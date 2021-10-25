@@ -48,7 +48,7 @@ class TitleCardMaker:
     __SERIES_COUNT_TEXT_PATH = Path(__file__).parent / 'series_count_text.png'
 
     def __init__(self, source: Path, output_file: Path,
-                 title_line1: str, title_line2: str, 
+                 title_top_line: str, title_bottom_line: str, 
                  season_text: str, episode_text: str, font: str,
                  title_color: str, hide_season: bool) -> None:
 
@@ -85,15 +85,18 @@ class TitleCardMaker:
 
         self.source_file = source
         self.output_file = output_file
-        self.title_line1 = title_line1.upper()
-        self.title_line2 = title_line2.upper() if title_line2 else None
-        self.font = font
+
+        self.title_top_line = title_top_line.upper()
+        self.title_bottom_line = title_bottom_line.upper() if title_bottom_line else None
+
         self.season_text = season_text.upper()
         self.episode_text = episode_text.upper()
-        self.title_color = title_color
-        self.hide_season = hide_season
 
-        self.has_two_lines = title_line2 is not None
+        self.font = font
+        self.title_color = title_color
+
+        self.hide_season = hide_season
+        self.has_two_lines = title_top_line is not None
 
 
     def __episode_text_global_effects(self) -> list:
@@ -146,8 +149,7 @@ class TitleCardMaker:
         """
         { function_description }
         
-        :returns:   { description_of_the_return_value }
-        :rtype:     list
+        :returns:   List of ImageMagick commands.
         """
 
         return [
@@ -161,8 +163,7 @@ class TitleCardMaker:
         """
         { function_description }
         
-        :returns:   { description_of_the_return_value }
-        :rtype:     list
+        :returns:   List of ImageMagick commands.
         """
 
         return [
@@ -176,8 +177,7 @@ class TitleCardMaker:
         """
         Adds a gradient to this object's source image.
         
-        :returns:   { description_of_the_return_value }
-        :rtype:     Path
+        :returns:   Path to the created image that has a gradient added.
         """
 
         command = ' '.join([
@@ -198,18 +198,20 @@ class TitleCardMaker:
     def _add_one_line_episode_text(self, gradient_image: Path) -> Path:
         """
         Adds one line of episode text to the provide image.
+
+        :param      gradient_image: The image with gradient added.
         
-        :returns:   { description_of_the_return_value }
-        :rtype:     Path
+        :returns:   Path to the created image that has a gradient and
+                    a single line of title text.
         """
 
         command = ' '.join([
             f'convert "{gradient_image.resolve()}"',
             *self.__episode_text_global_effects(),
             *self.__episode_text_black_stroke(),
-            f'-annotate +0+560 "{self.title_line1}"',
+            f'-annotate +0+560 "{self.title_bottom_line}"',
             f'-fill "{self.title_color}"',               # Actual text
-            f'-annotate +0+560 "{self.title_line1}"',
+            f'-annotate +0+560 "{self.title_bottom_line}"',
             f'"{self.__GRADIENT_WITH_TITLE_PATH.resolve()}"',
         ])
 
@@ -222,23 +224,23 @@ class TitleCardMaker:
         """
         Adds one lines of episode text to the provide image.
         
-        :param      gradient_image:  The gradient image
+        :param      gradient_image: The image with gradient added.
         
-        :returns:   { description_of_the_return_value }
-        :rtype:     Path
+        :returns:   Path to the created image that has a gradient and
+                    two lines of title text.
         """
 
         command =  ' '.join([
             f'convert "{gradient_image.resolve()}"',
             *self.__episode_text_global_effects(),
             *self.__episode_text_black_stroke(),    # Black stroke behind text (top)
-            f'-annotate +0+385 "{self.title_line2}"',
+            f'-annotate +0+385 "{self.title_top_line}"',
             f'-fill "{self.title_color}"',    
-            f'-annotate +0+385 "{self.title_line2}"',    # Top line text
+            f'-annotate +0+385 "{self.title_top_line}"',    # Top line text
             *self.__episode_text_black_stroke(),    # Black stroke behind text (bottom)
-            f'-annotate +0+560 "{self.title_line1}"',
+            f'-annotate +0+560 "{self.title_bottom_line}"',
             f'-fill "{self.title_color}"',    
-            f'-annotate +0+560 "{self.title_line1}"',    # Bottom line text
+            f'-annotate +0+560 "{self.title_bottom_line}"',    # Bottom line text
             f'"{self.__GRADIENT_WITH_TITLE_PATH.resolve()}"',
         ])
 
@@ -252,7 +254,6 @@ class TitleCardMaker:
         Adds a series count text no season.
         
         :param      titled_image:  The titled image
-        :type       titled_image:  Path
         """
 
         command = ' '.join([
@@ -275,7 +276,6 @@ class TitleCardMaker:
         Gets the series count text dimensions.
         
         :returns:   The series count text dimensions.
-        :rtype:     dict
         """
 
         command = ' '.join([
@@ -313,7 +313,6 @@ class TitleCardMaker:
         Creates a series count text image.
         
         :returns:   { description_of_the_return_value }
-        :rtype:     Path
         """
 
         # Get total widths
@@ -353,7 +352,6 @@ class TitleCardMaker:
                                                 series_count_image: Path,
                                                 dimensions: dict) -> None:
 
-
         """
         { item_description }
         """
@@ -375,7 +373,6 @@ class TitleCardMaker:
         Delete all the provided files using `rm`.
         
         :param      paths:  Any number of files to delete.
-        :type       paths:  tuple of Path objects.
         """
 
         for image in paths:

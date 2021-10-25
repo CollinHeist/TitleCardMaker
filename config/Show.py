@@ -1,111 +1,145 @@
-from csv import reader
 from pathlib import Path
-from xml.etree.ElementTree import parse
 
 from DataFileInterface import DataFileInterface
+from Debug import *
+from Episode import Episode
+from Profile import Profile
 from TitleCard import TitleCard
-from TitleCardProfile import TitleCardProfile
-from TitleCardMaker import TitleCardMaker
 
 class Show:
-    """
-    This class describes a show.
-    """
+    def __init__(self, show_element: 'Element', source: Path, media: Path) -> None:
+        """
+        Constructs a new instance.
+        
+        :param      show_element:   The show element
 
-    def __init__(self, base_source: Path, archive_directory: Path,
-                 libraries: dict, show_element: 'Element') -> None:
+        :param      source:         The source
 
-        # Parse <name> attribute
+        :param      media:          The media
+        """
+
+        # show_element will have name, year, season_count, season_map, profile
+
+        # Parse <show name="..."> attribute
         self.name = show_element.attrib['name']
 
-        # Parse <seasons> attribute
+        # Parse <show year="..."> attribute
+        self.year = int(show_element.attrib['year'])
+
+        # Parse <show season_count="..."> attribute
         self.season_count = int(show_element.attrib['seasons'])
 
-        # Parse <library> attribute, match it to the path from the library dict
-        self.media_directory = Path(libraries[show_element.attrib['library']]) / self.name
-
-        # Parse <font> tag (if present) - supported fonts are `convert -list font`
-        font = show_element.find('font')
-        self.font = TitleCardMaker.TITLE_DEFAULT_FONT if font is None else font.text
-
-        # Parse <font> tag's <color> attribute (if present)
-        if font is None:
-            self.font_color = TitleCardMaker.TITLE_DEFAULT_COLOR
-        else:
-            try:
-                self.font_color = font.attrib['color']
-            except KeyError:
-                self.font_color = TitleCardMaker.TITLE_DEFAULT_COLOR
-
+        # Parse <show/season_map> element (if present)
         # Parse <season_map> tag (if present) - default is 1:Season 1, 2:Season 2, etc.
         self.season_map = {n: f'Season {n}' for n in range(1, self.season_count+1)}
         self.season_map.update({0: 'SPECIALS'})
+
         for season in show_element.findall('season_map/'):
             self.season_map.update({
                 int(season.attrib['number']): season.attrib['name']
             })
 
-       # Parse <profile> tag (if present) into a Profile object
-        self.profile = TitleCardProfile(
-            show_element.find('profile'), archive_directory,
-            self.font, self.font_color, self.season_map,
+        # Parse <profile> tag (if present) into a Profile object
+        self.profile = Profile(
+            show_element.find('profile'),
+            show_element.find('font'),
+            self.season_map,
         )
 
-        # Initialize the data file interface
-        self._file_interface(base_source / self.name / DataFileInterface.GENERIC_DATA_FILE_NAME)
+        self.source_directory = source / f'{self.name} ({self.year})'
+        self.media_directory = media / f'{self.name} ({self.year})'
 
-        # Set base archive directory
-        self.archive_directory = archive_directory
+        # Create this show's interface to it's data file
+        self.file_interface = DataFileInterface(
+            self.source_directory / DataFileInterface.GENERIC_DATA_FILE_NAME
+        )
 
-        # Create empty data list until a read is initated
-        self.title_cards = []
+        # Create empty set of Episode objects
+        self.episodes = []
 
 
-    def __repr__(self) -> str:
+    def _get_destination(self, data_row: dict) -> Path:
         """
-        Returns a unambiguous string representation of the object (for debug).
+        Get the destination filename for the given data row. The row's
+        'season_number', and 'episode_number' keys are used.
         
-        :returns:   String representation of the object.
-        """
-
-        return f'<Show object for "{self.name}" media at "{self.media_directory.resolve()}">'
-
-
-    def __iter__(self) -> 'Iterable':
-        """
-        Creates an iterator for this container.
+        :param      data_row:   The data row returned from the file interface.
         
-        :returns:   The iterator.
-        :rtype:     { return_type_description }
+        :returns:   Path for the full title card destination
         """
 
-        yield from self.title_cards
+        # Read from data row
+        season_number = int(data_row['season_number'])
+        episode_number = int(data_row['episode_number'])
+
+        # Get the season folder corresponding to this episode's season
+        season_folder = 'Specials' if season_number == 0 else f'Season {season_number}'
+
+        # The standard plex filename for this episode
+        filename = (
+            f'{self.name} ({self.year}) - '
+            f'S{season_number:02}E{episode_number:02}{TitleCard.OUTPUT_CARD_EXTENSION}'
+        )
+
+        return self.media_directory / season_folder / filename
 
 
-    def read_source_data(self) -> None:
+    def check_sonarr_for_new_episodes(self, sonarr_interface: 'SonarrInterface') -> None:
         """
-        Reads the data CSV for a specific show, storing TitleCard objects for that row
-        in self.title_cards.
+        { function_description }
         
-        :param      file:  The file to read
-        
-        :returns:   List of dictionaries with an entry for each row in the source CSV.
-                    Each dictionary has keys for output path, title lines, season, and
-                    episode numbers.
+        :param      sonarr_interface:  The sonarr interface
         """
 
-        for data_row in self._file_interface.read():
-            self.title_cards.append(
-                TitleCard(
-                    row,
-                    self.media_directory,
-                    self.source_directory,
-                    self.profile
+        # Refresh data from file interface
+        self.parse_episodes()
+
+        # Get dict of episode data from Sonarr
+        all_episodes = sonarr_interface.get_all_episodes_for_series(self.name)
+
+        # For each episode, check if the data matches any contained Episode objects
+        for new_episode in all_episodes:
+            # Compare against every Episode in this Show
+            has_match = False
+            for current_episode in self.episodes:
+                if current_episode.matches(new_episode):
+                    has_match = True
+                    break
+
+            # If no match is found, add to source file
+            if not has_match:
+                # Construct data for new row
+                top, bottom = Episode.split_episode_title(new_episode.pop('title'))
+                new_episode.update({'title_top': top, 'title_bottom': bottom})
+
+                info(f'Sonarr indicates new episode ({new_episode})')
+
+                # Add entry to data file through interface
+                self.file_interface.add_entry(**new_episode)
+
+        # After adding new entries, re-parse source file
+        self.parse_episodes()
+
+
+    def parse_episodes(self) -> None:
+        """
+        { function_description }
+        """
+
+        self.episodes = []
+        for data_row in self.file_interface.read():
+            # Construct the file destination for Episode object building
+            self.episodes.append(
+                Episode(
+                    base_source=self.source_directory,
+                    destination=self._get_destination(data_row),
+                    **data_row
                 )
             )
 
 
-    def create_missing_title_cards(self) -> None:
+    def create_missing_title_cards(self,
+                                   database_interface: 'DatabaseInterface'=None) -> None:
         """
         Creates missing title cards.
         
@@ -113,7 +147,24 @@ class Show:
         :rtype:     None
         """
 
-        for title_card in self:
+        for episode in self.episodes:
+            title_card = TitleCard(episode, self.profile)
+
+            if not episode.source.exists() and database_interface is not None:
+                # Get the image URL for this episode's image
+                image_url = database_interface.get_title_card_source_image(
+                    self.name,
+                    episode.season_number,
+                    episode.episode_number,
+                    self.year,
+                )
+
+                if image_url is not None:
+                    info(f'Downloading source image ({episode.destination}).')
+                    database_interface.download_image(image_url, episode.destination)
+
             title_card.create()
+
+
 
 
