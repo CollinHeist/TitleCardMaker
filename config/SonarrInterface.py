@@ -1,8 +1,17 @@
 from datetime import datetime
+from re import match
 from requests import get
 
-class SonarrInterface:
+from Debug import *
 
+class SonarrInterface:
+    """
+    This class describes a Sonarr interface. The primary purpose of this
+    class is to get episode titles based on season and episode counts. This
+    is the alternative to making API requests to TheMovieDatabase.
+    """
+
+    """Datetime format string for airDateUtc field in Sonarr API requests"""
     AIRDATE_FORMAT: str = '%Y-%m-%dT%H:%M:%SZ'
 
     def __init__(self, url: str, api_key: str) -> None:
@@ -23,16 +32,19 @@ class SonarrInterface:
         self._param_base = {'apikey': api_key}
 
 
-    def _get_series_id(self, title: str) -> int:
+    def _get_series_id(self, title: str, year: int) -> int:
         """
-        Gets the series identifier.
+        Gets the series ID used by Sonarr to identify this show.
         
-        :param      title:  The title
-        :type       title:  str
+        :param      title:  The title of the show in question. Should
+                            not include year.
         
-        :returns:   The series identifier.
-        :rtype:     id
+        :returns:   The series ID as used by this object's instance of
+                    Sonarr.
         """
+
+        # Get only text from this title..
+        title = self.__text_only(title)
 
         # Construct GET arguments
         url = f'{self._url_base}series/'
@@ -43,10 +55,14 @@ class SonarrInterface:
 
         # Go through each series
         for show in all_series:
-            current_title = show['title']
-            alternate_titles = [_['title'] for _ in show['alternateTitles']]
+            # Skip shows with a year mismatch, prevents parsing titles (slower)
+            if int(show['year']) != year:
+                continue
 
-            # If the provided title matches the given title/alt. title, return it'd id
+            # Year match, verify the given title matches main/alternate titles
+            current_title = self.__text_only(show['title'])
+            alternate_titles = [self.__text_only(_['title']) for _ in show['alternateTitles']]
+
             if title == current_title or title in alternate_titles:
                 return int(show['id'])
 
@@ -82,8 +98,7 @@ class SonarrInterface:
                 return episode['title']
 
         raise ValueError(
-            f'Cannot find Season {season}, '
-            f'Episode {episode} of seriesId={series_id}'
+            f'Cannot find Season {season}, Episode {episode} of seriesId={series_id}'
         )
 
 
@@ -109,10 +124,16 @@ class SonarrInterface:
         # Go through each episode and get its season/episode number, and title
         episode_info = []
         for episode in all_episodes:
-            # Verify this episode has already aired
-            air_datetime = datetime.strptime(episode['airDateUtc'], self.AIRDATE_FORMAT)
-            if air_datetime > datetime.now():
-                continue
+            # Unaired episodes (such as specials) won't have airDateUtc key
+            if 'airDateUtc' in episode:
+                # Verify this episode has already aired
+                air_datetime = datetime.strptime(episode['airDateUtc'], self.AIRDATE_FORMAT)
+                if air_datetime > datetime.now():
+                    continue
+            else:
+                # Unaired episodes will probably be titled TBA..
+                if episode['title'] == 'TBA':
+                    continue
 
             episode_info.append({
                 'season_number':    int(episode['seasonNumber']),
@@ -123,7 +144,8 @@ class SonarrInterface:
         return episode_info
 
 
-    def get_episode_title(self, title: str, season: int, episode: int) -> str:
+    def get_episode_title(self, title: str, year: int, season: int,
+                          episode: int) -> str:
         """
         Gets the episode title.
         
@@ -136,12 +158,12 @@ class SonarrInterface:
         :returns:   The episode title.
         """
 
-        series_id = self._get_series_id(title)
+        series_id = self._get_series_id(title, year)
 
         return self._get_episode_title_for_id(series_id, season, episode)
 
 
-    def get_all_episodes_for_series(self, title: str) -> list:
+    def get_all_episodes_for_series(self, title: str, year: int) -> list:
         """
         Gets all episode info for the given series title from Sonarr. The
         returned info is season/episode number and title for each episode.
@@ -153,7 +175,7 @@ class SonarrInterface:
         :returns:   List of dictionaries of episode data.
         """
 
-        series_id = self._get_series_id(title)
+        series_id = self._get_series_id(title, year)
 
         return self._get_all_episode_data_for_id(series_id)
         
@@ -173,4 +195,14 @@ class SonarrInterface:
         return get(url=url, params=params).json()
 
 
+    def __text_only(self, text: str) -> str:
+        """
+        { function_description }
+        
+        :param      text:  The text
+        
+        :returns:   { description_of_the_return_value }
+        """
+
+        return ''.join(filter(lambda c: match('[a-zA-Z]', c), text))
         

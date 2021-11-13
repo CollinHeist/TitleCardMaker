@@ -19,4 +19,5 @@ __pypackages__/
 .DS_Store
 source/
 Media/
-config/config.xml
+config/objects/
+*.xml

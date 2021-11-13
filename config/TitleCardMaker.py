@@ -2,6 +2,8 @@ from pathlib import Path
 from re import findall
 from subprocess import run
 
+from Debug import *
+
 class TitleCardMaker:
     """
     This class describes the object that actually makes the title card using
@@ -27,16 +29,30 @@ class TitleCardMaker:
         9. Delete all intermediate files used in the creation of the title card.
     """
 
+    """Docker container ID with an instance of ImageMagick"""
+    IMAGEMAGICK_DOCKER_ID = '7e300751af8b'
+
+    """Map of 'case' values to their relavant functions"""
+    DEFAULT_CASE_VALUE = 'upper'
+    CASE_FUNCTION_MAP = {
+        'upper': str.upper,
+        'lower': str.lower,
+        'title': str.title,
+    }
+
     """Source path for the gradient image overlayed over all title cards"""
     GRADIENT_IMAGE_PATH = Path(__file__).parent / 'GRADIENT.png'
 
     """Default font and text color for episode title text"""
-    TITLE_DEFAULT_FONT = 'Sequel-Neue'
+    # TITLE_DEFAULT_FONT = 'Sequel-Neue'
+    TITLE_DEFAULT_FONT = Path(__file__).parent / 'fonts' / 'Sequel-Neue.otf'
     TITLE_DEFAULT_COLOR = '#EBEBEB'
 
     """Default fonts and color for series count text"""
-    SEASON_COUNT_DEFAULT_FONT = 'ProximaNova-Semibold'
-    EPISODE_COUNT_DEFAULT_FONT = 'Proxima-Nova-Regular'
+    # SEASON_COUNT_DEFAULT_FONT = 'ProximaNova-Semibold'
+    SEASON_COUNT_DEFAULT_FONT = Path(__file__).parent / 'fonts' / 'Proxima Nova Semibold.otf'
+    # EPISODE_COUNT_DEFAULT_FONT = 'Proxima-Nova-Regular'
+    EPISODE_COUNT_DEFAULT_FONT = Path(__file__).parent / 'fonts' / 'Proxima Nova Regular.otf'
     SERIES_COUNT_DEFAULT_COLOR = '#CFCFCF'
 
     """Character used to join season and episode text (with spacing)"""
@@ -47,10 +63,9 @@ class TitleCardMaker:
     __GRADIENT_WITH_TITLE_PATH = Path(__file__).parent / 'gradient_title.png'
     __SERIES_COUNT_TEXT_PATH = Path(__file__).parent / 'series_count_text.png'
 
-    def __init__(self, source: Path, output_file: Path,
-                 title_top_line: str, title_bottom_line: str, 
-                 season_text: str, episode_text: str, font: str,
-                 title_color: str, hide_season: bool) -> None:
+    def __init__(self, source: Path, output_file: Path, title_top_line: str,
+                 title_bottom_line: str, season_text: str, episode_text: str,
+                 font: str, font_size: float, title_color: str, hide_season: bool) -> None:
 
         """
         Initialize the TitleCardMaker object. This primarily just stores
@@ -86,17 +101,18 @@ class TitleCardMaker:
         self.source_file = source
         self.output_file = output_file
 
-        self.title_top_line = title_top_line.upper()
-        self.title_bottom_line = title_bottom_line.upper() if title_bottom_line else None
+        self.title_top_line = title_top_line.replace('"', r'\"')
+        self.title_bottom_line = title_bottom_line.replace('"', r'\"') if title_bottom_line else None
 
         self.season_text = season_text.upper()
         self.episode_text = episode_text.upper()
 
         self.font = font
+        self.font_size = font_size
         self.title_color = title_color
 
         self.hide_season = hide_season
-        self.has_two_lines = title_top_line is not None
+        self.has_two_lines = title_top_line not in (None, '')
 
 
     def __episode_text_global_effects(self) -> list:
@@ -108,10 +124,13 @@ class TitleCardMaker:
         :returns:   List of ImageMagick commands.
         """
 
+        font_size = 157.41 * self.font_size
+
         return [
             f'-font "{self.font}"',
-            f'-kerning -1.75',
-            f'-pointsize 157.41',
+            f'-kerning -1.25',
+            f'-interword-spacing 50',
+            f'-pointsize {font_size}',
             f'-gravity center'
         ]   
 
@@ -119,8 +138,7 @@ class TitleCardMaker:
     def __episode_text_black_stroke(self) -> list:
         """
         ImageMagick commands to implement the episode text's
-        black stroke. Specifically a black fill and stroke, and
-        a strokewidth of 3.
+        black stroke.
         
         :returns:   List of ImageMagick commands.
         """
@@ -134,7 +152,8 @@ class TitleCardMaker:
 
     def __series_count_text_global_effects(self) -> list:
         """
-        { function_description }
+        ImageMagick commands for global text effects applied to
+        all series count text (season/episode count and dot).
         
         :returns:   List of ImageMagick commands.
         """
@@ -147,7 +166,8 @@ class TitleCardMaker:
 
     def __series_count_text_black_stroke(self) -> list:
         """
-        { function_description }
+        ImageMagick commands for adding the necessary black stroke
+        effects to series count text.
         
         :returns:   List of ImageMagick commands.
         """
@@ -161,7 +181,8 @@ class TitleCardMaker:
 
     def __series_count_text_effects(self) -> list:
         """
-        { function_description }
+        ImageMagick commands for adding the necessary text effects
+        to the series count text.
         
         :returns:   List of ImageMagick commands.
         """
@@ -190,7 +211,8 @@ class TitleCardMaker:
             f'"{self.__SOURCE_WITH_GRADIENT_PATH.resolve()}"',
         ])
 
-        run(command, shell=True)
+        # run(command, shell=True)
+        self.run(command)
 
         return self.__SOURCE_WITH_GRADIENT_PATH
 
@@ -215,7 +237,8 @@ class TitleCardMaker:
             f'"{self.__GRADIENT_WITH_TITLE_PATH.resolve()}"',
         ])
 
-        run(command, shell=True)
+        # run(command, shell=True)
+        self.run(command)
 
         return self.__GRADIENT_WITH_TITLE_PATH
 
@@ -244,7 +267,8 @@ class TitleCardMaker:
             f'"{self.__GRADIENT_WITH_TITLE_PATH.resolve()}"',
         ])
 
-        run(command, shell=True)
+        # run(command, shell=True)
+        self.run(command)
 
         return self.__GRADIENT_WITH_TITLE_PATH
 
@@ -268,7 +292,8 @@ class TitleCardMaker:
             f'"{self.output_file.resolve()}"',
         ])
 
-        run(command, shell=True)
+        # run(command, shell=True)
+        self.run(command)
 
 
     def _get_series_count_text_dimensions(self) -> dict:
@@ -295,29 +320,29 @@ class TitleCardMaker:
             f'null: 2>&1 | grep Metrics'
         ])
 
-        metrics = run(command, shell=True, capture_output=True).stdout.decode()
+        # metrics = run(command, shell=True, capture_output=True).stdout.decode()
+        metrics = self.run(command, capture_output=True).stdout.decode()
         
         widths = list(map(int, findall('width: (\d+)', metrics)))
         heights = list(map(int, findall('height: (\d+)', metrics)))
 
         return {
-            'width': sum(widths),
-            'width text 1': widths[0],
-            'width text 2': widths[1],
-            'height': max(heights)+25,
+            'width':    sum(widths),
+            'width1':   widths[0],
+            'width2':   widths[1],
+            'height':   max(heights)+25,
         }
 
 
-    def _create_series_count_text_image(self, dimensions: dict) -> Path:
-        """
-        Creates a series count text image.
-        
-        :returns:   { description_of_the_return_value }
-        """
+    def _create_series_count_text_image(self, width: float, width1: float,
+                                        width2: float, height: float) -> Path:
 
-        # Get total widths
-        height, width = dimensions['height'], dimensions['width']
-        width1, width2 = dimensions['width text 1'], dimensions['width text 2']
+        """
+        Creates an image with only series count text. This image is transparent,
+        and not any wider than is necessary (as indicated by `dimensions`).
+        
+        :returns:   Path to the created image containing only series count text.
+        """
 
         # Create text only transparent image of season count text
         command = ' '.join([
@@ -343,17 +368,21 @@ class TitleCardMaker:
             f'"PNG32:{self.__SERIES_COUNT_TEXT_PATH.resolve()}"',
         ])
 
-        run(command, shell=True)
+        # run(command, shell=True)
+        self.run(command)
 
         return self.__SERIES_COUNT_TEXT_PATH
 
 
     def _combine_titled_image_series_count_text(self, titled_image: Path,
-                                                series_count_image: Path,
-                                                dimensions: dict) -> None:
+                                                series_count_image: Path) -> None:
 
         """
-        { item_description }
+        Combine the titled image (image+gradient+episode title) and the 
+        series count image (optional season number+optional dot+episode number)
+        into a single image.
+
+        This image is written into the output image for this object.
         """
 
         command = ' '.join([
@@ -365,26 +394,29 @@ class TitleCardMaker:
             f'"{self.output_file.resolve()}"',
         ])
 
-        run(command, shell=True)
+        # run(command, shell=True)
+        self.run(command, entrypoint='composite')
 
 
     def _delete_intermediate_images(self, *paths: tuple) -> None:
         """
-        Delete all the provided files using `rm`.
+        Delete all the provided files.
         
-        :param      paths:  Any number of files to delete.
+        :param      paths:  Any number of files to delete. Must be
+                            Path objects.
         """
 
+        # Delete (unlink) each image, don't raise FileNotFoundError if DNE
         for image in paths:
-            run(f'rm {image.resolve()}', shell=True)
+            image.unlink(missing_ok=True)
 
 
     def create(self) -> None:
         """
         Make the necessary ImageMagick and system calls to create this
-        object's defined title card file.
+        object's defined title card.
         """
-
+        
         # Add the gradient to the source image (always)
         gradient_image = self._add_gradient()
 
@@ -394,24 +426,76 @@ class TitleCardMaker:
         else:
             titled_image = self._add_one_line_episode_text(gradient_image)
 
-        # Create the output directory parents necessary ...
+        # Create the output directory parents necessary 
         self.output_file.parent.mkdir(parents=True, exist_ok=True)
 
         # If season text is hidden, just add episode text 
         if self.hide_season:
             self._add_series_count_text_no_season(titled_image)
         else:
-            dimensions = self._get_series_count_text_dimensions()
-            series_count_image = self._create_series_count_text_image(dimensions)
-            self._combine_titled_image_series_count_text(
-                titled_image,
-                series_count_image,
-                dimensions
+            # If adding season text, create intermediate images and combine them
+            series_count_image = self._create_series_count_text_image(
+                **self._get_series_count_text_dimensions()
             )
+            self._combine_titled_image_series_count_text(titled_image, series_count_image)
 
         # Delete all intermediate images
-        intermediate_images = [
-            gradient_image, titled_image
-        ] + ([] if self.hide_season else [series_count_image])
-        self._delete_intermediate_images(*intermediate_images)
+        self._delete_intermediate_images(
+            *([gradient_image, titled_image] + ([] if self.hide_season else [series_count_image]))
+        )
+
+
+    @staticmethod
+    def is_valid_font(font: str) -> bool:
+        """
+        Determines whether the specified font is a valid font for ImageMagick commands.
+        
+        :param      font:  The font being checked
+        
+        :returns:   True if the specified font is valid font, False otherwise.
+        """
+
+        # Query ImageMagick for font list, then grep just the font name
+        command = 'convert -list font | grep "Font: "'
+
+        font_list = self.run(command, capture_output=True).stdout.decode().split('\n')
+        # font_list = run(
+        #     command, shell=True, capture_output=True
+        # ).stdout.decode().split('\n')
+
+        # Check the given font against all fonts returned
+        for font_string in font_list:
+            if font in findall(': (.*)', font_string):
+                return True
+
+        return False
+
+
+    def run(self, command: str, entrypoint='convert', *args: tuple, **kwargs: dict):
+        """
+        
+        
+        :param      args:    The arguments
+
+        :param      kwargs:  The keywords arguments
+
+        """
+
+        # Remove entrypont command (i.e. convert/composite) from command
+        # command = command[len(entrypoint):]# if command.startswith(f'{entrypoint} ') else command
+
+        # Add docker run command
+        # command = (
+        #     f'docker run --entrypoint={entrypoint} '
+        #     '-it --rm -v "/mnt/":"/mnt/" '
+        #     'dpokidov/imagemagick '
+        #     f'{command}'
+        # )
+        
+        command = f'docker exec -t {self.IMAGEMAGICK_DOCKER_ID} {command}'
+        
+        return run(command, shell=True, *args, **kwargs)
+
+
+
 

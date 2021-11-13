@@ -40,6 +40,9 @@ class Episode:
         else:
             self.title_top_line, self.title_bottom_line = self._split_title(title)
 
+        # Set attribute for whether this episode exists in the Database, for checking later
+        self.in_database = True
+
 
     def __repr__(self) -> str:
         """
@@ -50,10 +53,19 @@ class Episode:
 
         return (
             f'<Episode(season_number={self.season_number}, episode_number='
-            f'{self.episode_number}, source="{self.source}", destination="'
-            f'{self.destination}", title_top_line="{self.title_top_line}",'
+            f'{self.episode_number}, title_top_line="{self.title_top_line}",'
             f' title_bottom_line="{self.title_bottom_line}">'
         )
+
+
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the object.
+        
+        :returns:   String representation of the object.
+        """
+
+        return f'Season {self.season_number}, Episode {self.episode_number}'
 
 
     def matches(self, episode_info: dict) -> bool:
@@ -92,6 +104,7 @@ class Episode:
     def _split_title(title: str) -> (str, str):
         """
         Inner function to split a given title into top and bottom title text.
+        Splitting takes priority on a colon (':') character, and then spaces.
         
         :param      title:  The title to be split.
         
@@ -100,10 +113,16 @@ class Episode:
         """
 
         top, bottom = '', title
-        if len(title) > Episode.MAX_LINE_LENGTH:
-            top, bottom = title.split(' ', 1)
+        if len(title) >= Episode.MAX_LINE_LENGTH:
+            # Only look for colon in the first half of the text to avoid long top lines
+            # for titles with colons in the last part of the title like [.......]: [..]
+            if ': ' in bottom[:len(bottom)//2]:
+                top, bottom = title.split(': ', 1)
+                top += ':'
+            else:
+                top, bottom = title.split(' ', 1)
 
-            while len(bottom) > Episode.MAX_LINE_LENGTH:
+            while len(bottom) >= Episode.MAX_LINE_LENGTH:
                 top2, bottom = bottom.split(' ', 1)
                 top += f' {top2}'
 
