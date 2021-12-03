@@ -37,7 +37,7 @@ class Profile:
 
         ## Parse <font> element if given
         # Parse <font></font> text
-        self.__custom_font = getattr(font_element, 'text', TitleCardMaker.TITLE_DEFAULT_FONT)
+        self.__custom_font = getattr(font_element, 'text', TitleCardMaker.TITLE_DEFAULT_FONT.resolve())
 
         # Parse <show size=""> attribute
         try:
@@ -59,7 +59,7 @@ class Profile:
 
         # Set object attributes
         if not self.__use_custom_font:
-            self.font = TitleCardMaker.TITLE_DEFAULT_FONT
+            self.font = TitleCardMaker.TITLE_DEFAULT_FONT.resolve()
             self.font_size = 1.0
             self.color = TitleCardMaker.TITLE_DEFAULT_COLOR
             self.case = TitleCardMaker.CASE_FUNCTION_MAP[TitleCardMaker.DEFAULT_CASE_VALUE]

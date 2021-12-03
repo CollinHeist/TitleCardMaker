@@ -74,16 +74,23 @@ class PlexInterface:
             # Add this library to the object's dictionary
             self.library.update({library_title: content_dict})
 
-        info(f'Parsed {len(self.library)} Plex libraries ({", ".join(self.library.keys())})')
+        info(f'Found {len(self.library)} Plex libraries ({", ".join(self.library.keys())})')
 
 
     def refresh_metadata(self, library: str, title: str, year: int=None) -> None:
         """
-        { function_description }
-        
-        :param      title:  The title
+        Refresh the given title's (if found in the specified library) metadata. This
+        effectively forces the title cards to be refreshed, if updated/newly added.
 
-        :param      year:   The year
+        If the library or the title is not known to this object, no content
+        is refreshed.
+
+        :param      library:    The name of the library where the content is. Must be
+                                a valid library name (i.e. matching Plex).
+        
+        :param      title:      The title of the content to refresh.
+
+        :param      year:       The year of the content (for matching).
         """
 
         title = title.replace(' - ', ': ')

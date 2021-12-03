@@ -183,7 +183,10 @@ class Show:
 
         # Go through each episode for this show
         for _, episode in self.episodes.items():
-            title_card = TitleCard(episode, self.profile)
+            try:
+                title_card = TitleCard(episode, self.profile)
+            except Exception as e:
+                error(f'Error creating TitleCard ({e}) for episode ({episode})')
 
             # If the title card doesn't exist...
             if not episode.source.exists():
@@ -192,7 +195,7 @@ class Show:
                     continue
 
                 # If a DatabaseInterface is provided, query for this episode's source image
-                if database_interface is not None:
+                if database_interface:
                     image_url = database_interface.get_title_card_source_image(
                         self.name,
                         self.year,

@@ -8,6 +8,11 @@ from Show import Show
 from ShowArchive import ShowArchive
 
 class TitleCardManager:
+    """
+    This class describes a title card manager. The manager is used to manage
+    title card and archive creation/management from a high level.
+    """
+
     def __init__(self, config: str, source_directory: str, archive_directory: str,
                  sonarr_interface: 'SonarrInterface',
                  database_interface: 'DatabaseInterface',
@@ -18,7 +23,9 @@ class TitleCardManager:
         self.config = parse(self.__config_file.resolve())
 
         # Read all specified libraries
-        self.libraries = {e.attrib['name']: Path(e.text) for e in self.config.findall('library')}
+        self.libraries = {
+            e.attrib['name']: Path(e.text) for e in self.config.findall('library')
+        }   
 
         # Establish source base
         self.source_base = Path(source_directory)
@@ -49,7 +56,7 @@ class TitleCardManager:
 
     def create_shows(self) -> None:
         """
-        Creates Show objects for each <show> element in the config file.
+        Creates Show objects for each <show> element in this object's config file.
         """
 
         # Re-parse config file
@@ -83,11 +90,8 @@ class TitleCardManager:
 
     def read_show_source(self) -> None:
         """
-        Reads a show source.
-        
-        :param      show_full_name: The show full name - this is "title
-                                    (year)". If unspecified, all shows are
-                                    read.
+        Reads all source files known to this manager. This calls
+        `Show.read_source()`.
         """
 
         for _, show in self.shows.items():
@@ -96,18 +100,22 @@ class TitleCardManager:
 
     def check_sonarr_for_new_episodes(self) -> None:
         """
-        { function_description }
+        Query Sonarr to see if any new episodes exist for every show
+        known to this manager. This calls
+        `Show.check_sonarr_for_new_epsiodes()`.
         
         :param      show_full_name: The show's full name
         """
-
+        
         for _, show in self.shows.items():
             show.check_sonarr_for_new_episodes(self.sonarr_interface)
 
 
     def create_missing_title_cards(self) -> None:
         """
-        Creates missing title cards.
+        Creates all missing title cards for every show known to this
+        manager. For each show, if any new title cards are created, it's
+        Plex metadata is updated. This calls `Show.create_missing_title_cards()`.
         """
 
         for _, show in self.shows.items():
@@ -120,7 +128,8 @@ class TitleCardManager:
 
     def update_archive(self) -> None:
         """
-        { function_description }
+        Update the title card archives for every show known to this object.
+        This calls `Show.update_archive()`.
         
         :param      show_full_name:  The show full name
         """
@@ -131,9 +140,23 @@ class TitleCardManager:
 
     def main_loop(self, interval: int=600) -> None:
         """
-        { function_description }
+        Infinite loop meant to be the entrypoint of this class. All primary
+        methods are called at the given interval. Multithreading is not used,
+        so there is no guarantee these methods will be executed in time.
+
+        The following functions are executed in the following order:
+
+        `create_shows()`
+        `read_show_source()`
+        `check_sonarr_for_new_episodes()`
+        `create_missing_title_cards()`
+        `update_archive()`.
+
+        And these are executed immediately upon call (waiting `interval` seconds
+        after that first execution).
         
-        :param      interval:  The interval
+        :param      interval:   The interval, in seconds, to wait between
+                                instances of execution.
         """
 
         # Execute everything before waiting
@@ -143,9 +166,8 @@ class TitleCardManager:
         self.create_missing_title_cards()
         self.update_archive()
 
-        last_execution = datetime.now()
-
         # Infinite loop 
+        last_execution = datetime.now()
         while True:
             if datetime.now() - last_execution >= timedelta(seconds=interval):
                 self.create_shows()
@@ -158,10 +180,5 @@ class TitleCardManager:
             # Calculate how long to sleep
             wait_time = interval - (datetime.now() - last_execution).seconds
             sleep(max(wait_time, 0))
-
-
-
-
-
 
         

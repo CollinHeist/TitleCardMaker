@@ -11,42 +11,65 @@ class DatabaseInterface:
     API_BASE_URL: str = 'https://api.themoviedb.org/3/'
 
     """Filename for where to store blacklisted entries"""
-    BLACKLIST_FILE: Path = Path(__file__).parent / 'objects' / 'database_blacklist.pkl'
+    __BLACKLIST: Path = Path(__file__).parent / '.objects' / 'db_blacklist.pkl'
+
+    """Filename where mappings of series full titles to TMDB ids is stored"""
+    __ID_MAP: Path = Path(__file__).parent / '.objects' / 'db_id_map.pkl'
 
     def __init__(self, api_key: str) -> None:
         """
-        Constructs a new instance.
+        Constructs a new instance of an interface to TheMovieDB.
         
-        :param      api_key:  The api key
+        :param      api_key:    The api key used to communicate with TMDB.
         """
         
         # Store API key
         self.__api_key = api_key
 
         # Attempt to read existing blacklist
-        if self.BLACKLIST_FILE.exists():
-            with self.BLACKLIST_FILE.open('rb') as file_hande:
-                self.__blacklist = load(file_hande)
+        if self.__BLACKLIST.exists():
+            with self.__BLACKLIST.open('rb') as file_handle:
+                self.__blacklist = load(file_handle)
         else:
             self.__blacklist = []
+
+        # Attempt to read existing ID map
+        if self.__ID_MAP.exists():
+            with self.__ID_MAP.open('rb') as file_handle:
+                self.__id_map = load(file_handle)
+        else:
+            self.__id_map = {}
+
+
+    def __bool__(self) -> bool:
+        """
+        { function_description }
+        
+        :returns:   True
+        """
+
+        return True
 
 
     def __add_to_blacklist(self, title: str, year: int, season: int, episode: int) -> None:
         """
-        Adds to blacklist.
+        Adds the given entry to the blacklist; indicating that this exact entry
+        shouldn't be queried to TheMovieDB (to prevent unnecessary queries).
         
-        :param      tv_id:    The tv identifier
+        :param      title:      The show's title.
 
-        :param      season:   The season
+        :param      year:       The show's year.
 
-        :param      episode:  The episode
+        :param      season:     The entry's season number.
+
+        :param      episode:    The entry's episode number.
         """
 
         # Add to current blacklist
         self.__blacklist.append(f'{title} ({year})-{season}-{episode}')
 
         # Write latest version of blacklist to file, in case program exits
-        with self.BLACKLIST_FILE.open('wb') as file_handle:
+        with self.__BLACKLIST.open('wb') as file_handle:
             dump(self.__blacklist, file_handle, HIGHEST_PROTOCOL)
 
         info(f'Added "{title} ({year})-{season}-{episode}" to database blacklist', 3)
@@ -54,14 +77,16 @@ class DatabaseInterface:
 
     def __is_in_blacklist(self, title: str, year: int, season: int, episode: int) -> bool:
         """
-        Determines if in blacklist.
+        Determines if the specified entry is in the blacklist (i.e. has no entry
+        in TheMovieDB).
         
-        :param      tv_id:    The tv identifier
+        :param      title:      The show's title.
 
-        :param      season:   The season
+        :param      year:       The show's year.
 
-        :param      episode:  The episode
+        :param      season:     The entry's season number.
 
+        :param      episode:    The entry's episode number.
         
         :returns:   True if in blacklist, False otherwise.
         """
@@ -69,11 +94,34 @@ class DatabaseInterface:
         return f'{title} ({year})-{season}-{episode}' in self.__blacklist
 
 
+    def __add_id_to_map(self, title: str, year: int, id_: int) -> None:
+        """
+        Adds a mapping of this full title to the corresponding TheMovieDB ID.
+        
+        :param      title:  The show's title.
+
+        :param      year:   The show's year.
+
+        :param      id_:    The show's ID, as returned by `__get_tv_id()`.
+        """
+
+        self.__id_map[f'{title} ({year})'] = id_
+
+        with self.__ID_MAP.open('wb') as file_handle:
+            dump(self.__id_map, file_handle, HIGHEST_PROTOCOL)
+
+
+    @staticmethod
+    def manually_specify_id(*args, **kwargs) -> None:
+        """Public (static) implementation of `__add_id_to_map()`."""
+
+        DatabaseInterface(None).__add_id_to_map(*args, **kwargs)
+
+
     def __get_tv_id(self, title: str, year: int) -> int:
         """
         Get the internal TMDb ID for the provided series. Search is done
-        by name, but if the start air year is provided more accurate results
-        are to be expected.
+        by name and the start air year.
 
         The first result is returned every time.
         
@@ -84,6 +132,10 @@ class DatabaseInterface:
         :returns:   The internal TMDb ID for the found series
         """
 
+        # If this full title has been mapped, no need to query 
+        if f'{title} ({year})' in self.__id_map:
+            return self.__id_map[f'{title} ({year})']
+
         # Base params are api_key and the query (title)
         url = f'{self.API_BASE_URL}search/tv/'
         params = {'api_key': self.__api_key, 'query': title, 'first_air_date_year': year}
@@ -91,11 +143,16 @@ class DatabaseInterface:
         # Query TheMovieDB
         results = get(url=url, params=params).json()
 
-        if int(results['total_results']) < 1:
+        # If there are no results, error and return
+        if int(results['total_results']) == 0:
             error(f'TheMovieDB returned no results for "{title}"')
             return None
 
-        return results['results'][0]['id']
+        # Found new ID, add to map and return
+        new_id = results['results'][0]['id']
+        self.__add_id_to_map(title, year, new_id)
+
+        return new_id
 
 
     def __determine_best_image(self, images: list) -> dict:
@@ -148,7 +205,7 @@ class DatabaseInterface:
         # Make the GET request
         results = get(url=url, params=params).json()
 
-        # If 'stills' wasn't in return JSON, episode wasn't found (mismatch between tvdb and tmdb)
+        # If 'stills' wasn't in return JSON, episode wasn't found (mismatch)
         if 'stills' not in results:
             warn(f'TheMovieDB has no matching episode for "{title} ({year})" Season {season}, Episode {episode}', 2)
             self.__add_to_blacklist(title, year, season, episode)

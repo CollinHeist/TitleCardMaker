@@ -30,7 +30,7 @@ class TitleCardMaker:
     """
 
     """Docker container ID with an instance of ImageMagick"""
-    IMAGEMAGICK_DOCKER_ID = '7e300751af8b'
+    IMAGEMAGICK_DOCKER_ID = '9ab39821bdae'
 
     """Map of 'case' values to their relavant functions"""
     DEFAULT_CASE_VALUE = 'upper'
@@ -59,9 +59,9 @@ class TitleCardMaker:
     SERIES_COUNT_JOIN_CHARACTER = '•'
 
     """Paths to intermediate files that are deleted after the card is created"""
-    __SOURCE_WITH_GRADIENT_PATH = Path(__file__).parent / 'source_gradient.png'
-    __GRADIENT_WITH_TITLE_PATH = Path(__file__).parent / 'gradient_title.png'
-    __SERIES_COUNT_TEXT_PATH = Path(__file__).parent / 'series_count_text.png'
+    __SOURCE_WITH_GRADIENT_PATH = Path(__file__).parent / '.objects' / 'source_gradient.png'
+    __GRADIENT_WITH_TITLE_PATH = Path(__file__).parent / '.objects' / 'gradient_title.png'
+    __SERIES_COUNT_TEXT_PATH = Path(__file__).parent / '.objects' / 'series_count_text.png'
 
     def __init__(self, source: Path, output_file: Path, title_top_line: str,
                  title_bottom_line: str, season_text: str, episode_text: str,
@@ -131,7 +131,7 @@ class TitleCardMaker:
             f'-kerning -1.25',
             f'-interword-spacing 50',
             f'-pointsize {font_size}',
-            f'-gravity center'
+            f'-gravity center',
         ]   
 
 
@@ -212,7 +212,7 @@ class TitleCardMaker:
         ])
 
         # run(command, shell=True)
-        self.run(command)
+        self._run(command)
 
         return self.__SOURCE_WITH_GRADIENT_PATH
 
@@ -238,7 +238,7 @@ class TitleCardMaker:
         ])
 
         # run(command, shell=True)
-        self.run(command)
+        self._run(command)
 
         return self.__GRADIENT_WITH_TITLE_PATH
 
@@ -268,7 +268,7 @@ class TitleCardMaker:
         ])
 
         # run(command, shell=True)
-        self.run(command)
+        self._run(command)
 
         return self.__GRADIENT_WITH_TITLE_PATH
 
@@ -293,7 +293,7 @@ class TitleCardMaker:
         ])
 
         # run(command, shell=True)
-        self.run(command)
+        self._run(command)
 
 
     def _get_series_count_text_dimensions(self) -> dict:
@@ -321,7 +321,7 @@ class TitleCardMaker:
         ])
 
         # metrics = run(command, shell=True, capture_output=True).stdout.decode()
-        metrics = self.run(command, capture_output=True).stdout.decode()
+        metrics = self._run(command, capture_output=True).stdout.decode()
         
         widths = list(map(int, findall('width: (\d+)', metrics)))
         heights = list(map(int, findall('height: (\d+)', metrics)))
@@ -369,7 +369,7 @@ class TitleCardMaker:
         ])
 
         # run(command, shell=True)
-        self.run(command)
+        self._run(command)
 
         return self.__SERIES_COUNT_TEXT_PATH
 
@@ -395,7 +395,7 @@ class TitleCardMaker:
         ])
 
         # run(command, shell=True)
-        self.run(command, entrypoint='composite')
+        self._run(command)
 
 
     def _delete_intermediate_images(self, *paths: tuple) -> None:
@@ -458,10 +458,7 @@ class TitleCardMaker:
         # Query ImageMagick for font list, then grep just the font name
         command = 'convert -list font | grep "Font: "'
 
-        font_list = self.run(command, capture_output=True).stdout.decode().split('\n')
-        # font_list = run(
-        #     command, shell=True, capture_output=True
-        # ).stdout.decode().split('\n')
+        font_list = self._run(command, capture_output=True).stdout.decode().split('\n')
 
         # Check the given font against all fonts returned
         for font_string in font_list:
@@ -471,7 +468,7 @@ class TitleCardMaker:
         return False
 
 
-    def run(self, command: str, entrypoint='convert', *args: tuple, **kwargs: dict):
+    def _run(self, command: str, *args: tuple, **kwargs: dict):
         """
         
         
@@ -480,17 +477,8 @@ class TitleCardMaker:
         :param      kwargs:  The keywords arguments
 
         """
-
-        # Remove entrypont command (i.e. convert/composite) from command
-        # command = command[len(entrypoint):]# if command.startswith(f'{entrypoint} ') else command
-
-        # Add docker run command
-        # command = (
-        #     f'docker run --entrypoint={entrypoint} '
-        #     '-it --rm -v "/mnt/":"/mnt/" '
-        #     'dpokidov/imagemagick '
-        #     f'{command}'
-        # )
+        
+        # docker run --name="ImageMagick" --entrypoint="/bin/bash" -dit -v "/mnt/user/":"/mnt/user/" 'dpokidov/imagemagick'
         
         command = f'docker exec -t {self.IMAGEMAGICK_DOCKER_ID} {command}'
         

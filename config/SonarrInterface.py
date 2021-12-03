@@ -1,5 +1,6 @@
 from datetime import datetime
 from re import match
+from pathlib import Path
 from requests import get
 
 from Debug import *
@@ -18,18 +19,41 @@ class SonarrInterface:
         """
         Constructs a new instance.
         
-        :param      url:        The base API url of Sonarr. Must end in
-                                /api/ endpoint.
+        :param      url:        The base url of Sonarr.
 
         :param      api_key:    The api key for requesting data to/from
                                 Sonarr.
         """
 
-        if not url.endswith(('api', 'api/')):
-            raise ValueError(f'Sonarr URL must have /api endpoint')
+        # If unspecified, create an inactive object
+        if url is None or api_key is None:
+            self._active = False
+            self._url_base = None
+            self._param_base = None
+            return
+
+        # Add /api/ endpoint if not provided
+        if not url.endswith('api') and not url.endswith('api/'):
+            url += 'api/' if url.endswith('/') else '/api/'
         
+        self._active = True
         self._url_base = url + ('' if url.endswith('/') else '/')
         self._param_base = {'apikey': api_key}
+
+
+    def _if_active(func):
+        """
+        Decorator for methods of this class that instantly returns
+        if this instance's `_active` attribute is False.
+        """
+
+        def __wrapped_func(*args, **kwargs):
+            if args[0]._active:
+                return func(*args, **kwargs)
+            else:
+                return
+
+        return __wrapped_func
 
 
     def _get_series_id(self, title: str, year: int) -> int:
@@ -130,10 +154,10 @@ class SonarrInterface:
                 air_datetime = datetime.strptime(episode['airDateUtc'], self.AIRDATE_FORMAT)
                 if air_datetime > datetime.now():
                     continue
-            else:
-                # Unaired episodes will probably be titled TBA..
-                if episode['title'] == 'TBA':
-                    continue
+
+            # Skip episodes whose titles aren't in Sonarr yet (to avoid naming them TBA.. )
+            if episode['title'] == 'TBA':
+                continue
 
             episode_info.append({
                 'season_number':    int(episode['seasonNumber']),
@@ -144,6 +168,7 @@ class SonarrInterface:
         return episode_info
 
 
+    @_if_active
     def get_episode_title(self, title: str, year: int, season: int,
                           episode: int) -> str:
         """
@@ -163,6 +188,7 @@ class SonarrInterface:
         return self._get_episode_title_for_id(series_id, season, episode)
 
 
+    @_if_active
     def get_all_episodes_for_series(self, title: str, year: int) -> list:
         """
         Gets all episode info for the given series title from Sonarr. The
@@ -197,11 +223,11 @@ class SonarrInterface:
 
     def __text_only(self, text: str) -> str:
         """
-        { function_description }
+        Get only the A-Z characters from the given text string.
         
-        :param      text:  The text
+        :param      text:   The text to process.
         
-        :returns:   { description_of_the_return_value }
+        :returns:   String with all non a-z A-Z characters removed.
         """
 
         return ''.join(filter(lambda c: match('[a-zA-Z]', c), text))
