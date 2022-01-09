@@ -1,9 +1,10 @@
 from pathlib import Path
-from xml.etree.ElementTree import tostring, fromstring
+from xml.etree.ElementTree import fromstring
 
 from requests import get, put
 
 from Debug import *
+from Show import Show
 
 class PlexInterface:
     """
@@ -16,24 +17,44 @@ class PlexInterface:
         """
         Constructs a new instance.
         
-        :param      url:           The url
+        :param      url:            The url
 
-        :param      x_plex_token:  The x plex token
+        :param      x_plex_token:   The x plex token
         """
 
+        # If any args are None, this interface is inactive
+        if any(_ is None for _ in (url, x_plex_token)):
+            self.__active = False
+            self.base_url, self.base_params, self.library = None, None, None
+            return
+
+        self.__active = True
         url = url + ('' if url.endswith('/') else '/')
         self.base_url = url + 'library/'
         self.base_params = {'X-Plex-Token': x_plex_token}
 
-        # Structre is {name: {full_title: ratingKey, ...}, ...}
+        # Structre is {library_name: {full_title: ratingKey, ...}, ...}
         self.library = {}
         self.parse_plex_library()
+
+
+    def __bool__(self) -> bool:
+        """
+        Get the truthiness of this object.
+
+        :returns:   Whether this interface is active orn ot.
+        """
+
+        return self.__active
 
 
     def parse_plex_library(self) -> None:
         """
         Parse the associated plex library 
         """
+
+        if not self:
+            return
         
         url = self.base_url + 'sections'
         params = self.base_params
@@ -69,7 +90,7 @@ class PlexInterface:
                 else:
                     full_title = f'{series_title} ({series_year})'
 
-                content_dict.update({full_title: series_rating_key})
+                content_dict.update({Show.strip_specials(full_title): series_rating_key})
 
             # Add this library to the object's dictionary
             self.library.update({library_title: content_dict})
@@ -77,24 +98,24 @@ class PlexInterface:
         info(f'Found {len(self.library)} Plex libraries ({", ".join(self.library.keys())})')
 
 
-    def refresh_metadata(self, library: str, title: str, year: int=None) -> None:
+    def refresh_metadata(self, library: str, full_title: str) -> None:
         """
         Refresh the given title's (if found in the specified library) metadata. This
-        effectively forces the title cards to be refreshed, if updated/newly added.
+        effectively forces new title cards to be pulled in.
 
-        If the library or the title is not known to this object, no content
-        is refreshed.
+        If the library or full title is not found, no content is refreshed.
 
         :param      library:    The name of the library where the content is. Must be
                                 a valid library name (i.e. matching Plex).
         
-        :param      title:      The title of the content to refresh.
-
-        :param      year:       The year of the content (for matching).
+        :param      full_title: The full name (title, year) of the content to refresh.
         """
 
-        title = title.replace(' - ', ': ')
-        full_title = title if year is None else f'{title} (year)'
+        if not self:
+            return
+
+        # Match based on the stripped full title
+        match_title = Show.strip_specials(full_title)
 
         # Invalid library - error and exit
         if library not in self.library:
@@ -102,14 +123,14 @@ class PlexInterface:
             return
         
         # Valid library, invalid title - error and exit
-        if full_title not in self.library[library]:
+        if match_title not in self.library[library]:
             error(f'Series "{full_title}" was not found under library "{library}" in Plex')
             return
 
-        rating_key = self.library[library][full_title]
+        # Get the plex ratingKey for this title, then PUT a metadata refresh
+        rating_key = self.library[library][match_title]
 
         url = self.base_url + f'metadata/{rating_key}/refresh'
-        
         put(url)
 
         info(f'Refreshed Plex metadata for "{full_title}"', 1)

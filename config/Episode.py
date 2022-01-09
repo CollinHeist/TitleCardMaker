@@ -1,10 +1,31 @@
 from pathlib import Path
 
-from DataFileInterface import DataFileInterface
 from Debug import *
 from TitleCard import TitleCard
 
 class Episode:
+    """
+    This class defines an episode of a series that has a corresponding Title Card.
+    An Episode is defined (and identified) by its season and episode number.
+    Upon initialization, this class splits episode titles into up to two lines (if
+    necessary, as determined by length of the title itself).
+
+    This class is not intended to execute any methods, and is instead intended
+    to contain data for use by other classes.
+
+    An example usage is shown below:
+
+    ```
+    >>> e = Episode(
+    >>>     1, 1, 
+    >>>     '/sources/Show (Year)/', 
+    >>>     '/media/Show (Year)/Season 1/Show (Year) - S01E01.jpg',
+    >>>     'Long Pilot Title: Episode 1 of Season 1'
+    >>> )
+    >>> e.title_top_line, e.title_bottom_line
+    ('Long Pilot Title:', 'Episode 1 of Season 1')
+    ```
+    """
 
     """Character count to begin splitting episode text into 2 lines"""
     MAX_LINE_LENGTH: int = 32
@@ -104,7 +125,8 @@ class Episode:
     def _split_title(title: str) -> (str, str):
         """
         Inner function to split a given title into top and bottom title text.
-        Splitting takes priority on a colon (':') character, and then spaces.
+        Splitting takes priority on some special characters, such as colons,
+        and commas. Final splitting is then done on spaces
         
         :param      title:  The title to be split.
         
@@ -114,11 +136,14 @@ class Episode:
 
         top, bottom = '', title
         if len(title) >= Episode.MAX_LINE_LENGTH:
-            # Only look for colon in the first half of the text to avoid long top lines
-            # for titles with colons in the last part of the title like [.......]: [..]
+            # Only look for colon/comma in the first half of the text to avoid long top lines
+            # for titles with these in the last part of the title like [.......]: [..]
             if ': ' in bottom[:len(bottom)//2]:
                 top, bottom = title.split(': ', 1)
                 top += ':'
+            elif ', ' in bottom[:len(bottom)//2]:
+                top, bottom = title.split(', ', 1)
+                top += ','
             else:
                 top, bottom = title.split(' ', 1)
 

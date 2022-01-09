@@ -9,7 +9,7 @@ from ShowArchive import ShowArchive
 
 class TitleCardManager:
     """
-    This class describes a title card manager. The manager is used to manage
+    This class describes a title card manager. The manager is used to control
     title card and archive creation/management from a high level.
     """
 
@@ -27,11 +27,11 @@ class TitleCardManager:
             e.attrib['name']: Path(e.text) for e in self.config.findall('library')
         }   
 
-        # Establish source base
+        # Establish directory bases
         self.source_base = Path(source_directory)
-        self.archive_base = Path(archive_directory)
+        self.archive_base = Path(archive_directory) if archive_directory else None
 
-        # Intialize each interface
+        # Assign each interface
         self.sonarr_interface = sonarr_interface
         self.database_interface = database_interface
         self.plex_interface = plex_interface
@@ -66,26 +66,37 @@ class TitleCardManager:
             error(f'Config file has typo - cannot parse')
             return
         
-        # Store Show object under each show's full name in the shows dictionary
+        # Store object under each show's full name in the shows dictionary
         for show_element in self.config.findall('show'):
+            # Ensure this show's library exists in the library map, if not error and skip
+            library = show_element.attrib['library']
+            if library not in self.libraries:
+                error(f'Library "{library}" does not have an associated <library> element')
+                continue
+
+            # Create a show object for this element
             show_object = Show(
                 show_element,
                 self.source_base,
-                self.libraries[show_element.attrib['library']],
+                self.libraries[library],
             )
 
-            archive_object = ShowArchive(
-                self.archive_base,
-                show_element,
-                self.source_base,
-                self.libraries[show_element.attrib['library']],
-            )
-
+            # If this show object already exists, skip
             if show_object.full_name in self.shows:
                 continue
 
             self.shows[show_object.full_name] = show_object
-            self.archives[show_object.full_name] = archive_object
+
+            # If an archive is not specified, skip
+            if not self.archive_base:
+                continue
+
+            self.archives[show_object.full_name] = ShowArchive(
+                self.archive_base,
+                show_element,
+                self.source_base,
+                self.libraries[library],
+            )
 
 
     def read_show_source(self) -> None:
@@ -131,11 +142,20 @@ class TitleCardManager:
         Update the title card archives for every show known to this object.
         This calls `Show.update_archive()`.
         
-        :param      show_full_name:  The show full name
+        :param      show_full_name: The shows full name.
         """
 
         for _, show in self.archives.items():
             show.update_archive(self.database_interface)
+
+
+    def create_summaries(self) -> None:
+        """
+        Creates summaries.
+        """
+
+        for _, show in self.archives.items():
+            show.create_summary()
 
 
     def main_loop(self, interval: int=600) -> None:
@@ -151,11 +171,8 @@ class TitleCardManager:
         `check_sonarr_for_new_episodes()`
         `create_missing_title_cards()`
         `update_archive()`.
-
-        And these are executed immediately upon call (waiting `interval` seconds
-        after that first execution).
         
-        :param      interval:   The interval, in seconds, to wait between
+        :param      interval:   The minimum interval, in seconds, to wait between
                                 instances of execution.
         """
 
@@ -165,6 +182,7 @@ class TitleCardManager:
         self.check_sonarr_for_new_episodes()
         self.create_missing_title_cards()
         self.update_archive()
+        self.create_summaries()
 
         # Infinite loop 
         last_execution = datetime.now()
@@ -175,6 +193,7 @@ class TitleCardManager:
                 self.check_sonarr_for_new_episodes()
                 self.create_missing_title_cards()
                 self.update_archive()
+                self.create_summaries()
                 last_execution = datetime.now()
 
             # Calculate how long to sleep

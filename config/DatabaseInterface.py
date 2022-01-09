@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from pathlib import Path
 from pickle import dump, load, HIGHEST_PROTOCOL
 from requests import get
@@ -6,12 +7,18 @@ from urllib.request import urlretrieve
 from Debug import *
 
 class DatabaseInterface:
+    """
+    This class defines an interface to TheMovieDatabase. Once initialized with
+    a valid API key, the primary purpose of this class is to automatically 
+    gather source images for episodes of series.
+    """
 
     """Base URL for sending API requests to TheMovieDB"""
     API_BASE_URL: str = 'https://api.themoviedb.org/3/'
 
     """Filename for where to store blacklisted entries"""
     __BLACKLIST: Path = Path(__file__).parent / '.objects' / 'db_blacklist.pkl'
+    __BLACKLIST_THRESHOLD = 5
 
     """Filename where mappings of series full titles to TMDB ids is stored"""
     __ID_MAP: Path = Path(__file__).parent / '.objects' / 'db_id_map.pkl'
@@ -22,16 +29,6 @@ class DatabaseInterface:
         
         :param      api_key:    The api key used to communicate with TMDB.
         """
-        
-        # Store API key
-        self.__api_key = api_key
-
-        # Attempt to read existing blacklist
-        if self.__BLACKLIST.exists():
-            with self.__BLACKLIST.open('rb') as file_handle:
-                self.__blacklist = load(file_handle)
-        else:
-            self.__blacklist = []
 
         # Attempt to read existing ID map
         if self.__ID_MAP.exists():
@@ -40,18 +37,36 @@ class DatabaseInterface:
         else:
             self.__id_map = {}
 
+        # Attempt to read existing blacklist
+        if self.__BLACKLIST.exists():
+            with self.__BLACKLIST.open('rb') as file_handle:
+                self.__blacklist = load(file_handle)
+        else:
+            self.__blacklist = {}
+
+        # If unspecified, create an inactive object
+        if not api_key:
+            self.__active = False
+            self.__api_key = None
+            return
+
+        self.__active = True
+        
+        # Store API key
+        self.__api_key = api_key
+        
 
     def __bool__(self) -> bool:
         """
-        { function_description }
-        
-        :returns:   True
+        Get the truthiness of this object.
+
+        :returns:   Whether this interface is active orn ot.
         """
 
-        return True
+        return self.__active
 
 
-    def __add_to_blacklist(self, title: str, year: int, season: int, episode: int) -> None:
+    def __update_blacklist(self, title: str, year: int, season: int, episode: int) -> None:
         """
         Adds the given entry to the blacklist; indicating that this exact entry
         shouldn't be queried to TheMovieDB (to prevent unnecessary queries).
@@ -65,17 +80,29 @@ class DatabaseInterface:
         :param      episode:    The entry's episode number.
         """
 
-        # Add to current blacklist
-        self.__blacklist.append(f'{title} ({year})-{season}-{episode}')
+        key = f'{title} ({year})-{season}-{episode}'
+
+        # If previously indexed and next has passed, increase count and set next
+        later = datetime.now() + timedelta(days=1)
+        if key in self.__blacklist:
+            if datetime.now() >= self.__blacklist[key]['next']:
+                # One day has passed, and still failed, increment count
+                self.__blacklist[key]['failures'] += 1
+                self.__blacklist[key]['next'] = later
+            else:
+                return
+        else:
+            # Add new entry to blacklist with 1 failure, next time is in one day
+            self.__blacklist[key] = {'failures': 1, 'next': later}
+
+        warn(f'Query failed {self.__blacklist[key]["failures"]} times', 3)
 
         # Write latest version of blacklist to file, in case program exits
         with self.__BLACKLIST.open('wb') as file_handle:
             dump(self.__blacklist, file_handle, HIGHEST_PROTOCOL)
 
-        info(f'Added "{title} ({year})-{season}-{episode}" to database blacklist', 3)
 
-
-    def __is_in_blacklist(self, title: str, year: int, season: int, episode: int) -> bool:
+    def __is_blacklisted(self, title: str, year: int, season: int, episode: int) -> bool:
         """
         Determines if the specified entry is in the blacklist (i.e. has no entry
         in TheMovieDB).
@@ -91,7 +118,18 @@ class DatabaseInterface:
         :returns:   True if in blacklist, False otherwise.
         """
 
-        return f'{title} ({year})-{season}-{episode}' in self.__blacklist
+        key = f'{title} ({year})-{season}-{episode}'
+
+        # If never indexed before, skip failure check
+        if key not in self.__blacklist:
+            return False
+            
+        if self.__blacklist[key]['failures'] > self.__BLACKLIST_THRESHOLD:
+            return True
+
+        # If we haven't passed next time, then treat as temporary blacklist
+        # i.e. before next = 'blacklisted', after next is not
+        return datetime.now() < self.__blacklist[key]['next']
 
 
     def __add_id_to_map(self, title: str, year: int, id_: int) -> None:
@@ -190,9 +228,27 @@ class DatabaseInterface:
 
     def get_title_card_source_image(self, title: str, year: int, season: int,
                                     episode: int) -> str:
+        """
+        Get the best source image for the requested entry. The URL of this
+        image is returned.
+        
+        :param      title:    The title of the requested series.
+
+        :param      year:     The year of the requested series.
+
+        :param      season:   The season of the requested entry.
+
+        :param      episode:  The episode of the requested entry.
+        
+        :returns:   URL to the 'best' source image for the requested
+                    entry. None if no images are available.
+        """
+
+        if not self:
+            return
 
         # Don't query the database if this episode is in the blacklist
-        if self.__is_in_blacklist(title, year, season, episode):
+        if self.__is_blacklisted(title, year, season, episode):
             return None
 
         # Get the TV id for the provided series+year
@@ -208,13 +264,13 @@ class DatabaseInterface:
         # If 'stills' wasn't in return JSON, episode wasn't found (mismatch)
         if 'stills' not in results:
             warn(f'TheMovieDB has no matching episode for "{title} ({year})" Season {season}, Episode {episode}', 2)
-            self.__add_to_blacklist(title, year, season, episode)
+            self.__update_blacklist(title, year, season, episode)
             return None
 
         # If 'stills' is in JSON, but is an empty list, then database has no images
         if len(results['stills']) == 0:
             warn(f'There are no images for "{title} ({year})" Season {season}, Episode {episode}', 2)
-            self.__add_to_blacklist(title, year, season, episode)
+            self.__update_blacklist(title, year, season, episode)
             return None
 
         best_image = self.__determine_best_image(results['stills'])['file_path']
@@ -230,6 +286,9 @@ class DatabaseInterface:
 
         :param      destination:    The destination for the requested image.
         """
+
+        if not self:
+            return
 
         # Make parent folder structure
         destination.parent.mkdir(parents=True, exist_ok=True)

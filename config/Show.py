@@ -1,4 +1,5 @@
 from pathlib import Path
+from re import match
 
 from DataFileInterface import DataFileInterface
 from Debug import *
@@ -67,6 +68,8 @@ class Show:
             self.source_directory / DataFileInterface.GENERIC_DATA_FILE_NAME
         )
 
+        self.logo = self.source_directory / 'logo.png'
+
         # Create empty set of Episode objects
         self.episodes = {}
 
@@ -82,6 +85,19 @@ class Show:
             f'<Show full_name={self.full_name}, season_map={self.season_map}'
             f', profile={self.profile}, episodes={self.episodes}>'
         )
+
+
+    @staticmethod
+    def strip_specials(text: str) -> str:
+        """
+        Remove all non A-Z characters from the given title.
+        
+        :param      text:   The title to strip of special characters.
+        
+        :returns:   The input `text` with all non A-Z characters removed.
+        """
+
+        return ''.join(filter(lambda c: match('[a-zA-Z0-9]', c), text))
 
 
     def _get_destination(self, data_row: dict) -> Path:
@@ -111,7 +127,8 @@ class Show:
 
     def read_source(self) -> None:
         """
-        { function_description }
+        Read the source file for this show, creating the associated Episode
+        objects.
         """
 
         for data_row in self.file_interface.read():

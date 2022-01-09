@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from Show import Show
+from ShowSummary import ShowSummary
 
 class ShowArchive:
     """
@@ -54,6 +55,7 @@ class ShowArchive:
         base_show = Show(*args, **kwargs)
 
         self.shows = []
+        self.summaries = []
         for profile_string in base_show.profile._get_valid_profile_strings():
             # Create show object for this profile
             show = Show(*args, **kwargs)
@@ -66,9 +68,10 @@ class ShowArchive:
             show.read_source()
 
             self.shows.append(show)
+            self.summaries.append(ShowSummary(show))
 
 
-    def update_archive(self, *args: tuple, **kwargs: dict) -> int:
+    def update_archive(self, *args: tuple, **kwargs: dict) -> None:
         """
         Call `create_missing_title_cards()` on each archive-specific
         `Show` object in this object. This effectively creates all missing
@@ -80,4 +83,13 @@ class ShowArchive:
         """
         for show in self.shows:
             show.create_missing_title_cards(*args, **kwargs)
+
+
+    def create_summary(self) -> None:
+        """
+        Creates a summary.
+        """
+
+        for show in self.summaries:
+            show.create()
 

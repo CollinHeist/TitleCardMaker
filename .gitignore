@@ -19,5 +19,6 @@ __pypackages__/
 .DS_Store
 source/
 Media/
-config/objects/
+config/.objects/
 *.xml
+fonts/
