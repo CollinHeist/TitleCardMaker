@@ -1,13 +1,12 @@
-from datetime import datetime, timedelta
 from pathlib import Path
 from time import sleep
 from xml.etree.ElementTree import parse, ParseError
 
-from Debug import *
-from Show import Show
-from ShowArchive import ShowArchive
+from modules.Debug import *
+from modules.Show import Show
+from modules.ShowArchive import ShowArchive
 
-class TitleCardManager:
+class Manager:
     """
     This class describes a title card manager. The manager is used to control
     title card and archive creation/management from a high level.
@@ -79,6 +78,7 @@ class TitleCardManager:
                 show_element,
                 self.source_base,
                 self.libraries[library],
+                show_element.attrib['library'],
             )
 
             # If this show object already exists, skip
@@ -108,6 +108,9 @@ class TitleCardManager:
         for _, show in self.shows.items():
             show.read_source()
 
+        for _, archive in self.archives.items():
+            archive.read_source()
+
 
     def check_sonarr_for_new_episodes(self) -> None:
         """
@@ -130,10 +133,8 @@ class TitleCardManager:
         """
 
         for _, show in self.shows.items():
-            status = show.create_missing_title_cards(self.database_interface)
-            
-            # If a new title card was created, update Plex
-            if status == show.CREATED_NEW_TITLE_CARDS:
+            # A show that created new cards will return True
+            if show.create_missing_title_cards(self.database_interface):
                 self.plex_interface.refresh_metadata(show.library, show.full_name)
 
 
@@ -158,11 +159,9 @@ class TitleCardManager:
             show.create_summary()
 
 
-    def main_loop(self, interval: int=600) -> None:
+    def run(self) -> None:
         """
-        Infinite loop meant to be the entrypoint of this class. All primary
-        methods are called at the given interval. Multithreading is not used,
-        so there is no guarantee these methods will be executed in time.
+        Run the manager and exit.
 
         The following functions are executed in the following order:
 
@@ -170,10 +169,8 @@ class TitleCardManager:
         `read_show_source()`
         `check_sonarr_for_new_episodes()`
         `create_missing_title_cards()`
-        `update_archive()`.
-        
-        :param      interval:   The minimum interval, in seconds, to wait between
-                                instances of execution.
+        `update_archive()`
+        `create_summaries()`
         """
 
         # Execute everything before waiting
@@ -183,21 +180,5 @@ class TitleCardManager:
         self.create_missing_title_cards()
         self.update_archive()
         self.create_summaries()
-
-        # Infinite loop 
-        last_execution = datetime.now()
-        while True:
-            if datetime.now() - last_execution >= timedelta(seconds=interval):
-                self.create_shows()
-                self.read_show_source()
-                self.check_sonarr_for_new_episodes()
-                self.create_missing_title_cards()
-                self.update_archive()
-                self.create_summaries()
-                last_execution = datetime.now()
-
-            # Calculate how long to sleep
-            wait_time = interval - (datetime.now() - last_execution).seconds
-            sleep(max(wait_time, 0))
 
         

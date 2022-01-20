@@ -1,23 +1,26 @@
 from abc import ABC, abstractmethod
 
-from ImageMagickInterface import ImageMagickInterface
-import preferences
+from modules.ImageMagickInterface import ImageMagickInterface
+import modules.preferences as preferences
 
-class TitleCardType(ABC):
+class ImageMaker(ABC):
     """
-    Abstract class that outlines the creation of a title card maker profile.
-
-    A title card profile is responsible for taking title card information, such
-    as season and episode numbers, fonts, etc., and then producing a title card
-    according to that class's own functions. 
+    Abstract class that outlines the necessary attributes for any class that
+    creates images.
 
     All instances of this class must implement `create()` as the main callable
     function to produce a title card. The specifics of how that card looks are
-    completely customizable.
+    completely customizeable.
     """
 
     @abstractmethod
     def __init__(self) -> None:
+        """
+        Initializes a new instance. This gives all subclasses access to an
+        `ImageMagickInterface` object that uses the docker ID found within
+        preferences. 
+        """
+
         self.image_magick = ImageMagickInterface(preferences.imagemagick_docker_id)
 
 

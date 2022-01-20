@@ -1,10 +1,11 @@
 from argparse import ArgumentParser, ArgumentTypeError, SUPPRESS
 from pathlib import Path
 
-from DatabaseInterface import DatabaseInterface
-import preferences
-from SonarrInterface import SonarrInterface
-from TitleCardMaker import TitleCardMaker
+from modules.DatabaseInterface import DatabaseInterface
+from modules.GenreMaker import GenreMaker
+import modules.preferences as preferences
+from modules.SonarrInterface import SonarrInterface
+from modules.TitleCardMaker import TitleCardMaker
 
 parser = ArgumentParser(description='Manual fixes for the TitleCardMaker')
 
@@ -32,6 +33,12 @@ title_card_group.add_argument('--font-color', '--color', type=str, default=Title
                               metavar='#HEX',
                               help='Specify a custom font color to use for this card')
 
+# Argument group for genre maker
+genre_group = parser.add_argument_group('Genre Cards', 'Manual genre card creation')
+genre_group.add_argument('--genre-card', type=str, nargs=3, default=SUPPRESS,
+                         metavar=('SOURCE', 'GENRE', 'DESTINATION'),
+                         help='Create a genre card with the given text')
+
 # Argument group for fixes relating to Sonarr
 sonarr_group = parser.add_argument_group('Sonarr', 'Fixes for how the maker interacts with Sonarr')
 sonarr_group.add_argument('--sonarr-list-ids', type=str, nargs=2, default=SUPPRESS,
@@ -46,6 +53,11 @@ tmdb_group = parser.add_argument_group('TheMovieDatabase', 'Fixes for how the Ma
 tmdb_group.add_argument('--tmdb-force-id', type=str, nargs=3, default=SUPPRESS, action='append',
                         metavar=('TITLE', 'YEAR', 'TMDB_ID'),
                         help='Manually specify an ID for a show')
+tmdb_group.add_argument('--tmdb-download-images', nargs=6, default=SUPPRESS, action='append',
+                        metavar=('API_KEY', 'TITLE', 'YEAR', 'SEASON', 'EPISODES', 'DIRECTORY'),
+                        help='Download the best title card source image for the given episode')
+tmdb_group.add_argument('--delete-blacklist', action='store_true',
+                        help='Whether to delete the existing TMDb blacklist.')
 
 # Check given arguments
 args = parser.parse_args()
@@ -68,6 +80,14 @@ if hasattr(args, 'title_card'):
         hide_season=not bool(args.season),
     ).create()
 
+# Execute genre card related options
+if hasattr(args, 'genre_card'):
+    GenreMaker(
+        source=Path(args.genre_card[0]),
+        genre=args.genre_card[1],
+        output=Path(args.genre_card[2]),
+    ).create()
+
 # Execute Sonarr related options
 if hasattr(args, 'sonarr_list_ids'):
     SonarrInterface(args.sonarr_list_ids[0], args.sonarr_list_ids[1]).list_all_series_id()
@@ -79,4 +99,21 @@ if hasattr(args, 'sonarr_force_id'):
 # Execute TMDB related options
 if hasattr(args, 'tmdb_force_id'):
     for arg_set in args.tmdb_force_id:
-        DatabaseInterface.manually_specify_id(*arg_set)
+        DatabaseInterface.manually_specify_id(
+            title=arg_set[0], year=arg_set[1], id_=arg_set[2]
+        )
+
+if hasattr(args, 'tmdb_download_images'):
+    for arg_set in args.tmdb_download_images:
+        DatabaseInterface.manually_download_season(
+            api_key=arg_set[0],
+            title=arg_set[1],
+            year=int(arg_set[2]),
+            season=int(arg_set[3]),
+            episode_count=int(arg_set[4]),
+            directory=Path(arg_set[5]),
+        )
+
+if hasattr(args, 'delete_blacklist'):
+    if args.delete_blacklist:
+        DatabaseInterface.delete_blacklist()

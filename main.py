@@ -1,10 +1,10 @@
 from argparse import ArgumentParser
 
-from DatabaseInterface import DatabaseInterface
-from PlexInterface import PlexInterface
-import preferences
-from SonarrInterface import SonarrInterface
-from TitleCardManager import TitleCardManager
+from modules.DatabaseInterface import DatabaseInterface
+from modules.PlexInterface import PlexInterface
+import modules.preferences as preferences
+from modules.SonarrInterface import SonarrInterface
+from modules.Manager import Manager
 
 # Construct argument parser, adding required arguments
 parser = ArgumentParser(description='Setup the TitleCardMaker')
@@ -19,12 +19,8 @@ parser.add_argument('--archive', type=str, nargs='?',
                     metavar='DIRECTORY',
                     help='Archive directory where all types of title cards are stored')
 
-parser.add_argument('--validate-fonts', action='store_true',
-                    help='Check if a font has all the necessary characters before creating any title cards')
-
-parser.add_argument('--interval', type=int, nargs='?', default=600,
-                    metavar='INTERVAL',
-                    help='How often to execute the main loop of the title card maker')
+# parser.add_argument('--validate-fonts', action='store_true',
+#                     help='Check if a font has all the necessary characters before creating any title cards')
 
 # Add arguments for Sonarr
 sonarr_group = parser.add_argument_group('Sonarr', 'Sonarr options to automatically pull episode titles')
@@ -57,8 +53,8 @@ args = parser.parse_args()
 if args.magick_docker_id:
     preferences.update_imagemagick_docker_id(args.magick_docker_id)
     
-# Create TitleCardManager based on provided arguments
-tcm = TitleCardManager(
+# Create Manager based on provided arguments
+tcm = Manager(
     args.config,
     args.source,
     args.archive,
@@ -67,4 +63,4 @@ tcm = TitleCardManager(
     PlexInterface(*args.plex),
 )
 
-tcm.main_loop(args.interval)
+tcm.run()

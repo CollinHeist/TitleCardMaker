@@ -1,33 +1,34 @@
 from pathlib import Path
 from re import match
 
-from DataFileInterface import DataFileInterface
-from Debug import *
-from Episode import Episode
-from Profile import Profile
-from TitleCard import TitleCard
+from modules.DataFileInterface import DataFileInterface
+from modules.Debug import *
+from modules.Episode import Episode
+from modules.Profile import Profile
+from modules.TitleCard import TitleCard
 
 class Show:
     """
-    This class describes a show.
+    This class describes a show. A Show is initialzied by a <show> XML element, and
+    is given a base source and media path. The show then encapsulates those
+    attributes, as well as permitting operations for this show's episodes.
     """
 
-    HAS_NO_NEW_EPISODES: int = 0
-    HAS_NEW_EPISODES: int = 1
+    def __init__(self, show_element: 'Element', source: Path, media: Path,
+                 library_name: str=None) -> None:
 
-    NO_NEW_TITLE_CARDS: int = 0
-    CREATED_NEW_TITLE_CARDS: int = 1
-
-
-    def __init__(self, show_element: 'Element', source: Path, media: Path) -> None:
         """
         Constructs a new instance.
         
-        :param      show_element:   The show element
+        :param      show_element:   The show element to parse for creation details.
 
-        :param      source:         The source
+        :param      source:         The base source directory - source images will
+                                    be searched in a subfolder for this show.
 
-        :param      media:          The media
+        :param      media:          The base media directory to place created title
+                                    cards at.
+
+        :param      library_name:   Name of the media libary within Plex.
         """
 
         # Parse <show name="..."> attribute
@@ -59,7 +60,7 @@ class Show:
             self.season_map,
         )
 
-        self.library = media.name
+        self.library = library_name if library_name else media.name
         self.source_directory = source / self.full_name
         self.media_directory = media / self.full_name
 
@@ -68,6 +69,7 @@ class Show:
             self.source_directory / DataFileInterface.GENERIC_DATA_FILE_NAME
         )
 
+        # A transparent logo for use by a `ShowSummary` object.
         self.logo = self.source_directory / 'logo.png'
 
         # Create empty set of Episode objects
@@ -144,13 +146,16 @@ class Show:
             )
 
 
-    def check_sonarr_for_new_episodes(self, sonarr_interface: 'SonarrInterface') -> int:
+    def check_sonarr_for_new_episodes(self,
+                                      sonarr_interface: 'SonarrInterface') -> bool:
         """
-        Query the provided SonarrInterface object, checking if the returned episodes
-        exist in this show's associated source. All new entries are added to this 
-        object's DataFileInterface.
+        Query the provided SonarrInterface object, checking if the returned
+        episodes exist in this show's associated source. All new entries are
+        added to this object's DataFileInterface.
         
-        :param  sonarr_interface:   The sonarr interface to query.
+        :param      sonarr_interface:   The Sonarr interface to query.
+
+        :returns:   Whether or not Sonarr returned any new episodes.
         """
 
         # Refresh data from file interface
@@ -161,56 +166,64 @@ class Show:
             all_episodes = sonarr_interface.get_all_episodes_for_series(self.name, self.year)
         except ValueError:
             error(f'Cannot find series "{self.full_name}" in Sonarr')
-            return self.HAS_NO_NEW_EPISODES
+            return False
 
         # For each episode, check if the data matches any contained Episode objects
         has_new = False
-        for new_episode in all_episodes:
-            # Compare against every Episode in this Show
-            key = f'{new_episode["season_number"]}-{new_episode["episode_number"]}'
-            if key in self.episodes and self.episodes[key].matches(new_episode):
-                continue
+        if all_episodes:
+            for new_episode in all_episodes:
+                # Compare against every Episode in this Show
+                key = f'{new_episode["season_number"]}-{new_episode["episode_number"]}'
+                if key in self.episodes and self.episodes[key].matches(new_episode):
+                    continue
 
-            # Construct data for new row
-            has_new = True
-            top, bottom = Episode.split_episode_title(new_episode.pop('title'))
-            new_episode.update({'title_top': top, 'title_bottom': bottom})
+                # Construct data for new row
+                has_new = True
+                top, bottom = Episode.split_episode_title(new_episode.pop('title'))
+                new_episode.update({'title_top': top, 'title_bottom': bottom})
 
-            info(f'Sonarr indicates new episode ({new_episode})')
+                info(f'Sonarr indicates new episode ({new_episode})')
 
-            # Add entry to data file through interface
-            self.file_interface.add_entry(**new_episode)
+                # Add entry to data file through interface
+                self.file_interface.add_entry(**new_episode)
 
         # If new entries were added, re-parse source file
         if has_new:
             self.read_source()
-            return self.HAS_NEW_EPISODES
-        else:
-            return self.HAS_NO_NEW_EPISODES
+            return True
+
+        return False
 
 
     def create_missing_title_cards(self,
-                                   database_interface: 'DatabaseInterface'=None) -> int:
+                                   database_interface: 'DatabaseInterface'=None) -> bool:
         """
-        Creates missing title cards.
+        Creates any missing title cards for each episode of this show.
+
+        :param      database_interface: Optional interface to TMDb for attempting
+                                        to download any source images that are
+                                        missing.
+
+        :returns:   True if any new cards were created, false otherwise.
         """
 
         info(f'Processing Show "{self.full_name}"')
-        created_new_cards = TitleCard.NO_TITLE_CARD_CREATED
+        created_new_cards = False
 
         # Go through each episode for this show
         for _, episode in self.episodes.items():
             try:
                 title_card = TitleCard(episode, self.profile)
             except Exception as e:
-                error(f'Error creating TitleCard ({e}) for episode ({episode})')
+                error(f'Error creating TitleCard ({e}) for episode ({episode})', 1)
+                continue
 
-            # If the title card doesn't exist...
+            # If the title card source image doesn't exist, attempt to download it
             if not episode.source.exists():
                 # Already queried the database, skip
                 if not episode.in_database:
                     continue
-
+                    
                 # If a DatabaseInterface is provided, query for this episode's source image
                 if database_interface:
                     image_url = database_interface.get_title_card_source_image(
@@ -218,6 +231,7 @@ class Show:
                         self.year,
                         episode.season_number,
                         episode.episode_number,
+                        episode.abs_number,
                     )
 
                     if image_url is None:
@@ -229,10 +243,7 @@ class Show:
             # Source exists, create the title card
             created_new_cards |= title_card.create()
 
-        if created_new_cards == TitleCard.NO_TITLE_CARD_CREATED:
-            return self.NO_NEW_TITLE_CARDS
-
-        return self.CREATED_NEW_TITLE_CARDS
+        return created_new_cards
 
 
 

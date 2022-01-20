@@ -5,7 +5,7 @@ RESET = '\033[00m'
 
 def info(text: str, level: int=0) -> None:
     """
-    { function_description }
+    Output some text as information.
     
     :param      text:  The text to log at info level.
     """
@@ -16,7 +16,7 @@ def info(text: str, level: int=0) -> None:
 
 def warn(text: str, level: int=0) -> None:
     """
-    { function_description }
+    Output some text as a warning.
     
     :param      text:  The text
     """
@@ -27,7 +27,7 @@ def warn(text: str, level: int=0) -> None:
 
 def error(text: str, level: int=0) -> None:
     """
-    { function_description }
+    Output some text as an error.
     
     :param      text:  The text
     """

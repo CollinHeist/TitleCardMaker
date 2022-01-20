@@ -1,16 +1,17 @@
-from TitleCardMaker import TitleCardMaker
+from modules.TitleCardMaker import TitleCardMaker
 
 class Profile:
     """
-    This class describes a profile. A profile determines whether to use
-    custom or generic font and season titles.
+    This class describes a profile. A profile defines whether to use
+    specific aspects of a card - i.e. custom/generic font, custom/generic
+    season titles.
     """
 
     """Default profile for unspecified <profile> tag"""
     DEFAULT_PROFILE: str = 'custom-custom'
 
     def __init__(self, profile_element: 'Element', font_element: 'Element',
-                 season_map: dict, bypass: dict=None) -> None:
+                 season_map: dict) -> None:
         """
         Constructs a new instance of a Profile object. Initializing the
         profile's font, and color.
@@ -87,10 +88,12 @@ class Profile:
 
     def _get_valid_profile_strings(self) -> list:
         """
-        Gets the valid profiles.
+        Gets the valid applicable profiles for this profile. For example,
+        for a profile with only generic attributes, it's invalid to
+        apply a custom font profile from there.
         
-        :returns:   The valid profiles.
-        :rtype:     list
+        :returns:   The profile strings that can be created as subprofiles
+                    from this object.
         """
 
         # Determine whether this profile uses custom season titles
@@ -129,9 +132,10 @@ class Profile:
 
     def convert_profile_string(self, profile_string: str) -> None:
         """
-        { function_description }
+        Convert this profile to the provided profile string. This modifies
+        what characteristics are presented by the object.
         
-        :param      profile_string:  The profile string
+        :param      profile_string:  The profile string to update to.
         """
 
         # Update this object's data
@@ -188,7 +192,7 @@ class Profile:
         This is any abitrary function for text processing. Typically
         `str.upper()` or `str.lower()`.
         
-        :param      episode_text:   The episode text
+        :param      episode_text:   The episode text to convert.
         
         :returns:   The processed text
         """

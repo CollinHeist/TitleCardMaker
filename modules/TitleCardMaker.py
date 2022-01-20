@@ -1,12 +1,11 @@
 from pathlib import Path
 from re import findall
-from subprocess import run
 
-from Debug import *
-import preferences
-from TitleCardType import TitleCardType
+from modules.Debug import *
+import modules.preferences as preferences
+from modules.ImageMaker import ImageMaker
 
-class TitleCardMaker(TitleCardType):
+class TitleCardMaker(ImageMaker):
     """
     This class describes the object that actually makes the title card using
     programmed ImageMagick commands. 
@@ -21,17 +20,17 @@ class TitleCardMaker(TitleCardType):
            provided text line(s), font, and color.
         3. Create the output file's necessary parent folders.
         4. If no season text is required, add just the episode count and skip to 8.
-        5. If season text is required, query ImageMagick's metrics to get the end
-           width of the season and episode text.
+        5. If season text is required, query ImageMagick's to get the end width of
+           the season and episode text.
         6. Create a transparent image of only the provided season and episode text
-           of the dimensions computed above.
+           of the dimensions computed in 5.
         7. Place the intermediate transparent text image on top of the image with
            title text.
         8. The resulting title card file is placed at the provided output path. 
-        9. Delete all intermediate files used in the creation of the title card.
+        9. Delete all intermediate files created above.
     """
 
-    """Map of 'case' values to their relavant functions"""
+    """Map of 'case' values to their relevant functions"""
     DEFAULT_CASE_VALUE = 'upper'
     CASE_FUNCTION_MAP = {
         'upper': str.upper,
@@ -100,6 +99,8 @@ class TitleCardMaker(TitleCardType):
         self.source_file = source
         self.output_file = output_file
 
+        # Since all text is sent to ImageMagick wrapped in quotes, escape actual quotes
+        # found within the episode text
         self.title_top_line = title_top_line.replace('"', r'\"')
         self.title_bottom_line = title_bottom_line.replace('"', r'\"') if title_bottom_line else None
 
@@ -145,7 +146,7 @@ class TitleCardMaker(TitleCardType):
         return [
             f'-fill black',
             f'-stroke black',
-            f'-strokewidth 3',
+            f'-strokewidth 3', #3, euphoria is 0.5
         ]
 
 
@@ -211,7 +212,6 @@ class TitleCardMaker(TitleCardType):
             f'"{self.__SOURCE_WITH_GRADIENT_PATH.resolve()}"',
         ])
 
-        # run(command, shell=True)
         self.image_magick.run(command)
 
         return self.__SOURCE_WITH_GRADIENT_PATH
@@ -237,7 +237,6 @@ class TitleCardMaker(TitleCardType):
             f'"{self.__GRADIENT_WITH_TITLE_PATH.resolve()}"',
         ])
 
-        # run(command, shell=True)
         self.image_magick.run(command)
 
         return self.__GRADIENT_WITH_TITLE_PATH
@@ -267,7 +266,6 @@ class TitleCardMaker(TitleCardType):
             f'"{self.__GRADIENT_WITH_TITLE_PATH.resolve()}"',
         ])
 
-        # run(command, shell=True)
         self.image_magick.run(command)
 
         return self.__GRADIENT_WITH_TITLE_PATH
@@ -292,7 +290,6 @@ class TitleCardMaker(TitleCardType):
             f'"{self.output_file.resolve()}"',
         ])
 
-        # run(command, shell=True)
         self.image_magick.run(command)
 
 
@@ -320,7 +317,6 @@ class TitleCardMaker(TitleCardType):
             f'null: 2>&1 | grep Metrics'
         ])
 
-        # metrics = run(command, shell=True, capture_output=True).stdout.decode()
         metrics = self.image_magick.run(command, capture_output=True).stdout.decode()
         
         widths = list(map(int, findall('width: (\d+)', metrics)))
@@ -428,32 +424,3 @@ class TitleCardMaker(TitleCardType):
         self.image_magick.delete_intermediate_images(
             *([gradient_image, titled_image] + ([] if self.hide_season else [series_count_image]))
         )
-
-
-    def is_valid_font(self, font: str) -> bool:
-        """
-        Determines whether the specified font is a valid font for ImageMagick commands.
-        
-        :param      font:   The font being checked. Either a font name or filepath
-                            to a font file
-        
-        :returns:   True if the specified font is valid font, False otherwise.
-        """
-
-        # If the font given is a file, no need to check ImageMagick's list
-        if Path(font).exists():
-            return True
-
-        # Query ImageMagick for font list, then grep just the font name
-        command = 'convert -list font | grep "Font: "'
-
-        font_list = self.image_magick.run_get_stdout(command, capture_output=True).split('\n')
-
-        # Check the given font against all fonts returned
-        for font_string in font_list:
-            if font in findall(': (.*)', font_string):
-                return True
-
-        return False
-
-

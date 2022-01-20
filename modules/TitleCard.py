@@ -1,24 +1,27 @@
-from Debug import *
-from TitleCardMaker import TitleCardMaker
+from modules.Debug import *
+from modules.TitleCardMaker import TitleCardMaker
 
 class TitleCard:
     """
-    This class describes a title card.
+    This class describes a title card. This class is responsible for
+    applying a given profile to the Episode details and initializing a
+    TitleCardMaker with those details. After initialization, `create()`
+    is just a glorified wrapper for `TitleCardMaker.create()`.
     """
 
-    NO_TITLE_CARD_CREATED: int = 0
-    TITLE_CARD_CREATED: int = 1
-
+    """Extensions of the input source image and output title card"""
     INPUT_CARD_EXTENSION: str = '.jpg'
     OUTPUT_CARD_EXTENSION: str = '.jpg'
 
     def __init__(self, episode: 'Episode', profile: 'Profile') -> None:
         """
-        Constructs a new instance.
+        Constructs a new instance of this class.
         
-        :param      episode:  The episode
+        :param      episode:    The episode whose TitleCard this corresponds to.
 
-        :param      profile:  The profile
+        :param      profile:    The profile to apply to the creation of
+                                this title card. This ensures the correct
+                                season text, and font characteristics are used.
         """
         
         self.episode = episode
@@ -41,23 +44,25 @@ class TitleCard:
         self.file = episode.destination
 
 
-    def create(self, database_interface: 'DatabaseInterface'=None) -> int:
+    def create(self) -> bool:
         """
         Create this title card. If the card already exists, a new one
-        is not created.
+        is not created. Return whether a card was created.
+
+        :returns:   True if a title card was created, otherwise False.
         """
 
         # If the card already exists, exit
         if self.file.exists():
-            return self.NO_TITLE_CARD_CREATED
+            return False
 
         # If the input source doesn't exist, warn and exit
         if not self.episode.source.exists():
             warn(f'Source image {self.episode.source.resolve()} does not exist', 2)
-            return self.NO_TITLE_CARD_CREATED
-
+            return False
+            
         info(f'Creating title card for {self.episode.destination.name}', 2)
         self.maker.create()
 
-        return self.TITLE_CARD_CREATED
+        return True
         

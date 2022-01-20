@@ -1,23 +1,24 @@
 from csv import reader, writer
 from pathlib import Path
 
-from Debug import *
+from modules.Debug import *
 
 class DataFileInterface:
     """
     This class is used to interface with a show's data file. 
 
     This can be used for reading from and writing to the files for the purpose of
-    adding new episodes, or reading existing ones.
+    adding new or reading existing episodes.
     """
 
     GENERIC_DATA_FILE_NAME: str = 'data.tsv'
     DELIMETER: str = '\t'
 
-    """String that indicates empty text in title text."""
+    """String that indicates empty text in title text"""
     EMPTY_VALUE: str ='_EMPTY_'
 
-    GENERIC_HEADERS: list = ['title_top', 'title_bottom', 'season', 'episode']
+    """Label headers found at the top of all data files"""
+    GENERIC_HEADERS: list = ['title_top', 'title_bottom', 'season', 'episode', 'abs_number']
 
     def __init__(self, data_file: Path) -> None:
         """
@@ -37,7 +38,7 @@ class DataFileInterface:
 
         # Create an empty data file if nothing exists, then exit (no data to read)
         if not self.file.exists():
-            warn(f'Source file "{self.file.resolve()}" does not exist - creating blank')
+            info(f'Source file "{self.file.resolve()}" does not exist - creating blank')
             self.create_new_data_file()
             return
             
@@ -49,7 +50,7 @@ class DataFileInterface:
                     continue
 
                 # Skip invalid rows
-                if len(row) != 4:
+                if len(row) < 4:
                     error(f'Row {row_number} of {self.file.resolve()} is invalid ({row})')
                     continue
 
@@ -57,17 +58,36 @@ class DataFileInterface:
                 title_top = '' if row[0] == self.EMPTY_VALUE else row[0]
                 title_bottom = '' if row[1] == self.EMPTY_VALUE else row[1]
 
-                yield {
+                # Create dictionary for this row, add the abs_number if present
+                row_dict = {
                     'title': (title_top, title_bottom),
                     'season_number': row[2],
                     'episode_number': row[3],
                 }
 
+                # Rows with the (optional) abs_number value should be parsed accordingly
+                if len(row) == 5:
+                    row_dict['abs_number'] = row[4]
 
-    def add_entry(self, title_top: str, title_bottom: str,
-                  season_number: int, episode_number: int) -> None:
+                yield row_dict
+
+
+    def add_entry(self, title_top: str, title_bottom: str, season_number: int,
+                  episode_number: int, abs_number: int=None) -> None:
         """
         Add the info provided to this object's data file.
+
+        :param      title_top:      Top line of the episode title text for
+                                    the entry.
+
+        :param      title_bottom:   Bottom line of the episode title text for
+                                    the entry.
+
+        :param      season_number:  Season number of the entry being added.
+
+        :param      episode_number: Episode number of the entry being added.
+
+        :param      abs_number:     Optional absolute number of the entry.
         """
 
         if not self.file.exists():
@@ -86,12 +106,15 @@ class DataFileInterface:
 
             # Construct new row
             row = [title_top, title_bottom, season_number, episode_number]
+            row += [abs_number] if abs_number != None else []
             file_writer.writerow(row)
 
 
     def create_new_data_file(self) -> None:
         """
-        Creates a new data file.
+        Creates a new data file for this interface. This will construct the
+        necessary parent folders, and exits if the file already exists. The
+        generic headers are written to the first line of the file.
         """
 
         # Exit if the file already exists
@@ -115,12 +138,15 @@ class DataFileInterface:
         last row).
         """
 
+        # Exit if the file doesnt' exist
         if not self.file.exists():
             return
 
+        # Read existign content
         with self.file.open('r') as file_handle:
             existing = file_handle.read()
 
+        # If the file ends without a newline character, add one
         if not existing.endswith('\n'):
             with self.file.open('a') as file_handle:
                 file_handle.write('\n')

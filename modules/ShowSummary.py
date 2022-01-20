@@ -2,22 +2,24 @@ from math import ceil
 from pathlib import Path
 from random import sample
 
-from Debug import *
-import preferences
-from ImageMagickInterface import ImageMagickInterface
-from Show import Show
-from TitleCardMaker import TitleCardMaker
+from modules.Debug import *
+from modules.Show import Show
+from modules.TitleCardMaker import TitleCardMaker
+from modules.ImageMaker import ImageMaker
 
-class ShowSummary:
+class ShowSummary(ImageMaker):
     """
     This class describes a show summary. A show summary is a random subset of title
     cards from a show's profile, montaged into (at most) a 3x3 grid, with a logo at
-    the top. The intention is to quickly identify the title card's visually.
+    the top. The intention is to quickly visually identify the title cards.
+
+    This class is a type of ImageMaker.
     """
 
+    """Default color for the background of the summary image"""
     BACKGROUND_COLOR: str = '#1A1A1A'
-    CREATED_BY_COLOR: str ='#E9724D'
 
+    """Paths to intermediate images created in the process of making a summary."""
     __MONTAGE_PATH: Path = Path(__file__).parent / '.objects' / 'montage.png'
     __MONTAGE_WITH_HEADER_PATH: Path = Path(__file__).parent / '.objects' / 'header.png'
     __RESIZED_LOGO_PATH: Path = Path(__file__).parent / '.objects' / 'resized_logo.png'
@@ -35,8 +37,8 @@ class ShowSummary:
         :param      show:  The show
         """
 
-        # Initialize interface to ImageMagick
-        self.image_magick = ImageMagickInterface(preferences.imagemagick_docker_id)
+        # Initialize parent object (for the ImageMagickInterface)
+        super().__init__()
         
         # This summary's logo is an attribute of the provided show
         self.show = show
@@ -51,7 +53,7 @@ class ShowSummary:
         # Warn if this show has no episodes to work with
         episode_count = len(available_episodes)
         if episode_count == 0:
-            warn(f'Cannot create Show Summary for {show} - has no episodes')
+            warn(f'Cannot create Show Summary for {show.full_name} - has no episodes')
 
         # Get a random subset of images to create the summary with
         # Sort that subset my season/episode number so the montage appears chronological
@@ -247,9 +249,9 @@ class ShowSummary:
 
         # Add created by tag - summary is completed
         self._add_created_by(montage_and_logo)
-
-        info(f'Created ImageSummary', 1)
         
+        info(f'Created ImageSummary', 1)
+
         # Delete temporary files
         self.image_magick.delete_intermediate_images(
             montage, montage_and_header, logo, montage_and_logo

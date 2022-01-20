@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from Show import Show
-from ShowSummary import ShowSummary
+from modules.Show import Show
+from modules.ShowSummary import ShowSummary
 
 class ShowArchive:
     """
@@ -71,6 +71,15 @@ class ShowArchive:
             self.summaries.append(ShowSummary(show))
 
 
+    def read_source(self) -> None:
+        """
+        Calls `read_source()` on each show contaiend within this archive.
+        """
+
+        for show in self.shows:
+            show.read_source()
+
+
     def update_archive(self, *args: tuple, **kwargs: dict) -> None:
         """
         Call `create_missing_title_cards()` on each archive-specific
@@ -81,6 +90,7 @@ class ShowArchive:
 
         :param      kwargs:  The keywords arguments
         """
+
         for show in self.shows:
             show.create_missing_title_cards(*args, **kwargs)
 

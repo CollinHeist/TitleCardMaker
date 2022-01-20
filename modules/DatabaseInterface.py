@@ -4,13 +4,13 @@ from pickle import dump, load, HIGHEST_PROTOCOL
 from requests import get
 from urllib.request import urlretrieve
 
-from Debug import *
+from modules.Debug import *
 
 class DatabaseInterface:
     """
-    This class defines an interface to TheMovieDatabase. Once initialized with
-    a valid API key, the primary purpose of this class is to automatically 
-    gather source images for episodes of series.
+    This class defines an interface to TheMovieDatabase (TMDb). Once initialized 
+    with a valid API key, the primary purpose of this class is to automatically 
+    gather source images of episodes.
     """
 
     """Base URL for sending API requests to TheMovieDB"""
@@ -18,6 +18,7 @@ class DatabaseInterface:
 
     """Filename for where to store blacklisted entries"""
     __BLACKLIST: Path = Path(__file__).parent / '.objects' / 'db_blacklist.pkl'
+    """After how many failed requests should that entry be permanently blacklisted."""
     __BLACKLIST_THRESHOLD = 5
 
     """Filename where mappings of series full titles to TMDB ids is stored"""
@@ -29,6 +30,9 @@ class DatabaseInterface:
         
         :param      api_key:    The api key used to communicate with TMDB.
         """
+
+        # Create objects directory if it does not exist
+        self.__ID_MAP.parent.mkdir(parents=True, exist_ok=True)
 
         # Attempt to read existing ID map
         if self.__ID_MAP.exists():
@@ -60,7 +64,7 @@ class DatabaseInterface:
         """
         Get the truthiness of this object.
 
-        :returns:   Whether this interface is active orn ot.
+        :returns:   Whether this interface is active or not.
         """
 
         return self.__active
@@ -104,8 +108,8 @@ class DatabaseInterface:
 
     def __is_blacklisted(self, title: str, year: int, season: int, episode: int) -> bool:
         """
-        Determines if the specified entry is in the blacklist (i.e. has no entry
-        in TheMovieDB).
+        Determines if the specified entry is in the blacklist (i.e. should
+        not bother querying TMDb.
         
         :param      title:      The show's title.
 
@@ -115,7 +119,7 @@ class DatabaseInterface:
 
         :param      episode:    The entry's episode number.
         
-        :returns:   True if in blacklist, False otherwise.
+        :returns:   True if the entry is blacklisted, False otherwise.
         """
 
         key = f'{title} ({year})-{season}-{episode}'
@@ -150,10 +154,50 @@ class DatabaseInterface:
 
 
     @staticmethod
-    def manually_specify_id(*args, **kwargs) -> None:
+    def manually_specify_id(title: str, year: int, id_: int) -> None:
         """Public (static) implementation of `__add_id_to_map()`."""
 
-        DatabaseInterface(None).__add_id_to_map(*args, **kwargs)
+        DatabaseInterface(None).__add_id_to_map(title, year, id_)
+
+
+    @staticmethod
+    def manually_download_season(api_key: str, title: str, year: int, season: int,
+                                 episode_count: int, directory: Path) -> None:
+        """
+        Download episodes 1-episode_count of the requested season for the given show.
+        They will be named as s{season}e{episode}.jpg.
+        
+        :param      api_key:        The api key for sending requsts to TMDb.
+
+        :param      title:          The title of the requested show.
+
+        :param      year:           The year of the requested show (for matching).
+
+        :param      season:         The season to download.
+
+        :param      episode_count:  The number of episodes to download
+
+        :param      directory:      The directory to place the downloaded images
+                                    in.
+        """
+
+        # Create a temporary interface object for this function
+        dbi = DatabaseInterface(api_key)
+
+        for episode in range(1, episode_count+1):
+            image_url = dbi.get_title_card_source_image(title, year, season, episode)
+
+            if image_url:
+                dbi.download_image(image_url, directory / f's{season}e{episode}.jpg')
+
+
+    @staticmethod
+    def delete_blacklist() -> None:
+        """
+        Delete the blacklist file referenced by this class.
+        """
+
+        DatabaseInterface.__BLACKLIST.unlink(missing_ok=True)
 
 
     def __get_tv_id(self, title: str, year: int) -> int:
@@ -227,25 +271,27 @@ class DatabaseInterface:
 
 
     def get_title_card_source_image(self, title: str, year: int, season: int,
-                                    episode: int) -> str:
+                                    episode: int, abs_number: int=None) -> str:
         """
         Get the best source image for the requested entry. The URL of this
         image is returned.
         
-        :param      title:    The title of the requested series.
+        :param      title:      The title of the requested series.
 
-        :param      year:     The year of the requested series.
+        :param      year:       The year of the requested series.
 
-        :param      season:   The season of the requested entry.
+        :param      season:     The season of the requested entry.
 
-        :param      episode:  The episode of the requested entry.
+        :param      episode:    The episode of the requested entry.
+
+        :param      abs_number: The absolute episode number of the entry.
         
         :returns:   URL to the 'best' source image for the requested
                     entry. None if no images are available.
         """
 
         if not self:
-            return
+            return None
 
         # Don't query the database if this episode is in the blacklist
         if self.__is_blacklisted(title, year, season, episode):
@@ -260,6 +306,13 @@ class DatabaseInterface:
 
         # Make the GET request
         results = get(url=url, params=params).json()
+
+        # If an absolute number has been given and the first query failed, try again
+        # breakpoint()
+        if abs_number != None and 'success' in results and not results['success']:
+            info(f'Trying absolute episode number {abs_number}', 2)
+            url = f'{self.API_BASE_URL}tv/{tv_id}/season/{season}/episode/{abs_number}/images'
+            results = get(url=url, params=params).json()
 
         # If 'stills' wasn't in return JSON, episode wasn't found (mismatch)
         if 'stills' not in results:

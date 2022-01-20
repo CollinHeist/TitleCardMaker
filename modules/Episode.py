@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from Debug import *
-from TitleCard import TitleCard
+from modules.Debug import *
+from modules.TitleCard import TitleCard
 
 class Episode:
     """
@@ -31,22 +31,30 @@ class Episode:
     MAX_LINE_LENGTH: int = 32
 
     def __init__(self, season_number: int, episode_number: int,
-                 base_source: Path, destination: Path, title: str) -> None:
+                 base_source: Path, destination: Path, title: str,
+                 abs_number: int=None) -> None:
         """
         Constructs a new instance.
 
-        :param      season_number:  The season number
+        :param      season_number:  The season number of this episode.
 
-        :param      episode_number: The episode number
+        :param      episode_number: The episode number of this episode.
 
-        :param      base_source:    The source
+        :param      base_source:    The base source directory to look for
+                                    source images within.
 
-        :param      title:          The title
+        :param      destination:    The destination for the title card
+                                    associated with this episode.
+
+        :param      title:          The title (full text) of this episode.
+
+        :param      abs_number:     The absolute episode number of this episode.
         """
 
         # Set object attributes
         self.season_number = int(season_number)
         self.episode_number = int(episode_number)
+        self.abs_number = abs_number
 
         # Set in/out paths
         name = f's{season_number}e{episode_number}{TitleCard.INPUT_CARD_EXTENSION}'

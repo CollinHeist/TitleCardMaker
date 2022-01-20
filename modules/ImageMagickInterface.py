@@ -1,13 +1,30 @@
 from subprocess import run
 
-from Debug import *
+from modules.Debug import *
 
 class ImageMagickInterface:
-    def __init__(self, docker_id: str) -> None:
+    """
+    This class describes an interface to ImageMagick. If initialized with a
+    valid docker ID, then all given ImageMagick commands will be run through
+    that docker container.
+
+    Note: This class does not validate the provided docker ID corresponds to
+    a valid docker container. Commands are passed to docker so long as the
+    ID is non-zero (truthy).
+
+    The command I use for launching an ImageMagick container is:
+
+    >>> docker run --name="ImageMagick" --entrypoint="/bin/bash" \
+        -dit -v "/mnt/user/":"/mnt/user/" 'dpokidov/imagemagick'
+    """
+
+    def __init__(self, docker_id: str=None) -> None:
         """
-        Constructs a new instance.
+        Constructs a new instance. If docker_id is None/0/False, then
+        commands will not use a docker container.
         
-        :param      docker_id:  The docker identifier
+        :param      docker_id:  The docker ID for sending requests to
+                                ImageMagick.
         """
         
         # Definitions of this interface, i.e. whether to use docker and how
@@ -32,7 +49,6 @@ class ImageMagickInterface:
                                 function.
         """
         
-# docker run --name="ImageMagick" --entrypoint="/bin/bash" -dit -v "/mnt/user/":"/mnt/user/" 'dpokidov/imagemagick'
         
         # If a docker image ID is specified, execute the command in that container
         # otherwise, execute on the host machine (no docker wrapper)

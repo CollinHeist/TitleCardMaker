@@ -3,8 +3,8 @@ from pathlib import Path
 from pickle import dump, load, HIGHEST_PROTOCOL
 from requests import get
 
-from Debug import *
-from Show import Show
+from modules.Debug import *
+from modules.Show import Show
 
 class SonarrInterface:
     """
@@ -27,6 +27,9 @@ class SonarrInterface:
         :param      api_key:    The api key for requesting data to/from
                                 Sonarr.
         """
+
+        # Create objects directory if it does not exist
+        self.__ID_MAP.parent.mkdir(parents=True, exist_ok=True)
 
         # Attempt to read existing ID map
         if self.__ID_MAP.exists():
@@ -123,7 +126,8 @@ class SonarrInterface:
 
     def list_all_series_id(self) -> None:
         """
-        
+        List all the series ID used by Sonarr. This can help manually map a series
+        title to an ID.
         """
 
         # Construct GET arguments
@@ -132,6 +136,10 @@ class SonarrInterface:
         
         # Query Sonarr to get JSON of all series in the library
         all_series = self.__get(url, params)
+
+        if 'error' in all_series:
+            error(f'Sonarr returned error "{all_series["error"]}"')
+            return None
 
         # Go through each series
         for show in all_series:
@@ -206,14 +214,21 @@ class SonarrInterface:
                     continue
 
             # Skip episodes whose titles aren't in Sonarr yet (to avoid naming them TBA)
-            if episode['title'] == 'TBA':
+            if episode['title'].lower() == 'tba':
                 continue
 
-            episode_info.append({
+            new_info = {
                 'season_number':    int(episode['seasonNumber']),
                 'episode_number':   int(episode['episodeNumber']),
                 'title':            episode['title'],
-            })
+                # 'filename':         Path(episode['episodeFile']['path']).stem,
+            }
+
+            # Non-cannon episodes don't have an absolute number
+            if 'absoluteEpisodeNumber' in episode:
+                new_info['abs_number'] = int(episode['absoluteEpisodeNumber'])
+
+            episode_info.append(new_info)
 
         return episode_info
 
@@ -249,11 +264,12 @@ class SonarrInterface:
         
         :param      title:  The title of the requested show.
         
-        :returns:   List of dictionaries of episode data.
+        :returns:   List of dictionaries of episode data. None if the 
+                    interface is invalid/unitialized.
         """
 
         if not self:
-            return
+            return None
 
         series_id = self._get_series_id(title, year)
 

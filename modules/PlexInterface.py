@@ -3,8 +3,8 @@ from xml.etree.ElementTree import fromstring
 
 from requests import get, put
 
-from Debug import *
-from Show import Show
+from modules.Debug import *
+from modules.Show import Show
 
 class PlexInterface:
     """
@@ -59,7 +59,14 @@ class PlexInterface:
         url = self.base_url + 'sections'
         params = self.base_params
 
-        response = get(url=url, params=params)
+        # Attempt to query Plex, if it errors, the URL was probably wrong - set inactive
+        try:
+            response = get(url=url, params=params)
+        except Exception as e:
+            error(f'Cannot query Plex. Returned error: "{e}"')
+            self.__active = False
+            return None
+
         library_xml = fromstring(response.text)
 
         for library in library_xml.findall('Directory'):
