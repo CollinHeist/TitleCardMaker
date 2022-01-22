@@ -152,6 +152,9 @@ class Episode:
             elif ', ' in bottom[:len(bottom)//2]:
                 top, bottom = title.split(', ', 1)
                 top += ','
+            elif '( ' in bottom[:len(bottom)//2]:
+                top, bottom = title.split('( ', 1)
+                top += '('
             else:
                 top, bottom = title.split(' ', 1)
 

@@ -38,6 +38,9 @@ genre_group = parser.add_argument_group('Genre Cards', 'Manual genre card creati
 genre_group.add_argument('--genre-card', type=str, nargs=3, default=SUPPRESS,
                          metavar=('SOURCE', 'GENRE', 'DESTINATION'),
                          help='Create a genre card with the given text')
+genre_group.add_argument('--genre-card-batch', type=Path, default=SUPPRESS,
+                         metavar=('SOURCE_DIRECTORY'),
+                         help='Create all genre cards for images in the given directory based on their file names')
 
 # Argument group for fixes relating to Sonarr
 sonarr_group = parser.add_argument_group('Sonarr', 'Fixes for how the maker interacts with Sonarr')
@@ -57,7 +60,7 @@ tmdb_group.add_argument('--tmdb-download-images', nargs=6, default=SUPPRESS, act
                         metavar=('API_KEY', 'TITLE', 'YEAR', 'SEASON', 'EPISODES', 'DIRECTORY'),
                         help='Download the best title card source image for the given episode')
 tmdb_group.add_argument('--delete-blacklist', action='store_true',
-                        help='Whether to delete the existing TMDb blacklist.')
+                        help='Whether to delete the existing TMDb blacklist (executed first)')
 
 # Check given arguments
 args = parser.parse_args()
@@ -88,6 +91,15 @@ if hasattr(args, 'genre_card'):
         output=Path(args.genre_card[2]),
     ).create()
 
+if hasattr(args, 'genre_card_batch'):
+    for file in args.genre_card_batch.glob('*'):
+        if file.suffix.lower() in ('.jpg', '.jpeg', '.png', '.tiff', '.gif'):
+            GenreMaker(
+                source=file,
+                genre=file.stem.upper(),
+                output=Path(file.parent / f'{file.stem}-GenreCard{file.suffix}'),
+            ).create()
+
 # Execute Sonarr related options
 if hasattr(args, 'sonarr_list_ids'):
     SonarrInterface(args.sonarr_list_ids[0], args.sonarr_list_ids[1]).list_all_series_id()
@@ -97,6 +109,10 @@ if hasattr(args, 'sonarr_force_id'):
         SonarrInterface.manually_specify_id(*arg_set)
 
 # Execute TMDB related options
+if hasattr(args, 'delete_blacklist'):
+    if args.delete_blacklist:
+        DatabaseInterface.delete_blacklist()
+
 if hasattr(args, 'tmdb_force_id'):
     for arg_set in args.tmdb_force_id:
         DatabaseInterface.manually_specify_id(
@@ -114,6 +130,3 @@ if hasattr(args, 'tmdb_download_images'):
             directory=Path(arg_set[5]),
         )
 
-if hasattr(args, 'delete_blacklist'):
-    if args.delete_blacklist:
-        DatabaseInterface.delete_blacklist()
