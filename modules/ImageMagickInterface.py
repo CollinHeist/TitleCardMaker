@@ -42,11 +42,11 @@ class ImageMagickInterface:
 
         :param      command:    The command to execute
         
-        :param      args:       Any arguments to pass to the subprocess `run`
-                                function.
+        :param      args:       The arguments to pass to `subprocess.run()`.
 
-        :param      kwargs:     Any keyword arguments to pass to the subprocess `run`
-                                function.
+        :param      kwargs:     The keyword arguments to pass to `subprocess.run()`.
+
+        :returns:   The return of the `subprocess.run()` function execution.
         """
         
         
@@ -60,13 +60,15 @@ class ImageMagickInterface:
         return run(command, shell=True, *args, **kwargs)
 
 
-    def run_get_stdout(self, command: str, *args: tuple, **kwargs: dict):
+    def run_get_stdout(self, command: str, *args: tuple, **kwargs: dict) -> str:
         """
         Wrapper for `run()`, but return the byte-decoded stdout immediately.
         
-        :param      command:    The command
-        :param      args:     The arguments
-        :param      kwargs:   The keywords arguments
+        :param      command:    The command being executed.
+        :param      args:       The arguments to pass to `subprocess.run()`.
+        :param      kwargs:     The keywords arguments to pass to `subprocess.run()`.
+
+        :returns:   The decoded stdout output of the executed command.
         """
 
         return self.run(command, capture_output=True, *args, **kwargs).stdout.decode()
