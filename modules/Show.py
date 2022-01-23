@@ -40,18 +40,12 @@ class Show:
         # Full name is name (year)
         self.full_name = f'{self.name} ({self.year})'
 
-        # Parse <show season_count="..."> attribute
-        self.season_count = int(show_element.attrib['seasons'])
-
-        # Parse <show/season_map> element (if present)
-        # Parse <season_map> tag (if present) - default is 1:Season 1, 2:Season 2, etc.
-        self.season_map = {n: f'Season {n}' for n in range(1, self.season_count+1)}
-        self.season_map.update({0: 'Specials'})
-
+        # Parse <season_map> tag (if present) - all unspecified seasons
+        # will be given "Season x" text 
+        self.season_map = {n: f'Season {n}' for n in range(1, 999)}
+        self.season_map[0] = 'Specials'
         for season in show_element.findall('season_map/'):
-            self.season_map.update({
-                int(season.attrib['number']): season.attrib['name']
-            })
+            self.season_map[int(season.attrib['number'])] = season.attrib['name']
 
         # Parse <profile> tag (if present) into a Profile object
         self.profile = Profile(
@@ -84,8 +78,8 @@ class Show:
         """
 
         return (
-            f'<Show full_name={self.full_name}, season_map={self.season_map}'
-            f', profile={self.profile}, episodes={self.episodes}>'
+            f'<Show full_name={self.full_name}, profile={self.profile}, '
+            f'episodes={self.episodes}>'
         )
 
 
