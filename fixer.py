@@ -46,8 +46,7 @@ genre_group.add_argument('--genre-card-batch', type=Path, default=SUPPRESS,
 
 # Argument group for fixes relating to Sonarr
 sonarr_group = parser.add_argument_group('Sonarr', 'Fixes for how the maker interacts with Sonarr')
-sonarr_group.add_argument('--sonarr-list-ids', type=str, nargs=2, default=SUPPRESS,
-                          metavar=('URL', 'API_KEY'),
+sonarr_group.add_argument('--sonarr-list-ids', action='store_true',
                           help='List all internal IDs used by Sonarr - use with grep')
 sonarr_group.add_argument('--sonarr-force-id', type=str, nargs=3, default=SUPPRESS, action='append',
                           metavar=('TITLE', 'YEAR', 'SONARR_ID'),
@@ -109,8 +108,8 @@ if hasattr(args, 'genre_card_batch'):
             ).create()
 
 # Execute Sonarr related options
-if hasattr(args, 'sonarr_list_ids'):
-    SonarrInterface(args.sonarr_list_ids[0], args.sonarr_list_ids[1]).list_all_series_id()
+if args.sonarr_list_ids:
+    SonarrInterface(pp.sonarr_url, pp.sonarr_api_key).list_all_series_id()
 
 if hasattr(args, 'sonarr_force_id'):
     for arg_set in args.sonarr_force_id:
@@ -119,7 +118,7 @@ if hasattr(args, 'sonarr_force_id'):
 if hasattr(args, 'add_absolute_numbers'):
     # Create DataFileInterface and SonarrInterface
     dfi = DataFileInterface(Path(args.add_absolute_numbers[2]))
-    si = SonarrInterface(pp.get_sonarr_url(), pp.get_sonarr_api_key())
+    si = SonarrInterface(pp.sonarr_url, pp.sonarr_api_key)
 
     # Get a list of all entries without absolute numbers, ask Sonarr for absolute number
     modify_list = []

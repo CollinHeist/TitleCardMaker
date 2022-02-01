@@ -367,7 +367,7 @@ class SonarrInterface(WebInterface):
         :param      id_:    The Sonarr ID for this series.
         """
 
-        SonarrInterface(None, None).__add_id_to_map(f'{title} ({year})', id_)
+        SonarrInterface('', '').__add_id_to_map(f'{title} ({year})', id_)
         
 
 
