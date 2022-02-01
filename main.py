@@ -1,66 +1,39 @@
 from argparse import ArgumentParser
+from pathlib import Path
 
-from modules.DatabaseInterface import DatabaseInterface
-from modules.PlexInterface import PlexInterface
-import modules.preferences as preferences
-from modules.SonarrInterface import SonarrInterface
+from modules.Debug import *
+from modules.PreferenceParser import PreferenceParser
+from modules.preferences import set_preference_parser
 from modules.Manager import Manager
 
-# Construct argument parser, adding required arguments
-parser = ArgumentParser(description='Setup the TitleCardMaker')
-parser.add_argument('config', type=str, 
-                    help='Path to the config XML file defining how to create all title cards')
+# Default path for a preference file to parse
+DEFAULT_PREFERNCE_FILE = Path('preferences.yml')
 
-parser.add_argument('source', type=str,
-                    help='Directory where all title card source data/images are stored')
+# Set up argument parser
+parser = ArgumentParser(description='Start the TitleCardMaker')
+parser.add_argument('-p', '--preference-file', type=Path,
+                    default=DEFAULT_PREFERNCE_FILE,
+                    help='Manually specify the preference file for the TitleCardMaker')
+parser.add_argument('-r', '--run', action='count', default=0,
+                    help='How many times to run the TitleCardMaker back-to-back')
 
-# Add optional arguments
-parser.add_argument('--archive', type=str, nargs='?',
-                    metavar='DIRECTORY',
-                    help='Archive directory where all types of title cards are stored')
-
-# parser.add_argument('--validate-fonts', action='store_true',
-#                     help='Check if a font has all the necessary characters before creating any title cards')
-
-# Add arguments for Sonarr
-sonarr_group = parser.add_argument_group('Sonarr', 'Sonarr options to automatically pull episode titles')
-sonarr_group.add_argument('--sonarr', type=str, nargs=2, default=[None, None],
-                          metavar=('URL', 'API_KEY'),
-                          help='Sonarr URL and API Key - see Sonarr/Settings/General/Security')
-
-# Add arguments for TheMovieDB
-tmdb_group = parser.add_argument_group('TheMovieDatabase', 'TheMovieDatabase options to automatically pull title card source images')
-tmdb_group.add_argument('--tmdb', type=str, default=None,
-                        metavar='KEY',
-                        help='TheMovieDB API key - see https://www.themoviedb.org/settings/api')
-
-# Add arguments for Plex
-plex_group = parser.add_argument_group('Plex', 'Plex options to automatically refresh title cards')
-plex_group.add_argument('--plex', type=str, nargs=2, default=[None, None],
-                        metavar=('URL', 'XTOKEN'),
-                        help='Plex URL and X-Token - see https://support.plex.tv/articles/204059436')
-
-# Add arguments for interfacing wtih ImageMagick
-imagemagick_group = parser.add_argument_group('ImageMagick', 'Options for how to use ImageMagick')
-imagemagick_group.add_argument('--magick-docker-id', type=str, default=None,
-                               metavar='ID',
-                               help='Docker ID of a container running Imagemagick - if unspecified, the host ImageMagick is used')
-
-# Check given arguments
+# Parse given arguments
 args = parser.parse_args()
 
-# Update global preferences
-if args.magick_docker_id:
-    preferences.update_imagemagick_docker_id(args.magick_docker_id)
-    
-# Create Manager based on provided arguments
-tcm = Manager(
-    args.config,
-    args.source,
-    args.archive,
-    SonarrInterface(*args.sonarr),
-    DatabaseInterface(args.tmdb),
-    PlexInterface(*args.plex),
-)
+# Check if preference file exists
+if not args.preference_file.exists():
+    error(f'Preference file "{args.preference.resolve()}" does not exist')
+    exit(1)
 
-tcm.run()
+# Read the preference file, verify it is valid and exit if not
+pp = PreferenceParser(args.preference_file)
+if not pp.valid:
+    exit(1)
+
+# Store the valid preference parser in the global namespace
+set_preference_parser(pp)
+
+# Create and run the manager --run many times
+for _ in range(args.run):
+    tcm = Manager()
+    tcm.run()

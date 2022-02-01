@@ -1,3 +1,6 @@
+from re import match
+
+from modules.Debug import *
 from modules.TitleCardMaker import TitleCardMaker
 
 class Profile:
@@ -10,198 +13,212 @@ class Profile:
     """Default profile for unspecified <profile> tag"""
     DEFAULT_PROFILE: str = 'custom-custom'
 
-    def __init__(self, profile_element: 'Element', font_element: 'Element',
-                 season_map: dict) -> None:
+    def __init__(self, font_color: str, font_size: float, font: str,
+                 font_case: str, font_replacements: dict, hide_seasons: bool,
+                 season_map: dict, episode_range: dict, map_or_range: bool,
+                 episode_text_format: str) -> None:
         """
         Constructs a new instance of a Profile object. Initializing the
         profile's font, and color.
-        
-        :param      profile_element:    The XML Element <profile> object
-                                        from a config. Or None if absent.
-
-        :param      font_element:       The XML Element <font> object from
-                                        a config. Or None if absent.
-
-        :param      season_map:         Dictionary mapping season numbers
-                                        to season titles.
         """
 
-        # Parse <profile> element if given
-        if profile_element is None:
-            self._profile = self.DEFAULT_PROFILE
-        else:
-            self._profile = profile_element.text.lower()
-
-        self.__use_custom_season_title = self._profile.split('-')[0] == 'custom'
-        self.hide_season_title = self._profile.split('-')[0] == 'none'
-        self.__use_custom_font = self._profile.split('-')[1] == 'custom'
-
-        ## Parse <font> element if given
-        # Parse <font></font> text
-        self.__custom_font = getattr(font_element, 'text', TitleCardMaker.TITLE_DEFAULT_FONT.resolve())
-
-        # Parse <show size=""> attribute
-        try:
-            self.__custom_size = float(font_element.attrib['size'][:-1]) / 100.0
-        except:
-            self.__custom_size = 1.0
-
-        # Parse <show color=""> attribute
-        try:
-            self.__custom_color = font_element.attrib['color']
-        except:
-            self.__custom_color = TitleCardMaker.TITLE_DEFAULT_COLOR
-
-        # Parse <show case=""> attribute
-        try:
-            self.__custom_case = font_element.attrib['case'].lower()
-        except:
-            self.__custom_case = TitleCardMaker.DEFAULT_CASE_VALUE
-
-        # Set object attributes
-        if not self.__use_custom_font:
-            self.font = TitleCardMaker.TITLE_DEFAULT_FONT.resolve()
-            self.font_size = 1.0
-            self.color = TitleCardMaker.TITLE_DEFAULT_COLOR
-            self.case = TitleCardMaker.CASE_FUNCTION_MAP[TitleCardMaker.DEFAULT_CASE_VALUE]
-        else:
-            self.font = self.__custom_font
-            self.font_size = self.__custom_size
-            self.color = self.__custom_color
-            self.case = TitleCardMaker.CASE_FUNCTION_MAP[self.__custom_case]
-
+        self.font_color = font_color
+        self.font_size = font_size
+        self.font = font
+        self.font_case = TitleCardMaker.CASE_FUNCTION_MAP[font_case]
+        self.font_replacements = font_replacements
+        self.hide_season_title = hide_seasons
         self.__season_map = season_map
+        self.__episode_range = episode_range
+        self.__map_or_range = map_or_range
+        self.episode_text_format = episode_text_format
+
+        self.__use_custom_seasons = True
+        self.__use_custom_font = True
 
 
-    def __repr__(self) -> str:
-        """
-        Returns a unambiguous string representation of the object (for debug...).
-        
-        :returns:   String representation of the object.
-        """
-
-        return (
-            f'<Profile font={self.font}, font_size={self.font_size}, '
-            f'color={self.color}, case={self.case}>'
-        )
-
-
-    def _get_valid_profile_strings(self) -> list:
+    def _get_valid_profiles(self) -> list:
         """
         Gets the valid applicable profiles for this profile. For example,
         for a profile with only generic attributes, it's invalid to
         apply a custom font profile from there.
         
-        :returns:   The profile strings that can be created as subprofiles
+        :returns:   The profiles that can be created as subprofiles
                     from this object.
         """
 
         # Determine whether this profile uses custom season titles
         has_custom_season_titles = False
-        for number, title in self.__season_map.items():
-            if number == 0:
-                if title.lower() != 'specials':
-                    has_custom_season_titles = True
-                    break
-            else:
-                if title.lower() != f'season {number}':
-                    has_custom_season_titles = True
-                    break
+        if self.episode_text_format != 'EPISODE {episode_number}':
+            has_custom_season_titles = True
+        elif self.__episode_range != {}:
+            has_custom_season_titles = True
+        else:
+            for number, title in self.__season_map.items():
+                if number == 0:
+                    if title.lower() != 'specials':
+                        has_custom_season_titles = True
+                        break
+                else:
+                    if title.lower() != f'season {number}':
+                        has_custom_season_titles = True
+                        break
 
         # Determine whether this profile uses a custom font
         has_custom_font = \
             (self.font != TitleCardMaker.TITLE_DEFAULT_FONT) or \
             (self.font_size != 1.0) or \
-            (self.color != TitleCardMaker.TITLE_DEFAULT_COLOR) or \
-            (self.case != TitleCardMaker.CASE_FUNCTION_MAP[TitleCardMaker.DEFAULT_CASE_VALUE])
+            (self.font_color != TitleCardMaker.TITLE_DEFAULT_COLOR) or \
+            (self.font_replacements != TitleCardMaker.DEFAULT_FONT_REPLACEMENTS) or \
+            (self.font_case != TitleCardMaker.CASE_FUNCTION_MAP[TitleCardMaker.DEFAULT_CASE_VALUE])
 
         # Get list of profile strings applicable to this object
-        valid_profiles = ['generic-generic'] + (['generic-custom'] if has_custom_font else [])
+        valid_profiles = [{'seasons': 'generic', 'font': 'generic'}]
+        if has_custom_font:
+            valid_profiles.append({'seasons': 'generic', 'font': 'custom'})
+            
         if has_custom_season_titles:
-            valid_profiles += ['custom-generic']
+            valid_profiles.append({'seasons': 'custom', 'font': 'generic'})
             if has_custom_font:
-                valid_profiles += ['custom-custom']
+                valid_profiles.append({'seasons': 'custom', 'font': 'custom'})
 
         if self.hide_season_title:
-            valid_profiles += ['none-generic']
+            valid_profiles.append({'seasons': 'hidden', 'font': 'generic'})
             if has_custom_font:
-                valid_profiles += ['none-custom']
+                valid_profiles.append({'seasons': 'hidden', 'font': 'custom'})
 
         return valid_profiles
 
 
-    def convert_profile_string(self, profile_string: str) -> None:
+    def convert_profile_string(self, seasons: str, font: str) -> None:
         """
-        Convert this profile to the provided profile string. This modifies
+        Convert this profile to the provided profile attributes. This modifies
         what characteristics are presented by the object.
         
-        :param      profile_string:  The profile string to update to.
+        
         """
 
         # Update this object's data
-        self.__use_custom_season_title = profile_string.split('-')[0] == 'custom'
-        self.hide_season_title = profile_string.split('-')[0] == 'none'
-        self.__use_custom_font = profile_string.split('-')[1] == 'custom'
+        self.__use_custom_seasons = (seasons == 'custom')
+        self.hide_season_title = (seasons == 'hidden')
+        self.__use_custom_font = (font == 'custom')
 
-        if self.__use_custom_font:
-            self.font = self.__custom_font
-            self.font_size = self.__custom_size
-            self.color = self.__custom_color
-            self.case = TitleCardMaker.CASE_FUNCTION_MAP[self.__custom_case]
-        else:
+        # If the new profile has a generic font, reset font attributes
+        if not self.__use_custom_font:
             self.font = TitleCardMaker.TITLE_DEFAULT_FONT
             self.font_size = 1.0
-            self.color = TitleCardMaker.TITLE_DEFAULT_COLOR
-            self.case = TitleCardMaker.CASE_FUNCTION_MAP[TitleCardMaker.DEFAULT_CASE_VALUE]
+            self.font_color = TitleCardMaker.TITLE_DEFAULT_COLOR
+            self.font_replacements = TitleCardMaker.DEFAULT_FONT_REPLACEMENTS
+            self.font_case = TitleCardMaker.CASE_FUNCTION_MAP[
+                TitleCardMaker.DEFAULT_CASE_VALUE
+            ]
 
 
-    def get_season_text(self, season_number: int) -> str:
+    def get_season_text(self, season_number: int, abs_number: int=None) -> str:
         """
         Gets the season text for the given season number, after applying this
         profile's 'rules' about season text.
         
         :param      season_number:  The season number.
         
-        :returns:   The season text. '' if season text is hidden in this profile.
+        :returns:   The season text for the given entry as defined by this
+                    profile.
         """
 
+        # If this profile has hidden season titles, return blank string
         if self.hide_season_title:
             return ''
 
-        if self.__use_custom_season_title:
+        # Generic season titles
+        if not self.__use_custom_seasons:
+            return 'Specials' if season_number == 0 else f'Season {season_number}'
+
+        # Custom season titles and method is season map
+        if self.__map_or_range == 'map':
+            return self.__season_map[season_number]
+        
+        # Custom season titles using episode range, check for absolute number
+        if abs_number == None:
+            # Episode range, but episode has no absolute number
+            if season_number != 0: # Don't warn on specials, rarely have range
+                warn(f'Episode range preferred, but episode has no absolute '
+                     f'number', 1)
+            return self.__season_map[season_number]
+        elif abs_number not in self.__episode_range:
+            # Absolute number doesn't have episode range, fallback on season map
+            warn(f'Episode {abs_number} does not fall into specified range', 1)
             return self.__season_map[season_number]
 
-        return 'Specials' if season_number == 0 else f'Season {season_number}'
+        # Absolute number is provided and falls into mapped episode ranges
+        return self.__episode_range[abs_number]
 
 
-    def get_episode_text(self, episde_number: int) -> str:
+    def get_episode_text(self, episode_number: int, abs_number: int=None)-> str:
         """
-        Gets the episode text.
+        Gets the episode text for the given episode number, as defined by this
+        profile.
         
-        :param      episde_number:  The episde number.
+        :param      episode_number: The episode number.
+
+        :param      abs_number:     The absolute episode number. 
         
-        :returns:   The episode text.
+        :returns:   The episode text defined by this profile.
         """
 
-        return f'Episode {episde_number}'
+        # Custom season tag can also indicate custom episode text format
+        if self.__use_custom_seasons:
+            # Warn if absolute isn't given, but is requested
+            if '{abs_number}' in self.episode_text_format and abs_number ==None:
+                warn(f'Episode text formatting uses absolute episode number, '
+                     f'but episode {episode_number} has no absolute number.')
+
+            return self.episode_text_format.format(
+                episode_number=episode_number,
+                abs_number=abs_number if abs_number != None else '',
+            )
+
+        return f'EPISODE {episode_number}'
 
 
     def convert_title(self, episode_text: str) -> str:
         """
-        Wrap the given episode text through this profile's case setting.
-        This is any abitrary function for text processing. Typically
-        `str.upper()` or `str.lower()`.
+        Convert the given episode text through this profile's settings. This is
+        any combination of text substitutions, case functions such as
+        `str.upper()` or `str.lower()`, and optionally removing text that
+        matches the format of this profile's episode text format.
+
+        For example, if the episode format string was
+        'Chapter {episode_number}', and the given `episode_text` was 'Chapter 1:
+        Pilot', then the returned text (excluding any replacements or case
+        mappings) would be 'Pilot'.
         
         :param      episode_text:   The episode text to convert.
         
-        :returns:   The processed text
+        :returns:   The processed text.
         """
 
-        # The default font has swapped the () and [] characters - unswap them
-        if self.font == TitleCardMaker.TITLE_DEFAULT_FONT:
-            episode_text = episode_text.translate(
-                str.maketrans({'(': '[', ')': ']', '[': '(', ']': ')'})
-            )
+        # Modify the title if it contains the episode text format
+        if self.__use_custom_seasons:
+            # Replace the episode number identifers with regex string '\d+:?'
+            format_string = self.episode_text_format
+            if '{abs_number}' in format_string:
+                adj_format = format_string.replace('{abs_number}', '\d+:?')
+            elif '{episode_number}' in format_string:
+                adj_format = format_string.replace('{episode_number}', '\d+:?')
 
-        return self.case(episode_text)
+            # Identify if the given title has any matching episode format text
+            text_to_remove = match(adj_format, episode_text)
+            if text_to_remove:
+                info(f'Removed episode number format text "'
+                     f'{text_to_remove.group()}" from episode title', 1)
+                episode_text = episode_text.replace(text_to_remove.group(), '')
+
+        # Create translation table for this profile's replacements
+        translation = str.maketrans(self.font_replacements)
+
+        # Apply translation table to this text
+        translated_text = episode_text.translate(translation)
+
+        # Apply this profile's font function to the translated text
+        return self.font_case(translated_text)
 

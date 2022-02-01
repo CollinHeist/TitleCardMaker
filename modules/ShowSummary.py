@@ -19,6 +19,9 @@ class ShowSummary(ImageMaker):
     """Default color for the background of the summary image"""
     BACKGROUND_COLOR: str = '#1A1A1A'
 
+    """Default filename of the logo file to search for (referenced by other classes)"""
+    LOGO_FILENAME: str = 'logo.png'
+
     """Paths to intermediate images created in the process of making a summary."""
     __MONTAGE_PATH: Path = Path(__file__).parent / '.objects' / 'montage.png'
     __MONTAGE_WITH_HEADER_PATH: Path = Path(__file__).parent / '.objects' / 'header.png'

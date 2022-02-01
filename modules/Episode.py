@@ -54,11 +54,11 @@ class Episode:
         # Set object attributes
         self.season_number = int(season_number)
         self.episode_number = int(episode_number)
-        self.abs_number = abs_number
+        self.abs_number = int(abs_number) if abs_number != None else None
 
         # Set in/out paths
-        name = f's{season_number}e{episode_number}{TitleCard.INPUT_CARD_EXTENSION}'
-        self.source = base_source / name
+        source_name = f's{season_number}e{episode_number}{TitleCard.INPUT_CARD_EXTENSION}'
+        self.source = base_source / source_name
         self.destination = destination
 
         # If title is a list, parse into top/botton text
@@ -68,9 +68,6 @@ class Episode:
             self.title_bottom_line = title[1]
         else:
             self.title_top_line, self.title_bottom_line = self._split_title(title)
-
-        # Set attribute for whether this episode exists in the Database, for checking later
-        self.in_database = True
 
 
     def __repr__(self) -> str:

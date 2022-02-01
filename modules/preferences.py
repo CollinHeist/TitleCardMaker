@@ -1,7 +1,7 @@
-# Global Preferences
+from modules.Debug import *
 
-imagemagick_docker_id: str = None
-
-def update_imagemagick_docker_id(to: str) -> None:
-    global imagemagick_docker_id
-    imagemagick_docker_id = to
+# Global PreferenceParser object
+pp = None
+def set_preference_parser(to: 'PreferenceParser') -> None:
+    global pp
+    pp = to

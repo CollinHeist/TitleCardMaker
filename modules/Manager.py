@@ -1,114 +1,112 @@
-from pathlib import Path
-from time import sleep
-from xml.etree.ElementTree import parse, ParseError
-
 from modules.Debug import *
+from modules.PlexInterface import PlexInterface
+import modules.preferences as global_preferences
 from modules.Show import Show
 from modules.ShowArchive import ShowArchive
+from modules.SonarrInterface import SonarrInterface
+from modules.TMDbInterface import TMDbInterface
 
 class Manager:
     """
     This class describes a title card manager. The manager is used to control
-    title card and archive creation/management from a high level.
+    title card and archive creation/management from a high level, and is meant
+    to be the main entry point of the program.
     """
 
-    def __init__(self, config: str, source_directory: str, archive_directory: str,
-                 sonarr_interface: 'SonarrInterface',
-                 database_interface: 'DatabaseInterface',
-                 plex_interface: 'PlexInterface') -> None:
+    def __init__(self) -> None:
+        """
+        Constructs a new instance of the manager. This uses the global
+        `PreferenceParser` object in `preferences`, and optionally creates
+        interfaces as indicated by that parser.
+        """
 
-        # Setup Path for the config file
-        self.__config_file = Path(config)
-        self.config = parse(self.__config_file.resolve())
-
-        # Read all specified libraries
-        self.libraries = {
-            e.attrib['name']: Path(e.text) for e in self.config.findall('library')
-        }   
+        self.preferences = global_preferences.pp
 
         # Establish directory bases
-        self.source_base = Path(source_directory)
-        self.archive_base = Path(archive_directory) if archive_directory else None
+        self.source_base = self.preferences.source_directory
+        self.archive_base = self.preferences.archive_directory
 
-        # Assign each interface
-        self.sonarr_interface = sonarr_interface
-        self.database_interface = database_interface
-        self.plex_interface = plex_interface
+        # Optionally assign PlexInterface
+        self.plex_interface = None
+        if global_preferences.pp.use_plex:
+            self.plex_interface = PlexInterface(
+                url=self.preferences.plex_url,
+                x_plex_token=self.preferences.plex_token,
+            )
 
-        # Setup blank show dictionary
-        self.shows = {}
-        self.archives = {}
+        # Optionally assign SonarrInterface
+        self.sonarr_interface = None
+        if self.preferences.use_sonarr:
+            self.sonarr_interface = SonarrInterface(
+                url=self.preferences.sonarr_url,
+                api_key=self.preferences.sonarr_api_key,
+            )
+
+        # Optionally assign TMDbInterface
+        self.tmdb_interface = None
+        if self.preferences.use_tmdb:
+            self.tmdb_interface = TMDbInterface(self.preferences.tmdb_api_key)
+
+        # Setup blank show and archive lists
+        self.shows = []
+        self.archives = []
 
 
     def __repr__(self) -> str:
         """
-        Returns a unambiguous string representation of the object (for debug...).
+        Returns a unambiguous string representation of the object.
         
         :returns:   String representation of the object.
         """
 
         return (f'<TitleCardManager(config={self.config}, source_directory='
             f'{self.source_base}, sonarr_interface={self.sonarr_interface}, '
-            f'database_interface={self.database_interface}, shows={self.shows}>'
+            f'tmdb_interface={self.tmdb_interface}, shows={self.shows}>'
         )
 
 
     def create_shows(self) -> None:
         """
-        Creates Show objects for each <show> element in this object's config file.
+        Create `Show` and `ShowArchive` objects for each series entry found
+        known to the global `PreferenceParser`. This updates the `shows` and
+        `archives` lists with these objects.
         """
 
-        # Re-parse config file
-        try:
-            self.config = parse(self.__config_file.resolve())
-        except ParseError:
-            error(f'Config file has typo - cannot parse')
-            return
-        
-        # Store object under each show's full name in the shows dictionary
-        for show_element in self.config.findall('show'):
-            # Ensure this show's library exists in the library map, if not error and skip
-            library = show_element.attrib['library']
-            if library not in self.libraries:
-                error(f'Library "{library}" does not have an associated <library> element')
+        self.shows = []
+        self.archives = []
+        for show in self.preferences.iterate_series_files():
+            # Skip shows whose YAML was invalid
+            if not show.valid:
+                error(f'Skipping series "{show.name}"')
                 continue
 
-            # Create a show object for this element
-            show_object = Show(
-                show_element,
-                self.source_base,
-                self.libraries[library],
-                show_element.attrib['library'],
-            )
+            self.shows.append(show)
 
-            # If this show object already exists, skip
-            if show_object.full_name in self.shows:
+            # If archives are disabled globally, or for this show.. skip 
+            if not self.preferences.create_archive or not show.archive:
                 continue
 
-            self.shows[show_object.full_name] = show_object
-
-            # If an archive is not specified, skip
-            if not self.archive_base:
-                continue
-
-            self.archives[show_object.full_name] = ShowArchive(
-                self.archive_base,
-                show_element,
-                self.source_base,
-                self.libraries[library],
+            self.archives.append(
+                ShowArchive(
+                    self.preferences.archive_directory,
+                    show,
+                )
             )
 
 
     def read_show_source(self) -> None:
         """
-        Reads all source files known to this manager. This calls
-        `Show.read_source()`.
+        Reads all source files known to this manager. This calls `read_source()`
+        on all show and archive objects.
         """
 
-        for _, show in self.shows.items():
-            show.read_source()
+        for show in self.shows:
+            if self.sonarr_interface:
+                show.read_source(self.sonarr_interface)
+            else:
+                show.read_source()
 
-        for _, archive in self.archives.items():
+        for archive in self.archives:
             archive.read_source()
 
 
@@ -120,42 +118,61 @@ class Manager:
         
         :param      show_full_name: The show's full name
         """
-        
-        for _, show in self.shows.items():
+
+        # If sonarr is globally disabled, skip
+        if not self.preferences.use_sonarr:
+            return None
+
+        for show in self.shows:
             show.check_sonarr_for_new_episodes(self.sonarr_interface)
 
 
     def create_missing_title_cards(self) -> None:
         """
-        Creates all missing title cards for every show known to this
-        manager. For each show, if any new title cards are created, it's
-        Plex metadata is updated. This calls `Show.create_missing_title_cards()`.
+        Creates all missing title cards for every show known to this manager.
+        For each show, if any new title cards are created, it's Plex metadata is
+        updated (if enabled). This calls `Show.create_missing_title_cards()`
         """
 
-        for _, show in self.shows.items():
-            # A show that created new cards will return True
-            if show.create_missing_title_cards(self.database_interface):
-                self.plex_interface.refresh_metadata(show.library, show.full_name)
+        for show in self.shows:
+            # Pass the TMDbInterface to the show if globally enabled
+            if self.preferences.use_tmdb:
+                created = show.create_missing_title_cards(self.tmdb_interface)
+            else:
+                created = show.create_missing_title_cards()
+
+            # If a card was created and a plex interface is globally enabled
+            if created and self.preferences.use_plex:
+                self.plex_interface.refresh_metadata(show.library_name, show.full_name)
 
 
     def update_archive(self) -> None:
         """
-        Update the title card archives for every show known to this object.
-        This calls `Show.update_archive()`.
-        
-        :param      show_full_name: The shows full name.
+        Update the title card archives for every show known to the manager. This
+        calls `ShowArchive.update_archive()` if archives are globally enabled.
         """
 
-        for _, show in self.archives.items():
-            show.update_archive(self.database_interface)
+        # If archives are globally disabled, skip
+        if not self.preferences.create_archive:
+            return None
+
+        for show in self.archives:
+            if self.preferences.use_tmdb:
+                show.update_archive(self.tmdb_interface)
+            else:
+                show.update_archive()
 
 
     def create_summaries(self) -> None:
         """
-        Creates summaries.
+        Creates summaries for every `ShowArchive` known to this manager. This
+        calls `ShowArchive.create_summary()` if summaries are globally enabled.
         """
 
-        for _, show in self.archives.items():
+        if not self.preferences.create_summaries:
+            return None
+
+        for show in self.archives:
             show.create_summary()
 
 

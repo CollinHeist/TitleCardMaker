@@ -1,12 +1,13 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 from pickle import dump, load, HIGHEST_PROTOCOL
-from requests import get
 from urllib.request import urlretrieve
 
 from modules.Debug import *
+import modules.preferences as global_preferences
+from modules.WebInterface import WebInterface
 
-class DatabaseInterface:
+class TMDbInterface(WebInterface):
     """
     This class defines an interface to TheMovieDatabase (TMDb). Once initialized 
     with a valid API key, the primary purpose of this class is to automatically 
@@ -16,10 +17,11 @@ class DatabaseInterface:
     """Base URL for sending API requests to TheMovieDB"""
     API_BASE_URL: str = 'https://api.themoviedb.org/3/'
 
+    """Default for how many failed requests lead to an entry being blacklisted"""
+    BLACKLIST_THRESHOLD: int = 5
+
     """Filename for where to store blacklisted entries"""
     __BLACKLIST: Path = Path(__file__).parent / '.objects' / 'db_blacklist.pkl'
-    """After how many failed requests should that entry be permanently blacklisted."""
-    __BLACKLIST_THRESHOLD = 5
 
     """Filename where mappings of series full titles to TMDB ids is stored"""
     __ID_MAP: Path = Path(__file__).parent / '.objects' / 'db_id_map.pkl'
@@ -30,6 +32,11 @@ class DatabaseInterface:
         
         :param      api_key:    The api key used to communicate with TMDB.
         """
+
+        # Initialize parent WebInterface 
+        super().__init__()
+
+        self.preferences = global_preferences.pp
 
         # Create objects directory if it does not exist
         self.__ID_MAP.parent.mkdir(parents=True, exist_ok=True)
@@ -47,27 +54,9 @@ class DatabaseInterface:
                 self.__blacklist = load(file_handle)
         else:
             self.__blacklist = {}
-
-        # If unspecified, create an inactive object
-        if not api_key:
-            self.__active = False
-            self.__api_key = None
-            return
-
-        self.__active = True
         
         # Store API key
         self.__api_key = api_key
-        
-
-    def __bool__(self) -> bool:
-        """
-        Get the truthiness of this object.
-
-        :returns:   Whether this interface is active or not.
-        """
-
-        return self.__active
 
 
     def __update_blacklist(self, title: str, year: int, season: int, episode: int) -> None:
@@ -128,7 +117,7 @@ class DatabaseInterface:
         if key not in self.__blacklist:
             return False
             
-        if self.__blacklist[key]['failures'] > self.__BLACKLIST_THRESHOLD:
+        if self.__blacklist[key]['failures'] > self.preferences.tmdb_retry_count:
             return True
 
         # If we haven't passed next time, then treat as temporary blacklist
@@ -157,7 +146,7 @@ class DatabaseInterface:
     def manually_specify_id(title: str, year: int, id_: int) -> None:
         """Public (static) implementation of `__add_id_to_map()`."""
 
-        DatabaseInterface(None).__add_id_to_map(title, year, id_)
+        TMDbInterface(None).__add_id_to_map(title, year, id_)
 
 
     @staticmethod
@@ -182,7 +171,7 @@ class DatabaseInterface:
         """
 
         # Create a temporary interface object for this function
-        dbi = DatabaseInterface(api_key)
+        dbi = TMDbInterface(api_key)
 
         for episode in range(1, episode_count+1):
             image_url = dbi.get_title_card_source_image(title, year, season, episode)
@@ -197,7 +186,8 @@ class DatabaseInterface:
         Delete the blacklist file referenced by this class.
         """
 
-        DatabaseInterface.__BLACKLIST.unlink(missing_ok=True)
+        TMDbInterface.__BLACKLIST.unlink(missing_ok=True)
+        info(f'Deleted blacklist file "{TMDbInterface.__BLACKLIST.resolve()}"')
 
 
     def __get_tv_id(self, title: str, year: int) -> int:
@@ -223,7 +213,7 @@ class DatabaseInterface:
         params = {'api_key': self.__api_key, 'query': title, 'first_air_date_year': year}
 
         # Query TheMovieDB
-        results = get(url=url, params=params).json()
+        results = self._get(url=url, params=params)
 
         # If there are no results, error and return
         if int(results['total_results']) == 0:
@@ -247,17 +237,23 @@ class DatabaseInterface:
         
         :returns:   The "best" image for title card creation. This is
                     determined using the images' aspect ratios, and 
-                    dimensions. Priority given to largest image.
+                    dimensions. Priority given to largest image. None is
+                    returned if no images passed the minimum dimension
+                    requirements in preferences.
         """
-
-        # Only one image, bypass this function
-        if len(images) == 1:
-            return images[0]
 
         # Pick the best image based on image dimensions, and then vote average
         best_image = {'index': 0, 'pixels': 0, 'score': 0}
+        valid_image = False
         for index, image in enumerate(images):
-            pixels = int(image['height']) * int(image['width'])
+            # If either dimension is too small, skip
+            width, height = int(image['width']), int(image['height'])
+            if not self.preferences.meets_minimum_resolution(width, height):
+                continue
+
+            # If the image has valid dimensions, get pixel count and vote average
+            valid_image = True
+            pixels = height * width
             score = int(image['vote_average'])
 
             # Priority 1 is image size, priority 2 is vote average/score
@@ -267,7 +263,7 @@ class DatabaseInterface:
                 if score > best_image['score']:
                     best_image = {'index': index, 'pixels': pixels, 'score': score}
 
-        return images[best_image['index']]
+        return images[best_image['index']] if valid_image else None
 
 
     def get_title_card_source_image(self, title: str, year: int, season: int,
@@ -290,9 +286,6 @@ class DatabaseInterface:
                     entry. None if no images are available.
         """
 
-        if not self:
-            return None
-
         # Don't query the database if this episode is in the blacklist
         if self.__is_blacklisted(title, year, season, episode):
             return None
@@ -305,30 +298,40 @@ class DatabaseInterface:
         params = {'api_key': self.__api_key}
 
         # Make the GET request
-        results = get(url=url, params=params).json()
+        results = self._get(url=url, params=params)
 
         # If an absolute number has been given and the first query failed, try again
-        # breakpoint()
         if abs_number != None and 'success' in results and not results['success']:
-            info(f'Trying absolute episode number {abs_number}', 2)
-            url = f'{self.API_BASE_URL}tv/{tv_id}/season/{season}/episode/{abs_number}/images'
-            results = get(url=url, params=params).json()
+            info(f'Trying absolute episode number {abs_number} in different seasons', 2)
 
-        # If 'stills' wasn't in return JSON, episode wasn't found (mismatch)
+            # Try surround season numbers (TMDb indexes these weirdly..)
+            for new_season in range(1, season+1)[::-1]:
+                info(f'Trying /season/{new_season}/episode/{abs_number}', 3)
+                url = f'{self.API_BASE_URL}tv/{tv_id}/season/{new_season}/episode/{abs_number}/images'
+                results = self._get(url=url, params=params)
+                if 'stills' in results:
+                    break
+
+        # If 'stills' wasn't in return JSON, episode wasn't found
         if 'stills' not in results:
-            warn(f'TheMovieDB has no matching episode for "{title} ({year})" Season {season}, Episode {episode}', 2)
+            warn(f'TMDb has no matching episode for "{title} ({year})" Season {season}, Episode {episode}', 2)
             self.__update_blacklist(title, year, season, episode)
             return None
 
         # If 'stills' is in JSON, but is an empty list, then database has no images
         if len(results['stills']) == 0:
-            warn(f'There are no images for "{title} ({year})" Season {season}, Episode {episode}', 2)
+            warn(f'TMDb has no images for "{title} ({year})" Season {season}, Episode {episode}', 2)
             self.__update_blacklist(title, year, season, episode)
             return None
 
-        best_image = self.__determine_best_image(results['stills'])['file_path']
+        # Get the best image, None is returned if requirements weren't met
+        best_image = self.__determine_best_image(results['stills'])
+        if not best_image:
+            warn(f'TMDb images for "{title} ({year})" Season {season}, Episode {episode} '
+                 f'do not meet dimensional requirements.', 2)
+            return None
         
-        return f'https://image.tmdb.org/t/p/original{best_image}'
+        return f'https://image.tmdb.org/t/p/original{best_image["file_path"]}'
 
 
     def download_image(self, image_url: str, destination: Path) -> None:
@@ -339,9 +342,6 @@ class DatabaseInterface:
 
         :param      destination:    The destination for the requested image.
         """
-
-        if not self:
-            return
 
         # Make parent folder structure
         destination.parent.mkdir(parents=True, exist_ok=True)

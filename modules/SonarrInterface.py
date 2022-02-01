@@ -1,21 +1,22 @@
 from datetime import datetime
 from pathlib import Path
 from pickle import dump, load, HIGHEST_PROTOCOL
-from requests import get
 
 from modules.Debug import *
 from modules.Show import Show
+from modules.WebInterface import WebInterface
 
-class SonarrInterface:
+class SonarrInterface(WebInterface):
     """
-    This class describes a Sonarr interface. The primary purpose of this
-    class is to get episode titles based on season and episode counts. This
-    is the alternative to making API requests to TheMovieDatabase.
+    This class describes a Sonarr interface, which is a type of WebInterface.
+    The primary purpose of this class is to get episode titles for series
+    entries.
     """
 
     """Datetime format string for airDateUtc field in Sonarr API requests"""
     AIRDATE_FORMAT: str = '%Y-%m-%dT%H:%M:%SZ'
 
+    """Path to the map of sonarr titles to ID's"""
     __ID_MAP: Path = Path(__file__).parent / '.objects' / 'sonarr_id_map.pkl'
 
     def __init__(self, url: str, api_key: str) -> None:
@@ -28,6 +29,9 @@ class SonarrInterface:
                                 Sonarr.
         """
 
+        # Initialize parent WebInterface 
+        super().__init__()
+
         # Create objects directory if it does not exist
         self.__ID_MAP.parent.mkdir(parents=True, exist_ok=True)
 
@@ -38,30 +42,13 @@ class SonarrInterface:
         else:
             self.__id_map = {}
 
-        # If unspecified, create an inactive object
-        if url is None or api_key is None:
-            self.__active = False
-            self._url_base, self._param_base = None, None
-            return
-
-        self.__active = True
-
         # Add /api/ endpoint if not provided
         if not url.endswith('api') and not url.endswith('api/'):
             url += 'api/' if url.endswith('/') else '/api/'
         self._url_base = url + ('' if url.endswith('/') else '/')
 
+        # Base parameters for sending requests to Sonarr
         self._param_base = {'apikey': api_key}
-
-        
-    def __bool__(self) -> bool:
-        """
-        Get the truthiness of this object.
-
-        :returns:   Whether this interface is active orn ot.
-        """
-
-        return self.__active
 
 
     def __add_id_to_map(self, full_title: str, id_: int) -> None:
@@ -83,11 +70,10 @@ class SonarrInterface:
         """
         Gets the series ID used by Sonarr to identify this show.
         
-        :param      title:  The title of the show in question. Should
-                            NOT include year.
+        :param      title:  The title of the series.
         
-        :returns:   The series ID as used by this object's instance of
-                    Sonarr.
+        :returns:   The series ID as used by Sonarr, None if the series was
+                    not found.
         """
 
         # Get titles to operate with
@@ -103,7 +89,7 @@ class SonarrInterface:
         params = self._param_base
 
         # Query Sonarr to get JSON of all series in the library
-        all_series = self.__get(url, params)
+        all_series = self._get(url, params)
 
         # Go through each series
         for show in all_series:
@@ -111,9 +97,11 @@ class SonarrInterface:
             if int(show['year']) != year:
                 continue
 
-            # Year match, verify the given title matches main/alternate titles
+            # Year matches, verify the given title matches main/alternate titles
             current_title = Show.strip_specials(show['title'])
-            alternate_titles = [Show.strip_specials(_['title']) for _ in show['alternateTitles']]
+            alternate_titles = [
+                Show.strip_specials(_['title']) for _ in show['alternateTitles']
+            ]
 
             if match_title == current_title or match_title in alternate_titles:
                 id_ = int(show['id'])
@@ -121,21 +109,52 @@ class SonarrInterface:
 
                 return id_
 
-        raise ValueError(f'Cannot find series "{full_title}" in Sonarr')
+        return None
+
+
+    def get_absolute_episode_number(self, title: str, year: int,
+                                    season_number: int,
+                                    episode_number: int) -> int:
+        """
+        Gets the absolute episode number of the given entry.
+        
+        :param      title:          The title of the series.
+        :param      year:           The year of the series.
+        :param      season_number:  The season number of the entry.
+        :param      episode_number: The episode number of the entry.
+        
+        :returns:   The absolute episode number. None if not found, or if the
+                    entry does not have an absolute number.
+        """
+
+        # Get the ID for this series
+        series_id = self._get_series_id(title, year)
+
+        # If not found, skip
+        if not series_id:
+            error(f'Cannot find series "{title} ({year})" in Sonarr')
+            return None
+
+        # Get all episodes, and match by season+episode number
+        for episode in self._get_all_episode_data_for_id(series_id):
+            season_match = (episode['season_number'] == season_number)
+            episode_match = (episode['episode_number'] == episode_number)
+
+            if season_match and episode_match and 'abs_number' in episode:
+                return episode['abs_number']
+
+        return None
 
 
     def list_all_series_id(self) -> None:
-        """
-        List all the series ID used by Sonarr. This can help manually map a series
-        title to an ID.
-        """
+        """List all the series ID's of all shows used by Sonarr. """
 
         # Construct GET arguments
         url = f'{self._url_base}series/'
         params = self._param_base
         
         # Query Sonarr to get JSON of all series in the library
-        all_series = self.__get(url, params)
+        all_series = self._get(url, params)
 
         if 'error' in all_series:
             error(f'Sonarr returned error "{all_series["error"]}"')
@@ -169,7 +188,7 @@ class SonarrInterface:
         params.update(seriesId=series_id)
 
         # Query Sonarr to get JSON of all episodes for this series id
-        all_episodes = self.__get(url, params)
+        all_episodes = self._get(url, params)
 
         # Go through each episode
         for episode in all_episodes:
@@ -180,7 +199,8 @@ class SonarrInterface:
                 return episode['title']
 
         raise ValueError(
-            f'Cannot find Season {season}, Episode {episode} of seriesId={series_id}'
+            f'Cannot find Season {season}, Episode {episode} of '
+            f'seriesId={series_id}'
         )
 
 
@@ -201,19 +221,23 @@ class SonarrInterface:
         params.update(seriesId=series_id)
 
         # Query Sonarr to get JSON of all episodes for this series id
-        all_episodes = self.__get(url, params)
+        all_episodes = self._get(url, params)
 
         # Go through each episode and get its season/episode number, and title
         episode_info = []
         for episode in all_episodes:
             # Unaired episodes (such as specials) won't have airDateUtc key
             if 'airDateUtc' in episode:
-                # Verify this episode has already aired
-                air_datetime = datetime.strptime(episode['airDateUtc'], self.AIRDATE_FORMAT)
+                # Verify this episode has already aired, skip if not
+                air_datetime = datetime.strptime(
+                    episode['airDateUtc'],
+                    self.AIRDATE_FORMAT
+                )
                 if air_datetime > datetime.now():
                     continue
 
-            # Skip episodes whose titles aren't in Sonarr yet (to avoid naming them TBA)
+            # Skip episodes whose titles aren't in Sonarr yet to avoid
+            # placeholder names
             if episode['title'].lower() == 'tba':
                 continue
 
@@ -236,19 +260,18 @@ class SonarrInterface:
     def get_episode_title(self, title: str, year: int, season: int,
                           episode: int) -> str:
         """
-        Gets the episode title if this is an active interface.
+        Gets the episode title of the requested entry.
         
-        :param      title:      The title of the requested show. 
+        :param      title:      The title of the requested series.
 
-        :param      season:     The season number whose title is requested.
+        :param      year:       The year of the requested series.
 
-        :param      episode:    The episode number whose title is requested.
+        :param      season:     The season number of the entry.
+
+        :param      episode:    The episode number of the entry.
         
         :returns:   The episode title.
         """
-
-        if not self:
-            return
 
         series_id = self._get_series_id(title, year)
 
@@ -262,41 +285,90 @@ class SonarrInterface:
 
         Only episodes that have already aired are returned.
         
-        :param      title:  The title of the requested show.
-        
-        :returns:   List of dictionaries of episode data. None if the 
-                    interface is invalid/unitialized.
-        """
+        :param      title:  The title of the series.
 
-        if not self:
-            return None
+        :param      year:   The year of the series.
+        
+        :returns:   List of dictionaries of episode data.
+        """
 
         series_id = self._get_series_id(title, year)
 
+        if series_id == None:
+            error(f'Series "{title} ({year})" not found in Sonarr')
+            return []
+
         return self._get_all_episode_data_for_id(series_id)
+
+
+    # def get_episode_filename(self, title: str, year: int, season_number: int,
+    #                          episode_number: int) -> str:
+
+    #     """
+    #     { item_description }
+    #     """
+
+    #     if not self:
+    #         return None
+
+    #     # Get the ID for this series
+    #     series_id = self._get_series_id(title, year)
+
+    #     # Construct GET arguments
+    #     url = f'{self._url_base}series/'
+    #     params = self._param_base
+
+    #     # Query Sonarr to get all series in the library
+    #     all_series = self._get(url, params)
+
+    #     # Match by ID, get the top-level series folder
+    #     series_folder = None
+    #     for show in all_series:
+    #         if show['id'] == series_id:
+    #             series_folder = Path(show['path']).name
+    #             break
+
+    #     # If no top-level series folder (for some reason..), exit
+    #     if not series_folder:
+    #         return None
+
+    #     # Construct GET arguments for this specific episode
+    #     url = f'{self._url_base}episode/'
+    #     params = self._param_base
+    #     params['seriesId'] = series_id
+
+    #     # Query for all episodes of this show
+    #     all_episodes = self._get(url, params)
+
+    #     # Find this season/episode number
+    #     for episode in all_episodes:
+    #         if (int(episode['seasonNumber']) == season_number
+    #             and int(episode['episodeNumber']) == episode_number):
+    #             # If episode found, check if file exists and get that filename
+    #             if episode['hasFile']:
+    #                 full_path = episode['episodeFile']['relativePath']
+    #                 filename = full_path[:full_path.rfind('.')]
+
+    #                 return str(series_folder / Path(filename))
+
+    #     return None
+
 
 
     @staticmethod
     def manually_specify_id(title: str, year: int, id_: int) -> None:
         """
-        { function_description }
+        Manually set the Sonarr ID for the given full title.
+
+        :param      title:  The title of the series.
+
+        :param      year:   The year of the series.
+
+        :param      id_:    The Sonarr ID for this series.
         """
 
         SonarrInterface(None, None).__add_id_to_map(f'{title} ({year})', id_)
         
 
-    def __get(self, url: str, params: dict) -> dict:
-        """
-        Wrapper for getting the JSON return of the specified GET request.
-        
-        :param      url:    URL to pass to GET.
-
-        :param      params: Parameters to pass to GET.
-        
-        :returns:   Dict made from the JSON return of the specified
-                    GET request.
-        """
-
-        return get(url=url, params=params).json()
 
         

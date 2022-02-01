@@ -40,7 +40,7 @@ class DataFileInterface:
         if not self.file.exists():
             info(f'Source file "{self.file.resolve()}" does not exist - creating blank')
             self.create_new_data_file()
-            return
+            return None
             
         # Start reading this interface's file, yielding each row (except headers)
         with self.file.open('r') as file_handle:
@@ -70,6 +70,65 @@ class DataFileInterface:
                     row_dict['abs_number'] = row[4]
 
                 yield row_dict
+
+
+    def read_entries_without_absolute(self) -> dict:
+        """
+        Reads an entries without absolute.
+        
+        :returns:   { description_of_the_return_value }
+        """
+
+        # If the specified file doesn't exist, skip..
+        if not self.file.exists():
+            return {}
+
+        # Iterate through each row in the file, yielding season/episode number
+        with self.file.open('r') as file_handle:
+            for row_number, row in enumerate(reader(file_handle, delimiter=self.DELIMETER)):
+                # Skip headers
+                if row_number == 0 or len(row) != 4:
+                    continue
+
+                # Create dictionary for this row, add the abs_number if present
+                yield {
+                    'row_number': row_number,
+                    'title_top': row[0],
+                    'title_bottom': row[1],
+                    'season_number': int(row[2]),
+                    'episode_number': int(row[3]),
+                }
+
+
+    def modify_entry(self, row_number: int, title_top: str, title_bottom: str,
+                     season_number: int, episode_number: int,
+                     abs_number: int=None) -> None:
+        """
+        { function_description }
+        
+        :param      row_number:      The row number
+        :param      title_top:       The title top
+        :param      title_bottom:    The title bottom
+        :param      season_number:   The season number
+        :param      episode_number:  The episode number
+        :param      abs_number:      The absolute number
+        """
+
+        # Read current data
+        with self.file.open('r') as file_handle:
+            current = file_handle.readlines()
+
+        # Construct row with new data
+        row_list = [title_top, title_bottom, season_number, episode_number]
+        if abs_number != None:
+            row_list += [abs_number]
+
+        # Change this row
+        current[row_number] = self.DELIMETER.join(map(str, row_list)) + '\n'
+        with self.file.open('w') as file_handle:
+            file_handle.writelines(current)
+
+        info(f'Modified line {row_number} to {row_list}')
 
 
     def add_entry(self, title_top: str, title_bottom: str, season_number: int,
