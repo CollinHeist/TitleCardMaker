@@ -22,3 +22,5 @@ modules/.objects/
 *.xml
 fonts/
 *._*
+*.yml
+*.yaml
