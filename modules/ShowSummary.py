@@ -19,6 +19,9 @@ class ShowSummary(ImageMaker):
     """Default color for the background of the summary image"""
     BACKGROUND_COLOR: str = '#1A1A1A'
 
+    """Default filename of the logo file to search for (referenced by other classes)"""
+    LOGO_FILENAME: str = 'logo.png'
+
     """Paths to intermediate images created in the process of making a summary."""
     __MONTAGE_PATH: Path = Path(__file__).parent / '.objects' / 'montage.png'
     __MONTAGE_WITH_HEADER_PATH: Path = Path(__file__).parent / '.objects' / 'header.png'
@@ -44,16 +47,29 @@ class ShowSummary(ImageMaker):
         self.show = show
         self.logo = show.logo
 
+        # Output file is stored in the top-level media directory (usually an archive folder)
+        self.output = show.media_directory / 'Summary.jpg'
+
+        # Initialize variables that will be set upon image selection
+        self.inputs = []
+        self.number_rows = 0
+
+
+    def __select_images(self) -> dict:
+        """
+        { function_description }
+        """
+
         # Filter out episodes that don't have an existing title card
         available_episodes = list(filter(
-            lambda e: show.episodes[e].destination.exists(),
-            show.episodes
+            lambda e: self.show.episodes[e].destination.exists(),
+            self.show.episodes
         ))
 
         # Warn if this show has no episodes to work with
         episode_count = len(available_episodes)
         if episode_count == 0:
-            warn(f'Cannot create Show Summary for {show.full_name} - has no episodes')
+            warn(f'Cannot create Show Summary for {self.show.full_name} - has no episodes', 1)
 
         # Get a random subset of images to create the summary with
         # Sort that subset my season/episode number so the montage appears chronological
@@ -61,15 +77,13 @@ class ShowSummary(ImageMaker):
             sample(available_episodes, min(episode_count, 9)),
             key=lambda k: int(k.split('-')[0])*1000+int(k.split('-')[1])
         )
+
         self.inputs = [
-            str(show.episodes[episode].destination.resolve()) for episode in episode_keys
+            str(self.show.episodes[episode].destination.resolve()) for episode in episode_keys
         ]
 
         # The number of rows is necessary to determine how to scale y-values
         self.number_rows = ceil(len(episode_keys) / 3)
-
-        # Output file is stored in the top-level media directory (usually an archive folder)
-        self.output = show.media_directory / 'Summary.jpg'
 
 
     def _create_montage(self) -> Path:
@@ -225,6 +239,9 @@ class ShowSummary(ImageMaker):
         """
 
         info(f'Creating ShowSummary for "{self.show.full_name}"')
+
+        # Select images for montaging
+        self.__select_images()
 
         # If the summary already exists, or there are no title cards to montage
         if self.output.exists() or len(self.inputs) == 0:

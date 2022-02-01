@@ -26,18 +26,18 @@ class TitleCard:
         
         self.episode = episode
         self.profile = profile
-
+        
         # Construct this title card's TitleCardMaker from the given Episode and Profile
         self.maker = TitleCardMaker(
             episode.source,
             episode.destination,
             profile.convert_title(episode.title_top_line),
             profile.convert_title(episode.title_bottom_line),
-            profile.get_season_text(episode.season_number),
-            profile.get_episode_text(episode.episode_number),
+            profile.get_season_text(episode.season_number, episode.abs_number),
+            profile.get_episode_text(episode.episode_number,episode.abs_number),
             profile.font,
             profile.font_size,
-            profile.color,
+            profile.font_color,
             profile.hide_season_title,
         )
 
@@ -58,7 +58,7 @@ class TitleCard:
 
         # If the input source doesn't exist, warn and exit
         if not self.episode.source.exists():
-            warn(f'Source image {self.episode.source.resolve()} does not exist', 2)
+            # warn(f'Source image {self.episode.source.resolve()} does not exist', 2)
             return False
             
         info(f'Creating title card for {self.episode.destination.name}', 2)

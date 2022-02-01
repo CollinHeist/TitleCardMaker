@@ -5,10 +5,12 @@ from modules.ImageMaker import ImageMaker
 
 class GenreMaker(ImageMaker):
     """
-    This class defines a type of maker that 
+    This class defines a type of maker that creates genre cards. These are
+    posters that have text (the genre) at the bottom of their image, and are
+    outlined by a white border (in this implementation).
     """
 
-    """Base font for genre"""
+    """Base font for genre text"""
     FONT: Path = Path(__file__).parent / 'ref' / 'MyriadRegular.ttf'
 
     """Base gradient image to overlay over source image"""
@@ -41,9 +43,10 @@ class GenreMaker(ImageMaker):
 
     def __resize_source(self) -> Path:
         """
-        { function_description }
+        Resize the source file for this card into the necessary
+        dimensions (946x1446).
         
-        :returns:   { description_of_the_return_value }
+        :returns:   Path to the created image.
         """
 
         command = ' '.join([
@@ -65,7 +68,7 @@ class GenreMaker(ImageMaker):
         
         :param      resized_source:  The resized source
         
-        :returns:   { description_of_the_return_value }
+        :returns:   Path to the created image.
         """
 
         command = ' '.join([
@@ -85,9 +88,10 @@ class GenreMaker(ImageMaker):
         """
         Adds a text and border.
         
-        :param      source_with_gradient:  The source with gradient
+        :param      source_with_gradient:   The source image with gradient
+                                            applied.
         
-        :returns:   { description_of_the_return_value }
+        :returns:   Path to the created image.
         """
 
         command = ' '.join([
@@ -114,6 +118,7 @@ class GenreMaker(ImageMaker):
         exists. Errors and returns if the image source does not exist.
         """
 
+        # If the source file doesn't exist, exit
         if not self.source.exists():
             error(f'Cannot create genre card, "{self.source.resolve()}" does not exist.')
             return None
@@ -121,7 +126,7 @@ class GenreMaker(ImageMaker):
         # Resize source to fit in contrained space
         resized_source = self.__resize_source()
 
-        # Add gradient to bottom of the image
+        # Add gradient overlay to the image
         source_with_gradient = self.__add_gradient(resized_source)
 
         # Add genre text and outer border, result is the genre card

@@ -13,12 +13,14 @@ __pycache__/
 #   install all needed dependencies.
 #Pipfile.lock
 
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow
+# PEP 582
 __pypackages__/
 
 .DS_Store
 source/
-Media/
 modules/.objects/
 *.xml
 fonts/
+*._*
+*.yml
+*.yaml

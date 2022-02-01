@@ -1,5 +1,7 @@
+from copy import deepcopy
 from pathlib import Path
 
+from modules.Debug import *
 from modules.Show import Show
 from modules.ShowSummary import ShowSummary
 
@@ -32,12 +34,11 @@ class ShowArchive:
         'custom-generic':  'Custom Season Titles, Generic Font',
         'generic-custom':  'Generic Season Titles, Custom Font',
         'generic-generic': 'Generic Season Titles, Generic Font',
-        'none-custom':     'No Season Titles, Custom Font',
-        'none-generic':    'No Season Titles, Generic Font',
+        'hidden-custom':   'No Season Titles, Custom Font',
+        'hidden-generic':  'No Season Titles, Generic Font',
     }
 
-    def __init__(self, archive_directory: Path, *args: tuple,
-                 **kwargs: dict) -> None:
+    def __init__(self, archive_directory: Path, base_show: 'Show') -> None:
 
         """
         Constructs a new instance of this class. Creates a list of all
@@ -52,28 +53,34 @@ class ShowArchive:
                                         a `Show` object with.
         """
         
-        base_show = Show(*args, **kwargs)
-
+        # Empty lists to be populated with modified Show and ShowSummary objects
         self.shows = []
         self.summaries = []
-        for profile_string in base_show.profile._get_valid_profile_strings():
+
+        self.__base_show = base_show
+        if not base_show.archive:
+            return
+
+        # For each applicable sub-profile, create and modify new show/show summary
+        for profile_attributes in base_show.profile._get_valid_profiles():
             # Create show object for this profile
-            show = Show(*args, **kwargs)
+            new_show = deepcopy(base_show)
 
             # Update media directory, update profile and parse source
-            show.media_directory = (
-                archive_directory / show.full_name / self.PROFILE_DIRECTORY_MAP[profile_string]
+            profile_string = f'{profile_attributes["seasons"]}-{profile_attributes["font"]}'
+            new_show.media_directory = (
+                archive_directory / new_show.full_name / self.PROFILE_DIRECTORY_MAP[profile_string]
             )
-            show.profile.convert_profile_string(profile_string)
-            show.read_source()
+            new_show.profile.convert_profile_string(**profile_attributes)
+            new_show.read_source()
 
-            self.shows.append(show)
-            self.summaries.append(ShowSummary(show))
+            self.shows.append(new_show)
+            self.summaries.append(ShowSummary(new_show))
 
 
     def read_source(self) -> None:
         """
-        Calls `read_source()` on each show contaiend within this archive.
+        Calls `read_source()` on each show contained within this archive.
         """
 
         for show in self.shows:
@@ -90,7 +97,7 @@ class ShowArchive:
 
         :param      kwargs:  The keywords arguments
         """
-
+        info(f'Updating archive for "{self.__base_show.full_name}"')
         for show in self.shows:
             show.create_missing_title_cards(*args, **kwargs)
 

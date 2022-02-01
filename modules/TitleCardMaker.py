@@ -38,6 +38,11 @@ class TitleCardMaker(ImageMaker):
         'title': str.title,
     }
 
+    """Default characters to replace in the generic font"""
+    DEFAULT_FONT_REPLACEMENTS = {
+        '[': '(', ']': ')', '(': '[', ')': ']'
+    }
+
     """Source path for the gradient image overlayed over all title cards"""
     GRADIENT_IMAGE_PATH: Path = Path(__file__).parent / 'ref' / 'GRADIENT.png'
 
@@ -146,7 +151,7 @@ class TitleCardMaker(ImageMaker):
         return [
             f'-fill black',
             f'-stroke black',
-            f'-strokewidth 3', #3, euphoria is 0.5
+            f'-strokewidth 3', #3, euphoria is 0.5, the wire is 1, punisher 1.5
         ]
 
 
@@ -204,6 +209,7 @@ class TitleCardMaker(ImageMaker):
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
             f'+profile "*"',    # To avoid profile conversion warnings on some ATV images
+            f'-gravity center', # For images that aren't in 4x3, crop around the center 
             f'-resize "3200x1800^"',
             f'-extent "3200x1800"',
             f'"{self.GRADIENT_IMAGE_PATH.resolve()}"',
