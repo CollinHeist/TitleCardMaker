@@ -368,6 +368,7 @@ class SonarrInterface(WebInterface):
         """
 
         SonarrInterface('', '').__add_id_to_map(f'{title} ({year})', id_)
+        info(f'Specified ID {id_} for "{title} ({year})"')
         
 
 
