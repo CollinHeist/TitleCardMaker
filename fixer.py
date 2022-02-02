@@ -25,7 +25,7 @@ title_card_group.add_argument('--season', type=str, default=None,
 title_card_group.add_argument('--title', type=str, nargs='+', default=(' ', ' '),
                               metavar=('LINE1', 'LINE2'),
                               help='Specify the title text to use for this card')
-title_card_group.add_argument('--font', type=Path, default=TitleCardMaker.TITLE_DEFAULT_FONT,
+title_card_group.add_argument('--font', '--font-file', type=Path, default=TitleCardMaker.TITLE_DEFAULT_FONT,
                               metavar='FONT_FILE',
                               help='Specify a custom font to use for this card')
 title_card_group.add_argument('--font-size', '--size', type=str, default='100%',
