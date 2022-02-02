@@ -202,9 +202,9 @@ class Profile:
             # Replace the episode number identifers with regex string '\d+:?'
             format_string = self.episode_text_format
             if '{abs_number}' in format_string:
-                adj_format = format_string.replace('{abs_number}', '\d+:?')
+                adj_format = format_string.replace('{abs_number}', '\d+\s*[:,-]?\s*')
             elif '{episode_number}' in format_string:
-                adj_format = format_string.replace('{episode_number}', '\d+:?')
+                adj_format = format_string.replace('{episode_number}', '\d+\s*[:,-]?\s*')
 
             # Identify if the given title has any matching episode format text
             text_to_remove = match(adj_format, episode_text)
