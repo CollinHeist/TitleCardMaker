@@ -19,21 +19,27 @@ class TitleCard:
         
         :param      episode:    The episode whose TitleCard this corresponds to.
 
-        :param      profile:    The profile to apply to the creation of
-                                this title card. This ensures the correct
-                                season text, and font characteristics are used.
+        :param      profile:    The profile to apply to the creation of this 
+                                title card.
         """
         
+        # Store this card's associated episode/profile.
         self.episode = episode
         self.profile = profile
+
+        # Get temporary absolute number
+        if episode.abs_number == None:
+            abs_number = episode.episode_number
+        else:
+            abs_number = episode.abs_number
         
-        # Construct this title card's TitleCardMaker from the given Episode and Profile
+        # Construct this title card's TitleCardMaker from the given arguments
         self.maker = TitleCardMaker(
             episode.source,
             episode.destination,
             profile.convert_title(episode.title_top_line),
             profile.convert_title(episode.title_bottom_line),
-            profile.get_season_text(episode.season_number, episode.abs_number),
+            profile.get_season_text(episode.season_number, abs_number),
             profile.get_episode_text(episode.episode_number,episode.abs_number),
             profile.font,
             profile.font_size,
@@ -41,13 +47,14 @@ class TitleCard:
             profile.hide_season_title,
         )
 
+        # File associated with this card is the episode's destination
         self.file = episode.destination
 
 
     def create(self) -> bool:
         """
-        Create this title card. If the card already exists, a new one
-        is not created. Return whether a card was created.
+        Create this title card. If the card already exists, a new one is not 
+        created. Return whether a card was created.
 
         :returns:   True if a title card was created, otherwise False.
         """
