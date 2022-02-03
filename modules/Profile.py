@@ -1,4 +1,4 @@
-from re import match
+from regex import match, IGNORECASE
 
 from modules.Debug import *
 from modules.TitleCardMaker import TitleCardMaker
@@ -10,9 +10,6 @@ class Profile:
     season titles.
     """
 
-    """Default profile for unspecified <profile> tag"""
-    DEFAULT_PROFILE: str = 'custom-custom'
-
     def __init__(self, font_color: str, font_size: float, font: str,
                  font_case: str, font_replacements: dict, hide_seasons: bool,
                  season_map: dict, episode_range: dict, map_or_range: bool,
@@ -22,6 +19,7 @@ class Profile:
         profile's font, and color.
         """
 
+        # Store this profiles arguments as attributes
         self.font_color = font_color
         self.font_size = font_size
         self.font = font
@@ -33,6 +31,7 @@ class Profile:
         self.__map_or_range = map_or_range
         self.episode_text_format = episode_text_format
 
+        # These flags are only modified when the profile is converted
         self.__use_custom_seasons = True
         self.__use_custom_font = True
 
@@ -180,45 +179,109 @@ class Profile:
         return f'EPISODE {episode_number}'
 
 
-    def convert_title(self, episode_text: str) -> str:
+    def __remove_episode_text_format(self, title_text: str) -> str:
         """
-        Convert the given episode text through this profile's settings. This is
+        Removes text that matches this profile's episode text format. This
+        replaces the {episode_number} and {abs_number} format placeholders
+        with a regex for any number. Currently, any number expressed as a digit
+        (i.e. 1, 2, ... 99999), and all numbers between 1-99 expressed as
+        ENGLISH TEXT (i.e. "one", "twenty", "ninety-nine") are removed. For
+        example, if self.episode_text_format = 'Chapter {abs_number}':
+
+        >>> self.__remove_episode_text_format('Chapter 1: Title')
+        'Title'
+        >>> self.__remove_episode_text_format('Chapter Thirty-Three, Example')
+        'Example'
+        >>> self.__remove_episode_text_format('Chapter 919491 - Longer Title')
+        'Longer Title'
+        >>> self.__remove_episode_text_format('Chapter Eighty Eight Example 2')
+        'Example 2'
+        
+        :param      episode_text:  The episode text to process.
+        
+        :returns:   The episode text with all text that matches the format
+                    specified in this profile's episode text format REMOVED. If
+                    there is no matching text, the title is returned unaltered.
+        """
+
+        # Regex group for matching 1-9 called "one_to_9"
+        one_to_9 = 'one|two|three|four|five|six|seven|eight|nine'
+        one_to_9_group = f'(?<one_to_9>(?:{one_to_9}))'
+
+        # Regex group for matching 10-19 called "ten_to_19"
+        ten_to_19 = (
+            'ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|'
+            'eighteen|nineteen'
+        )
+        ten_to_19_group = f'(?<ten_to_19>(?:{ten_to_19}))'
+
+        # Regex group for two digit prefix (20, 30..) called "two_digit_prefix"
+        two_digit_prefix='twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety'
+        two_digit_prefix_group = f'(?<two_digit_prefix>(?:{two_digit_prefix}))'
+
+        # Regex group for 1-99 called "one_to_99"
+        one_to_99_group = (
+            '(?<one_to_99>(?&two_digit_prefix)(?:[- ](?&one_to_9))?|'
+            '(?&ten_to_19)|(?&one_to_9)|\d+)'
+        )
+
+        # Define all the groups used in the regex
+        define_all = (
+            f'(?(DEFINE){one_to_9_group}{ten_to_19_group}'
+            f'{two_digit_prefix_group}{one_to_99_group})'
+        )
+
+        # Full regex for any number followed by colon, comma, or dash (+spaces)
+        full_regex = f'{define_all}(?&one_to_99)\s*[:,-]?\s*'
+
+        # Look for number indicator to replace with above regex
+        format_string = self.episode_text_format
+        if '{abs_number}' in format_string:
+            remove_regex = format_string.replace('{abs_number}', full_regex)
+        elif '{episode_number}' in format_string:
+            remove_regex = format_string.replace('{episode_number}', full_regex)
+
+        # Find match of above regex, if exists, delete that text
+        # Perform match on the case-ified episode text
+        text_to_remove = match(remove_regex, title_text, IGNORECASE)
+
+        if text_to_remove:
+            info(f'Removed episode number format text "'
+                 f'{text_to_remove.group()}" from episode title', 1)
+            return title_text.replace(text_to_remove.group(), '')
+
+        return title_text
+
+
+    def convert_title(self, title_text: str) -> str:
+        """
+        Convert the given title text through this profile's settings. This is
         any combination of text substitutions, case functions such as
         `str.upper()` or `str.lower()`, and optionally removing text that
         matches the format of this profile's episode text format.
 
         For example, if the episode format string was
-        'Chapter {episode_number}', and the given `episode_text` was 'Chapter 1:
+        'Chapter {episode_number}', and the given `title_text` was 'Chapter 1:
         Pilot', then the returned text (excluding any replacements or case
         mappings) would be 'Pilot'.
         
-        :param      episode_text:   The episode text to convert.
+        :param      title_text: The title text to convert.
         
         :returns:   The processed text.
         """
 
         # Modify the title if it contains the episode text format
         if self.__use_custom_seasons:
-            # Replace the episode number identifers with regex string '\d+:?'
-            format_string = self.episode_text_format
-            if '{abs_number}' in format_string:
-                adj_format = format_string.replace('{abs_number}', '\d+:?')
-            elif '{episode_number}' in format_string:
-                adj_format = format_string.replace('{episode_number}', '\d+:?')
-
-            # Identify if the given title has any matching episode format text
-            text_to_remove = match(adj_format, episode_text)
-            if text_to_remove:
-                info(f'Removed episode number format text "'
-                     f'{text_to_remove.group()}" from episode title', 1)
-                episode_text = episode_text.replace(text_to_remove.group(), '')
+            # Attempt to remove case that matches the episode text format string
+            title_text = self.__remove_episode_text_format(title_text)
 
         # Create translation table for this profile's replacements
         translation = str.maketrans(self.font_replacements)
 
         # Apply translation table to this text
-        translated_text = episode_text.translate(translation)
+        translated_text = title_text.translate(translation)
 
         # Apply this profile's font function to the translated text
         return self.font_case(translated_text)
+
 

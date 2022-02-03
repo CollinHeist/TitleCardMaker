@@ -18,7 +18,7 @@ class TMDbInterface(WebInterface):
     API_BASE_URL: str = 'https://api.themoviedb.org/3/'
 
     """Default for how many failed requests lead to an entry being blacklisted"""
-    BLACKLIST_THRESHOLD: int = 5
+    BLACKLIST_THRESHOLD: int = 3
 
     """Filename for where to store blacklisted entries"""
     __BLACKLIST: Path = Path(__file__).parent / '.objects' / 'db_blacklist.pkl'

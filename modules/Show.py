@@ -267,11 +267,15 @@ class Show:
             season_number = int(data_row['season_number'])
             episode_number = int(data_row['episode_number'])
         except ValueError:
-            error(f'Invalid season/episode number "{data_row["season_number"]}, "{data_row["episode_number"]}"', 1)
+            error(f'Invalid season/episode number "{data_row["season_number"]},'
+                  f' "{data_row["episode_number"]}"', 1)
             return None
 
         # Get the season folder corresponding to this episode's season
-        season_folder = 'Specials' if season_number == 0 else f'Season {season_number}'
+        if season_number == 0:
+            season_folder = 'Specials'
+        else:
+            season_folder = f'Season {season_number}'
 
         # The standard plex filename for this episode
         # filename = preferences.card_filename_format.format(
@@ -281,7 +285,8 @@ class Show:
         # )
         # filename += TitleCard.OUTPUT_CARD_EXTENSION
         filename = (
-            f'{self.full_name} - S{season_number:02}E{episode_number:02}{TitleCard.OUTPUT_CARD_EXTENSION}'
+            f'{self.full_name} - S{season_number:02}E{episode_number:02}'
+            f'{TitleCard.OUTPUT_CARD_EXTENSION}'
         )
 
         return self.media_directory / season_folder / filename
@@ -390,13 +395,12 @@ class Show:
 
 
     def create_missing_title_cards(self,
-                                   database_interface: 'DatabaseInterface'=None) -> bool:
+                                   tmdb_interface: 'TMDbInterface'=None) -> bool:
         """
         Creates any missing title cards for each episode of this show.
 
-        :param      database_interface: Optional interface to TMDb for attempting
-                                        to download any source images that are
-                                        missing.
+        :param      tmdb_interface: Optional interface to TMDb for attempting to
+                                    download any source images that are missing.
 
         :returns:   True if any new cards were created, false otherwise.
         """
@@ -424,11 +428,11 @@ class Show:
             # If the title card source images doesn't exist..
             if not episode.source.exists():
                 # Skip if cannot query database
-                if not all((self.tmdb_sync, database_interface)):
+                if not all((self.tmdb_sync, tmdb_interface)):
                     continue
 
                 # Query database for image
-                image_url = database_interface.get_title_card_source_image(
+                image_url = tmdb_interface.get_title_card_source_image(
                     self.name,
                     self.year,
                     episode.season_number,
@@ -441,7 +445,7 @@ class Show:
                     continue
 
                 # Download the image
-                database_interface.download_image(image_url, episode.source)
+                tmdb_interface.download_image(image_url, episode.source)
 
             # Source exists, create the title card
             created_new_cards |= title_card.create()
