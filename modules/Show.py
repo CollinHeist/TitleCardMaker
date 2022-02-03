@@ -12,6 +12,13 @@ from modules.TitleCard import TitleCard
 from modules.TitleCardMaker import TitleCardMaker
 
 class Show:
+    """
+    This class describes a show. A show encapsulates the names and preferences
+    with a complete series of episodes. Each object inherits many preferences 
+    from the global `PreferenceParser` object, but manually specified attributes
+    within the Show's YAML take precedence over the global enables, with the
+    exception of Interface objects (such as Sonarr and TMDb).
+    """
 
     # FILENAME_FORMAT_HELP_STRING: str = (
     #     "Format String Options:\n"
@@ -30,7 +37,19 @@ class Show:
     def __init__(self, name: str, yaml_dict: dict, library_map: dict,
                  source_directory: Path) -> None:
         """
-        Constructs a new instance.
+        Constructs a new instance of a Show object from the given YAML
+        dictionary, library map, and referencing the base source directory. If
+        the initialization fails to produce a 'valid' show object, the `valid`
+        attribute is set to False.
+
+        :param      name:               The name or title of the series.
+        :param      yaml_dict:          YAML dictionary of the associated series
+                                        as found in a card YAML file.
+        :param      library_map:        Map of library titles to media
+                                        directories.
+        :param      source_directory:   Base source directory this show should
+                                        search for and place source images. Can
+                                        be overwritten by YAML tag.
         """
 
         self.preferences = global_preferences.pp
@@ -134,6 +153,9 @@ class Show:
                 self.library_name = value
                 self.library = Path(self.__library_map[value])
 
+        if self.__is_specified('source'):
+            self.source_directory = Path(self.__yaml['source'])
+
         if self.__is_specified('episode_text_format'):  
             self.episode_text_format = self.__yaml['episode_text_format']
 
@@ -193,9 +215,10 @@ class Show:
             self.hide_seasons = bool(self.__yaml['seasons']['hide'])
 
         # Validate season map and episode range aren't specified at the same time
-        if self.__is_specified('seasons') and self.__is_specified('episodes'):
+        if self.__is_specified('seasons') and self.__is_specified('episode_ranges'):
             if any(isinstance(key, int) for key in self.__yaml['seasons'].keys()):
-                error(f'Cannot specify season titles with both "seasons" and "episodes"')
+                error(f'Cannot specify season titles with both "seasons" and '
+                      f'"episode_ranges"')
                 self.valid = False
 
         # Validate season title map
@@ -205,20 +228,21 @@ class Show:
                     self.__season_map[tag] = self.__yaml['seasons'][tag]
 
         # Validate episode range map
-        if self.__is_specified('episodes'):
-            for episode_range in self.__yaml['episodes']:
-                # If the range cannot be parsed as ints separated by '-', then error and exit
+        if self.__is_specified('episode_ranges'):
+            for episode_range in self.__yaml['episode_ranges']:
+                # If the range cannot be parsed, then error and skip
                 try:
                     start, end = map(int, episode_range.split('-'))
                 except:
                     error(f'Episode range "{episode_range}" for series "{self.name}" '
-                          f'is invalid - specify as start-end')
+                          f'is invalid - specify as "start-end"')
                     self.valid = False
                     continue
 
                 # Assign this season title to each episde in the given range
+                this_title = self.__yaml['episode_ranges'][episode_range]
                 for episode_number in range(start, end+1):
-                    self.__episode_range[episode_number] = self.__yaml['episodes'][episode_range]
+                    self.__episode_range[episode_number] = this_title
         
 
     def __is_specified(self, *attributes: tuple) -> bool:
@@ -307,8 +331,11 @@ class Show:
 
     def read_source(self, sonarr_interface: 'SonarrInterface'=None) -> None:
         """
-        Read the source file for this show, creating the associated Episode
-        objects.
+        Read the source file for this show, adding the associated Episode
+        objects to this show's episodes dictionary.
+
+        :param      sonarr_interface:   Optional SonarrInterface - currently
+                                        not used.
         """
 
         for data_row in self.file_interface.read():
@@ -341,7 +368,7 @@ class Show:
 
 
     def check_sonarr_for_new_episodes(self,
-                                      sonarr_interface: 'SonarrInterface') -> bool:
+                                      sonarr_interface:'SonarrInterface')->bool:
         """
         Query the provided SonarrInterface object, checking if the returned
         episodes exist in this show's associated source. All new entries are
@@ -349,7 +376,7 @@ class Show:
         
         :param      sonarr_interface:   The Sonarr interface to query.
 
-        :returns:   Whether or not Sonarr returned any new episodes.
+        :returns:   True if Sonarr returned any new episodes, False otherwise.
         """
 
         # This function is only called when sonarr is globally enabled
@@ -361,7 +388,9 @@ class Show:
 
         # Get dict of episode data from Sonarr
         try:
-            all_episodes = sonarr_interface.get_all_episodes_for_series(self.name, self.year)
+            all_episodes = sonarr_interface.get_all_episodes_for_series(
+                self.name, self.year
+            )
         except ValueError:
             error(f'Cannot find series "{self.full_name}" in Sonarr', 1)
             return False
@@ -381,7 +410,8 @@ class Show:
                 new_episode.update({'title_top': top, 'title_bottom': bottom})
 
                 info(f'New episode for "{self.full_name}" '
-                     f'S{new_episode["season_number"]:02}E{new_episode["episode_number"]:02}', 1)
+                     f'S{new_episode["season_number"]:02}'
+                     f'E{new_episode["episode_number"]:02}', 1)
 
                 # Add entry to data file through interface
                 self.file_interface.add_entry(**new_episode)
@@ -395,7 +425,7 @@ class Show:
 
 
     def create_missing_title_cards(self,
-                                   tmdb_interface: 'TMDbInterface'=None) -> bool:
+                                   tmdb_interface: 'TMDbInterface'=None) ->bool:
         """
         Creates any missing title cards for each episode of this show.
 
@@ -405,7 +435,7 @@ class Show:
         :returns:   True if any new cards were created, false otherwise.
         """
 
-        # If the media directory is unspecified, then skip
+        # If the media directory is unspecified, then exit
         if self.media_directory is None:
             return False
 
