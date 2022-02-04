@@ -9,7 +9,7 @@ from modules.Episode import Episode
 import modules.preferences as global_preferences
 from modules.Profile import Profile
 from modules.TitleCard import TitleCard
-from modules.TitleCardMaker import TitleCardMaker
+from modules.StandardTitleCard import StandardTitleCard
 
 class Show:
     """
@@ -83,11 +83,11 @@ class Show:
         self.archive = True
         self.sonarr_sync = True
         self.tmdb_sync = True
-        self.font_color = TitleCardMaker.TITLE_DEFAULT_COLOR
+        self.font_color = StandardTitleCard.TITLE_DEFAULT_COLOR
         self.font_size = 1.0
-        self.font = TitleCardMaker.TITLE_DEFAULT_FONT.resolve()
+        self.font = StandardTitleCard.TITLE_DEFAULT_FONT.resolve()
         self.font_case = 'upper'
-        self.font_replacements = TitleCardMaker.DEFAULT_FONT_REPLACEMENTS
+        self.font_replacements = StandardTitleCard.DEFAULT_FONT_REPLACEMENTS
         self.hide_seasons = False
         self.__episode_range = {}
         self.__season_map = {n: f'Season {n}' for n in range(1, 1000)}
@@ -198,7 +198,7 @@ class Show:
 
         if self.__is_specified('font', 'case'):
             value = self.__yaml['font']['case'].lower()
-            if value not in TitleCardMaker.CASE_FUNCTION_MAP:
+            if value not in StandardTitleCard.CASE_FUNCTION_MAP:
                 error(f'Font case "{value}" of series "{self.name}" is unrecognized')
                 self.valid = False
             else:

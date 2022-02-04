@@ -1,12 +1,11 @@
 from modules.Debug import *
-from modules.TitleCardMaker import TitleCardMaker
+from modules.StandardTitleCard import StandardTitleCard
 
 class TitleCard:
     """
-    This class describes a title card. This class is responsible for
-    applying a given profile to the Episode details and initializing a
-    TitleCardMaker with those details. After initialization, `create()`
-    is just a glorified wrapper for `TitleCardMaker.create()`.
+    This class describes a title card. This class is responsible for applying a
+    given profile to the Episode details and initializing a card maker with
+    those details.
     """
 
     """Extensions of the input source image and output title card"""
@@ -33,8 +32,8 @@ class TitleCard:
         else:
             abs_number = episode.abs_number
         
-        # Construct this title card's TitleCardMaker from the given arguments
-        self.maker = TitleCardMaker(
+        # Construct this title card's StandardTitleCard from the given arguments
+        self.maker = StandardTitleCard(
             episode.source,
             episode.destination,
             profile.convert_title(episode.title_top_line),

@@ -5,7 +5,7 @@ from modules.Debug import *
 import modules.preferences as preferences
 from modules.ImageMaker import ImageMaker
 
-class TitleCardMaker(ImageMaker):
+class StandardTitleCard(ImageMaker):
     """
     This class describes the object that actually makes the title card using
     programmed ImageMagick commands. 

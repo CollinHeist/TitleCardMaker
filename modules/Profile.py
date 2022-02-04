@@ -1,7 +1,7 @@
 from regex import match, IGNORECASE
 
 from modules.Debug import *
-from modules.TitleCardMaker import TitleCardMaker
+from modules.StandardTitleCard import StandardTitleCard
 
 class Profile:
     """
@@ -23,7 +23,7 @@ class Profile:
         self.font_color = font_color
         self.font_size = font_size
         self.font = font
-        self.font_case = TitleCardMaker.CASE_FUNCTION_MAP[font_case]
+        self.font_case = StandardTitleCard.CASE_FUNCTION_MAP[font_case]
         self.font_replacements = font_replacements
         self.hide_season_title = hide_seasons
         self.__season_map = season_map
@@ -65,11 +65,11 @@ class Profile:
 
         # Determine whether this profile uses a custom font
         has_custom_font = \
-            (self.font != TitleCardMaker.TITLE_DEFAULT_FONT) or \
+            (self.font != StandardTitleCard.TITLE_DEFAULT_FONT) or \
             (self.font_size != 1.0) or \
-            (self.font_color != TitleCardMaker.TITLE_DEFAULT_COLOR) or \
-            (self.font_replacements != TitleCardMaker.DEFAULT_FONT_REPLACEMENTS) or \
-            (self.font_case != TitleCardMaker.CASE_FUNCTION_MAP[TitleCardMaker.DEFAULT_CASE_VALUE])
+            (self.font_color != StandardTitleCard.TITLE_DEFAULT_COLOR) or \
+            (self.font_replacements != StandardTitleCard.DEFAULT_FONT_REPLACEMENTS) or \
+            (self.font_case != StandardTitleCard.CASE_FUNCTION_MAP[StandardTitleCard.DEFAULT_CASE_VALUE])
 
         # Get list of profile strings applicable to this object
         valid_profiles = [{'seasons': 'generic', 'font': 'generic'}]
@@ -104,12 +104,12 @@ class Profile:
 
         # If the new profile has a generic font, reset font attributes
         if not self.__use_custom_font:
-            self.font = TitleCardMaker.TITLE_DEFAULT_FONT
+            self.font = StandardTitleCard.TITLE_DEFAULT_FONT
             self.font_size = 1.0
-            self.font_color = TitleCardMaker.TITLE_DEFAULT_COLOR
-            self.font_replacements = TitleCardMaker.DEFAULT_FONT_REPLACEMENTS
-            self.font_case = TitleCardMaker.CASE_FUNCTION_MAP[
-                TitleCardMaker.DEFAULT_CASE_VALUE
+            self.font_color = StandardTitleCard.TITLE_DEFAULT_COLOR
+            self.font_replacements = StandardTitleCard.DEFAULT_FONT_REPLACEMENTS
+            self.font_case = StandardTitleCard.CASE_FUNCTION_MAP[
+                StandardTitleCard.DEFAULT_CASE_VALUE
             ]
 
 
