@@ -122,9 +122,8 @@ class TitleCardMaker(ImageMaker):
 
     def __episode_text_global_effects(self) -> list:
         """
-        ImageMagick commands to implement the episode text's global
-        effects. Specifically the the font, kerning, fontsize, and
-        center gravity.
+        ImageMagick commands to implement the episode text's global effects.
+        Specifically the the font, kerning, fontsize, and center gravity.
         
         :returns:   List of ImageMagick commands.
         """
@@ -142,8 +141,7 @@ class TitleCardMaker(ImageMaker):
 
     def __episode_text_black_stroke(self) -> list:
         """
-        ImageMagick commands to implement the episode text's
-        black stroke.
+        ImageMagick commands to implement the episode text's black stroke.
         
         :returns:   List of ImageMagick commands.
         """
@@ -157,8 +155,8 @@ class TitleCardMaker(ImageMaker):
 
     def __series_count_text_global_effects(self) -> list:
         """
-        ImageMagick commands for global text effects applied to
-        all series count text (season/episode count and dot).
+        ImageMagick commands for global text effects applied to all series count
+        text (season/episode count and dot).
         
         :returns:   List of ImageMagick commands.
         """
@@ -171,8 +169,8 @@ class TitleCardMaker(ImageMaker):
 
     def __series_count_text_black_stroke(self) -> list:
         """
-        ImageMagick commands for adding the necessary black stroke
-        effects to series count text.
+        ImageMagick commands for adding the necessary black stroke effects to
+        series count text.
         
         :returns:   List of ImageMagick commands.
         """
@@ -186,8 +184,8 @@ class TitleCardMaker(ImageMaker):
 
     def __series_count_text_effects(self) -> list:
         """
-        ImageMagick commands for adding the necessary text effects
-        to the series count text.
+        ImageMagick commands for adding the necessary text effects to the series
+        count text.
         
         :returns:   List of ImageMagick commands.
         """
@@ -208,10 +206,10 @@ class TitleCardMaker(ImageMaker):
 
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
-            f'+profile "*"',    # To avoid profile conversion warnings on some ATV images
-            f'-gravity center', # For images that aren't in 4x3, crop around the center 
-            f'-resize "3200x1800^"',
-            f'-extent "3200x1800"',
+            f'+profile "*"',    # To avoid profile conversion warnings
+            f'-gravity center', # For images that aren't in 4x3, center crop
+            f'-resize "{self.TITLE_CARD_SIZE}^"',
+            f'-extent "{self.TITLE_CARD_SIZE}"',
             f'"{self.GRADIENT_IMAGE_PATH.resolve()}"',
             f'-background None',
             f'-layers Flatten',

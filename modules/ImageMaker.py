@@ -13,6 +13,8 @@ class ImageMaker(ABC):
     completely customizable.
     """
 
+    TITLE_CARD_SIZE: str = '3200x1800'
+
     @abstractmethod
     def __init__(self) -> None:
         """
