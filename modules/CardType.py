@@ -16,12 +16,18 @@ class CardType(ImageMaker):
     StarWarsTitleCard doesn't use anything except the episode number and title.
     """
 
+    """Default case for all episode text"""
     DEFAULT_FONT_CASE = 'upper'
+
+    """Mapping of 'case' strings to format functions"""
     CASE_FUNCTION_MAP = {
         'upper': str.upper,
         'lower': str.lower,
         'title': str.title,
     }
+
+    """Standard size for a title card"""
+    TITLE_CARD_SIZE: str = '3200x1800'
 
     @property
     @abstractmethod
