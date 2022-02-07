@@ -7,8 +7,11 @@ from modules.StarWarsTitleCard import StarWarsTitleCard
 class TitleCard:
     """
     This class describes a title card. This class is responsible for applying a
-    given profile to the Episode details and initializing a card maker with
-    those details.
+    given profile to the Episode details and initializing a CardType with those
+    attributes.
+
+    It also contains the mapping of card type identifier strings (in YAML) to
+    their respective CardType classes.
     """
 
     """Extensions of the input source image and output title card"""

@@ -11,27 +11,17 @@ class StarWarsTitleCard(CardType):
     cards are not as customizeable as the standard template.
     """
 
-    """Standard font replacements for the title font"""
-    FONT_REPLACEMENTS = {'Ō': 'O', 'ō': 'o'}
-
-    """Path to the reference star image to overlay on all source images"""
-    __STAR_GRADIENT_IMAGE = Path(__file__).parent / 'ref' / 'star_gradient.png'
-
-    """Path to the source+gradient image"""
-    __SOURCE_WITH_STARS = Path(__file__).parent/'.objects'/'source_gradient.png'
-
     """Path to the font to use for the episode title"""
     TITLE_FONT =str((Path(__file__).parent/'ref'/'Monstice-Base.ttf').resolve())
 
     """Color to use for the episode title"""
     TITLE_COLOR = '#DAC960'
 
-    """Path to the font to use for the episode/episode number text """
-    EPISODE_TEXT_FONT = Path(__file__).parent / 'ref' / 'HelveticaNeue.ttc'
-    EPISODE_NUMBER_FONT = Path(__file__).parent / 'ref'/'HelveticaNeue-Bold.ttf'
-
     """Color of the episode/episode number text"""
     EPISODE_TEXT_COLOR = '#AB8630'
+
+    """Standard font replacements for the title font"""
+    FONT_REPLACEMENTS = {'Ō': 'O', 'ō': 'o'}
 
     """After how many characters to split an episode title into two lines"""
     MAX_LINE_LENGTH = 18
@@ -41,6 +31,16 @@ class StarWarsTitleCard(CardType):
 
     """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Star Wars Style'
+
+    """Path to the reference star image to overlay on all source images"""
+    __STAR_GRADIENT_IMAGE = Path(__file__).parent / 'ref' / 'star_gradient.png'
+
+    """Path to the source+gradient image"""
+    __SOURCE_WITH_STARS = Path(__file__).parent/'.objects'/'source_gradient.png'
+
+    """Path to the font to use for the episode/episode number text """
+    EPISODE_TEXT_FONT = Path(__file__).parent / 'ref' / 'HelveticaNeue.ttc'
+    EPISODE_NUMBER_FONT = Path(__file__).parent / 'ref'/'HelveticaNeue-Bold.ttf'
 
     
     def __init__(self, source: Path, output_file: Path, title_top_line: str,
