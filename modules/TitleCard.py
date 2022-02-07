@@ -1,17 +1,30 @@
 from modules.Debug import *
-from modules.TitleCardMaker import TitleCardMaker
+
+# CardType classes
+from modules.StandardTitleCard import StandardTitleCard
+from modules.StarWarsTitleCard import StarWarsTitleCard
 
 class TitleCard:
     """
-    This class describes a title card. This class is responsible for
-    applying a given profile to the Episode details and initializing a
-    TitleCardMaker with those details. After initialization, `create()`
-    is just a glorified wrapper for `TitleCardMaker.create()`.
+    This class describes a title card. This class is responsible for applying a
+    given profile to the Episode details and initializing a CardType with those
+    attributes.
+
+    It also contains the mapping of card type identifier strings (in YAML) to
+    their respective CardType classes.
     """
 
     """Extensions of the input source image and output title card"""
     INPUT_CARD_EXTENSION: str = '.jpg'
     OUTPUT_CARD_EXTENSION: str = '.jpg'
+
+    """Mapping of card type identifiers to CardType classes"""
+    CARD_TYPES = {
+        'standard': StandardTitleCard,
+        'generic': StandardTitleCard,
+        'star wars': StarWarsTitleCard,
+    }
+
 
     def __init__(self, episode: 'Episode', profile: 'Profile') -> None:
         """
@@ -33,18 +46,20 @@ class TitleCard:
         else:
             abs_number = episode.abs_number
         
-        # Construct this title card's TitleCardMaker from the given arguments
-        self.maker = TitleCardMaker(
-            episode.source,
-            episode.destination,
-            profile.convert_title(episode.title_top_line),
-            profile.convert_title(episode.title_bottom_line),
-            profile.get_season_text(episode.season_number, abs_number),
-            profile.get_episode_text(episode.episode_number,episode.abs_number),
-            profile.font,
-            profile.font_size,
-            profile.font_color,
-            profile.hide_season_title,
+        # Construct this title card's StandardTitleCard from the given arguments
+        self.maker = self.episode.card_class(
+            source=episode.source,
+            output_file=episode.destination,
+            title_top_line=profile.convert_title(episode.title_top_line),
+            title_bottom_line=profile.convert_title(episode.title_bottom_line),
+            season_text=profile.get_season_text(
+                episode.season_number, abs_number
+            ), episode_text=profile.get_episode_text(
+                episode.episode_number, episode.abs_number
+            ), font=profile.font,
+            font_size=profile.font_size,
+            title_color=profile.font_color,
+            hide_season=profile.hide_season_title,
         )
 
         # File associated with this card is the episode's destination

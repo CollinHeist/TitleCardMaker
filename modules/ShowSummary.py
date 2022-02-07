@@ -4,7 +4,7 @@ from random import sample
 
 from modules.Debug import *
 from modules.Show import Show
-from modules.TitleCardMaker import TitleCardMaker
+from modules.StandardTitleCard import StandardTitleCard
 from modules.ImageMaker import ImageMaker
 
 class ShowSummary(ImageMaker):
@@ -37,7 +37,7 @@ class ShowSummary(ImageMaker):
         ImageMagickInterface object, and searches the provided show object
         for existing title cards to use in `create()`.
         
-        :param      show:  The show
+        :param      show:  The show object of which to create a summary for.
         """
 
         # Initialize parent object (for the ImageMagickInterface)
@@ -55,9 +55,10 @@ class ShowSummary(ImageMaker):
         self.number_rows = 0
 
 
-    def __select_images(self) -> dict:
+    def __select_images(self) -> None:
         """
-        { function_description }
+        Select the images that are to be incorporated into the show summary.
+        This updates the object's inputs and number_rows attributes.
         """
 
         # Filter out episodes that don't have an existing title card
@@ -69,7 +70,8 @@ class ShowSummary(ImageMaker):
         # Warn if this show has no episodes to work with
         episode_count = len(available_episodes)
         if episode_count == 0:
-            warn(f'Cannot create Show Summary for {self.show.full_name} - has no episodes', 1)
+            warn(f'Cannot create Show Summary for {self.show.full_name} - '
+                 f'has no episodes', 1)
 
         # Get a random subset of images to create the summary with
         # Sort that subset my season/episode number so the montage appears chronological
@@ -79,7 +81,7 @@ class ShowSummary(ImageMaker):
         )
 
         self.inputs = [
-            str(self.show.episodes[episode].destination.resolve()) for episode in episode_keys
+            str(self.show.episodes[e].destination.resolve()) for e in episode_keys
         ]
 
         # The number of rows is necessary to determine how to scale y-values
@@ -111,10 +113,10 @@ class ShowSummary(ImageMaker):
 
     def _add_header(self, montage: Path) -> Path:
         """
-        Pad 80 pixels of blank space around the image, and add a
-        header of text that says "EPISODE TITLE CARDS".
+        Pad 80 pixels of blank space around the image, and add a header of text
+        that says "EPISODE TITLE CARDS".
         
-        :param      montage:    The montage of images to adjust.
+        :param      montage:    The montage of images to add a header to.
         
         :returns:   Path to the created image.
         """
@@ -125,8 +127,8 @@ class ShowSummary(ImageMaker):
             f'-background "{self.BACKGROUND_COLOR}"',
             f'-gravity north',
             f'-splice 0x840',
-            f'-font "{TitleCardMaker.EPISODE_COUNT_DEFAULT_FONT}"',
-            f'-fill "{TitleCardMaker.SERIES_COUNT_DEFAULT_COLOR}"',
+            f'-font "{StandardTitleCard.EPISODE_COUNT_DEFAULT_FONT}"',
+            f'-fill "{StandardTitleCard.SERIES_COUNT_DEFAULT_COLOR}"',
             f'-pointsize 100',
             f'-kerning 4.52',
             f'-annotate +0+700 "EPISODE TITLE CARDS"',
@@ -147,7 +149,8 @@ class ShowSummary(ImageMaker):
     def _resize_logo(self) -> Path:
         """
         Resize this associated show's logo to fit into at least a a 500 pixel
-        high space. If the resulting logo is wider than 3400 pixels, it is scaled
+        high space. If the resulting logo is wider than 3400 pixels, it is
+        scaled.
         
         :returns:   Path to the resized logo.
         """
@@ -166,9 +169,9 @@ class ShowSummary(ImageMaker):
 
     def _get_logo_height(self, logo: Path) -> int:
         """
-        Gets the logo height.
+        Gets the height of the provided logo.
         
-        :param      logo:  The path to the resized logo.
+        :param      logo:  The path to the logo image.
         
         :returns:   The logo height.
         """
@@ -186,8 +189,10 @@ class ShowSummary(ImageMaker):
         """
         Add the logo to the top of the montage image.
         
-        :param      montage:  The montage
-        :param      logo:     The logo
+        :param      montage:    Path to the montage image to add the logo to.
+        :param      logo:       Path to the logo image to add to the montage.
+
+        :returns:   Path to the created images.
         """
 
         logo_height = self._get_logo_height(logo)
@@ -208,10 +213,11 @@ class ShowSummary(ImageMaker):
 
     def _add_created_by(self, montage_and_logo: Path) -> Path:
         """
-        Adds the "CREATED BY COLLINHEIST" text (image at 
-        `__CREATED_BY_PATH`) to the bottom of the image.
+        Adds the "CREATED BY COLLINHEIST" text (image at `__CREATED_BY_PATH`) to
+        the bottom of the image.
         
-        :param      montage_and_logo:  The montage and logo
+        :param      montage_and_logo:   Path to the montage with the logo
+                                        already applied.
         
         :returns:   Path to the created (output) image.
         """
@@ -233,9 +239,8 @@ class ShowSummary(ImageMaker):
 
     def create(self) -> None:
         """
-        Create the ShowSummary defined by this show object. The previously
-        randomly selected images will be used, and all ImageMagick commands will
-        be run through an `ImageMagickInterface`.
+        Create the ShowSummary defined by this show object. Image selection is
+        done at the start of this function.
         """
 
         info(f'Creating ShowSummary for "{self.show.full_name}"')

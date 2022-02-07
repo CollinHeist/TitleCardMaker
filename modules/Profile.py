@@ -1,7 +1,8 @@
 from regex import match, IGNORECASE
 
 from modules.Debug import *
-from modules.TitleCardMaker import TitleCardMaker
+from modules.CardType import CardType
+from modules.StandardTitleCard import StandardTitleCard
 
 class Profile:
     """
@@ -15,15 +16,14 @@ class Profile:
                  season_map: dict, episode_range: dict, map_or_range: bool,
                  episode_text_format: str) -> None:
         """
-        Constructs a new instance of a Profile object. Initializing the
-        profile's font, and color.
+        Constructs a new instance of a Profile object.
         """
 
         # Store this profiles arguments as attributes
         self.font_color = font_color
         self.font_size = font_size
         self.font = font
-        self.font_case = TitleCardMaker.CASE_FUNCTION_MAP[font_case]
+        self.font_case = CardType.CASE_FUNCTION_MAP[font_case]
         self.font_replacements = font_replacements
         self.hide_season_title = hide_seasons
         self.__season_map = season_map
@@ -36,40 +36,34 @@ class Profile:
         self.__use_custom_font = True
 
 
-    def _get_valid_profiles(self) -> list:
+    def get_valid_profiles(self, card_class: CardType) -> list:
         """
         Gets the valid applicable profiles for this profile. For example,
         for a profile with only generic attributes, it's invalid to
         apply a custom font profile from there.
+
+        :param      card_class: Implementation of CardType whose valid 
+                                subprofiles are requested. 
         
-        :returns:   The profiles that can be created as subprofiles
-                    from this object.
+        :returns:   The profiles that can be created as subprofiles from this
+                    object.
         """
 
         # Determine whether this profile uses custom season titles
-        has_custom_season_titles = False
-        if self.episode_text_format != 'EPISODE {episode_number}':
-            has_custom_season_titles = True
-        elif self.__episode_range != {}:
-            has_custom_season_titles = True
-        else:
-            for number, title in self.__season_map.items():
-                if number == 0:
-                    if title.lower() != 'specials':
-                        has_custom_season_titles = True
-                        break
-                else:
-                    if title.lower() != f'season {number}':
-                        has_custom_season_titles = True
-                        break
+        has_custom_season_titles = card_class.is_custom_season_titles(
+            season_map=self.__season_map,
+            episode_range=self.__episode_range,
+            episode_text_format=self.episode_text_format,
+        )
 
         # Determine whether this profile uses a custom font
-        has_custom_font = \
-            (self.font != TitleCardMaker.TITLE_DEFAULT_FONT) or \
-            (self.font_size != 1.0) or \
-            (self.font_color != TitleCardMaker.TITLE_DEFAULT_COLOR) or \
-            (self.font_replacements != TitleCardMaker.DEFAULT_FONT_REPLACEMENTS) or \
-            (self.font_case != TitleCardMaker.CASE_FUNCTION_MAP[TitleCardMaker.DEFAULT_CASE_VALUE])
+        has_custom_font = card_class.is_custom_font(
+            font=self.font,
+            size=self.font_size,
+            color=self.font_color,
+            replacements=self.font_replacements,
+            case=self.font_case,
+        )
 
         # Get list of profile strings applicable to this object
         valid_profiles = [{'seasons': 'generic', 'font': 'generic'}]
@@ -81,7 +75,7 @@ class Profile:
             if has_custom_font:
                 valid_profiles.append({'seasons': 'custom', 'font': 'custom'})
 
-        if self.hide_season_title:
+        if self.hide_season_title and card_class.USES_SEASON_TITLE:
             valid_profiles.append({'seasons': 'hidden', 'font': 'generic'})
             if has_custom_font:
                 valid_profiles.append({'seasons': 'hidden', 'font': 'custom'})
@@ -89,7 +83,8 @@ class Profile:
         return valid_profiles
 
 
-    def convert_profile_string(self, seasons: str, font: str) -> None:
+    def convert_profile_string(self, card_class: CardType, seasons: str,
+                               font: str) -> None:
         """
         Convert this profile to the provided profile attributes. This modifies
         what characteristics are presented by the object.
@@ -104,12 +99,12 @@ class Profile:
 
         # If the new profile has a generic font, reset font attributes
         if not self.__use_custom_font:
-            self.font = TitleCardMaker.TITLE_DEFAULT_FONT
+            self.font = card_class.TITLE_FONT
             self.font_size = 1.0
-            self.font_color = TitleCardMaker.TITLE_DEFAULT_COLOR
-            self.font_replacements = TitleCardMaker.DEFAULT_FONT_REPLACEMENTS
-            self.font_case = TitleCardMaker.CASE_FUNCTION_MAP[
-                TitleCardMaker.DEFAULT_CASE_VALUE
+            self.font_color = card_class.TITLE_COLOR
+            self.font_replacements = card_class.FONT_REPLACEMENTS
+            self.font_case = card_class.CASE_FUNCTION_MAP[
+                card_class.DEFAULT_FONT_CASE
             ]
 
 
@@ -248,7 +243,9 @@ class Profile:
         if text_to_remove:
             info(f'Removed episode number format text "'
                  f'{text_to_remove.group()}" from episode title', 1)
-            return title_text.replace(text_to_remove.group(), '')
+            new_text = title_text.replace(text_to_remove.group(), '')
+            if new_text == '':
+                return title_text
 
         return title_text
 

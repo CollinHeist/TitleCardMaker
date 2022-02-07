@@ -6,7 +6,7 @@ from modules.GenreMaker import GenreMaker
 from modules.PreferenceParser import PreferenceParser
 from modules.preferences import set_preference_parser
 from modules.SonarrInterface import SonarrInterface
-from modules.TitleCardMaker import TitleCardMaker
+from modules.TitleCard import TitleCard
 from modules.TMDbInterface import TMDbInterface
 
 parser = ArgumentParser(description='Manual fixes for the TitleCardMaker')
@@ -16,6 +16,9 @@ parser.add_argument('-p', '--preference-file', type=Path, default='preferences.y
 
 # Argument group for 'manual' title card creation
 title_card_group = parser.add_argument_group('Title Cards', 'Manual title card creation')
+title_card_group.add_argument('--card-type', type=str, default='standard',
+                              choices=TitleCard.CARD_TYPES.keys(),
+                              help='Create a title card of a specific type')
 title_card_group.add_argument('--title-card', type=str, nargs=3, default=SUPPRESS, 
                               metavar=('EPISODE', 'SOURCE', 'DESTINATION'),
                               help='Manually create a title card using these parameters')
@@ -25,13 +28,13 @@ title_card_group.add_argument('--season', type=str, default=None,
 title_card_group.add_argument('--title', type=str, nargs='+', default=(' ', ' '),
                               metavar=('LINE1', 'LINE2'),
                               help='Specify the title text to use for this card')
-title_card_group.add_argument('--font', '--font-file', type=Path, default=TitleCardMaker.TITLE_DEFAULT_FONT,
+title_card_group.add_argument('--font', '--font-file', type=Path, default='__default',
                               metavar='FONT_FILE',
                               help='Specify a custom font to use for this card')
 title_card_group.add_argument('--font-size', '--size', type=str, default='100%',
                               metavar='SCALE%',
                               help='Specify a custom font scale, as percentage, to use for this card')
-title_card_group.add_argument('--font-color', '--color', type=str, default=TitleCardMaker.TITLE_DEFAULT_COLOR,
+title_card_group.add_argument('--font-color', '--color', type=str, default='__default',
                               metavar='#HEX',
                               help='Specify a custom font color to use for this card')
 
@@ -69,6 +72,12 @@ tmdb_group.add_argument('--delete-blacklist', action='store_true',
 # Check given arguments
 args = parser.parse_args()
 
+# Override unspecified defaults with their class specific defaults
+if args.font == '__default':
+    args.font = TitleCard.CARD_TYPES[args.card_type].TITLE_FONT
+if args.font_color == '__default':
+    args.font_color = TitleCard.CARD_TYPES[args.card_type].TITLE_COLOR
+
 # Parse preference file for options that might need it
 pp = PreferenceParser(args.preference_file)
 if not pp.valid:
@@ -77,7 +86,7 @@ set_preference_parser(pp)
 
 # Execute title card related options
 if hasattr(args, 'title_card'):
-    TitleCardMaker(
+    TitleCard.CARD_TYPES[args.card_type](
         episode_text=args.title_card[0],
         source=Path(args.title_card[1]), 
         output_file=Path(args.title_card[2]),

@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 regex = "*"
+num2words = "*"
 
 [dev-packages]
 

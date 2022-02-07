@@ -20,7 +20,7 @@ class PreferenceParser:
         errors and exits if any required options are missing, and then parses
         the preferences into object attributes.
         
-        :param      file:  The preference file to parse.
+        :param      file:   The preference file to parse.
         """
         
         # Store file
@@ -38,6 +38,7 @@ class PreferenceParser:
 
         ## Setup default values that can be overwritten by YAML
         self.series_files = []
+        self.card_type = 'standard'
         self.archive_directory = None
         self.create_archive = False
         self.create_summaries = False
@@ -101,6 +102,9 @@ class PreferenceParser:
             else:
                 self.series_files = [value]
 
+        if self.__is_specified('options', 'card_type'):
+            self.card_type = self.__yaml['options']['card_type']
+
         if self.__is_specified('archive', 'path'):
             self.archive_directory = Path(self.__yaml['archive']['path'])
             self.create_archive = True
@@ -122,7 +126,8 @@ class PreferenceParser:
             self.plex_token = self.__yaml['plex']['token']
 
         if self.__is_specified('sonarr'):
-            if not all((self.__is_specified('sonarr', 'url'), self.__is_specified('sonarr', 'api_key'))):
+            if not all((self.__is_specified('sonarr', 'url'),
+                        self.__is_specified('sonarr', 'api_key'))):
                 error(f'Sonarr preferences must contain "url" and "api_key"')
                 self.valid = False
             else:
