@@ -22,7 +22,7 @@ args = parser.parse_args()
 
 # Check if preference file exists
 if not args.preference_file.exists():
-    error(f'Preference file "{args.preference.resolve()}" does not exist')
+    error(f'Preference file "{args.preference_file.resolve()}" does not exist')
     exit(1)
 
 # Read the preference file, verify it is valid and exit if not
