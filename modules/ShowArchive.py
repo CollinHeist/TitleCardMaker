@@ -62,16 +62,28 @@ class ShowArchive:
             return
 
         # For each applicable sub-profile, create and modify new show/show summary
-        for profile_attributes in base_show.profile._get_valid_profiles():
+        for profile_attributes in base_show.profile.get_valid_profiles(base_show.card_class):
             # Create show object for this profile
             new_show = deepcopy(base_show)
 
-            # Update media directory, update profile and parse source
-            profile_string = f'{profile_attributes["seasons"]}-{profile_attributes["font"]}'
+            # Update media directory
+            profile_directory = self.PROFILE_DIRECTORY_MAP[
+                f'{profile_attributes["seasons"]}-{profile_attributes["font"]}'
+            ]
+            if base_show.card_class.ARCHIVE_NAME != 'standard':
+                profile_directory += f' - {base_show.card_class.ARCHIVE_NAME}'
+
             new_show.media_directory = (
-                archive_directory / new_show.full_name / self.PROFILE_DIRECTORY_MAP[profile_string]
+                archive_directory / new_show.full_name / profile_directory
             )
-            new_show.profile.convert_profile_string(**profile_attributes)
+
+            # Convert this new show's profile
+            new_show.profile.convert_profile_string(
+                base_show.card_class,
+                **profile_attributes
+            )
+
+            # Read the show source
             new_show.read_source()
 
             self.shows.append(new_show)
@@ -89,13 +101,10 @@ class ShowArchive:
 
     def update_archive(self, *args: tuple, **kwargs: dict) -> None:
         """
-        Call `create_missing_title_cards()` on each archive-specific
-        `Show` object in this object. This effectively creates all missing
-        title cards for each profile.
+        Create all missing title cards for each show object in this archive.
         
-        :param      args:    The arguments
-
-        :param      kwargs:  The keywords arguments
+        :param      args and kwargs:    The arguments to pass directly to
+                                        `Show.create_missing_title_cards()`.
         """
         info(f'Updating archive for "{self.__base_show.full_name}"')
         for show in self.shows:
@@ -103,9 +112,7 @@ class ShowArchive:
 
 
     def create_summary(self) -> None:
-        """
-        Creates a summary.
-        """
+        """Create the ShowSummary image for each archive in this object."""
 
         for show in self.summaries:
             show.create()

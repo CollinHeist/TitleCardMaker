@@ -1,5 +1,8 @@
 from modules.Debug import *
+
+# CardType classes
 from modules.StandardTitleCard import StandardTitleCard
+from modules.StarWarsTitleCard import StarWarsTitleCard
 
 class TitleCard:
     """
@@ -11,6 +14,14 @@ class TitleCard:
     """Extensions of the input source image and output title card"""
     INPUT_CARD_EXTENSION: str = '.jpg'
     OUTPUT_CARD_EXTENSION: str = '.jpg'
+
+    """Mapping of card type identifiers to CardType classes"""
+    CARD_TYPES = {
+        'standard': StandardTitleCard,
+        'generic': StandardTitleCard,
+        'star wars': StarWarsTitleCard,
+    }
+
 
     def __init__(self, episode: 'Episode', profile: 'Profile') -> None:
         """
@@ -33,17 +44,19 @@ class TitleCard:
             abs_number = episode.abs_number
         
         # Construct this title card's StandardTitleCard from the given arguments
-        self.maker = StandardTitleCard(
-            episode.source,
-            episode.destination,
-            profile.convert_title(episode.title_top_line),
-            profile.convert_title(episode.title_bottom_line),
-            profile.get_season_text(episode.season_number, abs_number),
-            profile.get_episode_text(episode.episode_number,episode.abs_number),
-            profile.font,
-            profile.font_size,
-            profile.font_color,
-            profile.hide_season_title,
+        self.maker = self.episode.card_class(
+            source=episode.source,
+            output_file=episode.destination,
+            title_top_line=profile.convert_title(episode.title_top_line),
+            title_bottom_line=profile.convert_title(episode.title_bottom_line),
+            season_text=profile.get_season_text(
+                episode.season_number, abs_number
+            ), episode_text=profile.get_episode_text(
+                episode.episode_number, episode.abs_number
+            ), font=profile.font,
+            font_size=profile.font_size,
+            title_color=profile.font_color,
+            hide_season=profile.hide_season_title,
         )
 
         # File associated with this card is the episode's destination

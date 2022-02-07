@@ -5,13 +5,11 @@ from modules.TitleCard import TitleCard
 
 class Episode:
     """
-    This class defines an episode of a series that has a corresponding Title Card.
-    An Episode is defined (and identified) by its season and episode number.
-    Upon initialization, this class splits episode titles into up to two lines (if
-    necessary, as determined by length of the title itself).
-
-    This class is not intended to execute any methods, and is instead intended
-    to contain data for use by other classes.
+    This class defines an episode of a series that has a corresponding Title
+    Card. An Episode is defined (and identified) by its season and episode
+    number. Upon initialization, this class splits episode titles into up to two
+    lines (if necessary, as determined by length of the title and the card
+    class).
 
     An example usage is shown below:
 
@@ -27,12 +25,9 @@ class Episode:
     ```
     """
 
-    """Character count to begin splitting episode text into 2 lines"""
-    MAX_LINE_LENGTH: int = 32
-
     def __init__(self, season_number: int, episode_number: int,
-                 base_source: Path, destination: Path, title: str,
-                 abs_number: int=None) -> None:
+                 card_class: 'CardType', base_source: Path, destination: Path,
+                 title: str, abs_number: int=None) -> None:
         """
         Constructs a new instance.
 
@@ -54,10 +49,12 @@ class Episode:
         # Set object attributes
         self.season_number = int(season_number)
         self.episode_number = int(episode_number)
+        self.card_class = card_class
         self.abs_number = int(abs_number) if abs_number != None else None
 
         # Set in/out paths
-        source_name = f's{season_number}e{episode_number}{TitleCard.INPUT_CARD_EXTENSION}'
+        source_name = (f's{season_number}e{episode_number}'
+                       f'{TitleCard.INPUT_CARD_EXTENSION}')
         self.source = base_source / source_name
         self.destination = destination
 
@@ -67,7 +64,8 @@ class Episode:
             self.title_top_line = title[0]
             self.title_bottom_line = title[1]
         else:
-            self.title_top_line, self.title_bottom_line = self._split_title(title)
+            top, bottom = card_class.split_title(title)
+            self.title_top_line, self.title_bottom_line = top, bottom
 
 
     def __repr__(self) -> str:
@@ -82,16 +80,6 @@ class Episode:
             f'{self.episode_number}, title_top_line="{self.title_top_line}",'
             f' title_bottom_line="{self.title_bottom_line}">'
         )
-
-
-    def __str__(self) -> str:
-        """
-        Returns a string representation of the object.
-        
-        :returns:   String representation of the object.
-        """
-
-        return f'Season {self.season_number}, Episode {self.episode_number}'
 
 
     def matches(self, episode_info: dict) -> bool:
@@ -110,55 +98,5 @@ class Episode:
         episode_match = episode_info['episode_number'] == self.episode_number
 
         return season_match and episode_match
-
-
-    @staticmethod
-    def split_episode_title(title: str) -> (str, str):
-        """
-        Split a given title into top and bottom title text.
-        
-        :param      title:  The title to be split.
-        
-        :returns:   Tuple of titles. First entry is the top title, second
-                    is the bottom.
-        """
-
-        return Episode._split_title(title)
-
-
-    @staticmethod
-    def _split_title(title: str) -> (str, str):
-        """
-        Inner function to split a given title into top and bottom title text.
-        Splitting takes priority on some special characters, such as colons,
-        and commas. Final splitting is then done on spaces
-        
-        :param      title:  The title to be split.
-        
-        :returns:   Tuple of titles. First entry is the top title, second
-                    is the bottom.
-        """
-
-        top, bottom = '', title
-        if len(title) >= Episode.MAX_LINE_LENGTH:
-            # Only look for colon/comma in the first half of the text to avoid long top lines
-            # for titles with these in the last part of the title like [.......]: [..]
-            if ': ' in bottom[:len(bottom)//2]:
-                top, bottom = title.split(': ', 1)
-                top += ':'
-            elif ', ' in bottom[:len(bottom)//2]:
-                top, bottom = title.split(', ', 1)
-                top += ','
-            elif '( ' in bottom[:len(bottom)//2]:
-                top, bottom = title.split('( ', 1)
-                top += '('
-            else:
-                top, bottom = title.split(' ', 1)
-
-            while len(bottom) >= Episode.MAX_LINE_LENGTH:
-                top2, bottom = bottom.split(' ', 1)
-                top += f' {top2}'
-
-        return top, bottom
 
         

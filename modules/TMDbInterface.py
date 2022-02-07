@@ -117,7 +117,7 @@ class TMDbInterface(WebInterface):
         if key not in self.__blacklist:
             return False
             
-        if self.__blacklist[key]['failures'] > self.preferences.tmdb_retry_count:
+        if self.__blacklist[key]['failures'] >self.preferences.tmdb_retry_count:
             return True
 
         # If we haven't passed next time, then treat as temporary blacklist

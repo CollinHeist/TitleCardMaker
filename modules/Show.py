@@ -3,13 +3,13 @@ from re import match
 
 from yaml import safe_load
 
+from modules.CardType import CardType
 from modules.DataFileInterface import DataFileInterface
 from modules.Debug import *
 from modules.Episode import Episode
 import modules.preferences as global_preferences
 from modules.Profile import Profile
 from modules.TitleCard import TitleCard
-from modules.StandardTitleCard import StandardTitleCard
 
 class Show:
     """
@@ -78,16 +78,17 @@ class Show:
         # Setup default values that can be overwritten by the YML
         self.library_name = None
         self.library = None
+        self.card_class = TitleCard.CARD_TYPES[self.preferences.card_type]
         self.source_directory = source_directory / self.full_name
         self.episode_text_format = 'EPISODE {episode_number}'
         self.archive = True
         self.sonarr_sync = True
         self.tmdb_sync = True
-        self.font_color = StandardTitleCard.TITLE_DEFAULT_COLOR
+        self.font_color = self.card_class.TITLE_COLOR
         self.font_size = 1.0
-        self.font = StandardTitleCard.TITLE_DEFAULT_FONT.resolve()
-        self.font_case = 'upper'
-        self.font_replacements = StandardTitleCard.DEFAULT_FONT_REPLACEMENTS
+        self.font = self.card_class.TITLE_FONT
+        self.font_case = self.card_class.DEFAULT_FONT_CASE
+        self.font_replacements = self.card_class.FONT_REPLACEMENTS
         self.hide_seasons = False
         self.__episode_range = {}
         self.__season_map = {n: f'Season {n}' for n in range(1, 1000)}
@@ -136,8 +137,6 @@ class Show:
         """
         Parse the show's YAML and update this object's attributes. Error on
         any invalid attributes and update `valid` attribute.
-        
-        :returns:   { description_of_the_return_value }
         """
 
         # Read all optional tags
@@ -147,11 +146,22 @@ class Show:
         if self.__is_specified('library'):
             value = self.__yaml['library']
             if value not in self.__library_map:
-                error(f'Library "{value}" of series "{self.name}" is not found in libraries list')
+                error(f'Library "{value}" of series "{self.name}" is not found '
+                      f'in libraries list')
                 self.valid = False
             else:
                 self.library_name = value
                 self.library = Path(self.__library_map[value])
+
+        if self.__is_specified('card_type'):
+            value = self.__yaml['card_type']
+            if value not in TitleCard.CARD_TYPES:
+                error(f'Card type "{value}" of series "{self.name}" is unknown,'
+                      f' ensure any custom card classes are added to the '
+                      f'CARD_TYPES dictionary of the TitleCard class')
+                self.valid = False
+            else:
+                self.card_class = TitleCard.CARD_TYPES[value]
 
         if self.__is_specified('source'):
             self.source_directory = Path(self.__yaml['source'])
@@ -174,7 +184,8 @@ class Show:
         if self.__is_specified('font', 'color'):
             value = self.__yaml['font']['color']
             if not bool(match('^#[a-fA-F0-9]{6}$', value)):
-                error(f'Font color "{value}" of series "{self.name}" is invalid - specify as "#xxxxxx"')
+                error(f'Font color "{value}" of series "{self.name}" is invalid'
+                      f' - specify as "#xxxxxx"')
                 self.valid = False
             else:
                 self.font_color = value
@@ -182,7 +193,8 @@ class Show:
         if self.__is_specified('font', 'size'):
             value = self.__yaml['font']['size']
             if not bool(match('^\d+%$', value)):
-                error(f'Font size "{value}" of series "{self.name}" is invalid - specify as "x%"')
+                error(f'Font size "{value}" of series "{self.name}" is invalid '
+                      f'- specify as "x%"')
                 self.valid = False
             else:
                 self.font_size = float(value[:-1]) / 100.0
@@ -190,15 +202,15 @@ class Show:
         if self.__is_specified('font', 'file'):
             value = Path(self.__yaml['font']['file'])
             if not value.exists():
-                error(f'Font file "{value}" of series "{self.name}" does not exist')
+                error(f'Font file "{value}" of series "{self.name}" not found')
                 self.valid = False
             else:
-                self.font = value.resolve()
-                self.font_replacements = {} # reset replacements if new font is given
+                self.font = str(value.resolve())
+                self.font_replacements = {} # Reset for manually specified font
 
         if self.__is_specified('font', 'case'):
             value = self.__yaml['font']['case'].lower()
-            if value not in StandardTitleCard.CASE_FUNCTION_MAP:
+            if value not in self.card_class.CASE_FUNCTION_MAP:
                 error(f'Font case "{value}" of series "{self.name}" is unrecognized')
                 self.valid = False
             else:
@@ -206,7 +218,8 @@ class Show:
 
         if self.__is_specified('font', 'replacements'):
             if any(len(key) != 1 for key in self.__yaml['font']['replacements'].keys()):
-                error(f'Font replacements of series "{self.name}" is invalid - must only be 1 character')
+                error(f'Font replacements of series "{self.name}" is invalid - '
+                      f'must only be 1 character')
                 self.valid = False
             else:
                 self.font_replacements = self.__yaml['font']['replacements']
@@ -234,8 +247,8 @@ class Show:
                 try:
                     start, end = map(int, episode_range.split('-'))
                 except:
-                    error(f'Episode range "{episode_range}" for series "{self.name}" '
-                          f'is invalid - specify as "start-end"')
+                    error(f'Episode range "{episode_range}" for series "'
+                          f'{self.name}" is invalid - specify as "start-end"')
                     self.valid = False
                     continue
 
@@ -252,22 +265,23 @@ class Show:
         
         :param      attribute:      The attribute to check for.
         :param      sub_attribute:  The sub attribute to check for. Necessary if
-                                    the given attribute has attributes of its own.
+                                    the given attribute has attributes of its
+                                    own.
         
         :returns:   True if specified, False otherwise.
         """
 
         current_level = self.__yaml
-        for attribute in attributes:
-            # If this level isn't even a dictionary, or the attribute doesn't exist
-            if not isinstance(current_level, dict) or attribute not in current_level:
+        for attr in attributes:
+            # If this level isn't even a dictionary, or the attribute DNE, FALSE
+            if not isinstance(current_level, dict) or attr not in current_level:
                 return False
 
-            if current_level[attribute] == None:
+            if current_level[attr] == None:
                 return False
 
             # Move to the next level
-            current_level = current_level[attribute]
+            current_level = current_level[attr]
 
         return True
 
@@ -347,7 +361,8 @@ class Show:
             self.episodes[key] = Episode(
                 base_source=self.source_directory,
                 destination=self._get_destination(data_row),
-                **data_row
+                card_class=self.card_class,
+                **data_row,
             )
 
             # Attempt to use sonarr to figure out more accurate destination
@@ -406,7 +421,7 @@ class Show:
 
                 # Construct data for new row
                 has_new = True
-                top, bottom = Episode.split_episode_title(new_episode.pop('title'))
+                top,bottom=self.card_class.split_title(new_episode.pop('title'))
                 new_episode.update({'title_top': top, 'title_bottom': bottom})
 
                 info(f'New episode for "{self.full_name}" '

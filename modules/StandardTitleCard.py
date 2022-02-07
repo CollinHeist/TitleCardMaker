@@ -3,9 +3,9 @@ from re import findall
 
 from modules.Debug import *
 import modules.preferences as preferences
-from modules.ImageMaker import ImageMaker
+from modules.CardType import CardType
 
-class StandardTitleCard(ImageMaker):
+class StandardTitleCard(CardType):
     """
     This class describes the object that actually makes the title card using
     programmed ImageMagick commands. 
@@ -30,16 +30,8 @@ class StandardTitleCard(ImageMaker):
         9. Delete all intermediate files created above.
     """
 
-    """Map of 'case' values to their relevant functions"""
-    DEFAULT_CASE_VALUE = 'upper'
-    CASE_FUNCTION_MAP = {
-        'upper': str.upper,
-        'lower': str.lower,
-        'title': str.title,
-    }
-
     """Default characters to replace in the generic font"""
-    DEFAULT_FONT_REPLACEMENTS = {
+    FONT_REPLACEMENTS = {
         '[': '(', ']': ')', '(': '[', ')': ']'
     }
 
@@ -47,8 +39,8 @@ class StandardTitleCard(ImageMaker):
     GRADIENT_IMAGE_PATH: Path = Path(__file__).parent / 'ref' / 'GRADIENT.png'
 
     """Default font and text color for episode title text"""
-    TITLE_DEFAULT_FONT = Path(__file__).parent / 'ref' / 'Sequel-Neue.otf'
-    TITLE_DEFAULT_COLOR = '#EBEBEB'
+    TITLE_FONT = str((Path(__file__).parent /'ref'/'Sequel-Neue.otf').resolve())
+    TITLE_COLOR = '#EBEBEB'
 
     """Default fonts and color for series count text"""
     SEASON_COUNT_DEFAULT_FONT = Path(__file__).parent / 'ref' / 'Proxima Nova Semibold.otf'
@@ -63,39 +55,51 @@ class StandardTitleCard(ImageMaker):
     __GRADIENT_WITH_TITLE_PATH = Path(__file__).parent / '.objects' / 'gradient_title.png'
     __SERIES_COUNT_TEXT_PATH = Path(__file__).parent / '.objects' / 'series_count_text.png'
 
+    """Character count to begin splitting episode text into 2 lines"""
+    MAX_LINE_LENGTH = 32
+
+    """Whether this CardType uses season titles for archival purposes"""
+    USES_SEASON_TITLE = True
+
+    ARCHIVE_NAME = 'standard'
+
     def __init__(self, source: Path, output_file: Path, title_top_line: str,
                  title_bottom_line: str, season_text: str, episode_text: str,
-                 font: str, font_size: float, title_color: str, hide_season: bool) -> None:
+                 font: str, font_size: float, title_color: str,
+                 hide_season: bool, *args: tuple, **kwargs: dict) -> None:
 
         """
         Initialize the TitleCardMaker object. This primarily just stores
         instance variables for later use in `create()`. If the provided font
         does not have a character in the title text, a space is used instead.
 
-        :param      source:         Path to the image source for this card.
+        :param  source:             Source image.
 
-        :param      output_file:    Path to the output destination for this card.
+        :param  output_file:        Output file.
 
-        :param      title_line1:    First line of episode title text. This is
-                                    the BOTTOM line of text.
+        :param  title_top_line:     Top line of the episode title.
 
-        :param      title_line2:    Second line of episode title text. This is
-                                    the TOP line of text.
+        :param  title_bottom_line:  Bottom line of the episode title.
 
-        :param      season_text:    Text to use as season count text. Ignored
+        :param  season_text:        Text to use as season count text. Ignored
                                     if hide_season is True.
 
-        :param      episode_text:   Text to use as episode count text.
+        :param  episode_text:       Text to use as episode count text.
 
-        :param      font:           Font to use for the episode title. MUST be
-                                    a valid ImageMagick font. See
-                                    `convert -list font` for full list.
+        :param  font:               Font to use for the episode title. MUST be a
+                                    a valid ImageMagick font, or filepath to a
+                                    font.
 
-        :param      title_color:    Color to use for the episode title.
+        :param  font_size:          Scalar to apply to the standard font size,
+                                    i.e. 1.0 if normal (100%), 0.5 if 50%, etc.
 
-        :param      hide_season:    Whether to omit the season text (and
-                                    joining character) from the title card
-                                    completely.
+        :param  title_color:        Color to use for the episode title.
+
+        :param  hide_season:        Whether to omit the season text (and joining
+                                    character) from the title card completely.
+
+        :param  args and kwargs:    Unused arguments to permit generalized
+                                    calls for any CardType.
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
@@ -104,13 +108,13 @@ class StandardTitleCard(ImageMaker):
         self.source_file = source
         self.output_file = output_file
 
-        # Since all text is sent to ImageMagick wrapped in quotes, escape actual quotes
-        # found within the episode text
+        # Since all text is sent to ImageMagick wrapped in quotes, escape actual
+        # quotes found within the text
         self.title_top_line = title_top_line.replace('"', r'\"')
-        self.title_bottom_line = title_bottom_line.replace('"', r'\"') if title_bottom_line else None
+        self.title_bottom_line = title_bottom_line.replace('"', r'\"')
 
-        self.season_text = season_text.upper()
-        self.episode_text = episode_text.upper()
+        self.season_text = season_text.upper().replace('"', r'\"')
+        self.episode_text = episode_text.upper().replace('"', r'\"')
 
         self.font = font
         self.font_size = font_size
@@ -396,12 +400,83 @@ class StandardTitleCard(ImageMaker):
         self.image_magick.run(command)
 
 
+    @staticmethod
+    def split_title(title: str) -> (str, str):
+        """
+        Inner function to split a given title into top and bottom title text.
+        Splitting takes priority on some special characters, such as colons,
+        and commas. Final splitting is then done on spaces
+        
+        :param      title:  The title to be split.
+        
+        :returns:   Tuple of titles. First entry is the top title, second
+                    is the bottom.
+        """
+
+        return CardType._split_at_width(
+            title,
+            StandardTitleCard.MAX_LINE_LENGTH
+        )
+
+
+    @staticmethod
+    def is_custom_font(font: str, size: float, color: str,
+                       replacements: dict, case: callable,*args,**kwargs)->bool:
+        """
+        Determines whether the
+        
+        :param      font:          The font
+        :param      size:          The size
+        :param      color:         The color
+        :param      replacements:  The replacements
+        :param      case:          The case
+        
+        :returns:   True if custom font, False otherwise.
+        """
+
+        default_case = StandardTitleCard.DEFAULT_FONT_CASE
+
+        return ((font != StandardTitleCard.TITLE_FONT)
+            or (size != 1.0)
+            or (color != StandardTitleCard.TITLE_COLOR)
+            or (replacements != StandardTitleCard.FONT_REPLACEMENTS)
+            or (case != CardType.CASE_FUNCTION_MAP[default_case]))
+
+
+    @staticmethod
+    def is_custom_season_titles(season_map: dict, episode_range: dict, 
+                                episode_text_format: str) -> bool:
+        """
+        Determines if custom season titles.
+        
+        :param      season_map:           The season map
+        :param      episode_range:        The episode range
+        :param      episode_text_format:  The episode text format
+        
+        :returns:   True if custom season titles, False otherwise.
+        """
+
+        if episode_text_format != 'EPISODE {episode_number}':
+            return True
+        elif episode_range != {}:
+            return True
+        else:
+            for number, title in season_map.items():
+                if number == 0:
+                    if title.lower() != 'specials':
+                        return True
+                else:
+                    if title.lower() != f'season {number}':
+                        return True
+
+        return False
+
     def create(self) -> None:
         """
         Make the necessary ImageMagick and system calls to create this
         object's defined title card.
         """
-        
+
         # Add the gradient to the source image (always)
         gradient_image = self._add_gradient()
 

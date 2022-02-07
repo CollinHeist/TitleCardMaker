@@ -18,7 +18,9 @@ class DataFileInterface:
     EMPTY_VALUE: str ='_EMPTY_'
 
     """Label headers found at the top of all data files"""
-    GENERIC_HEADERS: list = ['title_top', 'title_bottom', 'season', 'episode', 'abs_number']
+    GENERIC_HEADERS: list = [
+        'title_top', 'title_bottom', 'season', 'episode', 'abs_number'
+    ]
 
     def __init__(self, data_file: Path) -> None:
         """
@@ -38,7 +40,7 @@ class DataFileInterface:
 
         # Create an empty data file if nothing exists, then exit (no data to read)
         if not self.file.exists():
-            info(f'Source file "{self.file.resolve()}" does not exist - creating blank')
+            info(f'Creating blank source file "{self.file.resolve()}"')
             self.create_new_data_file()
             return None
             
@@ -51,7 +53,8 @@ class DataFileInterface:
 
                 # Skip invalid rows
                 if len(row) < 4:
-                    error(f'Row {row_number} of {self.file.resolve()} is invalid ({row})')
+                    error(f'Row {row_number} of {self.file.resolve()} is '
+                          f'invalid ({row})')
                     continue
 
                 # Process EMPTY_VALUE text into blank text
@@ -65,7 +68,7 @@ class DataFileInterface:
                     'episode_number': row[3],
                 }
 
-                # Rows with the (optional) abs_number value should be parsed accordingly
+                # Rows with the (optional) abs_number value have extra key
                 if len(row) == 5:
                     row_dict['abs_number'] = row[4]
 

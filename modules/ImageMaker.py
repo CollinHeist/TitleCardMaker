@@ -13,6 +13,7 @@ class ImageMaker(ABC):
     completely customizable.
     """
 
+    """Standard size for a title card"""
     TITLE_CARD_SIZE: str = '3200x1800'
 
     @abstractmethod
