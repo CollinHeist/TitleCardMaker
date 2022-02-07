@@ -44,6 +44,7 @@ class PreferenceParser:
         self.create_summaries = False
         self.summary_background_color = ShowSummary.BACKGROUND_COLOR
         self.logo_filename = ShowSummary.LOGO_FILENAME
+        self.summary_minimum_episode_count = 1
         self.use_plex = False
         self.plex_url = None
         self.plex_token = 'NA'
@@ -117,6 +118,14 @@ class PreferenceParser:
 
         if self.__is_specified('archive', 'summary', 'logo_filename'):
             self.logo_filename = self.__yaml['archive']['summary']['logo_filename']
+
+        if self.__is_specified('archive', 'summary', 'minimum_episodes'):
+            value = self.__yaml['archive']['summary']['minimum_episodes']
+            try:
+                self.summary_minimum_episode_count = int(value)
+            except ValueError:
+                error(f'Summary minimum episode count "{value}" is invalid')
+                self.valid = False
 
         if self.__is_specified('plex', 'url'):
             self.plex_url = self.__yaml['plex']['url']

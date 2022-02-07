@@ -70,8 +70,14 @@ class ShowSummary(ImageMaker):
         # Warn if this show has no episodes to work with
         episode_count = len(available_episodes)
         if episode_count == 0:
-            warn(f'Cannot create Show Summary for {self.show.full_name} - '
+            warn(f'Cannot create ShowSummary for {self.show.full_name} - '
                  f'has no episodes', 1)
+
+        minimum = self.preferences.summary_minimum_episode_count
+        if episode_count < minimum:
+            info(f'Skipping ShowSummary for {self.show.full_name} - has '
+                 f'{episode_count} episodes, minimum setting is {minimum}', 1)
+            return
 
         # Get a random subset of images to create the summary with
         # Sort that subset my season/episode number so the montage appears chronological
