@@ -55,7 +55,7 @@ class Show:
         self.preferences = global_preferences.pp
         
         # Parse arguments given by the creator of this object
-        self.name = name
+        self.name = str(name)
         self.__yaml = yaml_dict
         self.__library_map = library_map
 
