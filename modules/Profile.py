@@ -235,6 +235,8 @@ class Profile:
             remove_regex = format_string.replace('{abs_number}', full_regex)
         elif '{episode_number}' in format_string:
             remove_regex = format_string.replace('{episode_number}', full_regex)
+        else:
+            return title_text
 
         # Find match of above regex, if exists, delete that text
         # Perform match on the case-ified episode text
