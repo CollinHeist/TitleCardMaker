@@ -8,6 +8,7 @@ regex = "*"
 num2words = "*"
 pyyaml = "*"
 requests = "*"
+titlecase = "*"
 
 [dev-packages]
 
