@@ -240,14 +240,13 @@ class Profile:
         # Perform match on the case-ified episode text
         text_to_remove = match(remove_regex, title_text, IGNORECASE)
 
-        if text_to_remove:
-            info(f'Removed episode number format text "'
-                 f'{text_to_remove.group()}" from episode title', 1)
-            new_text = title_text.replace(text_to_remove.group(), '')
-            if new_text == '':
-                return title_text
+        # If there's no match, return the original title
+        if not text_to_remove:
+            return title_text
 
-        return title_text
+        info(f'Removed episode number format text "{text_to_remove.group()}" '
+             f'from episode title', 1)
+        return title_text.replace(text_to_remove.group(), '')
 
 
     def convert_title(self, title_text: str) -> str:
