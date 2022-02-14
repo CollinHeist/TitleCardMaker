@@ -43,8 +43,8 @@ class GenreMaker(ImageMaker):
 
     def __resize_source(self) -> Path:
         """
-        Resize the source file for this card into the necessary
-        dimensions (946x1446).
+        Resize the source file for this card into the necessary dimensions
+        (946x1446).
         
         :returns:   Path to the created image.
         """
@@ -64,9 +64,9 @@ class GenreMaker(ImageMaker):
 
     def __add_gradient(self, resized_source: Path) -> Path:
         """
-        Adds a gradient.
+        Add the static gradient image to the given resized image.
         
-        :param      resized_source:  The resized source
+        :param      resized_source: Path to the image to add a gradient to.
         
         :returns:   Path to the created image.
         """
@@ -86,9 +86,9 @@ class GenreMaker(ImageMaker):
 
     def __add_text_and_border(self, source_with_gradient: Path) -> Path:
         """
-        Adds a text and border.
+        Add the genre text and the white border to the given image.
         
-        :param      source_with_gradient:   The source image with gradient
+        :param      source_with_gradient:   The source image with the gradient
                                             applied.
         
         :returns:   Path to the created image.
@@ -114,13 +114,14 @@ class GenreMaker(ImageMaker):
         
     def create(self) -> None:
         """
-        Create the genre card. This WILL overwrite the existing file if it already
-        exists. Errors and returns if the image source does not exist.
+        Create the genre card. This WILL overwrite the existing file if it 
+        already exists. Errors and returns if the image source does not exist.
         """
 
         # If the source file doesn't exist, exit
         if not self.source.exists():
-            error(f'Cannot create genre card, "{self.source.resolve()}" does not exist.')
+            error(f'Cannot create genre card, "{self.source.resolve()}" does '
+                  f'not exist.')
             return None
         
         # Resize source to fit in contrained space
@@ -133,5 +134,8 @@ class GenreMaker(ImageMaker):
         output = self.__add_text_and_border(source_with_gradient)
 
         # Delete intermediate files
-        self.image_magick.delete_intermediate_images(resized_source, source_with_gradient)
+        self.image_magick.delete_intermediate_images(
+            resized_source,
+            source_with_gradient
+        )
 

@@ -9,9 +9,8 @@ from modules.TMDbInterface import TMDbInterface
 
 class PreferenceParser:
     """
-    This class describes a preference parser that reads a given preference
-    YAML file and parses it into individual attributes such as whether to use Plex,
-    the TMDb API key, etc.
+    This class describes a preference parser that reads a given preference YAML
+    file and parses it into individual attributes.
     """
 
     def __init__(self, file: Path) -> None:
@@ -36,7 +35,7 @@ class PreferenceParser:
             exit(1)
         self.source_directory = Path(self.__yaml['options']['source'])
 
-        ## Setup default values that can be overwritten by YAML
+        # Setup default values that can be overwritten by YAML
         self.series_files = []
         self.card_type = 'standard'
         self.archive_directory = None
@@ -57,7 +56,7 @@ class PreferenceParser:
         self.tmdb_minimum_resolution = {'width': 0, 'height': 0}
         self.imagemagick_docker_id = None
 
-        # Modify object attributes based off YAML
+        # Modify object attributes based off YAML, assume valid to start
         self.valid = True
         self.__parse_yaml()
 
@@ -67,33 +66,35 @@ class PreferenceParser:
         Determines whether the given attribute/sub-attribute has been manually 
         specified in the show's YAML.
         
-        :param      attribute:      The attribute to check for.
-        :param      sub_attribute:  The sub attribute to check for. Necessary if
-                                    the given attribute has attributes of its own.
+        :param      attributes: Any number of attributes to check for. Each
+                                subsequent argument is checked for as a sub-
+                                attribute of the prior one.
         
-        :returns:   True if specified, False otherwise.
+        :returns:   True if ALL attributes are specified, False otherwise.
         """
 
-        current_level = self.__yaml
+        current = self.__yaml
         for attribute in attributes:
-            # If this level isn't even a dictionary, or the attribute doesn't exist
-            if not isinstance(current_level, dict) or attribute not in current_level:
+            # If this level isn't even a dictionary or the attribute DNE - False
+            if not isinstance(current, dict) or attribute not in current:
                 return False
 
-            if current_level[attribute] == None:
+            # If this level has sub-attributes, but is blank (None) - False
+            if current[attribute] == None:
                 return False
 
             # Move to the next level
-            current_level = current_level[attribute]
+            current = current[attribute]
 
+        # All given attributes have been checked without exit, must be specified
         return True
 
 
     def __parse_yaml(self) -> None:
         """
-        Parse the raw YAML dictionary into object attributes. This also
-        errors to the user if any provided values are overtly invalid (i.e.
-        missing where necessary, fails type conversion).
+        Parse the raw YAML dictionary into object attributes. This also errors
+        to the user if any provided values are overtly invalid (i.e. missing
+        where necessary, fails type conversion).
         """
 
         if self.__is_specified('options', 'series'):
@@ -160,7 +161,7 @@ class PreferenceParser:
                 width, height = map(int, self.__yaml['tmdb']['minimum_resolution'].split('x'))
                 self.tmdb_minimum_resolution = {'width': width, 'height': height}
             except:
-                error(f'Invalid TMDb minimum resolution - specify as WIDTHxHEIGHT')
+                error(f'Invalid minimum resolution - specify as WIDTHxHEIGHT')
                 self.valid = False
 
         if self.__is_specified('imagemagick', 'docker_id'):

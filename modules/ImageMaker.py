@@ -37,5 +37,4 @@ class ImageMaker(ABC):
         This method should delete any intermediate files, and should make
         ImageMagick calls through the parent class' ImageMagickInterface object.
         """
-
-        pass
+        raise NotImplementedError(f'All ImageMaker objects must implement this')
