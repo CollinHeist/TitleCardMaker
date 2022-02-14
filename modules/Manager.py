@@ -16,10 +16,11 @@ class Manager:
     def __init__(self) -> None:
         """
         Constructs a new instance of the manager. This uses the global
-        `PreferenceParser` object in `preferences`, and optionally creates
+        `PreferenceParser` object in preferences, and optionally creates
         interfaces as indicated by that parser.
         """
 
+        # Get the global preferences
         self.preferences = global_preferences.pp
 
         # Establish directory bases
@@ -50,19 +51,6 @@ class Manager:
         # Setup blank show and archive lists
         self.shows = []
         self.archives = []
-
-
-    def __repr__(self) -> str:
-        """
-        Returns a unambiguous string representation of the object.
-        
-        :returns:   String representation of the object.
-        """
-
-        return (f'<TitleCardManager(config={self.config}, source_directory='
-            f'{self.source_base}, sonarr_interface={self.sonarr_interface}, '
-            f'tmdb_interface={self.tmdb_interface}, shows={self.shows}>'
-        )
 
 
     def create_shows(self) -> None:
@@ -101,6 +89,7 @@ class Manager:
         """
 
         for show in self.shows:
+            # Pass the Sonarr interface to the show if globally enabled
             if self.sonarr_interface:
                 show.read_source(self.sonarr_interface)
             else:
@@ -112,11 +101,8 @@ class Manager:
 
     def check_sonarr_for_new_episodes(self) -> None:
         """
-        Query Sonarr to see if any new episodes exist for every show
-        known to this manager. This calls
-        `Show.check_sonarr_for_new_epsiodes()`.
-        
-        :param      show_full_name: The show's full name
+        Query Sonarr to see if any new episodes exist for every show known to
+        this manager. This calls `Show.check_sonarr_for_new_epsiodes()`.
         """
 
         # If sonarr is globally disabled, skip
@@ -143,7 +129,10 @@ class Manager:
 
             # If a card was created and a plex interface is globally enabled
             if created and self.preferences.use_plex:
-                self.plex_interface.refresh_metadata(show.library_name, show.full_name)
+                self.plex_interface.refresh_metadata(
+                    show.library_name,
+                    show.full_name
+                )
 
 
     def update_archive(self) -> None:
@@ -156,11 +145,12 @@ class Manager:
         if not self.preferences.create_archive:
             return None
 
-        for show in self.archives:
+        for show_archive in self.archives:
+            # If TMDb is globally enabled, pass the interface along
             if self.preferences.use_tmdb:
-                show.update_archive(self.tmdb_interface)
+                show_archive.update_archive(self.tmdb_interface)
             else:
-                show.update_archive()
+                show_archive.update_archive()
 
 
     def create_summaries(self) -> None:
@@ -172,8 +162,12 @@ class Manager:
         if not self.preferences.create_summaries:
             return None
 
-        for show in self.archives:
-            show.create_summary()
+        for show_archive in self.archives:
+            # If TMDb is globally enabled, pass the interface along
+            if self.preferences.use_tmdb:
+                show_archive.create_summary(self.tmdb_interface)
+            else:
+                show_archive.create_summary()
 
 
     def run(self) -> None:

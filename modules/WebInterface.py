@@ -5,13 +5,13 @@ from requests import get
 class WebInterface(ABC):
     """
     Abstract class that defines a WebInterface, which is a type of interface
-    that makes GET requests and returns some JSON result.
+    that makes GET requests and returns some JSON result. 
     """
     
     @abstractmethod
     def __init__(self) -> None:
         """
-        Constructs a new instance of a WebInterface. This creates creates a
+        Constructs a new instance of a WebInterface. This creates creates a 
         cached request and result, but no other attributes.
         """
 
@@ -22,9 +22,9 @@ class WebInterface(ABC):
 
     def _get(self, url: str, params: dict) -> dict:
         """
-        Wrapper for getting the JSON return of the specified GET request. If
-        the provided URL and parameters are identical to the previous request,
-        then a cached result is returned instead.
+        Wrapper for getting the JSON return of the specified GET request. If the
+        provided URL and parameters are identical to the previous request, then
+        a cached result is returned instead.
         
         :param      url:    URL to pass to GET.
 

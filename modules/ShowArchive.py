@@ -8,12 +8,12 @@ from modules.ShowSummary import ShowSummary
 class ShowArchive:
     """
     This class describes a show archive. This is an object that contains
-    modified `Show` objects, each of which is used to create an update an
-    archive directory for a specific type of profile. Collectively every
-    possible profile is maintained.
+    modified Show objects, each of which is used to create an update an archive
+    directory for a specific type of profile. Collectively every possible
+    profile is maintained.
 
-    The following profiles are created depending on whether this show has
-    custom season titles, custom fonts, and hidden season titles:
+    The following profiles are created depending on whether this show has custom
+    season titles, custom fonts, and hidden season titles:
 
         Custom |        | Hidden |
         Season | Custom | Season | Output
@@ -29,6 +29,7 @@ class ShowArchive:
             1  |    1   |    1   | 110 + No Season Titles, Custom Font
     """
 
+    """Map of season/font attributes and matching directory titles"""
     PROFILE_DIRECTORY_MAP: dict = {
         'custom-custom':   'Custom Season Titles, Custom Font',
         'custom-generic':  'Custom Season Titles, Generic Font',
@@ -39,7 +40,6 @@ class ShowArchive:
     }
 
     def __init__(self, archive_directory: Path, base_show: 'Show') -> None:
-
         """
         Constructs a new instance of this class. Creates a list of all
         applicable Show objects for later us.
@@ -57,6 +57,7 @@ class ShowArchive:
         self.shows = []
         self.summaries = []
 
+        # If the base show for this object has archiving disabled, exit
         self.__base_show = base_show
         if not base_show.archive:
             return
@@ -70,6 +71,8 @@ class ShowArchive:
             profile_directory = self.PROFILE_DIRECTORY_MAP[
                 f'{profile_attributes["seasons"]}-{profile_attributes["font"]}'
             ]
+
+            # For non-standard card classes, modify archive directory name
             if base_show.card_class.ARCHIVE_NAME != 'standard':
                 profile_directory += f' - {base_show.card_class.ARCHIVE_NAME}'
 
@@ -106,14 +109,41 @@ class ShowArchive:
         :param      args and kwargs:    The arguments to pass directly to
                                         `Show.create_missing_title_cards()`.
         """
+
         info(f'Updating archive for "{self.__base_show.full_name}"')
         for show in self.shows:
             show.create_missing_title_cards(*args, **kwargs)
 
 
-    def create_summary(self) -> None:
-        """Create the ShowSummary image for each archive in this object."""
+    def create_summary(self, tmdb_interface: 'TMDbInterface'=None) -> None:
+        """
+        Create the ShowSummary image for each archive in this object. And if the
+        required logo doesn't exist, attempt to download it.
 
-        for show in self.summaries:
-            show.create()
+        :param      tmdb_interface: TMDb interface to query for a logo file, if
+                                    there is not an existing one.
+        """
+
+        for summary in self.summaries:
+            # If summary already exists, skip
+            if summary.output.exists():
+                continue
+
+            # If the logo doesn't exist, and we're given a TMDBInterface,
+            # attempt to download the best logo
+            if not summary.logo.exists() and tmdb_interface:
+                logo = tmdb_interface.get_series_logo(
+                    self.__base_show.name,
+                    self.__base_show.year,
+                )
+
+                # If a valid logo was returned, download it
+                if logo == None:
+                    continue
+
+                info(f'Downloading series logo', 2)
+                tmdb_interface.download_image(logo, summary.logo)
+
+            # If the logo was downloaded (or already existed), create summary
+            summary.create()
 
