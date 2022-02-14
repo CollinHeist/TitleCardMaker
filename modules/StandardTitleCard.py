@@ -19,13 +19,13 @@ class StandardTitleCard(CardType):
         2. Add the title text (either one or two lines) to the image. Using the
            provided text line(s), font, and color.
         3. Create the output file's necessary parent folders.
-        4. If no season text is required, add just the episode count and skip to 8.
-        5. If season text is required, query ImageMagick's to get the end width of
-           the season and episode text.
-        6. Create a transparent image of only the provided season and episode text
-           of the dimensions computed in 5.
-        7. Place the intermediate transparent text image on top of the image with
-           title text.
+        4. If no season text is required, add just the episode count and go to 8.
+        5. If season text is required, query ImageMagick's to get the end width
+           of the season and episode text.
+        6. Create a transparent image of only the provided season and episode
+           text of the dimensions computed in 5.
+        7. Place the intermediate transparent text image on top of the image
+           with title text.
         8. The resulting title card file is placed at the provided output path. 
         9. Delete all intermediate files created above.
     """
@@ -67,7 +67,6 @@ class StandardTitleCard(CardType):
                  title_bottom_line: str, season_text: str, episode_text: str,
                  font: str, font_size: float, title_color: str,
                  hide_season: bool, *args: tuple, **kwargs: dict) -> None:
-
         """
         Initialize the TitleCardMaker object. This primarily just stores
         instance variables for later use in `create()`. If the provided font
@@ -153,7 +152,7 @@ class StandardTitleCard(CardType):
         return [
             f'-fill black',
             f'-stroke black',
-            f'-strokewidth 3', #3, euphoria is 0.5, the wire is 1, punisher 1.5
+            f'-strokewidth 3', #def:3, euphoria:0.5, the wire:1, punisher:1.5
         ]
 
 

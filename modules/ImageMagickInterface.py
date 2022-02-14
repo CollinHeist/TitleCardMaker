@@ -20,8 +20,8 @@ class ImageMagickInterface:
 
     def __init__(self, docker_id: str=None) -> None:
         """
-        Constructs a new instance. If docker_id is None/0/False, then
-        commands will not use a docker container.
+        Constructs a new instance. If docker_id is None/0/False, then commands
+        will not use a docker container.
         
         :param      docker_id:  The docker ID for sending requests to
                                 ImageMagick.
@@ -62,24 +62,25 @@ class ImageMagickInterface:
 
     def run_get_stdout(self, command: str, *args: tuple, **kwargs: dict) -> str:
         """
-        Wrapper for `run()`, but return the byte-decoded stdout immediately.
+        Wrapper for run(), but return the byte-decoded stdout.
         
-        :param      command:    The command being executed.
-        :param      args:       The arguments to pass to `subprocess.run()`.
-        :param      kwargs:     The keywords arguments to pass to `subprocess.run()`.
+        :param      command:            The command being executed.
+        :param      args and kwargs:    Generalized arguments to pass to
+                                        `subprocess.run()`.
 
         :returns:   The decoded stdout output of the executed command.
         """
 
-        return self.run(command, capture_output=True, *args, **kwargs).stdout.decode()
+        return self.run(
+            command, capture_output=True, *args, **kwargs
+        ).stdout.decode()
 
 
     def delete_intermediate_images(self, *paths: tuple) -> None:
         """
-        Delete all the provided files.
+        Delete all the provided intermediate files.
         
-        :param      paths:  Any number of files to delete. Must be
-                            Path objects.
+        :param      paths:  Any number of files to delete. Must be Path objects.
         """
 
         # Delete (unlink) each image, don't raise FileNotFoundError if DNE

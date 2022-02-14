@@ -24,6 +24,7 @@ class PlexInterface:
                                     if the host device is untrusted.
         """
 
+        # Store base url and parameters to use for most requests
         url = url + ('' if url.endswith('/') else '/')
         self.base_url = url + 'library/'
         self.base_params = {'X-Plex-Token': x_plex_token}
@@ -35,7 +36,9 @@ class PlexInterface:
 
     def parse_plex_library(self) -> None:
         """
-        Parse the associated plex library 
+        Parse the associated plex library. This queries Plex to get a list of
+        all libraries, and then stores the content of that library for future
+        reference.
         """
         
         url = self.base_url + 'sections'
@@ -102,7 +105,7 @@ class PlexInterface:
         :param      full_title: The full title of the content to refresh.
         """
 
-        # Match based on the stripped full title
+        # Do matching on the a-z 0-9 title only
         match_title = Show.strip_specials(full_title)
 
         # Invalid library - error and exit

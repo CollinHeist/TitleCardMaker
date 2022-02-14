@@ -1,5 +1,7 @@
 from abc import abstractmethod
 
+from titlecase import titlecase
+
 from modules.ImageMaker import ImageMaker
 
 class CardType(ImageMaker):
@@ -13,7 +15,7 @@ class CardType(ImageMaker):
     CardTypes need to use every argument of these methods. For example, the
     StandardTitleCard utilizes most all customizations for a title card (i.e.
     custom fonts, colors, sizing, season titles, etc.), while a
-    StarWarsTitleCard doesn't use anything except the episode number and title.
+    StarWarsTitleCard doesn't use anything except the episode title and number.
     """
 
     """Default case for all episode text"""
@@ -23,7 +25,7 @@ class CardType(ImageMaker):
     CASE_FUNCTION_MAP = {
         'upper': str.upper,
         'lower': str.lower,
-        'title': str.title,
+        'title': titlecase,
     }
 
     """Standard size for a title card"""

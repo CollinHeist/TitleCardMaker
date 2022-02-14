@@ -70,8 +70,14 @@ class ShowSummary(ImageMaker):
         # Warn if this show has no episodes to work with
         episode_count = len(available_episodes)
         if episode_count == 0:
-            warn(f'Cannot create Show Summary for {self.show.full_name} - '
-                 f'has no episodes', 1)
+            return None
+
+        # Skip if the number of available episodes is below the minimum
+        minimum = self.preferences.summary_minimum_episode_count
+        if episode_count < minimum:
+            info(f'Skipping ShowSummary for {self.show.full_name} - has '
+                 f'{episode_count} episodes, minimum setting is {minimum}', 1)
+            return None
 
         # Get a random subset of images to create the summary with
         # Sort that subset my season/episode number so the montage appears chronological
@@ -248,13 +254,13 @@ class ShowSummary(ImageMaker):
         # Select images for montaging
         self.__select_images()
 
-        # If the summary already exists, or there are no title cards to montage
-        if self.output.exists() or len(self.inputs) == 0:
+        # If there are no title cards to montage
+        if len(self.inputs) == 0:
             return
 
         # Exit if a logo does not exist
         if not self.logo.exists():
-            warn('Cannot create ShowSummary; no logo found', 1)
+            warn('Cannot create ShowSummary - no logo found', 1)
             return
 
         # Create montage of title cards
@@ -271,7 +277,6 @@ class ShowSummary(ImageMaker):
 
         # Add created by tag - summary is completed
         self._add_created_by(montage_and_logo)
-        
         info(f'Created ImageSummary', 1)
 
         # Delete temporary files
