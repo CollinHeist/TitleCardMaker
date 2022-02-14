@@ -14,19 +14,17 @@ class SonarrInterface(WebInterface):
     """
 
     """Datetime format string for airDateUtc field in Sonarr API requests"""
-    AIRDATE_FORMAT: str = '%Y-%m-%dT%H:%M:%SZ'
+    __AIRDATE_FORMAT: str = '%Y-%m-%dT%H:%M:%SZ'
 
     """Path to the map of sonarr titles to ID's"""
     __ID_MAP: Path = Path(__file__).parent / '.objects' / 'sonarr_id_map.pkl'
 
     def __init__(self, url: str, api_key: str) -> None:
         """
-        Constructs a new instance.
+        Constructs a new instance of an interface to Sonarr.
         
         :param      url:        The base url of Sonarr.
-
-        :param      api_key:    The api key for requesting data to/from
-                                Sonarr.
+        :param      api_key:    The api key for requesting data to/from Sonarr.
         """
 
         # Initialize parent WebInterface 
@@ -53,11 +51,11 @@ class SonarrInterface(WebInterface):
 
     def __add_id_to_map(self, full_title: str, id_: int) -> None:
         """
-        Adds an identifier to map.
+        Add the given ID to the object's map. Also write this updated map object
+        to the file.
         
-        :param      title:  The title
-
-        :param      id_:    The identifier
+        :param      full_title: The full title of the entry to map.
+        :param      id_:        The ID of the entry to store.
         """
 
         self.__id_map[full_title] = int(id_)
@@ -172,10 +170,8 @@ class SonarrInterface(WebInterface):
 
     def _get_episode_title_for_id(self, series_id: int, season: int,
                                   episode: int) -> str:
-
         """
-        Gets the episode title for a given series ID and season/episode
-        number.
+        Gets the episode title for a given series ID and season/episode number.
         
         :param      series_id:  The series identifier
         
@@ -209,10 +205,10 @@ class SonarrInterface(WebInterface):
         Gets all episode data for identifier. Only returns episodes that have
         aired already.
         
-        :param      series_id:  The series identifier
+        :param      series_id:  The series identifier.
         
-        :returns:   All episode data for the given series id. Only entries
-                    that have ALREADY aired are returned.
+        :returns:   All episode data for the given series id. Only entries that
+                    have ALREADY aired (or do not air) are returned.
         """
 
         # Construct GET arguments
@@ -231,7 +227,7 @@ class SonarrInterface(WebInterface):
                 # Verify this episode has already aired, skip if not
                 air_datetime = datetime.strptime(
                     episode['airDateUtc'],
-                    self.AIRDATE_FORMAT
+                    self.__AIRDATE_FORMAT
                 )
                 if air_datetime > datetime.now():
                     continue
@@ -263,11 +259,8 @@ class SonarrInterface(WebInterface):
         Gets the episode title of the requested entry.
         
         :param      title:      The title of the requested series.
-
         :param      year:       The year of the requested series.
-
         :param      season:     The season number of the entry.
-
         :param      episode:    The episode number of the entry.
         
         :returns:   The episode title.
@@ -286,7 +279,6 @@ class SonarrInterface(WebInterface):
         Only episodes that have already aired are returned.
         
         :param      title:  The title of the series.
-
         :param      year:   The year of the series.
         
         :returns:   List of dictionaries of episode data.
@@ -301,6 +293,7 @@ class SonarrInterface(WebInterface):
         return self._get_all_episode_data_for_id(series_id)
 
 
+    #TODO immplement
     # def get_episode_filename(self, title: str, year: int, season_number: int,
     #                          episode_number: int) -> str:
 
@@ -354,16 +347,13 @@ class SonarrInterface(WebInterface):
     #     return None
 
 
-
     @staticmethod
     def manually_specify_id(title: str, year: int, id_: int) -> None:
         """
-        Manually set the Sonarr ID for the given full title.
+        Manually override the Sonarr ID for the given full title.
 
         :param      title:  The title of the series.
-
         :param      year:   The year of the series.
-
         :param      id_:    The Sonarr ID for this series.
         """
 
