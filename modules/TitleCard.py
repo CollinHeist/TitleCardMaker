@@ -25,8 +25,8 @@ class TitleCard:
         'star wars': StarWarsTitleCard,
     }
 
-
-    def __init__(self, episode: 'Episode', profile: 'Profile') -> None:
+    def __init__(self, episode: 'Episode', profile: 'Profile',
+                 **title_characteristics: dict) -> None:
         """
         Constructs a new instance of this class.
         
@@ -40,18 +40,17 @@ class TitleCard:
         self.episode = episode
         self.profile = profile
 
-        # Get temporary absolute number
+        # If the episode has no absolute number, use the season number instead
         if episode.abs_number == None:
             abs_number = episode.episode_number
         else:
             abs_number = episode.abs_number
         
-        # Construct this title card's StandardTitleCard from the given arguments
+        # Construct this episode's CardType instance
         self.maker = self.episode.card_class(
             source=episode.source,
             output_file=episode.destination,
-            title_top_line=profile.convert_title(episode.title_top_line),
-            title_bottom_line=profile.convert_title(episode.title_bottom_line),
+            title=episode.title.apply_profile(profile, **title_characteristics),
             season_text=profile.get_season_text(
                 episode.season_number, abs_number
             ), episode_text=profile.get_episode_text(
@@ -83,7 +82,7 @@ class TitleCard:
             # warn(f'Source image {self.episode.source.resolve()} does not exist', 2)
             return False
             
-        info(f'Creating title card for {self.episode.destination.name}', 2)
+        info(f'Creating title card {self.episode.destination.name}', 2)
         self.maker.create()
 
         return True

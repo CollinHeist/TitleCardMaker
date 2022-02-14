@@ -28,8 +28,18 @@ class CardType(ImageMaker):
         'title': titlecase,
     }
 
-    """Standard size for a title card"""
+    """Standard size for all title cards"""
     TITLE_CARD_SIZE: str = '3200x1800'
+
+    @property
+    @abstractmethod
+    def TITLE_CHARACTERISTICS(self) -> dict:
+        """
+        Characteristics of title splitting for this card type. Must have keys
+        for max_line_width, max_line_count, and top_heavy. See `Title` class
+        for details.
+        """
+        raise NotImplementedError(f'All CardType objects must implement this')
 
     @property
     @abstractmethod

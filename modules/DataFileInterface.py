@@ -1,7 +1,8 @@
 from yaml import safe_load, dump
 from pathlib import Path
 
-from modules.Debug import *
+from modules.Debug import info, warn, error
+from modules.Title import Title
 
 class DataFileInterface:
     """
@@ -91,15 +92,9 @@ class DataFileInterface:
                           f'"{self.file.resolve()}" is missing title')
                     continue
 
-                # TODO - replace with Title object
-                if isinstance(episode_data['title'], list):
-                    title = ' '.join(episode_data['title'])
-                else:
-                    title = episode_data['title']
-
                 # Construct data dictionary of this object
                 data = {
-                    'title': ('', title),
+                    'title': Title(episode_data['title']),
                     'season_number': season_number,
                     'episode_number': episode_number,
                 }
@@ -115,8 +110,8 @@ class DataFileInterface:
         Read and yield all entries without absolute episode numbers.
         
         :returns:   Yields an iterable of dictionaries for entry without an 
-                    absolute episode number. The keys are 'title_top',
-                    'title_bottom', 'season_number', and 'episode_number'.
+                    absolute episode number. The keys are 'title',
+                    'season_number', and 'episode_number'.
         """
 
         # Read yaml, returns {} if empty/DNE
@@ -129,28 +124,24 @@ class DataFileInterface:
             # Iterate through each episode of this season
             for episode_number, episode_data in season_data.items():
                 if 'absolute_number' not in episode_data:
-                    #TODO remove hardcoded top/bottom title
                     yield {
-                        'title_top': '',
-                        'title_bottom': episode_data['title'],
+                        'title': Title(episode_data['title']),
                         'season_number': season_number,
                         'episode_number': episode_number,
                     }
 
 
-    def modify_entry(self, title_top: str, title_bottom: str,
-                     season_number: int, episode_number: int,
-                     abs_number: int=None) -> None:
+    def modify_entry(self, title: Title, season_number: int,
+                     episode_number: int, abs_number: int=None) -> None:
         """
         Modify the entry found under the given season+episode number to the
         specified information. If the entry does not exist, a new entry is NOT
         created.
 
-        :param      title_top:      The top line of the entry's title.
-        :param      title_bottom:   The bottom line of the entry's title.
-        :param      season_number:  The season number of the entry.
-        :param      episode_number: The episode number of the entry.
-        :param      abs_number:     The absolute episode number of the entry.
+        :param      title:          Title of the entry
+        :param      season_number:  Season number of the entry.
+        :param      episode_number: Episode number of the entry.
+        :param      abs_number:     Absolute episode number of the entry.
         """
 
         # Read yaml, returns {} if empty/DNE
@@ -166,8 +157,7 @@ class DataFileInterface:
             return None
 
         # Update this entry with the new title(s)
-        #TODO - work with Title objects
-        yaml[season_key][episode_number]={'title': f'{title_top} {title_bottom}'}
+        yaml[season_key][episode_number]= {'title': title.title_yaml}
         if abs_number != None:
             yaml[season_key][episode_number]['absolute_number'] = abs_number
 
@@ -175,16 +165,13 @@ class DataFileInterface:
         self.__write_data(yaml)
 
 
-    def add_entry(self, title_top: str, title_bottom: str, season_number: int,
+    def add_entry(self, title: Title, season_number: int,
                   episode_number: int, abs_number: int=None) -> None:
         """
         Add the info provided to this object's data file. If the specified
         season+episode number already exists, that data is NOT overwritten.
 
-        :param      title_top:      Top line of the episode title text for
-                                    the entry.
-        :param      title_bottom:   Bottom line of the episode title text for
-                                    the entry.
+        :param      title_top:      Title of the entry being added.
         :param      season_number:  Season number of the entry being added.
         :param      episode_number: Episode number of the entry being added.
         :param      abs_number:     The absolute episode number of the entry.
@@ -205,8 +192,7 @@ class DataFileInterface:
             return None
 
         # Construct episode data
-        #TODO - use Title objects
-        yaml[season_key][episode_number]={'title':f'{title_top} {title_bottom}'}
+        yaml[season_key][episode_number] = {'title': title.title_yaml}
 
         # Add absolute number if given, add key
         if abs_number != None:

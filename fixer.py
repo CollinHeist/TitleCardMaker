@@ -73,8 +73,8 @@ tmdb_group.add_argument('--delete-blacklist', action='store_true',
 args = parser.parse_args()
 
 # Override unspecified defaults with their class specific defaults
-if args.font == '__default':
-    args.font = TitleCard.CARD_TYPES[args.card_type].TITLE_FONT
+if args.font == Path('__default'):
+    args.font = Path(TitleCard.CARD_TYPES[args.card_type].TITLE_FONT)
 if args.font_color == '__default':
     args.font_color = TitleCard.CARD_TYPES[args.card_type].TITLE_COLOR
 
