@@ -8,8 +8,18 @@ class StarWarsTitleCard(CardType):
     """
     This class describes a type of ImageMaker that produces title cards in the
     theme of Star Wars cards as designed by reddit user /u/Olivier_286. These
-    cards are not as customizeable as the standard template.
+    cards are not as customizable as the standard template.
     """
+
+    """Characteristics for title splitting by this class"""
+    TITLE_CHARACTERISTICS = {
+        'max_line_width': 16,   # Character count to begin splitting titles
+        'max_line_count': 3,    # Maximum number of lines a title can take up
+        'top_heavy': True,      # This class uses top heavy titling
+    }
+
+    """How to name archive directories for this type of card"""
+    ARCHIVE_NAME = 'Star Wars Style'
 
     """Path to the font to use for the episode title"""
     TITLE_FONT =str((Path(__file__).parent/'ref'/'Monstice-Base.ttf').resolve())
@@ -23,14 +33,8 @@ class StarWarsTitleCard(CardType):
     """Standard font replacements for the title font"""
     FONT_REPLACEMENTS = {'Ō': 'O', 'ō': 'o'}
 
-    """After how many characters to split an episode title into two lines"""
-    MAX_LINE_LENGTH = 18
-
     """Whether this class uses season titles for the purpose of archives"""
     USES_SEASON_TITLE = False
-
-    """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Star Wars Style'
 
     """Path to the reference star image to overlay on all source images"""
     __STAR_GRADIENT_IMAGE = Path(__file__).parent / 'ref' / 'star_gradient.png'
@@ -43,18 +47,17 @@ class StarWarsTitleCard(CardType):
     EPISODE_NUMBER_FONT = Path(__file__).parent / 'ref'/'HelveticaNeue-Bold.ttf'
 
     
-    def __init__(self, source: Path, output_file: Path, title_top_line: str,
-                 title_bottom_line: str, episode_text: str,
-                 *args: tuple, **kwargs: dict) -> None:
+    def __init__(self, source: Path, output_file: Path, title: str,
+                 episode_text: str, *args: tuple, **kwargs: dict) -> None:
         """
         Constructs a new instance.
         
-        :param      source:        The source
-        :param      output_file:   The output file
-        :param      title:         The title
-        :param      episode_text:  The episode text
-        :param      args:          The arguments
-        :param      kwargs:        The keywords arguments
+        :param      source:             Source image for this card.
+        :param      output_file:        Output filepath for this card.
+        :param      title:              The title for this card.
+        :param      episode_text:       The episode text for this card.
+        :param      args and kwargs:    Unused arguments to permit generalized
+                                        function calls for any CardType.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface
@@ -65,11 +68,8 @@ class StarWarsTitleCard(CardType):
         self.output_file = output_file
 
         # Store episode title
-        if title_top_line in ('', None):
-            self.title = f'{title_bottom_line}'.upper().strip()
-        else:
-            self.title =f'{title_top_line}\n{title_bottom_line}'.upper().strip()
-
+        self.title = title.upper().strip()
+        
         # Modify episode text to remove "Episode"-like text, replace numbers
         # with text, strip spaces, and convert to uppercase
         self.episode_text = self.__modify_episode_text(episode_text)
@@ -89,9 +89,9 @@ class StarWarsTitleCard(CardType):
         
         :param      text:  The episode text to modify.
         
-        :returns:   The modified episode text with preface text removed, 
-                    numbers replaced with words, and converted to uppercase. If
-                    numbers cannot be replaced, that step is skipped.
+        :returns:   The modified episode text with preface text removed, numbers
+                    replaced with words, and converted to uppercase. If numbers
+                    cannot be replaced, that step is skipped.
         """
 
         # Convert to uppercase, remove space padding
@@ -109,7 +109,7 @@ class StarWarsTitleCard(CardType):
 
     def __add_star_gradient(self, source: Path) -> Path:
         """
-        Add the star gradient to the given source image.
+        Add the static star gradient to the given source image.
         
         :param      source: The source image to modify.
         
@@ -255,6 +255,7 @@ class StarWarsTitleCard(CardType):
     def create(self) -> None:
         """Create the title card as defined by this object."""
 
+        # Add the starry gradient to the source image
         star_image = self.__add_star_gradient(self.source_file)
 
         # Create the output directory and any necessary parents 

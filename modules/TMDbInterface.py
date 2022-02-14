@@ -66,11 +66,8 @@ class TMDbInterface(WebInterface):
         shouldn't be queried to TheMovieDB (to prevent unnecessary queries).
         
         :param      title:      The show's title.
-
         :param      year:       The show's year.
-
         :param      season:     The entry's season number.
-
         :param      episode:    The entry's episode number.
         """
 
@@ -103,11 +100,8 @@ class TMDbInterface(WebInterface):
         not bother querying TMDb.
         
         :param      title:      The show's title.
-
         :param      year:       The show's year.
-
         :param      season:     The entry's season number.
-
         :param      episode:    The entry's episode number.
         
         :returns:   True if the entry is blacklisted, False otherwise.
@@ -132,9 +126,7 @@ class TMDbInterface(WebInterface):
         Adds a mapping of this full title to the corresponding TheMovieDB ID.
         
         :param      title:  The show's title.
-
         :param      year:   The show's year.
-
         :param      id_:    The show's ID, as returned by `__get_tv_id()`.
         """
 
@@ -160,15 +152,10 @@ class TMDbInterface(WebInterface):
         show. They will be named as s{season}e{episode}.jpg.
         
         :param      api_key:        The api key for sending requsts to TMDb.
-
         :param      title:          The title of the requested show.
-
         :param      year:           The year of the requested show.
-
         :param      season:         The season to download.
-
         :param      episode_count:  The number of episodes to download
-
         :param      directory:      The directory to place the downloaded images
                                     in.
         """
@@ -201,7 +188,6 @@ class TMDbInterface(WebInterface):
         The first result is returned every time.
         
         :param      title:  The title of the requested series
-
         :param      year:   The year the requested series first aired
         
         :returns:   The internal TMDb ID for the found series
@@ -276,13 +262,9 @@ class TMDbInterface(WebInterface):
         is returned.
         
         :param      title:      The title of the requested series.
-
         :param      year:       The year of the requested series.
-
         :param      season:     The season of the requested entry.
-
         :param      episode:    The episode of the requested entry.
-
         :param      abs_number: The absolute episode number of the entry.
         
         :returns:   URL to the 'best' source image for the requested entry. None
@@ -345,7 +327,6 @@ class TMDbInterface(WebInterface):
         Get the 'best' logo for the given series.
         
         :param      title:  The title of the requested series.
-
         :param      year:   The year of the requested series.
         
         :returns:   URL to the 'best' logo for the given series, and None if no
@@ -395,7 +376,6 @@ class TMDbInterface(WebInterface):
         Downloads the provided image URL to the destination filepath.
         
         :param      image_url:      The image url to download.
-
         :param      destination:    The destination for the requested image.
         """
 

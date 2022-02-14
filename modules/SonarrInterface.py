@@ -4,6 +4,7 @@ from pickle import dump, load, HIGHEST_PROTOCOL
 
 from modules.Debug import *
 from modules.Show import Show
+from modules.Title import Title
 from modules.WebInterface import WebInterface
 
 class SonarrInterface(WebInterface):
@@ -169,7 +170,7 @@ class SonarrInterface(WebInterface):
 
 
     def _get_episode_title_for_id(self, series_id: int, season: int,
-                                  episode: int) -> str:
+                                  episode: int) -> Title:
         """
         Gets the episode title for a given series ID and season/episode number.
         
@@ -192,7 +193,7 @@ class SonarrInterface(WebInterface):
             curr_episode_number = int(episode['episodeNumber'])
 
             if season == curr_season_number and episode == curr_season_number:
-                return episode['title']
+                return Title(episode['title'])
 
         raise ValueError(
             f'Cannot find Season {season}, Episode {episode} of '
@@ -240,7 +241,7 @@ class SonarrInterface(WebInterface):
             new_info = {
                 'season_number':    int(episode['seasonNumber']),
                 'episode_number':   int(episode['episodeNumber']),
-                'title':            episode['title'],
+                'title':            Title(episode['title']),
                 # 'filename':         Path(episode['episodeFile']['path']).stem,
             }
 
@@ -254,7 +255,7 @@ class SonarrInterface(WebInterface):
 
 
     def get_episode_title(self, title: str, year: int, season: int,
-                          episode: int) -> str:
+                          episode: int) -> Title:
         """
         Gets the episode title of the requested entry.
         
