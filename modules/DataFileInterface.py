@@ -1,216 +1,206 @@
-from csv import reader, writer
+from yaml import safe_load, dump
 from pathlib import Path
 
-from modules.Debug import *
+from modules.Debug import info, warn, error
+from modules.Title import Title
 
 class DataFileInterface:
     """
-    This class is used to interface with a show's data file. 
-
-    This can be used for reading from and writing to the files for the purpose of
-    adding new or reading existing episodes.
+    This class is used to interface with a show's data file. And can be used for
+    reading from and writing to the files for the purpose of adding new or
+    reading existing episode data.
     """
 
-    GENERIC_DATA_FILE_NAME: str = 'data.tsv'
-    DELIMETER: str = '\t'
-
-    """String that indicates empty text in title text"""
-    EMPTY_VALUE: str ='_EMPTY_'
-
-    """Label headers found at the top of all data files"""
-    GENERIC_HEADERS: list = [
-        'title_top', 'title_bottom', 'season', 'episode', 'abs_number'
-    ]
+    """Default name for a data file of episode information"""
+    GENERIC_DATA_FILE_NAME: str = 'data.yml'
 
     def __init__(self, data_file: Path) -> None:
         """
-        Constructs a new instance of the interface for the specified
-        data file. Permits future reading and writing.
+        Constructs a new instance of the interface for the specified data file.
+
+        :param      data_file:  Path to the data file to interface with.
         """
         
+        # Store the data file for future use
         self.file = data_file
+
+
+    def __read_data(self) -> dict:
+        """
+        Read this interface's data from file. Returns an empty dictionary if the
+        file does not exist, is misformatted, or if 'data' key is missing.
+        
+        :returns:   Contents under 'data' key of this interface's file.
+        """
+
+        # If the file DNE, return empty dictionary
+        if not self.file.exists():
+            return {}
+
+        # Read file 
+        with self.file.open('r') as file_handle:
+            try:
+                yaml = safe_load(file_handle)
+            except Exception as e:
+                error(f'Error reading datafile:\n{e}\n')
+                return {}
+
+        # If the top-level key is not 'data', error and return empty dictionary
+        if 'data' not in yaml:
+            error(f'Datafile "{self.file.resolve()}" missing "data" key')
+            return {}
+
+        return yaml['data']
+
+
+    def __write_data(self, yaml: dict) -> None:
+        """
+        Write the given YAML data to this interface's file. Created parent
+        directories if they do not exist, and puts all data under 'data' key.
+
+        :param      yaml:   YAML dictionary to write to file.
+        """
+
+        # Create parent directories if necessary
+        self.file.parent.mkdir(parents=True, exist_ok=True)
+
+        # Write updated data with this entry added
+        with self.file.open('w') as file_handle:
+            dump({'data': yaml}, file_handle)
 
 
     def read(self) -> dict:
         """
-        Reads a data file.
+        Read the data file for this object, yielding each (valid) row.
         
-        :returns:   Yields from each row in the data file.
+        :returns:   Yields from each row in the data file as a dictionary. The
+                    keys are 'title', 'season_number', 'episode_number', and
+                    'abs_number' (if present).
         """
 
-        # Create an empty data file if nothing exists, then exit (no data to read)
-        if not self.file.exists():
-            info(f'Creating blank source file "{self.file.resolve()}"')
-            self.create_new_data_file()
-            return None
-            
-        # Start reading this interface's file, yielding each row (except headers)
-        with self.file.open('r') as file_handle:
-            for row_number, row in enumerate(reader(file_handle, delimiter=self.DELIMETER)):
-                # Skip headers
-                if row_number == 0:
+        # Read yaml, returns {} if empty/DNE
+        yaml = self.__read_data()
+
+        # Iterate through each season
+        for season, season_data in yaml.items():
+            season_number = int(season.rsplit(' ', 1)[-1])
+
+            # Iterate through each episode of this season
+            for episode_number, episode_data in season_data.items():
+                if ('title' not in episode_data
+                    or not isinstance(episode_data, dict)):
+                    error(f'Season {season_number}, Episode {episode_number} of '
+                          f'"{self.file.resolve()}" is missing title')
                     continue
 
-                # Skip invalid rows
-                if len(row) < 4:
-                    error(f'Row {row_number} of {self.file.resolve()} is '
-                          f'invalid ({row})')
-                    continue
-
-                # Process EMPTY_VALUE text into blank text
-                title_top = '' if row[0] == self.EMPTY_VALUE else row[0]
-                title_bottom = '' if row[1] == self.EMPTY_VALUE else row[1]
-
-                # Create dictionary for this row, add the abs_number if present
-                row_dict = {
-                    'title': (title_top, title_bottom),
-                    'season_number': row[2],
-                    'episode_number': row[3],
+                # Construct data dictionary of this object
+                data = {
+                    'title': Title(episode_data['title']),
+                    'season_number': season_number,
+                    'episode_number': episode_number,
                 }
 
-                # Rows with the (optional) abs_number value have extra key
-                if len(row) == 5:
-                    row_dict['abs_number'] = row[4]
+                if 'absolute_number' in episode_data:
+                    data['abs_number'] = episode_data['absolute_number']
 
-                yield row_dict
+                yield data
 
 
     def read_entries_without_absolute(self) -> dict:
         """
-        Reads an entries without absolute.
+        Read and yield all entries without absolute episode numbers.
         
-        :returns:   { description_of_the_return_value }
+        :returns:   Yields an iterable of dictionaries for entry without an 
+                    absolute episode number. The keys are 'title',
+                    'season_number', and 'episode_number'.
         """
 
-        # If the specified file doesn't exist, skip..
-        if not self.file.exists():
-            return {}
+        # Read yaml, returns {} if empty/DNE
+        yaml = self.__read_data()
 
-        # Iterate through each row in the file, yielding season/episode number
-        with self.file.open('r') as file_handle:
-            for row_number, row in enumerate(reader(file_handle, delimiter=self.DELIMETER)):
-                # Skip headers
-                if row_number == 0 or len(row) != 4:
-                    continue
+        # Iterate through entries, yielding if no absolute number
+        for season, season_data in yaml.items():
+            season_number = int(season.rsplit(' ', 1)[-1])
 
-                # Create dictionary for this row, add the abs_number if present
-                yield {
-                    'row_number': row_number,
-                    'title_top': row[0],
-                    'title_bottom': row[1],
-                    'season_number': int(row[2]),
-                    'episode_number': int(row[3]),
-                }
+            # Iterate through each episode of this season
+            for episode_number, episode_data in season_data.items():
+                if 'absolute_number' not in episode_data:
+                    yield {
+                        'title': Title(episode_data['title']),
+                        'season_number': season_number,
+                        'episode_number': episode_number,
+                    }
 
 
-    def modify_entry(self, row_number: int, title_top: str, title_bottom: str,
-                     season_number: int, episode_number: int,
-                     abs_number: int=None) -> None:
+    def modify_entry(self, title: Title, season_number: int,
+                     episode_number: int, abs_number: int=None) -> None:
         """
-        { function_description }
-        
-        :param      row_number:      The row number
-        :param      title_top:       The title top
-        :param      title_bottom:    The title bottom
-        :param      season_number:   The season number
-        :param      episode_number:  The episode number
-        :param      abs_number:      The absolute number
+        Modify the entry found under the given season+episode number to the
+        specified information. If the entry does not exist, a new entry is NOT
+        created.
+
+        :param      title:          Title of the entry
+        :param      season_number:  Season number of the entry.
+        :param      episode_number: Episode number of the entry.
+        :param      abs_number:     Absolute episode number of the entry.
         """
 
-        # Read current data
-        with self.file.open('r') as file_handle:
-            current = file_handle.readlines()
+        # Read yaml, returns {} if empty/DNE
+        yaml = self.__read_data()
 
-        # Construct row with new data
-        row_list = [title_top, title_bottom, season_number, episode_number]
+        # Verify this entry already exists, warn and exit if not
+        season_key = f'Season {season_number}'
+        if (season_key not in yaml or 
+            episode_number not in yaml[season_key]):
+            warn(f'Cannot modify entry for Season {season_number}, Episode ',
+                 f'{episode_number} in "{self.file.resolve()}" - entry does not'
+                 f' exist')
+            return None
+
+        # Update this entry with the new title(s)
+        yaml[season_key][episode_number]= {'title': title.title_yaml}
         if abs_number != None:
-            row_list += [abs_number]
+            yaml[season_key][episode_number]['absolute_number'] = abs_number
 
-        # Change this row
-        current[row_number] = self.DELIMETER.join(map(str, row_list)) + '\n'
-        with self.file.open('w') as file_handle:
-            file_handle.writelines(current)
-
-        info(f'Modified line {row_number} to {row_list}')
+        # Write updated data
+        self.__write_data(yaml)
 
 
-    def add_entry(self, title_top: str, title_bottom: str, season_number: int,
+    def add_entry(self, title: Title, season_number: int,
                   episode_number: int, abs_number: int=None) -> None:
         """
-        Add the info provided to this object's data file.
+        Add the info provided to this object's data file. If the specified
+        season+episode number already exists, that data is NOT overwritten.
 
-        :param      title_top:      Top line of the episode title text for
-                                    the entry.
-
-        :param      title_bottom:   Bottom line of the episode title text for
-                                    the entry.
-
+        :param      title_top:      Title of the entry being added.
         :param      season_number:  Season number of the entry being added.
-
         :param      episode_number: Episode number of the entry being added.
-
-        :param      abs_number:     Optional absolute number of the entry.
+        :param      abs_number:     The absolute episode number of the entry.
         """
 
-        if not self.file.exists():
-            self.create_new_data_file()
+        # Read yaml, returns {} if empty/DNE
+        yaml = self.__read_data()
 
-        # Ensure newline is added to end of file
-        self.__add_newline()
+        # Create blank season data under this key if it doesn't already exist
+        season_key = f'Season {season_number}'
+        if season_key not in yaml:
+            yaml[season_key] = {}
 
-        # Empty title text should be replaced with EMPTY_VALUE
-        title_top = self.EMPTY_VALUE if title_top == '' else title_top
-        title_bottom = self.EMPTY_VALUE if title_bottom == '' else title_bottom
+        # If this episode already exists for this season, warn and exit
+        if episode_number in yaml[season_key]:
+            warn(f'Cannot add duplicate entry for Season {season_number}, '
+                 f'Episode {episode_number} in "{self.file.resolve()}"')
+            return None
+
+        # Construct episode data
+        yaml[season_key][episode_number] = {'title': title.title_yaml}
+
+        # Add absolute number if given, add key
+        if abs_number != None:
+            yaml[season_key][episode_number]['absolute_number'] = abs_number
+
+        # Write updated data
+        self.__write_data(yaml)
+
         
-        # Write new row
-        with self.file.open('a', newline='') as file_handle:
-            file_writer = writer(file_handle, delimiter=self.DELIMETER)
-
-            # Construct new row
-            row = [title_top, title_bottom, season_number, episode_number]
-            row += [abs_number] if abs_number != None else []
-            file_writer.writerow(row)
-
-
-    def create_new_data_file(self) -> None:
-        """
-        Creates a new data file for this interface. This will construct the
-        necessary parent folders, and exits if the file already exists. The
-        generic headers are written to the first line of the file.
-        """
-
-        # Exit if the file already exists
-        if self.file.exists():
-            return
-
-        # Make parent directory if it doesn't exist
-        self.file.parent.mkdir(parents=True, exist_ok=True)
-
-        # Write row of headers, then exit
-        with self.file.open('w') as file_handle:
-            file_writer = writer(file_handle, delimiter=self.DELIMETER)
-
-            file_writer.writerow(self.GENERIC_HEADERS)
-
-
-    def __add_newline(self) -> None:
-        """
-        Adds a newline if the datafile does not end in one. Ensures
-        new rows are added correctly (and not appended to end of existing
-        last row).
-        """
-
-        # Exit if the file doesnt' exist
-        if not self.file.exists():
-            return
-
-        # Read existign content
-        with self.file.open('r') as file_handle:
-            existing = file_handle.read()
-
-        # If the file ends without a newline character, add one
-        if not existing.endswith('\n'):
-            with self.file.open('a') as file_handle:
-                file_handle.write('\n')
-
 

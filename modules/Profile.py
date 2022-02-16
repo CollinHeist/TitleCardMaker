@@ -123,9 +123,11 @@ class Profile:
         if self.hide_season_title:
             return ''
 
-        # Generic season titles
+        # Generic season titles are Specials and Season {n}
         if not self.__use_custom_seasons:
-            return 'Specials' if season_number == 0 else f'Season {season_number}'
+            if season_number == 0:
+                return 'Specials'
+            return f'Season {season_number}'
 
         # Custom season titles and method is season map
         if self.__map_or_range == 'map':
@@ -254,14 +256,13 @@ class Profile:
     def convert_title(self, title_text: str) -> str:
         """
         Convert the given title text through this profile's settings. This is
-        any combination of text substitutions, case functions such as
-        `str.upper()` or `str.lower()`, and optionally removing text that
-        matches the format of this profile's episode text format.
+        any combination of text substitutions, case functions, and optionally
+        removing text that matches the format of this profile's episode text
+        format.
 
-        For example, if the episode format string was
-        'Chapter {episode_number}', and the given `title_text` was 'Chapter 1:
-        Pilot', then the returned text (excluding any replacements or case
-        mappings) would be 'Pilot'.
+        For example, if the episode format string was 'Chapter {episode_number}'
+        and the given `title_text` was 'Chapter 1: Pilot', then the returned
+        text (excluding any replacements or case mappings) would be 'Pilot'.
         
         :param      title_text: The title text to convert.
         

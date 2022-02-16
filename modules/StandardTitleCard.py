@@ -30,9 +30,11 @@ class StandardTitleCard(CardType):
         9. Delete all intermediate files created above.
     """
 
-    """Default characters to replace in the generic font"""
-    FONT_REPLACEMENTS = {
-        '[': '(', ']': ')', '(': '[', ')': ']'
+    """Characteristics for title splitting by this class"""
+    TITLE_CHARACTERISTICS = {
+        'max_line_width': 32,   # Character count to begin splitting titles
+        'max_line_count': 2,    # Maximum number of lines a title can take up
+        'top_heavy': False,     # This class uses bottom heavy titling
     }
 
     """Source path for the gradient image overlayed over all title cards"""
@@ -41,6 +43,15 @@ class StandardTitleCard(CardType):
     """Default font and text color for episode title text"""
     TITLE_FONT = str((Path(__file__).parent /'ref'/'Sequel-Neue.otf').resolve())
     TITLE_COLOR = '#EBEBEB'
+
+    """Default characters to replace in the generic font"""
+    FONT_REPLACEMENTS = {'[': '(', ']': ')', '(': '[', ')': ']'}
+
+    """Whether this CardType uses season titles for archival purposes"""
+    USES_SEASON_TITLE = True
+
+    """Standard class has standard archive name"""
+    ARCHIVE_NAME = 'standard'
 
     """Default fonts and color for series count text"""
     SEASON_COUNT_DEFAULT_FONT = Path(__file__).parent / 'ref' / 'Proxima Nova Semibold.otf'
@@ -55,50 +66,32 @@ class StandardTitleCard(CardType):
     __GRADIENT_WITH_TITLE_PATH = Path(__file__).parent / '.objects' / 'gradient_title.png'
     __SERIES_COUNT_TEXT_PATH = Path(__file__).parent / '.objects' / 'series_count_text.png'
 
-    """Character count to begin splitting episode text into 2 lines"""
-    MAX_LINE_LENGTH = 32
 
-    """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = True
-
-    ARCHIVE_NAME = 'standard'
-
-    def __init__(self, source: Path, output_file: Path, title_top_line: str,
-                 title_bottom_line: str, season_text: str, episode_text: str,
-                 font: str, font_size: float, title_color: str,
-                 hide_season: bool, *args: tuple, **kwargs: dict) -> None:
+    def __init__(self, source: Path, output_file: Path, title: str,
+                 season_text: str, episode_text: str, font: str,
+                 font_size: float, title_color: str, hide_season: bool,
+                 *args: tuple, **kwargs: dict) -> None:
         """
         Initialize the TitleCardMaker object. This primarily just stores
         instance variables for later use in `create()`. If the provided font
         does not have a character in the title text, a space is used instead.
 
         :param  source:             Source image.
-
         :param  output_file:        Output file.
-
-        :param  title_top_line:     Top line of the episode title.
-
-        :param  title_bottom_line:  Bottom line of the episode title.
-
-        :param  season_text:        Text to use as season count text. Ignored
-                                    if hide_season is True.
-
+        :param  title_top_line:     Episode title.
+        :param  season_text:        Text to use as season count text. Ignored if
+                                    hide_season is True.
         :param  episode_text:       Text to use as episode count text.
-
         :param  font:               Font to use for the episode title. MUST be a
                                     a valid ImageMagick font, or filepath to a
                                     font.
-
         :param  font_size:          Scalar to apply to the standard font size,
                                     i.e. 1.0 if normal (100%), 0.5 if 50%, etc.
-
         :param  title_color:        Color to use for the episode title.
-
         :param  hide_season:        Whether to omit the season text (and joining
                                     character) from the title card completely.
-
-        :param  args and kwargs:    Unused arguments to permit generalized
-                                    calls for any CardType.
+        :param  args and kwargs:    Unused arguments to permit generalized calls
+                                    for any CardType.
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
@@ -109,8 +102,7 @@ class StandardTitleCard(CardType):
 
         # Since all text is sent to ImageMagick wrapped in quotes, escape actual
         # quotes found within the text
-        self.title_top_line = title_top_line.replace('"', r'\"')
-        self.title_bottom_line = title_bottom_line.replace('"', r'\"')
+        self.title = title.replace('"', r'\"')
 
         self.season_text = season_text.upper().replace('"', r'\"')
         self.episode_text = episode_text.upper().replace('"', r'\"')
@@ -120,12 +112,11 @@ class StandardTitleCard(CardType):
         self.title_color = title_color
 
         self.hide_season = hide_season
-        self.has_two_lines = title_top_line not in (None, '')
 
 
-    def __episode_text_global_effects(self) -> list:
+    def __title_text_global_effects(self) -> list:
         """
-        ImageMagick commands to implement the episode text's global effects.
+        ImageMagick commands to implement the title text's global effects.
         Specifically the the font, kerning, fontsize, and center gravity.
         
         :returns:   List of ImageMagick commands.
@@ -137,14 +128,15 @@ class StandardTitleCard(CardType):
             f'-font "{self.font}"',
             f'-kerning -1.25',
             f'-interword-spacing 50',
+            f'-interline-spacing -22',
             f'-pointsize {font_size}',
-            f'-gravity center',
+            f'-gravity south',
         ]   
 
 
-    def __episode_text_black_stroke(self) -> list:
+    def __title_text_black_stroke(self) -> list:
         """
-        ImageMagick commands to implement the episode text's black stroke.
+        ImageMagick commands to implement the title text's black stroke.
         
         :returns:   List of ImageMagick commands.
         """
@@ -152,7 +144,7 @@ class StandardTitleCard(CardType):
         return [
             f'-fill black',
             f'-stroke black',
-            f'-strokewidth 3', #def:3, euphoria:0.5, the wire:1, punisher:1.5
+            f'-strokewidth 3', #def:3, euphoria:0.5, the wire:1, punisher:1.5, pll:1
         ]
 
 
@@ -202,15 +194,15 @@ class StandardTitleCard(CardType):
 
     def _add_gradient(self) -> Path:
         """
-        Adds a gradient to this object's source image.
+        Add the static gradient to this object's source image.
         
-        :returns:   Path to the created image that has a gradient added.
+        :returns:   Path to the created image.
         """
 
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
             f'+profile "*"',    # To avoid profile conversion warnings
-            f'-gravity center', # For images that aren't in 4x3, center crop
+            f'-gravity center', # For images that aren't 4x3, center crop
             f'-resize "{self.TITLE_CARD_SIZE}^"',
             f'-extent "{self.TITLE_CARD_SIZE}"',
             f'"{self.GRADIENT_IMAGE_PATH.resolve()}"',
@@ -224,23 +216,23 @@ class StandardTitleCard(CardType):
         return self.__SOURCE_WITH_GRADIENT_PATH
 
 
-    def _add_one_line_episode_text(self, gradient_image: Path) -> Path:
+    def _add_title_text(self, gradient_image: Path) -> Path:
         """
-        Adds one line of episode text to the provide image.
+        Adds episode title text to the provide image.
 
         :param      gradient_image: The image with gradient added.
         
-        :returns:   Path to the created image that has a gradient and
-                    a single line of title text.
+        :returns:   Path to the created image that has a gradient and the title
+                    text added.
         """
 
         command = ' '.join([
             f'convert "{gradient_image.resolve()}"',
-            *self.__episode_text_global_effects(),
-            *self.__episode_text_black_stroke(),
-            f'-annotate +0+560 "{self.title_bottom_line}"',
-            f'-fill "{self.title_color}"',               # Actual text
-            f'-annotate +0+560 "{self.title_bottom_line}"',
+            *self.__title_text_global_effects(),
+            *self.__title_text_black_stroke(),
+            f'-annotate +0+238 "{self.title}"',
+            f'-fill "{self.title_color}"',
+            f'-annotate +0+238 "{self.title}"',
             f'"{self.__GRADIENT_WITH_TITLE_PATH.resolve()}"',
         ])
 
@@ -249,40 +241,13 @@ class StandardTitleCard(CardType):
         return self.__GRADIENT_WITH_TITLE_PATH
 
 
-    def _add_two_line_episode_text(self, gradient_image: Path) -> Path:
+    def _add_series_count_text_no_season(self, titled_image: Path) -> Path:
         """
-        Adds one lines of episode text to the provide image.
+        Adds the series count text without season title/number.
         
-        :param      gradient_image: The image with gradient added.
-        
-        :returns:   Path to the created image that has a gradient and
-                    two lines of title text.
-        """
+        :param      titled_image:  The titled image to add text to.
 
-        command =  ' '.join([
-            f'convert "{gradient_image.resolve()}"',
-            *self.__episode_text_global_effects(),
-            *self.__episode_text_black_stroke(),    # Black stroke behind text (top)
-            f'-annotate +0+385 "{self.title_top_line}"',
-            f'-fill "{self.title_color}"',    
-            f'-annotate +0+385 "{self.title_top_line}"',    # Top line text
-            *self.__episode_text_black_stroke(),    # Black stroke behind text (bottom)
-            f'-annotate +0+560 "{self.title_bottom_line}"',
-            f'-fill "{self.title_color}"',    
-            f'-annotate +0+560 "{self.title_bottom_line}"',    # Bottom line text
-            f'"{self.__GRADIENT_WITH_TITLE_PATH.resolve()}"',
-        ])
-
-        self.image_magick.run(command)
-
-        return self.__GRADIENT_WITH_TITLE_PATH
-
-
-    def _add_series_count_text_no_season(self, titled_image: Path) -> None:
-        """
-        Adds a series count text no season.
-        
-        :param      titled_image:  The titled image
+        :returns:   Path to the created image (the output file).
         """
 
         command = ' '.join([
@@ -298,6 +263,8 @@ class StandardTitleCard(CardType):
         ])
 
         self.image_magick.run(command)
+
+        return self.output_file
 
 
     def _get_series_count_text_dimensions(self) -> dict:
@@ -324,7 +291,7 @@ class StandardTitleCard(CardType):
             f'null: 2>&1 | grep Metrics'
         ])
 
-        metrics = self.image_magick.run(command, capture_output=True).stdout.decode()
+        metrics = self.image_magick.run_get_stdout(command)
         
         widths = list(map(int, findall('width: (\d+)', metrics)))
         heights = list(map(int, findall('height: (\d+)', metrics)))
@@ -339,7 +306,6 @@ class StandardTitleCard(CardType):
 
     def _create_series_count_text_image(self, width: float, width1: float,
                                         width2: float, height: float) -> Path:
-
         """
         Creates an image with only series count text. This image is transparent,
         and not any wider than is necessary (as indicated by `dimensions`).
@@ -377,14 +343,17 @@ class StandardTitleCard(CardType):
 
 
     def _combine_titled_image_series_count_text(self, titled_image: Path,
-                                                series_count_image: Path) -> None:
-
+                                                series_count_image: Path)->Path:
         """
-        Combine the titled image (image+gradient+episode title) and the 
-        series count image (optional season number+optional dot+episode number)
-        into a single image.
+        Combine the titled image (image+gradient+episode title) and the series
+        count image (optional season number+optional dot+episode number) into a
+        single image. This is written into the output image for this object.
 
-        This image is written into the output image for this object.
+        :param      titled_image:       Path to the titled image to add.
+        :param      series_count_image: Path to the series count transparent
+                                        image to add.
+
+        :returns:   Path to the created image (the output file).
         """
 
         command = ' '.join([
@@ -398,6 +367,8 @@ class StandardTitleCard(CardType):
 
         self.image_magick.run(command)
 
+        return self.output_file
+
 
     @staticmethod
     def split_title(title: str) -> (str, str):
@@ -408,33 +379,32 @@ class StandardTitleCard(CardType):
         
         :param      title:  The title to be split.
         
-        :returns:   Tuple of titles. First entry is the top title, second
-                    is the bottom.
+        :returns:   Tuple of titles. First entry is the top title, second is the
+                    bottom.
         """
 
-        return CardType._split_at_width(
-            title,
-            StandardTitleCard.MAX_LINE_LENGTH
-        )
+        return CardType._split_at_width(title, StandardTitleCard.MAX_LINE_WIDTH)
 
 
     @staticmethod
     def is_custom_font(font: str, size: float, color: str,
                        replacements: dict, case: callable,*args,**kwargs)->bool:
         """
-        Determines whether the
+        Determines whether the given font characteristics constitute a default
+        or custom font.
         
-        :param      font:          The font
-        :param      size:          The size
-        :param      color:         The color
-        :param      replacements:  The replacements
-        :param      case:          The case
+        :param      font:               The episode title font.
+        :param      size:               The episode title font size (float).
+        :param      color:              The episode title color.
+        :param      replacements:       The title character replacements used.
+        :param      case:               The episode title case function.
+        :param      args and kwargs:    Generic arguments to permit a call for
+                                        any CardType.
         
-        :returns:   True if custom font, False otherwise.
+        :returns:   True if a custom font is indicated, False otherwise.
         """
 
         default_case = StandardTitleCard.DEFAULT_FONT_CASE
-
         return ((font != StandardTitleCard.TITLE_FONT)
             or (size != 1.0)
             or (color != StandardTitleCard.TITLE_COLOR)
@@ -446,44 +416,47 @@ class StandardTitleCard(CardType):
     def is_custom_season_titles(season_map: dict, episode_range: dict, 
                                 episode_text_format: str) -> bool:
         """
-        Determines if custom season titles.
+        Determines whether the given attributes constitute custom or generic
+        season titles.
         
-        :param      season_map:           The season map
-        :param      episode_range:        The episode range
-        :param      episode_text_format:  The episode text format
+        :param      season_map:           The season map in use.
+        :param      episode_range:        The episode range in use.
+        :param      episode_text_format:  The episode text format in use.
         
-        :returns:   True if custom season titles, False otherwise.
+        :returns:   True if custom season titles are indicated, False otherwise.
         """
 
+        # Nonstandard episode text format
         if episode_text_format != 'EPISODE {episode_number}':
             return True
-        elif episode_range != {}:
+
+        # Nonstandard episode range
+        if episode_range != {}:
             return True
-        else:
-            for number, title in season_map.items():
-                if number == 0:
-                    if title.lower() != 'specials':
-                        return True
-                else:
-                    if title.lower() != f'season {number}':
-                        return True
+
+        # If any season title isn't standard, 
+        for number, title in season_map.items():
+            if number == 0:
+                if title.lower() != 'specials':
+                    return True
+            else:
+                if title.lower() != f'season {number}':
+                    return True
 
         return False
 
+
     def create(self) -> None:
         """
-        Make the necessary ImageMagick and system calls to create this
-        object's defined title card.
+        Make the necessary ImageMagick and system calls to create this object's
+        defined title card.
         """
-
+        
         # Add the gradient to the source image (always)
         gradient_image = self._add_gradient()
 
         # Add either one or two lines of episode text 
-        if self.has_two_lines:
-            titled_image = self._add_two_line_episode_text(gradient_image)
-        else:
-            titled_image = self._add_one_line_episode_text(gradient_image)
+        titled_image = self._add_title_text(gradient_image)
 
         # Create the output directory and any necessary parents 
         self.output_file.parent.mkdir(parents=True, exist_ok=True)
@@ -496,9 +469,14 @@ class StandardTitleCard(CardType):
             series_count_image = self._create_series_count_text_image(
                 **self._get_series_count_text_dimensions()
             )
-            self._combine_titled_image_series_count_text(titled_image, series_count_image)
+            self._combine_titled_image_series_count_text(
+                titled_image,
+                series_count_image
+            )
 
         # Delete all intermediate images
-        self.image_magick.delete_intermediate_images(
-            *([gradient_image, titled_image] + ([] if self.hide_season else [series_count_image]))
-        )
+        images = [gradient_image, titled_image]
+        if not self.hide_season:
+            images.append(series_count_image)
+
+        self.image_magick.delete_intermediate_images(*images)

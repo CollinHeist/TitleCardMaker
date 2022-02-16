@@ -286,12 +286,11 @@ class Show:
         return True
 
 
-    def _get_destination(self, data_row: dict) -> Path:
+    def _get_destination(self, entry: dict) -> Path:
         """
-        Get the destination filename for the given data row. The row's
-        'season_number', and 'episode_number' keys are used.
+        Get the destination filename for the given entry.
         
-        :param      data_row:   The data row returned from the file interface.
+        :param      entry:  The entry returned from a file interface.
         
         :returns:   Path for the full title card destination
         """
@@ -300,13 +299,13 @@ class Show:
         if not self.media_directory:
             return None
 
-        # Read from data row
+        # Get season and episode number for this entry
         try:
-            season_number = int(data_row['season_number'])
-            episode_number = int(data_row['episode_number'])
+            season_number = int(entry['season_number'])
+            episode_number = int(entry['episode_number'])
         except ValueError:
-            error(f'Invalid season/episode number "{data_row["season_number"]},'
-                  f' "{data_row["episode_number"]}"', 1)
+            error(f'Invalid season/episode number "{entry["season_number"]},'
+                  f' "{entry["episode_number"]}"', 1)
             return None
 
         # Get the season folder corresponding to this episode's season
@@ -315,13 +314,13 @@ class Show:
         else:
             season_folder = f'Season {season_number}'
 
-        # The standard plex filename for this episode
         # filename = preferences.card_filename_format.format(
         #     show=self.name, year=self.year, full_name=self.full_name,
         #     season=season_number, episode=episode_number,
-        #     title=data_row['title'][0] + data_row['title'][1],
+        #     title=entry['title'][0] + entry['title'][1],
         # )
         # filename += TitleCard.OUTPUT_CARD_EXTENSION
+        # The standard plex filename for this episode
         filename = (
             f'{self.full_name} - S{season_number:02}E{episode_number:02}'
             f'{TitleCard.OUTPUT_CARD_EXTENSION}'
@@ -352,17 +351,15 @@ class Show:
                                         not used.
         """
 
-        for data_row in self.file_interface.read():
-            key = f'{data_row["season_number"]}-{data_row["episode_number"]}'
-            if key in self.episodes and self.episodes[key].matches(data_row):
-                continue
+        for entry in self.file_interface.read():
+            key = f'{entry["season_number"]}-{entry["episode_number"]}'
 
             # Construct the file destination for Episode object building
             self.episodes[key] = Episode(
                 base_source=self.source_directory,
-                destination=self._get_destination(data_row),
+                destination=self._get_destination(entry),
                 card_class=self.card_class,
-                **data_row,
+                **entry,
             )
 
             # Attempt to use sonarr to figure out more accurate destination
@@ -419,11 +416,8 @@ class Show:
                 if key in self.episodes and self.episodes[key].matches(new_episode):
                     continue
 
-                # Construct data for new row
+                # New episode - indicate to user
                 has_new = True
-                top,bottom=self.card_class.split_title(new_episode.pop('title'))
-                new_episode.update({'title_top': top, 'title_bottom': bottom})
-
                 info(f'New episode for "{self.full_name}" '
                      f'S{new_episode["season_number"]:02}'
                      f'E{new_episode["episode_number"]:02}', 1)
@@ -447,7 +441,7 @@ class Show:
         :param      tmdb_interface: Optional interface to TMDb for attempting to
                                     download any source images that are missing.
 
-        :returns:   True if any new cards were created, false otherwise.
+        :returns:   True if any new cards were created, False otherwise.
         """
 
         # If the media directory is unspecified, then exit
@@ -464,16 +458,16 @@ class Show:
                 continue
 
             # Attempt to make a TitleCard object for this episode and profile
-            try:
-                title_card = TitleCard(episode, self.profile)
-            except Exception as e:
-                error(f'Error creating TitleCard ({e}) for episode ({episode})', 1)
-                continue
+            title_card = TitleCard(
+                episode,
+                self.profile,
+                **self.card_class.TITLE_CHARACTERISTICS,
+            )
 
             # If the title card source images doesn't exist..
             if not episode.source.exists():
                 # Skip if cannot query database
-                if not all((self.tmdb_sync, tmdb_interface)):
+                if not self.tmdb_sync or not tmdb_interface:
                     continue
 
                 # Query database for image
