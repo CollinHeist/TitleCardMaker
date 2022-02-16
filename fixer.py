@@ -25,8 +25,8 @@ title_card_group.add_argument('--title-card', type=str, nargs=3, default=SUPPRES
 title_card_group.add_argument('--season', type=str, default=None,
                               metavar='SEASON_TEXT',
                               help='Specify the season text to use for this card')
-title_card_group.add_argument('--title', type=str, nargs='+', default=(' ', ' '),
-                              metavar=('LINE1', 'LINE2'),
+title_card_group.add_argument('--title', type=str, nargs='+', default='',
+                              metavar=('TITLE_LINE1'),
                               help='Specify the title text to use for this card')
 title_card_group.add_argument('--font', '--font-file', type=Path, default='__default',
                               metavar='FONT_FILE',
@@ -91,8 +91,7 @@ if hasattr(args, 'title_card'):
         source=Path(args.title_card[1]), 
         output_file=Path(args.title_card[2]),
         season_text=('' if not args.season else args.season),
-        title_top_line=args.title[0] if len(args.title) == 2 else '',
-        title_bottom_line=args.title[1 if len(args.title) == 2 else 0],
+        title='\n'.join(args.title),
         font=args.font.resolve(),
         font_size=float(args.font_size[:-1])/100.0,
         title_color=args.font_color,

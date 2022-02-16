@@ -1,0 +1,9 @@
+certifi==2021.10.8
+charset-normalizer==2.0.12
+idna==3.3
+num2words==0.5.6
+PyYAML==6.0
+regex==2022.1.18
+requests==2.27.1
+titlecase==2.3
+urllib3==1.26.8
