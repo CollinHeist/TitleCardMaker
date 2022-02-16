@@ -1,7 +1,7 @@
 from pathlib import Path
 from re import findall
 
-from modules.Debug import *
+from modules.Debug import info, warn, error
 import modules.preferences as preferences
 from modules.CardType import CardType
 
@@ -93,7 +93,7 @@ class StandardTitleCard(CardType):
         :param  args and kwargs:    Unused arguments to permit generalized calls
                                     for any CardType.
         """
-
+        
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__()
 

@@ -26,7 +26,7 @@ title_card_group.add_argument('--season', type=str, default=None,
                               metavar='SEASON_TEXT',
                               help='Specify the season text to use for this card')
 title_card_group.add_argument('--title', type=str, nargs='+', default='',
-                              metavar=('TITLE_LINE1'),
+                              metavar=('TITLE_LINE'),
                               help='Specify the title text to use for this card')
 title_card_group.add_argument('--font', '--font-file', type=Path, default='__default',
                               metavar='FONT_FILE',

@@ -87,21 +87,22 @@ class DataFileInterface:
 
             # Iterate through each episode of this season
             for episode_number, episode_data in season_data.items():
+                # If the 'title' key is missing (or no subkeys at all..) error
                 if ('title' not in episode_data
                     or not isinstance(episode_data, dict)):
-                    error(f'Season {season_number}, Episode {episode_number} of '
-                          f'"{self.file.resolve()}" is missing title')
+                    error(f'Season {season_number}, Episode {episode_number} of'
+                          f' "{self.file.resolve()}" is missing title')
                     continue
 
                 # Construct data dictionary of this object
                 data = {
-                    'title': Title(episode_data['title']),
+                    'title': Title(episode_data.pop('title')),
                     'season_number': season_number,
                     'episode_number': episode_number,
                 }
 
-                if 'absolute_number' in episode_data:
-                    data['abs_number'] = episode_data['absolute_number']
+                # Add any additional, unexpected keys from the YAML
+                data.update(episode_data)
 
                 yield data
 
@@ -124,7 +125,7 @@ class DataFileInterface:
 
             # Iterate through each episode of this season
             for episode_number, episode_data in season_data.items():
-                if 'absolute_number' not in episode_data:
+                if 'abs_number' not in episode_data:
                     yield {
                         'title': Title(episode_data['title']),
                         'season_number': season_number,
@@ -160,7 +161,7 @@ class DataFileInterface:
         # Update this entry with the new title(s)
         yaml[season_key][episode_number]= {'title': title.title_yaml}
         if abs_number != None:
-            yaml[season_key][episode_number]['absolute_number'] = abs_number
+            yaml[season_key][episode_number]['abs_number'] = abs_number
 
         # Write updated data
         self.__write_data(yaml)
@@ -197,7 +198,7 @@ class DataFileInterface:
 
         # Add absolute number if given, add key
         if abs_number != None:
-            yaml[season_key][episode_number]['absolute_number'] = abs_number
+            yaml[season_key][episode_number]['abs_number'] = abs_number
 
         # Write updated data
         self.__write_data(yaml)

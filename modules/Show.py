@@ -458,10 +458,12 @@ class Show:
                 continue
 
             # Attempt to make a TitleCard object for this episode and profile
+            # passing any extra characteristics from the episode along
             title_card = TitleCard(
                 episode,
                 self.profile,
-                **self.card_class.TITLE_CHARACTERISTICS,
+                self.card_class.TITLE_CHARACTERISTICS,
+                **episode.extra_characteristics,
             )
 
             # If the title card source images doesn't exist..
