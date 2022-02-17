@@ -39,8 +39,7 @@ class Title:
             self.__title_lines = title
             self.__manually_specified = True
         else:
-            error(f'Title can only be created by str or list')
-            return
+            raise TypeError(f'Title can only be created by str or list')
 
         # This title as represented in YAML
         self.title_yaml = title
@@ -48,6 +47,16 @@ class Title:
         # Generate title to use for matching purposes
         match_func = lambda c: match('[a-zA-Z0-9]', c)
         self.match_title = ''.join(filter(match_func, title)).lower()
+
+
+    def __repr__(self) -> str:
+        """
+        Returns a unambiguous string representation of the object.
+        
+        :returns:   String representation of the object.
+        """
+
+        return f'<Title title="{self.full_title}", lines={self.__title_lines}>'
 
 
     def split(self, max_line_width: int, max_line_count: int,
