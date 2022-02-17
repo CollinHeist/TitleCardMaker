@@ -410,20 +410,15 @@ class Show:
         # For each episode, check if the data matches any contained Episode objects
         has_new = False
         if all_episodes:
-            for new_episode in all_episodes:
-                # Compare against every Episode in this Show
-                key = f'{new_episode["season_number"]}-{new_episode["episode_number"]}'
-                if key in self.episodes and self.episodes[key].matches(new_episode):
-                    continue
+            # Filter out episodes that already exist
+            new_episodes = list(filter(
+                lambda e: (f'{e["season_number"]}-{e["episode_number"]}'
+                           not in self.episodes),
+                all_episodes,
+            ))
 
-                # New episode - indicate to user
-                has_new = True
-                info(f'New episode for "{self.full_name}" '
-                     f'S{new_episode["season_number"]:02}'
-                     f'E{new_episode["episode_number"]:02}', 1)
-
-                # Add entry to data file through interface
-                self.file_interface.add_entry(**new_episode)
+            # Add many entries at once
+            self.file_interface.add_many_entries(new_episodes)
 
         # If new entries were added, re-parse source file
         if has_new:

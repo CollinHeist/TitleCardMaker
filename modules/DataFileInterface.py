@@ -66,7 +66,7 @@ class DataFileInterface:
 
         # Write updated data with this entry added
         with self.file.open('w') as file_handle:
-            dump({'data': yaml}, file_handle)
+            dump({'data': yaml}, file_handle, allow_unicode=True)
 
 
     def read(self) -> dict:
@@ -126,15 +126,18 @@ class DataFileInterface:
             # Iterate through each episode of this season
             for episode_number, episode_data in season_data.items():
                 if 'abs_number' not in episode_data:
-                    yield {
-                        'title': Title(episode_data['title']),
+                    data = {
+                        'title': Title(episode_data.pop('title')),
                         'season_number': season_number,
                         'episode_number': episode_number,
                     }
+                    data.update(episode_data)
+
+                    yield data
 
 
     def modify_entry(self, title: Title, season_number: int,
-                     episode_number: int, abs_number: int=None) -> None:
+                     episode_number: int, **extra_data: dict) -> None:
         """
         Modify the entry found under the given season+episode number to the
         specified information. If the entry does not exist, a new entry is NOT
@@ -159,9 +162,8 @@ class DataFileInterface:
             return None
 
         # Update this entry with the new title(s)
-        yaml[season_key][episode_number]= {'title': title.title_yaml}
-        if abs_number != None:
-            yaml[season_key][episode_number]['abs_number'] = abs_number
+        yaml[season_key][episode_number] = {'title': title.title_yaml}
+        yaml[season_key][episode_number].update(extra_data)
 
         # Write updated data
         self.__write_data(yaml)
@@ -196,12 +198,52 @@ class DataFileInterface:
         # Construct episode data
         yaml[season_key][episode_number] = {'title': title.title_yaml}
 
-        # Add absolute number if given, add key
+        # Add absolute number if given
         if abs_number != None:
             yaml[season_key][episode_number]['abs_number'] = abs_number
 
         # Write updated data
         self.__write_data(yaml)
+
+
+    def add_many_entries(self, new_episodes: [dict]) -> None:
+        """
+        Adds many entries at once.
+        """
+
+        # Read yaml
+        yaml = self.__read_data()
+
+        for entry in new_episodes:
+            # Get this entry's season and episode number
+            season, episode = entry['season_number'], entry['episode_number']
+
+            # Indicate new episode to user
+            info(f'Added S{season:02}E{episode:02} to "{self.file.parent.name}"')
+
+            # Create blank season data if this key doesn't exist
+            season_key = f'Season {season}'
+            if season_key not in yaml:
+                yaml[season_key] = {}
+
+            # If this episde already exists, warn and exit
+            if episode in yaml[season_key]:
+                warn(f'Cannot add duplicate entry for Season {season}, Episode',
+                     f'{episode} in "{self.file.resolve()}"')
+                continue
+
+            # Construct episode data
+            yaml[season_key][episode] = {'title': entry['title'].title_yaml}
+
+            # Add absolute number if given
+            if 'abs_number' in entry and entry['abs_number'] != None:
+                yaml[season_key][episode]['abs_number'] = entry['abs_number']
+
+        # Write updated yaml
+        self.__write_data(yaml)
+
+
+
 
         
 
