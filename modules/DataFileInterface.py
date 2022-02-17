@@ -69,6 +69,32 @@ class DataFileInterface:
             dump({'data': yaml}, file_handle, allow_unicode=True)
 
 
+    def sort(self, yaml: dict) -> None:
+        """
+        Sort the given YAML and then write it to this interface's file. Sorting
+        is done by season number, and then episode number, and then by info
+        key.
+
+        :param      yaml:   YAML dictionary to sort and write to file.
+        """
+
+        if not self.file.exists():
+            return None
+
+        # Sort dictionary by season number
+        sorted_yaml = {}
+        for season in sorted(yaml, key=lambda k: int(k.split(' ')[-1])):
+            # Sort each season by episode number
+            sorted_yaml[season] = {}
+            for episode in sorted(yaml[season]):
+                # Sort each episode by key
+                sorted_yaml[season][episode] = {}
+                for key in sorted(yaml[season][episode]):
+                    sorted_yaml[season][episode][key]=yaml[season][episode][key]
+
+        self.__write_data(yaml)
+
+
     def read(self) -> dict:
         """
         Read the data file for this object, yielding each (valid) row.
@@ -173,7 +199,7 @@ class DataFileInterface:
                   episode_number: int, abs_number: int=None) -> None:
         """
         Add the info provided to this object's data file. If the specified
-        season+episode number already exists, that data is NOT overwritten.
+        season and episode number already exists, that data is NOT overwritten.
 
         :param      title_top:      Title of the entry being added.
         :param      season_number:  Season number of the entry being added.
@@ -208,7 +234,12 @@ class DataFileInterface:
 
     def add_many_entries(self, new_episodes: [dict]) -> None:
         """
-        Adds many entries at once.
+        Adds many entries at once. This only reads and writes from this 
+        interface's file once.
+
+        :param      new_episodes:   List of dictionaries containing episode
+                                    data. Each entry must have 'season_number',
+                                    'episode_number', and 'title' key.
         """
 
         # Read yaml
@@ -241,9 +272,4 @@ class DataFileInterface:
 
         # Write updated yaml
         self.__write_data(yaml)
-
-
-
-
-        
 
