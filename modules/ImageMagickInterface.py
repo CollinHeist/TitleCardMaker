@@ -1,6 +1,6 @@
 from subprocess import run
 
-from modules.Debug import *
+from modules.Debug import info, warn, error
 
 class ImageMagickInterface:
     """

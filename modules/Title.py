@@ -128,7 +128,6 @@ class Title:
                 all_lines[-2] = f'{all_lines[-2]} {all_lines[-1]}'
                 del all_lines[-1]
 
-            warn(f'Top split "{self.full_title}" into {"|".join(all_lines)}')
             return all_lines
 
         # For bottom heavy splitting, start on bottom and move text UP
@@ -159,7 +158,7 @@ class Title:
         if len(all_lines) > max_line_count:
             all_lines[-2] = f'{all_lines[-2]} {all_lines[-1]}'
             del all_lines[-1]
-        warn(f'Bottom split "{self.full_title}" into {"|".join(all_lines)}')
+            
         return all_lines
 
 
