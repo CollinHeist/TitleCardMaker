@@ -32,8 +32,8 @@ class StandardTitleCard(CardType):
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
-        'max_line_width': 32,   # Character count to begin splitting titles
-        'max_line_count': 2,    # Maximum number of lines a title can take up
+        'max_line_width': 30,   # Character count to begin splitting titles
+        'max_line_count': 3,    # Maximum number of lines a title can take up
         'top_heavy': False,     # This class uses bottom heavy titling
     }
 
@@ -56,7 +56,7 @@ class StandardTitleCard(CardType):
     """Default fonts and color for series count text"""
     SEASON_COUNT_DEFAULT_FONT = Path(__file__).parent / 'ref' / 'Proxima Nova Semibold.otf'
     EPISODE_COUNT_DEFAULT_FONT = Path(__file__).parent / 'ref' / 'Proxima Nova Regular.otf'
-    SERIES_COUNT_DEFAULT_COLOR = '#CFCFCF'
+    SERIES_COUNT_TEXT_COLOR = '#CFCFCF'
 
     """Character used to join season and episode text (with spacing)"""
     SERIES_COUNT_JOIN_CHARACTER = '•'
@@ -186,8 +186,8 @@ class StandardTitleCard(CardType):
         """
 
         return [
-            f'-fill "{self.SERIES_COUNT_DEFAULT_COLOR}"',
-            f'-stroke "{self.SERIES_COUNT_DEFAULT_COLOR}"',
+            f'-fill "{self.SERIES_COUNT_TEXT_COLOR}"',
+            f'-stroke "{self.SERIES_COUNT_TEXT_COLOR}"',
             f'-strokewidth 0.75',
         ]
 
