@@ -72,14 +72,10 @@ class DataFileInterface:
     def sort(self, yaml: dict) -> None:
         """
         Sort the given YAML and then write it to this interface's file. Sorting
-        is done by season number, and then episode number, and then by info
-        key.
+        is done by season number, and then episode number, and then by info key.
 
         :param      yaml:   YAML dictionary to sort and write to file.
         """
-
-        if not self.file.exists():
-            return None
 
         # Sort dictionary by season number
         sorted_yaml = {}
@@ -92,6 +88,7 @@ class DataFileInterface:
                 for key in sorted(yaml[season][episode]):
                     sorted_yaml[season][episode][key]=yaml[season][episode][key]
 
+        # Write newly sorted YAML
         self.__write_data(yaml)
 
 
