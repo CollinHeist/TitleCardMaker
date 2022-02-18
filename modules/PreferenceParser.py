@@ -5,6 +5,7 @@ from yaml import safe_load
 from modules.Debug import *
 from modules.Show import Show
 from modules.ShowSummary import ShowSummary
+from modules.TitleCard import TitleCard
 from modules.TMDbInterface import TMDbInterface
 
 class PreferenceParser:
@@ -105,7 +106,12 @@ class PreferenceParser:
                 self.series_files = [value]
 
         if self.__is_specified('options', 'card_type'):
-            self.card_type = self.__yaml['options']['card_type']
+            value = self.__yaml['options']['card_type']
+            if value not in TitleCard.CARD_TYPES:
+                error(f'Default card type "{value}" is unrecognized')
+                self.valid = False
+            else:
+                self.card_type = value
 
         if self.__is_specified('archive', 'path'):
             self.archive_directory = Path(self.__yaml['archive']['path'])
