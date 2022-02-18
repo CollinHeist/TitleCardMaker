@@ -54,8 +54,8 @@ class StandardTitleCard(CardType):
     __GRADIENT_IMAGE: Path = Path(__file__).parent / 'ref' / 'GRADIENT.png'
 
     """Default fonts and color for series count text"""
-    SEASON_COUNT_DEFAULT_FONT = Path(__file__).parent / 'ref' / 'Proxima Nova Semibold.otf'
-    EPISODE_COUNT_DEFAULT_FONT = Path(__file__).parent / 'ref' / 'Proxima Nova Regular.otf'
+    SEASON_COUNT_FONT = Path(__file__).parent / 'ref' / 'Proxima Nova Semibold.otf'
+    EPISODE_COUNT_FONT = Path(__file__).parent / 'ref' / 'Proxima Nova Regular.otf'
     SERIES_COUNT_TEXT_COLOR = '#CFCFCF'
 
     """Character used to join season and episode text (with spacing)"""
@@ -253,7 +253,7 @@ class StandardTitleCard(CardType):
         command = ' '.join([
             f'convert "{titled_image.resolve()}"',
             *self.__series_count_text_global_effects(),
-            f'-font "{self.EPISODE_COUNT_DEFAULT_FONT}"',
+            f'-font "{self.EPISODE_COUNT_FONT}"',
             f'-gravity center',
             *self.__series_count_text_black_stroke(),
             f'-annotate +0+697.2 "{self.episode_text}"',
@@ -277,11 +277,11 @@ class StandardTitleCard(CardType):
         command = ' '.join([
             f'convert -debug annotate xc: ',
             *self.__series_count_text_global_effects(),
-            f'-font "{self.SEASON_COUNT_DEFAULT_FONT}"',    # Season text
+            f'-font "{self.SEASON_COUNT_FONT}"',    # Season text
             f'-gravity east',
             *self.__series_count_text_effects(),
             f'-annotate +1600+697.2 "{self.season_text} "',
-            f'-font "{self.EPISODE_COUNT_DEFAULT_FONT}"',   # Separator dot
+            f'-font "{self.EPISODE_COUNT_FONT}"',   # Separator dot
             f'-gravity center',
             *self.__series_count_text_effects(),
             f'-annotate +0+689.5 "{self.SERIES_COUNT_JOIN_CHARACTER} "',
@@ -320,12 +320,12 @@ class StandardTitleCard(CardType):
             f'-background transparent',
             f'xc:transparent',
             *self.__series_count_text_global_effects(),
-            f'-font "{self.SEASON_COUNT_DEFAULT_FONT}"',
+            f'-font "{self.SEASON_COUNT_FONT}"',
             *self.__series_count_text_black_stroke(),
             f'-annotate +0+{height-25} "{self.season_text} "',
             *self.__series_count_text_effects(),
             f'-annotate +0+{height-25} "{self.season_text} "',
-            f'-font "{self.EPISODE_COUNT_DEFAULT_FONT}"',
+            f'-font "{self.EPISODE_COUNT_FONT}"',
             *self.__series_count_text_black_stroke(),
             f'-annotate +{width1}+{height-25-6.5} "{self.SERIES_COUNT_JOIN_CHARACTER}"',
             *self.__series_count_text_effects(),
