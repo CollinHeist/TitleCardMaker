@@ -80,7 +80,7 @@ class ShowSummary(ImageMaker):
             return None
 
         # Get a random subset of images to create the summary with
-        # Sort that subset my season/episode number so the montage appears chronological
+        # Sort that subset my season/episode number so the montage is ordered
         episode_keys = sorted(
             sample(available_episodes, min(episode_count, 9)),
             key=lambda k: int(k.split('-')[0])*1000+int(k.split('-')[1])
@@ -256,12 +256,12 @@ class ShowSummary(ImageMaker):
 
         # If there are no title cards to montage
         if len(self.inputs) == 0:
-            return
+            return None
 
         # Exit if a logo does not exist
         if not self.logo.exists():
             warn('Cannot create ShowSummary - no logo found', 1)
-            return
+            return None
 
         # Create montage of title cards
         montage = self._create_montage()
