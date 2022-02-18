@@ -1,7 +1,7 @@
 from pathlib import Path
 from re import findall
 
-from modules.Debug import *
+from modules.Debug import info, warn, error
 import modules.preferences as preferences
 from modules.CardType import CardType
 
@@ -32,13 +32,10 @@ class StandardTitleCard(CardType):
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
-        'max_line_width': 32,   # Character count to begin splitting titles
-        'max_line_count': 2,    # Maximum number of lines a title can take up
+        'max_line_width': 30,   # Character count to begin splitting titles
+        'max_line_count': 3,    # Maximum number of lines a title can take up
         'top_heavy': False,     # This class uses bottom heavy titling
     }
-
-    """Source path for the gradient image overlayed over all title cards"""
-    GRADIENT_IMAGE_PATH: Path = Path(__file__).parent / 'ref' / 'GRADIENT.png'
 
     """Default font and text color for episode title text"""
     TITLE_FONT = str((Path(__file__).parent /'ref'/'Sequel-Neue.otf').resolve())
@@ -53,18 +50,21 @@ class StandardTitleCard(CardType):
     """Standard class has standard archive name"""
     ARCHIVE_NAME = 'standard'
 
+    """Source path for the gradient image overlayed over all title cards"""
+    __GRADIENT_IMAGE: Path = Path(__file__).parent / 'ref' / 'GRADIENT.png'
+
     """Default fonts and color for series count text"""
-    SEASON_COUNT_DEFAULT_FONT = Path(__file__).parent / 'ref' / 'Proxima Nova Semibold.otf'
-    EPISODE_COUNT_DEFAULT_FONT = Path(__file__).parent / 'ref' / 'Proxima Nova Regular.otf'
-    SERIES_COUNT_DEFAULT_COLOR = '#CFCFCF'
+    SEASON_COUNT_FONT = Path(__file__).parent / 'ref' / 'Proxima Nova Semibold.otf'
+    EPISODE_COUNT_FONT = Path(__file__).parent / 'ref' / 'Proxima Nova Regular.otf'
+    SERIES_COUNT_TEXT_COLOR = '#CFCFCF'
 
     """Character used to join season and episode text (with spacing)"""
     SERIES_COUNT_JOIN_CHARACTER = '•'
 
     """Paths to intermediate files that are deleted after the card is created"""
-    __SOURCE_WITH_GRADIENT_PATH = Path(__file__).parent / '.objects' / 'source_gradient.png'
-    __GRADIENT_WITH_TITLE_PATH = Path(__file__).parent / '.objects' / 'gradient_title.png'
-    __SERIES_COUNT_TEXT_PATH = Path(__file__).parent / '.objects' / 'series_count_text.png'
+    __SOURCE_WITH_GRADIENT = Path(__file__).parent / '.objects' / 'source_gradient.png'
+    __GRADIENT_WITH_TITLE = Path(__file__).parent / '.objects' / 'gradient_title.png'
+    __SERIES_COUNT_TEXT = Path(__file__).parent / '.objects' / 'series_count_text.png'
 
 
     def __init__(self, source: Path, output_file: Path, title: str,
@@ -93,7 +93,7 @@ class StandardTitleCard(CardType):
         :param  args and kwargs:    Unused arguments to permit generalized calls
                                     for any CardType.
         """
-
+        
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__()
 
@@ -186,8 +186,8 @@ class StandardTitleCard(CardType):
         """
 
         return [
-            f'-fill "{self.SERIES_COUNT_DEFAULT_COLOR}"',
-            f'-stroke "{self.SERIES_COUNT_DEFAULT_COLOR}"',
+            f'-fill "{self.SERIES_COUNT_TEXT_COLOR}"',
+            f'-stroke "{self.SERIES_COUNT_TEXT_COLOR}"',
             f'-strokewidth 0.75',
         ]
 
@@ -205,15 +205,15 @@ class StandardTitleCard(CardType):
             f'-gravity center', # For images that aren't 4x3, center crop
             f'-resize "{self.TITLE_CARD_SIZE}^"',
             f'-extent "{self.TITLE_CARD_SIZE}"',
-            f'"{self.GRADIENT_IMAGE_PATH.resolve()}"',
+            f'"{self.__GRADIENT_IMAGE.resolve()}"',
             f'-background None',
             f'-layers Flatten',
-            f'"{self.__SOURCE_WITH_GRADIENT_PATH.resolve()}"',
+            f'"{self.__SOURCE_WITH_GRADIENT.resolve()}"',
         ])
 
         self.image_magick.run(command)
 
-        return self.__SOURCE_WITH_GRADIENT_PATH
+        return self.__SOURCE_WITH_GRADIENT
 
 
     def _add_title_text(self, gradient_image: Path) -> Path:
@@ -230,15 +230,15 @@ class StandardTitleCard(CardType):
             f'convert "{gradient_image.resolve()}"',
             *self.__title_text_global_effects(),
             *self.__title_text_black_stroke(),
-            f'-annotate +0+238 "{self.title}"',
+            f'-annotate +0+245 "{self.title}"',
             f'-fill "{self.title_color}"',
-            f'-annotate +0+238 "{self.title}"',
-            f'"{self.__GRADIENT_WITH_TITLE_PATH.resolve()}"',
+            f'-annotate +0+245 "{self.title}"',
+            f'"{self.__GRADIENT_WITH_TITLE.resolve()}"',
         ])
 
         self.image_magick.run(command)
 
-        return self.__GRADIENT_WITH_TITLE_PATH
+        return self.__GRADIENT_WITH_TITLE
 
 
     def _add_series_count_text_no_season(self, titled_image: Path) -> Path:
@@ -253,7 +253,7 @@ class StandardTitleCard(CardType):
         command = ' '.join([
             f'convert "{titled_image.resolve()}"',
             *self.__series_count_text_global_effects(),
-            f'-font "{self.EPISODE_COUNT_DEFAULT_FONT}"',
+            f'-font "{self.EPISODE_COUNT_FONT}"',
             f'-gravity center',
             *self.__series_count_text_black_stroke(),
             f'-annotate +0+697.2 "{self.episode_text}"',
@@ -277,11 +277,11 @@ class StandardTitleCard(CardType):
         command = ' '.join([
             f'convert -debug annotate xc: ',
             *self.__series_count_text_global_effects(),
-            f'-font "{self.SEASON_COUNT_DEFAULT_FONT}"',    # Season text
+            f'-font "{self.SEASON_COUNT_FONT}"',    # Season text
             f'-gravity east',
             *self.__series_count_text_effects(),
             f'-annotate +1600+697.2 "{self.season_text} "',
-            f'-font "{self.EPISODE_COUNT_DEFAULT_FONT}"',   # Separator dot
+            f'-font "{self.EPISODE_COUNT_FONT}"',   # Separator dot
             f'-gravity center',
             *self.__series_count_text_effects(),
             f'-annotate +0+689.5 "{self.SERIES_COUNT_JOIN_CHARACTER} "',
@@ -320,12 +320,12 @@ class StandardTitleCard(CardType):
             f'-background transparent',
             f'xc:transparent',
             *self.__series_count_text_global_effects(),
-            f'-font "{self.SEASON_COUNT_DEFAULT_FONT}"',
+            f'-font "{self.SEASON_COUNT_FONT}"',
             *self.__series_count_text_black_stroke(),
             f'-annotate +0+{height-25} "{self.season_text} "',
             *self.__series_count_text_effects(),
             f'-annotate +0+{height-25} "{self.season_text} "',
-            f'-font "{self.EPISODE_COUNT_DEFAULT_FONT}"',
+            f'-font "{self.EPISODE_COUNT_FONT}"',
             *self.__series_count_text_black_stroke(),
             f'-annotate +{width1}+{height-25-6.5} "{self.SERIES_COUNT_JOIN_CHARACTER}"',
             *self.__series_count_text_effects(),
@@ -334,12 +334,12 @@ class StandardTitleCard(CardType):
             f'-annotate +{width1+width2}+{height-25} "{self.episode_text}"',
             *self.__series_count_text_effects(),
             f'-annotate +{width1+width2}+{height-25} "{self.episode_text}"',
-            f'"PNG32:{self.__SERIES_COUNT_TEXT_PATH.resolve()}"',
+            f'"PNG32:{self.__SERIES_COUNT_TEXT.resolve()}"',
         ])
 
         self.image_magick.run(command)
 
-        return self.__SERIES_COUNT_TEXT_PATH
+        return self.__SERIES_COUNT_TEXT
 
 
     def _combine_titled_image_series_count_text(self, titled_image: Path,
@@ -368,22 +368,6 @@ class StandardTitleCard(CardType):
         self.image_magick.run(command)
 
         return self.output_file
-
-
-    @staticmethod
-    def split_title(title: str) -> (str, str):
-        """
-        Inner function to split a given title into top and bottom title text.
-        Splitting takes priority on some special characters, such as colons,
-        and commas. Final splitting is then done on spaces
-        
-        :param      title:  The title to be split.
-        
-        :returns:   Tuple of titles. First entry is the top title, second is the
-                    bottom.
-        """
-
-        return CardType._split_at_width(title, StandardTitleCard.MAX_LINE_WIDTH)
 
 
     @staticmethod

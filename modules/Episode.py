@@ -13,7 +13,8 @@ class Episode:
 
     def __init__(self, season_number: int, episode_number: int,
                  card_class: 'CardType', base_source: Path, destination: Path,
-                 title: Title, abs_number: int=None) -> None:
+                 title: Title, abs_number: int=None,
+                 **extra_characteristics: dict) -> None:
         """
         Constructs a new instance of an Episode.
 
@@ -25,6 +26,9 @@ class Episode:
                                     associated with this episode.
         :param      title:          The title (full text) of this episode.
         :param      abs_number:     The absolute episode number of this episode.
+        :param      extra_characteristics:  Additional characteristics to pass
+                                            to the creation of the TitleCard
+                                            from this Episode.
         """
 
         # Set object attributes
@@ -41,6 +45,9 @@ class Episode:
 
         # Store Title object
         self.title = title
+
+        # Store extra characteristics
+        self.extra_characteristics = extra_characteristics
 
 
     def __repr__(self) -> str:

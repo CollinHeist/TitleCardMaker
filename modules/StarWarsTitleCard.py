@@ -39,12 +39,12 @@ class StarWarsTitleCard(CardType):
     """Path to the reference star image to overlay on all source images"""
     __STAR_GRADIENT_IMAGE = Path(__file__).parent / 'ref' / 'star_gradient.png'
 
-    """Path to the source+gradient image"""
-    __SOURCE_WITH_STARS = Path(__file__).parent/'.objects'/'source_gradient.png'
-
     """Path to the font to use for the episode/episode number text """
     EPISODE_TEXT_FONT = Path(__file__).parent / 'ref' / 'HelveticaNeue.ttc'
     EPISODE_NUMBER_FONT = Path(__file__).parent / 'ref'/'HelveticaNeue-Bold.ttf'
+
+    """Paths to intermediate files that are deleted after the card is created"""
+    __SOURCE_WITH_STARS = Path(__file__).parent/'.objects'/'source_gradient.png'
 
     
     def __init__(self, source: Path, output_file: Path, title: str,
@@ -205,22 +205,6 @@ class StarWarsTitleCard(CardType):
         self.image_magick.run(command)
 
         return self.output_file
-
-
-    @staticmethod
-    def split_title(title: str) -> (str, str):
-        """
-        Splits a title.
-        
-        :param      title:  The title
-        
-        :returns:   { description_of_the_return_value }
-        """
-
-        return CardType._split_at_width(
-            title,
-            StarWarsTitleCard.MAX_LINE_LENGTH
-        )
 
 
     @staticmethod

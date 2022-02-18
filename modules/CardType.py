@@ -88,50 +88,6 @@ class CardType(ImageMaker):
 
     @staticmethod
     @abstractmethod
-    def split_title() -> (str, str):
-        """
-        Abstract method to split an episode title into two lines of text.
-        """
-        raise NotImplementedError(f'All CardType objects must implement this')
-
-
-    def _split_at_width(title: str, width: int) -> (str, str):
-        """
-        Split a given title after a given width. This method prioritizes
-        splitting on colons, commas, and parentheses in addition to spaces.
-
-        :param      title:  The episode title to split.
-
-        :param      width:  After how many characters to begin splitting.
-
-        :returns:   Tuple of the two lines of title text as "top" and "bottom".
-        """
-
-        top, bottom = '', title
-        if len(title) >= width:
-            # Only look for colon/comma in the first half of the text to avoid
-            # long top lines for titles with these in the last part of the title
-            if ': ' in bottom[:len(bottom)//2]:
-                top, bottom = title.split(': ', 1)
-                top += ':'
-            elif ', ' in bottom[:len(bottom)//2]:
-                top, bottom = title.split(', ', 1)
-                top += ','
-            elif '( ' in bottom[:len(bottom)//2]:
-                top, bottom = title.split('( ', 1)
-                top += '('
-            else:
-                top, bottom = title.split(' ', 1)
-
-            while len(bottom) >= width:
-                top2, bottom = bottom.split(' ', 1)
-                top += f' {top2}'
-
-        return top, bottom
-
-
-    @staticmethod
-    @abstractmethod
     def is_custom_font() -> bool:
         """
         Abstract method to determine whether the given font characteristics

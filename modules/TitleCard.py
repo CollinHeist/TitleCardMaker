@@ -26,14 +26,20 @@ class TitleCard:
     }
 
     def __init__(self, episode: 'Episode', profile: 'Profile',
-                 **title_characteristics: dict) -> None:
+                 title_characteristics: dict,
+                 **extra_characteristics: dict) -> None:
         """
         Constructs a new instance of this class.
         
         :param      episode:    The episode whose TitleCard this corresponds to.
-
         :param      profile:    The profile to apply to the creation of this 
                                 title card.
+        :param      title_characteristics:  Dictionary of characteristics from
+                                            the CardType class for this Episode
+                                            to pass to apply_profile().
+        :param      extra_characteristics:  Any extra keyword arguments to pass
+                                            directly to the creation of the
+                                            CardType object.
         """
         
         # Store this card's associated episode/profile.
@@ -59,6 +65,7 @@ class TitleCard:
             font_size=profile.font_size,
             title_color=profile.font_color,
             hide_season=profile.hide_season_title,
+            **extra_characteristics,
         )
 
         # File associated with this card is the episode's destination
