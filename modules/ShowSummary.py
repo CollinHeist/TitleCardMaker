@@ -60,7 +60,7 @@ class ShowSummary(ImageMaker):
         Select the images that are to be incorporated into the show summary.
         This updates the object's inputs and number_rows attributes.
         """
-
+        
         # Filter out episodes that don't have an existing title card
         available_episodes = list(filter(
             lambda e: self.show.episodes[e].destination.exists(),
@@ -248,8 +248,6 @@ class ShowSummary(ImageMaker):
         Create the ShowSummary defined by this show object. Image selection is
         done at the start of this function.
         """
-
-        info(f'Creating ShowSummary for "{self.show.full_name}"')
 
         # Select images for montaging
         self.__select_images()

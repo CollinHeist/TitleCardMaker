@@ -7,12 +7,12 @@ from modules.preferences import set_preference_parser
 from modules.Manager import Manager
 
 # Default path for a preference file to parse
-DEFAULT_PREFERNCE_FILE = Path('preferences.yml')
+DEFAULT_PREFERENCE_FILE = Path('preferences.yml')
 
 # Set up argument parser
 parser = ArgumentParser(description='Start the TitleCardMaker')
 parser.add_argument('-p', '--preference-file', type=Path,
-                    default=DEFAULT_PREFERNCE_FILE,
+                    default=DEFAULT_PREFERENCE_FILE,
                     help='Manually specify the preference file for the TitleCardMaker')
 parser.add_argument('-r', '--run', action='count', default=0,
                     help='How many times to run the TitleCardMaker back-to-back')

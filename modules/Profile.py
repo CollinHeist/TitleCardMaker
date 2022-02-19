@@ -248,8 +248,6 @@ class Profile:
         if not text_to_remove:
             return title_text
 
-        info(f'Removed episode number format text "{text_to_remove.group()}" '
-             f'from episode title', 1)
         return title_text.replace(text_to_remove.group(), '')
 
 

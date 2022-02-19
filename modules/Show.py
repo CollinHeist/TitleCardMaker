@@ -1,6 +1,7 @@
 from pathlib import Path
 from re import match
 
+from tqdm import tqdm
 from yaml import safe_load
 
 from modules.CardType import CardType
@@ -443,11 +444,12 @@ class Show:
         if self.media_directory is None:
             return False
 
-        info(f'Creating Title Cards for Show "{self.full_name}"')
-
         # Go through each episode for this show
         created_new_cards = False
-        for _, episode in self.episodes.items():
+        for _, episode in (pbar := tqdm(self.episodes.items(), leave=False)):
+            # Update progress bar
+            pbar.set_description(f'Processing {str(episode)}')
+
             # Skip episodes whose destination is None (don't create) or does exist
             if not episode.destination or episode.destination.exists():
                 continue
