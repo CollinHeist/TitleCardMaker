@@ -6,4 +6,5 @@ PyYAML==6.0
 regex==2022.1.18
 requests==2.27.1
 titlecase==2.3
+tqdm==4.62.3
 urllib3==1.26.8

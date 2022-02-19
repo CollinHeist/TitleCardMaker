@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from tqdm import tqdm
 from yaml import safe_load
 
 from modules.Debug import *
@@ -181,6 +182,7 @@ class PreferenceParser:
         If reading the YAML fails, the error is printed and the program exits.
         """
 
+        # If the file doesn't exist, error and exit
         if not self.file.exists():
             info(f'Preference file "{self.file.resolve()}" does not exist')
             exit(1)
@@ -207,8 +209,12 @@ class PreferenceParser:
         """
 
         # For each file in the cards list
-        for file in self.series_files:
+        for file in (pbar := tqdm(self.series_files)):
+            # Create Path object for this file
             file_object = Path(file)
+
+            # Update progress bar for this file
+            pbar.set_description(f'Reading {file_object.name}')
 
             # If the file doesn't exist, error and skip
             if not file_object.exists():
@@ -226,7 +232,9 @@ class PreferenceParser:
             # Get the libraries listed in this file
             libraries = file_yaml['libraries'] if 'libraries' in file_yaml else {}
 
-            for show_name in file_yaml['series']:
+            # Go through each series in this file
+            pbar2 = tqdm(file_yaml['series'], leave=False,desc='Creating Shows')
+            for show_name in pbar2:
                 # Yield the Show object created from this entry
                 yield Show(
                     show_name,
@@ -251,5 +259,4 @@ class PreferenceParser:
         height_ok = (height >= self.tmdb_minimum_resolution['height'])
 
         return width_ok and height_ok
-
 

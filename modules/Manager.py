@@ -1,4 +1,6 @@
-from modules.Debug import *
+from tqdm import tqdm
+
+from modules.Debug import info, warn, error
 from modules.PlexInterface import PlexInterface
 import modules.preferences as global_preferences
 from modules.Show import Show
@@ -88,14 +90,14 @@ class Manager:
         on all show and archive objects.
         """
 
-        for show in self.shows:
+        for show in tqdm(self.shows, desc='Reading source files'):
             # Pass the Sonarr interface to the show if globally enabled
             if self.sonarr_interface:
                 show.read_source(self.sonarr_interface)
             else:
                 show.read_source()
 
-        for archive in self.archives:
+        for archive in tqdm(self.archives, desc='Reading archive source files'):
             archive.read_source()
 
 
@@ -109,7 +111,7 @@ class Manager:
         if not self.preferences.use_sonarr:
             return None
 
-        for show in self.shows:
+        for show in tqdm(self.shows, desc='Querying Sonarr'):
             show.check_sonarr_for_new_episodes(self.sonarr_interface)
 
 
@@ -120,7 +122,10 @@ class Manager:
         updated (if enabled). This calls `Show.create_missing_title_cards()`
         """
 
-        for show in self.shows:
+        for show in (pbar := tqdm(self.shows)):
+            # Update progress bar
+            pbar.set_description(f'Creating Title Cards for "{show.name[:20]}"')
+
             # Pass the TMDbInterface to the show if globally enabled
             if self.preferences.use_tmdb:
                 created = show.create_missing_title_cards(self.tmdb_interface)
@@ -145,7 +150,11 @@ class Manager:
         if not self.preferences.create_archive:
             return None
 
-        for show_archive in self.archives:
+        for show_archive in (pbar := tqdm(self.archives)):
+            # Update progress bar
+            pbar.set_description(f'Updating archive for "'
+                                 f'{show_archive.name[:20]}"')
+
             # If TMDb is globally enabled, pass the interface along
             if self.preferences.use_tmdb:
                 show_archive.update_archive(self.tmdb_interface)
@@ -162,7 +171,11 @@ class Manager:
         if not self.preferences.create_summaries:
             return None
 
-        for show_archive in self.archives:
+        for show_archive in (pbar := tqdm(self.archives)):
+            # Update progress bar
+            pbar.set_description(f'Creating ShowSummary for "'
+                                 f'{show_archive.name[:20]}"')
+
             # If TMDb is globally enabled, pass the interface along
             if self.preferences.use_tmdb:
                 show_archive.create_summary(self.tmdb_interface)

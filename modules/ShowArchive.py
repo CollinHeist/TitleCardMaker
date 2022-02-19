@@ -1,7 +1,9 @@
 from copy import deepcopy
 from pathlib import Path
 
-from modules.Debug import *
+from tqdm import tqdm
+
+from modules.Debug import info, warn, error
 from modules.Show import Show
 from modules.ShowSummary import ShowSummary
 
@@ -58,6 +60,8 @@ class ShowArchive:
         self.summaries = []
 
         # If the base show for this object has archiving disabled, exit
+        self.name = base_show.name
+        self.full_name = base_show.full_name
         self.__base_show = base_show
         if not base_show.archive:
             return
@@ -86,18 +90,15 @@ class ShowArchive:
                 **profile_attributes
             )
 
-            # Read the show source
-            new_show.read_source()
-
+            # Store this new Show and associated ShowSummary
             self.shows.append(new_show)
             self.summaries.append(ShowSummary(new_show))
 
 
     def read_source(self) -> None:
-        """
-        Calls `read_source()` on each show contained within this archive.
-        """
+        """Call `read_source()` on each Show object in this archive."""
 
+        # Read the source of every sub-Show in this Archive
         for show in self.shows:
             show.read_source()
 
@@ -110,7 +111,7 @@ class ShowArchive:
                                         `Show.create_missing_title_cards()`.
         """
 
-        info(f'Updating archive for "{self.__base_show.full_name}"')
+        # Create missing cards for each `Show` object in this archive
         for show in self.shows:
             show.create_missing_title_cards(*args, **kwargs)
 
@@ -124,6 +125,7 @@ class ShowArchive:
                                     there is not an existing one.
         """
 
+        # Go through each ShowSumamry object within this Archive
         for summary in self.summaries:
             # If summary already exists, skip
             if summary.output.exists():

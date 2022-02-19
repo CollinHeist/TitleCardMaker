@@ -50,6 +50,16 @@ class Episode:
         self.extra_characteristics = extra_characteristics
 
 
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the object.
+        
+        :returns:   String representation of the object.
+        """
+
+        return f'Episode S{self.season_number:02}E{self.episode_number:02}'
+
+
     def __repr__(self) -> str:
         """
         Returns an unambiguous string representation of the object.

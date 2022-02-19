@@ -25,6 +25,16 @@ class DataFileInterface:
         self.file = data_file
 
 
+    def __repr__(self) -> str:
+        """
+        Returns a unambiguous string representation of the object.
+        
+        :returns:   String representation of the object.
+        """
+
+        return f'<DataFileInterface data_file={self.file.resolve()}>'
+
+
     def __read_data(self) -> dict:
         """
         Read this interface's data from file. Returns an empty dictionary if the

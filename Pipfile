@@ -9,6 +9,7 @@ num2words = "*"
 pyyaml = "*"
 requests = "*"
 titlecase = "*"
+tqdm = "*"
 
 [dev-packages]
 
