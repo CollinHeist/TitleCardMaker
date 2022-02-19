@@ -1,6 +1,7 @@
 from modules.Debug import *
 
 # CardType classes
+from modules.AnimeCard import AnimeCard
 from modules.StandardTitleCard import StandardTitleCard
 from modules.StarWarsTitleCard import StarWarsTitleCard
 
@@ -22,6 +23,7 @@ class TitleCard:
     CARD_TYPES = {
         'standard': StandardTitleCard,
         'generic': StandardTitleCard,
+        'anime': AnimeCard,
         'star wars': StarWarsTitleCard,
     }
 
@@ -86,10 +88,8 @@ class TitleCard:
 
         # If the input source doesn't exist, warn and exit
         if not self.episode.source.exists():
-            # warn(f'Source image {self.episode.source.resolve()} does not exist', 2)
             return False
             
-        info(f'Creating title card {self.episode.destination.name}', 2)
         self.maker.create()
 
         return True
