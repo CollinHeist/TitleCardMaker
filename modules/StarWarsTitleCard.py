@@ -11,6 +11,9 @@ class StarWarsTitleCard(CardType):
     cards are not as customizable as the standard template.
     """
 
+    """Directory where all reference files used by this card are stored"""
+    REF_DIRECTORY = Path(__file__).parent / 'ref' / 'star_wars'
+
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
         'max_line_width': 16,   # Character count to begin splitting titles
@@ -22,7 +25,7 @@ class StarWarsTitleCard(CardType):
     ARCHIVE_NAME = 'Star Wars Style'
 
     """Path to the font to use for the episode title"""
-    TITLE_FONT =str((Path(__file__).parent/'ref'/'Monstice-Base.ttf').resolve())
+    TITLE_FONT = str((REF_DIRECTORY/'Monstice-Base.ttf').resolve())
 
     """Color to use for the episode title"""
     TITLE_COLOR = '#DAC960'
@@ -37,14 +40,14 @@ class StarWarsTitleCard(CardType):
     USES_SEASON_TITLE = False
 
     """Path to the reference star image to overlay on all source images"""
-    __STAR_GRADIENT_IMAGE = Path(__file__).parent / 'ref' / 'star_gradient.png'
+    __STAR_GRADIENT_IMAGE = REF_DIRECTORY / 'star_gradient.png'
 
     """Path to the font to use for the episode/episode number text """
-    EPISODE_TEXT_FONT = Path(__file__).parent / 'ref' / 'HelveticaNeue.ttc'
-    EPISODE_NUMBER_FONT = Path(__file__).parent / 'ref'/'HelveticaNeue-Bold.ttf'
+    EPISODE_TEXT_FONT = REF_DIRECTORY / 'HelveticaNeue.ttc'
+    EPISODE_NUMBER_FONT = REF_DIRECTORY / 'HelveticaNeue-Bold.ttf'
 
     """Paths to intermediate files that are deleted after the card is created"""
-    __SOURCE_WITH_STARS = Path(__file__).parent/'.objects'/'source_gradient.png'
+    __SOURCE_WITH_STARS = CardType.TEMP_DIR / 'source_gradient.png'
 
     
     def __init__(self, source: Path, output_file: Path, title: str,
