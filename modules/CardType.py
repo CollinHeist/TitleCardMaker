@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from pathlib import Path
 
 from titlecase import titlecase
 
@@ -30,6 +31,9 @@ class CardType(ImageMaker):
 
     """Standard size for all title cards"""
     TITLE_CARD_SIZE: str = '3200x1800'
+
+    """Directory for all temporary images created during image creation"""
+    TEMP_DIR = Path(__file__).parent / '.objects'
 
     @property
     @abstractmethod
@@ -94,6 +98,18 @@ class CardType(ImageMaker):
         indicate the use of a custom font or not.
         
         :returns:   True if a custom font is indicated, False otherwise.
+        """
+        raise NotImplementedError(f'All CardType objects must implement this')
+
+
+    @staticmethod
+    @abstractmethod
+    def is_custom_season_titles() -> bool:
+        """
+        Abstract method to determine whether the given season characteristics
+        indicate the use of a custom season title or not.
+        
+        :returns:   True if a custom season title is indicated, False otherwise.
         """
         raise NotImplementedError(f'All CardType objects must implement this')
 

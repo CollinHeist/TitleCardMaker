@@ -49,6 +49,14 @@ class Title:
         self.match_title = ''.join(filter(match_func, title)).lower()
 
 
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the object.
+        """
+
+        return f'"{self.full_title}"'
+
+
     def __repr__(self) -> str:
         """
         Returns a unambiguous string representation of the object.

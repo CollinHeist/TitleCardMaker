@@ -30,6 +30,9 @@ class StandardTitleCard(CardType):
         9. Delete all intermediate files created above.
     """
 
+    """Directory where all reference files used by this card are stored"""
+    REF_DIRECTORY = Path(__file__).parent / 'ref'
+
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
         'max_line_width': 30,   # Character count to begin splitting titles
@@ -51,20 +54,20 @@ class StandardTitleCard(CardType):
     ARCHIVE_NAME = 'standard'
 
     """Source path for the gradient image overlayed over all title cards"""
-    __GRADIENT_IMAGE: Path = Path(__file__).parent / 'ref' / 'GRADIENT.png'
+    __GRADIENT_IMAGE: Path = REF_DIRECTORY / 'GRADIENT.png'
 
     """Default fonts and color for series count text"""
-    SEASON_COUNT_FONT = Path(__file__).parent / 'ref' / 'Proxima Nova Semibold.otf'
-    EPISODE_COUNT_FONT = Path(__file__).parent / 'ref' / 'Proxima Nova Regular.otf'
+    SEASON_COUNT_FONT = REF_DIRECTORY / 'Proxima Nova Semibold.otf'
+    EPISODE_COUNT_FONT = REF_DIRECTORY / 'Proxima Nova Regular.otf'
     SERIES_COUNT_TEXT_COLOR = '#CFCFCF'
 
     """Character used to join season and episode text (with spacing)"""
     SERIES_COUNT_JOIN_CHARACTER = '•'
 
     """Paths to intermediate files that are deleted after the card is created"""
-    __SOURCE_WITH_GRADIENT = Path(__file__).parent / '.objects' / 'source_gradient.png'
-    __GRADIENT_WITH_TITLE = Path(__file__).parent / '.objects' / 'gradient_title.png'
-    __SERIES_COUNT_TEXT = Path(__file__).parent / '.objects' / 'series_count_text.png'
+    __SOURCE_WITH_GRADIENT = CardType.TEMP_DIR / 'source_gradient.png'
+    __GRADIENT_WITH_TITLE = CardType.TEMP_DIR / 'gradient_title.png'
+    __SERIES_COUNT_TEXT = CardType.TEMP_DIR / 'series_count_text.png'
 
 
     def __init__(self, source: Path, output_file: Path, title: str,

@@ -11,6 +11,9 @@ class AnimeCard(CardType):
     some additional information (such as kanji).
     """
 
+    """Directory where all reference files used by this card are stored"""
+    REF_DIRECTORY = Path(__file__).parent / 'ref' / 'anime'
+
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
         'max_line_width': 25,   # Character count to begin splitting titles
@@ -22,9 +25,7 @@ class AnimeCard(CardType):
     ARCHIVE_NAME = 'Anime Style'
 
     """Path to the font to use for the episode title"""
-    TITLE_FONT = str(
-        (Path(__file__).parent/'ref'/'anime'/'Flanker Griffo.otf').resolve()
-    )
+    TITLE_FONT = str((REF_DIRECTORY / 'Flanker Griffo.otf').resolve())
 
     """Color to use for the episode title"""
     TITLE_COLOR = 'white'
@@ -39,13 +40,13 @@ class AnimeCard(CardType):
     USES_SEASON_TITLE = True
 
     """Source path for the gradient image overlayed over all title cards"""
-    __GRADIENT_IMAGE: Path = Path(__file__).parent / 'ref' / 'GRADIENT.png'
+    __GRADIENT_IMAGE: Path = REF_DIRECTORY / 'GRADIENT.png'
 
     """Path to the font to use for the kanji font"""
-    KANJI_FONT = Path(__file__).parent / 'ref' /'anime'/'hiragino-mincho-w3.ttc'
+    KANJI_FONT = REF_DIRECTORY / 'hiragino-mincho-w3.ttc'
 
     """Path to the font to use for the series count text"""
-    SERIES_COUNT_FONT = Path(__file__).parent / 'ref' / 'anime' / 'Avenir.ttc'
+    SERIES_COUNT_FONT = REF_DIRECTORY / 'Avenir.ttc'
 
     """Character used to join season and episode text (with spacing)"""
     SERIES_COUNT_JOIN_CHARACTER = '·'
@@ -53,9 +54,9 @@ class AnimeCard(CardType):
     SERIES_COUNT_TEXT_COLOR = '#CFCFCF'
 
     """Paths to intermediate files that are deleted after the card is created"""
-    __CONSTRAST_SOURCE = Path(__file__).parent / '.objects' / 'adj_source.png'
-    __SOURCE_WITH_GRADIENT = Path(__file__).parent / '.objects' / 'swg.png'
-    __GRADIENT_WITH_TITLE = Path(__file__).parent / '.objects' / 'gwt.png'
+    __CONSTRAST_SOURCE = CardType.TEMP_DIR / 'adj_source.png'
+    __SOURCE_WITH_GRADIENT = CardType.TEMP_DIR / 'source_with_gradient.png'
+    __GRADIENT_WITH_TITLE = CardType.TEMP_DIR / 'gradient_with_title.png'
 
     
     def __init__(self, source: Path, output_file: Path, title: str, 
