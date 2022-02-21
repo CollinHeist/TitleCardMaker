@@ -10,15 +10,18 @@ class GenreMaker(ImageMaker):
     outlined by a white border (in this implementation).
     """
 
+    """Directory where all reference files used by this maker are stored"""
+    REF_DIRECTORY = Path(__file__).parent / 'ref' / 'genre'
+
     """Base font for genre text"""
-    FONT: Path = Path(__file__).parent / 'ref' / 'MyriadRegular.ttf'
+    FONT = REF_DIRECTORY / 'MyriadRegular.ttf'
 
     """Base gradient image to overlay over source image"""
-    __GENRE_GRADIENT: Path = Path(__file__).parent / 'ref' / 'genre_gradient.png'
+    __GENRE_GRADIENT: Path = REF_DIRECTORY / 'genre_gradient.png'
 
     """Temporary image paths used in the process of title card making"""
     __RESIZED_SOURCE: Path = Path(__file__).parent / '.objects' / 'resized.png'
-    __SOURCE_WITH_GRADIENT: Path = Path(__file__).parent / '.objects' / 'swg.png'
+    __SOURCE_WITH_GRADIENT: Path = Path(__file__).parent / '.objects' /'swg.png'
 
 
     def __init__(self, source: Path, genre: str, output: Path) -> None:
