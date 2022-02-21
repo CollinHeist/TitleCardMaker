@@ -386,19 +386,17 @@ class Show:
         """
         Query the provided SonarrInterface object, checking if the returned
         episodes exist in this show's associated source. All new entries are
-        added to this object's DataFileInterface.
+        added to this object's DataFileInterface. This method should only be
+        called if sonarr syncing is globally enabled.
         
         :param      sonarr_interface:   The Sonarr interface to query.
 
         :returns:   True if Sonarr returned any new episodes, False otherwise.
         """
 
-        # This function is only called when sonarr is globally enabled
+        # Check if Sonarr is enabled for this show in partocular
         if not self.sonarr_sync:
             return False
-
-        # Refresh data from file interface
-        self.read_source(sonarr_interface)
 
         # Get dict of episode data from Sonarr
         try:

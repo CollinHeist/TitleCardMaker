@@ -24,7 +24,7 @@ class Episode:
                                     source images within.
         :param      destination:    The destination for the title card
                                     associated with this episode.
-        :param      title:          The title (full text) of this episode.
+        :param      title:          The Title for this episode.
         :param      abs_number:     The absolute episode number of this episode.
         :param      extra_characteristics:  Additional characteristics to pass
                                             to the creation of the TitleCard
