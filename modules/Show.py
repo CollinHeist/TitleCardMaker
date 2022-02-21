@@ -143,6 +143,7 @@ class Show:
         # Read all optional tags
         if self.__is_specified('name'):
             self.name = self.__yaml['name']
+            self.full_name = f'{self.name} ({self.year})'
 
         if self.__is_specified('library'):
             value = self.__yaml['library']
