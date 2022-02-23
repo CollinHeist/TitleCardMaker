@@ -32,6 +32,26 @@ class ImageMagickInterface:
         self.use_docker = bool(docker_id)
 
 
+    @staticmethod
+    def escape_chars(string: str) -> str:
+        """
+        Escape the necessary characters within the given string so that they
+        can be sent to ImageMagick.
+        
+        :param      string: The string to escape.
+        
+        :returns:   Input string with all necessary characters escaped. This 
+                    assumes that text will be wrapped in "", and so only escapes
+                    " and ` characters
+        """
+
+        # Handle possible None strings
+        if string is None:
+            return None
+
+        return string.replace('"', r'\"').replace('`', r'\`')
+
+
     def run(self, command: str, *args: tuple, **kwargs: dict):
         """
         Wrapper for running a given command. This uses either the host machine

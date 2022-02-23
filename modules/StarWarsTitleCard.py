@@ -71,11 +71,13 @@ class StarWarsTitleCard(CardType):
         self.output_file = output_file
 
         # Store episode title
-        self.title = title.upper().strip()
+        self.title = self.image_magick.escape_chars(title.upper())
         
         # Modify episode text to remove "Episode"-like text, replace numbers
         # with text, strip spaces, and convert to uppercase
-        self.episode_text = self.__modify_episode_text(episode_text)
+        self.episode_text = self.image_magick.escape_chars(
+            self.__modify_episode_text(episode_text)
+        )
 
 
     def __modify_episode_text(self, text: str) -> str:

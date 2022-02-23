@@ -103,12 +103,10 @@ class StandardTitleCard(CardType):
         self.source_file = source
         self.output_file = output_file
 
-        # Since all text is sent to ImageMagick wrapped in quotes, escape actual
-        # quotes found within the text
-        self.title = title.replace('"', r'\"')
-
-        self.season_text = season_text.upper().replace('"', r'\"')
-        self.episode_text = episode_text.upper().replace('"', r'\"')
+        # Ensure characters that need to be escaped are
+        self.title = self.image_magick.escape_chars(title)
+        self.season_text = self.image_magick.escape_chars(season_text.upper())
+        self.episode_text = self.image_magick.escape_chars(episode_text.upper())
 
         self.font = font
         self.font_size = font_size
