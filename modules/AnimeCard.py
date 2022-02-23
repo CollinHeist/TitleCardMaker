@@ -85,14 +85,18 @@ class AnimeCard(CardType):
         self.source_file = source
         self.output_file = output_file
 
-        # Store episode title
-        self.title = self.CASE_FUNCTION_MAP['title'](title).replace('"', r'\"')
-        self.kanji = kanji
+        # Apply titlecase case function, escape characters
+        self.title = self.image_magick.escape_chars(
+            self.CASE_FUNCTION_MAP['title'](title)
+        )
+
+        # Store kanji, set bool for whether to use it or not
+        self.kanji = self.image_magick.escape_chars(kanji)
         self.use_kanji = (kanji != None)
 
         # Store season and episode text
-        self.season_text = season_text.upper().replace('"', r'\"')
-        self.episode_text = episode_text.upper().replace('"', r'\"')
+        self.season_text = self.image_magick.escape_chars(season_text.upper())
+        self.episode_text = self.image_magick.escape_chars(episode_text.upper())
         self.hide_season = hide_season
 
 
