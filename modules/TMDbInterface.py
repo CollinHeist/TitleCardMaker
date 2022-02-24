@@ -5,6 +5,7 @@ from urllib.request import urlretrieve
 
 from modules.Debug import *
 import modules.preferences as global_preferences
+from modules.SeriesInfo import SeriesInfo
 from modules.WebInterface import WebInterface
 
 class TMDbInterface(WebInterface):
@@ -59,19 +60,18 @@ class TMDbInterface(WebInterface):
         self.__api_key = api_key
 
 
-    def __update_blacklist(self, title: str, year: int, season: int,
+    def __update_blacklist(self, series_info: SeriesInfo, season: int,
                            episode: int) -> None:
         """
         Adds the given entry to the blacklist; indicating that this exact entry
         shouldn't be queried to TheMovieDB (to prevent unnecessary queries).
         
-        :param      title:      The show's title.
-        :param      year:       The show's year.
-        :param      season:     The entry's season number.
-        :param      episode:    The entry's episode number.
+        :param      series_info:    SeriesInfo for the entry.
+        :param      season:         The entry's season number.
+        :param      episode:        The entry's episode number.
         """
 
-        key = f'{title} ({year})-{season}-{episode}'
+        key = f'{series_info.full_name}-{season}-{episode}'
 
         # If previously indexed and next has passed, increase count and set next
         later = datetime.now() + timedelta(days=1)
@@ -86,28 +86,27 @@ class TMDbInterface(WebInterface):
             # Add new entry to blacklist with 1 failure, next time is in one day
             self.__blacklist[key] = {'failures': 1, 'next': later}
 
-        warn(f'Query failed {self.__blacklist[key]["failures"]} times', 3)
+        # warn(f'Query failed {self.__blacklist[key]["failures"]} times', 2)
 
         # Write latest version of blacklist to file, in case program exits
         with self.__BLACKLIST.open('wb') as file_handle:
             dump(self.__blacklist, file_handle, HIGHEST_PROTOCOL)
 
 
-    def __is_blacklisted(self, title: str, year: int, season: int,
+    def __is_blacklisted(self, series_info: SeriesInfo, season: int,
                          episode: int) -> bool:
         """
         Determines if the specified entry is in the blacklist (i.e. should
         not bother querying TMDb.
         
-        :param      title:      The show's title.
-        :param      year:       The show's year.
-        :param      season:     The entry's season number.
-        :param      episode:    The entry's episode number.
+        :param      series_info:    SeriesInfo for the entry.
+        :param      season:         The entry's season number.
+        :param      episode:        The entry's episode number.
         
         :returns:   True if the entry is blacklisted, False otherwise.
         """
 
-        key = f'{title} ({year})-{season}-{episode}'
+        key = f'{series_info.full_name}-{season}-{episode}'
 
         # If never indexed before, skip failure check
         if key not in self.__blacklist:
@@ -121,17 +120,22 @@ class TMDbInterface(WebInterface):
         return datetime.now() < self.__blacklist[key]['next']
 
 
-    def __add_id_to_map(self, title: str, year: int, id_: int) -> None:
+    def __add_id_to_map(self, series_info: SeriesInfo) -> None:
         """
-        Adds a mapping of this full title to the corresponding TheMovieDB ID.
+        Adds a mapping of this full title to the corresponding TheMovieDB ID. If
+        a TVDb ID was provided, map that as well
         
-        :param      title:  The show's title.
-        :param      year:   The show's year.
-        :param      id_:    The show's ID, as returned by `__get_tv_id()`.
+        :param      series_info:    SeriesInfo for the entry.
         """
 
-        self.__id_map[f'{title} ({year})'] = id_
+        # Map full title to the TMDb id
+        self.__id_map[series_info.full_name] = series_info.tmdb_id
 
+        # If TVDb ID is available, map TVDb ID to the TMDb ID
+        if series_info.tvdb_id != None:
+            self.__id_map[series_info.tvdb_id] = series_info.tmdb_id
+
+        # Write updated map to file
         with self.__ID_MAP.open('wb') as file_handle:
             dump(self.__id_map, file_handle, HIGHEST_PROTOCOL)
 
@@ -180,41 +184,64 @@ class TMDbInterface(WebInterface):
         info(f'Deleted blacklist file "{TMDbInterface.__BLACKLIST.resolve()}"')
 
 
-    def __get_tv_id(self, title: str, year: int) -> int:
+    def __set_tmdb_id(self, series_info: SeriesInfo) -> None:
         """
-        Get the internal TMDb ID for the provided series. Matching is done by
-        name and the start air year.
-
-        The first result is returned every time.
+        Get the TMDb series ID associated with the given entry. If an ID is not
+        provided, then matching is done with title and year. If this has been
+        mapped previously, get value from map.
         
-        :param      title:  The title of the requested series
-        :param      year:   The year the requested series first aired
-        
-        :returns:   The internal TMDb ID for the found series
+        :param      series_info:    SeriesInfo for the entry.
         """
 
-        # If this full title has been mapped, no need to query 
-        if f'{title} ({year})' in self.__id_map:
-            return self.__id_map[f'{title} ({year})']
+        # If TVDb ID is available and is mapped, set that ID
+        if series_info.tvdb_id != None and series_info.tvdb_id in self.__id_map:
+            series_info.set_tmdb_id(self.__id_map[series_info.tvdb_id])
+            return None
 
-        # Base params are api_key and the query (title)
+        # If already mapped, set that ID
+        if series_info.full_name in self.__id_map:
+            series_info.set_tmdb_id(self.__id_map[series_info.full_name])
+            return None
+
+        # Match by TVDB ID if available
+        if series_info.tvdb_id != None:
+            # Construct GET arguments
+            url = f'{self.API_BASE_URL}find/{series_info.tvdb_id}'
+            params = {'api_key': self.__api_key, 'external_source': 'tvdb_id'}
+
+            # Query TMDb
+            results = self._get(url=url, params=params)['tv_results']
+
+            if len(results) == 0:
+                # If there is no entry with this ID, error and return
+                error(f'TMDb returned no results for "{series_info}"')
+            elif len(results) != 1:
+                # If more than one entry was returned (somehow?), warn
+                warn(f'TMDb returned >1 series for "{series_info}"')
+            else:
+                # Get the TMDb ID for this series, set for object and add to map
+                tmdb_id = results[0]['id']
+                series_info.set_tmdb_id(tmdb_id)
+                self.__add_id_to_map(series_info)
+                return None
+
+        # Match by title and year if no ID was given
+        # Construct GET arguments
         url = f'{self.API_BASE_URL}search/tv/'
-        params = {'api_key': self.__api_key, 'query': title,
-                  'first_air_date_year': year}
+        params = {'api_key': self.__api_key, 'query': series_info.name,
+                  'first_air_date_year': series_info.year}
 
-        # Query TheMovieDB
+        # Query TMDb
         results = self._get(url=url, params=params)
 
         # If there are no results, error and return
         if int(results['total_results']) == 0:
-            error(f'TheMovieDB returned no results for "{title}"')
+            error(f'TMDb returned no results for "{series_info}"')
             return None
 
-        # Found new ID, add to map and return
-        new_id = results['results'][0]['id']
-        self.__add_id_to_map(title, year, new_id)
-
-        return new_id
+        # Get the TMDb ID for this series, set for object and add to map
+        series_info.set_tmdb_id(results['results'][0]['id'])
+        self.__add_id_to_map(series_info)
 
 
     def __determine_best_image(self, images: list) -> dict:
@@ -255,89 +282,133 @@ class TMDbInterface(WebInterface):
         return images[best_image['index']] if valid_image else None
 
 
-    def get_title_card_source_image(self, title: str, year: int, season: int,
+    def get_title_card_source_image(self, series_info: SeriesInfo, season: int,
                                     episode: int, abs_number: int=None) -> str:
         """
         Get the best source image for the requested entry. The URL of this image
         is returned.
         
-        :param      title:      The title of the requested series.
-        :param      year:       The year of the requested series.
-        :param      season:     The season of the requested entry.
-        :param      episode:    The episode of the requested entry.
-        :param      abs_number: The absolute episode number of the entry.
+        :param      series_info:    SeriesInfo for the entry.
+        :param      season:         The season of the requested entry.
+        :param      episode:        The episode of the requested entry.
+        :param      abs_number:     The absolute episode number of the entry.
         
         :returns:   URL to the 'best' source image for the requested entry. None
                     if no images are available.
         """
 
         # Don't query the database if this episode is in the blacklist
-        if self.__is_blacklisted(title, year, season, episode):
+        if self.__is_blacklisted(series_info, season, episode):
             return None
 
-        # Get the TV id for the provided series+year
-        tv_id = self.__get_tv_id(title, year)
+        # Set the TV id for the provided series
+        self.__set_tmdb_id(series_info)
 
         # GET params
-        url = f'{self.API_BASE_URL}tv/{tv_id}/season/{season}/episode/{episode}/images'
+        url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/{season}'
+               f'/episode/{episode}/images')
         params = {'api_key': self.__api_key}
 
         # Make the GET request
         results = self._get(url=url, params=params)
 
-        # If an absolute number has been given and the first query failed, try again
-        if abs_number != None and 'success' in results and not results['success']:
-            info(f'Trying absolute episode number {abs_number} in different seasons', 2)
-
+        # If absolute number has been given and the first query failed,try again
+        if (abs_number != None and 'success' in results
+            and not results['success']):
             # Try surround season numbers (TMDb indexes these weirdly..)
             for new_season in range(1, season+1)[::-1]:
-                info(f'Trying /season/{new_season}/episode/{abs_number}', 3)
-                url = f'{self.API_BASE_URL}tv/{tv_id}/season/{new_season}/episode/{abs_number}/images'
+                url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/'
+                       f'{new_season}/episode/{abs_number}/images')
                 results = self._get(url=url, params=params)
                 if 'stills' in results:
                     break
 
         # If 'stills' wasn't in return JSON, episode wasn't found
         if 'stills' not in results:
-            warn(f'TMDb has no matching episode for "{title} ({year})" Season '
+            warn(f'TMDb has no matching episode for "{series_info}" Season '
                  f'{season}, Episode {episode}', 2)
-            self.__update_blacklist(title, year, season, episode)
+            self.__update_blacklist(series_info, season, episode)
             return None
 
         # If 'stills' is in JSON, but is empty, then TMDb has no images
         if len(results['stills']) == 0:
-            warn(f'TMDb has no images for "{title} ({year})" Season {season}, '
+            warn(f'TMDb has no images for "{series_info}" Season {season}, '
                  f'Episode {episode}', 2)
-            self.__update_blacklist(title, year, season, episode)
+            self.__update_blacklist(series_info, season, episode)
             return None
 
         # Get the best image, None is returned if requirements weren't met
         best_image = self.__determine_best_image(results['stills'])
         if not best_image:
-            warn(f'TMDb images for "{title} ({year})" Season {season}, Episode '
+            warn(f'TMDb images for "{series_info}" Season {season}, Episode '
                  f'{episode} do not meet dimensional requirements.', 2)
-            self.__update_blacklist(title, year, season, episode)
+            self.__update_blacklist(series_info, season, episode)
             return None
         
         return f'https://image.tmdb.org/t/p/original{best_image["file_path"]}'
 
 
-    def get_series_logo(self, title: str, year: int) -> str:
+    def get_episode_title(self, series_info: SeriesInfo, season: int,
+                          episode: int, abs_number: int=None,
+                          language_code: str='en-US') -> str:
+        """
+        Get the episode title for the given entry for the given language.
+        
+        :param      series_info:    SeriesInfo for the entry.
+        :param      season:         The season number of the episode.
+        :param      episode:        The episode number of the episode
+        :param      language_code:  The language code of the episode.
+        
+        :returns:   The episode title. None if the entry does not exist.
+        """
+
+        # Get the TV id for the provided series+year
+        self.__set_tmdb_id(series_info)
+
+        # GET params
+        url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/{season}'
+               f'/episode/{episode}')
+        params = {'api_key': self.__api_key, 'language': language_code}
+
+        # Make the GET request
+        results = self._get(url=url, params=params)
+
+        # If absolute number has been given and the first query failed,try again
+        if (abs_number != None and 'success' in results
+            and not results['success']):
+            # Try surround season numbers (TMDb indexes these weirdly..)
+            for new_season in range(1, season+1)[::-1]:
+                url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/'
+                       f'{new_season}/episode/{abs_number}')
+                results = self._get(url=url, params=params)
+
+                # Return name if this query succeeded
+                if 'name' in results:
+                    return results['name']
+
+        # No absolute number to test (or tried all), skip!
+        if 'success' in results and not results['success']:
+            return None
+
+        # Return the name for this episode
+        return results['name']
+
+
+    def get_series_logo(self, series_info: SeriesInfo) -> str:
         """
         Get the 'best' logo for the given series.
         
-        :param      title:  The title of the requested series.
-        :param      year:   The year of the requested series.
+        :param      series_info:    SeriesInfo for the entry.
         
         :returns:   URL to the 'best' logo for the given series, and None if no
                     images are available.
         """
 
-        # Get the TV id for the provided series+year
-        tv_id = self.__get_tv_id(title, year)
+        # Set the TV id for the provided series+year
+        self.__set_tmdb_id(series_info)
 
         # GET params
-        url = f'{self.API_BASE_URL}tv/{tv_id}/images'
+        url = f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/images'
         params = {'api_key': self.__api_key}
 
         # Make the GET request
@@ -345,7 +416,7 @@ class TMDbInterface(WebInterface):
 
         # If there are no logos, warn and exit
         if len(results['logos']) == 0:
-            warn(f'TMDb has no logos for "{title} ({year})"', 1)
+            warn(f'TMDb has no logos for "{series_info}"', 1)
             return None
 
         # Pick the best image based on image dimensions

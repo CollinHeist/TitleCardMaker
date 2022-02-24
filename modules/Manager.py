@@ -67,7 +67,7 @@ class Manager:
         for show in self.preferences.iterate_series_files():
             # Skip shows whose YAML was invalid
             if not show.valid:
-                error(f'Skipping series "{show.name}"')
+                error(f'Skipping series "{show.series_info}"')
                 continue
 
             self.shows.append(show)
@@ -136,7 +136,7 @@ class Manager:
             if created and self.preferences.use_plex:
                 self.plex_interface.refresh_metadata(
                     show.library_name,
-                    show.full_name
+                    show.series_info
                 )
 
 
@@ -152,8 +152,8 @@ class Manager:
 
         for show_archive in (pbar := tqdm(self.archives)):
             # Update progress bar
-            pbar.set_description(f'Updating archive for "'
-                                 f'{show_archive.name[:20]}"')
+            pbar.set_description(f'Updating archive for '
+                                 f'"{show_archive.series_info.short_name}"')
 
             # If TMDb is globally enabled, pass the interface along
             if self.preferences.use_tmdb:
@@ -174,7 +174,7 @@ class Manager:
         for show_archive in (pbar := tqdm(self.archives)):
             # Update progress bar
             pbar.set_description(f'Creating ShowSummary for "'
-                                 f'{show_archive.name[:20]}"')
+                                 f'{show_archive.series_info.short_name}"')
 
             # If TMDb is globally enabled, pass the interface along
             if self.preferences.use_tmdb:
