@@ -13,6 +13,9 @@ parser = ArgumentParser(description='Manual fixes for the TitleCardMaker')
 parser.add_argument('-p', '--preference-file', type=Path, default='preferences.yml',
                     metavar='PREFERENCE_FILE',
                     help='Preference YAML file for parsing ImageMagick/Sonarr/TMDb options')
+parser.add_argument('--sort-data-file', type=Path, default=SUPPRESS,
+                    metavar='DATAFILE',
+                    help='Sort the given datafile')
 
 # Argument group for 'manual' title card creation
 title_card_group = parser.add_argument_group('Title Cards', 'Manual title card creation')
@@ -72,17 +75,23 @@ tmdb_group.add_argument('--delete-blacklist', action='store_true',
 # Check given arguments
 args = parser.parse_args()
 
+# Parse preference file for options that might need it
+pp = PreferenceParser(args.preference_file)
+if not pp.valid:
+    exit(1)
+set_preference_parser(pp)
+
 # Override unspecified defaults with their class specific defaults
 if args.font == Path('__default'):
     args.font = Path(TitleCard.CARD_TYPES[args.card_type].TITLE_FONT)
 if args.font_color == '__default':
     args.font_color = TitleCard.CARD_TYPES[args.card_type].TITLE_COLOR
 
-# Parse preference file for options that might need it
-pp = PreferenceParser(args.preference_file)
-if not pp.valid:
-    exit(1)
-set_preference_parser(pp)
+# Execute misc. options
+if hasattr(args, 'sort_data_file'):
+    dfi = DataFileInterface(args.sort_data_file)
+
+    dfi.sort(dfi._DataFileInterface__read_data())
 
 # Execute title card related options
 if hasattr(args, 'title_card'):
