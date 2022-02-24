@@ -273,16 +273,19 @@ class Show:
         return True
 
 
-    def _get_destination(self, entry: dict) -> Path:
+    def __get_destination(self, entry: dict) -> Path:
         """
-        Get the destination filename for the given entry.
+        Get the destination filename for the given entry of a datafile.
         
-        :param      entry:  The entry returned from a file interface.
+        :param      entry:  The entry returned from a file interface. Must
+                            have 'season_number', 'episode_number', and
+                            'title' keys.
         
-        :returns:   Path for the full title card destination
+        :returns:   Path for the full title card destination, and None
+                    if this show has no media directory.
         """
 
-        # If this show should not be written to a media directory, return 
+        # If this entry should not be written to a media directory, return 
         if not self.media_directory:
             return None
 
@@ -329,7 +332,7 @@ class Show:
             # Create Episode object for this entry, store under key
             self.episodes[key] = Episode(
                 base_source=self.source_directory,
-                destination=self._get_destination(entry),
+                destination=self.__get_destination(entry),
                 card_class=self.card_class,
                 **entry,
             )
