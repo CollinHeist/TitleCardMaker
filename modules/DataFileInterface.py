@@ -76,10 +76,10 @@ class DataFileInterface:
 
         # Write updated data with this entry added
         with self.file.open('w') as file_handle:
-            dump({'data': yaml}, file_handle, allow_unicode=True)
+            dump({'data': yaml}, file_handle, allow_unicode=True, width=100)
 
 
-    def sort(self, yaml: dict) -> None:
+    def sort_and_write(self, yaml: dict) -> None:
         """
         Sort the given YAML and then write it to this interface's file. Sorting
         is done by season number, and then episode number, and then by info key.
@@ -97,7 +97,7 @@ class DataFileInterface:
                 sorted_yaml[season][episode] = {}
                 for key in sorted(yaml[season][episode]):
                     sorted_yaml[season][episode][key]=yaml[season][episode][key]
-
+                    
         # Write newly sorted YAML
         self.__write_data(yaml)
 
@@ -187,8 +187,7 @@ class DataFileInterface:
 
         # Verify this entry already exists, warn and exit if not
         season_key = f'Season {season_number}'
-        if (season_key not in yaml or 
-            episode_number not in yaml[season_key]):
+        if (season_key not in yaml or episode_number not in yaml[season_key]):
             warn(f'Cannot modify entry for Season {season_number}, Episode ',
                  f'{episode_number} in "{self.file.resolve()}" - entry does not'
                  f' exist')
@@ -266,8 +265,6 @@ class DataFileInterface:
 
             # If this episde already exists, warn and exit
             if episode in yaml[season_key]:
-                warn(f'Cannot add duplicate entry for Season {season}, Episode',
-                     f'{episode} in "{self.file.resolve()}"')
                 continue
 
             # Construct episode data
@@ -278,5 +275,5 @@ class DataFileInterface:
                 yaml[season_key][episode]['abs_number'] = entry['abs_number']
 
         # Write updated yaml
-        self.__write_data(yaml)
+        self.sort_and_write(yaml)
 
