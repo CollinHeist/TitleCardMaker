@@ -16,19 +16,11 @@ class SeriesInfo:
         :param      year:  The air year of the series.
         """
 
-        # Set base attributes
-        self.name = str(name)
+        # Set year
         self.year = int(year)
 
-        # Set short name
-        if len(self.name) > self.SHORT_WIDTH:
-            self.short_name = f'{self.name[:self.SHORT_WIDTH]}..'
-        else:
-            self.short_name = self.name
-
-        # Set full and match name
-        self.full_name = f'{name} ({year})'
-        self.match_name = self.get_matching_title(self.name)
+        # Update all name attributes
+        self.update_name(name)
 
         # Optional attributes
         self.sonarr_id = None
@@ -57,8 +49,18 @@ class SeriesInfo:
         :param      name:  The new name of the series info.
         """
 
+        # Set name and full name
         self.name = name
         self.full_name = f'{name} ({self.year})'
+        
+        # Set short name
+        if len(self.name) > self.SHORT_WIDTH:
+            self.short_name = f'{self.name[:self.SHORT_WIDTH]}..'
+        else:
+            self.short_name = self.name
+            
+        # Set match name
+        self.match_name = self.get_matching_title(self.name)
 
 
     def set_sonarr_id(self, sonarr_id: int) -> None:
