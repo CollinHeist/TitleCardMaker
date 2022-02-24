@@ -288,35 +288,13 @@ class Show:
         # If this entry should not be written to a media directory, return 
         if not self.media_directory:
             return None
-
-        # Get season and episode number for this entry
-        try:
-            season_number = int(entry['season_number'])
-            episode_number = int(entry['episode_number'])
-        except ValueError:
-            error(f'Invalid season/episode number "{entry["season_number"]},'
-                  f' "{entry["episode_number"]}"', 1)
-            return None
-
-        # Get the season folder corresponding to this episode's season
-        if season_number == 0:
-            season_folder = 'Specials'
-        else:
-            season_folder = f'Season {season_number}'
-
-        # filename = preferences.card_filename_format.format(
-        #     show=self.name, year=self.year, full_name=self.full_name,
-        #     season=season_number, episode=episode_number,
-        #     title=entry['title'][0] + entry['title'][1],
-        # )
-        # filename += TitleCard.OUTPUT_CARD_EXTENSION
-        # The standard plex filename for this episode
-        filename = (
-            f'{self.series_info.full_name} - S{season_number:02}'
-            f'E{episode_number:02}{TitleCard.OUTPUT_CARD_EXTENSION}'
+        
+        return TitleCard.get_output_filename(
+            self.preferences.card_filename_format,
+            self.series_info,
+            entry,
+            self.media_directory
         )
-
-        return self.media_directory / season_folder / filename
 
 
     def read_source(self) -> None:
