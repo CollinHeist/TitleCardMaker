@@ -3,7 +3,7 @@ from xml.etree.ElementTree import fromstring
 from requests import get, put
 
 from modules.Debug import *
-from modules.Show import Show
+from modules.SeriesInfo import SeriesInfo
 
 class PlexInterface:
     """
@@ -82,7 +82,7 @@ class PlexInterface:
                     full_title = f'{series_title} ({series_year})'
 
                 content_dict.update({
-                    Show.strip_specials(full_title): series_rating_key
+                    SeriesInfo.get_matching_title(full_title): series_rating_key
                 })
 
             # Add this library to the object's dictionary
@@ -92,21 +92,19 @@ class PlexInterface:
         info(f'Found {len(self.library)} Plex libraries ({libraries})')
 
 
-    def refresh_metadata(self, library: str, full_title: str) -> None:
+    def refresh_metadata(self, library: str, series_info: SeriesInfo) -> None:
         """
         Refresh the given title's (if found in the specified library) metadata.
         This effectively forces new title cards to be pulled in.
 
         If the library or full title is not found, no content is refreshed.
 
-        :param      library:    The name of the library where the content is.
-                                Must be a valid library name matching Plex.
+        :param      library:        The name of the library where the content
+                                    is. Must be a valid library name matching
+                                    Plex.
         
-        :param      full_title: The full title of the content to refresh.
+        :param      series_info:    SeriesInfo for the entry.
         """
-
-        # Do matching on the a-z 0-9 title only
-        match_title = Show.strip_specials(full_title)
 
         # Invalid library - error and exit
         if library not in self.library:
@@ -114,17 +112,17 @@ class PlexInterface:
             return None
         
         # Valid library, invalid title - error and exit
-        if match_title not in self.library[library]:
-            error(f'Series "{full_title}" was not found under library '
+        if series_info.match_name not in self.library[library]:
+            error(f'Series "{series_info}" was not found under library '
                   f'"{library}" in Plex')
             return None
 
         # Get the plex ratingKey for this title, then PUT a metadata refresh
-        rating_key = self.library[library][match_title]
+        rating_key = self.library[library][series_info.match_name]
         url = self.base_url + f'metadata/{rating_key}/refresh'
         put(url)
 
-        info(f'Refreshed Plex metadata for "{full_title}"', 1)
+        info(f'Refreshed Plex metadata for "{series_info}"', 1)
 
 
         

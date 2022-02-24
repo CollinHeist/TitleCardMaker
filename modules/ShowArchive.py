@@ -60,14 +60,18 @@ class ShowArchive:
         self.summaries = []
 
         # If the base show for this object has archiving disabled, exit
-        self.name = base_show.name
-        self.full_name = base_show.full_name
+        self.series_info = base_show.series_info
         self.__base_show = base_show
         if not base_show.archive:
             return
 
         # For each applicable sub-profile, create and modify new show/show summary
-        for profile_attributes in base_show.profile.get_valid_profiles(base_show.card_class):
+        valid_profiles = base_show.profile.get_valid_profiles(
+            base_show.card_class
+        )
+
+        # Go through each valid profile
+        for profile_attributes in valid_profiles:
             # Create show object for this profile
             new_show = deepcopy(base_show)
 
@@ -81,7 +85,7 @@ class ShowArchive:
                 profile_directory += f' - {base_show.card_class.ARCHIVE_NAME}'
 
             new_show.media_directory = (
-                archive_directory / new_show.full_name / profile_directory
+                archive_directory/base_show.series_info.full_name/profile_directory
             )
 
             # Convert this new show's profile
@@ -134,10 +138,7 @@ class ShowArchive:
             # If the logo doesn't exist, and we're given a TMDBInterface,
             # attempt to download the best logo
             if not summary.logo.exists() and tmdb_interface:
-                logo = tmdb_interface.get_series_logo(
-                    self.__base_show.name,
-                    self.__base_show.year,
-                )
+                logo = tmdb_interface.get_series_logo(self.series_info)
 
                 # If a valid logo was returned, download it
                 if logo == None:
