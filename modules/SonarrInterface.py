@@ -291,60 +291,6 @@ class SonarrInterface(WebInterface):
         self.__map_id_to_tvdb(series_info)
 
 
-    #TODO immplement
-    # def get_episode_filename(self, title: str, year: int, season_number: int,
-    #                          episode_number: int) -> str:
-
-    #     """
-    #     { item_description }
-    #     """
-
-    #     if not self:
-    #         return None
-
-    #     # Get the ID for this series
-    #     series_id = self.__set_sonarr_id(title, year)
-
-    #     # Construct GET arguments
-    #     url = f'{self._url_base}series/'
-    #     params = self._param_base
-
-    #     # Query Sonarr to get all series in the library
-    #     all_series = self._get(url, params)
-
-    #     # Match by ID, get the top-level series folder
-    #     series_folder = None
-    #     for show in all_series:
-    #         if show['id'] == series_id:
-    #             series_folder = Path(show['path']).name
-    #             break
-
-    #     # If no top-level series folder (for some reason..), exit
-    #     if not series_folder:
-    #         return None
-
-    #     # Construct GET arguments for this specific episode
-    #     url = f'{self._url_base}episode/'
-    #     params = self._param_base
-    #     params['seriesId'] = series_id
-
-    #     # Query for all episodes of this show
-    #     all_episodes = self._get(url, params)
-
-    #     # Find this season/episode number
-    #     for episode in all_episodes:
-    #         if (int(episode['seasonNumber']) == season_number
-    #             and int(episode['episodeNumber']) == episode_number):
-    #             # If episode found, check if file exists and get that filename
-    #             if episode['hasFile']:
-    #                 full_path = episode['episodeFile']['relativePath']
-    #                 filename = full_path[:full_path.rfind('.')]
-
-    #                 return str(series_folder / Path(filename))
-
-    #     return None
-
-
     @staticmethod
     def manually_specify_id(title: str, year: int, sonarr_id: int) -> None:
         """

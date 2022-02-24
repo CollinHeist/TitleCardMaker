@@ -40,6 +40,7 @@ class PreferenceParser:
         # Setup default values that can be overwritten by YAML
         self.series_files = []
         self.card_type = 'standard'
+        self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
         self.archive_directory = None
         self.create_archive = False
         self.create_summaries = False
@@ -113,6 +114,13 @@ class PreferenceParser:
                 self.valid = False
             else:
                 self.card_type = value
+                
+        if self.__is_specified('options', 'filename_format'):
+            new_format = self.__yaml['options']['filename_format']
+            if not TitleCard.validate_card_format_string(new_format):
+                self.valid = False
+            else:
+                self.card_filename_format = new_format
 
         if self.__is_specified('archive', 'path'):
             self.archive_directory = Path(self.__yaml['archive']['path'])

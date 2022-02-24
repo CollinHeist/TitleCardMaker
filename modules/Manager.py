@@ -91,11 +91,7 @@ class Manager:
         """
 
         for show in tqdm(self.shows, desc='Reading source files'):
-            # Pass the Sonarr interface to the show if globally enabled
-            if self.sonarr_interface:
-                show.read_source(self.sonarr_interface)
-            else:
-                show.read_source()
+            show.read_source()
 
         for archive in tqdm(self.archives, desc='Reading archive source files'):
             archive.read_source()

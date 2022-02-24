@@ -21,20 +21,7 @@ class Show:
     within the Show's YAML take precedence over the global enables, with the
     exception of Interface objects (such as Sonarr and TMDb).
     """
-
-    # FILENAME_FORMAT_HELP_STRING: str = (
-    #     "Format String Options:\n"
-    #     "  {show}      : The show's name\n"
-    #     "  {year}      : The show's year\n"
-    #     "  {full_name} : The show's full name - equivalent to {show} ({year})\n"
-    #     "  {season}    : The episode's season number\n"
-    #     "  {episode}   : The episode's episode number\n"
-    #     "  {title}     : The episode title, as found in the source data file\n\n"
-    #     "Example: ShowX, aired in 2022, Season 1 Episode 10 titled 'Pilot'\n"
-    #     "  {show} - S{season:03} - {title}         -> ShowX - S001 - Pilot\n"
-    #     "  {full_name} - S{season:02}E{episode:02} -> ShowX (2022) - S01E10\n"
-    #     "  {show} {year} - S{season}E{episode}     -> ShowX 2022 - S1E10\n"
-    # )
+    
 
     def __init__(self, name: str, yaml_dict: dict, library_map: dict,
                  source_directory: Path) -> None:
@@ -286,84 +273,47 @@ class Show:
         return True
 
 
-    def _get_destination(self, entry: dict) -> Path:
+    def __get_destination(self, entry: dict) -> Path:
         """
-        Get the destination filename for the given entry.
+        Get the destination filename for the given entry of a datafile.
         
-        :param      entry:  The entry returned from a file interface.
+        :param      entry:  The entry returned from a file interface. Must
+                            have 'season_number', 'episode_number', and
+                            'title' keys.
         
-        :returns:   Path for the full title card destination
+        :returns:   Path for the full title card destination, and None
+                    if this show has no media directory.
         """
 
-        # If this show should not be written to a media directory, return 
+        # If this entry should not be written to a media directory, return 
         if not self.media_directory:
             return None
-
-        # Get season and episode number for this entry
-        try:
-            season_number = int(entry['season_number'])
-            episode_number = int(entry['episode_number'])
-        except ValueError:
-            error(f'Invalid season/episode number "{entry["season_number"]},'
-                  f' "{entry["episode_number"]}"', 1)
-            return None
-
-        # Get the season folder corresponding to this episode's season
-        if season_number == 0:
-            season_folder = 'Specials'
-        else:
-            season_folder = f'Season {season_number}'
-
-        # filename = preferences.card_filename_format.format(
-        #     show=self.name, year=self.year, full_name=self.full_name,
-        #     season=season_number, episode=episode_number,
-        #     title=entry['title'][0] + entry['title'][1],
-        # )
-        # filename += TitleCard.OUTPUT_CARD_EXTENSION
-        # The standard plex filename for this episode
-        filename = (
-            f'{self.series_info.full_name} - S{season_number:02}'
-            f'E{episode_number:02}{TitleCard.OUTPUT_CARD_EXTENSION}'
+        
+        return TitleCard.get_output_filename(
+            self.preferences.card_filename_format,
+            self.series_info,
+            entry,
+            self.media_directory
         )
 
-        return self.media_directory / season_folder / filename
 
-
-    def read_source(self, sonarr_interface: 'SonarrInterface'=None) -> None:
+    def read_source(self) -> None:
         """
         Read the source file for this show, adding the associated Episode
         objects to this show's episodes dictionary.
-
-        :param      sonarr_interface:   Optional SonarrInterface - currently
-                                        not used.
         """
 
+        # Go through each entry in the file interface
         for entry in self.file_interface.read():
             key = f'{entry["season_number"]}-{entry["episode_number"]}'
 
-            # Construct the file destination for Episode object building
+            # Create Episode object for this entry, store under key
             self.episodes[key] = Episode(
                 base_source=self.source_directory,
-                destination=self._get_destination(entry),
+                destination=self.__get_destination(entry),
                 card_class=self.card_class,
                 **entry,
             )
-
-            # Attempt to use sonarr to figure out more accurate destination
-            # if sonarr_interface and preferences.card_name_source == 'sonarr':
-            #     episode_filename = sonarr_interface.get_episode_filename(
-            #         self.name,
-            #         self.year,
-            #         episode.season_number,
-            #         episode.episode_number,
-            #     )
-
-            #     # If the filename couldn't be gathered from Sonarr, None is returned
-            #     if episode_filename:
-            #         episode.destination = self.media_directory / episode_filename
-            #     print('Sonarr found filename', episode.destination)
-
-            # self.episodes[key] = episode
 
 
     def check_sonarr_for_new_episodes(self,
