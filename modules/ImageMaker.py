@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from pathlib import Path
 
 from modules.ImageMagickInterface import ImageMagickInterface
 import modules.preferences as global_preferences
@@ -12,6 +13,9 @@ class ImageMaker(ABC):
     function to produce an image. The specifics of how that image is created are
     completely customizable.
     """
+
+    """Directory for all temporary images created during image creation"""
+    TEMP_DIR = Path(__file__).parent / '.objects'
 
     @abstractmethod
     def __init__(self) -> None:

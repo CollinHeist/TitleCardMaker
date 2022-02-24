@@ -32,9 +32,6 @@ class CardType(ImageMaker):
     """Standard size for all title cards"""
     TITLE_CARD_SIZE: str = '3200x1800'
 
-    """Directory for all temporary images created during image creation"""
-    TEMP_DIR = Path(__file__).parent / '.objects'
-
     @property
     @abstractmethod
     def TITLE_CHARACTERISTICS(self) -> dict:
