@@ -196,6 +196,33 @@ class DataFileInterface:
         # Update this entry with the new title(s)
         yaml[season_key][episode_number] = {'title': title.title_yaml}
         yaml[season_key][episode_number].update(extra_data)
+        
+        # Write updated data
+        self.__write_data(yaml)
+
+
+    def add_data_to_entry(self, season_number: int, episode_number: int,
+                          **new_data: dict) -> None:
+        """
+        Adds a data to entry.
+        
+        :param      season_number:   The season number
+        :param      episode_number:  The episode number
+        :param      new_data:        The new data
+        """
+
+        yaml = self.__read_data()
+
+        # Verify this entry already exists, warn and exit if not
+        season_key = f'Season {season_number}'
+        if (season_key not in yaml or episode_number not in yaml[season_key]):
+            warn(f'Cannot add data to entry for Season {season_number}, '
+                 f'Episode {episode_number} in "{self.file.resolve()}" - entry '
+                 f'does not exist')
+            return None
+
+        # Add new data
+        yaml[season_key][episode_number].update(new_data)
 
         # Write updated data
         self.__write_data(yaml)
