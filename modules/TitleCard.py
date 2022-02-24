@@ -18,6 +18,9 @@ class TitleCard:
     """Extensions of the input source image and output title card"""
     INPUT_CARD_EXTENSION: str = '.jpg'
     OUTPUT_CARD_EXTENSION: str = '.jpg'
+        
+    """Default filename format for all title cards"""
+    DEFAULT_FILENAME_FORMAT = '{full_name} - S{season:02}E{episode:02}'
 
     """Mapping of card type identifiers to CardType classes"""
     CARD_TYPES = {
@@ -73,6 +76,28 @@ class TitleCard:
         # File associated with this card is the episode's destination
         self.file = episode.destination
 
+    @staticmethod
+    def validate_card_format_string(format_string: str) -> bool:
+        """
+        Return whether the given card filename format string is valid or
+        not.
+        
+        :param      format_string:  Format string being validated.
+        
+        :returns:   True if the given string can be formatted correctly,
+                    False otherwise.
+        """
+        
+        try:
+            format_string.format(
+                name='TestName', full_name='TestName (2000)', year=2000,
+                season=1, episode=1, title='Episode Title',
+            )
+            return True
+        except ValueError as e:
+            error(f'Card format string is invalid - "{e}"')
+            return False
+            
 
     def create(self) -> bool:
         """
