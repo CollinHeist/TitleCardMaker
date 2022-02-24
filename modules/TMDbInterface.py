@@ -240,8 +240,7 @@ class TMDbInterface(WebInterface):
             return None
 
         # Get the TMDb ID for this series, set for object and add to map
-        tmdb_id = results[0]['id']
-        series_info.set_tmdb_id(tmdb_id)
+        series_info.set_tmdb_id(results['results'][0]['id'])
         self.__add_id_to_map(series_info)
 
 

@@ -75,8 +75,8 @@ class ShowSummary(ImageMaker):
         # Skip if the number of available episodes is below the minimum
         minimum = self.preferences.summary_minimum_episode_count
         if episode_count < minimum:
-            info(f'Skipping ShowSummary for {self.show.full_name} - has '
-                 f'{episode_count} episodes, minimum setting is {minimum}', 1)
+            info(f'Skipping ShowSummary for {self.show.series_info.full_name} -'
+                 f' has {episode_count} episodes, minimum setting is {minimum}')
             return None
 
         # Get a random subset of images to create the summary with
