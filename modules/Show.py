@@ -215,7 +215,8 @@ class Show:
             self.hide_seasons = bool(self.__yaml['seasons']['hide'])
 
         # Validate season map and episode range aren't specified at the same time
-        if self.__is_specified('seasons') and self.__is_specified('episode_ranges'):
+        if (self.__is_specified('seasons')
+            and self.__is_specified('episode_ranges')):
             if any(isinstance(key, int) for key in self.__yaml['seasons'].keys()):
                 error(f'Cannot specify season titles with both "seasons" and '
                       f'"episode_ranges"')

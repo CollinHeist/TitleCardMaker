@@ -23,10 +23,10 @@ class ShowSummary(ImageMaker):
     LOGO_FILENAME: str = 'logo.png'
 
     """Paths to intermediate images created in the process of making a summary."""
-    __MONTAGE_PATH: Path = Path(__file__).parent / '.objects' / 'montage.png'
-    __MONTAGE_WITH_HEADER_PATH: Path = Path(__file__).parent / '.objects' / 'header.png'
-    __RESIZED_LOGO_PATH: Path = Path(__file__).parent / '.objects' / 'resized_logo.png'
-    __LOGO_AND_HEADER_PATH: Path = Path(__file__).parent / '.objects' / 'logo_and_header.png'
+    __MONTAGE_PATH = ImageMaker.TEMP_DIR / 'montage.png'
+    __MONTAGE_WITH_HEADER_PATH = ImageMaker.TEMP_DIR / 'header.png'
+    __RESIZED_LOGO_PATH = ImageMaker.TEMP_DIR / 'resized_logo.png'
+    __LOGO_AND_HEADER_PATH = ImageMaker.TEMP_DIR / 'logo_and_header.png'
     
     """Path to the 'created by' image to add to all show summaries"""
     __CREATED_BY_PATH: Path = Path(__file__).parent / 'ref' / 'created_by.png'

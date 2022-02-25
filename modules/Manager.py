@@ -120,11 +120,17 @@ class Manager:
 
         for show in (pbar := tqdm(self.shows)):
             # Update progress bar
-            pbar.set_description(f'Creating Title Cards for "{show.name[:20]}"')
+            pbar.set_description(f'Creating Title Cards for '
+                                 f'"{show.series_info.short_name}"')
 
             # Pass the TMDbInterface to the show if globally enabled
             if self.preferences.use_tmdb:
-                created = show.create_missing_title_cards(self.tmdb_interface)
+                if self.preferences.use_sonarr:
+                    created = show.create_missing_title_cards(
+                        self.tmdb_interface, self.sonarr_interface
+                    )
+                else:
+                    created=show.create_missing_title_cards(self.tmdb_interface)
             else:
                 created = show.create_missing_title_cards()
 
