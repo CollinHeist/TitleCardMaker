@@ -112,7 +112,8 @@ class PlexInterface:
             return None
         
         # Valid library, invalid title - error and exit
-        if series_info.match_name not in self.library[library]:
+        match_name = f'{series_info.match_name}{series_info.year}'
+        if match_name not in self.library[library]:
             error(f'Series "{series_info}" was not found under library '
                   f'"{library}" in Plex')
             return None
