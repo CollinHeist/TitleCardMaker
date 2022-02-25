@@ -114,7 +114,7 @@ class PreferenceParser:
                 self.valid = False
             else:
                 self.card_type = value
-                
+
         if self.__is_specified('options', 'filename_format'):
             new_format = self.__yaml['options']['filename_format']
             if not TitleCard.validate_card_format_string(new_format):
@@ -251,7 +251,7 @@ class PreferenceParser:
                     self.source_directory,
                 )
 
-
+                
     def meets_minimum_resolution(self, width: int, height: int) -> bool:
         """
         Return whether the given dimensions meet the minimum resolution

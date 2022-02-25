@@ -1,4 +1,4 @@
-from modules.Debug import info, warn, error
+from modules.Debug import *
 
 # CardType classes
 from modules.AnimeCard import AnimeCard
@@ -18,7 +18,7 @@ class TitleCard:
     """Extensions of the input source image and output title card"""
     INPUT_CARD_EXTENSION: str = '.jpg'
     OUTPUT_CARD_EXTENSION: str = '.jpg'
-        
+
     """Default filename format for all title cards"""
     DEFAULT_FILENAME_FORMAT = '{full_name} - S{season:02}E{episode:02}'
 
@@ -75,7 +75,7 @@ class TitleCard:
 
         # File associated with this card is the episode's destination
         self.file = episode.destination
-        
+
         
     @staticmethod
     def get_output_filename(format_string: str, series_info: 'SeriesInfo', 
@@ -117,8 +117,8 @@ class TitleCard:
         filename += TitleCard.OUTPUT_CARD_EXTENSION
         
         return media_directory / season_folder / filename
-        
-        
+
+
     @staticmethod
     def validate_card_format_string(format_string: str) -> bool:
         """
@@ -140,7 +140,7 @@ class TitleCard:
         except ValueError as e:
             error(f'Card format string is invalid - "{e}"')
             return False
-            
+
 
     def create(self) -> bool:
         """
