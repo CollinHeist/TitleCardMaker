@@ -44,13 +44,13 @@ class SeriesInfo:
 
     def update_name(self, name: str) -> None:
         """
-        Update the name for this SeriesInfo.
+        Update the names for this series.
         
         :param      name:  The new name of the series info.
         """
 
         # Set name and full name
-        self.name = name
+        self.name = str(name)
         self.full_name = f'{name} ({self.year})'
         
         # Set short name
