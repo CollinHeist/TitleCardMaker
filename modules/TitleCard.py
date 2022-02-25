@@ -50,12 +50,6 @@ class TitleCard:
         # Store this card's associated episode/profile.
         self.episode = episode
         self.profile = profile
-
-        # If the episode has no absolute number, use the season number instead
-        if episode.abs_number == None:
-            abs_number = episode.episode_number
-        else:
-            abs_number = episode.abs_number
         
         # Construct this episode's CardType instance
         self.maker = self.episode.card_class(
@@ -63,7 +57,7 @@ class TitleCard:
             output_file=episode.destination,
             title=episode.title.apply_profile(profile, **title_characteristics),
             season_text=profile.get_season_text(
-                episode.season_number, abs_number
+                episode.season_number, episode.abs_number
             ), episode_text=profile.get_episode_text(
                 episode.episode_number, episode.abs_number
             ), font=profile.font,
