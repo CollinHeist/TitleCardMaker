@@ -119,7 +119,7 @@ class PlexInterface:
             return None
 
         # Get the plex ratingKey for this title, then PUT a metadata refresh
-        rating_key = self.library[library][series_info.match_name]
+        rating_key = self.library[library][match_name]
         url = self.base_url + f'metadata/{rating_key}/refresh'
         put(url)
 
