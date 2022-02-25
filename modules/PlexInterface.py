@@ -123,7 +123,7 @@ class PlexInterface:
         url = self.base_url + f'metadata/{rating_key}/refresh'
         put(url)
 
-        info(f'Refreshed Plex metadata for "{series_info}"', 1)
+        info(f'Refreshed Plex metadata for "{series_info}"')
 
 
         
