@@ -47,14 +47,18 @@ class SeriesInfo:
 
     def update_name(self, name: str) -> None:
         """
-        Update the names for this series.
+        Update all names for this series.
         
         :param      name:  The new name of the series info.
         """
 
-        # Set name and full name
-        self.name = str(name)
-        self.full_name = f'{name} ({self.year})'
+        # If the given name already has the year, remove it
+        if f'({self.year})' in str(name):
+            self.name = name.rsplit(' (', 1)[0]
+        else:
+            self.name = str(name)
+
+        self.full_name = f'{self.name} ({self.year})'
         
         # Set short name
         if len(self.name) > self.SHORT_WIDTH:
@@ -64,6 +68,7 @@ class SeriesInfo:
             
         # Set match name
         self.match_name = self.get_matching_title(self.name)
+        self.full_match_name = self.get_matching_title(self.full_name)
 
 
     def set_sonarr_id(self, sonarr_id: int) -> None:
