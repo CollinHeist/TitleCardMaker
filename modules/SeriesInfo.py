@@ -37,9 +37,12 @@ class SeriesInfo:
     def __repr__(self) -> str:
         """Returns a unambiguous string representation of the object."""
 
-        return (f'<SeriesInfo name={self.name}, year={self.year}, sonarr_id='
-                f'{self.sonarr_id}, tvdb_id={self.tvdb_id}, tmdb_id='
-                f'{self.tmdb_id}>')
+        ret = f'<SeriesInfo name={self.name}, year={self.year}'
+        ret += '' if self.sonarr_id == None else f', sonarr_id={self.sonarr_id}'
+        ret += '' if self.tvdb_id == None else f', tvdb_id={self.tvdb_id}'
+        ret += '' if self.tmdb_id == None else f', tmdb_id={self.tmdb_id}'
+
+        return f'{ret}>'
 
 
     def update_name(self, name: str) -> None:

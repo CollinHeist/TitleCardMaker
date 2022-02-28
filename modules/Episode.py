@@ -7,8 +7,8 @@ from modules.TitleCard import TitleCard
 class Episode:
     """
     This class defines an episode of a series that has a corresponding Title
-    Card. An Episode is defined (and identified) by its season and episode
-    number.
+    Card. An Episode encapsulates some EpisodeInfo, as well as attributes that
+    map that info to a source and destination file.
     """
 
     def __init__(self, season_number: int, episode_number: int,
@@ -61,16 +61,6 @@ class Episode:
 
 
     def __repr__(self) -> str:
-        """
-        Returns an unambiguous string representation of the object.
-        
-        :returns:   String representation of the object.
-        """
-
-        return (f'<Episode season_number={self.season_number}, episode_number='
-                f'{self.episode_number}, abs_number={self.abs_number}, '
-                f'card_class={self.card_class}, source={self.source}, '
-                f'destination={self.destination}, title={self.title}>')
 
 
     def matches(self, episode_info: dict) -> bool:
@@ -87,7 +77,11 @@ class Episode:
 
         season_match = episode_info['season_number'] == self.season_number
         episode_match = episode_info['episode_number'] == self.episode_number
+        """Returns a string representation of the object."""
 
         return (season_match and episode_match)
+        return (f'<Episode episode_info={self.episode_info}, card_class='
+               f'{self.card_class}, source={self.source}, destination='
+               f'{self.destination}, extras={self.extra_characteristics}')
 
         
