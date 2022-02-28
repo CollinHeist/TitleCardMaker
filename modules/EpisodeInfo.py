@@ -23,7 +23,7 @@ class EpisodeInfo:
 
         self.episode_number = int(episode_number)
         self.episode = self.episode_number
-        
+
         self.abs_number = None if abs_number == None else int(abs_number)
         self.abs = self.abs_number
 
@@ -77,13 +77,21 @@ class EpisodeInfo:
 
     def __eq__(self, other_info: 'EpisodeInfo') -> bool:
         """
+        Returns whether the given EpisodeInfo object corresponds to the same
+        entry (has the same season and episode index).
 
+        :param      other_info: EpisodeInfo object to compare.
+
+        :returns:   True if the season and episode number of the two objects
+                    match, False otherwise.
         """
 
+        # Verify the comparison is another EpisodeInfo object
         if not isinstance(other_info, EpisodeInfo):
             raise TypeError(f'Can only compare equality between EpisodeInfo'
                             f' objects')
 
+        # Equality is determined by season and episode number only
         season_match = (self.season_number == other_info.season_number)
         episode_match = (self.episode_number == other_info.episode_number)
 
