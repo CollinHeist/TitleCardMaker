@@ -112,17 +112,18 @@ class PlexInterface:
             return None
         
         # Valid library, invalid title - error and exit
-        if series_info.match_name not in self.library[library]:
+        match_name = f'{series_info.match_name}{series_info.year}'
+        if match_name not in self.library[library]:
             error(f'Series "{series_info}" was not found under library '
                   f'"{library}" in Plex')
             return None
 
         # Get the plex ratingKey for this title, then PUT a metadata refresh
-        rating_key = self.library[library][series_info.match_name]
+        rating_key = self.library[library][match_name]
         url = self.base_url + f'metadata/{rating_key}/refresh'
         put(url)
 
-        info(f'Refreshed Plex metadata for "{series_info}"', 1)
+        info(f'Refreshed Plex metadata for "{series_info}"')
 
 
         

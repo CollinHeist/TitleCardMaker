@@ -16,7 +16,19 @@ class Profile:
                  season_map: dict, episode_range: dict, map_or_range: bool,
                  episode_text_format: str) -> None:
         """
-        Constructs a new instance of a Profile object.
+        Constructs a new instance of a Profile. All given arguments will be
+        applied through this Profile (and whether it's generic/custom).
+        
+        :param      font_color:             The font color.
+        :param      font_size:              The font size.
+        :param      font:                   The font name.
+        :param      font_case:              The font case string.
+        :param      font_replacements:      The font replacements.
+        :param      hide_seasons:           Whether to hide/show seasons.
+        :param      season_map:             The season map.
+        :param      episode_range:          The episode range.
+        :param      map_or_range:           The map or range.
+        :param      episode_text_format:    The episode text format string.
         """
 
         # Store this profiles arguments as attributes
@@ -108,12 +120,12 @@ class Profile:
             ]
 
 
-    def get_season_text(self, season_number: int, abs_number: int=None) -> str:
+    def get_season_text(self, episode_info: 'EpisodeInfo') -> str:
         """
         Gets the season text for the given season number, after applying this
         profile's 'rules' about season text.
         
-        :param      season_number:  The season number.
+        :param      episode_info:   Episode info to get the season text of.
         
         :returns:   The season text for the given entry as defined by this
                     profile.
@@ -125,38 +137,36 @@ class Profile:
 
         # Generic season titles are Specials and Season {n}
         if not self.__use_custom_seasons:
-            if season_number == 0:
+            if episode_info.season_number == 0:
                 return 'Specials'
-            return f'Season {season_number}'
+            return f'Season {episode_info.season_number}'
 
         # Custom season titles and method is season map
         if self.__map_or_range == 'map':
-            return self.__season_map[season_number]
+            return self.__season_map[episode_info.season_number]
         
         # Custom season titles using episode range, check for absolute number
-        if abs_number == None:
+        if episode_info.abs_number == None:
             # Episode range, but episode has no absolute number
-            if season_number != 0: # Don't warn on specials, rarely have range
+            if episode_info.season_number != 0:     # Don't warn on specials
                 warn(f'Episode range preferred, but episode has no absolute '
                      f'number', 1)
-            return self.__season_map[season_number]
-        elif abs_number not in self.__episode_range:
+            return self.__season_map[episode_info.season_number]
+        elif episode_info.abs_number not in self.__episode_range:
             # Absolute number doesn't have episode range, fallback on season map
-            warn(f'Episode {abs_number} does not fall into specified range', 1)
-            return self.__season_map[season_number]
+            warn(f'Episode {episode_info} does not fall into specified range',1)
+            return self.__season_map[episode_info.season_number]
 
         # Absolute number is provided and falls into mapped episode ranges
-        return self.__episode_range[abs_number]
+        return self.__episode_range[episode_info.abs_number]
 
 
-    def get_episode_text(self, episode_number: int, abs_number: int=None)-> str:
+    def get_episode_text(self, episode_info: 'EpisodeInfo')-> str:
         """
-        Gets the episode text for the given episode number, as defined by this
+        Gets the episode text for the given episode info, as defined by this
         profile.
         
-        :param      episode_number: The episode number.
-
-        :param      abs_number:     The absolute episode number. 
+        :param      episode_info:   Episode info to get the episode text of.
         
         :returns:   The episode text defined by this profile.
         """
@@ -164,16 +174,17 @@ class Profile:
         # Custom season tag can also indicate custom episode text format
         if self.__use_custom_seasons:
             # Warn if absolute isn't given, but is requested
-            if '{abs_number}' in self.episode_text_format and abs_number ==None:
+            if ('{abs_number}' in self.episode_text_format
+                and episode_info.abs_number == None):
                 warn(f'Episode text formatting uses absolute episode number, '
-                     f'but episode {episode_number} has no absolute number.')
+                     f'but episode {episode_info} has no absolute number.')
 
             return self.episode_text_format.format(
-                episode_number=episode_number,
-                abs_number=abs_number if abs_number != None else '',
+                episode_number=episode_info.episode_number,
+                abs_number=episode_info.abs_number,
             )
 
-        return f'EPISODE {episode_number}'
+        return f'EPISODE {episode_info.episode_number}'
 
 
     def __remove_episode_text_format(self, title_text: str) -> str:
