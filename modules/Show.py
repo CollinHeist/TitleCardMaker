@@ -337,7 +337,7 @@ class Show:
             self.series_info
         )
 
-        # For each episode, check if the data matches any contained Episode objects
+        # For each episode, check if the data matches any contained Episodes
         has_new = False
         if all_episodes:
             # Filter out episodes that already exist
@@ -372,10 +372,11 @@ class Show:
         if self.media_directory is None:
             return False
 
-        # If using Sonarr, get the TVDb ID for this show
-        tvdb_id = None
-        if sonarr_interface:
-            sonarr_interface.set_series_ids(self.series_info)
+        # If TMDb syncing is enabled, and a valid TMDb and Sonarr Interface were
+        # provided, get all episode ID's for this series
+        if self.tmdb_sync and tmdb_interface and sonarr_interface:
+            all_episodes = list(ei for _, ei in self.episodes.items())
+            sonarr_interface.set_all_episode_ids(self.series_info, all_episodes)
 
         # Go through each episode for this show
         created_new_cards = False
