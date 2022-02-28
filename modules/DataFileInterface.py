@@ -14,6 +14,7 @@ class DataFileInterface:
     """Default name for a data file of episode information"""
     GENERIC_DATA_FILE_NAME: str = 'data.yml'
 
+
     def __init__(self, data_file: Path) -> None:
         """
         Constructs a new instance of the interface for the specified data file.
@@ -26,11 +27,7 @@ class DataFileInterface:
 
 
     def __repr__(self) -> str:
-        """
-        Returns a unambiguous string representation of the object.
-        
-        :returns:   String representation of the object.
-        """
+        """Returns a unambiguous string representation of the object."""
 
         return f'<DataFileInterface data_file={self.file.resolve()}>'
 
@@ -104,7 +101,7 @@ class DataFileInterface:
 
     def read(self) -> dict:
         """
-        Read the data file for this object, yielding each (valid) row.
+        Read the data file for this object, yielding each valid row.
         
         :returns:   Yields from each row in the data file as a dictionary. The
                     keys are 'title', 'season_number', 'episode_number', and
@@ -169,42 +166,13 @@ class DataFileInterface:
                     yield data
 
 
-    def modify_entry(self, title: Title, season_number: int,
-                     episode_number: int, **extra_data: dict) -> None:
-        """
-        Modify the entry found under the given season+episode number to the
-        specified information. If the entry does not exist, a new entry is NOT
-        created.
 
-        :param      title:          Title of the entry
-        :param      season_number:  Season number of the entry.
-        :param      episode_number: Episode number of the entry.
-        :param      abs_number:     Absolute episode number of the entry.
-        """
-
-        # Read yaml, returns {} if empty/DNE
-        yaml = self.__read_data()
-
-        # Verify this entry already exists, warn and exit if not
-        season_key = f'Season {season_number}'
-        if (season_key not in yaml or episode_number not in yaml[season_key]):
-            warn(f'Cannot modify entry for Season {season_number}, Episode ',
-                 f'{episode_number} in "{self.file.resolve()}" - entry does not'
-                 f' exist')
-            return None
-
-        # Update this entry with the new title(s)
-        yaml[season_key][episode_number] = {'title': title.title_yaml}
-        yaml[season_key][episode_number].update(extra_data)
-        
-        # Write updated data
-        self.__write_data(yaml)
 
 
     def add_data_to_entry(self, season_number: int, episode_number: int,
                           **new_data: dict) -> None:
         """
-        Adds a data to entry.
+        Add any generic data to the YAML entry associated with this EpisodeInfo.
         
         :param      season_number:   The season number
         :param      episode_number:  The episode number
@@ -228,38 +196,6 @@ class DataFileInterface:
         self.__write_data(yaml)
 
 
-    def add_entry(self, title: Title, season_number: int,
-                  episode_number: int, abs_number: int=None) -> None:
-        """
-        Add the info provided to this object's data file. If the specified
-        season and episode number already exists, that data is NOT overwritten.
-
-        :param      title_top:      Title of the entry being added.
-        :param      season_number:  Season number of the entry being added.
-        :param      episode_number: Episode number of the entry being added.
-        :param      abs_number:     The absolute episode number of the entry.
-        """
-
-        # Read yaml, returns {} if empty/DNE
-        yaml = self.__read_data()
-
-        # Create blank season data under this key if it doesn't already exist
-        season_key = f'Season {season_number}'
-        if season_key not in yaml:
-            yaml[season_key] = {}
-
-        # If this episode already exists for this season, warn and exit
-        if episode_number in yaml[season_key]:
-            warn(f'Cannot add duplicate entry for Season {season_number}, '
-                 f'Episode {episode_number} in "{self.file.resolve()}"')
-            return None
-
-        # Construct episode data
-        yaml[season_key][episode_number] = {'title': title.title_yaml}
-
-        # Add absolute number if given
-        if abs_number != None:
-            yaml[season_key][episode_number]['abs_number'] = abs_number
 
         # Write updated data
         self.__write_data(yaml)
