@@ -2,7 +2,7 @@ from re import match
 
 class SeriesInfo:
     """
-    This class encapsulates information that is tied to a single Series.
+    This class encapsulates static information that is tied to a single Series.
     """
 
     """After how many characters to truncate the short name"""
@@ -37,21 +37,28 @@ class SeriesInfo:
     def __repr__(self) -> str:
         """Returns a unambiguous string representation of the object."""
 
-        return (f'<SeriesInfo name={self.name}, year={self.year}, sonarr_id='
-                f'{self.sonarr_id}, tvdb_id={self.tvdb_id}, tmdb_id='
-                f'{self.tmdb_id}>')
+        ret = f'<SeriesInfo name={self.name}, year={self.year}'
+        ret += '' if self.sonarr_id == None else f', sonarr_id={self.sonarr_id}'
+        ret += '' if self.tvdb_id == None else f', tvdb_id={self.tvdb_id}'
+        ret += '' if self.tmdb_id == None else f', tmdb_id={self.tmdb_id}'
+
+        return f'{ret}>'
 
 
     def update_name(self, name: str) -> None:
         """
-        Update the name for this SeriesInfo.
+        Update all names for this series.
         
         :param      name:  The new name of the series info.
         """
 
-        # Set name and full name
-        self.name = name
-        self.full_name = f'{name} ({self.year})'
+        # If the given name already has the year, remove it
+        if f'({self.year})' in str(name):
+            self.name = name.rsplit(' (', 1)[0]
+        else:
+            self.name = str(name)
+
+        self.full_name = f'{self.name} ({self.year})'
         
         # Set short name
         if len(self.name) > self.SHORT_WIDTH:
@@ -61,6 +68,7 @@ class SeriesInfo:
             
         # Set match name
         self.match_name = self.get_matching_title(self.name)
+        self.full_match_name = self.get_matching_title(self.full_name)
 
 
     def set_sonarr_id(self, sonarr_id: int) -> None:

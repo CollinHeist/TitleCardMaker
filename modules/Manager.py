@@ -203,6 +203,7 @@ class Manager:
         self.create_shows()
         self.read_show_source()
         self.check_sonarr_for_new_episodes()
+        self.read_show_source() # again?
         self.create_missing_title_cards()
         self.update_archive()
         self.create_summaries()

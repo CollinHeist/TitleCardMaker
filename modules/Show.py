@@ -6,12 +6,14 @@ from yaml import safe_load
 
 from modules.CardType import CardType
 from modules.DataFileInterface import DataFileInterface
-from modules.Debug import *
+from modules.Debug import info, warn, error
 from modules.Episode import Episode
+from modules.EpisodeInfo import EpisodeInfo
 import modules.preferences as global_preferences
 from modules.Profile import Profile
 from modules.SeriesInfo import SeriesInfo
 from modules.TitleCard import TitleCard
+from modules.Title import Title
 
 class Show:
     """
@@ -21,7 +23,7 @@ class Show:
     within the Show's YAML take precedence over the global enables, with the
     exception of Interface objects (such as Sonarr and TMDb).
     """
-    
+
 
     def __init__(self, name: str, yaml_dict: dict, library_map: dict,
                  source_directory: Path) -> None:
@@ -274,16 +276,14 @@ class Show:
         return True
 
 
-    def __get_destination(self, entry: dict) -> Path:
+    def __get_destination(self, episode_info: EpisodeInfo) -> Path:
         """
         Get the destination filename for the given entry of a datafile.
         
-        :param      entry:  The entry returned from a file interface. Must
-                            have 'season_number', 'episode_number', and
-                            'title' keys.
+        :param      episode_info:   EpisodeInfo for this episode.
         
-        :returns:   Path for the full title card destination, and None
-                    if this show has no media directory.
+        :returns:   Path for the full title card destination, and None if this
+                    show has no media directory.
         """
 
         # If this entry should not be written to a media directory, return 
@@ -293,7 +293,7 @@ class Show:
         return TitleCard.get_output_filename(
             self.preferences.card_filename_format,
             self.series_info,
-            entry,
+            episode_info,
             self.media_directory
         )
 
@@ -306,12 +306,10 @@ class Show:
 
         # Go through each entry in the file interface
         for entry in self.file_interface.read():
-            key = f'{entry["season_number"]}-{entry["episode_number"]}'
-
             # Create Episode object for this entry, store under key
-            self.episodes[key] = Episode(
+            self.episodes[entry['episode_info'].key] = Episode(
                 base_source=self.source_directory,
-                destination=self.__get_destination(entry),
+                destination=self.__get_destination(entry['episode_info']),
                 card_class=self.card_class,
                 **entry,
             )
@@ -323,7 +321,7 @@ class Show:
         Query the provided SonarrInterface object, checking if the returned
         episodes exist in this show's associated source. All new entries are
         added to this object's DataFileInterface. This method should only be
-        called if sonarr syncing is globally enabled.
+        called if Sonarr syncing is globally enabled.
         
         :param      sonarr_interface:   The Sonarr interface to query.
 
@@ -334,26 +332,21 @@ class Show:
         if not self.sonarr_sync:
             return False
 
-        # Get dict of episode data from Sonarr
-        try:
-            all_episodes = sonarr_interface.get_all_episodes_for_series(
-                self.series_info
-            )
-        except ValueError:
-            error(f'Cannot find series "{self.series_info}" in Sonarr', 1)
-            return False
+        # Get list of EpisodeInfo objects from Sonarr
+        all_episodes = sonarr_interface.get_all_episodes_for_series(
+            self.series_info
+        )
 
         # For each episode, check if the data matches any contained Episode objects
         has_new = False
         if all_episodes:
             # Filter out episodes that already exist
             new_episodes = list(filter(
-                lambda e: (f'{e["season_number"]}-{e["episode_number"]}'
-                           not in self.episodes),
+                lambda e: e.key not in self.episodes,
                 all_episodes,
             ))
 
-            # Add many entries at once
+            # Add all new entries to the datafile
             self.file_interface.add_many_entries(new_episodes)
 
         # If new entries were added, re-parse source file
@@ -388,12 +381,12 @@ class Show:
         created_new_cards = False
         for _, episode in (pbar := tqdm(self.episodes.items(), leave=False)):
             # Update progress bar
-            pbar.set_description(f'Processing {str(episode)}')
+            pbar.set_description(f'Creating {episode}')
 
             # Skip episodes whose destination is None (don't create) or does exist
             if not episode.destination or episode.destination.exists():
                 continue
-
+                
             # Attempt to make a TitleCard object for this episode and profile
             # passing any extra characteristics from the episode along
             title_card = TitleCard(
@@ -410,11 +403,9 @@ class Show:
                     continue
 
                 # Query database for image
-                image_url = tmdb_interface.get_title_card_source_image(
+                image_url = tmdb_interface.get_source_image(
                     self.series_info,
-                    episode.season_number,
-                    episode.episode_number,
-                    episode.abs_number,
+                    episode.episode_info
                 )
 
                 # Skip if no image is returned

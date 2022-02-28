@@ -3,7 +3,8 @@ from pathlib import Path
 from pickle import dump, load, HIGHEST_PROTOCOL
 from urllib.request import urlretrieve
 
-from modules.Debug import *
+from modules.Debug import info, warn, error
+from modules.EpisodeInfo import EpisodeInfo
 import modules.preferences as global_preferences
 from modules.SeriesInfo import SeriesInfo
 from modules.WebInterface import WebInterface
@@ -60,18 +61,17 @@ class TMDbInterface(WebInterface):
         self.__api_key = api_key
 
 
-    def __update_blacklist(self, series_info: SeriesInfo, season: int,
-                           episode: int) -> None:
+    def __update_blacklist(self, series_info: SeriesInfo,
+                           episode_info: EpisodeInfo) -> None:
         """
         Adds the given entry to the blacklist; indicating that this exact entry
         shouldn't be queried to TheMovieDB (to prevent unnecessary queries).
         
         :param      series_info:    SeriesInfo for the entry.
-        :param      season:         The entry's season number.
-        :param      episode:        The entry's episode number.
+        :param      episode_info:   EpisodeInfo for the entry.
         """
 
-        key = f'{series_info.full_name}-{season}-{episode}'
+        key = f'{series_info.full_name}-{episode_info.key}'
 
         # If previously indexed and next has passed, increase count and set next
         later = datetime.now() + timedelta(days=1)
@@ -93,20 +93,19 @@ class TMDbInterface(WebInterface):
             dump(self.__blacklist, file_handle, HIGHEST_PROTOCOL)
 
 
-    def __is_blacklisted(self, series_info: SeriesInfo, season: int,
-                         episode: int) -> bool:
+    def __is_blacklisted(self, series_info: SeriesInfo,
+                         episode_info: EpisodeInfo) -> bool:
         """
         Determines if the specified entry is in the blacklist (i.e. should
         not bother querying TMDb.
         
         :param      series_info:    SeriesInfo for the entry.
-        :param      season:         The entry's season number.
-        :param      episode:        The entry's episode number.
+        :param      episode_info:   EpisodeInfo for the entry.
         
         :returns:   True if the entry is blacklisted, False otherwise.
         """
 
-        key = f'{series_info.full_name}-{season}-{episode}'
+        key = f'{series_info.full_name}-{episode_info.key}'
 
         # If never indexed before, skip failure check
         if key not in self.__blacklist:
@@ -282,27 +281,28 @@ class TMDbInterface(WebInterface):
         return images[best_image['index']] if valid_image else None
 
 
-    def get_title_card_source_image(self, series_info: SeriesInfo, season: int,
-                                    episode: int, abs_number: int=None) -> str:
+    def get_source_image(self, series_info: SeriesInfo,
+                         episode_info: EpisodeInfo) -> str:
         """
         Get the best source image for the requested entry. The URL of this image
         is returned.
         
-        :param      series_info:    SeriesInfo for the entry.
-        :param      season:         The season of the requested entry.
-        :param      episode:        The episode of the requested entry.
-        :param      abs_number:     The absolute episode number of the entry.
+        :param      series_info:    SeriesInfo for this entry.
+        :param      episode_info:   EpisodeInfo for this entry.
         
         :returns:   URL to the 'best' source image for the requested entry. None
                     if no images are available.
         """
 
         # Don't query the database if this episode is in the blacklist
-        if self.__is_blacklisted(series_info, season, episode):
+        if self.__is_blacklisted(series_info, episode_info):
             return None
 
         # Set the TV id for the provided series
         self.__set_tmdb_id(series_info)
+
+        # Get this entry's season and episode numbers
+        season, episode = episode_info.season_number,episode_info.episode_number
 
         # GET params
         url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/{season}'
@@ -313,50 +313,48 @@ class TMDbInterface(WebInterface):
         results = self._get(url=url, params=params)
 
         # If absolute number has been given and the first query failed,try again
-        if (abs_number != None and 'success' in results
+        if (episode_info.abs_number != None and 'success' in results
             and not results['success']):
             # Try surround season numbers (TMDb indexes these weirdly..)
             for new_season in range(1, season+1)[::-1]:
                 url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/'
-                       f'{new_season}/episode/{abs_number}/images')
+                       f'{new_season}/episode/{episode_info.abs_number}/images')
                 results = self._get(url=url, params=params)
                 if 'stills' in results:
                     break
 
         # If 'stills' wasn't in return JSON, episode wasn't found
         if 'stills' not in results:
-            warn(f'TMDb has no matching episode for "{series_info}" Season '
-                 f'{season}, Episode {episode}', 2)
-            self.__update_blacklist(series_info, season, episode)
+            warn(f'TMDb has no matching episode for "{series_info}" '
+                 f'{episode_info}', 1)
+            self.__update_blacklist(series_info, episode_info)
             return None
 
         # If 'stills' is in JSON, but is empty, then TMDb has no images
         if len(results['stills']) == 0:
-            warn(f'TMDb has no images for "{series_info}" Season {season}, '
-                 f'Episode {episode}', 2)
-            self.__update_blacklist(series_info, season, episode)
+            warn(f'TMDb has no images for "{series_info}" {episode_info}', 1)
+            self.__update_blacklist(series_info, episode_info)
             return None
 
         # Get the best image, None is returned if requirements weren't met
         best_image = self.__determine_best_image(results['stills'])
         if not best_image:
-            warn(f'TMDb images for "{series_info}" Season {season}, Episode '
-                 f'{episode} do not meet dimensional requirements.', 2)
-            self.__update_blacklist(series_info, season, episode)
+            warn(f'TMDb images for "{series_info}" {episode_info} do not meet '
+                 f'dimensional requirements.', 1)
+            self.__update_blacklist(series_info, episode_info)
             return None
         
         return f'https://image.tmdb.org/t/p/original{best_image["file_path"]}'
 
 
-    def get_episode_title(self, series_info: SeriesInfo, season: int,
-                          episode: int, abs_number: int=None,
+    def get_episode_title(self, series_info: SeriesInfo,
+                          episode_info: EpisodeInfo,
                           language_code: str='en-US') -> str:
         """
         Get the episode title for the given entry for the given language.
         
         :param      series_info:    SeriesInfo for the entry.
-        :param      season:         The season number of the episode.
-        :param      episode:        The episode number of the episode
+        :param      episode_info:   EpisodeInfo for the entry.
         :param      language_code:  The language code of the episode.
         
         :returns:   The episode title. None if the entry does not exist.
@@ -364,6 +362,9 @@ class TMDbInterface(WebInterface):
 
         # Get the TV id for the provided series+year
         self.__set_tmdb_id(series_info)
+
+        # Get this entry's season and episode numbers
+        season, episode = episode_info.season_number,episode_info.episode_number
 
         # GET params
         url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/{season}'
@@ -374,12 +375,12 @@ class TMDbInterface(WebInterface):
         results = self._get(url=url, params=params)
 
         # If absolute number has been given and the first query failed,try again
-        if (abs_number != None and 'success' in results
+        if (episode_info.abs_number != None and 'success' in results
             and not results['success']):
             # Try surround season numbers (TMDb indexes these weirdly..)
             for new_season in range(1, season+1)[::-1]:
                 url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/'
-                       f'{new_season}/episode/{abs_number}')
+                       f'{new_season}/episode/{episode_info.abs_number}')
                 results = self._get(url=url, params=params)
 
                 # Return name if this query succeeded
