@@ -202,7 +202,7 @@ class SonarrInterface(WebInterface):
         return self.__get_all_episode_info(series_info.sonarr_id)
 
 
-    def set_tvdb_id_for_series(self, series_info: SeriesInfo) -> None:
+    def set_series_ids(self, series_info: SeriesInfo) -> None:
         """
         Set the TVDb ID to the given SeriesInfo object.
 

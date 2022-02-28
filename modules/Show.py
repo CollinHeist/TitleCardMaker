@@ -375,7 +375,7 @@ class Show:
         # If using Sonarr, get the TVDb ID for this show
         tvdb_id = None
         if sonarr_interface:
-            sonarr_interface.set_tvdb_id_for_series(self.series_info)
+            sonarr_interface.set_series_ids(self.series_info)
 
         # Go through each episode for this show
         created_new_cards = False
