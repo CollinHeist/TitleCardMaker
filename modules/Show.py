@@ -386,7 +386,7 @@ class Show:
             # Skip episodes whose destination is None (don't create) or does exist
             if not episode.destination or episode.destination.exists():
                 continue
-
+                
             # Attempt to make a TitleCard object for this episode and profile
             # passing any extra characteristics from the episode along
             title_card = TitleCard(
@@ -403,11 +403,9 @@ class Show:
                     continue
 
                 # Query database for image
-                image_url = tmdb_interface.get_title_card_source_image(
+                image_url = tmdb_interface.get_source_image(
                     self.series_info,
-                    episode.season_number,
-                    episode.episode_number,
-                    episode.abs_number,
+                    episode.episode_info
                 )
 
                 # Skip if no image is returned
