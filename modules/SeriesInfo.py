@@ -2,7 +2,7 @@ from re import match
 
 class SeriesInfo:
     """
-    This class encapsulates information that is tied to a single Series.
+    This class encapsulates static information that is tied to a single Series.
     """
 
     """After how many characters to truncate the short name"""
