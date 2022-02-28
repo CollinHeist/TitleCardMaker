@@ -67,7 +67,7 @@ class Manager:
         for show in self.preferences.iterate_series_files():
             # Skip shows whose YAML was invalid
             if not show.valid:
-                error(f'Skipping series "{show.name}"')
+                error(f'Skipping series "{show.series_info}"')
                 continue
 
             self.shows.append(show)
@@ -91,11 +91,7 @@ class Manager:
         """
 
         for show in tqdm(self.shows, desc='Reading source files'):
-            # Pass the Sonarr interface to the show if globally enabled
-            if self.sonarr_interface:
-                show.read_source(self.sonarr_interface)
-            else:
-                show.read_source()
+            show.read_source()
 
         for archive in tqdm(self.archives, desc='Reading archive source files'):
             archive.read_source()
@@ -124,11 +120,17 @@ class Manager:
 
         for show in (pbar := tqdm(self.shows)):
             # Update progress bar
-            pbar.set_description(f'Creating Title Cards for "{show.name[:20]}"')
+            pbar.set_description(f'Creating Title Cards for '
+                                 f'"{show.series_info.short_name}"')
 
             # Pass the TMDbInterface to the show if globally enabled
             if self.preferences.use_tmdb:
-                created = show.create_missing_title_cards(self.tmdb_interface)
+                if self.preferences.use_sonarr:
+                    created = show.create_missing_title_cards(
+                        self.tmdb_interface, self.sonarr_interface
+                    )
+                else:
+                    created=show.create_missing_title_cards(self.tmdb_interface)
             else:
                 created = show.create_missing_title_cards()
 
@@ -136,7 +138,7 @@ class Manager:
             if created and self.preferences.use_plex:
                 self.plex_interface.refresh_metadata(
                     show.library_name,
-                    show.full_name
+                    show.series_info
                 )
 
 
@@ -152,8 +154,8 @@ class Manager:
 
         for show_archive in (pbar := tqdm(self.archives)):
             # Update progress bar
-            pbar.set_description(f'Updating archive for "'
-                                 f'{show_archive.name[:20]}"')
+            pbar.set_description(f'Updating archive for '
+                                 f'"{show_archive.series_info.short_name}"')
 
             # If TMDb is globally enabled, pass the interface along
             if self.preferences.use_tmdb:
@@ -174,7 +176,7 @@ class Manager:
         for show_archive in (pbar := tqdm(self.archives)):
             # Update progress bar
             pbar.set_description(f'Creating ShowSummary for "'
-                                 f'{show_archive.name[:20]}"')
+                                 f'{show_archive.series_info.short_name}"')
 
             # If TMDb is globally enabled, pass the interface along
             if self.preferences.use_tmdb:

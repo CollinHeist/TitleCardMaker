@@ -10,6 +10,7 @@ from modules.Debug import *
 from modules.Episode import Episode
 import modules.preferences as global_preferences
 from modules.Profile import Profile
+from modules.SeriesInfo import SeriesInfo
 from modules.TitleCard import TitleCard
 
 class Show:
@@ -20,20 +21,7 @@ class Show:
     within the Show's YAML take precedence over the global enables, with the
     exception of Interface objects (such as Sonarr and TMDb).
     """
-
-    # FILENAME_FORMAT_HELP_STRING: str = (
-    #     "Format String Options:\n"
-    #     "  {show}      : The show's name\n"
-    #     "  {year}      : The show's year\n"
-    #     "  {full_name} : The show's full name - equivalent to {show} ({year})\n"
-    #     "  {season}    : The episode's season number\n"
-    #     "  {episode}   : The episode's episode number\n"
-    #     "  {title}     : The episode title, as found in the source data file\n\n"
-    #     "Example: ShowX, aired in 2022, Season 1 Episode 10 titled 'Pilot'\n"
-    #     "  {show} - S{season:03} - {title}         -> ShowX - S001 - Pilot\n"
-    #     "  {full_name} - S{season:02}E{episode:02} -> ShowX (2022) - S01E10\n"
-    #     "  {show} {year} - S{season}E{episode}     -> ShowX 2022 - S1E10\n"
-    # )
+    
 
     def __init__(self, name: str, yaml_dict: dict, library_map: dict,
                  source_directory: Path) -> None:
@@ -56,31 +44,30 @@ class Show:
         self.preferences = global_preferences.pp
         
         # Parse arguments given by the creator of this object
-        self.name = str(name)
         self.__yaml = yaml_dict
         self.__library_map = library_map
 
         # If year isn't given, skip completely
         if not self.__is_specified('year'):
-            error(f'Series "{self.name}" is missing required "year"')
+            error(f'Series "{name}" is missing required "year"')
             self.valid = False
             return 
 
         # Year is given, parse and update year/full name of this show
         year = self.__yaml['year']
         if not match(r'^\d{4}$', str(year)):
-            error(f'Year "{year}" of series "{self.name}" is invalid')
+            error(f'Year "{year}" of series "{name}" is invalid')
             self.valid = False
             return
-        else:
-            self.year = int(year)
-            self.full_name = f'{self.name} ({self.year})'
+
+        # Set this show's SeriesInfo object
+        self.series_info = SeriesInfo(name, year)
         
         # Setup default values that can be overwritten by the YML
         self.library_name = None
         self.library = None
         self.card_class = TitleCard.CARD_TYPES[self.preferences.card_type]
-        self.source_directory = source_directory / self.full_name
+        self.source_directory = source_directory / self.series_info.full_name
         self.episode_text_format = 'EPISODE {episode_number}'
         self.archive = True
         self.sonarr_sync = True
@@ -94,13 +81,16 @@ class Show:
         self.__episode_range = {}
         self.__season_map = {n: f'Season {n}' for n in range(1, 1000)}
         self.__season_map[0] = 'Specials'
+        self.title_language = {}
 
         # Modify object attributes based off YAML and update validity attribute
         self.valid = True
         self.__parse_yaml()
 
         # Update non YAML-able attributes for this show now that overwriting has occurred
-        self.media_directory = self.library / self.full_name if self.library else None
+        self.media_directory = None
+        if self.library:
+            self.media_directory = self.library / self.series_info.full_name
         self.logo = self.source_directory / self.preferences.logo_filename
         self.file_interface = DataFileInterface(
             self.source_directory / DataFileInterface.GENERIC_DATA_FILE_NAME
@@ -125,25 +115,20 @@ class Show:
 
 
     def __repr__(self) -> str:
-        """
-        Returns a unambiguous string representation of the object (for debug...).
-        
-        :returns:   String representation of the object.
-        """
+        """Returns a unambiguous string representation of the object"""
 
-        return f'<Show "{self.full_name}" with {len(self.episodes)} Episodes>'
+        return f'<Show "{self.series_info}" with {len(self.episodes)} Episodes>'
 
 
     def __parse_yaml(self):
         """
-        Parse the show's YAML and update this object's attributes. Error on
-        any invalid attributes and update `valid` attribute.
+        Parse the show's YAML and update this object's attributes. Error on any
+        invalid attributes and update `valid` attribute.
         """
 
         # Read all optional tags
         if self.__is_specified('name'):
-            self.name = self.__yaml['name']
-            self.full_name = f'{self.name} ({self.year})'
+            self.series_info.update_name(self.__yaml['name'])
 
         if self.__is_specified('library'):
             value = self.__yaml['library']
@@ -230,7 +215,8 @@ class Show:
             self.hide_seasons = bool(self.__yaml['seasons']['hide'])
 
         # Validate season map and episode range aren't specified at the same time
-        if self.__is_specified('seasons') and self.__is_specified('episode_ranges'):
+        if (self.__is_specified('seasons')
+            and self.__is_specified('episode_ranges')):
             if any(isinstance(key, int) for key in self.__yaml['seasons'].keys()):
                 error(f'Cannot specify season titles with both "seasons" and '
                       f'"episode_ranges"')
@@ -288,97 +274,47 @@ class Show:
         return True
 
 
-    def _get_destination(self, entry: dict) -> Path:
+    def __get_destination(self, entry: dict) -> Path:
         """
-        Get the destination filename for the given entry.
+        Get the destination filename for the given entry of a datafile.
         
-        :param      entry:  The entry returned from a file interface.
+        :param      entry:  The entry returned from a file interface. Must
+                            have 'season_number', 'episode_number', and
+                            'title' keys.
         
-        :returns:   Path for the full title card destination
+        :returns:   Path for the full title card destination, and None
+                    if this show has no media directory.
         """
 
-        # If this show should not be written to a media directory, return 
+        # If this entry should not be written to a media directory, return 
         if not self.media_directory:
             return None
-
-        # Get season and episode number for this entry
-        try:
-            season_number = int(entry['season_number'])
-            episode_number = int(entry['episode_number'])
-        except ValueError:
-            error(f'Invalid season/episode number "{entry["season_number"]},'
-                  f' "{entry["episode_number"]}"', 1)
-            return None
-
-        # Get the season folder corresponding to this episode's season
-        if season_number == 0:
-            season_folder = 'Specials'
-        else:
-            season_folder = f'Season {season_number}'
-
-        # filename = preferences.card_filename_format.format(
-        #     show=self.name, year=self.year, full_name=self.full_name,
-        #     season=season_number, episode=episode_number,
-        #     title=entry['title'][0] + entry['title'][1],
-        # )
-        # filename += TitleCard.OUTPUT_CARD_EXTENSION
-        # The standard plex filename for this episode
-        filename = (
-            f'{self.full_name} - S{season_number:02}E{episode_number:02}'
-            f'{TitleCard.OUTPUT_CARD_EXTENSION}'
+        
+        return TitleCard.get_output_filename(
+            self.preferences.card_filename_format,
+            self.series_info,
+            entry,
+            self.media_directory
         )
 
-        return self.media_directory / season_folder / filename
 
-
-    @staticmethod
-    def strip_specials(text: str) -> str:
-        """
-        Remove all non A-Z characters from the given title.
-        
-        :param      text:   The title to strip of special characters.
-        
-        :returns:   The input `text` with all non A-Z characters removed.
-        """
-
-        return ''.join(filter(lambda c: match('[a-zA-Z0-9]', c), text)).lower()
-
-
-    def read_source(self, sonarr_interface: 'SonarrInterface'=None) -> None:
+    def read_source(self) -> None:
         """
         Read the source file for this show, adding the associated Episode
         objects to this show's episodes dictionary.
-
-        :param      sonarr_interface:   Optional SonarrInterface - currently
-                                        not used.
         """
 
+        # Go through each entry in the file interface
         for entry in self.file_interface.read():
             key = f'{entry["season_number"]}-{entry["episode_number"]}'
 
-            # Construct the file destination for Episode object building
+            # Create Episode object for this entry, store under key
             self.episodes[key] = Episode(
                 base_source=self.source_directory,
-                destination=self._get_destination(entry),
+                destination=self.__get_destination(entry),
                 card_class=self.card_class,
                 **entry,
             )
-
-            # Attempt to use sonarr to figure out more accurate destination
-            # if sonarr_interface and preferences.card_name_source == 'sonarr':
-            #     episode_filename = sonarr_interface.get_episode_filename(
-            #         self.name,
-            #         self.year,
-            #         episode.season_number,
-            #         episode.episode_number,
-            #     )
-
-            #     # If the filename couldn't be gathered from Sonarr, None is returned
-            #     if episode_filename:
-            #         episode.destination = self.media_directory / episode_filename
-            #     print('Sonarr found filename', episode.destination)
-
-            # self.episodes[key] = episode
 
 
     def check_sonarr_for_new_episodes(self,
@@ -401,10 +337,10 @@ class Show:
         # Get dict of episode data from Sonarr
         try:
             all_episodes = sonarr_interface.get_all_episodes_for_series(
-                self.name, self.year
+                self.series_info
             )
         except ValueError:
-            error(f'Cannot find series "{self.full_name}" in Sonarr', 1)
+            error(f'Cannot find series "{self.series_info}" in Sonarr', 1)
             return False
 
         # For each episode, check if the data matches any contained Episode objects
@@ -428,13 +364,13 @@ class Show:
         return False
 
 
-    def create_missing_title_cards(self,
-                                   tmdb_interface: 'TMDbInterface'=None) ->bool:
+    def create_missing_title_cards(self, tmdb_interface: 'TMDbInterface'=None,
+                              sonarr_interface: 'SonarrInterface'=None) -> bool:
         """
         Creates any missing title cards for each episode of this show.
 
-        :param      tmdb_interface: Optional interface to TMDb for attempting to
-                                    download any source images that are missing.
+        :param      tmdb_interface: Optional interface to TMDb to download any
+                                    source images that are missing.
 
         :returns:   True if any new cards were created, False otherwise.
         """
@@ -442,6 +378,11 @@ class Show:
         # If the media directory is unspecified, then exit
         if self.media_directory is None:
             return False
+
+        # If using Sonarr, get the TVDb ID for this show
+        tvdb_id = None
+        if sonarr_interface:
+            sonarr_interface.set_tvdb_id_for_series(self.series_info)
 
         # Go through each episode for this show
         created_new_cards = False
@@ -470,8 +411,7 @@ class Show:
 
                 # Query database for image
                 image_url = tmdb_interface.get_title_card_source_image(
-                    self.name,
-                    self.year,
+                    self.series_info,
                     episode.season_number,
                     episode.episode_number,
                     episode.abs_number,

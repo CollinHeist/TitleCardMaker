@@ -1,4 +1,4 @@
-from modules.Debug import *
+from modules.Debug import info, warn, error
 
 # CardType classes
 from modules.AnimeCard import AnimeCard
@@ -18,6 +18,9 @@ class TitleCard:
     """Extensions of the input source image and output title card"""
     INPUT_CARD_EXTENSION: str = '.jpg'
     OUTPUT_CARD_EXTENSION: str = '.jpg'
+        
+    """Default filename format for all title cards"""
+    DEFAULT_FILENAME_FORMAT = '{full_name} - S{season:02}E{episode:02}'
 
     """Mapping of card type identifiers to CardType classes"""
     CARD_TYPES = {
@@ -72,7 +75,72 @@ class TitleCard:
 
         # File associated with this card is the episode's destination
         self.file = episode.destination
-
+        
+        
+    @staticmethod
+    def get_output_filename(format_string: str, series_info: 'SeriesInfo', 
+                            datafile_entry: dict,
+                            media_directory: 'Path') -> 'Path':
+        """
+        Get the output filename for a title card described by the given values.
+        
+        :param      format_string:      Format string that specifies how to 
+                                        construct the filename.
+        :param      series_info:        Series info pertaining to this entry
+        :param      datafile_entry:     Episode data of an entry, as returned
+                                        by a DataFileInterface. 
+        :param      media_directory:    Top-level media directory.
+        
+        :returns:   Path for the full title card destination.
+        """
+        
+        # Get season number for this entry
+        season_number = datafile_entry['season_number']
+        
+        # Get the season folder for this entry's season
+        if season_number == 0:
+            season_folder = 'Specials'
+        else:
+            season_folder = f'Season {season_number}'
+        
+        # Get filename from the given format string
+        filename = format_string.format(
+            name=series_info.name,
+            full_name=series_info.full_name,
+            year=series_info.year,
+            season=season_number,
+            episode=datafile_entry['episode_number'],
+            title=datafile_entry['title'].full_title,
+        )
+        
+        # Add card extension
+        filename += TitleCard.OUTPUT_CARD_EXTENSION
+        
+        return media_directory / season_folder / filename
+        
+        
+    @staticmethod
+    def validate_card_format_string(format_string: str) -> bool:
+        """
+        Return whether the given card filename format string is valid or
+        not.
+        
+        :param      format_string:  Format string being validated.
+        
+        :returns:   True if the given string can be formatted correctly,
+                    False otherwise.
+        """
+        
+        try:
+            format_string.format(
+                name='TestName', full_name='TestName (2000)', year=2000,
+                season=1, episode=1, title='Episode Title',
+            )
+            return True
+        except ValueError as e:
+            error(f'Card format string is invalid - "{e}"')
+            return False
+            
 
     def create(self) -> bool:
         """
