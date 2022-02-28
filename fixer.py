@@ -54,12 +54,6 @@ genre_group.add_argument('--genre-card-batch', type=Path, default=SUPPRESS,
 sonarr_group = parser.add_argument_group('Sonarr', 'Fixes for how the maker interacts with Sonarr')
 sonarr_group.add_argument('--sonarr-list-ids', action='store_true',
                           help='List all internal IDs used by Sonarr - use with grep')
-sonarr_group.add_argument('--sonarr-force-id', type=str, nargs=3, default=SUPPRESS, action='append',
-                          metavar=('TITLE', 'YEAR', 'SONARR_ID'),
-                          help='Manually specify an ID for a series')
-sonarr_group.add_argument('--add-absolute-numbers', type=str, nargs=3, default=SUPPRESS,
-                          metavar=('TITLE', 'YEAR', 'DATA_FILE'),
-                          help='Add absolute episode numbers a series to the given file')
 
 # Argument group for fixes relating to TheMovieDatabase
 tmdb_group = parser.add_argument_group('TheMovieDatabase', 'Fixes for how the Maker interacts with TheMovieDatabase')
@@ -127,34 +121,6 @@ if hasattr(args, 'genre_card_batch'):
 # Execute Sonarr related options
 if args.sonarr_list_ids:
     SonarrInterface(pp.sonarr_url, pp.sonarr_api_key).list_all_series_id()
-
-if hasattr(args, 'sonarr_force_id'):
-    for arg_set in args.sonarr_force_id:
-        SonarrInterface.manually_specify_id(*arg_set)
-
-if hasattr(args, 'add_absolute_numbers'):
-    # Create DataFileInterface and SonarrInterface
-    dfi = DataFileInterface(Path(args.add_absolute_numbers[2]))
-    si = SonarrInterface(pp.sonarr_url, pp.sonarr_api_key)
-
-    # Get a list of all entries without absolute numbers, ask Sonarr for absolute number
-    modify_list = []
-    for to_modify in dfi.read_entries_without_absolute():
-        # Get absolute number for this episode
-        absolute_number = si.get_absolute_episode_number(
-            args.add_absolute_numbers[0],
-            args.add_absolute_numbers[1],
-            to_modify['season_number'],
-            to_modify['episode_number'],
-        )
-
-        if absolute_number != None:
-            to_modify['abs_number'] = absolute_number
-            modify_list.append(to_modify)
-
-    for to_modify in modify_list:
-        dfi.modify_entry(**to_modify)
-
 
 # Execute TMDB related options
 if hasattr(args, 'delete_blacklist'):
