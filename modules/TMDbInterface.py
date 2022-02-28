@@ -222,13 +222,15 @@ class TMDbInterface(WebInterface):
                 tmdb_id = results[0]['id']
                 series_info.set_tmdb_id(tmdb_id)
                 self.__add_id_to_map(series_info)
+
                 return None
 
         # Match by title and year if no ID was given
         # Construct GET arguments
         url = f'{self.API_BASE_URL}search/tv/'
         params = {'api_key': self.__api_key, 'query': series_info.name,
-                  'first_air_date_year': series_info.year}
+                  'first_air_date_year': series_info.year,
+                  'include_adult': False}
 
         # Query TMDb
         results = self._get(url=url, params=params)
@@ -243,6 +245,101 @@ class TMDbInterface(WebInterface):
         self.__add_id_to_map(series_info)
 
 
+    def __find_episode(self, series_info: SeriesInfo,
+                       episode_info: EpisodeInfo) -> dict:
+        """
+        Finds the episode index for the given entry. Searching is done in the
+        following priority:
+
+        1. Episode TVDb ID
+        2. Series TMDb ID and season+episode index with title match
+        3. Series TMDb ID and season+absolute episode # with title match
+        3. Series TMDb ID and title match on any episode
+        
+        :param      series_info:   The series information.
+        :param      episode_info:  The episode information.
+        
+        :returns:   Dictionary of the index for the given entry. This dictionary
+                    has keys 'season' and 'episode'. None if returned if the
+                    entry cannot be found.
+        """
+
+        # If the episode has a TVDb ID, query with that first
+        if episode_info.tvdb_id != None:
+            # GET parameters and request
+            url = f'{self.API_BASE_URL}find/{episode_info.tvdb_id}'
+            params = {'api_key': self.__api_key, 'external_source': 'tvdb_id'}
+            results = self._get(url, params)['tv_episode_results']
+
+            # If an episode was found, return it's index
+            if len(results) > 0:
+                # Verify series TMDb ID is correct
+                if series_info.tmdb_id not in (results[0]['show_id'], None):
+                    warn(f'Series TMDb ID mismatch for {episode_info}')
+                
+                # Set series TMDb ID
+                series_info.set_tmdb_id(results[0]['show_id'])
+                info(f'Found {episode_info} via TVDb ID')
+                return {
+                    'season': results[0]['season_number'],
+                    'episode': results[0]['episode_number'],
+                }
+
+        # If the series has no TMDb ID, cannot continue
+        if series_info.tmdb_id == None:
+            return None
+
+        # Match by series TMDb ID and series index with title matching
+        # GET parameters and request
+        url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/'
+               f'{episode_info.season}/episode/{episode_info.episode}')
+        params = self.__standard_params
+        tmdb_info = self._get(url, params)
+
+        # If episode was not found, query by absolute number in all seasons
+        if ('success' in tmdb_info and not tmdb_info['success']
+            and episode_info.abs_number != None):
+            # Query TMDb until the absolute number has been found
+            for season in range(0, episode_info.season_number+1)[::-1]:
+                url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/'
+                       f'{season}/episode/{episode_info.abs_number}/images')
+                tmdb_info = self._get(url=url, params=params)
+                if 'season_number' in tmdb_info:
+                    break
+
+        # Episode has been found on TMDb, check title
+        if episode_info.title.matches(tmdb_info['name']):
+            # Title matches, return the resulting season/episode number
+            info(f'Found {episode_info} via index and title ')
+            return {
+                'season': tmdb_info['season_number'],
+                'episode': tmdb_info['episode_number'],
+            }
+
+        # No title match on given or absolute index, try each season
+        for season in range(0, episode_info.season_number+1):
+            # GET parameters and request
+            url = f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/{season}'
+            params = self.__standard_params
+            tmdb_season = self._get(url, params)
+
+            # If the season DNE, this episode cannot be found
+            if 'success' in tmdb_season and not tmdb_season['success']:
+                warn(f'Tried every season, {episode_info} not found by title')
+                return None
+
+            # Season could be found, check each given title
+            for episode in season['episodes']:
+                if episode_info.title.matches(episode['name']):
+                    # Title match, return this entry
+                    info(f'Found {series_info} {episode_info} under TMDb '
+                         f'S{episode["season_number"]:02}E'
+                         f'E{episode["episode_number"]:02} - possible mismatch')
+                    return {
+                        'season': episode['season_number'],
+                        'episode': episode['episode_number'],
+                    }
+        info(f'Tried every season and episode, {episode_info} not found by title')
     def __determine_best_image(self, images: list) -> dict:
         """
         Determines the best image, returning it's contents from within the
@@ -299,37 +396,25 @@ class TMDbInterface(WebInterface):
             return None
 
         # Set the TV id for the provided series
+        # Set the TMDb ID for the provided series
         self.__set_tmdb_id(series_info)
 
-        # Get this entry's season and episode numbers
         season, episode = episode_info.season_number,episode_info.episode_number
+        # Get the TMDb index for this entry
+        index = self.__find_episode(series_info, episode_info)
 
-        # GET params
-        url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/{season}'
-               f'/episode/{episode}/images')
-        params = {'api_key': self.__api_key}
-
-        # Make the GET request
-        results = self._get(url=url, params=params)
-
-        # If absolute number has been given and the first query failed,try again
-        if (episode_info.abs_number != None and 'success' in results
-            and not results['success']):
-            # Try surround season numbers (TMDb indexes these weirdly..)
-            for new_season in range(1, season+1)[::-1]:
-                url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/'
-                       f'{new_season}/episode/{episode_info.abs_number}/images')
-                results = self._get(url=url, params=params)
-                if 'stills' in results:
-                    break
-
-        # If 'stills' wasn't in return JSON, episode wasn't found
         if 'stills' not in results:
             warn(f'TMDb has no matching episode for "{series_info}" '
                  f'{episode_info}', 1)
             self.__update_blacklist(series_info, episode_info)
             return None
 
+        season, episode = index['season'], index['episode']
+
+        # Use the found index to query TMDB for images
+        # GET parameters and request
+        url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/{season}'
+               f'/episode/{episode}/images')
         # If 'stills' is in JSON, but is empty, then TMDb has no images
         if len(results['stills']) == 0:
             warn(f'TMDb has no images for "{series_info}" {episode_info}', 1)

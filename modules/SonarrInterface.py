@@ -215,7 +215,6 @@ class SonarrInterface(WebInterface):
         # If no ID was returned, error and return
         if series_info.sonarr_id == None:
             error(f'Series "{series_info}" not found in Sonarr')
-            return None
 
 
     def set_all_episode_ids(self, series_info: SeriesInfo,
