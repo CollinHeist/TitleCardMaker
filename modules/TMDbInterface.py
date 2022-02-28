@@ -59,6 +59,7 @@ class TMDbInterface(WebInterface):
         
         # Store API key
         self.__api_key = api_key
+        self.__standard_params = {'api_key': api_key}
 
 
     def __update_blacklist(self, series_info: SeriesInfo,
@@ -139,43 +140,6 @@ class TMDbInterface(WebInterface):
             dump(self.__id_map, file_handle, HIGHEST_PROTOCOL)
 
 
-    @staticmethod
-    def manually_download_season(api_key: str, title: str, year: int,
-                                 season: int, episode_count: int,
-                                 directory: Path) -> None:
-        """
-        Download episodes 1-episode_count of the requested season for the given
-        show. They will be named as s{season}e{episode}.jpg.
-        
-        :param      api_key:        The api key for sending requsts to TMDb.
-        :param      title:          The title of the requested show.
-        :param      year:           The year of the requested show.
-        :param      season:         The season to download.
-        :param      episode_count:  The number of episodes to download
-        :param      directory:      The directory to place the downloaded images
-                                    in.
-        """
-
-        # Create a temporary interface object for this function
-        dbi = TMDbInterface(api_key)
-
-        for episode in range(1, episode_count+1):
-            image_url=dbi.get_title_card_source_image(title,year,season,episode)
-
-            # If a valid URL was returned, download it
-            if image_url:
-                filename = f's{season}e{episode}.jpg'
-                dbi.download_image(image_url, directory / filename)
-
-
-    @staticmethod
-    def delete_blacklist() -> None:
-        """Delete the blacklist file referenced by this class."""
-
-        TMDbInterface.__BLACKLIST.unlink(missing_ok=True)
-        info(f'Deleted blacklist file "{TMDbInterface.__BLACKLIST.resolve()}"')
-
-
     def __set_tmdb_id(self, series_info: SeriesInfo) -> None:
         """
         Get the TMDb series ID associated with the given entry. If an ID is not
@@ -221,7 +185,8 @@ class TMDbInterface(WebInterface):
         # Construct GET arguments
         url = f'{self.API_BASE_URL}search/tv/'
         params = {'api_key': self.__api_key, 'query': series_info.name,
-                  'first_air_date_year': series_info.year}
+                  'first_air_date_year': series_info.year,
+                  'include_adult': False}
 
         # Query TMDb
         results = self._get(url=url, params=params)
@@ -453,5 +418,41 @@ class TMDbInterface(WebInterface):
         except Exception as e:
             error(f'TheMovieDB errored: "{e}"')
 
+
+    @staticmethod
+    def manually_download_season(api_key: str, title: str, year: int,
+                                 season: int, episode_count: int,
+                                 directory: Path) -> None:
+        """
+        Download episodes 1-episode_count of the requested season for the given
+        show. They will be named as s{season}e{episode}.jpg.
+        
+        :param      api_key:        The api key for sending requsts to TMDb.
+        :param      title:          The title of the requested show.
+        :param      year:           The year of the requested show.
+        :param      season:         The season to download.
+        :param      episode_count:  The number of episodes to download
+        :param      directory:      The directory to place the downloaded images
+                                    in.
+        """
+
+        # Create a temporary interface object for this function
+        dbi = TMDbInterface(api_key)
+
+        for episode in range(1, episode_count+1):
+            image_url=dbi.get_title_card_source_image(title,year,season,episode)
+
+            # If a valid URL was returned, download it
+            if image_url:
+                filename = f's{season}e{episode}.jpg'
+                dbi.download_image(image_url, directory / filename)
+
+
+    @staticmethod
+    def delete_blacklist() -> None:
+        """Delete the blacklist file referenced by this class."""
+
+        TMDbInterface.__BLACKLIST.unlink(missing_ok=True)
+        info(f'Deleted blacklist file "{TMDbInterface.__BLACKLIST.resolve()}"')
 
 
