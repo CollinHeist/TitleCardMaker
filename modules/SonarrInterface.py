@@ -2,7 +2,8 @@ from datetime import datetime
 from pathlib import Path
 from pickle import dump, load, HIGHEST_PROTOCOL
 
-from modules.Debug import *
+from modules.Debug import info, warn, error
+from modules.EpisodeInfo import EpisodeInfo
 from modules.SeriesInfo import SeriesInfo
 from modules.Title import Title
 from modules.WebInterface import WebInterface
@@ -13,6 +14,9 @@ class SonarrInterface(WebInterface):
     The primary purpose of this class is to get episode titles for series
     entries.
     """
+
+    """Episode titles that indicate a placeholder and are to be ignored"""
+    __PLACEHOLDER_NAMES = {'tba', 'TBA'}
 
     """Datetime format string for airDateUtc field in Sonarr API requests"""
     __AIRDATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
@@ -27,8 +31,8 @@ class SonarrInterface(WebInterface):
         """
         Constructs a new instance of an interface to Sonarr.
         
-        :param      url:        The base url of Sonarr.
-        :param      api_key:    The api key for requesting data to/from Sonarr.
+        :param      url:        The API url communicating with Sonarr.
+        :param      api_key:    The api key for API requests.
         """
 
         # Initialize parent WebInterface 
@@ -50,11 +54,12 @@ class SonarrInterface(WebInterface):
                 self.__tvdb_id_map = load(file_handle)
         else:
             self.__tvdb_id_map = {}
+        # Add / if not given
+        self.url = url + ('' if url.endswith('/') else '/')
 
-        # Add /api/ endpoint if not provided
-        if not url.endswith('api') and not url.endswith('api/'):
-            url += 'api/' if url.endswith('/') else '/api/'
-        self._url_base = url + ('' if url.endswith('/') else '/')
+        # Warn if a v3 API url has not been provided
+        if not self.url.endswith('/v3/'):
+            warn(f'Provided Sonarr URL ({self.url}) is not v3, add /v3/')
 
         # Base parameters for sending requests to Sonarr
         self._param_base = {'apikey': api_key}
@@ -289,26 +294,4 @@ class SonarrInterface(WebInterface):
         # Add this ID to the map
         series_info.set_tvdb_id(sonarr_info['tvdbId'])
         self.__map_id_to_tvdb(series_info)
-
-
-    @staticmethod
-    def manually_specify_id(title: str, year: int, sonarr_id: int) -> None:
-        """
-        Manually override the Sonarr ID for the given full title.
-
-        :param      title:      The title of the series.
-        :param      year:       The year of the series.
-        :param      sonarr_id:  The Sonarr ID for this series.
-        """
-
-        # Create SeriesInfo object for this info
-        series_info = SeriesInfo(title, year)
-        series_info.set_sonarr_id(sonarr_id)
-
-        SonarrInterface('', '').__map_title_to_id(series_info)
-
-        info(f'Specified ID {series_info.sonarr_id} for "{series_info}"')
-        
-
-
         
