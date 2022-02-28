@@ -19,8 +19,13 @@ class EpisodeInfo:
 
         # Store index
         self.season_number = int(season_number)
+        self.season = self.season_number
+
         self.episode_number = int(episode_number)
+        self.episode = self.episode_number
+        
         self.abs_number = None if abs_number == None else int(abs_number)
+        self.abs = self.abs_number
 
         # Create key for unique indexing associated with this Episode
         self.key = f'{self.season_number}-{self.episode_number}'
