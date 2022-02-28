@@ -362,8 +362,11 @@ class Show:
         """
         Creates any missing title cards for each episode of this show.
 
-        :param      tmdb_interface: Optional interface to TMDb to download any
-                                    source images that are missing.
+        :param      tmdb_interface:     Optional interface to TMDb to download
+                                        any missing source images.
+        :param      sonarr_interface:   Optional interface to Sonarr to get
+                                        episode and series ID's before querying
+                                        TMDb.
 
         :returns:   True if any new cards were created, False otherwise.
         """

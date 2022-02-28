@@ -62,6 +62,12 @@ class TMDbInterface(WebInterface):
         self.__standard_params = {'api_key': api_key}
 
 
+    def __repr__(self) -> str:
+        """Returns a unambiguous string representation of the object."""
+
+        return f'<TMDbInterface api_key={self.__api_key}>'
+
+
     def __update_blacklist(self, series_info: SeriesInfo,
                            episode_info: EpisodeInfo) -> None:
         """
@@ -259,15 +265,14 @@ class TMDbInterface(WebInterface):
             # Query TMDb until the absolute number has been found
             for season in range(0, episode_info.season_number+1)[::-1]:
                 url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/'
-                       f'{season}/episode/{episode_info.abs_number}/images')
+                       f'{season}/episode/{episode_info.abs_number}')
                 tmdb_info = self._get(url=url, params=params)
                 if 'season_number' in tmdb_info:
                     break
 
         # Episode has been found on TMDb, check title
-        if episode_info.title.matches(tmdb_info['name']):
+        if 'name' in tmdb_info and episode_info.title.matches(tmdb_info['name']):
             # Title matches, return the resulting season/episode number
-            info(f'Found {episode_info} via index and title ')
             return {
                 'season': tmdb_info['season_number'],
                 'episode': tmdb_info['episode_number'],
@@ -286,17 +291,16 @@ class TMDbInterface(WebInterface):
                 return None
 
             # Season could be found, check each given title
-            for episode in season['episodes']:
-                if episode_info.title.matches(episode['name']):
+            for tmdb_episode in tmdb_season['episodes']:
+                if episode_info.title.matches(tmdb_episode['name']):
                     # Title match, return this entry
-                    info(f'Found {series_info} {episode_info} under TMDb '
-                         f'S{episode["season_number"]:02}E'
-                         f'E{episode["episode_number"]:02} - possible mismatch')
                     return {
-                        'season': episode['season_number'],
-                        'episode': episode['episode_number'],
+                        'season': tmdb_episode['season_number'],
+                        'episode': tmdb_episode['episode_number'],
                     }
-        info(f'Tried every season and episode, {episode_info} not found by title')
+        return None
+
+
     def __determine_best_image(self, images: list) -> dict:
         """
         Determines the best image, returning it's contents from within the
@@ -352,15 +356,14 @@ class TMDbInterface(WebInterface):
         if self.__is_blacklisted(series_info, episode_info):
             return None
 
-        # Set the TV id for the provided series
         # Set the TMDb ID for the provided series
         self.__set_tmdb_id(series_info)
 
-        season, episode = episode_info.season_number,episode_info.episode_number
         # Get the TMDb index for this entry
         index = self.__find_episode(series_info, episode_info)
 
-        if 'stills' not in results:
+        # If None was returned, episode not found - warn, blacklist, and exit
+        if index == None:
             warn(f'TMDb has no matching episode for "{series_info}" '
                  f'{episode_info}', 1)
             self.__update_blacklist(series_info, episode_info)
@@ -372,6 +375,9 @@ class TMDbInterface(WebInterface):
         # GET parameters and request
         url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/{season}'
                f'/episode/{episode}/images')
+        params = self.__standard_params
+        results = self._get(url, params)
+
         # If 'stills' is in JSON, but is empty, then TMDb has no images
         if len(results['stills']) == 0:
             warn(f'TMDb has no images for "{series_info}" {episode_info}', 1)

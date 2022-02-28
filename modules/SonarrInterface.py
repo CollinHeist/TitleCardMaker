@@ -9,8 +9,8 @@ from modules.WebInterface import WebInterface
 class SonarrInterface(WebInterface):
     """
     This class describes a Sonarr interface, which is a type of WebInterface.
-    The primary purpose of this class is to get episode titles for series
-    entries.
+    The primary purpose of this class is to get episode titles, as well as
+    database ID's for episodes.
     """
 
     """Episode titles that indicate a placeholder and are to be ignored"""
@@ -47,6 +47,13 @@ class SonarrInterface(WebInterface):
 
         # Parse all Sonarr series
         self.__map_all_ids()
+
+
+    def __repr__(self) -> str:
+        """Returns a unambiguous string representation of the object."""
+
+        return (f'<SonarrInterface url={self.url}, api_key={self.__api_key}'
+                f', mapping of {len(self.__series_ids)} series>')
 
 
     def __set_ids(self, series_info: SeriesInfo) -> None:
