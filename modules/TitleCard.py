@@ -1,4 +1,5 @@
 from modules.Debug import *
+from modules.Debug import info, warn, error
 
 # CardType classes
 from modules.AnimeCard import AnimeCard
@@ -47,7 +48,7 @@ class TitleCard:
                                             CardType object.
         """
         
-        # Store this card's associated episode/profile.
+        # Store this card's associated episode and profile
         self.episode = episode
         self.profile = profile
         
@@ -55,12 +56,11 @@ class TitleCard:
         self.maker = self.episode.card_class(
             source=episode.source,
             output_file=episode.destination,
-            title=episode.title.apply_profile(profile, **title_characteristics),
-            season_text=profile.get_season_text(
-                episode.season_number, episode.abs_number
-            ), episode_text=profile.get_episode_text(
-                episode.episode_number, episode.abs_number
-            ), font=profile.font,
+            title=episode.episode_info.title.apply_profile(
+                profile, **title_characteristics
+            ), season_text=profile.get_season_text(episode.episode_info),
+            episode_text=profile.get_episode_text(episode.episode_info),
+            font=profile.font,
             font_size=profile.font_size,
             title_color=profile.font_color,
             hide_season=profile.hide_season_title,
@@ -73,7 +73,7 @@ class TitleCard:
         
     @staticmethod
     def get_output_filename(format_string: str, series_info: 'SeriesInfo', 
-                            datafile_entry: dict,
+                            episode_info: 'EpisodeInfo',
                             media_directory: 'Path') -> 'Path':
         """
         Get the output filename for a title card described by the given values.
@@ -81,30 +81,26 @@ class TitleCard:
         :param      format_string:      Format string that specifies how to 
                                         construct the filename.
         :param      series_info:        Series info pertaining to this entry
-        :param      datafile_entry:     Episode data of an entry, as returned
-                                        by a DataFileInterface. 
+        :param      episode_info:       Episode info to get the output of.
         :param      media_directory:    Top-level media directory.
         
         :returns:   Path for the full title card destination.
         """
         
-        # Get season number for this entry
-        season_number = datafile_entry['season_number']
-        
         # Get the season folder for this entry's season
-        if season_number == 0:
+        if episode_info.season_number == 0:
             season_folder = 'Specials'
         else:
-            season_folder = f'Season {season_number}'
+            season_folder = f'Season {episode_info.season_number}'
         
         # Get filename from the given format string
         filename = format_string.format(
             name=series_info.name,
             full_name=series_info.full_name,
             year=series_info.year,
-            season=season_number,
-            episode=datafile_entry['episode_number'],
-            title=datafile_entry['title'].full_title,
+            season=episode_info.season_number,
+            episode=episode_info.episode_number,
+            title=episode_info.title.full_title,
         )
         
         # Add card extension
@@ -116,13 +112,12 @@ class TitleCard:
     @staticmethod
     def validate_card_format_string(format_string: str) -> bool:
         """
-        Return whether the given card filename format string is valid or
-        not.
+        Return whether the given card filename format string is valid or not.
         
         :param      format_string:  Format string being validated.
         
-        :returns:   True if the given string can be formatted correctly,
-                    False otherwise.
+        :returns:   True if the given string can be formatted correctly, False
+                    otherwise.
         """
         
         try:
