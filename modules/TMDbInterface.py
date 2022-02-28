@@ -140,13 +140,6 @@ class TMDbInterface(WebInterface):
 
 
     @staticmethod
-    def manually_specify_id(title: str, year: int, id_: int) -> None:
-        """Public (static) implementation of `__add_id_to_map()`."""
-
-        TMDbInterface(None).__add_id_to_map(title, year, id_)
-
-
-    @staticmethod
     def manually_download_season(api_key: str, title: str, year: int,
                                  season: int, episode_count: int,
                                  directory: Path) -> None:
