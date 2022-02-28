@@ -70,6 +70,21 @@ class EpisodeInfo:
         return f'{self.season_number}-{self.episode_number+count}'
 
 
+    def __eq__(self, other_info: 'EpisodeInfo') -> bool:
+        """
+
+        """
+
+        if not isinstance(other_info, EpisodeInfo):
+            raise TypeError(f'Can only compare equality between EpisodeInfo'
+                            f' objects')
+
+        season_match = (self.season_number == other_info.season_number)
+        episode_match = (self.episode_number == other_info.episode_number)
+
+        return season_match and episode_match 
+
+
     def set_abs_number(self, abs_number: int) -> None:
         """
         Sets the absolute number.

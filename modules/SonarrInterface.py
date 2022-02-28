@@ -217,4 +217,23 @@ class SonarrInterface(WebInterface):
             error(f'Series "{series_info}" not found in Sonarr')
             return None
 
+
+    def set_all_episode_ids(self, series_info: SeriesInfo,
+                            all_episode_info: [EpisodeInfo]) -> None:
+        """
+        Sets the episode identifiers.
+        
+        :param      episode_info:  The episode information
+        """
+
+        # Set the Sonarr ID for this series
+        self.__set_ids(series_info)
+
+        # Get all sonarr-created EpisodeInfo objects
+        sonarr_episode_info = self.get_all_episodes_for_series(series_info)
+
+        # Go through each episode 
+        for episode_info in all_episode_info:
+            
+
         
