@@ -128,4 +128,20 @@ class EpisodeInfo:
         """
 
         self.tmdb_id = int(tmdb_id)
+
+
+    def copy_ids(self, other: 'EpisodeInfo') -> None:
+        """
+        { function_description }
+        
+        :param      other:  The other
+        """
+
+        if not isinstance(other, EpisodeInfo):
+            raise TypeError(f"Can only copy ID's from another EpisodeInfo "
+                            f"object")
+
+        self.sonarr_id = other.sonarr_id
+        self.tvdb_id = other.tvdb_id
+        self.tmdb_id = other.tmdb_id
         

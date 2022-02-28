@@ -219,10 +219,13 @@ class SonarrInterface(WebInterface):
 
 
     def set_all_episode_ids(self, series_info: SeriesInfo,
-                            all_episode_info: [EpisodeInfo]) -> None:
+                            all_episodes: [EpisodeInfo]) -> None:
         """
-        Sets the episode identifiers.
+        Set all the episode ID's for the given list of EpisodeInfo objects. This
+        sets the Sonarr and TVDb ID's for each episode. As a byproduct, this
+        also updates the series ID's for the SeriesInfo object
         
+        :param      series_info:    SeriesInfo for the entry.
         :param      episode_info:  The episode information
         """
 
@@ -230,10 +233,16 @@ class SonarrInterface(WebInterface):
         self.__set_ids(series_info)
 
         # Get all sonarr-created EpisodeInfo objects
-        sonarr_episode_info = self.get_all_episodes_for_series(series_info)
+        all_sonarr_episodes = self.get_all_episodes_for_series(series_info)
 
         # Go through each episode 
-        for episode_info in all_episode_info:
-            
+        for episode in all_episodes:
+            # Find the matching EpisodeInfo object returned by Sonarr
+            for sonarr_info in all_sonarr_episodes:
+                # If these objects correspond to the same data, transfer ID's
+                # from the Sonarr EpisodeInfo objects to the primary ones
+                if episode.episode_info == sonarr_info:
+                    episode.episode_info.copy_ids(sonarr_info)
+                    break
 
         
