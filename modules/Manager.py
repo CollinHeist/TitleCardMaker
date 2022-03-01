@@ -124,13 +124,12 @@ class Manager:
                                  f'"{show.series_info.short_name}"')
 
             # Pass the TMDbInterface to the show if globally enabled
-            if self.preferences.use_tmdb:
-                if self.preferences.use_sonarr:
-                    created = show.create_missing_title_cards(
-                        self.tmdb_interface, self.sonarr_interface
-                    )
-                else:
-                    created=show.create_missing_title_cards(self.tmdb_interface)
+            if self.preferences.use_tmdb and self.preferences.use_sonarr:
+                created = show.create_missing_title_cards(
+                    self.tmdb_interface, self.sonarr_interface
+                )
+            elif self.preferences.use_tmdb:
+                created = show.create_missing_title_cards(self.tmdb_interface)
             else:
                 created = show.create_missing_title_cards()
 
@@ -157,8 +156,12 @@ class Manager:
             pbar.set_description(f'Updating archive for '
                                  f'"{show_archive.series_info.short_name}"')
 
-            # If TMDb is globally enabled, pass the interface along
-            if self.preferences.use_tmdb:
+            # Depending on which interfaces are enabled, pass those along
+            if self.preferences.use_tmdb and self.preferences.use_sonarr:
+                show_archive.update_archive(
+                    self.tmdb_interface, self.sonarr_interface
+                )
+            elif self.preferences.use_tmdb:
                 show_archive.update_archive(self.tmdb_interface)
             else:
                 show_archive.update_archive()

@@ -57,9 +57,6 @@ sonarr_group.add_argument('--sonarr-list-ids', action='store_true',
 
 # Argument group for fixes relating to TheMovieDatabase
 tmdb_group = parser.add_argument_group('TheMovieDatabase', 'Fixes for how the Maker interacts with TheMovieDatabase')
-tmdb_group.add_argument('--tmdb-force-id', type=str, nargs=3, default=SUPPRESS, action='append',
-                        metavar=('TITLE', 'YEAR', 'TMDB_ID'),
-                        help='Manually specify an ID for a show')
 tmdb_group.add_argument('--tmdb-download-images', nargs=6, default=SUPPRESS, action='append',
                         metavar=('API_KEY', 'TITLE', 'YEAR', 'SEASON', 'EPISODES', 'DIRECTORY'),
                         help='Download the best title card source image for the given episode')
@@ -126,12 +123,6 @@ if args.sonarr_list_ids:
 if hasattr(args, 'delete_blacklist'):
     if args.delete_blacklist:
         TMDbInterface.delete_blacklist()
-
-if hasattr(args, 'tmdb_force_id'):
-    for arg_set in args.tmdb_force_id:
-        TMDbInterface.manually_specify_id(
-            title=arg_set[0], year=arg_set[1], id_=arg_set[2]
-        )
 
 if hasattr(args, 'tmdb_download_images'):
     for arg_set in args.tmdb_download_images:
