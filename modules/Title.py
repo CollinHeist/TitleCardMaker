@@ -47,8 +47,7 @@ class Title:
         self.title_yaml = title
 
         # Generate title to use for matching purposes
-        match_func = lambda c: match('[a-zA-Z0-9]', c)
-        self.match_title = ''.join(filter(match_func, title)).lower()
+        self.match_title = self.get_matching_title(self.full_title)
 
 
     def __str__(self) -> str:
@@ -217,4 +216,32 @@ class Title:
 
         # Call split on the new title, join those lines
         return '\n'.join(new_title.split(**title_characteristics))
+
+
+    @staticmethod
+    def get_matching_title(text: str) -> str:
+        """
+        Remove all non A-Z characters from the given title.
+        
+        :param      text:   The title to strip of special characters.
+        
+        :returns:   The input `text` with all non A-Z characters removed.
+        """
+
+        return ''.join(filter(lambda c: match('[a-zA-Z0-9]', c), text)).lower()
+
+
+    def matches(self, *titles: tuple) -> bool:
+        """
+        Get whether any of the given titles match this Series.
+        
+        :param      titles: The titles to check
+        
+        :returns:   True if any of the given titles match this series, False
+                    otherwise.
+        """
+
+        matching_titles = map(self.get_matching_title, titles)
+
+        return any(title == self.match_title for title in matching_titles)
         

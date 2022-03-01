@@ -1,26 +1,33 @@
 class EpisodeInfo:
     """
-    This class describes static information about an Episode.
+    This class describes static information about an Episode, such as the
+    season, episode, and absolute number, as well as the various ID's associated
+    with it - such as Sonarr, TVDb, and TMDb.
     """
 
     def __init__(self, title: 'Title', season_number: int, episode_number: int,
                  abs_number: int=None) -> None:
         """
-        Constructs a new instance.
+        Constructs a new instance of an EpisdeInfo object.
         
-        :param      title:           The title
-        :param      season_number:   The season number
-        :param      episode_number:  The episode number
-        :param      abs_number:      The absolute number
+        :param      title:           The Title object for this entry.
+        :param      season_number:   The season number for this entry.
+        :param      episode_number:  The episode number for this entry.
+        :param      abs_number:      The absolute episode number for this entry.
         """
 
         # Store title
         self.title = title
 
-        # Store index
+        # Store indices
         self.season_number = int(season_number)
+        self.season = self.season_number
+
         self.episode_number = int(episode_number)
+        self.episode = self.episode_number
+
         self.abs_number = None if abs_number == None else int(abs_number)
+        self.abs = self.abs_number
 
         # Create key for unique indexing associated with this Episode
         self.key = f'{self.season_number}-{self.episode_number}'
@@ -70,21 +77,45 @@ class EpisodeInfo:
         return f'{self.season_number}-{self.episode_number+count}'
 
 
-    def set_abs_number(self, abs_number: int) -> None:
+    def __eq__(self, other_info: 'EpisodeInfo') -> bool:
         """
-        Sets the absolute number.
-        
-        :param      abs_number:  The absolute number
+        Returns whether the given EpisodeInfo object corresponds to the same
+        entry (has the same season and episode index).
+
+        :param      other_info: EpisodeInfo object to compare.
+
+        :returns:   True if the season and episode number of the two objects
+                    match, False otherwise.
         """
 
-        self.abs_number = abs_number
+        # Verify the comparison is another EpisodeInfo object
+        if not isinstance(other_info, EpisodeInfo):
+            raise TypeError(f'Can only compare equality between EpisodeInfo'
+                            f' objects')
+
+        # Equality is determined by season and episode number only
+        season_match = (self.season_number == other_info.season_number)
+        episode_match = (self.episode_number == other_info.episode_number)
+
+        return season_match and episode_match 
+
+
+    def set_abs_number(self, abs_number: int) -> None:
+        """
+        Set the absolute number for this object.
+        
+        :param      abs_number:  The absolute number to set.
+        """
+
+        self.abs_number = int(abs_number)
+        self.abs = self.abs_number
 
 
     def set_sonarr_id(self, sonarr_id: int) -> None:
         """
-        Sets the sonarr identifier.
+        Sets the Sonarr ID for this object.
         
-        :param      sonarr_id:  The sonarr identifier
+        :param      tmdb_id:  The Sonarr ID to set.
         """
 
         self.sonarr_id = int(sonarr_id)
@@ -92,9 +123,9 @@ class EpisodeInfo:
 
     def set_tvdb_id(self, tvdb_id: int) -> None:
         """
-        Sets the tvdb identifier.
+        Sets the TVDb ID for this object.
         
-        :param      tvdb_id:  The tvdb identifier
+        :param      tmdb_id:  The TVDb ID to set.
         """
 
         self.tvdb_id = int(tvdb_id)
@@ -102,10 +133,26 @@ class EpisodeInfo:
 
     def set_tmdb_id(self, tmdb_id: int) -> None:
         """
-        Sets the tmdb identifier.
+        Sets the TMDb ID for this object.
         
-        :param      tmdb_id:  The tmdb identifier
+        :param      tmdb_id:  The TMDb ID to set.
         """
 
         self.tmdb_id = int(tmdb_id)
+
+
+    def copy_ids(self, other: 'EpisodeInfo') -> None:
+        """
+        Copy all ID's from the given EpisodeInfo object. This copies the Sonarr,
+        TVDb, and TMDb ID's.
+        
+        :param      other:  The EpisodeInfo object to copy ID's from.
+        """
+
+        if not isinstance(other, EpisodeInfo):
+            raise TypeError(f"Can only copy ID's from EpisodeInfo objects")
+
+        self.sonarr_id = other.sonarr_id
+        self.tvdb_id = other.tvdb_id
+        self.tmdb_id = other.tmdb_id
         
