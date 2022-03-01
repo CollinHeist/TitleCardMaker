@@ -216,7 +216,7 @@ class TMDbInterface(WebInterface):
 
         1. Episode TVDb ID
         2. Series TMDb ID and season+episode index with title match
-        3. Series TMDb ID and season+absolute episode # with title match
+        3. Series TMDb ID and season+absolute episode index with title match
         3. Series TMDb ID and title match on any episode
         
         :param      series_info:   The series information.
@@ -234,7 +234,7 @@ class TMDbInterface(WebInterface):
             params = {'api_key': self.__api_key, 'external_source': 'tvdb_id'}
             results = self._get(url, params)['tv_episode_results']
 
-            # If an episode was found, return it's index
+            # If an episode was found, return its index
             if len(results) > 0:
                 # Verify series TMDb ID is correct
                 if series_info.tmdb_id not in (results[0]['show_id'], None):
@@ -242,7 +242,7 @@ class TMDbInterface(WebInterface):
                 
                 # Set series TMDb ID
                 series_info.set_tmdb_id(results[0]['show_id'])
-                info(f'Found {episode_info} via TVDb ID')
+
                 return {
                     'season': results[0]['season_number'],
                     'episode': results[0]['episode_number'],
@@ -273,6 +273,10 @@ class TMDbInterface(WebInterface):
         # Episode has been found on TMDb, check title
         if 'name' in tmdb_info and episode_info.title.matches(tmdb_info['name']):
             # Title matches, return the resulting season/episode number
+            if episode_info.tvdb_id != None:
+                info(f'Add TVDb ID {episode_info.tvdb_id} to TMDb "'
+                     f'{series_info.full_name}" {episode_info}')
+
             return {
                 'season': tmdb_info['season_number'],
                 'episode': tmdb_info['episode_number'],
@@ -294,10 +298,14 @@ class TMDbInterface(WebInterface):
             for tmdb_episode in tmdb_season['episodes']:
                 if episode_info.title.matches(tmdb_episode['name']):
                     # Title match, return this entry
+                    info(f'Found {episode_info!r} under TMDb '
+                         f'S{tmdb_episode["season_number"]:02}'
+                         f'E{tmdb_episode["episode_number"]:02} - possible mismatch')
                     return {
                         'season': tmdb_episode['season_number'],
                         'episode': tmdb_episode['episode_number'],
                     }
+                    
         return None
 
 
