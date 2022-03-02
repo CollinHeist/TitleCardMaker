@@ -70,7 +70,7 @@ class Show:
         self.library = None
         self.card_class = TitleCard.CARD_TYPES[self.preferences.card_type]
         self.source_directory = source_directory / self.series_info.full_name
-        self.episode_text_format = 'EPISODE {episode_number}'
+        self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
         self.archive = True
         self.sonarr_sync = True
         self.tmdb_sync = True
