@@ -50,7 +50,7 @@ class Episode:
         """Returns a string representation of the object."""
 
         return (f'<Episode episode_info={self.episode_info}, card_class='
-               f'{self.card_class}, source={self.source}, destination='
-               f'{self.destination}, extras={self.extra_characteristics}')
+                f'{self.card_class}, source={self.source}, destination='
+                f'{self.destination}, extras={self.extra_characteristics}')
 
         
