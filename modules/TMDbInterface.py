@@ -373,7 +373,7 @@ class TMDbInterface(WebInterface):
         # If None was returned, episode not found - warn, blacklist, and exit
         if index == None:
             warn(f'TMDb has no matching episode for "{series_info}" '
-                 f'{episode_info}', 1)
+                 f'{episode_info}')
             self.__update_blacklist(series_info, episode_info)
             return None
 

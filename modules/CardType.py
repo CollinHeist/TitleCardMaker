@@ -28,7 +28,7 @@ class CardType(ImageMaker):
         'lower': str.lower,
         'title': titlecase,
     }
-    
+
     """Default episode text format string, can be overwritten by each class"""
     EPISODE_TEXT_FORMAT = 'EPISODE {episode_number}'
 

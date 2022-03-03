@@ -1,61 +1,93 @@
-from pathlib import Path
+from copy import deepcopy
 
-# from modules.Debug import info, warn, error
+from modules.TitleCard import TitleCard
 
 class MultiEpisode:
-    def __init__(self, episode_infos: ['EpisodeInfo'], card_class: 'CardType',
-                 base_source: Path, destination: Path, **extras: dict) -> None:
+    """
+    This class describes a MultiEpisode, which is a 'type' (essentially a 
+    subclass) of Episode but describes a range of sequential episodes within a
+    single season for a given series. The MultiEpisode uses the first episode's
+    (sequentially) episode info and source.
+    """
+
+    def __init__(self, episodes: ['Episode'], title: 'Title') -> None:
+        """
+        Constructs a new instance.
+        
+        :param      episodes:       Episodes this object describes.
+        :param      title:          The modified title that describes these
+                                    multiple episodes.
         """
         
-        """
-        
-        # If episode infos is 0-length, error
-        if len(episode_infos) == 0:
-            raise ValueError(f'No EpisodeInfo objects provided')
+        # Verify at least two episodes have been provided
+        if len(episodes) < 2:
+            raise ValueError(f'MultiEpisode requires at least 2 Episodes')
         
         # Verify all episodes are from the same season
+        episode_infos = tuple(map(lambda e: e.episode_info, episodes))
         if not all(episode_info.season_number == episode_infos[0].season_number
                    for episode_info in episode_infos):
-            raise ValueError(f'Given set of EpisodeInfo objects must be from'
-                             f' the same season.')
+            raise ValueError(f'Given set of EpisodeInfo objects must be from '
+                             f'the same season.')
+
+        # Get the season for this episode set
+        self.season_number = episode_infos[0].season_number
         
         # Get the episode range for the given episode set
         episode_numbers = tuple(map(lambda e: e.episode_number, episode_infos))
-        self.start_episode = min(episode_numbers)
-        self.end_episode = max(episode_numbers)
+        self.episode_start = min(episode_numbers)
+        self.episode_end = max(episode_numbers)
         
-        # If all episode have absolute numbers, get their absolute range
-        self.start_abs, self.end_abs = None, None
+        # If all episode have absolute numbers, get their range
+        self.abs_start, self.abs_end = None, None
         if all(e.abs_number != None for e in episode_infos):
             abs_numbers = tuple(map(lambda e: e.abs_number, episode_infos))
-            self.start_abs = min(abs_numbers)
-            self.end_abs = max(abs_numbers)
+            self.abs_start = min(abs_numbers)
+            self.abs_end = max(abs_numbers)
         
         # Get the first episde in the set
-        for episode_info in episode_infos:
-            if episode_info.episode_number == self.start_episode:
-                first_episode = episode_info
+        for episode in episodes:
+            if episode.episode_info.episode_number == self.episode_start:
+                first_episode = episode
                 break
                    
-        # Set object attributes
-        self.episode_info = first_episode
-        self.card_class = card_class
+        # Set object attributes from first episode
+        self.episode_info = deepcopy(first_episode.episode_info)
+        self.card_class = first_episode.card_class
+        self.source = first_episode.source
+        self.extra_characteristics = first_episode.extra_characteristics
 
-        # Set source/destination paths
-        source_name = (f's{first_episode.season_number}'
-                       f'e{first_episode.episode_number}'
-                       f'{TitleCard.INPUT_CARD_EXTENSION}')
-        self.source = base_source / source_name
-        self.destination = destination
+        # Override title, set blank destination
+        self.episode_info.title = title
+        self.destination = None
 
-        # Store extra characteristics
-        self.extra_characteristics = extras
+
+    def __repr__(self) -> str:
+        """Returns a unambiguous string representation of the object"""
+
+        ret = (f'<MultiEpisode episode_start={self.episode_start}, episode_end='
+               f'{self.episode_end}, title={self.episode_info.title}, '
+               f'destination={self.destination}')
+        ret += f', abs_start={self.abs_start}' if self.abs_start != None else ''
+        ret += f', abs_end={self.abs_end}' if self.abs_end != None else ''
+
+        return f'{ret}>'
         
         
     @staticmethod
     def modify_format_string(episode_format_string: str) -> str:
         """
+        Modify the given episode text format string to be suitable for a
+        MultiEpisode. This replaces {abs_number} or {episode_number} with
+        {abs_start}-{abs_end} and {episode_start}-{episode_end}, and adds an S
+        to the preceding text. For example:
+
+        >>> modify_format_string('EPISODE {abs_number}')
+        'EPISODES {abs_start}-{abs_end}'
         
+        :param      episode_format_string:  The episode format string to modify.
+        
+        :returns:   The modified multiple'd format string.
         """
         
         if ' {abs_number}' in episode_format_string:
@@ -63,10 +95,20 @@ class MultiEpisode:
             pre, post = episode_format_string.split(' {abs_number}')
 
             return pre + 'S {abs_start}-{abs_end}' + post
-        elif ' {episode_number}' in episode_format_string:
-            # Split for episode numbers
-            pre, post = episode_format_string.split(' {episode_number}')
 
-            return pre + 'S {episode_start}-{episode_end}' + post
-        else:
-            raise ValueError('Format string is missing "{abs_number}" or "{episode_number}" text')
+        # Split for episode numbers
+        pre, post = episode_format_string.split(' {episode_number}')
+
+        return pre + 'S {episode_start}-{episode_end}' + post
+
+
+    def set_destination(self, destination: 'Path') -> None:
+        """
+        Sets the destination.
+        
+        :param      destination:    The destination for the card that is created
+                                    for these episodes.
+        """
+
+        self.destination = destination
+        
