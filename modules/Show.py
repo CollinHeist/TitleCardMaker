@@ -1,3 +1,4 @@
+from copy import deepcopy
 from pathlib import Path
 from re import match
 
@@ -10,6 +11,7 @@ from modules.Debug import info, warn, error
 from modules.Episode import Episode
 from modules.EpisodeInfo import EpisodeInfo
 import modules.preferences as global_preferences
+from modules.MultiEpisode import MultiEpisode
 from modules.Profile import Profile
 from modules.SeriesInfo import SeriesInfo
 from modules.TitleCard import TitleCard
@@ -315,6 +317,72 @@ class Show:
             )
 
 
+    def find_multipart_episodes(self) -> None:
+        """
+        Find and create all the multipart episodes for this series. This adds
+        MutliEpisode objects to this show's episodes dictionary.
+        """
+
+        # Set of episodes already mapped
+        matched = set()
+
+        # List of multipart episodes
+        multiparts = []
+
+        # Go through each episode to check if it can be made into a MultiEpisode
+        for _, episode in self.episodes.items():
+            # If this episode has already been used in MultiEpisode, skip
+            if episode in matched:
+                continue
+
+            # Get the partless title for this episode, and match within season
+            partless_title = episode.episode_info.title.get_partless_title()
+            season_number = episode.episode_info.season_number
+
+            # Sublist of all matching episodes
+            matching_episodes = [episode]
+
+            # Check if the next sequential episode is a multiparter
+            next_key = episode.episode_info + 1
+            while next_key in self.episodes:
+                # Get the next episode
+                next_episode = self.episodes[next_key]
+                next_title =next_episode.episode_info.title.get_partless_title()
+
+                # If this next episode's partless title matches, add to list
+                if partless_title == next_title:
+                    matching_episodes.append(next_episode)
+                else:
+                    break
+
+                # Move to next episode
+                next_key = next_episode.episode_info + 1
+
+            # If there are matching episodes, add to multiparts list
+            if len(matching_episodes) > 1:
+                # Create a MultiEpisode object for these episodes and new title
+                multi = MultiEpisode(matching_episodes, Title(partless_title))
+
+                destination = None
+                if self.media_directory:
+                    # Get the output filename for this multiepisode card
+                    destination = TitleCard.get_multi_output_filename(
+                        self.preferences.card_filename_format,
+                        self.series_info,
+                        multi,
+                        self.media_directory,
+                    )
+                    multi.set_destination(destination)
+                
+                # Add MultiEpisode to list
+                multiparts.append(multi)
+                matched.update(set(matching_episodes))
+        
+        # Add all MultiEpisode objects to this show's episode dictionary
+        for ind, mp in enumerate(multiparts):
+            self.episodes[f'MultiEpisode {ind}'] = mp
+
+
     def check_sonarr_for_new_episodes(self,
                                       sonarr_interface:'SonarrInterface')->bool:
         """
@@ -390,7 +458,7 @@ class Show:
             # Skip episodes whose destination is None (don't create) or does exist
             if not episode.destination or episode.destination.exists():
                 continue
-                
+
             # Attempt to make a TitleCard object for this episode and profile
             # passing any extra characteristics from the episode along
             title_card = TitleCard(
@@ -421,6 +489,7 @@ class Show:
 
             # Source exists, create the title card
             created_new_cards |= title_card.create()
+            info(f'Created card {episode}')
 
         return created_new_cards
 

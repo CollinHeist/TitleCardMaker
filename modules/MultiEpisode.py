@@ -62,6 +62,12 @@ class MultiEpisode:
         self.destination = None
 
 
+    def __str__(self) -> str:
+        """Returns a string representation of the object."""
+
+        return f'E{self.episode_start}-E{self.episode_end}'
+
+
     def __repr__(self) -> str:
         """Returns a unambiguous string representation of the object"""
 
