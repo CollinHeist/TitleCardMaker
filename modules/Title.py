@@ -1,4 +1,4 @@
-from re import match
+from re import match, IGNORECASE
 
 from modules.Debug import info, warn, error
 
@@ -66,6 +66,25 @@ class Title:
         """
 
         return f'<Title title="{self.full_title}", lines={self.__title_lines}>'
+
+
+    def get_partless_title(self) -> str:
+        """
+        Gets the partless title.
+        
+        :returns:   The partless title.
+        """
+
+        # Match for "title" (digit)
+        if (partless := match(r'^(.*?)\s*\(\d+\)', self.full_title)):
+            return partless.group(1)
+
+        # Match "title" - Part (digit) or "title": Part (digit)
+        if (partless := match(r'^(.*?)(?::|\s*-|,)\s*Part \d*', self.full_title,
+                              IGNORECASE)):
+            return partless.group(1)
+
+        return self.full_title
 
 
     def split(self, max_line_width: int, max_line_count: int,

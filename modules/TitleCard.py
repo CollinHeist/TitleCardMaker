@@ -1,4 +1,5 @@
-from modules.Debug import *
+from re import match, sub, IGNORECASE
+
 from modules.Debug import info, warn, error
 
 # CardType classes
@@ -59,7 +60,7 @@ class TitleCard:
             title=episode.episode_info.title.apply_profile(
                 profile, **title_characteristics
             ), season_text=profile.get_season_text(episode.episode_info),
-            episode_text=profile.get_episode_text(episode.episode_info),
+            episode_text=profile.get_episode_text(episode),
             font=profile.font,
             font_size=profile.font_size,
             title_color=profile.font_color,
@@ -80,7 +81,7 @@ class TitleCard:
         
         :param      format_string:      Format string that specifies how to 
                                         construct the filename.
-        :param      series_info:        Series info pertaining to this entry
+        :param      series_info:        Series info pertaining to this entry.
         :param      episode_info:       Episode info to get the output of.
         :param      media_directory:    Top-level media directory.
         
@@ -103,6 +104,64 @@ class TitleCard:
             title=episode_info.title.full_title,
         )
         
+        # Add card extension
+        filename += TitleCard.OUTPUT_CARD_EXTENSION
+        
+        return media_directory / season_folder / filename
+
+
+    @staticmethod
+    def get_multi_output_filename(format_string: str, series_info: 'SeriesInfo',
+                                  multi_episode: 'MultiEpisode',
+                                  media_directory: 'Path') -> 'Path':
+        """
+        Get the output filename for a title card described by the given values,
+        and that represents a range of Episodes (not just one).
+        
+        :param      format_string:  Format string that specifies how to
+                                    construct the filename.
+        :param      series_info:    Series info pertaining to this entry
+        :param      multi_episode:  
+        :returns:   
+        """
+
+        # Replace existing episode number reference with episode start number
+        mod_format_string = format_string.replace('episode', 'episode_start')
+
+        # Episode number formatting with prefix
+        episode_text = match(
+            r'.*?(e?{episode_start.*?})',
+            mod_format_string,
+            IGNORECASE
+        ).group(1)
+
+        # Duplicate episode text format for end text format
+        end_episode_text = episode_text.replace('episode_start', 'episode_end')
+
+        # Range of episode numbers
+        range_text = f'{episode_text}-{end_episode_text}'
+
+        # Completely modified format string with keys for start/end episodes
+        modified_format_string = sub(r'e?{episode_start.*?}', range_text,
+                                     mod_format_string, flags=IGNORECASE)
+
+        # # Get the season folder for these episodes
+        if multi_episode.season_number == 0:
+            season_folder = 'Specials'
+        else:
+            season_folder = f'Season {multi_episode.season_number}'
+
+        # Get filename from the modified format string
+        filename = modified_format_string.format(
+            name=series_info.name,
+            full_name=series_info.full_name,
+            year=series_info.year,
+            season=multi_episode.season_number,
+            episode_start=multi_episode.episode_start,
+            episode_end=multi_episode.episode_end,
+            title=multi_episode.episode_info.title.full_title,
+        )
+
         # Add card extension
         filename += TitleCard.OUTPUT_CARD_EXTENSION
         
@@ -136,7 +195,7 @@ class TitleCard:
         Create this title card. If the card already exists, a new one is not 
         created. Return whether a card was created.
 
-        :returns:   True if a title card was created, otherwise False.
+        :returns:   True if a title card was created, False otherwise.
         """
 
         # If the card already exists, exit

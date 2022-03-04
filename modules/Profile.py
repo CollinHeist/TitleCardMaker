@@ -1,7 +1,8 @@
 from regex import match, IGNORECASE
 
-from modules.Debug import *
 from modules.CardType import CardType
+from modules.Debug import info, warn, error
+from modules.MultiEpisode import MultiEpisode
 from modules.StandardTitleCard import StandardTitleCard
 
 class Profile:
@@ -161,7 +162,7 @@ class Profile:
         return self.__episode_range[episode_info.abs_number]
 
 
-    def get_episode_text(self, episode_info: 'EpisodeInfo')-> str:
+    def get_episode_text(self, episode: 'Episode') -> str:
         """
         Gets the episode text for the given episode info, as defined by this
         profile.
@@ -171,20 +172,39 @@ class Profile:
         :returns:   The episode text defined by this profile.
         """
 
-        # Custom season tag can also indicate custom episode text format
-        if self.__use_custom_seasons:
-            # Warn if absolute isn't given, but is requested
-            if ('{abs_number}' in self.episode_text_format
-                and episode_info.abs_number == None):
+        # Warn if absolute number is requested but not present
+        if (self.__use_custom_seasons and '{abs_' in self.episode_text_format
+            and episode.episode_info.abs_number == None):
                 warn(f'Episode text formatting uses absolute episode number, '
-                     f'but episode {episode_info} has no absolute number.')
+                     f'but episode {episode} has no absolute number')
 
-            return self.episode_text_format.format(
-                episode_number=episode_info.episode_number,
-                abs_number=episode_info.abs_number,
+        # Format MultiEpisode episode text
+        if isinstance(episode, MultiEpisode):
+            # If no custom season/episode text, use card class standard
+            new_etf = episode.modify_format_string(
+                self.episode_text_format
+                if self.__use_custom_seasons else
+                episode.card_class.EPISODE_TEXT_FORMAT
             )
 
-        return f'EPISODE {episode_info.episode_number}'
+            return new_etf.format(
+                episode_start=episode.episode_start,
+                episode_end=episode.episode_end,
+                abs_start=episode.abs_start,
+                abs_end=episode.abs_end,
+            )
+
+        # Standard Episode class
+        if self.__use_custom_seasons:
+            return self.episode_text_format.format(
+                episode_number=episode.episode_info.episode_number,
+                abs_number=episode.episode_info.abs_number,
+            )
+
+        return episode.card_class.EPISODE_TEXT_FORMAT.format(
+            episode_number=episode.episode_info.episode_number,
+            abs_number=episode.episode_info.abs_number, 
+        )
 
 
     def __remove_episode_text_format(self, title_text: str) -> str:
