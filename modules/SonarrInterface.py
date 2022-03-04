@@ -203,7 +203,6 @@ class SonarrInterface(WebInterface):
         # If no ID was returned, error and return an empty list
         if series_info.sonarr_id == None:
             error(f'Series "{series_info}" not found in Sonarr')
-            breakpoint()
             return []
 
         return self.__get_all_episode_info(series_info.sonarr_id)
