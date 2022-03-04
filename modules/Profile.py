@@ -175,8 +175,8 @@ class Profile:
         # Warn if absolute number is requested but not present
         if (self.__use_custom_seasons and '{abs_' in self.episode_text_format
             and episode.episode_info.abs_number == None):
-                warn(f'Episode text formatting uses absolute episode number'
-                     f', but episode {episode_info} has no absolute number')
+                warn(f'Episode text formatting uses absolute episode number, '
+                     f'but episode {episode} has no absolute number')
 
         # Format MultiEpisode episode text
         if isinstance(episode, MultiEpisode):

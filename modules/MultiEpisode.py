@@ -65,7 +65,8 @@ class MultiEpisode:
     def __str__(self) -> str:
         """Returns a string representation of the object."""
 
-        return f'E{self.episode_start}-E{self.episode_end}'
+        return (f'S{self.season_number:02}'
+                f'E{self.episode_start}-E{self.episode_end}')
 
 
     def __repr__(self) -> str:

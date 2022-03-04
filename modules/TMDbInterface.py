@@ -236,10 +236,6 @@ class TMDbInterface(WebInterface):
 
             # If an episode was found, return its index
             if len(results) > 0:
-                # Verify series TMDb ID is correct
-                if series_info.tmdb_id not in (results[0]['show_id'], None):
-                    warn(f'Series TMDb ID mismatch for {episode_info}')
-                
                 # Set series TMDb ID
                 series_info.set_tmdb_id(results[0]['show_id'])
 
@@ -291,16 +287,12 @@ class TMDbInterface(WebInterface):
 
             # If the season DNE, this episode cannot be found
             if 'success' in tmdb_season and not tmdb_season['success']:
-                warn(f'Tried every season, {episode_info} not found by title')
                 return None
 
             # Season could be found, check each given title
             for tmdb_episode in tmdb_season['episodes']:
                 if episode_info.title.matches(tmdb_episode['name']):
                     # Title match, return this entry
-                    info(f'Found {episode_info!r} under TMDb '
-                         f'S{tmdb_episode["season_number"]:02}'
-                         f'E{tmdb_episode["episode_number"]:02} - possible mismatch')
                     return {
                         'season': tmdb_episode['season_number'],
                         'episode': tmdb_episode['episode_number'],
