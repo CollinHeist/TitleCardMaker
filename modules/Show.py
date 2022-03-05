@@ -118,8 +118,14 @@ class Show:
         self.episodes = {}
 
 
+    def __str__(self) -> str:
+        """Returns a string representation of the object."""
+
+        return self.series_info.full_name
+
+
     def __repr__(self) -> str:
-        """Returns a unambiguous string representation of the object"""
+        """Returns an unambiguous string representation of the object"""
 
         return f'<Show "{self.series_info}" with {len(self.episodes)} Episodes>'
 
@@ -255,10 +261,9 @@ class Show:
         Determines whether the given attribute/sub-attribute has been manually 
         specified in the show's YAML.
         
-        :param      attribute:      The attribute to check for.
-        :param      sub_attribute:  The sub attribute to check for. Necessary if
-                                    the given attribute has attributes of its
-                                    own.
+        :param      attributes: Any number of attributes to check for. Each
+                                subsequent argument is checked for as a sub-
+                                attribute of the prior one.
         
         :returns:   True if specified, False otherwise.
         """
@@ -379,8 +384,8 @@ class Show:
                 matched.update(set(matching_episodes))
         
         # Add all MultiEpisode objects to this show's episode dictionary
-        for ind, mp in enumerate(multiparts):
-            self.episodes[f'MultiEpisode {ind}'] = mp
+        for mp in multiparts:
+            self.episodes[f'{mp.season_number}-{mp.episode_start}'] = mp
 
 
     def check_sonarr_for_new_episodes(self,
@@ -486,7 +491,7 @@ class Show:
 
                 # Download the image
                 tmdb_interface.download_image(image_url, episode.source)
-                
+
             # Source exists, create the title card
             created_new_cards |= title_card.create()
 

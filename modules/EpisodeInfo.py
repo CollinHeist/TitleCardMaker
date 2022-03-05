@@ -10,10 +10,10 @@ class EpisodeInfo:
         """
         Constructs a new instance of an EpisdeInfo object.
         
-        :param      title:           The Title object for this entry.
-        :param      season_number:   The season number for this entry.
-        :param      episode_number:  The episode number for this entry.
-        :param      abs_number:      The absolute episode number for this entry.
+        :param      title:          The Title object of this Episode.
+        :param      season_number:  The season number of this Episode.
+        :param      episode_number: The episode number of this Episode.
+        :param      abs_number:     The absolute episode number of this Episode.
         """
 
         # Store title
@@ -45,7 +45,7 @@ class EpisodeInfo:
 
 
     def __repr__(self) -> str:
-        """Returns a unambiguous string representation of the object."""
+        """Returns an unambiguous string representation of the object."""
 
         # Static information
         ret = (f'<EpisodeInfo title={self.title}, season_number='
@@ -104,7 +104,7 @@ class EpisodeInfo:
         """
         Set the absolute number for this object.
         
-        :param      abs_number:  The absolute number to set.
+        :param      abs_number: The absolute number to set.
         """
 
         self.abs_number = int(abs_number)
@@ -115,7 +115,7 @@ class EpisodeInfo:
         """
         Sets the Sonarr ID for this object.
         
-        :param      tmdb_id:  The Sonarr ID to set.
+        :param      tmdb_id:    The Sonarr ID to set.
         """
 
         self.sonarr_id = int(sonarr_id)
@@ -125,7 +125,7 @@ class EpisodeInfo:
         """
         Sets the TVDb ID for this object.
         
-        :param      tmdb_id:  The TVDb ID to set.
+        :param      tmdb_id:    The TVDb ID to set.
         """
 
         self.tvdb_id = int(tvdb_id)
@@ -135,7 +135,7 @@ class EpisodeInfo:
         """
         Sets the TMDb ID for this object.
         
-        :param      tmdb_id:  The TMDb ID to set.
+        :param      tmdb_id:    The TMDb ID to set.
         """
 
         self.tmdb_id = int(tmdb_id)

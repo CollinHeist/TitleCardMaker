@@ -1,10 +1,8 @@
 from copy import deepcopy
-from pathlib import Path
 
 from tqdm import tqdm
 
 from modules.Debug import info, warn, error
-from modules.Show import Show
 from modules.ShowSummary import ShowSummary
 
 class ShowArchive:
@@ -41,7 +39,7 @@ class ShowArchive:
         'hidden-generic':  'No Season Titles, Generic Font',
     }
 
-    def __init__(self, archive_directory: Path, base_show: 'Show') -> None:
+    def __init__(self, archive_directory: 'Path', base_show: 'Show') -> None:
         """
         Constructs a new instance of this class. Creates a list of all
         applicable Show objects for later us.
@@ -51,8 +49,8 @@ class ShowArchive:
                                         `/Documents/` would operate on 
                                         `/Documents/Title (Year)/...`.
 
-        :param      args and kwargs:    Arguments passed directly to initialize 
-                                        a `Show` object with.
+        :param      base_show:          Base Show object this Archive is based
+                                        on.
         """
         
         # Empty lists to be populated with modified Show and ShowSummary objects
@@ -139,7 +137,7 @@ class ShowArchive:
                                     there is not an existing one.
         """
 
-        # Go through each ShowSumamry object within this Archive
+        # Go through each ShowSummary object within this Archive
         for summary in self.summaries:
             # If summary already exists, skip
             if summary.output.exists():
@@ -154,7 +152,7 @@ class ShowArchive:
                 if logo == None:
                     continue
 
-                info(f'Downloading series logo', 2)
+                info(f'Downloading series logo')
                 tmdb_interface.download_image(logo, summary.logo)
 
             # If the logo was downloaded (or already existed), create summary

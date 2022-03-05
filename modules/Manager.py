@@ -18,7 +18,7 @@ class Manager:
     def __init__(self) -> None:
         """
         Constructs a new instance of the manager. This uses the global
-        `PreferenceParser` object in preferences, and optionally creates
+        PreferenceParser object in preferences, and optionally creates
         interfaces as indicated by that parser.
         """
 
@@ -57,9 +57,9 @@ class Manager:
 
     def create_shows(self) -> None:
         """
-        Create `Show` and `ShowArchive` objects for each series entry found
-        known to the global `PreferenceParser`. This updates the `shows` and
-        `archives` lists with these objects.
+        Create Show and ShowArchive objects for each series YAML files known to
+        the global PreferenceParser. This updates the Manager's show and
+        archives lists.
         """
 
         self.shows = []
@@ -77,10 +77,7 @@ class Manager:
                 continue
 
             self.archives.append(
-                ShowArchive(
-                    self.preferences.archive_directory,
-                    show,
-                )
+                ShowArchive(self.preferences.archive_directory, show)
             )
 
 
@@ -191,20 +188,9 @@ class Manager:
 
 
     def run(self) -> None:
-        """
-        Run the manager and exit.
+        """Run the manager and exit."""
 
-        The following functions are executed in the following order:
-
-        `create_shows()`
-        `read_show_source()`
-        `check_sonarr_for_new_episodes()`
-        `create_missing_title_cards()`
-        `update_archive()`
-        `create_summaries()`
-        """
-
-        # Execute everything before waiting
+        # Execute everything
         self.create_shows()
         self.read_show_source()
         self.check_sonarr_for_new_episodes()

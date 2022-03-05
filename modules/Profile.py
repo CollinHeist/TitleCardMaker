@@ -3,7 +3,6 @@ from regex import match, IGNORECASE
 from modules.CardType import CardType
 from modules.Debug import info, warn, error
 from modules.MultiEpisode import MultiEpisode
-from modules.StandardTitleCard import StandardTitleCard
 
 class Profile:
     """
