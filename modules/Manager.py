@@ -1,3 +1,4 @@
+from yaml import dump
 from tqdm import tqdm
 
 from modules.Debug import info, warn, error
@@ -18,7 +19,7 @@ class Manager:
     def __init__(self) -> None:
         """
         Constructs a new instance of the manager. This uses the global
-        `PreferenceParser` object in preferences, and optionally creates
+        PreferenceParser object in preferences, and optionally creates
         interfaces as indicated by that parser.
         """
 
@@ -57,9 +58,9 @@ class Manager:
 
     def create_shows(self) -> None:
         """
-        Create `Show` and `ShowArchive` objects for each series entry found
-        known to the global `PreferenceParser`. This updates the `shows` and
-        `archives` lists with these objects.
+        Create Show and ShowArchive objects for each series YAML files known to
+        the global PreferenceParser. This updates the Manager's show and
+        archives lists.
         """
 
         self.shows = []
@@ -77,10 +78,7 @@ class Manager:
                 continue
 
             self.archives.append(
-                ShowArchive(
-                    self.preferences.archive_directory,
-                    show,
-                )
+                ShowArchive(self.preferences.archive_directory, show)
             )
 
 
@@ -191,26 +189,51 @@ class Manager:
 
 
     def run(self) -> None:
-        """
-        Run the manager and exit.
+        """Run the manager and exit."""
 
-        The following functions are executed in the following order:
-
-        `create_shows()`
-        `read_show_source()`
-        `check_sonarr_for_new_episodes()`
-        `create_missing_title_cards()`
-        `update_archive()`
-        `create_summaries()`
-        """
-
-        # Execute everything before waiting
+        # Execute everything
         self.create_shows()
         self.read_show_source()
         self.check_sonarr_for_new_episodes()
+        # self.check_tmdb_for_original_language()
         self.read_show_source() # again?
         self.create_missing_title_cards()
         self.update_archive()
         self.create_summaries()
+
+
+    def report_missing(self, file: 'Path') -> None:
+        """
+        Report all missing assets for Shows known to the Manager.
+        """
+
+        missing = {}
+        # Go through each show
+        for show in self.shows:
+            show_dict = {}
+            # Go through each episode for this show, add missing source/cards
+            for _, episode in show.episodes.items():
+                if not episode.source.exists():
+                    show_dict[str(episode)] = {}
+                    show_dict[str(episode)]['source'] = episode.source.name
+                if episode.destination != None and not episode.destination.exists():
+                    show_dict[str(episode)]['card'] = episode.destination.name
+
+            if not show.logo.exists():
+                show_dict['logo'] = show.logo.name
+
+            if len(show_dict.keys()) > 0:
+                missing[str(show)] = show_dict
+
+        # Create parent directories if necessary
+        file.parent.mkdir(parents=True, exist_ok=True)
+
+        # Write updated data with this entry added
+        with file.open('w') as file_handle:
+            dump(missing, file_handle, allow_unicode=True, width=120)
+
+        info(f'Wrote missing assets to "{file.name}"')
+
+
 
         
