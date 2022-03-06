@@ -377,7 +377,10 @@ class TMDbInterface(WebInterface):
                f'/episode/{episode}/images')
         params = self.__standard_params
         results = self._get(url, params)
-
+        if 'stills' not in results:
+            error(f'TMDb somehow errored on {series_info} {episode_info}')
+            return None
+            
         # If 'stills' is in JSON, but is empty, then TMDb has no images
         if len(results['stills']) == 0:
             warn(f'TMDb has no images for "{series_info}" {episode_info}', 1)
