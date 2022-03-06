@@ -1,12 +1,16 @@
 from abc import ABC, abstractmethod
 
 from requests import get
+from modules.Debug import warn
 
 class WebInterface(ABC):
     """
     Abstract class that defines a WebInterface, which is a type of interface
     that makes GET requests and returns some JSON result. 
     """
+
+    """How many requests to cache"""
+    CACHE_LENGTH = 5
     
     @abstractmethod
     def __init__(self) -> None:
@@ -15,9 +19,9 @@ class WebInterface(ABC):
         cached request and result, but no other attributes.
         """
 
-        # Cache of the last request+result to speed up identical sequential requests
-        self.__cache = {'url': None, 'params': None}
-        self.__cached_result = None
+        # Cache of the last requests to speed up identical sequential requests
+        self.__cache = []
+        self.__cached_results = []
 
 
     def _get(self, url: str, params: dict) -> dict:
@@ -32,13 +36,21 @@ class WebInterface(ABC):
         
         :returns:   Dict made from the JSON return of the specified GET request.
         """
-
-        # If this exact URL+params were requested last time, skip the request
-        if self.__cache['url'] == url and self.__cache['params'] == str(params):
-            return self.__cached_result
+        
+        # Look through all cached results for this exact URL+params; if found,
+        # skip the request and return that result
+        for cache, result in zip(self.__cache, self.__cached_results):
+            if cache['url'] == url and cache['params'] == str(params):
+                return result
 
         # Make new request, add to cache
-        self.__cached_result = get(url=url, params=params).json()
-        self.__cache = {'url': url, 'params': str(params)}
+        self.__cached_results.append(get(url=url, params=params).json())
+        self.__cache.append({'url': url, 'params': str(params)})
 
-        return self.__cached_result
+        # Delete element from cache if length has been exceeded
+        if len(self.__cache) > self.CACHE_LENGTH:
+            self.__cache.pop(0)
+            self.__cached_results.pop(0)
+
+        # Return latest result
+        return self.__cached_results[-1]
