@@ -33,6 +33,18 @@ For usage and configuration details, read the wiki [here](https://github.com/Col
 
 If you have trouble getting the Maker working (and have already read the Wiki), or have a problem, [create an issue on GitHub](https://github.com/CollinHeist/TitleCardMaker/issues/new)!
 
+## Examples
+Below are some examples of title cards created automatically (when configured correctly) by the TitleCardMaker:
+
+### Mr. Robot S01E02 in the `Standard` card style
+<img src="https://preview.redd.it/a6e04h0fwvs71.jpg?width=3200&format=pjpg&auto=webp&s=9015ced06ac3a97b45b8fe1f807ce7b2721c9e44" width="800">
+
+### The Mandalorian S01E03 in the `Star Wars` card style
+<img src="https://i.ibb.co/cTwGGyn/The-Mandalorian-2019-S01-E03.jpg" width="800">
+
+### Demon Slayer: Kimetsu no Yaiba S03E10 in the `Anime` card style
+<img src="https://i.ibb.co/HDQMFyT/Demon-Slayer-Kimetsu-no-Yaiba-2019-S03-E10.jpg" width="800">
+
 ## Contributing
 If you'd like to contribute - whether that's a suggested feature, a bug fix, or anything else - please do so on GitHub by creating an issue. Perhaps I'll setup a Discord in the future, but for now the best way for me to manage the project is on GitHub.
 
