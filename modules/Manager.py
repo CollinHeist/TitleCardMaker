@@ -1,3 +1,4 @@
+from yaml import dump
 from tqdm import tqdm
 
 from modules.Debug import info, warn, error
@@ -194,9 +195,45 @@ class Manager:
         self.create_shows()
         self.read_show_source()
         self.check_sonarr_for_new_episodes()
+        # self.check_tmdb_for_original_language()
         self.read_show_source() # again?
         self.create_missing_title_cards()
         self.update_archive()
         self.create_summaries()
+
+
+    def report_missing(self, file: 'Path') -> None:
+        """
+        Report all missing assets for Shows known to the Manager.
+        """
+
+        missing = {}
+        # Go through each show
+        for show in self.shows:
+            show_dict = {}
+            # Go through each episode for this show, add missing source/cards
+            for _, episode in show.episodes.items():
+                if not episode.source.exists():
+                    show_dict[str(episode)] = {}
+                    show_dict[str(episode)]['source'] = episode.source.name
+                if episode.destination != None and not episode.destination.exists():
+                    show_dict[str(episode)]['card'] = episode.destination.name
+
+            if not show.logo.exists():
+                show_dict['logo'] = show.logo.name
+
+            if len(show_dict.keys()) > 0:
+                missing[str(show)] = show_dict
+
+        # Create parent directories if necessary
+        file.parent.mkdir(parents=True, exist_ok=True)
+
+        # Write updated data with this entry added
+        with file.open('w') as file_handle:
+            dump(missing, file_handle, allow_unicode=True, width=120)
+
+        info(f'Wrote missing assets to "{file.name}"')
+
+
 
         
