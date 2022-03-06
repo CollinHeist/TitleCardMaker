@@ -85,14 +85,16 @@ class Manager:
     def read_show_source(self) -> None:
         """
         Reads all source files known to this manager. This reads Episode objects
-        for all Show and ShowArchives.
+        for all Show and ShowArchives, and also looks for multipart episodes.
         """
 
         for show in tqdm(self.shows, desc='Reading source files'):
             show.read_source()
+            show.find_multipart_episodes()
 
         for archive in tqdm(self.archives, desc='Reading archive source files'):
             archive.read_source()
+            archive.find_multipart_episodes()
 
 
     def check_sonarr_for_new_episodes(self) -> None:

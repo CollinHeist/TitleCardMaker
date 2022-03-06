@@ -486,10 +486,9 @@ class Show:
 
                 # Download the image
                 tmdb_interface.download_image(image_url, episode.source)
-
+                
             # Source exists, create the title card
             created_new_cards |= title_card.create()
-            info(f'Created card {episode}')
 
         return created_new_cards
 

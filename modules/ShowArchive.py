@@ -100,11 +100,21 @@ class ShowArchive:
 
 
     def read_source(self) -> None:
-        """Call `read_source()` on each Show object in this archive."""
+        """Call read_source() on each Show object in this archive."""
 
         # Read the source of every sub-Show in this Archive
         for show in self.shows:
             show.read_source()
+
+
+    def find_multipart_episodes(self) -> None:
+        """
+        Call find_multipart_episodes() on each Show object in this archive.
+        """
+
+        # Look for multiparts in every sub-Show in this Archive
+        for show in self.shows:
+            show.find_multipart_episodes()
 
 
     def update_archive(self, *args: tuple, **kwargs: dict) -> None:
