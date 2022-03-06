@@ -215,9 +215,12 @@ class Manager:
             for _, episode in show.episodes.items():
                 if not episode.source.exists():
                     show_dict[str(episode)] = {}
-                    show_dict[str(episode)]['source'] = str(episode.source)
+                    show_dict[str(episode)]['source'] = episode.source.name
                 if episode.destination != None and not episode.destination.exists():
-                    show_dict[str(episode)]['card'] = str(episode.destination.resolve())
+                    show_dict[str(episode)]['card'] = episode.destination.name
+
+            if not show.logo.exists():
+                show_dict['logo'] = show.logo.name
 
             if len(show_dict.keys()) > 0:
                 missing[str(show)] = show_dict
