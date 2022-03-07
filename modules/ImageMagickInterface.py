@@ -42,7 +42,7 @@ class ImageMagickInterface:
         
         :returns:   Input string with all necessary characters escaped. This 
                     assumes that text will be wrapped in "", and so only escapes
-                    " and ` characters
+                    " and ` characters.
         """
 
         # Handle possible None strings
@@ -56,17 +56,17 @@ class ImageMagickInterface:
         """
         Wrapper for running a given command. This uses either the host machine
         (i.e. direct calls); or through the provided docker container (if
-        `preferences` has been set; i.e. wrapped through "docker exec -t {id}
-        {command}"). `args` and `kwargs` are used to permit general usage of
-        the `subprocess.run()` function's options (`capture_output`, etc).
+        preferences has been set; i.e. wrapped through "docker exec -t {id}
+        {command}"). args and kwargs are used to permit general usage of
+        the subprocess.run() function's options (capture_output, etc).
 
         :param      command:    The command to execute
         
-        :param      args:       The arguments to pass to `subprocess.run()`.
+        :param      args:       The arguments to pass to subprocess.run().
 
-        :param      kwargs:     The keyword arguments to pass to `subprocess.run()`.
+        :param      kwargs:     The keyword arguments to pass to subprocess.run().
 
-        :returns:   The return of the `subprocess.run()` function execution.
+        :returns:   The return of the subprocess.run() function execution.
         """
         
         
@@ -86,7 +86,7 @@ class ImageMagickInterface:
         
         :param      command:            The command being executed.
         :param      args and kwargs:    Generalized arguments to pass to
-                                        `subprocess.run()`.
+                                        subprocess.run().
 
         :returns:   The decoded stdout output of the executed command.
         """

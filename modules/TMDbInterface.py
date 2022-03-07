@@ -377,7 +377,10 @@ class TMDbInterface(WebInterface):
                f'/episode/{episode}/images')
         params = self.__standard_params
         results = self._get(url, params)
-
+        if 'stills' not in results:
+            error(f'TMDb somehow errored on {series_info} {episode_info}')
+            return None
+            
         # If 'stills' is in JSON, but is empty, then TMDb has no images
         if len(results['stills']) == 0:
             warn(f'TMDb has no images for "{series_info}" {episode_info}', 1)
@@ -403,9 +406,9 @@ class TMDbInterface(WebInterface):
         
         :param      series_info:    SeriesInfo for the entry.
         :param      episode_info:   EpisodeInfo for the entry.
-        :param      language_code:  The language code of the episode.
+        :param      language_code:  The language code for the desired title.
         
-        :returns:   The episode title. None if the entry does not exist.
+        :returns:   The episode title, None if the entry does not exist.
         """
 
         # Get the TV id for the provided series+year
@@ -465,7 +468,6 @@ class TMDbInterface(WebInterface):
 
         # If there are no logos, warn and exit
         if len(results['logos']) == 0:
-            warn(f'TMDb has no logos for "{series_info}"', 1)
             return None
 
         # Pick the best image based on image dimensions

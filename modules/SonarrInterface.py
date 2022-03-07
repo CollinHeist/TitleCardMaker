@@ -42,6 +42,17 @@ class SonarrInterface(WebInterface):
         self.__api_key = api_key
         self.__standard_params = {'apikey': api_key}
 
+        # Query system status to verify connection to Sonarr
+        url = f'{self.url}system/status'
+        params = self.__standard_params
+        try:
+            status = self._get(url, params)
+            if 'error' in status and status['error'] == 'Unauthorized':
+                raise Exception('Invalid API key')
+        except Exception as e:
+            error(f'Cannot query Sonarr - returned error: "{e}"')
+            exit(1)
+
         # Create blank dictionary of titles -> ID's
         self.__series_ids = {}
 
@@ -50,7 +61,7 @@ class SonarrInterface(WebInterface):
 
 
     def __repr__(self) -> str:
-        """Returns a unambiguous string representation of the object."""
+        """Returns an unambiguous string representation of the object."""
 
         return (f'<SonarrInterface url={self.url}, api_key={self.__api_key}'
                 f', mapping of {len(self.__series_ids)} series>')
@@ -58,7 +69,8 @@ class SonarrInterface(WebInterface):
 
     def __set_ids(self, series_info: SeriesInfo) -> None:
         """
-        Set the Sonarr series ID and the TVDb ID for the given SeriesInfo object
+        Set the Sonarr series ID and the TVDb ID for the given SeriesInfo
+        object.
         
         :param      series_info:    SeriesInfo to modify.
         """
@@ -87,8 +99,6 @@ class SonarrInterface(WebInterface):
         # Construct GET arguments
         url = f'{self.url}series'
         params = self.__standard_params
-
-        # Make GET request
         all_series = self._get(url, params)
 
         # Go through each series in Sonarr
@@ -115,8 +125,6 @@ class SonarrInterface(WebInterface):
         # Construct GET arguments
         url = f'{self.url}series/'
         params = self.__standard_params
-        
-        # Query Sonarr to get JSON of all series in the library
         all_series = self._get(url, params)
 
         # Go through each series in Sonarr

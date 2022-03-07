@@ -208,5 +208,5 @@ class TitleCard:
             
         self.maker.create()
 
-        return True
+        return self.file.exists()
         

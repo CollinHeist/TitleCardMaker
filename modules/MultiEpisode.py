@@ -66,7 +66,7 @@ class MultiEpisode:
         """Returns a string representation of the object."""
 
         return (f'S{self.season_number:02}'
-                f'E{self.episode_start}-E{self.episode_end}')
+                f'E{self.episode_start:02}-E{self.episode_end:02}')
 
 
     def __repr__(self) -> str:
@@ -111,7 +111,7 @@ class MultiEpisode:
 
     def set_destination(self, destination: 'Path') -> None:
         """
-        Sets the destination.
+        Set the destination for the card associated with these Episdoes.
         
         :param      destination:    The destination for the card that is created
                                     for these episodes.

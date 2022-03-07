@@ -2,16 +2,16 @@ from math import ceil
 from pathlib import Path
 from random import sample
 
-from modules.Debug import *
-from modules.Show import Show
+from modules.Debug import info, warn, error
 from modules.StandardTitleCard import StandardTitleCard
 from modules.ImageMaker import ImageMaker
 
 class ShowSummary(ImageMaker):
     """
-    This class describes a show summary. A show summary is a random subset of title
-    cards from a show's profile, montaged into (at most) a 3x3 grid, with a logo at
-    the top. The intention is to quickly visually identify the title cards.
+    This class describes a show summary. A show summary is a random subset of
+    title cards from a show's profile, montaged into (at most) a 3x3 grid, with
+    a logo at the top. The intention is to quickly visually identify the title
+    cards.
 
     This class is a type of ImageMaker.
     """
@@ -31,7 +31,8 @@ class ShowSummary(ImageMaker):
     """Path to the 'created by' image to add to all show summaries"""
     __CREATED_BY_PATH: Path = Path(__file__).parent / 'ref' / 'created_by.png'
 
-    def __init__(self, show: Show) -> None:
+
+    def __init__(self, show: 'Show') -> None:
         """
         Constructs a new instance of this object. This initialized a
         ImageMagickInterface object, and searches the provided show object

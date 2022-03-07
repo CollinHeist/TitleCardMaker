@@ -48,8 +48,8 @@ class PlexInterface:
         try:
             response = get(url=url, params=params)
         except Exception as e:
-            error(f'Cannot query Plex. Returned error: "{e}"')
-            return None
+            error(f'Cannot query Plex - returned error: "{e}"')
+            exit(1)
 
         library_xml = fromstring(response.text)
 
