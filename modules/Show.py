@@ -385,7 +385,7 @@ class Show:
         
         # Add all MultiEpisode objects to this show's episode dictionary
         for mp in multiparts:
-            self.episodes[f'{mp.season_number}-{mp.episode_start}'] = mp
+            self.episodes[f'0{mp.season_number}-{mp.episode_start}'] = mp
 
 
     def check_sonarr_for_new_episodes(self,
