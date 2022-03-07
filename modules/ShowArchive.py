@@ -85,7 +85,7 @@ class ShowArchive:
             )
 
             # Convert this new show's profile
-            new_show.profile.convert_profile_string(
+            new_show.profile.convert_profile(
                 base_show.card_class,
                 **profile_attributes
             )

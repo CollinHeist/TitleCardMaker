@@ -95,8 +95,8 @@ class Profile:
         return valid_profiles
 
 
-    def convert_profile_string(self, card_class: CardType, seasons: str,
-                               font: str) -> None:
+    def convert_profile(self, card_class: CardType, seasons: str,
+                        font: str) -> None:
         """
         Convert this profile to the provided profile attributes. This modifies
         what characteristics are presented by the object.
