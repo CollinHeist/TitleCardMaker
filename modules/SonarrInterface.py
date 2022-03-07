@@ -42,6 +42,17 @@ class SonarrInterface(WebInterface):
         self.__api_key = api_key
         self.__standard_params = {'apikey': api_key}
 
+        # Query system status to verify connection to Sonarr
+        url = f'{self.url}system/status'
+        params = self.__standard_params
+        try:
+            status = self._get(url, params)
+            if 'error' in status and status['error'] == 'Unauthorized':
+                raise Exception('Invalid API key')
+        except Exception as e:
+            error(f'Cannot query Sonarr - returned error: "{e}"')
+            exit(1)
+
         # Create blank dictionary of titles -> ID's
         self.__series_ids = {}
 
