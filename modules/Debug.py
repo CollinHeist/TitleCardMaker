@@ -1,12 +1,7 @@
-CYAN = '\033[96m'
-YELLOW = '\033[93m'
-RED = '\033[91m'
-RESET = '\033[00m'
 from logging import Formatter, Handler, getLogger
 from logging import NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL
 from tqdm import tqdm
 
-def info(text: str, level: int=0) -> None:
 class LogHandler(Handler):
     def __init__(self, level=NOTSET):
         super().__init__(level)
@@ -21,13 +16,9 @@ class LogHandler(Handler):
 
 class LogFormatter(Formatter):
     """
-    Output some text as information.
-    
-    :param      text:  The text to log at info level.
+    Taken/modified from SO: https://stackoverflow.com/a/56944256
     """
 
-    indent = '  ' * level
-    print(f'{indent}{CYAN}[INFO] {text}{RESET}')
     GRAY =     '\x1b[1;30m'
     CYAN =     '\033[96m'
     YELLOW =   '\x1b[33;20m'
@@ -60,23 +51,6 @@ handler = LogHandler()
 handler.setFormatter(LogFormatter())
 log.addHandler(handler)
 
-def warn(text: str, level: int=0) -> None:
-    """
-    Output some text as a warning.
-    
-    :param      text:  The text
-    """
-    
-    indent = '  ' * level
-    print(f'{indent}{YELLOW}[WARNING] {text}{RESET}')
 
 
-def error(text: str, level: int=0) -> None:
-    """
-    Output some text as an error.
-    
-    :param      text:  The text
-    """
 
-    indent = '  ' * level
-    print(f'{indent}{RED}[ERROR] {text}{RESET}')

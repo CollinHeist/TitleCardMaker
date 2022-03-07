@@ -2,7 +2,7 @@ from xml.etree.ElementTree import fromstring
 
 from requests import get, put
 
-from modules.Debug import *
+from modules.Debug import log
 from modules.SeriesInfo import SeriesInfo
 
 class PlexInterface:
@@ -48,7 +48,7 @@ class PlexInterface:
         try:
             response = get(url=url, params=params)
         except Exception as e:
-            error(f'Cannot query Plex - returned error: "{e}"')
+            log.critical(f'Cannot query Plex - returned error: "{e}"')
             exit(1)
 
         library_xml = fromstring(response.text)
@@ -89,7 +89,7 @@ class PlexInterface:
             self.library.update({library_title: content_dict})
 
         libraries = ", ".join(self.library.keys())
-        info(f'Found {len(self.library)} Plex libraries ({libraries})')
+        log.info(f'Found {len(self.library)} Plex libraries ({libraries})')
 
 
     def refresh_metadata(self, library: str, series_info: SeriesInfo) -> None:
@@ -108,14 +108,14 @@ class PlexInterface:
 
         # Invalid library - error and exit
         if library not in self.library:
-            error(f'Library "{library}" was not found in Plex')
+            log.error(f'Library "{library}" was not found in Plex')
             return None
         
         # Valid library, invalid title - error and exit
         match_name = f'{series_info.match_name}{series_info.year}'
         if match_name not in self.library[library]:
-            error(f'Series "{series_info}" was not found under library '
-                  f'"{library}" in Plex')
+            log.error(f'Series "{series_info}" was not found under library '
+                      f'"{library}" in Plex')
             return None
 
         # Get the plex ratingKey for this title, then PUT a metadata refresh
@@ -123,7 +123,7 @@ class PlexInterface:
         url = self.base_url + f'metadata/{rating_key}/refresh'
         put(url)
 
-        info(f'Refreshed Plex metadata for "{series_info}"')
+        log.info(f'Refreshed Plex metadata for "{series_info}"')
 
 
         

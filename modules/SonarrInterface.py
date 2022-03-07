@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from modules.Debug import info, warn, error
+from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
 from modules.SeriesInfo import SeriesInfo
 from modules.Title import Title
@@ -36,7 +36,7 @@ class SonarrInterface(WebInterface):
 
         # Warn if a v3 API url has not been provided
         if not self.url.endswith('/v3/'):
-            warn(f'Provided Sonarr URL ({self.url}) is not v3, add /v3/')
+            log.warning(f'Provided Sonarr URL ({self.url}) is not v3, add /v3/')
 
         # Base parameters for sending requests to Sonarr
         self.__api_key = api_key
@@ -50,7 +50,7 @@ class SonarrInterface(WebInterface):
             if 'error' in status and status['error'] == 'Unauthorized':
                 raise Exception('Invalid API key')
         except Exception as e:
-            error(f'Cannot query Sonarr - returned error: "{e}"')
+            log.critical(f'Cannot query Sonarr - returned error: "{e}"')
             exit(1)
 
         # Create blank dictionary of titles -> ID's
@@ -210,7 +210,7 @@ class SonarrInterface(WebInterface):
 
         # If no ID was returned, error and return an empty list
         if series_info.sonarr_id == None:
-            error(f'Series "{series_info}" not found in Sonarr')
+            log.warning(f'Series "{series_info}" not found in Sonarr')
             return []
 
         return self.__get_all_episode_info(series_info.sonarr_id)
@@ -228,7 +228,7 @@ class SonarrInterface(WebInterface):
 
         # If no ID was returned, error and return
         if series_info.sonarr_id == None:
-            error(f'Series "{series_info}" not found in Sonarr')
+            log.warning(f'Series "{series_info}" not found in Sonarr')
 
 
     def set_all_episode_ids(self, series_info: SeriesInfo,

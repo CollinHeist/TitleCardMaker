@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 
 from requests import get
-from modules.Debug import warn
 
 class WebInterface(ABC):
     """

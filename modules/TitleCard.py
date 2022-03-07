@@ -1,6 +1,6 @@
 from re import match, sub, IGNORECASE
 
-from modules.Debug import info, warn, error
+from modules.Debug import log
 
 # CardType classes
 from modules.AnimeCard import AnimeCard
@@ -186,7 +186,7 @@ class TitleCard:
             )
             return True
         except ValueError as e:
-            error(f'Card format string is invalid - "{e}"')
+            log.error(f'Card format string is invalid - "{e}"')
             return False
 
 

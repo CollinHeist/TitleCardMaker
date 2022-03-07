@@ -3,7 +3,7 @@ from pathlib import Path
 from pickle import dump, load, HIGHEST_PROTOCOL
 from urllib.request import urlretrieve
 
-from modules.Debug import info, warn, error
+from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
 import modules.preferences as global_preferences
 from modules.SeriesInfo import SeriesInfo
@@ -93,8 +93,6 @@ class TMDbInterface(WebInterface):
             # Add new entry to blacklist with 1 failure, next time is in one day
             self.__blacklist[key] = {'failures': 1, 'next': later}
 
-        # warn(f'Query failed {self.__blacklist[key]["failures"]} times', 2)
-
         # Write latest version of blacklist to file, in case program exits
         with self.__BLACKLIST.open('wb') as file_handle:
             dump(self.__blacklist, file_handle, HIGHEST_PROTOCOL)
@@ -175,11 +173,11 @@ class TMDbInterface(WebInterface):
             results = self._get(url=url, params=params)['tv_results']
 
             if len(results) == 0:
-                # If there is no entry with this ID, error and return
-                error(f'TMDb returned no results for "{series_info}"')
+                # No entry with this ID, try with title+year
+                log.debug(f'TMDb returned no results for "{series_info}"')
             elif len(results) != 1:
-                # If more than one entry was returned (somehow?), warn
-                warn(f'TMDb returned >1 series for "{series_info}"')
+                # More than one entry (somehow?), warn and try with title+year
+                log.warning(f'TMDb returned >1 series for "{series_info}"')
             else:
                 # Get the TMDb ID for this series, set for object and add to map
                 tmdb_id = results[0]['id']
@@ -200,7 +198,7 @@ class TMDbInterface(WebInterface):
 
         # If there are no results, error and return
         if int(results['total_results']) == 0:
-            error(f'TMDb returned no results for "{series_info}"')
+            log.error(f'TMDb returned no results for "{series_info}"')
             return None
 
         # Get the TMDb ID for this series, set for object and add to map
@@ -270,8 +268,8 @@ class TMDbInterface(WebInterface):
         if 'name' in tmdb_info and episode_info.title.matches(tmdb_info['name']):
             # Title matches, return the resulting season/episode number
             if episode_info.tvdb_id != None:
-                info(f'Add TVDb ID {episode_info.tvdb_id} to TMDb "'
-                     f'{series_info.full_name}" {episode_info}')
+                log.info(f'Add TVDb ID {episode_info.tvdb_id} to TMDb "'
+                         f'{series_info}" {episode_info}')
 
             return {
                 'season': tmdb_info['season_number'],
@@ -287,6 +285,7 @@ class TMDbInterface(WebInterface):
 
             # If the season DNE, this episode cannot be found
             if 'success' in tmdb_season and not tmdb_season['success']:
+                log.debug(f'Tried every season, {episode_info} not found')
                 return None
 
             # Season could be found, check each given title
@@ -364,8 +363,8 @@ class TMDbInterface(WebInterface):
 
         # If None was returned, episode not found - warn, blacklist, and exit
         if index == None:
-            warn(f'TMDb has no matching episode for "{series_info}" '
-                 f'{episode_info}')
+            log.info(f'TMDb has no matching episode for "{series_info}" '
+                     f'{episode_info}')
             self.__update_blacklist(series_info, episode_info)
             return None
 
@@ -377,21 +376,23 @@ class TMDbInterface(WebInterface):
                f'/episode/{episode}/images')
         params = self.__standard_params
         results = self._get(url, params)
+
+        # Temporary fix for weird queries
         if 'stills' not in results:
-            error(f'TMDb somehow errored on {series_info} {episode_info}')
+            log.error(f'TMDb somehow errored on {series_info} {episode_info}')
             return None
             
         # If 'stills' is in JSON, but is empty, then TMDb has no images
         if len(results['stills']) == 0:
-            warn(f'TMDb has no images for "{series_info}" {episode_info}', 1)
+            log.debug(f'TMDb has no images for "{series_info}" {episode_info}')
             self.__update_blacklist(series_info, episode_info)
             return None
 
         # Get the best image, None is returned if requirements weren't met
         best_image = self.__determine_best_image(results['stills'])
         if not best_image:
-            warn(f'TMDb images for "{series_info}" {episode_info} do not meet '
-                 f'dimensional requirements.', 1)
+            log.debug(f'TMDb images for "{series_info}" {episode_info} do not '
+                      f'meet dimensional requirements')
             self.__update_blacklist(series_info, episode_info)
             return None
         
@@ -474,8 +475,8 @@ class TMDbInterface(WebInterface):
         best = results['logos'][0]
         valid_image = False
         for index, image in enumerate(results['logos']):
-            # Skip SVG images (for now!)
-            if image['file_path'].endswith('.svg'):
+            # Skip all non-PNG
+            if not image['file_path'].endswith('.png'):
                 continue
 
             # Skip logos that aren't english
@@ -508,7 +509,7 @@ class TMDbInterface(WebInterface):
         try:
             urlretrieve(image_url, destination.resolve())
         except Exception as e:
-            error(f'TheMovieDB errored: "{e}"')
+            log.error(f'Cannot download, TMDb errored: "{e}"')
 
 
     @staticmethod
@@ -545,6 +546,7 @@ class TMDbInterface(WebInterface):
         """Delete the blacklist file referenced by this class."""
 
         TMDbInterface.__BLACKLIST.unlink(missing_ok=True)
-        info(f'Deleted blacklist file "{TMDbInterface.__BLACKLIST.resolve()}"')
+        log.info(f'Deleted blacklist file '
+                 f'"{TMDbInterface.__BLACKLIST.resolve()}"')
 
 

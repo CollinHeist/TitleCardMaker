@@ -1,7 +1,7 @@
 from regex import match, IGNORECASE
 
 from modules.CardType import CardType
-from modules.Debug import info, warn, error
+from modules.Debug import log
 from modules.MultiEpisode import MultiEpisode
 
 class Profile:
@@ -101,7 +101,12 @@ class Profile:
         Convert this profile to the provided profile attributes. This modifies
         what characteristics are presented by the object.
         
-        
+        :param      card_class: CardType whose default characteristics should
+                                be used if converting to default values.
+        :param      seasons:    String of how to modify seasons. Must be one of
+                                'custom', 'generic', or 'hidden'.
+        :param      font:       String of how to modify fonts. Must be 'custom'
+                                or 'generic'.
         """
 
         # Update this object's data
@@ -149,12 +154,13 @@ class Profile:
         if episode_info.abs_number == None:
             # Episode range, but episode has no absolute number
             if episode_info.season_number != 0:     # Don't warn on specials
-                warn(f'Episode range preferred, but episode has no absolute '
-                     f'number', 1)
+                self.warning(f'Episode range preferred, but episode '
+                             f'{episode_info} has no absolute number')
             return self.__season_map[episode_info.season_number]
         elif episode_info.abs_number not in self.__episode_range:
             # Absolute number doesn't have episode range, fallback on season map
-            warn(f'Episode {episode_info} does not fall into specified range',1)
+            self.warning(f'Episode {episode_info} does not fall into specified '
+                         f'episode range')
             return self.__season_map[episode_info.season_number]
 
         # Absolute number is provided and falls into mapped episode ranges
@@ -174,8 +180,9 @@ class Profile:
         # Warn if absolute number is requested but not present
         if (self.__use_custom_seasons and '{abs_' in self.episode_text_format
             and episode.episode_info.abs_number == None):
-                warn(f'Episode text formatting uses absolute episode number, '
-                     f'but episode {episode} has no absolute number')
+                self.warning(f'Episode text formatting uses absolute episode '
+                             f'number, but episode {episode} has no absolute '
+                             f'number')
 
         # Format MultiEpisode episode text
         if isinstance(episode, MultiEpisode):
@@ -233,7 +240,7 @@ class Profile:
 
         # Regex group for matching 1-9 called "one_to_9"
         one_to_9 = 'one|two|three|four|five|six|seven|eight|nine'
-        one_to_9_group = f'(?<one_to_9>(?:{one_to_9}))'
+        one_to_9_group = rf'(?<one_to_9>(?:{one_to_9}))'
 
         # Regex group for matching 10-19 called "ten_to_19"
         ten_to_19 = (
@@ -244,7 +251,7 @@ class Profile:
 
         # Regex group for two digit prefix (20, 30..) called "two_digit_prefix"
         two_digit_prefix='twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety'
-        two_digit_prefix_group = f'(?<two_digit_prefix>(?:{two_digit_prefix}))'
+        two_digit_prefix_group = rf'(?<two_digit_prefix>(?:{two_digit_prefix}))'
 
         # Regex group for 1-99 called "one_to_99"
         one_to_99_group = (
@@ -259,7 +266,7 @@ class Profile:
         )
 
         # Full regex for any number followed by colon, comma, or dash (+spaces)
-        full_regex = f'{define_all}(?&one_to_99)\s*[:,-]?\s*'
+        full_regex = rf'{define_all}(?&one_to_99)\s*[:,-]?\s*'
 
         # Look for number indicator to replace with above regex
         format_string = self.episode_text_format

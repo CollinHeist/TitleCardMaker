@@ -1,8 +1,6 @@
 from copy import deepcopy
 
-from tqdm import tqdm
-
-from modules.Debug import info, warn, error
+from modules.Debug import log
 from modules.ShowSummary import ShowSummary
 
 class ShowArchive:
@@ -152,7 +150,7 @@ class ShowArchive:
                 if logo == None:
                     continue
 
-                info(f'Downloading series logo')
+                log.info(f'Downloading series logo')
                 tmdb_interface.download_image(logo, summary.logo)
 
             # If the logo was downloaded (or already existed), create summary
