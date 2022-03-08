@@ -1,7 +1,7 @@
 from yaml import safe_load, dump
 from pathlib import Path
 
-from modules.Debug import info, warn, error
+from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
 from modules.Title import Title
 
@@ -50,12 +50,12 @@ class DataFileInterface:
             try:
                 yaml = safe_load(file_handle)
             except Exception as e:
-                error(f'Error reading datafile:\n{e}\n')
+                log.error(f'Error reading datafile:\n{e}\n')
                 return {}
 
         # If the top-level key is not 'data', error and return empty dictionary
         if 'data' not in yaml:
-            error(f'Datafile "{self.file.resolve()}" missing "data" key')
+            log.error(f'Datafile "{self.file.resolve()}" missing "data" key')
             return {}
 
         return yaml['data']
@@ -122,8 +122,8 @@ class DataFileInterface:
                 # If the 'title' key is missing (or no subkeys at all..) error
                 if ('title' not in episode_data
                     or not isinstance(episode_data, dict)):
-                    error(f'Season {season_number}, Episode {episode_number} of'
-                          f' "{self.file.resolve()}" is missing title')
+                    log.error(f'Season {season_number}, Episode {episode_number}'
+                              f' of "{self.file.resolve()}" is missing title')
                     continue
 
                 # Construct EpisodeInfo object for this entry
@@ -190,8 +190,8 @@ class DataFileInterface:
         season_key = f'Season {episode_info.season_number}'
         if (season_key not in yaml
             or episode_info.episode_number not in yaml[season_key]):
-            warn(f'Cannot add data to entry for {episode_info} in '
-                 f'"{self.file.resolve()}" - entry does not exist')
+            log.error(f'Cannot add data to entry for {episode_info} in '
+                      f'"{self.file.resolve()}" - entry does not exist')
             return None
 
         # Add new data
@@ -214,7 +214,7 @@ class DataFileInterface:
 
         for episode_info in new_episodes:
             # Indicate new episode to user
-            info(f'Added {episode_info} to "{self.file.parent.name}"')
+            log.info(f'Added {episode_info} to "{self.file.parent.name}"')
 
             # Create blank season data if this key doesn't exist
             season_key = f'Season {episode_info.season_number}'

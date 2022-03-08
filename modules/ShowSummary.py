@@ -2,7 +2,7 @@ from math import ceil
 from pathlib import Path
 from random import sample
 
-from modules.Debug import info, warn, error
+from modules.Debug import log
 from modules.StandardTitleCard import StandardTitleCard
 from modules.ImageMaker import ImageMaker
 
@@ -76,8 +76,8 @@ class ShowSummary(ImageMaker):
         # Skip if the number of available episodes is below the minimum
         minimum = self.preferences.summary_minimum_episode_count
         if episode_count < minimum:
-            info(f'Skipping ShowSummary for {self.show.series_info.full_name} -'
-                 f' has {episode_count} episodes, minimum setting is {minimum}')
+            log.info(f'Skipping ShowSummary - {self.show} has {episode_count} '
+                     f'episodes, minimum setting is {minimum}')
             return None
 
         # Get a random subset of images to create the summary with
@@ -87,8 +87,10 @@ class ShowSummary(ImageMaker):
             key=lambda k: int(k.split('-')[0])*1000+int(k.split('-')[1])
         )
 
+        # Get the full filepath for each of the selected images
+        get_destination = lambda e_key: self.show.episodes[e_key].destination
         self.inputs = [
-            str(self.show.episodes[e].destination.resolve()) for e in episode_keys
+            str(get_destination(e).resolve()) for e in episode_keys
         ]
 
         # The number of rows is necessary to determine how to scale y-values
@@ -259,7 +261,7 @@ class ShowSummary(ImageMaker):
 
         # Exit if a logo does not exist
         if not self.logo.exists():
-            warn('Cannot create ShowSummary - no logo found', 1)
+            self.error('Cannot create ShowSummary - no logo found')
             return None
 
         # Create montage of title cards
@@ -276,7 +278,7 @@ class ShowSummary(ImageMaker):
 
         # Add created by tag - summary is completed
         self._add_created_by(montage_and_logo)
-        info(f'Created ImageSummary {self.output.resolve()}', 1)
+        self.info(f'Created ImageSummary {self.output.resolve()}')
 
         # Delete temporary files
         self.image_magick.delete_intermediate_images(

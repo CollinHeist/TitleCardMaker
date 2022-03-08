@@ -1,7 +1,7 @@
 from yaml import dump
 from tqdm import tqdm
 
-from modules.Debug import info, warn, error
+from modules.Debug import log
 from modules.PlexInterface import PlexInterface
 import modules.preferences as global_preferences
 from modules.Show import Show
@@ -68,9 +68,9 @@ class Manager:
         for show in self.preferences.iterate_series_files():
             # Skip shows whose YAML was invalid
             if not show.valid:
-                error(f'Skipping series "{show.series_info}"')
+                self.warning(f'Skipping series {show}')
                 continue
-
+                
             self.shows.append(show)
 
             # If archives are disabled globally, or for this show.. skip 
@@ -232,7 +232,7 @@ class Manager:
         with file.open('w') as file_handle:
             dump(missing, file_handle, allow_unicode=True, width=120)
 
-        info(f'Wrote missing assets to "{file.name}"')
+        log.info(f'Wrote missing assets to "{file.name}"')
 
 
 

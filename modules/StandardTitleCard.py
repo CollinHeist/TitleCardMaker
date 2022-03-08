@@ -1,8 +1,6 @@
 from pathlib import Path
 from re import findall
 
-from modules.Debug import info, warn, error
-import modules.preferences as preferences
 from modules.CardType import CardType
 
 class StandardTitleCard(CardType):

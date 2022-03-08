@@ -3,7 +3,7 @@ from pathlib import Path
 from tqdm import tqdm
 from yaml import safe_load
 
-from modules.Debug import *
+from modules.Debug import log
 from modules.Show import Show
 from modules.ShowSummary import ShowSummary
 from modules.TitleCard import TitleCard
@@ -33,7 +33,8 @@ class PreferenceParser:
 
         # Check for required source directory
         if not self.__is_specified('options', 'source'):
-            error(f'Preference file missing required "options/source" tag.')
+            log.critical(f'Preference file missing required "options/source"'
+                         f'tag')
             exit(1)
         self.source_directory = Path(self.__yaml['options']['source'])
 
@@ -110,7 +111,7 @@ class PreferenceParser:
         if self.__is_specified('options', 'card_type'):
             value = self.__yaml['options']['card_type']
             if value not in TitleCard.CARD_TYPES:
-                error(f'Default card type "{value}" is unrecognized')
+                log.critical(f'Default card type "{value}" is unrecognized')
                 self.valid = False
             else:
                 self.card_type = value
@@ -127,20 +128,23 @@ class PreferenceParser:
             self.create_archive = True
 
         if self.__is_specified('archive', 'summary', 'create'):
-            self.create_summaries = bool(self.__yaml['archive']['summary']['create'])
+            summary_yaml = self.__yaml['archive']['summary']
+            self.create_summaries = bool(summary_yaml['create'])
 
         if self.__is_specified('archive', 'summary', 'background_color'):
-            self.summary_background_color = self.__yaml['archive']['summary']['background_color']
+            summary_yaml = self.__yaml['archive']['summary']
+            self.summary_background_color = summary_yaml['background_color']
 
         if self.__is_specified('archive', 'summary', 'logo_filename'):
-            self.logo_filename = self.__yaml['archive']['summary']['logo_filename']
+            summary_yaml = self.__yaml['archive']['summary']
+            self.logo_filename = summary_yaml['logo_filename']
 
         if self.__is_specified('archive', 'summary', 'minimum_episodes'):
             value = self.__yaml['archive']['summary']['minimum_episodes']
             try:
                 self.summary_minimum_episode_count = int(value)
             except ValueError:
-                error(f'Summary minimum episode count "{value}" is invalid')
+                log.critical(f'Invalid summary minimum count "{value}"')
                 self.valid = False
 
         if self.__is_specified('plex', 'url'):
@@ -153,7 +157,8 @@ class PreferenceParser:
         if self.__is_specified('sonarr'):
             if not all((self.__is_specified('sonarr', 'url'),
                         self.__is_specified('sonarr', 'api_key'))):
-                error(f'Sonarr preferences must contain "url" and "api_key"')
+                log.critical(f'Sonarr preferences must contain "url" and '
+                             f'"api_key"')
                 self.valid = False
             else:
                 self.sonarr_url = self.__yaml['sonarr']['url']
@@ -162,7 +167,7 @@ class PreferenceParser:
 
         if self.__is_specified('tmdb'):
             if not self.__is_specified('tmdb', 'api_key'):
-                error(f'TMDb preferences must contain "api_key"')
+                log.critical(f'TMDb preferences must contain "api_key"')
                 self.valid = False
             else:
                 self.tmdb_api_key = self.__yaml['tmdb']['api_key']
@@ -173,10 +178,12 @@ class PreferenceParser:
 
         if self.__is_specified('tmdb', 'minimum_resolution'):
             try:
-                width, height = map(int, self.__yaml['tmdb']['minimum_resolution'].split('x'))
-                self.tmdb_minimum_resolution = {'width': width, 'height': height}
+                min_res = self.__yaml['tmdb']['minimum_resolution']
+                width, height = map(int, min_res.split('x'))
+                self.tmdb_minimum_resolution = {'width': width, 'height':height}
             except:
-                error(f'Invalid minimum resolution - specify as WIDTHxHEIGHT')
+                log.critical(f'Invalid minimum resolution - specify as '
+                             f'WIDTHxHEIGHT')
                 self.valid = False
 
         if self.__is_specified('imagemagick', 'docker_id'):
@@ -192,7 +199,7 @@ class PreferenceParser:
 
         # If the file doesn't exist, error and exit
         if not self.file.exists():
-            info(f'Preference file "{self.file.resolve()}" does not exist')
+            log.critical(f'Preference file "{self.file.resolve()}" does not exist')
             exit(1)
 
         # Read file 
@@ -200,10 +207,10 @@ class PreferenceParser:
             try:
                 self.__yaml = safe_load(file_handle)
             except Exception as e:
-                error(f'Error reading preference file:\n{e}\n')
+                log.critical(f'Error reading preference file:\n{e}\n')
                 exit(1)
 
-        info(f'Read preference file "{self.file.resolve()}"')
+        log.info(f'Read preference file "{self.file.resolve()}"')
 
 
     def iterate_series_files(self) -> [Show]:
@@ -226,7 +233,8 @@ class PreferenceParser:
 
             # If the file doesn't exist, error and skip
             if not file_object.exists():
-                error(f'Series file "{file_object.resolve()}" does not exist')
+                log.error(f'Series file "{file_object.resolve()}" does not '
+                          f'exist')
                 continue
 
             # Read file, parse yaml
@@ -234,7 +242,7 @@ class PreferenceParser:
                 try:
                     file_yaml = safe_load(file_handle)
                 except Exception as e:
-                    error(f'Error reading preference file:\n{e}\n')
+                    log.error(f'Error reading preference file:\n{e}\n')
                     continue
 
             # Get the libraries listed in this file

@@ -1,6 +1,6 @@
 from re import match, IGNORECASE
 
-from modules.Debug import info, warn, error
+from modules.Debug import log
 
 class Title:
     """
@@ -115,8 +115,7 @@ class Title:
 
         # Misformat ahead..
         if len(self.full_title) > max_line_count * max_line_width:
-            #print('WARN: Title too long, potential misformat')
-            pass
+            log.debug(f'Title "{self.full_title}" too long, potential misformat')
 
         # Start splitting on the base full title
         all_lines = [self.full_title]

@@ -7,7 +7,7 @@ from yaml import safe_load
 
 from modules.CardType import CardType
 from modules.DataFileInterface import DataFileInterface
-from modules.Debug import info, warn, error
+from modules.Debug import log
 from modules.Episode import Episode
 from modules.EpisodeInfo import EpisodeInfo
 import modules.preferences as global_preferences
@@ -53,14 +53,14 @@ class Show:
 
         # If year isn't given, skip completely
         if not self.__is_specified('year'):
-            error(f'Series "{name}" is missing required "year"')
+            log.error(f'Series "{name}" is missing required "year"')
             self.valid = False
             return 
 
         # Year is given, parse and update year/full name of this show
         year = self.__yaml['year']
         if not match(r'^\d{4}$', str(year)):
-            error(f'Year "{year}" of series "{name}" is invalid')
+            log.error(f'Year "{year}" of series "{name}" is invalid')
             self.valid = False
             return
 
@@ -121,7 +121,7 @@ class Show:
     def __str__(self) -> str:
         """Returns a string representation of the object."""
 
-        return self.series_info.full_name
+        return f'"{self.series_info.full_name}"'
 
 
     def __repr__(self) -> str:
@@ -133,7 +133,7 @@ class Show:
     def __parse_yaml(self):
         """
         Parse the show's YAML and update this object's attributes. Error on any
-        invalid attributes and update `valid` attribute.
+        invalid attributes and update this object's valid attribute.
         """
 
         # Read all optional tags
@@ -143,8 +143,8 @@ class Show:
         if self.__is_specified('library'):
             value = self.__yaml['library']
             if value not in self.__library_map:
-                error(f'Library "{value}" of series "{self.name}" is not found '
-                      f'in libraries list')
+                log.error(f'Library "{value}" of series {self} is not found in'
+                          f'libraries list')
                 self.valid = False
             else:
                 self.library_name = value
@@ -153,9 +153,7 @@ class Show:
         if self.__is_specified('card_type'):
             value = self.__yaml['card_type']
             if value not in TitleCard.CARD_TYPES:
-                error(f'Card type "{value}" of series "{self.name}" is unknown,'
-                      f' ensure any custom card classes are added to the '
-                      f'CARD_TYPES dictionary of the TitleCard class')
+                log.error(f'Unknown card type "{value}" of series {self}')
                 self.valid = False
             else:
                 self.card_class = TitleCard.CARD_TYPES[value]
@@ -181,17 +179,17 @@ class Show:
         if self.__is_specified('font', 'color'):
             value = self.__yaml['font']['color']
             if not bool(match('^#[a-fA-F0-9]{6}$', value)):
-                error(f'Font color "{value}" of series "{self.name}" is invalid'
-                      f' - specify as "#xxxxxx"')
+                log.error(f'Font color "{value}" of series {self} is invalid - '
+                          f'specify as "#xxxxxx"')
                 self.valid = False
             else:
                 self.font_color = value
 
         if self.__is_specified('font', 'size'):
             value = self.__yaml['font']['size']
-            if not bool(match('^\d+%$', value)):
-                error(f'Font size "{value}" of series "{self.name}" is invalid '
-                      f'- specify as "x%"')
+            if not bool(match(r'^\d+%$', value)):
+                log.error(f'Font size "{value}" of series {self} is invalid - '
+                          f'specify as "x%"')
                 self.valid = False
             else:
                 self.font_size = float(value[:-1]) / 100.0
@@ -199,7 +197,7 @@ class Show:
         if self.__is_specified('font', 'file'):
             value = Path(self.__yaml['font']['file'])
             if not value.exists():
-                error(f'Font file "{value}" of series "{self.name}" not found')
+                log.error(f'Font file "{value}" of series {self} not found')
                 self.valid = False
             else:
                 self.font = str(value.resolve())
@@ -208,15 +206,16 @@ class Show:
         if self.__is_specified('font', 'case'):
             value = self.__yaml['font']['case'].lower()
             if value not in self.card_class.CASE_FUNCTION_MAP:
-                error(f'Font case "{value}" of series "{self.name}" is unrecognized')
+                log.error(f'Font case "{value}" of series {self} is unrecognized')
                 self.valid = False
             else:
                 self.font_case = value
 
         if self.__is_specified('font', 'replacements'):
-            if any(len(key) != 1 for key in self.__yaml['font']['replacements'].keys()):
-                error(f'Font replacements of series "{self.name}" is invalid - '
-                      f'must only be 1 character')
+            replacements = self.__yaml['font']['replacements']
+            if any(len(key) != 1 for key in replacements.keys()):
+                log.error(f'Font replacements of series {self} is invalid - '
+                          f'must only be 1 character')
                 self.valid = False
             else:
                 self.font_replacements = self.__yaml['font']['replacements']
@@ -224,12 +223,13 @@ class Show:
         if self.__is_specified('seasons', 'hide'):
             self.hide_seasons = bool(self.__yaml['seasons']['hide'])
 
-        # Validate season map and episode range aren't specified at the same time
+        # Validate season map & episode range aren't specified at the same time
         if (self.__is_specified('seasons')
             and self.__is_specified('episode_ranges')):
-            if any(isinstance(key, int) for key in self.__yaml['seasons'].keys()):
-                error(f'Cannot specify season titles with both "seasons" and '
-                      f'"episode_ranges"')
+            seasons = self.__yaml['seasons']
+            if any(isinstance(key, int) for key in seasons.keys()):
+                log.warning(f'Cannot specify season titles with both "seasons" '
+                            f'and "episode_ranges" in series {self}')
                 self.valid = False
 
         # Validate season title map
@@ -245,8 +245,8 @@ class Show:
                 try:
                     start, end = map(int, episode_range.split('-'))
                 except:
-                    error(f'Episode range "{episode_range}" for series "'
-                          f'{self.name}" is invalid - specify as "start-end"')
+                    log.error(f'Episode range "{episode_range}" of series '
+                              f'{self} is invalid - specify as "start-end"')
                     self.valid = False
                     continue
 
@@ -385,7 +385,7 @@ class Show:
         
         # Add all MultiEpisode objects to this show's episode dictionary
         for mp in multiparts:
-            self.episodes[f'{mp.season_number}-{mp.episode_start}'] = mp
+            self.episodes[f'0{mp.season_number}-{mp.episode_start}'] = mp
 
 
     def check_sonarr_for_new_episodes(self,
@@ -447,7 +447,7 @@ class Show:
         # If the media directory is unspecified, then exit
         if self.media_directory is None:
             return False
-
+            
         # If TMDb syncing is enabled, and a valid TMDb and Sonarr Interface were
         # provided, get all episode ID's for this series
         if self.tmdb_sync and tmdb_interface and sonarr_interface:

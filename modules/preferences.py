@@ -1,5 +1,3 @@
-from modules.Debug import *
-
 # Global PreferenceParser object
 pp = None
 def set_preference_parser(to: 'PreferenceParser') -> None:
