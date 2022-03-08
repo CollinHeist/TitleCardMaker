@@ -10,36 +10,41 @@ from modules.TitleCard import TitleCard
 from modules.TMDbInterface import TMDbInterface
 
 parser = ArgumentParser(description='Manual fixes for the TitleCardMaker')
-parser.add_argument('-p', '--preference-file', type=Path, default='preferences.yml',
-                    metavar='PREFERENCE_FILE',
-                    help='Preference YAML file for parsing ImageMagick/Sonarr/TMDb options')
+parser.add_argument('-p', '--preference-file', type=Path, 
+                    default='preferences.yml', metavar='PREFERENCE_FILE',
+                    help='Preference YAML file for parsing '
+                         'ImageMagick/Sonarr/TMDb options')
 parser.add_argument('--sort-data-file', type=Path, default=SUPPRESS,
-                    metavar='DATAFILE',
-                    help='Sort the given datafile')
+                    metavar='DATAFILE', help='Sort the given datafile')
 
 # Argument group for 'manual' title card creation
-title_card_group = parser.add_argument_group('Title Cards', 'Manual title card creation')
+title_card_group = parser.add_argument_group('Title Cards',
+                                             'Manual title card creation')
 title_card_group.add_argument('--card-type', type=str, default='standard',
                               choices=TitleCard.CARD_TYPES.keys(),
                               help='Create a title card of a specific type')
-title_card_group.add_argument('--title-card', type=str, nargs=3, default=SUPPRESS, 
+title_card_group.add_argument('--title-card', type=str, nargs=3,
+                              default=SUPPRESS, 
                               metavar=('EPISODE', 'SOURCE', 'DESTINATION'),
-                              help='Manually create a title card using these parameters')
+                              help='Manually create a title card using these '
+                                   'parameters')
 title_card_group.add_argument('--season', type=str, default=None,
                               metavar='SEASON_TEXT',
-                              help='Specify the season text to use for this card')
+                              help="Specify this card's season text")
 title_card_group.add_argument('--title', type=str, nargs='+', default='',
                               metavar=('TITLE_LINE'),
-                              help='Specify the title text to use for this card')
-title_card_group.add_argument('--font', '--font-file', type=Path, default='__default',
-                              metavar='FONT_FILE',
-                              help='Specify a custom font to use for this card')
+                              help="Specify this card's title text")
+title_card_group.add_argument('--font', '--font-file', type=Path,
+                              default='__default', metavar='FONT_FILE',
+                              help="Specify this card's custom font")
 title_card_group.add_argument('--font-size', '--size', type=str, default='100%',
                               metavar='SCALE%',
-                              help='Specify a custom font scale, as percentage, to use for this card')
-title_card_group.add_argument('--font-color', '--color', type=str, default='__default',
-                              metavar='#HEX',
-                              help='Specify a custom font color to use for this card')
+                              help='Specify a custom font scale, as percentage,'
+                                   ' to use for this card')
+title_card_group.add_argument('--font-color', '--color', type=str, 
+                              default='__default', metavar='#HEX',
+                              help='Specify a custom font color to use for this'
+                                   ' card')
 
 # Argument group for genre maker
 genre_group = parser.add_argument_group('Genre Cards', 'Manual genre card creation')
@@ -48,20 +53,30 @@ genre_group.add_argument('--genre-card', type=str, nargs=3, default=SUPPRESS,
                          help='Create a genre card with the given text')
 genre_group.add_argument('--genre-card-batch', type=Path, default=SUPPRESS,
                          metavar=('SOURCE_DIRECTORY'),
-                         help='Create all genre cards for images in the given directory based on their file names')
+                         help='Create all genre cards for images in the given '
+                              'directory based on their file names')
 
 # Argument group for fixes relating to Sonarr
 sonarr_group = parser.add_argument_group('Sonarr', 'Fixes for how the maker interacts with Sonarr')
 sonarr_group.add_argument('--sonarr-list-ids', action='store_true',
-                          help='List all internal IDs used by Sonarr - use with grep')
+                          help='List all internal IDs used by Sonarr - use with'
+                               ' grep')
 
 # Argument group for fixes relating to TheMovieDatabase
 tmdb_group = parser.add_argument_group('TheMovieDatabase', 'Fixes for how the Maker interacts with TheMovieDatabase')
-tmdb_group.add_argument('--tmdb-download-images', nargs=6, default=SUPPRESS, action='append',
-                        metavar=('API_KEY', 'TITLE', 'YEAR', 'SEASON', 'EPISODES', 'DIRECTORY'),
-                        help='Download the best title card source image for the given episode')
+tmdb_group.add_argument('--tmdb-download-images', nargs=6, default=SUPPRESS,
+                        action='append',
+                        metavar=('API_KEY', 'TITLE', 'YEAR', 'SEASON',
+                                 'EPISODES', 'DIRECTORY'),
+                        help='Download the best title card source image for the'
+                             ' given episode')
 tmdb_group.add_argument('--delete-blacklist', action='store_true',
-                        help='Whether to delete the existing TMDb blacklist (executed first)')
+                        help='Whether to delete the existing TMDb blacklist')
+tmdb_group.add_argument('--add-translation', nargs=5, default=SUPPRESS,
+                        metavar=('TITLE', 'YEAR', 'DATAFILE', 'LANGUAGE_CODE',
+                                 'LABEL'),
+                        help='Add title translations from TMDb to the given '
+                             'datafile')
 
 # Check given arguments
 args = parser.parse_args()
@@ -81,7 +96,6 @@ if args.font_color == '__default':
 # Execute misc. options
 if hasattr(args, 'sort_data_file'):
     dfi = DataFileInterface(args.sort_data_file)
-
     dfi.sort(dfi._DataFileInterface__read_data())
 
 # Execute title card related options
@@ -134,4 +148,25 @@ if hasattr(args, 'tmdb_download_images'):
             episode_count=int(arg_set[4]),
             directory=Path(arg_set[5]),
         )
+
+if hasattr(args, 'add_language'):
+    dfi = DataFileInterface(Path(args.add_language[2]))
+    tmdbi = TMDbInterface(pp.tmdb_api_key)
+
+    for entry in dfi.read():
+        if args.add_language[4] in entry:
+            continue
+
+        new_title = tmdbi.get_episode_title(
+            title=args.add_language[0],
+            year=args.add_language[1],
+            season=entry['season_number'],
+            episode=entry['episode_number'],
+            language_code=args.add_language[3],
+        )
+
+        if new_title == None:
+            continue
+
+        dfi.modify_entry(**entry, **{args.add_language[4]: new_title})
 
