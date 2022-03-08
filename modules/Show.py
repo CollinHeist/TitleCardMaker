@@ -223,6 +223,10 @@ class Show:
         if self.__is_specified('seasons', 'hide'):
             self.hide_seasons = bool(self.__yaml['seasons']['hide'])
 
+        if (self.__is_specified('original_title', 'language')
+            and self.__is_specified('original_title', 'key')):
+            self.title_language = self.__yaml['original_title']
+
         # Validate season map & episode range aren't specified at the same time
         if (self.__is_specified('seasons')
             and self.__is_specified('episode_ranges')):
@@ -428,6 +432,49 @@ class Show:
             return True
 
         return False
+
+
+    def add_translation(self, tmdb_interface: 'TMDbInterface') -> None:
+        """
+        Add translated episode titles to the Episodes of this series.
+        
+        :param      tmdb_interface: Interface to TMDb to query for translated
+                                    episode titles.
+        """
+
+        # If no title language was specified, or TMDb syncing isn't enabled,skip
+        if self.title_language == {}:
+            return None
+
+        for _, episode in (pbar := tqdm(self.episodes.items(), leave=False)):
+            # Update progress bar
+            pbar.set_description(f'Checking {episode}')
+
+            # If the key already exists, skip this episode
+            if self.title_language['key'] in episode.extra_characteristics:
+                continue
+
+            # Query TMDb for the title of this episode in the requested language
+            language_title = tmdb_interface.get_episode_title(
+                self.series_info,
+                episode.episode_info,
+                self.title_language['language'],
+            )
+
+            # If episode wasn't found, or the original title was returned, skip!
+            if (language_title == None
+                or language_title ==  episode.episode_info.title.full_title):
+                continue
+
+            # Adding data, log it
+            log.debug(f'Adding "{language_title}" to '
+                      f'"{self.title_language["key"]}"')
+
+            # Modify data file entry with new title
+            self.file_interface.add_data_to_entry(
+                episode.episode_info,
+                **{self.title_language['key']: language_title},
+            )
 
 
     def create_missing_title_cards(self, tmdb_interface: 'TMDbInterface'=None,
