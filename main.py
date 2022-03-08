@@ -23,9 +23,16 @@ parser.add_argument('-r', '--run', action='count', default=0,
 parser.add_argument('-m', '--missing', type=Path, default=DEFAULT_MISSING_FILE,
                     metavar='FILE',
                     help='File to write a list of missing assets to')
+parser.add_argument('-l', '--log',
+                    choices=('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'),
+                    default='INFO',
+                    help='Level of logging verbosity to use')
 
 # Parse given arguments
 args = parser.parse_args()
+
+# Set log level
+log.setLevel(args.log)
 
 # Check if preference file exists
 if not args.preference_file.exists():

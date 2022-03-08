@@ -50,7 +50,3 @@ log.setLevel(DEBUG)
 handler = LogHandler()
 handler.setFormatter(LogFormatter())
 log.addHandler(handler)
-
-
-
-
