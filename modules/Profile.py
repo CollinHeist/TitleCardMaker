@@ -154,13 +154,13 @@ class Profile:
         if episode_info.abs_number == None:
             # Episode range, but episode has no absolute number
             if episode_info.season_number != 0:     # Don't warn on specials
-                self.warning(f'Episode range preferred, but episode '
-                             f'{episode_info} has no absolute number')
+                log.warning(f'Episode range preferred, but episode '
+                            f'{episode_info} has no absolute number')
             return self.__season_map[episode_info.season_number]
         elif episode_info.abs_number not in self.__episode_range:
             # Absolute number doesn't have episode range, fallback on season map
-            self.warning(f'Episode {episode_info} does not fall into specified '
-                         f'episode range')
+            log.warning(f'Episode {episode_info} does not fall into specified '
+                        f'episode range')
             return self.__season_map[episode_info.season_number]
 
         # Absolute number is provided and falls into mapped episode ranges
@@ -180,9 +180,9 @@ class Profile:
         # Warn if absolute number is requested but not present
         if (self.__use_custom_seasons and '{abs_' in self.episode_text_format
             and episode.episode_info.abs_number == None):
-                self.warning(f'Episode text formatting uses absolute episode '
-                             f'number, but episode {episode} has no absolute '
-                             f'number')
+                log.warning(f'Episode text formatting uses absolute episode '
+                            f'number, but episode {episode} has no absolute '
+                            f'number')
 
         # Format MultiEpisode episode text
         if isinstance(episode, MultiEpisode):
