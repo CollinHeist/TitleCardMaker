@@ -415,29 +415,20 @@ class TMDbInterface(WebInterface):
         # Get the TV id for the provided series+year
         self.__set_tmdb_id(series_info)
 
-        # Get this entry's season and episode numbers
-        season, episode = episode_info.season_number,episode_info.episode_number
+        # Get the TMDb index for this entry
+        index = self.__find_episode(series_info, episode_info)
+
+        # If None was returned, episode not found - warn, blacklist, and exit
+        if index == None:
+            return None
+
+        season, episode = index['season'], index['episode']
 
         # GET params
         url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/{season}'
                f'/episode/{episode}')
         params = {'api_key': self.__api_key, 'language': language_code}
-
-        # Make the GET request
         results = self._get(url=url, params=params)
-
-        # If absolute number has been given and the first query failed,try again
-        if (episode_info.abs_number != None and 'success' in results
-            and not results['success']):
-            # Try surround season numbers (TMDb indexes these weirdly..)
-            for new_season in range(1, season+1)[::-1]:
-                url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/'
-                       f'{new_season}/episode/{episode_info.abs_number}')
-                results = self._get(url=url, params=params)
-
-                # Return name if this query succeeded
-                if 'name' in results:
-                    return results['name']
 
         # No absolute number to test (or tried all), skip!
         if 'success' in results and not results['success']:
@@ -463,8 +454,6 @@ class TMDbInterface(WebInterface):
         # GET params
         url = f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/images'
         params = {'api_key': self.__api_key}
-
-        # Make the GET request
         results = self._get(url=url, params=params)
 
         # If there are no logos, warn and exit
