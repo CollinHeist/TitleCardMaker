@@ -131,12 +131,13 @@ class DataFileInterface:
                     Title(episode_data.pop('title')),
                     season_number,
                     episode_number,
+                    episode_data.pop('abs_number', None)
                 )
 
                 # Add any additional, unexpected keys from the YAML
                 data = {'episode_info': episode_info}
                 data.update(episode_data)
-
+                
                 yield data
 
 
