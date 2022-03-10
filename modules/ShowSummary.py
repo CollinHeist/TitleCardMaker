@@ -278,7 +278,7 @@ class ShowSummary(ImageMaker):
 
         # Add created by tag - summary is completed
         self._add_created_by(montage_and_logo)
-        self.info(f'Created ImageSummary {self.output.resolve()}')
+        log.info(f'Created ImageSummary {self.output.resolve()}')
 
         # Delete temporary files
         self.image_magick.delete_intermediate_images(
