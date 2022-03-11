@@ -199,7 +199,8 @@ class PreferenceParser:
 
         # If the file doesn't exist, error and exit
         if not self.file.exists():
-            log.critical(f'Preference file "{self.file.resolve()}" does not exist')
+            log.critical(f'Preference file "{self.file.resolve()}" does not '
+                         f'exist')
             exit(1)
 
         # Read file 
@@ -216,11 +217,11 @@ class PreferenceParser:
     def iterate_series_files(self) -> [Show]:
         """
         Iterate through all series file listed in the preferences. For each
-        series encountered in each file, yield a `Show` object. Files that do
-        not exist or have invalid YAML are skipped.
+        series encountered in each file, yield a Show object. Files that do not
+        exist or have invalid YAML are skipped.
         
-        :returns:   An iterable of `Show` objects created by the entry listed
-                    in all the known (valid) series files. 
+        :returns:   An iterable of Show objects created by the entry listed in
+                    all the known (valid) series files. 
         """
 
         # For each file in the cards list
@@ -242,15 +243,25 @@ class PreferenceParser:
                 try:
                     file_yaml = safe_load(file_handle)
                 except Exception as e:
-                    log.error(f'Error reading preference file:\n{e}\n')
+                    log.error(f'Error reading series file:\n{e}\n')
                     continue
 
-            # Get the libraries listed in this file
-            libraries = file_yaml['libraries'] if 'libraries' in file_yaml else {}
+            # Skip if there are no series to yield
+            if 'series' not in file_yaml:
+                log.info(f'Series file has no entries')
+                continue
+
+            # Get library map for this file; error+skip missing library paths
+            libraries = file_yaml.get('libraries', {})
+            if not all('path' in libraries[library] for library in libraries):
+                breakpoint()
+                log.error(f'Libraries in series file "{file_object.resolve()}" '
+                          f'are missing their "path" attributes.')
+                continue
 
             # Go through each series in this file
-            pbar2 = tqdm(file_yaml['series'], leave=False,desc='Creating Shows')
-            for show_name in pbar2:
+            for show_name in tqdm(file_yaml['series'], leave=False,
+                                  desc='Creating Shows'):
                 # Yield the Show object created from this entry
                 yield Show(
                     show_name,

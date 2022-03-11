@@ -150,9 +150,13 @@ class ShowArchive:
                 if logo == None:
                     continue
 
-                log.info(f'Downloading series logo')
+                log.debug(f'Downloading series logo')
                 tmdb_interface.download_image(logo, summary.logo)
 
             # If the logo was downloaded (or already existed), create summary
             summary.create()
+
+            # If the summary exists, log that
+            if summary.output.exists():
+                log.debug(f'Created ImageSummary {summary.output.resolve()}')
 
