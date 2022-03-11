@@ -140,14 +140,22 @@ class Show:
             self.series_info.update_name(self.__yaml['name'])
 
         if self.__is_specified('library'):
-            value = self.__yaml['library']
-            if value not in self.__library_map:
-                log.error(f'Library "{value}" of series {self} is not found in'
-                          f'libraries list')
+            if (library := self.__yaml['library']) not in self.__library_map:
+                log.error(f'Library "{library}" of series {self} is not found '
+                          f'in libraries list')
                 self.valid = False
             else:
-                self.library_name = value
-                self.library = Path(self.__library_map[value])
+                self.library_name = library
+                self.library = Path(self.__library_map[library]['path'])
+                # If card type was specified for this library, set that
+                if 'card_type' in self.__library_map[library]:
+                    card_type = self.__library_map[library]['card_type']
+                    if card_type not in TitleCard.CARD_TYPES:
+                        log.error(f'Unknown card type "{card_type}" of series '
+                                  f'{self}')
+                        self.valid = False
+                    else:
+                        self.card_class = TitleCard.CARD_TYPES[card_type]
 
         if self.__is_specified('card_type'):
             if (value := self.__yaml['card_type']) not in TitleCard.CARD_TYPES:
@@ -221,9 +229,9 @@ class Show:
         if self.__is_specified('seasons', 'hide'):
             self.hide_seasons = bool(self.__yaml['seasons']['hide'])
 
-        if (self.__is_specified('original_title', 'language')
-            and self.__is_specified('original_title', 'key')):
-            self.title_language = self.__yaml['original_title']
+        if (self.__is_specified('translation', 'language')
+            and self.__is_specified('translation', 'key')):
+            self.title_language = self.__yaml['translation']
 
         # Validate season map & episode range aren't specified at the same time
         if (self.__is_specified('seasons')

@@ -246,8 +246,18 @@ class PreferenceParser:
                     log.error(f'Error reading series file:\n{e}\n')
                     continue
 
-            # Get the libraries listed in this file
-            libraries = file_yaml['libraries'] if 'libraries' in file_yaml else {}
+            # Skip if there are no series to yield
+            if 'series' not in file_yaml:
+                log.info(f'Series file has no entries')
+                continue
+
+            # Get library map for this file; error+skip missing library paths
+            libraries = file_yaml.get('libraries', {})
+            if not all('path' in libraries[library] for library in libraries):
+                breakpoint()
+                log.error(f'Libraries in series file "{file_object.resolve()}" '
+                          f'are missing their "path" attributes.')
+                continue
 
             # Go through each series in this file
             for show_name in tqdm(file_yaml['series'], leave=False,

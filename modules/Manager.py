@@ -68,7 +68,7 @@ class Manager:
         for show in self.preferences.iterate_series_files():
             # Skip shows whose YAML was invalid
             if not show.valid:
-                info.warning(f'Skipping series {show}')
+                log.warning(f'Skipping series {show}')
                 continue
                 
             self.shows.append(show)
