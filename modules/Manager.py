@@ -82,6 +82,20 @@ class Manager:
             )
 
 
+    def check_tmdb_for_translations(self) -> None:
+        """Query TMDb for all translated episode titles (if indicated). """
+
+        # If the TMDbInterface isn't enabled, skip
+        if not self.tmdb_interface:
+            return None
+
+        # For each show in the Manager, add translation
+        for show in (pbar := tqdm(self.shows)):
+            pbar.set_description(f'Adding translations for '
+                                 f'"{show.series_info.short_name}"')
+            show.add_translation(self.tmdb_interface)
+
+
     def read_show_source(self) -> None:
         """
         Reads all source files known to this manager. This reads Episode objects
@@ -100,7 +114,7 @@ class Manager:
     def check_sonarr_for_new_episodes(self) -> None:
         """
         Query Sonarr to see if any new episodes exist for every show known to
-        this manager. This calls `Show.check_sonarr_for_new_epsiodes()`.
+        this manager.
         """
 
         # If sonarr is globally disabled, skip
@@ -195,7 +209,7 @@ class Manager:
         self.create_shows()
         self.read_show_source()
         self.check_sonarr_for_new_episodes()
-        # self.check_tmdb_for_original_language()
+        self.check_tmdb_for_translations()
         self.read_show_source() # again?
         self.create_missing_title_cards()
         self.update_archive()
