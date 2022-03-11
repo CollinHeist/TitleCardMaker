@@ -168,8 +168,6 @@ class TMDbInterface(WebInterface):
             # Construct GET arguments
             url = f'{self.API_BASE_URL}find/{series_info.tvdb_id}'
             params = {'api_key': self.__api_key, 'external_source': 'tvdb_id'}
-
-            # Query TMDb
             results = self._get(url=url, params=params)['tv_results']
 
             if len(results) == 0:
@@ -192,8 +190,6 @@ class TMDbInterface(WebInterface):
         params = {'api_key': self.__api_key, 'query': series_info.name,
                   'first_air_date_year': series_info.year,
                   'include_adult': False}
-
-        # Query TMDb
         results = self._get(url=url, params=params)
 
         # If there are no results, error and return
@@ -285,7 +281,6 @@ class TMDbInterface(WebInterface):
 
             # If the season DNE, this episode cannot be found
             if 'success' in tmdb_season and not tmdb_season['success']:
-                log.debug(f'Tried every season, {episode_info} not found')
                 return None
 
             # Season could be found, check each given title

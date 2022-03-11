@@ -3,7 +3,6 @@ from pathlib import Path
 from re import match
 
 from tqdm import tqdm
-from yaml import safe_load
 
 from modules.CardType import CardType
 from modules.DataFileInterface import DataFileInterface
@@ -133,10 +132,10 @@ class Show:
     def __parse_yaml(self):
         """
         Parse the show's YAML and update this object's attributes. Error on any
-        invalid attributes and update this object's valid attribute.
+        invalid attributes and update this object's validity.
         """
 
-        # Read all optional tags
+        # Read all optional attributes
         if self.__is_specified('name'):
             self.series_info.update_name(self.__yaml['name'])
 
@@ -151,8 +150,7 @@ class Show:
                 self.library = Path(self.__library_map[value])
 
         if self.__is_specified('card_type'):
-            value = self.__yaml['card_type']
-            if value not in TitleCard.CARD_TYPES:
+            if (value := self.__yaml['card_type']) not in TitleCard.CARD_TYPES:
                 log.error(f'Unknown card type "{value}" of series {self}')
                 self.valid = False
             else:
@@ -195,8 +193,8 @@ class Show:
                 self.font_size = float(value[:-1]) / 100.0
 
         if self.__is_specified('font', 'file'):
-            value = Path(self.__yaml['font']['file'])
-            if not value.exists():
+            
+            if not (value := Path(self.__yaml['font']['file'])).exists():
                 log.error(f'Font file "{value}" of series {self} not found')
                 self.valid = False
             else:
@@ -206,7 +204,7 @@ class Show:
         if self.__is_specified('font', 'case'):
             value = self.__yaml['font']['case'].lower()
             if value not in self.card_class.CASE_FUNCTION_MAP:
-                log.error(f'Font case "{value}" of series {self} is unrecognized')
+                log.error(f'Font case "{value}" of series {self} is invalid')
                 self.valid = False
             else:
                 self.font_case = value
@@ -468,7 +466,7 @@ class Show:
 
             # Adding data, log it
             log.debug(f'Adding "{language_title}" to '
-                      f'"{self.title_language["key"]}"')
+                      f'"{self.title_language["key"]}" of {self}')
 
             # Modify data file entry with new title
             self.file_interface.add_data_to_entry(

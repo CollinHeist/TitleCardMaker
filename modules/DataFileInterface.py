@@ -13,7 +13,7 @@ class DataFileInterface:
     """
 
     """Default name for a data file of episode information"""
-    GENERIC_DATA_FILE_NAME: str = 'data.yml'
+    GENERIC_DATA_FILE_NAME = 'data.yml'
 
 
     def __init__(self, data_file: Path) -> None:
@@ -28,7 +28,7 @@ class DataFileInterface:
 
 
     def __repr__(self) -> str:
-        """Returns a unambiguous string representation of the object."""
+        """Returns an unambiguous string representation of the object."""
 
         return f'<DataFileInterface data_file={self.file.resolve()}>'
 
