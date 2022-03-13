@@ -18,7 +18,9 @@ class Title:
      "Sister Babysits"]
     """
 
+    """Characters that should be used for priority splitting between lines"""
     SPLIT_CHARACTERS = (':', ',', ')', ']', '?', '!', '-', '.', '/')
+
 
     def __init__(self, title) -> None:
         """
@@ -51,26 +53,21 @@ class Title:
 
 
     def __str__(self) -> str:
-        """
-        Returns a string representation of the object.
-        """
+        """Returns a string representation of the object."""
 
         return f'"{self.full_title}"'
 
 
     def __repr__(self) -> str:
-        """
-        Returns a unambiguous string representation of the object.
-        
-        :returns:   String representation of the object.
-        """
+        """Returns an unambiguous string representation of the object."""
 
         return f'<Title title="{self.full_title}", lines={self.__title_lines}>'
 
 
     def get_partless_title(self) -> str:
         """
-        Gets the partless title.
+        Gets the partless title for this object. This removes parenthesized
+        digits, and title with "part" in them.
         
         :returns:   The partless title.
         """
@@ -115,7 +112,7 @@ class Title:
 
         # Misformat ahead..
         if len(self.full_title) > max_line_count * max_line_width:
-            log.debug(f'Title "{self.full_title}" too long, potential misformat')
+            log.debug(f'Title {self} too long, potential misformat')
 
         # Start splitting on the base full title
         all_lines = [self.full_title]
@@ -194,8 +191,8 @@ class Title:
         """
         Apply the given profile to this title. If this object was created with
         manually specified title lines, then the profile is applied to each
-        line, otherwise it's applied to the full title. Then newlines ('\n') are
-        used to join each line
+        line, otherwise it's applied to the full title. Then newlines are used
+        to join each line
         
         :param      profile:    Profile object to call `convert_title()`.
         

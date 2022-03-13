@@ -205,7 +205,6 @@ class Manager:
     def run(self) -> None:
         """Run the manager and exit."""
 
-        # Execute everything
         self.create_shows()
         self.read_show_source()
         self.check_sonarr_for_new_episodes()

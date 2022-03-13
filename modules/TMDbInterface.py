@@ -50,12 +50,12 @@ class TMDbInterface(WebInterface):
         else:
             self.__id_map = {}
 
-        # Attempt to read existing blacklist
+        # Attempt to read existing blacklist, if DNE, create blank one
         if self.__BLACKLIST.exists():
             with self.__BLACKLIST.open('rb') as file_handle:
                 self.__blacklist = load(file_handle)
         else:
-            self.__blacklist = {}
+            self.__blacklist = {'image': {}, 'title': {}, 'logo': {}}
         
         # Store API key
         self.__api_key = api_key
@@ -63,35 +63,40 @@ class TMDbInterface(WebInterface):
 
 
     def __repr__(self) -> str:
-        """Returns a unambiguous string representation of the object."""
+        """Returns an unambiguous string representation of the object."""
 
         return f'<TMDbInterface api_key={self.__api_key}>'
 
 
     def __update_blacklist(self, series_info: SeriesInfo,
-                           episode_info: EpisodeInfo) -> None:
+                           episode_info: EpisodeInfo, query_type: str) -> None:
         """
         Adds the given entry to the blacklist; indicating that this exact entry
         shouldn't be queried to TheMovieDB (to prevent unnecessary queries).
         
         :param      series_info:    SeriesInfo for the entry.
         :param      episode_info:   EpisodeInfo for the entry.
+        :param      query_type:     The type of request being updated.
         """
 
-        key = f'{series_info.full_name}-{episode_info.key}'
+        # Key for this entry based on the query type
+        if query_type == 'logo':
+            key = series_info.full_name
+        else:
+            key = f'{series_info.full_name}-{episode_info.key}'
 
         # If previously indexed and next has passed, increase count and set next
         later = datetime.now() + timedelta(days=1)
-        if key in self.__blacklist:
-            if datetime.now() >= self.__blacklist[key]['next']:
+        if key in self.__blacklist[query_type]:
+            if datetime.now() >= self.__blacklist[query_type][key]['next']:
                 # One day has passed, and still failed, increment count
-                self.__blacklist[key]['failures'] += 1
-                self.__blacklist[key]['next'] = later
+                self.__blacklist[query_type][key]['failures'] += 1
+                self.__blacklist[query_type][key]['next'] = later
             else:
                 return
         else:
             # Add new entry to blacklist with 1 failure, next time is in one day
-            self.__blacklist[key] = {'failures': 1, 'next': later}
+            self.__blacklist[query_type][key] = {'failures': 1, 'next': later}
 
         # Write latest version of blacklist to file, in case program exits
         with self.__BLACKLIST.open('wb') as file_handle:
@@ -99,29 +104,35 @@ class TMDbInterface(WebInterface):
 
 
     def __is_blacklisted(self, series_info: SeriesInfo,
-                         episode_info: EpisodeInfo) -> bool:
+                         episode_info: EpisodeInfo, query_type: str) -> bool:
         """
         Determines if the specified entry is in the blacklist (i.e. should
         not bother querying TMDb.
         
         :param      series_info:    SeriesInfo for the entry.
         :param      episode_info:   EpisodeInfo for the entry.
+        :param      query_type:     The type of request being checked.
         
         :returns:   True if the entry is blacklisted, False otherwise.
         """
 
-        key = f'{series_info.full_name}-{episode_info.key}'
+        # Key for this entry based on the query type
+        if query_type == 'logo':
+            key = series_info.full_name
+        else:
+            key = f'{series_info.full_name}-{episode_info.key}'
 
         # If never indexed before, skip failure check
-        if key not in self.__blacklist:
+        if key not in self.__blacklist[query_type]:
             return False
             
-        if self.__blacklist[key]['failures'] >self.preferences.tmdb_retry_count:
+        failures = self.__blacklist[query_type][key]['failures']
+        if failures > self.preferences.tmdb_retry_count:
             return True
 
         # If we haven't passed next time, then treat as temporary blacklist
         # i.e. before next = 'blacklisted', after next is not
-        return datetime.now() < self.__blacklist[key]['next']
+        return datetime.now() < self.__blacklist[query_type][key]['next']
 
 
     def __add_id_to_map(self, series_info: SeriesInfo) -> None:
@@ -213,8 +224,8 @@ class TMDbInterface(WebInterface):
         3. Series TMDb ID and season+absolute episode index with title match
         3. Series TMDb ID and title match on any episode
         
-        :param      series_info:   The series information.
-        :param      episode_info:  The episode information.
+        :param      series_info:    The series information.
+        :param      episode_info:   The episode information.
         
         :returns:   Dictionary of the index for the given entry. This dictionary
                     has keys 'season' and 'episode'. None if returned if the
@@ -347,20 +358,20 @@ class TMDbInterface(WebInterface):
         """
 
         # Don't query the database if this episode is in the blacklist
-        if self.__is_blacklisted(series_info, episode_info):
+        if self.__is_blacklisted(series_info, episode_info, 'image'):
             return None
 
         # Set the TMDb ID for the provided series
         self.__set_tmdb_id(series_info)
 
         # Get the TMDb index for this entry
-        index = self.__find_episode(series_info, episode_info)
+        index = self.__find_episode(series_info, episode_info, title_match)
 
         # If None was returned, episode not found - warn, blacklist, and exit
         if index == None:
             log.info(f'TMDb has no matching episode for "{series_info}" '
                      f'{episode_info}')
-            self.__update_blacklist(series_info, episode_info)
+            self.__update_blacklist(series_info, episode_info, 'image')
             return None
 
         season, episode = index['season'], index['episode']
@@ -380,7 +391,7 @@ class TMDbInterface(WebInterface):
         # If 'stills' is in JSON, but is empty, then TMDb has no images
         if len(results['stills']) == 0:
             log.debug(f'TMDb has no images for "{series_info}" {episode_info}')
-            self.__update_blacklist(series_info, episode_info)
+            self.__update_blacklist(series_info, episode_info, 'image')
             return None
 
         # Get the best image, None is returned if requirements weren't met
@@ -388,7 +399,7 @@ class TMDbInterface(WebInterface):
         if not best_image:
             log.debug(f'TMDb images for "{series_info}" {episode_info} do not '
                       f'meet dimensional requirements')
-            self.__update_blacklist(series_info, episode_info)
+            self.__update_blacklist(series_info, episode_info, 'image')
             return None
         
         return f'https://image.tmdb.org/t/p/original{best_image["file_path"]}'
@@ -407,6 +418,10 @@ class TMDbInterface(WebInterface):
         :returns:   The episode title, None if the entry does not exist.
         """
 
+        # Don't query the database if this episode is in the blacklist
+        if self.__is_blacklisted(series_info, episode_info, 'title'):
+            return None
+
         # Get the TV id for the provided series+year
         self.__set_tmdb_id(series_info)
 
@@ -415,6 +430,7 @@ class TMDbInterface(WebInterface):
 
         # If None was returned, episode not found - warn, blacklist, and exit
         if index == None:
+            self.__update_blacklist(series_info, episode_info, 'title')
             return None
 
         season, episode = index['season'], index['episode']
@@ -425,8 +441,9 @@ class TMDbInterface(WebInterface):
         params = {'api_key': self.__api_key, 'language': language_code}
         results = self._get(url=url, params=params)
 
-        # No absolute number to test (or tried all), skip!
+        # Unsuccessful for some reason.. skip
         if 'success' in results and not results['success']:
+            self.__update_blacklist(series_info, episode_info, 'title')
             return None
 
         # Return the name for this episode
@@ -443,6 +460,10 @@ class TMDbInterface(WebInterface):
                     images are available.
         """
 
+        # Don't query the database if this episode is in the blacklist
+        if self.__is_blacklisted(series_info, None, 'logo'):
+            return None
+
         # Set the TV id for the provided series+year
         self.__set_tmdb_id(series_info)
 
@@ -451,8 +472,9 @@ class TMDbInterface(WebInterface):
         params = {'api_key': self.__api_key}
         results = self._get(url=url, params=params)
 
-        # If there are no logos, warn and exit
+        # If there are no logos, blacklist and exit
         if len(results['logos']) == 0:
+            self.__update_blacklist(series_info, None, 'logo')
             return None
 
         # Pick the best image based on image dimensions
@@ -472,7 +494,9 @@ class TMDbInterface(WebInterface):
             if image['width']*image['height'] > best['width']*best['height']:
                 best = results['logos'][index]
 
+        # No valid image found, blacklist and exit
         if not valid_image:
+            self.__update_blacklist(series_info, None, 'logo')
             return None
 
         return f'https://image.tmdb.org/t/p/original{best["file_path"]}'
