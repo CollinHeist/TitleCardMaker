@@ -193,6 +193,7 @@ class Profile:
             )
 
             return new_etf.format(
+                season_number=episode.season_number,
                 episode_start=episode.episode_start,
                 episode_end=episode.episode_end,
                 abs_start=episode.abs_start,
@@ -202,11 +203,13 @@ class Profile:
         # Standard Episode class
         if self.__use_custom_seasons:
             return self.episode_text_format.format(
+                season_number=episode.episode_info.season_number,
                 episode_number=episode.episode_info.episode_number,
                 abs_number=episode.episode_info.abs_number,
             )
 
         return episode.card_class.EPISODE_TEXT_FORMAT.format(
+            season_number=episode.episode_info.season_number,
             episode_number=episode.episode_info.episode_number,
             abs_number=episode.episode_info.abs_number, 
         )
@@ -278,7 +281,11 @@ class Profile:
 
         # Find match of above regex, if exists, delete that text
         # Perform match on the case-ified episode text
-        text_to_remove = match(remove_regex, title_text, IGNORECASE)
+        try:
+            text_to_remove = match(remove_regex, title_text, IGNORECASE)
+        except Exception:
+            # Regex match error, return title text
+            return title_text
 
         # If there's no match, return the original title
         if not text_to_remove:

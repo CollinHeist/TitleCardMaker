@@ -18,7 +18,7 @@ class Manager:
 
     def __init__(self) -> None:
         """
-        Constructs a new instance of the manager. This uses the global
+        Constructs a new instance of the Manager. This uses the global
         PreferenceParser object in preferences, and optionally creates
         interfaces as indicated by that parser.
         """
@@ -63,8 +63,11 @@ class Manager:
         archives lists.
         """
 
+        # Reset this Manager's list of Show and ShowArchive objects
         self.shows = []
         self.archives = []
+
+        # Go through each Series YAML file
         for show in self.preferences.iterate_series_files():
             # Skip shows whose YAML was invalid
             if not show.valid:
@@ -83,7 +86,7 @@ class Manager:
 
 
     def check_tmdb_for_translations(self) -> None:
-        """Query TMDb for all translated episode titles (if indicated). """
+        """Query TMDb for all translated episode titles (if indicated)."""
 
         # If the TMDbInterface isn't enabled, skip
         if not self.tmdb_interface:
@@ -129,7 +132,7 @@ class Manager:
         """
         Creates all missing title cards for every show known to this manager.
         For each show, if any new title cards are created, it's Plex metadata is
-        updated (if enabled). This calls `Show.create_missing_title_cards()`
+        updated (if enabled). This calls Show.create_missing_title_cards().
         """
 
         for show in (pbar := tqdm(self.shows)):
@@ -158,7 +161,7 @@ class Manager:
     def update_archive(self) -> None:
         """
         Update the title card archives for every show known to the manager. This
-        calls `ShowArchive.update_archive()` if archives are globally enabled.
+        calls ShowArchive.update_archive() if archives are globally enabled.
         """
 
         # If archives are globally disabled, skip
@@ -183,8 +186,8 @@ class Manager:
 
     def create_summaries(self) -> None:
         """
-        Creates summaries for every `ShowArchive` known to this manager. This
-        calls `ShowArchive.create_summary()` if summaries are globally enabled.
+        Creates summaries for every ShowArchive known to this manager. This
+        calls ShowArchive.create_summary()` if summaries are globally enabled.
         """
 
         if not self.preferences.create_summaries:
@@ -216,9 +219,7 @@ class Manager:
 
 
     def report_missing(self, file: 'Path') -> None:
-        """
-        Report all missing assets for Shows known to the Manager.
-        """
+        """Report all missing assets for Shows known to the Manager."""
 
         missing = {}
         # Go through each show
@@ -229,7 +230,8 @@ class Manager:
                 if not episode.source.exists():
                     show_dict[str(episode)] = {}
                     show_dict[str(episode)]['source'] = episode.source.name
-                if episode.destination != None and not episode.destination.exists():
+                if (episode.destination != None
+                    and not episode.destination.exists()):
                     show_dict[str(episode)]['card'] = episode.destination.name
 
             if not show.logo.exists():

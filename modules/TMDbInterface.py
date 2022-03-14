@@ -7,6 +7,7 @@ from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
 import modules.preferences as global_preferences
 from modules.SeriesInfo import SeriesInfo
+from modules.Title import Title
 from modules.WebInterface import WebInterface
 
 class TMDbInterface(WebInterface):
@@ -214,7 +215,7 @@ class TMDbInterface(WebInterface):
 
 
     def __find_episode(self, series_info: SeriesInfo,
-                       episode_info: EpisodeInfo) -> dict:
+                       episode_info: EpisodeInfo, title_match: bool=True)->dict:
         """
         Finds the episode index for the given entry. Searching is done in the
         following priority:
@@ -226,6 +227,8 @@ class TMDbInterface(WebInterface):
         
         :param      series_info:    The series information.
         :param      episode_info:   The episode information.
+        :para       title_match:    Whether to require the title within
+                                    episode_info to match the title on TMDb.
         
         :returns:   Dictionary of the index for the given entry. This dictionary
                     has keys 'season' and 'episode'. None if returned if the
@@ -270,6 +273,13 @@ class TMDbInterface(WebInterface):
                 tmdb_info = self._get(url=url, params=params)
                 if 'season_number' in tmdb_info:
                     break
+
+        # Episode has been found on TMDb, skip title match if specified
+        if 'name' in tmdb_info and not title_match:
+            return {
+                'season': tmdb_info['season_number'],
+                'episode': tmdb_info['episode_number'],
+            }
 
         # Episode has been found on TMDb, check title
         if 'name' in tmdb_info and episode_info.title.matches(tmdb_info['name']):
@@ -345,13 +355,16 @@ class TMDbInterface(WebInterface):
 
 
     def get_source_image(self, series_info: SeriesInfo,
-                         episode_info: EpisodeInfo) -> str:
+                         episode_info: EpisodeInfo,
+                         title_match: bool=True) -> str:
         """
         Get the best source image for the requested entry. The URL of this image
         is returned.
         
         :param      series_info:    SeriesInfo for this entry.
         :param      episode_info:   EpisodeInfo for this entry.
+        :param      title_match:    Whether to require the episode title to
+                                    match when querying TMDb.
         
         :returns:   URL to the 'best' source image for the requested entry. None
                     if no images are available.
@@ -540,8 +553,12 @@ class TMDbInterface(WebInterface):
         # Create a temporary interface object for this function
         dbi = TMDbInterface(api_key)
 
+        # Create SeriesInfo and EpisodeInfo objects
+        si = SeriesInfo(title, year)
+
         for episode in range(1, episode_count+1):
-            image_url=dbi.get_title_card_source_image(title,year,season,episode)
+            ei = EpisodeInfo(Title(''), season, episode)
+            image_url=dbi.get_source_image(si, ei, title_match=False)
 
             # If a valid URL was returned, download it
             if image_url:

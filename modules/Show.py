@@ -52,7 +52,7 @@ class Show:
 
         # If year isn't given, skip completely
         if not self.__is_specified('year'):
-            log.error(f'Series "{name}" is missing required "year"')
+            log.error(f'Series "{name}" is missing the required "year"')
             self.valid = False
             return 
 
@@ -201,7 +201,6 @@ class Show:
                 self.font_size = float(value[:-1]) / 100.0
 
         if self.__is_specified('font', 'file'):
-            
             if not (value := Path(self.__yaml['font']['file'])).exists():
                 log.error(f'Font file "{value}" of series {self} not found')
                 self.valid = False
@@ -449,7 +448,7 @@ class Show:
         """
 
         # If no title language was specified, or TMDb syncing isn't enabled,skip
-        if self.title_language == {}:
+        if self.title_language == {} or not self.tmdb_sync:
             return None
 
         for _, episode in (pbar := tqdm(self.episodes.items(), leave=False)):
