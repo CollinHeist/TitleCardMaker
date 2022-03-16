@@ -19,9 +19,14 @@ class DataFileInterface:
     def __init__(self, data_file: Path) -> None:
         """
         Constructs a new instance of the interface for the specified data file.
+        This also creates the parent directories for the data file if they do
+        not exist.
 
         :param      data_file:  Path to the data file to interface with.
         """
+
+        # Create parent directories if necessary
+        data_file.parent.mkdir(parents=True, exist_ok=True)
         
         # Store the data file for future use
         self.file = data_file
@@ -63,14 +68,11 @@ class DataFileInterface:
 
     def __write_data(self, yaml: dict) -> None:
         """
-        Write the given YAML data to this interface's file. Created parent
-        directories if they do not exist, and puts all data under 'data' key.
+        Write the given YAML data to this interface's file. This puts all data
+        under the 'data' key.
 
         :param      yaml:   YAML dictionary to write to file.
         """
-
-        # Create parent directories if necessary
-        self.file.parent.mkdir(parents=True, exist_ok=True)
 
         # Write updated data with this entry added
         with self.file.open('w') as file_handle:
@@ -131,7 +133,7 @@ class DataFileInterface:
                     Title(episode_data.pop('title')),
                     season_number,
                     episode_number,
-                    episode_data.pop('abs_number', None)
+                    episode_data.pop('abs_number', None),
                 )
 
                 # Add any additional, unexpected keys from the YAML

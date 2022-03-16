@@ -152,7 +152,7 @@ class ShowArchive:
 
                 log.debug(f'Downloading series logo')
                 tmdb_interface.download_image(logo, summary.logo)
-
+            
             # If the logo was downloaded (or already existed), create summary
             summary.create()
 

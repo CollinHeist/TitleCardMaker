@@ -69,8 +69,7 @@ class ShowSummary(ImageMaker):
         ))
 
         # Warn if this show has no episodes to work with
-        episode_count = len(available_episodes)
-        if episode_count == 0:
+        if (episode_count := len(available_episodes)) == 0:
             return None
 
         # Skip if the number of available episodes is below the minimum

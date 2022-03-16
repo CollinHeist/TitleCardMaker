@@ -254,7 +254,6 @@ class PreferenceParser:
             # Get library map for this file; error+skip missing library paths
             libraries = file_yaml.get('libraries', {})
             if not all('path' in libraries[library] for library in libraries):
-                breakpoint()
                 log.error(f'Libraries in series file "{file_object.resolve()}" '
                           f'are missing their "path" attributes.')
                 continue
