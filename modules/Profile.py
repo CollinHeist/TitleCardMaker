@@ -159,7 +159,7 @@ class Profile:
             return self.__season_map[episode_info.season_number]
         elif episode_info.abs_number not in self.__episode_range:
             # Absolute number doesn't have episode range, fallback on season map
-            log.warning(f'{episode_info} does not fall into specified episode'
+            log.warning(f'{episode_info} does not fall into specified episode '
                         f'range')
             return self.__season_map[episode_info.season_number]
 

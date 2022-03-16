@@ -211,8 +211,9 @@ class Manager:
         self.create_shows()
         self.read_show_source()
         self.check_sonarr_for_new_episodes()
+        self.read_show_source()
         self.check_tmdb_for_translations()
-        self.read_show_source() # again?
+        self.read_show_source()
         self.create_missing_title_cards()
         self.update_archive()
         self.create_summaries()
@@ -227,6 +228,9 @@ class Manager:
             show_dict = {}
             # Go through each episode for this show, add missing source/cards
             for _, episode in show.episodes.items():
+                # Don't report special content as missing
+                if episode.episode_info.season_number == 0:
+                    continue
                 if not episode.source.exists():
                     show_dict[str(episode)] = {}
                     show_dict[str(episode)]['source'] = episode.source.name
