@@ -494,16 +494,21 @@ class TMDbInterface(WebInterface):
         best = results['logos'][0]
         valid_image = False
         for index, image in enumerate(results['logos']):
-            # Skip all non-PNG
-            if not image['file_path'].endswith('.png'):
+            # Skip all non-transparent
+            if not image['file_path'].endswith(('.png', '.svg')):
                 continue
 
             # Skip logos that aren't english
             if image['iso_639_1'] != 'en':
                 continue
 
-            # Choose the best image on the pixel count alone
+            # If the image is SVG, pick best and exit loop
             valid_image = True
+            if image['file_path'].endswith('.svg'):
+                best = results['logos'][index]
+                break
+
+            # Choose the best image on the pixel count alone
             if image['width']*image['height'] > best['width']*best['height']:
                 best = results['logos'][index]
 
