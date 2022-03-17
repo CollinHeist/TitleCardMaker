@@ -17,10 +17,13 @@ class ShowSummary(ImageMaker):
     """
 
     """Default color for the background of the summary image"""
-    BACKGROUND_COLOR: str = '#1A1A1A'
+    BACKGROUND_COLOR = '#1A1A1A'
 
-    """Default filename of the logo file to search for (referenced by other classes)"""
-    LOGO_FILENAME: str = 'logo.png'
+    """Default filename of logo files"""
+    LOGO_FILENAME = 'logo.png'
+
+    """Temporary path for SVG files being converted"""
+    _TEMP_SVG_FILENAME = ImageMaker.TEMP_DIR / 'logo.svg'
 
     """Paths to intermediate images created in the process of making a summary."""
     __MONTAGE_PATH = ImageMaker.TEMP_DIR / 'montage.png'
@@ -245,6 +248,36 @@ class ShowSummary(ImageMaker):
         return self.output
 
 
+    def convert_svg_to_png(self) -> Path:
+        """
+        Convert the temporary SVG logo (located at _TEMP_SVG_FILENAME) and write
+        it to this ShowSummary's logo file.
+        
+        :returns:   Path to the created file (this summary's logo file).
+        """
+
+        # If the temp file doesn't exist, return
+        if not self._TEMP_SVG_FILENAME.exists():
+            return None
+
+        # Convert file to PNG
+        command = ' '.join([
+            f'convert',
+            f'-density 512',
+            f'-resize x1024',
+            f'-background None',
+            f'"{self._TEMP_SVG_FILENAME.resolve()}"',
+            f'"{self.logo.resolve()}"',
+        ])
+
+        self.image_magick.run(command)
+        
+        # Delete SVG file
+        self.image_magick.delete_intermediate_images(self._TEMP_SVG_FILENAME)
+
+        return self.logo
+
+
     def create(self) -> None:
         """
         Create the ShowSummary defined by this show object. Image selection is
@@ -260,7 +293,7 @@ class ShowSummary(ImageMaker):
 
         # Exit if a logo does not exist
         if not self.logo.exists():
-            log.error('Cannot create ShowSummary - no logo found')
+            log.warning('Cannot create ShowSummary - no logo found')
             return None
 
         # Create montage of title cards

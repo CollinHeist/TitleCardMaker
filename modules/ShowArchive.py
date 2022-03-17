@@ -144,16 +144,26 @@ class ShowArchive:
             # If the logo doesn't exist, and we're given a TMDBInterface,
             # attempt to download the best logo
             if not summary.logo.exists() and tmdb_interface:
-                logo = tmdb_interface.get_series_logo(self.series_info)
+                # If no logo was returned, skip
+                if not (logo:=tmdb_interface.get_series_logo(self.series_info)):
+                    return None
 
                 # If a valid logo was returned, download it
-                if logo == None:
-                    continue
+                log.debug(f'Downloading logo for {self.series_info}')
 
-                log.debug(f'Downloading series logo')
-                tmdb_interface.download_image(logo, summary.logo)
+                # If the returned logo was SVG, convert to PNG
+                if logo.endswith('.svg'):
+                    # Download SVG to temp file, convert to PNG
+                    tmdb_interface.download_image(
+                        logo,
+                        summary._TEMP_SVG_FILENAME
+                    )
+                    summary.convert_svg_to_png()
+                else:
+                    # Download non-SVG file
+                    tmdb_interface.download_image(logo, summary.logo)
             
-            # If the logo was downloaded (or already existed), create summary
+            # If the logo exists, create summary
             summary.create()
 
             # If the summary exists, log that
