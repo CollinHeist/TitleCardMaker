@@ -78,8 +78,13 @@ tmdb_group.add_argument('--add-translation', nargs=5, default=SUPPRESS,
                         help='Add title translations from TMDb to the given '
                              'datafile')
 
-# Check given arguments
-args = parser.parse_args()
+# Parse given arguments
+args, unknown = parser.parse_known_args()
+
+# Create dictionary of unknown arguments
+arbitrary_data = {}
+if len(unknown) % 2 == 0 and len(unknown) > 1:
+    arbitrary_data = {key: val for key, val in zip(unknown[::2], unknown[1::2])}
 
 # Parse preference file for options that might need it
 pp = PreferenceParser(args.preference_file)
@@ -110,6 +115,7 @@ if hasattr(args, 'title_card'):
         font_size=float(args.font_size[:-1])/100.0,
         title_color=args.font_color,
         hide_season=(not bool(args.season)),
+        **arbitrary_data,
     ).create()
 
 # Execute genre card related options
@@ -122,7 +128,7 @@ if hasattr(args, 'genre_card'):
 
 if hasattr(args, 'genre_card_batch'):
     for file in args.genre_card_batch.glob('*'):
-        if file.suffix.lower() in ('.jpg', '.jpeg', '.png', '.tiff', '.gif'):
+        if file.suffix.lower() in GenreMaker.VALID_IMAGE_EXTENSIONS:
             GenreMaker(
                 source=file,
                 genre=file.stem.upper(),
