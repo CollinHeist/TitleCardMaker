@@ -17,6 +17,12 @@ class ImageMaker(ABC):
     """Directory for all temporary images created during image creation"""
     TEMP_DIR = Path(__file__).parent / '.objects'
 
+    """
+    Valid file extensions for input images - ImageMagick supports more than just
+    these types, but these are the most common across all OS's.
+    """
+    VALID_IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.tiff', '.gif')
+
     @abstractmethod
     def __init__(self) -> None:
         """
