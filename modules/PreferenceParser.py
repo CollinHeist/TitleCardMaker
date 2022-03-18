@@ -179,7 +179,7 @@ class PreferenceParser:
         if self.__is_specified('tmdb', 'minimum_resolution'):
             try:
                 min_res = self.__yaml['tmdb']['minimum_resolution']
-                width, height = map(int, min_res.split('x'))
+                width, height = map(int, min_res.lower().split('x'))
                 self.tmdb_minimum_resolution = {'width': width, 'height':height}
             except:
                 log.critical(f'Invalid minimum resolution - specify as '
