@@ -370,13 +370,12 @@ class AnimeTitleCard(CardType):
 
 
     @staticmethod
-    def is_custom_font(*args, **kwargs) -> bool:
+    def is_custom_font(font: 'Font') -> bool:
         """
         Determines whether the given arguments represent a custom font for this
         card. This CardType does not use custom fonts, so this is always False.
         
-        :param      args and kwargs:    Generic arguments to permit generalized
-                                        function calls for any CardType.
+        :param      font:   The Font being evaluated.
         
         :returns:   False, as fonts are not customizable with this card.
         """

@@ -11,19 +11,14 @@ class Profile:
     season titles.
     """
 
-    def __init__(self, font_color: str, font_size: float, font: str,
-                 font_case: str, font_replacements: dict, hide_seasons: bool,
+    def __init__(self, font: 'Font', hide_seasons: bool,
                  season_map: dict, episode_range: dict, map_or_range: bool,
                  episode_text_format: str) -> None:
         """
         Constructs a new instance of a Profile. All given arguments will be
         applied through this Profile (and whether it's generic/custom).
         
-        :param      font_color:             The font color.
-        :param      font_size:              The font size.
-        :param      font:                   The font name.
-        :param      font_case:              The font case string.
-        :param      font_replacements:      The font replacements.
+        :param      font:                   The Font for this profile.
         :param      hide_seasons:           Whether to hide/show seasons.
         :param      season_map:             The season map.
         :param      episode_range:          The episode range.
@@ -32,11 +27,7 @@ class Profile:
         """
 
         # Store this profiles arguments as attributes
-        self.font_color = font_color
-        self.font_size = font_size
         self.font = font
-        self.font_case = CardType.CASE_FUNCTION_MAP[font_case]
-        self.font_replacements = font_replacements
         self.hide_season_title = hide_seasons
         self.__season_map = season_map
         self.__episode_range = episode_range
@@ -69,13 +60,7 @@ class Profile:
         )
 
         # Determine whether this profile uses a custom font
-        has_custom_font = card_class.is_custom_font(
-            font=self.font,
-            size=self.font_size,
-            color=self.font_color,
-            replacements=self.font_replacements,
-            case=self.font_case,
-        )
+        has_custom_font = card_class.is_custom_font(self.font)
 
         # Get list of profile strings applicable to this object
         valid_profiles = [{'seasons': 'generic', 'font': 'generic'}]
@@ -116,13 +101,7 @@ class Profile:
 
         # If the new profile has a generic font, reset font attributes
         if not self.__use_custom_font:
-            self.font = card_class.TITLE_FONT
-            self.font_size = 1.0
-            self.font_color = card_class.TITLE_COLOR
-            self.font_replacements = card_class.FONT_REPLACEMENTS
-            self.font_case = card_class.CASE_FUNCTION_MAP[
-                card_class.DEFAULT_FONT_CASE
-            ]
+            self.font.set_default()
 
 
     def get_season_text(self, episode_info: 'EpisodeInfo') -> str:
@@ -316,12 +295,12 @@ class Profile:
             title_text = self.__remove_episode_text_format(title_text)
 
         # Create translation table for this profile's replacements
-        translation = str.maketrans(self.font_replacements)
+        translation = str.maketrans(self.font.replacements)
 
         # Apply translation table to this text
         translated_text = title_text.translate(translation)
 
         # Apply this profile's font function to the translated text
-        return self.font_case(translated_text)
+        return self.font.case(translated_text)
 
 

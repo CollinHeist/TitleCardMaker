@@ -23,7 +23,7 @@ class CardType(ImageMaker):
     DEFAULT_FONT_CASE = 'upper'
 
     """Mapping of 'case' strings to format functions"""
-    CASE_FUNCTION_MAP = {
+    CASE_FUNCTIONS = {
         'upper': str.upper,
         'lower': str.lower,
         'title': titlecase,
