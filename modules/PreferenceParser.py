@@ -65,6 +65,12 @@ class PreferenceParser:
         self.__parse_yaml()
 
 
+    def __repr__(self) -> str:
+        """Returns a unambiguous string representation of the object."""
+
+        return f'<PreferenceParser file={self.file}>'
+
+
     def __is_specified(self, *attributes: tuple) -> bool:
         """
         Determines whether the given attribute/sub-attribute has been manually 

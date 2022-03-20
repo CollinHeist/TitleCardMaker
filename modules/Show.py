@@ -9,6 +9,7 @@ from modules.DataFileInterface import DataFileInterface
 from modules.Debug import log
 from modules.Episode import Episode
 from modules.EpisodeInfo import EpisodeInfo
+from modules.Font import Font
 import modules.preferences as global_preferences
 from modules.MultiEpisode import MultiEpisode
 from modules.Profile import Profile
@@ -66,7 +67,7 @@ class Show:
         # Set this show's SeriesInfo object
         self.series_info = SeriesInfo(name, year)
         
-        # Setup default values that can be overwritten by the YML
+        # Setup default values that can be overwritten by YAML
         self.library_name = None
         self.library = None
         self.card_class = TitleCard.CARD_TYPES[self.preferences.card_type]
@@ -75,22 +76,22 @@ class Show:
         self.archive = True
         self.sonarr_sync = True
         self.tmdb_sync = True
-        self.font_color = self.card_class.TITLE_COLOR
-        self.font_size = 1.0
-        self.font = self.card_class.TITLE_FONT
-        self.font_case = self.card_class.DEFAULT_FONT_CASE
-        self.font_replacements = self.card_class.FONT_REPLACEMENTS
         self.hide_seasons = False
         self.__episode_range = {}
         self.__season_map = {n: f'Season {n}' for n in range(1, 1000)}
         self.__season_map[0] = 'Specials'
         self.title_language = {}
+        self.font = Font(
+            self.__yaml.get('font', {}),
+            self.card_class,
+            self.series_info
+        )
 
         # Modify object attributes based off YAML and update validity attribute
-        self.valid = True
+        self.valid = self.font.valid
         self.__parse_yaml()
 
-        # Update non YAML-able attributes for this show now that overwriting has occurred
+        # Update non YAML-able attributes for this show, post YAML overwrites
         self.media_directory = None
         if self.library:
             self.media_directory = self.library / self.series_info.full_name
@@ -99,13 +100,9 @@ class Show:
             self.source_directory / DataFileInterface.GENERIC_DATA_FILE_NAME
         )
 
-        # Assign the profile for this show
+        # Create the profile for this show
         self.profile = Profile(
-            self.font_color,
-            self.font_size,
             self.font,
-            self.font_case,
-            self.font_replacements,
             self.hide_seasons,
             self.__season_map,
             self.__episode_range,
@@ -181,49 +178,6 @@ class Show:
 
         if self.__is_specified('source_directory'):
             self.source_directory = Path(self.__yaml['source_directory'])
-
-        if self.__is_specified('font', 'color'):
-            value = self.__yaml['font']['color']
-            if not bool(match('^#[a-fA-F0-9]{6}$', value)):
-                log.error(f'Font color "{value}" of series {self} is invalid - '
-                          f'specify as "#xxxxxx"')
-                self.valid = False
-            else:
-                self.font_color = value
-
-        if self.__is_specified('font', 'size'):
-            value = self.__yaml['font']['size']
-            if not bool(match(r'^\d+%$', value)):
-                log.error(f'Font size "{value}" of series {self} is invalid - '
-                          f'specify as "x%"')
-                self.valid = False
-            else:
-                self.font_size = float(value[:-1]) / 100.0
-
-        if self.__is_specified('font', 'file'):
-            if not (value := Path(self.__yaml['font']['file'])).exists():
-                log.error(f'Font file "{value}" of series {self} not found')
-                self.valid = False
-            else:
-                self.font = str(value.resolve())
-                self.font_replacements = {} # Reset for manually specified font
-
-        if self.__is_specified('font', 'case'):
-            value = self.__yaml['font']['case'].lower()
-            if value not in self.card_class.CASE_FUNCTION_MAP:
-                log.error(f'Font case "{value}" of series {self} is invalid')
-                self.valid = False
-            else:
-                self.font_case = value
-
-        if self.__is_specified('font', 'replacements'):
-            replacements = self.__yaml['font']['replacements']
-            if any(len(key) != 1 for key in replacements.keys()):
-                log.error(f'Font replacements of series {self} is invalid - '
-                          f'must only be 1 character')
-                self.valid = False
-            else:
-                self.font_replacements = self.__yaml['font']['replacements']
 
         if self.__is_specified('seasons', 'hide'):
             self.hide_seasons = bool(self.__yaml['seasons']['hide'])

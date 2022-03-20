@@ -3,7 +3,7 @@ from re import match, sub, IGNORECASE
 from modules.Debug import log
 
 # CardType classes
-from modules.AnimeCard import AnimeCard
+from modules.AnimeTitleCard import AnimeTitleCard
 from modules.StandardTitleCard import StandardTitleCard
 from modules.StarWarsTitleCard import StarWarsTitleCard
 
@@ -28,7 +28,7 @@ class TitleCard:
     CARD_TYPES = {
         'standard': StandardTitleCard,
         'generic': StandardTitleCard,
-        'anime': AnimeCard,
+        'anime': AnimeTitleCard,
         'star wars': StarWarsTitleCard,
     }
 
@@ -61,10 +61,8 @@ class TitleCard:
                 profile, **title_characteristics
             ), season_text=profile.get_season_text(episode.episode_info),
             episode_text=profile.get_episode_text(episode),
-            font=profile.font,
-            font_size=profile.font_size,
-            title_color=profile.font_color,
             hide_season=profile.hide_season_title,
+            **profile.font.get_attributes(),
             **extra_characteristics,
         )
 

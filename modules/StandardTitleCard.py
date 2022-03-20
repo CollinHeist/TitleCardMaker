@@ -71,6 +71,7 @@ class StandardTitleCard(CardType):
     def __init__(self, source: Path, output_file: Path, title: str,
                  season_text: str, episode_text: str, font: str,
                  font_size: float, title_color: str, hide_season: bool,
+                 vertical_shift: int=0, interline_spacing: int=0,
                  *args: tuple, **kwargs: dict) -> None:
         """
         Initialize the TitleCardMaker object. This primarily just stores
@@ -109,8 +110,9 @@ class StandardTitleCard(CardType):
         self.font = font
         self.font_size = font_size
         self.title_color = title_color
-
         self.hide_season = hide_season
+        self.vertical_shift = vertical_shift
+        self.interline_spacing = interline_spacing
 
 
     def __title_text_global_effects(self) -> list:
@@ -122,12 +124,13 @@ class StandardTitleCard(CardType):
         """
 
         font_size = 157.41 * self.font_size
+        interline_spacing = -22 + self.interline_spacing
 
         return [
             f'-font "{self.font}"',
             f'-kerning -1.25',
             f'-interword-spacing 50',
-            f'-interline-spacing -22',
+            f'-interline-spacing {interline_spacing}', #-22, south park is +70
             f'-pointsize {font_size}',
             f'-gravity south',
         ]   
@@ -225,13 +228,15 @@ class StandardTitleCard(CardType):
                     text added.
         """
 
+        vertical_shift = 245 + self.vertical_shift
+
         command = ' '.join([
             f'convert "{gradient_image.resolve()}"',
             *self.__title_text_global_effects(),
             *self.__title_text_black_stroke(),
-            f'-annotate +0+245 "{self.title}"',
+            f'-annotate +0+{vertical_shift} "{self.title}"',
             f'-fill "{self.title_color}"',
-            f'-annotate +0+245 "{self.title}"',
+            f'-annotate +0+{vertical_shift} "{self.title}"',
             f'"{self.__GRADIENT_WITH_TITLE.resolve()}"',
         ])
 
@@ -370,29 +375,24 @@ class StandardTitleCard(CardType):
 
 
     @staticmethod
-    def is_custom_font(font: str, size: float, color: str,
-                       replacements: dict, case: callable,*args,**kwargs)->bool:
+    def is_custom_font(font: 'Font') -> bool:
         """
         Determines whether the given font characteristics constitute a default
         or custom font.
         
-        :param      font:               The episode title font.
-        :param      size:               The episode title font size (float).
-        :param      color:              The episode title color.
-        :param      replacements:       The title character replacements used.
-        :param      case:               The episode title case function.
-        :param      args and kwargs:    Generic arguments to permit a call for
-                                        any CardType.
+        :param      font:   The Font being evaluated.
         
         :returns:   True if a custom font is indicated, False otherwise.
         """
 
         default_case = StandardTitleCard.DEFAULT_FONT_CASE
-        return ((font != StandardTitleCard.TITLE_FONT)
-            or (size != 1.0)
-            or (color != StandardTitleCard.TITLE_COLOR)
-            or (replacements != StandardTitleCard.FONT_REPLACEMENTS)
-            or (case != CardType.CASE_FUNCTION_MAP[default_case]))
+        return ((font.file != StandardTitleCard.TITLE_FONT)
+            or (font.size != 1.0)
+            or (font.color != StandardTitleCard.TITLE_COLOR)
+            or (font.replacements != StandardTitleCard.FONT_REPLACEMENTS)
+            or (font.case != StandardTitleCard.CASE_FUNCTIONS[default_case])
+            or (font.vertical_shift != 0)
+            or (font.interline_spacing != 0))
 
 
     @staticmethod
@@ -417,7 +417,7 @@ class StandardTitleCard(CardType):
         if episode_range != {}:
             return True
 
-        # If any season title isn't standard, 
+        # If any season title isn't standard
         for number, title in season_map.items():
             if number == 0:
                 if title.lower() != 'specials':
