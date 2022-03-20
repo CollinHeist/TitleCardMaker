@@ -17,7 +17,7 @@ class StarWarsTitleCard(CardType):
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
         'max_line_width': 16,   # Character count to begin splitting titles
-        'max_line_count': 3,    # Maximum number of lines a title can take up
+        'max_line_count': 5,    # Maximum number of lines a title can take up
         'top_heavy': True,      # This class uses top heavy titling
     }
 

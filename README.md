@@ -4,11 +4,6 @@ An automated title card maker for Plex.
 ## Table of Contents
 - [Description](#description)
 - [Getting Started](#getting-started)
-- [Installation](#installation)
-   - [Installing the Maker](#installing-the-maker)
-   - [Python](#python)
-   - [ImageMagick](#imagemagick)
-   - [Sonarr](#sonarr)
 - [Usage and Troubleshooting](#usage-and-troubleshooting)
 - [Examples](#examples)
 - [Contributing](#contributing)
@@ -24,35 +19,18 @@ The Maker can be automated such that everything can be pulled without manual int
 
 ## Getting Started
 
-1. Install TitleCardMaker and the required software - see [here](#installation) for details.
-2. Create the top-level configuration file necessary to outline how the maker should interact with your services - see [here](https://github.com/CollinHeist/TitleCardMaker/wiki#configuring-the-titlecardmaker) for detailed instructions, or [here](https://github.com/CollinHeist/TitleCardMaker/wiki#complete-example) for an example file you can copy and fill out yourself.
-3. Create the series YAML file(s) that list for which series you would like to create title cards for, as well as what those cards should look like - see [here](https://github.com/CollinHeist/TitleCardMaker/wiki/Series-YAML-Files) for details.
-4. If you're inspired to create your own _types of cards_ (not just your own cards), see [here](https://github.com/CollinHeist/TitleCardMaker/wiki/Custom-Card-Types#creating-a-custom-card-type) for details on getting started.
-
-> For more details on any particular aspect of the Maker, read the [wiki](https://github.com/CollinHeist/TitleCardMaker/wiki).
-
-## Installation
-### Installing the Maker
-Download this repo, unzip it, and extract those contents to whatever location you want the program to live.
-
-### Python
-The Maker requires [Python](https://www.python.org/) version of at least 3.8+. All package management is done via [pipenv](https://pypi.org/project/pipenv/), or pip with the `requirements.txt` file.
-
-```bash
-pipenv install
-pip3 install -r requirements.txt
-```
-
-### ImageMagick
-ImageMagick is required to create all cards. Check their [website](https://imagemagick.org/) for installation details, or if your OS does not support a standalone installation, the maker supports the use of a docker container - I personally use [imagemagick-docker](https://hub.docker.com/r/dpokidov/imagemagick/). Just make sure you specify this container within the [preferences file](https://github.com/CollinHeist/TitleCardMaker/wiki/ImageMagick-Attributes).
-
-### Sonarr
-Sonarr is not required by the Maker, however if unused you will have to manually enter all episode titles for each show (which is __very__ tedious). I strongly recommend you install this (see [here](https://sonarr.tv/)), even if you're not using it to gather your media itself.
+Read the [Getting Started](https://github.com/CollinHeist/TitleCardMaker/wiki) page on the Wiki.
 
 ## Usage and Troubleshooting
-For usage and configuration details, read the [wiki](https://github.com/CollinHeist/TitleCardMaker/wiki).
+Assuming you're using the default preference filename, invoking the Maker is as simple as:
 
-If you have trouble getting the Maker working (and have already read the Wiki), or have a problem, [create an issue on GitHub](https://github.com/CollinHeist/TitleCardMaker/issues/new)!
+```console
+$ pipenv run python3 main.py --run
+```
+
+For invocation and configuration details, read [here](https://github.com/CollinHeist/TitleCardMaker/wiki/Running-the-TitleCardMaker).
+
+> If you have trouble getting the Maker working, or have a problem, [create an issue on GitHub](https://github.com/CollinHeist/TitleCardMaker/issues/new)!
 
 ## Examples
 Below are some examples of title cards created automatically (when configured correctly) by the TitleCardMaker:
