@@ -3,7 +3,7 @@ from re import findall
 
 from modules.CardType import CardType
 
-class AnimeCard(CardType):
+class AnimeTitleCard(CardType):
     """
     This class describes a type of ImageMaker that produces title cards in the
     theme of Star Wars cards as designed by reddit user /u/Olivier_286. These
