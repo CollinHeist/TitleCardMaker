@@ -87,26 +87,43 @@ class MultiEpisode:
         Modify the given episode text format string to be suitable for a
         MultiEpisode. This replaces {abs_number} or {episode_number} with
         {abs_start}-{abs_end} and {episode_start}-{episode_end}, and adds an S
-        to the preceding text. For example:
+        to the preceding text (if a space preceeds the identifier) For example:
 
         >>> modify_format_string('EPISODE {abs_number}')
         'EPISODES {abs_start}-{abs_end}'
+        >>> modify_format_string('E{episode_number}')
+        'E{episode_start}-{episode_end}'
         
         :param      episode_format_string:  The episode format string to modify.
         
-        :returns:   The modified multiple'd format string.
+        :returns:   The modified format string.
         """
         
+        # Split for pluralized absolute numbers
         if ' {abs_number}' in episode_format_string:
-            # Split for absolute numbers
             pre, post = episode_format_string.split(' {abs_number}')
 
             return pre + 'S {abs_start}-{abs_end}' + post
 
-        # Split for episode numbers
-        pre, post = episode_format_string.split(' {episode_number}')
+        # Split for pluralized episode numbers
+        if ' {episode_number}' in episode_format_string:
+            pre, post = episode_format_string.split(' {episode_number}')
 
-        return pre + 'S {episode_start}-{episode_end}' + post
+            return pre + 'S {episode_start}-{episode_end}' + post
+
+        # Split for absolute number, no leading space and pluralization
+        if '{abs_number}' in episode_format_string:
+            pre, post = episode_format_string.split('{abs_number}')
+
+            return pre + '{abs_start}-{abs_end}' + post
+
+        # Split for episode number, no leading space and pluralization
+        if '{episode_number}' in episode_format_string:
+            pre, post = episode_format_string.split('{episode_number}')
+
+            return pre + '{episode_start}-{episode_end}' + post
+
+        return episode_format_string
 
 
     def set_destination(self, destination: 'Path') -> None:
