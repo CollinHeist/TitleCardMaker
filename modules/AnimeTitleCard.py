@@ -87,7 +87,7 @@ class AnimeTitleCard(CardType):
 
         # Apply titlecase case function, escape characters
         self.title = self.image_magick.escape_chars(
-            self.CASE_FUNCTION_MAP['title'](title)
+            self.CASE_FUNCTIONS['title'](title)
         )
 
         # Store kanji, set bool for whether to use it or not
