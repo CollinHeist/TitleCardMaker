@@ -47,32 +47,30 @@ class Show:
 
         self.preferences = global_preferences.pp
         
-        # Parse arguments given by the creator of this object
+        # Parse arguments into attribures
         self.__yaml = yaml_dict
         self.__library_map = library_map
+
+        # Set this show's SeriesInfo object with blank year to start
+        self.series_info = SeriesInfo(name, 0)
 
         # If year isn't given, skip completely
         if not self.__is_specified('year'):
             log.error(f'Series "{name}" is missing the required "year"')
             self.valid = False
-            return 
+            return None
 
         # Year is given, parse and update year/full name of this show
-        year = self.__yaml['year']
-        if not match(r'^\d{4}$', str(year)):
+        if not match(r'^\d{4}$', str(year := self.__yaml['year'])):
             log.error(f'Year "{year}" of series "{name}" is invalid')
             self.valid = False
-            return
+            return None
 
-        # Set this show's SeriesInfo object
-        self.series_info = SeriesInfo(name, year)
-        
         # Setup default values that can be overwritten by YAML
+        self.series_info = SeriesInfo(name, year)
+        self.card_class = TitleCard.CARD_TYPES[self.preferences.card_type]
         self.library_name = None
         self.library = None
-        self.card_class = TitleCard.CARD_TYPES[self.preferences.card_type]
-        self.source_directory = source_directory / self.series_info.full_name
-        self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
         self.archive = True
         self.sonarr_sync = True
         self.tmdb_sync = True
@@ -81,24 +79,28 @@ class Show:
         self.__season_map = {n: f'Season {n}' for n in range(1, 1000)}
         self.__season_map[0] = 'Specials'
         self.title_language = {}
+
+        # Set object attributes based off YAML and update validity attribute
+        self.__parse_yaml()
         self.font = Font(
             self.__yaml.get('font', {}),
             self.card_class,
             self.series_info
         )
-
-        # Modify object attributes based off YAML and update validity attribute
         self.valid = self.font.valid
-        self.__parse_yaml()
 
-        # Update non YAML-able attributes for this show, post YAML overwrites
-        self.media_directory = None
-        if self.library:
-            self.media_directory = self.library / self.series_info.full_name
+        # Update derived attributes
+        self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
+        self.source_directory = source_directory / self.series_info.full_name
         self.logo = self.source_directory / self.preferences.logo_filename
         self.file_interface = DataFileInterface(
             self.source_directory / DataFileInterface.GENERIC_DATA_FILE_NAME
         )
+
+        # If no library given, keep media directory as None
+        self.media_directory = None
+        if self.library:
+            self.media_directory = self.library / self.series_info.full_name
 
         # Create the profile for this show
         self.profile = Profile(
@@ -144,6 +146,7 @@ class Show:
             else:
                 self.library_name = library
                 self.library = Path(self.__library_map[library]['path'])
+
                 # If card type was specified for this library, set that
                 if 'card_type' in self.__library_map[library]:
                     card_type = self.__library_map[library]['card_type']
@@ -161,8 +164,8 @@ class Show:
             else:
                 self.card_class = TitleCard.CARD_TYPES[value]
 
-        if self.__is_specified('source'):
-            self.source_directory = Path(self.__yaml['source'])
+        if self.__is_specified('source_directory'):
+            self.source_directory = Path(self.__yaml['source_directory'])
 
         if self.__is_specified('episode_text_format'):  
             self.episode_text_format = self.__yaml['episode_text_format']
@@ -175,9 +178,6 @@ class Show:
 
         if self.__is_specified('tmdb_sync'):
             self.tmdb_sync = bool(self.__yaml['tmdb_sync'])
-
-        if self.__is_specified('source_directory'):
-            self.source_directory = Path(self.__yaml['source_directory'])
 
         if self.__is_specified('seasons', 'hide'):
             self.hide_seasons = bool(self.__yaml['seasons']['hide'])
