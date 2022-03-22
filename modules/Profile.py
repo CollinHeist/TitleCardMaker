@@ -177,6 +177,7 @@ class Profile:
                 episode_end=episode.episode_end,
                 abs_start=episode.abs_start,
                 abs_end=episode.abs_end,
+                **episode.extra_characteristics,
             )
 
         # Standard Episode class
@@ -185,12 +186,14 @@ class Profile:
                 season_number=episode.episode_info.season_number,
                 episode_number=episode.episode_info.episode_number,
                 abs_number=episode.episode_info.abs_number,
+                **episode.extra_characteristics,
             )
 
         return episode.card_class.EPISODE_TEXT_FORMAT.format(
             season_number=episode.episode_info.season_number,
             episode_number=episode.episode_info.episode_number,
             abs_number=episode.episode_info.abs_number, 
+            **episode.extra_characteristics,
         )
 
 
