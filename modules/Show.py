@@ -465,7 +465,7 @@ class Show:
         for _, episode in (pbar := tqdm(self.episodes.items(), leave=False)):
             # Update progress bar
             pbar.set_description(f'Creating {episode}')
-
+            
             # Skip episodes whose destination is None (don't create) or does exist
             if not episode.destination or episode.destination.exists():
                 continue
