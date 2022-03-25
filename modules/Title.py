@@ -72,13 +72,14 @@ class Title:
         :returns:   The partless title.
         """
 
-        # Match for "title" (digit)
-        if (partless := match(r'^(.*?)\s*\(\d+\)', self.full_title)):
+        # Match for "title" (digit) or "title" (Part (digit))
+        if (partless := match(r'^(.*?)\s*\((?:Part\s*)?\d+\)',
+                              self.full_title, IGNORECASE)):
             return partless.group(1)
 
         # Match "title" - Part (digit) or "title": Part (digit)
-        if (partless := match(r'^(.*?)(?::|\s*-|,)\s*Part \d*', self.full_title,
-                              IGNORECASE)):
+        if (partless := match(r'^(.*?)(?::|\s*-|,)\s+Part\s*\d*', 
+                              self.full_title, IGNORECASE)):
             return partless.group(1)
 
         return self.full_title

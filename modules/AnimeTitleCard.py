@@ -26,6 +26,7 @@ class AnimeTitleCard(CardType):
 
     """Path to the font to use for the episode title"""
     TITLE_FONT = str((REF_DIRECTORY / 'Flanker Griffo.otf').resolve())
+    DEFAULT_FONT_CASE = 'title'
 
     """Color to use for the episode title"""
     TITLE_COLOR = 'white'
@@ -86,9 +87,7 @@ class AnimeTitleCard(CardType):
         self.output_file = output_file
 
         # Apply titlecase case function, escape characters
-        self.title = self.image_magick.escape_chars(
-            self.CASE_FUNCTION_MAP['title'](title)
-        )
+        self.title = self.image_magick.escape_chars(title)
 
         # Store kanji, set bool for whether to use it or not
         self.kanji = self.image_magick.escape_chars(kanji)
@@ -373,14 +372,16 @@ class AnimeTitleCard(CardType):
     def is_custom_font(font: 'Font') -> bool:
         """
         Determines whether the given arguments represent a custom font for this
-        card. This CardType does not use custom fonts, so this is always False.
+        card. This CardType only uses custom font cases.
         
         :param      font:   The Font being evaluated.
         
-        :returns:   False, as fonts are not customizable with this card.
+        :returns:   True if the given font uses a case function other than
+                    'title', False otherwise.
         """
 
-        return False
+        default_case = AnimeTitleCard.DEFAULT_FONT_CASE
+        return font.case != AnimeTitleCard.CASE_FUNCTIONS[default_case]
 
 
     @staticmethod
