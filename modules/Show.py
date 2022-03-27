@@ -377,6 +377,7 @@ class Show:
         )
 
         # For each episode, check if the data matches any contained Episodes
+        has_new = False
         if all_episodes:
             # Filter out episodes that already exist
             new_episodes = list(filter(
@@ -384,30 +385,29 @@ class Show:
                 all_episodes,
             ))
 
-            # If there are new episodes, add to the datafile, return True
-            if new_episodes:
-                self.file_interface.add_many_entries(new_episodes)
-                return True
+            # Add all new entries to the datafile
+            self.file_interface.add_many_entries(new_episodes)
+
+        # If new entries were added, re-parse source file
+        if has_new:
+            self.read_source()
+            return True
 
         return False
 
 
-    def add_translations(self, tmdb_interface: 'TMDbInterface') -> bool:
+    def add_translation(self, tmdb_interface: 'TMDbInterface') -> None:
         """
         Add translated episode titles to the Episodes of this series.
         
         :param      tmdb_interface: Interface to TMDb to query for translated
                                     episode titles.
-
-        :returns:   True if any translations were added, False otherwise.
         """
 
         # If no title language was specified, or TMDb syncing isn't enabled,skip
         if self.title_language == {} or not self.tmdb_sync:
-            return False
+            return None
 
-        modified = False
-        # Go through every episode and look for translations
         for _, episode in (pbar := tqdm(self.episodes.items(), leave=False)):
             # Update progress bar
             pbar.set_description(f'Checking {episode}')
@@ -433,13 +433,10 @@ class Show:
                       f'"{self.title_language["key"]}" of {self}')
 
             # Modify data file entry with new title
-            modified = True
             self.file_interface.add_data_to_entry(
                 episode.episode_info,
                 **{self.title_language['key']: language_title},
             )
-
-        return modified
 
 
     def create_missing_title_cards(self, tmdb_interface: 'TMDbInterface'=None,

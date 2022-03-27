@@ -85,25 +85,18 @@ class Manager:
             )
 
 
-    def check_tmdb_for_translations(self) -> bool:
-        """
-        Query TMDb for all translated episode titles (if indicated).
-
-        :returns:   True if any translations were added to shows.
-        """
+    def check_tmdb_for_translations(self) -> None:
+        """Query TMDb for all translated episode titles (if indicated)."""
 
         # If the TMDbInterface isn't enabled, skip
         if not self.tmdb_interface:
-            return False
+            return None
 
         # For each show in the Manager, add translation
-        modified = False
         for show in (pbar := tqdm(self.shows)):
             pbar.set_description(f'Adding translations for '
                                  f'"{show.series_info.short_name}"')
-            modified |= show.add_translations(self.tmdb_interface)
-
-        return modified
+            show.add_translation(self.tmdb_interface)
 
 
     def read_show_source(self) -> None:
@@ -121,24 +114,18 @@ class Manager:
             archive.find_multipart_episodes()
 
 
-    def check_sonarr_for_new_episodes(self) -> bool:
+    def check_sonarr_for_new_episodes(self) -> None:
         """
         Query Sonarr to see if any new episodes exist for every show known to
         this manager.
-
-        :returns:   True if anu new episodes were found, False otherwise.
         """
 
         # If sonarr is globally disabled, skip
         if not self.preferences.use_sonarr:
             return None
 
-        # Go through each show in the Manager, querying Sonarr
-        modified = False
         for show in tqdm(self.shows, desc='Querying Sonarr'):
-            modified |=show.check_sonarr_for_new_episodes(self.sonarr_interface)
-
-        return modified
+            show.check_sonarr_for_new_episodes(self.sonarr_interface)
 
 
     def create_missing_title_cards(self) -> None:
@@ -221,19 +208,12 @@ class Manager:
     def run(self) -> None:
         """Run the manager and exit."""
 
-        # Always create Show objects from series YAML and read their sources
         self.create_shows()
         self.read_show_source()
-
-        # If Sonarr has new episodes, add them and re-read source
-        if self.check_sonarr_for_new_episodes():
-            self.read_show_source()
-
-        # If any translations were added to datafiles, re-read source
-        if self.check_tmdb_for_translations():
-            self.read_show_source()
-
-        # Create cards, update archive, create summaries
+        self.check_sonarr_for_new_episodes()
+        self.read_show_source()
+        self.check_tmdb_for_translations()
+        self.read_show_source()
         self.create_missing_title_cards()
         self.update_archive()
         self.create_summaries()
