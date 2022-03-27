@@ -231,11 +231,18 @@ class Manager:
                 # Don't report special content as missing
                 if episode.episode_info.season_number == 0:
                     continue
+
+                # If source file doesn't exist, add to report
                 if not episode.source.exists():
-                    show_dict[str(episode)] = {}
+                    if str(episode) not in show_dict:
+                        show_dict[str(episode)] = {}
                     show_dict[str(episode)]['source'] = episode.source.name
+
+                # If destination card doesn't exist, add to report
                 if (episode.destination != None
                     and not episode.destination.exists()):
+                    if str(episode) not in show_dict:
+                        show_dict[str(episode)] = {}
                     show_dict[str(episode)]['card'] = episode.destination.name
 
             if not show.logo.exists():

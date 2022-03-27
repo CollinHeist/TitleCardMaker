@@ -182,19 +182,21 @@ class Profile:
 
         # Standard Episode class
         if self.__use_custom_seasons:
-            return self.episode_text_format.format(
+            format_string = self.episode_text_format
+        else:
+            format_string = episode.card_class.EPISODE_TEXT_FORMAT
+
+        try:
+            return format_string.format(
                 season_number=episode.episode_info.season_number,
                 episode_number=episode.episode_info.episode_number,
                 abs_number=episode.episode_info.abs_number,
                 **episode.extra_characteristics,
             )
-
-        return episode.card_class.EPISODE_TEXT_FORMAT.format(
-            season_number=episode.episode_info.season_number,
-            episode_number=episode.episode_info.episode_number,
-            abs_number=episode.episode_info.abs_number, 
-            **episode.extra_characteristics,
-        )
+        except:
+            log.error(f'Cannot format episode text "{format_string}" for '
+                      f'{episode}')
+            return 'INVALID FORMAT STRING'
 
 
     def __remove_episode_text_format(self, title_text: str) -> str:
@@ -294,7 +296,7 @@ class Profile:
 
         # Modify the title if it contains the episode text format
         if self.__use_custom_seasons:
-            # Attempt to remove case that matches the episode text format string
+            # Attempt to remove text that matches the episode text format string
             title_text = self.__remove_episode_text_format(title_text)
 
         # Create translation table for this profile's replacements

@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from pathlib import Path
-from pickle import dump, load, HIGHEST_PROTOCOL
+from yaml import dump, safe_load
 from urllib.request import urlretrieve
 
 from modules.Debug import log
@@ -18,16 +18,16 @@ class TMDbInterface(WebInterface):
     """
 
     """Base URL for sending API requests to TheMovieDB"""
-    API_BASE_URL: str = 'https://api.themoviedb.org/3/'
+    API_BASE_URL = 'https://api.themoviedb.org/3/'
 
     """Default for how many failed requests lead to an entry being blacklisted"""
-    BLACKLIST_THRESHOLD: int = 3
+    BLACKLIST_THRESHOLD = 3
 
     """Filename for where to store blacklisted entries"""
-    __BLACKLIST: Path = Path(__file__).parent / '.objects' / 'db_blacklist.pkl'
+    __BLACKLIST: Path = Path(__file__).parent / '.objects' / 'db_blacklist.yml'
 
     """Filename where mappings of series full titles to TMDB ids is stored"""
-    __ID_MAP: Path = Path(__file__).parent / '.objects' / 'db_id_map.pkl'
+    __ID_MAP: Path = Path(__file__).parent / '.objects' / 'db_id_map.yml'
 
     def __init__(self, api_key: str) -> None:
         """
@@ -43,18 +43,19 @@ class TMDbInterface(WebInterface):
 
         # Create objects directory if it does not exist
         self.__ID_MAP.parent.mkdir(parents=True, exist_ok=True)
+        self.__BLACKLIST.parent.mkdir(parents=True, exist_ok=True)
 
         # Attempt to read existing ID map
         if self.__ID_MAP.exists():
-            with self.__ID_MAP.open('rb') as file_handle:
-                self.__id_map = load(file_handle)
+            with self.__ID_MAP.open('r') as file_handle:
+                self.__id_map = safe_load(file_handle)
         else:
-            self.__id_map = {}
+            self.__id_map = {'name': {}, 'id': {}}
 
         # Attempt to read existing blacklist, if DNE, create blank one
         if self.__BLACKLIST.exists():
-            with self.__BLACKLIST.open('rb') as file_handle:
-                self.__blacklist = load(file_handle)
+            with self.__BLACKLIST.open('r') as file_handle:
+                self.__blacklist = safe_load(file_handle)
         else:
             self.__blacklist = {'image': {}, 'title': {}, 'logo': {}}
         
@@ -72,11 +73,12 @@ class TMDbInterface(WebInterface):
     def __update_blacklist(self, series_info: SeriesInfo,
                            episode_info: EpisodeInfo, query_type: str) -> None:
         """
-        Adds the given entry to the blacklist; indicating that this exact entry
-        shouldn't be queried to TheMovieDB (to prevent unnecessary queries).
+        Adds the given request to the blacklist; indicating that this exact
+        request shouldn't be queried to TheMovieDB for another day. Write the
+        updated blacklist to file
         
-        :param      series_info:    SeriesInfo for the entry.
-        :param      episode_info:   EpisodeInfo for the entry.
+        :param      series_info:    SeriesInfo for the request.
+        :param      episode_info:   EpisodeInfo for the request.
         :param      query_type:     The type of request being updated.
         """
 
@@ -99,9 +101,9 @@ class TMDbInterface(WebInterface):
             # Add new entry to blacklist with 1 failure, next time is in one day
             self.__blacklist[query_type][key] = {'failures': 1, 'next': later}
 
-        # Write latest version of blacklist to file, in case program exits
-        with self.__BLACKLIST.open('wb') as file_handle:
-            dump(self.__blacklist, file_handle, HIGHEST_PROTOCOL)
+        # Write latest version of blacklist to file
+        with self.__BLACKLIST.open('w') as file_handle:
+            dump(self.__blacklist, file_handle)
 
 
     def __is_blacklisted(self, series_info: SeriesInfo,
@@ -132,7 +134,7 @@ class TMDbInterface(WebInterface):
             return True
 
         # If we haven't passed next time, then treat as temporary blacklist
-        # i.e. before next = 'blacklisted', after next is not
+        # i.e. before next is blacklisted, after next is not
         return datetime.now() < self.__blacklist[query_type][key]['next']
 
 
@@ -145,15 +147,15 @@ class TMDbInterface(WebInterface):
         """
 
         # Map full title to the TMDb id
-        self.__id_map[series_info.full_name] = series_info.tmdb_id
+        self.__id_map['name'][series_info.full_name] = series_info.tmdb_id
 
         # If TVDb ID is available, map TVDb ID to the TMDb ID
         if series_info.tvdb_id != None:
-            self.__id_map[series_info.tvdb_id] = series_info.tmdb_id
+            self.__id_map['id'][series_info.tvdb_id] = series_info.tmdb_id
 
         # Write updated map to file
-        with self.__ID_MAP.open('wb') as file_handle:
-            dump(self.__id_map, file_handle, HIGHEST_PROTOCOL)
+        with self.__ID_MAP.open('w') as file_handle:
+            dump(self.__id_map, file_handle)
 
 
     def __set_tmdb_id(self, series_info: SeriesInfo) -> None:
@@ -166,13 +168,14 @@ class TMDbInterface(WebInterface):
         """
 
         # If TVDb ID is available and is mapped, set that ID
-        if series_info.tvdb_id != None and series_info.tvdb_id in self.__id_map:
-            series_info.set_tmdb_id(self.__id_map[series_info.tvdb_id])
+        if (series_info.tvdb_id != None
+            and series_info.tvdb_id in self.__id_map['id']):
+            series_info.set_tmdb_id(self.__id_map['id'][series_info.tvdb_id])
             return None
 
         # If already mapped, set that ID
-        if series_info.full_name in self.__id_map:
-            series_info.set_tmdb_id(self.__id_map[series_info.full_name])
+        if (id_ := self.__id_map['name'].get(series_info.full_name, None)):
+            series_info.set_tmdb_id(id_)
             return None
 
         # Match by TVDB ID if available
