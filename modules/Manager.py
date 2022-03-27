@@ -96,7 +96,7 @@ class Manager:
         for show in (pbar := tqdm(self.shows)):
             pbar.set_description(f'Adding translations for '
                                  f'"{show.series_info.short_name}"')
-            show.add_translation(self.tmdb_interface)
+            show.add_translations(self.tmdb_interface)
 
 
     def read_show_source(self) -> None:
@@ -124,6 +124,7 @@ class Manager:
         if not self.preferences.use_sonarr:
             return None
 
+        # Go through each show in the Manager, querying Sonarr
         for show in tqdm(self.shows, desc='Querying Sonarr'):
             show.check_sonarr_for_new_episodes(self.sonarr_interface)
 
@@ -135,6 +136,7 @@ class Manager:
         updated (if enabled). This calls Show.create_missing_title_cards().
         """
 
+        # Go through every show in the Manager, create cards
         for show in (pbar := tqdm(self.shows)):
             # Update progress bar
             pbar.set_description(f'Creating Title Cards for '
@@ -211,9 +213,7 @@ class Manager:
         self.create_shows()
         self.read_show_source()
         self.check_sonarr_for_new_episodes()
-        self.read_show_source()
         self.check_tmdb_for_translations()
-        self.read_show_source()
         self.create_missing_title_cards()
         self.update_archive()
         self.create_summaries()
