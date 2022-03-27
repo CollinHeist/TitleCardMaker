@@ -33,8 +33,8 @@ class PreferenceParser:
 
         # Check for required source directory
         if not self.__is_specified('options', 'source'):
-            log.critical(f'Preference file missing required "options/source"'
-                         f'tag')
+            log.critical(f'Preference file missing required options/source '
+                         f'attribute')
             exit(1)
         self.source_directory = Path(self.__yaml['options']['source'])
 
@@ -113,6 +113,9 @@ class PreferenceParser:
                 self.series_files = value
             else:
                 self.series_files = [value]
+        else:
+            log.warning(f'No series YAML files indicated, no cards will be '
+                        f'created')
 
         if self.__is_specified('options', 'card_type'):
             value = self.__yaml['options']['card_type']
@@ -253,8 +256,8 @@ class PreferenceParser:
                     continue
 
             # Skip if there are no series to yield
-            if 'series' not in file_yaml:
-                log.info(f'Series file has no entries')
+            if file_yaml is None or 'series' not in file_yaml:
+                log.warning(f'Series file has no entries')
                 continue
 
             # Get library map for this file; error+skip missing library paths
