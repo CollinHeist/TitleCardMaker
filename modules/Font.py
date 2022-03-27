@@ -47,7 +47,8 @@ class Font:
         # Font case
         if (value := self.__yaml.get('case', '').lower()):
             if value not in self.__card_class.CASE_FUNCTIONS:
-                log.error(f'Font case "{value}" of series {self} is invalid')
+                log.error(f'Font case "{value}" of series {self.__series_info} '
+                          f'is invalid')
                 self.valid = False
             else:
                 self.case = self.__card_class.CASE_FUNCTIONS[value]
@@ -55,8 +56,8 @@ class Font:
         # Font color
         if (value := self.__yaml.get('color', None)):
             if not bool(match('^#[a-fA-F0-9]{6}$', value)):
-                log.error(f'Font color "{value}" of series {self} is invalid - '
-                          f'specify as "#xxxxxx"')
+                log.error(f'Font color "{value}" of series {self.__series_info}'
+                          f' is invalid - specify as "#xxxxxx"')
                 self.valid = False
             else:
                 self.color = value
@@ -64,7 +65,8 @@ class Font:
         # Font file
         if (value := self.__yaml.get('file', None)):
             if not Path(value).exists():
-                log.error(f'Font file "{value}" of series {self} not found')
+                log.error(f'Font file "{value}" of series {self.__series_info} '
+                          f'not found')
                 self.valid = False
             else:
                 self.file = str(Path(value).resolve())
@@ -73,8 +75,12 @@ class Font:
         # Font replacements
         if (value := self.__yaml.get('replacements', None)):
             if any(len(key) != 1 for key in value.keys()):
-                log.error(f'Font replacements of series {self} is invalid - '
-                          f'must only be 1 character')
+                log.error(f'Font replacements of series {self.__series_info} is'
+                          f' invalid - must only be 1 character')
+                self.valid = False
+            elif not all(isinstance(repl, str) for _, repl in value.items()):
+                log.error(f'Font replacements of series {self.__series_info} is'
+                          f' invalid - can only substitute strings')
                 self.valid = False
             else:
                 self.replacements = value
@@ -82,8 +88,8 @@ class Font:
         # Font Size
         if (value := self.__yaml.get('size', None)):
             if not bool(match(r'^\d+%$', value)):
-                log.error(f'Font size "{value}" of series {self} is invalid - '
-                          f'specify as "x%"')
+                log.error(f'Font size "{value}" of series {self.__series_info} '
+                          f'is invalid - specify as "x%"')
                 self.valid = False
             else:
                 self.size = float(value[:-1]) / 100.0
@@ -91,8 +97,8 @@ class Font:
         # Vertical shift
         if (value := self.__yaml.get('vertical_shift', None)):
             if not isinstance(value, int):
-                log.error(f'Font vertical shift "{value}" of series {self} is '
-                          f'invalid - must be an integer.')
+                log.error(f'Font vertical shift "{value}" of series '
+                          f'{self.__series_info} is invalid - must be integer.')
                 self.valid = False
             else:
                 self.vertical_shift = value
@@ -100,8 +106,8 @@ class Font:
         # Interline spacing
         if (value := self.__yaml.get('interline_spacing', None)):
             if not isinstance(value, int):
-                log.error(f'Font interline spacing "{value}" of series {self} '
-                          f'is invalid - must be an integer.')
+                log.error(f'Font interline spacing "{value}" of series '
+                          f'{self.__series_info} is invalid - must be integer.')
                 self.valid = False
             else:
                 self.interline_spacing = value
