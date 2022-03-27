@@ -423,7 +423,7 @@ class AnimeTitleCard(CardType):
         Make the necessary ImageMagick and system calls to create this object's
         defined title card.
         """
-
+        
         # Create the output directory and any necessary parents 
         self.output_file.parent.mkdir(parents=True, exist_ok=True)
 

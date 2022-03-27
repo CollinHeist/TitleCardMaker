@@ -69,6 +69,7 @@ class Show:
         # Setup default values that can be overwritten by YAML
         self.series_info = SeriesInfo(name, year)
         self.card_class = TitleCard.CARD_TYPES[self.preferences.card_type]
+        self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
         self.library_name = None
         self.library = None
         self.archive = True
@@ -90,7 +91,6 @@ class Show:
         self.valid = self.font.valid
 
         # Update derived attributes
-        self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
         self.source_directory = source_directory / self.series_info.full_name
         self.logo = self.source_directory / self.preferences.logo_filename
         self.file_interface = DataFileInterface(
@@ -134,7 +134,6 @@ class Show:
         invalid attributes and update this object's validity.
         """
 
-        # Read all optional attributes
         if self.__is_specified('name'):
             self.series_info.update_name(self.__yaml['name'])
 
@@ -156,6 +155,8 @@ class Show:
                         self.valid = False
                     else:
                         self.card_class = TitleCard.CARD_TYPES[card_type]
+                        etf = self.card_class.EPISODE_TEXT_FORMAT
+                        self.episode_text_format = etf
 
         if self.__is_specified('card_type'):
             if (value := self.__yaml['card_type']) not in TitleCard.CARD_TYPES:
@@ -163,6 +164,7 @@ class Show:
                 self.valid = False
             else:
                 self.card_class = TitleCard.CARD_TYPES[value]
+                self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
 
         if self.__is_specified('source_directory'):
             self.source_directory = Path(self.__yaml['source_directory'])
@@ -274,6 +276,9 @@ class Show:
         objects to this show's episodes dictionary.
         """
 
+        # Reset episodes dictionary
+        self.episodes = {}
+
         # Go through each entry in the file interface
         for entry in self.file_interface.read():
             # Create Episode object for this entry, store under key
@@ -352,21 +357,20 @@ class Show:
 
 
     def check_sonarr_for_new_episodes(self,
-                                      sonarr_interface:'SonarrInterface')->bool:
+                                      sonarr_interface:'SonarrInterface')->None:
         """
         Query the provided SonarrInterface object, checking if the returned
         episodes exist in this show's associated source. All new entries are
-        added to this object's DataFileInterface. This method should only be
-        called if Sonarr syncing is globally enabled.
-        
-        :param      sonarr_interface:   The Sonarr interface to query.
+        added to this object's DataFileInterface, and the source is re-read.
 
-        :returns:   True if Sonarr returned any new episodes, False otherwise.
+        This method should only be called if Sonarr syncing is globally enabled.
+        
+        :param      sonarr_interface:   The SonarrInterface to query.
         """
 
         # Check if Sonarr is enabled for this show in partocular
         if not self.sonarr_sync:
-            return False
+            return None
 
         # Get list of EpisodeInfo objects from Sonarr
         all_episodes = sonarr_interface.get_all_episodes_for_series(
@@ -374,7 +378,6 @@ class Show:
         )
 
         # For each episode, check if the data matches any contained Episodes
-        has_new = False
         if all_episodes:
             # Filter out episodes that already exist
             new_episodes = list(filter(
@@ -382,20 +385,16 @@ class Show:
                 all_episodes,
             ))
 
-            # Add all new entries to the datafile
-            self.file_interface.add_many_entries(new_episodes)
-
-        # If new entries were added, re-parse source file
-        if has_new:
-            self.read_source()
-            return True
-
-        return False
+            # If there are new episodes, add to the datafile, return True
+            if new_episodes:
+                self.file_interface.add_many_entries(new_episodes)
+                self.read_source()
 
 
-    def add_translation(self, tmdb_interface: 'TMDbInterface') -> None:
+    def add_translations(self, tmdb_interface: 'TMDbInterface') -> None:
         """
-        Add translated episode titles to the Episodes of this series.
+        Add translated episode titles to the Episodes of this series. This 
+        show's source file is re-read if any translations are added.
         
         :param      tmdb_interface: Interface to TMDb to query for translated
                                     episode titles.
@@ -405,6 +404,8 @@ class Show:
         if self.title_language == {} or not self.tmdb_sync:
             return None
 
+        # Go through every episode and look for translations
+        modified = False
         for _, episode in (pbar := tqdm(self.episodes.items(), leave=False)):
             # Update progress bar
             pbar.set_description(f'Checking {episode}')
@@ -425,15 +426,20 @@ class Show:
                 or language_title ==  episode.episode_info.title.full_title):
                 continue
 
-            # Adding data, log it
+            # Adding translated title, log it
             log.debug(f'Adding "{language_title}" to '
                       f'"{self.title_language["key"]}" of {self}')
 
             # Modify data file entry with new title
+            modified = True
             self.file_interface.add_data_to_entry(
                 episode.episode_info,
                 **{self.title_language['key']: language_title},
             )
+
+        # If any translations were added, re-read source
+        if modified:
+            self.read_source()
 
 
     def create_missing_title_cards(self, tmdb_interface: 'TMDbInterface'=None,
