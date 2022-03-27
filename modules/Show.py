@@ -69,6 +69,7 @@ class Show:
         # Setup default values that can be overwritten by YAML
         self.series_info = SeriesInfo(name, year)
         self.card_class = TitleCard.CARD_TYPES[self.preferences.card_type]
+        self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
         self.library_name = None
         self.library = None
         self.archive = True
@@ -90,7 +91,6 @@ class Show:
         self.valid = self.font.valid
 
         # Update derived attributes
-        self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
         self.source_directory = source_directory / self.series_info.full_name
         self.logo = self.source_directory / self.preferences.logo_filename
         self.file_interface = DataFileInterface(
@@ -156,6 +156,8 @@ class Show:
                         self.valid = False
                     else:
                         self.card_class = TitleCard.CARD_TYPES[card_type]
+                        etf = self.card_class.EPISODE_TEXT_FORMAT
+                        self.episode_text_format = etf
 
         if self.__is_specified('card_type'):
             if (value := self.__yaml['card_type']) not in TitleCard.CARD_TYPES:
@@ -163,6 +165,7 @@ class Show:
                 self.valid = False
             else:
                 self.card_class = TitleCard.CARD_TYPES[value]
+                self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
 
         if self.__is_specified('source_directory'):
             self.source_directory = Path(self.__yaml['source_directory'])
