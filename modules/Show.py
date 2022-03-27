@@ -377,7 +377,6 @@ class Show:
         )
 
         # For each episode, check if the data matches any contained Episodes
-        has_new = False
         if all_episodes:
             # Filter out episodes that already exist
             new_episodes = list(filter(
@@ -385,13 +384,10 @@ class Show:
                 all_episodes,
             ))
 
-            # Add all new entries to the datafile
-            self.file_interface.add_many_entries(new_episodes)
-
-        # If new entries were added, re-parse source file
-        if has_new:
-            self.read_source()
-            return True
+            # If there are new episodes, add to the datafile, return True
+            if new_episodes:
+                self.file_interface.add_many_entries(new_episodes)
+                return True
 
         return False
 
