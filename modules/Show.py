@@ -393,18 +393,22 @@ class Show:
         return False
 
 
-    def add_translation(self, tmdb_interface: 'TMDbInterface') -> None:
+    def add_translations(self, tmdb_interface: 'TMDbInterface') -> bool:
         """
         Add translated episode titles to the Episodes of this series.
         
         :param      tmdb_interface: Interface to TMDb to query for translated
                                     episode titles.
+
+        :returns:   True if any translations were added, False otherwise.
         """
 
         # If no title language was specified, or TMDb syncing isn't enabled,skip
         if self.title_language == {} or not self.tmdb_sync:
-            return None
+            return False
 
+        modified = False
+        # Go through every episode and look for translations
         for _, episode in (pbar := tqdm(self.episodes.items(), leave=False)):
             # Update progress bar
             pbar.set_description(f'Checking {episode}')
@@ -430,10 +434,13 @@ class Show:
                       f'"{self.title_language["key"]}" of {self}')
 
             # Modify data file entry with new title
+            modified = True
             self.file_interface.add_data_to_entry(
                 episode.episode_info,
                 **{self.title_language['key']: language_title},
             )
+
+        return modified
 
 
     def create_missing_title_cards(self, tmdb_interface: 'TMDbInterface'=None,

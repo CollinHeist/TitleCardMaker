@@ -93,10 +93,11 @@ class Manager:
             return None
 
         # For each show in the Manager, add translation
+        modified = False
         for show in (pbar := tqdm(self.shows)):
             pbar.set_description(f'Adding translations for '
                                  f'"{show.series_info.short_name}"')
-            show.add_translation(self.tmdb_interface)
+            modified |= show.add_translations(self.tmdb_interface)
 
 
     def read_show_source(self) -> None:
