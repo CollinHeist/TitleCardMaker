@@ -18,8 +18,8 @@ class TitleCard:
     """
 
     """Extensions of the input source image and output title card"""
-    INPUT_CARD_EXTENSION: str = '.jpg'
-    OUTPUT_CARD_EXTENSION: str = '.jpg'
+    INPUT_CARD_EXTENSION = '.jpg'
+    OUTPUT_CARD_EXTENSION = '.jpg'
 
     """Default filename format for all title cards"""
     DEFAULT_FILENAME_FORMAT = '{full_name} - S{season:02}E{episode:02}'
@@ -79,8 +79,8 @@ class TitleCard:
         
         :param      format_string:      Format string that specifies how to 
                                         construct the filename.
-        :param      series_info:        Series info pertaining to this entry.
-        :param      episode_info:       Episode info to get the output of.
+        :param      series_info:        SeriesInfo for this entry.
+        :param      episode_info:       EpisodeInfo to get filename of.
         :param      media_directory:    Top-level media directory.
         
         :returns:   Path for the full title card destination.
@@ -116,11 +116,13 @@ class TitleCard:
         Get the output filename for a title card described by the given values,
         and that represents a range of Episodes (not just one).
         
-        :param      format_string:  Format string that specifies how to
-                                    construct the filename.
-        :param      series_info:    Series info pertaining to this entry
-        :param      multi_episode:  
-        :returns:   
+        :param      format_string:      Format string that specifies how to
+                                        construct the filename.
+        :param      series_info:        Series info for this entry.
+        :param      multi_episode:      MultiEpisode object to get filename of.
+        :param      media_directory:    Top-level media directory.
+
+        :returns:   Path to the full title card destination.
         """
 
         # Replace existing episode number reference with episode start number
@@ -173,17 +175,18 @@ class TitleCard:
         
         :param      format_string:  Format string being validated.
         
-        :returns:   True if the given string can be formatted correctly, False
-                    otherwise.
+        :returns:   True if the given string can be formatted, False otherwise.
         """
         
         try:
+            # Attempt to format using all the standard keys
             format_string.format(
                 name='TestName', full_name='TestName (2000)', year=2000,
                 season=1, episode=1, title='Episode Title',
             )
             return True
         except ValueError as e:
+            # Invalid format string, log
             log.error(f'Card format string is invalid - "{e}"')
             return False
 
