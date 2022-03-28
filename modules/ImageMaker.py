@@ -36,7 +36,7 @@ class ImageMaker(ABC):
 
         # All ImageMakers have an instance of an ImageMagickInterface
         self.image_magick = ImageMagickInterface(
-            self.preferences.imagemagick_docker_id
+            self.preferences.imagemagick_container
         )
 
 

@@ -3,12 +3,12 @@ from subprocess import run
 class ImageMagickInterface:
     """
     This class describes an interface to ImageMagick. If initialized with a
-    valid docker ID, then all given ImageMagick commands will be run through
-    that docker container.
+    valid docker container (name or ID), then all given ImageMagick commands
+    will be run through that docker container.
 
-    Note: This class does not validate the provided docker ID corresponds to
-    a valid docker container. Commands are passed to docker so long as the
-    ID is non-zero (truthy).
+    Note: This class does not validate the provided container corresponds to
+    a valid ImageMagick container. Commands are passed to docker so long as any
+    container is fiben.
 
     The command I use for launching an ImageMagick container is:
 
@@ -16,18 +16,18 @@ class ImageMagickInterface:
         -dit -v "/mnt/user/":"/mnt/user/" 'dpokidov/imagemagick'
     """
 
-    def __init__(self, docker_id: str=None) -> None:
+    def __init__(self, container: str=None) -> None:
         """
         Constructs a new instance. If docker_id is None/0/False, then commands
         will not use a docker container.
         
-        :param      docker_id:  The docker ID for sending requests to
-                                ImageMagick.
+        :param      container:  The container for sending requests to
+                                ImageMagick, can be a name or container ID.
         """
         
         # Definitions of this interface, i.e. whether to use docker and how
-        self.docker_id = docker_id
-        self.use_docker = bool(docker_id)
+        self.container = container
+        self.use_docker = bool(container)
 
 
     @staticmethod
@@ -71,7 +71,7 @@ class ImageMagickInterface:
         # If a docker image ID is specified, execute the command in that container
         # otherwise, execute on the host machine (no docker wrapper)
         if self.use_docker:
-            command = f'docker exec -t {self.docker_id} {command}'
+            command = f'docker exec -t {self.container} {command}'
         else:
             command = command
             
