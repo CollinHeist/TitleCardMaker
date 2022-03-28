@@ -58,7 +58,7 @@ class PreferenceParser:
         self.tmdb_api_key = None
         self.tmdb_retry_count = TMDbInterface.BLACKLIST_THRESHOLD
         self.tmdb_minimum_resolution = {'width': 0, 'height': 0}
-        self.imagemagick_docker_id = None
+        self.imagemagick_container = None
 
         # Modify object attributes based off YAML, assume valid to start
         self.valid = True
@@ -195,8 +195,8 @@ class PreferenceParser:
                              f'WIDTHxHEIGHT')
                 self.valid = False
 
-        if self.__is_specified('imagemagick', 'docker_id'):
-            self.imagemagick_docker_id = self.__yaml['imagemagick']['docker_id']
+        if self.__is_specified('imagemagick', 'container'):
+            self.imagemagick_container = self.__yaml['imagemagick']['container']
 
 
     def read_file(self) -> None:
