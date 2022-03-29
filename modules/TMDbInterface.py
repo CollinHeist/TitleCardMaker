@@ -13,15 +13,41 @@ from modules.WebInterface import WebInterface
 class TMDbInterface(WebInterface):
     """
     This class defines an interface to TheMovieDatabase (TMDb). Once initialized 
-    with a valid API key, the primary purpose of this class is to gather 
-    images for title cards, or logos for summaries.
+    with a valid API key, the primary purpose of this class is to gather images
+    for title cards, logos for summaries, or translations for titles.
     """
 
     """Base URL for sending API requests to TheMovieDB"""
     API_BASE_URL = 'https://api.themoviedb.org/3/'
 
-    """Default for how many failed requests lead to an entry being blacklisted"""
+    """Default for how many failed requests lead to a blacklisted entry"""
     BLACKLIST_THRESHOLD = 3
+
+    """Generic translated episode format strings for each language code"""
+    GENERIC_TITLE_FORMATS = {
+        'ar': r'الحلقة {number}',
+        'zh': r'第 {number} 集',
+        'cs': r'{number}. epizoda',
+        'en': r'Episode {number}',
+        'fr': r'Épisode {number}',
+        'de': r'Episode {number}',
+        'he': r'פרק {number}',
+        'hu': r'{number}. epizód',
+        'id': r'Episode {number}',
+        'it': r'Episodio {number}',
+        'ja': r'第{number}話',
+        'ko': r'에피소드 {number}',
+        'pl': r'Odcinek {number}',
+        'pt': r'Episódio {number}',
+        'ro': r'Episodul {number}',
+        'ru': r'Эпизод {number}',
+        'sk': r'Epizóda {number}',
+        'es': r'Episodio {number}',
+        'th': r'Episode {number}',
+        'tr': r'{number}. Bölüm',
+        'uk': r'Серія {number}',
+        'vi': r'Episode {number}',
+    }
 
     """Filename for where to store blacklisted entries"""
     __BLACKLIST: Path = Path(__file__).parent / '.objects' / 'db_blacklist.yml'
@@ -357,6 +383,36 @@ class TMDbInterface(WebInterface):
         return images[best_image['index']] if valid_image else None
 
 
+    def __is_generic_title(self, title: str, language_code: str,
+                           episode_info: EpisodeInfo) -> bool:
+        """
+        Determine whether the given title is a generic translation of
+        "Episode (x)" for the indicated language. 
+        
+        :param      title:          The translated title.
+        :param      language_code:  The language code of the translation.
+        :param      episode_info:   The EpisodeInfo for this title.
+        
+        :returns:   True if the title is a generic translation, False otherwise.
+        """
+
+        # Assume non-generic if the code isn't pre-mapped
+        if not (generic := self.GENERIC_TITLE_FORMATS.get(language_code, None)):
+            log.debug(f'Unrecognized language code "{language_code}"')
+            return False
+
+        # Format with this episode, return whether this matches the translation
+        if episode_info.abs_number != None:
+            # Check against episode and absolute number
+            return title in (
+                generic.format(number=episode_info.episode_number),
+                generic.format(number=episode_info.abs_number),
+            )
+
+        # Only check against episode number (no absolute)
+        return title == generic.format(number=episode_info.episode_number)
+
+
     def get_source_image(self, series_info: SeriesInfo,
                          episode_info: EpisodeInfo,
                          title_match: bool=True) -> str:
@@ -459,6 +515,13 @@ class TMDbInterface(WebInterface):
 
         # Unsuccessful for some reason.. skip
         if 'success' in results and not results['success']:
+            self.__update_blacklist(series_info, episode_info, 'title')
+            return None
+
+        # If the returned name is generic for that language, blacklist and exit
+        title = results['name']
+        if self.__is_generic_title(title, language_code, episode_info):
+            log.debug(f'Generic title "{title}" detected for {episode_info}')
             self.__update_blacklist(series_info, episode_info, 'title')
             return None
 
