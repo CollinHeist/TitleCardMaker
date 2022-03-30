@@ -1,5 +1,6 @@
 certifi==2021.10.8
 charset-normalizer==2.0.12
+fonttools==4.30.0
 idna==3.3
 num2words==0.5.6
 PyYAML==6.0

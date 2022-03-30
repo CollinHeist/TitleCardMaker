@@ -10,6 +10,7 @@ pyyaml = "*"
 requests = "*"
 titlecase = "*"
 tqdm = "*"
+fonttools = "*"
 
 [dev-packages]
 
