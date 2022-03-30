@@ -42,6 +42,7 @@ class PreferenceParser:
         self.series_files = []
         self.card_type = 'standard'
         self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
+        self.validate_fonts = True
         self.archive_directory = None
         self.create_archive = False
         self.create_summaries = False
@@ -131,6 +132,9 @@ class PreferenceParser:
                 self.valid = False
             else:
                 self.card_filename_format = new_format
+
+        if self.__is_specified('options', 'validate_fonts'):
+            self.validate_fonts = bool(self.__yaml['options']['validate_fonts'])
 
         if self.__is_specified('archive', 'path'):
             self.archive_directory = Path(self.__yaml['archive']['path'])

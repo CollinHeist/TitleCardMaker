@@ -3,6 +3,7 @@ from re import match
 
 from modules.Debug import log
 from modules.TitleCard import TitleCard
+import modules.preferences as global_preferences
 
 class Font:
     """
@@ -26,6 +27,9 @@ class Font:
         self.__yaml = yaml
         self.__card_class = card_class
         self.__series_info = series_info
+
+        # This font's FontValidator object
+        self.__validator = global_preferences.fv
         
         # Generic font attributes
         self.set_default()
@@ -141,4 +145,19 @@ class Font:
             'vertical_shift': self.vertical_shift,
             'interline_spacing': self.interline_spacing,
         }
+
+
+    def validate_title(self, title: 'Title') -> bool:
+        """
+        Return whether all the characters of the given Title are valid for this
+        font. This uses the global FontValidator object.
+        
+        :param      title:  The Title being validated.
+        
+        :returns:   True if all the characters of the given Title are contained
+                    within this font, False otherwise.
+        """
+
+        return self.__validator.validate_title(self.file, title)
+
         
