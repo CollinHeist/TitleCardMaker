@@ -48,6 +48,11 @@ class Font:
     def __parse_attributes(self) -> None:
         """Parse this object's YAML and update the validity and attributes."""
 
+        # Whether to validate for this font
+        if (value := self.__yaml.get('validate', None)):
+            self.__validate = bool(value)
+            breakpoint()
+
         # Font case
         if (value := self.__yaml.get('case', '').lower()):
             if value not in self.__card_class.CASE_FUNCTIONS:
@@ -120,6 +125,10 @@ class Font:
     def set_default(self) -> None:
         """Reset this object's attributes to its default values."""
 
+        # Whether to validate for this font
+        self.__validate = global_preferences.pp.validate_fonts
+
+        # Title card characteristics
         self.color = self.__card_class.TITLE_COLOR
         self.size = 1.0
         self.file = self.__card_class.TITLE_FONT
@@ -150,7 +159,8 @@ class Font:
     def validate_title(self, title: 'Title') -> bool:
         """
         Return whether all the characters of the given Title are valid for this
-        font. This uses the global FontValidator object.
+        font. This uses the global FontValidator object, and always returns True
+        if validation is not enabled.
         
         :param      title:  The Title being validated.
         
@@ -158,6 +168,10 @@ class Font:
                     within this font, False otherwise.
         """
 
-        return self.__validator.validate_title(self.file, title)
+        # Validate title against this font
+        validity = self.__validator.validate_title(self.file, title)
+
+        # If validation isn't enabled, ignore result and return True
+        return validity if self.__validate else True
 
         

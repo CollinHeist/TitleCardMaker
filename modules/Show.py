@@ -70,7 +70,6 @@ class Show:
         self.series_info = SeriesInfo(name, year)
         self.card_class = TitleCard.CARD_TYPES[self.preferences.card_type]
         self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
-        self.validate_font = self.preferences.validate_fonts
         self.library_name = None
         self.library = None
         self.archive = True
@@ -172,9 +171,6 @@ class Show:
 
         if self.__is_specified('episode_text_format'):  
             self.episode_text_format = self.__yaml['episode_text_format']
-
-        if self.__is_specified('validate_font'):
-            self.validate_font = bool(self.__yaml['validate_font'])
 
         if self.__is_specified('archive'):
             self.archive = bool(self.__yaml['archive'])
@@ -503,9 +499,8 @@ class Show:
                 **episode.extra_characteristics,
             )
 
-            # If font validation is enabled, skip if title is invalid for font
-            if (self.validate_font
-                and not self.font.validate_title(title_card.converted_title)):
+            # Skip if title is invalid for font
+            if not self.font.validate_title(title_card.converted_title):
                 log.warning(f'Invalid font {self.font} for {episode}')
                 continue
 
