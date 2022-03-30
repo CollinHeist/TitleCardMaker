@@ -3,6 +3,7 @@ from re import match
 
 from modules.Debug import log
 from modules.TitleCard import TitleCard
+import modules.preferences as global_preferences
 
 class Font:
     """
@@ -26,6 +27,9 @@ class Font:
         self.__yaml = yaml
         self.__card_class = card_class
         self.__series_info = series_info
+
+        # This font's FontValidator object
+        self.__validator = global_preferences.fv
         
         # Generic font attributes
         self.set_default()
@@ -43,6 +47,11 @@ class Font:
 
     def __parse_attributes(self) -> None:
         """Parse this object's YAML and update the validity and attributes."""
+
+        # Whether to validate for this font
+        if (value := self.__yaml.get('validate', None)):
+            self.__validate = bool(value)
+            breakpoint()
 
         # Font case
         if (value := self.__yaml.get('case', '').lower()):
@@ -116,6 +125,10 @@ class Font:
     def set_default(self) -> None:
         """Reset this object's attributes to its default values."""
 
+        # Whether to validate for this font
+        self.__validate = global_preferences.pp.validate_fonts
+
+        # Title card characteristics
         self.color = self.__card_class.TITLE_COLOR
         self.size = 1.0
         self.file = self.__card_class.TITLE_FONT
@@ -141,4 +154,24 @@ class Font:
             'vertical_shift': self.vertical_shift,
             'interline_spacing': self.interline_spacing,
         }
+
+
+    def validate_title(self, title: 'Title') -> bool:
+        """
+        Return whether all the characters of the given Title are valid for this
+        font. This uses the global FontValidator object, and always returns True
+        if validation is not enabled.
+        
+        :param      title:  The Title being validated.
+        
+        :returns:   True if all the characters of the given Title are contained
+                    within this font, False otherwise.
+        """
+
+        # Validate title against this font
+        validity = self.__validator.validate_title(self.file, title)
+
+        # If validation isn't enabled, ignore result and return True
+        return validity if self.__validate else True
+
         
