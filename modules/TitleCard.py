@@ -13,13 +13,13 @@ class TitleCard:
     given profile to the Episode details and initializing a CardType with those
     attributes.
 
-    It also contains the mapping of card type identifier strings (in YAML) to
-    their respective CardType classes.
+    It also contains the mapping of card type identifier strings to their
+    respective CardType classes.
     """
 
     """Extensions of the input source image and output title card"""
-    INPUT_CARD_EXTENSION: str = '.jpg'
-    OUTPUT_CARD_EXTENSION: str = '.jpg'
+    INPUT_CARD_EXTENSION = '.jpg'
+    OUTPUT_CARD_EXTENSION = '.jpg'
 
     """Default filename format for all title cards"""
     DEFAULT_FILENAME_FORMAT = '{full_name} - S{season:02}E{episode:02}'
@@ -43,7 +43,7 @@ class TitleCard:
                                 title card.
         :param      title_characteristics:  Dictionary of characteristics from
                                             the CardType class for this Episode
-                                            to pass to apply_profile().
+                                            to pass to Title.apply_profile().
         :param      extra_characteristics:  Any extra keyword arguments to pass
                                             directly to the creation of the
                                             CardType object.
@@ -52,14 +52,18 @@ class TitleCard:
         # Store this card's associated episode and profile
         self.episode = episode
         self.profile = profile
+
+        # Apply the given profile to the Episode's Title
+        self.converted_title = episode.episode_info.title.apply_profile(
+            profile, **title_characteristics
+        )   
         
         # Construct this episode's CardType instance
         self.maker = self.episode.card_class(
             source=episode.source,
             output_file=episode.destination,
-            title=episode.episode_info.title.apply_profile(
-                profile, **title_characteristics
-            ), season_text=profile.get_season_text(episode.episode_info),
+            title=self.converted_title,
+            season_text=profile.get_season_text(episode.episode_info),
             episode_text=profile.get_episode_text(episode),
             hide_season=profile.hide_season_title,
             **profile.font.get_attributes(),
@@ -79,8 +83,8 @@ class TitleCard:
         
         :param      format_string:      Format string that specifies how to 
                                         construct the filename.
-        :param      series_info:        Series info pertaining to this entry.
-        :param      episode_info:       Episode info to get the output of.
+        :param      series_info:        SeriesInfo for this entry.
+        :param      episode_info:       EpisodeInfo to get filename of.
         :param      media_directory:    Top-level media directory.
         
         :returns:   Path for the full title card destination.
@@ -116,11 +120,13 @@ class TitleCard:
         Get the output filename for a title card described by the given values,
         and that represents a range of Episodes (not just one).
         
-        :param      format_string:  Format string that specifies how to
-                                    construct the filename.
-        :param      series_info:    Series info pertaining to this entry
-        :param      multi_episode:  
-        :returns:   
+        :param      format_string:      Format string that specifies how to
+                                        construct the filename.
+        :param      series_info:        Series info for this entry.
+        :param      multi_episode:      MultiEpisode object to get filename of.
+        :param      media_directory:    Top-level media directory.
+
+        :returns:   Path to the full title card destination.
         """
 
         # Replace existing episode number reference with episode start number
@@ -173,17 +179,18 @@ class TitleCard:
         
         :param      format_string:  Format string being validated.
         
-        :returns:   True if the given string can be formatted correctly, False
-                    otherwise.
+        :returns:   True if the given string can be formatted, False otherwise.
         """
         
         try:
+            # Attempt to format using all the standard keys
             format_string.format(
                 name='TestName', full_name='TestName (2000)', year=2000,
                 season=1, episode=1, title='Episode Title',
             )
             return True
         except ValueError as e:
+            # Invalid format string, log
             log.error(f'Card format string is invalid - "{e}"')
             return False
 
@@ -200,10 +207,11 @@ class TitleCard:
         if self.file.exists():
             return False
 
-        # If the input source doesn't exist, warn and exit
+        # If the input source doesn't exist, exit
         if not self.episode.source.exists():
             return False
             
+        # Create card, return whether it was successful
         self.maker.create()
 
         return self.file.exists()
