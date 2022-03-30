@@ -13,8 +13,8 @@ class TitleCard:
     given profile to the Episode details and initializing a CardType with those
     attributes.
 
-    It also contains the mapping of card type identifier strings (in YAML) to
-    their respective CardType classes.
+    It also contains the mapping of card type identifier strings to their
+    respective CardType classes.
     """
 
     """Extensions of the input source image and output title card"""
@@ -43,7 +43,7 @@ class TitleCard:
                                 title card.
         :param      title_characteristics:  Dictionary of characteristics from
                                             the CardType class for this Episode
-                                            to pass to apply_profile().
+                                            to pass to Title.apply_profile().
         :param      extra_characteristics:  Any extra keyword arguments to pass
                                             directly to the creation of the
                                             CardType object.
@@ -52,14 +52,18 @@ class TitleCard:
         # Store this card's associated episode and profile
         self.episode = episode
         self.profile = profile
+
+        # Apply the given profile to the Episode's Title
+        self.converted_title = episode.episode_info.title.apply_profile(
+            profile, **title_characteristics
+        )   
         
         # Construct this episode's CardType instance
         self.maker = self.episode.card_class(
             source=episode.source,
             output_file=episode.destination,
-            title=episode.episode_info.title.apply_profile(
-                profile, **title_characteristics
-            ), season_text=profile.get_season_text(episode.episode_info),
+            title=self.converted_title,
+            season_text=profile.get_season_text(episode.episode_info),
             episode_text=profile.get_episode_text(episode),
             hide_season=profile.hide_season_title,
             **profile.font.get_attributes(),
@@ -203,10 +207,11 @@ class TitleCard:
         if self.file.exists():
             return False
 
-        # If the input source doesn't exist, warn and exit
+        # If the input source doesn't exist, exit
         if not self.episode.source.exists():
             return False
             
+        # Create card, return whether it was successful
         self.maker.create()
 
         return self.file.exists()
