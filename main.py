@@ -2,8 +2,9 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 from modules.Debug import log
+from modules.FontValidator import FontValidator
 from modules.PreferenceParser import PreferenceParser
-from modules.preferences import set_preference_parser
+from modules.preferences import set_preference_parser, set_font_validator
 from modules.Manager import Manager
 
 # Default path for a preference file to parse
@@ -46,6 +47,7 @@ if not (pp := PreferenceParser(args.preference_file)).valid:
 
 # Store the valid preference parser in the global namespace
 set_preference_parser(pp)
+set_font_validator(FontValidator())
 
 # Create and run the manager --run many times
 tcm = None

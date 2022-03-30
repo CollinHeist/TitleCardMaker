@@ -81,7 +81,7 @@ class Show:
         self.__season_map[0] = 'Specials'
         self.title_language = {}
 
-        # Set object attributes based off YAML and update validity attribute
+        # Set object attributes based off YAML and update validity
         self.__parse_yaml()
         self.font = Font(
             self.__yaml.get('font', {}),
@@ -447,11 +447,10 @@ class Show:
         """
         Creates any missing title cards for each episode of this show.
 
-        :param      tmdb_interface:     Optional interface to TMDb to download
-                                        any missing source images.
-        :param      sonarr_interface:   Optional interface to Sonarr to get
-                                        episode and series ID's before querying
-                                        TMDb.
+        :param      tmdb_interface:     Optional TMDbInterface to download any
+                                        missing source images from.
+        :param      sonarr_interface:   Optional SonarrInterface to get episode
+                                        and series ID's for improved querying.
 
         :returns:   True if any new cards were created, False otherwise.
         """
@@ -472,12 +471,27 @@ class Show:
             # Update progress bar
             pbar.set_description(f'Creating {episode}')
             
-            # Skip episodes whose destination is None (don't create) or does exist
+            # Skip episodes without destination (do not create), or that exist
             if not episode.destination or episode.destination.exists():
                 continue
 
-            # Attempt to make a TitleCard object for this episode and profile
-            # passing any extra characteristics from the episode along
+            # If the title card source images doesn't exist and can query TMDb..
+            if (not episode.source.exists()
+                and self.tmdb_sync and tmdb_interface):
+                # Query TMDbInterface for image
+                image_url = tmdb_interface.get_source_image(
+                    self.series_info,
+                    episode.episode_info
+                )
+
+                # Skip this card if no image is returned
+                if not image_url:
+                    continue
+
+                # Download the image
+                tmdb_interface.download_image(image_url, episode.source)
+
+            # Create a TitleCard object for this episode with Show's profile
             title_card = TitleCard(
                 episode,
                 self.profile,
@@ -485,24 +499,10 @@ class Show:
                 **episode.extra_characteristics,
             )
 
-            # If the title card source images doesn't exist..
-            if not episode.source.exists():
-                # Skip if cannot query database
-                if not self.tmdb_sync or not tmdb_interface:
-                    continue
-
-                # Query database for image
-                image_url = tmdb_interface.get_source_image(
-                    self.series_info,
-                    episode.episode_info
-                )
-
-                # Skip if no image is returned
-                if not image_url:
-                    continue
-
-                # Download the image
-                tmdb_interface.download_image(image_url, episode.source)
+            # Skip if title is invalid for font
+            if not self.font.validate_title(title_card.converted_title):
+                log.warning(f'Invalid font {self.font} for {episode}')
+                continue
 
             # Source exists, create the title card
             created_new_cards |= title_card.create()
