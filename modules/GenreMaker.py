@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from modules.Debug import *
+from modules.Debug import log
 from modules.ImageMaker import ImageMaker
 
 class GenreMaker(ImageMaker):
