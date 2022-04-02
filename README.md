@@ -1,4 +1,9 @@
 # TitleCardMaker
+[![](https://img.shields.io/github/release/CollinHeist/TitleCardMaker.svg)](https://github.com/CollinHeist/TitleCardMaker/releases)
+[![GitHub Develop Commits](https://img.shields.io/github/commits-since/CollinHeist/TitleCardMaker/latest/develop?label=Commits%20in%20Develop&style=flat)](https://github.com/CollinHeist/TitleCardMaker/tree/develop)
+[![Discord](https://img.shields.io/discord/955533113734357125?style=flat&logo=discord&logoColor=white)](https://discord.gg/bJ3bHtw8wH)
+[![Support](https://img.shields.io/badge/-Support_Development-9cf?style=flat&color=informational)](https://github.com/sponsors/CollinHeist)
+
 An automated title card maker for Plex.
 
 ## Table of Contents
