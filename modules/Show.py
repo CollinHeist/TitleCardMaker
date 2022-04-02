@@ -38,8 +38,7 @@ class Show:
         :param      library_map:        Map of library titles to media
                                         directories.
         :param      source_directory:   Base source directory this show should
-                                        search for and place source images. Can
-                                        be overwritten by YAML tag.
+                                        search for and place source images.
         """
 
         self.preferences = global_preferences.pp
@@ -166,9 +165,6 @@ class Show:
 
         if self.__is_specified('media_directory'):
             self.media_directory = Path(self.__yaml['media_directory'])
-
-        if self.__is_specified('source_directory'):
-            self.source_directory = Path(self.__yaml['source_directory'])
 
         if self.__is_specified('episode_text_format'):  
             self.episode_text_format = self.__yaml['episode_text_format']
