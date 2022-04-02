@@ -116,13 +116,16 @@ class TMDbInterface(WebInterface):
 
         # If previously indexed and next has passed, increase count and set next
         later = datetime.now() + timedelta(days=1)
-        if key in self.__blacklist[query_type]:
+        if key in self.__blacklist.get(query_type, {}):
             if datetime.now() >= self.__blacklist[query_type][key]['next']:
                 # One day has passed, and still failed, increment count
                 self.__blacklist[query_type][key]['failures'] += 1
                 self.__blacklist[query_type][key]['next'] = later
             else:
                 return
+        elif not self.__blacklist.get(query_type, None):
+            # First blacklist for this query type
+            self.__blacklist[query_type] = {key: {'failures': 1, 'next': later}}
         else:
             # Add new entry to blacklist with 1 failure, next time is in one day
             self.__blacklist[query_type][key] = {'failures': 1, 'next': later}
@@ -145,6 +148,10 @@ class TMDbInterface(WebInterface):
         :returns:   True if the entry is blacklisted, False otherwise.
         """
 
+        # Skip imediately if this query type has no entries
+        if query_type not in self.__blacklist:
+            return False
+
         # Key for this entry based on the query type
         if query_type == 'logo':
             key = series_info.full_name
@@ -155,6 +162,7 @@ class TMDbInterface(WebInterface):
         if key not in self.__blacklist[query_type]:
             return False
             
+        # Has been indexed before, check if past failure count threshold
         failures = self.__blacklist[query_type][key]['failures']
         if failures > self.preferences.tmdb_retry_count:
             return True

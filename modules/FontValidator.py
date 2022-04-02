@@ -77,7 +77,7 @@ class FontValidator:
 
         # Update map for this character, return False
         self.__set_character(font_filepath, character, False)
-        log.debug(f'Character "{character}"" not in font "{font_filepath}"')
+        
         return False
 
 
@@ -98,6 +98,11 @@ class FontValidator:
             lambda char: self.__has_character(font_filepath, char),
             title.replace('\n', '')
         )
+
+        # Log all missing characters
+        for char, has_character in zip(title, has_characters):
+            if not has_character:
+                log.info(f'Character "{char}" missing from "{font_filepath}"')
 
         return all(has_characters)
 

@@ -1,17 +1,14 @@
-from copy import deepcopy
 from pathlib import Path
 from re import match
 
 from tqdm import tqdm
 
-from modules.CardType import CardType
 from modules.DataFileInterface import DataFileInterface
 from modules.Debug import log
 from modules.Episode import Episode
-from modules.EpisodeInfo import EpisodeInfo
 from modules.Font import Font
-import modules.preferences as global_preferences
 from modules.MultiEpisode import MultiEpisode
+import modules.preferences as global_preferences
 from modules.Profile import Profile
 from modules.SeriesInfo import SeriesInfo
 from modules.TitleCard import TitleCard
@@ -230,9 +227,11 @@ class Show:
                                 subsequent argument is checked for as a sub-
                                 attribute of the prior one.
         
-        :returns:   True if specified, False otherwise.
+        :returns:   True if the given attributes are all specified, False
+                    otherwise.
         """
 
+        # Start on the top-level series YAML
         current_level = self.__yaml
         for attr in attributes:
             # If this level isn't even a dictionary, or the attribute DNE, FALSE
@@ -248,7 +247,7 @@ class Show:
         return True
 
 
-    def __get_destination(self, episode_info: EpisodeInfo) -> Path:
+    def __get_destination(self, episode_info: 'EpisodeInfo') -> Path:
         """
         Get the destination filename for the given entry of a datafile.
         

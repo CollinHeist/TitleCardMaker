@@ -20,7 +20,7 @@ class Font:
         
         :param      yaml:           'font' dictionary from a series YAML file.
         :param      card_class:     CardType class to use values from.
-        :param      series_info:    Associated SeriesInfo (for logging only).
+        :param      series_info:    Associated SeriesInfo (for logging).
         """
 
         # Store arguments
@@ -51,7 +51,6 @@ class Font:
         # Whether to validate for this font
         if (value := self.__yaml.get('validate', None)):
             self.__validate = bool(value)
-            breakpoint()
 
         # Font case
         if (value := self.__yaml.get('case', '').lower()):
