@@ -65,6 +65,7 @@ class Show:
 
         # Setup default values that can be overwritten by YAML
         self.series_info = SeriesInfo(name, year)
+        self.media_directory = None
         self.card_class = TitleCard.CARD_TYPES[self.preferences.card_type]
         self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
         self.library_name = None
@@ -90,14 +91,11 @@ class Show:
         # Update derived attributes
         self.source_directory = source_directory / self.series_info.full_name
         self.logo = self.source_directory / self.preferences.logo_filename
+
+        # Create DataFileInterface fo this show
         self.file_interface = DataFileInterface(
             self.source_directory / DataFileInterface.GENERIC_DATA_FILE_NAME
         )
-
-        # If no library given, keep media directory as None
-        self.media_directory = None
-        if self.library:
-            self.media_directory = self.library / self.series_info.full_name
 
         # Create the profile for this show
         self.profile = Profile(
@@ -135,13 +133,16 @@ class Show:
             self.series_info.update_name(self.__yaml['name'])
 
         if self.__is_specified('library'):
+            # If the given library isn't in libary map, invalid
             if (library := self.__yaml['library']) not in self.__library_map:
                 log.error(f'Library "{library}" of series {self} is not found '
                           f'in libraries list')
                 self.valid = False
             else:
+                # Valid library, update library and media directory
                 self.library_name = library
                 self.library = Path(self.__library_map[library]['path'])
+                self.media_directory = self.library / self.series_info.full_name
 
                 # If card type was specified for this library, set that
                 if 'card_type' in self.__library_map[library]:
@@ -162,6 +163,9 @@ class Show:
             else:
                 self.card_class = TitleCard.CARD_TYPES[value]
                 self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
+
+        if self.__is_specified('media_directory'):
+            self.media_directory = Path(self.__yaml['media_directory'])
 
         if self.__is_specified('source_directory'):
             self.source_directory = Path(self.__yaml['source_directory'])
