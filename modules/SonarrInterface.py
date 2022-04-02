@@ -56,6 +56,9 @@ class SonarrInterface(WebInterface):
         # Create blank dictionary of titles -> ID's
         self.__series_ids = {}
 
+        # List of missing series that have already been warned 
+        self.__warned = []
+
         # Parse all Sonarr series
         self.__map_all_ids()
 
@@ -65,6 +68,23 @@ class SonarrInterface(WebInterface):
 
         return (f'<SonarrInterface url={self.url}, api_key={self.__api_key}'
                 f', mapping of {len(self.__series_ids)} series>')
+
+
+    def __warn_missing_series(self, series_info: SeriesInfo) -> None:
+        """
+        Warn a given series is missing from Sonarr, but only if it hasn't
+        already been warned.
+        
+        :param      series_info:  The SeriesInfo being warned.
+        """
+
+        # If this series has already been warned, return
+        if series_info.full_name in self.__warned:
+            return None
+
+        # Series hasn't been warned - warn and add to list
+        log.warning(f'Series "{series_info}" not found in Sonarr')
+        self.__warned.append(series_info.full_name)
 
 
     def __set_ids(self, series_info: SeriesInfo) -> None:
@@ -210,7 +230,7 @@ class SonarrInterface(WebInterface):
 
         # If no ID was returned, error and return an empty list
         if series_info.sonarr_id == None:
-            log.warning(f'Series "{series_info}" not found in Sonarr')
+            self.__warn_missing_series(series_info)
             return []
 
         return self.__get_all_episode_info(series_info.sonarr_id)
@@ -228,7 +248,7 @@ class SonarrInterface(WebInterface):
 
         # If no ID was returned, error and return
         if series_info.sonarr_id == None:
-            log.warning(f'Series "{series_info}" not found in Sonarr')
+            self.__warn_missing_series(series_info)
 
 
     def set_all_episode_ids(self, series_info: SeriesInfo,

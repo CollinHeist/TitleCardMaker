@@ -78,7 +78,7 @@ class ShowSummary(ImageMaker):
         # Skip if the number of available episodes is below the minimum
         minimum = self.preferences.summary_minimum_episode_count
         if episode_count < minimum:
-            log.info(f'Skipping ShowSummary - {self.show} has {episode_count} '
+            log.info(f'Skipping ShowSummary, {self.show} has {episode_count} '
                      f'episodes, minimum setting is {minimum}')
             return None
 
