@@ -5,10 +5,9 @@ from modules.CardType import CardType
 
 class AnimeTitleCard(CardType):
     """
-    This class describes a type of ImageMaker that produces title cards in the
-    theme of Star Wars cards as designed by reddit user /u/Olivier_286. These
-    cards are not as customizable as the standard template, but does support
-    some additional information (such as kanji).
+    This class describes a type of CardType that produces title cards in the
+    anime-styled cards designed by reddit user /u/Recker_Man. These cards don't
+    support custom fonts, but does support optional kanji text.
     """
 
     """Directory where all reference files used by this card are stored"""
