@@ -5,7 +5,6 @@ from modules.DataFileInterface import DataFileInterface
 from modules.GenreMaker import GenreMaker
 from modules.PreferenceParser import PreferenceParser
 from modules.preferences import set_preference_parser
-from modules.SonarrInterface import SonarrInterface
 from modules.TitleCard import TitleCard
 from modules.TMDbInterface import TMDbInterface
 

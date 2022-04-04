@@ -171,12 +171,8 @@ class Manager:
             pbar.set_description(f'Updating archive for '
                                  f'"{show_archive.series_info.short_name}"')
 
-            # Depending on which interfaces are enabled, pass those along
-            if self.preferences.use_tmdb and self.preferences.use_sonarr:
-                show_archive.update_archive(
-                    self.tmdb_interface, self.sonarr_interface
-                )
-            elif self.preferences.use_tmdb:
+            # Pass the TMDbInterface to the show if globally enabled
+            if self.preferences.use_tmdb:
                 show_archive.update_archive(self.tmdb_interface)
             else:
                 show_archive.update_archive()
