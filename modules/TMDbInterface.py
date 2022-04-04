@@ -50,7 +50,8 @@ class TMDbInterface(WebInterface):
     }
 
     """Filename for where to store blacklisted entries"""
-    __BLACKLIST: Path = Path(__file__).parent / '.objects' / 'db_blacklist.yml'
+    __BLACKLIST_FILE = Path(__file__).parent / '.objects' / 'db_blacklist.yml'
+    __EMPTY_BLACKLIST = {'image': {}, 'title': {}, 'logo': {}}
 
     """Filename where mappings of series full titles to TMDB ids is stored"""
     __ID_MAP: Path = Path(__file__).parent / '.objects' / 'db_id_map.yml'
@@ -69,7 +70,7 @@ class TMDbInterface(WebInterface):
 
         # Create objects directory if it does not exist
         self.__ID_MAP.parent.mkdir(parents=True, exist_ok=True)
-        self.__BLACKLIST.parent.mkdir(parents=True, exist_ok=True)
+        self.__BLACKLIST_FILE.parent.mkdir(parents=True, exist_ok=True)
 
         # Attempt to read existing ID map
         if self.__ID_MAP.exists():
@@ -79,11 +80,11 @@ class TMDbInterface(WebInterface):
             self.__id_map = {'name': {}, 'id': {}}
 
         # Attempt to read existing blacklist, if DNE, create blank one
-        if self.__BLACKLIST.exists():
-            with self.__BLACKLIST.open('r') as file_handle:
-                self.__blacklist = safe_load(file_handle)
+        if self.__BLACKLIST_FILE.exists():
+            with self.__BLACKLIST_FILE.open('r') as file_handle:
+                self.__blacklist = self.__fix_blacklist(safe_load(file_handle))
         else:
-            self.__blacklist = {'image': {}, 'title': {}, 'logo': {}}
+            self.__blacklist = self.__EMPTY_BLACKLIST
         
         # Store API key
         self.__api_key = api_key
@@ -94,6 +95,49 @@ class TMDbInterface(WebInterface):
         """Returns an unambiguous string representation of the object."""
 
         return f'<TMDbInterface api_key={self.__api_key}>'
+
+
+    def __fix_blacklist(self, blacklist: dict) -> dict:
+        """
+        Fix the given blacklist dictionary. This validates required query types
+        are present, that each query type leads to a dictionary, and that each
+        item within those queries has a failure and next key.
+
+        :param      blacklist:  Blacklist to be fixed.
+
+        :returns:   Modified blacklist, with entries fixed.
+        """
+
+        # Blacklist isn't a dictionary, set to empty blacklist
+        if not isinstance(blacklist, dict):
+            return self.__EMPTY_BLACKLIST
+
+        # Missing query type section or section isn't a dictionary?
+        for query_type in ('image', 'title', 'logo'):
+            if (query_type not in blacklist
+                or not isinstance(blacklist[query_type], dict)):
+                blacklist[query_type] = {}
+
+        # Verify each query sub-item is a dictionary with valid values
+        for qt in blacklist:
+            for key in blacklist[qt]:
+                if not isinstance(blacklist[qt][key], dict):
+                    blacklist[qt][key] = {'failures': 1, 'next': datetime.now()}
+                    log.debug(f'Reset blacklist entry for "{qt}" {key}')
+                elif 'failures' not in blacklist[qt][key]:
+                    blacklist[qt][key]['failures'] = 1
+                    log.debug(f'Reset failures for blacklist entry {key}')
+                elif not isinstance(blacklist[qt][key]['failures'], int):
+                    blacklist[qt][key]['failures'] = 1
+                    log.debug(f'Reset failures for blacklist entry {key}')
+                elif 'next' not in blacklist[qt][key]:
+                    blacklist[qt][key]['next'] = datetime.now()
+                    log.debug(f'Reset next for blacklist entry {key}')
+                elif not isinstance(blacklist[qt][key]['next'],datetime):
+                    blacklist[qt][key]['next'] = datetime.now()
+                    log.debug(f'Reset next for blacklist entry {key}')
+
+        return blacklist
 
 
     def __update_blacklist(self, series_info: SeriesInfo,
@@ -122,16 +166,13 @@ class TMDbInterface(WebInterface):
                 self.__blacklist[query_type][key]['failures'] += 1
                 self.__blacklist[query_type][key]['next'] = later
             else:
-                return
-        elif not self.__blacklist.get(query_type, None):
-            # First blacklist for this query type
-            self.__blacklist[query_type] = {key: {'failures': 1, 'next': later}}
+                return None
         else:
             # Add new entry to blacklist with 1 failure, next time is in one day
             self.__blacklist[query_type][key] = {'failures': 1, 'next': later}
 
         # Write latest version of blacklist to file
-        with self.__BLACKLIST.open('w') as file_handle:
+        with self.__BLACKLIST_FILE.open('w') as file_handle:
             dump(self.__blacklist, file_handle)
 
 
@@ -161,7 +202,7 @@ class TMDbInterface(WebInterface):
         # If never indexed before, skip failure check
         if key not in self.__blacklist[query_type]:
             return False
-            
+
         # Has been indexed before, check if past failure count threshold
         failures = self.__blacklist[query_type][key]['failures']
         if failures > self.preferences.tmdb_retry_count:
