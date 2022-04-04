@@ -355,8 +355,7 @@ class Show:
             self.episodes[f'0{mp.season_number}-{mp.episode_start}'] = mp
 
 
-    def check_sonarr_for_new_episodes(self,
-                                      sonarr_interface:'SonarrInterface')->None:
+    def query_sonarr(self, sonarr_interface: 'SonarrInterface') -> None:
         """
         Query the provided SonarrInterface object, checking if the returned
         episodes exist in this show's associated source. All new entries are
