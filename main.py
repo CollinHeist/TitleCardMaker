@@ -7,27 +7,36 @@ from modules.PreferenceParser import PreferenceParser
 from modules.preferences import set_preference_parser, set_font_validator
 from modules.Manager import Manager
 
-# Default path for a preference file to parse
+# Default path for the preference file to parse
 DEFAULT_PREFERENCE_FILE = Path('preferences.yml')
 
-# Default path for a missing file
+# Default path for the missing file to write to
 DEFAULT_MISSING_FILE = Path('missing.yml')
 
 # Set up argument parser
 parser = ArgumentParser(description='Start the TitleCardMaker')
-parser.add_argument('-p', '--preference-file', type=Path,
-                    default=DEFAULT_PREFERENCE_FILE,
-                    metavar='FILE',
-                    help='Specify the preference file for the TitleCardMaker')
-parser.add_argument('-r', '--run', action='count', default=0,
-                    help='Run the TitleCardMaker')
-parser.add_argument('-m', '--missing', type=Path, default=DEFAULT_MISSING_FILE,
-                    metavar='FILE',
-                    help='File to write a list of missing assets to')
-parser.add_argument('-l', '--log',
-                    choices=('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'),
-                    default='INFO',
-                    help='Level of logging verbosity to use')
+parser.add_argument(
+    '-p', '--preference-file',
+    type=Path,
+    default=DEFAULT_PREFERENCE_FILE,
+    metavar='FILE',
+    help='Specify the global preferences file')
+parser.add_argument(
+    '-r', '--run',
+    action='count',
+    default=0,
+    help='Run the TitleCardMaker')
+parser.add_argument(
+    '-m', '--missing', 
+    type=Path,
+    default=DEFAULT_MISSING_FILE,
+    metavar='FILE',
+    help='File to write the list of missing assets to')
+parser.add_argument(
+    '-l', '--log',
+    choices=('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'),
+    default='INFO',
+    help='Level of logging verbosity to use')
 
 # Parse given arguments
 args = parser.parse_args()
@@ -45,7 +54,7 @@ if not args.preference_file.exists():
 if not (pp := PreferenceParser(args.preference_file)).valid:
     exit(1)
 
-# Store the valid preference parser in the global namespace
+# Store the PreferenceParser and FontValidator in the global namespace
 set_preference_parser(pp)
 set_font_validator(FontValidator())
 
