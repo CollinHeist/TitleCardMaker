@@ -508,14 +508,13 @@ class TMDbInterface(WebInterface):
         # Get the TMDb index for this entry
         index = self.__find_episode(series_info, episode_info)
 
-        # If None was returned, episode not found - warn, blacklist, and exit
+        # If episode was not found - blacklist, and exit
         if index == None:
             self.__update_blacklist(series_info, episode_info, 'title')
             return None
 
-        season, episode = index['season'], index['episode']
-
         # GET params
+        season, episode = index['season'], index['episode']
         url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/{season}'
                f'/episode/{episode}')
         params = {'api_key': self.__api_key, 'language': language_code}

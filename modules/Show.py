@@ -360,7 +360,8 @@ class Show:
         """
         Query the provided SonarrInterface object, checking if the returned
         episodes exist in this show's associated source. All new entries are
-        added to this object's DataFileInterface, and the source is re-read.
+        added to this object's DataFileInterface, the source is re-read, and
+        episode ID's are set IF TMDb syncing is enabled.
 
         This method should only be called if Sonarr syncing is globally enabled.
         
@@ -388,6 +389,11 @@ class Show:
             if new_episodes:
                 self.file_interface.add_many_entries(new_episodes)
                 self.read_source()
+
+        # If TMDb syncing is enabled, set episode ID's for all episodes
+        if self.tmdb_sync:
+            all_episodes = list(ei for _, ei in self.episodes.items())
+            sonarr_interface.set_all_episode_ids(self.series_info, all_episodes)
 
 
     def add_translations(self, tmdb_interface: 'TMDbInterface') -> None:
@@ -441,28 +447,20 @@ class Show:
             self.read_source()
 
 
-    def create_missing_title_cards(self, tmdb_interface: 'TMDbInterface'=None,
-                              sonarr_interface: 'SonarrInterface'=None) -> bool:
+    def create_missing_title_cards(self,
+                                   tmdb_interface: 'TMDbInterface'=None) ->bool:
         """
         Creates any missing title cards for each episode of this show.
 
         :param      tmdb_interface:     Optional TMDbInterface to download any
                                         missing source images from.
-        :param      sonarr_interface:   Optional SonarrInterface to get episode
-                                        and series ID's for improved querying.
 
         :returns:   True if any new cards were created, False otherwise.
         """
 
-        # If the media directory is unspecified, then exit
+        # If the media directory is unspecified, exit
         if self.media_directory is None:
             return False
-            
-        # If TMDb syncing is enabled, and a valid TMDb and Sonarr Interface were
-        # provided, get all episode ID's for this series
-        if self.tmdb_sync and tmdb_interface and sonarr_interface:
-            all_episodes = list(ei for _, ei in self.episodes.items())
-            sonarr_interface.set_all_episode_ids(self.series_info, all_episodes)
 
         # Go through each episode for this show
         created_new_cards = False
