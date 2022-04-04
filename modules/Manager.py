@@ -76,7 +76,7 @@ class Manager:
                 
             self.shows.append(show)
 
-            # If archives are disabled globally, or for this show.. skip 
+            # If archives are disabled globally, or for this show - skip 
             if not self.preferences.create_archive or not show.archive:
                 continue
 
@@ -125,7 +125,7 @@ class Manager:
             return None
 
         # Go through each show in the Manager and query Sonarr
-        for show in tqdm(self.shows, desc='Querying Sonarr'):
+        for show in tqdm(self.shows + self.archives, desc='Querying Sonarr'):
             show.query_sonarr(self.sonarr_interface)
 
 

@@ -58,8 +58,6 @@ class ShowArchive:
         # If the base show for this object has archiving disabled, exit
         self.series_info = base_show.series_info
         self.__base_show = base_show
-        if not base_show.archive:
-            return
 
         # For each applicable sub-profile, create and modify new show/show summary
         valid_profiles = base_show.profile.get_valid_profiles(
@@ -113,15 +111,28 @@ class ShowArchive:
             show.find_multipart_episodes()
 
 
-    def update_archive(self, *args: tuple, **kwargs: dict) -> None:
+    def query_sonarr(self, *args: tuple, **kwargs: dict) -> None:
         """
-        Create all missing title cards for each show object in this archive.
-        
+        Call query_sonarr() on each Show object in this archive.
+
         :param      args and kwargs:    The arguments to pass directly to
-                                        `Show.create_missing_title_cards()`.
+                                        Show.query_sonarr().
         """
 
-        # Create missing cards for each `Show` object in this archive
+        # Query Sonarr for each show (updates episode ID's, namely)
+        for show in self.shows:
+            show.query_sonarr(*args, **kwargs)
+
+
+    def update_archive(self, *args: tuple, **kwargs: dict) -> None:
+        """
+        Create all missing title cards for each Show object in this archive.
+        
+        :param      args and kwargs:    The arguments to pass directly to
+                                        Show.create_missing_title_cards().
+        """
+
+        # Create missing cards for each Show object in this archive
         for show in self.shows:
             show.create_missing_title_cards(*args, **kwargs)
 
