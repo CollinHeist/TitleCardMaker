@@ -252,14 +252,15 @@ class SonarrInterface(WebInterface):
 
 
     def set_all_episode_ids(self, series_info: SeriesInfo,
-                            all_episodes: [EpisodeInfo]) -> None:
+                            all_episodes: ['Episode']) -> None:
         """
         Set all the episode ID's for the given list of EpisodeInfo objects. This
         sets the Sonarr and TVDb ID's for each episode. As a byproduct, this
         also updates the series ID's for the SeriesInfo object
         
         :param      series_info:    SeriesInfo for the entry.
-        :param      episode_info:  The episode information
+        :param      all_episodes:   List of Episodes to update the EpisodeInfo
+                                    object of.
         """
 
         # Set the Sonarr ID for this series
