@@ -5,27 +5,10 @@ from modules.CardType import CardType
 
 class StandardTitleCard(CardType):
     """
-    This class describes the object that actually makes the title card using
-    programmed ImageMagick commands. 
-
-    Once initialized with the required title card information, the maker should
-    only be used to call `create()`. This will use those arguments to construct
-    the desired title card, and delete all intermediate files from that process.
-
-    The process for this creation is:
-        1. Take the source image and add the preset gradient overlay.
-        2. Add the title text (either one or two lines) to the image. Using the
-           provided text line(s), font, and color.
-        3. Create the output file's necessary parent folders.
-        4. If no season text is required, add just the episode count and go to 8.
-        5. If season text is required, query ImageMagick's to get the end width
-           of the season and episode text.
-        6. Create a transparent image of only the provided season and episode
-           text of the dimensions computed in 5.
-        7. Place the intermediate transparent text image on top of the image
-           with title text.
-        8. The resulting title card file is placed at the provided output path. 
-        9. Delete all intermediate files created above.
+    This class describes a type of CardType that produces the 'generic' title
+    cards based on Reddit user /u/UniversalPolymath. This card supports 
+    customization of every aspect of the card, but does not use any arbitrary
+    data.
     """
 
     """Directory where all reference files used by this card are stored"""
@@ -58,9 +41,6 @@ class StandardTitleCard(CardType):
     SEASON_COUNT_FONT = REF_DIRECTORY / 'Proxima Nova Semibold.otf'
     EPISODE_COUNT_FONT = REF_DIRECTORY / 'Proxima Nova Regular.otf'
     SERIES_COUNT_TEXT_COLOR = '#CFCFCF'
-
-    """Character used to join season and episode text (with spacing)"""
-    SERIES_COUNT_JOIN_CHARACTER = '•'
 
     """Paths to intermediate files that are deleted after the card is created"""
     __SOURCE_WITH_GRADIENT = CardType.TEMP_DIR / 'source_gradient.png'
@@ -288,7 +268,7 @@ class StandardTitleCard(CardType):
             f'-font "{self.EPISODE_COUNT_FONT}"',   # Separator dot
             f'-gravity center',
             *self.__series_count_text_effects(),
-            f'-annotate +0+689.5 "{self.SERIES_COUNT_JOIN_CHARACTER} "',
+            f'-annotate +0+689.5 "• "',
             f'-gravity west',                               # Episode text
             *self.__series_count_text_effects(),
             f'-annotate +1640+697.2 "{self.episode_text}"',
@@ -331,9 +311,9 @@ class StandardTitleCard(CardType):
             f'-annotate +0+{height-25} "{self.season_text} "',
             f'-font "{self.EPISODE_COUNT_FONT}"',
             *self.__series_count_text_black_stroke(),
-            f'-annotate +{width1}+{height-25-6.5} "{self.SERIES_COUNT_JOIN_CHARACTER}"',
+            f'-annotate +{width1}+{height-25-6.5} "•"',
             *self.__series_count_text_effects(),
-            f'-annotate +{width1}+{height-25-6.5} "{self.SERIES_COUNT_JOIN_CHARACTER}"',
+            f'-annotate +{width1}+{height-25-6.5} "•"',
             *self.__series_count_text_black_stroke(),
             f'-annotate +{width1+width2}+{height-25} "{self.episode_text}"',
             *self.__series_count_text_effects(),

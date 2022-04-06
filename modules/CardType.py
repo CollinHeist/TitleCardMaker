@@ -33,7 +33,7 @@ class CardType(ImageMaker):
     EPISODE_TEXT_FORMAT = 'EPISODE {episode_number}'
 
     """Standard size for all title cards"""
-    TITLE_CARD_SIZE: str = '3200x1800'
+    TITLE_CARD_SIZE = '3200x1800'
 
     @property
     @abstractmethod

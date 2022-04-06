@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 
 from requests import get
 
+from modules.Debug import log
+
 class WebInterface(ABC):
     """
     Abstract class that defines a WebInterface, which is a type of interface
@@ -9,7 +11,7 @@ class WebInterface(ABC):
     """
 
     """How many requests to cache"""
-    CACHE_LENGTH = 5
+    CACHE_LENGTH = 10
     
     @abstractmethod
     def __init__(self) -> None:

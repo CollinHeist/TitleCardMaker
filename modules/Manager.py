@@ -76,7 +76,7 @@ class Manager:
                 
             self.shows.append(show)
 
-            # If archives are disabled globally, or for this show.. skip 
+            # If archives are disabled globally, or for this show - skip 
             if not self.preferences.create_archive or not show.archive:
                 continue
 
@@ -120,13 +120,13 @@ class Manager:
         this manager.
         """
 
-        # If sonarr is globally disabled, skip
+        # If Sonarr is globally disabled, skip
         if not self.preferences.use_sonarr:
             return None
 
-        # Go through each show in the Manager, querying Sonarr
-        for show in tqdm(self.shows, desc='Querying Sonarr'):
-            show.check_sonarr_for_new_episodes(self.sonarr_interface)
+        # Go through each show in the Manager and query Sonarr
+        for show in tqdm(self.shows + self.archives, desc='Querying Sonarr'):
+            show.query_sonarr(self.sonarr_interface)
 
 
     def create_missing_title_cards(self) -> None:
@@ -143,11 +143,7 @@ class Manager:
                                  f'"{show.series_info.short_name}"')
 
             # Pass the TMDbInterface to the show if globally enabled
-            if self.preferences.use_tmdb and self.preferences.use_sonarr:
-                created = show.create_missing_title_cards(
-                    self.tmdb_interface, self.sonarr_interface
-                )
-            elif self.preferences.use_tmdb:
+            if self.preferences.use_tmdb:
                 created = show.create_missing_title_cards(self.tmdb_interface)
             else:
                 created = show.create_missing_title_cards()
@@ -175,12 +171,8 @@ class Manager:
             pbar.set_description(f'Updating archive for '
                                  f'"{show_archive.series_info.short_name}"')
 
-            # Depending on which interfaces are enabled, pass those along
-            if self.preferences.use_tmdb and self.preferences.use_sonarr:
-                show_archive.update_archive(
-                    self.tmdb_interface, self.sonarr_interface
-                )
-            elif self.preferences.use_tmdb:
+            # Pass the TMDbInterface to the show if globally enabled
+            if self.preferences.use_tmdb:
                 show_archive.update_archive(self.tmdb_interface)
             else:
                 show_archive.update_archive()

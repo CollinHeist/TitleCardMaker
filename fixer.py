@@ -5,7 +5,6 @@ from modules.DataFileInterface import DataFileInterface
 from modules.GenreMaker import GenreMaker
 from modules.PreferenceParser import PreferenceParser
 from modules.preferences import set_preference_parser
-from modules.SonarrInterface import SonarrInterface
 from modules.TitleCard import TitleCard
 from modules.TMDbInterface import TMDbInterface
 
@@ -14,69 +13,115 @@ parser.add_argument('-p', '--preference-file', type=Path,
                     default='preferences.yml', metavar='PREFERENCE_FILE',
                     help='Preference YAML file for parsing '
                          'ImageMagick/Sonarr/TMDb options')
-parser.add_argument('--sort-data-file', type=Path, default=SUPPRESS,
-                    metavar='DATAFILE', help='Sort the given datafile')
 
 # Argument group for 'manual' title card creation
 title_card_group = parser.add_argument_group('Title Cards',
                                              'Manual title card creation')
-title_card_group.add_argument('--card-type', type=str, default='standard',
-                              choices=TitleCard.CARD_TYPES.keys(),
-                              help='Create a title card of a specific type')
-title_card_group.add_argument('--title-card', type=str, nargs=3,
-                              default=SUPPRESS, 
-                              metavar=('EPISODE', 'SOURCE', 'DESTINATION'),
-                              help='Manually create a title card using these '
-                                   'parameters')
-title_card_group.add_argument('--season', type=str, default=None,
-                              metavar='SEASON_TEXT',
-                              help="Specify this card's season text")
-title_card_group.add_argument('--title', type=str, nargs='+', default='',
-                              metavar=('TITLE_LINE'),
-                              help="Specify this card's title text")
-title_card_group.add_argument('--font', '--font-file', type=Path,
-                              default='__default', metavar='FONT_FILE',
-                              help="Specify this card's custom font")
-title_card_group.add_argument('--font-size', '--size', type=str, default='100%',
-                              metavar='SCALE%',
-                              help='Specify a custom font scale, as percentage,'
-                                   ' to use for this card')
-title_card_group.add_argument('--font-color', '--color', type=str, 
-                              default='__default', metavar='#HEX',
-                              help='Specify a custom font color to use for this'
-                                   ' card')
+title_card_group.add_argument(
+    '--card-type',
+    type=str,
+    default='standard',
+    choices=TitleCard.CARD_TYPES.keys(),
+    metavar='TYPE',
+    help='Create a title card of a specific type')
+title_card_group.add_argument(
+    '--title-card',
+    type=Path,
+    nargs=2,
+    default=SUPPRESS,
+    metavar=('SOURCE', 'DESTINATION'),
+    help='Create a title card with the given source image, written to the given'
+         'destination')
+title_card_group.add_argument(
+    '--episode',
+    type=str,
+    default='EPISODE x',
+    metavar='EPISODE_TEXT',
+    help="Specify this card's episode text")
+title_card_group.add_argument(
+    '--season',
+    type=str,
+    default=None,
+    metavar='SEASON_TEXT',
+    help="Specify this card's season text")
+title_card_group.add_argument(
+    '--title',
+    type=str,
+    nargs='+',
+    default='',
+    metavar=('TITLE_LINE'),
+    help="Specify this card's title text")
+title_card_group.add_argument(
+    '--font', '--font-file',
+    type=Path,
+    default='__default',
+    metavar='FONT_FILE',
+    help="Specify this card's custom font")
+title_card_group.add_argument(
+    '--font-size', '--size',
+    type=str,
+    default='100%',
+    metavar='SCALE%',
+    help='Specify a custom font scale (as percentage)')
+title_card_group.add_argument(
+    '--font-color', '--color',
+    type=str, 
+    default='__default',
+    metavar='#HEX',
+    help='Specify a custom font color to use for this card')
+title_card_group.add_argument(
+    '--vertical-shift', '--shift',
+    type=float,
+    default=0.0,
+    metavar='PIXELS',
+    help='How many pixels to vertically shift the title text')
+title_card_group.add_argument(
+    '--interline-spacing', '--spacing',
+    type=float,
+    default=0.0,
+    metavar='PIXELS',
+    help='How many pixels to increase the interline spacing of for title text')
 
 # Argument group for genre maker
-genre_group = parser.add_argument_group('Genre Cards', 'Manual genre card creation')
-genre_group.add_argument('--genre-card', type=str, nargs=3, default=SUPPRESS,
-                         metavar=('SOURCE', 'GENRE', 'DESTINATION'),
-                         help='Create a genre card with the given text')
-genre_group.add_argument('--genre-card-batch', type=Path, default=SUPPRESS,
-                         metavar=('SOURCE_DIRECTORY'),
-                         help='Create all genre cards for images in the given '
-                              'directory based on their file names')
-
-# Argument group for fixes relating to Sonarr
-sonarr_group = parser.add_argument_group('Sonarr', 'Fixes for how the maker interacts with Sonarr')
-sonarr_group.add_argument('--sonarr-list-ids', action='store_true',
-                          help='List all internal IDs used by Sonarr - use with'
-                               ' grep')
+genre_group = parser.add_argument_group(
+    'Genre Cards',
+    'Manual genre card creation')
+genre_group.add_argument(
+    '--genre-card',
+    type=str,
+    nargs=3,
+    default=SUPPRESS,
+    metavar=('SOURCE', 'GENRE', 'DESTINATION'),
+    help='Create a genre card with the given text')
+genre_group.add_argument(
+    '--genre-card-batch',
+    type=Path,
+    default=SUPPRESS,
+    metavar=('SOURCE_DIRECTORY'),
+    help='Create all genre cards for images in the given directory based on '
+         'their file names')
 
 # Argument group for fixes relating to TheMovieDatabase
-tmdb_group = parser.add_argument_group('TheMovieDatabase', 'Fixes for how the Maker interacts with TheMovieDatabase')
-tmdb_group.add_argument('--tmdb-download-images', nargs=6, default=SUPPRESS,
-                        action='append',
-                        metavar=('API_KEY', 'TITLE', 'YEAR', 'SEASON',
-                                 'EPISODES', 'DIRECTORY'),
-                        help='Download the best title card source image for the'
-                             ' given episode')
-tmdb_group.add_argument('--delete-blacklist', action='store_true',
-                        help='Whether to delete the existing TMDb blacklist')
-tmdb_group.add_argument('--add-translation', nargs=5, default=SUPPRESS,
-                        metavar=('TITLE', 'YEAR', 'DATAFILE', 'LANGUAGE_CODE',
-                                 'LABEL'),
-                        help='Add title translations from TMDb to the given '
-                             'datafile')
+tmdb_group = parser.add_argument_group(
+    'TheMovieDatabase',
+    'Fixes for how the Maker interacts with TheMovieDatabase')
+tmdb_group.add_argument(
+    '--tmdb-download-images',
+    nargs=6,
+    default=SUPPRESS,
+    action='append',
+    metavar=('API_KEY', 'TITLE', 'YEAR', 'SEASON', 'EPISODES', 'DIRECTORY'),
+    help='Download the best title card source image for the given episode')
+tmdb_group.add_argument(
+    '--delete-blacklist',
+    action='store_true',
+    help='Whether to delete the existing TMDb blacklist')
+tmdb_group.add_argument(
+    '--add-translation',
+    nargs=5,
+    default=SUPPRESS,
+    metavar=('TITLE', 'YEAR', 'DATAFILE', 'LANGUAGE_CODE', 'LABEL'),
+    help='Add title translations from TMDb to the given datafile')
 
 # Parse given arguments
 args, unknown = parser.parse_known_args()
@@ -98,23 +143,20 @@ if args.font == Path('__default'):
 if args.font_color == '__default':
     args.font_color = TitleCard.CARD_TYPES[args.card_type].TITLE_COLOR
 
-# Execute misc. options
-if hasattr(args, 'sort_data_file'):
-    dfi = DataFileInterface(args.sort_data_file)
-    dfi.sort(dfi._DataFileInterface__read_data())
-
 # Execute title card related options
 if hasattr(args, 'title_card'):
     TitleCard.CARD_TYPES[args.card_type](
-        episode_text=args.title_card[0],
-        source=Path(args.title_card[1]), 
-        output_file=Path(args.title_card[2]),
+        episode_text=args.episode,
+        source=Path(args.title_card[0]), 
+        output_file=Path(args.title_card[1]),
         season_text=('' if not args.season else args.season),
         title='\n'.join(args.title),
         font=args.font.resolve(),
         font_size=float(args.font_size[:-1])/100.0,
         title_color=args.font_color,
         hide_season=(not bool(args.season)),
+        vertical_shift=args.vertical_shift,
+        interline_spacing=args.interline_spacing,
         **arbitrary_data,
     ).create()
 
@@ -134,10 +176,6 @@ if hasattr(args, 'genre_card_batch'):
                 genre=file.stem.upper(),
                 output=Path(file.parent / f'{file.stem}-GenreCard{file.suffix}'),
             ).create()
-
-# Execute Sonarr related options
-if args.sonarr_list_ids:
-    SonarrInterface(pp.sonarr_url, pp.sonarr_api_key).list_all_series_id()
 
 # Execute TMDB related options
 if hasattr(args, 'delete_blacklist'):
