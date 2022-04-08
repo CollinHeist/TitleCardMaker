@@ -189,7 +189,7 @@ class TitleCard:
                 season=1, episode=1, title='Episode Title',
             )
             return True
-        except ValueError as e:
+        except Exception as e:
             # Invalid format string, log
             log.error(f'Card format string is invalid - "{e}"')
             return False
