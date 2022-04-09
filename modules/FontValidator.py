@@ -30,6 +30,27 @@ class FontValidator:
             self.FONT_VALIDATION_MAP.parent.mkdir(parents=True, exist_ok=True)
             self.__fonts = {}
 
+        # List of missing characters that have already been warned
+        self.__warned = []
+
+
+    def __warn_missing(self, char: str, font_filepath: str) -> None:
+        """
+        Warn a given character is missing from a given font, but only if it 
+        hasn't already been warned.
+        
+        :param      char:           The missing character
+        :param      font_filepath:  Filepath to the relevant font.
+        """
+
+        # If this character (for this font) has already been warned, return
+        if (key := f'{char}-{font_filepath}') in self.__warned:
+            return None
+
+        # Character (and font) hasn't been warned yet - warn and add to list
+        log.warning(f'Character "{char}" missing from "{font_filepath}"')
+        self.__warned.append(key)
+
 
     def __set_character(self, font_filepath: str, character: str,
                         status: bool) -> None:
@@ -100,15 +121,15 @@ class FontValidator:
         """
 
         # Map __has_character() to all characters in the title
-        has_characters = map(
+        has_characters = tuple(map(
             lambda char: self.__has_character(font_filepath, char),
-            title.replace('\n', '')
-        )
+            (title := title.replace('\n', ''))
+        ))
 
         # Log all missing characters
         for char, has_character in zip(title, has_characters):
             if not has_character:
-                log.info(f'Character "{char}" missing from "{font_filepath}"')
+                self.__warn_missing(char, font_filepath)
 
         return all(has_characters)
 
