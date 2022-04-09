@@ -123,8 +123,8 @@ class GenreMaker(ImageMaker):
 
         # If the source file doesn't exist, exit
         if not self.source.exists():
-            error(f'Cannot create genre card, "{self.source.resolve()}" does '
-                  f'not exist.')
+            log.error(f'Cannot create genre card, "{self.source.resolve()}" '
+                      f'does not exist.')
             return None
         
         # Resize source to fit in contrained space
