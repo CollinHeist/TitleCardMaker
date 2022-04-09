@@ -497,7 +497,7 @@ class Show:
 
             # Skip if title is invalid for font
             if not self.font.validate_title(title_card.converted_title):
-                log.warning(f'Invalid font for {episode} of "{self}"')
+                log.warning(f'Invalid font for {episode} of {self}')
                 continue
 
             # Source exists, create the title card
