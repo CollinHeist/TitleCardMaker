@@ -24,6 +24,7 @@ class CardType(ImageMaker):
 
     """Mapping of 'case' strings to format functions"""
     CASE_FUNCTIONS = {
+        'source': str,
         'upper': str.upper,
         'lower': str.lower,
         'title': titlecase,
