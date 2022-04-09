@@ -1,4 +1,5 @@
 from pathlib import Path
+from re import match
 
 from num2words import num2words
 
@@ -75,6 +76,7 @@ class StarWarsTitleCard(CardType):
         
         # Modify episode text to remove "Episode"-like text, replace numbers
         # with text, strip spaces, and convert to uppercase
+        self.episode_prefix = 'EPISODE'
         self.episode_text = self.image_magick.escape_chars(
             self.__modify_episode_text(episode_text)
         )
@@ -82,7 +84,7 @@ class StarWarsTitleCard(CardType):
 
     def __modify_episode_text(self, text: str) -> str:
         """
-        Amend the given episode text (such as "EPISODE 1" or "CHAPTER 1") to fit
+        Modify the given episode text (such as "EPISODE 1" or "CHAPTER 1") to fit
         the theme of this card. This removes preface text like episode, chapter,
         or part; and converts numeric episode numbers to their text equivalent.
         For example:
@@ -92,7 +94,7 @@ class StarWarsTitleCard(CardType):
         >>> self.__modify_episode_text('PART 14')
         'FOURTEEN'
         
-        :param      text:  The episode text to modify.
+        :param      text:   The episode text to modify.
         
         :returns:   The modified episode text with preface text removed, numbers
                     replaced with words, and converted to uppercase. If numbers
@@ -102,13 +104,21 @@ class StarWarsTitleCard(CardType):
         # Convert to uppercase, remove space padding
         modified_text = text.upper().strip()
 
-        # Remove preface text
-        for to_remove in ['CHAPTER', 'EPISODE', 'PART']:
-            modified_text = modified_text.replace(to_remove, '')
+        # Remove preface text - if CHAPTER or EPISODE, set object episode prefix
+        if match(rf'CHAPTER\s*(\d+)', modified_text):
+            self.episode_prefix = 'CHAPTER'
+            modified_text = modified_text.replace('CHAPTER', '')
+        elif match(rf'EPISODE\s*(\d+)', modified_text):
+            self.episode_prefix = 'EPISODE'
+            modified_text = modified_text.replace('EPISODE', '')
+        elif match(rf'PART\s*(\d+)', modified_text):
+            modified_text = modified_text.replace('PART', '')
 
         try:
+            # Only digit episode text remains, return as a number (i.e. "two")
             return num2words(int(modified_text.strip())).upper()
         except ValueError:
+            # Not just a digit, return as-is
             return modified_text.strip()
 
 
@@ -158,7 +168,8 @@ class StarWarsTitleCard(CardType):
 
     def __add_episode_prefix(self) -> list:
         """
-        ImageMagick commands to add the "EPISODE" prefix text to an image.
+        ImageMagick commands to add the episode prefix text to an image. This is
+        either "EPISODE" or "CHAPTER".
         
         :returns:   List of ImageMagick commands.
         """
@@ -169,7 +180,7 @@ class StarWarsTitleCard(CardType):
             f'-fill "{self.EPISODE_TEXT_COLOR}"',
             f'-pointsize 53',
             f'-kerning 19',
-            f'-annotate +325-140 "EPISODE"',
+            f'-annotate +325-140 "{self.episode_prefix}"',
         ]
 
 
@@ -227,17 +238,23 @@ class StarWarsTitleCard(CardType):
 
 
     @staticmethod
-    def is_custom_season_titles(*args, **kwargs) -> bool:
+    def is_custom_season_titles(episode_text_format: str,
+                                *args, **kwargs) -> bool:
         """
-        Determines if custom season titles.
+        Determines whether the given attributes constitute custom or generic
+        season titles.
         
-        :param      args and kwargs:    Generic arguments to permit generalized
-                                        function calls for any CardType.
+        :param      episode_text_format:    The episode text format in use.
+        :param      args and kwargs:        Generic arguments to permit 
+                                            generalized function calls for any
+                                            CardType.
         
-        :returns:  False, as season titles are not customizable with this card.
+        :returns:   True if custom season titles are indicated, False otherwise.
         """
 
-        return False
+        generic_formats = ('EPISODE {episode_number}', 'PART {episode_number}')
+
+        return episode_text_format not in generic_formats
 
 
     def create(self) -> None:
