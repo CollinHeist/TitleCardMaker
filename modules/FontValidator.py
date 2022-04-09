@@ -6,13 +6,19 @@ from yaml import safe_load, dump
 from modules.Debug import log
 
 class FontValidator:
+    """
+    This class describes a font validator. A FontValidator takes font files and
+    can indicate whether that font contains all the characters for some strings
+    (titles).
+    """
 
+    """File to the font validation map that persists between runs"""
     FONT_VALIDATION_MAP = Path(__file__).parent / '.objects' / 'fvm.yml'
 
     def __init__(self) -> None:
         """
         Constructs a new instance. This creates the parent directory for the 
-        temporary font map if it exists, and reads the font map if possible.
+        temporary font map if it exists, and reads the font map if it exists.
         """
 
         # Attept to read existing font file if it exists
@@ -32,7 +38,7 @@ class FontValidator:
         write the updated font map to file.
         
         :param      font_filepath:  Filepath to the font being validated against
-        :param      character:      The character whose status is being set
+        :param      character:      The character whose status is being set.
         :param      status:         Whether the given font has the given
                                     character.
         """
