@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
@@ -186,7 +186,7 @@ class SonarrInterface(WebInterface):
                     episode['airDateUtc'],
                     self.__AIRDATE_FORMAT
                 )
-                if air_datetime > datetime.now():
+                if air_datetime > datetime.now() + timedelta(hours=2):
                     continue
 
             # Skip episodes whose titles aren't in Sonarr to avoid placeholders
