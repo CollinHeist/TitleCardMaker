@@ -11,7 +11,7 @@ class CardType(ImageMaker):
     ImageMaker, because all CardTypes are designed to create title cards. This
     class outlines the requirements for creating a custom type of title card.
 
-    All subclasses of CardType must implement this classe's abstract properties
+    All subclasses of CardType must implement this class's abstract properties
     and methods in order to work with the TitleCardMaker. However, not all
     CardTypes need to use every argument of these methods. For example, the
     StandardTitleCard utilizes most all customizations for a title card (i.e.
@@ -24,6 +24,7 @@ class CardType(ImageMaker):
 
     """Mapping of 'case' strings to format functions"""
     CASE_FUNCTIONS = {
+        'source': str,
         'upper': str.upper,
         'lower': str.lower,
         'title': titlecase,

@@ -11,7 +11,7 @@ from modules.TMDbInterface import TMDbInterface
 
 class Manager:
     """
-    This class describes a title card manager. The manager is used to control
+    This class describes a title card manager. The Manager is used to control
     title card and archive creation/management from a high level, and is meant
     to be the main entry point of the program.
     """
@@ -181,7 +181,7 @@ class Manager:
     def create_summaries(self) -> None:
         """
         Creates summaries for every ShowArchive known to this manager. This
-        calls ShowArchive.create_summary()` if summaries are globally enabled.
+        calls ShowArchive.create_summary() if summaries are globally enabled.
         """
 
         if not self.preferences.create_summaries:

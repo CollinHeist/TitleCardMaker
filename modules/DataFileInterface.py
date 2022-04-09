@@ -216,9 +216,6 @@ class DataFileInterface:
         yaml = self.__read_data()
 
         for episode_info in new_episodes:
-            # Indicate new episode to user
-            log.info(f'Added {episode_info} to "{self.file.parent.name}"')
-
             # Create blank season data if this key doesn't exist
             season_key = f'Season {episode_info.season_number}'
             if season_key not in yaml:
@@ -237,6 +234,9 @@ class DataFileInterface:
             if episode_info.abs_number != None:
                 yaml[season_key][episode_info.episode_number]['abs_number'] =\
                     episode_info.abs_number
+
+            # Indicate new episode to user
+            log.info(f'Added {episode_info} to "{self.file.parent.name}"')
 
         # Write updated yaml
         self.sort_and_write(yaml)

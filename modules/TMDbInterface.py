@@ -599,8 +599,8 @@ class TMDbInterface(WebInterface):
         params = {'api_key': self.__api_key}
         results = self._get(url=url, params=params)
 
-        # If there are no logos, blacklist and exit
-        if len(results['logos']) == 0:
+        # If there are no logos (or series not found), blacklist and exit
+        if len(results.get('logos', [])) == 0:
             self.__update_blacklist(series_info, None, 'logo')
             return None
 

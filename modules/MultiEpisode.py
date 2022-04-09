@@ -4,7 +4,7 @@ from modules.TitleCard import TitleCard
 
 class MultiEpisode:
     """
-    This class describes a MultiEpisode, which is a 'type' (essentially a 
+    This class describes a MultiEpisode, which is a 'type' (practically a 
     subclass) of Episode but describes a range of sequential episodes within a
     single season for a given series. The MultiEpisode uses the first episode's
     (sequentially) episode info and source.
@@ -12,11 +12,13 @@ class MultiEpisode:
 
     def __init__(self, episodes: ['Episode'], title: 'Title') -> None:
         """
-        Constructs a new instance.
+        Constructs a new instance of a MultiEpisode that represents the given
+        list of Episode objects, and has the given (modified) Title.
         
-        :param      episodes:       Episodes this object describes.
-        :param      title:          The modified title that describes these
-                                    multiple episodes.
+        :param      episodes:   List of Episode objects this MultiEpisode
+                                describes.
+        :param      title:      The modified title that describes these multiple
+                                episodes.
         """
         
         # Verify at least two episodes have been provided

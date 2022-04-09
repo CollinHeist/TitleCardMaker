@@ -42,7 +42,7 @@ class Font:
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
         
-        return f'<CustomFont for series {self.__series_info}>'
+        return f'<CustomFont for series "{self.__series_info}">'
 
 
     def __parse_attributes(self) -> None:
