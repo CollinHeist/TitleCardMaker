@@ -5,6 +5,7 @@ from modules.DataFileInterface import DataFileInterface
 from modules.GenreMaker import GenreMaker
 from modules.PreferenceParser import PreferenceParser
 from modules.preferences import set_preference_parser
+from modules.SonarrInterface import SonarrInterface
 from modules.TitleCard import TitleCard
 from modules.TMDbInterface import TMDbInterface
 
@@ -35,7 +36,7 @@ title_card_group.add_argument(
 title_card_group.add_argument(
     '--episode',
     type=str,
-    default='EPISODE x',
+    default='EPISODE',
     metavar='EPISODE_TEXT',
     help="Specify this card's episode text")
 title_card_group.add_argument(
@@ -100,6 +101,13 @@ genre_group.add_argument(
     metavar=('SOURCE_DIRECTORY'),
     help='Create all genre cards for images in the given directory based on '
          'their file names')
+
+# Argument group for fixes relating to Sonarr
+sonarr_group = parser.add_argument_group('Sonarr')
+sonarr_group.add_argument(
+    '--sonarr-list-ids',
+    action='store_true',
+    help="Whether to list all the ID's for all shows within Sonarr")
 
 # Argument group for fixes relating to TheMovieDatabase
 tmdb_group = parser.add_argument_group(
@@ -176,6 +184,13 @@ if hasattr(args, 'genre_card_batch'):
                 genre=file.stem.upper(),
                 output=Path(file.parent / f'{file.stem}-GenreCard{file.suffix}'),
             ).create()
+
+# Execute Sonarr related options
+if args.sonarr_list_ids:
+    if not pp.use_sonarr:
+        log.warning("Cannot print Sonarr ID's if Sonarr is disabled")
+    else:
+        SonarrInterface(pp.sonarr_url, pp.sonarr_api_key).list_all_series_id()
 
 # Execute TMDB related options
 if hasattr(args, 'delete_blacklist'):
