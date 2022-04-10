@@ -4,6 +4,7 @@ from pathlib import Path
 try:
     from modules.Debug import log
     from modules.FontValidator import FontValidator
+    from modules.ImageMagickInterface import ImageMagickInterface
     from modules.PreferenceParser import PreferenceParser
     from modules.preferences import set_preference_parser, set_font_validator
     from modules.Manager import Manager
@@ -61,6 +62,13 @@ if not (pp := PreferenceParser(args.preference_file)).valid:
 # Store the PreferenceParser and FontValidator in the global namespace
 set_preference_parser(pp)
 set_font_validator(FontValidator())
+
+# Validate that ImageMagick is configured correctly
+imi = ImageMagickInterface(pp.imagemagick_container)
+font_output = imi.run_get_stdout('convert -list font')
+if not all(_ in font_output for _ in ('Font:', 'family:', 'style:')):
+    log.critical(f"ImageMagick doesn't appear to be installed")
+    exit(1)
 
 # Create and run the manager --run many times
 tcm = None
