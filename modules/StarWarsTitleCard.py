@@ -132,7 +132,7 @@ class StarWarsTitleCard(CardType):
         """
 
         command = ' '.join([
-            f'convert "{source.resolve()}"',
+            f'magick convert "{source.resolve()}"',
             f'+profile "*"',    # To avoid profile conversion warnings
             f'-gravity center', # For images that aren't in 4x3, center crop
             f'-resize "{self.TITLE_CARD_SIZE}^"',
@@ -211,7 +211,7 @@ class StarWarsTitleCard(CardType):
         """
 
         command = ' '.join([
-            f'convert {gradient_source.resolve()}',
+            f'magick convert {gradient_source.resolve()}',
             *self.__add_title_text(),
             *self.__add_episode_prefix(),
             *self.__add_episode_number_text(),
