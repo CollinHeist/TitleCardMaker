@@ -1,6 +1,7 @@
 from re import match, sub, IGNORECASE
 
 from modules.Debug import log
+import modules.preferences as global_preferences
 
 # CardType classes
 from modules.AnimeTitleCard import AnimeTitleCard
@@ -48,7 +49,7 @@ class TitleCard:
                                             directly to the creation of the
                                             CardType object.
         """
-        
+
         # Store this card's associated episode and profile
         self.episode = episode
         self.profile = profile
@@ -91,10 +92,9 @@ class TitleCard:
         """
         
         # Get the season folder for this entry's season
-        if episode_info.season_number == 0:
-            season_folder = 'Specials'
-        else:
-            season_folder = f'Season {episode_info.season_number}'
+        season_folder = global_preferences.pp.get_season_folder(
+            episode_info.season_number
+        )
         
         # Get filename from the given format string
         filename = format_string.format(
@@ -150,10 +150,9 @@ class TitleCard:
                                      mod_format_string, flags=IGNORECASE)
 
         # # Get the season folder for these episodes
-        if multi_episode.season_number == 0:
-            season_folder = 'Specials'
-        else:
-            season_folder = f'Season {multi_episode.season_number}'
+        season_folder = global_preferences.pp.get_season_folder(
+            multi_episode.season_number
+        )
 
         # Get filename from the modified format string
         filename = modified_format_string.format(
