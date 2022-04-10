@@ -43,6 +43,7 @@ class PreferenceParser:
         self.card_type = 'standard'
         self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
         self.validate_fonts = True
+        self.zero_pad_seasons = False
         self.archive_directory = None
         self.create_archive = False
         self.create_summaries = False
@@ -135,6 +136,10 @@ class PreferenceParser:
 
         if self.__is_specified('options', 'validate_fonts'):
             self.validate_fonts = bool(self.__yaml['options']['validate_fonts'])
+
+        if self.__is_specified('options', 'zero_pad_seasons'):
+            val = self.__yaml['options']['zero_pad_seasons']
+            self.zero_pad_seasons = bool(val)
 
         if self.__is_specified('archive', 'path'):
             self.archive_directory = Path(self.__yaml['archive']['path'])
@@ -298,4 +303,28 @@ class PreferenceParser:
         height_ok = (height >= self.tmdb_minimum_resolution['height'])
 
         return width_ok and height_ok
+
+
+    def get_season_folder(self, season_number: int) -> str:
+        """
+        Get the season folder name for the given season number, padding the
+        season number if indicated by the preference file.
+        
+        :param      season_number:  The season number.
+        
+        :returns:   The season folder. This is 'Specials' for 0, and either a
+                    zero-padded or not zero-padded version of "Season {x}".
+        """
+
+        # Season 0 is always Specials
+        if season_number == 0:
+            return 'Specials'
+
+        # Zero pad the season number if indicated
+        if self.zero_pad_seasons:
+            return f'Season {season_number:02}'
+
+        # Return non-zero-padded season name
+        return f'Season {season_number}'
+
 

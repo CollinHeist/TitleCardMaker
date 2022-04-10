@@ -183,7 +183,12 @@ class Show:
 
         if (self.__is_specified('translation', 'language')
             and self.__is_specified('translation', 'key')):
-            self.title_language = self.__yaml['translation']
+            key = self.__yaml['translation']['key']
+            if key in ('title', 'abs_number'):
+                log.error(f'Cannot add translations under the key "{key}" in '
+                          f'series {self}')
+            else:
+                self.title_language = self.__yaml['translation']
 
         # Validate season map & episode range aren't specified at the same time
         if (self.__is_specified('seasons')
