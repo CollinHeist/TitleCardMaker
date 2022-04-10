@@ -2,6 +2,7 @@ from pathlib import Path
 from re import findall
 
 from modules.CardType import CardType
+from modules.Debug import log
 
 class StandardTitleCard(CardType):
     """
@@ -275,11 +276,17 @@ class StandardTitleCard(CardType):
             f'null: 2>&1'
         ])
 
+        # Get text dimensions from the output
         metrics = self.image_magick.run_get_stdout(command)
-        
         widths = list(map(int, findall('Metrics:.*width:\s+(\d+)', metrics)))
         heights = list(map(int, findall('Metrics:.*height:\s+(\d+)', metrics)))
-        
+
+        # Don't raise IndexError if no dimensions were found
+        if len(widths) < 2 or len(heights) < 2:
+            log.warning(f'Unable to identify font dimensions, file bug report')
+            widths = [370, 47, 357]
+            heights = [68, 83, 83]
+
         return {
             'width':    sum(widths),
             'width1':   widths[0],
