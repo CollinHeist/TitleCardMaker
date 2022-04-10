@@ -50,7 +50,7 @@ Below are some examples of title cards created automatically (when configured co
 <img src="https://i.ibb.co/HDQMFyT/Demon-Slayer-Kimetsu-no-Yaiba-2019-S03-E10.jpg" width="800">
 
 ## Contributing
-If you'd like to contribute - whether that's a suggested feature, a bug fix, or anything else - please do so on GitHub by creating an issue. Perhaps I'll setup a Discord in the future, but for now the best way for me to manage the project is on GitHub.
+If you'd like to contribute - whether that's a suggested feature, a bug fix, or anything else - please do so on GitHub by creating an issue, or [join the Discord](https://discord.gg/bJ3bHtw8wH). The best way for me to manage technical aspects of the project is on GitHub.
 
 I plan on creating another repository for non-standard title card styles in the future.
 
