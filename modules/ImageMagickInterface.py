@@ -1,5 +1,7 @@
 from subprocess import run
 
+import modules.preferences as global_preferences
+
 class ImageMagickInterface:
     """
     This class describes an interface to ImageMagick. If initialized with a
@@ -28,6 +30,12 @@ class ImageMagickInterface:
         # Definitions of this interface, i.e. whether to use docker and how
         self.container = container
         self.use_docker = bool(container)
+
+        # Whether to prefix commands with "magick" or not
+        if global_preferences.pp.use_magick_prefix:
+            self.prefix = 'magick '
+        else:
+            self.prefix = ''
 
 
     @staticmethod
@@ -71,9 +79,9 @@ class ImageMagickInterface:
         # If a docker image ID is specified, execute the command in that container
         # otherwise, execute on the host machine (no docker wrapper)
         if self.use_docker:
-            command = f'docker exec -t {self.container} {command}'
+            command = f'docker exec -t {self.container} {self.prefix}{command}'
         else:
-            command = command
+            command = f'{self.prefix}{command}'
             
         return run(command, shell=True, *args, **kwargs)
 

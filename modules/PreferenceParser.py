@@ -66,6 +66,9 @@ class PreferenceParser:
         self.valid = True
         self.__parse_yaml()
 
+        # Whether to use magick prefix, default false
+        self.use_magick_prefix = False
+
 
     def __repr__(self) -> str:
         """Returns a unambiguous string representation of the object."""
