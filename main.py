@@ -8,10 +8,10 @@ from modules.preferences import set_preference_parser, set_font_validator
 from modules.Manager import Manager
 
 # Default path for the preference file to parse
-DEFAULT_PREFERENCE_FILE = Path('preferences.yml')
+DEFAULT_PREFERENCE_FILE = Path(__file__).parent / 'preferences.yml'
 
 # Default path for the missing file to write to
-DEFAULT_MISSING_FILE = Path('missing.yml')
+DEFAULT_MISSING_FILE = Path(__file__).parent / 'missing.yml'
 
 # Set up argument parser
 parser = ArgumentParser(description='Start the TitleCardMaker')
