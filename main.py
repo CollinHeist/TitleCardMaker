@@ -1,11 +1,15 @@
 from argparse import ArgumentParser
 from pathlib import Path
 
-from modules.Debug import log
-from modules.FontValidator import FontValidator
-from modules.PreferenceParser import PreferenceParser
-from modules.preferences import set_preference_parser, set_font_validator
-from modules.Manager import Manager
+try:
+    from modules.Debug import log
+    from modules.FontValidator import FontValidator
+    from modules.PreferenceParser import PreferenceParser
+    from modules.preferences import set_preference_parser, set_font_validator
+    from modules.Manager import Manager
+except ImportError:
+    print(f'Required Python packages are missing - execute "pipenv install"')
+    exit(1)
 
 # Default path for the preference file to parse
 DEFAULT_PREFERENCE_FILE = Path(__file__).parent / 'preferences.yml'
