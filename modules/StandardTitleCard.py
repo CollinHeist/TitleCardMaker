@@ -269,17 +269,17 @@ class StandardTitleCard(CardType):
             f'-gravity center',
             *self.__series_count_text_effects(),
             f'-annotate +0+689.5 "• "',
-            f'-gravity west',                               # Episode text
+            f'-gravity west',                       # Episode text
             *self.__series_count_text_effects(),
             f'-annotate +1640+697.2 "{self.episode_text}"',
-            f'null: 2>&1 | grep Metrics'
+            f'null: 2>&1'
         ])
 
         metrics = self.image_magick.run_get_stdout(command)
         
-        widths = list(map(int, findall('width: (\d+)', metrics)))
-        heights = list(map(int, findall('height: (\d+)', metrics)))
-
+        widths = list(map(int, findall('Metrics:.*width:\s+(\d+)', metrics)))
+        heights = list(map(int, findall('Metrics:.*height:\s+(\d+)', metrics)))
+        
         return {
             'width':    sum(widths),
             'width1':   widths[0],
