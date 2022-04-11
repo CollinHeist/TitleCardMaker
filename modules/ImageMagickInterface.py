@@ -1,5 +1,5 @@
 from shlex import split as command_split
-from subprocess import run, Popen, PIPE
+from subprocess import Popen, PIPE
 
 import modules.preferences as global_preferences
 from modules.Debug import log
@@ -60,19 +60,16 @@ class ImageMagickInterface:
         return string.replace('"', r'\"').replace('`', r'\`')
 
 
-    def run(self, command: str, *args: tuple, **kwargs: dict) -> (bytes, bytes):
+    def run(self, command: str) -> (bytes, bytes):
         """
         Wrapper for running a given command. This uses either the host machine
         (i.e. direct calls); or through the provided docker container (if
         preferences has been set; i.e. wrapped through "docker exec -t {id}
-        {command}"). args and kwargs are used to permit general usage of
-        the subprocess.run() function's options (capture_output, etc).
+        {command}").
 
-        :param      command:            The command (as string) to execute.
-        
-        :param      args and kwargs:    The arguments to pass to Popen.
+        :param      command:    The command (as string) to execute.
 
-        :returns:   The return of the subprocess.run() function execution.
+        :returns:   Tuple of the STDOUT and STDERR of the executed command.
         """
         
         
@@ -88,24 +85,20 @@ class ImageMagickInterface:
 
         # Execute, capturing stdout and stderr
         stdout, stderr = Popen(command, stdout=PIPE, stderr=PIPE).communicate()
-
+        
         return stdout, stderr
 
 
-    def run_get_stdout(self, command: str, *args: tuple, **kwargs: dict) -> str:
+    def run_get_output(self, command: str) -> str:
         """
         Wrapper for run(), but return the byte-decoded stdout.
         
-        :param      command:            The command being executed.
-        :param      args and kwargs:    Generalized arguments to pass to
-                                        subprocess.run().
+        :param      command:    The command (as string) being executed.
 
         :returns:   The decoded stdout output of the executed command.
         """
 
-        return self.run(
-            command, capture_output=True, *args, **kwargs
-        )[0].decode()
+        return b''.join(self.run(command)).decode()
 
 
     def delete_intermediate_images(self, *paths: tuple) -> None:
