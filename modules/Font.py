@@ -12,16 +12,27 @@ class Font:
     interline spacing.
     """
 
-    def __init__(self, yaml: dict, card_class: 'CardType',
+    def __init__(self, yaml, font_map: dict, card_class: 'CardType',
                  series_info: 'SeriesInfo') -> None:
         """
         Constructs a new instance of a Font for the given YAML, CardType, and
         series.
         
         :param      yaml:           'font' dictionary from a series YAML file.
+        :type       yaml:           Dict or str. If str, must be a key of
+                                    font_map.
+        :param      font_map:       Map of font labels to custom font
+                                    descriptions.
         :param      card_class:     CardType class to use values from.
         :param      series_info:    Associated SeriesInfo (for logging).
         """
+
+        # If the given value is a key of the font map, use those values instead
+        if isinstance(yaml, str) and yaml in font_map:
+            yaml = font_map[yaml]
+        elif not isinstance(yaml, dict):
+            log.error(f'Invalid font for series "{series_info}"')
+            yaml = {}
 
         # Store arguments
         self.__yaml = yaml
