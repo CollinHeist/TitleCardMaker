@@ -158,15 +158,17 @@ class TitleCard:
         :returns:   Path to the full title card destination.
         """
 
-        # Replace existing episode number reference with episode start number
-        mod_format_string = format_string.replace('episode', 'episode_start')
+        # If there is an episode key to modify, do so
+        if '{episode' in format_string:
+            # Replace existing episode number reference with episode start number
+            mod_format_string=format_string.replace('{episode','{episode_start')
 
-        # Episode number formatting with prefix
-        episode_text = match(
-            r'.*?(e?{episode_start.*?})',
-            mod_format_string,
-            IGNORECASE
-        ).group(1)
+            # Episode number formatting with prefix
+            episode_text = match(
+                r'.*?(e?{episode_start.*?})',
+                mod_format_string,
+                IGNORECASE
+            )
 
             # Duplicate episode text format for end text format
             end_episode_text=episode_text.replace('episode_start','episode_end')
@@ -174,9 +176,12 @@ class TitleCard:
             # Range of episode numbers
             range_text = f'{episode_text}-{end_episode_text}'
 
-        # Completely modified format string with keys for start/end episodes
-        modified_format_string = sub(r'e?{episode_start.*?}', range_text,
-                                     mod_format_string, flags=IGNORECASE)
+            # Completely modified format string with keys for start/end episodes
+            modified_format_string = sub(r'e?{episode_start.*?}', range_text,
+                                         mod_format_string, flags=IGNORECASE)
+        else:
+            # No episode key to modify, format the original string
+            modified_format_string = format_string
 
         # # Get the season folder for these episodes
         season_folder = global_preferences.pp.get_season_folder(
