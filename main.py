@@ -64,9 +64,17 @@ set_preference_parser(pp)
 set_font_validator(FontValidator())
 
 # Validate that ImageMagick is configured correctly
-imi = ImageMagickInterface(pp.imagemagick_container)
-font_output = imi.run_get_stdout('magick convert -list font')
-if not all(_ in font_output for _ in ('Font:', 'family:', 'style:')):
+found = False
+for prefix in ('magick ', ''):
+    pp.use_magick_prefix = 'magick' in prefix
+    imi = ImageMagickInterface(pp.imagemagick_container)
+    font_output = imi.run_get_output(f'convert -list font')
+    if all(_ in font_output for _ in ('Font:', 'family:', 'style:')):
+        log.debug(f'Using "{prefix}" command prefix')
+        found = True
+        break
+
+if not found:
     log.critical(f"ImageMagick doesn't appear to be installed")
     exit(1)
 

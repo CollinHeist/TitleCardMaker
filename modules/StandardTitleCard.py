@@ -2,6 +2,7 @@ from pathlib import Path
 from re import findall
 
 from modules.CardType import CardType
+from modules.Debug import log
 
 class StandardTitleCard(CardType):
     """
@@ -182,7 +183,7 @@ class StandardTitleCard(CardType):
         """
 
         command = ' '.join([
-            f'magick convert "{self.source_file.resolve()}"',
+            f'convert "{self.source_file.resolve()}"',
             f'+profile "*"',    # To avoid profile conversion warnings
             f'-gravity center', # For images that aren't 4x3, center crop
             f'-resize "{self.TITLE_CARD_SIZE}^"',
@@ -211,7 +212,7 @@ class StandardTitleCard(CardType):
         vertical_shift = 245 + self.vertical_shift
 
         command = ' '.join([
-            f'magick convert "{gradient_image.resolve()}"',
+            f'convert "{gradient_image.resolve()}"',
             *self.__title_text_global_effects(),
             *self.__title_text_black_stroke(),
             f'-annotate +0+{vertical_shift} "{self.title}"',
@@ -235,7 +236,7 @@ class StandardTitleCard(CardType):
         """
 
         command = ' '.join([
-            f'magick convert "{titled_image.resolve()}"',
+            f'convert "{titled_image.resolve()}"',
             *self.__series_count_text_global_effects(),
             f'-font "{self.EPISODE_COUNT_FONT}"',
             f'-gravity center',
@@ -259,7 +260,7 @@ class StandardTitleCard(CardType):
         """
 
         command = ' '.join([
-            f'magick convert -debug annotate xc: ',
+            f'convert -debug annotate xc: ',
             *self.__series_count_text_global_effects(),
             f'-font "{self.SEASON_COUNT_FONT}"',    # Season text
             f'-gravity east',
@@ -275,11 +276,17 @@ class StandardTitleCard(CardType):
             f'null: 2>&1'
         ])
 
-        metrics = self.image_magick.run_get_stdout(command)
-        
+        # Get text dimensions from the output
+        metrics = self.image_magick.run_get_output(command)
         widths = list(map(int, findall('Metrics:.*width:\s+(\d+)', metrics)))
         heights = list(map(int, findall('Metrics:.*height:\s+(\d+)', metrics)))
-        
+
+        # Don't raise IndexError if no dimensions were found
+        if len(widths) < 2 or len(heights) < 2:
+            log.warning(f'Unable to identify font dimensions, file bug report')
+            widths = [370, 47, 357]
+            heights = [68, 83, 83]
+
         return {
             'width':    sum(widths),
             'width1':   widths[0],
@@ -299,7 +306,7 @@ class StandardTitleCard(CardType):
 
         # Create text only transparent image of season count text
         command = ' '.join([
-            f'magick convert -size "{width}x{height}"',
+            f'convert -size "{width}x{height}"',
             f'-alpha on',
             f'-background transparent',
             f'xc:transparent',
@@ -341,7 +348,7 @@ class StandardTitleCard(CardType):
         """
 
         command = ' '.join([
-            f'magick composite',
+            f'composite',
             f'-gravity center',
             f'-geometry +0+690.2',
             f'"{series_count_image.resolve()}"',

@@ -193,7 +193,7 @@ class ShowSummary(ImageMaker):
             f'"{logo.resolve()}"',
         ])
 
-        return int(self.image_magick.run_get_stdout(command))
+        return int(self.image_magick.run_get_output(command))
 
 
     def _add_logo(self, montage: Path, logo: Path) -> Path:

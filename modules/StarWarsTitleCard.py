@@ -4,6 +4,7 @@ from re import match
 from num2words import num2words
 
 from modules.CardType import CardType
+from modules.Debug import log
 
 class StarWarsTitleCard(CardType):
     """
@@ -132,7 +133,7 @@ class StarWarsTitleCard(CardType):
         """
 
         command = ' '.join([
-            f'magick convert "{source.resolve()}"',
+            f'convert "{source.resolve()}"',
             f'+profile "*"',    # To avoid profile conversion warnings
             f'-gravity center', # For images that aren't in 4x3, center crop
             f'-resize "{self.TITLE_CARD_SIZE}^"',
@@ -211,7 +212,7 @@ class StarWarsTitleCard(CardType):
         """
 
         command = ' '.join([
-            f'magick convert {gradient_source.resolve()}',
+            f'convert {gradient_source.resolve()}',
             *self.__add_title_text(),
             *self.__add_episode_prefix(),
             *self.__add_episode_number_text(),
