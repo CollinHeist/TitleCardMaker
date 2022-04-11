@@ -33,6 +33,19 @@ class TitleCard:
         'star wars': StarWarsTitleCard,
     }
 
+    """Mapping of illegal filename characters and their replacements"""
+    __ILLEGAL_CHARACTERS = {
+        '?': '!',
+        '<': '',
+        '>': '',
+        ':':' -',
+        '"': '',
+        '/': '+',
+        '\\': '+',
+        '|': '',
+        '*': '-',
+    }
+
     def __init__(self, episode: 'Episode', profile: 'Profile',
                  title_characteristics: dict,
                  **extra_characteristics: dict) -> None:
@@ -74,6 +87,20 @@ class TitleCard:
         # File associated with this card is the episode's destination
         self.file = episode.destination
 
+
+    @staticmethod
+    def __replace_illegal_characters(filename: str) -> str:
+        """
+        Replace the given filename's illegal characters with their legal
+        counterparts.
+        
+        :param      filename:   The filename (as a string) to modify.
+        
+        :returns:   The modified filename.
+        """
+
+        return filename.translate(str.maketrans(TitleCard.__ILLEGAL_CHARACTERS))
+
         
     @staticmethod
     def get_output_filename(format_string: str, series_info: 'SeriesInfo', 
@@ -96,14 +123,16 @@ class TitleCard:
             episode_info.season_number
         )
         
-        # Get filename from the given format string
-        filename = format_string.format(
-            name=series_info.name,
-            full_name=series_info.full_name,
-            year=series_info.year,
-            season=episode_info.season_number,
-            episode=episode_info.episode_number,
-            title=episode_info.title.full_title,
+        # Get filename from the given format string, with illegals removed
+        filename = TitleCard.__replace_illegal_characters(
+            format_string.format(
+                name=series_info.name,
+                full_name=series_info.full_name,
+                year=series_info.year,
+                season=episode_info.season_number,
+                episode=episode_info.episode_number,
+                title=episode_info.title.full_title,
+            )
         )
         
         # Add card extension
@@ -139,11 +168,11 @@ class TitleCard:
             IGNORECASE
         ).group(1)
 
-        # Duplicate episode text format for end text format
-        end_episode_text = episode_text.replace('episode_start', 'episode_end')
+            # Duplicate episode text format for end text format
+            end_episode_text=episode_text.replace('episode_start','episode_end')
 
-        # Range of episode numbers
-        range_text = f'{episode_text}-{end_episode_text}'
+            # Range of episode numbers
+            range_text = f'{episode_text}-{end_episode_text}'
 
         # Completely modified format string with keys for start/end episodes
         modified_format_string = sub(r'e?{episode_start.*?}', range_text,
@@ -155,14 +184,16 @@ class TitleCard:
         )
 
         # Get filename from the modified format string
-        filename = modified_format_string.format(
-            name=series_info.name,
-            full_name=series_info.full_name,
-            year=series_info.year,
-            season=multi_episode.season_number,
-            episode_start=multi_episode.episode_start,
-            episode_end=multi_episode.episode_end,
-            title=multi_episode.episode_info.title.full_title,
+        filename = TitleCard.__replace_illegal_characters(
+            modified_format_string.format(
+                name=series_info.name,
+                full_name=series_info.full_name,
+                year=series_info.year,
+                season=multi_episode.season_number,
+                episode_start=multi_episode.episode_start,
+                episode_end=multi_episode.episode_end,
+                title=multi_episode.episode_info.title.full_title,
+            )
         )
 
         # Add card extension
