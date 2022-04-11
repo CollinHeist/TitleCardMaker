@@ -168,7 +168,7 @@ class TitleCard:
                 r'.*?(e?{episode_start.*?})',
                 mod_format_string,
                 IGNORECASE
-            )
+            ).group(1)
 
             # Duplicate episode text format for end text format
             end_episode_text=episode_text.replace('episode_start','episode_end')
