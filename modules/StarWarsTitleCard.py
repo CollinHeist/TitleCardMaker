@@ -4,6 +4,7 @@ from re import match
 from num2words import num2words
 
 from modules.CardType import CardType
+from modules.Debug import log
 
 class StarWarsTitleCard(CardType):
     """

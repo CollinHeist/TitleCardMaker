@@ -1,6 +1,8 @@
-from subprocess import run
+from shlex import split as command_split
+from subprocess import run, Popen, PIPE
 
 import modules.preferences as global_preferences
+from modules.Debug import log
 
 class ImageMagickInterface:
     """
@@ -58,7 +60,7 @@ class ImageMagickInterface:
         return string.replace('"', r'\"').replace('`', r'\`')
 
 
-    def run(self, command: str, *args: tuple, **kwargs: dict):
+    def run(self, command: str, *args: tuple, **kwargs: dict) -> (bytes, bytes):
         """
         Wrapper for running a given command. This uses either the host machine
         (i.e. direct calls); or through the provided docker container (if
@@ -66,11 +68,9 @@ class ImageMagickInterface:
         {command}"). args and kwargs are used to permit general usage of
         the subprocess.run() function's options (capture_output, etc).
 
-        :param      command:    The command to execute
+        :param      command:            The command (as string) to execute.
         
-        :param      args:       The arguments to pass to subprocess.run().
-
-        :param      kwargs:     The keyword arguments to pass to subprocess.run().
+        :param      args and kwargs:    The arguments to pass to Popen.
 
         :returns:   The return of the subprocess.run() function execution.
         """
@@ -83,7 +83,13 @@ class ImageMagickInterface:
         else:
             command = f'{self.prefix}{command}'
             
-        return run(command, shell=True, *args, **kwargs)
+        # Split command into list of strings for Popen
+        command = command_split(command)
+
+        # Execute, capturing stdout and stderr
+        stdout, stderr = Popen(command, stdout=PIPE, stderr=PIPE).communicate()
+
+        return stdout, stderr
 
 
     def run_get_stdout(self, command: str, *args: tuple, **kwargs: dict) -> str:
@@ -99,7 +105,7 @@ class ImageMagickInterface:
 
         return self.run(
             command, capture_output=True, *args, **kwargs
-        ).stdout.decode()
+        )[0].decode()
 
 
     def delete_intermediate_images(self, *paths: tuple) -> None:

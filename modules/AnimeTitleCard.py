@@ -2,6 +2,7 @@ from pathlib import Path
 from re import findall
 
 from modules.CardType import CardType
+from modules.Debug import log
 
 class AnimeTitleCard(CardType):
     """
