@@ -273,11 +273,14 @@ class PreferenceParser:
                 continue
 
             # Get library map for this file; error+skip missing library paths
-            libraries = file_yaml.get('libraries', {})
-            if not all('path' in libraries[library] for library in libraries):
+            library_map = file_yaml.get('libraries', {})
+            if not all('path' in library_map[lib] for lib in library_map):
                 log.error(f'Libraries in series file "{file_object.resolve()}" '
                           f'are missing their "path" attributes.')
                 continue
+
+            # Get font map for this file
+            font_map = file_yaml.get('fonts', {})
 
             # Go through each series in this file
             for show_name in tqdm(file_yaml['series'], leave=False,
@@ -286,7 +289,8 @@ class PreferenceParser:
                 yield Show(
                     show_name,
                     file_yaml['series'][show_name],
-                    libraries,
+                    library_map,
+                    font_map,
                     self.source_directory,
                 )
 

@@ -24,8 +24,8 @@ class Show:
     """
 
 
-    def __init__(self, name: str, yaml_dict: dict, library_map: dict,
-                 source_directory: Path) -> None:
+    def __init__(self, name: str, yaml_dict: dict, library_map: dict, 
+                 font_map: dict, source_directory: Path) -> None:
         """
         Constructs a new instance of a Show object from the given YAML
         dictionary, library map, and referencing the base source directory. If
@@ -37,6 +37,8 @@ class Show:
                                         as found in a card YAML file.
         :param      library_map:        Map of library titles to media
                                         directories.
+        :param      font_map:           Map of font labels to custom font
+                                        descriptions.
         :param      source_directory:   Base source directory this show should
                                         search for and place source images.
         """
@@ -82,6 +84,7 @@ class Show:
         self.__parse_yaml()
         self.font = Font(
             self.__yaml.get('font', {}),
+            font_map,
             self.card_class,
             self.series_info
         )
