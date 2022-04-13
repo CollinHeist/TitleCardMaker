@@ -65,7 +65,7 @@ set_font_validator(FontValidator())
 
 # Validate that ImageMagick is configured correctly
 found = False
-for prefix in ('magick ', ''):
+for prefix in ('', 'magick '):
     pp.use_magick_prefix = 'magick' in prefix
     imi = ImageMagickInterface(pp.imagemagick_container)
     font_output = imi.run_get_output(f'convert -list font')
