@@ -273,7 +273,7 @@ class PreferenceParser:
                 continue
 
             # Get library map for this file; error+skip missing library paths
-            if (library_map := file_yaml.get('library', {})):
+            if (library_map := file_yaml.get('libraries', {})):
                 if not all('path' in library_map[lib] for lib in library_map):
                     log.error(f'Libraries in series file "{file_object.resolve()}'
                               f'"are missing their "path" attributes.')
