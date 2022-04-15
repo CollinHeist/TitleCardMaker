@@ -254,5 +254,7 @@ class TitleCard:
             return True
 
         log.debug(f'Could not create card "{self.file.resolve()}"')
+        self.maker.image_magick.print_command_history()
+        
         return False
         

@@ -36,6 +36,9 @@ class ImageMagickInterface:
         # Whether to prefix commands with "magick" or not
         self.prefix = 'magick ' if use_magick_prefix else ''
 
+        # Command history for debug purposes
+        self.__history = []
+
 
     @staticmethod
     def escape_chars(string: str) -> str:
@@ -78,10 +81,13 @@ class ImageMagickInterface:
             command = f'{self.prefix}{command}'
             
         # Split command into list of strings for Popen
-        command = command_split(command)
+        command_ = command_split(command)
 
         # Execute, capturing stdout and stderr
-        stdout, stderr = Popen(command, stdout=PIPE, stderr=PIPE).communicate()
+        stdout, stderr = Popen(command_, stdout=PIPE, stderr=PIPE).communicate()
+
+        # Add command and output to history for debug
+        self.__history.append((command, stdout, stderr))
         
         return stdout, stderr
 
@@ -108,4 +114,18 @@ class ImageMagickInterface:
         # Delete (unlink) each image, don't raise FileNotFoundError if DNE
         for image in paths:
             image.unlink(missing_ok=True)
+
+
+    def print_command_history(self) -> None:
+        """
+        Prints the command history of this Interface.
+        """
+
+        for entry in self.__history:
+            command, stdout, stderr = entry
+            sep = '-' * 60
+            log.debug(f'Command: {command}\n\nstdout: {stdout}\n\nstderr: '
+                      f'{stderr}\n{sep}')
+
+
 
