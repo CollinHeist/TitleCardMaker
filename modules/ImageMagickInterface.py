@@ -1,7 +1,6 @@
 from shlex import split as command_split
 from subprocess import Popen, PIPE
 
-import modules.preferences as global_preferences
 from modules.Debug import log
 
 class ImageMagickInterface:
@@ -20,7 +19,8 @@ class ImageMagickInterface:
         -dit -v "/mnt/user/":"/mnt/user/" 'dpokidov/imagemagick'
     """
 
-    def __init__(self, container: str=None) -> None:
+    def __init__(self, container: str=None,
+                 use_magick_prefix: bool=False) -> None:
         """
         Constructs a new instance. If docker_id is None/0/False, then commands
         will not use a docker container.
@@ -34,10 +34,7 @@ class ImageMagickInterface:
         self.use_docker = bool(container)
 
         # Whether to prefix commands with "magick" or not
-        if global_preferences.pp.use_magick_prefix:
-            self.prefix = 'magick '
-        else:
-            self.prefix = ''
+        self.prefix = 'magick ' if use_magick_prefix else ''
 
 
     @staticmethod
