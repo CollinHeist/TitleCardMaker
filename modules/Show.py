@@ -73,6 +73,7 @@ class Show:
         self.library = None
         self.archive = True
         self.sonarr_sync = True
+        self.sync_specials = self.preferences.sonarr_sync_specials
         self.tmdb_sync = True
         self.hide_seasons = False
         self.__episode_range = {}
@@ -177,6 +178,9 @@ class Show:
 
         if self.__is_specified('sonarr_sync'):
             self.sonarr_sync = bool(self.__yaml['sonarr_sync'])
+
+        if self.__is_specified('sync_specials'):
+            self.sync_specials = bool(self.__yaml['sync_specials'])
 
         if self.__is_specified('tmdb_sync'):
             self.tmdb_sync = bool(self.__yaml['tmdb_sync'])
@@ -391,6 +395,13 @@ class Show:
                 lambda e: e.key not in self.episodes,
                 all_episodes,
             ))
+
+            # Filter episodes that are specials if sync_specials is False
+            if not self.sync_specials:
+                new_episodes = list(filter(
+                    lambda e: e.season_number != 0,
+                    new_episodes,
+                ))
 
             # If there are new episodes, add to the datafile, return True
             if new_episodes:

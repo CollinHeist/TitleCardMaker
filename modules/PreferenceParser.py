@@ -56,6 +56,7 @@ class PreferenceParser:
         self.use_sonarr = False
         self.sonarr_url = None
         self.sonarr_api_key = None
+        self.sonarr_sync_specials = True
         self.use_tmdb = False
         self.tmdb_api_key = None
         self.tmdb_retry_count = TMDbInterface.BLACKLIST_THRESHOLD
@@ -185,6 +186,10 @@ class PreferenceParser:
                 self.sonarr_url = self.__yaml['sonarr']['url']
                 self.sonarr_api_key = self.__yaml['sonarr']['api_key']
                 self.use_sonarr = True
+
+        if self.__is_specified('sonarr', 'sync_specials'):
+            value = self.__yaml['sonarr']['sync_specials']
+            self.sonarr_sync_specials = bool(value)
 
         if self.__is_specified('tmdb'):
             if not self.__is_specified('tmdb', 'api_key'):
