@@ -59,7 +59,7 @@ class WebInterface(ABC):
 
     def download_image(self, image_url: str, destination: 'Path') -> None:
         """
-        Downloads the provided image URL to the destination filepath.
+        Download the provided image URL to the destination filepath.
         
         :param      image_url:      The image url to download.
         :param      destination:    The destination for the requested image.
@@ -68,6 +68,7 @@ class WebInterface(ABC):
         # Make parent folder structure
         destination.parent.mkdir(parents=True, exist_ok=True)
 
+        # Attempt to download the image, if an error happens log to user
         try:
             with destination.open('wb') as file_handle:
                 file_handle.write(get(image_url).content)

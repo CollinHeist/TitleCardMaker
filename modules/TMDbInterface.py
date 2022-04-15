@@ -20,7 +20,7 @@ class TMDbInterface(WebInterface):
     API_BASE_URL = 'https://api.themoviedb.org/3/'
 
     """Default for how many failed requests lead to a blacklisted entry"""
-    BLACKLIST_THRESHOLD = 3
+    BLACKLIST_THRESHOLD = 5
 
     """Generic translated episode format strings for each language code"""
     GENERIC_TITLE_FORMATS = {
