@@ -56,6 +56,7 @@ class PreferenceParser:
         self.use_sonarr = False
         self.sonarr_url = None
         self.sonarr_api_key = None
+        self.sonarr_sync_specials = True
         self.use_tmdb = False
         self.tmdb_api_key = None
         self.tmdb_retry_count = TMDbInterface.BLACKLIST_THRESHOLD
@@ -186,6 +187,10 @@ class PreferenceParser:
                 self.sonarr_api_key = self.__yaml['sonarr']['api_key']
                 self.use_sonarr = True
 
+        if self.__is_specified('sonarr', 'sync_specials'):
+            value = self.__yaml['sonarr']['sync_specials']
+            self.sonarr_sync_specials = bool(value)
+
         if self.__is_specified('tmdb'):
             if not self.__is_specified('tmdb', 'api_key'):
                 log.critical(f'TMDb preferences must contain "api_key"')
@@ -273,11 +278,11 @@ class PreferenceParser:
                 continue
 
             # Get library map for this file; error+skip missing library paths
-            library_map = file_yaml.get('libraries', {})
-            if not all('path' in library_map[lib] for lib in library_map):
-                log.error(f'Libraries in series file "{file_object.resolve()}" '
-                          f'are missing their "path" attributes.')
-                continue
+            if (library_map := file_yaml.get('libraries', {})):
+                if not all('path' in library_map[lib] for lib in library_map):
+                    log.error(f'Libraries in series file "{file_object.resolve()}'
+                              f'"are missing their "path" attributes.')
+                    continue
 
             # Get font map for this file
             font_map = file_yaml.get('fonts', {})

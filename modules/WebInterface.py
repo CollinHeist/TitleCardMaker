@@ -55,3 +55,26 @@ class WebInterface(ABC):
 
         # Return latest result
         return self.__cached_results[-1]
+
+
+    def download_image(self, image_url: str, destination: 'Path') -> None:
+        """
+        Download the provided image URL to the destination filepath.
+        
+        :param      image_url:      The image url to download.
+        :param      destination:    The destination for the requested image.
+        """
+
+        # Make parent folder structure
+        destination.parent.mkdir(parents=True, exist_ok=True)
+
+        # Attempt to download the image, if an error happens log to user
+        try:
+            with destination.open('wb') as file_handle:
+                file_handle.write(get(image_url).content)
+            log.debug(f'downloaded {image_url} to {destination}')
+        except Exception as e:
+            log.error(f'Cannot download image, error: "{e}"')
+
+
+        
