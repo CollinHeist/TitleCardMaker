@@ -248,6 +248,11 @@ class TitleCard:
             
         # Create card, return whether it was successful
         self.maker.create()
+        
+        if self.file.exists():
+            log.debug(f'Created card "{self.file.resolve()}"')
+            return True
 
-        return self.file.exists()
+        log.debug(f'Could not create card "{self.file.resolve()}"')
+        return False
         
