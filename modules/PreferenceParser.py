@@ -88,7 +88,6 @@ class PreferenceParser:
 
         # Try variations of the font list command with/out the "magick " prefix
         for prefix, use_magick in zip(('', 'magick '), (False, True)):
-            log.debug(prefix, use_magick)
             # Create ImageMagickInterface object to test font command
             imi = ImageMagickInterface(self.imagemagick_container, use_magick)
 
