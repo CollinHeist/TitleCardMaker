@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 from yaml import dump, safe_load
-from urllib.request import urlretrieve
 
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
@@ -632,24 +631,6 @@ class TMDbInterface(WebInterface):
             return None
 
         return f'https://image.tmdb.org/t/p/original{best["file_path"]}'
-
-
-    def download_image(self, image_url: str, destination: Path) -> None:
-        """
-        Downloads the provided image URL to the destination filepath.
-        
-        :param      image_url:      The image url to download.
-        :param      destination:    The destination for the requested image.
-        """
-
-        # Make parent folder structure
-        destination.parent.mkdir(parents=True, exist_ok=True)
-
-        # Download the image and store it in destination
-        try:
-            urlretrieve(image_url, destination.resolve())
-        except Exception as e:
-            log.error(f'Cannot download, TMDb errored: "{e}"')
 
 
     @staticmethod
