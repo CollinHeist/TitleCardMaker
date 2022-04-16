@@ -81,10 +81,15 @@ class ImageMagickInterface:
             command = f'{self.prefix}{command}'
             
         # Split command into list of strings for Popen
-        command_ = command_split(command)
+        cmd = command_split(command)
 
         # Execute, capturing stdout and stderr
-        stdout, stderr = Popen(command_, stdout=PIPE, stderr=PIPE).communicate()
+        try:
+            stdout, stderr = Popen(cmd, stdout=PIPE, stderr=PIPE).communicate()
+        except FileNotFoundError as e:
+            if 'docker' in str(e):
+                log.critical(f'ImageMagick docker container not found')
+                exit(1)
 
         # Add command and output to history for debug
         self.__history.append((command, stdout, stderr))
