@@ -72,7 +72,6 @@ class WebInterface(ABC):
         try:
             with destination.open('wb') as file_handle:
                 file_handle.write(get(image_url).content)
-            log.debug(f'downloaded {image_url} to {destination}')
         except Exception as e:
             log.error(f'Cannot download image, error: "{e}"')
 

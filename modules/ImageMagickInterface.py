@@ -1,7 +1,6 @@
 from shlex import split as command_split
 from subprocess import Popen, PIPE
 
-import modules.preferences as global_preferences
 from modules.Debug import log
 
 class ImageMagickInterface:
@@ -20,7 +19,8 @@ class ImageMagickInterface:
         -dit -v "/mnt/user/":"/mnt/user/" 'dpokidov/imagemagick'
     """
 
-    def __init__(self, container: str=None) -> None:
+    def __init__(self, container: str=None,
+                 use_magick_prefix: bool=False) -> None:
         """
         Constructs a new instance. If docker_id is None/0/False, then commands
         will not use a docker container.
@@ -34,10 +34,10 @@ class ImageMagickInterface:
         self.use_docker = bool(container)
 
         # Whether to prefix commands with "magick" or not
-        if global_preferences.pp.use_magick_prefix:
-            self.prefix = 'magick '
-        else:
-            self.prefix = ''
+        self.prefix = 'magick ' if use_magick_prefix else ''
+
+        # Command history for debug purposes
+        self.__history = []
 
 
     @staticmethod
@@ -81,10 +81,18 @@ class ImageMagickInterface:
             command = f'{self.prefix}{command}'
             
         # Split command into list of strings for Popen
-        command = command_split(command)
+        cmd = command_split(command)
 
         # Execute, capturing stdout and stderr
-        stdout, stderr = Popen(command, stdout=PIPE, stderr=PIPE).communicate()
+        try:
+            stdout, stderr = Popen(cmd, stdout=PIPE, stderr=PIPE).communicate()
+        except FileNotFoundError as e:
+            if 'docker' in str(e):
+                log.critical(f'ImageMagick docker container not found')
+                exit(1)
+
+        # Add command and output to history for debug
+        self.__history.append((command, stdout, stderr))
         
         return stdout, stderr
 
@@ -111,4 +119,18 @@ class ImageMagickInterface:
         # Delete (unlink) each image, don't raise FileNotFoundError if DNE
         for image in paths:
             image.unlink(missing_ok=True)
+
+
+    def print_command_history(self) -> None:
+        """
+        Prints the command history of this Interface.
+        """
+
+        for entry in self.__history:
+            command, stdout, stderr = entry
+            sep = '-' * 60
+            log.debug(f'Command: {command}\n\nstdout: {stdout}\n\nstderr: '
+                      f'{stderr}\n{sep}')
+
+
 

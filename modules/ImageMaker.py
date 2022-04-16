@@ -36,7 +36,8 @@ class ImageMaker(ABC):
 
         # All ImageMakers have an instance of an ImageMagickInterface
         self.image_magick = ImageMagickInterface(
-            self.preferences.imagemagick_container
+            self.preferences.imagemagick_container,
+            self.preferences.use_magick_prefix,
         )
 
 

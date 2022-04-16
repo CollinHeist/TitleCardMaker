@@ -317,18 +317,18 @@ class AnimeTitleCard(CardType):
 
         # Construct command for getting the width of the season text
         width_command = ' '.join([
-            f'convert -debug annotate {titled_image.resolve()}',
+            f'convert -debug annotate "{titled_image.resolve()}"',
             *season_text_command_list,
-            ' null: 2>&1 | grep Metrics',
+            ' null: 2>&1',
         ])
 
         # Get the width of the season text (reported twice, get first width)
         metrics = self.image_magick.run_get_output(width_command)
-        width = list(map(int, findall('width: (\d+)', metrics)))[0]
+        width = list(map(int, findall(r'Metrics:.*width:\s+(\d+)', metrics)))[0]
 
         # Construct command to add season and episode text
         command = ' '.join([
-            f'convert {titled_image.resolve()}',
+            f'convert "{titled_image.resolve()}"',
             *season_text_command_list,
             *self.__series_count_text_black_stroke(),
             f'-annotate +{75+width}+90 "{self.episode_text}"',

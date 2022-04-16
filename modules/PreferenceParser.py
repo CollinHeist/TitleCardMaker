@@ -4,6 +4,7 @@ from tqdm import tqdm
 from yaml import safe_load
 
 from modules.Debug import log
+from modules.ImageMagickInterface import ImageMagickInterface
 from modules.Show import Show
 from modules.ShowSummary import ShowSummary
 from modules.TitleCard import TitleCard
@@ -67,14 +68,42 @@ class PreferenceParser:
         self.valid = True
         self.__parse_yaml()
 
-        # Whether to use magick prefix, default false
+        # Whether to use magick prefix
         self.use_magick_prefix = False
+        self.__determine_imagemagick_prefix()
 
 
     def __repr__(self) -> str:
         """Returns a unambiguous string representation of the object."""
 
         return f'<PreferenceParser file={self.file}>'
+
+
+    def __determine_imagemagick_prefix(self) -> None:
+        """
+        Determine whether to use the "magick " prefix for ImageMagick commands.
+        If a prefix cannot be determined, a critical message is logged and the
+        program exits with an error.
+        """
+
+        # Try variations of the font list command with/out the "magick " prefix
+        for prefix, use_magick in zip(('', 'magick '), (False, True)):
+            # Create ImageMagickInterface object to test font command
+            imi = ImageMagickInterface(self.imagemagick_container, use_magick)
+
+            # Run font list command
+            font_output = imi.run_get_output(f'convert -list font')
+
+            # Check for standard font output to determine if it worked
+            if all(_ in font_output for _ in ('Font:', 'family:', 'style:')):
+                # Font command worked, exit function
+                self.use_magick_prefix = use_magick
+                log.debug(f'Using "{prefix}" ImageMagick command prefix')
+                return None
+
+        # If none of the font commands worked, IM might not be installed
+        log.critical(f"ImageMagick doesn't appear to be installed")
+        exit(1)
 
 
     def __is_specified(self, *attributes: tuple) -> bool:
@@ -338,5 +367,3 @@ class PreferenceParser:
 
         # Return non-zero-padded season name
         return f'Season {season_number}'
-
-

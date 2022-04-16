@@ -34,6 +34,11 @@ class SonarrInterface(WebInterface):
         # Add / if not given
         self.url = url + ('' if url.endswith('/') else '/')
 
+        # If non-api URL, exit
+        if not self.url.endswith(('/api/v3/', '/api/')):
+            log.critical(f'Sonarr URL must be an API url, add /api/')
+            exit(1)
+
         # Warn if a v3 API url has not been provided
         if not self.url.endswith('/v3/'):
             log.warning(f'Provided Sonarr URL ({self.url}) is not v3, add /v3/')
@@ -43,10 +48,8 @@ class SonarrInterface(WebInterface):
         self.__standard_params = {'apikey': api_key}
 
         # Query system status to verify connection to Sonarr
-        url = f'{self.url}system/status'
-        params = self.__standard_params
         try:
-            status = self._get(url, params)
+            status =self._get(f'{self.url}system/status',self.__standard_params)
             if 'error' in status and status['error'] == 'Unauthorized':
                 raise Exception('Invalid API key')
         except Exception as e:

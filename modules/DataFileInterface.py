@@ -51,7 +51,7 @@ class DataFileInterface:
             return {}
 
         # Read file 
-        with self.file.open('r') as file_handle:
+        with self.file.open('r', encoding='utf-8') as file_handle:
             try:
                 yaml = safe_load(file_handle)
             except Exception as e:
@@ -75,7 +75,7 @@ class DataFileInterface:
         """
 
         # Write updated data with this entry added
-        with self.file.open('w') as file_handle:
+        with self.file.open('w', encoding='utf-8') as file_handle:
             dump({'data': yaml}, file_handle, allow_unicode=True, width=100)
 
 

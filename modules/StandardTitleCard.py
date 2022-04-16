@@ -278,8 +278,8 @@ class StandardTitleCard(CardType):
 
         # Get text dimensions from the output
         metrics = self.image_magick.run_get_output(command)
-        widths = list(map(int, findall('Metrics:.*width:\s+(\d+)', metrics)))
-        heights = list(map(int, findall('Metrics:.*height:\s+(\d+)', metrics)))
+        widths = list(map(int, findall(r'Metrics:.*width:\s+(\d+)', metrics)))
+        heights = list(map(int, findall(r'Metrics:.*height:\s+(\d+)', metrics)))
 
         # Don't raise IndexError if no dimensions were found
         if len(widths) < 2 or len(heights) < 2:
