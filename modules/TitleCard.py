@@ -124,6 +124,7 @@ class TitleCard:
         )
         
         # Get filename from the given format string, with illegals removed
+        abs_number = episode_info.abs_number
         filename = TitleCard.__replace_illegal_characters(
             format_string.format(
                 name=series_info.name,
@@ -132,6 +133,7 @@ class TitleCard:
                 season=episode_info.season_number,
                 episode=episode_info.episode_number,
                 title=episode_info.title.full_title,
+                abs_number=abs_number if abs_number != None else 0,
             )
         )
         
@@ -189,6 +191,7 @@ class TitleCard:
         )
 
         # Get filename from the modified format string
+        abs_number = multi_episode.episode_info.abs_number
         filename = TitleCard.__replace_illegal_characters(
             modified_format_string.format(
                 name=series_info.name,
@@ -198,6 +201,7 @@ class TitleCard:
                 episode_start=multi_episode.episode_start,
                 episode_end=multi_episode.episode_end,
                 title=multi_episode.episode_info.title.full_title,
+                abs_number=abs_number if abs_number != None else 0,
             )
         )
 
@@ -221,7 +225,7 @@ class TitleCard:
             # Attempt to format using all the standard keys
             format_string.format(
                 name='TestName', full_name='TestName (2000)', year=2000,
-                season=1, episode=1, title='Episode Title',
+                season=1, episode=1, title='Episode Title', abs_number=1,
             )
             return True
         except Exception as e:
