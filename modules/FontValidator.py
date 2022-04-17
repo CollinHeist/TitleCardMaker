@@ -23,8 +23,8 @@ class FontValidator:
 
         # Attept to read existing font file if it exists
         if self.FONT_VALIDATION_MAP.exists():
-            with self.FONT_VALIDATION_MAP.open('r') as file_handle:
-                self.__fonts = safe_load(file_handle)['fonts']
+            with self.FONT_VALIDATION_MAP.open('r', encoding='utf-8') as fh:
+                self.__fonts = safe_load(fh)['fonts']
         else:
             # Create parent directories if necessary
             self.FONT_VALIDATION_MAP.parent.mkdir(parents=True, exist_ok=True)
@@ -73,8 +73,8 @@ class FontValidator:
             }
 
         # Write updated map to file
-        with self.FONT_VALIDATION_MAP.open('w') as file_handle:
-            dump({'fonts': self.__fonts}, file_handle, allow_unicode=True)
+        with self.FONT_VALIDATION_MAP.open('w', encoding='utf-8') as fh:
+            dump({'fonts': self.__fonts}, fh, allow_unicode=True)
 
 
     def __has_character(self, font_filepath: str, character: str) -> bool:
