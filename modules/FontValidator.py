@@ -23,8 +23,11 @@ class FontValidator:
 
         # Attept to read existing font file if it exists
         if self.FONT_VALIDATION_MAP.exists():
-            with self.FONT_VALIDATION_MAP.open('r', encoding='utf-8') as fh:
-                self.__fonts = safe_load(fh)['fonts']
+            try:
+                with self.FONT_VALIDATION_MAP.open('r', encoding='utf-8') as fh:
+                    self.__fonts = safe_load(fh)['fonts']
+            except Exception:
+                self.__fonts = {}
         else:
             # Create parent directories if necessary
             self.FONT_VALIDATION_MAP.parent.mkdir(parents=True, exist_ok=True)
@@ -68,9 +71,7 @@ class FontValidator:
         if font_filepath in self.__fonts:
             self.__fonts[font_filepath][character] = status
         else:
-            self.__fonts[font_filepath] = {
-                character: status, ' ': True,
-            }
+            self.__fonts[font_filepath] = {character: status, ' ': True}
 
         # Write updated map to file
         with self.FONT_VALIDATION_MAP.open('w', encoding='utf-8') as fh:
