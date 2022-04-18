@@ -372,12 +372,10 @@ class StandardTitleCard(CardType):
         :returns:   True if a custom font is indicated, False otherwise.
         """
 
-        default_case = StandardTitleCard.DEFAULT_FONT_CASE
         return ((font.file != StandardTitleCard.TITLE_FONT)
             or (font.size != 1.0)
             or (font.color != StandardTitleCard.TITLE_COLOR)
             or (font.replacements != StandardTitleCard.FONT_REPLACEMENTS)
-            or (font.case != StandardTitleCard.CASE_FUNCTIONS[default_case])
             or (font.vertical_shift != 0)
             or (font.interline_spacing != 0))
 

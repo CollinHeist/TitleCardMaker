@@ -212,7 +212,7 @@ class StarWarsTitleCard(CardType):
         """
 
         command = ' '.join([
-            f'convert {gradient_source.resolve()}',
+            f'convert "{gradient_source.resolve()}"',
             *self.__add_title_text(),
             *self.__add_episode_prefix(),
             *self.__add_episode_number_text(),

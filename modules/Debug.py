@@ -14,10 +14,8 @@ class LogHandler(Handler):
             self.handleError(record)
             
 
-class LogFormatter(Formatter):
-    """
-    Taken/modified from SO: https://stackoverflow.com/a/56944256
-    """
+class LogFormatterColor(Formatter):
+    """Taken/modified from SO: https://stackoverflow.com/a/56944256"""
 
     GRAY =     '\x1b[1;30m'
     CYAN =     '\033[96m'
@@ -42,11 +40,39 @@ class LogFormatter(Formatter):
 
         return formatter_obj.format(record)
 
+
+class LogFormatterNoColor(Formatter):
+    format_layout = '[%(levelname)s] %(message)s'
+
+    LEVEL_FORMATS = {
+        DEBUG: f'{format_layout}',
+        INFO: f'{format_layout}',
+        WARNING: f'{format_layout}',
+        ERROR: f'{format_layout}',
+        CRITICAL: f'{format_layout}',
+    }
+
+    def format(self, record):
+        format_string = self.LEVEL_FORMATS[record.levelno]
+        formatter_obj = Formatter(format_string)
+
+        return formatter_obj.format(record)
+
+
 # Create global logger
 log = getLogger('TitleCardMaker')
 log.setLevel(DEBUG)
 
 # Add TQDM handler and color formatter to the logger
 handler = LogHandler()
-handler.setFormatter(LogFormatter())
+handler.setFormatter(LogFormatterColor())
 log.addHandler(handler)
+
+def apply_no_color_formatter(log_object: 'Logger') -> None:
+    # Create colorless Formatter
+    handler = LogHandler()
+    handler.setFormatter(LogFormatterNoColor())
+
+    # Delete existing Handler, add new one
+    log.removeHandler(log.handlers[0])
+    log.addHandler(handler)
