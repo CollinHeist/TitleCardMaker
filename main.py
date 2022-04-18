@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 try:
-    from modules.Debug import log
+    from modules.Debug import log, apply_no_color_formatter
     from modules.FontValidator import FontValidator
     from modules.PreferenceParser import PreferenceParser
     from modules.preferences import set_preference_parser, set_font_validator
@@ -41,12 +41,18 @@ parser.add_argument(
     choices=('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'),
     default='INFO',
     help='Level of logging verbosity to use')
+parser.add_argument(
+    '-nc', '--no-color',
+    action='store_true',
+    help='Whether to omit color from all print messages')
 
 # Parse given arguments
 args = parser.parse_args()
 
-# Set log level
+# Set global log level and coloring
 log.setLevel(args.log)
+if args.no_color:
+    apply_no_color_formatter(log)
 
 # Check if preference file exists
 if not args.preference_file.exists():
