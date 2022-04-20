@@ -131,9 +131,8 @@ class Manager:
 
     def create_missing_title_cards(self) -> None:
         """
-        Creates all missing title cards for every show known to this manager.
-        For each show, if any new title cards are created, it's Plex metadata is
-        updated (if enabled). This calls Show.create_missing_title_cards().
+        Creates all missing title cards for every show known to this Manager.
+        For each show, this calls Show.create_missing_title_cards().
         """
 
         # Go through every show in the Manager, create cards
@@ -144,16 +143,29 @@ class Manager:
 
             # Pass the TMDbInterface to the show if globally enabled
             if self.preferences.use_tmdb:
-                created = show.create_missing_title_cards(self.tmdb_interface)
+                show.create_missing_title_cards(self.tmdb_interface)
             else:
-                created = show.create_missing_title_cards()
+                show.create_missing_title_cards()
 
-            # If a card was created and a plex interface is globally enabled
-            if created and self.preferences.use_plex:
-                self.plex_interface.refresh_metadata(
-                    show.library_name,
-                    show.series_info
-                )
+    
+    def update_plex(self) -> None:
+        """
+        Update Plex for all cards for every show known to this Manager. This 
+        only executes if Plex is globally enabled. For each show, this calls
+        Show.update_plex().
+        """
+
+        # If Plex isn't enabled, return
+        if not self.preferences.use_plex:
+            return None
+
+        # Go through each show in the Manager, update Plex
+        for show in (pbar := tqdm(self.shows)):
+            # Update progress bar
+            pbar.set_description(f'Updating Plex for '
+                                 f'"{show.series_info.short_name}"')
+
+            show.update_plex(self.plex_interface)
 
 
     def update_archive(self) -> None:
@@ -207,6 +219,7 @@ class Manager:
         self.check_sonarr_for_new_episodes()
         self.check_tmdb_for_translations()
         self.create_missing_title_cards()
+        self.update_plex()
         self.update_archive()
         self.create_summaries()
 
@@ -251,7 +264,5 @@ class Manager:
             dump(missing, file_handle, allow_unicode=True, width=120)
 
         log.info(f'Wrote missing assets to "{file.name}"')
-
-
 
         

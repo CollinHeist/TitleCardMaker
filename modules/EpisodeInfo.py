@@ -48,14 +48,13 @@ class EpisodeInfo:
         """Returns an unambiguous string representation of the object."""
 
         # Static information
-        ret = (f'<EpisodeInfo title={self.title}, season_number='
-            f'{self.season_number}, episode_number={self.episode_number}')
+        ret = (f'<EpisodeInfo {self.title=}, {self.season_number=}, '
+               f'{self.episode_number=}')
 
-        ret += '' if self.sonarr_id == None else f', sonarr_id={self.sonarr_id}'
-        ret += '' if self.tvdb_id == None else f', tvdb_id={self.tvdb_id}'
-        ret += '' if self.tmdb_id == None else f', tmdb_id={self.tmdb_id}'
-        if self.abs_number != None:
-            ret += f', abs_number={self.abs_number}'
+        ret += '' if self.sonarr_id == None else f', {self.sonarr_id=}'
+        ret += '' if self.tvdb_id == None else f', {self.tvdb_id=}'
+        ret += '' if self.tmdb_id == None else f', {self.tmdb_id=}'
+        ret += '' if self.abs_number != None else f', {self.abs_number=}'
 
         return f'{ret}>'
 

@@ -13,8 +13,9 @@ from modules.Profile import Profile
 from modules.SeriesInfo import SeriesInfo
 from modules.TitleCard import TitleCard
 from modules.Title import Title
+from modules.YamlReader import YamlReader
 
-class Show:
+class Show(YamlReader):
     """
     This class describes a show. A show encapsulates the names and preferences
     with a complete series of episodes. Each object inherits many preferences 
@@ -40,26 +41,29 @@ class Show:
         :param      font_map:           Map of font labels to custom font
                                         descriptions.
         :param      source_directory:   Base source directory this show should
-                                        search for and place source images.
+                                        search for and place source images in.
         """
 
+        # Initialize parent YamlReader object
+        super().__init__(yaml_dict)
+
+        # Get global PreferenceParser object
         self.preferences = global_preferences.pp
         
         # Parse arguments into attribures
-        self.__yaml = yaml_dict
         self.__library_map = library_map
 
         # Set this show's SeriesInfo object with blank year to start
         self.series_info = SeriesInfo(name, 0)
 
         # If year isn't given, skip completely
-        if not self.__is_specified('year'):
+        if not (year := self['year']):
             log.error(f'Series "{name}" is missing the required "year"')
             self.valid = False
             return None
 
         # Year is given, parse and update year/full name of this show
-        if not match(r'^\d{4}$', str(year := self.__yaml['year'])):
+        if not match(r'^\d{4}$', str(year)):
             log.error(f'Year "{year}" of series "{name}" is invalid')
             self.valid = False
             return None
@@ -84,10 +88,10 @@ class Show:
         # Set object attributes based off YAML and update validity
         self.__parse_yaml()
         self.font = Font(
-            self.__yaml.get('font', {}),
+            self._base_yaml.get('font', {}),
             font_map,
             self.card_class,
-            self.series_info
+            self.series_info,
         )
         self.valid = self.font.valid
 
@@ -132,12 +136,12 @@ class Show:
         invalid attributes and update this object's validity.
         """
 
-        if self.__is_specified('name'):
-            self.series_info.update_name(self.__yaml['name'])
+        if (name := self['name']):
+            self.series_info.update_name(name)
 
-        if self.__is_specified('library'):
+        if (library := self['library']):
             # If the given library isn't in libary map, invalid
-            if (library := self.__yaml['library']) not in self.__library_map:
+            if library not in self.__library_map:
                 log.error(f'Library "{library}" of series {self} is not found '
                           f'in libraries list')
                 self.valid = False
@@ -159,62 +163,58 @@ class Show:
                         etf = self.card_class.EPISODE_TEXT_FORMAT
                         self.episode_text_format = etf
 
-        if self.__is_specified('card_type'):
-            if (value := self.__yaml['card_type']) not in TitleCard.CARD_TYPES:
-                log.error(f'Unknown card type "{value}" of series {self}')
+        if (card_type := self['card_type']):
+            if card_type not in TitleCard.CARD_TYPES:
+                log.error(f'Unknown card type "{card_type}" of series {self}')
                 self.valid = False
             else:
-                self.card_class = TitleCard.CARD_TYPES[value]
+                self.card_class = TitleCard.CARD_TYPES[card_type]
                 self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
 
-        if self.__is_specified('media_directory'):
-            self.media_directory = Path(self.__yaml['media_directory'])
+        if (value := self['media_directory']):
+            self.media_directory = Path(value)
 
-        if self.__is_specified('episode_text_format'):  
-            self.episode_text_format = self.__yaml['episode_text_format']
+        if (value := self['episode_text_format']):
+            self.episode_text_format = value
 
-        if self.__is_specified('archive'):
-            self.archive = bool(self.__yaml['archive'])
+        if (value := self['archive']):
+            self.archive = bool(value)
 
-        if self.__is_specified('sonarr_sync'):
-            self.sonarr_sync = bool(self.__yaml['sonarr_sync'])
+        if (value := self['sonarr_sync']):
+            self.sonarr_sync = bool(value)
 
-        if self.__is_specified('sync_specials'):
-            self.sync_specials = bool(self.__yaml['sync_specials'])
+        if (value := self['sync_specials']):
+            self.sync_specials = bool(value)
 
-        if self.__is_specified('tmdb_sync'):
-            self.tmdb_sync = bool(self.__yaml['tmdb_sync'])
+        if (value := self['tmdb_sync']):
+            self.tmdb_sync = bool(value)
 
-        if self.__is_specified('seasons', 'hide'):
-            self.hide_seasons = bool(self.__yaml['seasons']['hide'])
+        if (value := self['seasons', 'hide']):
+            self.hide_seasons = bool(value)
 
-        if (self.__is_specified('translation', 'language')
-            and self.__is_specified('translation', 'key')):
-            key = self.__yaml['translation']['key']
-            if key in ('title', 'abs_number'):
+        if self['translation', 'language'] and self['translation', 'key']:
+            if (key := self['translation', 'key']) in ('title', 'abs_number'):
                 log.error(f'Cannot add translations under the key "{key}" in '
                           f'series {self}')
             else:
-                self.title_language = self.__yaml['translation']
+                self.title_language = self['translation']
 
         # Validate season map & episode range aren't specified at the same time
-        if (self.__is_specified('seasons')
-            and self.__is_specified('episode_ranges')):
-            seasons = self.__yaml['seasons']
+        if (seasons := self['seasons']) and self['episode_ranges']:
             if any(isinstance(key, int) for key in seasons.keys()):
                 log.warning(f'Cannot specify season titles with both "seasons" '
                             f'and "episode_ranges" in series {self}')
                 self.valid = False
 
         # Validate season title map
-        if self.__is_specified('seasons'):
-            for tag in self.__yaml['seasons']:
+        if (seasons := self['seasons']):
+            for tag in seasons:
                 if isinstance(tag, int):
-                    self.__season_map[tag] = self.__yaml['seasons'][tag]
+                    self.__season_map[tag] = self['seasons', tag]
 
         # Validate episode range map
-        if self.__is_specified('episode_ranges'):
-            for episode_range in self.__yaml['episode_ranges']:
+        if (episode_ranges := self['episode_ranges']):
+            for episode_range in episode_ranges:
                 # If the range cannot be parsed, then error and skip
                 try:
                     start, end = map(int, episode_range.split('-'))
@@ -225,38 +225,9 @@ class Show:
                     continue
 
                 # Assign this season title to each episde in the given range
-                this_title = self.__yaml['episode_ranges'][episode_range]
+                this_title = episode_ranges[episode_range]
                 for episode_number in range(start, end+1):
                     self.__episode_range[episode_number] = this_title
-        
-
-    def __is_specified(self, *attributes: tuple) -> bool:
-        """
-        Determines whether the given attribute/sub-attribute has been manually 
-        specified in the show's YAML.
-        
-        :param      attributes: Any number of attributes to check for. Each
-                                subsequent argument is checked for as a sub-
-                                attribute of the prior one.
-        
-        :returns:   True if the given attributes are all specified, False
-                    otherwise.
-        """
-
-        # Start on the top-level series YAML
-        current_level = self.__yaml
-        for attr in attributes:
-            # If this level isn't even a dictionary, or the attribute DNE, FALSE
-            if not isinstance(current_level, dict) or attr not in current_level:
-                return False
-
-            if current_level[attr] == None:
-                return False
-
-            # Move to the next level
-            current_level = current_level[attr]
-
-        return True
 
 
     def __get_destination(self, episode_info: 'EpisodeInfo') -> Path:
@@ -466,14 +437,12 @@ class Show:
 
 
     def create_missing_title_cards(self,
-                                   tmdb_interface: 'TMDbInterface'=None) ->bool:
+                                   tmdb_interface: 'TMDbInterface'=None) ->None:
         """
         Creates any missing title cards for each episode of this show.
 
         :param      tmdb_interface:     Optional TMDbInterface to download any
                                         missing source images from.
-
-        :returns:   True if any new cards were created, False otherwise.
         """
 
         # If the media directory is unspecified, exit
@@ -481,7 +450,6 @@ class Show:
             return False
 
         # Go through each episode for this show
-        created_new_cards = False
         for _, episode in (pbar := tqdm(self.episodes.items(), leave=False)):
             # Update progress bar
             pbar.set_description(f'Creating {episode}')
@@ -520,7 +488,21 @@ class Show:
                 continue
 
             # Source exists, create the title card
-            created_new_cards |= title_card.create()
+            title_card.create()
 
-        return created_new_cards
+
+    def update_plex(self, plex_interface: 'PlexInterface') -> None:
+        """
+        Update the given PlexInterface with all title cards for all Episodes
+        within this Show.
+
+        :param      plex_interface: PlexInterface object to update.
+        """
+
+        # Update Plex for this library, this show's info and episodes
+        plex_interface.set_title_cards_for_series(
+            self.library_name,
+            self.series_info,
+            self.episodes,
+        )
 
