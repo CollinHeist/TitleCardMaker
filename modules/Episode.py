@@ -48,8 +48,8 @@ class Episode:
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object"""
 
-        return (f'<Episode episode_info={self.episode_info}, card_class='
-                f'{self.card_class}, source={self.source}, destination='
-                f'{self.destination}, extras={self.extra_characteristics}>')
+        return (f'<Episode {self.episode_info=}, {self.card_class=}, '
+                f'{self.source=}, {self.destination=}, '
+                f'{self.extra_characteristics=}>')
 
         

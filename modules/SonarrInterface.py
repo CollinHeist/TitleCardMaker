@@ -69,7 +69,7 @@ class SonarrInterface(WebInterface):
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
-        return (f'<SonarrInterface url={self.url}, api_key={self.__api_key}'
+        return (f'<SonarrInterface {self.url=}, {self.__api_key=}'
                 f', mapping of {len(self.__series_ids)} series>')
 
 
@@ -146,7 +146,7 @@ class SonarrInterface(WebInterface):
         """List all the series ID's of all shows used by Sonarr. """
 
         # Construct GET arguments
-        url = f'{self.url}series/'
+        url = f'{self.url}series'
         params = self.__standard_params
         all_series = self._get(url, params)
 

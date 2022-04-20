@@ -93,7 +93,7 @@ class TMDbInterface(WebInterface):
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
-        return f'<TMDbInterface api_key={self.__api_key}>'
+        return f'<TMDbInterface {self.__api_key=}>'
 
 
     def __fix_blacklist(self, blacklist: dict) -> dict:
@@ -311,7 +311,7 @@ class TMDbInterface(WebInterface):
                     has keys 'season' and 'episode'. None if returned if the
                     entry cannot be found.
         """
-
+        
         # If the episode has a TVDb ID, query with that first
         if episode_info.tvdb_id != None:
             # GET parameters and request

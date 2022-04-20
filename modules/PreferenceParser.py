@@ -9,8 +9,9 @@ from modules.Show import Show
 from modules.ShowSummary import ShowSummary
 from modules.TitleCard import TitleCard
 from modules.TMDbInterface import TMDbInterface
+from modules.YamlReader import YamlReader
 
-class PreferenceParser:
+class PreferenceParser(YamlReader):
     """
     This class describes a preference parser that reads a given preference YAML
     file and parses it into individual attributes.
@@ -24,20 +25,20 @@ class PreferenceParser:
         
         :param      file:   The preference file to parse.
         """
-        
-        # Store file
-        self.file = file
-        self.__yaml = {}
 
-        # Read file
+        super().__init__()
+        
+        # Store and read file
+        self.file = file
         self.read_file()
 
         # Check for required source directory
-        if not self.__is_specified('options', 'source'):
+        if not (source_directory := self['options', 'source']):
+            breakpoint()
             log.critical(f'Preference file missing required options/source '
                          f'attribute')
             exit(1)
-        self.source_directory = Path(self.__yaml['options']['source'])
+        self.source_directory = Path(source_directory)
 
         # Setup default values that can be overwritten by YAML
         self.series_files = []
@@ -76,7 +77,7 @@ class PreferenceParser:
     def __repr__(self) -> str:
         """Returns a unambiguous string representation of the object."""
 
-        return f'<PreferenceParser file={self.file}>'
+        return f'<PreferenceParser {self.file=}>'
 
 
     def __determine_imagemagick_prefix(self) -> None:
@@ -106,35 +107,6 @@ class PreferenceParser:
         exit(1)
 
 
-    def __is_specified(self, *attributes: tuple) -> bool:
-        """
-        Determines whether the given attribute/sub-attribute has been manually 
-        specified in the show's YAML.
-        
-        :param      attributes: Any number of attributes to check for. Each
-                                subsequent argument is checked for as a sub-
-                                attribute of the prior one.
-        
-        :returns:   True if ALL attributes are specified, False otherwise.
-        """
-
-        current = self.__yaml
-        for attribute in attributes:
-            # If this level isn't even a dictionary or the attribute DNE - False
-            if not isinstance(current, dict) or attribute not in current:
-                return False
-
-            # If this level has sub-attributes, but is blank (None) - False
-            if current[attribute] == None:
-                return False
-
-            # Move to the next level
-            current = current[attribute]
-
-        # All given attributes have been checked without exit, must be specified
-        return True
-
-
     def __parse_yaml(self) -> None:
         """
         Parse the raw YAML dictionary into object attributes. This also errors
@@ -142,8 +114,7 @@ class PreferenceParser:
         where necessary, fails type conversion).
         """
 
-        if self.__is_specified('options', 'series'):
-            value = self.__yaml['options']['series']
+        if (value := self['options', 'series']):
             if isinstance(value, list):
                 self.series_files = value
             else:
@@ -152,97 +123,83 @@ class PreferenceParser:
             log.warning(f'No series YAML files indicated, no cards will be '
                         f'created')
 
-        if self.__is_specified('options', 'card_type'):
-            value = self.__yaml['options']['card_type']
+        if (value := self['options', 'card_type']):
             if value not in TitleCard.CARD_TYPES:
                 log.critical(f'Default card type "{value}" is unrecognized')
                 self.valid = False
             else:
                 self.card_type = value
 
-        if self.__is_specified('options', 'filename_format'):
-            new_format = self.__yaml['options']['filename_format']
+        if (new_format := self['options', 'filename_format']):
             if not TitleCard.validate_card_format_string(new_format):
                 self.valid = False
             else:
                 self.card_filename_format = new_format
 
-        if self.__is_specified('options', 'validate_fonts'):
-            self.validate_fonts = bool(self.__yaml['options']['validate_fonts'])
+        if (value := self['options', 'validate_fonts']):
+            self.validate_fonts = bool(value)
 
-        if self.__is_specified('options', 'zero_pad_seasons'):
-            val = self.__yaml['options']['zero_pad_seasons']
-            self.zero_pad_seasons = bool(val)
+        if (value := self['options', 'zero_pad_seasons']):
+            self.zero_pad_seasons = bool(value)
 
-        if self.__is_specified('archive', 'path'):
-            self.archive_directory = Path(self.__yaml['archive']['path'])
+        if (value := self['archive', 'path']):
+            self.archive_directory = Path(value)
             self.create_archive = True
 
-        if self.__is_specified('archive', 'summary', 'create'):
-            summary_yaml = self.__yaml['archive']['summary']
-            self.create_summaries = bool(summary_yaml['create'])
+        if (value := self['archive', 'summary', 'create']):
+            self.create_summaries = bool(value)
 
-        if self.__is_specified('archive', 'summary', 'background_color'):
-            summary_yaml = self.__yaml['archive']['summary']
-            self.summary_background_color = summary_yaml['background_color']
+        if (value := self['arhive', 'summary', 'background_color']):
+            self.summary_background_color = value
 
-        if self.__is_specified('archive', 'summary', 'logo_filename'):
-            summary_yaml = self.__yaml['archive']['summary']
-            self.logo_filename = summary_yaml['logo_filename']
+        if (value := self['archive', 'summary', 'logo_filename']):
+            self.logo_filename = value
 
-        if self.__is_specified('archive', 'summary', 'minimum_episodes'):
-            value = self.__yaml['archive']['summary']['minimum_episodes']
+        if (value := self['archive', 'summary', 'minimum_episodes']):
             try:
                 self.summary_minimum_episode_count = int(value)
             except ValueError:
                 log.critical(f'Invalid summary minimum count "{value}"')
                 self.valid = False
 
-        if self.__is_specified('plex', 'url'):
-            self.plex_url = self.__yaml['plex']['url']
+        if (value := self['plex', 'url']):
+            self.plex_url = value
             self.use_plex = True
 
-        if self.__is_specified('plex', 'token'):
-            self.plex_token = self.__yaml['plex']['token']
+        if (value := self['plex', 'token']):
+            self.plex_token = value
 
-        if self.__is_specified('sonarr'):
-            if not all((self.__is_specified('sonarr', 'url'),
-                        self.__is_specified('sonarr', 'api_key'))):
+        if self['sonarr']:
+            if not all((self['sonarr', 'url'], self['sonarr', 'api_key'])):
                 log.critical(f'Sonarr preferences must contain "url" and '
                              f'"api_key"')
                 self.valid = False
             else:
-                self.sonarr_url = self.__yaml['sonarr']['url']
-                self.sonarr_api_key = self.__yaml['sonarr']['api_key']
+                self.sonarr_url = self['sonarr', 'url']
+                self.sonarr_api_key = self['sonarr', 'api_key']
                 self.use_sonarr = True
 
-        if self.__is_specified('sonarr', 'sync_specials'):
-            value = self.__yaml['sonarr']['sync_specials']
+        if (value := self['sonarr', 'sync_specials']):
             self.sonarr_sync_specials = bool(value)
 
-        if self.__is_specified('tmdb'):
-            if not self.__is_specified('tmdb', 'api_key'):
-                log.critical(f'TMDb preferences must contain "api_key"')
-                self.valid = False
-            else:
-                self.tmdb_api_key = self.__yaml['tmdb']['api_key']
-                self.use_tmdb = True
+        if (value := self['tmdb', 'api_key']):
+            self.tmdb_api_key = value
+            self.use_tmdb = True
 
-        if self.__is_specified('tmdb', 'retry_count'):
-            self.tmdb_retry_count = int(self.__yaml['tmdb']['retry_count'])
+        if (value := self['tmdb', 'retry_count']):
+            self.tmdb_retry_count = int(value)
 
-        if self.__is_specified('tmdb', 'minimum_resolution'):
+        if (value := self['tmdb', 'minimum_resolution']):
             try:
-                min_res = self.__yaml['tmdb']['minimum_resolution']
-                width, height = map(int, min_res.lower().split('x'))
+                width, height = map(int, value.lower().split('x'))
                 self.tmdb_minimum_resolution = {'width': width, 'height':height}
             except Exception:
                 log.critical(f'Invalid minimum resolution - specify as '
                              f'WIDTHxHEIGHT')
                 self.valid = False
 
-        if self.__is_specified('imagemagick', 'container'):
-            self.imagemagick_container = self.__yaml['imagemagick']['container']
+        if (value := self['imagemagick', 'container']):
+            self.imagemagick_container = value
 
 
     def read_file(self) -> None:
@@ -259,13 +216,9 @@ class PreferenceParser:
             exit(1)
 
         # Read file 
-        with self.file.open('r') as file_handle:
-            try:
-                self.__yaml = safe_load(file_handle)
-            except Exception as e:
-                log.critical(f'Error reading preference file:\n{e}\n')
-                exit(1)
+        self._base_yaml = self._read_file(self.file)
 
+        # Log reading, return that YAML
         log.info(f'Read preference file "{self.file.resolve()}"')
 
 
