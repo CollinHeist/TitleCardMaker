@@ -18,9 +18,11 @@ class TitleCard:
     respective CardType classes.
     """
 
-    """Extensions of the input source image and output title card"""
+    """Extension of the input source image"""
     INPUT_CARD_EXTENSION = '.jpg'
-    OUTPUT_CARD_EXTENSION = '.jpg'
+
+    """Default extension of the output title card"""
+    DEFAULT_CARD_EXTENSION = '.jpg'
 
     """Default filename format for all title cards"""
     DEFAULT_FILENAME_FORMAT = '{full_name} - S{season:02}E{episode:02}'
@@ -138,7 +140,7 @@ class TitleCard:
         )
         
         # Add card extension
-        filename += TitleCard.OUTPUT_CARD_EXTENSION
+        filename += global_preferences.pp.card_extension
         
         return media_directory / season_folder / filename
 
@@ -206,7 +208,7 @@ class TitleCard:
         )
 
         # Add card extension
-        filename += TitleCard.OUTPUT_CARD_EXTENSION
+        filename += global_preferences.pp.card_extension
         
         return media_directory / season_folder / filename
 

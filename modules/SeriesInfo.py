@@ -7,6 +7,7 @@ class SeriesInfo:
 
     """After how many characters to truncate the short name"""
     SHORT_WIDTH = 15
+    
 
     def __init__(self, name: str, year: int) -> None:
         """

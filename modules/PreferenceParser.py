@@ -5,6 +5,7 @@ from yaml import safe_load
 
 from modules.Debug import log
 from modules.ImageMagickInterface import ImageMagickInterface
+from modules.ImageMaker import ImageMaker
 from modules.Show import Show
 from modules.ShowSummary import ShowSummary
 from modules.TitleCard import TitleCard
@@ -44,6 +45,7 @@ class PreferenceParser(YamlReader):
         self.series_files = []
         self.card_type = 'standard'
         self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
+        self.card_extension = TitleCard.DEFAULT_CARD_EXTENSION
         self.validate_fonts = True
         self.zero_pad_seasons = False
         self.archive_directory = None
@@ -135,6 +137,14 @@ class PreferenceParser(YamlReader):
                 self.valid = False
             else:
                 self.card_filename_format = new_format
+
+        if (extension := self['options', 'card_extension']):
+            extension = ('' if extension[0] == '.' else '.') + extension.lower()
+            if extension not in ImageMaker.VALID_IMAGE_EXTENSIONS:
+                log.critical(f'Card extension "{extension}" is invalid')
+                self.valid = False
+            else:
+                self.card_extension = extension
 
         if (value := self['options', 'validate_fonts']):
             self.validate_fonts = bool(value)

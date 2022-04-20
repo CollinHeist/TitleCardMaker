@@ -14,6 +14,7 @@ class FontValidator:
 
     """File to the font validation map that persists between runs"""
     FONT_VALIDATION_MAP = Path(__file__).parent / '.objects' / 'fvm.yml'
+    
 
     def __init__(self) -> None:
         """
@@ -26,7 +27,8 @@ class FontValidator:
             try:
                 with self.FONT_VALIDATION_MAP.open('r', encoding='utf-8') as fh:
                     self.__fonts = safe_load(fh)['fonts']
-            except Exception:
+            except Exception as e:
+                log.debug(f'Error reading font validation map - {e}')
                 self.__fonts = {}
         else:
             # Create parent directories if necessary
