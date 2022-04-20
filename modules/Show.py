@@ -41,7 +41,7 @@ class Show(YamlReader):
         :param      font_map:           Map of font labels to custom font
                                         descriptions.
         :param      source_directory:   Base source directory this show should
-                                        search for and place source images.
+                                        search for and place source images in.
         """
 
         # Initialize parent YamlReader object
@@ -437,14 +437,12 @@ class Show(YamlReader):
 
 
     def create_missing_title_cards(self,
-                                   tmdb_interface: 'TMDbInterface'=None) ->bool:
+                                   tmdb_interface: 'TMDbInterface'=None) ->None:
         """
         Creates any missing title cards for each episode of this show.
 
         :param      tmdb_interface:     Optional TMDbInterface to download any
                                         missing source images from.
-
-        :returns:   True if any new cards were created, False otherwise.
         """
 
         # If the media directory is unspecified, exit
@@ -452,7 +450,6 @@ class Show(YamlReader):
             return False
 
         # Go through each episode for this show
-        created_new_cards = False
         for _, episode in (pbar := tqdm(self.episodes.items(), leave=False)):
             # Update progress bar
             pbar.set_description(f'Creating {episode}')
@@ -491,7 +488,21 @@ class Show(YamlReader):
                 continue
 
             # Source exists, create the title card
-            created_new_cards |= title_card.create()
+            title_card.create()
 
-        return created_new_cards
+
+    def update_plex(self, plex_interface: 'PlexInterface') -> None:
+        """
+        Update the given PlexInterface with all title cards for all Episodes
+        within this Show.
+
+        :param      plex_interface: PlexInterface object to update.
+        """
+
+        # Update Plex for this library, this show's info and episodes
+        plex_interface.set_title_cards_for_series(
+            self.library_name,
+            self.series_info,
+            self.episodes,
+        )
 

@@ -11,6 +11,7 @@ requests = "*"
 titlecase = "*"
 tqdm = "*"
 fonttools = "*"
+plexapi = "*"
 
 [dev-packages]
 
