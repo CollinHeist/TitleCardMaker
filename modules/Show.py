@@ -177,19 +177,19 @@ class Show(YamlReader):
         if (value := self['episode_text_format']):
             self.episode_text_format = value
 
-        if self.__is_specified('archive'):
+        if self._is_specified('archive'):
             self.archive = bool(self['archive'])
 
-        if self.__is_specified('sonarr_sync'):
+        if self._is_specified('sonarr_sync'):
             self.sonarr_sync = bool(self['sonarr_sync'])
 
-        if self.__is_specified('sync_specials'):
+        if self._is_specified('sync_specials'):
             self.sync_specials = bool(self['sync_specials'])
 
-        if self.__is_specified('tmdb_sync'):
+        if self._is_specified('tmdb_sync'):
             self.tmdb_sync = bool(self['tmdb_sync'])
 
-        if self.__is_specified('seasons', 'hide'):
+        if self._is_specified('seasons', 'hide'):
             self.hide_seasons = bool(self['seasons', 'hide'])
 
         if self['translation', 'language'] and self['translation', 'key']:
