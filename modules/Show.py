@@ -147,7 +147,7 @@ class Show(YamlReader):
                 self.valid = False
             else:
                 # Valid library, update library and media directory
-                self.library_name = library
+                self.library_name = self.__library_map.get('plex_name', library)
                 self.library = Path(self.__library_map[library]['path'])
                 self.media_directory = self.library / self.series_info.full_name
 
@@ -177,20 +177,20 @@ class Show(YamlReader):
         if (value := self['episode_text_format']):
             self.episode_text_format = value
 
-        if (value := self['archive']):
-            self.archive = bool(value)
+        if self.__is_specified('archive'):
+            self.archive = bool(self['archive'])
 
-        if (value := self['sonarr_sync']):
-            self.sonarr_sync = bool(value)
+        if self.__is_specified('sonarr_sync'):
+            self.sonarr_sync = bool(self['sonarr_sync'])
 
-        if (value := self['sync_specials']):
-            self.sync_specials = bool(value)
+        if self.__is_specified('sync_specials'):
+            self.sync_specials = bool(self['sync_specials'])
 
-        if (value := self['tmdb_sync']):
-            self.tmdb_sync = bool(value)
+        if self.__is_specified('tmdb_sync'):
+            self.tmdb_sync = bool(self['tmdb_sync'])
 
-        if (value := self['seasons', 'hide']):
-            self.hide_seasons = bool(value)
+        if self.__is_specified('seasons', 'hide'):
+            self.hide_seasons = bool(self['seasons', 'hide'])
 
         if self['translation', 'language'] and self['translation', 'key']:
             if (key := self['translation', 'key']) in ('title', 'abs_number'):

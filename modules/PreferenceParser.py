@@ -146,18 +146,18 @@ class PreferenceParser(YamlReader):
             else:
                 self.card_extension = extension
 
-        if (value := self['options', 'validate_fonts']):
-            self.validate_fonts = bool(value)
+        if self.__is_specified('options', 'validate_fonts'):
+            self.validate_fonts = bool(self['options', 'validate_fonts'])
 
-        if (value := self['options', 'zero_pad_seasons']):
-            self.zero_pad_seasons = bool(value)
+        if self.__is_specified('options', 'zero_pad_seasons'):
+            self.zero_pad_seasons = bool(self['options', 'zero_pad_seasons'])
 
         if (value := self['archive', 'path']):
             self.archive_directory = Path(value)
             self.create_archive = True
 
-        if (value := self['archive', 'summary', 'create']):
-            self.create_summaries = bool(value)
+        if self.__is_specified('archive', 'summary', 'create'):
+            self.create_summaries = bool(self['archive', 'summary', 'create'])
 
         if (value := self['arhive', 'summary', 'background_color']):
             self.summary_background_color = value
@@ -189,8 +189,8 @@ class PreferenceParser(YamlReader):
                 self.sonarr_api_key = self['sonarr', 'api_key']
                 self.use_sonarr = True
 
-        if (value := self['sonarr', 'sync_specials']):
-            self.sonarr_sync_specials = bool(value)
+        if self.__is_specified('sonarr', 'sync_specials'):
+            self.sonarr_sync_specials = bool(self['sonarr', 'sync_specials'])
 
         if (value := self['tmdb', 'api_key']):
             self.tmdb_api_key = value
