@@ -4,7 +4,7 @@ from re import match
 from tqdm import tqdm
 
 from modules.DataFileInterface import DataFileInterface
-from modules.Debug import log
+from modules.Debug import log, TQDM_BAR
 from modules.Episode import Episode
 from modules.Font import Font
 from modules.MultiEpisode import MultiEpisode
@@ -400,7 +400,8 @@ class Show(YamlReader):
 
         # Go through every episode and look for translations
         modified = False
-        for _, episode in (pbar := tqdm(self.episodes.items(), leave=False)):
+        for _, episode in (pbar := tqdm(self.episodes.items(), leave=False,
+                                        bar_format=TQDM_BAR)):
             # Update progress bar
             pbar.set_description(f'Checking {episode}')
 
@@ -450,7 +451,8 @@ class Show(YamlReader):
             return False
 
         # Go through each episode for this show
-        for _, episode in (pbar := tqdm(self.episodes.items(), leave=False)):
+        for _, episode in (pbar := tqdm(self.episodes.items(), leave=False,
+                                        bar_format=TQDM_BAR)):
             # Update progress bar
             pbar.set_description(f'Creating {episode}')
             

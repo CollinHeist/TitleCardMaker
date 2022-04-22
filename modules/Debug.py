@@ -2,6 +2,8 @@ from logging import Formatter, Handler, getLogger
 from logging import NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL
 from tqdm import tqdm
 
+TQDM_BAR = '{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} [{elapsed}, {rate_fmt}{postfix}]'
+
 class LogHandler(Handler):
     def __init__(self, level=NOTSET):
         super().__init__(level)

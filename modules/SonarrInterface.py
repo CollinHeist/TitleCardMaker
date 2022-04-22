@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from pathlib import Path
 
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
@@ -281,5 +282,34 @@ class SonarrInterface(WebInterface):
                 if episode.episode_info == sonarr_info:
                     episode.episode_info.copy_ids(sonarr_info)
                     break
+
+
+    def get_all_series(self) -> [SeriesInfo]:
+        """
+        Gets all series.
+        
+        :returns:   All series.
+        """
+
+        # Construct GET arguments
+        url = f'{self.url}series'
+        params = self.__standard_params
+        all_series = self._get(url, params)
+
+        # Go through each series in Sonarr
+        series = []
+        for show in all_series:
+            # Construct SeriesInfo object for this show
+            series_info = SeriesInfo(show['title'], show['year'])
+            # series_info.set_sonarr_id(show['id'])
+            # series_info.set_tvdb_id(show['tvdbId'])
+
+            series.append({
+                'series_info': series_info,
+                'path': Path(show['path']),
+                'seasons': len(show['seasons']),
+            })
+
+        return series
 
         
