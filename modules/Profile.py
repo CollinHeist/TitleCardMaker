@@ -275,7 +275,9 @@ class Profile:
         if not text_to_remove:
             return title_text
 
-        return title_text.replace(text_to_remove.group(), '')
+        # Replace removal text, return original if all text was removed
+        finalized_title = title_text.replace(text_to_remove.group(), '')
+        return title_text if len(finalized_title) == 0 else finalized_title
 
 
     def convert_title(self, title_text: str) -> str:
