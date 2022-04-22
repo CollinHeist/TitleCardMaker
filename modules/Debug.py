@@ -2,7 +2,13 @@ from logging import Formatter, Handler, getLogger
 from logging import NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL
 from tqdm import tqdm
 
+"""TQDM bar format string"""
+TQDM_BAR = ('{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} '
+            '[{elapsed}, {rate_fmt}{postfix}]')
+
 class LogHandler(Handler):
+    """Handler subclass to integrate logging messages with TQDM"""
+
     def __init__(self, level=NOTSET):
         super().__init__(level)
 
@@ -15,8 +21,9 @@ class LogHandler(Handler):
             
 
 class LogFormatterColor(Formatter):
-    """Taken/modified from SO: https://stackoverflow.com/a/56944256"""
+    """Custom Formatter for logging integration, uses color"""
 
+    """Color codes"""
     GRAY =     '\x1b[1;30m'
     CYAN =     '\033[96m'
     YELLOW =   '\x1b[33;20m'
@@ -42,6 +49,8 @@ class LogFormatterColor(Formatter):
 
 
 class LogFormatterNoColor(Formatter):
+    """Custom Formatter for logging integration, does not use color"""
+
     format_layout = '[%(levelname)s] %(message)s'
 
     LEVEL_FORMATS = {
@@ -69,6 +78,13 @@ handler.setFormatter(LogFormatterColor())
 log.addHandler(handler)
 
 def apply_no_color_formatter(log_object: 'Logger') -> None:
+    """
+    Modify the given logger object, removing the colored Handler, adding an
+    instance of the colorless one.
+    
+    :param      log_object: The log object to modify.
+    """
+
     # Create colorless Formatter
     handler = LogHandler()
     handler.setFormatter(LogFormatterNoColor())
