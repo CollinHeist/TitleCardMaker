@@ -257,12 +257,8 @@ class PreferenceParser(YamlReader):
                 continue
 
             # Read file, parse yaml
-            with file_object.open('r') as file_handle:
-                try:
-                    file_yaml = safe_load(file_handle)
-                except Exception as e:
-                    log.error(f'Error reading series file:\n{e}\n')
-                    continue
+            if (file_yaml := self._read_file(file_object)) == {}:
+                continue
 
             # Skip if there are no series to yield
             if file_yaml is None or 'series' not in file_yaml:
