@@ -1,7 +1,7 @@
 from yaml import dump
 from tqdm import tqdm
 
-from modules.Debug import log, TQDM_BAR
+from modules.Debug import log
 from modules.PlexInterface import PlexInterface
 import modules.preferences as global_preferences
 from modules.Show import Show
@@ -93,7 +93,7 @@ class Manager:
             return None
 
         # For each show in the Manager, add translation
-        for show in (pbar := tqdm(self.shows, bar_format=TQDM_BAR)):
+        for show in (pbar := tqdm(self.shows)):
             pbar.set_description(f'Adding translations for '
                                  f'"{show.series_info.short_name}"')
             show.add_translations(self.tmdb_interface)
@@ -105,13 +105,11 @@ class Manager:
         for all Show and ShowArchives, and also looks for multipart episodes.
         """
 
-        for show in tqdm(self.shows, desc='Reading source files',
-                         bar_format=TQDM_BAR):
+        for show in tqdm(self.shows, desc='Reading source files'):
             show.read_source()
             show.find_multipart_episodes()
 
-        for archive in tqdm(self.archives, desc='Reading archive source files',
-                            bar_format=TQDM_BAR):
+        for archive in tqdm(self.archives, desc='Reading archive source files'):
             archive.read_source()
             archive.find_multipart_episodes()
 
@@ -127,8 +125,7 @@ class Manager:
             return None
 
         # Go through each show in the Manager and query Sonarr
-        for show in tqdm(self.shows + self.archives, desc='Querying Sonarr',
-                         bar_format=TQDM_BAR):
+        for show in tqdm(self.shows + self.archives, desc='Querying Sonarr'):
             show.query_sonarr(self.sonarr_interface)
 
 
@@ -139,7 +136,7 @@ class Manager:
         """
 
         # Go through every show in the Manager, create cards
-        for show in (pbar := tqdm(self.shows, bar_format=TQDM_BAR)):
+        for show in (pbar := tqdm(self.shows)):
             # Update progress bar
             pbar.set_description(f'Creating Title Cards for '
                                  f'"{show.series_info.short_name}"')
@@ -163,7 +160,7 @@ class Manager:
             return None
 
         # Go through each show in the Manager, update Plex
-        for show in (pbar := tqdm(self.shows, bar_format=TQDM_BAR)):
+        for show in (pbar := tqdm(self.shows)):
             # Update progress bar
             pbar.set_description(f'Updating Plex for '
                                  f'"{show.series_info.short_name}"')
@@ -181,7 +178,7 @@ class Manager:
         if not self.preferences.create_archive:
             return None
 
-        for show_archive in (pbar := tqdm(self.archives, bar_format=TQDM_BAR)):
+        for show_archive in (pbar := tqdm(self.archives)):
             # Update progress bar
             pbar.set_description(f'Updating archive for '
                                  f'"{show_archive.series_info.short_name}"')
@@ -202,7 +199,7 @@ class Manager:
         if not self.preferences.create_summaries:
             return None
 
-        for show_archive in (pbar := tqdm(self.archives, bar_format=TQDM_BAR)):
+        for show_archive in (pbar := tqdm(self.archives)):
             # Update progress bar
             pbar.set_description(f'Creating ShowSummary for "'
                                  f'{show_archive.series_info.short_name}"')
@@ -219,7 +216,6 @@ class Manager:
 
         self.create_shows()
         self.read_show_source()
-        # self.sonarr_interface.get_all_series()
         self.check_sonarr_for_new_episodes()
         self.check_tmdb_for_translations()
         self.create_missing_title_cards()

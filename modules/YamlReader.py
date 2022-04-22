@@ -85,7 +85,7 @@ class YamlReader(ABC):
         if not file.exists():
             return {}
 
-        with file.open('r', encoding='utf-8') as file_handle:
+        with file.open('r') as file_handle:
             try:
                 return safe_load(file_handle)
             except Exception as e:

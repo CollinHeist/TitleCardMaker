@@ -140,8 +140,8 @@ class PlexInterface:
         try:
             return library.get(series_info.full_name)
         except NotFound:
-            log.warning(f'Series "{series_info}" was not found under library '
-                        f'"{library.title}" in Plex')
+            log.error(f'Series "{series_info}" was not found under library '
+                      f'"{library.title}" in Plex')
             return None
 
 
