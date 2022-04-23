@@ -23,7 +23,7 @@ class StandardTitleCard(CardType):
     }
 
     """Default font and text color for episode title text"""
-    TITLE_FONT = str((Path(__file__).parent /'ref'/'Sequel-Neue.otf').resolve())
+    TITLE_FONT = str((REF_DIRECTORY / 'Sequel-Neue.otf').resolve())
     TITLE_COLOR = '#EBEBEB'
 
     """Default characters to replace in the generic font"""
@@ -111,7 +111,7 @@ class StandardTitleCard(CardType):
             f'-font "{self.font}"',
             f'-kerning -1.25',
             f'-interword-spacing 50',
-            f'-interline-spacing {interline_spacing}', #-22, south park is +70
+            f'-interline-spacing {interline_spacing}',
             f'-pointsize {font_size}',
             f'-gravity south',
         ]   

@@ -140,8 +140,8 @@ class PlexInterface:
         try:
             return library.get(series_info.full_name)
         except NotFound:
-            log.error(f'Series "{series_info}" was not found under library '
-                      f'"{library.title}" in Plex')
+            log.warning(f'Series "{series_info}" was not found under library '
+                        f'"{library.title}" in Plex')
             return None
 
 
@@ -189,7 +189,12 @@ class PlexInterface:
             if ep_key in filtered_episodes:
                 # Upload card to Plex
                 card_file = filtered_episodes[ep_key].destination
-                episode.uploadPoster(filepath=card_file.resolve())
+                try:
+                    episode.uploadPoster(filepath=card_file.resolve())
+                except Exception as e:
+                    log.error(f'Unable to upload {card_file} to {series_info}'
+                              f' - Plex returned "{e}"')
+                    continue
                 
                 # Update the loaded map with this card's size
                 size = card_file.stat().st_size

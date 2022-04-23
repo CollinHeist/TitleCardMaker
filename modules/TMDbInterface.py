@@ -73,15 +73,15 @@ class TMDbInterface(WebInterface):
 
         # Attempt to read existing ID map
         if self.__ID_MAP.exists():
-            with self.__ID_MAP.open('r') as file_handle:
+            with self.__ID_MAP.open('r', encoding='utf-8') as file_handle:
                 self.__id_map = safe_load(file_handle)
         else:
             self.__id_map = {'name': {}, 'id': {}}
 
         # Attempt to read existing blacklist, if DNE, create blank one
         if self.__BLACKLIST_FILE.exists():
-            with self.__BLACKLIST_FILE.open('r') as file_handle:
-                self.__blacklist = self.__fix_blacklist(safe_load(file_handle))
+            with self.__BLACKLIST_FILE.open('r', encoding='utf-8') as fh:
+                self.__blacklist = self.__fix_blacklist(safe_load(fh))
         else:
             self.__blacklist = self.__EMPTY_BLACKLIST
         
@@ -171,7 +171,7 @@ class TMDbInterface(WebInterface):
             self.__blacklist[query_type][key] = {'failures': 1, 'next': later}
 
         # Write latest version of blacklist to file
-        with self.__BLACKLIST_FILE.open('w') as file_handle:
+        with self.__BLACKLIST_FILE.open('w', encoding='utf-8') as file_handle:
             dump(self.__blacklist, file_handle)
 
 
@@ -228,7 +228,7 @@ class TMDbInterface(WebInterface):
             self.__id_map['id'][series_info.tvdb_id] = series_info.tmdb_id
 
         # Write updated map to file
-        with self.__ID_MAP.open('w') as file_handle:
+        with self.__ID_MAP.open('w', encoding='utf-8') as file_handle:
             dump(self.__id_map, file_handle)
 
 

@@ -3,7 +3,7 @@ from pathlib import Path
 from tqdm import tqdm
 from yaml import safe_load
 
-from modules.Debug import log
+from modules.Debug import log, TQDM_BAR
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.ImageMaker import ImageMaker
 from modules.Show import Show
@@ -243,7 +243,7 @@ class PreferenceParser(YamlReader):
         """
 
         # For each file in the cards list
-        for file in (pbar := tqdm(self.series_files)):
+        for file in (pbar := tqdm(self.series_files, bar_format=TQDM_BAR)):
             # Create Path object for this file
             file_object = Path(file)
 
@@ -257,12 +257,8 @@ class PreferenceParser(YamlReader):
                 continue
 
             # Read file, parse yaml
-            with file_object.open('r') as file_handle:
-                try:
-                    file_yaml = safe_load(file_handle)
-                except Exception as e:
-                    log.error(f'Error reading series file:\n{e}\n')
-                    continue
+            if (file_yaml := self._read_file(file_object)) == {}:
+                continue
 
             # Skip if there are no series to yield
             if file_yaml is None or 'series' not in file_yaml:
@@ -281,7 +277,7 @@ class PreferenceParser(YamlReader):
 
             # Go through each series in this file
             for show_name in tqdm(file_yaml['series'], leave=False,
-                                  desc='Creating Shows'):
+                                  desc='Creating Shows', bar_format=TQDM_BAR):
                 # Yield the Show object created from this entry
                 yield Show(
                     show_name,
