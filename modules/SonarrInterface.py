@@ -183,7 +183,7 @@ class SonarrInterface(WebInterface):
         # Go through each episode and get its season/episode number, and title
         for episode in all_episodes:
             # Unaired episodes (such as specials) won't have airDateUtc key
-            if 'airDateUtc' in episode:
+            if 'airDateUtc' in episode and not episode['hasFile']:
                 # Verify this episode has already aired, skip if not
                 air_datetime = datetime.strptime(
                     episode['airDateUtc'],
