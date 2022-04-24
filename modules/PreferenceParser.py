@@ -3,7 +3,7 @@ from pathlib import Path
 from tqdm import tqdm
 from yaml import safe_load
 
-from modules.Debug import log, TQDM_BAR
+from modules.Debug import log, TQDM_KWARGS
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.ImageMaker import ImageMaker
 from modules.Show import Show
@@ -243,7 +243,7 @@ class PreferenceParser(YamlReader):
         """
 
         # For each file in the cards list
-        for file in (pbar := tqdm(self.series_files, bar_format=TQDM_BAR)):
+        for file in (pbar := tqdm(self.series_files, **TQDM_KWARGS)):
             # Create Path object for this file
             file_object = Path(file)
 
@@ -276,8 +276,8 @@ class PreferenceParser(YamlReader):
             font_map = file_yaml.get('fonts', {})
 
             # Go through each series in this file
-            for show_name in tqdm(file_yaml['series'], leave=False,
-                                  desc='Creating Shows', bar_format=TQDM_BAR):
+            for show_name in tqdm(file_yaml['series'], desc='Creating Shows',
+                                  **TQDM_KWARGS):
                 # Yield the Show object created from this entry
                 yield Show(
                     show_name,

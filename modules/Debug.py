@@ -3,8 +3,11 @@ from logging import NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL
 from tqdm import tqdm
 
 """TQDM bar format string"""
-TQDM_BAR = ('{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} '
-            '[{elapsed}, {rate_fmt}{postfix}]')
+TQDM_KWARGS = {
+    'bar_format': ('{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} '
+                   '[{elapsed}, {rate_fmt}{postfix}]'),
+    'leave': False,
+}
 
 class LogHandler(Handler):
     """Handler subclass to integrate logging messages with TQDM"""
