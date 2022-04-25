@@ -1,10 +1,9 @@
 from pathlib import Path
-from re import match
 
 from tqdm import tqdm
 
 from modules.DataFileInterface import DataFileInterface
-from modules.Debug import log, TQDM_BAR
+from modules.Debug import log, TQDM_KWARGS
 from modules.Episode import Episode
 from modules.Font import Font
 from modules.MultiEpisode import MultiEpisode
@@ -63,11 +62,11 @@ class Show(YamlReader):
             return None
 
         # Year is given, parse and update year/full name of this show
-        if not match(r'^\d{4}$', str(year)):
+        if not isinstance(year, int) or year < 0:
             log.error(f'Year "{year}" of series "{name}" is invalid')
             self.valid = False
             return None
-
+            
         # Setup default values that can be overwritten by YAML
         self.series_info = SeriesInfo(name, year)
         self.media_directory = None
@@ -81,7 +80,7 @@ class Show(YamlReader):
         self.tmdb_sync = True
         self.hide_seasons = False
         self.__episode_range = {}
-        self.__season_map = {n: f'Season {n}' for n in range(1, 1000)}
+        self.__season_map = {n: f'Season {n}' for n in range(1, 100)}
         self.__season_map[0] = 'Specials'
         self.title_language = {}
 
@@ -141,19 +140,18 @@ class Show(YamlReader):
 
         if (library := self['library']):
             # If the given library isn't in libary map, invalid
-            if library not in self.__library_map:
+            if not (this_library := self.__library_map.get(library, None)):
                 log.error(f'Library "{library}" of series {self} is not found '
                           f'in libraries list')
                 self.valid = False
             else:
                 # Valid library, update library and media directory
-                self.library_name = self.__library_map.get('plex_name', library)
-                self.library = Path(self.__library_map[library]['path'])
+                self.library_name = this_library.get('plex_name', library)
+                self.library = Path(this_library['path'])
                 self.media_directory = self.library / self.series_info.full_name
 
                 # If card type was specified for this library, set that
-                if 'card_type' in self.__library_map[library]:
-                    card_type = self.__library_map[library]['card_type']
+                if (card_type := this_library.get('card_type', None)):
                     if card_type not in TitleCard.CARD_TYPES:
                         log.error(f'Unknown card type "{card_type}" of series '
                                   f'{self}')
@@ -400,8 +398,7 @@ class Show(YamlReader):
 
         # Go through every episode and look for translations
         modified = False
-        for _, episode in (pbar := tqdm(self.episodes.items(), leave=False,
-                                        bar_format=TQDM_BAR)):
+        for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
             # Update progress bar
             pbar.set_description(f'Checking {episode}')
 
@@ -451,8 +448,7 @@ class Show(YamlReader):
             return False
 
         # Go through each episode for this show
-        for _, episode in (pbar := tqdm(self.episodes.items(), leave=False,
-                                        bar_format=TQDM_BAR)):
+        for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
             # Update progress bar
             pbar.set_description(f'Creating {episode}')
             

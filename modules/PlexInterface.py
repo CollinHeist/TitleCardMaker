@@ -100,7 +100,7 @@ class PlexInterface:
         try:
             return self.__server.library.section(library_name)
         except NotFound:
-            log.error(f'Library "{library}" was not found in Plex')
+            log.error(f'Library "{library_name}" was not found in Plex')
             return None
 
 
