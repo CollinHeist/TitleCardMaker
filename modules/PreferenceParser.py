@@ -1,4 +1,5 @@
 from pathlib import Path
+from re import findall
 
 from tqdm import tqdm
 from yaml import safe_load
@@ -8,6 +9,7 @@ from modules.ImageMagickInterface import ImageMagickInterface
 from modules.ImageMaker import ImageMaker
 from modules.Show import Show
 from modules.ShowSummary import ShowSummary
+from modules.Template import Template
 from modules.TitleCard import TitleCard
 from modules.TMDbInterface import TMDbInterface
 from modules.YamlReader import YamlReader
@@ -212,6 +214,46 @@ class PreferenceParser(YamlReader):
             self.imagemagick_container = value
 
 
+    def __apply_template(self, templates: dict, series_yaml: dict,
+                         series_name: str) -> bool:
+        """
+        Apply the correct Template object (if indicated) to the given series
+        YAML. This effectively "fill out" the indicated template, and updates
+        the series YAML directly.
+        
+        :param      templates:      Dictionary of Template objects to
+                                    potentially apply.
+        :param      series_yaml:    The YAML of the series to modify.
+        :param      series_name:    The name of the series being modified.
+        
+        :returns:   True if the given series contained all the required template
+                    variables for application, False if it did not.
+        """
+
+        # No templates defined, skip
+        if templates == {} or 'template' not in series_yaml:
+            return True
+
+        # Get the specified template for this series
+        if isinstance((series_template := series_yaml['template']), str):
+            # Assume if only a string, then its the template name
+            series_template = {'name': series_template}
+            series_yaml['template'] = series_template
+
+        # Warn and return if no template name given
+        if not (template_name := series_template.get('name', None)):
+            log.error(f'Missing template name for "{series_name}"')
+            return False
+
+        # Warn and return if template name not mapped
+        if not (template := templates.get(template_name, None)):
+            log.error(f'Template "{template_name}" not defined')
+            return False
+
+        # Apply using Template object
+        return template.apply_to_series(series_name, series_yaml)
+
+
     def read_file(self) -> None:
         """
         Reads this associated preference file and store in `__yaml` attribute.
@@ -243,41 +285,60 @@ class PreferenceParser(YamlReader):
         """
 
         # For each file in the cards list
-        for file in (pbar := tqdm(self.series_files, **TQDM_KWARGS)):
+        for file_ in (pbar := tqdm(self.series_files, **TQDM_KWARGS)):
             # Create Path object for this file
-            file_object = Path(file)
+            file = Path(file_)
 
             # Update progress bar for this file
-            pbar.set_description(f'Reading {file_object.name}')
+            pbar.set_description(f'Reading {file.name}')
 
             # If the file doesn't exist, error and skip
-            if not file_object.exists():
-                log.error(f'Series file "{file_object.resolve()}" does not '
+            if not file.exists():
+                log.error(f'Series file "{file.resolve()}" does not '
                           f'exist')
                 continue
 
             # Read file, parse yaml
-            if (file_yaml := self._read_file(file_object)) == {}:
+            if (file_yaml := self._read_file(file)) == {}:
                 continue
 
             # Skip if there are no series to yield
             if file_yaml is None or 'series' not in file_yaml:
-                log.warning(f'Series file has no entries')
+                log.info(f'Series file has no entries')
                 continue
 
             # Get library map for this file; error+skip missing library paths
             if (library_map := file_yaml.get('libraries', {})):
                 if not all('path' in library_map[lib] for lib in library_map):
-                    log.error(f'Libraries in series file "{file_object.resolve()}'
-                              f'"are missing their "path" attributes.')
+                    log.error(f'Libraries are missing required "path" in series'
+                              f' file "{file.resolve()}"')
                     continue
 
             # Get font map for this file
             font_map = file_yaml.get('fonts', {})
 
+            # Get templates for this file
+            templates = {}
+            for name, template in file_yaml.get('templates', {}).items():
+                # If not specified as dictionary, error and skip
+                if not isinstance(template, dict):
+                    log.error(f'Invalid template specification for "{name}" in '
+                              f'series file "{file.resolve()}"')
+                    continue
+                templates[name] = Template(name, template)
+
             # Go through each series in this file
             for show_name in tqdm(file_yaml['series'], desc='Creating Shows',
                                   **TQDM_KWARGS):
+                # Apply template to series
+                valid = self.__apply_template(
+                    templates, file_yaml['series'][show_name], show_name,
+                )
+
+                # Skip if series is not valid
+                if not valid:
+                    continue
+                    
                 # Yield the Show object created from this entry
                 yield Show(
                     show_name,
@@ -326,3 +387,4 @@ class PreferenceParser(YamlReader):
 
         # Return non-zero-padded season name
         return f'Season {season_number}'
+

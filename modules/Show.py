@@ -62,11 +62,11 @@ class Show(YamlReader):
             return None
 
         # Year is given, parse and update year/full name of this show
-        if not isinstance(year, int) or year <= 0:
+        if not isinstance(year, int) or year < 0:
             log.error(f'Year "{year}" of series "{name}" is invalid')
             self.valid = False
             return None
-
+            
         # Setup default values that can be overwritten by YAML
         self.series_info = SeriesInfo(name, year)
         self.media_directory = None
