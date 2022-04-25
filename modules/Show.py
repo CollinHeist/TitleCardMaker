@@ -1,5 +1,4 @@
 from pathlib import Path
-from re import match
 
 from tqdm import tqdm
 
@@ -63,7 +62,7 @@ class Show(YamlReader):
             return None
 
         # Year is given, parse and update year/full name of this show
-        if not match(r'^\d{4}$', str(year)):
+        if not isinstance(year, int) or year <= 0:
             log.error(f'Year "{year}" of series "{name}" is invalid')
             self.valid = False
             return None
@@ -81,7 +80,7 @@ class Show(YamlReader):
         self.tmdb_sync = True
         self.hide_seasons = False
         self.__episode_range = {}
-        self.__season_map = {n: f'Season {n}' for n in range(1, 1000)}
+        self.__season_map = {n: f'Season {n}' for n in range(1, 100)}
         self.__season_map[0] = 'Specials'
         self.title_language = {}
 
