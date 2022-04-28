@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 from requests import get
+from tenacity import retry, stop_after_attempt, wait_fixed, wait_random
 
 from modules.Debug import log
 
@@ -26,6 +27,20 @@ class WebInterface(ABC):
         self.__cached_results = []
 
 
+    @retry(stop=stop_after_attempt(3), wait=wait_fixed(3) + wait_random(0, 2))
+    def __retry_get(self, url: str, params: dict) -> dict:
+        """
+        Retry the given GET request until successful (or really fails).
+        
+        :param      url:    The URL of the GET request.
+        :param      params: The params of  the GET request.
+
+        :retuns:    Dict made from the JSON return of the specified GET request.
+        """
+
+        return get(url=url, params=params).json()
+
+
     def _get(self, url: str, params: dict) -> dict:
         """
         Wrapper for getting the JSON return of the specified GET request. If the
@@ -46,7 +61,7 @@ class WebInterface(ABC):
                 return result
 
         # Make new request, add to cache
-        self.__cached_results.append(get(url=url, params=params).json())
+        self.__cached_results.append(self.__retry_get(url=url, params=params))
         self.__cache.append({'url': url, 'params': str(params)})
 
         # Delete element from cache if length has been exceeded
