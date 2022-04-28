@@ -1,13 +1,17 @@
 from argparse import ArgumentParser, ArgumentTypeError, SUPPRESS
 from pathlib import Path
 
-from modules.DataFileInterface import DataFileInterface
-from modules.GenreMaker import GenreMaker
-from modules.PreferenceParser import PreferenceParser
-from modules.preferences import set_preference_parser
-from modules.SonarrInterface import SonarrInterface
-from modules.TitleCard import TitleCard
-from modules.TMDbInterface import TMDbInterface
+try:
+    from modules.DataFileInterface import DataFileInterface
+    from modules.GenreMaker import GenreMaker
+    from modules.PreferenceParser import PreferenceParser
+    from modules.preferences import set_preference_parser
+    from modules.SonarrInterface import SonarrInterface
+    from modules.TitleCard import TitleCard
+    from modules.TMDbInterface import TMDbInterface
+except ImportError:
+    print(f'Required Python packages are missing - execute "pipenv install"')
+    exit(1)
 
 parser = ArgumentParser(description='Manual fixes for the TitleCardMaker')
 parser.add_argument('-p', '--preference-file', type=Path, 
