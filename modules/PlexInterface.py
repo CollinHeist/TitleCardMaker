@@ -183,7 +183,7 @@ class PlexInterface:
         for episode in (pbar := tqdm(series.episodes(), leave=False)):
             # Update progress bar
             pbar.set_description(f'Updating {episode.seasonEpisode.upper()}')
-
+            
             # If this Plex episode is among the list of cards to update
             ep_key = f'{episode.parentIndex}-{episode.index}'
             if ep_key in filtered_episodes:

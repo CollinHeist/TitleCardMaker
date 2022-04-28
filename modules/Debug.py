@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 """TQDM bar format string"""
 TQDM_KWARGS = {
-    'bar_format': ('{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} '
+    'bar_format': ('{desc} {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} '
                    '[{elapsed}, {rate_fmt}{postfix}]'),
     'leave': False,
 }

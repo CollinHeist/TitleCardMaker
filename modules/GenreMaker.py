@@ -24,24 +24,25 @@ class GenreMaker(ImageMaker):
     __SOURCE_WITH_GRADIENT = ImageMaker.TEMP_DIR / 'swg.png'
 
 
-    def __init__(self, source: Path, genre: str, output: Path) -> None:
+    def __init__(self, source: Path, genre: str, output: Path,
+                 font_size: float=1.0) -> None:
         """
         Constructs a new instance.
         
-        :param      source: The source image to use for the genre card.
-
-        :param      genre:  The genre text to put on the genre card.
-
-        :param      output: The output path to write the genre card to.
+        :param      source:     The source image to use for the genre card.
+        :param      genre:      The genre text to put on the genre card.
+        :param      output:     The output path to write the genre card to.
+        :param      font_size:  Scalar to apply to the title font size.
         """
 
         # Initialize parent object for the ImageMagickInterface
         super().__init__()
 
-        # Store this image's source, genre, and output arguments
+        # Store the arguments
         self.source = source
         self.genre = genre
         self.output = output
+        self.font_size = font_size
 
 
     def __resize_source(self) -> Path:
@@ -94,19 +95,19 @@ class GenreMaker(ImageMaker):
         :param      source_with_gradient:   The source image with the gradient
                                             applied.
         
-        :returns:   Path to the created image.
+        :returns:   Path to the created image (the output file).
         """
 
         command = ' '.join([
             f'convert "{source_with_gradient.resolve()}"',
-            f'-gravity south',
+            f'-gravity center',
             f'-font "{self.FONT.resolve()}"',
             f'-bordercolor white',
             f'-border 27x27',
             f'-fill white',
-            f'-pointsize 159',
+            f'-pointsize {self.font_size * 159}',
             f'-kerning 2.25',
-            f'-annotate +0+100 "{self.genre}"',
+            f'-annotate +0+564 "{self.genre}"',
             f'"{self.output.resolve()}"',
         ])
 

@@ -68,8 +68,7 @@ class StandardTitleCard(CardType):
         :param  font:               Font to use for the episode title. MUST be a
                                     a valid ImageMagick font, or filepath to a
                                     font.
-        :param  font_size:          Scalar to apply to the standard font size,
-                                    i.e. 1.0 if normal (100%), 0.5 if 50%, etc.
+        :param  font_size:          Scalar to apply to the title font size.
         :param  title_color:        Color to use for the episode title.
         :param  hide_season:        Whether to omit the season text (and joining
                                     character) from the title card completely.

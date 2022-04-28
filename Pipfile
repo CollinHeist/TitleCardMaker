@@ -12,6 +12,7 @@ titlecase = "*"
 tqdm = "*"
 fonttools = "*"
 plexapi = "*"
+tenacity = "*"
 
 [dev-packages]
 
