@@ -13,6 +13,7 @@ class WebInterface(ABC):
     """How many requests to cache"""
     CACHE_LENGTH = 10
     
+    
     @abstractmethod
     def __init__(self) -> None:
         """

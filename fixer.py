@@ -174,6 +174,7 @@ if hasattr(args, 'genre_card'):
         source=Path(args.genre_card[0]),
         genre=args.genre_card[1],
         output=Path(args.genre_card[2]),
+        font_size=float(args.font_size[:-1])/100.0,
     ).create()
 
 if hasattr(args, 'genre_card_batch'):
@@ -182,7 +183,8 @@ if hasattr(args, 'genre_card_batch'):
             GenreMaker(
                 source=file,
                 genre=file.stem.upper(),
-                output=Path(file.parent / f'{file.stem}-GenreCard{file.suffix}'),
+                output=Path(file.parent /f'{file.stem}-GenreCard{file.suffix}'),
+                font_size=float(args.font_size[:-1])/100.0,
             ).create()
 
 # Execute Sonarr related options

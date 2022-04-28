@@ -102,7 +102,7 @@ class Template:
         >>> base_yaml
         {'a': 123, 'b': 234, 'c': {'c1': False, 'c2': True}}
         
-        :param      base_yaml:      The base - i.e. higher priority, YAML that 
+        :param      base_yaml:      The base - i.e. higher priority - YAML that 
                                     forms the basis of the union of these
                                     dictionaries. Modified in-place.
         :param      template_yaml:  The templated - i.e. lower priority - YAML.
