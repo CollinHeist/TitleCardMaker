@@ -95,14 +95,14 @@ class Show(YamlReader):
         self.valid = self.font.valid
 
         # Update derived attributes
-        self.source_directory = source_directory / self.series_info.full_name
+        self.source_directory = source_directory / self.series_info.legal_path
         self.logo = self.source_directory / self.preferences.logo_filename
 
         # Create DataFileInterface fo this show
         self.file_interface = DataFileInterface(
             self.source_directory / DataFileInterface.GENERIC_DATA_FILE_NAME
         )
-
+        
         # Create the profile for this show
         self.profile = Profile(
             self.font,

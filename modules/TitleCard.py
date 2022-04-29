@@ -47,6 +47,7 @@ class TitleCard:
         '|': '',
         '*': '-',
     }
+    
 
     def __init__(self, episode: 'Episode', profile: 'Profile',
                  title_characteristics: dict,

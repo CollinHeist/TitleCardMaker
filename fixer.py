@@ -21,7 +21,7 @@ parser.add_argument('-p', '--preference-file', type=Path,
 
 # Argument group for 'manual' title card creation
 title_card_group = parser.add_argument_group('Title Cards',
-                                             'Manual title card creation')
+                                             'Manual TitleCardMaker interaction')
 title_card_group.add_argument(
     '--card-type',
     type=str,
@@ -36,7 +36,7 @@ title_card_group.add_argument(
     default=SUPPRESS,
     metavar=('SOURCE', 'DESTINATION'),
     help='Create a title card with the given source image, written to the given'
-         'destination')
+         ' destination')
 title_card_group.add_argument(
     '--episode',
     type=str,
