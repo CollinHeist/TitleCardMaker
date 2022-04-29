@@ -78,9 +78,8 @@ class ShowArchive:
             if base_show.card_class.ARCHIVE_NAME != 'standard':
                 profile_directory += f' - {base_show.card_class.ARCHIVE_NAME}'
 
-            new_show.media_directory = (
-                archive_directory/base_show.series_info.full_name/profile_directory
-            )
+            temp_path = archive_directory / base_show.series_info.legal_path
+            new_show.media_directory = temp_path / profile_directory
 
             # Convert this new show's profile
             new_show.profile.convert_profile(
