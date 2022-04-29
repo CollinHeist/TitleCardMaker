@@ -1,13 +1,17 @@
 from argparse import ArgumentParser, ArgumentTypeError, SUPPRESS
 from pathlib import Path
 
-from modules.DataFileInterface import DataFileInterface
-from modules.GenreMaker import GenreMaker
-from modules.PreferenceParser import PreferenceParser
-from modules.preferences import set_preference_parser
-from modules.SonarrInterface import SonarrInterface
-from modules.TitleCard import TitleCard
-from modules.TMDbInterface import TMDbInterface
+try:
+    from modules.DataFileInterface import DataFileInterface
+    from modules.GenreMaker import GenreMaker
+    from modules.PreferenceParser import PreferenceParser
+    from modules.preferences import set_preference_parser
+    from modules.SonarrInterface import SonarrInterface
+    from modules.TitleCard import TitleCard
+    from modules.TMDbInterface import TMDbInterface
+except ImportError:
+    print(f'Required Python packages are missing - execute "pipenv install"')
+    exit(1)
 
 parser = ArgumentParser(description='Manual fixes for the TitleCardMaker')
 parser.add_argument('-p', '--preference-file', type=Path, 
@@ -17,7 +21,7 @@ parser.add_argument('-p', '--preference-file', type=Path,
 
 # Argument group for 'manual' title card creation
 title_card_group = parser.add_argument_group('Title Cards',
-                                             'Manual title card creation')
+                                             'Manual TitleCardMaker interaction')
 title_card_group.add_argument(
     '--card-type',
     type=str,
@@ -32,7 +36,7 @@ title_card_group.add_argument(
     default=SUPPRESS,
     metavar=('SOURCE', 'DESTINATION'),
     help='Create a title card with the given source image, written to the given'
-         'destination')
+         ' destination')
 title_card_group.add_argument(
     '--episode',
     type=str,

@@ -29,6 +29,7 @@ class PreferenceParser(YamlReader):
         :param      file:   The preference file to parse.
         """
 
+        # Initialize parent YamlReader object
         super().__init__()
         
         # Store and read file
@@ -81,7 +82,7 @@ class PreferenceParser(YamlReader):
     def __repr__(self) -> str:
         """Returns a unambiguous string representation of the object."""
 
-        return f'<PreferenceParser {self.file=}>'
+        return f'<PreferenceParser {self.file=}, {self.valid=}>'
 
 
     def __determine_imagemagick_prefix(self) -> None:
@@ -171,7 +172,7 @@ class PreferenceParser(YamlReader):
             try:
                 self.summary_minimum_episode_count = int(value)
             except ValueError:
-                log.critical(f'Invalid summary minimum count "{value}"')
+                log.critical(f'Invalid summary minimum episode count "{value}"')
                 self.valid = False
 
         if (value := self['plex', 'url']):

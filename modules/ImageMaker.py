@@ -40,6 +40,9 @@ class ImageMaker(ABC):
             self.preferences.use_magick_prefix,
         )
 
+        # Create temporary directory if DNE
+        self.TEMP_DIR.mkdir(parents=True, exist_ok=True)
+
 
     @abstractmethod
     def create(self) -> None:

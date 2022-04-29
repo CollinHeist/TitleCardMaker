@@ -7,6 +7,19 @@ class SeriesInfo:
 
     """After how many characters to truncate the short name"""
     SHORT_WIDTH = 15
+
+    """Mapping of illegal filename characters and their replacements"""
+    __ILLEGAL_CHARACTERS = {
+        '?': '!',
+        '<': '',
+        '>': '',
+        ':':' -',
+        '"': '',
+        '/': '+',
+        '\\': '+',
+        '|': '',
+        '*': '-',
+    }
     
 
     def __init__(self, name: str, year: int) -> None:
@@ -59,6 +72,7 @@ class SeriesInfo:
         else:
             self.name = str(name)
 
+        # Set full name
         self.full_name = f'{self.name} ({self.year})'
         
         # Set short name
@@ -67,9 +81,13 @@ class SeriesInfo:
         else:
             self.short_name = self.name
             
-        # Set match name
+        # Set match names
         self.match_name = self.get_matching_title(self.name)
         self.full_match_name = self.get_matching_title(self.full_name)
+
+        # Set folder-safe name
+        translation = str.maketrans(self.__ILLEGAL_CHARACTERS)
+        self.legal_path = self.full_name.translate(translation)
 
 
     def set_sonarr_id(self, sonarr_id: int) -> None:

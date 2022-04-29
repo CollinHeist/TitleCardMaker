@@ -55,9 +55,9 @@ class GenreMaker(ImageMaker):
 
         command = ' '.join([
             f'convert "{self.source.resolve()}"',
-            f'-resize 946x1446^',
+            f'-resize "946x1446^"',
             f'-gravity center',
-            f'-extent 946x1446',
+            f'-extent "946x1446"',
             f'"{self.__RESIZED_SOURCE.resolve()}"',
         ])
 
@@ -105,7 +105,7 @@ class GenreMaker(ImageMaker):
             f'-bordercolor white',
             f'-border 27x27',
             f'-fill white',
-            f'-pointsize {self.font_size * 159}',
+            f'-pointsize {self.font_size * 159.0}',
             f'-kerning 2.25',
             f'-annotate +0+564 "{self.genre}"',
             f'"{self.output.resolve()}"',
@@ -134,9 +134,12 @@ class GenreMaker(ImageMaker):
         # Add gradient overlay to the image
         source_with_gradient = self.__add_gradient(resized_source)
 
+        # Create the output directory and any necessary parents 
+        self.output.parent.mkdir(parents=True, exist_ok=True)
+
         # Add genre text and outer border, result is the genre card
         output = self.__add_text_and_border(source_with_gradient)
-
+        
         # Delete intermediate files
         self.image_magick.delete_intermediate_images(
             resized_source,

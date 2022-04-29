@@ -19,7 +19,7 @@ class Episode:
         :param      base_source:    The base source directory to look for source
                                     images within.
         :param      destination:    The destination for the title card
-                                    associated with this episode.
+                                    associated with this Episode.
         :param      extras:         Additional characteristics to pass to the
                                     creation of the TitleCard from this Episode.
         """
