@@ -48,6 +48,10 @@ class StandardTitleCard(CardType):
     __GRADIENT_WITH_TITLE = CardType.TEMP_DIR / 'gradient_title.png'
     __SERIES_COUNT_TEXT = CardType.TEMP_DIR / 'series_count_text.png'
 
+    __slots__ = ('souce_file', 'output_file', 'title', 'season_text',
+                 'episode_text', 'font', 'font_size', 'title_color',
+                 'hide_season', 'vertical_shift', 'interline_spacing')
+
 
     def __init__(self, source: Path, output_file: Path, title: str,
                  season_text: str, episode_text: str, font: str,

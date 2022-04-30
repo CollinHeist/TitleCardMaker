@@ -20,6 +20,10 @@ class SeriesInfo:
         '|': '',
         '*': '-',
     }
+
+    __slots__ = ('year', 'name', 'full_name', 'short_name', 'match_name',
+                 'full_match_name', 'legal_path', 'sonarr_id', 'tvdb_id',
+                 'tmdb_id')
     
 
     def __init__(self, name: str, year: int) -> None:

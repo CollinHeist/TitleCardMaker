@@ -34,6 +34,8 @@ class ShowSummary(ImageMaker):
     """Path to the 'created by' image to add to all show summaries"""
     __CREATED_BY_PATH: Path = Path(__file__).parent / 'ref' / 'created_by.png'
 
+    __slots__ = ('show', 'logo', 'output', 'inputs', 'number_rows')
+
 
     def __init__(self, show: 'Show') -> None:
         """

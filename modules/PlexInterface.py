@@ -156,7 +156,7 @@ class PlexInterface:
         :param      library_name:   The name of the library containing the
                                     series to update.
         :param      series_info:    The series to update.
-        :param      episodes:       Dictionary of episode keys to Episode
+        :param      episode_map:    Dictionary of episode keys to Episode
                                     objects to update the cards of.
         """
 
@@ -192,8 +192,8 @@ class PlexInterface:
                 try:
                     episode.uploadPoster(filepath=card_file.resolve())
                 except Exception as e:
-                    log.error(f'Unable to upload {card_file} to {series_info}'
-                              f' - Plex returned "{e}"')
+                    log.error(f'Unable to upload {card_file} to {series_info} -'
+                              f' Plex returned "{e}"')
                     continue
                 
                 # Update the loaded map with this card's size

@@ -16,12 +16,19 @@ from modules.YamlReader import YamlReader
 
 class Show(YamlReader):
     """
-    This class describes a show. A show encapsulates the names and preferences
+    This class describes a show. A Show encapsulates the names and preferences
     with a complete series of episodes. Each object inherits many preferences 
     from the global `PreferenceParser` object, but manually specified attributes
     within the Show's YAML take precedence over the global enables, with the
     exception of Interface objects (such as Sonarr and TMDb).
     """
+
+    __slots__ = ('preferences', '__library_map', 'series_info', 'valid',
+                 'media_directory', 'card_class', 'episode_text_format',
+                 'library_name', 'library', 'archive', 'sonarr_sync',
+                 'sync_specials', 'tmdb_sync', 'hide_seasons','__episode_range',
+                 '__season_map', 'title_language', 'font', 'source_directory',
+                 'logo', 'file_interface', 'profile', 'episodes')
 
 
     def __init__(self, name: str, yaml_dict: dict, library_map: dict, 

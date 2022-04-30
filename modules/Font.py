@@ -12,6 +12,11 @@ class Font:
     interline spacing.
     """
 
+    __slots__ = ('valid', '__yaml', '__card_class', '__series_info',
+                 '__validator', '__validate', 'color', 'size', 'file',
+                 'replacements', 'case', 'vertical_shift', 'interline_spacing')
+    
+
     def __init__(self, yaml, font_map: dict, card_class: 'CardType',
                  series_info: 'SeriesInfo') -> None:
         """

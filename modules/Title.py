@@ -21,6 +21,9 @@ class Title:
     """Characters that should be used for priority splitting between lines"""
     SPLIT_CHARACTERS = (':', ',', ')', ']', '?', '!', '-', '.', '/')
 
+    __slots__ = ('full_title', '__title_lines', '__manually_specified',
+                 'title_yaml', 'match_title')
+
 
     def __init__(self, title) -> None:
         """
