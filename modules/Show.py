@@ -102,7 +102,7 @@ class Show(YamlReader):
         self.file_interface = DataFileInterface(
             self.source_directory / DataFileInterface.GENERIC_DATA_FILE_NAME
         )
-        
+
         # Create the profile for this show
         self.profile = Profile(
             self.font,
@@ -148,7 +148,7 @@ class Show(YamlReader):
                 # Valid library, update library and media directory
                 self.library_name = this_library.get('plex_name', library)
                 self.library = Path(this_library['path'])
-                self.media_directory = self.library / self.series_info.full_name
+                self.media_directory = self.library /self.series_info.legal_path
 
                 # If card type was specified for this library, set that
                 if (card_type := this_library.get('card_type', None)):
