@@ -1,5 +1,3 @@
-from re import match
-
 class SeriesInfo:
     """
     This class encapsulates static information that is tied to a single Series.
@@ -134,7 +132,7 @@ class SeriesInfo:
         :returns:   The input `text` with all non A-Z characters removed.
         """
 
-        return ''.join(filter(lambda c: match('[a-zA-Z0-9]', c), text)).lower()
+        return ''.join(filter(str.isalnum, text)).lower()
 
 
     def matches(self, *names: tuple) -> bool:

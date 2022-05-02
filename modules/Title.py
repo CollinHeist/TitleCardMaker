@@ -228,7 +228,7 @@ class Title:
         :returns:   The input `text` with all non A-Z characters removed.
         """
 
-        return ''.join(filter(lambda c: match('[a-zA-Z0-9]', c), text)).lower()
+        return ''.join(filter(str.isalnum, text)).lower()
 
 
     def matches(self, *titles: tuple) -> bool:

@@ -85,20 +85,6 @@ class Manager:
             )
 
 
-    def check_tmdb_for_translations(self) -> None:
-        """Query TMDb for all translated episode titles (if indicated)."""
-
-        # If the TMDbInterface isn't enabled, skip
-        if not self.tmdb_interface:
-            return None
-
-        # For each show in the Manager, add translation
-        for show in (pbar := tqdm(self.shows, **TQDM_KWARGS)):
-            pbar.set_description(f'Adding translations for '
-                                 f'"{show.series_info.short_name}"')
-            show.add_translations(self.tmdb_interface)
-
-
     def read_show_source(self) -> None:
         """
         Reads all source files known to this manager. This reads Episode objects
@@ -115,6 +101,20 @@ class Manager:
                             **TQDM_KWARGS):
             archive.read_source()
             archive.find_multipart_episodes()
+
+
+    def check_tmdb_for_translations(self) -> None:
+        """Query TMDb for all translated episode titles (if indicated)."""
+
+        # If the TMDbInterface isn't enabled, skip
+        if not self.tmdb_interface:
+            return None
+
+        # For each show in the Manager, add translation
+        for show in (pbar := tqdm(self.shows, **TQDM_KWARGS)):
+            pbar.set_description(f'Adding translations for '
+                                 f'"{show.series_info.short_name}"')
+            show.add_translations(self.tmdb_interface)
 
 
     def check_sonarr_for_new_episodes(self) -> None:

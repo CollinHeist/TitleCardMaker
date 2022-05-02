@@ -406,12 +406,12 @@ class Show(YamlReader):
         # Go through every episode and look for translations
         modified = False
         for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
-            # Update progress bar
-            pbar.set_description(f'Checking {episode}')
-
             # If the key already exists, skip this episode
             if self.title_language['key'] in episode.extra_characteristics:
                 continue
+
+            # Update progress bar
+            pbar.set_description(f'Checking {episode}')
 
             # Query TMDb for the title of this episode in the requested language
             language_title = tmdb_interface.get_episode_title(

@@ -14,12 +14,14 @@ class FontValidator:
 
     """File to the font validation map that persists between runs"""
     FONT_VALIDATION_MAP = Path(__file__).parent / '.objects' / 'fvm.yml'
+
+    __slots__ = ('__fonts', '__warned')
     
 
     def __init__(self) -> None:
         """
         Constructs a new instance. This creates the parent directory for the 
-        temporary font map if it exists, and reads the font map if it exists.
+        temporary font map if it does not exist, and reads the font map if does.
         """
 
         # Attept to read existing font file if it exists

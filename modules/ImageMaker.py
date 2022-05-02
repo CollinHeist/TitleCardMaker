@@ -44,7 +44,8 @@ class ImageMaker(ABC):
         )
 
         # Create temporary directory if DNE
-        self.TEMP_DIR.mkdir(parents=True, exist_ok=True)
+        if not self.TEMP_DIR.exists():
+            self.TEMP_DIR.mkdir(parents=True, exist_ok=True)
 
 
     @abstractmethod
