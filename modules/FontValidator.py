@@ -99,7 +99,7 @@ class FontValidator:
         glyph = ord(character)
 
         # Go through each table in this font, return True if in a cmap
-        for table in TTFont(font_filepath)['cmap'].tables:
+        for table in TTFont(font_filepath, fontNumber=0)['cmap'].tables:
             if glyph in table.cmap:
                 # Update map for this character, return True
                 self.__set_character(font_filepath, character, True)
