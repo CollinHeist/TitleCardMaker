@@ -92,8 +92,8 @@ class FontValidator:
         """
 
         # If this font and character has been checked, return that
-        if (status := self.__fonts.get(font_filepath, {}).get(character, None)):
-            return status
+        if character in self.__fonts.get(font_filepath, {}):
+            return self.__fonts[font_filepath][character]
 
         # Get the ordinal value of this character
         glyph = ord(character)
