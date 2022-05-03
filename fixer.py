@@ -99,6 +99,10 @@ genre_group.add_argument(
     metavar=('SOURCE', 'GENRE', 'DESTINATION'),
     help='Create a genre card with the given text')
 genre_group.add_argument(
+    '--borderless',
+    action='store_true',
+    help='Make the specified Genre Card transparent')
+genre_group.add_argument(
     '--genre-card-batch',
     type=Path,
     default=SUPPRESS,
@@ -180,6 +184,7 @@ if hasattr(args, 'genre_card'):
         genre=args.genre_card[1],
         output=Path(args.genre_card[2]),
         font_size=float(args.font_size[:-1])/100.0,
+        borderless=args.borderless,
     ).create()
 
 if hasattr(args, 'genre_card_batch'):

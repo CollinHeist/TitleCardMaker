@@ -25,7 +25,7 @@ class GenreMaker(ImageMaker):
 
 
     def __init__(self, source: Path, genre: str, output: Path,
-                 font_size: float=1.0) -> None:
+                 font_size: float=1.0, borderless: bool=False) -> None:
         """
         Constructs a new instance.
         
@@ -33,6 +33,7 @@ class GenreMaker(ImageMaker):
         :param      genre:      The genre text to put on the genre card.
         :param      output:     The output path to write the genre card to.
         :param      font_size:  Scalar to apply to the title font size.
+        :param      borderless: Whether to make the card as borderless or not.
         """
 
         # Initialize parent object for the ImageMagickInterface
@@ -43,6 +44,7 @@ class GenreMaker(ImageMaker):
         self.genre = genre
         self.output = output
         self.font_size = font_size
+        self.borderless = borderless
 
 
     def __resize_source(self) -> Path:
@@ -55,6 +57,7 @@ class GenreMaker(ImageMaker):
 
         command = ' '.join([
             f'convert "{self.source.resolve()}"',
+            f'-background transparent',
             f'-resize "946x1446^"',
             f'-gravity center',
             f'-extent "946x1446"',
@@ -101,9 +104,9 @@ class GenreMaker(ImageMaker):
         command = ' '.join([
             f'convert "{source_with_gradient.resolve()}"',
             f'-gravity center',
-            f'-font "{self.FONT.resolve()}"',
             f'-bordercolor white',
-            f'-border 27x27',
+            f'-border 27x27' if not self.borderless else f'',
+            f'-font "{self.FONT.resolve()}"',
             f'-fill white',
             f'-pointsize {self.font_size * 159.0}',
             f'-kerning 2.25',
