@@ -24,12 +24,13 @@ class DataFileInterface:
 
         :param      data_file:  Path to the data file to interface with.
         """
-
-        # Create parent directories if necessary
-        data_file.parent.mkdir(parents=True, exist_ok=True)
         
         # Store the data file for future use
         self.file = data_file
+
+        # Create parent directories if necessary
+        if not self.file.exists():
+            data_file.parent.mkdir(parents=True, exist_ok=True)
 
 
     def __repr__(self) -> str:

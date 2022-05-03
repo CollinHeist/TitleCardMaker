@@ -5,6 +5,10 @@ class EpisodeInfo:
     with it - such as Sonarr, TVDb, and TMDb.
     """
 
+    __slots__ = ('title', 'season_number', 'season', 'episode_number','episode',
+                 'abs_number', 'abs', 'key', 'sonarr_id', 'tvdb_id', 'tmdb_id')
+    
+
     def __init__(self, title: 'Title', season_number: int, episode_number: int,
                  abs_number: int=None) -> None:
         """

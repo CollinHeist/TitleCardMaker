@@ -47,6 +47,8 @@ class TitleCard:
         '|': '',
         '*': '-',
     }
+
+    __slots__ = ('episode', 'profile', 'converted_title', 'maker', 'file')
     
 
     def __init__(self, episode: 'Episode', profile: 'Profile',

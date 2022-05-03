@@ -10,6 +10,9 @@ class Episode:
     map that info to a source and destination file.
     """
 
+    __slots__ = ('episode_info', 'card_class', 'source', 'destination',
+                 'extra_characteristics')
+
     def __init__(self, episode_info: 'EpisodeInfo', card_class: 'CardType',
                  base_source: Path, destination: Path, **extras: dict) -> None:
         """

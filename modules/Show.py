@@ -16,12 +16,19 @@ from modules.YamlReader import YamlReader
 
 class Show(YamlReader):
     """
-    This class describes a show. A show encapsulates the names and preferences
+    This class describes a show. A Show encapsulates the names and preferences
     with a complete series of episodes. Each object inherits many preferences 
     from the global `PreferenceParser` object, but manually specified attributes
     within the Show's YAML take precedence over the global enables, with the
     exception of Interface objects (such as Sonarr and TMDb).
     """
+
+    __slots__ = ('preferences', '__library_map', 'series_info', 'valid',
+                 'media_directory', 'card_class', 'episode_text_format',
+                 'library_name', 'library', 'archive', 'sonarr_sync',
+                 'sync_specials', 'tmdb_sync', 'hide_seasons','__episode_range',
+                 '__season_map', 'title_language', 'font', 'source_directory',
+                 'logo', 'file_interface', 'profile', 'episodes')
 
 
     def __init__(self, name: str, yaml_dict: dict, library_map: dict, 
@@ -399,12 +406,12 @@ class Show(YamlReader):
         # Go through every episode and look for translations
         modified = False
         for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
-            # Update progress bar
-            pbar.set_description(f'Checking {episode}')
-
             # If the key already exists, skip this episode
             if self.title_language['key'] in episode.extra_characteristics:
                 continue
+
+            # Update progress bar
+            pbar.set_description(f'Checking {episode}')
 
             # Query TMDb for the title of this episode in the requested language
             language_title = tmdb_interface.get_episode_title(

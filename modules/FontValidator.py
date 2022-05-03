@@ -14,12 +14,14 @@ class FontValidator:
 
     """File to the font validation map that persists between runs"""
     FONT_VALIDATION_MAP = Path(__file__).parent / '.objects' / 'fvm.yml'
+
+    __slots__ = ('__fonts', '__warned')
     
 
     def __init__(self) -> None:
         """
         Constructs a new instance. This creates the parent directory for the 
-        temporary font map if it exists, and reads the font map if it exists.
+        temporary font map if it does not exist, and reads the font map if does.
         """
 
         # Attept to read existing font file if it exists
@@ -92,14 +94,14 @@ class FontValidator:
         """
 
         # If this font and character has been checked, return that
-        if (status := self.__fonts.get(font_filepath, {}).get(character, None)):
-            return status
+        if character in self.__fonts.get(font_filepath, {}):
+            return self.__fonts[font_filepath][character]
 
         # Get the ordinal value of this character
         glyph = ord(character)
 
         # Go through each table in this font, return True if in a cmap
-        for table in TTFont(font_filepath)['cmap'].tables:
+        for table in TTFont(font_filepath, fontNumber=0)['cmap'].tables:
             if glyph in table.cmap:
                 # Update map for this character, return True
                 self.__set_character(font_filepath, character, True)

@@ -10,6 +10,11 @@ class MultiEpisode:
     (sequentially) episode info and source.
     """
 
+    __slots__ = ('season_number', 'episode_start', 'episode_end', 'abs_start',
+                 'abs_end', 'episode_info', 'card_class', 'source',
+                 'extra_characteristics', 'destination')
+
+
     def __init__(self, episodes: ['Episode'], title: 'Title') -> None:
         """
         Constructs a new instance of a MultiEpisode that represents the given

@@ -99,6 +99,10 @@ genre_group.add_argument(
     metavar=('SOURCE', 'GENRE', 'DESTINATION'),
     help='Create a genre card with the given text')
 genre_group.add_argument(
+    '--borderless',
+    action='store_true',
+    help='Make the specified Genre Card transparent')
+genre_group.add_argument(
     '--genre-card-batch',
     type=Path,
     default=SUPPRESS,
@@ -119,11 +123,12 @@ tmdb_group = parser.add_argument_group(
     'Fixes for how the Maker interacts with TheMovieDatabase')
 tmdb_group.add_argument(
     '--tmdb-download-images',
-    nargs=6,
+    nargs=5,
     default=SUPPRESS,
     action='append',
-    metavar=('API_KEY', 'TITLE', 'YEAR', 'SEASON', 'EPISODES', 'DIRECTORY'),
-    help='Download the best title card source image for the given episode')
+    metavar=('TITLE', 'YEAR', 'SEASON', 'EPISODES', 'DIRECTORY'),
+    help='Download the title card source images for the given season of the '
+         'given series')
 tmdb_group.add_argument(
     '--delete-blacklist',
     action='store_true',
@@ -179,6 +184,7 @@ if hasattr(args, 'genre_card'):
         genre=args.genre_card[1],
         output=Path(args.genre_card[2]),
         font_size=float(args.font_size[:-1])/100.0,
+        borderless=args.borderless,
     ).create()
 
 if hasattr(args, 'genre_card_batch'):
@@ -206,12 +212,12 @@ if hasattr(args, 'delete_blacklist'):
 if hasattr(args, 'tmdb_download_images'):
     for arg_set in args.tmdb_download_images:
         TMDbInterface.manually_download_season(
-            api_key=arg_set[0],
-            title=arg_set[1],
-            year=int(arg_set[2]),
-            season=int(arg_set[3]),
-            episode_count=int(arg_set[4]),
-            directory=Path(arg_set[5]),
+            api_key=pp.tmdb_api_key,
+            title=arg_set[0],
+            year=int(arg_set[1]),
+            season=int(arg_set[2]),
+            episode_count=int(arg_set[3]),
+            directory=Path(arg_set[4]),
         )
 
 if hasattr(args, 'add_language'):

@@ -37,32 +37,30 @@ class ShowArchive:
         'hidden-generic':  'No Season Titles, Generic Font',
     }
 
+    __slots__ = ('series_info', '__base_show', 'shows', 'summaries')
+
+
     def __init__(self, archive_directory: 'Path', base_show: 'Show') -> None:
         """
         Constructs a new instance of this class. Creates a list of all
         applicable Show objects for later us.
         
         :param      archive_directory:  The base directory where this
-                                        show should generate its archive. i.e.
-                                        `/Documents/` would operate on 
-                                        `/Documents/Title (Year)/...`.
-
-        :param      base_show:          Base Show object this Archive is based
-                                        on.
+                                        show should generate its archive.
+        :param      base_show:          Base Show this Archive is based on.
         """
-        
-        # Empty lists to be populated with modified Show and ShowSummary objects
-        self.shows = []
-        self.summaries = []
 
         # If the base show for this object has archiving disabled, exit
         self.series_info = base_show.series_info
         self.__base_show = base_show
 
-        # For each applicable sub-profile, create and modify new show/show summary
-        valid_profiles = base_show.profile.get_valid_profiles(
-            base_show.card_class
-        )
+        # Empty lists to be populated with modified Show and ShowSummary objects
+        self.shows = []
+        self.summaries = []
+
+        # For each applicable sub-profile, create+modify new Show/ShowSummary
+        card_class = base_show.card_class
+        valid_profiles = base_show.profile.get_valid_profiles(card_class)
 
         # Go through each valid profile
         for profile_attributes in valid_profiles:

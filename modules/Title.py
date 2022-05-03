@@ -21,6 +21,9 @@ class Title:
     """Characters that should be used for priority splitting between lines"""
     SPLIT_CHARACTERS = (':', ',', ')', ']', '?', '!', '-', '.', '/')
 
+    __slots__ = ('full_title', '__title_lines', '__manually_specified',
+                 'title_yaml', 'match_title')
+
 
     def __init__(self, title) -> None:
         """
@@ -225,7 +228,7 @@ class Title:
         :returns:   The input `text` with all non A-Z characters removed.
         """
 
-        return ''.join(filter(lambda c: match('[a-zA-Z0-9]', c), text)).lower()
+        return ''.join(filter(str.isalnum, text)).lower()
 
 
     def matches(self, *titles: tuple) -> bool:

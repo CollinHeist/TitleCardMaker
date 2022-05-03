@@ -23,6 +23,9 @@ class ImageMaker(ABC):
     """
     VALID_IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.tiff', '.gif')
 
+    __slots__ = ('preferences', 'image_magick')
+
+
     @abstractmethod
     def __init__(self) -> None:
         """
@@ -41,7 +44,8 @@ class ImageMaker(ABC):
         )
 
         # Create temporary directory if DNE
-        self.TEMP_DIR.mkdir(parents=True, exist_ok=True)
+        if not self.TEMP_DIR.exists():
+            self.TEMP_DIR.mkdir(parents=True, exist_ok=True)
 
 
     @abstractmethod
