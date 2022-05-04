@@ -80,7 +80,7 @@ class PreferenceParser(YamlReader):
 
 
     def __repr__(self) -> str:
-        """Returns a unambiguous string representation of the object."""
+        """Returns an unambiguous string representation of the object."""
 
         return f'<PreferenceParser {self.file=}, {self.valid=}>'
 

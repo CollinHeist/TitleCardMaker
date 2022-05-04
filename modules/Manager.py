@@ -264,7 +264,7 @@ class Manager:
         file.parent.mkdir(parents=True, exist_ok=True)
 
         # Write updated data with this entry added
-        with file.open('w') as file_handle:
+        with file.open('w', encoding='utf-8') as file_handle:
             dump(missing, file_handle, allow_unicode=True, width=120)
 
         log.info(f'Wrote missing assets to "{file.name}"')

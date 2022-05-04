@@ -239,7 +239,7 @@ class ShowSummary(ImageMaker):
         command = ' '.join([
             f'composite',
             f'-gravity south',
-            f'-geometry +0+{25+y_offset}',
+            f'-geometry +0+{35+y_offset}',
             f'"{self.__CREATED_BY_PATH.resolve()}"',
             f'"{montage_and_logo.resolve()}"',
             f'"{self.output.resolve()}"',
