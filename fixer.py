@@ -2,6 +2,8 @@ from argparse import ArgumentParser, ArgumentTypeError, SUPPRESS
 from pathlib import Path
 
 try:
+    from yaml import dump
+
     from modules.DataFileInterface import DataFileInterface
     from modules.GenreMaker import GenreMaker
     from modules.PreferenceParser import PreferenceParser
@@ -87,7 +89,7 @@ title_card_group.add_argument(
     metavar='PIXELS',
     help='How many pixels to increase the interline spacing of for title text')
 
-# Argument group for genre maker
+# Argument group for genre cards
 genre_group = parser.add_argument_group(
     'Genre Cards',
     'Manual genre card creation')
@@ -113,11 +115,17 @@ genre_group.add_argument(
 # Argument group for fixes relating to Sonarr
 sonarr_group = parser.add_argument_group('Sonarr')
 sonarr_group.add_argument(
+    '--read-all-series',
+    type=Path,
+    default=SUPPRESS,
+    metavar='FILE',
+    help='Create a generic series YAML file for all the series in Sonarr')
+sonarr_group.add_argument(
     '--sonarr-list-ids',
     action='store_true',
     help="Whether to list all the ID's for all shows within Sonarr")
 
-# Argument group for fixes relating to TheMovieDatabase
+# Argument group for TMDb
 tmdb_group = parser.add_argument_group(
     'TheMovieDatabase',
     'Fixes for how the Maker interacts with TheMovieDatabase')
@@ -198,6 +206,37 @@ if hasattr(args, 'genre_card_batch'):
             ).create()
 
 # Execute Sonarr related options
+if hasattr(args, 'read_all_series'):
+    # Create SonarrInterface
+    si = SonarrInterface(pp.sonarr_url, pp.sonarr_api_key)
+
+    # Create YAML
+    yaml = {'libraries': {}, 'series': {}}
+    for series_info, media_directory in si.get_all_series():
+        # Add library section
+        library = {'path': str(media_directory.parent.resolve())}
+        yaml['libraries'][media_directory.parent.name] = library
+
+        # Get series key for this series
+        if series_info.name in yaml.get('series', {}):
+            if series_info.full_name in yaml.get('series', {}):
+                key = f'{series_info.name} ({series_info.tvdb_id})'
+            else:
+                key = series_info.full_name
+        else:
+            key = series_info.name
+
+        # Create YAML entry for this series
+        yaml['series'][key] = {
+            'year': series_info.year,
+            'library': media_directory.parent.name,
+            'media_directory': str(media_directory.resolve()),
+        }
+
+    # Write YAML to the specified file
+    with args.read_all_series.open('w', encoding='utf-8') as file_handle:
+        dump(yaml, file_handle, allow_unicode=True)
+
 if args.sonarr_list_ids:
     if not pp.use_sonarr:
         log.warning("Cannot print Sonarr ID's if Sonarr is disabled")
