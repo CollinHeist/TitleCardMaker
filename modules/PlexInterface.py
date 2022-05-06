@@ -171,43 +171,45 @@ class PlexInterface:
         if len(filtered_episodes) == 0:
             return None
 
-        # If no episodes, or the given library cannot be found, exit
+        # If the given library cannot be found, exit
         if not (library := self.__get_library(library_name)):
             return None
 
-        # Exit if the given series cannot be found in this library
+        # If the given series cannot be found in this library, exit
         if not (series := self.__get_series(library, series_info)):
             return None
 
         # Go through each episode within Plex, set title cards
-        for episode in (pbar := tqdm(series.episodes(), leave=False)):
+        for episode in (pbar := tqdm(series.episodes(), **TQDM_KWARGS)):
+            # Skip episodes that aren't in list of cards to update
+            ep_key = f'{episode.parentIndex}-{episode.index}'
+            if ep_key not in filtered_episodes:
+                continue
+
             # Update progress bar
             pbar.set_description(f'Updating {episode.seasonEpisode.upper()}')
             
-            # If this Plex episode is among the list of cards to update
-            ep_key = f'{episode.parentIndex}-{episode.index}'
-            if ep_key in filtered_episodes:
-                # Upload card to Plex
-                card_file = filtered_episodes[ep_key].destination
-                try:
-                    episode.uploadPoster(filepath=card_file.resolve())
-                except Exception as e:
-                    log.error(f'Unable to upload {card_file} to {series_info} -'
-                              f' Plex returned "{e}"')
-                    continue
-                
-                # Update the loaded map with this card's size
-                size = card_file.stat().st_size
-                series_name = series_info.full_name
+            # Upload card to Plex
+            card_file = filtered_episodes[ep_key].destination
+            try:
+                episode.uploadPoster(filepath=card_file.resolve())
+            except Exception as e:
+                log.error(f'Unable to upload {card_file} to {series_info} - '
+                          f'Plex returned "{e}"')
+                continue
+            
+            # Update the loaded map with this card's size
+            size = card_file.stat().st_size
+            series_name = series_info.full_name
 
-                # Update loaded map with this entry
-                if library_name in self.__loaded:
-                    if series_name in self.__loaded[library_name]:
-                        self.__loaded[library_name][series_name][ep_key] = size
-                    else:
-                        self.__loaded[library_name][series_name] = {ep_key:size}
+            # Update loaded map with this entry
+            if library_name in self.__loaded:
+                if series_name in self.__loaded[library_name]:
+                    self.__loaded[library_name][series_name][ep_key] = size
                 else:
-                    self.__loaded[library_name] = {series_name: {ep_key: size}}
+                    self.__loaded[library_name][series_name] = {ep_key: size}
+            else:
+                self.__loaded[library_name] = {series_name: {ep_key: size}}
 
         # Write updated loaded map to file
         with self.LOADED_CARDS.open('w', encoding='utf-8') as file_handle:

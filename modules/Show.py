@@ -104,6 +104,7 @@ class Show(YamlReader):
         # Update derived attributes
         self.source_directory = source_directory / self.series_info.legal_path
         self.logo = self.source_directory / self.preferences.logo_filename
+        self.backdrop = self.source_directory / self.BACKDROP_FILENAME
 
         # Create DataFileInterface fo this show
         self.file_interface = DataFileInterface(
@@ -464,8 +465,8 @@ class Show(YamlReader):
                 continue
 
             # If the title card source images doesn't exist and can query TMDb..
-            if (not episode.source.exists()
-                and self.tmdb_sync and tmdb_interface):
+            if (self.tmdb_sync and tmdb_interface
+                and not episode.source.exists()):
                 # Query TMDbInterface for image
                 image_url = tmdb_interface.get_source_image(
                     self.series_info,
