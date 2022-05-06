@@ -50,7 +50,7 @@ class TMDbInterface(WebInterface):
 
     """Filename for where to store blacklisted entries"""
     __BLACKLIST_FILE = Path(__file__).parent / '.objects' / 'db_blacklist.yml'
-    __EMPTY_BLACKLIST = {'image': {}, 'title': {}, 'logo': {}}
+    __EMPTY_BLACKLIST = {'image': {}, 'title': {}, 'logo': {}, 'backdrop': {}}
 
     """Filename where mappings of series full titles to TMDB ids is stored"""
     __ID_MAP: Path = Path(__file__).parent / '.objects' / 'db_id_map.yml'
@@ -112,7 +112,7 @@ class TMDbInterface(WebInterface):
             return self.__EMPTY_BLACKLIST
 
         # Missing query type section or section isn't a dictionary?
-        for query_type in ('image', 'title', 'logo'):
+        for query_type in ('image', 'title', 'logo', 'backdrop'):
             if (query_type not in blacklist
                 or not isinstance(blacklist[query_type], dict)):
                 blacklist[query_type] = {}
@@ -143,8 +143,8 @@ class TMDbInterface(WebInterface):
                            episode_info: EpisodeInfo, query_type: str) -> None:
         """
         Adds the given request to the blacklist; indicating that this exact
-        request shouldn't be queried to TheMovieDB for another day. Write the
-        updated blacklist to file
+        request shouldn't be queried to TMDb for another day. Write the updated
+        blacklist to file
         
         :param      series_info:    SeriesInfo for the request.
         :param      episode_info:   EpisodeInfo for the request.
@@ -152,7 +152,7 @@ class TMDbInterface(WebInterface):
         """
 
         # Key for this entry based on the query type
-        if query_type == 'logo':
+        if query_type in ('logo', 'backdrop'):
             key = series_info.full_name
         else:
             key = f'{series_info.full_name}-{episode_info.key}'
@@ -193,7 +193,7 @@ class TMDbInterface(WebInterface):
             return False
 
         # Key for this entry based on the query type
-        if query_type == 'logo':
+        if query_type in ('logo', 'backdrop'):
             key = series_info.full_name
         else:
             key = f'{series_info.full_name}-{episode_info.key}'
@@ -393,27 +393,33 @@ class TMDbInterface(WebInterface):
         return None
 
 
-    def __determine_best_image(self, images: list) -> dict:
+    def __determine_best_image(self, images: list,
+                               source_image: bool=True) -> dict:
         """
         Determines the best image, returning it's contents from within the
         database return JSON.
         
-        :param      images: The results from the database. Each entry is a new
-                            image to be considered.
+        :param      images:         The results from the database. Each entry is
+                                    a newimage to be considered.
+        :param      source_image:   Whether the images being selected are source
+                                    images or not. If True, then images must
+                                    meet the minimum resolution requirements.
         
         :returns:   The "best" image for title card creation. This is determined
                     using the images' dimensions. Priority given to largest
-                    image. None is returned if no images passed the minimum
-                    dimension requirements in preferences.
+                    image. None if there are no valid images.
         """
 
         # Pick the best image based on image dimensions, and then vote average
         best_image = {'index': 0, 'pixels': 0, 'score': 0}
         valid_image = False
         for index, image in enumerate(images):
-            # If either dimension is too small, skip
+            # Get image dimensions
             width, height = int(image['width']), int(image['height'])
-            if not self.preferences.meets_minimum_resolution(width, height):
+
+            # If source image selection, check dimensions
+            if (source_image and
+                not self.preferences.meets_minimum_resolution(width, height)):
                 continue
 
             # If the image has valid dimensions,get pixel count and vote average
@@ -515,7 +521,7 @@ class TMDbInterface(WebInterface):
             return None
 
         # Get the best image, None is returned if requirements weren't met
-        best_image = self.__determine_best_image(results['stills'])
+        best_image = self.__determine_best_image(results['stills'], True)
         if not best_image:
             log.debug(f'TMDb images for "{series_info}" {episode_info} do not '
                       f'meet dimensional requirements')
@@ -580,22 +586,22 @@ class TMDbInterface(WebInterface):
         """
         Get the 'best' logo for the given series.
         
-        :param      series_info:    SeriesInfo for the entry.
+        :param      series_info:    Series to get the logo of.
         
         :returns:   URL to the 'best' logo for the given series, and None if no
                     images are available.
         """
 
-        # Don't query the database if this episode is in the blacklist
+        # Don't query the database if this series logo is blacklisted
         if self.__is_blacklisted(series_info, None, 'logo'):
             return None
 
-        # Set the TV id for the provided series+year
+        # Set the TV id for the provided series
         self.__set_tmdb_id(series_info)
 
         # GET params
         url = f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/images'
-        params = {'api_key': self.__api_key}
+        params = self.__standard_params
         results = self._get(url=url, params=params)
 
         # If there are no logos (or series not found), blacklist and exit
@@ -631,6 +637,42 @@ class TMDbInterface(WebInterface):
             return None
 
         return f'https://image.tmdb.org/t/p/original{best["file_path"]}'
+
+
+    def get_series_backdrop(self, series_info: SeriesInfo) -> str:
+        """
+        Get the 'best' backdrop for the given series.
+        
+        :param      series_info:    Series to get the logo of.
+        
+        :returns:   URL to the 'best' backdrop for the given series, and None if
+                    no images are available.
+        """
+
+        # Don't query the database if this episode is in the blacklist
+        if self.__is_blacklisted(series_info, None, 'backdrop'):
+            return None
+
+        # Set the TV id for the provided series
+        self.__set_tmdb_id(series_info)
+
+        # GET params
+        url = f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/images'
+        params = {'api_key': self.__api_key, 'include_image_language': 'null'}
+        results = self._get(url=url, params=params)
+
+        # If there are no backdrops (or series not found), blacklist and exit
+        if len(results.get('backdrops', [])) == 0:
+            self.__update_blacklist(series_info, None, 'backdrop')
+            return None
+
+        # Get the best image, None is returned if requirements weren't met
+        best_image = self.__determine_best_image(results['backdrops'], False)
+        if not best_image:
+            self.__update_blacklist(series_info, None, 'backdrop')
+            return None
+
+        return f'https://image.tmdb.org/t/p/original{best_image["file_path"]}'
 
 
     @staticmethod
