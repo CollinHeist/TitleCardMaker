@@ -14,7 +14,8 @@ class Font:
 
     __slots__ = ('valid', '__yaml', '__card_class', '__series_info',
                  '__validator', '__validate', 'color', 'size', 'file',
-                 'replacements', 'case', 'vertical_shift', 'interline_spacing')
+                 'replacements', 'case_name', 'case', 'vertical_shift',
+                 'interline_spacing')
     
 
     def __init__(self, yaml, font_map: dict, card_class: 'CardType',
@@ -80,6 +81,7 @@ class Font:
                           f'is invalid')
                 self.valid = False
             else:
+                self.case_name = value
                 self.case = self.__card_class.CASE_FUNCTIONS[value]
 
         # Font color
@@ -153,9 +155,8 @@ class Font:
         self.size = 1.0
         self.file = self.__card_class.TITLE_FONT
         self.replacements = self.__card_class.FONT_REPLACEMENTS
-        self.case = self.__card_class.CASE_FUNCTIONS[
-            self.__card_class.DEFAULT_FONT_CASE
-        ]
+        self.case_name = self.__card_class.DEFAULT_FONT_CASE
+        self.case = self.__card_class.CASE_FUNCTIONS[self.case_name]
         self.vertical_shift = 0
         self.interline_spacing = 0
 
