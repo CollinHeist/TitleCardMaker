@@ -7,6 +7,7 @@ from yaml import safe_load
 from modules.Debug import log, TQDM_KWARGS
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.ImageMaker import ImageMaker
+from modules.PlexInterface import PlexInterface
 from modules.Show import Show
 from modules.ShowSummary import ShowSummary
 from modules.Template import Template
@@ -60,6 +61,7 @@ class PreferenceParser(YamlReader):
         self.use_plex = False
         self.plex_url = None
         self.plex_token = 'NA'
+        self.plex_unwatched = PlexInterface.DEFAULT_UNWATCHED_ACTION
         self.use_sonarr = False
         self.sonarr_url = None
         self.sonarr_api_key = None
@@ -181,6 +183,15 @@ class PreferenceParser(YamlReader):
 
         if (value := self['plex', 'token']):
             self.plex_token = value
+
+        if (value := self['plex', 'unwatched']):
+            if str(value).lower() not in PlexInterface.VALID_UNWATCHED_ACTIONS:
+                options = '", "'.join(PlexInterface.VALID_UNWATCHED_ACTIONS)
+                log.critical(f'Invalid "unwatched" action, must be one of "'
+                             f'{options}"')
+                self.valid = False
+            else:
+                self.plex_unwatched = value.lower()
 
         if self['sonarr']:
             if not all((self['sonarr', 'url'], self['sonarr', 'api_key'])):

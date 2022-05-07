@@ -8,6 +8,7 @@ from modules.Episode import Episode
 from modules.Font import Font
 from modules.MultiEpisode import MultiEpisode
 import modules.preferences as global_preferences
+from modules.PlexInterface import PlexInterface
 from modules.Profile import Profile
 from modules.SeriesInfo import SeriesInfo
 from modules.TitleCard import TitleCard
@@ -23,12 +24,15 @@ class Show(YamlReader):
     exception of Interface objects (such as Sonarr and TMDb).
     """
 
+    """Filename to the backdrop for a series"""
+    BACKDROP_FILENAME = 'backdrop.jpg'
+
     __slots__ = ('preferences', '__library_map', 'series_info', 'valid',
                  'media_directory', 'card_class', 'episode_text_format',
                  'library_name', 'library', 'archive', 'sonarr_sync',
                  'sync_specials', 'tmdb_sync', 'hide_seasons','__episode_range',
                  '__season_map', 'title_language', 'font', 'source_directory',
-                 'logo', 'file_interface', 'profile', 'episodes')
+                 'logo', 'backdrop', 'file_interface', 'profile', 'episodes')
 
 
     def __init__(self, name: str, yaml_dict: dict, library_map: dict, 
@@ -85,6 +89,7 @@ class Show(YamlReader):
         self.sonarr_sync = True
         self.sync_specials = self.preferences.sonarr_sync_specials
         self.tmdb_sync = True
+        self.unwatched_action = self.preferences.plex_unwatched
         self.hide_seasons = False
         self.__episode_range = {}
         self.__season_map = {n: f'Season {n}' for n in range(1, 100)}
@@ -194,6 +199,13 @@ class Show(YamlReader):
 
         if self._is_specified('tmdb_sync'):
             self.tmdb_sync = bool(self['tmdb_sync'])
+
+        if (value := self['unwatched']):
+            if value.lower() not in PlexInterface.VALID_UNWATCHED_ACTIONS:
+                log.error(f'Invalid unwatched action "{value}" in series {self}')
+                self.valid = False
+            else:
+                self.unwatched_action = value.lower()
 
         if self._is_specified('seasons', 'hide'):
             self.hide_seasons = bool(self['seasons', 'hide'])
@@ -442,6 +454,43 @@ class Show(YamlReader):
             self.read_source()
 
 
+    def modify_unwatched_episodes(self, plex_interface: PlexInterface,
+                                  tmdb_interface: 'TMDbInterface'=None) -> None:
+        """
+        Modify this series' Episode objects based on their watched status in the
+        given PlexInterface. If a backdrop is requested, and TMDb is enabled,
+        then one is downloaded if it DNE.
+        
+        :param      plex_interface: The PlexInterface used to modify the
+                                    Episode objects based on the watched status
+                                    of.
+        :param      tmdb_interface: Optional TMDbInterface to query for a
+                                    backdrop if one is needed and DNE.
+        """
+
+        # Modify episodes based off Plex watched status
+        plex_interface.modify_unwatched_episodes(
+            self.library_name,
+            self.series_info,
+            self.episodes,
+            self.unwatched_action,
+        )
+
+        # If spoiler hiding uses art method..
+        if self.preferences.plex_unwatched in ('art', 'art_all'):
+            # Exit if backdrop exists, or cannot sync to TMDb
+            if (self.backdrop.exists()
+                or not (self.tmdb_sync and tmdb_interface)):
+                return None
+
+            # Query TMDb for the best backdrop
+            backdrop_url = tmdb_interface.get_series_backdrop(self.series_info)
+
+            # Download background art 
+            if backdrop_url:
+                tmdb_interface.download_image(backdrop_url, self.backdrop)
+
+
     def create_missing_title_cards(self,
                                    tmdb_interface: 'TMDbInterface'=None) ->None:
         """
@@ -466,6 +515,7 @@ class Show(YamlReader):
 
             # If the title card source images doesn't exist and can query TMDb..
             if (self.tmdb_sync and tmdb_interface
+                and episode.source != self.backdrop
                 and not episode.source.exists()):
                 # Query TMDbInterface for image
                 image_url = tmdb_interface.get_source_image(
@@ -497,7 +547,7 @@ class Show(YamlReader):
             title_card.create()
 
 
-    def update_plex(self, plex_interface: 'PlexInterface') -> None:
+    def update_plex(self, plex_interface: PlexInterface) -> None:
         """
         Update the given PlexInterface with all title cards for all Episodes
         within this Show.

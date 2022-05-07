@@ -145,6 +145,14 @@ class Manager:
             pbar.set_description(f'Creating Title Cards for '
                                  f'"{show.series_info.short_name}"')
 
+            # Modify unwatched episodes based on Plex watch status
+            if self.preferences.use_plex:
+                if self.preferences.use_tmdb:
+                    show.modify_unwatched_episodes(self.plex_interface,
+                                                   self.tmdb_interface)
+                else:
+                    show.modify_unwatched_episodes(self.plex_interface)
+
             # Pass the TMDbInterface to the show if globally enabled
             if self.preferences.use_tmdb:
                 show.create_missing_title_cards(self.tmdb_interface)
@@ -200,9 +208,11 @@ class Manager:
         calls ShowArchive.create_summary() if summaries are globally enabled.
         """
 
+        # If summaries aren't enabled, skip
         if not self.preferences.create_summaries:
             return None
 
+        # Go through each archive and create summaries
         for show_archive in (pbar := tqdm(self.archives, **TQDM_KWARGS)):
             # Update progress bar
             pbar.set_description(f'Creating ShowSummary for "'

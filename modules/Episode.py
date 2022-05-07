@@ -10,8 +10,9 @@ class Episode:
     map that info to a source and destination file.
     """
 
-    __slots__ = ('episode_info', 'card_class', 'source', 'destination',
-                 'extra_characteristics')
+    __slots__ = ('episode_info', 'card_class', 'source', 'destination', 'blur',
+                 'extra_characteristics', 'spoiler', '_spoil_type')
+    
 
     def __init__(self, episode_info: 'EpisodeInfo', card_class: 'CardType',
                  base_source: Path, destination: Path, **extras: dict) -> None:
@@ -41,6 +42,11 @@ class Episode:
         # Store extra characteristics
         self.extra_characteristics = extras
 
+        # Episodes are spoilers and not blurred until updated
+        self.spoiler = True
+        self.blur = False
+        self._spoil_type = 'spoiled'
+
 
     def __str__(self) -> str:
         """Returns a string representation of the object."""
@@ -52,7 +58,36 @@ class Episode:
         """Returns an unambiguous string representation of the object"""
 
         return (f'<Episode {self.episode_info=}, {self.card_class=}, '
-                f'{self.source=}, {self.destination=}, '
-                f'{self.extra_characteristics=}>')
+                f'{self.source=}, {self.destination=}, {self.spoiler=},'
+                f'{self.blur=}, {self.extra_characteristics=}>')
+
+
+    def delete_card(self) -> None:
+        """Delete the title card for this Episode."""
+
+        self.destination.unlink(missing_ok=True)
+
+
+    def make_spoiler_free(self, action: str) -> None:
+        """
+        Modify this Episode to be spoiler-free according to the given spoil
+        action. This updates the spoiler and blur attribute flags, and changes
+        the source Path for the Episode if art is the specified action.
+        
+        :param      action: Spoiler action to update according to.
+        """
+
+        # Return if action isn't blur or art
+        if action == 'ignore':
+            return None
+
+        # Update spoiler and blur attributes
+        self.spoiler = False
+        self.blur = action in ('blur', 'blur_all')
+        self._spoil_type = 'art' if 'art' in action else 'blur'
+
+        # Blurring, set source to blurred source in 
+        if action in ('art', 'art_all'):
+            self.source = self.source.parent / 'backdrop.jpg'
 
         
