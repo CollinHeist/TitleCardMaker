@@ -185,8 +185,8 @@ class Show(YamlReader):
         if (value := self['media_directory']):
             self.media_directory = Path(value)
 
-        if (value := self['episode_text_format']):
-            self.episode_text_format = value
+        if self._is_specified('episode_text_format'):
+            self.episode_text_format = self['episode_text_format']
 
         if self._is_specified('archive'):
             self.archive = bool(self['archive'])
