@@ -1,4 +1,4 @@
-from copy import deepcopy
+from copy import copy
 
 from modules.Debug import log
 from modules.ShowSummary import ShowSummary
@@ -65,7 +65,7 @@ class ShowArchive:
         # Go through each valid profile
         for profile_attributes in valid_profiles:
             # Create show object for this profile
-            new_show = deepcopy(base_show)
+            new_show = copy(base_show)
 
             # Update media directory
             profile_directory = self.PROFILE_DIRECTORY_MAP[

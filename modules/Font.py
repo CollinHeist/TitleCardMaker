@@ -12,7 +12,7 @@ class Font:
     interline spacing.
     """
 
-    __slots__ = ('valid', '__yaml', '__card_class', '__series_info',
+    __slots__ = ('valid', '__yaml', '__card_class','__font_map','__series_info',
                  '__validator', '__validate', 'color', 'size', 'file',
                  'replacements', 'case_name', 'case', 'vertical_shift',
                  'interline_spacing')
@@ -49,6 +49,7 @@ class Font:
         # Store arguments
         self.__yaml = yaml
         self.__card_class = card_class
+        self.__font_map = font_map
         self.__series_info = series_info
 
         # Use the global FontValidator object

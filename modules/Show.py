@@ -142,6 +142,17 @@ class Show(YamlReader):
         return f'<Show "{self.series_info}" with {len(self.episodes)} Episodes>'
 
 
+    def __copy__(self) -> 'Show':
+        """
+        Copy the given Show.
+        
+        :returns:   A newly constructed Show object.
+        """
+
+        return Show(self.series_info.name, self._base_yaml, self.__library_map,
+                    self.font._Font__font_map, self.source_directory.parent)
+
+
     def __parse_yaml(self):
         """
         Parse the show's YAML and update this object's attributes. Error on any
@@ -467,6 +478,10 @@ class Show(YamlReader):
         :param      tmdb_interface: Optional TMDbInterface to query for a
                                     backdrop if one is needed and DNE.
         """
+
+        # If no library is set, don't update Episode objects
+        if self.library_name == None:
+            return None
 
         # Modify episodes based off Plex watched status
         plex_interface.modify_unwatched_episodes(
