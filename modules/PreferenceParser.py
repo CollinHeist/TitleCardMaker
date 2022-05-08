@@ -54,7 +54,7 @@ class PreferenceParser(YamlReader):
         self.zero_pad_seasons = False
         self.archive_directory = None
         self.create_archive = False
-        self.create_summaries = False
+        self.create_summaries = True
         self.summary_background_color = ShowSummary.BACKGROUND_COLOR
         self.logo_filename = ShowSummary.LOGO_FILENAME
         self.summary_minimum_episode_count = 1
