@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from pathlib import Path
-from yaml import dump, safe_load
+from tinydb import TinyDB, where
+from yaml import safe_load
 
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
@@ -49,11 +50,11 @@ class TMDbInterface(WebInterface):
     }
 
     """Filename for where to store blacklisted entries"""
-    __BLACKLIST_FILE = Path(__file__).parent / '.objects' / 'db_blacklist.yml'
-    __EMPTY_BLACKLIST = {'image': {}, 'title': {}, 'logo': {}, 'backdrop': {}}
+    __BLACKLIST_DB = Path(__file__).parent / '.objects' / 'tmdb_blacklist.json'
 
     """Filename where mappings of series full titles to TMDB ids is stored"""
-    __ID_MAP: Path = Path(__file__).parent / '.objects' / 'db_id_map.yml'
+    __ID_DB = Path(__file__).parent / '.objects' / 'tmdb_ids.json'
+
 
     def __init__(self, api_key: str) -> None:
         """
@@ -67,27 +68,20 @@ class TMDbInterface(WebInterface):
 
         self.preferences = global_preferences.pp
 
-        # Create objects directory if it does not exist
-        self.__ID_MAP.parent.mkdir(parents=True, exist_ok=True)
-        self.__BLACKLIST_FILE.parent.mkdir(parents=True, exist_ok=True)
+        # Create/read blacklist database
+        self.__BLACKLIST_DB.parent.mkdir(parents=True, exist_ok=True)
+        self.__blacklist = TinyDB(self.__BLACKLIST_DB)
 
-        # Attempt to read existing ID map
-        if self.__ID_MAP.exists():
-            with self.__ID_MAP.open('r', encoding='utf-8') as file_handle:
-                self.__id_map = safe_load(file_handle)
-        else:
-            self.__id_map = {'name': {}, 'id': {}}
-
-        # Attempt to read existing blacklist, if DNE, create blank one
-        if self.__BLACKLIST_FILE.exists():
-            with self.__BLACKLIST_FILE.open('r', encoding='utf-8') as fh:
-                self.__blacklist = self.__fix_blacklist(safe_load(fh))
-        else:
-            self.__blacklist = self.__EMPTY_BLACKLIST
+        # Create/read series ID database
+        self.__ID_DB.parent.mkdir(parents=True, exist_ok=True)
+        self.__id_map = TinyDB(self.__ID_DB)
         
         # Store API key
         self.__api_key = api_key
         self.__standard_params = {'api_key': api_key}
+
+        # Import old blacklist if it exists
+        self.__import_old_blacklist()
 
 
     def __repr__(self) -> str:
@@ -96,47 +90,77 @@ class TMDbInterface(WebInterface):
         return f'<TMDbInterface {self.__api_key=}>'
 
 
-    def __fix_blacklist(self, blacklist: dict) -> dict:
+    def __import_old_blacklist(self) -> None:
         """
-        Fix the given blacklist dictionary. This validates required query types
-        are present, that each query type leads to a dictionary, and that each
-        item within those queries has a failure and next key.
-
-        :param      blacklist:  Blacklist to be fixed.
-
-        :returns:   Modified blacklist, with entries fixed.
+        Import old loaded database into new TinyDB. This reads the file and then
+        deletes it.
         """
 
-        # Blacklist isn't a dictionary, set to empty blacklist
-        if not isinstance(blacklist, dict):
-            return self.__EMPTY_BLACKLIST
+        # If old file DNE, return
+        old_file = Path(__file__).parent / '.objects' / 'db_blacklist.yml'
+        if not old_file.exists():
+            return None
 
-        # Missing query type section or section isn't a dictionary?
-        for query_type in ('image', 'title', 'logo', 'backdrop'):
-            if (query_type not in blacklist
-                or not isinstance(blacklist[query_type], dict)):
-                blacklist[query_type] = {}
+        # Load old file
+        try:
+            with old_file.open('r', encoding='utf-8') as fh:
+                old_yaml = safe_load(fh)
+        except Exception:
+            return None
 
-        # Verify each query sub-item is a dictionary with valid values
-        for qt in blacklist:
-            for key in blacklist[qt]:
-                if not isinstance(blacklist[qt][key], dict):
-                    blacklist[qt][key] = {'failures': 1, 'next': datetime.now()}
-                    log.debug(f'Reset blacklist entry for "{qt}" {key}')
-                elif 'failures' not in blacklist[qt][key]:
-                    blacklist[qt][key]['failures'] = 1
-                    log.debug(f'Reset failures for blacklist entry {key}')
-                elif not isinstance(blacklist[qt][key]['failures'], int):
-                    blacklist[qt][key]['failures'] = 1
-                    log.debug(f'Reset failures for blacklist entry {key}')
-                elif 'next' not in blacklist[qt][key]:
-                    blacklist[qt][key]['next'] = datetime.now()
-                    log.debug(f'Reset next for blacklist entry {key}')
-                elif not isinstance(blacklist[qt][key]['next'],datetime):
-                    blacklist[qt][key]['next'] = datetime.now()
-                    log.debug(f'Reset next for blacklist entry {key}')
+        entries = []
+        for query_type, query in old_yaml.items():
+            for entry_key, blacklist in query.items():
+                if query_type in ('logo', 'backdrop'):
+                    entries.append({
+                        'query': query_type,
+                        'series': entry_key,
+                        'failures': blacklist['failures'],
+                        'next': blacklist['next'].timestamp(), 
+                    })
+                else:
+                    series, season, episode = entry_key.rsplit('-', 2)
+                    entries.append({
+                        'query': query_type,
+                        'series': series,
+                        'season': int(season),
+                        'episode': int(episode),
+                        'failures': blacklist['failures'],
+                        'next': blacklist['next'].timestamp(), 
+                    })
 
-        return blacklist
+        # Add entries to DB
+        self.__blacklist.insert_multiple(entries)
+        
+        # Delete old file
+        old_file.unlink()
+
+
+    def __get_condition(self, query_type: str, series_info: SeriesInfo,
+                        episode_info: EpisodeInfo) -> 'QueryInstance':
+        """
+        Get the tinydb query condition for the given query.
+        
+        :param      series_info:    SeriesInfo for the request.
+        :param      episode_info:   EpisodeInfo for the request.
+        :param      query_type:     The type of request being updated.
+        
+        :returns:   The condition that matches the given query type, series, and
+                    Episode season+episode number.and episode.
+        """
+
+        if query_type in ('logo', 'backdrop'):
+            return (
+                (where('query') == query_type) &
+                (where('series') == series_info.full_name)
+            )
+
+        return (
+            (where('query') == query_type) &
+            (where('series') == series_info.full_name) &
+            (where('season') == episode_info.season_number) &
+            (where('episode') == episode_info.episode_number)
+        )
 
 
     def __update_blacklist(self, series_info: SeriesInfo,
@@ -151,28 +175,29 @@ class TMDbInterface(WebInterface):
         :param      query_type:     The type of request being updated.
         """
 
-        # Key for this entry based on the query type
-        if query_type in ('logo', 'backdrop'):
-            key = series_info.full_name
-        else:
-            key = f'{series_info.full_name}-{episode_info.key}'
+        # Get the entry for this request
+        condition = self.__get_condition(query_type, series_info, episode_info)
+        entry = self.__blacklist.get(condition)
 
         # If previously indexed and next has passed, increase count and set next
-        later = datetime.now() + timedelta(days=1)
-        if key in self.__blacklist.get(query_type, {}):
-            if datetime.now() >= self.__blacklist[query_type][key]['next']:
-                # One day has passed, and still failed, increment count
-                self.__blacklist[query_type][key]['failures'] += 1
-                self.__blacklist[query_type][key]['next'] = later
-            else:
-                return None
-        else:
-            # Add new entry to blacklist with 1 failure, next time is in one day
-            self.__blacklist[query_type][key] = {'failures': 1, 'next': later}
+        later = (datetime.now() + timedelta(days=1)).timestamp()
 
-        # Write latest version of blacklist to file
-        with self.__BLACKLIST_FILE.open('w', encoding='utf-8') as file_handle:
-            dump(self.__blacklist, file_handle)
+        # If this entry exists, check that next has passed
+        if entry:
+            if datetime.now().timestamp() >= entry['next']:
+                self.__blacklist.update(
+                    {'failures': entry['failures']+1, 'next': later},
+                    condition
+                )
+        else:
+            self.__blacklist.insert({
+                'query': query_type,
+                'series': series_info.full_name,
+                'season': episode_info.season_number,
+                'episode': episode_info.episode_number,
+                'failures': 1,
+                'next': later,
+            })
 
 
     def __is_blacklisted(self, series_info: SeriesInfo,
@@ -188,48 +213,21 @@ class TMDbInterface(WebInterface):
         :returns:   True if the entry is blacklisted, False otherwise.
         """
 
-        # Skip imediately if this query type has no entries
-        if query_type not in self.__blacklist:
+        # Get the blacklist entry for this request
+        entry = self.__blacklist.get(
+            self.__get_condition(query_type, series_info, episode_info)
+        )
+
+        # If request hasn't been blacklisted, not blacklisted
+        if entry == None:
             return False
 
-        # Key for this entry based on the query type
-        if query_type in ('logo', 'backdrop'):
-            key = series_info.full_name
-        else:
-            key = f'{series_info.full_name}-{episode_info.key}'
-
-        # If never indexed before, skip failure check
-        if key not in self.__blacklist[query_type]:
-            return False
-
-        # Has been indexed before, check if past failure count threshold
-        failures = self.__blacklist[query_type][key]['failures']
-        if failures > self.preferences.tmdb_retry_count:
+        # If too many failures, blacklisted
+        if entry['failures'] > self.preferences.tmdb_retry_count:
             return True
 
-        # If we haven't passed next time, then treat as temporary blacklist
-        # i.e. before next is blacklisted, after next is not
-        return datetime.now() < self.__blacklist[query_type][key]['next']
-
-
-    def __add_id_to_map(self, series_info: SeriesInfo) -> None:
-        """
-        Adds a mapping of this full title to the corresponding TheMovieDB ID. If
-        a TVDb ID was provided, map that as well
-        
-        :param      series_info:    SeriesInfo for the entry.
-        """
-
-        # Map full title to the TMDb id
-        self.__id_map['name'][series_info.full_name] = series_info.tmdb_id
-
-        # If TVDb ID is available, map TVDb ID to the TMDb ID
-        if series_info.tvdb_id != None:
-            self.__id_map['id'][series_info.tvdb_id] = series_info.tmdb_id
-
-        # Write updated map to file
-        with self.__ID_MAP.open('w', encoding='utf-8') as file_handle:
-            dump(self.__id_map, file_handle)
+        # If next hasn't passed, treat as temporary blacklist
+        return datetime.now().timestamp() < entry['next']
 
 
     def __set_tmdb_id(self, series_info: SeriesInfo) -> None:
@@ -242,14 +240,14 @@ class TMDbInterface(WebInterface):
         """
 
         # If TVDb ID is available and is mapped, set that ID
-        if (series_info.tvdb_id != None
-            and series_info.tvdb_id in self.__id_map['id']):
-            series_info.set_tmdb_id(self.__id_map['id'][series_info.tvdb_id])
+        if (series_info.tvdb_id and
+            (val := self.__id_map.get(where('tvdb_id') == series_info.tvdb_id))):
+            series_info.set_tmdb_id(val['tmdb_id'])
             return None
 
         # If already mapped, set that ID
-        if (id_ := self.__id_map['name'].get(series_info.full_name, None)):
-            series_info.set_tmdb_id(id_)
+        if (entry := self.__id_map.get(where('name') == series_info.full_name)):
+            series_info.set_tmdb_id(entry['tmdb_id'])
             return None
 
         # Match by TVDB ID if available
@@ -269,8 +267,9 @@ class TMDbInterface(WebInterface):
                 # Get the TMDb ID for this series, set for object and add to map
                 tmdb_id = results[0]['id']
                 series_info.set_tmdb_id(tmdb_id)
-                self.__add_id_to_map(series_info)
-
+                self.__id_map.insert({'tvdb_id': series_info.tvdb_id,
+                                      'tmdb_id': tmdb_id,
+                                      'name': series_info.full_name})
                 return None
 
         # Match by title and year if no ID was given
@@ -288,7 +287,9 @@ class TMDbInterface(WebInterface):
 
         # Get the TMDb ID for this series, set for object and add to map
         series_info.set_tmdb_id(results['results'][0]['id'])
-        self.__add_id_to_map(series_info)
+        self.__id_map.insert({'tvdb_id': series_info.tvdb_id,
+                              'tmdb_id': series_info.tmdb_id,
+                              'name': series_info.full_name})
 
 
     def __find_episode(self, series_info: SeriesInfo,

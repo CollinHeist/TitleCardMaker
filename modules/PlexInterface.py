@@ -84,24 +84,26 @@ class PlexInterface:
         old_file.unlink()
 
 
-    def __get_loaded_details(self, library_name: str, series_info: 'SeriesInfo',
-                             episode: 'Episode') -> dict:
+    def __get_condition(self, library_name: str, series_info: 'SeriesInfo',
+                        episode: 'Episode') -> 'QueryInstance':
         """
-        Get the loaded dictionary details for the specified entry.
+        Get the tinydb query condition for the given entry.
         
         :param      library_name:   The name of the library containing the
                                     series to get the details of.
         :param      series_info:    The series to get the details of.
         :param      episode:        The Episode object to get the details of.
         
-        :returns:   The loaded details with keys 'filesize' and 'spoiler'. Empty
-                    dictionary if the specified entry DNE.
+        :returns:   The condition that matches the given library, series, and
+                    Episode season+episode number.
         """
 
-        return self.__db.get((where('library') == library_name) &
-                             (where('series') == series_info.full_name) &
-                             (where('season') == episode.episode_info.season) &
-                             (where('episode') == episode.episode_info.episode))
+        return (
+            (where('library') == library_name) &
+            (where('series') == series_info.full_name) &
+            (where('season') == episode.episode_info.season_number) &
+            (where('episode') == episode.episode_info.episode_number)
+        )
 
 
     def __filter_loaded_cards(self, library_name: str, series_info:'SeriesInfo',
@@ -127,7 +129,9 @@ class PlexInterface:
                 continue
 
             # Get current details of this episode
-            details =self.__get_loaded_details(library_name,series_info,episode)
+            details = self.__db.get(
+                self.__get_condition(library_name, series_info, episode)
+            )
 
             # If this episode has never been loaded, add
             if details == None:
@@ -247,8 +251,8 @@ class PlexInterface:
                 continue
 
             # Get loaded card characteristics for this episode, skip if unloaded
-            loaded = self.__get_loaded_details(library_name,series_info,episode)
-            if loaded == None:
+            condition = self.__get_condition(library_name, series_info, episode)
+            if (loaded := self.__db.get(condition)) == None:
                 continue
 
             # Spoil characteristics for this card            
@@ -279,13 +283,7 @@ class PlexInterface:
             # Delete card, reset size in loaded map to force reload
             if delete_and_reset:
                 episode.delete_card()
-                self.__db.update(
-                    {'filesize': 0},
-                    (where('library') == library_name) &
-                    (where('series') == series_info.full_name) &
-                    (where('season') == episode.episode_info.season) &
-                    (where('episode') == episode.episode_info.episode)
-                )
+                self.__db.update({'filesize': 0}, condition)
 
 
     def set_title_cards_for_series(self, library_name: str, 
@@ -345,14 +343,12 @@ class PlexInterface:
             series_name = series_info.full_name
 
             # Update loaded map with this entry
-            loaded = self.__get_loaded_details(library_name,series_info,episode)
+            condition = self.__get_condition(library_name, series_info, episode)
+            loaded = self.__db.get(condition)
             if loaded:
                 self.__db.update(
                     {'filesize': size, 'spoiler': episode._spoil_type},
-                    (where('library') == library_name) &
-                    (where('series') == series_info.full_name) &
-                    (where('season') == episode.episode_info.season) &
-                    (where('episode') == episode.episode_info.episode)
+                    condition
                 )
             else:
                 self.__db.insert({
