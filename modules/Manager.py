@@ -209,7 +209,8 @@ class Manager:
         """
 
         # If summaries aren't enabled, skip
-        if not self.preferences.create_summaries:
+        if (not self.preferences.create_archive
+            or not self.preferences.create_summaries):
             return None
 
         # Go through each archive and create summaries

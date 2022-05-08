@@ -1,5 +1,6 @@
 from logging import Formatter, Handler, getLogger
 from logging import NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL
+
 from tqdm import tqdm
 
 """TQDM bar format string"""

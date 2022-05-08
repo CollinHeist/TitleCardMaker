@@ -1,8 +1,9 @@
 from pathlib import Path
 
 from plexapi.server import PlexServer, NotFound
+from tinydb import TinyDB, where
 from tqdm import tqdm
-from yaml import safe_load, dump
+from yaml import safe_load
 
 from modules.Debug import log, TQDM_KWARGS
 
@@ -10,16 +11,13 @@ class PlexInterface:
     """
     This class describes an interface to Plex for the purpose of pulling in new
     title card images.
-
-    Get the plex token from this webpage:
-    https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
     """
 
     """Directory for all temporary objects"""
     TEMP_DIR = Path(__file__).parent / '.objects'
 
-    """Filepath to the map of each episode's loaded card size (from os.stat)"""
-    LOADED_CARDS = TEMP_DIR / 'loaded_cards.yml'
+    """Filepath to the database of each episode's loaded card characteristics"""
+    LOADED_DB = TEMP_DIR / 'loaded.json'
 
     """Action to take for unwatched episodes"""
     VALID_UNWATCHED_ACTIONS = ('ignore', 'blur', 'art', 'blur_all', 'art_all')
@@ -38,50 +36,52 @@ class PlexInterface:
         # Create PlexServer object with these arguments
         self.__server = PlexServer(url, x_plex_token)
 
-        # Read map of show name, key, and file size (in bytes)
-        if self.LOADED_CARDS.exists():
-            try:
-                with self.LOADED_CARDS.open('r', encoding='utf-8') as fh:
-                    self.__loaded = self.__update_loaded(safe_load(fh)['sizes'])
+        # Create/read loaded card database
+        self.LOADED_DB.parent.mkdir(parents=True, exist_ok=True)
+        self.__db = TinyDB(self.LOADED_DB)
 
-                # Write updated loaded map to file
-                self.__write_loaded()
-            except Exception as e:
-                log.debug(f'Error reading loaded card map - {e}')
-                self.__loaded = {}
-        else:
-            # Create parent directories if necessary
-            self.LOADED_CARDS.parent.mkdir(parents=True, exist_ok=True)
-            self.__loaded = {}
+        # Import old database if it exists
+        self.__import_old_db()
 
 
-    def __write_loaded(self) -> None:
-        """Write the loaded dictionary to file."""
-
-        # Write updated loaded map to file
-        with self.LOADED_CARDS.open('w', encoding='utf-8') as file_handle:
-            dump({'sizes': self.__loaded}, file_handle, allow_unicode=True)
-
-
-    def __update_loaded(self, yaml: dict) -> dict:
+    def __import_old_db(self) -> None:
         """
-        Update the loaded dictionary from old style to new. This keeps old
-        filesizes and adds spoiler attribute for each card.
-        
-        :param      yaml:   The YAML of the loaded file to update.
-        
-        :returns:   Modified YAML with each 'old' entry converted.
+        Import old loaded database into new TinyDB. This reads the file and then
+        deletes it.
         """
 
-        # Go through each item one-by-one, update to new format
-        for library_name, library in yaml.items():
+        # If old map doesn't exist, nothing to do
+        if not (old_file := self.TEMP_DIR / 'loaded_cards.yml').exists():
+            return None
+
+        # Read old file
+        try:
+            with old_file.open('r', encoding='utf-8') as fh:
+                old_yaml = safe_load(fh)['sizes']
+        except Exception:
+            return None
+
+        # Go through each entry, adding to list to add to DB all-at-once
+        entries = []
+        for library_name, library in old_yaml.items():
             for series_name, series in library.items():
-                for episode_key, loaded in series.items():
-                    if isinstance(loaded, int):
-                        yaml[library_name][series_name][episode_key] = \
-                            {'filesize': loaded, 'spoiler': 'spoiled'}
+                for episode_key, filesize in series.items():
+                    # Get DB-equivalent of this entry
+                    season_num, episode_num = map(int, episode_key.split('-'))
+                    entries.append({
+                        'library': library_name,
+                        'series': series_name,
+                        'season': season_num,
+                        'episode': episode_num,
+                        'filesize': filesize,
+                        'spoiler': 'spoiled',
+                    })                    
 
-        return yaml
+        # Add entries to DB
+        self.__db.insert_multiple(entries)
+
+        # Delete old file
+        old_file.unlink()
 
 
     def __get_loaded_details(self, library_name: str, series_info: 'SeriesInfo',
@@ -98,16 +98,10 @@ class PlexInterface:
                     dictionary if the specified entry DNE.
         """
 
-        # If this library hasn't been loaded, return 
-        if not (library := self.__loaded[library_name]):
-            return {}
-
-        # If this series hasn't been loaded, return
-        if not (series := library.get(series_info.full_name)):
-            return {}
-
-        # Return contents for this episode (or blank)
-        return series.get(episode.episode_info.key, {})
+        return self.__db.get((where('library') == library_name) &
+                             (where('series') == series_info.full_name) &
+                             (where('season') == episode.episode_info.season) &
+                             (where('episode') == episode.episode_info.episode))
 
 
     def __filter_loaded_cards(self, library_name: str, series_info:'SeriesInfo',
@@ -132,23 +126,16 @@ class PlexInterface:
             if not episode.destination or not episode.destination.exists():
                 continue
 
-            # If this library is new, don't filter
-            if not (library_loaded := self.__loaded.get(library_name, {})):
+            # Get current details of this episode
+            details =self.__get_loaded_details(library_name,series_info,episode)
+
+            # If this episode has never been loaded, add
+            if details == None:
                 filtered[key] = episode
                 continue
 
-            # Check if this episode matches what was loaded for this series
-            if (show_loaded := library_loaded.get(series_info.full_name, {})):
-                # Get the previously loaded filesize (or 0 if never loaded)
-                ep_loaded = show_loaded.get(episode.episode_info.key, {})
-                old_size = ep_loaded.get('filesize', 0)
-
-                # If new or different card, don't filter
-                if (not old_size
-                    or episode.destination.stat().st_size != old_size):
-                    filtered[key] = episode
-            else:
-                # If series has never been loaded before, don't filter
+            # If the loaded filesize is different, add
+            if details['filesize'] != episode.destination.stat().st_size:
                 filtered[key] = episode
 
         return filtered
@@ -259,16 +246,19 @@ class PlexInterface:
             if not (episode := episode_map.get(ep_key)):
                 continue
 
+            # Get loaded card characteristics for this episode, skip if unloaded
+            loaded = self.__get_loaded_details(library_name,series_info,episode)
+            if loaded == None:
+                continue
+
             # Spoil characteristics for this card            
             spoiler_free = (unwatched != 'ignore'
                             and not plex_episode.isWatched)
             spoiler = plex_episode.isWatched and not all_spoiler_free
-
-            # Get loaded card characteristics for this episode
-            loaded = self.__get_loaded_details(library_name,series_info,episode)
-            spoiler_status = loaded.get('spoiler')
+            spoiler_status = loaded['spoiler']
 
             # If episode needs to be spoiler-free
+            delete_and_reset = False
             if all_spoiler_free or spoiler_free:
                 # Update episode source
                 episode.make_spoiler_free(unwatched)
@@ -276,25 +266,26 @@ class PlexInterface:
                 # If loaded card is spoiler, or wrong style
                 if (spoiler_status == 'spoiled'
                     or spoiler_status != spoil_type):
-                    # Delete card, reset size in loaded map to force reload
-                    episode.delete_card()
-                    self.__loaded[library_name][series_info.full_name]\
-                        [ep_key]['filesize'] = 0
+                    delete_and_reset = True
                     log.debug(f'Deleted card for {series_info} {episode} - want'
                               f' spoiler-free card')
-                continue
 
             # If episode needs to be a spoiler and has been loaded already
             if (all_spoiler or spoiler) and spoiler_status != 'spoiled':
-                # Delete card, reset size in loaded map to force reload
-                episode.delete_card()
-                self.__loaded[library_name][series_info.full_name]\
-                    [ep_key]['filesize'] = 0
-                log.debug(f'Deleted card for {series_info} {episode} - want'
-                          f' spoiler card')
+                delete_and_reset = True
+                log.debug(f'Deleted card for {series_info} {episode} - want '
+                          f'spoiler card')
 
-        # Write updated loaded map to file
-        self.__write_loaded()
+            # Delete card, reset size in loaded map to force reload
+            if delete_and_reset:
+                episode.delete_card()
+                self.__db.update(
+                    {'filesize': 0},
+                    (where('library') == library_name) &
+                    (where('series') == series_info.full_name) &
+                    (where('season') == episode.episode_info.season) &
+                    (where('episode') == episode.episode_info.episode)
+                )
 
 
     def set_title_cards_for_series(self, library_name: str, 
@@ -332,40 +323,45 @@ class PlexInterface:
             return None
 
         # Go through each episode within Plex, set title cards
-        for episode in (pbar := tqdm(series.episodes(), **TQDM_KWARGS)):
+        for pl_episode in (pbar := tqdm(series.episodes(), **TQDM_KWARGS)):
             # Skip episodes that aren't in list of cards to update
-            ep_key = f'{episode.parentIndex}-{episode.index}'
-            if ep_key not in filtered_episodes:
+            ep_key = f'{pl_episode.parentIndex}-{pl_episode.index}'
+            if not (episode := filtered_episodes.get(ep_key)):
                 continue
 
             # Update progress bar
-            pbar.set_description(f'Updating {episode.seasonEpisode.upper()}')
+            pbar.set_description(f'Updating {pl_episode.seasonEpisode.upper()}')
             
             # Upload card to Plex
-            card_file = filtered_episodes[ep_key].destination
             try:
-                episode.uploadPoster(filepath=card_file.resolve())
+                pl_episode.uploadPoster(filepath=episode.destination.resolve())
             except Exception as e:
                 log.error(f'Unable to upload {card_file} to {series_info} - '
                           f'Plex returned "{e}"')
                 continue
             
             # Update the loaded map with this card's size
-            size = card_file.stat().st_size
+            size = episode.destination.stat().st_size
             series_name = series_info.full_name
 
             # Update loaded map with this entry
-            ep_stats = {'filesize': size,
-                        'spoiler': filtered_episodes[ep_key]._spoil_type}
-            if library_name in self.__loaded:
-                if series_name in self.__loaded[library_name]:
-                    self.__loaded[library_name][series_name][ep_key] = ep_stats
-                else:
-                    self.__loaded[library_name][series_name] = {ep_key:ep_stats}
+            loaded = self.__get_loaded_details(library_name,series_info,episode)
+            if loaded:
+                self.__db.update(
+                    {'filesize': size, 'spoiler': episode._spoil_type},
+                    (where('library') == library_name) &
+                    (where('series') == series_info.full_name) &
+                    (where('season') == episode.episode_info.season) &
+                    (where('episode') == episode.episode_info.episode)
+                )
             else:
-                self.__loaded[library_name] = {series_name: {ep_key: ep_stats}}
-
-        # Write updated loaded map to file
-        self.__write_loaded()
+                self.__db.insert({
+                    'library': library_name,
+                    'series': series_info.full_name,
+                    'season': episode.episode_info.season,
+                    'episode': episode.episode_info.episode,
+                    'filesize': size,
+                    'spoiler': episode._spoil_type,
+                })
 
         
