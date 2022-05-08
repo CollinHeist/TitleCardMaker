@@ -131,7 +131,7 @@ class TMDbInterface(WebInterface):
 
         # Add entries to DB
         self.__blacklist.insert_multiple(entries)
-        
+
         # Delete old file
         old_file.unlink()
 
@@ -190,14 +190,22 @@ class TMDbInterface(WebInterface):
                     condition
                 )
         else:
-            self.__blacklist.insert({
-                'query': query_type,
-                'series': series_info.full_name,
-                'season': episode_info.season_number,
-                'episode': episode_info.episode_number,
-                'failures': 1,
-                'next': later,
-            })
+            if query_type in ('logo', 'backdrop'):
+                self.__blacklist.insert({
+                    'query': query_type,
+                    'series': series_info.full_name,
+                    'failures': 1,
+                    'next': later,    
+                })
+            else:
+                self.__blacklist.insert({
+                    'query': query_type,
+                    'series': series_info.full_name,
+                    'season': episode_info.season_number,
+                    'episode': episode_info.episode_number,
+                    'failures': 1,
+                    'next': later,
+                })
 
 
     def __is_blacklisted(self, series_info: SeriesInfo,
