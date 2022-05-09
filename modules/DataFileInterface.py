@@ -207,15 +207,22 @@ class DataFileInterface:
 
     def add_many_entries(self, new_episodes: ['EpisodeInfo']) -> None:
         """
-        Adds many entries at once. This only reads and writes from this 
+        Adds many entries at once. An episode is only added if an episode of
+        that index does not already exist. This only reads and writes from this 
         interface's file once.
 
         :param      new_episodes:   List of EpisodeInfo objects to write.
         """
 
+        # If no new episodes are being added, exit
+        if len(new_episodes) == 0:
+            return None
+
         # Read yaml
         yaml = self.__read_data()
 
+        # Go through each episode to possibly add to file
+        added = {'count': 0, 'info': None}
         for episode_info in new_episodes:
             # Create blank season data if this key doesn't exist
             season_key = f'Season {episode_info.season_number}'
@@ -227,6 +234,7 @@ class DataFileInterface:
                 continue
 
             # Construct episode data
+            added = {'count': added['count'] + 1, 'info': episode_info}
             yaml[season_key][episode_info.episode_number] = {
                 'title': episode_info.title.title_yaml
             }
@@ -236,8 +244,15 @@ class DataFileInterface:
                 yaml[season_key][episode_info.episode_number]['abs_number'] =\
                     episode_info.abs_number
 
-            # Indicate new episode to user
-            log.info(f'Added {episode_info} to "{self.file.parent.name}"')
+        # If nothing was added, return
+        if (count := added['count']) == 0:
+            return None
+        
+        # Log add operations to user
+        if count > 1:
+            log.info(f'Added {count} episodes to "{self.file.parent.name}"')
+        else:
+            log.info(f'Added {added["info"]} to "{self.file.parent.name}"')
 
         # Write updated yaml
         self.sort_and_write(yaml)
