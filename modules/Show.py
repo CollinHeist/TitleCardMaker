@@ -570,7 +570,7 @@ class Show(YamlReader):
         :param      plex_interface: PlexInterface object to update.
         """
 
-        # Update Plex for this library, this show's info and episodes
+        # Update Plex
         plex_interface.set_title_cards_for_series(
             self.library_name,
             self.series_info,

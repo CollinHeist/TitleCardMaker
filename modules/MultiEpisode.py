@@ -12,7 +12,8 @@ class MultiEpisode:
 
     __slots__ = ('season_number', 'episode_start', 'episode_end', 'abs_start',
                  'abs_end', 'episode_info', 'card_class', 'source',
-                 'extra_characteristics', 'destination')
+                 'extra_characteristics', 'destination', 'spoiler', 'blur',
+                 '_spoil_type')
 
 
     def __init__(self, episodes: ['Episode'], title: 'Title') -> None:
@@ -67,6 +68,11 @@ class MultiEpisode:
         # Override title, set blank destination
         self.episode_info.title = title
         self.destination = None
+
+        # Episodes are spoilers and not blurred until updated
+        self.spoiler = first_episode.spoiler
+        self.blur = first_episode.blur
+        self._spoil_type = first_episode._spoil_type
 
 
     def __str__(self) -> str:
@@ -142,4 +148,33 @@ class MultiEpisode:
         """
 
         self.destination = destination
+
+
+    def delete_card(self) -> None:
+        """Delete the title card for this Episode."""
+
+        self.destination.unlink(missing_ok=True)
+
+
+    def make_spoiler_free(self, action: str) -> None:
+        """
+        Modify this Episode to be spoiler-free according to the given spoil
+        action. This updates the spoiler and blur attribute flags, and changes
+        the source Path for the Episode if art is the specified action.
+        
+        :param      action: Spoiler action to update according to.
+        """
+
+        # Return if action isn't blur or art
+        if action == 'ignore':
+            return None
+
+        # Update spoiler and blur attributes
+        self.spoiler = False
+        self.blur = action in ('blur', 'blur_all')
+        self._spoil_type = 'art' if 'art' in action else 'blur'
+
+        # Blurring, set source to blurred source in 
+        if action in ('art', 'art_all'):
+            self.source = self.source.parent / 'backdrop.jpg'
         
