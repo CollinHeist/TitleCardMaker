@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from fontTools.ttLib import TTFont
-from yaml import safe_load, dump
+from tinydb import TinyDB, where
 
 from modules.Debug import log
 
@@ -12,30 +12,20 @@ class FontValidator:
     (titles).
     """
 
-    """File to the font validation map that persists between runs"""
-    FONT_VALIDATION_MAP = Path(__file__).parent / '.objects' / 'fvm.yml'
-
-    __slots__ = ('__fonts', '__warned')
+    """File to the font character validation database"""
+    CHARACTER_DATABASE = Path(__file__).parent / '.objects' / 'fvm.json'
     
 
     def __init__(self) -> None:
         """
         Constructs a new instance. This creates the parent directory for the 
-        temporary font map if it does not exist, and reads the font map if does.
+        temporary validation database if it does not exist, and reads it if it
+        does.
         """
 
-        # Attept to read existing font file if it exists
-        if self.FONT_VALIDATION_MAP.exists():
-            try:
-                with self.FONT_VALIDATION_MAP.open('r', encoding='utf-8') as fh:
-                    self.__fonts = safe_load(fh)['fonts']
-            except Exception as e:
-                log.debug(f'Error reading font validation map - {e}')
-                self.__fonts = {}
-        else:
-            # Create parent directories if necessary
-            self.FONT_VALIDATION_MAP.parent.mkdir(parents=True, exist_ok=True)
-            self.__fonts = {}
+        # Create/read font validation database
+        self.CHARACTER_DATABASE.parent.mkdir(parents=True, exist_ok=True)
+        self.__db = TinyDB(self.CHARACTER_DATABASE)
 
         # List of missing characters that have already been warned
         self.__warned = []
@@ -59,43 +49,23 @@ class FontValidator:
         self.__warned.append(key)
 
 
-    def __set_character(self, font_filepath: str, character: str,
-                        status: bool) -> None:
-        """
-        Set the given character for the given font to the given status, then
-        write the updated font map to file.
-        
-        :param      font_filepath:  Filepath to the font being validated against
-        :param      character:      The character whose status is being set.
-        :param      status:         Whether the given font has the given
-                                    character.
-        """
-
-        # Set the given status within the map
-        if font_filepath in self.__fonts:
-            self.__fonts[font_filepath][character] = status
-        else:
-            self.__fonts[font_filepath] = {character: status, ' ': True}
-
-        # Write updated map to file
-        with self.FONT_VALIDATION_MAP.open('w', encoding='utf-8') as fh:
-            dump({'fonts': self.__fonts}, fh, allow_unicode=True)
-
-
     def __has_character(self, font_filepath: str, character: str) -> bool:
         """
         Determines whether the given character exists in the given Font. 
         
         :param      font_filepath:  Filepath to the font being validated against
-        :param      title:          The Title being validated.
+        :param      character:      Character being checked.
         
         :returns:   True if the given character exists in the given font, False
                     otherwise.
         """
 
-        # If this font and character has been checked, return that
-        if character in self.__fonts.get(font_filepath, {}):
-            return self.__fonts[font_filepath][character]
+        # If character has been checked, return status
+        if self.__db.contains((where('file') == font_filepath) &
+                              (where('character') == character)):
+            # Get entry, return status
+            return self.__db.get((where('file') == font_filepath) &
+                                 (where('character') == character))['status']
 
         # Get the ordinal value of this character
         glyph = ord(character)
@@ -104,12 +74,17 @@ class FontValidator:
         for table in TTFont(font_filepath, fontNumber=0)['cmap'].tables:
             if glyph in table.cmap:
                 # Update map for this character, return True
-                self.__set_character(font_filepath, character, True)
+                self.__db.insert({
+                    'file': font_filepath, 'character': character, 'status':True
+                })
+
                 return True
 
         # Update map for this character, return False
-        self.__set_character(font_filepath, character, False)
-        
+        self.__db.insert({
+            'file': font_filepath, 'character': character, 'status': False
+        })
+
         return False
 
 

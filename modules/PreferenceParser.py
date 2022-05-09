@@ -7,6 +7,7 @@ from yaml import safe_load
 from modules.Debug import log, TQDM_KWARGS
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.ImageMaker import ImageMaker
+from modules.PlexInterface import PlexInterface
 from modules.Show import Show
 from modules.ShowSummary import ShowSummary
 from modules.Template import Template
@@ -53,13 +54,14 @@ class PreferenceParser(YamlReader):
         self.zero_pad_seasons = False
         self.archive_directory = None
         self.create_archive = False
-        self.create_summaries = False
+        self.create_summaries = True
         self.summary_background_color = ShowSummary.BACKGROUND_COLOR
         self.logo_filename = ShowSummary.LOGO_FILENAME
         self.summary_minimum_episode_count = 1
         self.use_plex = False
         self.plex_url = None
         self.plex_token = 'NA'
+        self.plex_unwatched = PlexInterface.DEFAULT_UNWATCHED_ACTION
         self.use_sonarr = False
         self.sonarr_url = None
         self.sonarr_api_key = None
@@ -181,6 +183,15 @@ class PreferenceParser(YamlReader):
 
         if (value := self['plex', 'token']):
             self.plex_token = value
+
+        if (value := self['plex', 'unwatched']):
+            if str(value).lower() not in PlexInterface.VALID_UNWATCHED_ACTIONS:
+                options = '", "'.join(PlexInterface.VALID_UNWATCHED_ACTIONS)
+                log.critical(f'Invalid "unwatched" action, must be one of "'
+                             f'{options}"')
+                self.valid = False
+            else:
+                self.plex_unwatched = value.lower()
 
         if self['sonarr']:
             if not all((self['sonarr', 'url'], self['sonarr', 'api_key'])):
@@ -310,6 +321,10 @@ class PreferenceParser(YamlReader):
 
             # Get library map for this file; error+skip missing library paths
             if (library_map := file_yaml.get('libraries', {})):
+                if not isinstance(library_map, dict):
+                    log.error(f'Invalid library specification for series file '
+                              f'"{file.resolve()}"')
+                    continue
                 if not all('path' in library_map[lib] for lib in library_map):
                     log.error(f'Libraries are missing required "path" in series'
                               f' file "{file.resolve()}"')

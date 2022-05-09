@@ -85,6 +85,7 @@ class TitleCard:
             season_text=profile.get_season_text(episode.episode_info),
             episode_text=profile.get_episode_text(episode),
             hide_season=profile.hide_season_title,
+            blur=episode.blur,
             **profile.font.get_attributes(),
             **extra_characteristics,
         )

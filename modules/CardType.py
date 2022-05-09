@@ -36,6 +36,9 @@ class CardType(ImageMaker):
     """Standard size for all title cards"""
     TITLE_CARD_SIZE = '3200x1800'
 
+    """Blur effects to apply to spoiler-free images"""
+    BLUR_PROFILE = '0x60'
+
     @property
     @abstractmethod
     def TITLE_CHARACTERISTICS(self) -> dict:

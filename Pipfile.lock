@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "b0ae20bcff416b121c374a21d1208becbac2a17fefa043a5c8e7fa8a40f0a63c"
+            "sha256": "99857f2a957f01c97e5b7f42bbadde0cf9e5d873b483eadc290b4ec9d8feb36d"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -203,6 +203,14 @@
             ],
             "index": "pypi",
             "version": "==8.0.1"
+        },
+        "tinydb": {
+            "hashes": [
+                "sha256:357eb7383dee6915f17b00596ec6dd2a890f3117bf52be28a4c516aeee581100",
+                "sha256:e2cdf6e2dad49813e9b5fceb3c7943387309a8738125fbff0b58d248a033f7a9"
+            ],
+            "index": "pypi",
+            "version": "==4.7.0"
         },
         "titlecase": {
             "hashes": [

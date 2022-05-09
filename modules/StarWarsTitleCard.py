@@ -53,7 +53,7 @@ class StarWarsTitleCard(CardType):
 
     
     def __init__(self, source: Path, output_file: Path, title: str,
-                 episode_text: str, *args: tuple, **kwargs: dict) -> None:
+                 episode_text: str, blur: bool=False, *args, **kwargs) -> None:
         """
         Constructs a new instance.
         
@@ -61,6 +61,7 @@ class StarWarsTitleCard(CardType):
         :param      output_file:        Output filepath for this card.
         :param      title:              The title for this card.
         :param      episode_text:       The episode text for this card.
+        :param      blur:               Whether to blur the source image.
         :param      args and kwargs:    Unused arguments to permit generalized
                                         function calls for any CardType.
         """
@@ -81,6 +82,9 @@ class StarWarsTitleCard(CardType):
         self.episode_text = self.image_magick.escape_chars(
             self.__modify_episode_text(episode_text)
         )
+
+        # Store blur flag
+        self.blur = blur
 
 
     def __modify_episode_text(self, text: str) -> str:
@@ -134,10 +138,11 @@ class StarWarsTitleCard(CardType):
 
         command = ' '.join([
             f'convert "{source.resolve()}"',
-            f'+profile "*"',    # To avoid profile conversion warnings
-            f'-gravity center', # For images that aren't in 4x3, center crop
+            f'+profile "*"',
+            f'-gravity center',
             f'-resize "{self.TITLE_CARD_SIZE}^"',
             f'-extent "{self.TITLE_CARD_SIZE}"',
+            f'-blur {self.BLUR_PROFILE}' if self.blur else '',
             f'"{self.__STAR_GRADIENT_IMAGE.resolve()}"',
             f'-background None',
             f'-layers Flatten',
