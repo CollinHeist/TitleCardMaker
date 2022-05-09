@@ -56,8 +56,8 @@ class StandardTitleCard(CardType):
     def __init__(self, source: Path, output_file: Path, title: str,
                  season_text: str, episode_text: str, font: str,
                  font_size: float, title_color: str, hide_season: bool,
-                 vertical_shift: int=0, interline_spacing: int=0,
-                 *args: tuple, **kwargs: dict) -> None:
+                 blur: bool=False, vertical_shift: int=0,
+                 interline_spacing: int=0, *args, **kwargs) -> None:
         """
         Initialize the TitleCardMaker object. This primarily just stores
         instance variables for later use in `create()`. If the provided font
@@ -76,6 +76,9 @@ class StandardTitleCard(CardType):
         :param  title_color:        Color to use for the episode title.
         :param  hide_season:        Whether to omit the season text (and joining
                                     character) from the title card completely.
+        :param  blur:               Whether to blur the source image.
+        :param  vertical_shift:     Pixels to adjust title vertical shift by.
+        :param  interline_spacing:  Pixels to adjust title interline spacing by.
         :param  args and kwargs:    Unused arguments to permit generalized calls
                                     for any CardType.
         """
@@ -95,6 +98,7 @@ class StandardTitleCard(CardType):
         self.font_size = font_size
         self.title_color = title_color
         self.hide_season = hide_season
+        self.blur = blur
         self.vertical_shift = vertical_shift
         self.interline_spacing = interline_spacing
 
@@ -187,10 +191,11 @@ class StandardTitleCard(CardType):
 
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
-            f'+profile "*"',    # To avoid profile conversion warnings
-            f'-gravity center', # For images that aren't 4x3, center crop
+            f'+profile "*"',
+            f'-gravity center',
             f'-resize "{self.TITLE_CARD_SIZE}^"',
             f'-extent "{self.TITLE_CARD_SIZE}"',
+            f'-blur {self.BLUR_PROFILE}' if self.blur else '',
             f'"{self.__GRADIENT_IMAGE.resolve()}"',
             f'-background None',
             f'-layers Flatten',

@@ -62,7 +62,7 @@ class AnimeTitleCard(CardType):
     
     def __init__(self, source: Path, output_file: Path, title: str, 
                  season_text: str, episode_text: str, hide_season: bool,
-                 kanji: str=None, *args: tuple, **kwargs: dict) -> None:
+                 kanji: str=None, blur: bool=False, *args, **kwargs) -> None:
         """
         Constructs a new instance.
         
@@ -75,6 +75,7 @@ class AnimeTitleCard(CardType):
                                         card.
         :param      kanji:              Optional kanji text to place above the
                                         episode title on this card.
+        :param      blur:               Whether to blur the source image.
         :param      args and kwargs:    Unused arguments to permit generalized
                                         function calls for any CardType.
         """
@@ -97,6 +98,7 @@ class AnimeTitleCard(CardType):
         self.season_text = self.image_magick.escape_chars(season_text.upper())
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
         self.hide_season = hide_season
+        self.blur = blur
 
 
     def __title_text_global_effects(self) -> list:
@@ -219,9 +221,11 @@ class AnimeTitleCard(CardType):
 
         command = ' '.join([
             f'convert "{image.resolve()}"',
-            f'-gravity center', # For images that aren't 4x3, center crop
+            f'-profile "*"',
+            f'-gravity center',
             f'-resize "{self.TITLE_CARD_SIZE}^"',
             f'-extent "{self.TITLE_CARD_SIZE}"',
+            f'-blur {self.BLUR_PROFILE}' if self.blur else '',
             f'"{self.__GRADIENT_IMAGE.resolve()}"',
             f'-background None',
             f'-layers Flatten',

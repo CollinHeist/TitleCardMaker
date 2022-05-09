@@ -207,12 +207,12 @@ class Title:
         # If manually specified, apply the profile to each line, skip splitting
         if self.__manually_specified:
             return '\n'.join(list(map(
-                lambda line: profile.convert_title(line),
+                lambda line: profile.convert_title(line, True),
                 self.__title_lines
             )))
 
         # Title lines weren't manually specified - apply profile, make new Title
-        new_title = Title(profile.convert_title(self.full_title))
+        new_title = Title(profile.convert_title(self.full_title, False))
 
         # Call split on the new title, join those lines
         return '\n'.join(new_title.split(**title_characteristics))

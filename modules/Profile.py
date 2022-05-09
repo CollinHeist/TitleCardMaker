@@ -280,7 +280,8 @@ class Profile:
         return title_text if len(finalized_title) == 0 else finalized_title
 
 
-    def convert_title(self, title_text: str) -> str:
+    def convert_title(self, title_text: str,
+                      manually_specified: bool=False) -> str:
         """
         Convert the given title text through this profile's settings. This is
         any combination of text substitutions, case functions, and optionally
@@ -291,7 +292,9 @@ class Profile:
         and the given `title_text` was 'Chapter 1: Pilot', then the returned
         text (excluding any replacements or case mappings) would be 'Pilot'.
         
-        :param      title_text: The title text to convert.
+        :param      title_text:         The title text to convert.
+        :param      manually_specified: Whether the given title text has been
+                                        manually specified.
         
         :returns:   The processed text.
         """
@@ -307,7 +310,11 @@ class Profile:
         # Apply translation table to this text
         translated_text = title_text.translate(translation)
 
-        # Apply this profile's font function to the translated text
+        # Apply this profile's font function to the translated text, unless
+        # this is a manually specified title and we're apply title casing
+        if manually_specified and self.font.case_name in ('title', 'source'):
+            return translated_text
+
         return self.font.case(translated_text)
 
 

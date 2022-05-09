@@ -13,6 +13,7 @@ tqdm = "*"
 fonttools = "*"
 plexapi = "*"
 tenacity = "*"
+tinydb = "*"
 
 [dev-packages]
 

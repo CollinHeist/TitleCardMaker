@@ -237,9 +237,12 @@ if hasattr(args, 'read_all_series'):
     with args.read_all_series.open('w', encoding='utf-8') as file_handle:
         dump(yaml, file_handle, allow_unicode=True)
 
+    print(f'\nWrote {len(yaml["series"])} series to '
+          f'{args.read_all_series.resolve()}')
+
 if args.sonarr_list_ids:
     if not pp.use_sonarr:
-        log.warning("Cannot print Sonarr ID's if Sonarr is disabled")
+        print("Cannot print Sonarr ID's if Sonarr is disabled")
     else:
         SonarrInterface(pp.sonarr_url, pp.sonarr_api_key).list_all_series_id()
 
