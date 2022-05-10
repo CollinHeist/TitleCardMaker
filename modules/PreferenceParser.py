@@ -39,7 +39,6 @@ class PreferenceParser(YamlReader):
 
         # Check for required source directory
         if not (source_directory := self['options', 'source']):
-            breakpoint()
             log.critical(f'Preference file missing required options/source '
                          f'attribute')
             exit(1)
