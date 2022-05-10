@@ -1,0 +1,14 @@
+modules/.objects/
+source/
+fonts/
+.DS_Store
+.git
+.github
+.gitignore
+.dockerignore
+README.md
+LICENSE
+Dockerfile
+._*
+*.yml
+*.yaml

@@ -1,4 +1,5 @@
 from argparse import ArgumentParser, ArgumentTypeError, SUPPRESS
+from dataclasses import dataclass
 from pathlib import Path
 
 try:
@@ -8,6 +9,7 @@ try:
     from modules.GenreMaker import GenreMaker
     from modules.PreferenceParser import PreferenceParser
     from modules.preferences import set_preference_parser
+    from modules.ShowSummary import ShowSummary
     from modules.SonarrInterface import SonarrInterface
     from modules.TitleCard import TitleCard
     from modules.TMDbInterface import TMDbInterface
@@ -112,7 +114,17 @@ genre_group.add_argument(
     help='Create all genre cards for images in the given directory based on '
          'their file names')
 
-# Argument group for fixes relating to Sonarr
+# Argument group for ShowSummary creation
+summary_group = parser.add_argument_group('ShowSummary')
+summary_group.add_argument(
+    '--show-summary',
+    type=Path,
+    nargs=2,
+    default=SUPPRESS,
+    metavar=('IMAGE_DIRECTORY', 'LOGO'),
+    help='Create a ShowSummary for the given directory')
+
+# Argument group for Sonarr
 sonarr_group = parser.add_argument_group('Sonarr')
 sonarr_group.add_argument(
     '--read-all-series',
@@ -123,7 +135,7 @@ sonarr_group.add_argument(
 sonarr_group.add_argument(
     '--sonarr-list-ids',
     action='store_true',
-    help="Whether to list all the ID's for all shows within Sonarr")
+    help="List all the ID's for all shows within Sonarr")
 
 # Argument group for TMDb
 tmdb_group = parser.add_argument_group(
@@ -140,7 +152,7 @@ tmdb_group.add_argument(
 tmdb_group.add_argument(
     '--delete-blacklist',
     action='store_true',
-    help='Whether to delete the existing TMDb blacklist')
+    help='Delete the existing TMDb blacklist file')
 tmdb_group.add_argument(
     '--add-translation',
     nargs=5,
@@ -204,6 +216,28 @@ if hasattr(args, 'genre_card_batch'):
                 output=Path(file.parent /f'{file.stem}-GenreCard{file.suffix}'),
                 font_size=float(args.font_size[:-1])/100.0,
             ).create()
+
+# Executer ShowSummary options
+if hasattr(args, 'show_summary'):
+    # Temporary classes
+    @dataclass
+    class Episode:
+        destination: Path
+
+    @dataclass
+    class Show:
+        logo: Path
+        media_directory: Path
+        episodes: dict
+
+    # Get all images in folder
+    all_images = args.show_summary[0].glob('**/*.jpg')
+    episode = 1
+    episodes = {f'1-{(episode := episode+1)}': Episode(f) for f in all_images}
+    show = Show(args.show_summary[1], args.show_summary[0], episodes)
+
+    # Create ShowSummary
+    ShowSummary(show).create()
 
 # Execute Sonarr related options
 if hasattr(args, 'read_all_series'):

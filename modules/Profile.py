@@ -193,10 +193,10 @@ class Profile:
                 abs_number=episode.episode_info.abs_number,
                 **episode.extra_characteristics,
             )
-        except:
+        except Exception:
             log.error(f'Cannot format episode text "{format_string}" for '
                       f'{episode}')
-            return 'INVALID FORMAT STRING'
+            return f'EPISODE {episode.episode_info.episode_number}'
 
 
     def __remove_episode_text_format(self, title_text: str) -> str:

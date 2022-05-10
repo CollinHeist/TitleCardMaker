@@ -27,8 +27,7 @@ parser.add_argument(
     help='Specify the global preferences file')
 parser.add_argument(
     '-r', '--run',
-    action='count',
-    default=0,
+    action='store_true',
     help='Run the TitleCardMaker')
 parser.add_argument(
     '-m', '--missing', 
@@ -68,12 +67,12 @@ if not (pp := PreferenceParser(args.preference_file)).valid:
 set_preference_parser(pp)
 set_font_validator(FontValidator())
 
-# Create and run the manager --run many times
-tcm = None
-for _ in range(args.run):
+# Create and run a Manger object
+if args.run:
+    # Create object, run
     tcm = Manager()
     tcm.run()
 
-# Write missing assets
-if tcm != None:
+    # Write missing assets
     tcm.report_missing(args.missing)
+

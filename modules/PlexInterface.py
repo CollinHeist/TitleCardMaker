@@ -271,13 +271,13 @@ class PlexInterface:
                 if (spoiler_status == 'spoiled'
                     or spoiler_status != spoil_type):
                     delete_and_reset = True
-                    log.debug(f'Deleted card for {series_info} {episode} - want'
-                              f' spoiler-free card')
+                    log.debug(f'Deleted card for "{series_info}" {episode}, '
+                              f'want spoiler-free card')
 
             # If episode needs to be a spoiler and has been loaded already
             if (all_spoiler or spoiler) and spoiler_status != 'spoiled':
                 delete_and_reset = True
-                log.debug(f'Deleted card for {series_info} {episode} - want '
+                log.debug(f'Deleted card for "{series_info}" {episode}, want '
                           f'spoiler card')
 
             # Delete card, reset size in loaded map to force reload
