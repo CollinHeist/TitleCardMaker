@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from plexapi.server import PlexServer, NotFound
+from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 from tinydb import TinyDB, where
 from tqdm import tqdm
 from yaml import safe_load
@@ -326,6 +327,21 @@ class PlexInterface:
                 )
 
 
+    @retry(stop=stop_after_attempt(5),
+           wait=wait_fixed(3)+wait_exponential(min=1, max=32))
+    def __retry_upload(self, plex_episode: 'Episode', filepath: Path) -> None:
+        """
+        Upload the given poster to the given Episode, retrying if it fails.
+        
+        :param      plex_episode:   The plexapi Episode object to upload the
+                                    file to.
+        :param      filepath:       Filepath to the poster to upload.
+        """
+
+        pl_episode.uploadPoster(filepath=filepath)
+
+
+
     def set_title_cards_for_series(self, library_name: str, 
                                    series_info: 'SeriesInfo',
                                    episode_map: dict) -> None:
@@ -372,10 +388,10 @@ class PlexInterface:
             
             # Upload card to Plex
             try:
-                pl_episode.uploadPoster(filepath=episode.destination.resolve())
+                self.__retry_upload(episode.destination.resolve())
             except Exception as e:
-                log.error(f'Unable to upload {card_file} to {series_info} - '
-                          f'Plex returned "{e}"')
+                log.error(f'Unable to upload {episode.destination.resolve()} '
+                          f'to {series_info} - Plex returned "{e}"')
                 continue
             
             # Update the loaded map with this card's size
