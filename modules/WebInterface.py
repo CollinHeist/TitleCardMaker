@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from requests import get
-from tenacity import retry, stop_after_attempt, wait_fixed, wait_random
+from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 
 from modules.Debug import log
 
@@ -27,7 +27,8 @@ class WebInterface(ABC):
         self.__cached_results = []
 
 
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(3) + wait_random(0, 2))
+    @retry(stop=stop_after_attempt(10),
+           wait=wait_fixed(3)+wait_exponential(min=1, max=32))
     def __retry_get(self, url: str, params: dict) -> dict:
         """
         Retry the given GET request until successful (or really fails).
