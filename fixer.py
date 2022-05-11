@@ -93,7 +93,13 @@ title_card_group.add_argument(
     type=float,
     default=0.0,
     metavar='PIXELS',
-    help='How many pixels to increase the interline spacing of for title text')
+    help='How many pixels to increase the interline spacing of the title text')
+title_card_group.add_argument(
+    '--stroke-width', '--stroke',
+    type=str,
+    default='100%',
+    metavar='SCALE%',
+    help='Specify the font black stroke scale (as percentage)')
 
 # Argument group for genre cards
 genre_group = parser.add_argument_group(
@@ -199,6 +205,7 @@ if hasattr(args, 'title_card'):
         blur=args.blur,
         vertical_shift=args.vertical_shift,
         interline_spacing=args.interline_spacing,
+        stroke_width=float(args.stroke_width[:-1])/100.0,
         **arbitrary_data,
     ).create()
 

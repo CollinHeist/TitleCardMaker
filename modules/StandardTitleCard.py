@@ -57,7 +57,8 @@ class StandardTitleCard(CardType):
                  season_text: str, episode_text: str, font: str,
                  font_size: float, title_color: str, hide_season: bool,
                  blur: bool=False, vertical_shift: int=0,
-                 interline_spacing: int=0, *args, **kwargs) -> None:
+                 interline_spacing: int=0, stroke_width: float=1.0,
+                 *args, **kwargs) -> None:
         """
         Initialize the TitleCardMaker object. This primarily just stores
         instance variables for later use in `create()`. If the provided font
@@ -79,6 +80,8 @@ class StandardTitleCard(CardType):
         :param  blur:               Whether to blur the source image.
         :param  vertical_shift:     Pixels to adjust title vertical shift by.
         :param  interline_spacing:  Pixels to adjust title interline spacing by.
+        :param  stroke_width:       Scalar to apply to black stroke of the title
+                                    text.
         :param  args and kwargs:    Unused arguments to permit generalized calls
                                     for any CardType.
         """
@@ -101,6 +104,7 @@ class StandardTitleCard(CardType):
         self.blur = blur
         self.vertical_shift = vertical_shift
         self.interline_spacing = interline_spacing
+        self.stroke_width = stroke_width
 
 
     def __title_text_global_effects(self) -> list:
@@ -131,10 +135,12 @@ class StandardTitleCard(CardType):
         :returns:   List of ImageMagick commands.
         """
 
+        stroke_width = 3.0 * self.stroke_width
+
         return [
             f'-fill black',
             f'-stroke black',
-            f'-strokewidth 3', #def:3, euphoria:0.5, the wire:1, punisher:1.5, pll:1
+            f'-strokewidth {stroke_width}',
         ]
 
 

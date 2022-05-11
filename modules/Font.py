@@ -15,7 +15,7 @@ class Font:
     __slots__ = ('valid', '__yaml', '__card_class','__font_map','__series_info',
                  '__validator', '__validate', 'color', 'size', 'file',
                  'replacements', 'case_name', 'case', 'vertical_shift',
-                 'interline_spacing')
+                 'interline_spacing', 'stroke_width')
     
 
     def __init__(self, yaml, font_map: dict, card_class: 'CardType',
@@ -144,6 +144,15 @@ class Font:
             else:
                 self.interline_spacing = value
 
+        # Stroke width
+        if (value := self.__yaml.get('stroke_width', None)):
+            if not bool(match(r'^\d+%$', value)):
+                log.error(f'Font stroke width "{value}" of series '
+                          f'{self.__series_info} is invalid - specify as "x%"')
+                self.valid = False
+            else:
+                self.stroke_width = float(value[:-1]) / 100.0
+
 
     def set_default(self) -> None:
         """Reset this object's attributes to its default values."""
@@ -160,6 +169,7 @@ class Font:
         self.case = self.__card_class.CASE_FUNCTIONS[self.case_name]
         self.vertical_shift = 0
         self.interline_spacing = 0
+        self.stroke_width = 1.0
 
 
     def get_attributes(self) -> dict:
@@ -175,6 +185,7 @@ class Font:
             'font': self.file,
             'vertical_shift': self.vertical_shift,
             'interline_spacing': self.interline_spacing,
+            'stroke_width': self.stroke_width,
         }
 
 
