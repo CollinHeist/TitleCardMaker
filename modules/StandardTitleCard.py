@@ -50,15 +50,16 @@ class StandardTitleCard(CardType):
 
     __slots__ = ('souce_file', 'output_file', 'title', 'season_text',
                  'episode_text', 'font', 'font_size', 'title_color',
-                 'hide_season', 'vertical_shift', 'interline_spacing')
+                 'hide_season', 'vertical_shift', 'kerning',
+                 'interline_spacing')
 
 
     def __init__(self, source: Path, output_file: Path, title: str,
                  season_text: str, episode_text: str, font: str,
                  font_size: float, title_color: str, hide_season: bool,
                  blur: bool=False, vertical_shift: int=0,
-                 interline_spacing: int=0, stroke_width: float=1.0,
-                 *args, **kwargs) -> None:
+                 interline_spacing: int=0, kerning: float=1.0,
+                 stroke_width: float=1.0, *args, **kwargs) -> None:
         """
         Initialize the TitleCardMaker object. This primarily just stores
         instance variables for later use in `create()`. If the provided font
@@ -80,6 +81,7 @@ class StandardTitleCard(CardType):
         :param  blur:               Whether to blur the source image.
         :param  vertical_shift:     Pixels to adjust title vertical shift by.
         :param  interline_spacing:  Pixels to adjust title interline spacing by.
+        :param  kerning:            Scalar to apply to kerning of the title text.
         :param  stroke_width:       Scalar to apply to black stroke of the title
                                     text.
         :param  args and kwargs:    Unused arguments to permit generalized calls
@@ -104,6 +106,7 @@ class StandardTitleCard(CardType):
         self.blur = blur
         self.vertical_shift = vertical_shift
         self.interline_spacing = interline_spacing
+        self.kerning = kerning
         self.stroke_width = stroke_width
 
 
@@ -117,10 +120,11 @@ class StandardTitleCard(CardType):
 
         font_size = 157.41 * self.font_size
         interline_spacing = -22 + self.interline_spacing
+        kerning = -1.25 * self.kerning
 
         return [
             f'-font "{self.font}"',
-            f'-kerning -1.25',
+            f'-kerning {kerning}',
             f'-interword-spacing 50',
             f'-interline-spacing {interline_spacing}',
             f'-pointsize {font_size}',

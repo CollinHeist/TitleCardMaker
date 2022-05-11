@@ -95,6 +95,12 @@ title_card_group.add_argument(
     metavar='PIXELS',
     help='How many pixels to increase the interline spacing of the title text')
 title_card_group.add_argument(
+    '--kerning',
+    type=str,
+    default='100%',
+    metavar='SCALE%',
+    help='Specify the font kerning scale (as percentage)')
+title_card_group.add_argument(
     '--stroke-width', '--stroke',
     type=str,
     default='100%',
@@ -205,6 +211,7 @@ if hasattr(args, 'title_card'):
         blur=args.blur,
         vertical_shift=args.vertical_shift,
         interline_spacing=args.interline_spacing,
+        kerning=float(args.kerning[:-1])/100.0,
         stroke_width=float(args.stroke_width[:-1])/100.0,
         **arbitrary_data,
     ).create()
