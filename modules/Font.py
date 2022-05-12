@@ -1,5 +1,6 @@
 from pathlib import Path
-from re import compile
+from re import match
+from re import compile as re_compile
 
 from modules.Debug import log
 from modules.TitleCard import TitleCard
@@ -13,8 +14,8 @@ class Font:
     """
     
     """Compiled regex to identify percentage values"""
-    _PERCENT_REGEX = compile(r'^-?\d+\.?\d*%$')
-    _PERCENT_REGEX_POSITIVE = compile(r'^\d+\.\d*%$')
+    _PERCENT_REGEX = re_compile(r'^-?\d+\.?\d*%$')
+    _PERCENT_REGEX_POSITIVE = re_compile(r'^\d+\.?\d*%$')
 
     __slots__ = ('valid', '__yaml', '__card_class','__font_map','__series_info',
                  '__validator', '__validate', 'color', 'size', 'file',
