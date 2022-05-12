@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from plexapi.server import PlexServer, NotFound
+from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 from tinydb import TinyDB, where
 from tqdm import tqdm
 from yaml import safe_load
@@ -85,18 +86,25 @@ class PlexInterface:
 
 
     def __get_condition(self, library_name: str, series_info: 'SeriesInfo',
-                        episode: 'Episode') -> 'QueryInstance':
+                        episode: 'Episode'=None) -> 'QueryInstance':
         """
         Get the tinydb query condition for the given entry.
         
         :param      library_name:   The name of the library containing the
                                     series to get the details of.
         :param      series_info:    The series to get the details of.
-        :param      episode:        The Episode object to get the details of.
+        :param      episode:        Optional Episode object to get details of.
         
         :returns:   The condition that matches the given library, series, and
-                    Episode season+episode number.
+                    Episode season+episode number if provided.
         """
+
+        # If no episode was given, get condition for entire series
+        if episode == None:
+            return (
+                (where('library') == library_name) &
+                (where('series') == series_info.full_name)
+            )
 
         return (
             (where('library') == library_name) &
@@ -104,6 +112,29 @@ class PlexInterface:
             (where('season') == episode.episode_info.season_number) &
             (where('episode') == episode.episode_info.episode_number)
         )
+
+
+    def __get_loaded_episode(self, loaded_series: [dict],
+                             episode: 'Episode') -> dict:
+        """
+        Get the loaded details of the given Episode from the given list of
+        loaded series details.
+        
+        :param      loaded_series:  Filtered List from the loaded database to
+                                    look through.
+        :param      episode:        The Episode to get the details of.
+
+        :returns:   Loaded details for the specified episode. None if an episode
+                    of that index DNE in the given list.
+        """
+        
+        for index, entry in enumerate(loaded_series):
+            # Check index 
+            if (entry['season'] == episode.episode_info.season_number and
+                entry['episode'] == episode.episode_info.episode_number):
+                return entry
+
+        return None
 
 
     def __filter_loaded_cards(self, library_name: str, series_info:'SeriesInfo',
@@ -122,24 +153,30 @@ class PlexInterface:
                     are removed.
         """
 
+        # Get all loaded details for this series
+        series=self.__db.search(self.__get_condition(library_name, series_info))
+
         filtered = {}
         for key, episode in episode_map.items():
             # Filter out episodes without cards
             if not episode.destination or not episode.destination.exists():
                 continue
 
-            # Get current details of this episode
-            details = self.__db.get(
-                self.__get_condition(library_name, series_info, episode)
-            )
-
-            # If this episode has never been loaded, add
-            if details == None:
+            # If no cards have been loaded, add all episodes with cards
+            if not series:
                 filtered[key] = episode
                 continue
 
-            # If the loaded filesize is different, add
-            if details['filesize'] != episode.destination.stat().st_size:
+            # Get current details of this episode
+            found = False
+            if (entry := self.__get_loaded_episode(series, episode)):
+                # Episode found, check filesize
+                found = True
+                if entry['filesize'] != episode.destination.stat().st_size:
+                    filtered[key] = episode
+
+            # If this episode has never been loaded, add
+            if not found:
                 filtered[key] = episode
 
         return filtered
@@ -243,6 +280,11 @@ class PlexInterface:
         else:
             spoil_type = 'art' if 'art' in unwatched else 'blur'
 
+        # Get loaded characteristics of the series
+        loaded_series = self.__db.search(
+            self.__get_condition(library_name, series_info)
+        )
+
         # Go through each episode within Plex and update Episode spoiler status
         for plex_episode in series.episodes():
             # If this Plex episode doesn't have Episode object(?) skip
@@ -250,40 +292,54 @@ class PlexInterface:
             if not (episode := episode_map.get(ep_key)):
                 continue
 
-            # Get loaded card characteristics for this episode, skip if unloaded
-            condition = self.__get_condition(library_name, series_info, episode)
-            if (loaded := self.__db.get(condition)) == None:
-                continue
+            # Get loaded card characteristics for this episode
+            details = self.__get_loaded_episode(loaded_series, episode)
+            loaded = details != None
 
             # Spoil characteristics for this card            
             spoiler_free = (unwatched != 'ignore'
                             and not plex_episode.isWatched)
             spoiler = plex_episode.isWatched and not all_spoiler_free
-            spoiler_status = loaded['spoiler']
+            spoiler_status = details['spoiler'] if loaded else None
 
-            # If episode needs to be spoiler-free
+            # If Episode needs to be spoiler-free
             delete_and_reset = False
             if all_spoiler_free or spoiler_free:
                 # Update episode source
                 episode.make_spoiler_free(unwatched)
 
-                # If loaded card is spoiler, or wrong style
-                if (spoiler_status == 'spoiled'
-                    or spoiler_status != spoil_type):
+                # If loaded card is spoiler, or wrong style, mark for deletion
+                if spoiler_status == 'spoiled' or spoiler_status != spoil_type:
                     delete_and_reset = True
-                    log.debug(f'Deleted card for "{series_info}" {episode}, '
-                              f'want spoiler-free card')
 
-            # If episode needs to be a spoiler and has been loaded already
+            # If episode needs to become spoiler, mark for deletion
             if (all_spoiler or spoiler) and spoiler_status != 'spoiled':
                 delete_and_reset = True
-                log.debug(f'Deleted card for "{series_info}" {episode}, want '
-                          f'spoiler card')
 
             # Delete card, reset size in loaded map to force reload
-            if delete_and_reset:
+            if delete_and_reset and loaded:
                 episode.delete_card()
-                self.__db.update({'filesize': 0}, condition)
+                log.debug(f'Deleted card for "{series_info}" {episode}, '
+                          f'updating spoil status')
+                self.__db.update(
+                    {'filesize': 0},
+                    self.__get_condition(library_name, series_info, episode)
+                )
+
+
+    @retry(stop=stop_after_attempt(5),
+           wait=wait_fixed(3)+wait_exponential(min=1, max=32))
+    def __retry_upload(self, plex_episode: 'Episode', filepath: Path) -> None:
+        """
+        Upload the given poster to the given Episode, retrying if it fails.
+        
+        :param      plex_episode:   The plexapi Episode object to upload the
+                                    file to.
+        :param      filepath:       Filepath to the poster to upload.
+        """
+
+        pl_episode.uploadPoster(filepath=filepath)
+
 
 
     def set_title_cards_for_series(self, library_name: str, 
@@ -332,10 +388,10 @@ class PlexInterface:
             
             # Upload card to Plex
             try:
-                pl_episode.uploadPoster(filepath=episode.destination.resolve())
+                self.__retry_upload(episode.destination.resolve())
             except Exception as e:
-                log.error(f'Unable to upload {card_file} to {series_info} - '
-                          f'Plex returned "{e}"')
+                log.error(f'Unable to upload {episode.destination.resolve()} '
+                          f'to {series_info} - Plex returned "{e}"')
                 continue
             
             # Update the loaded map with this card's size

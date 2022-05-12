@@ -1,5 +1,6 @@
 from pathlib import Path
 from re import match
+from re import compile as re_compile
 
 from modules.Debug import log
 from modules.TitleCard import TitleCard
@@ -11,11 +12,15 @@ class Font:
     it's color, size, file, replacements, case function, vertical offset, and 
     interline spacing.
     """
+    
+    """Compiled regex to identify percentage values"""
+    _PERCENT_REGEX = re_compile(r'^-?\d+\.?\d*%$')
+    _PERCENT_REGEX_POSITIVE = re_compile(r'^\d+\.?\d*%$')
 
     __slots__ = ('valid', '__yaml', '__card_class','__font_map','__series_info',
                  '__validator', '__validate', 'color', 'size', 'file',
                  'replacements', 'case_name', 'case', 'vertical_shift',
-                 'interline_spacing')
+                 'interline_spacing', 'kerning', 'stroke_width')
     
 
     def __init__(self, yaml, font_map: dict, card_class: 'CardType',
@@ -72,11 +77,11 @@ class Font:
         """Parse this object's YAML and update the validity and attributes."""
 
         # Whether to validate for this font
-        if (value := self.__yaml.get('validate', None)):
+        if (value := self.__yaml.get('validate')) != None:
             self.__validate = bool(value)
 
         # Font case
-        if (value := self.__yaml.get('case', '').lower()):
+        if (value := self.__yaml.get('case', '').lower()) != '':
             if value not in self.__card_class.CASE_FUNCTIONS:
                 log.error(f'Font case "{value}" of series {self.__series_info} '
                           f'is invalid')
@@ -86,7 +91,7 @@ class Font:
                 self.case = self.__card_class.CASE_FUNCTIONS[value]
 
         # Font color
-        if (value := self.__yaml.get('color', None)):
+        if (value := self.__yaml.get('color')) != None:
             if not bool(match('^#[a-fA-F0-9]{6}$', value)):
                 log.error(f'Font color "{value}" of series {self.__series_info}'
                           f' is invalid - specify as "#xxxxxx"')
@@ -95,7 +100,7 @@ class Font:
                 self.color = value
 
         # Font file
-        if (value := self.__yaml.get('file', None)):
+        if (value := self.__yaml.get('file')) != None:
             if not Path(value).exists():
                 log.error(f'Font file "{value}" of series {self.__series_info} '
                           f'not found')
@@ -105,7 +110,7 @@ class Font:
                 self.replacements = {} # Reset for manually specified font
 
         # Font replacements
-        if (value := self.__yaml.get('replacements', None)):
+        if (value := self.__yaml.get('replacements')) != None:
             if any(len(key) != 1 for key in value.keys()):
                 log.error(f'Font replacements of series {self.__series_info} is'
                           f' invalid - must only be 1 character')
@@ -118,8 +123,8 @@ class Font:
                 self.replacements = value
 
         # Font Size
-        if (value := self.__yaml.get('size', None)):
-            if not bool(match(r'^\d+%$', value)):
+        if (value := self.__yaml.get('size')) != None:
+            if not bool(self._PERCENT_REGEX_POSITIVE.match(value)):
                 log.error(f'Font size "{value}" of series {self.__series_info} '
                           f'is invalid - specify as "x%"')
                 self.valid = False
@@ -127,7 +132,7 @@ class Font:
                 self.size = float(value[:-1]) / 100.0
 
         # Vertical shift
-        if (value := self.__yaml.get('vertical_shift', None)):
+        if (value := self.__yaml.get('vertical_shift')) != None:
             if not isinstance(value, int):
                 log.error(f'Font vertical shift "{value}" of series '
                           f'{self.__series_info} is invalid - must be integer.')
@@ -136,13 +141,31 @@ class Font:
                 self.vertical_shift = value
 
         # Interline spacing
-        if (value := self.__yaml.get('interline_spacing', None)):
+        if (value := self.__yaml.get('interline_spacing')) != None:
             if not isinstance(value, int):
                 log.error(f'Font interline spacing "{value}" of series '
                           f'{self.__series_info} is invalid - must be integer.')
                 self.valid = False
             else:
                 self.interline_spacing = value
+                
+	# Kerning
+        if (value := self.__yaml.get('kerning')) != None:
+            if not bool(self._PERCENT_REGEX.match(value)):
+                log.error(f'Font kerning "{value}" of series '
+                          f'{self.__series_info} is invalid - specify as "x%"')
+                self.valid = False
+            else:
+                self.kerning = float(value[:-1]) / 100.0
+
+        # Stroke width
+        if (value := self.__yaml.get('stroke_width')) != None:
+            if not bool(self._PERCENT_REGEX.match(value)):
+                log.error(f'Font stroke width "{value}" of series '
+                          f'{self.__series_info} is invalid - specify as "x%"')
+                self.valid = False
+            else:
+                self.stroke_width = float(value[:-1]) / 100.0
 
 
     def set_default(self) -> None:
@@ -160,6 +183,8 @@ class Font:
         self.case = self.__card_class.CASE_FUNCTIONS[self.case_name]
         self.vertical_shift = 0
         self.interline_spacing = 0
+        self.kerning = 1.0
+        self.stroke_width = 1.0
 
 
     def get_attributes(self) -> dict:
@@ -175,6 +200,8 @@ class Font:
             'font': self.file,
             'vertical_shift': self.vertical_shift,
             'interline_spacing': self.interline_spacing,
+            'kerning': self.kerning,
+            'stroke_width': self.stroke_width,
         }
 
 

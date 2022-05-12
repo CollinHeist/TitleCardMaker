@@ -42,42 +42,46 @@ title_card_group.add_argument(
     help='Create a title card with the given source image, written to the given'
          ' destination')
 title_card_group.add_argument(
+    '--blur',
+    action='store_true',
+    help='Blur the source image for this card')
+title_card_group.add_argument(
     '--episode',
     type=str,
     default='EPISODE',
     metavar='EPISODE_TEXT',
-    help="Specify this card's episode text")
+    help='The episode text for this card')
 title_card_group.add_argument(
     '--season',
     type=str,
     default=None,
     metavar='SEASON_TEXT',
-    help="Specify this card's season text")
+    help='The season text for this card')
 title_card_group.add_argument(
     '--title',
     type=str,
     nargs='+',
     default='',
     metavar=('TITLE_LINE'),
-    help="Specify this card's title text")
+    help="The title text for this card")
 title_card_group.add_argument(
     '--font', '--font-file',
     type=Path,
     default='__default',
     metavar='FONT_FILE',
-    help="Specify this card's custom font")
+    help="A custom font file for this card")
 title_card_group.add_argument(
     '--font-size', '--size',
     type=str,
     default='100%',
     metavar='SCALE%',
-    help='Specify a custom font scale (as percentage)')
+    help='A font scale (as percentage) for this card')
 title_card_group.add_argument(
     '--font-color', '--color',
     type=str, 
     default='__default',
     metavar='#HEX',
-    help='Specify a custom font color to use for this card')
+    help='A custom font color for this card')
 title_card_group.add_argument(
     '--vertical-shift', '--shift',
     type=float,
@@ -89,7 +93,19 @@ title_card_group.add_argument(
     type=float,
     default=0.0,
     metavar='PIXELS',
-    help='How many pixels to increase the interline spacing of for title text')
+    help='How many pixels to increase the interline spacing of the title text')
+title_card_group.add_argument(
+    '--kerning',
+    type=str,
+    default='100%',
+    metavar='SCALE%',
+    help='Specify the font kerning scale (as percentage)')
+title_card_group.add_argument(
+    '--stroke-width', '--stroke',
+    type=str,
+    default='100%',
+    metavar='SCALE%',
+    help='Specify the font black stroke scale (as percentage)')
 
 # Argument group for genre cards
 genre_group = parser.add_argument_group(
@@ -192,8 +208,11 @@ if hasattr(args, 'title_card'):
         font_size=float(args.font_size[:-1])/100.0,
         title_color=args.font_color,
         hide_season=(not bool(args.season)),
+        blur=args.blur,
         vertical_shift=args.vertical_shift,
         interline_spacing=args.interline_spacing,
+        kerning=float(args.kerning[:-1])/100.0,
+        stroke_width=float(args.stroke_width[:-1])/100.0,
         **arbitrary_data,
     ).create()
 

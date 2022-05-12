@@ -24,7 +24,6 @@ RUN export MAGICK_HOME="$HOME/ImageMagick-7.1.0" \
 # Install TCM package dependencies
 RUN pip3 install --no-cache-dir --upgrade pipenv
 RUN pipenv install
-RUN rm -f /maker/requirements.txt
 
 # Volumes?
 VOLUME /source
