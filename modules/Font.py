@@ -149,7 +149,7 @@ class Font:
             else:
                 self.interline_spacing = value
                 
-	# Kerning
+        # Kerning
         if (value := self.__yaml.get('kerning')) != None:
             if not bool(self._PERCENT_REGEX.match(value)):
                 log.error(f'Font kerning "{value}" of series '
@@ -160,7 +160,7 @@ class Font:
 
         # Stroke width
         if (value := self.__yaml.get('stroke_width')) != None:
-            if not bool(self._PERCENT_REGEX.match(value)):
+            if not bool(self._PERCENT_REGEX_POSITIVE.match(value)):
                 log.error(f'Font stroke width "{value}" of series '
                           f'{self.__series_info} is invalid - specify as "x%"')
                 self.valid = False
