@@ -27,7 +27,8 @@ class StandardTitleCard(CardType):
     TITLE_COLOR = '#EBEBEB'
 
     """Default characters to replace in the generic font"""
-    FONT_REPLACEMENTS = {'[': '(', ']': ')', '(': '[', ')': ']', '―': '-'}
+    FONT_REPLACEMENTS = {'[': '(', ']': ')', '(': '[', ')': ']', '―': '-',
+                         '…': '...'}
 
     """Whether this CardType uses season titles for archival purposes"""
     USES_SEASON_TITLE = True
