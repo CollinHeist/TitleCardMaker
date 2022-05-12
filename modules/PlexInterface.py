@@ -182,6 +182,8 @@ class PlexInterface:
         return filtered
     
 
+    @retry(stop=stop_after_attempt(5),
+           wait=wait_fixed(3)+wait_exponential(min=1, max=32))
     def __get_library(self, library_name: str) -> 'Library':
         """
         Get the Library object under the given name.
@@ -198,6 +200,8 @@ class PlexInterface:
             return None
 
 
+    @retry(stop=stop_after_attempt(5),
+           wait=wait_fixed(3)+wait_exponential(min=1, max=32))
     def __get_series(self, library: 'Library',
                      series_info: 'SeriesInfo') -> 'Show':
         """
