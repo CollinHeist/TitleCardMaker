@@ -338,8 +338,7 @@ class PlexInterface:
         :param      filepath:       Filepath to the poster to upload.
         """
 
-        pl_episode.uploadPoster(filepath=filepath)
-
+        plex_episode.uploadPoster(filepath=filepath)
 
 
     def set_title_cards_for_series(self, library_name: str, 
@@ -388,7 +387,7 @@ class PlexInterface:
             
             # Upload card to Plex
             try:
-                self.__retry_upload(episode.destination.resolve())
+                self.__retry_upload(pl_episode, episode.destination.resolve())
             except Exception as e:
                 log.error(f'Unable to upload {episode.destination.resolve()} '
                           f'to {series_info} - Plex returned "{e}"')
