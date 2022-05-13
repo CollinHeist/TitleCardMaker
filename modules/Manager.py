@@ -265,10 +265,12 @@ class Manager:
                         show_dict[str(episode)] = {}
                     show_dict[str(episode)]['card'] = episode.destination.name
 
-            if (self.preferences.create_summaries
-                and self.preferences.create_archive and not show.logo.exists()):
+            # Report missing logo if archives and summaries are enabled
+            if (show.archive and self.preferences.create_summaries
+                and not show.logo.exists()):
                 show_dict['logo'] = show.logo.name
 
+            # If this show is missing at least one thing, add to missing dict
             if len(show_dict.keys()) > 0:
                 missing[str(show)] = show_dict
 
@@ -277,7 +279,7 @@ class Manager:
 
         # Write updated data with this entry added
         with file.open('w', encoding='utf-8') as file_handle:
-            dump(missing, file_handle, allow_unicode=True, width=120)
+            dump(missing, file_handle, allow_unicode=True, width=160)
 
         log.info(f'Wrote missing assets to "{file.name}"')
 

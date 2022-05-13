@@ -85,10 +85,10 @@ class Show(YamlReader):
         self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
         self.library_name = None
         self.library = None
-        self.archive = True
-        self.sonarr_sync = True
+        self.archive = self.preferences.create_archive
+        self.sonarr_sync = self.preferences.use_sonarr
         self.sync_specials = self.preferences.sonarr_sync_specials
-        self.tmdb_sync = True
+        self.tmdb_sync = self.preferences.use_tmdb
         self.unwatched_action = self.preferences.plex_unwatched
         self.hide_seasons = False
         self.__episode_range = {}
