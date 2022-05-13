@@ -266,7 +266,7 @@ class Manager:
                     show_dict[str(episode)]['card'] = episode.destination.name
 
             if (self.preferences.create_summaries
-                and self.preferences.create_archive not show.logo.exists()):
+                and self.preferences.create_archive and not show.logo.exists()):
                 show_dict['logo'] = show.logo.name
 
             if len(show_dict.keys()) > 0:
