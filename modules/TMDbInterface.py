@@ -721,8 +721,8 @@ class TMDbInterface(WebInterface):
     def delete_blacklist() -> None:
         """Delete the blacklist file referenced by this class."""
 
-        TMDbInterface.__BLACKLIST.unlink(missing_ok=True)
+        TMDbInterface.__BLACKLIST_DB.unlink(missing_ok=True)
         log.info(f'Deleted blacklist file '
-                 f'"{TMDbInterface.__BLACKLIST.resolve()}"')
+                 f'"{TMDbInterface.__BLACKLIST_DB.resolve()}"')
 
 
