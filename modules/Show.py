@@ -10,6 +10,7 @@ from modules.MultiEpisode import MultiEpisode
 import modules.preferences as global_preferences
 from modules.PlexInterface import PlexInterface
 from modules.Profile import Profile
+from modules.RemoteCardType import RemoteCardType
 from modules.SeriesInfo import SeriesInfo
 from modules.TitleCard import TitleCard
 from modules.Title import Title
@@ -144,7 +145,7 @@ class Show(YamlReader):
 
     def __copy__(self) -> 'Show':
         """
-        Copy the given Show.
+        Copy this Show object into a new (identical) Show.
         
         :returns:   A newly constructed Show object.
         """
@@ -164,7 +165,7 @@ class Show(YamlReader):
 
         if (library := self['library']):
             # If the given library isn't in libary map, invalid
-            if not (this_library := self.__library_map.get(library, None)):
+            if not (this_library := self.__library_map.get(library)):
                 log.error(f'Library "{library}" of series {self} is not found '
                           f'in libraries list')
                 self.valid = False
@@ -175,23 +176,31 @@ class Show(YamlReader):
                 self.media_directory = self.library /self.series_info.legal_path
 
                 # If card type was specified for this library, set that
-                if (card_type := this_library.get('card_type', None)):
-                    if card_type not in TitleCard.CARD_TYPES:
-                        log.error(f'Unknown card type "{card_type}" of series '
-                                  f'{self}')
-                        self.valid = False
-                    else:
+                if (card_type := this_library.get('card_type')):
+                    if card_type in TitleCard.CARD_TYPES:
                         self.card_class = TitleCard.CARD_TYPES[card_type]
                         etf = self.card_class.EPISODE_TEXT_FORMAT
                         self.episode_text_format = etf
+                    elif (remote_card_type := RemoteCardType(card_type)).valid:
+                        self.card_class = remote_card_type.card_class
+                        etf = self.card_class.EPISODE_TEXT_FORMAT
+                        self.episode_text_format = etf
+                    else:
+                        log.error(f'Unknown card type "{card_type}" of series '
+                                  f'{self}')
+                        self.valid = False
 
         if (card_type := self['card_type']):
-            if card_type not in TitleCard.CARD_TYPES:
-                log.error(f'Unknown card type "{card_type}" of series {self}')
-                self.valid = False
-            else:
+            # If known card type, set right away, otherwise check remote repo
+            if card_type in TitleCard.CARD_TYPES:
                 self.card_class = TitleCard.CARD_TYPES[card_type]
                 self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
+            elif (remote_card_type := RemoteCardType(card_type)).valid:
+                self.card_class = remote_card_type.card_class
+                self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
+            else:
+                log.error(f'Unknown card type "{card_type}" of series {self}')
+                self.valid = False
 
         if (value := self['media_directory']):
             self.media_directory = Path(value)

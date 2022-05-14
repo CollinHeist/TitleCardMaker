@@ -1,11 +1,9 @@
-from abc import ABC, abstractmethod
-
 from requests import get
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 
 from modules.Debug import log
 
-class WebInterface(ABC):
+class WebInterface:
     """
     Abstract class that defines a WebInterface, which is a type of interface
     that makes GET requests and returns some JSON result. 
@@ -15,7 +13,6 @@ class WebInterface(ABC):
     CACHE_LENGTH = 10
     
     
-    @abstractmethod
     def __init__(self) -> None:
         """
         Constructs a new instance of a WebInterface. This creates creates a 

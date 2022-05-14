@@ -130,9 +130,9 @@ genre_group.add_argument(
     help='Create all genre cards for images in the given directory based on '
          'their file names')
 
-# Argument group for ShowSummary creation
-summary_group = parser.add_argument_group('ShowSummary')
-summary_group.add_argument(
+# Argument group for Miscelanneous functions
+misc_group = parser.add_argument_group('Miscellaneous')
+misc_group.add_argument(
     '--show-summary',
     type=Path,
     nargs=2,
