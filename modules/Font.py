@@ -101,13 +101,19 @@ class Font:
 
         # Font file
         if (value := self.__yaml.get('file')) != None:
-            if not Path(value).exists():
+            # If specified as direct path, check for existance
+            if (value := Path(value)).exists():
+                self.file = str(value.resolve())
+                self.replacements = {}
+            elif len(matches := tuple(value.parent.glob(f'{value.name}*'))) ==1:
+                # If specified indirectly (or DNE), glob for any extension
+                self.file = str(matches[0].resolve())
+                self.replacements = {}
+            else:
+                # No matching file, error and invalidate
                 log.error(f'Font file "{value}" of series {self.__series_info} '
                           f'not found')
                 self.valid = False
-            else:
-                self.file = str(Path(value).resolve())
-                self.replacements = {} # Reset for manually specified font
 
         # Font replacements
         if (value := self.__yaml.get('replacements')) != None:
