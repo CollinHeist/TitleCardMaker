@@ -123,8 +123,8 @@ class DataFileInterface:
             # Iterate through each episode of this season
             for episode_number, episode_data in season_data.items():
                 # If the 'title' key is missing (or no subkeys at all..) error
-                if ('title' not in episode_data
-                    or not isinstance(episode_data, dict)):
+                if (not isinstance(episode_data, dict)
+                    or 'title' not in episode_data):
                     log.error(f'Season {season_number}, Episode {episode_number}'
                               f' of "{self.file.resolve()}" is missing title')
                     continue

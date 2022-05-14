@@ -14,15 +14,18 @@ class PlexInterface:
     title card images.
     """
 
+    """Action to take for unwatched episodes"""
+    VALID_UNWATCHED_ACTIONS = ('ignore', 'blur', 'art', 'blur_all', 'art_all')
+    DEFAULT_UNWATCHED_ACTION = 'ignore'
+
     """Directory for all temporary objects"""
     TEMP_DIR = Path(__file__).parent / '.objects'
 
     """Filepath to the database of each episode's loaded card characteristics"""
     LOADED_DB = TEMP_DIR / 'loaded.json'
 
-    """Action to take for unwatched episodes"""
-    VALID_UNWATCHED_ACTIONS = ('ignore', 'blur', 'art', 'blur_all', 'art_all')
-    DEFAULT_UNWATCHED_ACTION = 'ignore'
+    """How many failed episodes result in skipping a series"""
+    SKIP_SERIES_THRESHOLD = 3
 
 
     def __init__(self, url: str, x_plex_token: str=None) -> None:
@@ -182,6 +185,8 @@ class PlexInterface:
         return filtered
     
 
+    @retry(stop=stop_after_attempt(5),
+           wait=wait_fixed(3)+wait_exponential(min=1, max=32))
     def __get_library(self, library_name: str) -> 'Library':
         """
         Get the Library object under the given name.
@@ -198,6 +203,8 @@ class PlexInterface:
             return None
 
 
+    @retry(stop=stop_after_attempt(5),
+           wait=wait_fixed(3)+wait_exponential(min=1, max=32))
     def __get_series(self, library: 'Library',
                      series_info: 'SeriesInfo') -> 'Show':
         """
@@ -376,7 +383,14 @@ class PlexInterface:
             return None
 
         # Go through each episode within Plex, set title cards
+        error_count = 0
         for pl_episode in (pbar := tqdm(series.episodes(), **TQDM_KWARGS)):
+            # If error count is too high, skip this series
+            if error_count >= self.SKIP_SERIES_THRESHOLD:
+                log.error(f'Failed to upload {error_count} episodes, skipping '
+                          f'"{series_info}" for now')
+                break
+
             # Skip episodes that aren't in list of cards to update
             ep_key = f'{pl_episode.parentIndex}-{pl_episode.index}'
             if not (episode := filtered_episodes.get(ep_key)):
@@ -389,9 +403,10 @@ class PlexInterface:
             try:
                 self.__retry_upload(pl_episode, episode.destination.resolve())
             except Exception as e:
-                log.error(f'Unable to upload {episode.destination.resolve()} '
-                          f'to {series_info} - Plex returned "{e}"')
-                continue
+                error_count += 1
+                log.warning(f'Unable to upload {episode.destination.resolve()} '
+                            f'to {series_info} - Plex returned "{e}"')
+                return None
             
             # Update the loaded map with this card's size
             size = episode.destination.stat().st_size

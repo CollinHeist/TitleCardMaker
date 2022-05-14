@@ -3,7 +3,7 @@ from re import match, sub, IGNORECASE
 from modules.Debug import log
 import modules.preferences as global_preferences
 
-# CardType classes
+# Default CardType classes
 from modules.AnimeTitleCard import AnimeTitleCard
 from modules.StandardTitleCard import StandardTitleCard
 from modules.StarWarsTitleCard import StarWarsTitleCard
