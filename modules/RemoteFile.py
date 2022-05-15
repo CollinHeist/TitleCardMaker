@@ -60,6 +60,16 @@ class RemoteFile:
         return str(self.local_file.resolve())
 
 
+    def resolve(self) -> Path:
+        """
+        Get the absolute path of the locally downloaded file.
+        
+        :returns:   Path to the locally downloaded file.
+        """
+
+        return self.local_file.resolve()
+
+
     @retry(stop=stop_after_attempt(3),
            wait=wait_fixed(3)+wait_exponential(min=1, max=16))
     def download(self):
