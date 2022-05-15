@@ -37,7 +37,7 @@ class StandardTitleCard(CardType):
     ARCHIVE_NAME = 'standard'
 
     """Source path for the gradient image overlayed over all title cards"""
-    __GRADIENT_IMAGE: Path = REF_DIRECTORY / 'GRADIENT.png'
+    __GRADIENT_IMAGE = REF_DIRECTORY / 'GRADIENT.png'
 
     """Default fonts and color for series count text"""
     SEASON_COUNT_FONT = REF_DIRECTORY / 'Proxima Nova Semibold.otf'
@@ -396,7 +396,9 @@ class StandardTitleCard(CardType):
             or (font.color != StandardTitleCard.TITLE_COLOR)
             or (font.replacements != StandardTitleCard.FONT_REPLACEMENTS)
             or (font.vertical_shift != 0)
-            or (font.interline_spacing != 0))
+            or (font.interline_spacing != 0)
+            or (font.kerning != 1.0)
+            or (font.stroke_width != 1.0))
 
 
     @staticmethod
