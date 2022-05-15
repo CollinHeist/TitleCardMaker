@@ -579,6 +579,10 @@ class Show(YamlReader):
         :param      plex_interface: PlexInterface object to update.
         """
 
+        # Skip if no library specified
+        if self.library_name == None:
+            return None
+
         # Update Plex
         plex_interface.set_title_cards_for_series(
             self.library_name,
