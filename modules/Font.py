@@ -73,6 +73,23 @@ class Font:
         return f'<CustomFont for series "{self.__series_info}">'
 
 
+    def __error(self, attribute: str, value: str, description: str=None) ->None:
+        """
+        Print an error message for the given attribute of the given value. Also
+        sets the valid attribute of this object to False.
+        
+        :param      attribute:      Font attribute that is incorrect.
+        :param      value:          Value of attribute that is incorrect.
+        :param      description:    Optional description for why the given value
+                                    is incorrect.
+        """
+
+        description_tag = f' - {description}' if description else ''
+        log.error(f'Font {attribute} "{value}" of series {self.__series_info} '
+                  f'is invalid{description_tag}')
+        self.valid = False
+
+
     def __parse_attributes(self) -> None:
         """Parse this object's YAML and update the validity and attributes."""
 
@@ -83,26 +100,25 @@ class Font:
         # Font case
         if (value := self.__yaml.get('case', '').lower()) != '':
             if value not in self.__card_class.CASE_FUNCTIONS:
-                log.error(f'Font case "{value}" of series {self.__series_info} '
-                          f'is invalid')
-                self.valid = False
+                self.__error('case', value)
             else:
                 self.case_name = value
                 self.case = self.__card_class.CASE_FUNCTIONS[value]
 
         # Font color
         if (value := self.__yaml.get('color')) != None:
-            if not bool(match('^#[a-fA-F0-9]{6}$', value)):
-                log.error(f'Font color "{value}" of series {self.__series_info}'
-                          f' is invalid - specify as "#xxxxxx"')
-                self.valid = False
+            if (not isinstance(value, str)
+                or not bool(match('^#[a-fA-F0-9]{6}$', value))):
+                self.__error('color', value, 'specify as "#xxxxxx"')
             else:
                 self.color = value
 
         # Font file
         if (value := self.__yaml.get('file')) != None:
-            # If specified as direct path, check for existance
-            if (value := Path(value)).exists():
+            if not isinstance(value, str):
+                self.__error('file', value, 'not a valid path')
+            elif (value := Path(value)).exists():
+                # If specified as direct path, check for existance
                 self.file = str(value.resolve())
                 self.replacements = {}
             elif len(matches := tuple(value.parent.glob(f'{value.name}*'))) ==1:
@@ -110,66 +126,55 @@ class Font:
                 self.file = str(matches[0].resolve())
                 self.replacements = {}
             else:
-                # No matching file, error and invalidate
-                log.error(f'Font file "{value}" of series {self.__series_info} '
-                          f'not found')
-                self.valid = False
+                self.__error('file', value, 'no font file found')
 
         # Font replacements
         if (value := self.__yaml.get('replacements')) != None:
+            if not isinstance(value, dict):
+                self.__error('replacements', value, 'must be character set')
             if any(len(key) != 1 for key in value.keys()):
-                log.error(f'Font replacements of series {self.__series_info} is'
-                          f' invalid - must only be 1 character')
-                self.valid = False
+                self.__error('replacements', value,
+                             'can only specify single character replacements')
             elif not all(isinstance(repl, str) for _, repl in value.items()):
-                log.error(f'Font replacements of series {self.__series_info} is'
-                          f' invalid - can only substitute strings')
-                self.valid = False
+                self.__error('replacements',value,'can only substitute strings')
             else:
                 self.replacements = value
 
         # Font Size
         if (value := self.__yaml.get('size')) != None:
-            if not bool(self._PERCENT_REGEX_POSITIVE.match(value)):
-                log.error(f'Font size "{value}" of series {self.__series_info} '
-                          f'is invalid - specify as "x%"')
-                self.valid = False
+            if (not isinstance(value, str)
+                or not bool(self._PERCENT_REGEX_POSITIVE.match(value))):
+                self.__error('size', value, 'specify as "x%')
             else:
                 self.size = float(value[:-1]) / 100.0
 
         # Vertical shift
         if (value := self.__yaml.get('vertical_shift')) != None:
             if not isinstance(value, int):
-                log.error(f'Font vertical shift "{value}" of series '
-                          f'{self.__series_info} is invalid - must be integer.')
-                self.valid = False
+                self.__error('vertical_shift', value, 'must be integer')
             else:
                 self.vertical_shift = value
 
         # Interline spacing
         if (value := self.__yaml.get('interline_spacing')) != None:
             if not isinstance(value, int):
-                log.error(f'Font interline spacing "{value}" of series '
-                          f'{self.__series_info} is invalid - must be integer.')
-                self.valid = False
+                self.__error('interline_spacing', value, 'must be integer')
             else:
                 self.interline_spacing = value
                 
         # Kerning
         if (value := self.__yaml.get('kerning')) != None:
-            if not bool(self._PERCENT_REGEX.match(value)):
-                log.error(f'Font kerning "{value}" of series '
-                          f'{self.__series_info} is invalid - specify as "x%"')
-                self.valid = False
+            if (not isinstance(value, str)
+                or not bool(self._PERCENT_REGEX.match(value))):
+                self.__error('kerning', value, 'specify as "x%"')
             else:
                 self.kerning = float(value[:-1]) / 100.0
 
         # Stroke width
         if (value := self.__yaml.get('stroke_width')) != None:
-            if not bool(self._PERCENT_REGEX_POSITIVE.match(value)):
-                log.error(f'Font stroke width "{value}" of series '
-                          f'{self.__series_info} is invalid - specify as "x%"')
-                self.valid = False
+            if (not isinstance(value, str)
+                or not bool(self._PERCENT_REGEX_POSITIVE.match(value))):
+                self.__error('stroke_width', value, 'specify as "x%"')
             else:
                 self.stroke_width = float(value[:-1]) / 100.0
 
