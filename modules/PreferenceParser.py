@@ -53,6 +53,7 @@ class PreferenceParser(YamlReader):
         self.zero_pad_seasons = False
         self.archive_directory = None
         self.create_archive = False
+        self.archive_all_variations = True
         self.create_summaries = True
         self.summary_background_color = ShowSummary.BACKGROUND_COLOR
         self.logo_filename = ShowSummary.LOGO_FILENAME
@@ -159,6 +160,10 @@ class PreferenceParser(YamlReader):
         if (value := self['archive', 'path']):
             self.archive_directory = Path(value)
             self.create_archive = True
+
+        if self._is_specified('archive', 'all_variations'):
+            value = self['archive', 'all_variations']
+            self.archive_all_variations = bool(value)
 
         if self._is_specified('archive', 'summary', 'create'):
             self.create_summaries = bool(self['archive', 'summary', 'create'])
