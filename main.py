@@ -57,7 +57,7 @@ parser.add_argument(
     action='store_true',
     help='Run the TitleCardMaker')
 parser.add_argument(
-    '--time', '--runtime',
+    '-t', '--time', '--runtime',
     dest='runtime',
     type=runtime,
     default=SUPPRESS,
