@@ -221,11 +221,12 @@ class Show(YamlReader):
             self.tmdb_sync = bool(self['tmdb_sync'])
 
         if (value := self['unwatched']):
-            if value.lower() not in PlexInterface.VALID_UNWATCHED_ACTIONS:
+            match_value = str(value).lower().replace(' ', '_')
+            if match_value not in PlexInterface.VALID_UNWATCHED_ACTIONS:
                 log.error(f'Invalid unwatched action "{value}" in series {self}')
                 self.valid = False
             else:
-                self.unwatched_action = value.lower()
+                self.unwatched_action = match_value
 
         if self._is_specified('seasons', 'hide'):
             self.hide_seasons = bool(self['seasons', 'hide'])
@@ -578,6 +579,10 @@ class Show(YamlReader):
 
         :param      plex_interface: PlexInterface object to update.
         """
+
+        # Skip if no library specified
+        if self.library_name == None:
+            return None
 
         # Update Plex
         plex_interface.set_title_cards_for_series(

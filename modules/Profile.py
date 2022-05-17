@@ -3,6 +3,7 @@ from regex import match, IGNORECASE
 from modules.CardType import CardType
 from modules.Debug import log
 from modules.MultiEpisode import MultiEpisode
+import modules.preferences as global_preferences
 
 class Profile:
     """
@@ -39,7 +40,7 @@ class Profile:
         self.__use_custom_font = True
 
 
-    def get_valid_profiles(self, card_class: CardType) -> list:
+    def get_valid_profiles(self, card_class: CardType) -> [dict]:
         """
         Gets the valid applicable profiles for this profile. For example,
         for a profile with only generic attributes, it's invalid to
@@ -61,6 +62,19 @@ class Profile:
 
         # Determine whether this profile uses a custom font
         has_custom_font = card_class.is_custom_font(self.font)
+
+        # If not archiving all variations, return only indicated profile
+        if not global_preferences.pp.archive_all_variations:
+            seasons = 'generic'
+            if self.hide_season_title and card_class.USES_SEASON_TITLE:
+                seasons = 'hidden'
+            elif has_custom_season_titles:
+                seasons = 'custom'
+
+            return [{
+                'seasons': seasons,
+                'font': 'custom' if has_custom_font else 'generic'
+            }]
 
         # Get list of profile strings applicable to this object
         valid_profiles = [{'seasons': 'generic', 'font': 'generic'}]

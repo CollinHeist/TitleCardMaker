@@ -37,7 +37,7 @@ class StandardTitleCard(CardType):
     ARCHIVE_NAME = 'standard'
 
     """Source path for the gradient image overlayed over all title cards"""
-    __GRADIENT_IMAGE: Path = REF_DIRECTORY / 'GRADIENT.png'
+    __GRADIENT_IMAGE = REF_DIRECTORY / 'GRADIENT.png'
 
     """Default fonts and color for series count text"""
     SEASON_COUNT_FONT = REF_DIRECTORY / 'Proxima Nova Semibold.otf'
@@ -257,7 +257,7 @@ class StandardTitleCard(CardType):
         command = ' '.join([
             f'convert "{titled_image.resolve()}"',
             *self.__series_count_text_global_effects(),
-            f'-font "{self.EPISODE_COUNT_FONT}"',
+            f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
             f'-gravity center',
             *self.__series_count_text_black_stroke(),
             f'-annotate +0+697.2 "{self.episode_text}"',
@@ -281,15 +281,15 @@ class StandardTitleCard(CardType):
         command = ' '.join([
             f'convert -debug annotate xc: ',
             *self.__series_count_text_global_effects(),
-            f'-font "{self.SEASON_COUNT_FONT}"',    # Season text
+            f'-font "{self.SEASON_COUNT_FONT.resolve()}"',
             f'-gravity east',
             *self.__series_count_text_effects(),
             f'-annotate +1600+697.2 "{self.season_text} "',
-            f'-font "{self.EPISODE_COUNT_FONT}"',   # Separator dot
+            f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
             f'-gravity center',
             *self.__series_count_text_effects(),
             f'-annotate +0+689.5 "• "',
-            f'-gravity west',                       # Episode text
+            f'-gravity west',
             *self.__series_count_text_effects(),
             f'-annotate +1640+697.2 "{self.episode_text}"',
             f'null: 2>&1'
@@ -330,12 +330,12 @@ class StandardTitleCard(CardType):
             f'-background transparent',
             f'xc:transparent',
             *self.__series_count_text_global_effects(),
-            f'-font "{self.SEASON_COUNT_FONT}"',
+            f'-font "{self.SEASON_COUNT_FONT.resolve()}"',
             *self.__series_count_text_black_stroke(),
             f'-annotate +0+{height-25} "{self.season_text} "',
             *self.__series_count_text_effects(),
             f'-annotate +0+{height-25} "{self.season_text} "',
-            f'-font "{self.EPISODE_COUNT_FONT}"',
+            f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
             *self.__series_count_text_black_stroke(),
             f'-annotate +{width1}+{height-25-6.5} "•"',
             *self.__series_count_text_effects(),
@@ -396,7 +396,9 @@ class StandardTitleCard(CardType):
             or (font.color != StandardTitleCard.TITLE_COLOR)
             or (font.replacements != StandardTitleCard.FONT_REPLACEMENTS)
             or (font.vertical_shift != 0)
-            or (font.interline_spacing != 0))
+            or (font.interline_spacing != 0)
+            or (font.kerning != 1.0)
+            or (font.stroke_width != 1.0))
 
 
     @staticmethod

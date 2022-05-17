@@ -53,6 +53,7 @@ class PreferenceParser(YamlReader):
         self.zero_pad_seasons = False
         self.archive_directory = None
         self.create_archive = False
+        self.archive_all_variations = True
         self.create_summaries = True
         self.summary_background_color = ShowSummary.BACKGROUND_COLOR
         self.logo_filename = ShowSummary.LOGO_FILENAME
@@ -160,6 +161,10 @@ class PreferenceParser(YamlReader):
             self.archive_directory = Path(value)
             self.create_archive = True
 
+        if self._is_specified('archive', 'all_variations'):
+            value = self['archive', 'all_variations']
+            self.archive_all_variations = bool(value)
+
         if self._is_specified('archive', 'summary', 'create'):
             self.create_summaries = bool(self['archive', 'summary', 'create'])
 
@@ -184,13 +189,14 @@ class PreferenceParser(YamlReader):
             self.plex_token = value
 
         if (value := self['plex', 'unwatched']):
-            if str(value).lower() not in PlexInterface.VALID_UNWATCHED_ACTIONS:
+            value = str(value).lower().replace(' ', '_')
+            if value not in PlexInterface.VALID_UNWATCHED_ACTIONS:
                 options = '", "'.join(PlexInterface.VALID_UNWATCHED_ACTIONS)
                 log.critical(f'Invalid "unwatched" action, must be one of "'
                              f'{options}"')
                 self.valid = False
             else:
-                self.plex_unwatched = value.lower()
+                self.plex_unwatched = value
 
         if self['sonarr']:
             if not all((self['sonarr', 'url'], self['sonarr', 'api_key'])):

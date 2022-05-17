@@ -5,6 +5,7 @@ from pathlib import Path
 try:
     from yaml import dump
 
+    from modules.Debug import log
     from modules.DataFileInterface import DataFileInterface
     from modules.GenreMaker import GenreMaker
     from modules.PreferenceParser import PreferenceParser
@@ -139,6 +140,18 @@ misc_group.add_argument(
     default=SUPPRESS,
     metavar=('IMAGE_DIRECTORY', 'LOGO'),
     help='Create a ShowSummary for the given directory')
+misc_group.add_argument(
+    '--delete-cards',
+    nargs='+',
+    default=[],
+    metavar='DIRECTORY',
+    help='Delete all images with the specified directory(ies)')
+misc_group.add_argument(
+    '--delete-extension',
+    type=str,
+    default='.jpg',
+    metavar='EXTENSION',
+    help='Extension of images to delete with --delete-cards')
 
 # Argument group for Sonarr
 sonarr_group = parser.add_argument_group('Sonarr')
@@ -236,7 +249,7 @@ if hasattr(args, 'genre_card_batch'):
                 font_size=float(args.font_size[:-1])/100.0,
             ).create()
 
-# Executer ShowSummary options
+# Execute Miscellaneous options
 if hasattr(args, 'show_summary'):
     # Temporary classes
     @dataclass
@@ -257,6 +270,25 @@ if hasattr(args, 'show_summary'):
 
     # Create ShowSummary
     ShowSummary(show).create()
+
+for directory in args.delete_cards:
+    # Get all images in this directory
+    directory = Path(directory)
+    images = tuple(directory.glob(f'**/*{args.delete_extension}'))
+
+    # If no images to delete, skip
+    if len(images) == 0:
+        log.info(f'No images to delete from "{directory.resolve()}"')
+        continue
+
+    # Ask user to confirm deletion
+    log.warning(f'Deleting {len(images)} images from "{directory.resolve()}"')
+    confirmation = input(f'  Continue [Y/N]?  ')
+    if confirmation in ('y', 'Y', 'yes', 'YES'):
+        # Delete each image returned by glob
+        for image in images:
+            image.unlink()
+            log.debug(f'Deleted {image.resolve()}')
 
 # Execute Sonarr related options
 if hasattr(args, 'read_all_series'):
@@ -290,12 +322,12 @@ if hasattr(args, 'read_all_series'):
     with args.read_all_series.open('w', encoding='utf-8') as file_handle:
         dump(yaml, file_handle, allow_unicode=True)
 
-    print(f'\nWrote {len(yaml["series"])} series to '
-          f'{args.read_all_series.resolve()}')
+    log.info(f'\nWrote {len(yaml["series"])} series to '
+             f'{args.read_all_series.resolve()}')
 
 if args.sonarr_list_ids:
     if not pp.use_sonarr:
-        print("Cannot print Sonarr ID's if Sonarr is disabled")
+        log.critical("Cannot list Sonarr ID's if Sonarr is disabled")
     else:
         SonarrInterface(pp.sonarr_url, pp.sonarr_api_key).list_all_series_id()
 

@@ -36,7 +36,7 @@ class RemoteFile:
         self.remote_source = f'{self.BASE_URL}/{username}/{filename}'
 
         # The font fill will be downloaded and exist in the temporary directory
-        self.local_file = self.TEMP_DIR / f'{username}-{filename}'
+        self.local_file = self.TEMP_DIR / username / filename.rsplit('/')[-1]
 
         # Don't redownload if the file has already been downloaded
         if self.local_file.exists():
@@ -58,6 +58,22 @@ class RemoteFile:
         """
 
         return str(self.local_file.resolve())
+
+
+    def __repr__(self) -> str:
+        """Returns a unambiguous string representation of the object."""
+
+        return f'<RemoteFile {self.remote_source=}, {self.local_file=}>'
+
+
+    def resolve(self) -> Path:
+        """
+        Get the absolute path of the locally downloaded file.
+        
+        :returns:   Path to the locally downloaded file.
+        """
+
+        return self.local_file.resolve()
 
 
     @retry(stop=stop_after_attempt(3),
