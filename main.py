@@ -1,7 +1,12 @@
-from argparse import ArgumentParser
+from argparse import ArgumentParser, ArgumentTypeError, SUPPRESS
 from pathlib import Path
+from re import match
+from time import sleep
 
 try:
+    from datetime import datetime, timedelta
+    import schedule
+
     from modules.Debug import log, apply_no_color_formatter
     from modules.FontValidator import FontValidator
     from modules.PreferenceParser import PreferenceParser
@@ -17,6 +22,28 @@ DEFAULT_PREFERENCE_FILE = Path(__file__).parent / 'preferences.yml'
 # Default path for the missing file to write to
 DEFAULT_MISSING_FILE = Path(__file__).parent / 'missing.yml'
 
+# Pseudo-type functions for argument runtime and frequency
+def runtime(arg: str) -> dict:
+    try:
+        hour, minute = map(int, arg.split(':'))
+        assert hour in range(0, 24) and minute in range(0, 60)
+        return {'hour': hour, 'minute': minute}
+    except Exception:
+        raise ArgumentTypeError(f'Invalid time, specify as HH:MM')
+
+def frequency(arg: str) -> dict:
+    try:
+        interval, unit = match(r'(\d+)(m|h|d)', arg).groups()
+        interval, unit = int(interval), unit.lower()
+        assert interval > 0 and unit in ('m', 'h', 'd')
+        return {
+            'interval': interval,
+            'unit': {'m': 'minutes', 'h': 'hours', 'd': 'days'}[unit]
+        }
+    except Exception:
+        raise ArgumentTypeError(f'Invalid frequency, specify as FREQUENCY[unit]'
+                                f', i.e. 12h -> 12 hours, 1d -> 1 day')
+
 # Set up argument parser
 parser = ArgumentParser(description='Start the TitleCardMaker')
 parser.add_argument(
@@ -29,6 +56,20 @@ parser.add_argument(
     '-r', '--run',
     action='store_true',
     help='Run the TitleCardMaker')
+parser.add_argument(
+    '--time', '--runtime',
+    dest='runtime',
+    type=runtime,
+    default=SUPPRESS,
+    metavar='HH:MM',
+    help='When to first run the TitleCardMaker (in 24-hour time)')
+parser.add_argument(
+    '-f', '--frequency',
+    type=frequency,
+    default='12h',
+    metavar='FREQUENCY[unit]',
+    help='How often to run the TitleCardMaker (default "12h"). Units can be '
+         'm/h/d for minutes/hours/days')
 parser.add_argument(
     '-m', '--missing', 
     type=Path,
@@ -67,12 +108,39 @@ if not (pp := PreferenceParser(args.preference_file)).valid:
 set_preference_parser(pp)
 set_font_validator(FontValidator())
 
-# Create and run a Manger object
-if args.run:
-    # Create object, run
+# Function to create and run Manager object
+def run():
+    # Create Manager, run, and write missing report
     tcm = Manager()
     tcm.run()
-
-    # Write missing assets
     tcm.report_missing(args.missing)
+
+# Run immediately if specified
+if args.run:
+    run()
+
+# Schedule subsequent runs if specified
+if hasattr(args, 'runtime'):
+    # Get current time and first run before starting schedule
+    today = datetime.today()
+    first_run = datetime(today.year, today.month, today.day, **args.runtime)
+    first_run += timedelta(days=int(first_run < today))
+
+    # Sleep until first run
+    sleep_seconds = (first_run - today).total_seconds()
+    log.info(f'Starting first run in {int(sleep_seconds)} seconds')
+    sleep(sleep_seconds)
+    run()
+
+    # Set schedule to execute based on given frequency
+    interval, unit = args.frequency['interval'], args.frequency['unit']
+    getattr(schedule.every(interval), unit).do(run)
+
+    # Infinite loop of TCM Execution
+    while True:
+        # Run schedule, sleep until next run
+        schedule.run_pending()
+        next_run = schedule.next_run().strftime("%H:%M:%S %Y-%m-%d")
+        log.info(f'Sleeping until {next_run}')
+        sleep(max(0, (schedule.next_run()-datetime.today()).total_seconds()))
 

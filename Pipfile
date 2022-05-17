@@ -14,6 +14,7 @@ fonttools = "*"
 plexapi = "*"
 tenacity = "*"
 tinydb = "*"
+schedule = "*"
 
 [dev-packages]
 
