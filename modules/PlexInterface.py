@@ -383,12 +383,12 @@ class PlexInterface:
             return None
 
         # Go through each episode within Plex, set title cards
-        error_count = 0
+        error_count, loaded_count = 0, 0
         for pl_episode in (pbar := tqdm(series.episodes(), **TQDM_KWARGS)):
             # If error count is too high, skip this series
             if error_count >= self.SKIP_SERIES_THRESHOLD:
                 log.error(f'Failed to upload {error_count} episodes, skipping '
-                          f'"{series_info}" for now')
+                          f'"{series_info}"')
                 break
 
             # Skip episodes that aren't in list of cards to update
@@ -402,11 +402,12 @@ class PlexInterface:
             # Upload card to Plex
             try:
                 self.__retry_upload(pl_episode, episode.destination.resolve())
+                loaded_count += 1
             except Exception as e:
                 error_count += 1
                 log.warning(f'Unable to upload {episode.destination.resolve()} '
                             f'to {series_info} - Plex returned "{e}"')
-                return None
+                continue
             
             # Update the loaded map with this card's size
             size = episode.destination.stat().st_size
@@ -429,5 +430,9 @@ class PlexInterface:
                     'filesize': size,
                     'spoiler': episode._spoil_type,
                 })
+                
+        # Log load operations to user
+        if loaded_count > 0:
+            log.debug(f'Loaded {loaded_count} cards for "{series_info}"')
 
         
