@@ -1,14 +1,18 @@
 from argparse import ArgumentParser, ArgumentTypeError, SUPPRESS
 from dataclasses import dataclass
 from pathlib import Path
+from re import match, IGNORECASE
 
 try:
     from yaml import dump
 
     from modules.Debug import log
     from modules.DataFileInterface import DataFileInterface
+    from modules.EpisodeInfo import EpisodeInfo
+    from modules.PlexInterface import PlexInterface
     from modules.PreferenceParser import PreferenceParser
     from modules.preferences import set_preference_parser
+    from modules.SeriesInfo import SeriesInfo
     from modules.ShowSummary import ShowSummary
     from modules.SonarrInterface import SonarrInterface
     from modules.TMDbInterface import TMDbInterface
@@ -23,14 +27,19 @@ parser.add_argument('-p', '--preference-file', type=Path,
                     help='Preference YAML file for parsing '
                          'ImageMagick/Sonarr/TMDb options')
 
+# Argument group for Miscellaneous functions
+misc_group = parser.add_argument_group('Miscellaneous')
+misc_group.add_argument(
+    '--import-archive', '--load-archive',
+    metavar=('ARCHIVE_DIRECTORY', 'PLEX_LIBRARY'),
+    help='Import an archive of Title Cards into Plex')
+misc_group.add_argument(
+    '--import-series', '--load-series',
     type=str,
     nargs=2,
     default=SUPPRESS,
-# Argument group for Miscelanneous functions
-misc_group = parser.add_argument_group('Miscellaneous')
-misc_group.add_argument(
-    nargs=2,
-    default=SUPPRESS,
+    metavar=('NAME', 'YEAR'),
+    help='Override/set the name of the series being imported with --import-archive')
 misc_group.add_argument(
     '--delete-cards',
     nargs='+',
@@ -90,10 +99,56 @@ if not pp.valid:
 set_preference_parser(pp)
 
 # Execute Miscellaneous options
+if hasattr(args, 'import_archive'):
     # Temporary classes
     @dataclass
     class Episode:
         destination: Path
+        episode_info: EpisodeInfo
+        _spoil_type: str
+        
+    # Create PlexInterface
+    if not pp.use_plex:
+        log.critical(f'Cannot import archive if Plex is disabled')
+        exit(1)
+    plex_interface = PlexInterface(pp.plex_url, pp.plex_token)
+
+    # Get series/name + year from archive directory if unspecified
+    if hasattr(args, 'import_series'):
+    	series_info = SeriesInfo(*args.import_series)
+    else:
+        if (groups := match(r'^(.*) \((\d+)\)$', archive.parent.name)):
+            series_info = SeriesInfo(*groups.groups())
+        else:
+            log.critical(f'Cannot identify series name/year; specify with '
+                         f'--import-series')
+            exit(1)
+            
+    # Get all images from import archive
+    if len(all_images := Path(args.import_archive[0]).glob('**/*.jpg')) == 0:
+        log.warning(f'No images to import')
+    
+    # For each image, fill out episode map to load into Plex
+    episode_map = {}
+    for image in all_images:
+        if (groups := match(r'.*s(\d+).*e(\d+)', image.name, IGNORECASE)):
+            season, episode = map(int, groups.groups())
+        else:
+            log.warning(f'Cannot identify index of {image.resolve()}, skipping')
+            continue
+            
+        # Import image into library
+        ep = Episode(image, EpisodeInfo('', season, episode), 'spoiled')
+        episode_map[f'{season}-{episode}'] = ep
+        
+    # Load images into Plex
+    plex_interface.set_title_cards_for_series(
+    	args.import_archive[1],
+    	series_info,
+    	episode_map
+    )
+    
+    
 for directory in args.delete_cards:
     # Get all images in this directory
     directory = Path(directory)
