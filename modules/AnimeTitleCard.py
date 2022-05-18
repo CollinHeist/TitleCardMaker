@@ -400,7 +400,7 @@ class AnimeTitleCard(CardType):
         """
 
         return ((font.case_name != AnimeTitleCard.DEFAULT_FONT_CASE)
-            or (font.font_size != 1.0))
+            or (font.size != 1.0))
 
 
     @staticmethod
