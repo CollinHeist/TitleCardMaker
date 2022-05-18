@@ -31,6 +31,9 @@ parser.add_argument('-p', '--preference-file', type=Path,
 misc_group = parser.add_argument_group('Miscellaneous')
 misc_group.add_argument(
     '--import-archive', '--load-archive',
+    type=str,
+    nargs=2,
+    default=SUPPRESS,
     metavar=('ARCHIVE_DIRECTORY', 'PLEX_LIBRARY'),
     help='Import an archive of Title Cards into Plex')
 misc_group.add_argument(
@@ -39,7 +42,7 @@ misc_group.add_argument(
     nargs=2,
     default=SUPPRESS,
     metavar=('NAME', 'YEAR'),
-    help='Override/set the name of the series being imported with --import-archive')
+    help='Override/set the name of the series imported with --import-archive')
 misc_group.add_argument(
     '--delete-cards',
     nargs='+',
@@ -114,6 +117,7 @@ if hasattr(args, 'import_archive'):
     plex_interface = PlexInterface(pp.plex_url, pp.plex_token)
 
     # Get series/name + year from archive directory if unspecified
+    archive = Path(args.import_archive[0])
     if hasattr(args, 'import_series'):
     	series_info = SeriesInfo(*args.import_series)
     else:
@@ -125,7 +129,7 @@ if hasattr(args, 'import_archive'):
             exit(1)
             
     # Get all images from import archive
-    if len(all_images := Path(args.import_archive[0]).glob('**/*.jpg')) == 0:
+    if len(all_images := list(archive.glob('**/*.jpg'))) == 0:
         log.warning(f'No images to import')
     
     # For each image, fill out episode map to load into Plex

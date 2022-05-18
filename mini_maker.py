@@ -13,7 +13,7 @@ except ImportError:
     print(f'Required Python packages are missing - execute "pipenv install"')
     exit(1)
 
-parser = ArgumentParser(description='Manual fixes for the TitleCardMaker')
+parser = ArgumentParser(description='Manually make cards')
 parser.add_argument('-p', '--preference-file', type=Path, 
                     default='preferences.yml', metavar='PREFERENCE_FILE',
                     help='Preference YAML file for parsing '
