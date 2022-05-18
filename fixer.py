@@ -1,145 +1,48 @@
 from argparse import ArgumentParser, ArgumentTypeError, SUPPRESS
 from dataclasses import dataclass
 from pathlib import Path
+from re import match, IGNORECASE
 
 try:
     from yaml import dump
 
     from modules.Debug import log
     from modules.DataFileInterface import DataFileInterface
-    from modules.GenreMaker import GenreMaker
+    from modules.EpisodeInfo import EpisodeInfo
+    from modules.PlexInterface import PlexInterface
     from modules.PreferenceParser import PreferenceParser
     from modules.preferences import set_preference_parser
+    from modules.SeriesInfo import SeriesInfo
     from modules.ShowSummary import ShowSummary
     from modules.SonarrInterface import SonarrInterface
-    from modules.TitleCard import TitleCard
     from modules.TMDbInterface import TMDbInterface
 except ImportError:
     print(f'Required Python packages are missing - execute "pipenv install"')
     exit(1)
 
+# Create ArgumentParser object 
 parser = ArgumentParser(description='Manual fixes for the TitleCardMaker')
 parser.add_argument('-p', '--preference-file', type=Path, 
                     default='preferences.yml', metavar='PREFERENCE_FILE',
                     help='Preference YAML file for parsing '
                          'ImageMagick/Sonarr/TMDb options')
 
-# Argument group for 'manual' title card creation
-title_card_group = parser.add_argument_group('Title Cards',
-                                             'Manual TitleCardMaker interaction')
-title_card_group.add_argument(
-    '--card-type',
-    type=str,
-    default='standard',
-    choices=TitleCard.CARD_TYPES.keys(),
-    metavar='TYPE',
-    help='Create a title card of a specific type')
-title_card_group.add_argument(
-    '--title-card',
-    type=Path,
-    nargs=2,
-    default=SUPPRESS,
-    metavar=('SOURCE', 'DESTINATION'),
-    help='Create a title card with the given source image, written to the given'
-         ' destination')
-title_card_group.add_argument(
-    '--blur',
-    action='store_true',
-    help='Blur the source image for this card')
-title_card_group.add_argument(
-    '--episode',
-    type=str,
-    default='EPISODE',
-    metavar='EPISODE_TEXT',
-    help='The episode text for this card')
-title_card_group.add_argument(
-    '--season',
-    type=str,
-    default=None,
-    metavar='SEASON_TEXT',
-    help='The season text for this card')
-title_card_group.add_argument(
-    '--title',
-    type=str,
-    nargs='+',
-    default='',
-    metavar=('TITLE_LINE'),
-    help="The title text for this card")
-title_card_group.add_argument(
-    '--font', '--font-file',
-    type=Path,
-    default='__default',
-    metavar='FONT_FILE',
-    help="A custom font file for this card")
-title_card_group.add_argument(
-    '--font-size', '--size',
-    type=str,
-    default='100%',
-    metavar='SCALE%',
-    help='A font scale (as percentage) for this card')
-title_card_group.add_argument(
-    '--font-color', '--color',
-    type=str, 
-    default='__default',
-    metavar='#HEX',
-    help='A custom font color for this card')
-title_card_group.add_argument(
-    '--vertical-shift', '--shift',
-    type=float,
-    default=0.0,
-    metavar='PIXELS',
-    help='How many pixels to vertically shift the title text')
-title_card_group.add_argument(
-    '--interline-spacing', '--spacing',
-    type=float,
-    default=0.0,
-    metavar='PIXELS',
-    help='How many pixels to increase the interline spacing of the title text')
-title_card_group.add_argument(
-    '--kerning',
-    type=str,
-    default='100%',
-    metavar='SCALE%',
-    help='Specify the font kerning scale (as percentage)')
-title_card_group.add_argument(
-    '--stroke-width', '--stroke',
-    type=str,
-    default='100%',
-    metavar='SCALE%',
-    help='Specify the font black stroke scale (as percentage)')
-
-# Argument group for genre cards
-genre_group = parser.add_argument_group(
-    'Genre Cards',
-    'Manual genre card creation')
-genre_group.add_argument(
-    '--genre-card',
-    type=str,
-    nargs=3,
-    default=SUPPRESS,
-    metavar=('SOURCE', 'GENRE', 'DESTINATION'),
-    help='Create a genre card with the given text')
-genre_group.add_argument(
-    '--borderless',
-    action='store_true',
-    help='Make the specified Genre Card transparent')
-genre_group.add_argument(
-    '--genre-card-batch',
-    type=Path,
-    default=SUPPRESS,
-    metavar=('SOURCE_DIRECTORY'),
-    help='Create all genre cards for images in the given directory based on '
-         'their file names')
-
-# Argument group for Miscelanneous functions
+# Argument group for Miscellaneous functions
 misc_group = parser.add_argument_group('Miscellaneous')
 misc_group.add_argument(
-    '--show-summary',
-    type=Path,
+    '--import-archive', '--load-archive',
+    type=str,
     nargs=2,
     default=SUPPRESS,
-    metavar=('IMAGE_DIRECTORY', 'LOGO'),
-    help='Create a ShowSummary for the given directory')
+    metavar=('ARCHIVE_DIRECTORY', 'PLEX_LIBRARY'),
+    help='Import an archive of Title Cards into Plex')
+misc_group.add_argument(
+    '--import-series', '--load-series',
+    type=str,
+    nargs=2,
+    default=SUPPRESS,
+    metavar=('NAME', 'YEAR'),
+    help='Override/set the name of the series imported with --import-archive')
 misc_group.add_argument(
     '--delete-cards',
     nargs='+',
@@ -192,85 +95,64 @@ tmdb_group.add_argument(
 # Parse given arguments
 args, unknown = parser.parse_known_args()
 
-# Create dictionary of unknown arguments
-arbitrary_data = {}
-if len(unknown) % 2 == 0 and len(unknown) > 1:
-    arbitrary_data = {key: val for key, val in zip(unknown[::2], unknown[1::2])}
-
 # Parse preference file for options that might need it
 pp = PreferenceParser(args.preference_file)
 if not pp.valid:
     exit(1)
 set_preference_parser(pp)
 
-# Override unspecified defaults with their class specific defaults
-if args.font == Path('__default'):
-    args.font = Path(TitleCard.CARD_TYPES[args.card_type].TITLE_FONT)
-if args.font_color == '__default':
-    args.font_color = TitleCard.CARD_TYPES[args.card_type].TITLE_COLOR
-
-# Execute title card related options
-if hasattr(args, 'title_card'):
-    TitleCard.CARD_TYPES[args.card_type](
-        episode_text=args.episode,
-        source=Path(args.title_card[0]), 
-        output_file=Path(args.title_card[1]),
-        season_text=('' if not args.season else args.season),
-        title='\n'.join(args.title),
-        font=args.font.resolve(),
-        font_size=float(args.font_size[:-1])/100.0,
-        title_color=args.font_color,
-        hide_season=(not bool(args.season)),
-        blur=args.blur,
-        vertical_shift=args.vertical_shift,
-        interline_spacing=args.interline_spacing,
-        kerning=float(args.kerning[:-1])/100.0,
-        stroke_width=float(args.stroke_width[:-1])/100.0,
-        **arbitrary_data,
-    ).create()
-
-# Execute genre card related options
-if hasattr(args, 'genre_card'):
-    GenreMaker(
-        source=Path(args.genre_card[0]),
-        genre=args.genre_card[1],
-        output=Path(args.genre_card[2]),
-        font_size=float(args.font_size[:-1])/100.0,
-        borderless=args.borderless,
-    ).create()
-
-if hasattr(args, 'genre_card_batch'):
-    for file in args.genre_card_batch.glob('*'):
-        if file.suffix.lower() in GenreMaker.VALID_IMAGE_EXTENSIONS:
-            GenreMaker(
-                source=file,
-                genre=file.stem.upper(),
-                output=Path(file.parent /f'{file.stem}-GenreCard{file.suffix}'),
-                font_size=float(args.font_size[:-1])/100.0,
-            ).create()
-
 # Execute Miscellaneous options
-if hasattr(args, 'show_summary'):
+if hasattr(args, 'import_archive'):
     # Temporary classes
     @dataclass
     class Episode:
         destination: Path
+        episode_info: EpisodeInfo
+        _spoil_type: str
+        
+    # Create PlexInterface
+    if not pp.use_plex:
+        log.critical(f'Cannot import archive if Plex is disabled')
+        exit(1)
+    plex_interface = PlexInterface(pp.plex_url, pp.plex_token)
 
-    @dataclass
-    class Show:
-        logo: Path
-        media_directory: Path
-        episodes: dict
-
-    # Get all images in folder
-    all_images = args.show_summary[0].glob('**/*.jpg')
-    episode = 1
-    episodes = {f'1-{(episode := episode+1)}': Episode(f) for f in all_images}
-    show = Show(args.show_summary[1], args.show_summary[0], episodes)
-
-    # Create ShowSummary
-    ShowSummary(show).create()
-
+    # Get series/name + year from archive directory if unspecified
+    archive = Path(args.import_archive[0])
+    if hasattr(args, 'import_series'):
+    	series_info = SeriesInfo(*args.import_series)
+    else:
+        if (groups := match(r'^(.*) \((\d+)\)$', archive.parent.name)):
+            series_info = SeriesInfo(*groups.groups())
+        else:
+            log.critical(f'Cannot identify series name/year; specify with '
+                         f'--import-series')
+            exit(1)
+            
+    # Get all images from import archive
+    if len(all_images := list(archive.glob('**/*.jpg'))) == 0:
+        log.warning(f'No images to import')
+    
+    # For each image, fill out episode map to load into Plex
+    episode_map = {}
+    for image in all_images:
+        if (groups := match(r'.*s(\d+).*e(\d+)', image.name, IGNORECASE)):
+            season, episode = map(int, groups.groups())
+        else:
+            log.warning(f'Cannot identify index of {image.resolve()}, skipping')
+            continue
+            
+        # Import image into library
+        ep = Episode(image, EpisodeInfo('', season, episode), 'spoiled')
+        episode_map[f'{season}-{episode}'] = ep
+        
+    # Load images into Plex
+    plex_interface.set_title_cards_for_series(
+    	args.import_archive[1],
+    	series_info,
+    	episode_map
+    )
+    
+    
 for directory in args.delete_cards:
     # Get all images in this directory
     directory = Path(directory)
