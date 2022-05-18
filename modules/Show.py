@@ -5,6 +5,7 @@ from tqdm import tqdm
 from modules.DataFileInterface import DataFileInterface
 from modules.Debug import log, TQDM_KWARGS
 from modules.Episode import Episode
+from modules.EpisodeMap import EpisodeMap
 from modules.Font import Font
 from modules.MultiEpisode import MultiEpisode
 import modules.preferences as global_preferences
@@ -24,6 +25,8 @@ class Show(YamlReader):
     within the Show's YAML take precedence over the global enables, with the
     exception of Interface objects (such as Sonarr and TMDb).
     """
+    
+    VALID_STYLES = ('unique', 'backdrop', 'blur')
 
     """Filename to the backdrop for a series"""
     BACKDROP_FILENAME = 'backdrop.jpg'
@@ -91,6 +94,7 @@ class Show(YamlReader):
         self.sync_specials = self.preferences.sonarr_sync_specials
         self.tmdb_sync = self.preferences.use_tmdb
         self.unwatched_action = self.preferences.plex_unwatched
+        self.style = self.preferences.style
         self.hide_seasons = False
         self.__episode_range = {}
         self.__season_map = {n: f'Season {n}' for n in range(1, 100)}
@@ -105,7 +109,7 @@ class Show(YamlReader):
             self.card_class,
             self.series_info,
         )
-        self.valid = self.font.valid
+        self.valid = self.valid and self.font.valid
 
         # Update derived attributes
         self.source_directory = source_directory / self.series_info.legal_path
@@ -201,7 +205,14 @@ class Show(YamlReader):
             else:
                 log.error(f'Unknown card type "{card_type}" of series {self}')
                 self.valid = False
-
+                
+        if (style := self['style']):
+            if not isinstance(style, str) and style.lower() in self.VALID_STYLES:
+                log.error(f'Invalid style "{style}" of series {self}')
+                self.valid = False
+            else:
+                self.style = style.lower()
+            
         if (value := self['media_directory']):
             self.media_directory = Path(value)
 
@@ -237,36 +248,9 @@ class Show(YamlReader):
                           f'series {self}')
             else:
                 self.title_language = self['translation']
-
-        # Validate season map & episode range aren't specified at the same time
-        if (seasons := self['seasons']) and self['episode_ranges']:
-            if any(isinstance(key, int) for key in seasons.keys()):
-                log.warning(f'Cannot specify season titles with both "seasons" '
-                            f'and "episode_ranges" in series {self}')
-                self.valid = False
-
-        # Validate season title map
-        if (seasons := self['seasons']):
-            for tag in seasons:
-                if isinstance(tag, int):
-                    self.__season_map[tag] = self['seasons', tag]
-
-        # Validate episode range map
-        if (episode_ranges := self['episode_ranges']):
-            for episode_range in episode_ranges:
-                # If the range cannot be parsed, then error and skip
-                try:
-                    start, end = map(int, episode_range.split('-'))
-                except:
-                    log.error(f'Episode range "{episode_range}" of series '
-                              f'{self} is invalid - specify as "start-end"')
-                    self.valid = False
-                    continue
-
-                # Assign this season title to each episde in the given range
-                this_title = episode_ranges[episode_range]
-                for episode_number in range(start, end+1):
-                    self.__episode_range[episode_number] = this_title
+                
+        self.__episode_map = EpisodeMap(self['seasons'], self['episode_ranges'])
+        self.valid = self.valid and self.__episode_map.valid
 
 
     def __get_destination(self, episode_info: 'EpisodeInfo') -> Path:
@@ -473,6 +457,26 @@ class Show(YamlReader):
         # If any translations were added, re-read source
         if modified:
             self.read_source()
+            
+            
+    def select_source_images(self, plex_interface: PlexInterface=None,
+                             tmdb_interface: 'TMDbInterface'=None) -> None:
+        """
+        
+        """
+        
+        # Update watched statuses via Plex
+        if plex_interface != None:
+            self.__update_watched_statuses(plex_interface)
+            
+        for key, episode in self.episodes.items():
+            applies_to = self.__episode_map.get_applies_to(episode.episode_info)
+            match (applies_to, self.unwatched_action, self.style, episode.watched):
+                case ('all', _, 'unique' | 'backdrop', _):
+                    continue
+                case ('all', _, 'blur'):
+                    episode.blur = True
+                case ('unwatched'
 
 
     def modify_unwatched_episodes(self, plex_interface: PlexInterface,
