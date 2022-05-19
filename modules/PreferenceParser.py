@@ -47,6 +47,7 @@ class PreferenceParser(YamlReader):
         # Setup default values that can be overwritten by YAML
         self.series_files = []
         self.card_type = 'standard'
+        self.style = 'unique'
         self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
         self.card_extension = TitleCard.DEFAULT_CARD_EXTENSION
         self.validate_fonts = True
@@ -132,10 +133,17 @@ class PreferenceParser(YamlReader):
 
         if (value := self['options', 'card_type']):
             if value not in TitleCard.CARD_TYPES:
-                log.critical(f'Default card type "{value}" is unrecognized')
+                log.critical(f'Default card type "{value}" is invalid')
                 self.valid = False
             else:
                 self.card_type = value
+
+        if (value := self['options', 'style']):
+            if str(value).lower() not in Show.VALID_STYLES:
+                log.critical(f'Default card style "{value}" is invalid')
+                self.valid = False
+            else:
+                self.style = str(value).lower()
 
         if (new_format := self['options', 'filename_format']):
             if not TitleCard.validate_card_format_string(new_format):
