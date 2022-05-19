@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # Set base image
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 # Set working directory
 WORKDIR /maker
@@ -24,12 +24,6 @@ RUN export MAGICK_HOME="$HOME/ImageMagick-7.1.0" \
 # Install TCM package dependencies
 RUN pip3 install --no-cache-dir --upgrade pipenv
 RUN pipenv install
-
-# Volumes?
-VOLUME /source
-VOLUME /archive
-VOLUME /fonts
-VOLUME /config
 
 # Entrypoint
 ENTRYPOINT ["/bin/bash"]
