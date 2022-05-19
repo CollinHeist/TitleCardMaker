@@ -23,13 +23,6 @@ parser.add_argument('-p', '--preference-file', type=Path,
 title_card_group = parser.add_argument_group('Title Cards',
                                              'Manual TitleCardMaker interaction')
 title_card_group.add_argument(
-    '--card-type',
-    type=str,
-    default='standard',
-    choices=TitleCard.CARD_TYPES.keys(),
-    metavar='TYPE',
-    help='Create a title card of a specific type')
-title_card_group.add_argument(
     '--title-card',
     type=Path,
     nargs=2,
@@ -37,6 +30,13 @@ title_card_group.add_argument(
     metavar=('SOURCE', 'DESTINATION'),
     help='Create a title card with the given source image, written to the given'
          ' destination')
+title_card_group.add_argument(
+    '--card-type',
+    type=str,
+    default='standard',
+    choices=TitleCard.CARD_TYPES.keys(),
+    metavar='TYPE',
+    help='Create a title card of a specific type')
 title_card_group.add_argument(
     '--blur',
     action='store_true',

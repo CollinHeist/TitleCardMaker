@@ -20,6 +20,8 @@ except ImportError:
     print(f'Required Python packages are missing - execute "pipenv install"')
     exit(1)
 
+OLD_COMMANDS = ('--title-card', '--genre-card', '--show-summary')
+
 # Create ArgumentParser object 
 parser = ArgumentParser(description='Manual fixes for the TitleCardMaker')
 parser.add_argument('-p', '--preference-file', type=Path, 
@@ -94,6 +96,8 @@ tmdb_group.add_argument(
 
 # Parse given arguments
 args, unknown = parser.parse_known_args()
+if any(old_arg in unknown for old_arg in OLD_COMMANDS):
+    log.warning(f'Manual card creation has moved to "mini_maker.py"')
 
 # Parse preference file for options that might need it
 pp = PreferenceParser(args.preference_file)
