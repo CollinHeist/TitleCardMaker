@@ -13,26 +13,21 @@ class Profile:
     """
 
     def __init__(self, font: 'Font', hide_seasons: bool,
-                 season_map: dict, episode_range: dict, map_or_range: bool,
-                 episode_text_format: str) -> None:
+                 episode_map: 'EpisodeMap', episode_text_format: str) -> None:
         """
         Constructs a new instance of a Profile. All given arguments will be
         applied through this Profile (and whether it's generic/custom).
         
         :param      font:                   The Font for this profile.
         :param      hide_seasons:           Whether to hide/show seasons.
-        :param      season_map:             The season map.
-        :param      episode_range:          The episode range.
-        :param      map_or_range:           The map or range.
+        :param      episode_map:            EpisodeMap for the series.
         :param      episode_text_format:    The episode text format string.
         """
 
         # Store this profiles arguments as attributes
         self.font = font
         self.hide_season_title = hide_seasons
-        self.__season_map = season_map
-        self.__episode_range = episode_range
-        self.__map_or_range = map_or_range
+        self.__episode_map = episode_map
         self.episode_text_format = episode_text_format
 
         # These flags are only modified when the profile is converted
@@ -55,8 +50,7 @@ class Profile:
 
         # Determine whether this profile uses custom season titles
         has_custom_season_titles = card_class.is_custom_season_titles(
-            season_map=self.__season_map,
-            episode_range=self.__episode_range,
+            custom_episode_map=self.__episode_map.is_custom,
             episode_text_format=self.episode_text_format,
         )
 
@@ -135,29 +129,10 @@ class Profile:
 
         # Generic season titles are Specials and Season {n}
         if not self.__use_custom_seasons:
-            if episode_info.season_number == 0:
-                return 'Specials'
-            return f'Season {episode_info.season_number}'
+            self.__episode_map.get_generic_season_title(episode_info)
 
-        # Custom season titles and method is season map
-        if self.__map_or_range == 'map':
-            return self.__season_map[episode_info.season_number]
-        
-        # Custom season titles using episode range, check for absolute number
-        if episode_info.abs_number == None:
-            # Episode range, but episode has no absolute number
-            if episode_info.season_number != 0:     # Don't warn on specials
-                log.warning(f'Episode range preferred, but {episode_info} has '
-                            f'no absolute number')
-            return self.__season_map[episode_info.season_number]
-        elif episode_info.abs_number not in self.__episode_range:
-            # Absolute number doesn't have episode range, fallback on season map
-            log.warning(f'{episode_info} does not fall into specified episode '
-                        f'range')
-            return self.__season_map[episode_info.season_number]
-
-        # Absolute number is provided and falls into mapped episode ranges
-        return self.__episode_range[episode_info.abs_number]
+        # Custom season title, query EpisodeMap for title
+        return self.__episode_map.get_season_title(episode_info)
 
 
     def get_episode_text(self, episode: 'Episode') -> str:

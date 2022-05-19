@@ -83,6 +83,7 @@ class Show(YamlReader):
             return None
             
         # Setup default values that can be overwritten by YAML
+        self.valid = True
         self.series_info = SeriesInfo(name, year)
         self.media_directory = None
         self.card_class = TitleCard.CARD_TYPES[self.preferences.card_type]
@@ -96,9 +97,7 @@ class Show(YamlReader):
         self.unwatched_action = self.preferences.plex_unwatched
         self.style = self.preferences.style
         self.hide_seasons = False
-        self.__episode_range = {}
-        self.__season_map = {n: f'Season {n}' for n in range(1, 100)}
-        self.__season_map[0] = 'Specials'
+        self.__episode_map = EpisodeMap()
         self.title_language = {}
 
         # Set object attributes based off YAML and update validity
@@ -109,7 +108,7 @@ class Show(YamlReader):
             self.card_class,
             self.series_info,
         )
-        self.valid = self.valid and self.font.valid
+        self.valid &= self.font.valid
 
         # Update derived attributes
         self.source_directory = source_directory / self.series_info.legal_path
@@ -125,9 +124,7 @@ class Show(YamlReader):
         self.profile = Profile(
             self.font,
             self.hide_seasons,
-            self.__season_map,
-            self.__episode_range,
-            'range' if self.__episode_range != {} else 'map',
+            self.__episode_map,
             self.episode_text_format,
         )
 
@@ -250,7 +247,7 @@ class Show(YamlReader):
                 self.title_language = self['translation']
                 
         self.__episode_map = EpisodeMap(self['seasons'], self['episode_ranges'])
-        self.valid = self.valid and self.__episode_map.valid
+        self.valid &= self.__episode_map.valid
 
 
     def __get_destination(self, episode_info: 'EpisodeInfo') -> Path:
@@ -470,13 +467,27 @@ class Show(YamlReader):
             self.__update_watched_statuses(plex_interface)
             
         for key, episode in self.episodes.items():
+            # Get the manually specified source from the episode map
+            manual_source = self.__episode_map.get_source(episode.episode_info)
+
+            # Update source and blurring of this episode based on all settings
             applies_to = self.__episode_map.get_applies_to(episode.episode_info)
-            match (applies_to, self.unwatched_action, self.style, episode.watched):
+            unwatched_action = self.unwatched_action
+            match (applies_to, unwatched_action, self.style, episode.watched):
                 case ('all', _, 'unique' | 'backdrop', _):
-                    continue
-                case ('all', _, 'blur'):
+                    episode.update_source(manual_source)
+                case (('all', _, 'blur', _)
+                    | ('unwatched', 'ignore', 'blur', False)
+                    | ('unwatched', 'blur', _, False)):
                     episode.blur = True
-                case ('unwatched'
+                    episode.update_source(manual_source)
+                case ('unwatched', _, _, False):
+                    episode.update_source(manual_source)
+                case ('unwatched', _, 'backdrop', True):
+                    episode.update_source(self.backdrop)
+                case ('unwatched', _, 'blur', True):
+                    episode.blur = True
+            
 
 
     def modify_unwatched_episodes(self, plex_interface: PlexInterface,

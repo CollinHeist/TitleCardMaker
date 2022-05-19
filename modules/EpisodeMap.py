@@ -1,12 +1,30 @@
+from modules.Debug import log
+
 class EpisodeMap:
     
     DEFAULT_APPLIES_TO = 'all'
+
+
+    __slots__ = ('valid', 'is_custom', '__index_by', '__titles', '__sources',
+                 '__applies')
+
     
     def __init__(self, seasons: dict=None,
-                 episode_ranges: dict=None) -> dict:
+                 episode_ranges: dict=None) -> None:
+        """
+        Construct a new instance of an EpisodeMap. This maps titles and source
+        images to episodes, and can be initialized with EITHER a season map or
+        episode range directly from series YAML; NOT both.
         
-        # Assume object is valid until invalidated
+        :param      seasons:        Optional 'seasons' key from series YAML to
+                                    initialize with.
+        :param      episode_ranges: Optional 'episode_ranges' key from series 
+                                    YAML to initialize with.
+        """
+        
+        # Assume object is valid until invalidated, and generic until customized
         self.valid = True
+        self.is_custom = False
         
         # Default indexing is by season number
         self.__index_by = 'season'
@@ -18,20 +36,21 @@ class EpisodeMap:
         
         # If both mappings are provided, invalidate 
         if seasons and episode_ranges:
-            print(f'Cannot specify both seasons and episode ranges')
+            log.error(f'Cannot specify both seasons and episode ranges')
             self.valid = False
             return None
         
         # Validate type of provided mapping
         if seasons and not isinstance(seasons, dict):
-            print(f'Invalid "seasons"')
+            log.error(f'Season map "{seasons}" is invalid')
             self.valid = False
             return None
         if episode_ranges and not isinstance(episode_ranges, dict):
-            print(f'Invalid "episode_ranges"')
+            print(f'Episode ranges "{episode_ranges}" is invalid')
             self.valid = False
             return None
         
+        # Specify how to index this Episode Map, parse that YAML
         if seasons:
             self.__index_by = 'season'
             self.__parse_seasons(seasons)
@@ -42,22 +61,31 @@ class EpisodeMap:
     
     def __parse_seasons(self, seasons: dict) -> None:
         """
-        
+        Parse the given season map, filling this object's title, source, and
+        applies dictionaries. Also update's object validity.
+
+        :param      seasons:    'series' key from series YAML to parse.
         """
         
         # Go through each season of mapping
         for season_number, mapping in seasons.items():
+            # Skip hide key
+            if season_number == 'hide':
+                continue
+
             # Ensure season number is a number
-            if not isinstance(season_number, int):
+            if isinstance(season_number, int):
                 print(f'Invalid season "{season_number}"')
                 self.valid = False
                 return None
             
+            # Parse title/source mapping
             if isinstance(mapping, str):
                 self.__titles[season_number] = mapping
             elif isinstance(value, dict):
                 if (value := mapping.get('title')):
                     self.__titles[season_number] = value
+                    self.is_custom = True
                 if (value := mapping.get('source')):
                     self.__sources[season_number] = value
                 if (value := mapping.get('source_applies_to', '').lower()):
@@ -71,7 +99,11 @@ class EpisodeMap:
         
     def __parse_episode_ranges(self, episode_ranges: dict) -> None:
         """
-        
+        Parse the given episode range map, filling this object's title, source,
+        and applies dictionaries. Also update's object validity.
+
+        :param      episode_ranges: 'episode_ranges' key from series YAML to
+                                    parse.
         """
         
         # Go through each episode range of mapping
@@ -87,8 +119,9 @@ class EpisodeMap:
                 if isinstance(mapping, str):
                     self.__titles[episode_number] = mapping
                 elif isinstance(mapping, dict):
-                    if (value := mapping.get('title'))
+                    if (value := mapping.get('title')):
                         self.__titles[episode_number] = value
+                        self.is_custom = True
                     if (value := mapping.get('source')):
                         self.__sources[episode_number] = value
                     if (value := mapping.get('source_applies_to', '').lower()):
@@ -101,11 +134,13 @@ class EpisodeMap:
                     
                     
     def __repr__(self) -> str:
+        """Returns a unambiguous string representation of the object."""
+
         return (f'<EpisodeRange {self.__titles=}, {self.__sources=}, '
-               f'{self.__applies=}>')
+               f'{self.__applies=}, {self.__index_by=}>')
     
     
-    def __get_generic_season_title(self, episode_info: 'EpisodeInfo') -> str:
+    def get_generic_season_title(self, episode_info: 'EpisodeInfo') -> str:
         """
         Get the generic season title associated with the given Episode.
         
@@ -114,51 +149,96 @@ class EpisodeMap:
         :returns:   'Specials' for season 0 episodes, 'Season {n}' otherwise.
         """
         
-        season = episode_number.season_number
+        season = episode_info.season_number
         return 'Specials' if season == 0 else f'Season {season}'
+
+
+    def __get_value(self, episode_info: 'EpisodeInfo', which: str,
+                    default: callable):
+        """
+        Get the value for the given Episode from the target associated with
+        'which' (i.e. the season title/source/applies map).
+        
+        :param      episode_info:   Episode to get the value of.
+        :param      which:          Which dictionary to get the value from.
+        :param      default:        Function to call if the given Episode does
+                                    not exist in the indicated map. It's return
+                                    is returned.
+        
+        :returns:   If the Episode exists, returns the value from the indicated
+                    map. If it does not exist, returns the return of default
+                    with EpisodeInfo passed.
+        """
+
+        # Get target to look through
+        if which == 'season_title':
+            target = self.__titles
+        elif which == 'source':
+            target == self.__sources
+        else:
+            target = self.__applies
+
+        # Index by season
+        if self.__index_by == 'season':
+            if episode_info.season_number in target:
+                return target[episode_info.season_number]
+
+            return default(episode_info)
+        
+        # Index by absolute episode number
+        if (episode_info.abs_number == None
+            or episode_info.abs_number not in target):
+            return default(episode_info)
+        
+        return target[episode_info.abs_number]
     
     
     def get_season_title(self, episode_info: 'EpisodeInfo') -> str:
         """
-        
+        Get the season title for the given Episode.
+
+        :param      episode_info:   Episode to get the season title of.
+
+        :returns:   Season title defined by this map for this Episode.
         """
-        
-        # Index by season, return matching season title
-        if self.__index_by == 'season':
-            if episode_info.season_number in self.__titles:
-                return self.__titles[episode_info.season_number]
-            return self.__get_generic_season_title(episode_info)
-        
-        # Index by absolute episode number
-        if episode_info.abs_number == None:
-            # Episode has no absolute number
-            if episode_info.season_number != 0:
+
+        season_title = self.__get_value(episode_info, 'season_title',
+                                        self.get_generic_season_title)
+
+        if self.__index_by == 'episode':
+            if (episode_info.abs_number == None
+                and episode_info.season_number != 0):
                 log.warning(f'Episode range specified, but {episode_info} '
                             f'has no absolute episode number')
+            elif episode_info.abs_number not in self.__titles:
+                log.warning(f'{episode_info} does not fall into specified '
+                            f'episode range')
 
-            return self.__get_generic_season_title(episode_info)
-        elif episode_info.abs_number not in self.__titles:
-            log.warning(f'{episode_info} does not fall into specified '
-                        f'episode range')
-            return self.__get_generic_season_title(episode_info)
-        
-        return self.__titles[episode_info.abs_number]
+        return season_title
+
+
+    def get_source(self, episode_info: 'EpisodeInfo') -> str:
+        """
+        Get the specified source filename for the given Episode.
+
+        :param      episode_info:   Episode to get the source filename of.
+
+        :returns:   Source filename defined by this map for this Episode.
+        """
+
+        return self.__get_value(episode_info, 'source', lambda _: None)
     
     
     def get_applies_to(self, episode_info: 'EpisodeInfo') -> str:
         """
-        
+        Get the specified applies to value of for the given Episode.
+
+        :param      episode_info:   Episode to get the applies to value of.
+
+        :returns:   Applies to value defined by this map for this Episode; 
+                    either 'all' or 'unwatched'.
         """
+
+        return self.__get_value(episode_info, 'applies_to',
+                                lambda _: self.DEFAULT_APPLIES_TO)
         
-        # Index by season
-        if self.__index_by == 'season':
-            if episode_info.season_number in self.__applies:
-                return self.__applies[episode_info.season_number]
-            return self.DEFAULT_APPLIES_TO
-        
-        # Index by absolute episode number
-        if (episode_info.abs_number == None
-            or episode_info.abs_number not in self.__applies):
-            return self.DEFAULT_APPLIES_TO
-        
-        return self.__applies[episode_info.abs_number]

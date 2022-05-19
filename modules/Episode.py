@@ -10,8 +10,9 @@ class Episode:
     map that info to a source and destination file.
     """
 
-    __slots__ = ('episode_info', 'card_class', 'source', 'destination', 'blur',
-                 'extra_characteristics', 'spoiler', '_spoil_type')
+    __slots__ = ('episode_info', 'card_class', '__base_source', 'source',
+                 'destination', 'blur', 'extra_characteristics', 'spoiler',
+                 '_spoil_type')
     
 
     def __init__(self, episode_info: 'EpisodeInfo', card_class: 'CardType',
@@ -33,6 +34,7 @@ class Episode:
         self.card_class = card_class
 
         # Set source/destination paths
+        self.__base_source = base_source
         source_name = (f's{episode_info.season_number}'
                        f'e{episode_info.episode_number}'
                        f'{TitleCard.INPUT_CARD_EXTENSION}')
@@ -60,6 +62,20 @@ class Episode:
         return (f'<Episode {self.episode_info=}, {self.card_class=}, '
                 f'{self.source=}, {self.destination=}, {self.spoiler=},'
                 f'{self.blur=}, {self.extra_characteristics=}>')
+
+
+    def update_source(self, new_source: str=None) -> None:
+        """
+        { function_description }
+        
+        :param      source:  The source
+        """
+
+        if new_source != None:
+            if isinstance(new_source, Path):
+                self.source = new_source
+            else:
+                self.source = self.__base_source / new_source
 
 
     def delete_card(self) -> None:
