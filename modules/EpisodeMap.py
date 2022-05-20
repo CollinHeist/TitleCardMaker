@@ -34,19 +34,19 @@ class EpisodeMap:
         if not seasons and not episode_ranges:
             return None
         
-        # If both mappings are provided, invalidate 
-        if seasons and episode_ranges:
-            log.error(f'Cannot specify both seasons and episode ranges')
-            self.valid = False
-            return None
-        
         # Validate type of provided mapping
         if seasons and not isinstance(seasons, dict):
             log.error(f'Season map "{seasons}" is invalid')
             self.valid = False
             return None
         if episode_ranges and not isinstance(episode_ranges, dict):
-            print(f'Episode ranges "{episode_ranges}" is invalid')
+            log.error(f'Episode ranges "{episode_ranges}" is invalid')
+            self.valid = False
+            return None
+
+        # If both mappings are provided, invalidate 
+        if seasons and episode_ranges:
+            log.error(f'Cannot specify both seasons and episode ranges')
             self.valid = False
             return None
         
@@ -74,8 +74,8 @@ class EpisodeMap:
                 continue
 
             # Ensure season number is a number
-            if isinstance(season_number, int):
-                print(f'Invalid season "{season_number}"')
+            if not isinstance(season_number, int):
+                log.warning(f'Invalid season number "{season_number}"')
                 self.valid = False
                 return None
             

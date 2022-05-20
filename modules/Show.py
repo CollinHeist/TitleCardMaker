@@ -473,20 +473,35 @@ class Show(YamlReader):
             # Update source and blurring of this episode based on all settings
             applies_to = self.__episode_map.get_applies_to(episode.episode_info)
             unwatched_action = self.unwatched_action
-            match (applies_to, unwatched_action, self.style, episode.watched):
-                case ('all', _, 'unique' | 'backdrop', _):
-                    episode.update_source(manual_source)
-                case (('all', _, 'blur', _)
-                    | ('unwatched', 'ignore', 'blur', False)
-                    | ('unwatched', 'blur', _, False)):
-                    episode.blur = True
-                    episode.update_source(manual_source)
-                case ('unwatched', _, _, False):
-                    episode.update_source(manual_source)
-                case ('unwatched', _, 'backdrop', True):
-                    episode.update_source(self.backdrop)
-                case ('unwatched', _, 'blur', True):
-                    episode.blur = True
+            if applies_to == 'all' and self.style in ('unique', 'backdrop'):
+                episode.update_source(manual_source)
+            elif ((applies_to == 'all' and self.style == 'blur')
+                or (applies_to == 'unwatched' and unwatched_action == 'ignore'
+                    and self.style == 'blur' and not episode.watched)
+                or (applies_to == 'unwatched' and unwatched_action == 'blur'
+                    and not episode.watched)):
+                episode.blur = True
+                episode.update_source(manual_source)
+            elif (applies_to == 'unwatched' and not episode.watched):
+                episode.update_source(manual_source)
+            elif (applies_to == 'unwatched' and self.style == 'blur'
+                and episode.watched):
+                episode.blur = True
+            # Python 3.10 version..
+            # match (applies_to, unwatched_action, self.style, episode.watched):
+            #     case ('all', _, 'unique' | 'backdrop', _):
+            #         episode.update_source(manual_source)
+            #     case (('all', _, 'blur', _)
+            #         | ('unwatched', 'ignore', 'blur', False)
+            #         | ('unwatched', 'blur', _, False)):
+            #         episode.blur = True
+            #         episode.update_source(manual_source)
+            #     case ('unwatched', _, _, False):
+            #         episode.update_source(manual_source)
+            #     case ('unwatched', _, 'backdrop', True):
+            #         episode.update_source(self.backdrop)
+            #     case ('unwatched', _, 'blur', True):
+            #         episode.blur = True
             
 
 

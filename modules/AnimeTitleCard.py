@@ -417,8 +417,10 @@ class AnimeTitleCard(CardType):
         :returns:   True if custom season titles are indicated, False otherwise.
         """
 
+        standard_etf = AnimeTitleCard.EPISODE_TEXT_FORMAT.upper()
+        
         return (custom_episode_map or
-                episode_text_format.upper() != self.EPISODE_TEXT_FORMAT.upper())
+                episode_text_format.upper() != standard_etf)
 
 
     def create(self) -> None:
