@@ -15,7 +15,7 @@ class SonarrInterface(WebInterface):
     """
 
     """Episode titles that indicate a placeholder and are to be ignored"""
-    __PLACEHOLDER_NAMES = {'tba', 'TBA'}
+    __PLACEHOLDER_NAMES = {'tba', 'TBA', 'tbd', 'TBD'}
 
     """Datetime format string for airDateUtc field in Sonarr API requests"""
     __AIRDATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
