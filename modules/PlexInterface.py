@@ -14,10 +14,6 @@ class PlexInterface:
     title card images.
     """
 
-    """Action to take for unwatched episodes"""
-    VALID_UNWATCHED_ACTIONS = ('ignore', 'blur', 'art', 'blur_all', 'art_all')
-    DEFAULT_UNWATCHED_ACTION = 'ignore'
-
     """Directory for all temporary objects"""
     TEMP_DIR = Path(__file__).parent / '.objects'
 
@@ -246,9 +242,9 @@ class PlexInterface:
             return None
 
 
-    def modify_unwatched_episodes(self, library_name: str,
-                                  series_info: 'SeriesInfo',
-                                  episode_map: dict, unwatched: str) -> None:
+    def update_watched_statuses(self, library_name: str,
+                                series_info: 'SeriesInfo', episode_map: dict,
+                                watched_style: str, unwatched_style: str)->None:
         """
         Modify the Episode objects according to the watched status of the
         corresponding episodes within Plex, and the spoil status of the object.
@@ -260,12 +256,9 @@ class PlexInterface:
         :param      series_info:    The series to update.
         :param      episode_map:    Dictionary of episode keys to Episode
                                     objects to modify.
-        :param      unwatched:      How to treat unwatched episodes.
+        :param      watched_style:  Desired card style of watched episodes.
+        :param      unwatched:      Desired card style of unwatched episodes.
         """
-
-        # Validate unwatched action
-        if (unwatched := unwatched.lower()) not in self.VALID_UNWATCHED_ACTIONS:
-            raise ValueError(f'Invalid unwatched action "{unwatched}"')
 
         # If no episodes, or unwatched setting is ignored, exit
         if len(episode_map) == 0:
@@ -279,19 +272,11 @@ class PlexInterface:
         if not (series := self.__get_series(library, series_info)):
             return None
 
-        # General spoil characteristics
-        all_spoiler_free = unwatched in ('art_all', 'blur_all')
-        all_spoiler = unwatched == 'ignore'
-        if unwatched == 'ignore':
-            spoil_type = 'spoiled'
-        else:
-            spoil_type = 'art' if 'art' in unwatched else 'blur'
-
         # Get loaded characteristics of the series
         loaded_series = self.__db.search(
             self.__get_condition(library_name, series_info)
         )
-
+        
         # Go through each episode within Plex and update Episode spoiler status
         for plex_episode in series.episodes():
             # If this Plex episode doesn't have Episode object(?) skip
@@ -299,29 +284,18 @@ class PlexInterface:
             if not (episode := episode_map.get(ep_key)):
                 continue
 
+            # Set Episode watched/spoil statuses
+            episode.update_statuses(plex_episode.isWatched, watched_style,
+                                    unwatched_style)
+
             # Get loaded card characteristics for this episode
             details = self.__get_loaded_episode(loaded_series, episode)
             loaded = details != None
-
-            # Spoil characteristics for this card            
-            spoiler_free = (unwatched != 'ignore'
-                            and not plex_episode.isWatched)
-            spoiler = plex_episode.isWatched and not all_spoiler_free
             spoiler_status = details['spoiler'] if loaded else None
 
-            # If Episode needs to be spoiler-free
-            delete_and_reset = False
-            if all_spoiler_free or spoiler_free:
-                # Update episode source
-                episode.make_spoiler_free(unwatched)
-
-                # If loaded card is spoiler, or wrong style, mark for deletion
-                if spoiler_status == 'spoiled' or spoiler_status != spoil_type:
-                    delete_and_reset = True
-
-            # If episode needs to become spoiler, mark for deletion
-            if (all_spoiler or spoiler) and spoiler_status != 'spoiled':
-                delete_and_reset = True
+            # Delete and reset card if current spoiler type doesnt match
+            delete_and_reset = ((episode.spoil_type != spoiler_status)
+                                and spoiler_status)
 
             # Delete card, reset size in loaded map to force reload
             if delete_and_reset and loaded:
@@ -418,7 +392,7 @@ class PlexInterface:
             loaded = self.__db.get(condition)
             if loaded:
                 self.__db.update(
-                    {'filesize': size, 'spoiler': episode._spoil_type},
+                    {'filesize': size, 'spoiler': episode.spoil_type},
                     condition
                 )
             else:
@@ -428,7 +402,7 @@ class PlexInterface:
                     'season': episode.episode_info.season,
                     'episode': episode.episode_info.episode,
                     'filesize': size,
-                    'spoiler': episode._spoil_type,
+                    'spoiler': episode.spoil_type,
                 })
                 
         # Log load operations to user

@@ -11,9 +11,7 @@ class MultiEpisode:
     """
 
     __slots__ = ('season_number', 'episode_start', 'episode_end', 'abs_start',
-                 'abs_end', 'episode_info', 'card_class', 'source',
-                 'extra_characteristics', 'destination', 'spoiler', 'blur',
-                 '_spoil_type')
+                 'abs_end', '_first_episode', 'episode_info', 'destination')
 
 
     def __init__(self, episodes: ['Episode'], title: 'Title') -> None:
@@ -56,23 +54,15 @@ class MultiEpisode:
         # Get the first episde in the set
         for episode in episodes:
             if episode.episode_info.episode_number == self.episode_start:
-                first_episode = episode
+                self._first_episode = episode
                 break
                    
         # Set object attributes from first episode
-        self.episode_info = deepcopy(first_episode.episode_info)
-        self.card_class = first_episode.card_class
-        self.source = first_episode.source
-        self.extra_characteristics = first_episode.extra_characteristics
+        self.episode_info = deepcopy(self._first_episode.episode_info)
 
         # Override title, set blank destination
         self.episode_info.title = title
         self.destination = None
-
-        # Episodes are spoilers and not blurred until updated
-        self.spoiler = first_episode.spoiler
-        self.blur = first_episode.blur
-        self._spoil_type = first_episode._spoil_type
 
 
     def __str__(self) -> str:
@@ -83,7 +73,7 @@ class MultiEpisode:
 
 
     def __repr__(self) -> str:
-        """Returns a unambiguous string representation of the object"""
+        """Returns an unambiguous string representation of the object"""
 
         ret = (f'<MultiEpisode episode_start={self.episode_start}, episode_end='
                f'{self.episode_end}, title={self.episode_info.title}, '
@@ -92,6 +82,31 @@ class MultiEpisode:
         ret += f', abs_end={self.abs_end}' if self.abs_end != None else ''
 
         return f'{ret}>'
+
+
+    def __getattr__(self, attribute):
+        """
+        Get an attribute from the first episode of this object.
+        
+        :param      attribute:  The attribute to get from the first Episode.
+        """
+
+        return getattr(self._first_episode, attribute)
+
+
+    def __setattr__(self, attribute, value) -> None:
+        """
+        Set an attribute of the first episode of this object.
+        
+        :param      attribute:  The attribute to set on the first Episode.
+        :param      value:      The value to set on the attribute.
+        """
+
+        # If an attribute of this object, set, otherwise set on first Episode
+        if attribute in self.__slots__:
+            object.__setattr__(self, attribute, value)
+        else:
+            setattr(self._first_episode, attribute, value)
         
         
     @staticmethod

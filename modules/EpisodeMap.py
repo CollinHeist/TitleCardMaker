@@ -1,7 +1,14 @@
 from modules.Debug import log
 
 class EpisodeMap:
+    """
+    This class describes an EpisodeMap. In particular a mapping of episode
+    indices to manually specified season titles or sources. This object
+    basically contains the `seasons` and `episode_ranges` attributes for a given
+    Show.
+    """
     
+    """How to apply manual source if not explicitly stated"""
     DEFAULT_APPLIES_TO = 'all'
 
 
@@ -82,7 +89,7 @@ class EpisodeMap:
             # Parse title/source mapping
             if isinstance(mapping, str):
                 self.__titles[season_number] = mapping
-            elif isinstance(value, dict):
+            elif isinstance(mapping, dict):
                 if (value := mapping.get('title')):
                     self.__titles[season_number] = value
                     self.is_custom = True
@@ -142,7 +149,7 @@ class EpisodeMap:
     
     def get_generic_season_title(self, episode_info: 'EpisodeInfo') -> str:
         """
-        Get the generic season title associated with the given Episode.
+        Get the generic season title associated with the given Episode index.
         
         :param      episode_info:   EpisodeInfo to the get season title of.
         
@@ -174,7 +181,7 @@ class EpisodeMap:
         if which == 'season_title':
             target = self.__titles
         elif which == 'source':
-            target == self.__sources
+            target = self.__sources
         else:
             target = self.__applies
 

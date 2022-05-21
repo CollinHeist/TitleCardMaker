@@ -62,7 +62,8 @@ class PreferenceParser(YamlReader):
         self.use_plex = False
         self.plex_url = None
         self.plex_token = 'NA'
-        self.plex_unwatched = PlexInterface.DEFAULT_UNWATCHED_ACTION
+        self.global_watched_style = 'unique'
+        self.global_unwatched_style = 'unique'
         self.use_sonarr = False
         self.sonarr_url = None
         self.sonarr_api_key = None
@@ -196,15 +197,28 @@ class PreferenceParser(YamlReader):
         if (value := self['plex', 'token']):
             self.plex_token = value
 
-        if (value := self['plex', 'unwatched']):
-            value = str(value).lower().replace(' ', '_')
-            if value not in PlexInterface.VALID_UNWATCHED_ACTIONS:
-                options = '", "'.join(PlexInterface.VALID_UNWATCHED_ACTIONS)
-                log.critical(f'Invalid "unwatched" action, must be one of "'
-                             f'{options}"')
+        if (value := self['plex', 'watched_style']):
+            if str(value).lower() not in Show.VALID_STYLES:
+                options = '", "'.join(Show.VALID_STYLES)
+                log.critical(f'Invalid watched style, must be one of "{opts}"')
                 self.valid = False
             else:
-                self.plex_unwatched = value
+                self.global_watched_style = str(value).lower()
+
+        if (value := self['plex', 'unwatched_style']):
+            if str(value).lower() == 'ignore':
+                log.critical(f'Unwatched style "ignore" is now "unique"')
+                self.valid = False
+            elif str(value).lower() not in Show.VALID_STYLES:
+                opts = '", "'.join(Show.VALID_STYLES)
+                log.critical(f'Invalid unwatched style, must be one of "{opts}"')
+                self.valid = False
+            else:
+                self.global_unwatched_style = str(value).lower()
+
+        if self['plex', 'unwatched']:
+            log.warning(f'Plex "unwatched" setting has been renamed to '
+                        f'"unwatched_style"')
 
         if self['sonarr']:
             if not all((self['sonarr', 'url'], self['sonarr', 'api_key'])):
