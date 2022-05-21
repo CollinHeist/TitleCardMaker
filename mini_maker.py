@@ -137,6 +137,12 @@ show_summary_group.add_argument(
     default=SUPPRESS,
     metavar=('IMAGE_DIRECTORY', 'LOGO'),
     help='Create a ShowSummary for the given directory')
+show_summary_group.add_argument(
+    '--background-color',
+    type=str,
+    default=ShowSummary.BACKGROUND_COLOR,
+    metavar='COLOR',
+    help='Specify background color for the created ShowSummary')
          
 # Parse given arguments
 args, unknown = parser.parse_known_args()
@@ -217,4 +223,4 @@ if hasattr(args, 'show_summary'):
     show = Show(args.show_summary[1], args.show_summary[0], episodes)
 
     # Create ShowSummary
-    ShowSummary(show).create()
+    ShowSummary(show, args.background_color).create()

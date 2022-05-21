@@ -3,8 +3,8 @@ from pathlib import Path
 from random import sample
 
 from modules.Debug import log
-from modules.StandardTitleCard import StandardTitleCard
 from modules.ImageMaker import ImageMaker
+from modules.StandardTitleCard import StandardTitleCard
 
 class ShowSummary(ImageMaker):
     """
@@ -34,16 +34,20 @@ class ShowSummary(ImageMaker):
     """Path to the 'created by' image to add to all show summaries"""
     __CREATED_BY_PATH: Path = Path(__file__).parent / 'ref' / 'created_by.png'
 
-    __slots__ = ('show', 'logo', 'output', 'inputs', 'number_rows')
+    __slots__ = ('show', 'logo', 'output', 'background_color', 'inputs',
+                 'number_rows')
 
 
-    def __init__(self, show: 'Show') -> None:
+    def __init__(self, show: 'Show',
+                 background_color: str=BACKGROUND_COLOR) -> None:
         """
-        Constructs a new instance of this object. This initialized a
+        Constructs a new instance of this object. This initializes a
         ImageMagickInterface object, and searches the provided show object
         for existing title cards to use in `create()`.
         
-        :param      show:  The show object of which to create a summary for.
+        :param      show:               The Show object of which to create a
+                                        summary for.
+        :param      background_color:   Background color to use for the summary.
         """
 
         # Initialize parent object (for the ImageMagickInterface)
@@ -55,6 +59,9 @@ class ShowSummary(ImageMaker):
 
         # Output file is stored in the top-level media directory (usually an archive folder)
         self.output = show.media_directory / 'Summary.jpg'
+
+        # Get global background color
+        self.background_color = background_color
 
         # Initialize variables that will be set upon image selection
         self.inputs = []
@@ -110,7 +117,7 @@ class ShowSummary(ImageMaker):
 
         command = ' '.join([
             f'montage',
-            f'-background "{self.BACKGROUND_COLOR}"',
+            f'-background "{self.background_color}"',
             f'-density 300',
             f'-tile 3x3',
             f'-geometry +80+80',
@@ -137,7 +144,7 @@ class ShowSummary(ImageMaker):
         command = ' '.join([
             f'convert "{montage.resolve()}"',
             f'-resize 50%',
-            f'-background "{self.BACKGROUND_COLOR}"',
+            f'-background "{self.background_color}"',
             f'-gravity north',
             f'-splice 0x840',
             f'-font "{StandardTitleCard.EPISODE_COUNT_FONT}"',
