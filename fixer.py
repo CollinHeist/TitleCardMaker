@@ -112,7 +112,7 @@ if hasattr(args, 'import_archive'):
     class Episode:
         destination: Path
         episode_info: EpisodeInfo
-        _spoil_type: str
+        spoil_type: str
         
     # Create PlexInterface
     if not pp.use_plex:
@@ -135,6 +135,7 @@ if hasattr(args, 'import_archive'):
     # Get all images from import archive
     if len(all_images := list(archive.glob('**/*.jpg'))) == 0:
         log.warning(f'No images to import')
+        exit(1)
     
     # For each image, fill out episode map to load into Plex
     episode_map = {}
