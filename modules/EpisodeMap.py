@@ -89,6 +89,7 @@ class EpisodeMap:
             # Parse title/source mapping
             if isinstance(mapping, str):
                 self.__titles[season_number] = mapping
+                self.is_custom = True
             elif isinstance(mapping, dict):
                 if (value := mapping.get('title')):
                     self.__titles[season_number] = value
@@ -97,6 +98,7 @@ class EpisodeMap:
                     self.__sources[season_number] = value
                 if (value := mapping.get('source_applies_to', '').lower()):
                     if value not in ('all', 'unwatched'):
+                        # Invalid applies, error and exit
                         log.error(f'Source applies to "{value}" of season '
                                   f'{season_number} is invalid')
                         self.valid = False
@@ -125,6 +127,7 @@ class EpisodeMap:
             for episode_number in range(start, end+1):
                 if isinstance(mapping, str):
                     self.__titles[episode_number] = mapping
+                    self.is_custom = True
                 elif isinstance(mapping, dict):
                     if (value := mapping.get('title')):
                         self.__titles[episode_number] = value
@@ -133,6 +136,7 @@ class EpisodeMap:
                         self.__sources[episode_number] = value
                     if (value := mapping.get('source_applies_to', '').lower()):
                         if value not in ('all', 'unwatched'):
+                            # Invalid applies, error and exit
                             log.error(f'Source applies to "{value}" of episodes '
                                       f'{episode_range} is invalid')
                             self.valid = False
