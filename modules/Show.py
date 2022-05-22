@@ -238,6 +238,9 @@ class Show(YamlReader):
                 self.valid = False
             else:
                 self.unwatched_style = match_value
+        if self['unwatched']:
+            log.error(f'"unwatched" setting has been renamed "unwatched_style"')
+            self.valid = False
 
         if self._is_specified('seasons', 'hide'):
             self.hide_seasons = bool(self['seasons', 'hide'])
