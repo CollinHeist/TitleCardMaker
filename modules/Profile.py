@@ -53,7 +53,7 @@ class Profile:
             custom_episode_map=self.__episode_map.is_custom,
             episode_text_format=self.episode_text_format,
         )
-
+        
         # Determine whether this profile uses a custom font
         has_custom_font = card_class.is_custom_font(self.font)
 
@@ -129,7 +129,7 @@ class Profile:
 
         # Generic season titles are Specials and Season {n}
         if not self.__use_custom_seasons:
-            self.__episode_map.get_generic_season_title(episode_info)
+            return self.__episode_map.get_generic_season_title(episode_info)
 
         # Custom season title, query EpisodeMap for title
         return self.__episode_map.get_season_title(episode_info)
