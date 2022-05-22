@@ -148,10 +148,12 @@ class Manager:
             # Modify unwatched episodes based on Plex watch status
             if self.preferences.use_plex:
                 if self.preferences.use_tmdb:
-                    show.modify_unwatched_episodes(self.plex_interface,
-                                                   self.tmdb_interface)
+                    show.select_source_images(self.plex_interface,
+                                              self.tmdb_interface)
                 else:
-                    show.modify_unwatched_episodes(self.plex_interface)
+                    show.select_source_images(self.plex_interface)
+            else:
+                show.select_source_images()
 
             # Pass the TMDbInterface to the show if globally enabled
             if self.preferences.use_tmdb:
@@ -269,6 +271,11 @@ class Manager:
             if (show.archive and self.preferences.create_summaries
                 and not show.logo.exists()):
                 show_dict['logo'] = show.logo.name
+
+            # Report missing backdrop if art style is used
+            if (show.watched_style == 'art' or show.unwatched_style == 'art'
+                and not show.backdrop.exists()):
+                show_dict['backdrop'] = show.backdrop.name
 
             # If this show is missing at least one thing, add to missing dict
             if len(show_dict.keys()) > 0:

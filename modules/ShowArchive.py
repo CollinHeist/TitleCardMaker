@@ -2,6 +2,7 @@ from copy import copy
 
 from modules.Debug import log
 from modules.ShowSummary import ShowSummary
+import modules.preferences as global_preferences
 
 class ShowArchive:
     """
@@ -87,7 +88,12 @@ class ShowArchive:
 
             # Store this new Show and associated ShowSummary
             self.shows.append(new_show)
-            self.summaries.append(ShowSummary(new_show))
+            self.summaries.append(
+                ShowSummary(
+                    new_show,
+                    global_preferences.pp.summary_background_color
+                )
+            )
 
 
     def read_source(self) -> None:

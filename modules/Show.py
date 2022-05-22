@@ -5,6 +5,7 @@ from tqdm import tqdm
 from modules.DataFileInterface import DataFileInterface
 from modules.Debug import log, TQDM_KWARGS
 from modules.Episode import Episode
+from modules.EpisodeMap import EpisodeMap
 from modules.Font import Font
 from modules.MultiEpisode import MultiEpisode
 import modules.preferences as global_preferences
@@ -24,6 +25,9 @@ class Show(YamlReader):
     within the Show's YAML take precedence over the global enables, with the
     exception of Interface objects (such as Sonarr and TMDb).
     """
+    
+    """Valid card styles for a series"""
+    VALID_STYLES = ('unique', 'art', 'blur')
 
     """Filename to the backdrop for a series"""
     BACKDROP_FILENAME = 'backdrop.jpg'
@@ -80,6 +84,7 @@ class Show(YamlReader):
             return None
             
         # Setup default values that can be overwritten by YAML
+        self.valid = True
         self.series_info = SeriesInfo(name, year)
         self.media_directory = None
         self.card_class = TitleCard.CARD_TYPES[self.preferences.card_type]
@@ -90,11 +95,11 @@ class Show(YamlReader):
         self.sonarr_sync = self.preferences.use_sonarr
         self.sync_specials = self.preferences.sonarr_sync_specials
         self.tmdb_sync = self.preferences.use_tmdb
-        self.unwatched_action = self.preferences.plex_unwatched
+        self.watched_style = self.preferences.global_watched_style
+        self.unwatched_style = self.preferences.global_unwatched_style
+        self.style = self.preferences.style
         self.hide_seasons = False
-        self.__episode_range = {}
-        self.__season_map = {n: f'Season {n}' for n in range(1, 100)}
-        self.__season_map[0] = 'Specials'
+        self.__episode_map = EpisodeMap()
         self.title_language = {}
 
         # Set object attributes based off YAML and update validity
@@ -105,7 +110,7 @@ class Show(YamlReader):
             self.card_class,
             self.series_info,
         )
-        self.valid = self.font.valid
+        self.valid &= self.font.valid
 
         # Update derived attributes
         self.source_directory = source_directory / self.series_info.legal_path
@@ -121,9 +126,7 @@ class Show(YamlReader):
         self.profile = Profile(
             self.font,
             self.hide_seasons,
-            self.__season_map,
-            self.__episode_range,
-            'range' if self.__episode_range != {} else 'map',
+            self.__episode_map,
             self.episode_text_format,
         )
 
@@ -201,7 +204,7 @@ class Show(YamlReader):
             else:
                 log.error(f'Unknown card type "{card_type}" of series {self}')
                 self.valid = False
-
+            
         if (value := self['media_directory']):
             self.media_directory = Path(value)
 
@@ -220,13 +223,21 @@ class Show(YamlReader):
         if self._is_specified('tmdb_sync'):
             self.tmdb_sync = bool(self['tmdb_sync'])
 
-        if (value := self['unwatched']):
-            match_value = str(value).lower().replace(' ', '_')
-            if match_value not in PlexInterface.VALID_UNWATCHED_ACTIONS:
-                log.error(f'Invalid unwatched action "{value}" in series {self}')
+        if (value := self['watched_style']):
+            match_value = str(value).lower()
+            if match_value not in self.VALID_STYLES:
+                log.error(f'Invalid watched style "{value}" in series {self}')
                 self.valid = False
             else:
-                self.unwatched_action = match_value
+                self.watched_style = match_value
+
+        if (value := self['unwatched_style']):
+            match_value = str(value).lower()
+            if match_value not in self.VALID_STYLES:
+                log.error(f'Invalid unwatched style "{value}" in series {self}')
+                self.valid = False
+            else:
+                self.unwatched_style = match_value
 
         if self._is_specified('seasons', 'hide'):
             self.hide_seasons = bool(self['seasons', 'hide'])
@@ -237,36 +248,9 @@ class Show(YamlReader):
                           f'series {self}')
             else:
                 self.title_language = self['translation']
-
-        # Validate season map & episode range aren't specified at the same time
-        if (seasons := self['seasons']) and self['episode_ranges']:
-            if any(isinstance(key, int) for key in seasons.keys()):
-                log.warning(f'Cannot specify season titles with both "seasons" '
-                            f'and "episode_ranges" in series {self}')
-                self.valid = False
-
-        # Validate season title map
-        if (seasons := self['seasons']):
-            for tag in seasons:
-                if isinstance(tag, int):
-                    self.__season_map[tag] = self['seasons', tag]
-
-        # Validate episode range map
-        if (episode_ranges := self['episode_ranges']):
-            for episode_range in episode_ranges:
-                # If the range cannot be parsed, then error and skip
-                try:
-                    start, end = map(int, episode_range.split('-'))
-                except:
-                    log.error(f'Episode range "{episode_range}" of series '
-                              f'{self} is invalid - specify as "start-end"')
-                    self.valid = False
-                    continue
-
-                # Assign this season title to each episde in the given range
-                this_title = episode_ranges[episode_range]
-                for episode_number in range(start, end+1):
-                    self.__episode_range[episode_number] = this_title
+                
+        self.__episode_map = EpisodeMap(self['seasons'], self['episode_ranges'])
+        self.valid &= self.__episode_map.valid
 
 
     def __get_destination(self, episode_info: 'EpisodeInfo') -> Path:
@@ -473,47 +457,86 @@ class Show(YamlReader):
         # If any translations were added, re-read source
         if modified:
             self.read_source()
-
-
-    def modify_unwatched_episodes(self, plex_interface: PlexInterface,
-                                  tmdb_interface: 'TMDbInterface'=None) -> None:
+            
+            
+    def select_source_images(self, plex_interface: PlexInterface=None,
+                             tmdb_interface: 'TMDbInterface'=None) -> None:
         """
-        Modify this series' Episode objects based on their watched status in the
-        given PlexInterface. If a backdrop is requested, and TMDb is enabled,
-        then one is downloaded if it DNE.
+        Modify this series' Episode source images based on their watch statuses,
+        and how that style applies to this show's un/watched styles. If a
+        backdrop is required, and TMDb is enabled, then one is downloaded if it
+        does not exist.
         
-        :param      plex_interface: The PlexInterface used to modify the
+        :param      plex_interface: Optional PlexInterface used to modify the
                                     Episode objects based on the watched status
-                                    of.
+                                    of. If not provided, episodes are assumed to
+                                    all be unwatched (i.e. spoiler free).
         :param      tmdb_interface: Optional TMDbInterface to query for a
                                     backdrop if one is needed and DNE.
         """
+        
+        # Update watched statuses via Plex
+        if plex_interface != None and self.library != None:
+            plex_interface.update_watched_statuses(
+                self.library_name,
+                self.series_info,
+                self.episodes,
+                self.watched_style,
+                self.unwatched_style,
+            )
+        else:
+            [episode.update_statuses(False, self.watched_style,
+                                     self.unwatched_style)
+             for _, episode in self.episodes.items()]
+            
+        # Get show styles
+        watched_style = self.watched_style
+        unwatched_style = self.unwatched_style
 
-        # If no library is set, don't update Episode objects
-        if self.library_name == None:
-            return None
+        # Go through all episodes and select source images
+        download_backdrop = False
+        for key, episode in self.episodes.items():
+            # Try and get the manually specified source from the episode map
+            manual_source = self.__episode_map.get_source(episode.episode_info)
+            applies_to = self.__episode_map.get_applies_to(episode.episode_info)
 
-        # Modify episodes based off Plex watched status
-        plex_interface.modify_unwatched_episodes(
-            self.library_name,
-            self.series_info,
-            self.episodes,
-            self.unwatched_action,
-        )
+            # Update source and blurring based on.. well, everything..
+            found = True
+            if ((applies_to == 'all' and unwatched_style == 'unique'
+                 and watched_style != 'blur') or
+                (applies_to == 'all' and unwatched_style == 'art'
+                 and not (watched_style == 'blur' and episode.watched)) or
+                (applies_to == 'all' and unwatched_style == 'blur'
+                 and watched_style != 'blur' and episode.watched) or
+                (applies_to == 'unwatched' and unwatched_style != 'blur'
+                 and not episode.watched)):
+                found = episode.update_source(manual_source, downloadable=False)
+            elif ((applies_to == 'all') or
+                (applies_to == 'unwatched' and unwatched_style == 'blur'
+                 and not episode.watched)):
+                episode.blur = True
+                found = episode.update_source(manual_source, downloadable=False)
+            elif watched_style == 'unique':
+                continue
+            elif watched_style == 'art':
+                found = episode.update_source(self.backdrop, downloadable=False)
+                download_backdrop = True
+            else:
+                episode.blur = True
 
-        # If spoiler hiding uses art method..
-        if self.preferences.plex_unwatched in ('art', 'art_all'):
-            # Exit if backdrop exists, or cannot sync to TMDb
-            if (self.backdrop.exists()
-                or not (self.tmdb_sync and tmdb_interface)):
-                return None
-
-            # Query TMDb for the best backdrop
-            backdrop_url = tmdb_interface.get_series_backdrop(self.series_info)
-
+            # Override to backdrop if indicated by style, or manual image not found
+            if (((episode.watched and watched_style == 'art')
+                or (not episode.watched and unwatched_style == 'art'))
+                and not found):
+                episode.update_source(self.backdrop, downloadable=True)
+                download_backdrop = True
+            
+        # Query TMDb for the backdrop if one does not exist
+        if (download_backdrop and tmdb_interface and self.tmdb_sync
+            and not self.backdrop.exists()):
             # Download background art 
-            if backdrop_url:
-                tmdb_interface.download_image(backdrop_url, self.backdrop)
+            if (url := tmdb_interface.get_series_backdrop(self.series_info)):
+                tmdb_interface.download_image(url, self.backdrop)
 
 
     def create_missing_title_cards(self,
@@ -540,8 +563,7 @@ class Show(YamlReader):
 
             # If the title card source images doesn't exist and can query TMDb..
             if (self.tmdb_sync and tmdb_interface
-                and episode.source != self.backdrop
-                and not episode.source.exists()):
+                and episode.downloadable_source and not episode.source.exists()):
                 # Query TMDbInterface for image
                 image_url = tmdb_interface.get_source_image(
                     self.series_info,

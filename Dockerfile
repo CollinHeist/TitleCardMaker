@@ -25,11 +25,5 @@ RUN export MAGICK_HOME="$HOME/ImageMagick-7.1.0" \
 RUN pip3 install --no-cache-dir --upgrade pipenv
 RUN pipenv install
 
-# Volumes?
-VOLUME /source
-VOLUME /archive
-VOLUME /fonts
-VOLUME /config
-
 # Entrypoint
 ENTRYPOINT ["/bin/bash"]

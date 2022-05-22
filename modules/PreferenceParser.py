@@ -47,6 +47,7 @@ class PreferenceParser(YamlReader):
         # Setup default values that can be overwritten by YAML
         self.series_files = []
         self.card_type = 'standard'
+        self.style = 'unique'
         self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
         self.card_extension = TitleCard.DEFAULT_CARD_EXTENSION
         self.validate_fonts = True
@@ -61,7 +62,8 @@ class PreferenceParser(YamlReader):
         self.use_plex = False
         self.plex_url = None
         self.plex_token = 'NA'
-        self.plex_unwatched = PlexInterface.DEFAULT_UNWATCHED_ACTION
+        self.global_watched_style = 'unique'
+        self.global_unwatched_style = 'unique'
         self.use_sonarr = False
         self.sonarr_url = None
         self.sonarr_api_key = None
@@ -132,10 +134,17 @@ class PreferenceParser(YamlReader):
 
         if (value := self['options', 'card_type']):
             if value not in TitleCard.CARD_TYPES:
-                log.critical(f'Default card type "{value}" is unrecognized')
+                log.critical(f'Default card type "{value}" is invalid')
                 self.valid = False
             else:
                 self.card_type = value
+
+        if (value := self['options', 'style']):
+            if str(value).lower() not in Show.VALID_STYLES:
+                log.critical(f'Default card style "{value}" is invalid')
+                self.valid = False
+            else:
+                self.style = str(value).lower()
 
         if (new_format := self['options', 'filename_format']):
             if not TitleCard.validate_card_format_string(new_format):
@@ -168,7 +177,7 @@ class PreferenceParser(YamlReader):
         if self._is_specified('archive', 'summary', 'create'):
             self.create_summaries = bool(self['archive', 'summary', 'create'])
 
-        if (value := self['arhive', 'summary', 'background_color']):
+        if (value := self['archive', 'summary', 'background_color']):
             self.summary_background_color = value
 
         if (value := self['archive', 'summary', 'logo_filename']):
@@ -188,15 +197,28 @@ class PreferenceParser(YamlReader):
         if (value := self['plex', 'token']):
             self.plex_token = value
 
-        if (value := self['plex', 'unwatched']):
-            value = str(value).lower().replace(' ', '_')
-            if value not in PlexInterface.VALID_UNWATCHED_ACTIONS:
-                options = '", "'.join(PlexInterface.VALID_UNWATCHED_ACTIONS)
-                log.critical(f'Invalid "unwatched" action, must be one of "'
-                             f'{options}"')
+        if (value := self['plex', 'watched_style']):
+            if str(value).lower() not in Show.VALID_STYLES:
+                options = '", "'.join(Show.VALID_STYLES)
+                log.critical(f'Invalid watched style, must be one of "{opts}"')
                 self.valid = False
             else:
-                self.plex_unwatched = value
+                self.global_watched_style = str(value).lower()
+
+        if (value := self['plex', 'unwatched_style']):
+            if str(value).lower() == 'ignore':
+                log.critical(f'Unwatched style "ignore" is now "unique"')
+                self.valid = False
+            elif str(value).lower() not in Show.VALID_STYLES:
+                opts = '", "'.join(Show.VALID_STYLES)
+                log.critical(f'Invalid unwatched style, must be one of "{opts}"')
+                self.valid = False
+            else:
+                self.global_unwatched_style = str(value).lower()
+
+        if self['plex', 'unwatched']:
+            log.warning(f'Plex "unwatched" setting has been renamed to '
+                        f'"unwatched_style"')
 
         if self['sonarr']:
             if not all((self['sonarr', 'url'], self['sonarr', 'api_key'])):

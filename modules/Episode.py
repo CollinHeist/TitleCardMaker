@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from modules.Title import Title
+from modules.Debug import log
 from modules.TitleCard import TitleCard
 
 class Episode:
@@ -10,8 +10,9 @@ class Episode:
     map that info to a source and destination file.
     """
 
-    __slots__ = ('episode_info', 'card_class', 'source', 'destination', 'blur',
-                 'extra_characteristics', 'spoiler', '_spoil_type')
+    __slots__ = ('episode_info', 'card_class', '__base_source', 'source',
+                 'destination', 'downloadable_source', 'extra_characteristics',
+                 'watched', 'blur', 'spoil_type', )
     
 
     def __init__(self, episode_info: 'EpisodeInfo', card_class: 'CardType',
@@ -33,19 +34,21 @@ class Episode:
         self.card_class = card_class
 
         # Set source/destination paths
+        self.__base_source = base_source
         source_name = (f's{episode_info.season_number}'
                        f'e{episode_info.episode_number}'
                        f'{TitleCard.INPUT_CARD_EXTENSION}')
         self.source = base_source / source_name
         self.destination = destination
+        self.downloadable_source = True
 
         # Store extra characteristics
         self.extra_characteristics = extras
 
-        # Episodes are spoilers and not blurred until updated
-        self.spoiler = True
+        # Episodes are watched, not blurred, and spoiled - until updated
+        self.watched = True
         self.blur = False
-        self._spoil_type = 'spoiled'
+        self.spoil_type = 'spoiled'
 
 
     def __str__(self) -> str:
@@ -58,36 +61,71 @@ class Episode:
         """Returns an unambiguous string representation of the object"""
 
         return (f'<Episode {self.episode_info=}, {self.card_class=}, '
-                f'{self.source=}, {self.destination=}, {self.spoiler=},'
+                f'{self.source=}, {self.destination=}, {self.watched=},'
                 f'{self.blur=}, {self.extra_characteristics=}>')
+
+
+    def update_statuses(self, watched: bool, watched_style: str, 
+                        unwatched_style: str) -> None:
+        """
+        Update the statuses of this Episode. In particular the watched and
+        spoil type statuses.
+        
+        :param      watched:          New watched status for this Episode.
+        :param      watched_style:    Watched style to assign spoil type from.
+        :param      unwatched_style:  Unwatched style to assign spoil tyle from.
+        """
+
+        # Update watched attribute
+        self.watched = watched
+
+        # Update spoil type based on given style and new watch status
+        SPOIL_TYPE_STYLE_MAP={'unique': 'spoiled', 'art': 'art', 'blur': 'blur'}
+        if self.watched:
+            self.spoil_type = SPOIL_TYPE_STYLE_MAP[watched_style]
+        else:
+            self.spoil_type = SPOIL_TYPE_STYLE_MAP[unwatched_style]
+
+
+    def update_source(self, new_source, *, downloadable: bool) -> bool:
+        """
+        Update the source image for this Episode, as well as the downloadable
+        flag for the source.
+        
+        :param      new_source:     New source file.
+        :type       new_source:     If Path, then source is taken as-is. If a
+                                    str, the the file is looked for within this
+                                    Episode's base source directory. If that
+                                    file doesn't exist under the base source,
+                                    then the string source is taken as a Path
+                                    and converted. If None nothing happens.
+        :param      downloadable:   Keyword-only argument for whether the new
+                                    source is downloadable or not.
+
+        :returns:   True if a new non-None source was provided, False otherwise.
+        """
+
+        # If no actual new source was provided, return
+        if new_source == None:
+            return False
+
+        # Update source path based on input (Path/str of filename in source,etc)
+        if isinstance(new_source, Path):
+            self.source = new_source
+        elif (self.__base_source / new_source).exists():
+            self.source = self.__base_source / new_source
+        else:
+            self.source = Path(new_source)
+
+        # Set the downloadable flag for the new source
+        self.downloadable_source = downloadable
+
+        return True
 
 
     def delete_card(self) -> None:
         """Delete the title card for this Episode."""
 
         self.destination.unlink(missing_ok=True)
-
-
-    def make_spoiler_free(self, action: str) -> None:
-        """
-        Modify this Episode to be spoiler-free according to the given spoil
-        action. This updates the spoiler and blur attribute flags, and changes
-        the source Path for the Episode if art is the specified action.
-        
-        :param      action: Spoiler action to update according to.
-        """
-
-        # Return if action isn't blur or art
-        if action == 'ignore':
-            return None
-
-        # Update spoiler and blur attributes
-        self.spoiler = False
-        self.blur = action in ('blur', 'blur_all')
-        self._spoil_type = 'art' if 'art' in action else 'blur'
-
-        # Blurring, set source to blurred source in 
-        if action in ('art', 'art_all'):
-            self.source = self.source.parent / 'backdrop.jpg'
 
         

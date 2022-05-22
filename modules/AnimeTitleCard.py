@@ -62,7 +62,8 @@ class AnimeTitleCard(CardType):
     
     def __init__(self, source: Path, output_file: Path, title: str, 
                  season_text: str, episode_text: str, hide_season: bool,
-                 kanji: str=None, blur: bool=False, *args, **kwargs) -> None:
+                 kanji: str=None, blur: bool=False, font_size: float=1.0,
+                 *args, **kwargs) -> None:
         """
         Constructs a new instance.
         
@@ -76,6 +77,7 @@ class AnimeTitleCard(CardType):
         :param      kanji:              Optional kanji text to place above the
                                         episode title on this card.
         :param      blur:               Whether to blur the source image.
+        :param      font_size:          Scalar to apply to the title font size.
         :param      args and kwargs:    Unused arguments to permit generalized
                                         function calls for any CardType.
         """
@@ -100,6 +102,17 @@ class AnimeTitleCard(CardType):
         self.hide_season = hide_season
         self.blur = blur
 
+        # Font customizations
+        self.font_size = font_size
+
+
+    def __repr__(self) -> str:
+        """Returns a unambiguous string representation of the object."""
+
+        return (f'<AnimeTitleCard {self.source_file=}, {self.output_file=}, '
+                f'{self.title=}, {self.kanji=}, {self.season_text=}, '
+                f'{self.episode_text=}, {self.blur=}, {self.font_size=}>')
+
 
     def __title_text_global_effects(self) -> list:
         """
@@ -113,7 +126,7 @@ class AnimeTitleCard(CardType):
             f'-font "{self.TITLE_FONT}"',
             f'-kerning 2',
             f'-interline-spacing -30',
-            f'-pointsize 150',
+            f'-pointsize {150 * self.font_size}',
             f'-gravity southwest',
         ]
 
@@ -272,8 +285,10 @@ class AnimeTitleCard(CardType):
                     text, and kanji added.
         """
 
-        # Shift kanji text up based on the number of lines in this 
-        kanji_offset = 375 + (165 * (len(self.title.split('\n'))-1))
+        # Shift kanji text up based on the number of lines in the title
+        base_offset = 175
+        variable_offset = 200 + (165 * (len(self.title.split('\n'))-1))
+        kanji_offset = base_offset + variable_offset * self.font_size
 
         command = ' '.join([
             f'convert "{gradient_image.resolve()}"',
@@ -284,7 +299,7 @@ class AnimeTitleCard(CardType):
             f'-annotate +75+175 "{self.title}"',
             f'-font "{self.KANJI_FONT.resolve()}"',
             *self.__title_text_black_stroke(),
-            f'-pointsize 85',
+            f'-pointsize {85 * self.font_size}',
             f'-annotate +75+{kanji_offset} "{self.kanji}"',
             *self.__title_text_effects(),
             f'-annotate +75+{kanji_offset} "{self.kanji}"',
@@ -384,42 +399,28 @@ class AnimeTitleCard(CardType):
                     'title', False otherwise.
         """
 
-        default_case = AnimeTitleCard.DEFAULT_FONT_CASE
-        return font.case != AnimeTitleCard.CASE_FUNCTIONS[default_case]
+        return ((font.case_name != AnimeTitleCard.DEFAULT_FONT_CASE)
+            or (font.size != 1.0))
 
 
     @staticmethod
-    def is_custom_season_titles(season_map: dict, episode_range: dict, 
+    def is_custom_season_titles(custom_episode_map: bool, 
                                 episode_text_format: str) -> bool:
         """
         Determines whether the given attributes constitute custom or generic
         season titles.
         
-        :param      season_map:           The season map in use.
-        :param      episode_range:        The episode range in use.
-        :param      episode_text_format:  The episode text format in use.
+        :param      custom_episode_map:     Whether the EpisodeMap was
+                                            customized.
+        :param      episode_text_format:    The episode text format in use.
         
         :returns:   True if custom season titles are indicated, False otherwise.
         """
 
-        # Nonstandard episode text format
-        if episode_text_format != 'EPISODE {episode_number}':
-            return True
-
-        # Nonstandard episode range
-        if episode_range != {}:
-            return True
-
-        # If any season title isn't standard, 
-        for number, title in season_map.items():
-            if number == 0:
-                if title.lower() != 'specials':
-                    return True
-            else:
-                if title.lower() != f'season {number}':
-                    return True
-
-        return False
+        standard_etf = AnimeTitleCard.EPISODE_TEXT_FORMAT.upper()
+        
+        return (custom_episode_map or
+                episode_text_format.upper() != standard_etf)
 
 
     def create(self) -> None:

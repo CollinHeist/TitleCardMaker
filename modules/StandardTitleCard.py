@@ -402,37 +402,23 @@ class StandardTitleCard(CardType):
 
 
     @staticmethod
-    def is_custom_season_titles(season_map: dict, episode_range: dict, 
+    def is_custom_season_titles(custom_episode_map: bool, 
                                 episode_text_format: str) -> bool:
         """
         Determines whether the given attributes constitute custom or generic
         season titles.
         
-        :param      season_map:           The season map in use.
-        :param      episode_range:        The episode range in use.
-        :param      episode_text_format:  The episode text format in use.
+        :param      custom_episode_map:     Whether the EpisodeMap was
+                                            customized.
+        :param      episode_text_format:    The episode text format in use.
         
         :returns:   True if custom season titles are indicated, False otherwise.
         """
 
-        # Nonstandard episode text format
-        if episode_text_format != 'EPISODE {episode_number}':
-            return True
+        standard_etf = StandardTitleCard.EPISODE_TEXT_FORMAT.upper()
 
-        # Nonstandard episode range
-        if episode_range != {}:
-            return True
-
-        # If any season title isn't standard
-        for number, title in season_map.items():
-            if number == 0:
-                if title.lower() != 'specials':
-                    return True
-            else:
-                if title.lower() != f'season {number}':
-                    return True
-
-        return False
+        return (custom_episode_map or
+                episode_text_format.upper() != standard_etf)
 
 
     def create(self) -> None:
