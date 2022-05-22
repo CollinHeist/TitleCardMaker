@@ -177,7 +177,7 @@ class PreferenceParser(YamlReader):
         if self._is_specified('archive', 'summary', 'create'):
             self.create_summaries = bool(self['archive', 'summary', 'create'])
 
-        if (value := self['arhive', 'summary', 'background_color']):
+        if (value := self['archive', 'summary', 'background_color']):
             self.summary_background_color = value
 
         if (value := self['archive', 'summary', 'logo_filename']):
