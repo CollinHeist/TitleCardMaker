@@ -1,5 +1,6 @@
 from argparse import ArgumentParser, ArgumentTypeError, SUPPRESS
 from pathlib import Path
+from os import environ
 from re import match
 from time import sleep
 
@@ -15,6 +16,10 @@ try:
 except ImportError:
     print(f'Required Python packages are missing - execute "pipenv install"')
     exit(1)
+
+# Environment variables
+RUNTIME_ENV = 'TCM_RUNTIME'
+FREQUENCY_ENV = 'TCM_FREQUENCY'
 
 # Default path for the preference file to parse
 DEFAULT_PREFERENCE_FILE = Path(__file__).parent / 'preferences.yml'
@@ -60,13 +65,13 @@ parser.add_argument(
     '-t', '--time', '--runtime',
     dest='runtime',
     type=runtime,
-    default=SUPPRESS,
+    default=environ.get(RUNTIME_ENV, SUPPRESS),
     metavar='HH:MM',
     help='When to first run the TitleCardMaker (in 24-hour time)')
 parser.add_argument(
     '-f', '--frequency',
     type=frequency,
-    default='12h',
+    default=environ.get(FREQUENCY_ENV, '12h'),
     metavar='FREQUENCY[unit]',
     help='How often to run the TitleCardMaker (default "12h"). Units can be '
          'm/h/d for minutes/hours/days')

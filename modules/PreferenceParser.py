@@ -217,8 +217,9 @@ class PreferenceParser(YamlReader):
                 self.global_unwatched_style = str(value).lower()
 
         if self['plex', 'unwatched']:
-            log.warning(f'Plex "unwatched" setting has been renamed to '
-                        f'"unwatched_style"')
+            log.critical(f'Plex "unwatched" setting has been renamed to '
+                         f'"unwatched_style"')
+            self.valid = False
 
         if self['sonarr']:
             if not all((self['sonarr', 'url'], self['sonarr', 'api_key'])):
