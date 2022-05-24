@@ -284,9 +284,15 @@ class SonarrInterface(WebInterface):
                     break
 
 
-    def get_all_series(self) -> [(SeriesInfo, Path)]:
+    def get_series(self, filter_tags: list=[]) -> [(SeriesInfo, Path)]:
         """
-        Get a list of tuples of all series and their paths within Sonarr.
+        Get a list of tuples of series and their paths within Sonarr. The list
+        can be filtered by a list of tags, any series with any of those tags
+        are returned.
+
+        :param      filter_tags:    Optional list of tag NAMES to filter the
+                                    returned list by. If provided, a series must
+                                    have at least one of the given tags.
         
         :returns:   List of tuples. The tuple contains the SeriesInfo object
                     for the series, and the Path to the media as reported by
@@ -294,13 +300,24 @@ class SonarrInterface(WebInterface):
         """
 
         # Construct GET arguments
-        url = f'{self.url}series'
-        params = self.__standard_params
-        all_series = self._get(url, params)
+        all_series = self._get(f'{self.url}series', self.__standard_params)
+
+        # Get filter tags if indicated
+        filter_tag_ids = []
+        if len(filter_tags) > 0:
+            # Request all Sonarr tags
+            all_tags = self._get(f'{self.url}tag', self.__standard_params)
+            filter_tag_ids = [tag['id'] for tag in all_tags
+                              if tag['label'] in filter_tags]
 
         # Go through each series in Sonarr
         series = []
         for show in all_series:
+            # Skip show if tag isn't in filter (and filter is enabled)
+            if (len(filter_tag_ids) > 0
+                and not any(tag in filter_tag_ids for tag in show['tags'])):
+                    continue
+
             # Construct SeriesInfo object for this show
             series_info = SeriesInfo(show['title'], show['year'])
             series_info.set_tvdb_id(show['tvdbId'])

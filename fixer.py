@@ -67,6 +67,13 @@ sonarr_group.add_argument(
     metavar='FILE',
     help='Create a generic series YAML file for all the series in Sonarr')
 sonarr_group.add_argument(
+    '--read-tags',
+    nargs='+',
+    type=str,
+    default=[],
+    metavar='TAG',
+    help='Any number of Sonarr tags to filter series of --read-all-series by')
+sonarr_group.add_argument(
     '--sonarr-list-ids',
     action='store_true',
     help="List all the ID's for all shows within Sonarr")
@@ -184,7 +191,7 @@ if hasattr(args, 'read_all_series'):
 
     # Create YAML
     yaml = {'libraries': {}, 'series': {}}
-    for series_info, media_directory in si.get_all_series():
+    for series_info, media_directory in si.get_series(args.read_tags):
         # Add library section
         library = {'path': str(media_directory.parent.resolve())}
         yaml['libraries'][media_directory.parent.name] = library
@@ -209,7 +216,7 @@ if hasattr(args, 'read_all_series'):
     with args.read_all_series.open('w', encoding='utf-8') as file_handle:
         dump(yaml, file_handle, allow_unicode=True)
 
-    log.info(f'\nWrote {len(yaml["series"])} series to '
+    log.info(f'Wrote {len(yaml["series"])} series to '
              f'{args.read_all_series.resolve()}')
 
 if args.sonarr_list_ids:
