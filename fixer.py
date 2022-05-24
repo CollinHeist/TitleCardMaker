@@ -113,7 +113,7 @@ if not pp.valid:
 set_preference_parser(pp)
 
 # Execute Miscellaneous options
-if hasattr(args, 'import_archive'):
+if hasattr(args, 'import_archive') and pp.use_plex:
     # Temporary classes
     @dataclass
     class Episode:
@@ -185,7 +185,7 @@ for directory in args.delete_cards:
             log.debug(f'Deleted {image.resolve()}')
 
 # Execute Sonarr related options
-if hasattr(args, 'read_all_series'):
+if hasattr(args, 'read_all_series') and pp.use_sonarr:
     # Create SonarrInterface
     si = SonarrInterface(pp.sonarr_url, pp.sonarr_api_key)
 
@@ -219,18 +219,15 @@ if hasattr(args, 'read_all_series'):
     log.info(f'Wrote {len(yaml["series"])} series to '
              f'{args.read_all_series.resolve()}')
 
-if args.sonarr_list_ids:
-    if not pp.use_sonarr:
-        log.critical("Cannot list Sonarr ID's if Sonarr is disabled")
-    else:
-        SonarrInterface(pp.sonarr_url, pp.sonarr_api_key).list_all_series_id()
+if args.sonarr_list_ids and pp.use_sonarr:
+    SonarrInterface(pp.sonarr_url, pp.sonarr_api_key).list_all_series_id()
 
 # Execute TMDB related options
 if hasattr(args, 'delete_blacklist'):
     if args.delete_blacklist:
         TMDbInterface.delete_blacklist()
 
-if hasattr(args, 'tmdb_download_images'):
+if hasattr(args, 'tmdb_download_images') and pp.use_tmdb:
     for arg_set in args.tmdb_download_images:
         TMDbInterface.manually_download_season(
             api_key=pp.tmdb_api_key,
@@ -241,7 +238,7 @@ if hasattr(args, 'tmdb_download_images'):
             directory=Path(arg_set[4]),
         )
 
-if hasattr(args, 'add_language'):
+if hasattr(args, 'add_language') and pp.use_tmdb:
     dfi = DataFileInterface(Path(args.add_language[2]))
     tmdbi = TMDbInterface(pp.tmdb_api_key)
 
