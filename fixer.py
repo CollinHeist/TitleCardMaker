@@ -238,24 +238,24 @@ if hasattr(args, 'tmdb_download_images') and pp.use_tmdb:
             directory=Path(arg_set[4]),
         )
 
-if hasattr(args, 'add_language') and pp.use_tmdb:
-    dfi = DataFileInterface(Path(args.add_language[2]))
+if hasattr(args, 'add_translation') and pp.use_tmdb:
+    dfi = DataFileInterface(Path(args.add_translation[2]))
     tmdbi = TMDbInterface(pp.tmdb_api_key)
 
     for entry in dfi.read():
-        if args.add_language[4] in entry:
+        if args.add_translation[4] in entry:
             continue
 
         new_title = tmdbi.get_episode_title(
-            title=args.add_language[0],
-            year=args.add_language[1],
+            title=args.add_translation[0],
+            year=args.add_translation[1],
             season=entry['season_number'],
             episode=entry['episode_number'],
-            language_code=args.add_language[3],
+            language_code=args.add_translation[3],
         )
 
         if new_title == None:
             continue
 
-        dfi.modify_entry(**entry, **{args.add_language[4]: new_title})
+        dfi.modify_entry(**entry, **{args.add_translation[4]: new_title})
 
