@@ -80,6 +80,12 @@ class TMDbInterface(WebInterface):
         self.__api_key = api_key
         self.__standard_params = {'api_key': api_key}
 
+        # Validate API key
+        if 'page' not in self._get(f'{self.API_BASE_URL}trending/all/day',
+                                   self.__standard_params):
+            log.critical(f'TMDb API key "{api_key}" is invalid')
+            exit(1)
+
         # Import old blacklist if it exists
         self.__import_old_blacklist()
 
