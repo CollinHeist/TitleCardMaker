@@ -32,12 +32,14 @@ class Show(YamlReader):
     """Filename to the backdrop for a series"""
     BACKDROP_FILENAME = 'backdrop.jpg'
 
-    __slots__ = ('preferences', '__library_map', 'series_info', 'valid',
+
+    __slots__ = ('preferences', 'valid', '__library_map', 'series_info',
                  'media_directory', 'card_class', 'episode_text_format',
                  'library_name', 'library', 'archive', 'sonarr_sync',
-                 'sync_specials', 'tmdb_sync', 'hide_seasons','__episode_range',
-                 '__season_map', 'title_language', 'font', 'source_directory',
-                 'logo', 'backdrop', 'file_interface', 'profile', 'episodes')
+                 'sync_specials', 'tmdb_sync','watched_style','unwatched_style',
+                 'hide_seasons','__episode_map', 'title_language', 'font',
+                 'source_directory', 'logo', 'backdrop', 'file_interface',
+                 'profile', 'episodes')
 
 
     def __init__(self, name: str, yaml_dict: dict, library_map: dict, 
@@ -60,7 +62,7 @@ class Show(YamlReader):
         """
 
         # Initialize parent YamlReader object
-        super().__init__(yaml_dict)
+        super().__init__(yaml_dict, log_function=log.error)
 
         # Get global PreferenceParser object
         self.preferences = global_preferences.pp
@@ -72,19 +74,12 @@ class Show(YamlReader):
         self.series_info = SeriesInfo(name, 0)
 
         # If year isn't given, skip completely
-        if not (year := self['year']):
+        if (year := self._get('year', type_=int)) == None:
             log.error(f'Series "{name}" is missing the required "year"')
-            self.valid = False
-            return None
-
-        # Year is given, parse and update year/full name of this show
-        if not isinstance(year, int) or year < 0:
-            log.error(f'Year "{year}" of series "{name}" is invalid')
             self.valid = False
             return None
             
         # Setup default values that can be overwritten by YAML
-        self.valid = True
         self.series_info = SeriesInfo(name, year)
         self.media_directory = None
         self.card_class = TitleCard.CARD_TYPES[self.preferences.card_type]
@@ -97,7 +92,6 @@ class Show(YamlReader):
         self.tmdb_sync = self.preferences.use_tmdb
         self.watched_style = self.preferences.global_watched_style
         self.unwatched_style = self.preferences.global_unwatched_style
-        self.style = self.preferences.style
         self.hide_seasons = False
         self.__episode_map = EpisodeMap()
         self.title_language = {}
@@ -163,10 +157,10 @@ class Show(YamlReader):
         invalid attributes and update this object's validity.
         """
 
-        if (name := self['name']):
+        if (name := self._get('name', type_=str)) != None:
             self.series_info.update_name(name)
 
-        if (library := self['library']):
+        if (library := self._get('library')) != None:
             # If the given library isn't in libary map, invalid
             if not (this_library := self.__library_map.get(library)):
                 log.error(f'Library "{library}" of series {self} is not found '
@@ -193,7 +187,7 @@ class Show(YamlReader):
                                   f'{self}')
                         self.valid = False
 
-        if (card_type := self['card_type']):
+        if (card_type := self._get('card_type', type_=str)) != None:
             # If known card type, set right away, otherwise check remote repo
             if card_type in TitleCard.CARD_TYPES:
                 self.card_class = TitleCard.CARD_TYPES[card_type]
@@ -205,54 +199,60 @@ class Show(YamlReader):
                 log.error(f'Unknown card type "{card_type}" of series {self}')
                 self.valid = False
             
-        if (value := self['media_directory']):
-            self.media_directory = Path(value)
+        if (value := self._get('media_directory', type_=Path)) != None:
+            self.media_directory = value
 
-        if self._is_specified('episode_text_format'):
-            self.episode_text_format = self['episode_text_format']
+        if (value := self._get('episode_text_format', type_=str)) != None:
+            self.episode_text_format = value
 
-        if self._is_specified('archive'):
-            self.archive = bool(self['archive'])
+        if (value := self._get('archive', type_=bool)) != None:
+            self.archive = value
 
-        if self._is_specified('sonarr_sync'):
-            self.sonarr_sync = bool(self['sonarr_sync'])
+        if (value := self._get('sonarr_sync', type_=bool)) != None:
+            self.sonarr_sync = value
 
-        if self._is_specified('sync_specials'):
-            self.sync_specials = bool(self['sync_specials'])
+        if (value := self._get('sync_specials', type_=bool)) != None:
+            self.sync_specials = value
 
-        if self._is_specified('tmdb_sync'):
-            self.tmdb_sync = bool(self['tmdb_sync'])
+        if (value := self._get('tmdb_sync', type_=bool)) != None:
+            self.tmdb_sync = value
 
-        if (value := self['watched_style']):
-            match_value = str(value).lower()
-            if match_value not in self.VALID_STYLES:
+        if (value := self._get('watched_style', type_=str)) != None:
+            if value not in self.VALID_STYLES:
                 log.error(f'Invalid watched style "{value}" in series {self}')
                 self.valid = False
             else:
-                self.watched_style = match_value
+                self.watched_style = value
 
-        if (value := self['unwatched_style']):
-            match_value = str(value).lower()
-            if match_value not in self.VALID_STYLES:
+        if (value := self._get('unwatched_style', type_=str)) != None:
+            if value not in self.VALID_STYLES:
                 log.error(f'Invalid unwatched style "{value}" in series {self}')
                 self.valid = False
             else:
-                self.unwatched_style = match_value
-        if self['unwatched']:
+                self.unwatched_style = value
+
+        if self._is_specified('unwatched'):
             log.error(f'"unwatched" setting has been renamed "unwatched_style"')
             self.valid = False
 
-        if self._is_specified('seasons', 'hide'):
-            self.hide_seasons = bool(self['seasons', 'hide'])
+        if (value := self._get('seasons', 'hide', type_=bool)) != None:
+            self.hide_seasons = value
 
-        if self['translation', 'language'] and self['translation', 'key']:
-            if (key := self['translation', 'key']) in ('title', 'abs_number'):
+        if (self._is_specified('translation', 'language')
+            and (key := self._get('translation', 'key', type_=str)) != None):
+            if key in ('title', 'abs_number'):
                 log.error(f'Cannot add translations under the key "{key}" in '
                           f'series {self}')
             else:
-                self.title_language = self['translation']
+                self.title_language = self._get('translation')
                 
-        self.__episode_map = EpisodeMap(self['seasons'], self['episode_ranges'])
+        # Construct EpisodeMap on seasons/episode ranges specification
+        self.__episode_map = EpisodeMap(
+            self._get('seasons'),
+            self._get('episode_ranges')
+        )
+
+        # Update object validity from EpisodeMap validity
         self.valid &= self.__episode_map.valid
 
 

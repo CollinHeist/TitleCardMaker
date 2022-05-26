@@ -85,7 +85,7 @@ class TMDbInterface(WebInterface):
                                    self.__standard_params):
             log.critical(f'TMDb API key "{api_key}" is invalid')
             exit(1)
-
+            
         # Import old blacklist if it exists
         self.__import_old_blacklist()
 
@@ -189,7 +189,7 @@ class TMDbInterface(WebInterface):
         later = (datetime.now() + timedelta(days=1)).timestamp()
 
         # If this entry exists, check that next has passed
-        if entry:
+        if entry != None:
             if datetime.now().timestamp() >= entry['next']:
                 self.__blacklist.update(
                     {'failures': entry['failures']+1, 'next': later},

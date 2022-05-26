@@ -31,23 +31,22 @@ class PreferenceParser(YamlReader):
         """
 
         # Initialize parent YamlReader object
-        super().__init__()
+        super().__init__(log_function=log.critical)
         
         # Store and read file
         self.file = file
         self.read_file()
 
         # Check for required source directory
-        if not (source_directory := self['options', 'source']):
+        if (value := self._get('options', 'source', type_=Path)) == None:
             log.critical(f'Preference file missing required options/source '
                          f'attribute')
             exit(1)
-        self.source_directory = Path(source_directory)
+        self.source_directory = value
 
         # Setup default values that can be overwritten by YAML
         self.series_files = []
         self.card_type = 'standard'
-        self.style = 'unique'
         self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
         self.card_extension = TitleCard.DEFAULT_CARD_EXTENSION
         self.validate_fonts = True
@@ -75,7 +74,6 @@ class PreferenceParser(YamlReader):
         self.imagemagick_container = None
 
         # Modify object attributes based off YAML, assume valid to start
-        self.valid = True
         self.__parse_yaml()
 
         # Whether to use magick prefix
@@ -123,7 +121,9 @@ class PreferenceParser(YamlReader):
         where necessary, fails type conversion).
         """
 
-        if (value := self['options', 'series']):
+        lower_str = lambda v: str(v).lower()
+
+        if (value := self._get('options', 'series')) != None:
             if isinstance(value, list):
                 self.series_files = value
             else:
@@ -132,116 +132,110 @@ class PreferenceParser(YamlReader):
             log.warning(f'No series YAML files indicated, no cards will be '
                         f'created')
 
-        if (value := self['options', 'card_type']):
+        if (value := self._get('options', 'card_type', type_=lower_str)) !=None:
             if value not in TitleCard.CARD_TYPES:
                 log.critical(f'Default card type "{value}" is invalid')
                 self.valid = False
             else:
                 self.card_type = value
 
-        if (value := self['options', 'style']):
-            if str(value).lower() not in Show.VALID_STYLES:
-                log.critical(f'Default card style "{value}" is invalid')
+        if (value := self._get('options', 'filename_format', type_=str)) !=None:
+            if not TitleCard.validate_card_format_string(value):
                 self.valid = False
             else:
-                self.style = str(value).lower()
+                self.card_filename_format = value
 
-        if (new_format := self['options', 'filename_format']):
-            if not TitleCard.validate_card_format_string(new_format):
-                self.valid = False
-            else:
-                self.card_filename_format = new_format
-
-        if (extension := self['options', 'card_extension']):
-            extension = ('' if extension[0] == '.' else '.') + extension.lower()
+        if (value := self._get('options', 'card_extension', type_=str)) != None:
+            extension = ('' if value[0] == '.' else '.') + value
             if extension not in ImageMaker.VALID_IMAGE_EXTENSIONS:
                 log.critical(f'Card extension "{extension}" is invalid')
                 self.valid = False
             else:
                 self.card_extension = extension
 
-        if self._is_specified('options', 'validate_fonts'):
-            self.validate_fonts = bool(self['options', 'validate_fonts'])
+        if (value := self._get('options', 'validate_fonts', type_=bool)) !=None:
+            self.validate_fonts = value
 
-        if self._is_specified('options', 'zero_pad_seasons'):
-            self.zero_pad_seasons = bool(self['options', 'zero_pad_seasons'])
+        if (value := self._get('options', 'zero_pad_seasons',type_=bool))!=None:
+            self.zero_pad_seasons = value
 
-        if (value := self['archive', 'path']):
-            self.archive_directory = Path(value)
+        if (value := self._get('archive', 'path', type_=Path)) != None:
+            self.archive_directory = value
             self.create_archive = True
 
-        if self._is_specified('archive', 'all_variations'):
-            value = self['archive', 'all_variations']
-            self.archive_all_variations = bool(value)
+        if (value := self._get('archive', 'all_variations', type_=bool)) !=None:
+            self.archive_all_variations = value
 
-        if self._is_specified('archive', 'summary', 'create'):
-            self.create_summaries = bool(self['archive', 'summary', 'create'])
+        if (value := self._get('archive', 'summary', 'create',
+                               type_=bool)) != None:
+            self.create_summaries = value
 
-        if (value := self['archive', 'summary', 'background_color']):
+        if (value := self._get('archive', 'summary', 'background_color',
+                               type_=str)) != None:
             self.summary_background_color = value
 
-        if (value := self['archive', 'summary', 'logo_filename']):
+        if (value := self._get('archive', 'summary', 'logo_filename',
+                               type_=str)) != None:
             self.logo_filename = value
 
-        if (value := self['archive', 'summary', 'minimum_episodes']):
-            try:
-                self.summary_minimum_episode_count = int(value)
-            except ValueError:
-                log.critical(f'Invalid summary minimum episode count "{value}"')
-                self.valid = False
+        if (value := self._get('archive', 'summary', 'minimum_episodes',
+                               type_=int) != None):
+            self.summary_minimum_episode_count = value
 
-        if (value := self['plex', 'url']):
+        if (value := self._get('plex', 'url', type_=str)) != None:
             self.plex_url = value
             self.use_plex = True
 
-        if (value := self['plex', 'token']):
+        if (value := self._get('plex', 'token', type_=str)) != None:
             self.plex_token = value
 
-        if (value := self['plex', 'watched_style']):
-            if str(value).lower() not in Show.VALID_STYLES:
+        if (value := self._get('plex', 'watched_style', type_=lower_str))!=None:
+            if value not in Show.VALID_STYLES:
                 options = '", "'.join(Show.VALID_STYLES)
                 log.critical(f'Invalid watched style, must be one of "{opts}"')
                 self.valid = False
             else:
-                self.global_watched_style = str(value).lower()
+                self.global_watched_style = value
 
-        if (value := self['plex', 'unwatched_style']):
-            if str(value).lower() == 'ignore':
+        if (value := self._get('plex', 'unwatched_style',
+                               type_=lower_str)) != None:
+            if value == 'ignore':
                 log.critical(f'Unwatched style "ignore" is now "unique"')
                 self.valid = False
-            elif str(value).lower() not in Show.VALID_STYLES:
+            elif value not in Show.VALID_STYLES:
                 opts = '", "'.join(Show.VALID_STYLES)
                 log.critical(f'Invalid unwatched style, must be one of "{opts}"')
                 self.valid = False
             else:
-                self.global_unwatched_style = str(value).lower()
+                self.global_unwatched_style = value
 
-        if self['plex', 'unwatched']:
+        if self._is_specified('plex', 'unwatched'):
             log.critical(f'Plex "unwatched" setting has been renamed to '
                          f'"unwatched_style"')
             self.valid = False
 
-        if self['sonarr']:
-            if not all((self['sonarr', 'url'], self['sonarr', 'api_key'])):
+        if self._is_specified('sonarr'):
+            if (not self._is_specified('sonarr', 'url')
+                or not self._is_specified('sonarr', 'api_key')):
                 log.critical(f'Sonarr preferences must contain "url" and '
                              f'"api_key"')
                 self.valid = False
             else:
-                self.sonarr_url = self['sonarr', 'url']
-                self.sonarr_api_key = self['sonarr', 'api_key']
+                self.sonarr_url = self._get('sonarr', 'url', type_=str)
+                self.sonarr_api_key = self._get('sonarr', 'api_key', type_=str)
                 self.use_sonarr = True
 
-        if self._is_specified('sonarr', 'sync_specials'):
-            self.sonarr_sync_specials = bool(self['sonarr', 'sync_specials'])
+        if (value := self._get('sonarr', 'sync_specials', type_=bool)) != None:
+            self.sonarr_sync_specials = value
 
-        if (value := self['tmdb', 'api_key']):
+        if (value := self._get('tmdb', 'api_key', type_=str)) != None:
             self.tmdb_api_key = value
             self.use_tmdb = True
 
-        if (value := self['tmdb', 'retry_count']):
+        if (value := self._get('tmdb', 'retry_count', type_=int)) != None:
             self.tmdb_retry_count = int(value)
 
-        if (value := self['tmdb', 'minimum_resolution']):
+        if (value := self._get('tmdb', 'minimum_resolution', type_=str)) !=None:
             try:
                 width, height = map(int, value.lower().split('x'))
                 self.tmdb_minimum_resolution = {'width': width, 'height':height}
@@ -250,7 +244,7 @@ class PreferenceParser(YamlReader):
                              f'WIDTHxHEIGHT')
                 self.valid = False
 
-        if (value := self['imagemagick', 'container']):
+        if (value := self._get('imagemagick', 'container', type_=str)) != None:
             self.imagemagick_container = value
 
 
@@ -343,8 +337,9 @@ class PreferenceParser(YamlReader):
                 continue
 
             # Skip if there are no series to yield
-            if file_yaml is None or 'series' not in file_yaml:
-                log.info(f'Series file has no entries')
+            if (file_yaml is None or 'series' not in file_yaml
+                or not file_yaml['series']):
+                log.warning(f'Series file "{file.resolve()}" has no entries')
                 continue
 
             # Get library map for this file; error+skip missing library paths

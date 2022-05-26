@@ -387,23 +387,15 @@ class PlexInterface:
             size = episode.destination.stat().st_size
             series_name = series_info.full_name
 
-            # Update loaded map with this entry
-            condition = self.__get_condition(library_name, series_info, episode)
-            loaded = self.__db.get(condition)
-            if loaded:
-                self.__db.update(
-                    {'filesize': size, 'spoiler': episode.spoil_type},
-                    condition
-                )
-            else:
-                self.__db.insert({
-                    'library': library_name,
-                    'series': series_info.full_name,
-                    'season': episode.episode_info.season,
-                    'episode': episode.episode_info.episode,
-                    'filesize': size,
-                    'spoiler': episode.spoil_type,
-                })
+            # Update/add loaded map with this entry
+            self.__db.upsert({
+                'library': library_name,
+                'series': series_info.full_name,
+                'season': episode.episode_info.season,
+                'episode': episode.episode_info.episode,
+                'filesize': size,
+                'spoiler': episode.spoil_type,
+            }, self.__get_condition(library_name, series_info, episode))
                 
         # Log load operations to user
         if loaded_count > 0:
