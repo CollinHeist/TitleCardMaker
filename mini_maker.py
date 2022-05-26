@@ -14,11 +14,16 @@ except ImportError:
     print(f'Required Python packages are missing - execute "pipenv install"')
     exit(1)
 
+# Default path for the preference file to parse
+DEFAULT_PREFERENCE_FILE = Path(__file__).parent / 'preferences.yml'
+
 parser = ArgumentParser(description='Manually make cards')
-parser.add_argument('-p', '--preference-file', type=Path, 
-                    default='preferences.yml', metavar='PREFERENCE_FILE',
-                    help='Preference YAML file for parsing '
-                         'ImageMagick/Sonarr/TMDb options')
+parser.add_argument(
+    '-p', '--preference-file',
+    type=Path, 
+    default=DEFAULT_PREFERENCE_FILE,
+    metavar='PREFERENCE_FILE',
+    help='Preference YAML file for global options')
 
 # Argument group for 'manual' title card creation
 title_card_group = parser.add_argument_group('Title Cards',
