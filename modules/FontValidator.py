@@ -60,6 +60,10 @@ class FontValidator:
                     otherwise.
         """
 
+        # All fonts have spaces
+        if character == ' ':
+            return True
+
         # If character has been checked, return status
         if self.__db.contains((where('file') == font_filepath) &
                               (where('character') == character)):

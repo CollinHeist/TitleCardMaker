@@ -37,7 +37,8 @@ class RemoteCardType:
         url = f'{self.URL_BASE}/{remote}.py'
         if (response := get(url)).status_code >= 400:
             log.error(f'Cannot identify remote Card Type "{remote}"')
-            return False
+            self.valid = False
+            return None
 
         # Succesful request (i.e. file remotely exists)
         # Get username and class name from the git specification

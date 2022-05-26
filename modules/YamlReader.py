@@ -10,33 +10,50 @@ class YamlReader(ABC):
     """
     
     @abstractmethod
-    def __init__(self, yaml: dict={}) -> None:
+    def __init__(self, yaml: dict={}, *,
+                 log_function: callable=log.error) -> None:
         """Initialization function of this class"""
         self._base_yaml = yaml
+        self.valid = True
+        self.__log = log_function
 
 
-    def __getitem__(self, attributes):
+    def _get(self, *attributes, type_: type=None):
         """
-        Main way to get attribute values from YAML. If the given indices exist,
-        then the value is returned, if not then None is returned.
+        Get the value specified by the given attributes/sub-attributes of YAML,
+        optionally converting to the given type. Log invalidity and return None
+        if value is either unspecified or cannot be converted to the type.
         
-        :param      attributes: Attributes to get of this YAML.
+        :param      attributes: Any number of nested attributes to get value of.
+        :param      type_:      Optional callable (i.e.) type to call on
+                                specified value before returning
         
-        :returns:   The value within YAML indicated by the given attributes, 
-                    None if DNE.
+        :returns:   Value located at the given attribute specification, None
+                    if DNE or cannot be typed.
         """
 
-        # For multi-indexing
-        if isinstance(attributes, tuple):
-            if self._is_specified(*attributes):
-                value = self._base_yaml
-                for attrib in attributes:
-                    value = value[attrib]
+        # If the value is specified
+        if self._is_specified(*attributes):
+            value = self._base_yaml
+            for attrib in attributes:
+                value = value[attrib]
 
+            # If no type conversion is indicated, just return value
+            if type_ == None:
                 return value
-            return None
 
-        return self._base_yaml.get(attributes, None)
+            try:
+                # Attempt type conversion
+                return type_(value)
+            except Exception:
+                # Type conversion failed, log, set invalid, return None
+                attrib_string = '", "'.join(attributes)
+                self.__log(f'Value of "{attrib_string}" is invalid')
+                self.valid = False
+                return None
+        else:
+            # No value specified, return None
+            return None
 
 
     def _is_specified(self, *attributes) -> bool:

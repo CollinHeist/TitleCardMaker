@@ -68,10 +68,12 @@ class ShowSummary(ImageMaker):
         self.number_rows = 0
 
 
-    def __select_images(self) -> None:
+    def __select_images(self) -> bool:
         """
         Select the images that are to be incorporated into the show summary.
         This updates the object's inputs and number_rows attributes.
+
+        :returns:   True if the ShowSummary should be created, False otherwise.
         """
         
         # Filter out episodes that don't have an existing title card
@@ -82,14 +84,14 @@ class ShowSummary(ImageMaker):
 
         # Warn if this show has no episodes to work with
         if (episode_count := len(available_episodes)) == 0:
-            return None
+            return False
 
         # Skip if the number of available episodes is below the minimum
         minimum = self.preferences.summary_minimum_episode_count
         if episode_count < minimum:
             log.info(f'Skipping ShowSummary, {self.show} has {episode_count} '
                      f'episodes, minimum setting is {minimum}')
-            return None
+            return False
 
         # Get a random subset of images to create the summary with
         # Sort that subset my season/episode number so the montage is ordered
@@ -106,6 +108,8 @@ class ShowSummary(ImageMaker):
 
         # The number of rows is necessary to determine how to scale y-values
         self.number_rows = ceil(len(episode_keys) / 3)
+
+        return True
 
 
     def _create_montage(self) -> Path:
@@ -293,9 +297,6 @@ class ShowSummary(ImageMaker):
         done at the start of this function.
         """
 
-        # Select images for montaging
-        self.__select_images()
-
         # If there are no title cards to montage
         if len(self.inputs) == 0:
             return None
@@ -305,6 +306,10 @@ class ShowSummary(ImageMaker):
             log.warning('Cannot create ShowSummary - no logo found')
             return None
 
+        # Select images for montaging
+        if not self.__select_images():
+            return None
+            
         # Create montage of title cards
         montage = self._create_montage()
 

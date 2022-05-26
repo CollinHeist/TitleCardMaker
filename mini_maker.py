@@ -7,6 +7,7 @@ try:
     from modules.GenreMaker import GenreMaker
     from modules.PreferenceParser import PreferenceParser
     from modules.preferences import set_preference_parser
+    from modules.RemoteCardType import RemoteCardType
     from modules.ShowSummary import ShowSummary
     from modules.TitleCard import TitleCard
 except ImportError:
@@ -34,7 +35,6 @@ title_card_group.add_argument(
     '--card-type',
     type=str,
     default='standard',
-    choices=TitleCard.CARD_TYPES.keys(),
     metavar='TYPE',
     help='Create a title card of a specific type')
 title_card_group.add_argument(
@@ -158,15 +158,26 @@ if not pp.valid:
     exit(1)
 set_preference_parser(pp)
 
-# Override unspecified defaults with their class specific defaults
-if args.font == Path('__default'):
-    args.font = Path(TitleCard.CARD_TYPES[args.card_type].TITLE_FONT)
-if args.font_color == '__default':
-    args.font_color = TitleCard.CARD_TYPES[args.card_type].TITLE_COLOR
-
 # Execute title card related options
 if hasattr(args, 'title_card'):
-    TitleCard.CARD_TYPES[args.card_type](
+    # Attempt to get local card type, if not, try RemoteCardType
+    if args.card_type in TitleCard.CARD_TYPES.keys():
+        CardClass = TitleCard.CARD_TYPES[args.card_type]
+    elif (remote_card := RemoteCardType(args.card_type)).valid:
+        CardClass = remote_card.card_class
+    else:
+        log.error(f'Cannot identify card type "{args.card_type}" as either '
+                  f'local or remote card type')
+        exit(1)
+
+    # Override unspecified defaults with their class specific defaults
+    if args.font == Path('__default'):
+        args.font = Path(str(CardClass.TITLE_FONT))
+    if args.font_color == '__default':
+        args.font_color = CardClass.TITLE_COLOR
+
+    # Create the given card
+    CardClass(
         episode_text=args.episode,
         source=Path(args.title_card[0]), 
         output_file=Path(args.title_card[1]),

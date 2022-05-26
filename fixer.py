@@ -67,6 +67,13 @@ sonarr_group.add_argument(
     metavar='FILE',
     help='Create a generic series YAML file for all the series in Sonarr')
 sonarr_group.add_argument(
+    '--read-tags',
+    nargs='+',
+    type=str,
+    default=[],
+    metavar='TAG',
+    help='Any number of Sonarr tags to filter series of --read-all-series by')
+sonarr_group.add_argument(
     '--sonarr-list-ids',
     action='store_true',
     help="List all the ID's for all shows within Sonarr")
@@ -106,7 +113,7 @@ if not pp.valid:
 set_preference_parser(pp)
 
 # Execute Miscellaneous options
-if hasattr(args, 'import_archive'):
+if hasattr(args, 'import_archive') and pp.use_plex:
     # Temporary classes
     @dataclass
     class Episode:
@@ -178,13 +185,13 @@ for directory in args.delete_cards:
             log.debug(f'Deleted {image.resolve()}')
 
 # Execute Sonarr related options
-if hasattr(args, 'read_all_series'):
+if hasattr(args, 'read_all_series') and pp.use_sonarr:
     # Create SonarrInterface
     si = SonarrInterface(pp.sonarr_url, pp.sonarr_api_key)
 
     # Create YAML
     yaml = {'libraries': {}, 'series': {}}
-    for series_info, media_directory in si.get_all_series():
+    for series_info, media_directory in si.get_series(args.read_tags):
         # Add library section
         library = {'path': str(media_directory.parent.resolve())}
         yaml['libraries'][media_directory.parent.name] = library
@@ -209,21 +216,18 @@ if hasattr(args, 'read_all_series'):
     with args.read_all_series.open('w', encoding='utf-8') as file_handle:
         dump(yaml, file_handle, allow_unicode=True)
 
-    log.info(f'\nWrote {len(yaml["series"])} series to '
+    log.info(f'Wrote {len(yaml["series"])} series to '
              f'{args.read_all_series.resolve()}')
 
-if args.sonarr_list_ids:
-    if not pp.use_sonarr:
-        log.critical("Cannot list Sonarr ID's if Sonarr is disabled")
-    else:
-        SonarrInterface(pp.sonarr_url, pp.sonarr_api_key).list_all_series_id()
+if args.sonarr_list_ids and pp.use_sonarr:
+    SonarrInterface(pp.sonarr_url, pp.sonarr_api_key).list_all_series_id()
 
 # Execute TMDB related options
 if hasattr(args, 'delete_blacklist'):
     if args.delete_blacklist:
         TMDbInterface.delete_blacklist()
 
-if hasattr(args, 'tmdb_download_images'):
+if hasattr(args, 'tmdb_download_images') and pp.use_tmdb:
     for arg_set in args.tmdb_download_images:
         TMDbInterface.manually_download_season(
             api_key=pp.tmdb_api_key,
@@ -234,24 +238,24 @@ if hasattr(args, 'tmdb_download_images'):
             directory=Path(arg_set[4]),
         )
 
-if hasattr(args, 'add_language'):
-    dfi = DataFileInterface(Path(args.add_language[2]))
+if hasattr(args, 'add_translation') and pp.use_tmdb:
+    dfi = DataFileInterface(Path(args.add_translation[2]))
     tmdbi = TMDbInterface(pp.tmdb_api_key)
 
     for entry in dfi.read():
-        if args.add_language[4] in entry:
+        if args.add_translation[4] in entry:
             continue
 
         new_title = tmdbi.get_episode_title(
-            title=args.add_language[0],
-            year=args.add_language[1],
+            title=args.add_translation[0],
+            year=args.add_translation[1],
             season=entry['season_number'],
             episode=entry['episode_number'],
-            language_code=args.add_language[3],
+            language_code=args.add_translation[3],
         )
 
         if new_title == None:
             continue
 
-        dfi.modify_entry(**entry, **{args.add_language[4]: new_title})
+        dfi.modify_entry(**entry, **{args.add_translation[4]: new_title})
 
