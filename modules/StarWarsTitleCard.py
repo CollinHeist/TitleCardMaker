@@ -51,6 +51,10 @@ class StarWarsTitleCard(CardType):
     """Paths to intermediate files that are deleted after the card is created"""
     __SOURCE_WITH_STARS = CardType.TEMP_DIR / 'source_gradient.png'
 
+
+    __slots__ = ('source_file', 'output_file', 'title', 'episode_prefix',
+                 'episode_text', 'hide_episode_text', 'blur')
+
     
     def __init__(self, source: Path, output_file: Path, title: str,
                  episode_text: str, blur: bool=False, *args, **kwargs) -> None:
@@ -78,10 +82,15 @@ class StarWarsTitleCard(CardType):
         
         # Modify episode text to remove "Episode"-like text, replace numbers
         # with text, strip spaces, and convert to uppercase
-        self.episode_prefix = 'EPISODE'
-        self.episode_text = self.image_magick.escape_chars(
-            self.__modify_episode_text(episode_text)
-        )
+        self.hide_episode_text = len(episode_text) == 0
+        if self.hide_episode_text:
+            self.episode_prefix = None
+            self.episode_text = self.image_magick.escape_chars(episode_text)
+        else:
+            self.episode_prefix = 'EPISODE'
+            self.episode_text = self.image_magick.escape_chars(
+                self.__modify_episode_text(episode_text)
+            )
 
         # Store blur flag
         self.blur = blur
@@ -117,6 +126,7 @@ class StarWarsTitleCard(CardType):
             self.episode_prefix = 'EPISODE'
             modified_text = modified_text.replace('EPISODE', '')
         elif match(rf'PART\s*(\d+)', modified_text):
+            self.episode_prefix = 'PART'
             modified_text = modified_text.replace('PART', '')
 
         try:
@@ -197,18 +207,43 @@ class StarWarsTitleCard(CardType):
         :returns:   List of ImageMagick commands.
         """
 
+        # Get variable horizontal offset based of episode prefix
+        text_offset = {'EPISODE': 720, 'CHAPTER': 720, 'PART': 570}
+        offset = text_offset[self.episode_prefix]
+
         return [
             f'-gravity west',
             f'-font "{self.EPISODE_NUMBER_FONT.resolve()}"',
             f'-pointsize 53',
             f'-kerning 19',
-            f'-annotate +720-140 "{self.episode_text}"',
+            f'-annotate +{offset}-140 "{self.episode_text}"',
         ]
 
 
-    def __add_text(self, gradient_source: Path) -> Path:
+    def __add_only_title(self, gradient_source: Path) -> Path:
         """
-        Add the title, "EPISODE" prefix, and episode text to the give image.
+        Add the title to the given image.
+        
+        :param      gradient_source:    Source image with starry gradient
+                                        overlaid.
+        
+        :returns:   Path to the created image (the output file).
+        """
+
+        command = ' '.join([
+            f'convert "{gradient_source.resolve()}"',
+            *self.__add_title_text(),
+            f'"{self.output_file.resolve()}"',
+        ])
+
+        self.image_magick.run(command)
+
+        return self.output_file
+
+
+    def __add_all_text(self, gradient_source: Path) -> Path:
+        """
+        Add the title, "EPISODE" prefix, and episode text to the given image.
         
         :param      gradient_source:    Source image with starry gradient
                                         overlaid.
@@ -258,7 +293,11 @@ class StarWarsTitleCard(CardType):
         :returns:   True if custom season titles are indicated, False otherwise.
         """
 
-        generic_formats = ('EPISODE {episode_number}', 'PART {episode_number}')
+        generic_formats = (
+            'EPISODE {episode_number}',
+            'CHAPTER {episode_number}',
+            'PART {episode_number}',
+        )
 
         return episode_text_format not in generic_formats
 
@@ -273,7 +312,10 @@ class StarWarsTitleCard(CardType):
         self.output_file.parent.mkdir(parents=True, exist_ok=True)
 
         # Add text to starry image, result is output
-        output_file = self.__add_text(star_image)
+        if self.hide_episode_text:
+            self.__add_only_title(star_image)
+        else:
+            self.__add_all_text(star_image)
 
         # Delete all intermediate images
         self.image_magick.delete_intermediate_images(star_image)
