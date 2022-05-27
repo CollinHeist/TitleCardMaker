@@ -28,6 +28,7 @@ class CardType(ImageMaker):
         'upper': str.upper,
         'lower': str.lower,
         'title': titlecase,
+        'blank': lambda _: '',
     }
 
     """Default episode text format string, can be overwritten by each class"""
