@@ -308,6 +308,41 @@ class PlexInterface:
                 )
 
 
+    def get_source_image(self, library_name: str, series_info: 'SeriesInfo',
+                         episode_info: 'EpisodeInfo') -> str:
+        """
+        Get the source image (i.e. the URL to the existing thumbnail) for the
+        given episode within Plex.
+        
+        :param      library_name:   Name of the library the series is under.
+        :param      series_info:    The series to get the thumbnail of.
+        :param      episode_info:   The episode to get the thumbnail of.
+        
+        :returns:   URL to the thumbnail of the given Episode. None if the
+                    episode DNE.
+        """
+
+        # If the given library cannot be found, exit
+        if not (library := self.__get_library(library_name)):
+            return None
+
+        # If the given series cannot be found in this library, exit
+        if not (series := self.__get_series(library, series_info)):
+            return None
+
+        # Get Episode from within Plex
+        try:
+            plex_episode = series.episode(
+                season=episode_info.season_number,
+                episode=episode_info.episode_number
+            )
+
+            return f'{self.__server._baseurl}{plex_episode.thumb}'
+        except NotFound:
+            # Episode DNE in Plex, return
+            return None
+
+
     @retry(stop=stop_after_attempt(5),
            wait=wait_fixed(3)+wait_exponential(min=1, max=32))
     def __retry_upload(self, plex_episode: 'Episode', filepath: Path) -> None:
