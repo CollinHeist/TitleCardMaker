@@ -488,6 +488,7 @@ class Show(YamlReader):
                 self.unwatched_style,
             )
         else:
+            # If no PlexInterface, assume all episodes are unwatched
             [episode.update_statuses(False, self.watched_style,
                                      self.unwatched_style)
              for _, episode in self.episodes.items()]
@@ -522,7 +523,7 @@ class Show(YamlReader):
             elif watched_style == 'unique':
                 continue
             elif watched_style == 'art':
-                found = episode.update_source(self.backdrop, downloadable=False)
+                found = episode.update_source(self.backdrop, downloadable=True)
                 download_backdrop = True
             else:
                 episode.blur = True
