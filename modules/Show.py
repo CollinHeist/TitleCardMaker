@@ -95,6 +95,7 @@ class Show(YamlReader):
         self.hide_seasons = False
         self.__episode_map = EpisodeMap()
         self.title_language = {}
+        self.extras = {}
 
         # Set object attributes based off YAML and update validity
         self.__parse_yaml()
@@ -248,12 +249,16 @@ class Show(YamlReader):
                 
         # Construct EpisodeMap on seasons/episode ranges specification
         self.__episode_map = EpisodeMap(
-            self._get('seasons'),
-            self._get('episode_ranges')
+            self._get('seasons', type_=dict),
+            self._get('episode_ranges', type_=dict)
         )
 
         # Update object validity from EpisodeMap validity
         self.valid &= self.__episode_map.valid
+
+        # Read all extras
+        if (self._is_specified('extras', type_=dict)):
+            self.extras = self._get('extras')
 
 
     def __get_destination(self, episode_info: 'EpisodeInfo') -> Path:
@@ -586,6 +591,7 @@ class Show(YamlReader):
                 episode,
                 self.profile,
                 self.card_class.TITLE_CHARACTERISTICS,
+                **self.extras,
                 **episode.extra_characteristics,
             )
 
