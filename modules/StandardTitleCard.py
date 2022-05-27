@@ -68,7 +68,7 @@ class StandardTitleCard(CardType):
 
         :param  source:             Source image.
         :param  output_file:        Output file.
-        :param  title_top_line:     Episode title.
+        :param  title:              Episode title.
         :param  season_text:        Text to use as season count text. Ignored if
                                     hide_season is True.
         :param  episode_text:       Text to use as episode count text.

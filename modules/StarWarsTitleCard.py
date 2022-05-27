@@ -213,7 +213,7 @@ class StarWarsTitleCard(CardType):
         :param      gradient_source:    Source image with starry gradient
                                         overlaid.
         
-        :returns:   Path to the created image.
+        :returns:   Path to the created image (the output file).
         """
 
         command = ' '.join([

@@ -96,6 +96,13 @@ class ShowArchive:
             )
 
 
+    def __repr__(self) -> str:
+        """Returns a unambiguous string representation of the object."""
+
+        return (f'<ShowArchive for {self.series_info} with {len(self.shows)} '
+                f'profiles>')
+
+
     def read_source(self) -> None:
         """Call read_source() on each Show object in this archive."""
 

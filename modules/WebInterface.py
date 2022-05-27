@@ -71,7 +71,8 @@ class WebInterface:
         return self.__cached_results[-1]
 
 
-    def download_image(self, image_url: str, destination: 'Path') -> None:
+    @staticmethod
+    def download_image(image_url: str, destination: 'Path') -> None:
         """
         Download the provided image URL to the destination filepath.
         
