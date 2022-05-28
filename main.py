@@ -122,14 +122,7 @@ def run():
 
 # Run immediately if specified
 if args.run:
-    from cProfile import Profile
-    from pstats import Stats
-
-    with Profile() as pr:
-        run()
-
-    stats = Stats(pr)
-    stats.dump_stats(filename='all.prof')   
+    run()  
 
 # Schedule subsequent runs if specified
 if hasattr(args, 'runtime'):
