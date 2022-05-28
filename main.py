@@ -38,12 +38,12 @@ def runtime(arg: str) -> dict:
 
 def frequency(arg: str) -> dict:
     try:
-        interval, unit = match(r'(\d+)(m|h|d)', arg).groups()
+        interval, unit = match(r'(\d+)(m|h|d|w)', arg).groups()
         interval, unit = int(interval), unit.lower()
-        assert interval > 0 and unit in ('m', 'h', 'd')
+        assert interval > 0 and unit in ('m', 'h', 'd', 'w')
         return {
             'interval': interval,
-            'unit': {'m': 'minutes', 'h': 'hours', 'd': 'days'}[unit]
+            'unit': {'m':'minutes', 'h':'hours', 'd':'days', 'w':'weeks'}[unit]
         }
     except Exception:
         raise ArgumentTypeError(f'Invalid frequency, specify as FREQUENCY[unit]'
@@ -74,7 +74,7 @@ parser.add_argument(
     default=environ.get(FREQUENCY_ENV, '12h'),
     metavar='FREQUENCY[unit]',
     help='How often to run the TitleCardMaker (default "12h"). Units can be '
-         'm/h/d for minutes/hours/days')
+         'm/h/d/w for minutes/hours/days/weeks')
 parser.add_argument(
     '-m', '--missing', 
     type=Path,
@@ -122,7 +122,7 @@ def run():
 
 # Run immediately if specified
 if args.run:
-    run()
+    run()  
 
 # Schedule subsequent runs if specified
 if hasattr(args, 'runtime'):

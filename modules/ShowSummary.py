@@ -89,8 +89,8 @@ class ShowSummary(ImageMaker):
         # Skip if the number of available episodes is below the minimum
         minimum = self.preferences.summary_minimum_episode_count
         if episode_count < minimum:
-            log.info(f'Skipping ShowSummary, {self.show} has {episode_count} '
-                     f'episodes, minimum setting is {minimum}')
+            log.debug(f'Skipping ShowSummary, {self.show} has {episode_count} '
+                      f'episodes, minimum setting is {minimum}')
             return False
 
         # Get a random subset of images to create the summary with
@@ -297,17 +297,13 @@ class ShowSummary(ImageMaker):
         done at the start of this function.
         """
 
-        # If there are no title cards to montage
-        if len(self.inputs) == 0:
-            return None
-
         # Exit if a logo does not exist
         if not self.logo.exists():
             log.warning('Cannot create ShowSummary - no logo found')
             return None
 
         # Select images for montaging
-        if not self.__select_images():
+        if not self.__select_images() or len(self.inputs) == 0:
             return None
             
         # Create montage of title cards

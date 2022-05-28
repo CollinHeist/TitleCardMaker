@@ -20,7 +20,7 @@ class CardType(ImageMaker):
     """
 
     """Default case string for all title text"""
-    DEFAULT_FONT_CASE = 'upper'
+    DEFAULT_FONT_CASE = 'source'
 
     """Mapping of 'case' strings to format functions"""
     CASE_FUNCTIONS = {
@@ -28,15 +28,19 @@ class CardType(ImageMaker):
         'upper': str.upper,
         'lower': str.lower,
         'title': titlecase,
+        'blank': lambda _: '',
     }
 
     """Default episode text format string, can be overwritten by each class"""
     EPISODE_TEXT_FORMAT = 'EPISODE {episode_number}'
 
+    """Whether this class uses unique source images for card creation"""
+    USES_UNIQUE_SOURCES = True
+
     """Standard size for all title cards"""
     TITLE_CARD_SIZE = '3200x1800'
 
-    """Blur effects to apply to spoiler-free images"""
+    """Standard blur effect to apply to spoiler-free images"""
     BLUR_PROFILE = '0x60'
 
     @property

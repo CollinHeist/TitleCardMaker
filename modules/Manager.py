@@ -133,16 +133,16 @@ class Manager:
             show.query_sonarr(self.sonarr_interface)
 
 
-    def create_missing_title_cards(self) -> None:
+    def select_source_images(self) -> None:
         """
-        Creates all missing title cards for every show known to this Manager.
-        For each show, this calls Show.create_missing_title_cards().
+        Select and download the source images for every show known to this
+        manager. For each show, this called Show.select_source_images().
         """
 
-        # Go through every show in the Manager, create cards
+        # Go through each show and download source images
         for show in (pbar := tqdm(self.shows, **TQDM_KWARGS)):
             # Update progress bar
-            pbar.set_description(f'Creating Title Cards for '
+            pbar.set_description(f'Selecting sources for '
                                  f'"{show.series_info.short_name}"')
 
             # Modify unwatched episodes based on Plex watch status
@@ -155,11 +155,21 @@ class Manager:
             else:
                 show.select_source_images()
 
-            # Pass the TMDbInterface to the show if globally enabled
-            if self.preferences.use_tmdb:
-                show.create_missing_title_cards(self.tmdb_interface)
-            else:
-                show.create_missing_title_cards()
+
+    def create_missing_title_cards(self) -> None:
+        """
+        Creates all missing title cards for every show known to this Manager.
+        For each show, this calls Show.create_missing_title_cards().
+        """
+
+        # Go through every show in the Manager, create cards
+        for show in (pbar := tqdm(self.shows, **TQDM_KWARGS)):
+            # Update progress bar
+            pbar.set_description(f'Creating Title Cards for '
+                                 f'"{show.series_info.short_name}"')
+
+            # Create cards
+            show.create_missing_title_cards()
 
     
     def update_plex(self) -> None:
@@ -196,12 +206,8 @@ class Manager:
             # Update progress bar
             pbar.set_description(f'Updating archive for '
                                  f'"{show_archive.series_info.short_name}"')
-
-            # Pass the TMDbInterface to the show if globally enabled
-            if self.preferences.use_tmdb:
-                show_archive.update_archive(self.tmdb_interface)
-            else:
-                show_archive.update_archive()
+            
+            show_archive.update_archive()
 
 
     def create_summaries(self) -> None:
@@ -230,11 +236,12 @@ class Manager:
 
     def run(self) -> None:
         """Run the manager and exit."""
-
+        
         self.create_shows()
         self.read_show_source()
         self.check_sonarr_for_new_episodes()
         self.check_tmdb_for_translations()
+        self.select_source_images()
         self.create_missing_title_cards()
         self.update_plex()
         self.update_archive()

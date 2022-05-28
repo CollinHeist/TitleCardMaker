@@ -7,6 +7,7 @@ import modules.preferences as global_preferences
 from modules.AnimeTitleCard import AnimeTitleCard
 from modules.StandardTitleCard import StandardTitleCard
 from modules.StarWarsTitleCard import StarWarsTitleCard
+from modules.TextlessTitleCard import TextlessTitleCard
 
 class TitleCard:
     """
@@ -33,6 +34,7 @@ class TitleCard:
         'generic': StandardTitleCard,
         'anime': AnimeTitleCard,
         'star wars': StarWarsTitleCard,
+        'textless': TextlessTitleCard,
     }
 
     """Mapping of illegal filename characters and their replacements"""

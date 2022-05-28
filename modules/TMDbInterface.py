@@ -232,7 +232,7 @@ class TMDbInterface(WebInterface):
             self.__get_condition(query_type, series_info, episode_info)
         )
 
-        # If request hasn't been blacklisted, not blacklisted
+        # If request DNE, not blacklisted
         if entry == None:
             return False
 
@@ -242,6 +242,31 @@ class TMDbInterface(WebInterface):
 
         # If next hasn't passed, treat as temporary blacklist
         return datetime.now().timestamp() < entry['next']
+
+
+    def is_permanently_blacklisted(self, series_info: SeriesInfo,
+                                   episode_info: EpisodeInfo,
+                                   query_type: str='source') -> bool:
+        """
+        Determines if permanently blacklisted.
+        
+        :param      series_info:   The series information
+        :param      episode_info:  The episode information
+        
+        :returns:   True if permanently blacklisted, False otherwise.
+        """
+
+        # Get the blacklist entry for this request
+        entry = self.__blacklist.get(
+            self.__get_condition(query_type, series_info, episode_info)
+        )
+
+        # If request hasn't been blacklisted, not blacklisted
+        if entry == None:
+            return False
+
+        # If too many failures, blacklisted
+        return entry['failures'] > self.preferences.tmdb_retry_count
 
 
     def __set_tmdb_id(self, series_info: SeriesInfo) -> None:

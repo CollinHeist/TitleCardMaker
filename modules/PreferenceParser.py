@@ -21,6 +21,10 @@ class PreferenceParser(YamlReader):
     file and parses it into individual attributes.
     """
 
+    """Valid source identifiers"""
+    VALID_SOURCES = ('tmdb', 'plex')
+
+
     def __init__(self, file: Path) -> None:
         """
         Constructs a new instance of this object. This reads the given file,
@@ -49,6 +53,7 @@ class PreferenceParser(YamlReader):
         self.card_type = 'standard'
         self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
         self.card_extension = TitleCard.DEFAULT_CARD_EXTENSION
+        self.source_priority = ['tmdb', 'plex']
         self.validate_fonts = True
         self.zero_pad_seasons = False
         self.archive_directory = None
@@ -153,6 +158,14 @@ class PreferenceParser(YamlReader):
             else:
                 self.card_extension = extension
 
+        if (value := self._get('options', 'source_priority', type_=str)) !=None:
+            sources = tuple(map(str.lower, value.split(', ')))
+            if not all(_ in self.VALID_SOURCES for _ in sources):
+                log.critical(f'Source priorities "{value}" is invalid')
+                self.valid = False
+            else:
+                self.source_priority = sources
+
         if (value := self._get('options', 'validate_fonts', type_=bool)) !=None:
             self.validate_fonts = value
 
@@ -178,8 +191,8 @@ class PreferenceParser(YamlReader):
                                type_=str)) != None:
             self.logo_filename = value
 
-        if (value := self._get('archive', 'summary', 'minimum_episodes',
-                               type_=int) != None):
+        if ((value := self._get('archive', 'summary', 'minimum_episodes',
+                               type_=int)) != None):
             self.summary_minimum_episode_count = value
 
         if (value := self._get('plex', 'url', type_=str)) != None:
