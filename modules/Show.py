@@ -152,6 +152,31 @@ class Show(YamlReader):
                     self.font._Font__font_map, self.source_directory.parent)
 
 
+    def __parse_card_type(self, card_type: str) -> None:
+        """
+        Read the card_type specification for this object. This first looks at
+        the locally implemented types in the TitleCard class, then attempts to
+        create a RemoteCardType from the specification. This can be either a
+        local file to inject, or a GitHub-hosted remote file to download and
+        inject. This updates the card_type, valid, and episode_text_format
+        attributes of this object.
+        
+        :param      card_type:  The value of card_type to read/parse.
+        """
+
+        # If known card type, set right away, otherwise check remote repo
+        if card_type in TitleCard.CARD_TYPES:
+            self.card_class = TitleCard.CARD_TYPES[card_type]
+        elif (remote_card_type := RemoteCardType(card_type)).valid:
+            self.card_class = remote_card_type.card_class
+        else:
+            log.error(f'Invalid card type "{card_type}" of series {self}')
+            self.valid = False
+
+        # Update ETF
+        self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
+
+
     def __parse_yaml(self):
         """
         Parse the show's YAML and update this object's attributes. Error on any
@@ -175,30 +200,10 @@ class Show(YamlReader):
 
                 # If card type was specified for this library, set that
                 if (card_type := this_library.get('card_type')):
-                    if card_type in TitleCard.CARD_TYPES:
-                        self.card_class = TitleCard.CARD_TYPES[card_type]
-                        etf = self.card_class.EPISODE_TEXT_FORMAT
-                        self.episode_text_format = etf
-                    elif (remote_card_type := RemoteCardType(card_type)).valid:
-                        self.card_class = remote_card_type.card_class
-                        etf = self.card_class.EPISODE_TEXT_FORMAT
-                        self.episode_text_format = etf
-                    else:
-                        log.error(f'Unknown card type "{card_type}" of series '
-                                  f'{self}')
-                        self.valid = False
+                    self.__parse_card_type(card_type)
 
         if (card_type := self._get('card_type', type_=str)) != None:
-            # If known card type, set right away, otherwise check remote repo
-            if card_type in TitleCard.CARD_TYPES:
-                self.card_class = TitleCard.CARD_TYPES[card_type]
-                self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
-            elif (remote_card_type := RemoteCardType(card_type)).valid:
-                self.card_class = remote_card_type.card_class
-                self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
-            else:
-                log.error(f'Unknown card type "{card_type}" of series {self}')
-                self.valid = False
+            self.__parse_card_type(card_type)
             
         if (value := self._get('media_directory', type_=Path)) != None:
             self.media_directory = value
