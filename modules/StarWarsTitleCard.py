@@ -32,6 +32,9 @@ class StarWarsTitleCard(CardType):
     """Color to use for the episode title"""
     TITLE_COLOR = '#DAC960'
 
+    """Default episode text format string"""
+    EPISODE_TEXT_FORMAT = 'EPISODE {episode_number}'
+
     """Color of the episode/episode number text"""
     EPISODE_TEXT_COLOR = '#AB8630'
 
@@ -294,12 +297,15 @@ class StarWarsTitleCard(CardType):
         """
 
         generic_formats = (
-            'EPISODE {episode_number}',
-            'CHAPTER {episode_number}',
-            'PART {episode_number}',
+            'episode {episode_number}',
+            'chapter {episode_number}',
+            'part {episode_number}',
+            'episode {abs_number}',
+            'chapter {abs_number}',
+            'part {abs_number}',
         )
-
-        return episode_text_format not in generic_formats
+        
+        return episode_text_format.lower() not in generic_formats
 
 
     def create(self) -> None:
