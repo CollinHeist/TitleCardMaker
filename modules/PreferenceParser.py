@@ -191,8 +191,8 @@ class PreferenceParser(YamlReader):
                                type_=str)) != None:
             self.logo_filename = value
 
-        if (value := self._get('archive', 'summary', 'minimum_episodes',
-                               type_=int) != None):
+        if ((value := self._get('archive', 'summary', 'minimum_episodes',
+                               type_=int)) != None):
             self.summary_minimum_episode_count = value
 
         if (value := self._get('plex', 'url', type_=str)) != None:
