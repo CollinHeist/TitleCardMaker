@@ -297,10 +297,6 @@ class ShowSummary(ImageMaker):
         done at the start of this function.
         """
 
-        # If there are no title cards to montage
-        if len(self.inputs) == 0:
-            return None
-
         # Exit if a logo does not exist
         if not self.logo.exists():
             log.warning('Cannot create ShowSummary - no logo found')

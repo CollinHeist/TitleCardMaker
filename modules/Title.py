@@ -1,4 +1,4 @@
-from re import match, IGNORECASE
+from re import compile as re_compile, IGNORECASE
 
 from modules.Debug import log
 
@@ -20,6 +20,14 @@ class Title:
 
     """Characters that should be used for priority splitting between lines"""
     SPLIT_CHARACTERS = (':', ',', ')', ']', '?', '!', '-', '.', '/')
+
+    """Regex for identifying partless titles for MultiEpisodes"""
+    PARTLESS_REGEX = (
+        # Match for "title" (digit) or "title" (Part (digit))
+        re_compile(r'^(.*?)\s*\((?:Part\s*)?\d+\)', IGNORECASE),
+        # Match for "title" (digit) or "title" (Part (digit))
+        re_compile(r'^(.*?)(?::|\s*-|,)\s+Part\s*\d*', IGNORECASE),
+    )
 
     __slots__ = ('full_title', '__title_lines', '__manually_specified',
                  'title_yaml', 'match_title')
@@ -75,15 +83,10 @@ class Title:
         :returns:   The partless title.
         """
 
-        # Match for "title" (digit) or "title" (Part (digit))
-        if (partless := match(r'^(.*?)\s*\((?:Part\s*)?\d+\)',
-                              self.full_title, IGNORECASE)):
-            return partless.group(1)
-
-        # Match "title" - Part (digit) or "title": Part (digit)
-        if (partless := match(r'^(.*?)(?::|\s*-|,)\s+Part\s*\d*', 
-                              self.full_title, IGNORECASE)):
-            return partless.group(1)
+        # Attempt to match any compiled partless regex
+        for regex in self.PARTLESS_REGEX:
+            if (partless := regex.match(self.full_title)):
+                return partless.group(1)
 
         return self.full_title
 

@@ -33,7 +33,6 @@ class Show(YamlReader):
     """Filename to the backdrop for a series"""
     BACKDROP_FILENAME = 'backdrop.jpg'
 
-
     __slots__ = ('preferences', 'valid', '__library_map', 'series_info',
                  'media_directory', 'card_class', 'episode_text_format',
                  'library_name', 'library', 'archive', 'sonarr_sync',
@@ -562,10 +561,10 @@ class Show(YamlReader):
                                     backdrop if one is needed and DNE.
         """
         
-        # Modify Episodes based on plex status
+        # Modify Episodes watched/blur/source files based on plex status
         download_backdrop = self.__apply_styles(plex_interface)
             
-        # Query TMDb for the backdrop if one does not exist
+        # Query TMDb for the backdrop if one does not exist and is needed
         if (download_backdrop and tmdb_interface and self.tmdb_sync
             and not self.backdrop.exists()):
             # Download background art 
@@ -615,14 +614,8 @@ class Show(YamlReader):
                     break
 
 
-    def create_missing_title_cards(self,
-                                   tmdb_interface: 'TMDbInterface'=None) ->None:
-        """
-        Creates any missing title cards for each episode of this show.
-
-        :param      tmdb_interface:     Optional TMDbInterface to download any
-                                        missing source images from.
-        """
+    def create_missing_title_cards(self) ->None:
+        """Create any missing title cards for each episode of this show."""
 
         # If the media directory is unspecified, exit
         if self.media_directory is None:

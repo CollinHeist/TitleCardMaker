@@ -168,11 +168,8 @@ class Manager:
             pbar.set_description(f'Creating Title Cards for '
                                  f'"{show.series_info.short_name}"')
 
-            # Pass the TMDbInterface to the show if globally enabled
-            if self.preferences.use_tmdb:
-                show.create_missing_title_cards(self.tmdb_interface)
-            else:
-                show.create_missing_title_cards()
+            # Create cards
+            show.create_missing_title_cards()
 
     
     def update_plex(self) -> None:
@@ -242,11 +239,12 @@ class Manager:
 
     def run(self) -> None:
         """Run the manager and exit."""
-
+        
         self.create_shows()
         self.read_show_source()
         self.check_sonarr_for_new_episodes()
         self.check_tmdb_for_translations()
+        self.select_source_images()
         self.create_missing_title_cards()
         self.update_plex()
         self.update_archive()
