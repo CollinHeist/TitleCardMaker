@@ -584,12 +584,17 @@ class Show(YamlReader):
 
             # If TMDb is a source interface, verify episode has been permanently
             # blacklisted before trying Plex
-            if ('tmdb' in self.preferences.source_priority and self.tmdb_sync
-                and tmdb_interface):
-                check_plex = tmdb_interface.is_permanently_blacklisted(
-                    self.series_info,
-                    episode.episode_info,
-                )
+            source_priority = self.preferences.source_priority
+            if ('tmdb' in source_priority and 'plex' in source_priority
+                and tmdb_interface and self.tmdb_sync):
+                # If plex is higher priority than TMDb, check always
+                if source_priority.index('plex') <source_priority.index('tmdb'):
+                    check_plex = True
+                else:
+                    check_plex = tmdb_interface.is_permanently_blacklisted(
+                        self.series_info,
+                        episode.episode_info,
+                    )
             else:
                 # TMDb not being checked, always check plex (if specified)
                 check_plex = True
