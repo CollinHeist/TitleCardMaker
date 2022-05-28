@@ -72,9 +72,7 @@ class StandardTitleCard(CardType):
         :param  season_text:        Text to use as season count text. Ignored if
                                     hide_season is True.
         :param  episode_text:       Text to use as episode count text.
-        :param  font:               Font to use for the episode title. MUST be a
-                                    a valid ImageMagick font, or filepath to a
-                                    font.
+        :param  font:               Font to use for the episode title.
         :param  font_size:          Scalar to apply to the title font size.
         :param  title_color:        Color to use for the episode title.
         :param  hide_season:        Whether to omit the season text (and joining

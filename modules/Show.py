@@ -15,6 +15,7 @@ from modules.RemoteCardType import RemoteCardType
 from modules.SeriesInfo import SeriesInfo
 from modules.TitleCard import TitleCard
 from modules.Title import Title
+from modules.WebInterface import WebInterface
 from modules.YamlReader import YamlReader
 
 class Show(YamlReader):
@@ -257,8 +258,8 @@ class Show(YamlReader):
         self.valid &= self.__episode_map.valid
 
         # Read all extras
-        if (self._is_specified('extras', type_=dict)):
-            self.extras = self._get('extras')
+        if (self._is_specified('extras')):
+            self.extras = self._get('extras', type_=dict)
 
 
     def __get_destination(self, episode_info: 'EpisodeInfo') -> Path:
@@ -465,26 +466,33 @@ class Show(YamlReader):
         # If any translations were added, re-read source
         if modified:
             self.read_source()
-            
-            
-    def select_source_images(self, plex_interface: PlexInterface=None,
-                             tmdb_interface: 'TMDbInterface'=None) -> None:
+
+
+    def __apply_styles(self, plex_interface: 'PlexInterface'=None) -> bool:
         """
         Modify this series' Episode source images based on their watch statuses,
-        and how that style applies to this show's un/watched styles. If a
-        backdrop is required, and TMDb is enabled, then one is downloaded if it
-        does not exist.
+        and how that style applies to this show's un/watched styles. Return
+        whether a backdrop should be downloaded.
         
         :param      plex_interface: Optional PlexInterface used to modify the
                                     Episode objects based on the watched status
                                     of. If not provided, episodes are assumed to
                                     all be unwatched (i.e. spoiler free).
-        :param      tmdb_interface: Optional TMDbInterface to query for a
-                                    backdrop if one is needed and DNE.
-        """
         
+        :returns:   Whether a backdrop should be downloaded or not.
+        """
+
+        # If no library, ignore styles
+        if self.library == None:
+            return False
+
         # Update watched statuses via Plex
-        if plex_interface != None and self.library != None:
+        if plex_interface == None:
+            # If no PlexInterface, assume all episodes are unwatched
+            [episode.update_statuses(False, self.watched_style,
+                                     self.unwatched_style)
+             for _, episode in self.episodes.items()]
+        else:
             plex_interface.update_watched_statuses(
                 self.library_name,
                 self.series_info,
@@ -492,11 +500,6 @@ class Show(YamlReader):
                 self.watched_style,
                 self.unwatched_style,
             )
-        else:
-            # If no PlexInterface, assume all episodes are unwatched
-            [episode.update_statuses(False, self.watched_style,
-                                     self.unwatched_style)
-             for _, episode in self.episodes.items()]
             
         # Get show styles
         watched_style = self.watched_style
@@ -539,6 +542,28 @@ class Show(YamlReader):
                 and not found):
                 episode.update_source(self.backdrop, downloadable=True)
                 download_backdrop = True
+
+        return download_backdrop
+            
+            
+    def select_source_images(self, plex_interface: PlexInterface=None,
+                             tmdb_interface: 'TMDbInterface'=None) -> None:
+        """
+        Modify this series' Episode source images based on their watch statuses,
+        and how that style applies to this show's un/watched styles. If a
+        backdrop is required, and TMDb is enabled, then one is downloaded if it
+        does not exist.
+        
+        :param      plex_interface: Optional PlexInterface used to modify the
+                                    Episode objects based on the watched status
+                                    of. If not provided, episodes are assumed to
+                                    all be unwatched (i.e. spoiler free).
+        :param      tmdb_interface: Optional TMDbInterface to query for a
+                                    backdrop if one is needed and DNE.
+        """
+        
+        # Modify Episodes based on plex status
+        download_backdrop = self.__apply_styles(plex_interface)
             
         # Query TMDb for the backdrop if one does not exist
         if (download_backdrop and tmdb_interface and self.tmdb_sync
@@ -546,6 +571,48 @@ class Show(YamlReader):
             # Download background art 
             if (url := tmdb_interface.get_series_backdrop(self.series_info)):
                 tmdb_interface.download_image(url, self.backdrop)
+
+        # For each episode, query interfaces (in priority order) for source
+        for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
+            # Skip this episode if not downloadable, or source exists
+            if not episode.downloadable_source or episode.source.exists():
+                continue
+
+            # If TMDb is a source interface, verify episode has been permanently
+            # blacklisted before trying Plex
+            if ('tmdb' in self.preferences.source_priority and self.tmdb_sync
+                and tmdb_interface):
+                check_plex = tmdb_interface.is_permanently_blacklisted(
+                    self.series_info,
+                    episode.episode_info,
+                )
+            else:
+                # TMDb not being checked, always check plex (if specified)
+                check_plex = True
+
+            # Go through each source interface indicated, try and get source
+            for source_interface in self.preferences.source_priority:
+                # Query either TMDb or Plex for the source image
+                image_url = None
+                if (source_interface == 'tmdb' and self.tmdb_sync
+                    and tmdb_interface):
+                    image_url = tmdb_interface.get_source_image(
+                        self.series_info,
+                        episode.episode_info
+                    )
+                elif (check_plex and source_interface == 'plex'
+                    and plex_interface and self.library != None):
+                    image_url = plex_interface.get_source_image(
+                        self.library_name,
+                        self.series_info,
+                        episode.episode_info,
+                    )
+
+                # If URL was returned by either interface, download
+                if image_url != None:
+                    log.error(f'{self} {episode} -> {image_url}')
+                    WebInterface.download_image(image_url, episode.source)
+                    break
 
 
     def create_missing_title_cards(self,
@@ -566,25 +633,10 @@ class Show(YamlReader):
             # Update progress bar
             pbar.set_description(f'Creating {episode}')
             
-            # Skip episodes without destination (do not create), or that exist
-            if not episode.destination or episode.destination.exists():
+            # Skip episodes without a destination, source, or that exist
+            if (not episode.destination or episode.destination.exists()
+                or not episode.source.exists()):
                 continue
-
-            # If the title card source images doesn't exist and can query TMDb..
-            if (self.tmdb_sync and tmdb_interface
-                and episode.downloadable_source and not episode.source.exists()):
-                # Query TMDbInterface for image
-                image_url = tmdb_interface.get_source_image(
-                    self.series_info,
-                    episode.episode_info
-                )
-
-                # Skip this card if no image is returned
-                if not image_url:
-                    continue
-
-                # Download the image
-                tmdb_interface.download_image(image_url, episode.source)
 
             # Create a TitleCard object for this episode with Show's profile
             title_card = TitleCard(

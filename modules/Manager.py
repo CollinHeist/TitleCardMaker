@@ -133,16 +133,16 @@ class Manager:
             show.query_sonarr(self.sonarr_interface)
 
 
-    def create_missing_title_cards(self) -> None:
+    def select_source_images(self) -> None:
         """
-        Creates all missing title cards for every show known to this Manager.
-        For each show, this calls Show.create_missing_title_cards().
+        Select and download the source images for every show known to this
+        manager.
         """
 
-        # Go through every show in the Manager, create cards
+        # Go through each show and download source images
         for show in (pbar := tqdm(self.shows, **TQDM_KWARGS)):
             # Update progress bar
-            pbar.set_description(f'Creating Title Cards for '
+            pbar.set_description(f'Selecting sources for '
                                  f'"{show.series_info.short_name}"')
 
             # Modify unwatched episodes based on Plex watch status
@@ -154,6 +154,19 @@ class Manager:
                     show.select_source_images(self.plex_interface)
             else:
                 show.select_source_images()
+
+
+    def create_missing_title_cards(self) -> None:
+        """
+        Creates all missing title cards for every show known to this Manager.
+        For each show, this calls Show.create_missing_title_cards().
+        """
+
+        # Go through every show in the Manager, create cards
+        for show in (pbar := tqdm(self.shows, **TQDM_KWARGS)):
+            # Update progress bar
+            pbar.set_description(f'Creating Title Cards for '
+                                 f'"{show.series_info.short_name}"')
 
             # Pass the TMDbInterface to the show if globally enabled
             if self.preferences.use_tmdb:
@@ -196,7 +209,6 @@ class Manager:
             # Update progress bar
             pbar.set_description(f'Updating archive for '
                                  f'"{show_archive.series_info.short_name}"')
-
             # Pass the TMDbInterface to the show if globally enabled
             if self.preferences.use_tmdb:
                 show_archive.update_archive(self.tmdb_interface)
