@@ -609,7 +609,6 @@ class Show(YamlReader):
 
                 # If URL was returned by either interface, download
                 if image_url != None:
-                    log.error(f'{self} {episode} -> {image_url}')
                     WebInterface.download_image(image_url, episode.source)
                     break
 

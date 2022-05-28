@@ -136,7 +136,7 @@ class Manager:
     def select_source_images(self) -> None:
         """
         Select and download the source images for every show known to this
-        manager.
+        manager. For each show, this called Show.select_source_images().
         """
 
         # Go through each show and download source images
@@ -206,11 +206,8 @@ class Manager:
             # Update progress bar
             pbar.set_description(f'Updating archive for '
                                  f'"{show_archive.series_info.short_name}"')
-            # Pass the TMDbInterface to the show if globally enabled
-            if self.preferences.use_tmdb:
-                show_archive.update_archive(self.tmdb_interface)
-            else:
-                show_archive.update_archive()
+            
+            show_archive.update_archive()
 
 
     def create_summaries(self) -> None:
