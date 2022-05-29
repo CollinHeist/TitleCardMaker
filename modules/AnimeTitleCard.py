@@ -26,7 +26,7 @@ class AnimeTitleCard(CardType):
 
     """Path to the font to use for the episode title"""
     TITLE_FONT = str((REF_DIRECTORY / 'Flanker Griffo.otf').resolve())
-    DEFAULT_FONT_CASE = 'title'
+    DEFAULT_FONT_CASE = 'source'
 
     """Color to use for the episode title"""
     TITLE_COLOR = 'white'

@@ -20,7 +20,7 @@ class CardType(ImageMaker):
     """
 
     """Default case string for all title text"""
-    DEFAULT_FONT_CASE = 'source'
+    DEFAULT_FONT_CASE = 'upper'
 
     """Mapping of 'case' strings to format functions"""
     CASE_FUNCTIONS = {
