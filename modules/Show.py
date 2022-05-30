@@ -582,35 +582,37 @@ class Show(YamlReader):
             if not episode.downloadable_source or episode.source.exists():
                 continue
 
-            # If TMDb is a source interface, verify episode has been permanently
-            # blacklisted before trying Plex
-            source_priority = self.preferences.source_priority
-            if ('tmdb' in source_priority and 'plex' in source_priority
-                and tmdb_interface and self.tmdb_sync):
-                # If plex is higher priority than TMDb, check always
-                if source_priority.index('plex') <source_priority.index('tmdb'):
+            # Check TMDb if enabled, provided, and not permanently blacklisted
+            if self.preferences.use_tmdb and tmdb_interface and self.tmdb_sync:
+                blacklisted = tmdb_interface.is_permanently_blacklisted(
+                    self.series_info,
+                    episode.episode_info,
+                )
+                check_tmdb = not blacklisted
+            else:
+                check_tmdb = False
+
+            # Check Plex if enabled, provided, and valid relative to TMDb
+            if (self.preferences.check_plex and plex_interface
+                and self.library != None):
+                if (not self.preferences.check_tmdb
+                    or self.preferences.check_plex_before_tmdb):
                     check_plex = True
                 else:
-                    check_plex = tmdb_interface.is_permanently_blacklisted(
-                        self.series_info,
-                        episode.episode_info,
-                    )
+                    check_plex = blacklisted
             else:
-                # TMDb not being checked, always check plex (if specified)
-                check_plex = True
+                check_plex = False
 
             # Go through each source interface indicated, try and get source
             for source_interface in self.preferences.source_priority:
                 # Query either TMDb or Plex for the source image
                 image_url = None
-                if (source_interface == 'tmdb' and self.tmdb_sync
-                    and tmdb_interface):
+                if source_interface == 'tmdb' and check_tmdb:
                     image_url = tmdb_interface.get_source_image(
                         self.series_info,
                         episode.episode_info
                     )
-                elif (check_plex and source_interface == 'plex'
-                    and plex_interface and self.library != None):
+                elif source_interface == 'plex' and check_plex:
                     image_url = plex_interface.get_source_image(
                         self.library_name,
                         self.series_info,
@@ -625,7 +627,7 @@ class Show(YamlReader):
 
     def create_missing_title_cards(self) ->None:
         """Create any missing title cards for each episode of this show."""
-
+        
         # If the media directory is unspecified, exit
         if self.media_directory is None:
             return False

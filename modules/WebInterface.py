@@ -61,7 +61,7 @@ class WebInterface:
         # Make new request, add to cache
         self.__cached_results.append(self.__retry_get(url=url, params=params))
         self.__cache.append({'url': url, 'params': str(params)})
-
+        
         # Delete element from cache if length has been exceeded
         if len(self.__cache) > self.CACHE_LENGTH:
             self.__cache.pop(0)

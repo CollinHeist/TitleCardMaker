@@ -53,7 +53,7 @@ class PreferenceParser(YamlReader):
         self.card_type = 'standard'
         self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
         self.card_extension = TitleCard.DEFAULT_CARD_EXTENSION
-        self.source_priority = ['tmdb', 'plex']
+        self.source_priority = ('tmdb', 'plex')
         self.validate_fonts = True
         self.zero_pad_seasons = False
         self.archive_directory = None
@@ -159,7 +159,8 @@ class PreferenceParser(YamlReader):
                 self.card_extension = extension
 
         if (value := self._get('options', 'source_priority', type_=str)) !=None:
-            sources = tuple(map(str.lower, value.split(', ')))
+            lower_strip = lambda s: str(s).lower().strip()
+            sources = tuple(map(lower_strip, value.split(', ')))
             if not all(_ in self.VALID_SOURCES for _ in sources):
                 log.critical(f'Source priorities "{value}" is invalid')
                 self.valid = False
@@ -399,6 +400,25 @@ class PreferenceParser(YamlReader):
                     font_map,
                     self.source_directory,
                 )
+
+
+    @property
+    def check_tmdb(self):
+        return 'tmdb' in self.source_priority
+
+    @property
+    def check_plex(self):
+        return 'plex' in self.source_priority
+
+    @property
+    def check_plex_before_tmdb(self) -> bool:
+        """Whether to check Plex source before TMDb"""
+
+        priorities = self.source_priority
+        if 'plex' in priorities and 'tmdb' in priorities:
+            return priorities.index('plex') < priorities.index('tmdb')
+
+        return False
 
                 
     def meets_minimum_resolution(self, width: int, height: int) -> bool:
