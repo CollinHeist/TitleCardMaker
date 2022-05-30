@@ -81,65 +81,16 @@ class TMDbInterface(WebInterface):
         self.__standard_params = {'api_key': api_key}
 
         # Validate API key
-        if 'page' not in self._get(f'{self.API_BASE_URL}trending/all/day',
-                                   self.__standard_params):
+        if 'images' not in self._get(f'{self.API_BASE_URL}configuration',
+                                     self.__standard_params):
             log.critical(f'TMDb API key "{api_key}" is invalid')
             exit(1)
-            
-        # Import old blacklist if it exists
-        self.__import_old_blacklist()
 
 
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
         return f'<TMDbInterface {self.__api_key=}>'
-
-
-    def __import_old_blacklist(self) -> None:
-        """
-        Import old loaded database into new TinyDB. This reads the file and then
-        deletes it.
-        """
-
-        # If old file DNE, return
-        old_file = Path(__file__).parent / '.objects' / 'db_blacklist.yml'
-        if not old_file.exists():
-            return None
-
-        # Load old file
-        try:
-            with old_file.open('r', encoding='utf-8') as fh:
-                old_yaml = safe_load(fh)
-        except Exception:
-            return None
-
-        entries = []
-        for query_type, query in old_yaml.items():
-            for entry_key, blacklist in query.items():
-                if query_type in ('logo', 'backdrop'):
-                    entries.append({
-                        'query': query_type,
-                        'series': entry_key,
-                        'failures': blacklist['failures'],
-                        'next': blacklist['next'].timestamp(), 
-                    })
-                else:
-                    series, season, episode = entry_key.rsplit('-', 2)
-                    entries.append({
-                        'query': query_type,
-                        'series': series,
-                        'season': int(season),
-                        'episode': int(episode),
-                        'failures': blacklist['failures'],
-                        'next': blacklist['next'].timestamp(), 
-                    })
-
-        # Add entries to DB
-        self.__blacklist.insert_multiple(entries)
-
-        # Delete old file
-        old_file.unlink()
 
 
     def __get_condition(self, query_type: str, series_info: SeriesInfo,
@@ -522,7 +473,7 @@ class TMDbInterface(WebInterface):
         :returns:   URL to the 'best' source image for the requested entry. None
                     if no images are available.
         """
-
+        
         # Don't query the database if this episode is in the blacklist
         if self.__is_blacklisted(series_info, episode_info, 'image'):
             return None
