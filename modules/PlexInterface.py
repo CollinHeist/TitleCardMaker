@@ -242,6 +242,25 @@ class PlexInterface:
             return None
 
 
+    def has_series(self, library_name: str, series_info: 'SeriesInfo') -> bool:
+        """
+        Determine whether the given series is present within Plex.
+        
+        :param      library_name:   The name of the library containing the
+                                    series to update.
+        :param      series_info:    The series to update.
+        
+        :returns:   True if the series is present within Plex.
+        """
+
+        # If the given library cannot be found, exit
+        if not (library := self.__get_library(library_name)):
+            return False
+
+        # If the given series cannot be found in this library, exit
+        return self.__get_series(library, series_info) != None
+
+
     def update_watched_statuses(self, library_name: str,
                                 series_info: 'SeriesInfo', episode_map: dict,
                                 watched_style: str, unwatched_style: str)->None:
