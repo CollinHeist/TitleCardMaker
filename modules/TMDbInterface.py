@@ -246,7 +246,7 @@ class TMDbInterface(WebInterface):
 
     def is_permanently_blacklisted(self, series_info: SeriesInfo,
                                    episode_info: EpisodeInfo,
-                                   query_type: str='source') -> bool:
+                                   query_type: str='image') -> bool:
         """
         Determines if permanently blacklisted.
         
