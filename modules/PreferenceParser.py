@@ -415,8 +415,11 @@ class PreferenceParser(YamlReader):
         """Whether to check Plex source before TMDb"""
 
         priorities = self.source_priority
-        if 'plex' in priorities and 'tmdb' in priorities:
-            return priorities.index('plex') < priorities.index('tmdb')
+        if 'plex' in priorities:
+            if 'tmdb' in priorities:
+                return priorities.index('plex') < priorities.index('tmdb')
+
+            return True
 
         return False
 

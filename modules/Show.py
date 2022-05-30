@@ -565,16 +565,13 @@ class Show(YamlReader):
         :param      tmdb_interface: Optional TMDbInterface to query for a
                                     backdrop if one is needed and DNE.
         """
-        
-        # Modify Episodes watched/blur/source files based on plex status
-        download_backdrop = self.__apply_styles(plex_interface)
-            
-        # Query TMDb for the backdrop if one does not exist and is needed
-        if (download_backdrop and tmdb_interface and self.tmdb_sync
-            and not self.backdrop.exists()):
-            # Download background art 
-            if (url := tmdb_interface.get_series_backdrop(self.series_info)):
-                tmdb_interface.download_image(url, self.backdrop)
+
+        # Whether to always check TMDb or Plex
+        always_check_tmdb = (self.preferences.use_tmdb and tmdb_interface
+                             and self.tmdb_sync and self.preferences.check_tmdb)
+        always_check_plex = (self.preferences.use_plex and plex_interface
+            and self.library != None and self.preferences.check_plex
+            and plex_interface.has_series(self.library_name, self.series_info))
 
         # For each episode, query interfaces (in priority order) for source
         for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
@@ -582,24 +579,19 @@ class Show(YamlReader):
             if not episode.downloadable_source or episode.source.exists():
                 continue
 
-            # Check TMDb if enabled, provided, and not permanently blacklisted
-            if self.preferences.use_tmdb and tmdb_interface and self.tmdb_sync:
-                blacklisted = tmdb_interface.is_permanently_blacklisted(
+            # Check TMDb if this episode isn't permanently blacklisted
+            if always_check_tmdb:
+                blacklisted =  tmdb_interface.is_permanently_blacklisted(
                     self.series_info,
                     episode.episode_info,
                 )
                 check_tmdb = not blacklisted
             else:
-                check_tmdb = False
+                check_tmdb, blacklisted = False, False
 
             # Check Plex if enabled, provided, and valid relative to TMDb
-            if (self.preferences.check_plex and plex_interface
-                and self.library != None):
-                if (not self.preferences.check_tmdb
-                    or self.preferences.check_plex_before_tmdb):
-                    check_plex = True
-                else:
-                    check_plex = blacklisted
+            if always_check_plex:
+                check_plex =self.preferences.check_plex_before_tmdb or blacklisted
             else:
                 check_plex = False
 
@@ -624,10 +616,20 @@ class Show(YamlReader):
                     WebInterface.download_image(image_url, episode.source)
                     break
 
+        # Modify Episodes watched/blur/source files based on plex status
+        download_backdrop = self.__apply_styles(plex_interface)
+            
+        # Query TMDb for the backdrop if one does not exist and is needed
+        if (download_backdrop and tmdb_interface and self.tmdb_sync
+            and not self.backdrop.exists()):
+            # Download background art 
+            if (url := tmdb_interface.get_series_backdrop(self.series_info)):
+                tmdb_interface.download_image(url, self.backdrop)
+
 
     def create_missing_title_cards(self) ->None:
         """Create any missing title cards for each episode of this show."""
-        
+
         # If the media directory is unspecified, exit
         if self.media_directory is None:
             return False
