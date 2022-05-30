@@ -145,15 +145,15 @@ class Manager:
             pbar.set_description(f'Selecting sources for '
                                  f'"{show.series_info.short_name}"')
 
-            # Modify unwatched episodes based on Plex watch status
+            # Select source images from Plex and/or TMDb
+            interfaces = {'plex_interface': None, 'tmdb_interface': None}
             if self.preferences.use_plex:
-                if self.preferences.use_tmdb:
-                    show.select_source_images(self.plex_interface,
-                                              self.tmdb_interface)
-                else:
-                    show.select_source_images(self.plex_interface)
-            else:
-                show.select_source_images()
+                interfaces['plex_interface'] = self.plex_interface
+            if self.preferences.use_tmdb:
+                interfaces['tmdb_interface'] = self.tmdb_interface
+
+            # Pass enabled interfaces
+            show.select_source_images(**interfaces)
 
 
     def create_missing_title_cards(self) -> None:

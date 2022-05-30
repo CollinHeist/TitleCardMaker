@@ -1,4 +1,5 @@
 from copy import deepcopy
+from re import compile as re_compile
 
 from modules.TitleCard import TitleCard
 
@@ -9,6 +10,9 @@ class MultiEpisode:
     single season for a given series. The MultiEpisode uses the first episode's
     (sequentially) episode info and source.
     """
+
+    """Regex to match/modify ETF strings for multi episodes"""
+    ETF_REGEX = re_compile(r'^(.*?)(\s*){(episode|abs)_number(.*?)}(.*)')
 
     __slots__ = ('season_number', 'episode_start', 'episode_end', 'abs_start',
                  'abs_end', '_first_episode', 'episode_info', 'destination')
@@ -126,31 +130,21 @@ class MultiEpisode:
         
         :returns:   The modified format string.
         """
-        
-        # Split for pluralized absolute numbers
-        if ' {abs_number}' in episode_format_string:
-            pre, post = episode_format_string.split(' {abs_number}')
 
-            return pre + 'S {abs_start}-{abs_end}' + post
+        # Attempt to match with regex
+        if (groups := MultiEpisode.ETF_REGEX.match(episode_format_string)):
+            pre, spacing, key, modifier, post = groups.groups()
 
-        # Split for pluralized episode numbers
-        if ' {episode_number}' in episode_format_string:
-            pre, post = episode_format_string.split(' {episode_number}')
+            # Pluralize prefix text if there is spacing
+            plural = 's' if spacing != '' else ''
 
-            return pre + 'S {episode_start}-{episode_end}' + post
+            # Create key range
+            key_range = ('{' + key + '_start' + modifier + '}-{'
+                             + key + '_end' + modifier + '}')
 
-        # Split for absolute number, no leading space and pluralization
-        if '{abs_number}' in episode_format_string:
-            pre, post = episode_format_string.split('{abs_number}')
+            return f'{pre}{plural}{spacing}{key_range}{post}'
 
-            return pre + '{abs_start}-{abs_end}' + post
-
-        # Split for episode number, no leading space and pluralization
-        if '{episode_number}' in episode_format_string:
-            pre, post = episode_format_string.split('{episode_number}')
-
-            return pre + '{episode_start}-{episode_end}' + post
-
+        # Cannot identify episode keys to modify, return as-is
         return episode_format_string
 
 

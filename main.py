@@ -122,7 +122,7 @@ def run():
 
 # Run immediately if specified
 if args.run:
-    run()  
+    run()
 
 # Schedule subsequent runs if specified
 if hasattr(args, 'runtime'):
