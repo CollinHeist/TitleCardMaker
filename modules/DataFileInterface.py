@@ -124,14 +124,19 @@ class DataFileInterface:
             for episode_number, episode_data in season_data.items():
                 # If the 'title' key is missing (or no subkeys at all..) error
                 if (not isinstance(episode_data, dict)
-                    or 'title' not in episode_data):
+                    or ('title' not in episode_data
+                    and 'preferred_title' not in episode_data)):
                     log.error(f'Season {season_number}, Episode {episode_number}'
                               f' of "{self.file.resolve()}" is missing title')
                     continue
 
+                # If translated title is available, prefer that
+                title = episode_data.pop('title', '')
+                title = episode_data.pop('preferred_title', title)
+
                 # Construct EpisodeInfo object for this entry
                 episode_info = EpisodeInfo(
-                    Title(episode_data.pop('title')),
+                    Title(title),
                     season_number,
                     episode_number,
                     episode_data.pop('abs_number', None),
