@@ -35,53 +35,13 @@ class PlexInterface:
 
         # Create PlexServer object with these arguments
         self.__server = PlexServer(url, x_plex_token)
-
+        
         # Create/read loaded card database
         self.LOADED_DB.parent.mkdir(parents=True, exist_ok=True)
         self.__db = TinyDB(self.LOADED_DB)
 
-        # Import old database if it exists
-        self.__import_old_db()
-
-
-    def __import_old_db(self) -> None:
-        """
-        Import old loaded database into new TinyDB. This reads the file and then
-        deletes it.
-        """
-
-        # If old map doesn't exist, nothing to do
-        if not (old_file := self.TEMP_DIR / 'loaded_cards.yml').exists():
-            return None
-
-        # Read old file
-        try:
-            with old_file.open('r', encoding='utf-8') as fh:
-                old_yaml = safe_load(fh)['sizes']
-        except Exception:
-            return None
-
-        # Go through each entry, adding to list to add to DB all-at-once
-        entries = []
-        for library_name, library in old_yaml.items():
-            for series_name, series in library.items():
-                for episode_key, filesize in series.items():
-                    # Get DB-equivalent of this entry
-                    season_num, episode_num = map(int, episode_key.split('-'))
-                    entries.append({
-                        'library': library_name,
-                        'series': series_name,
-                        'season': season_num,
-                        'episode': episode_num,
-                        'filesize': filesize,
-                        'spoiler': 'spoiled',
-                    })                    
-
-        # Add entries to DB
-        self.__db.insert_multiple(entries)
-
-        # Delete old file
-        old_file.unlink()
+        # List of "not found" warned series
+        self.__warned = set()
 
 
     def __get_condition(self, library_name: str, series_info: 'SeriesInfo',
@@ -237,8 +197,12 @@ class PlexInterface:
         try:
             return library.get(series_info.full_name)
         except NotFound:
-            log.warning(f'Series "{series_info}" was not found under library '
-                        f'"{library.title}" in Plex')
+            key = f'{library.title}-{series_info.full_name}'
+            if key not in self.__warned:
+                log.warning(f'Series "{series_info}" was not found under '
+                            f'library "{library.title}" in Plex')
+                self.__warned.add(key)
+            
             return None
 
 
@@ -295,7 +259,7 @@ class PlexInterface:
         loaded_series = self.__db.search(
             self.__get_condition(library_name, series_info)
         )
-        
+
         # Go through each episode within Plex and update Episode spoiler status
         for plex_episode in series.episodes():
             # If this Plex episode doesn't have Episode object(?) skip
