@@ -579,6 +579,9 @@ class Show(YamlReader):
             if not episode.downloadable_source or episode.source.exists():
                 continue
 
+            # Update progress bar
+            pbar.set_description(f'Selecting {episode}')
+
             # Check TMDb if this episode isn't permanently blacklisted
             if always_check_tmdb:
                 blacklisted =  tmdb_interface.is_permanently_blacklisted(

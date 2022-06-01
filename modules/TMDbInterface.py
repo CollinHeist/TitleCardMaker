@@ -691,7 +691,7 @@ class TMDbInterface(WebInterface):
 
         for episode in range(1, episode_count+1):
             ei = EpisodeInfo(Title(''), season, episode)
-            image_url=dbi.get_source_image(si, ei, title_match=False)
+            image_url = dbi.get_source_image(si, ei, title_match=False)
 
             # If a valid URL was returned, download it
             if image_url:

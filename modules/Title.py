@@ -30,17 +30,18 @@ class Title:
     )
 
     __slots__ = ('full_title', '__title_lines', '__manually_specified',
-                 'title_yaml', 'match_title')
+                 'title_yaml', 'match_title', '__original_title')
 
 
-    def __init__(self, title) -> None:
+    def __init__(self, title, *, original_title: str=None) -> None:
         """
         Constructs a new instance of a Title from either a full, unsplit title,
         or a list of title lines.
         
-        :param      title:  Title for this object.
-        :type       title:  str if the full title (from any source), or a list
-                            if parsed from YAML
+        :param      title:          Title for this object.
+        :type       title:          str if the full title (from any source), or 
+                                    a list if parsed from YAML
+        :param      original_title: Original title only for matching.
         """
         
         # If given as str, then title is not manually specified
@@ -61,6 +62,13 @@ class Title:
 
         # Generate title to use for matching purposes
         self.match_title = self.get_matching_title(self.full_title)
+        if original_title != title and original_title:
+            # Combine if manually specified
+            if isinstance(original_title, list):
+                original_title = ' '.join(original_title)
+            self.__original_title = self.get_matching_title(original_title)
+        else:
+            self.__original_title = None
 
 
     def __str__(self) -> str:
@@ -234,11 +242,11 @@ class Title:
         return ''.join(filter(str.isalnum, text)).lower()
 
 
-    def matches(self, *titles: tuple) -> bool:
+    def matches(self, *titles: tuple[str]) -> bool:
         """
-        Get whether any of the given titles match this Series.
+        Get whether any of the given titles match this object.
         
-        :param      titles: The titles to check
+        :param      titles: The titles to check.
         
         :returns:   True if any of the given titles match this series, False
                     otherwise.
@@ -246,5 +254,9 @@ class Title:
 
         matching_titles = map(self.get_matching_title, titles)
 
+        if self.__original_title != None:
+            return any(title in (self.__original_title, self.match_title)
+                       for title in matching_titles)
+        
         return any(title == self.match_title for title in matching_titles)
         
