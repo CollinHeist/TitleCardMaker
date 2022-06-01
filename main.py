@@ -95,7 +95,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 # Set global log level and coloring
-log.setLevel(args.log)
+log.handlers[0].setLevel(args.log)
 if args.no_color:
     apply_no_color_formatter(log)
 
