@@ -1,5 +1,6 @@
 from argparse import ArgumentParser, ArgumentTypeError, SUPPRESS
 from dataclasses import dataclass
+from os import environ
 from pathlib import Path
 from re import match, IGNORECASE
 
@@ -118,7 +119,7 @@ if any(old_arg in unknown for old_arg in OLD_COMMANDS):
     log.warning(f'Manual card creation has moved to "mini_maker.py"')
 
 # Parse preference file for options that might need it
-pp = PreferenceParser(args.preference_file)
+pp = PreferenceParser(args.preferences)
 if not pp.valid:
     exit(1)
 set_preference_parser(pp)

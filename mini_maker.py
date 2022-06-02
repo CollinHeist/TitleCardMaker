@@ -1,6 +1,7 @@
 from argparse import ArgumentParser, ArgumentTypeError, SUPPRESS
 from pathlib import Path
 from dataclasses import dataclass
+from os import environ
 
 try:
     from modules.Debug import log
@@ -163,7 +164,7 @@ if len(unknown) % 2 == 0 and len(unknown) > 1:
     arbitrary_data = {key: val for key, val in zip(unknown[::2], unknown[1::2])}
 
 # Parse preference file for options that might need it
-pp = PreferenceParser(args.preference_file)
+pp = PreferenceParser(args.preferences)
 if not pp.valid:
     exit(1)
 set_preference_parser(pp)
