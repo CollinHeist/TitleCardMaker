@@ -18,14 +18,16 @@ except ImportError:
     exit(1)
 
 # Environment variables
-RUNTIME_ENV = 'TCM_RUNTIME'
-FREQUENCY_ENV = 'TCM_FREQUENCY'
+ENV_PREFERENCE_FILE = 'TCM_PREFERENCES'
+ENV_RUNTIME = 'TCM_RUNTIME'
+ENV_FREQUENCY = 'TCM_FREQUENCY'
+ENV_MISSING_FILE = 'TCM_MISSING'
+ENV_LOG_LEVEL = 'TCM_LOG'
 
-# Default path for the preference file to parse
+# Default values
 DEFAULT_PREFERENCE_FILE = Path(__file__).parent / 'preferences.yml'
-
-# Default path for the missing file to write to
 DEFAULT_MISSING_FILE = Path(__file__).parent / 'missing.yml'
+DEFAULT_FREQUENCY = '12h'
 
 # Pseudo-type functions for argument runtime and frequency
 def runtime(arg: str) -> dict:
@@ -52,44 +54,49 @@ def frequency(arg: str) -> dict:
 # Set up argument parser
 parser = ArgumentParser(description='Start the TitleCardMaker')
 parser.add_argument(
-    '-p', '--preference-file',
+    '-p', '--preferences', '--preference-file',
     type=Path,
-    default=DEFAULT_PREFERENCE_FILE,
+    default=environ.get(ENV_PREFERENCE_FILE, DEFAULT_PREFERENCE_FILE),
     metavar='FILE',
-    help='Specify the global preferences file')
+    help=f'File to read global preferences from. Environment variable '
+         f'{ENV_PREFERENCE_FILE}. Defaults to '
+         f'"{DEFAULT_PREFERENCE_FILE.resolve()}"')
 parser.add_argument(
     '-r', '--run',
     action='store_true',
     help='Run the TitleCardMaker')
 parser.add_argument(
-    '-t', '--time', '--runtime',
-    dest='runtime',
+    '-t', '--runtime', '--time', 
     type=runtime,
-    default=environ.get(RUNTIME_ENV, SUPPRESS),
+    default=environ.get(ENV_RUNTIME, SUPPRESS),
     metavar='HH:MM',
-    help='When to first run the TitleCardMaker (in 24-hour time)')
+    help=f'When to first run the TitleCardMaker (in 24-hour time). Environment '
+         f'variable {ENV_RUNTIME}')
 parser.add_argument(
     '-f', '--frequency',
     type=frequency,
-    default=environ.get(FREQUENCY_ENV, '12h'),
+    default=environ.get(ENV_FREQUENCY, DEFAULT_FREQUENCY),
     metavar='FREQUENCY[unit]',
-    help='How often to run the TitleCardMaker (default "12h"). Units can be '
-         'm/h/d/w for minutes/hours/days/weeks')
+    help=f'How often to run the TitleCardMaker. Units can be m/h/d/w for '
+         f'minutes/hours/days/weeks. Environment variable {ENV_FREQUENCY}. '
+         f'Defaults to "{DEFAULT_FREQUENCY}"')
 parser.add_argument(
-    '-m', '--missing', 
+    '-m', '--missing', '--missing-file',
     type=Path,
-    default=DEFAULT_MISSING_FILE,
+    default=environ.get(ENV_MISSING_FILE, DEFAULT_MISSING_FILE),
     metavar='FILE',
-    help='File to write the list of missing assets to')
+    help=f'File to write the list of missing assets to. Environment variable '
+         f'{ENV_MISSING_FILE}. Defaults to "{DEFAULT_MISSING_FILE.resolve()}"')
 parser.add_argument(
     '-l', '--log',
     choices=('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'),
-    default='INFO',
-    help='Level of logging verbosity to use')
+    default=environ.get(ENV_LOG_LEVEL, 'INFO'),
+    help=f'Level of logging verbosity to use. Environment variable '
+         f'{ENV_LOG_LEVEL}. Defaults to "INFO"')
 parser.add_argument(
     '-nc', '--no-color',
     action='store_true',
-    help='Whether to omit color from all print messages')
+    help='Omit color from all print messages')
 
 # Parse given arguments
 args = parser.parse_args()
@@ -100,13 +107,12 @@ if args.no_color:
     apply_no_color_formatter(log)
 
 # Check if preference file exists
-if not args.preference_file.exists():
-    log.critical(f'Preference file "{args.preference_file.resolve()}" does not '
-                 f'exist')
+if not args.preferences.exists():
+    log.critical(f'Preference file "{args.preferences.resolve()}" does not exist')
     exit(1)
 
 # Read the preference file, verify it is valid and exit if not
-if not (pp := PreferenceParser(args.preference_file)).valid:
+if not (pp := PreferenceParser(args.preferences)).valid:
     exit(1)
 
 # Store the PreferenceParser and FontValidator in the global namespace
