@@ -12,6 +12,7 @@ try:
     from modules.FontValidator import FontValidator
     from modules.PreferenceParser import PreferenceParser
     from modules.preferences import set_preference_parser, set_font_validator
+    from modules.RemoteFile import RemoteFile
     from modules.Manager import Manager
 except ImportError:
     print(f'Required Python packages are missing - execute "pipenv install"')
@@ -121,6 +122,9 @@ set_font_validator(FontValidator())
 
 # Function to create and run Manager object
 def run():
+    # Reset previously loaded assets
+    RemoteFile.LOADED.truncate()
+
     # Create Manager, run, and write missing report
     tcm = Manager()
     tcm.run()

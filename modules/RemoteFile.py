@@ -4,6 +4,7 @@ from requests import get
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 
 from modules.Debug import log
+from tinydb import TinyDB, where
 
 class RemoteFile:
     """
@@ -21,13 +22,16 @@ class RemoteFile:
     """Temporary directory all files will be downloaded into"""
     TEMP_DIR = Path(__file__).parent / '.objects'
 
+    """List of assets that have been loaded already"""
+    LOADED = TinyDB(TEMP_DIR / 'remote_assets.json')
+
 
     def __init__(self, username: str, filename: str) -> None:
         """
-        Construct a new RemoteFont object. This downloads the file for the given
+        Construct a new RemoteFile object. This downloads the file for the given
         user and file into the temporary directory of the Maker.
         
-        :param      username:   Username containing the RemoteFont.
+        :param      username:   Username containing the file.
         :param      filename:   Filename of the file within the user's folder
                                 to download.
         """
@@ -38,16 +42,20 @@ class RemoteFile:
         # The font fill will be downloaded and exist in the temporary directory
         self.local_file = self.TEMP_DIR / username / filename.rsplit('/')[-1]
 
-        # Don't redownload if the file has already been downloaded
-        if self.local_file.exists():
+        # Create parent folder structure if necessary
+        self.local_file.parent.mkdir(parents=True, exist_ok=True)
+
+        # If file has already been loaded this run, skip
+        if self.LOADED.get(where('remote') == self.remote_source):
             return None
 
-        # Download the remote font for use locally
+        # Download the remote file for local use
         try:
             self.download()
-            log.info(f'Downloaded RemoteFile({username}/{filename})')
+            log.debug(f'Downloaded RemoteFile "{username}/{filename}"')
+            self.LOADED.insert({'remote': self.remote_source})
         except Exception as e:
-            log.error(f'Could not download RemoteFile({username}/{filename}), '
+            log.error(f'Could not download RemoteFile "{username}/{filename}", '
                       f'returned "{e}"')
 
 
@@ -61,7 +69,7 @@ class RemoteFile:
 
 
     def __repr__(self) -> str:
-        """Returns a unambiguous string representation of the object."""
+        """Returns an unambiguous string representation of the object."""
 
         return f'<RemoteFile {self.remote_source=}, {self.local_file=}>'
 
@@ -78,16 +86,26 @@ class RemoteFile:
 
     @retry(stop=stop_after_attempt(3),
            wait=wait_fixed(3)+wait_exponential(min=1, max=16))
+    def __get_remote_content(self) -> bytes:
+        """
+        Get the content at the remote source.
+
+        :returns:   Bytes of the remote content
+        """
+
+        return get(self.remote_source).content
+
+
     def download(self):
         """
         Download the specified remote file from the TCM CardTypes github, and
         write it to a temporary local file.
         """
 
-        # Create parent folder structure if necessary
-        self.local_file.parent.mkdir(parents=True, exist_ok=True)
+        # Download remote file
+        content = self.__get_remote_content()
 
-        # Attempt to download remote font
+        # Write content to file
         with self.local_file.open('wb') as file_handle:
-            file_handle.write(get(self.remote_source).content)
+            file_handle.write(content)
 
