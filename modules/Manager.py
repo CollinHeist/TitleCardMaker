@@ -3,7 +3,7 @@ from tqdm import tqdm
 
 from modules.Debug import log, TQDM_KWARGS
 from modules.PlexInterface import PlexInterface
-import modules.preferences as global_preferences
+import modules.global_objects as global_objects
 from modules.Show import Show
 from modules.ShowArchive import ShowArchive
 from modules.SonarrInterface import SonarrInterface
@@ -24,7 +24,7 @@ class Manager:
         """
 
         # Get the global preferences
-        self.preferences = global_preferences.pp
+        self.preferences = global_objects.pp
 
         # Establish directory bases
         self.source_base = self.preferences.source_directory
@@ -32,7 +32,7 @@ class Manager:
 
         # Optionally assign PlexInterface
         self.plex_interface = None
-        if global_preferences.pp.use_plex:
+        if global_objects.pp.use_plex:
             self.plex_interface = PlexInterface(
                 url=self.preferences.plex_url,
                 x_plex_token=self.preferences.plex_token,

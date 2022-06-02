@@ -2,7 +2,7 @@ from copy import copy
 
 from modules.Debug import log
 from modules.ShowSummary import ShowSummary
-import modules.preferences as global_preferences
+import modules.global_objects as global_objects
 
 class ShowArchive:
     """
@@ -91,7 +91,7 @@ class ShowArchive:
             self.summaries.append(
                 ShowSummary(
                     new_show,
-                    global_preferences.pp.summary_background_color
+                    global_objects.pp.summary_background_color
                 )
             )
 

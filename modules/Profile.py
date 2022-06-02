@@ -3,7 +3,7 @@ from regex import match, IGNORECASE
 from modules.CardType import CardType
 from modules.Debug import log
 from modules.MultiEpisode import MultiEpisode
-import modules.preferences as global_preferences
+import modules.global_objects as global_objects
 
 class Profile:
     """
@@ -58,7 +58,7 @@ class Profile:
         has_custom_font = card_class.is_custom_font(self.font)
 
         # If not archiving all variations, return only indicated profile
-        if not global_preferences.pp.archive_all_variations:
+        if not global_objects.pp.archive_all_variations:
             seasons = 'generic'
             if self.hide_season_title and card_class.USES_SEASON_TITLE:
                 seasons = 'hidden'

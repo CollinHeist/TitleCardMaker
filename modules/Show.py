@@ -8,7 +8,7 @@ from modules.Episode import Episode
 from modules.EpisodeMap import EpisodeMap
 from modules.Font import Font
 from modules.MultiEpisode import MultiEpisode
-import modules.preferences as global_preferences
+import modules.global_objects as global_objects
 from modules.PlexInterface import PlexInterface
 from modules.Profile import Profile
 from modules.RemoteCardType import RemoteCardType
@@ -65,7 +65,7 @@ class Show(YamlReader):
         super().__init__(yaml_dict, log_function=log.error)
 
         # Get global PreferenceParser object
-        self.preferences = global_preferences.pp
+        self.preferences = global_objects.pp
         
         # Parse arguments into attribures
         self.__library_map = library_map

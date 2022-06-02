@@ -4,7 +4,7 @@ from re import compile as re_compile
 
 from modules.Debug import log
 from modules.TitleCard import TitleCard
-import modules.preferences as global_preferences
+import modules.global_objects as global_objects
 
 class Font:
     """
@@ -58,7 +58,7 @@ class Font:
         self.__series_info = series_info
 
         # Use the global FontValidator object
-        self.__validator = global_preferences.fv
+        self.__validator = global_objects.fv
         
         # Generic font attributes
         self.set_default()
@@ -183,7 +183,7 @@ class Font:
         """Reset this object's attributes to its default values."""
 
         # Whether to validate for this font
-        self.__validate = global_preferences.pp.validate_fonts
+        self.__validate = global_objects.pp.validate_fonts
 
         # Title card characteristics
         self.color = self.__card_class.TITLE_COLOR

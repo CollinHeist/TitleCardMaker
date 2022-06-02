@@ -7,7 +7,7 @@ try:
     from modules.Debug import log
     from modules.GenreMaker import GenreMaker
     from modules.PreferenceParser import PreferenceParser
-    from modules.preferences import set_preference_parser
+    from modules.global_objects import set_preference_parser
     from modules.RemoteCardType import RemoteCardType
     from modules.ShowSummary import ShowSummary
     from modules.TitleCard import TitleCard

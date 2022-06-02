@@ -12,7 +12,7 @@ try:
     from modules.EpisodeInfo import EpisodeInfo
     from modules.PlexInterface import PlexInterface
     from modules.PreferenceParser import PreferenceParser
-    from modules.preferences import set_preference_parser
+    from modules.global_objects import set_preference_parser
     from modules.SeriesInfo import SeriesInfo
     from modules.ShowSummary import ShowSummary
     from modules.SonarrInterface import SonarrInterface

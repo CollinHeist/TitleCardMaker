@@ -11,8 +11,8 @@ try:
     from modules.Debug import log, apply_no_color_formatter
     from modules.FontValidator import FontValidator
     from modules.PreferenceParser import PreferenceParser
-    from modules.preferences import set_preference_parser, set_font_validator
     from modules.RemoteFile import RemoteFile
+    from modules.global_objects import set_preference_parser, set_font_validator
     from modules.Manager import Manager
 except ImportError:
     print(f'Required Python packages are missing - execute "pipenv install"')

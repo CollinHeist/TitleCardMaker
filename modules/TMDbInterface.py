@@ -5,7 +5,7 @@ from yaml import safe_load
 
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
-import modules.preferences as global_preferences
+import modules.global_objects as global_objects
 from modules.SeriesInfo import SeriesInfo
 from modules.Title import Title
 from modules.WebInterface import WebInterface
@@ -66,7 +66,7 @@ class TMDbInterface(WebInterface):
         # Initialize parent WebInterface 
         super().__init__()
 
-        self.preferences = global_preferences.pp
+        self.preferences = global_objects.pp
 
         # Create/read blacklist database
         self.__BLACKLIST_DB.parent.mkdir(parents=True, exist_ok=True)
