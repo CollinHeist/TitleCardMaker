@@ -46,14 +46,15 @@ class RemoteFile:
         self.local_file.parent.mkdir(parents=True, exist_ok=True)
 
         # If file has already been loaded this run, skip
-        if self.LOADED.get(where('remote') == self.remote_source):
+        if self.LOADED.get(where('remote') == self.remote_source) != None:
             return None
 
         # Download the remote file for local use
         try:
             self.download()
             log.debug(f'Downloaded RemoteFile "{username}/{filename}"')
-            self.LOADED.insert({'remote': self.remote_source})
+            if self.LOADED.get(where('remote') == self.remote_source) == None:
+                self.LOADED.insert({'remote': self.remote_source})
         except Exception as e:
             log.error(f'Could not download RemoteFile "{username}/{filename}", '
                       f'returned "{e}"')
