@@ -566,6 +566,9 @@ class Show(YamlReader):
                                     backdrop if one is needed and DNE.
         """
 
+        # Modify Episodes watched/blur/source files based on plex status
+        download_backdrop = self.__apply_styles(plex_interface)
+
         # Whether to always check TMDb or Plex
         always_check_tmdb = (self.preferences.use_tmdb and tmdb_interface
                              and self.tmdb_sync and self.preferences.check_tmdb)
@@ -594,7 +597,7 @@ class Show(YamlReader):
 
             # Check Plex if enabled, provided, and valid relative to TMDb
             if always_check_plex:
-                check_plex =self.preferences.check_plex_before_tmdb or blacklisted
+                check_plex = self.preferences.check_plex_before_tmdb or blacklisted
             else:
                 check_plex = False
 
@@ -618,9 +621,6 @@ class Show(YamlReader):
                 if image_url != None:
                     WebInterface.download_image(image_url, episode.source)
                     break
-
-        # Modify Episodes watched/blur/source files based on plex status
-        download_backdrop = self.__apply_styles(plex_interface)
             
         # Query TMDb for the backdrop if one does not exist and is needed
         if (download_backdrop and tmdb_interface and self.tmdb_sync
