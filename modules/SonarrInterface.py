@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from pathlib import Path
+from re import IGNORECASE, compile as re_compile
 
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
@@ -15,7 +16,8 @@ class SonarrInterface(WebInterface):
     """
 
     """Episode titles that indicate a placeholder and are to be ignored"""
-    __PLACEHOLDER_NAMES = {'tba', 'TBA', 'tbd', 'TBD'}
+    __TEMP_IGNORE_REGEX = re_compile(r'^(tba|tbd|episode \d+)$', IGNORECASE)
+    __ALWAYS_IGNORE_REGEX = re_compile(r'^(tba|tbd)$', IGNORECASE)
 
     """Datetime format string for airDateUtc field in Sonarr API requests"""
     __AIRDATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
@@ -183,18 +185,24 @@ class SonarrInterface(WebInterface):
 
         # Go through each episode and get its season/episode number, and title
         for episode in all_episodes:
-            # Unaired episodes (such as specials) won't have airDateUtc key
-            if 'airDateUtc' in episode and not episode['hasFile']:
-                # Verify this episode has already aired, skip if not
-                air_datetime = datetime.strptime(
-                    episode['airDateUtc'],
-                    self.__AIRDATE_FORMAT
-                )
-                if air_datetime > datetime.now() + timedelta(hours=2):
-                    continue
+            # Get airdate of this episode
+            if (ep_airdate := episode.get('airDateUtc')) != None:
+                # If episode hasn't aired, skip
+                air_datetime=datetime.strptime(ep_airdate,self.__AIRDATE_FORMAT)
+                if (not episode['hasFile']
+                    and air_datetime > datetime.now() + timedelta(hours=2)):
+                        log.debug(f'Skipping unaired episode {episode}')
+                        continue
 
-            # Skip episodes whose titles aren't in Sonarr to avoid placeholders
-            if episode['title'] in self.__PLACEHOLDER_NAMES:
+                # Skip temporary placeholder names if aired in the last 24 hours
+                if (self.__TEMP_IGNORE_REGEX.match(episode['title'])
+                    and air_datetime > datetime.now() + timedelta(days=1)):
+                        log.debug(f'Skipping placeholder episode {episode}')
+                        continue
+
+            # Skip permanent placeholder names
+            if self.__ALWAYS_IGNORE_REGEX.match(episode['title']):
+                log.debug(f'Skipping placeholder episode')
                 continue
 
             # Create EpisodeInfo object for this entry
@@ -210,7 +218,7 @@ class SonarrInterface(WebInterface):
             episode_info.set_sonarr_id(episode['id'])
 
             # If this episode has a non-zero TVDb ID (that exists), add that
-            if 'tvdbId' in episode and episode['tvdbId'] != 0:
+            if episode.get('tvdbId'):
                 episode_info.set_tvdb_id(episode['tvdbId'])
 
             all_episode_info.append(episode_info)
