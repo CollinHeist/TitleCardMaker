@@ -11,7 +11,7 @@ class StandardTitleCard(CardType):
     customization of every aspect of the card, but does not use any arbitrary
     data.
     """
-
+    
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = Path(__file__).parent / 'ref'
 

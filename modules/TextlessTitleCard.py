@@ -33,7 +33,7 @@ class TextlessTitleCard(CardType):
     """Whether this CardType uses season titles for archival purposes"""
     USES_SEASON_TITLE = False
 
-    """Standard class has standard archive name"""
+    """Label to archive cards under"""
     ARCHIVE_NAME = 'Textless Version'
 
     __slots__ = ('source_file', 'output_file', 'blur')

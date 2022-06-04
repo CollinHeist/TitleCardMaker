@@ -569,6 +569,10 @@ class Show(YamlReader):
         # Modify Episodes watched/blur/source files based on plex status
         download_backdrop = self.__apply_styles(plex_interface)
 
+        # Don't download source if this card type doesn't use unique images
+        if not self.card_class.USES_UNIQUE_SOURCES:
+            return None
+
         # Whether to always check TMDb or Plex
         always_check_tmdb = (self.preferences.use_tmdb and tmdb_interface
                              and self.tmdb_sync and self.preferences.check_tmdb)

@@ -159,7 +159,7 @@ class ShowSummary(ImageMaker):
             f'-gravity east',
             f'-splice 80x0',
             f'-gravity south',
-            f'-splice 0x{80+int(80*self.number_rows/3)}', # was 0x160
+            f'-splice 0x{80+int(80*self.number_rows/3)}',
             f'-gravity west',
             f'-splice 80x0',
             f'"{self.__MONTAGE_WITH_HEADER_PATH.resolve()}"'
@@ -182,7 +182,8 @@ class ShowSummary(ImageMaker):
         command = ' '.join([
             f'convert',
             f'"{self.logo.resolve()}"',
-            f'-resize x500 -resize 3400x500\>',
+            f'-resize x500',
+            f'-resize 3400x500\>',
             f'"{self.__RESIZED_LOGO_PATH.resolve()}"',
         ])
 
