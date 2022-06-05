@@ -53,8 +53,10 @@ class RemoteFile:
         try:
             self.download()
             log.debug(f'Downloaded RemoteFile "{username}/{filename}"')
-            if self.LOADED.get(where('remote') == self.remote_source) == None:
+            try:
                 self.LOADED.insert({'remote': self.remote_source})
+            except Exception:
+                pass
         except Exception as e:
             log.error(f'Could not download RemoteFile "{username}/{filename}", '
                       f'returned "{e}"')

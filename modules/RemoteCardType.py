@@ -80,9 +80,11 @@ class RemoteCardType:
             self.valid = True
 
             # Add this url to the loaded database
-            if self.LOADED.get(where('remote') == url) == None:
+            try:
                 self.LOADED.insert({'remote': url})
                 log.debug(f'Loaded RemoteCardType "{remote}"')
+            except Exception:
+                pass
         except Exception as e:
             # Some error in loading, set object as invalid
             log.error(f'Cannot load CardType "{remote}", returned "{e}"')
