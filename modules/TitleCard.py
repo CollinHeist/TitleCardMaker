@@ -5,6 +5,7 @@ import modules.global_objects as global_objects
 
 # Default CardType classes
 from modules.AnimeTitleCard import AnimeTitleCard
+from modules.LogoTitleCard import LogoTitleCard
 from modules.StandardTitleCard import StandardTitleCard
 from modules.StarWarsTitleCard import StarWarsTitleCard
 from modules.TextlessTitleCard import TextlessTitleCard
@@ -35,6 +36,7 @@ class TitleCard:
         'anime': AnimeTitleCard,
         'star wars': StarWarsTitleCard,
         'textless': TextlessTitleCard,
+        'logo': LogoTitleCard,
     }
 
     """Mapping of illegal filename characters and their replacements"""
