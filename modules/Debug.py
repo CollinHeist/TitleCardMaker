@@ -1,6 +1,8 @@
-from logging import Formatter, Handler, getLogger
+from logging import Formatter, getLogger, StreamHandler
+from logging.handlers import TimedRotatingFileHandler
 from logging import NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL
 
+from pathlib import Path
 from tqdm import tqdm
 
 """TQDM bar format string"""
@@ -10,7 +12,11 @@ TQDM_KWARGS = {
     'leave': False,
 }
 
-class LogHandler(Handler):
+"""Log file"""
+LOG_FILE = Path(__file__).parent.parent / 'logs' / 'maker.log'
+LOG_FILE.parent.mkdir(exist_ok=True)
+
+class LogHandler(StreamHandler):
     """Handler subclass to integrate logging messages with TQDM"""
 
     def __init__(self, level=NOTSET):
@@ -71,7 +77,6 @@ class LogFormatterNoColor(Formatter):
 
         return formatter_obj.format(record)
 
-
 # Create global logger
 log = getLogger('TitleCardMaker')
 log.setLevel(DEBUG)
@@ -79,7 +84,19 @@ log.setLevel(DEBUG)
 # Add TQDM handler and color formatter to the logger
 handler = LogHandler()
 handler.setFormatter(LogFormatterColor())
+handler.setLevel(DEBUG)
 log.addHandler(handler)
+
+# Add rotating file handler to the logger
+file_handler = TimedRotatingFileHandler(
+    filename=LOG_FILE, when='H', interval=6, backupCount=8
+)
+file_handler.setFormatter(Formatter(
+    '[%(levelname)s] [%(asctime)s] %(message)s',
+    '%y-%m-%d %H:%M:%S'
+))
+file_handler.setLevel(DEBUG)
+log.addHandler(file_handler)
 
 def apply_no_color_formatter(log_object: 'Logger') -> None:
     """

@@ -131,12 +131,12 @@ class DataFileInterface:
                     continue
 
                 # If translated title is available, prefer that
-                title = episode_data.pop('title', '')
-                title = episode_data.pop('preferred_title', title)
-
+                original_title = episode_data.pop('title', None)
+                title = episode_data.pop('preferred_title', original_title)
+                
                 # Construct EpisodeInfo object for this entry
                 episode_info = EpisodeInfo(
-                    Title(title),
+                    Title(title, original_title=original_title),
                     season_number,
                     episode_number,
                     episode_data.pop('abs_number', None),
@@ -249,7 +249,7 @@ class DataFileInterface:
                 yaml[season_key][episode_info.episode_number]['abs_number'] =\
                     episode_info.abs_number
 
-        # If nothing was added, return
+        # If nothing was added, exit
         if (count := added['count']) == 0:
             return None
         

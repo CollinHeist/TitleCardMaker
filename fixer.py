@@ -1,5 +1,6 @@
 from argparse import ArgumentParser, ArgumentTypeError, SUPPRESS
 from dataclasses import dataclass
+from os import environ
 from pathlib import Path
 from re import match, IGNORECASE
 
@@ -11,7 +12,7 @@ try:
     from modules.EpisodeInfo import EpisodeInfo
     from modules.PlexInterface import PlexInterface
     from modules.PreferenceParser import PreferenceParser
-    from modules.preferences import set_preference_parser
+    from modules.global_objects import set_preference_parser
     from modules.SeriesInfo import SeriesInfo
     from modules.ShowSummary import ShowSummary
     from modules.SonarrInterface import SonarrInterface
@@ -20,7 +21,10 @@ except ImportError:
     print(f'Required Python packages are missing - execute "pipenv install"')
     exit(1)
 
-# Default path for the preference file to parse
+# Environment Variables
+ENV_PREFERENCE_FILE = 'TCM_PREFERENCES'
+
+# Default values
 DEFAULT_PREFERENCE_FILE = Path(__file__).parent / 'preferences.yml'
 
 # Old commands that have moved to mini_maker to warn user about
@@ -29,11 +33,13 @@ OLD_COMMANDS = ('--title-card', '--genre-card', '--show-summary')
 # Create ArgumentParser object 
 parser = ArgumentParser(description='Manual fixes for the TitleCardMaker')
 parser.add_argument(
-    '-p', '--preference-file',
-    type=Path, 
-    default=DEFAULT_PREFERENCE_FILE,
-    metavar='PREFERENCE_FILE',
-    help='Preference YAML file for global options')
+    '-p', '--preferences', '--preference-file',
+    type=Path,
+    default=environ.get(ENV_PREFERENCE_FILE, DEFAULT_PREFERENCE_FILE),
+    metavar='FILE',
+    help=f'File to read global preferences from. Environment variable '
+         f'{ENV_PREFERENCE_FILE}. Defaults to '
+         f'"{DEFAULT_PREFERENCE_FILE.resolve()}"')
 
 # Argument group for Miscellaneous functions
 misc_group = parser.add_argument_group('Miscellaneous')
@@ -113,7 +119,7 @@ if any(old_arg in unknown for old_arg in OLD_COMMANDS):
     log.warning(f'Manual card creation has moved to "mini_maker.py"')
 
 # Parse preference file for options that might need it
-pp = PreferenceParser(args.preference_file)
+pp = PreferenceParser(args.preferences)
 if not pp.valid:
     exit(1)
 set_preference_parser(pp)

@@ -1,7 +1,7 @@
 from re import match, sub, IGNORECASE
 
 from modules.Debug import log
-import modules.preferences as global_preferences
+import modules.global_objects as global_objects
 
 # Default CardType classes
 from modules.AnimeTitleCard import AnimeTitleCard
@@ -127,7 +127,7 @@ class TitleCard:
         """
         
         # Get the season folder for this entry's season
-        season_folder = global_preferences.pp.get_season_folder(
+        season_folder = global_objects.pp.get_season_folder(
             episode_info.season_number
         )
         
@@ -146,7 +146,7 @@ class TitleCard:
         )
         
         # Add card extension
-        filename += global_preferences.pp.card_extension
+        filename += global_objects.pp.card_extension
         
         return media_directory / season_folder / filename
 
@@ -194,7 +194,7 @@ class TitleCard:
             modified_format_string = format_string
 
         # # Get the season folder for these episodes
-        season_folder = global_preferences.pp.get_season_folder(
+        season_folder = global_objects.pp.get_season_folder(
             multi_episode.season_number
         )
 
@@ -214,7 +214,7 @@ class TitleCard:
         )
 
         # Add card extension
-        filename += global_preferences.pp.card_extension
+        filename += global_objects.pp.card_extension
         
         return media_directory / season_folder / filename
 

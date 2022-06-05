@@ -1,12 +1,13 @@
 from argparse import ArgumentParser, ArgumentTypeError, SUPPRESS
 from pathlib import Path
 from dataclasses import dataclass
+from os import environ
 
 try:
     from modules.Debug import log
     from modules.GenreMaker import GenreMaker
     from modules.PreferenceParser import PreferenceParser
-    from modules.preferences import set_preference_parser
+    from modules.global_objects import set_preference_parser
     from modules.RemoteCardType import RemoteCardType
     from modules.ShowSummary import ShowSummary
     from modules.TitleCard import TitleCard
@@ -14,16 +15,21 @@ except ImportError:
     print(f'Required Python packages are missing - execute "pipenv install"')
     exit(1)
 
-# Default path for the preference file to parse
+# Environment Variables
+ENV_PREFERENCE_FILE = 'TCM_PREFERENCES'
+
+# Default values
 DEFAULT_PREFERENCE_FILE = Path(__file__).parent / 'preferences.yml'
 
 parser = ArgumentParser(description='Manually make cards')
 parser.add_argument(
-    '-p', '--preference-file',
-    type=Path, 
-    default=DEFAULT_PREFERENCE_FILE,
-    metavar='PREFERENCE_FILE',
-    help='Preference YAML file for global options')
+    '-p', '--preferences', '--preference-file',
+    type=Path,
+    default=environ.get(ENV_PREFERENCE_FILE, DEFAULT_PREFERENCE_FILE),
+    metavar='FILE',
+    help=f'File to read global preferences from. Environment variable '
+         f'{ENV_PREFERENCE_FILE}. Defaults to '
+         f'"{DEFAULT_PREFERENCE_FILE.resolve()}"')
 
 # Argument group for 'manual' title card creation
 title_card_group = parser.add_argument_group('Title Cards',
@@ -158,7 +164,7 @@ if len(unknown) % 2 == 0 and len(unknown) > 1:
     arbitrary_data = {key: val for key, val in zip(unknown[::2], unknown[1::2])}
 
 # Parse preference file for options that might need it
-pp = PreferenceParser(args.preference_file)
+pp = PreferenceParser(args.preferences)
 if not pp.valid:
     exit(1)
 set_preference_parser(pp)

@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 from modules.ImageMagickInterface import ImageMagickInterface
-import modules.preferences as global_preferences
+import modules.global_objects as global_objects
 
 class ImageMaker(ABC):
     """
@@ -35,7 +35,7 @@ class ImageMaker(ABC):
         """
 
         # Store global PreferenceParse object
-        self.preferences = global_preferences.pp
+        self.preferences = global_objects.pp
 
         # All ImageMakers have an instance of an ImageMagickInterface
         self.image_magick = ImageMagickInterface(

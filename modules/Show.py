@@ -8,7 +8,7 @@ from modules.Episode import Episode
 from modules.EpisodeMap import EpisodeMap
 from modules.Font import Font
 from modules.MultiEpisode import MultiEpisode
-import modules.preferences as global_preferences
+import modules.global_objects as global_objects
 from modules.PlexInterface import PlexInterface
 from modules.Profile import Profile
 from modules.RemoteCardType import RemoteCardType
@@ -65,7 +65,7 @@ class Show(YamlReader):
         super().__init__(yaml_dict, log_function=log.error)
 
         # Get global PreferenceParser object
-        self.preferences = global_preferences.pp
+        self.preferences = global_objects.pp
         
         # Parse arguments into attribures
         self.__library_map = library_map
@@ -566,6 +566,13 @@ class Show(YamlReader):
                                     backdrop if one is needed and DNE.
         """
 
+        # Modify Episodes watched/blur/source files based on plex status
+        download_backdrop = self.__apply_styles(plex_interface)
+
+        # Don't download source if this card type doesn't use unique images
+        if not self.card_class.USES_UNIQUE_SOURCES:
+            return None
+
         # Whether to always check TMDb or Plex
         always_check_tmdb = (self.preferences.use_tmdb and tmdb_interface
                              and self.tmdb_sync and self.preferences.check_tmdb)
@@ -579,6 +586,9 @@ class Show(YamlReader):
             if not episode.downloadable_source or episode.source.exists():
                 continue
 
+            # Update progress bar
+            pbar.set_description(f'Selecting {episode}')
+
             # Check TMDb if this episode isn't permanently blacklisted
             if always_check_tmdb:
                 blacklisted =  tmdb_interface.is_permanently_blacklisted(
@@ -591,7 +601,7 @@ class Show(YamlReader):
 
             # Check Plex if enabled, provided, and valid relative to TMDb
             if always_check_plex:
-                check_plex =self.preferences.check_plex_before_tmdb or blacklisted
+                check_plex = self.preferences.check_plex_before_tmdb or blacklisted
             else:
                 check_plex = False
 
@@ -615,9 +625,6 @@ class Show(YamlReader):
                 if image_url != None:
                     WebInterface.download_image(image_url, episode.source)
                     break
-
-        # Modify Episodes watched/blur/source files based on plex status
-        download_backdrop = self.__apply_styles(plex_interface)
             
         # Query TMDb for the backdrop if one does not exist and is needed
         if (download_backdrop and tmdb_interface and self.tmdb_sync

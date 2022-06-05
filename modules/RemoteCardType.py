@@ -5,6 +5,7 @@ from pathlib import Path
 from requests import get
 
 from modules.Debug import log
+from tinydb import TinyDB, where
 
 class RemoteCardType:
     """
@@ -19,6 +20,9 @@ class RemoteCardType:
 
     """Temporary directory all card types are written to"""
     TEMP_DIR = Path(__file__).parent / '.objects'
+
+    """List of assets that have been loaded already"""
+    LOADED = TinyDB(TEMP_DIR / 'remote_assets.json')
 
     __slots__ = ('card_class', 'valid')
 
@@ -40,26 +44,28 @@ class RemoteCardType:
             class_name = file.stem
             file_name = str(file.resolve())
         else:
-            # Make GET request for the contents of the specified value
-            url = f'{self.URL_BASE}/{remote}.py'
-            if (response := get(url)).status_code >= 400:
-                log.error(f'Cannot identify remote Card Type "{remote}"')
-                self.valid = False
-                return None
-
-            # Succesful request (i.e. file remotely exists)
-            # Get username and class name from the git specification
+            # Get username and class name from the remote specification
             username = remote.split('/')[0]
             class_name = remote.split('/')[-1]  
 
             # Download and write the CardType class into a temporary file
             file_name = self.TEMP_DIR / f'{username}-{class_name}.py'
-            file_name.parent.mkdir(parents=True, exist_ok=True)
+            url = f'{self.URL_BASE}/{remote}.py'
 
-            # Write remote file contents to temporary class
-            with (file_name).open('wb') as fh:
-                fh.write(response.content)
-            log.debug(f'Wrote {class_name}.py to {file_name.resolve()}')
+            # Only request and write file if not loaded this run
+            if (not self.LOADED.get(where('remote') == url)
+                or not file_name.exists()):
+            # if url not in loaded_remote_assets:
+                # Make GET request for the contents of the specified value
+                if (response := get(url)).status_code >= 400:
+                    log.error(f'Cannot identify remote Card Type "{remote}"')
+                    self.valid = False
+                    return None
+
+                # Write remote file contents to temporary class
+                file_name.parent.mkdir(parents=True, exist_ok=True)
+                with (file_name).open('wb') as fh:
+                    fh.write(response.content)
 
         # Import new file as module
         try:
@@ -71,8 +77,14 @@ class RemoteCardType:
 
             # Get class from module namespace
             self.card_class = module.__dict__[class_name]
-            log.info(f'Loaded CardType "{remote}"')
             self.valid = True
+
+            # Add this url to the loaded database
+            try:
+                self.LOADED.insert({'remote': url})
+                log.debug(f'Loaded RemoteCardType "{remote}"')
+            except Exception:
+                pass
         except Exception as e:
             # Some error in loading, set object as invalid
             log.error(f'Cannot load CardType "{remote}", returned "{e}"')
