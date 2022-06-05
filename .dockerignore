@@ -1,7 +1,8 @@
 modules/.objects/
+config/
 fonts/
-source/
 logs/
+source/
 .DS_Store
 .git
 .github

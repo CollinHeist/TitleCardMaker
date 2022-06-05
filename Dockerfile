@@ -9,6 +9,9 @@ LABEL description="Automated title card maker for Plex"
 WORKDIR /maker
 COPY . /maker
 
+# Script environments
+ENV TCM_PREFERENCES=/config/preferences.yml
+
 # Create user and group to run the container
 RUN groupadd -g 314 titlecardmaker; \
     useradd -u 314 -g 314 titlecardmaker
