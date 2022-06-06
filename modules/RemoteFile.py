@@ -23,7 +23,7 @@ class RemoteFile:
     TEMP_DIR = Path(__file__).parent / '.objects'
 
     """List of assets that have been loaded already"""
-    LOADED = TinyDB(TEMP_DIR / 'remote_assets.json')
+    LOADED = TinyDB(TEMP_DIR / 'remote_assets.json', create_dirs=True)
 
 
     def __init__(self, username: str, filename: str) -> None:
