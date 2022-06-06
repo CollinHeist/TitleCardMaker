@@ -262,7 +262,7 @@ class Show(YamlReader):
         self.valid &= self.__episode_map.valid
 
         # Read all extras
-        if (self._is_specified('extras')):
+        if self._is_specified('extras'):
             self.extras = self._get('extras', type_=dict)
 
 
