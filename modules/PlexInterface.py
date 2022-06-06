@@ -59,7 +59,7 @@ class PlexInterface:
         """
 
         # If no episode was given, get condition for entire series
-        if episode == None:
+        if episode is None:
             return (
                 (where('library') == library_name) &
                 (where('series') == series_info.full_name)
@@ -175,14 +175,14 @@ class PlexInterface:
 
         # Try by TVDb ID
         try:
-            if series_info.tvdb_id != None:
+            if series_info.tvdb_id is not None:
                 return library.getGuid(f'tvdb://{series_info.tvdb_id}')
         except NotFound:
             pass
 
         # Try by TMDb ID
         try:
-            if series_info.tmdb_id != None:
+            if series_info.tmdb_id is not None:
                 return library.getGuid(f'tmdb://{series_info.tmdb_id}')
         except NotFound:
             pass
@@ -222,7 +222,7 @@ class PlexInterface:
             return False
 
         # If the given series cannot be found in this library, exit
-        return self.__get_series(library, series_info) != None
+        return self.__get_series(library, series_info) is not None
 
 
     def update_watched_statuses(self, library_name: str,
@@ -273,7 +273,7 @@ class PlexInterface:
 
             # Get loaded card characteristics for this episode
             details = self.__get_loaded_episode(loaded_series, episode)
-            loaded = details != None
+            loaded = (details is not None)
             spoiler_status = details['spoiler'] if loaded else None
 
             # Delete and reset card if current spoiler type doesnt match

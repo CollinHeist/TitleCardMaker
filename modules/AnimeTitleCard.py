@@ -62,8 +62,8 @@ class AnimeTitleCard(CardType):
     
     def __init__(self, source: Path, output_file: Path, title: str, 
                  season_text: str, episode_text: str, hide_season: bool,
-                 kanji: str=None, blur: bool=False, font_size: float=1.0,
-                 *args, **kwargs) -> None:
+                 kanji: str=None, require_kanji: bool=False, blur: bool=False,
+                 font_size: float=1.0, *args, **kwargs) -> None:
         """
         Constructs a new instance.
         
@@ -74,8 +74,9 @@ class AnimeTitleCard(CardType):
         :param      episode_text:       The episode text for this card.
         :param      hide_season:        Whether to hide the season text on this
                                         card.
-        :param      kanji:              Optional kanji text to place above the
+        :param      kanji:              Kanji text to place above the
                                         episode title on this card.
+        :param      require_kanji:      Whether to require kanji for this card.
         :param      blur:               Whether to blur the source image.
         :param      font_size:          Scalar to apply to the title font size.
         :param      args and kwargs:    Unused arguments to permit generalized
@@ -94,7 +95,8 @@ class AnimeTitleCard(CardType):
 
         # Store kanji, set bool for whether to use it or not
         self.kanji = self.image_magick.escape_chars(kanji)
-        self.use_kanji = (kanji != None)
+        self.use_kanji = (kanji is not None)
+        self.require_kanji = require_kanji
 
         # Store season and episode text
         self.season_text = self.image_magick.escape_chars(season_text.upper())
@@ -428,6 +430,11 @@ class AnimeTitleCard(CardType):
         Make the necessary ImageMagick and system calls to create this object's
         defined title card.
         """
+
+        # If kanji is required (and not given), error!
+        if self.require_kanji and not self.use_kanji:
+            log.error(f'Kanji is required and not provided - skipping card')
+            return None
         
         # Create the output directory and any necessary parents 
         self.output_file.parent.mkdir(parents=True, exist_ok=True)

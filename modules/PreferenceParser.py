@@ -42,7 +42,7 @@ class PreferenceParser(YamlReader):
         self.read_file()
 
         # Check for required source directory
-        if (value := self._get('options', 'source', type_=Path)) == None:
+        if (value := self._get('options', 'source', type_=Path)) is None:
             log.critical(f'Preference file missing required options/source '
                          f'attribute')
             exit(1)
@@ -56,6 +56,7 @@ class PreferenceParser(YamlReader):
         self.source_priority = ('tmdb', 'plex')
         self.validate_fonts = True
         self.zero_pad_seasons = False
+        self.hide_season_folders = False
         self.archive_directory = None
         self.create_archive = False
         self.archive_all_variations = True
@@ -128,7 +129,7 @@ class PreferenceParser(YamlReader):
 
         lower_str = lambda v: str(v).lower()
 
-        if (value := self._get('options', 'series')) != None:
+        if (value := self._get('options', 'series')) is not None:
             if isinstance(value, list):
                 self.series_files = value
             else:
@@ -172,6 +173,10 @@ class PreferenceParser(YamlReader):
 
         if (value := self._get('options', 'zero_pad_seasons',type_=bool))!=None:
             self.zero_pad_seasons = value
+
+        if (value := self._get('options', 'hide_season_folders',
+                               type_=bool)) != None:
+            self.hide_season_folders = value
 
         if (value := self._get('archive', 'path', type_=Path)) != None:
             self.archive_directory = value
@@ -444,15 +449,21 @@ class PreferenceParser(YamlReader):
     def get_season_folder(self, season_number: int) -> str:
         """
         Get the season folder name for the given season number, padding the
-        season number if indicated by the preference file.
+        season number if indicated by the preference file, and returning an
+        empty string if season folders are hidden.
         
-        :param      season_number:  The season number.
+        :param      season_number:  The season number to get the folder name of.
         
-        :returns:   The season folder. This is 'Specials' for 0, and either a
-                    zero-padded or not zero-padded version of "Season {x}".
+        :returns:   The season folder name. Empty string if folders are hidden,
+                    'Specials' for season 0, and either a zero-padded or not
+                    zero-padded version of "Season {x}" otherwise.
         """
 
-        # Season 0 is always Specials
+        # If season folders are hidden, return empty string
+        if self.hide_season_folders:
+            return ''
+
+        # Season 0 is always Specials (never padded)
         if season_number == 0:
             return 'Specials'
 

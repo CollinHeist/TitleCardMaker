@@ -5,6 +5,7 @@ import modules.global_objects as global_objects
 
 # Default CardType classes
 from modules.AnimeTitleCard import AnimeTitleCard
+from modules.LogoTitleCard import LogoTitleCard
 from modules.StandardTitleCard import StandardTitleCard
 from modules.StarWarsTitleCard import StarWarsTitleCard
 from modules.TextlessTitleCard import TextlessTitleCard
@@ -35,6 +36,8 @@ class TitleCard:
         'anime': AnimeTitleCard,
         'star wars': StarWarsTitleCard,
         'textless': TextlessTitleCard,
+        'logo': LogoTitleCard,
+        'reality tv': LogoTitleCard,
     }
 
     """Mapping of illegal filename characters and their replacements"""
@@ -141,7 +144,7 @@ class TitleCard:
                 season=episode_info.season_number,
                 episode=episode_info.episode_number,
                 title=episode_info.title.full_title,
-                abs_number=abs_number if abs_number != None else 0,
+                abs_number=abs_number if abs_number is not None else 0,
             )
         )
         
@@ -209,7 +212,7 @@ class TitleCard:
                 episode_start=multi_episode.episode_start,
                 episode_end=multi_episode.episode_end,
                 title=multi_episode.episode_info.title.full_title,
-                abs_number=abs_number if abs_number != None else 0,
+                abs_number=abs_number if abs_number is not None else 0,
             )
         )
 

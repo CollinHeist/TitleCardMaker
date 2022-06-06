@@ -268,7 +268,7 @@ class Manager:
                     show_dict[str(episode)]['source'] = episode.source.name
 
                 # If destination card doesn't exist, add to report
-                if (episode.destination != None
+                if (episode.destination is not None
                     and not episode.destination.exists()):
                     if str(episode) not in show_dict:
                         show_dict[str(episode)] = {}

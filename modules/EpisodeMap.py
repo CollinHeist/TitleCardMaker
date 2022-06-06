@@ -197,7 +197,7 @@ class EpisodeMap:
             return default(episode_info)
         
         # Index by absolute episode number
-        if (episode_info.abs_number == None
+        if (episode_info.abs_number is None
             or episode_info.abs_number not in target):
             return default(episode_info)
         
@@ -217,7 +217,7 @@ class EpisodeMap:
                                         self.get_generic_season_title)
 
         if self.__index_by == 'episode':
-            if (episode_info.abs_number == None
+            if (episode_info.abs_number is None
                 and episode_info.season_number != 0):
                 log.warning(f'Episode range specified, but {episode_info} '
                             f'has no absolute episode number')

@@ -245,7 +245,7 @@ class DataFileInterface:
             }
 
             # Add absolute number if given
-            if episode_info.abs_number != None:
+            if episode_info.abs_number is not None:
                 yaml[season_key][episode_info.episode_number]['abs_number'] =\
                     episode_info.abs_number
 

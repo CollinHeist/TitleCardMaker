@@ -254,7 +254,7 @@ class Title:
 
         matching_titles = map(self.get_matching_title, titles)
 
-        if self.__original_title != None:
+        if self.__original_title is not None:
             return any(title in (self.__original_title, self.match_title)
                        for title in matching_titles)
         

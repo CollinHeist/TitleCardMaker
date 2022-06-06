@@ -186,7 +186,7 @@ class SonarrInterface(WebInterface):
         # Go through each episode and get its season/episode number, and title
         for episode in all_episodes:
             # Get airdate of this episode
-            if (ep_airdate := episode.get('airDateUtc')) != None:
+            if (ep_airdate := episode.get('airDateUtc')) is not None:
                 # If episode hasn't aired, skip
                 air_datetime=datetime.strptime(ep_airdate,self.__AIRDATE_FORMAT)
                 if (not episode['hasFile']
@@ -238,7 +238,7 @@ class SonarrInterface(WebInterface):
         self.__set_ids(series_info)
 
         # If no ID was returned, error and return an empty list
-        if series_info.sonarr_id == None:
+        if series_info.sonarr_id is None:
             self.__warn_missing_series(series_info)
             return []
 
@@ -256,7 +256,7 @@ class SonarrInterface(WebInterface):
         self.__set_ids(series_info)
 
         # If no ID was returned, error and return
-        if series_info.sonarr_id == None:
+        if series_info.sonarr_id is None:
             self.__warn_missing_series(series_info)
 
 
