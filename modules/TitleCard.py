@@ -37,6 +37,7 @@ class TitleCard:
         'star wars': StarWarsTitleCard,
         'textless': TextlessTitleCard,
         'logo': LogoTitleCard,
+        'reality tv': LogoTitleCard,
     }
 
     """Mapping of illegal filename characters and their replacements"""
