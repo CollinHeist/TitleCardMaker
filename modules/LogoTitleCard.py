@@ -91,7 +91,7 @@ class LogoTitleCard(CardType):
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__()
 
-        self.logo = Path(logo) if logo != None else None
+        self.logo = Path(logo) if logo is not None else None
         self.output_file = output_file
 
         # Ensure characters that need to be escaped are
@@ -457,7 +457,7 @@ class LogoTitleCard(CardType):
         """
         
         # Skip card if logo doesn't exist
-        if self.logo == None:
+        if self.logo is None:
             log.error(f'Logo file not specified')
             return None
         elif not self.logo.exists():

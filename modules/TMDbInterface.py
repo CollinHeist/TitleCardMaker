@@ -140,7 +140,7 @@ class TMDbInterface(WebInterface):
         later = (datetime.now() + timedelta(days=1)).timestamp()
 
         # If this entry exists, check that next has passed
-        if entry != None:
+        if entry is not None:
             if datetime.now().timestamp() >= entry['next']:
                 self.__blacklist.update(
                     {'failures': entry['failures']+1, 'next': later},
@@ -184,7 +184,7 @@ class TMDbInterface(WebInterface):
         )
 
         # If request DNE, not blacklisted
-        if entry == None:
+        if entry is None:
             return False
 
         # If too many failures, blacklisted
@@ -213,7 +213,7 @@ class TMDbInterface(WebInterface):
         )
 
         # If request hasn't been blacklisted, not blacklisted
-        if entry == None:
+        if entry is None:
             return False
 
         # If too many failures, blacklisted
@@ -241,7 +241,7 @@ class TMDbInterface(WebInterface):
             return None
 
         # Match by TVDB ID if available
-        if series_info.tvdb_id != None:
+        if series_info.tvdb_id is not None:
             # Construct GET arguments
             url = f'{self.API_BASE_URL}find/{series_info.tvdb_id}'
             params = {'api_key': self.__api_key, 'external_source': 'tvdb_id'}
@@ -304,7 +304,7 @@ class TMDbInterface(WebInterface):
         """
         
         # If the episode has a TVDb ID, query with that first
-        if episode_info.tvdb_id != None:
+        if episode_info.tvdb_id is not None:
             # GET parameters and request
             url = f'{self.API_BASE_URL}find/{episode_info.tvdb_id}'
             params = {'api_key': self.__api_key, 'external_source': 'tvdb_id'}
@@ -321,7 +321,7 @@ class TMDbInterface(WebInterface):
                 }
 
         # If the series has no TMDb ID, cannot continue
-        if series_info.tmdb_id == None:
+        if series_info.tmdb_id is None:
             return None
 
         # Match by series TMDb ID and series index with title matching
@@ -333,7 +333,7 @@ class TMDbInterface(WebInterface):
 
         # If episode was not found, query by absolute number in all seasons
         if ('success' in tmdb_info and not tmdb_info['success']
-            and episode_info.abs_number != None):
+            and episode_info.abs_number is not None):
             # Query TMDb until the absolute number has been found
             for season in range(0, episode_info.season_number+1)[::-1]:
                 url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/'
@@ -352,7 +352,7 @@ class TMDbInterface(WebInterface):
         # Episode has been found on TMDb, check title
         if 'name' in tmdb_info and episode_info.title.matches(tmdb_info['name']):
             # Title matches, return the resulting season/episode number
-            if episode_info.tvdb_id != None:
+            if episode_info.tvdb_id is not None:
                 log.info(f'Add TVDb ID {episode_info.tvdb_id} to TMDb "'
                          f'{series_info}" {episode_info}')
 
@@ -447,7 +447,7 @@ class TMDbInterface(WebInterface):
             return False
 
         # Format with this episode, return whether this matches the translation
-        if episode_info.abs_number != None:
+        if episode_info.abs_number is not None:
             # Check against episode and absolute number
             return title in (
                 generic.format(number=episode_info.episode_number),
@@ -485,7 +485,7 @@ class TMDbInterface(WebInterface):
         index = self.__find_episode(series_info, episode_info, title_match)
 
         # If None was returned, episode not found - warn, blacklist, and exit
-        if index == None:
+        if index is None:
             log.debug(f'TMDb has no matching episode for "{series_info}" '
                      f'{episode_info}')
             self.__update_blacklist(series_info, episode_info, 'image')
@@ -546,7 +546,7 @@ class TMDbInterface(WebInterface):
         index = self.__find_episode(series_info, episode_info)
 
         # If episode was not found - blacklist, and exit
-        if index == None:
+        if index is None:
             self.__update_blacklist(series_info, episode_info, 'title')
             return None
 

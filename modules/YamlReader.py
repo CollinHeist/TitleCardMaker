@@ -39,7 +39,7 @@ class YamlReader(ABC):
                 value = value[attrib]
 
             # If no type conversion is indicated, just return value
-            if type_ == None:
+            if type_ is None:
                 return value
 
             try:
@@ -77,7 +77,7 @@ class YamlReader(ABC):
                 return False
 
             # If this level has sub-attributes, but is blank (None) - False
-            if current[attribute] == None:
+            if current[attribute] is None:
                 return False
 
             # Move to the next level

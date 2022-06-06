@@ -50,7 +50,7 @@ class MultiEpisode:
         
         # If all episode have absolute numbers, get their range
         self.abs_start, self.abs_end = None, None
-        if all(e.abs_number != None for e in episode_infos):
+        if all(e.abs_number is not None for e in episode_infos):
             abs_numbers = tuple(map(lambda e: e.abs_number, episode_infos))
             self.abs_start = min(abs_numbers)
             self.abs_end = max(abs_numbers)
@@ -82,8 +82,8 @@ class MultiEpisode:
         ret = (f'<MultiEpisode episode_start={self.episode_start}, episode_end='
                f'{self.episode_end}, title={self.episode_info.title}, '
                f'destination={self.destination}')
-        ret += f', abs_start={self.abs_start}' if self.abs_start != None else ''
-        ret += f', abs_end={self.abs_end}' if self.abs_end != None else ''
+        ret += '' if self.abs_start is None else f', abs_start={self.abs_start}'
+        ret += '' if self.abs_end is None else f', abs_end={self.abs_end}'
 
         return f'{ret}>'
 

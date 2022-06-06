@@ -30,7 +30,7 @@ class EpisodeInfo:
         self.episode_number = int(episode_number)
         self.episode = self.episode_number
 
-        self.abs_number = None if abs_number == None else int(abs_number)
+        self.abs_number = None if abs_number is None else int(abs_number)
         self.abs = self.abs_number
 
         # Create key for unique indexing associated with this Episode
@@ -55,10 +55,10 @@ class EpisodeInfo:
         ret = (f'<EpisodeInfo {self.title=}, {self.season_number=}, '
                f'{self.episode_number=}')
 
-        ret += '' if self.sonarr_id == None else f', {self.sonarr_id=}'
-        ret += '' if self.tvdb_id == None else f', {self.tvdb_id=}'
-        ret += '' if self.tmdb_id == None else f', {self.tmdb_id=}'
-        ret += '' if self.abs_number != None else f', {self.abs_number=}'
+        ret += '' if self.sonarr_id is None else f', {self.sonarr_id=}'
+        ret += '' if self.tvdb_id is None else f', {self.tvdb_id=}'
+        ret += '' if self.tmdb_id is None else f', {self.tmdb_id=}'
+        ret += '' if self.abs_number is None else f', {self.abs_number=}'
 
         return f'{ret}>'
 

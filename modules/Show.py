@@ -74,7 +74,7 @@ class Show(YamlReader):
         self.series_info = SeriesInfo(name, 0)
 
         # If year isn't given, skip completely
-        if (year := self._get('year', type_=int)) == None:
+        if (year := self._get('year', type_=int)) is None:
             log.error(f'Series "{name}" is missing the required "year"')
             self.valid = False
             return None
@@ -183,10 +183,10 @@ class Show(YamlReader):
         invalid attributes and update this object's validity.
         """
 
-        if (name := self._get('name', type_=str)) != None:
+        if (name := self._get('name', type_=str)) is not None:
             self.series_info.update_name(name)
 
-        if (library := self._get('library')) != None:
+        if (library := self._get('library')) is not None:
             # If the given library isn't in libary map, invalid
             if not (this_library := self.__library_map.get(library)):
                 log.error(f'Library "{library}" of series {self} is not found '
@@ -202,35 +202,35 @@ class Show(YamlReader):
                 if (card_type := this_library.get('card_type')):
                     self.__parse_card_type(card_type)
 
-        if (card_type := self._get('card_type', type_=str)) != None:
+        if (card_type := self._get('card_type', type_=str)) is not None:
             self.__parse_card_type(card_type)
             
-        if (value := self._get('media_directory', type_=Path)) != None:
+        if (value := self._get('media_directory', type_=Path)) is not None:
             self.media_directory = value
 
-        if (value := self._get('episode_text_format', type_=str)) != None:
+        if (value := self._get('episode_text_format', type_=str)) is not None:
             self.episode_text_format = value
 
-        if (value := self._get('archive', type_=bool)) != None:
+        if (value := self._get('archive', type_=bool)) is not None:
             self.archive = value
 
-        if (value := self._get('sonarr_sync', type_=bool)) != None:
+        if (value := self._get('sonarr_sync', type_=bool)) is not None:
             self.sonarr_sync = value
 
-        if (value := self._get('sync_specials', type_=bool)) != None:
+        if (value := self._get('sync_specials', type_=bool)) is not None:
             self.sync_specials = value
 
-        if (value := self._get('tmdb_sync', type_=bool)) != None:
+        if (value := self._get('tmdb_sync', type_=bool)) is not None:
             self.tmdb_sync = value
 
-        if (value := self._get('watched_style', type_=str)) != None:
+        if (value := self._get('watched_style', type_=str)) is not None:
             if value not in self.VALID_STYLES:
                 log.error(f'Invalid watched style "{value}" in series {self}')
                 self.valid = False
             else:
                 self.watched_style = value
 
-        if (value := self._get('unwatched_style', type_=str)) != None:
+        if (value := self._get('unwatched_style', type_=str)) is not None:
             if value not in self.VALID_STYLES:
                 log.error(f'Invalid unwatched style "{value}" in series {self}')
                 self.valid = False
@@ -241,11 +241,11 @@ class Show(YamlReader):
             log.error(f'"unwatched" setting has been renamed "unwatched_style"')
             self.valid = False
 
-        if (value := self._get('seasons', 'hide', type_=bool)) != None:
+        if (value := self._get('seasons', 'hide', type_=bool)) is not None:
             self.hide_seasons = value
 
         if (self._is_specified('translation', 'language')
-            and (key := self._get('translation', 'key', type_=str)) != None):
+            and (key := self._get('translation', 'key',type_=str)) is not None):
             if key in ('title', 'abs_number'):
                 log.error(f'Cannot add translations under the key "{key}" in '
                           f'series {self}')
@@ -452,7 +452,7 @@ class Show(YamlReader):
             )
 
             # If episode wasn't found, or the original title was returned, skip!
-            if (language_title == None
+            if (language_title is None
                 or language_title ==  episode.episode_info.title.full_title):
                 continue
 
@@ -487,11 +487,11 @@ class Show(YamlReader):
         """
 
         # If no library, ignore styles
-        if self.library == None:
+        if self.library is None:
             return False
 
         # Update watched statuses via Plex
-        if plex_interface == None:
+        if plex_interface is None:
             # If no PlexInterface, assume all episodes are unwatched
             [episode.update_statuses(False, self.watched_style,
                                      self.unwatched_style)
@@ -577,7 +577,7 @@ class Show(YamlReader):
         always_check_tmdb = (self.preferences.use_tmdb and tmdb_interface
                              and self.tmdb_sync and self.preferences.check_tmdb)
         always_check_plex = (self.preferences.use_plex and plex_interface
-            and self.library != None and self.preferences.check_plex
+            and self.library is not None and self.preferences.check_plex
             and plex_interface.has_series(self.library_name, self.series_info))
 
         # For each episode, query interfaces (in priority order) for source
@@ -622,7 +622,7 @@ class Show(YamlReader):
                     )
 
                 # If URL was returned by either interface, download
-                if image_url != None:
+                if image_url is not None:
                     WebInterface.download_image(image_url, episode.source)
                     break
             
@@ -678,7 +678,7 @@ class Show(YamlReader):
         """
 
         # Skip if no library specified
-        if self.library_name == None:
+        if self.library_name is None:
             return None
 
         # Update Plex

@@ -143,7 +143,7 @@ class TitleCard:
                 season=episode_info.season_number,
                 episode=episode_info.episode_number,
                 title=episode_info.title.full_title,
-                abs_number=abs_number if abs_number != None else 0,
+                abs_number=abs_number if abs_number is not None else 0,
             )
         )
         
@@ -211,7 +211,7 @@ class TitleCard:
                 episode_start=multi_episode.episode_start,
                 episode_end=multi_episode.episode_end,
                 title=multi_episode.episode_info.title.full_title,
-                abs_number=abs_number if abs_number != None else 0,
+                abs_number=abs_number if abs_number is not None else 0,
             )
         )
 

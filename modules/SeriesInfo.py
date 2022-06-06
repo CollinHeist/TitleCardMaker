@@ -54,9 +54,9 @@ class SeriesInfo:
         """Returns a unambiguous string representation of the object."""
 
         ret = f'<SeriesInfo name={self.name}, year={self.year}'
-        ret += '' if self.sonarr_id == None else f', sonarr_id={self.sonarr_id}'
-        ret += '' if self.tvdb_id == None else f', tvdb_id={self.tvdb_id}'
-        ret += '' if self.tmdb_id == None else f', tmdb_id={self.tmdb_id}'
+        ret += '' if self.sonarr_id is None else f', sonarr_id={self.sonarr_id}'
+        ret += '' if self.tvdb_id is None else f', tvdb_id={self.tvdb_id}'
+        ret += '' if self.tmdb_id is None else f', tmdb_id={self.tmdb_id}'
 
         return f'{ret}>'
 

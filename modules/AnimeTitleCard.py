@@ -94,7 +94,7 @@ class AnimeTitleCard(CardType):
 
         # Store kanji, set bool for whether to use it or not
         self.kanji = self.image_magick.escape_chars(kanji)
-        self.use_kanji = (kanji != None)
+        self.use_kanji = (kanji is not None)
 
         # Store season and episode text
         self.season_text = self.image_magick.escape_chars(season_text.upper())

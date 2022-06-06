@@ -46,7 +46,7 @@ class RemoteFile:
         self.local_file.parent.mkdir(parents=True, exist_ok=True)
 
         # If file has already been loaded this run, skip
-        if self.LOADED.get(where('remote') == self.remote_source) != None:
+        if self.LOADED.get(where('remote') == self.remote_source) is not None:
             return None
 
         # Download the remote file for local use

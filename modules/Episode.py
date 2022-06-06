@@ -106,7 +106,7 @@ class Episode:
         """
 
         # If no actual new source was provided, return
-        if new_source == None:
+        if new_source is None:
             return False
 
         # Update source path based on input (Path/str of filename in source,etc)

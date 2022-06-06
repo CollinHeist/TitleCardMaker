@@ -42,7 +42,7 @@ class PreferenceParser(YamlReader):
         self.read_file()
 
         # Check for required source directory
-        if (value := self._get('options', 'source', type_=Path)) == None:
+        if (value := self._get('options', 'source', type_=Path)) is None:
             log.critical(f'Preference file missing required options/source '
                          f'attribute')
             exit(1)
@@ -128,7 +128,7 @@ class PreferenceParser(YamlReader):
 
         lower_str = lambda v: str(v).lower()
 
-        if (value := self._get('options', 'series')) != None:
+        if (value := self._get('options', 'series')) is not None:
             if isinstance(value, list):
                 self.series_files = value
             else:

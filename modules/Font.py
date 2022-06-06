@@ -94,7 +94,7 @@ class Font:
         """Parse this object's YAML and update the validity and attributes."""
 
         # Whether to validate for this font
-        if (value := self.__yaml.get('validate')) != None:
+        if (value := self.__yaml.get('validate')) is not None:
             self.__validate = bool(value)
 
         # Font case
@@ -106,7 +106,7 @@ class Font:
                 self.case = self.__card_class.CASE_FUNCTIONS[value]
 
         # Font color
-        if (value := self.__yaml.get('color')) != None:
+        if (value := self.__yaml.get('color')) is not None:
             if (not isinstance(value, str)
                 or not bool(match('^#[a-fA-F0-9]{6}$', value))):
                 self.__error('color', value, 'specify as "#xxxxxx"')
@@ -114,7 +114,7 @@ class Font:
                 self.color = value
 
         # Font file
-        if (value := self.__yaml.get('file')) != None:
+        if (value := self.__yaml.get('file')) is not None:
             if not isinstance(value, str):
                 self.__error('file', value, 'not a valid path')
             elif (value := Path(value)).exists():
@@ -129,7 +129,7 @@ class Font:
                 self.__error('file', value, 'no font file found')
 
         # Font replacements
-        if (value := self.__yaml.get('replacements')) != None:
+        if (value := self.__yaml.get('replacements')) is not None:
             if not isinstance(value, dict):
                 self.__error('replacements', value, 'must be character set')
             if any(len(key) != 1 for key in value.keys()):
@@ -141,7 +141,7 @@ class Font:
                 self.replacements = value
 
         # Font Size
-        if (value := self.__yaml.get('size')) != None:
+        if (value := self.__yaml.get('size')) is not None:
             if (not isinstance(value, str)
                 or not bool(self._PERCENT_REGEX_POSITIVE.match(value))):
                 self.__error('size', value, 'specify as "x%')
@@ -149,21 +149,21 @@ class Font:
                 self.size = float(value[:-1]) / 100.0
 
         # Vertical shift
-        if (value := self.__yaml.get('vertical_shift')) != None:
+        if (value := self.__yaml.get('vertical_shift')) is not None:
             if not isinstance(value, int):
                 self.__error('vertical_shift', value, 'must be integer')
             else:
                 self.vertical_shift = value
 
         # Interline spacing
-        if (value := self.__yaml.get('interline_spacing')) != None:
+        if (value := self.__yaml.get('interline_spacing')) is not None:
             if not isinstance(value, int):
                 self.__error('interline_spacing', value, 'must be integer')
             else:
                 self.interline_spacing = value
                 
         # Kerning
-        if (value := self.__yaml.get('kerning')) != None:
+        if (value := self.__yaml.get('kerning')) is not None:
             if (not isinstance(value, str)
                 or not bool(self._PERCENT_REGEX.match(value))):
                 self.__error('kerning', value, 'specify as "x%"')
@@ -171,7 +171,7 @@ class Font:
                 self.kerning = float(value[:-1]) / 100.0
 
         # Stroke width
-        if (value := self.__yaml.get('stroke_width')) != None:
+        if (value := self.__yaml.get('stroke_width')) is not None:
             if (not isinstance(value, str)
                 or not bool(self._PERCENT_REGEX_POSITIVE.match(value))):
                 self.__error('stroke_width', value, 'specify as "x%"')
