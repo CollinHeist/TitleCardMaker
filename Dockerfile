@@ -16,17 +16,17 @@ ENV TCM_PREFERENCES=/config/preferences.yml
 RUN groupadd -g 314 titlecardmaker; \
     useradd -u 314 -g 314 titlecardmaker
 
+# Intall OS dependencies
+RUN apt-get update; \
+    apt-get upgrade -y; \
+    apt update
+
 # Install gosu
 RUN set -eux; \
     apt-get update; \
     apt-get install -y gosu; \
     rm -rf /var/lib/apt/lists/*; \
     gosu nobody true
-
-# Intall OS dependencies
-RUN apt-get update; \
-    apt-get upgrade -y; \
-    apt update
 
 # Install ImageMagick
 RUN apt install -y imagemagick
@@ -35,7 +35,6 @@ RUN export MAGICK_HOME="$HOME/ImageMagick-7.1.0"; \
     export DYLD_LIBRARY_PATH="$MAGICK_HOME/lib/"
 
 # Install TCM package dependencies
-#RUN pip3 install -r requirements.txt    
 RUN pip3 install --no-cache-dir --upgrade pipenv; \
     pipenv lock --keep-outdated --requirements > requirements.txt; \
     pip3 install -r requirements.txt

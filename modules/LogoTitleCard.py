@@ -237,6 +237,7 @@ class LogoTitleCard(CardType):
             f'-size "{self.TITLE_CARD_SIZE}"',  # Create backdrop
             f'xc:"{self.background}"',          # Fill canvas with color
             f'"{resized_logo.resolve()}"',
+            f'-set colorspace sRGB',
             f'-gravity north',
             f'-geometry "+0+{offset}"',         # Put logo on backdrop
             f'-composite "{self.__BACKDROP_WITH_LOGO.resolve()}"',
@@ -493,5 +494,5 @@ class LogoTitleCard(CardType):
         images = [resized_logo, backdrop_logo, titled_image]
         if not self.hide_season:
             images.append(series_count_image)
-
+        
         self.image_magick.delete_intermediate_images(*images)
