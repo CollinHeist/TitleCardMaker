@@ -646,9 +646,13 @@ class Show(YamlReader):
             # Update progress bar
             pbar.set_description(f'Creating {episode}')
             
-            # Skip episodes without a destination, source, or that exist
-            if (not episode.destination or episode.destination.exists()
-                or not episode.source.exists()):
+            # Skip episodes without a destination or that already exist
+            if not episode.destination or episode.destination.exists():
+                continue
+                
+            # Skip episodes without souce that need them
+            if (self.card_class.USES_UNIQUE_SOURCES
+                and not episode.source.exists()):
                 continue
 
             # Create a TitleCard object for this episode with Show's profile
