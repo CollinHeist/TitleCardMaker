@@ -643,17 +643,17 @@ class Show(YamlReader):
 
         # Go through each episode for this show
         for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
-            # Update progress bar
-            pbar.set_description(f'Creating {episode}')
-            
             # Skip episodes without a destination or that already exist
             if not episode.destination or episode.destination.exists():
                 continue
-                
+
             # Skip episodes without souce that need them
             if (self.card_class.USES_UNIQUE_SOURCES
                 and not episode.source.exists()):
                 continue
+
+            # Update progress bar
+            pbar.set_description(f'Creating {episode}')
 
             # Create a TitleCard object for this episode with Show's profile
             title_card = TitleCard(

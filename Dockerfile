@@ -16,17 +16,17 @@ ENV TCM_PREFERENCES=/config/preferences.yml
 RUN groupadd -g 314 titlecardmaker; \
     useradd -u 314 -g 314 titlecardmaker
 
-# Intall OS dependencies
-RUN apt-get update; \
-    apt-get upgrade -y; \
-    apt update
-
 # Install gosu
 RUN set -eux; \
     apt-get update; \
     apt-get install -y gosu; \
     rm -rf /var/lib/apt/lists/*; \
     gosu nobody true
+
+# Intall OS dependencies
+RUN apt-get update; \
+    apt-get upgrade -y; \
+    apt update
 
 # Install ImageMagick
 RUN apt install -y imagemagick
