@@ -256,14 +256,11 @@ class TitleCard:
         # If the card already exists, exit
         if self.file.exists():
             return False
-
-        # If the input source doesn't exist, exit
-        if not self.episode.source.exists():
-            return False
             
-        # Create card, return whether it was successful
+        # Create card
         self.maker.create()
         
+        # Return whether card creation was successful or not
         if self.file.exists():
             log.debug(f'Created card "{self.file.resolve()}"')
             return True

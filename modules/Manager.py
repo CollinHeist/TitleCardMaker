@@ -262,7 +262,8 @@ class Manager:
                     continue
 
                 # If source file doesn't exist, add to report
-                if not episode.source.exists():
+                if (show.card_class.USES_UNIQUE_SOURCES
+                    and not episode.source.exists()):
                     if str(episode) not in show_dict:
                         show_dict[str(episode)] = {}
                     show_dict[str(episode)]['source'] = episode.source.name

@@ -35,7 +35,6 @@ RUN export MAGICK_HOME="$HOME/ImageMagick-7.1.0"; \
     export DYLD_LIBRARY_PATH="$MAGICK_HOME/lib/"
 
 # Install TCM package dependencies
-#RUN pip3 install -r requirements.txt    
 RUN pip3 install --no-cache-dir --upgrade pipenv; \
     pipenv lock --keep-outdated --requirements > requirements.txt; \
     pip3 install -r requirements.txt
