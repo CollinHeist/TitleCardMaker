@@ -193,9 +193,9 @@ class SonarrInterface(WebInterface):
                     and air_datetime > datetime.now() + timedelta(hours=2)):
                         continue
 
-                # Skip temporary placeholder names if aired in the last 24 hours
+                # Skip temporary placeholder names if aired in the last 48 hours
                 if (self.__TEMP_IGNORE_REGEX.match(episode['title'])
-                    and air_datetime > datetime.now() + timedelta(days=1)):
+                    and air_datetime > datetime.now() + timedelta(days=2)):
                         continue
 
             # Skip permanent placeholder names
