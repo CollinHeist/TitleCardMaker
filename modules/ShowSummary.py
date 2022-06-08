@@ -4,7 +4,6 @@ from random import sample
 
 from modules.Debug import log
 from modules.ImageMaker import ImageMaker
-from modules.StandardTitleCard import StandardTitleCard
 
 class ShowSummary(ImageMaker):
     """
@@ -12,15 +11,21 @@ class ShowSummary(ImageMaker):
     title cards from a show's profile, montaged into (at most) a 3x3 grid, with
     a logo at the top. The intention is to quickly visually identify the title
     cards.
-
-    This class is a type of ImageMaker.
     """
+
+    """Directory where all reference files used by this card are stored"""
+    REF_DIRECTORY = Path(__file__).parent / 'ref'
 
     """Default color for the background of the summary image"""
     BACKGROUND_COLOR = '#1A1A1A'
 
     """Default filename of logo files"""
     LOGO_FILENAME = 'logo.png'
+
+    """Configurations for the header text"""
+    HEADER_TEXT = 'EPISODE TITLE CARDS'
+    HEADER_FONT = REF_DIRECTORY / 'Proxima Nova Regular.otf'
+    HEADER_FONT_COLOR = '#CFCFCF'
 
     """Temporary path for SVG files being converted"""
     _TEMP_SVG_FILENAME = ImageMaker.TEMP_DIR / 'logo.svg'
@@ -50,7 +55,7 @@ class ShowSummary(ImageMaker):
         :param      background_color:   Background color to use for the summary.
         """
 
-        # Initialize parent object (for the ImageMagickInterface)
+        # Initialize parent object
         super().__init__()
         
         # This summary's logo is an attribute of the provided show
@@ -73,7 +78,7 @@ class ShowSummary(ImageMaker):
         Select the images that are to be incorporated into the show summary.
         This updates the object's inputs and number_rows attributes.
 
-        :returns:   True if the ShowSummary should be created, False otherwise.
+        :returns:   Whether the ShowSummary should/can be created.
         """
         
         # Filter out episodes that don't have an existing title card
@@ -151,11 +156,11 @@ class ShowSummary(ImageMaker):
             f'-background "{self.background_color}"',
             f'-gravity north',
             f'-splice 0x840',
-            f'-font "{StandardTitleCard.EPISODE_COUNT_FONT}"',
-            f'-fill "{StandardTitleCard.SERIES_COUNT_TEXT_COLOR}"',
+            f'-font "{self.HEADER_FONT.resolve()}"',
+            f'-fill "{self.HEADER_FONT_COLOR}"',
             f'-pointsize 100',
             f'-kerning 4.52',
-            f'-annotate +0+700 "EPISODE TITLE CARDS"',
+            f'-annotate +0+700 "{self.HEADER_TEXT}"',
             f'-gravity east',
             f'-splice 80x0',
             f'-gravity south',
@@ -238,8 +243,7 @@ class ShowSummary(ImageMaker):
 
     def _add_created_by(self, montage_and_logo: Path) -> Path:
         """
-        Adds the "CREATED BY COLLINHEIST" text (image at `__CREATED_BY_PATH`) to
-        the bottom of the image.
+        Add the 'created by' image to the bottom of the montage.
         
         :param      montage_and_logo:   Path to the montage with the logo
                                         already applied.
@@ -248,6 +252,7 @@ class ShowSummary(ImageMaker):
         """
 
         y_offset = (self.number_rows == 2) * 35 + (self.number_rows == 1) * 15
+
         command = ' '.join([
             f'composite',
             f'-gravity south',
