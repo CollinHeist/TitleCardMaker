@@ -23,7 +23,7 @@ class SeasonPoster(ImageMaker):
                  'font_color', 'font_size', 'kerning')
 
 
-    def __init__(self, source: Path, destination: Path, logo: Path,
+    def __init__(self, source: Path, logo: Path, destination: Path, 
                  season_text: str, font: Path=SEASON_TEXT_FONT,
                  font_color: str=SEASON_TEXT_COLOR, font_size: float=1.0,
                  kerning: float=1.0) -> None:
@@ -31,8 +31,8 @@ class SeasonPoster(ImageMaker):
         Constructs a new instance.
         
         :param      source:         The source file.
-        :param      destination:    The destination of this poster.
         :param      logo:           The logo file.
+        :param      destination:    The destination of this poster.
         :param      season_text:    The season text.
         :param      font:           Font file for season text.
         :param      font_color:     Font color for season text.
@@ -62,31 +62,33 @@ class SeasonPoster(ImageMaker):
         """Create the season poster defined by this object."""
 
         # Get the scaled values for this poster
-        font_size = 40.0 * self.font_size
-        kerning = 15 * self.kerning
+        font_size = 80.0 * self.font_size
+        kerning = 30 * self.kerning
 
         # Create the command
         command = ' '.join([
             f'convert',
+            f'-density 300',
             f'"{self.source.resolve()}"',           # Resize input image
             f'-gravity center',         
-            f'-resize "1000x1500^"',                    # Force into 1000x1500
+            f'-resize "2000x3000^"',                    # Force into 1000x1500
             f'"{self.GRADIENT_OVERLAY.resolve()}"', # Apply gradient
             f'-compose Darken',                         # Darken mode
             f'-composite',                              # Merge images
             f'\( "{self.logo.resolve()}"',          # Add logo
-            f'-resize 730x \)',                         # Fit to 730px wide
+            f'-resize 1460x \)',                         # Fit to 730px wide
             f'-gravity south',                          # Begin merge placement
             f'-compose Atop',       
-            f'-geometry +0+178',                        # Offset 178px from base
+            f'-geometry +0+356',                        # Offset 178px from base
             f'-composite',                              # Merge images
             f'-font "{self.font.resolve()}"',       # Write season text
             f'-fill "{self.font_color}"',
             f'-pointsize {font_size}',
             f'-kerning {kerning}',
-            f'-annotate +0+106 "{self.season_text}"',
+            f'-annotate +0+212 "{self.season_text}"',
             f'"{self.destination.resolve()}"',
         ])
 
         self.image_magick.run(command)
+        self.image_magick.print_command_history()
 
