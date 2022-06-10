@@ -19,9 +19,6 @@ class ShowSummary(ImageMaker):
     """Default color for the background of the summary image"""
     BACKGROUND_COLOR = '#1A1A1A'
 
-    """Default filename of logo files"""
-    LOGO_FILENAME = 'logo.png'
-
     """Configurations for the header text"""
     HEADER_TEXT = 'EPISODE TITLE CARDS'
     HEADER_FONT = REF_DIRECTORY / 'Proxima Nova Regular.otf'

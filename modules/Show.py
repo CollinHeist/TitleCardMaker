@@ -109,7 +109,7 @@ class Show(YamlReader):
 
         # Update derived attributes
         self.source_directory = source_directory / self.series_info.legal_path
-        self.logo = self.source_directory / self.preferences.logo_filename
+        self.logo = self.source_directory / 'logo.png'
         self.backdrop = self.source_directory / self.BACKDROP_FILENAME
 
         # Create DataFileInterface fo this show

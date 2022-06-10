@@ -62,7 +62,6 @@ class PreferenceParser(YamlReader):
         self.archive_all_variations = True
         self.create_summaries = True
         self.summary_background_color = ShowSummary.BACKGROUND_COLOR
-        self.logo_filename = ShowSummary.LOGO_FILENAME
         self.summary_minimum_episode_count = 1
         self.use_plex = False
         self.plex_url = None
@@ -192,10 +191,6 @@ class PreferenceParser(YamlReader):
         if (value := self._get('archive', 'summary', 'background_color',
                                type_=str)) != None:
             self.summary_background_color = value
-
-        if (value := self._get('archive', 'summary', 'logo_filename',
-                               type_=str)) != None:
-            self.logo_filename = value
 
         if ((value := self._get('archive', 'summary', 'minimum_episodes',
                                type_=int)) != None):
