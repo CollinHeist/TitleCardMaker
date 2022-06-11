@@ -24,6 +24,9 @@ class PreferenceParser(YamlReader):
     """Valid source identifiers"""
     VALID_SOURCES = ('tmdb', 'plex')
 
+    """Directory for all temporary objects created/maintained by the Maker"""
+    TEMP_DIR = Path(__file__).parent / '.objects'
+
 
     def __init__(self, file: Path) -> None:
         """
@@ -36,6 +39,9 @@ class PreferenceParser(YamlReader):
 
         # Initialize parent YamlReader object
         super().__init__(log_function=log.critical)
+
+        # Create temporary directory if DNE
+        self.TEMP_DIR.mkdir(parents=True, exist_ok=True)
         
         # Store and read file
         self.file = file

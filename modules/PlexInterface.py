@@ -37,7 +37,6 @@ class PlexInterface:
         self.__server = PlexServer(url, x_plex_token)
         
         # Create/read loaded card database
-        self.LOADED_DB.parent.mkdir(parents=True, exist_ok=True)
         self.__db = TinyDB(self.LOADED_DB)
 
         # List of "not found" warned series

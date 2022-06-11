@@ -431,9 +431,6 @@ class StandardTitleCard(CardType):
         # Add either one or two lines of episode text 
         titled_image = self._add_title_text(gradient_image)
 
-        # Create the output directory and any necessary parents 
-        self.output_file.parent.mkdir(parents=True, exist_ok=True)
-
         # If season text is hidden, just add episode text 
         if self.hide_season:
             self._add_series_count_text_no_season(titled_image)

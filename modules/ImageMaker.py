@@ -46,10 +46,6 @@ class ImageMaker(ABC):
             self.preferences.use_magick_prefix,
         )
 
-        # Create temporary directory if DNE
-        if not self.TEMP_DIR.exists():
-            self.TEMP_DIR.mkdir(parents=True, exist_ok=True)
-
 
     @staticmethod
     def convert_svg_to_png(image: Path, destination: Path,

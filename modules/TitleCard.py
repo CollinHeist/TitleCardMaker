@@ -256,6 +256,9 @@ class TitleCard:
         # If the card already exists, exit
         if self.file.exists():
             return False
+
+        # Create parent folders if necessary for this card
+        self.file.parent.mkdir(parents=True, exist_ok=True)
             
         # Create card
         self.maker.create()
@@ -265,6 +268,7 @@ class TitleCard:
             log.debug(f'Created card "{self.file.resolve()}"')
             return True
 
+        # Card doesn't exist, log commands to debug
         log.debug(f'Could not create card "{self.file.resolve()}"')
         self.maker.image_magick.print_command_history()
         

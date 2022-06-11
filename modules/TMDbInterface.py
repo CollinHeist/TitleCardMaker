@@ -69,11 +69,9 @@ class TMDbInterface(WebInterface):
         self.preferences = global_objects.pp
 
         # Create/read blacklist database
-        self.__BLACKLIST_DB.parent.mkdir(parents=True, exist_ok=True)
         self.__blacklist = TinyDB(self.__BLACKLIST_DB)
 
         # Create/read series ID database
-        self.__ID_DB.parent.mkdir(parents=True, exist_ok=True)
         self.__id_map = TinyDB(self.__ID_DB)
         
         # Store API key

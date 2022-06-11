@@ -24,7 +24,6 @@ class FontValidator:
         """
 
         # Create/read font validation database
-        self.CHARACTER_DATABASE.parent.mkdir(parents=True, exist_ok=True)
         self.__db = TinyDB(self.CHARACTER_DATABASE)
 
         # List of missing characters that have already been warned
