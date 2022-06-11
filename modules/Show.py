@@ -12,6 +12,7 @@ import modules.global_objects as global_objects
 from modules.PlexInterface import PlexInterface
 from modules.Profile import Profile
 from modules.RemoteCardType import RemoteCardType
+from modules.SeasonPosterSet import SeasonPosterSet
 from modules.SeriesInfo import SeriesInfo
 from modules.TitleCard import TitleCard
 from modules.Title import Title
@@ -705,6 +706,22 @@ class Show(YamlReader):
 
             # Source exists, create the title card
             title_card.create()
+
+
+    def create_season_posters(self) -> None:
+        """Create season posters for this Show."""
+
+        # Construct SeasonPosterSet and create posters
+        poster_set = SeasonPosterSet(
+            self.__episode_map,
+            self.source_directory,
+            self.media_directory,
+            self._get('season_posters', type_=dict)
+        )
+
+        # Create all posters in the set (if specification was valid)
+        if poster_set.valid:
+            poster_set.create()
 
 
     def update_plex(self, plex_interface: PlexInterface) -> None:

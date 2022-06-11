@@ -184,6 +184,15 @@ class Manager:
             # Create cards
             show.create_missing_title_cards()
 
+
+    def create_season_posters(self) -> None:
+        """Create season posters for all shows known to this Manager."""
+
+        # For each show in the Manager, create its posters
+        for show in (pbar := tqdm(self.shows, desc='Creating season posters',
+                                  **TQDM_KWARGS)):
+            show.create_season_posters()
+
     
     def update_plex(self) -> None:
         """
@@ -252,6 +261,7 @@ class Manager:
         self.download_logos()
         self.select_source_images()
         self.create_missing_title_cards()
+        self.create_season_posters()
         self.update_plex()
         self.update_archive()
         self.create_summaries()
