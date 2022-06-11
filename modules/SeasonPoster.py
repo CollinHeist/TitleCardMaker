@@ -20,13 +20,13 @@ class SeasonPoster(ImageMaker):
     GRADIENT_OVERLAY = REF_DIRECTORY / 'gradient.png'
 
     __slots__ = ('source', 'destination', 'logo', 'season_text', 'font',
-                 'font_color', 'font_size', 'kerning')
+                 'font_color', 'font_size', 'font_kerning')
 
 
     def __init__(self, source: Path, logo: Path, destination: Path, 
                  season_text: str, font: Path=SEASON_TEXT_FONT,
                  font_color: str=SEASON_TEXT_COLOR, font_size: float=1.0,
-                 kerning: float=1.0) -> None:
+                 font_kerning: float=1.0) -> None:
         """
         Constructs a new instance.
         
@@ -49,21 +49,24 @@ class SeasonPoster(ImageMaker):
         self.logo = logo
 
         # Store text attributes
-        self.season_text = season_text
+        self.season_text = season_text.upper()
 
         # Store customized font attributes
         self.font = font
         self.font_color = font_color
         self.font_size = font_size
-        self.kerning = kerning
+        self.font_kerning = font_kerning
 
 
     def create(self) -> None:
         """Create the season poster defined by this object."""
 
+        # Create parent directories
+        self.destination.parent.mkdir(parents=True, exist_ok=True)
+
         # Get the scaled values for this poster
-        font_size = 80.0 * self.font_size
-        kerning = 30 * self.kerning
+        font_size = 20.0 * self.font_size
+        kerning = 30 * self.font_kerning
 
         # Create the command
         command = ' '.join([
@@ -90,5 +93,4 @@ class SeasonPoster(ImageMaker):
         ])
 
         self.image_magick.run(command)
-        self.image_magick.print_command_history()
 
