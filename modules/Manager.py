@@ -207,8 +207,7 @@ class Manager:
 
     def update_archive(self) -> None:
         """
-        Update the title card archives for every show known to the manager. This
-        calls ShowArchive.update_archive() if archives are globally enabled.
+        Update the title card archives for every show known to the manager.
         """
 
         # If archives are globally disabled, skip
@@ -220,7 +219,7 @@ class Manager:
             pbar.set_description(f'Updating archive for '
                                  f'"{show_archive.series_info.short_name}"')
             
-            show_archive.update_archive()
+            show_archive.create_missing_title_cards()
 
 
     def create_summaries(self) -> None:
@@ -240,11 +239,7 @@ class Manager:
             pbar.set_description(f'Creating ShowSummary for "'
                                  f'{show_archive.series_info.short_name}"')
 
-            # If TMDb is globally enabled, pass the interface along
-            if self.preferences.use_tmdb:
-                show_archive.create_summary(self.tmdb_interface)
-            else:
-                show_archive.create_summary()
+            show_archive.create_summary()
 
 
     def run(self) -> None:
