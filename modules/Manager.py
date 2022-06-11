@@ -117,6 +117,19 @@ class Manager:
             show.add_translations(self.tmdb_interface)
 
 
+    def download_logos(self) -> None:
+        """Download logo files for all shows known to this manager."""
+
+        # If the TMDbInterface isn't enabled, skip
+        if not self.tmdb_interface:
+            return None
+
+        # For each show in the Manager, download a logo
+        for show in (pbar := tqdm(self.shows + self.archives,
+                                  desc='Downloading logos', **TQDM_KWARGS)):
+            show.download_logo(self.tmdb_interface)
+
+
     def check_sonarr_for_new_episodes(self) -> None:
         """
         Query Sonarr to see if any new episodes exist for every show known to
@@ -241,6 +254,7 @@ class Manager:
         self.read_show_source()
         self.check_sonarr_for_new_episodes()
         self.check_tmdb_for_translations()
+        self.download_logos()
         self.select_source_images()
         self.create_missing_title_cards()
         self.update_plex()

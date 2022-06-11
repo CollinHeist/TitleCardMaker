@@ -258,7 +258,7 @@ class Show(YamlReader):
             self._get('episode_ranges', type_=dict)
         )
 
-        # Update object validity from EpisodeMap validity
+        # Update object validity with EpisodeMap validity
         self.valid &= self.__episode_map.valid
 
         # Read all extras
@@ -472,6 +472,40 @@ class Show(YamlReader):
             self.read_source()
 
 
+    def download_logo(self, tmdb_interface: 'TMDbInterface') -> None:
+        """
+        Download the logo for this series from TMDb. Any SVG logos are converted
+        to PNG.
+        
+        :param      tmdb_interface: Interface to TMDb to download the logo from.
+        """
+
+        # If not syncing to TMDb, or logo already exists, exit
+        if not self.tmdb_sync or self.logo.exists():
+            return None
+
+        # Download logo
+        if (url := tmdb_interface.get_series_logo(self.series_info)):
+            # SVG logos need to be converted first
+            if url.endswith('.svg'):
+                # Download .svgs to temporary location pre-conversion
+                tmdb_interface.download_image(
+                    url, self.card_class.TEMPORARY_SVG_FILE
+                )
+
+                # Convert temporary SVG to PNG at logo filepath
+                self.card_class.convert_svg_to_png(
+                    self.card_class.TEMPORARY_SVG_FILE,
+                    self.logo,
+                )
+                log.debug(f'Converted logo for {self} from .svg to .png')
+            else:
+                tmdb_interface.download_image(url, self.logo)
+
+            # Convert SVG to PNG
+            log.debug(f'Downloaded logo for {self}')
+
+
     def __apply_styles(self, plex_interface: 'PlexInterface'=None) -> bool:
         """
         Modify this series' Episode source images based on their watch statuses,
@@ -540,7 +574,7 @@ class Show(YamlReader):
             else:
                 episode.blur = True
 
-            # Override to backdrop if indicated by style, or manual image not found
+            # Override to backdrop if indicated by style, or manual image DNE
             if (((episode.watched and watched_style == 'art')
                 or (not episode.watched and unwatched_style == 'art'))
                 and not found):
@@ -625,7 +659,7 @@ class Show(YamlReader):
                 if image_url is not None:
                     WebInterface.download_image(image_url, episode.source)
                     break
-            
+
         # Query TMDb for the backdrop if one does not exist and is needed
         if (download_backdrop and tmdb_interface and self.tmdb_sync
             and not self.backdrop.exists()):

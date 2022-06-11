@@ -286,3 +286,5 @@ if hasattr(args, 'season_poster'):
         font=args.season_font,
         # font_color=args.season_color,
     ).create()
+
+    

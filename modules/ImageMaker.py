@@ -17,6 +17,9 @@ class ImageMaker(ABC):
     """Directory for all temporary images created during image creation"""
     TEMP_DIR = Path(__file__).parent / '.objects'
 
+    """Temporary file location for svg -> png conversion"""
+    TEMPORARY_SVG_FILE = TEMP_DIR / 'temp_logo.svg'
+
     """
     Valid file extensions for input images - ImageMagick supports more than just
     these types, but these are the most common across all OS's.
@@ -46,6 +49,44 @@ class ImageMaker(ABC):
         # Create temporary directory if DNE
         if not self.TEMP_DIR.exists():
             self.TEMP_DIR.mkdir(parents=True, exist_ok=True)
+
+
+    @staticmethod
+    def convert_svg_to_png(image: Path, destination: Path,
+                           min_dimension: int=2500) -> Path:
+        """
+        Convert the given SVG image to PNG format.
+
+        :param      image:          Path to the image being converted.
+        :param      destination:    Path to the destination image location.
+        :param      min_dimension:  Minimum dimension of converted image.
+        
+        :returns:   Path to the converted file.
+        """
+
+        # If the temp file doesn't exist, return
+        if not image.exists():
+            return None
+
+        # Create ImageMagickInterface for this command
+        image_magick_interface = ImageMagickInterface(
+            global_objects.pp.imagemagick_container,
+            global_objects.pp.use_magick_prefix,
+        )
+
+        # Command to convert file to PNG
+        command = ' '.join([
+            f'convert',
+            f'-density 512',
+            f'-resize "{min_dimension}x{min_dimension}"',
+            f'-background None',
+            f'"{image.resolve()}"',
+            f'"{destination.resolve()}"',
+        ])
+
+        image_magick_interface.run(command)
+
+        return destination
 
 
     @abstractmethod

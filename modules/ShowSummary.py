@@ -24,9 +24,6 @@ class ShowSummary(ImageMaker):
     HEADER_FONT = REF_DIRECTORY / 'Proxima Nova Regular.otf'
     HEADER_FONT_COLOR = '#CFCFCF'
 
-    """Temporary path for SVG files being converted"""
-    _TEMP_SVG_FILENAME = ImageMaker.TEMP_DIR / 'logo.svg'
-
     """Paths to intermediate images created in the process of making a summary."""
     __MONTAGE_PATH = ImageMaker.TEMP_DIR / 'montage.png'
     __MONTAGE_WITH_HEADER_PATH = ImageMaker.TEMP_DIR / 'header.png'
@@ -264,36 +261,6 @@ class ShowSummary(ImageMaker):
         return self.output
 
 
-    def convert_svg_to_png(self) -> Path:
-        """
-        Convert the temporary SVG logo (located at _TEMP_SVG_FILENAME) and write
-        it to this ShowSummary's logo file.
-        
-        :returns:   Path to the created file (this summary's logo file).
-        """
-
-        # If the temp file doesn't exist, return
-        if not self._TEMP_SVG_FILENAME.exists():
-            return None
-
-        # Convert file to PNG
-        command = ' '.join([
-            f'convert',
-            f'-density 512',
-            f'-resize x1024',
-            f'-background None',
-            f'"{self._TEMP_SVG_FILENAME.resolve()}"',
-            f'"{self.logo.resolve()}"',
-        ])
-
-        self.image_magick.run(command)
-        
-        # Delete SVG file
-        self.image_magick.delete_intermediate_images(self._TEMP_SVG_FILENAME)
-
-        return self.logo
-
-
     def create(self) -> None:
         """
         Create the ShowSummary defined by this show object. Image selection is
@@ -328,5 +295,4 @@ class ShowSummary(ImageMaker):
         self.image_magick.delete_intermediate_images(
             montage, montage_and_header, logo, montage_and_logo
         )
-
 
