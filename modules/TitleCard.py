@@ -87,12 +87,13 @@ class TitleCard:
             source=episode.source,
             output_file=episode.destination,
             title=self.converted_title,
-            season_text=profile.get_season_text(episode.episode_info),
-            episode_text=profile.get_episode_text(episode),
+            season_text=profile.get_season_text(self.episode.episode_info),
+            episode_text=profile.get_episode_text(self.episode),
             hide_season=profile.hide_season_title,
             blur=episode.blur,
             **profile.font.get_attributes(),
             **extra_characteristics,
+            **self.episode.episode_info.episode_characteristics,
         )
 
         # File associated with this card is the episode's destination

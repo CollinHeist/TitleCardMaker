@@ -103,6 +103,17 @@ class EpisodeInfo:
         return season_match and episode_match 
 
 
+    @property
+    def episode_characteristics(self) -> dict:
+        """This object's season/episode indices (as a dictionary)"""
+
+        return {
+            'season_number': self.season_number,
+            'episode_number': self.episode_number,
+            'abs_number': self.abs_number,
+        }
+
+
     def set_abs_number(self, abs_number: int) -> None:
         """
         Set the absolute number for this object.
@@ -153,7 +164,7 @@ class EpisodeInfo:
         """
 
         if not isinstance(other, EpisodeInfo):
-            raise TypeError(f"Can only copy ID's from EpisodeInfo objects")
+            raise TypeError(f"Can only copy ID's into an EpisodeInfo object")
 
         self.sonarr_id = other.sonarr_id
         self.tvdb_id = other.tvdb_id
