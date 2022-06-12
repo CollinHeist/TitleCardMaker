@@ -408,8 +408,8 @@ class PlexInterface:
             self.__db.upsert({
                 'library': library_name,
                 'series': series_info.full_name,
-                'season': episode.episode_info.season,
-                'episode': episode.episode_info.episode,
+                'season': episode.episode_info.season_number,
+                'episode': episode.episode_info.episode_number,
                 'filesize': size,
                 'spoiler': episode.spoil_type,
             }, self.__get_condition(library_name, series_info, episode))

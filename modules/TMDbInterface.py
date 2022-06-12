@@ -325,7 +325,8 @@ class TMDbInterface(WebInterface):
         # Match by series TMDb ID and series index with title matching
         # GET parameters and request
         url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/'
-               f'{episode_info.season}/episode/{episode_info.episode}')
+               f'{episode_info.season_number}/episode/'
+               f'{episode_info.episode_number}')
         params = self.__standard_params
         tmdb_info = self._get(url, params)
 

@@ -1,3 +1,6 @@
+from dataclasses import dataclass, field
+
+@dataclass(eq=False, order=False)
 class EpisodeInfo:
     """
     This class describes static information about an Episode, such as the
@@ -5,62 +8,33 @@ class EpisodeInfo:
     with it - such as Sonarr, TVDb, and TMDb.
     """
 
-    __slots__ = ('title', 'season_number', 'season', 'episode_number','episode',
-                 'abs_number', 'abs', 'key', 'sonarr_id', 'tvdb_id', 'tmdb_id')
+    # Object attributes
+    title: 'Title'
+    season_number: int
+    episode_number: int
+    abs_number: int=None
+    sonarr_id: int=None
+    tvdb_id: int=None
+    tmdb_id: int=None
+    key: str = field(init=False, repr=False)
     
+    def __post_init__(self):
+        """Called after __init__, sets types of indices, assigns key field"""
 
-    def __init__(self, title: 'Title', season_number: int, episode_number: int,
-                 abs_number: int=None) -> None:
-        """
-        Constructs a new instance of an EpisdeInfo object.
-        
-        :param      title:          The Title object of this Episode.
-        :param      season_number:  The season number of this Episode.
-        :param      episode_number: The episode number of this Episode.
-        :param      abs_number:     The absolute episode number of this Episode.
-        """
+        # Convert indices to integers
+        self.season_number = int(self.season_number)
+        self.episode_number = int(self.episode_number)
+        if self.abs_number is not None:
+            self.abs_number = int(self.abs_number)
 
-        # Store title
-        self.title = title
-
-        # Store indices
-        self.season_number = int(season_number)
-        self.season = self.season_number
-
-        self.episode_number = int(episode_number)
-        self.episode = self.episode_number
-
-        self.abs_number = None if abs_number is None else int(abs_number)
-        self.abs = self.abs_number
-
-        # Create key for unique indexing associated with this Episode
+        # Create key
         self.key = f'{self.season_number}-{self.episode_number}'
-
-        # Optional attributes
-        self.sonarr_id = None
-        self.tvdb_id = None
-        self.tmdb_id = None
 
 
     def __str__(self) -> str:
         """Returns a string representation of the object."""
 
         return f'S{self.season_number:02}E{self.episode_number:02}'
-
-
-    def __repr__(self) -> str:
-        """Returns an unambiguous string representation of the object."""
-
-        # Static information
-        ret = (f'<EpisodeInfo {self.title=}, {self.season_number=}, '
-               f'{self.episode_number=}')
-
-        ret += '' if self.sonarr_id is None else f', {self.sonarr_id=}'
-        ret += '' if self.tvdb_id is None else f', {self.tvdb_id=}'
-        ret += '' if self.tmdb_id is None else f', {self.tmdb_id=}'
-        ret += '' if self.abs_number is None else f', {self.abs_number=}'
-
-        return f'{ret}>'
 
 
     def __add__(self, count: int) -> str:
