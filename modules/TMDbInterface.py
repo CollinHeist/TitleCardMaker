@@ -92,24 +92,26 @@ class TMDbInterface(WebInterface):
 
 
     def __get_condition(self, query_type: str, series_info: SeriesInfo,
-                        episode_info: EpisodeInfo) -> 'QueryInstance':
+                        episode_info: EpisodeInfo=None) -> 'QueryInstance':
         """
         Get the tinydb query condition for the given query.
         
+        :param      query_type:     The type of request being updated.
         :param      series_info:    SeriesInfo for the request.
         :param      episode_info:   EpisodeInfo for the request.
-        :param      query_type:     The type of request being updated.
         
         :returns:   The condition that matches the given query type, series, and
-                    Episode season+episode number.and episode.
+                    Episode season+episode number and episode.
         """
 
+        # Logo and backdrop queries don't use episode index
         if query_type in ('logo', 'backdrop'):
             return (
                 (where('query') == query_type) &
                 (where('series') == series_info.full_name)
             )
 
+        # Query by series name and episode index
         return (
             (where('query') == query_type) &
             (where('series') == series_info.full_name) &

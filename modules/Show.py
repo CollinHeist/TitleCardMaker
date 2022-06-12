@@ -636,7 +636,8 @@ class Show(YamlReader):
 
             # Check Plex if enabled, provided, and valid relative to TMDb
             if always_check_plex:
-                check_plex = self.preferences.check_plex_before_tmdb or blacklisted
+                check_plex = (self.preferences.check_plex_before_tmdb
+                              or blacklisted)
             else:
                 check_plex = False
 
