@@ -85,7 +85,7 @@ class SeasonPosterSet:
                 self.valid = False
 
         if (color := font_config.get('color')) != None:
-            if (not isinstance(value, str)
+            if (not isinstance(color, str)
                 or not bool(match('^#[a-fA-F0-9]{6}$', color))):
                 log.error(f'Font color "{color}" is invalid, specify as '
                           f'"#xxxxxx"')
