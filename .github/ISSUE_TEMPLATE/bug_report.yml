@@ -1,0 +1,64 @@
+name: Bug report
+description: Submit a bug report for some broken feature
+title: 'BUG - '
+labels: ['bug']
+assignees: 'CollinHeist'
+
+body:
+  - type: dropdown
+    id: docker
+    attributes:
+      label: Installation
+      description: Are you using Docker or Github; and which branch/tag?
+      options:
+        - Docker - master tag
+        - Docker - develop tag
+        - GitHub - master branch
+        - GitHub - develop branch
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the Bug
+      description: A clear and concise description of the bug.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: A clear and concise description of what you expected to happen.
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce the behavior
+      description: If not present under all circumstances, give a step-by-step on how to reproduce the bug.
+      value: |
+        1. 
+        2.
+        ...
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Attach any applicable screenshots that illustrate your problem.
+  - type: textarea
+    id: preferences
+    attributes:
+      label: Preference File
+      description: Paste your Preferences file (likely preferences.yml), with your API keys and URLs omitted
+      render: yaml
+  - type: textarea
+    id: seriesyaml
+    attributes:
+      label: Series YAML
+      description: Paste the YAML of the relevent series.
+      render: yaml
+  - type: input
+    id: log
+    attributes:
+      label: Debug Log
+      description: Attach the relevant log file(s) from the logs/ directory.
+    validations:
+      required: true
