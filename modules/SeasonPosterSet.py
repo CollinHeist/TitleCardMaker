@@ -163,6 +163,11 @@ class SeasonPosterSet:
     def create(self) -> None:
         """Create all season posters within this set."""
 
+        # Warn and exit if logo DNE
+        if len(self.posters) > 1 and not self.__logo.exists():
+            log.error(f'Cannot create season posters, logo file '
+                      f'"{self.__logo.resolve()}" does not exist')
+
         # Go through each season poster within this set
         for poster in self.posters:
             # Skip if poster file already exists

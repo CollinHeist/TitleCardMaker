@@ -61,6 +61,10 @@ class SeasonPoster(ImageMaker):
     def create(self) -> None:
         """Create the season poster defined by this object."""
 
+        # Exit if source or logo DNE
+        if not self.source.exists() or not self.logo.exists():
+            return None
+
         # Create parent directories
         self.destination.parent.mkdir(parents=True, exist_ok=True)
 
