@@ -1,3 +1,4 @@
+from copy import copy
 from pathlib import Path
 
 from tqdm import tqdm
@@ -142,14 +143,23 @@ class Show(YamlReader):
         return f'<Show "{self.series_info}" with {len(self.episodes)} Episodes>'
 
 
-    def __copy__(self) -> 'Show':
+    def _copy_with_modified_media_directory(self,
+                                            media_directory: Path) -> 'Show':
         """
-        Copy this Show object into a new (identical) Show.
+        Recreate this Show object with a modified media directory.
+
+        :param      media_directory:    Media directory the returned Show object
+                                        will utilize.
         
         :returns:   A newly constructed Show object.
         """
 
-        return Show(self.series_info.name, self._base_yaml, self.__library_map,
+        # Modify base yaml to have overriden media_directory attribute
+        modified_base = copy(self._base_yaml)
+        modified_base['media_directory'] = str(media_directory.resolve())
+        
+        # Recreate Show object with modified YAML
+        return Show(self.series_info.name, modified_base, self.__library_map,
                     self.font._Font__font_map, self.source_directory.parent)
 
 

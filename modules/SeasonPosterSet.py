@@ -56,7 +56,8 @@ class SeasonPosterSet:
         
         # If posters aren't enabled, skip rest of parsing
         poster_config = {} if poster_config is None else poster_config
-        if not poster_config.get('create', True):
+        if (self.__media_directory is None
+            or not poster_config.get('create', True)):
             return None
 
         #  Read the font specification

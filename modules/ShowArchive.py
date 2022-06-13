@@ -65,20 +65,23 @@ class ShowArchive:
 
         # Go through each valid profile
         for profile_attributes in valid_profiles:
-            # Create show object for this profile
-            new_show = copy(base_show)
-
-            # Update media directory
+            # Get directory name for this profile
             profile_directory = self.PROFILE_DIRECTORY_MAP[
                 f'{profile_attributes["seasons"]}-{profile_attributes["font"]}'
             ]
 
-            # For non-standard card classes, modify archive directory name
+            # For non-standard card classes, modify profile directory name
             if base_show.card_class.ARCHIVE_NAME != 'standard':
                 profile_directory += f' - {base_show.card_class.ARCHIVE_NAME}'
 
+            # Get modified media directory within the archive directory
             temp_path = archive_directory / base_show.series_info.legal_path
-            new_show.media_directory = temp_path / profile_directory
+            new_media_directory = temp_path / profile_directory
+
+            # Create modified Show object for this profile
+            new_show = base_show._copy_with_modified_media_directory(
+                new_media_directory
+            )
 
             # Convert this new show's profile
             new_show.profile.convert_profile(

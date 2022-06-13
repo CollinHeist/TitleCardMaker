@@ -189,8 +189,8 @@ class Manager:
         """Create season posters for all shows known to this Manager."""
 
         # For each show in the Manager, create its posters
-        for show in (pbar := tqdm(self.shows, desc='Creating season posters',
-                                  **TQDM_KWARGS)):
+        for show in (pbar := tqdm(self.shows + self.archives,
+                                 desc='Creating season posters',**TQDM_KWARGS)):
             show.create_season_posters()
 
     
