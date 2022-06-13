@@ -54,8 +54,9 @@ class SeasonPosterSet:
         self.__logo = source_directory / 'logo.png'
         self.__media_directory = media_directory
         
-        # If config is empty or posters aren't enabled, exit
-        if poster_config is None or not poster_config.get('create', False):
+        # If posters aren't enabled, skip rest of parsing
+        poster_config = {} if poster_config is None else poster_config
+        if not poster_config.get('create', True):
             return None
 
         #  Read the font specification
@@ -71,6 +72,10 @@ class SeasonPosterSet:
         
         :param      font_config:    The specified font configuration to read.
         """
+
+        # Exit if no config to parse
+        if font_config == {}:
+            return None
 
         if (file := font_config.get('file')) != None:
             if Path(file).exists():
