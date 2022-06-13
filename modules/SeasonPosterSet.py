@@ -174,5 +174,14 @@ class SeasonPosterSet:
             if poster.destination.exists():
                 continue
 
+            # Create season poster
             poster.create()
+
+            # Log results
+            if poster.destination.exists():
+                log.debug(f'Created poster "{poster.destination.resolve()}"')
+            else:
+                log.debug(f'Could not create poster '
+                          f'"{poster.destination.resolve()}"')
+                poster.image_magick.print_command_history()
 

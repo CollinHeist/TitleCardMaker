@@ -78,12 +78,13 @@ class SeasonPoster(ImageMaker):
             f'-density 300',
             f'"{self.source.resolve()}"',           # Resize input image
             f'-gravity center',         
-            f'-resize "2000x3000^"',                    # Force into 1000x1500
+            f'-resize "2000x3000^"',                    # Force into 2000x3000
+            f'-extent "2000x3000"',
             f'"{self.GRADIENT_OVERLAY.resolve()}"', # Apply gradient
             f'-compose Darken',                         # Darken mode
             f'-composite',                              # Merge images
             f'\( "{self.logo.resolve()}"',          # Add logo
-            f'-resize 1460x \)',                         # Fit to 730px wide
+            f'-resize 1460x \)',                        # Fit to 730px wide
             f'-gravity south',                          # Begin merge placement
             f'-compose Atop',       
             f'-geometry +0+356',                        # Offset 178px from base
