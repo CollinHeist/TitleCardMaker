@@ -176,14 +176,26 @@ season_poster_group.add_argument(
 season_poster_group.add_argument(
     '--season-font',
     type=Path,
-    default='__default',
+    default=SeasonPoster.SEASON_TEXT_FONT,
     metavar='FONT_FILE',
     help='A custom font file for this season poster')
 season_poster_group.add_argument(
     '--season-font-color',
-    default='__default',
+    default=SeasonPoster.SEASON_TEXT_COLOR,
     metavar='#HEX',
     help='A custom font color for this season poster')
+season_poster_group.add_argument(
+    '--season-font-size',
+    type=str,
+    default='100%',
+    metavar='SCALE%',
+    help='A font scale (as percentage) for this season poster')
+season_poster_group.add_argument(
+    '--season-font-kerning',
+    type=str,
+    default='100%',
+    metavar='SCALE%',
+    help='Specify the font kerning scale (as percentage) for this season poster')
          
 # Parse given arguments
 args, unknown = parser.parse_known_args()
@@ -284,7 +296,9 @@ if hasattr(args, 'season_poster'):
         destination=args.season_poster[2],
         season_text=args.season_text,
         font=args.season_font,
-        # font_color=args.season_color,
+        font_color=args.season_font_color,
+        font_size=args.season_font_size,
+        font_kerning=args.season_font_kerning,
     ).create()
 
     
