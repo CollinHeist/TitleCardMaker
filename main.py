@@ -126,9 +126,13 @@ def run():
     RemoteFile.LOADED.truncate()
 
     # Create Manager, run, and write missing report
-    tcm = Manager()
-    tcm.run()
-    tcm.report_missing(args.missing)
+    try:
+        tcm = Manager()
+        tcm.run()
+        tcm.report_missing(args.missing)
+    except PermissionError as error:
+        log.critical(f'Invalid permissions - {error}')
+        exit(1)
 
 # Run immediately if specified
 if args.run:
