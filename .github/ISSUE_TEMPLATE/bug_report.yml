@@ -11,10 +11,10 @@ body:
       label: Installation
       description: Are you using Docker or Github; and which branch/tag?
       options:
-        - Docker - `master` tag
-        - Docker - `develop` tag
-        - GitHub - `master` branch
-        - GitHub - `develop` branch
+        - Docker - master tag
+        - Docker - develop tag
+        - GitHub - master branch
+        - GitHub - develop branch
       validations:
         required: true
   - type: textarea
@@ -47,7 +47,7 @@ body:
     id: preferences
     attributes:
       label: Preference File
-      description: Paste your Preferences file (likely `preferences.yml`) **WITH API KEYS AND URLS OMITTED**
+      description: Paste your Preferences file (likely preferences.yml) **WITH API KEYS AND URLS OMITTED**
     render: yaml
   - type: textarea
     id: seriesyaml
@@ -59,6 +59,6 @@ body:
     id: log
     attributes:
       label: Debug Log
-      description: Attach the relevant log file(s) from the `logs/` directory.
+      description: Attach the relevant log file(s) from the logs/ directory.
     validations:
       required: true
