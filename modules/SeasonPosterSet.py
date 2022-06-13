@@ -147,11 +147,10 @@ class SeasonPosterSet:
             # Get season title for this poster
             if (text := (specified_titles |override_titles).get(season_number)):
                 season_text = text
+            elif season_number == 0:
+                season_text = 'Specials'
             elif spell:
-                if season_number == 0:
-                    season_text = 'Specials'
-                else:
-                    season_text = f'Season {num2words(season_number)}'.upper()
+                season_text = f'Season {num2words(season_number)}'
             else:
                 season_text = f'Season {season_number}'
 
