@@ -15,8 +15,8 @@ body:
         - Docker - develop tag
         - GitHub - master branch
         - GitHub - develop branch
-      validations:
-        required: true
+    validations:
+      required: true
   - type: textarea
     id: description
     attributes:
@@ -47,14 +47,14 @@ body:
     id: preferences
     attributes:
       label: Preference File
-      description: Paste your Preferences file (likely preferences.yml) **WITH API KEYS AND URLS OMITTED**
-    render: yaml
+      description: Paste your Preferences file (likely preferences.yml), with your API keys and URLs omitted
+      render: yaml
   - type: textarea
     id: seriesyaml
     attributes:
       label: Series YAML
       description: Paste the YAML of the relevent series.
-    render: yaml
+      render: yaml
   - type: input
     id: log
     attributes:
