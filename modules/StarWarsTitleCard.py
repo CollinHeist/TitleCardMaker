@@ -314,9 +314,6 @@ class StarWarsTitleCard(CardType):
         # Add the starry gradient to the source image
         star_image = self.__add_star_gradient(self.source_file)
 
-        # Create the output directory and any necessary parents 
-        self.output_file.parent.mkdir(parents=True, exist_ok=True)
-
         # Add text to starry image, result is output
         if self.hide_episode_text:
             self.__add_only_title(star_image)

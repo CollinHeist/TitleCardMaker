@@ -69,11 +69,9 @@ class TMDbInterface(WebInterface):
         self.preferences = global_objects.pp
 
         # Create/read blacklist database
-        self.__BLACKLIST_DB.parent.mkdir(parents=True, exist_ok=True)
         self.__blacklist = TinyDB(self.__BLACKLIST_DB)
 
         # Create/read series ID database
-        self.__ID_DB.parent.mkdir(parents=True, exist_ok=True)
         self.__id_map = TinyDB(self.__ID_DB)
         
         # Store API key
@@ -94,24 +92,26 @@ class TMDbInterface(WebInterface):
 
 
     def __get_condition(self, query_type: str, series_info: SeriesInfo,
-                        episode_info: EpisodeInfo) -> 'QueryInstance':
+                        episode_info: EpisodeInfo=None) -> 'QueryInstance':
         """
         Get the tinydb query condition for the given query.
         
+        :param      query_type:     The type of request being updated.
         :param      series_info:    SeriesInfo for the request.
         :param      episode_info:   EpisodeInfo for the request.
-        :param      query_type:     The type of request being updated.
         
         :returns:   The condition that matches the given query type, series, and
-                    Episode season+episode number.and episode.
+                    Episode season+episode number and episode.
         """
 
+        # Logo and backdrop queries don't use episode index
         if query_type in ('logo', 'backdrop'):
             return (
                 (where('query') == query_type) &
                 (where('series') == series_info.full_name)
             )
 
+        # Query by series name and episode index
         return (
             (where('query') == query_type) &
             (where('series') == series_info.full_name) &
@@ -327,7 +327,8 @@ class TMDbInterface(WebInterface):
         # Match by series TMDb ID and series index with title matching
         # GET parameters and request
         url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/'
-               f'{episode_info.season}/episode/{episode_info.episode}')
+               f'{episode_info.season_number}/episode/'
+               f'{episode_info.episode_number}')
         params = self.__standard_params
         tmdb_info = self._get(url, params)
 

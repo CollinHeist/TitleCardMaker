@@ -433,12 +433,9 @@ class AnimeTitleCard(CardType):
 
         # If kanji is required (and not given), error!
         if self.require_kanji and not self.use_kanji:
-            log.error(f'Kanji is required and not provided - skipping card'
-                      f'"{self.output_file.resolve()}"')
+            log.error(f'Kanji is required and not provided - skipping card '
+                      f'"{self.output_file.name}"')
             return None
-        
-        # Create the output directory and any necessary parents 
-        self.output_file.parent.mkdir(parents=True, exist_ok=True)
 
         # Increase contrast of source image
         adjusted_image = self.__increase_contrast()

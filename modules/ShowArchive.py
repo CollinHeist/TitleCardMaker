@@ -103,88 +103,39 @@ class ShowArchive:
                 f'profiles>')
 
 
-    def read_source(self) -> None:
-        """Call read_source() on each Show object in this archive."""
-
-        # Read the source of every sub-Show in this Archive
-        for show in self.shows:
-            show.read_source()
-
-
-    def find_multipart_episodes(self) -> None:
+    def __getattr__(self, show_function) -> callable:
         """
-        Call find_multipart_episodes() on each Show object in this archive.
-        """
-
-        # Look for multiparts in every sub-Show in this Archive
-        for show in self.shows:
-            show.find_multipart_episodes()
-
-
-    def query_sonarr(self, *args: tuple, **kwargs: dict) -> None:
-        """
-        Call query_sonarr() on each Show object in this archive.
-
-        :param      args and kwargs:    The arguments to pass directly to
-                                        Show.query_sonarr().
-        """
-
-        # Query Sonarr for each show (updates episode ID's, namely)
-        for show in self.shows:
-            show.query_sonarr(*args, **kwargs)
-
-
-    def update_archive(self, *args: tuple, **kwargs: dict) -> None:
-        """
-        Create all missing title cards for each Show object in this archive.
+        Get an arbitrary function for this object. This returns a wrapped
+        version of the given function that calls that function on all Show
+        objects within this Archive.
         
-        :param      args and kwargs:    The arguments to pass directly to
-                                        Show.create_missing_title_cards().
+        :param      show_function:  The function to wrap.
+        
+        :returns:   Wrapped callable that is the indicated function called on
+                    each Show object within this Archive.
         """
 
-        # Create missing cards for each Show object in this archive
-        for show in self.shows:
-            show.create_missing_title_cards(*args, **kwargs)
+        # Define wrapper that calls given function on all Shows of this object
+        def wrapper(*args, **kwargs) -> None:
+            # Iterate through each show and call the given function
+            for show in self.shows:
+                getattr(show, show_function)(*args, **kwargs)
+
+        # Return "attribute" that is the wrapped function applied to all shows
+        # within this archive
+        return wrapper
 
 
-    def create_summary(self, tmdb_interface: 'TMDbInterface'=None) -> None:
-        """
-        Create the ShowSummary image for each archive in this object. And if the
-        required logo doesn't exist, attempt to download it.
-
-        :param      tmdb_interface: TMDb interface to query for a logo file, if
-                                    there is not an existing one.
-        """
+    def create_summary(self) -> None:
+        """Create the ShowSummary image for each archive in this object."""
 
         # Go through each ShowSummary object within this Archive
         for summary in self.summaries:
             # If summary already exists, skip
-            if summary.output.exists():
+            if summary.output.exists() or not summary.logo.exists():
                 continue
 
-            # If the logo doesn't exist, and we're given a TMDBInterface,
-            # attempt to download the best logo
-            if not summary.logo.exists() and tmdb_interface:
-                # If no logo was returned, skip
-                if not (logo:=tmdb_interface.get_series_logo(self.series_info)):
-                    return None
-
-                # If a valid logo was returned, download it
-                log.debug(f'Downloading logo for {self.series_info}')
-
-                # If the returned logo was SVG, convert to PNG
-                if logo.endswith('.svg'):
-                    # Download SVG to temp file, convert to PNG
-                    tmdb_interface.download_image(
-                        logo,
-                        summary._TEMP_SVG_FILENAME
-                    )
-                    summary.convert_svg_to_png()
-                else:
-                    # Download non-SVG file
-                    tmdb_interface.download_image(logo, summary.logo)
-            
-            # If the logo exists, create summary
+            # Create summary image
             summary.create()
 
             # If the summary exists, log that

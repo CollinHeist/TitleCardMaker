@@ -24,6 +24,9 @@ class PreferenceParser(YamlReader):
     """Valid source identifiers"""
     VALID_SOURCES = ('tmdb', 'plex')
 
+    """Directory for all temporary objects created/maintained by the Maker"""
+    TEMP_DIR = Path(__file__).parent / '.objects'
+
 
     def __init__(self, file: Path) -> None:
         """
@@ -36,6 +39,9 @@ class PreferenceParser(YamlReader):
 
         # Initialize parent YamlReader object
         super().__init__(log_function=log.critical)
+
+        # Create temporary directory if DNE
+        self.TEMP_DIR.mkdir(parents=True, exist_ok=True)
         
         # Store and read file
         self.file = file
@@ -62,7 +68,6 @@ class PreferenceParser(YamlReader):
         self.archive_all_variations = True
         self.create_summaries = True
         self.summary_background_color = ShowSummary.BACKGROUND_COLOR
-        self.logo_filename = ShowSummary.LOGO_FILENAME
         self.summary_minimum_episode_count = 1
         self.use_plex = False
         self.plex_url = None
@@ -192,10 +197,6 @@ class PreferenceParser(YamlReader):
         if (value := self._get('archive', 'summary', 'background_color',
                                type_=str)) != None:
             self.summary_background_color = value
-
-        if (value := self._get('archive', 'summary', 'logo_filename',
-                               type_=str)) != None:
-            self.logo_filename = value
 
         if ((value := self._get('archive', 'summary', 'minimum_episodes',
                                type_=int)) != None):

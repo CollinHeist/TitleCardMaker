@@ -129,7 +129,9 @@ class Profile:
 
         # Generic season titles are Specials and Season {n}
         if not self.__use_custom_seasons:
-            return self.__episode_map.get_generic_season_title(episode_info)
+            return self.__episode_map.get_generic_season_title(
+                episode_info=episode_info
+            )
 
         # Custom season title, query EpisodeMap for title
         return self.__episode_map.get_season_title(episode_info)

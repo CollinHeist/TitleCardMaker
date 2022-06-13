@@ -117,6 +117,19 @@ class Manager:
             show.add_translations(self.tmdb_interface)
 
 
+    def download_logos(self) -> None:
+        """Download logo files for all shows known to this manager."""
+
+        # If the TMDbInterface isn't enabled, skip
+        if not self.tmdb_interface:
+            return None
+
+        # For each show in the Manager, download a logo
+        for show in (pbar := tqdm(self.shows + self.archives,
+                                  desc='Downloading logos', **TQDM_KWARGS)):
+            show.download_logo(self.tmdb_interface)
+
+
     def check_sonarr_for_new_episodes(self) -> None:
         """
         Query Sonarr to see if any new episodes exist for every show known to
@@ -171,6 +184,15 @@ class Manager:
             # Create cards
             show.create_missing_title_cards()
 
+
+    def create_season_posters(self) -> None:
+        """Create season posters for all shows known to this Manager."""
+
+        # For each show in the Manager, create its posters
+        for show in (pbar := tqdm(self.shows, desc='Creating season posters',
+                                  **TQDM_KWARGS)):
+            show.create_season_posters()
+
     
     def update_plex(self) -> None:
         """
@@ -194,8 +216,7 @@ class Manager:
 
     def update_archive(self) -> None:
         """
-        Update the title card archives for every show known to the manager. This
-        calls ShowArchive.update_archive() if archives are globally enabled.
+        Update the title card archives for every show known to the manager.
         """
 
         # If archives are globally disabled, skip
@@ -207,7 +228,7 @@ class Manager:
             pbar.set_description(f'Updating archive for '
                                  f'"{show_archive.series_info.short_name}"')
             
-            show_archive.update_archive()
+            show_archive.create_missing_title_cards()
 
 
     def create_summaries(self) -> None:
@@ -227,11 +248,7 @@ class Manager:
             pbar.set_description(f'Creating ShowSummary for "'
                                  f'{show_archive.series_info.short_name}"')
 
-            # If TMDb is globally enabled, pass the interface along
-            if self.preferences.use_tmdb:
-                show_archive.create_summary(self.tmdb_interface)
-            else:
-                show_archive.create_summary()
+            show_archive.create_summary()
 
 
     def run(self) -> None:
@@ -241,8 +258,10 @@ class Manager:
         self.read_show_source()
         self.check_sonarr_for_new_episodes()
         self.check_tmdb_for_translations()
+        self.download_logos()
         self.select_source_images()
         self.create_missing_title_cards()
+        self.create_season_posters()
         self.update_plex()
         self.update_archive()
         self.create_summaries()

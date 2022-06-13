@@ -14,7 +14,7 @@ TQDM_KWARGS = {
 
 """Log file"""
 LOG_FILE = Path(__file__).parent.parent / 'logs' / 'maker.log'
-LOG_FILE.parent.mkdir(exist_ok=True)
+LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
 class LogHandler(StreamHandler):
     """Handler subclass to integrate logging messages with TQDM"""

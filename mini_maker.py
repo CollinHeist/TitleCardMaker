@@ -9,6 +9,7 @@ try:
     from modules.PreferenceParser import PreferenceParser
     from modules.global_objects import set_preference_parser
     from modules.RemoteCardType import RemoteCardType
+    from modules.SeasonPoster import SeasonPoster
     from modules.ShowSummary import ShowSummary
     from modules.TitleCard import TitleCard
 except ImportError:
@@ -147,13 +148,54 @@ show_summary_group.add_argument(
     nargs=2,
     default=SUPPRESS,
     metavar=('IMAGE_DIRECTORY', 'LOGO'),
-    help='Create a ShowSummary for the given directory')
+    help='Create a show summary for the given directory')
 show_summary_group.add_argument(
     '--background-color',
     type=str,
     default=ShowSummary.BACKGROUND_COLOR,
     metavar='COLOR',
     help='Specify background color for the created ShowSummary')
+
+# Argument group for season posters
+season_poster_group = parser.add_argument_group(
+    'Season Poster',
+    'Manual SeasonPoster creation')
+season_poster_group.add_argument(
+    '--season-poster',
+    type=Path,
+    nargs=3,
+    default=SUPPRESS,
+    metavar=('SOURCE', 'LOGO', 'DESTINATION'),
+    help='Create a season poster with the given assets')
+season_poster_group.add_argument(
+    '--season-text',
+    type=str,
+    default='SEASON ONE',
+    metavar='SEASON_TEXT',
+    help='Season text for the created season poster')
+season_poster_group.add_argument(
+    '--season-font',
+    type=Path,
+    default=SeasonPoster.SEASON_TEXT_FONT,
+    metavar='FONT_FILE',
+    help='A custom font file for this season poster')
+season_poster_group.add_argument(
+    '--season-font-color',
+    default=SeasonPoster.SEASON_TEXT_COLOR,
+    metavar='#HEX',
+    help='A custom font color for this season poster')
+season_poster_group.add_argument(
+    '--season-font-size',
+    type=str,
+    default='100%',
+    metavar='SCALE%',
+    help='A font scale (as percentage) for this season poster')
+season_poster_group.add_argument(
+    '--season-font-kerning',
+    type=str,
+    default='100%',
+    metavar='SCALE%',
+    help='Specify the font kerning scale (as percentage) for this season poster')
          
 # Parse given arguments
 args, unknown = parser.parse_known_args()
@@ -246,3 +288,17 @@ if hasattr(args, 'show_summary'):
 
     # Create ShowSummary
     ShowSummary(show, args.background_color).create()
+
+if hasattr(args, 'season_poster'):
+    SeasonPoster(
+        source=args.season_poster[0],
+        logo=args.season_poster[1],
+        destination=args.season_poster[2],
+        season_text=args.season_text,
+        font=args.season_font,
+        font_color=args.season_font_color,
+        font_size=args.season_font_size,
+        font_kerning=args.season_font_kerning,
+    ).create()
+
+    

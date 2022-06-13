@@ -87,12 +87,13 @@ class TitleCard:
             source=episode.source,
             output_file=episode.destination,
             title=self.converted_title,
-            season_text=profile.get_season_text(episode.episode_info),
-            episode_text=profile.get_episode_text(episode),
+            season_text=profile.get_season_text(self.episode.episode_info),
+            episode_text=profile.get_episode_text(self.episode),
             hide_season=profile.hide_season_title,
             blur=episode.blur,
             **profile.font.get_attributes(),
             **extra_characteristics,
+            **self.episode.episode_info.episode_characteristics,
         )
 
         # File associated with this card is the episode's destination
@@ -256,6 +257,9 @@ class TitleCard:
         # If the card already exists, exit
         if self.file.exists():
             return False
+
+        # Create parent folders if necessary for this card
+        self.file.parent.mkdir(parents=True, exist_ok=True)
             
         # Create card
         self.maker.create()
@@ -265,6 +269,7 @@ class TitleCard:
             log.debug(f'Created card "{self.file.resolve()}"')
             return True
 
+        # Card doesn't exist, log commands to debug
         log.debug(f'Could not create card "{self.file.resolve()}"')
         self.maker.image_magick.print_command_history()
         
