@@ -255,13 +255,19 @@ class Show(YamlReader):
         if (value := self._get('seasons', 'hide', type_=bool)) is not None:
             self.hide_seasons = value
 
-        if (self._is_specified('translation', 'language')
-            and (key := self._get('translation', 'key',type_=str)) is not None):
-            if key in ('title', 'abs_number'):
-                log.error(f'Cannot add translations under the key "{key}" in '
-                          f'series {self}')
+        if (value := self._get('translation')) is not None:
+            if isinstance(value, dict) and value.keys() == {'language', 'key'}:
+                # Single translation
+                self.title_languages = [value]
+            elif isinstance(value, list):
+                # List of translations
+                if all(isinstance(t, dict) and t.keys() == {'language', 'key'}
+                       for t in value):
+                    self.title_languages = value
+                else:
+                    log.error(f'Invalid language translations in series {self}')
             else:
-                self.title_language = self._get('translation')
+                log.error(f'Invalid language translations in series {self}')
                 
         # Construct EpisodeMap on seasons/episode ranges specification
         self.__episode_map = EpisodeMap(
@@ -441,42 +447,44 @@ class Show(YamlReader):
                                     episode titles.
         """
 
-        # If no title language was specified, or TMDb syncing isn't enabled,skip
-        if self.title_language == {} or not self.tmdb_sync:
+        # If no translations were specified, or TMDb syncing isn't enabled, skip
+        if len(self.title_languages) == 0 or not self.tmdb_sync:
             return None
 
         # Go through every episode and look for translations
         modified = False
         for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
-            # If the key already exists, skip this episode
-            if self.title_language['key'] in episode.extra_characteristics:
-                continue
+            # Get each translation for this series
+            for translation in self.title_languages:
+                # If the key already exists, skip this episode
+                if translation['key'] in episode.extra_characteristics:
+                    continue
 
-            # Update progress bar
-            pbar.set_description(f'Checking {episode}')
+                # Update progress bar
+                pbar.set_description(f'Checking {episode}')
 
-            # Query TMDb for the title of this episode in the requested language
-            language_title = tmdb_interface.get_episode_title(
-                self.series_info,
-                episode.episode_info,
-                self.title_language['language'],
-            )
+                # Query TMDb for the title of this episode in this language
+                language_title = tmdb_interface.get_episode_title(
+                    self.series_info,
+                    episode.episode_info,
+                    translation['language'],
+                )
 
-            # If episode wasn't found, or the original title was returned, skip!
-            if (language_title is None
-                or language_title ==  episode.episode_info.title.full_title):
-                continue
+                # If episode wasn't found, or original title was returned, skip
+                if (language_title is None
+                    or language_title == episode.episode_info.title.full_title):
+                    continue
 
-            # Adding translated title, log it
-            log.debug(f'Adding "{language_title}" to '
-                      f'"{self.title_language["key"]}" of {self}')
+                # Modify data file entry with new title
+                modified = True
+                self.file_interface.add_data_to_entry(
+                    episode.episode_info,
+                    **{translation['key']: language_title},
+                )
 
-            # Modify data file entry with new title
-            modified = True
-            self.file_interface.add_data_to_entry(
-                episode.episode_info,
-                **{self.title_language['key']: language_title},
-            )
+                # Adding translated title, log it
+                log.debug(f'Added "{language_title}" to '
+                          f'"{translation["key"]}" for {self}')
 
         # If any translations were added, re-read source
         if modified:
