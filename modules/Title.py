@@ -137,12 +137,14 @@ class Title:
             for _ in range(max_line_count+2-1):
                 # Start splitting from the last line added
                 top, bottom = all_lines.pop(), ''
-                while ((len(top) > max_line_width or len(bottom) in range(1, 6))
+                while ((len(top) > max_line_width
+                        or len(bottom) in range(1, 6))
                         and ' ' in top):
                     # Look to split on special characters
                     special_split = False
                     for char in self.SPLIT_CHARACTERS:
-                        if f'{char} ' in top[:max_line_width]:
+                        # Split only if present after first third of next line
+                        if f'{char} ' in top[max_line_width//2:max_line_width]:
                             top, bottom_add = top.rsplit(f'{char} ', 1)
                             top += char
                             bottom = f'{bottom_add} {bottom}'
@@ -172,12 +174,13 @@ class Title:
         # For bottom heavy splitting, start on bottom and move text UP
         for _ in range(max_line_count+2-1):
             top, bottom = '', all_lines.pop()
-            while ((len(bottom) > max_line_width or len(top) in range(1, 6))
+            while ((len(bottom) > max_line_width
+                    or len(top) in range(1, 6))
                     and ' ' in bottom):
                 # Look to split on special characters
                 special_split = False
                 for char in self.SPLIT_CHARACTERS:
-                    if f'{char} ' in bottom[:min(max_line_width, len(bottom)//2)]:
+                    if f'{char} ' in bottom[:min(max_line_width,len(bottom)//2)]:
                         top_add, bottom = bottom.split(f'{char} ', 1)
                         top = f'{top} {top_add}{char}'
                         special_split = True

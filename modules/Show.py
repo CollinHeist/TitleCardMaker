@@ -96,7 +96,7 @@ class Show(YamlReader):
         self.unwatched_style = self.preferences.global_unwatched_style
         self.hide_seasons = False
         self.__episode_map = EpisodeMap()
-        self.title_language = {}
+        self.title_languages = {}
         self.extras = {}
 
         # Set object attributes based off YAML and update validity
