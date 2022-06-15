@@ -56,7 +56,8 @@ class SeasonPosterSet:
         
         # If posters aren't enabled, skip rest of parsing
         poster_config = {} if poster_config is None else poster_config
-        if not poster_config.get('create', True):
+        if (self.__media_directory is None
+            or not poster_config.get('create', True)):
             return None
 
         #  Read the font specification
@@ -85,7 +86,7 @@ class SeasonPosterSet:
                 self.valid = False
 
         if (color := font_config.get('color')) != None:
-            if (not isinstance(value, str)
+            if (not isinstance(color, str)
                 or not bool(match('^#[a-fA-F0-9]{6}$', color))):
                 log.error(f'Font color "{color}" is invalid, specify as '
                           f'"#xxxxxx"')

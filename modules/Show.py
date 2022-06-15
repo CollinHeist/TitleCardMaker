@@ -1,3 +1,4 @@
+from copy import copy
 from pathlib import Path
 
 from tqdm import tqdm
@@ -95,7 +96,7 @@ class Show(YamlReader):
         self.unwatched_style = self.preferences.global_unwatched_style
         self.hide_seasons = False
         self.__episode_map = EpisodeMap()
-        self.title_language = {}
+        self.title_languages = {}
         self.extras = {}
 
         # Set object attributes based off YAML and update validity
@@ -142,14 +143,23 @@ class Show(YamlReader):
         return f'<Show "{self.series_info}" with {len(self.episodes)} Episodes>'
 
 
-    def __copy__(self) -> 'Show':
+    def _copy_with_modified_media_directory(self,
+                                            media_directory: Path) -> 'Show':
         """
-        Copy this Show object into a new (identical) Show.
+        Recreate this Show object with a modified media directory.
+
+        :param      media_directory:    Media directory the returned Show object
+                                        will utilize.
         
         :returns:   A newly constructed Show object.
         """
 
-        return Show(self.series_info.name, self._base_yaml, self.__library_map,
+        # Modify base yaml to have overriden media_directory attribute
+        modified_base = copy(self._base_yaml)
+        modified_base['media_directory'] = str(media_directory.resolve())
+        
+        # Recreate Show object with modified YAML
+        return Show(self.series_info.name, modified_base, self.__library_map,
                     self.font._Font__font_map, self.source_directory.parent)
 
 
@@ -245,13 +255,19 @@ class Show(YamlReader):
         if (value := self._get('seasons', 'hide', type_=bool)) is not None:
             self.hide_seasons = value
 
-        if (self._is_specified('translation', 'language')
-            and (key := self._get('translation', 'key',type_=str)) is not None):
-            if key in ('title', 'abs_number'):
-                log.error(f'Cannot add translations under the key "{key}" in '
-                          f'series {self}')
+        if (value := self._get('translation')) is not None:
+            if isinstance(value, dict) and value.keys() == {'language', 'key'}:
+                # Single translation
+                self.title_languages = [value]
+            elif isinstance(value, list):
+                # List of translations
+                if all(isinstance(t, dict) and t.keys() == {'language', 'key'}
+                       for t in value):
+                    self.title_languages = value
+                else:
+                    log.error(f'Invalid language translations in series {self}')
             else:
-                self.title_language = self._get('translation')
+                log.error(f'Invalid language translations in series {self}')
                 
         # Construct EpisodeMap on seasons/episode ranges specification
         self.__episode_map = EpisodeMap(
@@ -431,42 +447,44 @@ class Show(YamlReader):
                                     episode titles.
         """
 
-        # If no title language was specified, or TMDb syncing isn't enabled,skip
-        if self.title_language == {} or not self.tmdb_sync:
+        # If no translations were specified, or TMDb syncing isn't enabled, skip
+        if len(self.title_languages) == 0 or not self.tmdb_sync:
             return None
 
         # Go through every episode and look for translations
         modified = False
         for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
-            # If the key already exists, skip this episode
-            if self.title_language['key'] in episode.extra_characteristics:
-                continue
+            # Get each translation for this series
+            for translation in self.title_languages:
+                # If the key already exists, skip this episode
+                if translation['key'] in episode.extra_characteristics:
+                    continue
 
-            # Update progress bar
-            pbar.set_description(f'Checking {episode}')
+                # Update progress bar
+                pbar.set_description(f'Checking {episode}')
 
-            # Query TMDb for the title of this episode in the requested language
-            language_title = tmdb_interface.get_episode_title(
-                self.series_info,
-                episode.episode_info,
-                self.title_language['language'],
-            )
+                # Query TMDb for the title of this episode in this language
+                language_title = tmdb_interface.get_episode_title(
+                    self.series_info,
+                    episode.episode_info,
+                    translation['language'],
+                )
 
-            # If episode wasn't found, or the original title was returned, skip!
-            if (language_title is None
-                or language_title ==  episode.episode_info.title.full_title):
-                continue
+                # If episode wasn't found, or original title was returned, skip
+                if (language_title is None
+                    or language_title == episode.episode_info.title.full_title):
+                    continue
 
-            # Adding translated title, log it
-            log.debug(f'Adding "{language_title}" to '
-                      f'"{self.title_language["key"]}" of {self}')
+                # Modify data file entry with new title
+                modified = True
+                self.file_interface.add_data_to_entry(
+                    episode.episode_info,
+                    **{translation['key']: language_title},
+                )
 
-            # Modify data file entry with new title
-            modified = True
-            self.file_interface.add_data_to_entry(
-                episode.episode_info,
-                **{self.title_language['key']: language_title},
-            )
+                # Adding translated title, log it
+                log.debug(f'Added "{language_title}" to '
+                          f'"{translation["key"]}" for {self}')
 
         # If any translations were added, re-read source
         if modified:
@@ -660,6 +678,8 @@ class Show(YamlReader):
                 # If URL was returned by either interface, download
                 if image_url is not None:
                     WebInterface.download_image(image_url, episode.source)
+                    log.debug(f'Downloaded {episode.source.name} for {self} '
+                              f'from {source_interface.title()}')
                     break
 
         # Query TMDb for the backdrop if one does not exist and is needed

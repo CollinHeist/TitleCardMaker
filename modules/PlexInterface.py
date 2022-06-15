@@ -1,10 +1,9 @@
 from pathlib import Path
 
-from plexapi.server import PlexServer, NotFound
+from plexapi.server import PlexServer, NotFound, Unauthorized
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 from tinydb import TinyDB, where
 from tqdm import tqdm
-from yaml import safe_load
 
 from modules.Debug import log, TQDM_KWARGS
 
@@ -34,7 +33,12 @@ class PlexInterface:
         """
 
         # Create PlexServer object with these arguments
-        self.__server = PlexServer(url, x_plex_token)
+        try:
+            self.__token = x_plex_token
+            self.__server = PlexServer(url, x_plex_token)
+        except Unauthorized:
+            log.critical(f'Invalid Plex Token "{x_plex_token}"')
+            exit(1)
         
         # Create/read loaded card database
         self.__db = TinyDB(self.LOADED_DB)
@@ -319,7 +323,8 @@ class PlexInterface:
                 episode=episode_info.episode_number
             )
 
-            return f'{self.__server._baseurl}{plex_episode.thumb}'
+            return (f'{self.__server._baseurl}{plex_episode.thumb}'
+                    f'?X-Plex-Token={self.__token}')
         except NotFound:
             # Episode DNE in Plex, return
             return None

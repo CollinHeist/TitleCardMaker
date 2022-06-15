@@ -43,5 +43,5 @@ RUN pip3 install --no-cache-dir --upgrade pipenv; \
 RUN rm -f Pipfile Pipfile.lock requirements.txt 
 
 # Entrypoint
-CMD ["python3", "main.py", "--run"]
+CMD ["python3", "main.py", "--run", "--no-color"]
 ENTRYPOINT ["bash", "./start.sh"]
