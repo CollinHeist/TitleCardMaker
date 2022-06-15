@@ -323,7 +323,8 @@ class PlexInterface:
                 episode=episode_info.episode_number
             )
 
-            return f'{self.__server._baseurl}{plex_episode.thumb}'
+            return (f'{self.__server._baseurl}{plex_episode.thumb}'
+                    f'?X-Plex-Token={self.__token}')
         except NotFound:
             # Episode DNE in Plex, return
             return None
