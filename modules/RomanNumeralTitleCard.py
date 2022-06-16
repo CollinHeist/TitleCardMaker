@@ -40,7 +40,7 @@ class RomanNumeralTitleCard(CardType):
     ARCHIVE_NAME = 'Roman Numeral Style'
 
     """Blur profile for this card is 1/3 the radius of the standard blur"""
-    BLUR_PROFILE = '0x20'
+    BLUR_PROFILE = '0x30'
 
     """Default fonts and color for series count text"""
     ROMAN_NUMERAL_FONT = REF_DIRECTORY / 'sinete-regular.otf'
@@ -50,9 +50,10 @@ class RomanNumeralTitleCard(CardType):
                  'roman_numeral_color', 'roman_numeral', '__roman_text_scalar')
 
     def __init__(self, output_file: Path, title: str, episode_text: str,
-                 episode_number: int, title_color: str, background: str='black',
+                 title_color: str, episode_number: int=1, blur: bool=False, 
+                 background: str='black', 
                  roman_numeral_color: str=ROMAN_NUMERAL_TEXT_COLOR,
-                 blur: bool=False, *args, **kwargs) -> None:
+                 *args, **kwargs) -> None:
         """
         Constructs a new instance.
         

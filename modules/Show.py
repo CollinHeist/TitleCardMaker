@@ -681,7 +681,7 @@ class Show(YamlReader):
                     log.debug(f'Downloaded {episode.source.name} for {self} '
                               f'from {source_interface}')
                     break
-
+        
         # Query TMDb for the backdrop if one does not exist and is needed
         if (download_backdrop and tmdb_interface and self.tmdb_sync
             and not self.backdrop.exists()):
