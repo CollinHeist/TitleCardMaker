@@ -291,7 +291,8 @@ class Profile:
         """
 
         # Modify the title if it contains the episode text format
-        if self.__use_custom_seasons:
+        if (self.__use_custom_seasons and
+            self.episode_text_format not in ('{abs_number}','{episode_number}')):
             # Attempt to remove text that matches the episode text format string
             title_text = self.__remove_episode_text_format(title_text)
 

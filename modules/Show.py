@@ -679,7 +679,7 @@ class Show(YamlReader):
                 if image_url is not None:
                     WebInterface.download_image(image_url, episode.source)
                     log.debug(f'Downloaded {episode.source.name} for {self} '
-                              f'from {source_interface.title()}')
+                              f'from {source_interface}')
                     break
 
         # Query TMDb for the backdrop if one does not exist and is needed

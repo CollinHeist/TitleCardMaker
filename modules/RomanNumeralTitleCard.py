@@ -198,20 +198,19 @@ class RomanNumeralTitleCard(CardType):
             f'-font "{self.ROMAN_NUMERAL_FONT.resolve()}"',
             f'-fill "{self.roman_numeral_color}"',
             f'-pointsize {font_size}',
-            f'-strokewidth 0',
             f'-gravity center',
             f'-interline-spacing {interline_spacing}',
             f'-annotate +0-175 "{self.roman_numeral}"',     # Should be +0+0..
             f'-blur {self.BLUR_PROFILE}' if self.blur else '',
             f'-font "{self.TITLE_FONT}"',
-            f'-fill "{self.title_color}"',
             f'-pointsize 150',
             f'-interword-spacing 40',
             f'-interline-spacing 0',
+            f'-fill "{self.title_color}"',            
             f'-annotate +0+0 "{self.title}"',
             f'"{self.output_file.resolve()}"',
         ])
-
+        
         # Create the card
         self.image_magick.run(command)
 
