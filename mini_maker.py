@@ -297,8 +297,8 @@ if hasattr(args, 'season_poster'):
         season_text=args.season_text,
         font=args.season_font,
         font_color=args.season_font_color,
-        font_size=args.season_font_size,
-        font_kerning=args.season_font_kerning,
+        font_size=float(args.season_font_size[:-1])/100.0,
+        font_kerning=float(args.season_font_kerning[:-1])/100.0,
     ).create()
 
     
