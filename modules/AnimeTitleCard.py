@@ -17,24 +17,17 @@ class AnimeTitleCard(CardType):
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
         'max_line_width': 25,   # Character count to begin splitting titles
-        'max_line_count': 3,    # Maximum number of lines a title can take up
+        'max_line_count': 4,    # Maximum number of lines a title can take up
         'top_heavy': False,     # This class uses bottom heavy titling
     }
 
     """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Anime Style'
 
-    """Path to the font to use for the episode title"""
+    """Characteristics of the default title font"""
     TITLE_FONT = str((REF_DIRECTORY / 'Flanker Griffo.otf').resolve())
     DEFAULT_FONT_CASE = 'source'
-
-    """Color to use for the episode title"""
     TITLE_COLOR = 'white'
-
-    """Color of the episode/episode number text"""
-    EPISODE_TEXT_COLOR = 'white'
-
-    """Default characters to replace in the generic font"""
     FONT_REPLACEMENTS = {}
 
     """Whether this class uses season titles for the purpose of archives"""
@@ -46,12 +39,8 @@ class AnimeTitleCard(CardType):
     """Path to the font to use for the kanji font"""
     KANJI_FONT = REF_DIRECTORY / 'hiragino-mincho-w3.ttc'
 
-    """Path to the font to use for the series count text"""
+    """Font characteristics for the series count text"""
     SERIES_COUNT_FONT = REF_DIRECTORY / 'Avenir.ttc'
-
-    """Character used to join season and episode text (with spacing)"""
-    SERIES_COUNT_JOIN_CHARACTER = '·'
-
     SERIES_COUNT_TEXT_COLOR = '#CFCFCF'
 
     """Paths to intermediate files that are deleted after the card is created"""
@@ -59,11 +48,14 @@ class AnimeTitleCard(CardType):
     __SOURCE_WITH_GRADIENT = CardType.TEMP_DIR / 'source_with_gradient.png'
     __GRADIENT_WITH_TITLE = CardType.TEMP_DIR / 'gradient_with_title.png'
 
+    __slots__ = ('source_file', 'output_file', 'title', 'kanji', 'use_kanji',
+                 'require_kanji', 'season_text', 'episode_text', 'hide_season',
+                 'separator', 'blur', 'font_size')
     
     def __init__(self, source: Path, output_file: Path, title: str, 
                  season_text: str, episode_text: str, hide_season: bool,
-                 kanji: str=None, require_kanji: bool=False, blur: bool=False,
-                 font_size: float=1.0, *args, **kwargs) -> None:
+                 kanji: str=None, require_kanji: bool=False, separator: str='·',
+                 blur: bool=False, font_size: float=1.0, *args, **kwargs)->None:
         """
         Constructs a new instance.
         
@@ -77,6 +69,8 @@ class AnimeTitleCard(CardType):
         :param      kanji:              Kanji text to place above the
                                         episode title on this card.
         :param      require_kanji:      Whether to require kanji for this card.
+        :param      separator:          Character to use to separate season and
+                                        episode text.
         :param      blur:               Whether to blur the source image.
         :param      font_size:          Scalar to apply to the title font size.
         :param      args and kwargs:    Unused arguments to permit generalized
@@ -102,6 +96,7 @@ class AnimeTitleCard(CardType):
         self.season_text = self.image_magick.escape_chars(season_text.upper())
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
         self.hide_season = hide_season
+        self.separator = separator
         self.blur = blur
 
         # Font customizations
@@ -323,7 +318,7 @@ class AnimeTitleCard(CardType):
         """
 
         # Construct season text
-        season_text = f'{self.season_text} {self.SERIES_COUNT_JOIN_CHARACTER} '
+        season_text = f'{self.season_text} {self.separator} '
 
         # Command list used by both the metric and season text command
         season_text_command_list = [

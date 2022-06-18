@@ -6,6 +6,7 @@ import modules.global_objects as global_objects
 # Default CardType classes
 from modules.AnimeTitleCard import AnimeTitleCard
 from modules.LogoTitleCard import LogoTitleCard
+from modules.RomanNumeralTitleCard import RomanNumeralTitleCard
 from modules.StandardTitleCard import StandardTitleCard
 from modules.StarWarsTitleCard import StarWarsTitleCard
 from modules.TextlessTitleCard import TextlessTitleCard
@@ -38,6 +39,8 @@ class TitleCard:
         'textless': TextlessTitleCard,
         'logo': LogoTitleCard,
         'reality tv': LogoTitleCard,
+        'roman': RomanNumeralTitleCard,
+        'roman numeral': RomanNumeralTitleCard,
     }
 
     """Mapping of illegal filename characters and their replacements"""

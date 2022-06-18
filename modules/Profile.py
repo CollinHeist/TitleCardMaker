@@ -151,7 +151,10 @@ class Profile:
         if (self.__use_custom_seasons and '{abs_' in self.episode_text_format
             and episode.episode_info.abs_number is None):
                 log.warning(f'Episode text formatting uses absolute episode '
-                            f'number, but {episode} has no absolute number')
+                            f'number, but {episode} has no absolute number - '
+                            f'using episode number instead')
+                new_fmt = self.episode_text_format.replace('{abs_', '{episode_')
+                self.episode_text_format = new_fmt
 
         # Format MultiEpisode episode text
         if isinstance(episode, MultiEpisode):
@@ -291,7 +294,8 @@ class Profile:
         """
 
         # Modify the title if it contains the episode text format
-        if self.__use_custom_seasons:
+        if (self.__use_custom_seasons and
+            self.episode_text_format not in ('{abs_number}','{episode_number}')):
             # Attempt to remove text that matches the episode text format string
             title_text = self.__remove_episode_text_format(title_text)
 

@@ -22,11 +22,9 @@ class StandardTitleCard(CardType):
         'top_heavy': False,     # This class uses bottom heavy titling
     }
 
-    """Default font and text color for episode title text"""
+    """Characteristics of the default title font"""
     TITLE_FONT = str((REF_DIRECTORY / 'Sequel-Neue.otf').resolve())
     TITLE_COLOR = '#EBEBEB'
-
-    """Default characters to replace in the generic font"""
     FONT_REPLACEMENTS = {'[': '(', ']': ')', '(': '[', ')': ']', '―': '-',
                          '…': '...'}
 
@@ -51,14 +49,14 @@ class StandardTitleCard(CardType):
 
     __slots__ = ('source_file', 'output_file', 'title', 'season_text',
                  'episode_text', 'font', 'font_size', 'title_color',
-                 'hide_season', 'blur', 'vertical_shift', 'interline_spacing',
-                 'kerning', 'stroke_width')
+                 'hide_season', 'separator', 'blur', 'vertical_shift', 
+                 'interline_spacing', 'kerning', 'stroke_width')
 
 
     def __init__(self, source: Path, output_file: Path, title: str,
                  season_text: str, episode_text: str, font: str,
                  font_size: float, title_color: str, hide_season: bool,
-                 blur: bool=False, vertical_shift: int=0,
+                 separator: str='•', blur: bool=False, vertical_shift: int=0,
                  interline_spacing: int=0, kerning: float=1.0,
                  stroke_width: float=1.0, *args, **kwargs) -> None:
         """
@@ -77,6 +75,8 @@ class StandardTitleCard(CardType):
         :param  title_color:        Color to use for the episode title.
         :param  hide_season:        Whether to omit the season text (and joining
                                     character) from the title card completely.
+        :param  separator:          Character to use to separate season and
+                                    episode text.
         :param  blur:               Whether to blur the source image.
         :param  vertical_shift:     Pixels to adjust title vertical shift by.
         :param  interline_spacing:  Pixels to adjust title interline spacing by.
@@ -102,6 +102,7 @@ class StandardTitleCard(CardType):
         self.font_size = font_size
         self.title_color = title_color
         self.hide_season = hide_season
+        self.separator = separator
         self.blur = blur
         self.vertical_shift = vertical_shift
         self.interline_spacing = interline_spacing
@@ -286,7 +287,7 @@ class StandardTitleCard(CardType):
             f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
             f'-gravity center',
             *self.__series_count_text_effects(),
-            f'-annotate +0+689.5 "• "',
+            f'-annotate +0+689.5 "{self.separator} "',
             f'-gravity west',
             *self.__series_count_text_effects(),
             f'-annotate +1640+697.2 "{self.episode_text}"',
@@ -335,9 +336,9 @@ class StandardTitleCard(CardType):
             f'-annotate +0+{height-25} "{self.season_text} "',
             f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
             *self.__series_count_text_black_stroke(),
-            f'-annotate +{width1}+{height-25-6.5} "•"',
+            f'-annotate +{width1}+{height-25-6.5} "{self.separator}"',
             *self.__series_count_text_effects(),
-            f'-annotate +{width1}+{height-25-6.5} "•"',
+            f'-annotate +{width1}+{height-25-6.5} "{self.separator}"',
             *self.__series_count_text_black_stroke(),
             f'-annotate +{width1+width2}+{height-25} "{self.episode_text}"',
             *self.__series_count_text_effects(),
@@ -392,7 +393,6 @@ class StandardTitleCard(CardType):
         return ((font.file != StandardTitleCard.TITLE_FONT)
             or (font.size != 1.0)
             or (font.color != StandardTitleCard.TITLE_COLOR)
-            or (font.replacements != StandardTitleCard.FONT_REPLACEMENTS)
             or (font.vertical_shift != 0)
             or (font.interline_spacing != 0)
             or (font.kerning != 1.0)

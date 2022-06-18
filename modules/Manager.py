@@ -26,10 +26,6 @@ class Manager:
         # Get the global preferences
         self.preferences = global_objects.pp
 
-        # Establish directory bases
-        self.source_base = self.preferences.source_directory
-        self.archive_base = self.preferences.archive_directory
-
         # Optionally assign PlexInterface
         self.plex_interface = None
         if global_objects.pp.use_plex:

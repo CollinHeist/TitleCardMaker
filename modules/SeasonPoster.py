@@ -9,6 +9,9 @@ class SeasonPoster(ImageMaker):
     Season posters take images, add a logo and season title.
     """
 
+    """Default size of all season posters"""
+    SEASON_POSTER_SIZE = '2000x3000'
+
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = Path(__file__).parent / 'ref' /'season_poster'
 
@@ -78,8 +81,8 @@ class SeasonPoster(ImageMaker):
             f'-density 300',
             f'"{self.source.resolve()}"',           # Resize input image
             f'-gravity center',         
-            f'-resize "2000x3000^"',                    # Force into 2000x3000
-            f'-extent "2000x3000"',
+            f'-resize "{self.SEASON_POSTER_SIZE}^"',    # Force into 2000x3000
+            f'-extent "{self.SEASON_POSTER_SIZE}"',
             f'"{self.GRADIENT_OVERLAY.resolve()}"', # Apply gradient
             f'-compose Darken',                         # Darken mode
             f'-composite',                              # Merge images

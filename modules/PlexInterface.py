@@ -269,7 +269,7 @@ class PlexInterface:
             ep_key = f'{plex_episode.parentIndex}-{plex_episode.index}'
             if not (episode := episode_map.get(ep_key)):
                 continue
-
+            
             # Set Episode watched/spoil statuses
             episode.update_statuses(plex_episode.isWatched, watched_style,
                                     unwatched_style)

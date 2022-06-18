@@ -25,8 +25,10 @@ class Title:
     PARTLESS_REGEX = (
         # Match for "title" (digit) or "title" (Part (digit))
         re_compile(r'^(.*?)\s*\((?:Part\s*)?\d+\)', IGNORECASE),
-        # Match for "title" (digit) or "title" (Part (digit))
-        re_compile(r'^(.*?)(?::|\s*-|,)\s+Part\s*\d*', IGNORECASE),
+        # Match for "title" (optional separator) Part (word)
+        re_compile(r'^(.*?)(?::|\s*-|,)?\s+Part\s+[a-zA-Z0-9]+', IGNORECASE),
+        # Match for "title" (Part (word))
+        re_compile(r'^(.*?)\s*\(Part\s*[a-zA-Z0-9]+\)', IGNORECASE),
     )
 
     __slots__ = ('full_title', '__title_lines', '__manually_specified',
