@@ -151,7 +151,10 @@ class Profile:
         if (self.__use_custom_seasons and '{abs_' in self.episode_text_format
             and episode.episode_info.abs_number is None):
                 log.warning(f'Episode text formatting uses absolute episode '
-                            f'number, but {episode} has no absolute number')
+                            f'number, but {episode} has no absolute number - '
+                            f'using episode number instead')
+                new_fmt = self.episode_text_format.replace('{abs_', '{episode_')
+                self.episode_text_format = new_fmt
 
         # Format MultiEpisode episode text
         if isinstance(episode, MultiEpisode):
