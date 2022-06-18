@@ -41,12 +41,13 @@ def runtime(arg: str) -> dict:
 
 def frequency(arg: str) -> dict:
     try:
-        interval, unit = match(r'(\d+)(m|h|d|w)', arg).groups()
+        interval, unit = match(r'(\d+)(s|m|h|d|w)', arg).groups()
         interval, unit = int(interval), unit.lower()
-        assert interval > 0 and unit in ('m', 'h', 'd', 'w')
+        assert interval > 0 and unit in ('s', 'm', 'h', 'd', 'w')
         return {
             'interval': interval,
-            'unit': {'m':'minutes', 'h':'hours', 'd':'days', 'w':'weeks'}[unit]
+            'unit': {'s': 'seconds', 'm':'minutes', 'h':'hours', 'd':'days',
+                     'w':'weeks'}[unit],
         }
     except Exception:
         raise ArgumentTypeError(f'Invalid frequency, specify as FREQUENCY[unit]'
@@ -78,9 +79,9 @@ parser.add_argument(
     type=frequency,
     default=environ.get(ENV_FREQUENCY, DEFAULT_FREQUENCY),
     metavar='FREQUENCY[unit]',
-    help=f'How often to run the TitleCardMaker. Units can be m/h/d/w for '
-         f'minutes/hours/days/weeks. Environment variable {ENV_FREQUENCY}. '
-         f'Defaults to "{DEFAULT_FREQUENCY}"')
+    help=f'How often to run the TitleCardMaker. Units can be s/m/h/d/w for '
+         f'seconds/minutes/hours/days/weeks. Environment variable '
+         f'{ENV_FREQUENCY}. Defaults to "{DEFAULT_FREQUENCY}"')
 parser.add_argument(
     '-m', '--missing', '--missing-file',
     type=Path,

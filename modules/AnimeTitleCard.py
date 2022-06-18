@@ -51,7 +51,6 @@ class AnimeTitleCard(CardType):
     __slots__ = ('source_file', 'output_file', 'title', 'kanji', 'use_kanji',
                  'require_kanji', 'season_text', 'episode_text', 'hide_season',
                  'separator', 'blur', 'font_size')
-
     
     def __init__(self, source: Path, output_file: Path, title: str, 
                  season_text: str, episode_text: str, hide_season: bool,
