@@ -1,3 +1,4 @@
+from copy import deepcopy
 from re import findall
 
 from modules.Debug import log
@@ -5,8 +6,8 @@ from modules.Debug import log
 class Template:
     """
     This class describes a template. A Template is a fallback YAML object that
-    can be "filled in" with values, or just outright contain them. Variable
-    data is encoded in the form <<{key}>>. When applied to some series YAML
+    can be "filled in" with values, or just outright contain them. Variable data
+    is encoded in the form <<{key}>>. When applied to some series YAML
     dictionary, the template'd YAML is applied to the series, unless both have
     instances of the data, in which the series data takes priority.
     """
@@ -139,7 +140,7 @@ class Template:
             return False
 
         # Take given template values, fill in template object
-        modified_template = self.__template.copy()
+        modified_template = deepcopy(self.__template)
         for key, value in series_yaml['template'].items():
             self.__apply_value_to_key(modified_template, key, value)
 
@@ -150,5 +151,4 @@ class Template:
         self.__recurse_priority_union(series_yaml, modified_template)
 
         return True
-
 
