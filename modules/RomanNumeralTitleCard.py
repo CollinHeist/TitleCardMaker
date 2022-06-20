@@ -189,7 +189,7 @@ class RomanNumeralTitleCard(CardType):
 
         # Scale font size and interline spacing of roman text
         font_size = int(1250 * self.__roman_text_scalar)
-        interline_spacing = int(-700 * self.__roman_text_scalar)
+        interline_spacing = int(-400 * self.__roman_text_scalar) # -700
         
         # Generate command to create card
         command = ' '.join([
@@ -201,7 +201,7 @@ class RomanNumeralTitleCard(CardType):
             f'-pointsize {font_size}',
             f'-gravity center',
             f'-interline-spacing {interline_spacing}',
-            f'-annotate +0-175 "{self.roman_numeral}"',     # Should be +0+0..
+            f'-annotate +0+0 "{self.roman_numeral}"',     # +0-175
             f'-blur {self.BLUR_PROFILE}' if self.blur else '',
             f'-font "{self.TITLE_FONT}"',
             f'-pointsize 150',
