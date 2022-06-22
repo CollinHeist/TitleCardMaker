@@ -6,6 +6,8 @@ from tinydb import TinyDB, where
 from tqdm import tqdm
 
 from modules.Debug import log, TQDM_KWARGS
+from modules.EpisodeInfo import EpisodeInfo
+from modules.SeriesInfo import SeriesInfo
 
 class PlexInterface:
     """
@@ -422,5 +424,37 @@ class PlexInterface:
         # Log load operations to user
         if loaded_count > 0:
             log.debug(f'Loaded {loaded_count} cards for "{series_info}"')
+
+
+    def get_episode_details(self, rating_key: int) -> tuple[SeriesInfo,
+                                                            EpisodeInfo, str]:
+        """
+        Get all details for the episode indicated by the given Plex rating key.
+        
+        :param      rating_key: Rating key used to fetch the item within Plex.
+        
+        :returns:   Tuple of the SeriesInfo, EpisodeInfo, and string of the
+                    library name corresponding to the given episode.
+        """
+
+        try:
+            # Get the episode for this key
+            episode = self.__server.fetchItem(rating_key)
+
+            # Make sure result is an episode
+            if episode.TYPE != 'episode':
+                log.error(f'Item {episode} is not an Episode')
+                raise NotFound
+
+            series = self.__server.fetchItem(episode.grandparentKey)
+
+            return (
+                SeriesInfo(episode.grandparentTitle, series.year),
+                EpisodeInfo(episode.title, episode.parentIndex, episode.index),
+                episode.librarySectionTitle,
+            )
+        except NotFound:
+            log.error(f'No item with ratingKey={rating_key} exists')
+            return None
 
         
