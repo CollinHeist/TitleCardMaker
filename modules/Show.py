@@ -525,7 +525,8 @@ class Show(YamlReader):
             log.debug(f'Downloaded logo for {self}')
 
 
-    def __apply_styles(self, plex_interface: 'PlexInterface'=None) -> bool:
+    def __apply_styles(self, plex_interface: 'PlexInterface'=None,
+                       select_only: Episode=None) -> bool:
         """
         Modify this series' Episode source images based on their watch statuses,
         and how that style applies to this show's un/watched styles. Return
@@ -535,6 +536,8 @@ class Show(YamlReader):
                                     Episode objects based on the watched status
                                     of. If not provided, episodes are assumed to
                                     all be unwatched (i.e. spoiler free).
+        :param      select_only:    Optional Episode object. If provided, only
+                                    this episode's style is applied.
         
         :returns:   Whether a backdrop should be downloaded or not.
         """
@@ -550,10 +553,14 @@ class Show(YamlReader):
                                      self.unwatched_style)
              for _, episode in self.episodes.items()]
         else:
+            episode_map = self.episodes
+            if select_only:
+                episode_map = {select_only.episode_info.key: select_only}
+
             plex_interface.update_watched_statuses(
                 self.library_name,
                 self.series_info,
-                self.episodes,
+                episode_map,
                 self.watched_style,
                 self.unwatched_style,
             )
@@ -565,6 +572,10 @@ class Show(YamlReader):
         # Go through all episodes and select source images
         download_backdrop = False
         for key, episode in self.episodes.items():
+            # If only selecting a specific episode, skip others
+            if select_only is not None and episode is not select_only:
+                continue
+            
             # Try and get the manually specified source from the episode map
             manual_source = self.__episode_map.get_source(episode.episode_info)
             applies_to = self.__episode_map.get_applies_to(episode.episode_info)
@@ -604,7 +615,8 @@ class Show(YamlReader):
             
             
     def select_source_images(self, plex_interface: PlexInterface=None,
-                             tmdb_interface: 'TMDbInterface'=None) -> None:
+                             tmdb_interface: 'TMDbInterface'=None,
+                             select_only: Episode=None) -> None:
         """
         Modify this series' Episode source images based on their watch statuses,
         and how that style applies to this show's un/watched styles. If a
@@ -617,10 +629,13 @@ class Show(YamlReader):
                                     all be unwatched (i.e. spoiler free).
         :param      tmdb_interface: Optional TMDbInterface to query for a
                                     backdrop if one is needed and DNE.
+        :param      select_only:    Optional Episode object. If provided, only
+                                    this episode's source is selected.
         """
 
         # Modify Episodes watched/blur/source files based on plex status
-        download_backdrop = self.__apply_styles(plex_interface)
+        download_backdrop = self.__apply_styles(plex_interface,
+                                                select_only=select_only)
 
         # Don't download source if this card type doesn't use unique images
         if not self.card_class.USES_UNIQUE_SOURCES:
@@ -635,6 +650,10 @@ class Show(YamlReader):
 
         # For each episode, query interfaces (in priority order) for source
         for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
+            # If only selecting a specific episode, skip others
+            if select_only is not None and episode is not select_only:
+                continue
+            
             # Skip this episode if not downloadable, or source exists
             if not episode.downloadable_source or episode.source.exists():
                 continue
@@ -688,6 +707,57 @@ class Show(YamlReader):
             # Download background art 
             if (url := tmdb_interface.get_series_backdrop(self.series_info)):
                 tmdb_interface.download_image(url, self.backdrop)
+
+
+    def remake_card(self, episode_info: 'EpisodeInfo',
+                    plex_interface: 'PlexInterface',
+                    tmdb_interface: 'TMDbInterface'=None) -> None:
+        """
+        Remake the card associated with the given EpisodeInfo, updating the
+        metadata within Plex.
+        
+        :param      episode_info:   EpisodeInfo corresponding to the Episode
+                                    being updated. Matched by key.
+        :param      plex_interface: The PlexInterface to utilize for watched
+                                    status identification, source image
+                                    gathering, and metadata refreshing.
+        :param      tmdb_interface: Optional TMDbInterface to utilize for source
+                                    gathering.
+        """
+
+        # If no episode of the given index (key) exists, nothing to remake, exit
+        if (episode := self.episodes.get(episode_info.key)) is None:
+            log.error(f'Episode {episode_info} not found in datafile')
+            return None
+
+        # Select proper source for this episode
+        self.select_source_images(plex_interface, tmdb_interface,
+                                  select_only=episode)
+
+        # Exit if this card needs a source and it DNE
+        if self.card_class.USES_UNIQUE_SOURCES and not episode.source.exists():
+            log.error(f'Cannot remake card {episode.destination.resolve()} - no'
+                      f'source image')
+            return None
+
+        # If card wasn't deleted, means watch status didn't change, exit
+        if episode.destination.exists():
+            log.debug(f'Not remaking card {episode.destination.resolve()}')
+            return None
+
+        # Create this card
+        TitleCard(
+            episode,
+            self.profile,
+            self.card_class.TITLE_CHARACTERISTICS,
+            **self.extras,
+            **episode.extra_characteristics,
+        ).create()
+
+        # Update Plex
+        plex_interface.set_title_cards_for_series(
+            self.library_name, self.series_info, {episode_info.key: episode}
+        )
 
 
     def create_missing_title_cards(self) ->None:

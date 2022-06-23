@@ -263,6 +263,79 @@ class Manager:
         self.create_summaries()
 
 
+    @staticmethod
+    def remake_cards(rating_keys: list[int]) -> None:
+        """
+        Remake the title cards associated with the given list of rating keys.
+        These keys are used to identify their corresponding episodes within
+        Plex.
+        
+        :param      rating_keys:    List of rating keys corresponding to
+                                    Episodes to update the cards of.
+        """
+        
+        # Get the global preferences, exit if Plex is not enabled
+        preference_parser = global_objects.pp
+        if not preference_parser.use_plex:
+            log.error(f'Cannot remake card if Plex is not enabled')
+            return None
+
+        # Construct PlexInterface
+        plex_interface = PlexInterface(
+            url=preference_parser.plex_url,
+            x_plex_token=preference_parser.plex_token,
+        )
+
+        # If TMDb is globally enabled, construct that interface
+        tmdb_interface = None
+        if preference_parser.use_tmdb:
+            tmdb_interface = TMDbInterface(preference_parser.tmdb_api_key)
+
+        # Get details for each rating key, removing 
+        entry_list = []
+        for key in rating_keys:
+            if (details := plex_interface.get_episode_details(key)) is None:
+                log.error(f'Cannot remake card, episode not found')
+            else:
+                entry_list.append(details)
+
+        # Go through every series in all series YAML files
+        found = set()
+        for show in preference_parser.iterate_series_files():
+            # If no more entries, exit
+            if len(entry_list) == 0:
+                break
+
+            # Check if this show is one of the entries to update
+            for index, (series_info, episode_info, library_name) \
+                in enumerate(entry_list):
+                # Skip entries already found
+                if index in found:
+                    continue
+
+                # Match the library and series name
+                full_match_name = show.series_info.full_match_name
+                if (show.valid
+                    and show.library_name == library_name
+                    and full_match_name == series_info.full_match_name):
+                    log.info(f'Remaking "{series_info}" {episode_info} within '
+                             f'library "{library_name}"')
+                    # Read this show's source
+                    show.read_source()
+
+                    # Remake card
+                    show.remake_card(episode_info,plex_interface,tmdb_interface)
+                    found.add(index)
+
+        # Warn for all entries not found
+        for index, (series_info, episode_info, library_name) \
+            in enumerate(entry_list):
+            if index not in found:
+                log.warning(f'Cannot update card for "{series_info}" '
+                            f'{episode_info} within library "{library_name}" - '
+                            f'no matching YAML entry was found')
+
+
     def report_missing(self, file: 'Path') -> None:
         """Report all missing assets for Shows known to the Manager."""
 
