@@ -696,7 +696,7 @@ class Show(YamlReader):
                 check_plex = False
 
             # Go through each source interface indicated, try and get source
-            for source_interface in self.preferences.source_priority:
+            for source_interface in self.preferences.image_source_priority:
                 # Query either TMDb or Plex for the source image
                 image_url = None
                 if source_interface == 'tmdb' and check_tmdb:
