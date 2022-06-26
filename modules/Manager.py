@@ -155,14 +155,7 @@ class Manager:
                                  f'"{show.series_info.short_name}"')
 
             # Select source images from Plex and/or TMDb
-            interfaces = {'plex_interface': None, 'tmdb_interface': None}
-            if self.preferences.use_plex:
-                interfaces['plex_interface'] = self.plex_interface
-            if self.preferences.use_tmdb:
-                interfaces['tmdb_interface'] = self.tmdb_interface
-
-            # Pass enabled interfaces
-            show.select_source_images(**interfaces)
+            show.select_source_images(self.plex_interface, self.tmdb_interface)
 
 
     def create_missing_title_cards(self) -> None:

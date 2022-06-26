@@ -198,7 +198,7 @@ class Show(YamlReader):
         if (name := self._get('name', type_=str)) is not None:
             self.series_info.update_name(name)
 
-        if (format_ := self.get('filename_format', type_=str)) is not None:
+        if (format_ := self._get('filename_format', type_=str)) is not None:
             if not TitleCard.validate_card_format_string(format_):
                 self.valid = False
             else:
@@ -219,6 +219,15 @@ class Show(YamlReader):
                 # If card type was specified for this library, set that
                 if (card_type := this_library.get('card_type')):
                     self.__parse_card_type(card_type)
+
+        if (id_ := self._get('sonarr_id', type_=int)) is not None:
+            self.series_info.set_sonarr_id(id_)
+
+        if (id_ := self._get('tvdb_id', type_=int)) is not None:
+            self.series_info.set_tvdb_id(id_)
+
+        if (id_ := self._get('tmdb_id', type_=int)) is not None:
+            self.series_info.set_tmdb_id(id_)
 
         if (card_type := self._get('card_type', type_=str)) is not None:
             self.__parse_card_type(card_type)
