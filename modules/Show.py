@@ -315,12 +315,13 @@ class Show(YamlReader):
         self.episodes = {}
 
         # Go through each entry in the file interface
-        for entry in self.file_interface.read():
+        for entry, given_keys in self.file_interface.read():
             # Create Episode object for this entry, store under key
             self.episodes[entry['episode_info'].key] = Episode(
                 base_source=self.source_directory,
                 destination=self.__get_destination(entry['episode_info']),
                 card_class=self.card_class,
+                given_keys=given_keys,
                 **entry,
             )
 
@@ -457,7 +458,7 @@ class Show(YamlReader):
             # Get each translation for this series
             for translation in self.title_languages:
                 # If the key already exists, skip this episode
-                if translation['key'] in episode.extra_characteristics:
+                if episode.key_is_specified(translation['key']):
                     continue
 
                 # Update progress bar
@@ -484,7 +485,7 @@ class Show(YamlReader):
 
                 # Adding translated title, log it
                 log.debug(f'Added "{language_title}" to '
-                          f'"{translation["key"]}" for {self}')
+                          f'"{translation["key"]}" for {self} {episode}')
 
         # If any translations were added, re-read source
         if modified:
