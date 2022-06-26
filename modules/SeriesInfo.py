@@ -1,3 +1,5 @@
+from modules.Debug import log
+
 class SeriesInfo:
     """
     This class encapsulates static information that is tied to a single Series.
@@ -99,7 +101,8 @@ class SeriesInfo:
         :param      sonarr_id:  The Sonarr ID used for this series.
         """
         
-        self.sonarr_id = int(sonarr_id)
+        if self.sonarr_id is None:
+            self.sonarr_id = int(sonarr_id)
 
 
     def set_tvdb_id(self, tvdb_id: int) -> None:
@@ -109,7 +112,8 @@ class SeriesInfo:
         :param      tvdb_id:  The TVDb ID for this series.
         """
 
-        self.tvdb_id = int(tvdb_id)
+        if self.tvdb_id is None:
+            self.tvdb_id = int(tvdb_id)
 
 
     def set_tmdb_id(self, tmdb_id: int) -> None:
@@ -118,8 +122,9 @@ class SeriesInfo:
         
         :param      tmdb_id:    The TMDb ID for this series.
         """
-
-        self.tmdb_id = int(tmdb_id)
+        
+        if self.tmdb_id is None:
+            self.tmdb_id = int(tmdb_id)
 
 
     @staticmethod

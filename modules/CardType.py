@@ -24,11 +24,11 @@ class CardType(ImageMaker):
 
     """Mapping of 'case' strings to format functions"""
     CASE_FUNCTIONS = {
-        'source': str,
-        'upper': str.upper,
-        'lower': str.lower,
-        'title': titlecase,
         'blank': lambda _: '',
+        'lower': str.lower,
+        'source': str,
+        'title': titlecase,
+        'upper': str.upper,
     }
 
     """Default episode text format string, can be overwritten by each class"""

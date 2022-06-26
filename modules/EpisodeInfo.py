@@ -13,11 +13,11 @@ class EpisodeInfo:
     season_number: int
     episode_number: int
     abs_number: int=None
-    sonarr_id: int=None
     tvdb_id: int=None
-    tmdb_id: int=None
+    imdb_id: str=None
     key: str = field(init=False, repr=False)
     
+
     def __post_init__(self):
         """Called after __init__, sets types of indices, assigns key field"""
 
@@ -78,6 +78,13 @@ class EpisodeInfo:
 
 
     @property
+    def ids(self) -> dict:
+        """This object's ID's (as a dictionary)"""
+
+        return {'tvdb_id': self.tvdb_id, 'imdb_id': self.imdb_id}
+
+
+    @property
     def episode_characteristics(self) -> dict:
         """This object's season/episode indices (as a dictionary)"""
 
@@ -99,16 +106,6 @@ class EpisodeInfo:
         self.abs = self.abs_number
 
 
-    def set_sonarr_id(self, sonarr_id: int) -> None:
-        """
-        Sets the Sonarr ID for this object.
-        
-        :param      tmdb_id:    The Sonarr ID to set.
-        """
-
-        self.sonarr_id = int(sonarr_id)
-
-
     def set_tvdb_id(self, tvdb_id: int) -> None:
         """
         Sets the TVDb ID for this object.
@@ -116,23 +113,25 @@ class EpisodeInfo:
         :param      tmdb_id:    The TVDb ID to set.
         """
 
-        self.tvdb_id = int(tvdb_id)
+        if self.tvdb_id is None and tvdb_id is not None:
+            self.tvdb_id = int(tvdb_id)
 
 
-    def set_tmdb_id(self, tmdb_id: int) -> None:
+    def set_imdb_id(self, imdb_id: str) -> None:
         """
-        Sets the TMDb ID for this object.
+        Sets the IMDb ID for this object.
         
-        :param      tmdb_id:    The TMDb ID to set.
+        :param      imdb_id:    The IMDb ID to set.
         """
 
-        self.tmdb_id = int(tmdb_id)
+        if self.imdb_id is None and imdb_id is not None:
+            self.imdb_id = imdb_id
 
 
     def copy_ids(self, other: 'EpisodeInfo') -> None:
         """
-        Copy all ID's from the given EpisodeInfo object. This copies the Sonarr,
-        TVDb, and TMDb ID's.
+        Copy all ID's from the given EpisodeInfo object. This copies the TVDb,
+        and TMDb ID's.
         
         :param      other:  The EpisodeInfo object to copy ID's from.
         """
@@ -140,7 +139,21 @@ class EpisodeInfo:
         if not isinstance(other, EpisodeInfo):
             raise TypeError(f"Can only copy ID's into an EpisodeInfo object")
 
-        self.sonarr_id = other.sonarr_id
-        self.tvdb_id = other.tvdb_id
-        self.tmdb_id = other.tmdb_id
+        self.set_tvdb_id(other.tvdb_id)
+        self.set_imdb_id(other.imdb_id)
+
+
+    def set_from_guids(self, guids: list['plexapi.media.GuidTag']) -> None:
+        """
+        Sets the from guids.
+        
+        :param      guids:  The guids
+        """
+
+        for guid in guids:
+            if 'tvdb://' in guid.id:
+                self.set_tvdb_id(guid.id[len('tvdb://'):])
+            elif 'imdb://' in guid.id:
+                self.set_imdb_id(guid.id[len('imdb://'):])
+
         

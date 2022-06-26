@@ -83,6 +83,7 @@ class Show(YamlReader):
             
         # Setup default values that can be overwritten by YAML
         self.series_info = SeriesInfo(name, year)
+        self.card_filename_format = self.preferences.card_filename_format
         self.media_directory = None
         self.card_class = TitleCard.CARD_TYPES[self.preferences.card_type]
         self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
@@ -197,6 +198,12 @@ class Show(YamlReader):
         if (name := self._get('name', type_=str)) is not None:
             self.series_info.update_name(name)
 
+        if (format_ := self.get('filename_format', type_=str)) is not None:
+            if not TitleCard.validate_card_format_string(format_):
+                self.valid = False
+            else:
+                self.card_filename_format = format_
+
         if (library := self._get('library')) is not None:
             # If the given library isn't in libary map, invalid
             if not (this_library := self.__library_map.get(library)):
@@ -298,7 +305,7 @@ class Show(YamlReader):
             return None
         
         return TitleCard.get_output_filename(
-            self.preferences.card_filename_format,
+            self.card_filename_format,
             self.series_info,
             episode_info,
             self.media_directory
