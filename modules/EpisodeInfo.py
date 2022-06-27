@@ -1,15 +1,17 @@
 from dataclasses import dataclass, field
 
+from modules.Title import Title
+
 @dataclass(eq=False, order=False)
 class EpisodeInfo:
     """
     This class describes static information about an Episode, such as the
     season, episode, and absolute number, as well as the various ID's associated
-    with it - such as Sonarr, TVDb, and TMDb.
+    with it.
     """
 
     # Object attributes
-    title: 'Title'
+    title: str
     season_number: int
     episode_number: int
     abs_number: int=None
@@ -20,6 +22,10 @@ class EpisodeInfo:
 
     def __post_init__(self):
         """Called after __init__, sets types of indices, assigns key field"""
+
+        # Convert title to Title object
+        if isinstance(self.title, str):
+            self.title = Title(self.title)
 
         # Convert indices to integers
         self.season_number = int(self.season_number)
