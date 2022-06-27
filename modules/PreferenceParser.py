@@ -395,15 +395,17 @@ class PreferenceParser(YamlReader):
             # Get font map for this file
             font_map = file_yaml.get('fonts', {})
 
-            # Get templates for this file
+            # Get templates for this file, validate they're all dictionaries
             templates = {}
-            for name, template in file_yaml.get('templates', {}).items():
-                # If not specified as dictionary, error and skip
-                if not isinstance(template, dict):
-                    log.error(f'Invalid template specification for "{name}" in '
-                              f'series file "{file.resolve()}"')
-                    continue
-                templates[name] = Template(name, template)
+            value = file_yaml.get('templates', {})
+            if isinstance(value, dict):
+                for name, template in value.items():
+                    # If not specified as dictionary, error and skip
+                    if not isinstance(template, dict):
+                        log.error(f'Invalid template specification for "{name}"'
+                                  f' in series file "{file.resolve()}"')
+                        continue
+                    templates[name] = Template(name, template)
 
             # Go through each series in this file
             for show_name in tqdm(file_yaml['series'], desc='Creating Shows',
