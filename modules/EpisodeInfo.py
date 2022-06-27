@@ -10,7 +10,7 @@ class EpisodeInfo:
     with it.
     """
 
-    # Object attributes
+    # Dataclass initialization attributes
     title: str
     season_number: int
     episode_number: int
@@ -23,7 +23,7 @@ class EpisodeInfo:
     def __post_init__(self):
         """Called after __init__, sets types of indices, assigns key field"""
 
-        # Convert title to Title object
+        # Convert title to Title object if given as string
         if isinstance(self.title, str):
             self.title = Title(self.title)
 
@@ -151,9 +151,9 @@ class EpisodeInfo:
 
     def set_from_guids(self, guids: list['plexapi.media.GuidTag']) -> None:
         """
-        Sets the from guids.
+        Set this object's ID's from a list of Plex API list of GuidTags.
         
-        :param      guids:  The guids
+        :param      guids:  List of GUID's to parse for ID's.
         """
 
         for guid in guids:

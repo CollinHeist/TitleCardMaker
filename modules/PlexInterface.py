@@ -217,7 +217,9 @@ class PlexInterface:
         Gets all episode info for the given series. Only episodes that have 
         already aired are returned.
         
-        :param      series_info:    SeriesInfo for the entry.
+        :param      library_name:   The name of the library containing the
+                                    series.
+        :param      series_info:    Series to get the episodes of.
         
         :returns:   List of EpisodeInfo objects for this series.
         """
@@ -250,8 +252,8 @@ class PlexInterface:
         """
         Determine whether the given series is present within Plex.
         
-        :param      library_name:   The name of the library containing the
-                                    series to update.
+        :param      library_name:   The name of the library potentially
+                                    containing the series.
         :param      series_info:    The series to update.
         
         :returns:   True if the series is present within Plex.
@@ -329,6 +331,44 @@ class PlexInterface:
                     {'filesize': 0},
                     self.__get_condition(library_name, series_info, episode)
                 )
+
+
+    def set_episode_ids(self, library_name: str, series_info: SeriesInfo,
+                        infos: list[EpisodeInfo]) -> None:
+        """
+        Set all the episode ID's for the given list of EpisodeInfo objects. This
+        sets the Sonarr and TVDb ID's for each episode. As a byproduct, this
+        also updates the series ID's for the SeriesInfo object
+        
+        :param      library_name:   Name of the library the series is under.
+        :param      series_info:    SeriesInfo for the entry.
+        :param      infos:          List of EpisodeInfo objects to update.
+        """
+
+        # If the given library cannot be found, exit
+        if not (library := self.__get_library(library_name)):
+            return None
+
+        # If the given series cannot be found in this library, exit
+        if not (series := self.__get_series(library, series_info)):
+            return None
+
+        for info in infos:
+            # Skip if EpisodeInfo already has IMDb, and TVDb ID's
+            if info.imdb_id is not None and info.tvdb_id is not None:
+                continue
+
+            try:
+                # Get episode from Plex
+                plex_episode = series.episode(
+                    season=info.season_number,
+                    episode=info.episode_number,
+                )
+
+                # Set this episode's ID's from the episode's associated GUID's
+                info.set_from_guids(plex_episode.guids)
+            except NotFound:
+                continue
 
 
     def get_source_image(self, library_name: str, series_info: 'SeriesInfo',

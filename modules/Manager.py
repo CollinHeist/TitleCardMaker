@@ -81,6 +81,20 @@ class Manager:
             )
 
 
+    def set_show_ids(self) -> None:
+        """Set the series ID's of each Show known to this Manager"""
+
+        # If neither Sonarr nor TMDb are enabled, skip
+        if not self.sonarr_interface and not self.tmdb_interface:
+            return None
+
+        # For each show in the Manager, set series IDs
+        for show in tqdm(self.shows + self.archives, desc='Setting series IDs',
+                         **TQDM_KWARGS):
+            # Select interfaces based on what's enabled
+            show.set_series_ids(self.sonarr_interface, self.tmdb_interface)
+
+
     def read_show_source(self) -> None:
         """
         Reads all source files known to this manager. This reads Episode objects
@@ -100,9 +114,7 @@ class Manager:
 
 
     def add_new_episodes(self) -> None:
-        """
-        Adds new episodes.
-        """
+        """Add any new episodes to this Manager's shows."""
 
         # If Sonarr, Plex, and TMDb are disabled, exit
         if (not self.sonarr_interface and not self.plex_interface
@@ -118,7 +130,23 @@ class Manager:
             )
 
 
-    def check_tmdb_for_translations(self) -> None:
+    def set_episode_ids(self) -> None:
+        """Set all episode ID's for all shows known to this manager."""
+
+        # If Sonarr, Plex, and TMDb are disabled, exit
+        if (not self.sonarr_interface and not self.plex_interface
+            and not self.tmdb_interface):
+            return None
+
+        # For each show in the Manager, set IDs for every episode
+        for show in tqdm(self.shows + self.archives, desc='Setting episode IDs',
+                         **TQDM_KWARGS):
+            show.set_episode_ids(
+                self.sonarr_interface, self.plex_interface, self.tmdb_interface
+            )
+
+
+    def add_translations(self) -> None:
         """Query TMDb for all translated episode titles (if indicated)."""
 
         # If the TMDbInterface isn't enabled, skip
@@ -247,9 +275,11 @@ class Manager:
         """Run the manager and exit."""
         
         self.create_shows()
+        self.set_show_ids()
         self.read_show_source()
         self.add_new_episodes()
-        self.check_tmdb_for_translations()
+        self.set_episode_ids()
+        self.add_translations()
         self.download_logos()
         self.select_source_images()
         self.create_missing_title_cards()

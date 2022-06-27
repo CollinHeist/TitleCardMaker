@@ -81,7 +81,7 @@ class Show(YamlReader):
             self.valid = False
             return None
             
-        # Setup default values that can be overwritten by YAML
+        # Setup default values that may be overwritten by YAML
         self.series_info = SeriesInfo(name, year)
         self.card_filename_format = self.preferences.card_filename_format
         self.media_directory = None
@@ -192,8 +192,8 @@ class Show(YamlReader):
 
     def __parse_yaml(self):
         """
-        Parse the show's YAML and update this object's attributes. Error on any
-        invalid attributes and update this object's validity.
+        Parse the Show's YAML and update this object's attributes. Error on any
+        invalid attributes.
         """
 
         if (name := self._get('name', type_=str)) is not None:
@@ -309,6 +309,28 @@ class Show(YamlReader):
             self.extras = self._get('extras', type_=dict)
 
 
+    def set_series_ids(self, sonarr_interface: 'SonarrInterface'=None,
+                       tmdb_interface: 'TMDbInterface'=None) -> None:
+        """
+        Set the series ID's for this show using the given interfaces.
+        
+        :param      sonarr_interface:   The SonarrInterface to query.
+        :param      tmdb_interface:     The TMDbInterface to query.
+        """
+
+        # Sonarr can provide Sonarr and TVDb ID's
+        if (sonarr_interface and self.sonarr_sync and
+            (self.series_info.sonarr_id is None or
+             self.series_info.tvdb_id is None)):
+            sonarr_interface.set_series_ids(self.series_info)
+
+        # TMDb can provide TMDb and TVDb ID's
+        if (tmdb_interface and self.tmdb_sync and
+            (self.series_info.tmdb_id is None or
+             self.series_info.tvdb_id is None)):
+            tmdb_interface.set_series_ids(self.series_info)
+
+
     def __get_destination(self, episode_info: 'EpisodeInfo') -> Path:
         """
         Get the destination filename for the given entry of a datafile.
@@ -352,117 +374,133 @@ class Show(YamlReader):
             )
 
 
-    def find_multipart_episodes(self) -> None:
+    def add_new_episodes(self, sonarr_interface: 'SonarrInterface'=None,
+                         plex_interface: 'PlexInterface'=None,
+                         tmdb_interface: 'TMDbInterface'=None) -> None:
         """
-        Find and create all the multipart episodes for this series. This adds
-        MutliEpisode objects to this show's episodes dictionary.
-        """
-
-        # Set of episodes already mapped
-        matched = set()
-
-        # List of multipart episodes
-        multiparts = []
-
-        # Go through each episode to check if it can be made into a MultiEpisode
-        for _, episode in self.episodes.items():
-            # If this episode has already been used in MultiEpisode, skip
-            if episode in matched:
-                continue
-
-            # Get the partless title for this episode, and match within season
-            partless_title = episode.episode_info.title.get_partless_title()
-            season_number = episode.episode_info.season_number
-
-            # Sublist of all matching episodes
-            matching_episodes = [episode]
-
-            # Check if the next sequential episode is a multiparter
-            next_key = episode.episode_info + 1
-            while next_key in self.episodes:
-                # Get the next episode
-                next_episode = self.episodes[next_key]
-                next_title =next_episode.episode_info.title.get_partless_title()
-
-                # If this next episode's partless title matches, add to list
-                if partless_title == next_title:
-                    matching_episodes.append(next_episode)
-                else:
-                    break
-
-                # Move to next episode
-                next_key = next_episode.episode_info + 1
-
-            # If there are matching episodes, add to multiparts list
-            if len(matching_episodes) > 1:
-                # Create a MultiEpisode object for these episodes and new title
-                multi = MultiEpisode(matching_episodes, Title(partless_title))
-
-                destination = None
-                if self.media_directory:
-                    # Get the output filename for this multiepisode card
-                    destination = TitleCard.get_multi_output_filename(
-                        self.preferences.card_filename_format,
-                        self.series_info,
-                        multi,
-                        self.media_directory,
-                    )
-                    multi.set_destination(destination)
-                
-                # Add MultiEpisode to list
-                multiparts.append(multi)
-                matched.update(set(matching_episodes))
+        Query the provided interfaces, checking for any new episodes exist in
+        that interface. All new entries are added to this object's datafile,
+        and an Episode object is created.
         
-        # Add all MultiEpisode objects to this show's episode dictionary
-        for mp in multiparts:
-            self.episodes[f'0{mp.season_number}-{mp.episode_start}'] = mp
-
-
-    def query_sonarr(self, sonarr_interface: 'SonarrInterface') -> None:
-        """
-        Query the provided SonarrInterface object, checking if the returned
-        episodes exist in this show's associated source. All new entries are
-        added to this object's DataFileInterface, the source is re-read, and
-        episode ID's are set IF TMDb syncing is enabled.
-
-        This method should only be called if Sonarr syncing is globally enabled.
-        
-        :param      sonarr_interface:   The SonarrInterface to query.
+        :param      sonarr_interface:   The SonarrInterface to optionally query.
+        :param      plex_interface:     The PlexInterface to optionally query.
+        :param      tmdb_interface:     The TMDbInterface to optionally query.
         """
 
-        # Check if Sonarr is enabled for this show in partocular
-        if not self.sonarr_sync:
+        # Get episodes from indicated data source
+        if (self.episode_data_source == 'sonarr' and self.sonarr_sync
+            and sonarr_interface):
+            all_episodes = sonarr_interface.get_all_episodes(self.series_info)
+        elif (self.episode_data_source == 'plex' and self.library is not None
+            and plex_interface):
+            all_episodes = plex_interface.get_all_episodes(self.library_name,
+                                                           self.series_info)
+        elif (self.episode_data_source == 'tmdb' and self.tmdb_sync
+            and tmdb_interface):
+            all_episodes = tmdb_interface.get_all_episodes(self.series_info)
+        else:
+            log.warning(f'Cannot source episodes for {self} from '
+                        f'{self.episode_data_source}')
             return None
 
-        # Get list of EpisodeInfo objects from Sonarr
-        all_episodes = sonarr_interface.get_all_episodes_for_series(
-            self.series_info
-        )
+        # No episodes found by data source
+        if not all_episodes:
+            return None
 
-        # For each episode, check if the data matches any contained Episodes
-        if all_episodes:
-            # Filter out episodes that already exist
+        # Filter out episodes that already exist
+        new_episodes = list(filter(
+            lambda episode: episode.key not in self.episodes,
+            all_episodes,
+        ))
+
+        # Filter episodes that are specials if specials aren't synced
+        if not self.sync_specials:
             new_episodes = list(filter(
-                lambda e: e.key not in self.episodes,
-                all_episodes,
+                lambda episode: episode.season_number != 0,
+                new_episodes,
             ))
 
-            # Filter episodes that are specials if sync_specials is False
-            if not self.sync_specials:
-                new_episodes = list(filter(
-                    lambda e: e.season_number != 0,
-                    new_episodes,
-                ))
+        # If any new episodes remain, add to datafile and create Episode object
+        self.file_interface.add_many_entries(new_episodes)
+        for episode_info in new_episodes:
+            self.episodes[episode_info.key] = Episode(
+                base_source=self.source_directory,
+                destination=self.__get_destination(episode_info),
+                card_class=self.card_class,
+                given_keys=set(),
+                episode_info=episode_info,
+            )
 
-            # If there are new episodes, add to the datafile, return True
-            if new_episodes:
-                self.file_interface.add_many_entries(new_episodes)
-                self.read_source()
 
-        # If TMDb syncing is enabled, set episode ID's for all episodes
-        if self.tmdb_sync:
-            all_episodes = list(ei for _, ei in self.episodes.items())
-            sonarr_interface.set_all_episode_ids(self.series_info, all_episodes)
+    def set_episode_ids(self, sonarr_interface: 'TMDbInterface'=None,
+                        plex_interface: 'PlexInterface'=None,
+                        tmdb_interface: 'TMDbInterface'=None) -> None:
+        """
+        Set episode ID's for all Episodes within this Show, using the given
+        interfaces. Only episodes whose card is not present or still need
+        translations are updated.
+        
+        :param      sonarr_interface:   The SonarrInterface to optionally query.
+        :param      plex_interface:     The PlexInterface to optionally query.
+        :param      tmdb_interface:     The TMDbInterface to optionally query.
+        """
+
+        # Exit if primary data source doesn't have an interface
+        if (self.episode_data_source == 'sonarr'
+            and (not self.sonarr_sync or not sonarr_interface)):
+            return None
+        elif (self.episode_data_source == 'plex'
+            and (self.library is None or not plex_interface)):
+            return None
+        elif (self.episode_data_source == 'tmdb'
+            and (not self.tmdb_sync or not tmdb_interface)):
+            return None
+
+        # Filter episodes not needing ID's - i.e. has card, and has translation
+        def does_need_id(item) -> bool:
+            _, episode = item
+            if episode.destination is None:
+                return False
+            if not episode.destination.exists():
+                return True
+            for translation in self.title_languages:
+                if not episode.key_is_specified(translation['key']):
+                    return True
+            return False
+
+        # Apply filter of only those needing ID's, get only EpisodeInfo objects
+        infos = list(
+            ep.episode_info for _, ep in
+            filter(does_need_id, self.episodes.items())
+        )
+
+        # If no episodes need ID's, exit
+        if not infos:
+            return None
+
+        # Temporary function to load episode ID's
+        def load_sonarr(infos):
+            if self.sonarr_sync and sonarr_interface:
+                sonarr_interface.set_episode_ids(self.series_info, infos)
+        def load_plex(infos):
+            if self.library is not None and plex_interface:
+                plex_interface.set_episode_ids(self.library_name,
+                                               self.series_info, infos)
+        def load_tmdb(infos):
+            if self.tmdb_sync and tmdb_interface:
+                tmdb_interface.set_episode_ids(self.series_info, infos)
+
+        # Identify interface order for ID gathering based on primary episode
+        # data source
+        interface_orders = {
+            'sonarr': [load_sonarr, load_plex, load_tmdb],
+            'plex':   [load_plex, load_sonarr, load_tmdb],
+            'tmdb':   [load_tmdb, load_plex, load_sonarr],
+        }
+        
+        # Go through each interface and load ID's from it
+        for interface_function in interface_orders[self.episode_data_source]:
+            interface_function(infos)
 
 
     def add_translations(self, tmdb_interface: 'TMDbInterface') -> None:
@@ -523,7 +561,7 @@ class Show(YamlReader):
         Download the logo for this series from TMDb. Any SVG logos are converted
         to PNG.
         
-        :param      tmdb_interface: Interface to TMDb to download the logo from.
+        :param      tmdb_interface: TMDbInterface to download the logo from.
         """
 
         # If not syncing to TMDb, or logo already exists, exit
@@ -734,6 +772,72 @@ class Show(YamlReader):
             # Download background art 
             if (url := tmdb_interface.get_series_backdrop(self.series_info)):
                 tmdb_interface.download_image(url, self.backdrop)
+
+
+    def find_multipart_episodes(self) -> None:
+        """
+        Find and create all the multipart episodes for this series. This adds
+        MultiEpisode objects to this Show's episodes dictionary.
+        """
+
+        # Set of episodes already mapped
+        matched = set()
+
+        # List of multipart episodes
+        multiparts = []
+
+        # Go through each episode to check if it can be made into a MultiEpisode
+        for _, episode in self.episodes.items():
+            # If this episode has already been used in MultiEpisode, skip
+            if episode in matched:
+                continue
+
+            # Get the partless title for this episode, and match within season
+            partless_title = episode.episode_info.title.get_partless_title()
+            season_number = episode.episode_info.season_number
+
+            # Sublist of all matching episodes
+            matching_episodes = [episode]
+
+            # Check if the next sequential episode is a multiparter
+            next_key = episode.episode_info + 1
+            while next_key in self.episodes:
+                # Get the next episode
+                next_episode = self.episodes[next_key]
+                next_title =next_episode.episode_info.title.get_partless_title()
+
+                # If this next episode's partless title matches, add to list
+                if partless_title == next_title:
+                    matching_episodes.append(next_episode)
+                else:
+                    break
+
+                # Move to next episode
+                next_key = next_episode.episode_info + 1
+
+            # If there are matching episodes, add to multiparts list
+            if len(matching_episodes) > 1:
+                # Create a MultiEpisode object for these episodes and new title
+                multi = MultiEpisode(matching_episodes, Title(partless_title))
+
+                destination = None
+                if self.media_directory:
+                    # Get the output filename for this multiepisode card
+                    destination = TitleCard.get_multi_output_filename(
+                        self.preferences.card_filename_format,
+                        self.series_info,
+                        multi,
+                        self.media_directory,
+                    )
+                    multi.set_destination(destination)
+                
+                # Add MultiEpisode to list
+                multiparts.append(multi)
+                matched.update(set(matching_episodes))
+        
+        # Add all MultiEpisode objects to this show's episode dictionary
+        for mp in multiparts:
+            self.episodes[f'0{mp.season_number}-{mp.episode_start}'] = mp
 
 
     def remake_card(self, episode_info: 'EpisodeInfo',
