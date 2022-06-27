@@ -58,7 +58,7 @@ class LogoTitleCard(CardType):
                  blur: bool=False, vertical_shift: int=0,
                  interline_spacing: int=0, kerning: float=1.0,
                  stroke_width: float=1.0, logo: str=None,
-                 background: str='#000000', *args, **kwargs) -> None:
+                 background: str='#000000', **kwargs) -> None:
         """
         Initialize the TitleCardMaker object. This primarily just stores
         instance variables for later use in `create()`. If the provided font
@@ -84,7 +84,7 @@ class LogoTitleCard(CardType):
                                     text.
         :param  logo:               Filepath to the logo file.
         :param  background:         Backround color to use for this card.
-        :param  args and kwargs:    Unused arguments to permit generalized calls
+        :param  kwargs:             Unused arguments to permit generalized calls
                                     for any CardType.
         """
         

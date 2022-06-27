@@ -53,7 +53,7 @@ class RomanNumeralTitleCard(CardType):
                  title_color: str, episode_number: int=1, blur: bool=False, 
                  background: str='black', 
                  roman_numeral_color: str=ROMAN_NUMERAL_TEXT_COLOR,
-                 *args, **kwargs) -> None:
+                 **kwargs) -> None:
         """
         Constructs a new instance.
         
@@ -67,7 +67,7 @@ class RomanNumeralTitleCard(CardType):
         :param      background:             Color for the background.
         :param      roman_numeral_color:    Color for the roman numerals.
         :param      blur:                   Whether to blur the source image.
-        :param      args and kwargs:        Unused arguments.
+        :param      kwargs:                 Unused arguments.
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface

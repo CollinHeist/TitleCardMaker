@@ -7,7 +7,7 @@ from modules.Debug import log
 class TextlessTitleCard(CardType):
     """
     This class describes a type of CardType that does not modify the source
-    image in anyway, and only optionally blurs it. No text of any kind is added.
+    image in anyway, only optionally blurring it. No text of any kind is added.
     """
 
     """Characteristics for title splitting by this class"""
@@ -23,11 +23,9 @@ class TextlessTitleCard(CardType):
     """Default episode text format string, can be overwritten by each class"""
     EPISODE_TEXT_FORMAT = ''
 
-    """Default font and text color for episode title text"""
+    """Characteristics of the default title font"""
     TITLE_FONT = None
     TITLE_COLOR = None
-
-    """Default characters to replace in the generic font"""
     FONT_REPLACEMENTS = {}
 
     """Whether this CardType uses season titles for archival purposes"""
@@ -40,17 +38,17 @@ class TextlessTitleCard(CardType):
 
 
     def __init__(self, source: Path, output_file: Path, blur: bool=False,
-                 *args, **kwargs) -> None:
+                 **kwargs) -> None:
         """
         Initialize the TitleCardMaker object. This primarily just stores
         instance variables for later use in `create()`. If the provided font
         does not have a character in the title text, a space is used instead.
 
-        :param  source:             Source image.
-        :param  output_file:        Output file.
-        :param  blur:               Whether to blur the source image.
-        :param  args and kwargs:    Unused arguments to permit generalized calls
-                                    for any CardType.
+        :param  source:         Source image.
+        :param  output_file:    Output file.
+        :param  blur:           Whether to blur the source image.
+        :param  kwargs:         Unused arguments to permit generalized calls for
+                                any CardType.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface

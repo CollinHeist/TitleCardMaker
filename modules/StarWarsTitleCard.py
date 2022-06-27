@@ -9,8 +9,7 @@ from modules.Debug import log
 class StarWarsTitleCard(CardType):
     """
     This class describes a type of ImageMaker that produces title cards in the
-    theme of Star Wars cards as designed by reddit user /u/Olivier_286. These
-    cards are not as customizable as the standard template.
+    theme of Star Wars cards as designed by reddit user /u/Olivier_286.
     """
 
     """Directory where all reference files used by this card are stored"""
@@ -23,54 +22,46 @@ class StarWarsTitleCard(CardType):
         'top_heavy': True,      # This class uses top heavy titling
     }
 
-    """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Star Wars Style'
-
-    """Path to the font to use for the episode title"""
+    """Characteristics of the default title font"""
     TITLE_FONT = str((REF_DIRECTORY/'Monstice-Base.ttf').resolve())
-
-    """Color to use for the episode title"""
     TITLE_COLOR = '#DAC960'
-
-    """Default episode text format string"""
-    EPISODE_TEXT_FORMAT = 'EPISODE {episode_number}'
-
-    """Color of the episode/episode number text"""
-    EPISODE_TEXT_COLOR = '#AB8630'
-
-    """Standard font replacements for the title font"""
     FONT_REPLACEMENTS = {'Ō': 'O', 'ō': 'o'}
+
+    """Characteristics of the episode text"""
+    EPISODE_TEXT_FORMAT = 'EPISODE {episode_number}'
+    EPISODE_TEXT_COLOR = '#AB8630'
+    EPISODE_TEXT_FONT = REF_DIRECTORY / 'HelveticaNeue.ttc'
+    EPISODE_NUMBER_FONT = REF_DIRECTORY / 'HelveticaNeue-Bold.ttf'
 
     """Whether this class uses season titles for the purpose of archives"""
     USES_SEASON_TITLE = False
 
+    """How to name archive directories for this type of card"""
+    ARCHIVE_NAME = 'Star Wars Style'
+
     """Path to the reference star image to overlay on all source images"""
     __STAR_GRADIENT_IMAGE = REF_DIRECTORY / 'star_gradient.png'
-
-    """Path to the font to use for the episode/episode number text """
-    EPISODE_TEXT_FONT = REF_DIRECTORY / 'HelveticaNeue.ttc'
-    EPISODE_NUMBER_FONT = REF_DIRECTORY / 'HelveticaNeue-Bold.ttf'
 
     """Paths to intermediate files that are deleted after the card is created"""
     __SOURCE_WITH_STARS = CardType.TEMP_DIR / 'source_gradient.png'
 
 
-    __slots__ = ('source_file', 'output_file', 'title', 'episode_prefix',
-                 'episode_text', 'hide_episode_text', 'blur')
+    __slots__ = ('source_file', 'output_file', 'title', 'hide_episode_text', 
+                 'episode_prefix', 'episode_text', 'blur')
 
     
     def __init__(self, source: Path, output_file: Path, title: str,
-                 episode_text: str, blur: bool=False, *args, **kwargs) -> None:
+                 episode_text: str, blur: bool=False, **kwargs) -> None:
         """
         Constructs a new instance.
         
-        :param      source:             Source image for this card.
-        :param      output_file:        Output filepath for this card.
-        :param      title:              The title for this card.
-        :param      episode_text:       The episode text for this card.
-        :param      blur:               Whether to blur the source image.
-        :param      args and kwargs:    Unused arguments to permit generalized
-                                        function calls for any CardType.
+        :param      source:         Source image for this card.
+        :param      output_file:    Output filepath for this card.
+        :param      title:          The title for this card.
+        :param      episode_text:   The episode text for this card.
+        :param      blur:           Whether to blur the source image.
+        :param      kwargs:         Unused arguments to permit generalized
+                                    function calls for any CardType.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface

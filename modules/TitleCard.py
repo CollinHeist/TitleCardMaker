@@ -65,9 +65,10 @@ class TitleCard:
         """
         Constructs a new instance of this class.
         
-        :param      episode:    The episode whose TitleCard this corresponds to.
-        :param      profile:    The profile to apply to the creation of this 
-                                title card.
+        :param      episode:                The episode whose TitleCard this
+                                            corresponds to.
+        :param      profile:                The profile to apply to the creation
+                                            of this title card.
         :param      title_characteristics:  Dictionary of characteristics from
                                             the CardType class for this Episode
                                             to pass to Title.apply_profile().
@@ -80,7 +81,7 @@ class TitleCard:
         self.episode = episode
         self.profile = profile
 
-        # Apply the given profile to the Episode's Title
+        # Apply the given profile to the Title
         self.converted_title = episode.episode_info.title.apply_profile(
             profile, **title_characteristics
         )   
@@ -94,6 +95,7 @@ class TitleCard:
             episode_text=profile.get_episode_text(self.episode),
             hide_season=profile.hide_season_title,
             blur=episode.blur,
+            watched=episode.watched,
             **profile.font.get_attributes(),
             **extra_characteristics,
             **self.episode.episode_info.episode_characteristics,

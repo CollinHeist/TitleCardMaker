@@ -55,26 +55,25 @@ class AnimeTitleCard(CardType):
     def __init__(self, source: Path, output_file: Path, title: str, 
                  season_text: str, episode_text: str, hide_season: bool,
                  kanji: str=None, require_kanji: bool=False, separator: str='·',
-                 blur: bool=False, font_size: float=1.0, *args, **kwargs)->None:
+                 blur: bool=False, font_size: float=1.0, **kwargs)->None:
         """
         Constructs a new instance.
         
-        :param      source:             Source image for this card.
-        :param      output_file:        Output filepath for this card.
-        :param      title:              The title for this card.
-        :param      season_text:        The season text for this card.
-        :param      episode_text:       The episode text for this card.
-        :param      hide_season:        Whether to hide the season text on this
-                                        card.
-        :param      kanji:              Kanji text to place above the
-                                        episode title on this card.
-        :param      require_kanji:      Whether to require kanji for this card.
-        :param      separator:          Character to use to separate season and
-                                        episode text.
-        :param      blur:               Whether to blur the source image.
-        :param      font_size:          Scalar to apply to the title font size.
-        :param      args and kwargs:    Unused arguments to permit generalized
-                                        function calls for any CardType.
+        :param      source:         Source image for this card.
+        :param      output_file:    Output filepath for this card.
+        :param      title:          The title for this card.
+        :param      season_text:    The season text for this card.
+        :param      episode_text:   The episode text for this card.
+        :param      hide_season:    Whether to hide the season text on this card
+        :param      kanji:          Kanji text to place above the episode title
+                                    on this card.
+        :param      require_kanji:  Whether to require kanji for this card.
+        :param      separator:      Character to use to separate season and
+                                    episode text.
+        :param      blur:           Whether to blur the source image.
+        :param      font_size:      Scalar to apply to the title font size.
+        :param      kwargs:         Unused arguments to permit generalized
+                                    function calls for any CardType.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface
