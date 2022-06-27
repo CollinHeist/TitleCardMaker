@@ -374,11 +374,10 @@ class TMDbInterface(WebInterface):
             url = f'{self.API_BASE_URL}find/{episode_info.tvdb_id}'
             params = {'api_key': self.__api_key, 'external_source': 'tvdb_id'}
             results = self._get(url, params)['tv_episode_results']
-
+            
             # If an episode was found, return its index
             if len(results) > 0:
-                # Set series TMDb ID
-                series_info.set_tmdb_id(results[0]['show_id'])
+                return {
                     'season': results[0]['season_number'],
                     'episode': results[0]['episode_number'],
                 }
