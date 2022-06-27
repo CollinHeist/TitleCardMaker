@@ -99,6 +99,25 @@ class Manager:
             archive.find_multipart_episodes()
 
 
+    def add_new_episodes(self) -> None:
+        """
+        Adds new episodes.
+        """
+
+        # If Sonarr, Plex, and TMDb are disabled, exit
+        if (not self.sonarr_interface and not self.plex_interface
+            and not self.tmdb_interface):
+            return None
+
+        # For each show in the Manager, look for new episodes using any of the
+        # possible interfaces
+        for show in tqdm(self.shows + self.archives, desc='Adding new episodes',
+                         **TQDM_KWARGS):
+            show.add_new_episodes(
+                self.sonarr_interface, self.plex_interface, self.tmdb_interface
+            )
+
+
     def check_tmdb_for_translations(self) -> None:
         """Query TMDb for all translated episode titles (if indicated)."""
 
@@ -124,22 +143,6 @@ class Manager:
         for show in (pbar := tqdm(self.shows + self.archives,
                                   desc='Downloading logos', **TQDM_KWARGS)):
             show.download_logo(self.tmdb_interface)
-
-
-    def check_sonarr_for_new_episodes(self) -> None:
-        """
-        Query Sonarr to see if any new episodes exist for every show known to
-        this manager.
-        """
-
-        # If Sonarr is globally disabled, skip
-        if not self.preferences.use_sonarr:
-            return None
-
-        # Go through each show in the Manager and query Sonarr
-        for show in tqdm(self.shows + self.archives, desc='Querying Sonarr',
-                         **TQDM_KWARGS):
-            show.query_sonarr(self.sonarr_interface)
 
 
     def select_source_images(self) -> None:
@@ -245,7 +248,7 @@ class Manager:
         
         self.create_shows()
         self.read_show_source()
-        self.check_sonarr_for_new_episodes()
+        self.add_new_episodes()
         self.check_tmdb_for_translations()
         self.download_logos()
         self.select_source_images()

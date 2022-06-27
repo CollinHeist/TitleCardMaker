@@ -24,6 +24,9 @@ class PreferenceParser(YamlReader):
     """Valid image source identifiers"""
     VALID_IMAGE_SOURCES = ('tmdb', 'plex')
 
+    """Valid episode data source identifiers"""
+    VALID_EPISODE_DATA_SOURCES = ('sonarr', 'plex', 'tmdb')
+
     """Directory for all temporary objects created/maintained by the Maker"""
     TEMP_DIR = Path(__file__).parent / '.objects'
 
@@ -60,6 +63,7 @@ class PreferenceParser(YamlReader):
         self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
         self.card_extension = TitleCard.DEFAULT_CARD_EXTENSION
         self.image_source_priority = ('tmdb', 'plex')
+        self.episode_data_source = 'sonarr'
         self.validate_fonts = True
         self.zero_pad_seasons = False
         self.hide_season_folders = False
@@ -173,6 +177,14 @@ class PreferenceParser(YamlReader):
                 self.valid = False
             else:
                 self.image_source_priority = sources
+
+        if (value := self._get('options',
+                               'episode_data_source', type_=str)) is not None:
+            if (value := value.lower()) in self.VALID_EPISODE_DATA_SOURCES:
+                self.episode_data_source = value
+            else:
+                log.critical(f'Episode data source "{value}" is invalid')
+                self.valid = False
 
         if (value := self._get('options', 'validate_fonts', type_=bool)) !=None:
             self.validate_fonts = value

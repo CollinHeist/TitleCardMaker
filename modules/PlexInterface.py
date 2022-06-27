@@ -211,6 +211,41 @@ class PlexInterface:
             return None
 
 
+    def get_all_episodes(self, library_name,
+                         series_info: SeriesInfo) -> list[EpisodeInfo]:
+        """
+        Gets all episode info for the given series. Only episodes that have 
+        already aired are returned.
+        
+        :param      series_info:    SeriesInfo for the entry.
+        
+        :returns:   List of EpisodeInfo objects for this series.
+        """
+
+        # If the given library cannot be found, exit
+        if not (library := self.__get_library(library_name)):
+            return []
+
+        # If the given series cannot be found in this library, exit
+        if not (series := self.__get_series(library, series_info)):
+            return []
+
+        # Create list of all episodes in Plex
+        all_episodes = []
+        for plex_episode in series.episodes():
+            episode_info = EpisodeInfo(
+                plex_episode.title,
+                plex_episode.parentIndex,
+                plex_episode.index,
+            )
+
+            # Assign ID's, add to list
+            episode_info.set_from_guids(plex_episode.guids)
+            all_episodes.append(episode_info)
+
+        return all_episodes
+
+
     def has_series(self, library_name: str, series_info: 'SeriesInfo') -> bool:
         """
         Determine whether the given series is present within Plex.

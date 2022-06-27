@@ -5,7 +5,6 @@ from re import IGNORECASE, compile as re_compile
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
 from modules.SeriesInfo import SeriesInfo
-from modules.Title import Title
 from modules.WebInterface import WebInterface
 
 class SonarrInterface(WebInterface):
@@ -223,19 +222,15 @@ class SonarrInterface(WebInterface):
         return all_episode_info
 
 
-    def get_all_episodes_for_series(self,
-                                    series_info: SeriesInfo) -> [EpisodeInfo]:
+    def get_all_episodes(self, series_info: SeriesInfo) -> list[EpisodeInfo]:
         """
-        Gets all episode info for the given series title from Sonarr. Only
-        episodes that have already aired are returned.
+        Gets all episode info for the given series. Only episodes that have 
+        already aired are returned.
         
         :param      series_info:    SeriesInfo for the entry.
         
         :returns:   List of EpisodeInfo objects for this series.
         """
-
-        # Set the Sonarr ID for this series
-        self.__set_ids(series_info)
 
         # If no ID was returned, error and return an empty list
         if series_info.sonarr_id is None:

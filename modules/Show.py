@@ -90,6 +90,7 @@ class Show(YamlReader):
         self.library_name = None
         self.library = None
         self.archive = self.preferences.create_archive
+        self.episode_data_source = self.preferences.episode_data_source
         self.sonarr_sync = self.preferences.use_sonarr
         self.sync_specials = self.preferences.sonarr_sync_specials
         self.tmdb_sync = self.preferences.use_tmdb
@@ -240,6 +241,15 @@ class Show(YamlReader):
 
         if (value := self._get('archive', type_=bool)) is not None:
             self.archive = value
+
+        if (value := self._get('episode_data_source', type_=str)) is not None:
+            value = value.lower().strip()
+            if value in self.preferences.VALID_EPISODE_DATA_SOURCES:
+                self.episode_data_source = value
+            else:
+                log.error(f'Invalid episode data source "{value}" in series '
+                          f'{self}')
+                self.valid = False
 
         if (value := self._get('sonarr_sync', type_=bool)) is not None:
             self.sonarr_sync = value
