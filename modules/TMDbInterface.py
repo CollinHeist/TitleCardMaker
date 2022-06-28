@@ -319,10 +319,11 @@ class TMDbInterface(WebInterface):
 
         # Get all seasons on TMDb
         url = f'{self.API_BASE_URL}tv/{series_info.tmdb_id}'
-        num_seasons = len(self._get(url, self.__standard_params)['seasons'])
+        seasons = self._get(url, self.__standard_params)['seasons']
+        season_numbers = [s['season_number'] for s in seasons]
 
         all_episodes = []
-        for season_number in range(num_seasons):
+        for season_number in season_numbers:
             # Get episodes for this season
             url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/'
                    f'{season_number}')
