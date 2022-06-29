@@ -405,7 +405,15 @@ class Show(YamlReader):
 
         # No episodes found by data source
         if not all_episodes:
+            log.info(f'No episodes found for {self} from '
+                     f'{self.episode_data_source}')
             return None
+
+        # Apply episode ID's to all episodes
+        def set_ids(episode_info):
+            if (ep := self.episodes.get(episode_info.key)) is not None:
+                ep.episode_info.copy_ids(episode_info)
+        tuple(map(set_ids, all_episodes))
 
         # Filter out episodes that already exist
         new_episodes = list(filter(

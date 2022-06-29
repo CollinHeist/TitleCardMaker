@@ -248,7 +248,7 @@ class SonarrInterface(WebInterface):
 
         # Get all sonarr-created EpisodeInfo objects
         all_sonarr_episodes = self.get_all_episodes(series_info)
-
+        
         # Go through each episode 
         for info in infos:
             # Skip if EpisodeInfo already has TVDb ID

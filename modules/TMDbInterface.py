@@ -465,15 +465,14 @@ class TMDbInterface(WebInterface):
     def set_episode_ids(self, series_info: SeriesInfo,
                         infos: list[EpisodeInfo]) -> None:
         """
-        Set all the episode ID's for the given list of EpisodeInfo objects. This
-        sets the Sonarr and TVDb ID's for each episode. As a byproduct, this
-        also updates the series ID's for the SeriesInfo object
+        Set all the episode ID's for the given list of EpisodeInfo objects. For
+        TMDb, this does nothing, as TMDb cannot provide any useful episode ID's.
         
         :param      series_info:    SeriesInfo for the entry.
         :param      infos:          List of EpisodeInfo objects to update.
         """
 
-        pass
+        return None
 
 
     def __determine_best_image(self, images: list,
