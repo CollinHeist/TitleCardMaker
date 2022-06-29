@@ -65,7 +65,7 @@ class Episode:
         """Returns an unambiguous string representation of the object"""
 
         return (f'<Episode {self.episode_info=}, {self.card_class=}, '
-                f'{self.source=}, {self.destination=}, {self.watched=},'
+                f'{self.source=}, {self.destination=}, {self.watched=}, '
                 f'{self.blur=}, {self.extra_characteristics=}>')
 
 

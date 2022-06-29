@@ -14,6 +14,9 @@ class SonarrInterface(WebInterface):
     database ID's for episodes.
     """
 
+    """Regex to match Sonarr URL's"""
+    __SONARR_URL_REGEX = re_compile(r'^((?:https?:\/\/)?.+?)(?=\/)', IGNORECASE)
+
     """Episode titles that indicate a placeholder and are to be ignored"""
     __TEMP_IGNORE_REGEX = re_compile(r'^(tba|tbd|episode \d+)$', IGNORECASE)
     __ALWAYS_IGNORE_REGEX = re_compile(r'^(tba|tbd)$', IGNORECASE)
@@ -33,17 +36,13 @@ class SonarrInterface(WebInterface):
         # Initialize parent WebInterface 
         super().__init__()
 
-        # Add / if not given
-        self.url = url + ('' if url.endswith('/') else '/')
-
-        # If non-api URL, exit
-        if not self.url.endswith(('/api/v3/', '/api/')):
-            log.critical(f'Sonarr URL must be an API url, add /api/')
+        # Correct URL to end in /api/v3/
+        url = url if url.endswith('/') else f'{url}/'
+        if (re_match := self.__SONARR_URL_REGEX.match(url)) is None:
+            log.critical(f'Invalid Sonarr URL "{url}"')
             exit(1)
-
-        # Warn if a v3 API url has not been provided
-        if not self.url.endswith('/v3/'):
-            log.warning(f'Provided Sonarr URL ({self.url}) is not v3, add /v3/')
+        else:
+            self.url = f'{re_match.group(1)}/api/v3/'
 
         # Base parameters for sending requests to Sonarr
         self.__api_key = api_key
@@ -52,12 +51,13 @@ class SonarrInterface(WebInterface):
         # Query system status to verify connection to Sonarr
         try:
             status =self._get(f'{self.url}system/status',self.__standard_params)
-            if 'error' in status and status['error'] == 'Unauthorized':
-                raise Exception('Invalid API key')
+            if status.get('appName') != 'Sonarr':
+                log.critical(f'Cannot get Sonarr status - invalid URL/API key')
+                exit(1)
         except Exception as e:
             log.critical(f'Cannot query Sonarr - returned error: "{e}"')
             exit(1)
-
+        
         # Create blank dictionary of titles -> ID's
         self.__series_ids = {}
 

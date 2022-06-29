@@ -100,7 +100,7 @@ class TitleCard:
             **extra_characteristics,
             **self.episode.episode_info.episode_characteristics,
         )
-
+        
         # File associated with this card is the episode's destination
         self.file = episode.destination
 

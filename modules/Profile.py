@@ -35,6 +35,13 @@ class Profile:
         self.__use_custom_font = True
 
 
+    def __repr__(self) -> str:
+        """Returns an unambiguous string representation of the object."""
+
+        return (f'<Profile {self.__use_custom_seasons=}, '
+                f'{self.__use_custom_font=}>')
+
+
     def get_valid_profiles(self, card_class: CardType) -> [dict]:
         """
         Gets the valid applicable profiles for this profile. For example,

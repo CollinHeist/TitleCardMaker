@@ -109,7 +109,6 @@ class EpisodeInfo:
         """
 
         self.abs_number = int(abs_number)
-        self.abs = self.abs_number
 
 
     def set_tvdb_id(self, tvdb_id: int) -> None:
