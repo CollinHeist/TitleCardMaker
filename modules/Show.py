@@ -467,7 +467,7 @@ class Show(YamlReader):
         # Filter episodes not needing ID's - i.e. has card, and has translation
         def does_need_id(item) -> bool:
             _, episode = item
-            if episode.destination is None:
+            if episode.episode_info.has_all_ids or episode.destination is None:
                 return False
             if not episode.destination.exists():
                 return True

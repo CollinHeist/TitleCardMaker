@@ -84,6 +84,13 @@ class EpisodeInfo:
 
 
     @property
+    def has_all_ids(self) -> bool:
+        """Whether this object has all ID's defined"""
+
+        return (self.tvdb_id is not None) and (self.imdb_id is not None)
+
+
+    @property
     def ids(self) -> dict:
         """This object's ID's (as a dictionary)"""
 
