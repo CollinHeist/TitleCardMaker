@@ -21,8 +21,11 @@ class PreferenceParser(YamlReader):
     file and parses it into individual attributes.
     """
 
-    """Valid source identifiers"""
-    VALID_SOURCES = ('tmdb', 'plex')
+    """Valid image source identifiers"""
+    VALID_IMAGE_SOURCES = ('tmdb', 'plex')
+
+    """Valid episode data source identifiers"""
+    VALID_EPISODE_DATA_SOURCES = ('sonarr', 'plex', 'tmdb')
 
     """Directory for all temporary objects created/maintained by the Maker"""
     TEMP_DIR = Path(__file__).parent / '.objects'
@@ -59,7 +62,8 @@ class PreferenceParser(YamlReader):
         self.card_type = 'standard'
         self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
         self.card_extension = TitleCard.DEFAULT_CARD_EXTENSION
-        self.source_priority = ('tmdb', 'plex')
+        self.image_source_priority = ('tmdb', 'plex')
+        self.episode_data_source = 'sonarr'
         self.validate_fonts = True
         self.zero_pad_seasons = False
         self.hide_season_folders = False
@@ -164,14 +168,23 @@ class PreferenceParser(YamlReader):
             else:
                 self.card_extension = extension
 
-        if (value := self._get('options', 'source_priority', type_=str)) !=None:
+        if (value := self._get('options',
+                               'image_source_priority', type_=str)) is not None:
             lower_strip = lambda s: str(s).lower().strip()
             sources = tuple(map(lower_strip, value.split(', ')))
-            if not all(_ in self.VALID_SOURCES for _ in sources):
-                log.critical(f'Source priorities "{value}" is invalid')
+            if not all(_ in self.VALID_IMAGE_SOURCES for _ in sources):
+                log.critical(f'Image source priority "{value}" is invalid')
                 self.valid = False
             else:
-                self.source_priority = sources
+                self.image_source_priority = sources
+
+        if (value := self._get('options',
+                               'episode_data_source', type_=str)) is not None:
+            if (value := value.lower()) in self.VALID_EPISODE_DATA_SOURCES:
+                self.episode_data_source = value
+            else:
+                log.critical(f'Episode data source "{value}" is invalid')
+                self.valid = False
 
         if (value := self._get('options', 'validate_fonts', type_=bool)) !=None:
             self.validate_fonts = value
@@ -229,11 +242,6 @@ class PreferenceParser(YamlReader):
             else:
                 self.global_unwatched_style = value
 
-        if self._is_specified('plex', 'unwatched'):
-            log.critical(f'Plex "unwatched" setting has been renamed to '
-                         f'"unwatched_style"')
-            self.valid = False
-
         if self._is_specified('sonarr'):
             if (not self._is_specified('sonarr', 'url')
                 or not self._is_specified('sonarr', 'api_key')):
@@ -266,6 +274,17 @@ class PreferenceParser(YamlReader):
 
         if (value := self._get('imagemagick', 'container', type_=str)) != None:
             self.imagemagick_container = value
+
+        # Warn for renamed settings
+        if self._is_specified('options', 'source_priority'):
+            log.critical(f'Options "source_priority" setting has been renamed '
+                         f'to "image_source_priority"')
+            self.valid = False
+
+        if self._is_specified('plex', 'unwatched'):
+            log.critical(f'Plex "unwatched" setting has been renamed to '
+                         f'"unwatched_style"')
+            self.valid = False
 
 
     def __apply_template(self, templates: dict, series_yaml: dict,
@@ -376,15 +395,17 @@ class PreferenceParser(YamlReader):
             # Get font map for this file
             font_map = file_yaml.get('fonts', {})
 
-            # Get templates for this file
+            # Get templates for this file, validate they're all dictionaries
             templates = {}
-            for name, template in file_yaml.get('templates', {}).items():
-                # If not specified as dictionary, error and skip
-                if not isinstance(template, dict):
-                    log.error(f'Invalid template specification for "{name}" in '
-                              f'series file "{file.resolve()}"')
-                    continue
-                templates[name] = Template(name, template)
+            value = file_yaml.get('templates', {})
+            if isinstance(value, dict):
+                for name, template in value.items():
+                    # If not specified as dictionary, error and skip
+                    if not isinstance(template, dict):
+                        log.error(f'Invalid template specification for "{name}"'
+                                  f' in series file "{file.resolve()}"')
+                        continue
+                    templates[name] = Template(name, template)
 
             # Go through each series in this file
             for show_name in tqdm(file_yaml['series'], desc='Creating Shows',
@@ -410,17 +431,17 @@ class PreferenceParser(YamlReader):
 
     @property
     def check_tmdb(self):
-        return 'tmdb' in self.source_priority
+        return 'tmdb' in self.image_source_priority
 
     @property
     def check_plex(self):
-        return 'plex' in self.source_priority
+        return 'plex' in self.image_source_priority
 
     @property
     def check_plex_before_tmdb(self) -> bool:
         """Whether to check Plex source before TMDb"""
 
-        priorities = self.source_priority
+        priorities = self.image_source_priority
         if 'plex' in priorities:
             if 'tmdb' in priorities:
                 return priorities.index('plex') < priorities.index('tmdb')

@@ -6,6 +6,8 @@ from tinydb import TinyDB, where
 from tqdm import tqdm
 
 from modules.Debug import log, TQDM_KWARGS
+from modules.EpisodeInfo import EpisodeInfo
+from modules.SeriesInfo import SeriesInfo
 
 class PlexInterface:
     """
@@ -209,12 +211,49 @@ class PlexInterface:
             return None
 
 
+    def get_all_episodes(self, library_name,
+                         series_info: SeriesInfo) -> list[EpisodeInfo]:
+        """
+        Gets all episode info for the given series. Only episodes that have 
+        already aired are returned.
+        
+        :param      library_name:   The name of the library containing the
+                                    series.
+        :param      series_info:    Series to get the episodes of.
+        
+        :returns:   List of EpisodeInfo objects for this series.
+        """
+
+        # If the given library cannot be found, exit
+        if not (library := self.__get_library(library_name)):
+            return []
+
+        # If the given series cannot be found in this library, exit
+        if not (series := self.__get_series(library, series_info)):
+            return []
+
+        # Create list of all episodes in Plex
+        all_episodes = []
+        for plex_episode in series.episodes():
+            episode_info = EpisodeInfo(
+                plex_episode.title,
+                plex_episode.parentIndex,
+                plex_episode.index,
+            )
+
+            # Assign ID's, add to list
+            episode_info.set_from_guids(plex_episode.guids)
+            all_episodes.append(episode_info)
+
+        return all_episodes
+
+
     def has_series(self, library_name: str, series_info: 'SeriesInfo') -> bool:
         """
         Determine whether the given series is present within Plex.
         
-        :param      library_name:   The name of the library containing the
-                                    series to update.
+        :param      library_name:   The name of the library potentially
+                                    containing the series.
         :param      series_info:    The series to update.
         
         :returns:   True if the series is present within Plex.
@@ -292,6 +331,44 @@ class PlexInterface:
                     {'filesize': 0},
                     self.__get_condition(library_name, series_info, episode)
                 )
+
+
+    def set_episode_ids(self, library_name: str, series_info: SeriesInfo,
+                        infos: list[EpisodeInfo]) -> None:
+        """
+        Set all the episode ID's for the given list of EpisodeInfo objects. This
+        sets the Sonarr and TVDb ID's for each episode. As a byproduct, this
+        also updates the series ID's for the SeriesInfo object
+        
+        :param      library_name:   Name of the library the series is under.
+        :param      series_info:    SeriesInfo for the entry.
+        :param      infos:          List of EpisodeInfo objects to update.
+        """
+
+        # If the given library cannot be found, exit
+        if not (library := self.__get_library(library_name)):
+            return None
+
+        # If the given series cannot be found in this library, exit
+        if not (series := self.__get_series(library, series_info)):
+            return None
+
+        for info in infos:
+            # Skip if EpisodeInfo already has IMDb, and TVDb ID's
+            if info.imdb_id is not None and info.tvdb_id is not None:
+                continue
+
+            try:
+                # Get episode from Plex
+                plex_episode = series.episode(
+                    season=info.season_number,
+                    episode=info.episode_number,
+                )
+
+                # Set this episode's ID's from the episode's associated GUID's
+                info.set_from_guids(plex_episode.guids)
+            except NotFound:
+                continue
 
 
     def get_source_image(self, library_name: str, series_info: 'SeriesInfo',
@@ -422,5 +499,37 @@ class PlexInterface:
         # Log load operations to user
         if loaded_count > 0:
             log.debug(f'Loaded {loaded_count} cards for "{series_info}"')
+
+
+    def get_episode_details(self, rating_key: int) -> tuple[SeriesInfo,
+                                                            EpisodeInfo, str]:
+        """
+        Get all details for the episode indicated by the given Plex rating key.
+        
+        :param      rating_key: Rating key used to fetch the item within Plex.
+        
+        :returns:   Tuple of the SeriesInfo, EpisodeInfo, and string of the
+                    library name corresponding to the given episode.
+        """
+
+        try:
+            # Get the episode for this key
+            episode = self.__server.fetchItem(rating_key)
+
+            # Make sure result is an episode
+            if episode.TYPE != 'episode':
+                log.error(f'Item {episode} is not an Episode')
+                raise NotFound
+
+            series = self.__server.fetchItem(episode.grandparentKey)
+
+            return (
+                SeriesInfo(episode.grandparentTitle, series.year),
+                EpisodeInfo(episode.title, episode.parentIndex, episode.index),
+                episode.librarySectionTitle,
+            )
+        except NotFound:
+            log.error(f'No item with ratingKey={rating_key} exists')
+            return None
 
         

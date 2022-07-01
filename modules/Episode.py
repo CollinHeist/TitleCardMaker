@@ -12,11 +12,12 @@ class Episode:
 
     __slots__ = ('episode_info', 'card_class', '__base_source', 'source',
                  'destination', 'downloadable_source', 'extra_characteristics',
-                 'watched', 'blur', 'spoil_type', )
+                 'given_keys', 'watched', 'blur', 'spoil_type', )
     
 
     def __init__(self, episode_info: 'EpisodeInfo', card_class: 'CardType',
-                 base_source: Path, destination: Path, **extras: dict) -> None:
+                 base_source: Path, destination: Path, given_keys: set,
+                 **extras: dict) -> None:
         """
         Constructs a new instance of an Episode.
 
@@ -25,6 +26,8 @@ class Episode:
                                     images within.
         :param      destination:    The destination for the title card
                                     associated with this Episode.
+        :param      given_keys:     Set of keys present in the initialization of
+                                    this Episode.
         :param      extras:         Additional characteristics to pass to the
                                     creation of the TitleCard from this Episode.
         """
@@ -42,7 +45,8 @@ class Episode:
         self.destination = destination
         self.downloadable_source = True
 
-        # Store extra characteristics
+        # Store given keys and extra characteristics
+        self.given_keys = given_keys
         self.extra_characteristics = extras
 
         # Episodes are watched, not blurred, and spoiled - until updated
@@ -61,8 +65,22 @@ class Episode:
         """Returns an unambiguous string representation of the object"""
 
         return (f'<Episode {self.episode_info=}, {self.card_class=}, '
-                f'{self.source=}, {self.destination=}, {self.watched=},'
+                f'{self.source=}, {self.destination=}, {self.watched=}, '
                 f'{self.blur=}, {self.extra_characteristics=}>')
+
+
+    def key_is_specified(self, key: str) -> bool:
+        """
+        Return whether the given key was present in the initialization for this
+        Episode, i.e. whether the key can be added to the datafile.
+        
+        :param      key:    The key being checked.
+        
+        :returns:   Whether the given key was specified in the initialization
+                    of this Episode.
+        """
+
+        return key in self.given_keys
 
 
     def update_statuses(self, watched: bool, watched_style: str, 

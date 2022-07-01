@@ -81,6 +81,20 @@ class Manager:
             )
 
 
+    def set_show_ids(self) -> None:
+        """Set the series ID's of each Show known to this Manager"""
+
+        # If neither Sonarr nor TMDb are enabled, skip
+        if not self.sonarr_interface and not self.tmdb_interface:
+            return None
+
+        # For each show in the Manager, set series IDs
+        for show in tqdm(self.shows + self.archives, desc='Setting series IDs',
+                         **TQDM_KWARGS):
+            # Select interfaces based on what's enabled
+            show.set_series_ids(self.sonarr_interface, self.tmdb_interface)
+
+
     def read_show_source(self) -> None:
         """
         Reads all source files known to this manager. This reads Episode objects
@@ -99,7 +113,40 @@ class Manager:
             archive.find_multipart_episodes()
 
 
-    def check_tmdb_for_translations(self) -> None:
+    def add_new_episodes(self) -> None:
+        """Add any new episodes to this Manager's shows."""
+
+        # If Sonarr, Plex, and TMDb are disabled, exit
+        if (not self.sonarr_interface and not self.plex_interface
+            and not self.tmdb_interface):
+            return None
+
+        # For each show in the Manager, look for new episodes using any of the
+        # possible interfaces
+        for show in tqdm(self.shows + self.archives, desc='Adding new episodes',
+                         **TQDM_KWARGS):
+            show.add_new_episodes(
+                self.sonarr_interface, self.plex_interface, self.tmdb_interface
+            )
+
+
+    def set_episode_ids(self) -> None:
+        """Set all episode ID's for all shows known to this manager."""
+
+        # If Sonarr, Plex, and TMDb are disabled, exit
+        if (not self.sonarr_interface and not self.plex_interface
+            and not self.tmdb_interface):
+            return None
+
+        # For each show in the Manager, set IDs for every episode
+        for show in tqdm(self.shows + self.archives, desc='Setting episode IDs',
+                         **TQDM_KWARGS):
+            show.set_episode_ids(
+                self.sonarr_interface, self.plex_interface, self.tmdb_interface
+            )
+
+
+    def add_translations(self) -> None:
         """Query TMDb for all translated episode titles (if indicated)."""
 
         # If the TMDbInterface isn't enabled, skip
@@ -126,22 +173,6 @@ class Manager:
             show.download_logo(self.tmdb_interface)
 
 
-    def check_sonarr_for_new_episodes(self) -> None:
-        """
-        Query Sonarr to see if any new episodes exist for every show known to
-        this manager.
-        """
-
-        # If Sonarr is globally disabled, skip
-        if not self.preferences.use_sonarr:
-            return None
-
-        # Go through each show in the Manager and query Sonarr
-        for show in tqdm(self.shows + self.archives, desc='Querying Sonarr',
-                         **TQDM_KWARGS):
-            show.query_sonarr(self.sonarr_interface)
-
-
     def select_source_images(self) -> None:
         """
         Select and download the source images for every show known to this
@@ -155,14 +186,7 @@ class Manager:
                                  f'"{show.series_info.short_name}"')
 
             # Select source images from Plex and/or TMDb
-            interfaces = {'plex_interface': None, 'tmdb_interface': None}
-            if self.preferences.use_plex:
-                interfaces['plex_interface'] = self.plex_interface
-            if self.preferences.use_tmdb:
-                interfaces['tmdb_interface'] = self.tmdb_interface
-
-            # Pass enabled interfaces
-            show.select_source_images(**interfaces)
+            show.select_source_images(self.plex_interface, self.tmdb_interface)
 
 
     def create_missing_title_cards(self) -> None:
@@ -251,9 +275,11 @@ class Manager:
         """Run the manager and exit."""
         
         self.create_shows()
+        self.set_show_ids()
         self.read_show_source()
-        self.check_sonarr_for_new_episodes()
-        self.check_tmdb_for_translations()
+        self.add_new_episodes()
+        self.set_episode_ids()
+        self.add_translations()
         self.download_logos()
         self.select_source_images()
         self.create_missing_title_cards()
@@ -261,6 +287,79 @@ class Manager:
         self.update_plex()
         self.update_archive()
         self.create_summaries()
+
+
+    @staticmethod
+    def remake_cards(rating_keys: list[int]) -> None:
+        """
+        Remake the title cards associated with the given list of rating keys.
+        These keys are used to identify their corresponding episodes within
+        Plex.
+        
+        :param      rating_keys:    List of rating keys corresponding to
+                                    Episodes to update the cards of.
+        """
+        
+        # Get the global preferences, exit if Plex is not enabled
+        preference_parser = global_objects.pp
+        if not preference_parser.use_plex:
+            log.error(f'Cannot remake card if Plex is not enabled')
+            return None
+
+        # Construct PlexInterface
+        plex_interface = PlexInterface(
+            url=preference_parser.plex_url,
+            x_plex_token=preference_parser.plex_token,
+        )
+
+        # If TMDb is globally enabled, construct that interface
+        tmdb_interface = None
+        if preference_parser.use_tmdb:
+            tmdb_interface = TMDbInterface(preference_parser.tmdb_api_key)
+
+        # Get details for each rating key, removing 
+        entry_list = []
+        for key in rating_keys:
+            if (details := plex_interface.get_episode_details(key)) is None:
+                log.error(f'Cannot remake card, episode not found')
+            else:
+                entry_list.append(details)
+
+        # Go through every series in all series YAML files
+        found = set()
+        for show in preference_parser.iterate_series_files():
+            # If no more entries, exit
+            if len(entry_list) == 0:
+                break
+
+            # Check if this show is one of the entries to update
+            for index, (series_info, episode_info, library_name) \
+                in enumerate(entry_list):
+                # Skip entries already found
+                if index in found:
+                    continue
+
+                # Match the library and series name
+                full_match_name = show.series_info.full_match_name
+                if (show.valid
+                    and show.library_name == library_name
+                    and full_match_name == series_info.full_match_name):
+                    log.info(f'Remaking "{series_info}" {episode_info} within '
+                             f'library "{library_name}"')
+                    # Read this show's source
+                    show.read_source()
+
+                    # Remake card
+                    show.remake_card(episode_info,plex_interface,tmdb_interface)
+                    found.add(index)
+
+        # Warn for all entries not found
+        for index, (series_info, episode_info, library_name) \
+            in enumerate(entry_list):
+            if index not in found:
+                log.warning(f'Cannot update card for "{series_info}" '
+                            f'{episode_info} within library "{library_name}" - '
+                            f'no matching YAML entry was found')
 
 
     def report_missing(self, file: 'Path') -> None:

@@ -34,13 +34,13 @@ class StandardTitleCard(CardType):
     """Standard class has standard archive name"""
     ARCHIVE_NAME = 'standard'
 
-    """Source path for the gradient image overlayed over all title cards"""
-    __GRADIENT_IMAGE = REF_DIRECTORY / 'GRADIENT.png'
-
     """Default fonts and color for series count text"""
     SEASON_COUNT_FONT = REF_DIRECTORY / 'Proxima Nova Semibold.otf'
     EPISODE_COUNT_FONT = REF_DIRECTORY / 'Proxima Nova Regular.otf'
     SERIES_COUNT_TEXT_COLOR = '#CFCFCF'
+
+    """Source path for the gradient image overlayed over all title cards"""
+    __GRADIENT_IMAGE = REF_DIRECTORY / 'GRADIENT.png'
 
     """Paths to intermediate files that are deleted after the card is created"""
     __SOURCE_WITH_GRADIENT = CardType.TEMP_DIR / 'source_gradient.png'
@@ -58,7 +58,7 @@ class StandardTitleCard(CardType):
                  font_size: float, title_color: str, hide_season: bool,
                  separator: str='•', blur: bool=False, vertical_shift: int=0,
                  interline_spacing: int=0, kerning: float=1.0,
-                 stroke_width: float=1.0, *args, **kwargs) -> None:
+                 stroke_width: float=1.0, **kwargs) -> None:
         """
         Initialize the TitleCardMaker object. This primarily just stores
         instance variables for later use in `create()`. If the provided font
@@ -83,7 +83,7 @@ class StandardTitleCard(CardType):
         :param  kerning:            Scalar to apply to kerning of the title text.
         :param  stroke_width:       Scalar to apply to black stroke of the title
                                     text.
-        :param  args and kwargs:    Unused arguments to permit generalized calls
+        :param  kwargs:             Unused arguments to permit generalized calls
                                     for any CardType.
         """
         

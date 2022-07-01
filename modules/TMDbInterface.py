@@ -49,6 +49,9 @@ class TMDbInterface(WebInterface):
         'vi': r'Episode {number}',
     }
 
+    """Episode airdate format"""
+    __AIRDATE_FORMAT = '%Y-%m-%d'
+
     """Filename for where to store blacklisted entries"""
     __BLACKLIST_DB = Path(__file__).parent / '.objects' / 'tmdb_blacklist.json'
 
@@ -237,6 +240,7 @@ class TMDbInterface(WebInterface):
 
         # If already mapped, set that ID
         if (entry := self.__id_map.get(where('name') == series_info.full_name)):
+            series_info.set_tvdb_id(entry['tmdb_id'])
             series_info.set_tmdb_id(entry['tmdb_id'])
             return None
 
@@ -265,7 +269,8 @@ class TMDbInterface(WebInterface):
         # Match by title and year if no ID was given
         # Construct GET arguments
         url = f'{self.API_BASE_URL}search/tv/'
-        params = {'api_key': self.__api_key, 'query': series_info.name,
+        params = {'api_key': self.__api_key,
+                  'query': series_info.name,
                   'first_air_date_year': series_info.year,
                   'include_adult': False}
         results = self._get(url=url, params=params)
@@ -282,8 +287,69 @@ class TMDbInterface(WebInterface):
                               'name': series_info.full_name})
 
 
+    def set_series_ids(self, series_info: SeriesInfo) -> None:
+        """
+        Set the TMDb and TVDb ID's for the given SeriesInfo object.
+        
+        :param      series_info:    SeriesInfo to update.
+        """
+
+        # Set the TMDb and TVDb ID's for this series
+        self.__set_tmdb_id(series_info)
+
+        # If no ID was returned, error and return
+        if series_info.tmdb_id is None:
+            log.warning(f'Series "{series_info}" not found on TMDb')
+
+
+    def get_all_episodes(self, series_info: SeriesInfo) -> list[EpisodeInfo]:
+        """
+        Gets all episode info for the given series. Only episodes that have 
+        already aired are returned.
+        
+        :param      series_info:    SeriesInfo for the entry.
+        
+        :returns:   List of EpisodeInfo objects for this series.
+        """
+
+        # Cannot query TMDb if no series TMDb ID 
+        if series_info.tmdb_id is None:
+            log.error(f'Cannot source episodes from TMDb for {series_info}')
+            return []
+
+        # Get all seasons on TMDb
+        url = f'{self.API_BASE_URL}tv/{series_info.tmdb_id}'
+        seasons = self._get(url, self.__standard_params)['seasons']
+        season_numbers = [s['season_number'] for s in seasons]
+
+        all_episodes = []
+        for season_number in season_numbers:
+            # Get episodes for this season
+            url = (f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/season/'
+                   f'{season_number}')
+            episodes = self._get(url, self.__standard_params)['episodes']
+
+            for episode in episodes:
+                # Skip episodes until 2 hours after airing
+                airdate = datetime.strptime(episode['air_date'],
+                                            self.__AIRDATE_FORMAT)
+                if airdate > datetime.now() + timedelta(hours=2):
+                    continue
+
+                # Create EpisodeInfo for this episode, add to list
+                episode_info = EpisodeInfo(
+                    episode['name'],
+                    season_number,
+                    episode['episode_number'],
+                )
+                all_episodes.append(episode_info)
+
+        return all_episodes
+
+
     def __find_episode(self, series_info: SeriesInfo,
-                       episode_info: EpisodeInfo, title_match: bool=True)->dict:
+                       episode_info: EpisodeInfo,
+                       title_match: bool=True) -> dict[str, int]:
         """
         Finds the episode index for the given entry. Searching is done in the
         following priority:
@@ -309,12 +375,23 @@ class TMDbInterface(WebInterface):
             url = f'{self.API_BASE_URL}find/{episode_info.tvdb_id}'
             params = {'api_key': self.__api_key, 'external_source': 'tvdb_id'}
             results = self._get(url, params)['tv_episode_results']
-
+            
             # If an episode was found, return its index
             if len(results) > 0:
-                # Set series TMDb ID
-                series_info.set_tmdb_id(results[0]['show_id'])
+                return {
+                    'season': results[0]['season_number'],
+                    'episode': results[0]['episode_number'],
+                }
 
+        # If episode has IMDb ID, query with that next
+        if episode_info.imdb_id is not None:
+            # GET parameters and request
+            url = f'{self.API_BASE_URL}find/{episode_info.tvdb_id}'
+            params = {'api_key': self.__api_key, 'external_source': 'imdb_id'}
+            results = self._get(url, params)['tv_episode_results']
+            
+            # If an episode was found, return its index
+            if len(results) > 0:
                 return {
                     'season': results[0]['season_number'],
                     'episode': results[0]['episode_number'],
@@ -382,6 +459,19 @@ class TMDbInterface(WebInterface):
                         'episode': tmdb_episode['episode_number'],
                     }
                     
+        return None
+
+
+    def set_episode_ids(self, series_info: SeriesInfo,
+                        infos: list[EpisodeInfo]) -> None:
+        """
+        Set all the episode ID's for the given list of EpisodeInfo objects. For
+        TMDb, this does nothing, as TMDb cannot provide any useful episode ID's.
+        
+        :param      series_info:    SeriesInfo for the entry.
+        :param      infos:          List of EpisodeInfo objects to update.
+        """
+
         return None
 
 
@@ -478,13 +568,10 @@ class TMDbInterface(WebInterface):
         # Don't query the database if this episode is in the blacklist
         if self.__is_blacklisted(series_info, episode_info, 'image'):
             return None
-
-        # Set the TMDb ID for the provided series
-        self.__set_tmdb_id(series_info)
-
+        
         # Get the TMDb index for this entry
         index = self.__find_episode(series_info, episode_info, title_match)
-
+        
         # If None was returned, episode not found - warn, blacklist, and exit
         if index is None:
             log.debug(f'TMDb has no matching episode for "{series_info}" '
@@ -540,9 +627,6 @@ class TMDbInterface(WebInterface):
         if self.__is_blacklisted(series_info, episode_info, 'title'):
             return None
 
-        # Get the TV id for the provided series+year
-        self.__set_tmdb_id(series_info)
-
         # Get the TMDb index for this entry
         index = self.__find_episode(series_info, episode_info)
 
@@ -587,9 +671,6 @@ class TMDbInterface(WebInterface):
         # Don't query the database if this series logo is blacklisted
         if self.__is_blacklisted(series_info, None, 'logo'):
             return None
-
-        # Set the TV id for the provided series
-        self.__set_tmdb_id(series_info)
 
         # GET params
         url = f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/images'
@@ -645,9 +726,6 @@ class TMDbInterface(WebInterface):
         if self.__is_blacklisted(series_info, None, 'backdrop'):
             return None
 
-        # Set the TV id for the provided series
-        self.__set_tmdb_id(series_info)
-
         # GET params
         url = f'{self.API_BASE_URL}tv/{series_info.tmdb_id}/images'
         params = {'api_key': self.__api_key, 'include_image_language': 'null'}
@@ -691,7 +769,7 @@ class TMDbInterface(WebInterface):
         si = SeriesInfo(title, year)
 
         for episode in range(1, episode_count+1):
-            ei = EpisodeInfo(Title(''), season, episode)
+            ei = EpisodeInfo('', season, episode)
             image_url = dbi.get_source_image(si, ei, title_match=False)
 
             # If a valid URL was returned, download it

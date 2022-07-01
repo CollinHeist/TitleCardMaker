@@ -21,7 +21,7 @@ An automated title card maker for Plex.
 The Maker can be automated such that everything can be pulled without manual intervention (except for a few exceptions). Episode titles can be pulled from an instance of [Sonarr](https://sonarr.tv/), images and logos from [TheMovieDatabase](https://www.themoviedb.org/) and Plex, and the maker can even utilize an episode's watch status within Plex to create "spoiler free" versions of title cards automatically, as shown below:
 
 <img src="https://user-images.githubusercontent.com/17693271/174520069-d981b33e-df93-4166-a4dc-b898af82eb3f.jpg"/>
-
+  
 The actual image creation is done using the open-source and free image library called [ImageMagick](https://imagemagick.org/).
 
 ## Getting Started
@@ -49,13 +49,17 @@ Below are some examples of each style of title card that can be created automati
 
 > The above cards are, in order, the [AnimeTitleCard](https://github.com/CollinHeist/TitleCardMaker/wiki/AnimeTitleCard), [LogoTitleCard](https://github.com/CollinHeist/TitleCardMaker/wiki/LogoTitleCard), [RomanTitleCard](https://github.com/CollinHeist/TitleCardMaker/wiki/RomanTitleCard), [StandardTitleCard](https://github.com/CollinHeist/TitleCardMaker/wiki/StandardTitleCard), [StarWarsTitleCard](https://github.com/CollinHeist/TitleCardMaker/wiki/StarWarsTitleCard), and the [TextlessTitleCard](https://github.com/CollinHeist/TitleCardMaker/wiki/TextlessTitleCard)
 
-### User-Created Card Types
+<details><summary><h3>User-Created Card Types</h3></summary>
+  
 The TitleCardMaker can also use user-created and maintained card types hosted on the [companion GitHub](https://github.com/CollinHeist/TitleCardMaker-CardTypes), an example of each type is shown below:
 
 <img src="https://github.com/Wdvh/TitleCardMaker-CardTypes/blob/c14f1b3759983a63e66982ba6517e2bc3f651dca/Wdvh/S01E01.jpg" height="175"/> <img src="https://user-images.githubusercontent.com/17693271/169709359-ffc9e109-b327-44e9-b78a-7276f77fe917.jpg" height="175"/> <img src="https://user-images.githubusercontent.com/17693271/169709482-6bb023ab-4986-464e-88d6-0e05ad75d0d3.jpg" height="175"/> 
 <img src="https://github.com/CollinHeist/TitleCardMaker-CardTypes/blob/110c2ec729dbb20d8ed461e7cc5a07c54540f842/Wdvh/S01E07.jpg" height="175"/> <img src="https://cdn.discordapp.com/attachments/975108033531219979/977614937457303602/S01E04.jpg" height="175"/>  <img src="https://user-images.githubusercontent.com/1803189/171089736-f60a6ff2-0914-432a-a45d-145323d39c42.jpg" height="175"/> 
+<img src="https://github.com/Beedman/TitleCardMaker-CardTypes/blob/master/Beedman/The%20Afterparty%20(2022)%20-%20S01E02%20-%20Brett.jpg?raw=true" height="175"/>
 
-> The above cards are, in order, `Wdvh/StarWarsTitleOnly`, `Wdvh/WhiteTextStandard`, `Wdvh/WhiteTextAbsolute`, `Wdvh/WhiteTextTitleOnly`, `Yozora/SlimTitleCard`, and `lyonza/WhiteTextBroadcast`
+> The above cards are, in order, `Wdvh/StarWarsTitleOnly`, `Wdvh/WhiteTextStandard`, `Wdvh/WhiteTextAbsolute`, `Wdvh/WhiteTextTitleOnly`, `Yozora/SlimTitleCard`, `lyonza/WhiteTextBroadcast`, and `Beedman/GradientLogoTitleCard`
+  
+</details>
 
 ## Contributing
 If you'd like to contribute - whether that's a suggested feature, a bug fix, or anything else - please do so on GitHub by creating an issue, or [join the Discord](https://discord.gg/bJ3bHtw8wH). The best way for me to manage technical aspects of the project is on GitHub.

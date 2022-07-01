@@ -81,14 +81,16 @@ class Show(YamlReader):
             self.valid = False
             return None
             
-        # Setup default values that can be overwritten by YAML
+        # Setup default values that may be overwritten by YAML
         self.series_info = SeriesInfo(name, year)
+        self.card_filename_format = self.preferences.card_filename_format
         self.media_directory = None
         self.card_class = TitleCard.CARD_TYPES[self.preferences.card_type]
         self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
         self.library_name = None
         self.library = None
         self.archive = self.preferences.create_archive
+        self.episode_data_source = self.preferences.episode_data_source
         self.sonarr_sync = self.preferences.use_sonarr
         self.sync_specials = self.preferences.sonarr_sync_specials
         self.tmdb_sync = self.preferences.use_tmdb
@@ -190,12 +192,18 @@ class Show(YamlReader):
 
     def __parse_yaml(self):
         """
-        Parse the show's YAML and update this object's attributes. Error on any
-        invalid attributes and update this object's validity.
+        Parse the Show's YAML and update this object's attributes. Error on any
+        invalid attributes.
         """
 
         if (name := self._get('name', type_=str)) is not None:
             self.series_info.update_name(name)
+
+        if (format_ := self._get('filename_format', type_=str)) is not None:
+            if not TitleCard.validate_card_format_string(format_):
+                self.valid = False
+            else:
+                self.card_filename_format = format_
 
         if (library := self._get('library')) is not None:
             # If the given library isn't in libary map, invalid
@@ -213,6 +221,15 @@ class Show(YamlReader):
                 if (card_type := this_library.get('card_type')):
                     self.__parse_card_type(card_type)
 
+        if (id_ := self._get('sonarr_id', type_=int)) is not None:
+            self.series_info.set_sonarr_id(id_)
+
+        if (id_ := self._get('tvdb_id', type_=int)) is not None:
+            self.series_info.set_tvdb_id(id_)
+
+        if (id_ := self._get('tmdb_id', type_=int)) is not None:
+            self.series_info.set_tmdb_id(id_)
+
         if (card_type := self._get('card_type', type_=str)) is not None:
             self.__parse_card_type(card_type)
             
@@ -224,6 +241,15 @@ class Show(YamlReader):
 
         if (value := self._get('archive', type_=bool)) is not None:
             self.archive = value
+
+        if (value := self._get('episode_data_source', type_=str)) is not None:
+            value = value.lower().strip()
+            if value in self.preferences.VALID_EPISODE_DATA_SOURCES:
+                self.episode_data_source = value
+            else:
+                log.error(f'Invalid episode data source "{value}" in series '
+                          f'{self}')
+                self.valid = False
 
         if (value := self._get('sonarr_sync', type_=bool)) is not None:
             self.sonarr_sync = value
@@ -283,6 +309,28 @@ class Show(YamlReader):
             self.extras = self._get('extras', type_=dict)
 
 
+    def set_series_ids(self, sonarr_interface: 'SonarrInterface'=None,
+                       tmdb_interface: 'TMDbInterface'=None) -> None:
+        """
+        Set the series ID's for this show using the given interfaces.
+        
+        :param      sonarr_interface:   The SonarrInterface to query.
+        :param      tmdb_interface:     The TMDbInterface to query.
+        """
+
+        # Sonarr can provide Sonarr and TVDb ID's
+        if (sonarr_interface and self.sonarr_sync and
+            (self.series_info.sonarr_id is None or
+             self.series_info.tvdb_id is None)):
+            sonarr_interface.set_series_ids(self.series_info)
+
+        # TMDb can provide TMDb and TVDb ID's
+        if (tmdb_interface and self.tmdb_sync and
+            (self.series_info.tmdb_id is None or
+             self.series_info.tvdb_id is None)):
+            tmdb_interface.set_series_ids(self.series_info)
+
+
     def __get_destination(self, episode_info: 'EpisodeInfo') -> Path:
         """
         Get the destination filename for the given entry of a datafile.
@@ -298,7 +346,7 @@ class Show(YamlReader):
             return None
         
         return TitleCard.get_output_filename(
-            self.preferences.card_filename_format,
+            self.card_filename_format,
             self.series_info,
             episode_info,
             self.media_directory
@@ -315,20 +363,429 @@ class Show(YamlReader):
         self.episodes = {}
 
         # Go through each entry in the file interface
-        for entry in self.file_interface.read():
+        for entry, given_keys in self.file_interface.read():
             # Create Episode object for this entry, store under key
             self.episodes[entry['episode_info'].key] = Episode(
                 base_source=self.source_directory,
                 destination=self.__get_destination(entry['episode_info']),
                 card_class=self.card_class,
+                given_keys=given_keys,
                 **entry,
             )
+
+
+    def add_new_episodes(self, sonarr_interface: 'SonarrInterface'=None,
+                         plex_interface: 'PlexInterface'=None,
+                         tmdb_interface: 'TMDbInterface'=None) -> None:
+        """
+        Query the provided interfaces, checking for any new episodes exist in
+        that interface. All new entries are added to this object's datafile,
+        and an Episode object is created.
+        
+        :param      sonarr_interface:   The SonarrInterface to optionally query.
+        :param      plex_interface:     The PlexInterface to optionally query.
+        :param      tmdb_interface:     The TMDbInterface to optionally query.
+        """
+
+        # Get episodes from indicated data source
+        if (self.episode_data_source == 'sonarr' and self.sonarr_sync
+            and sonarr_interface):
+            all_episodes = sonarr_interface.get_all_episodes(self.series_info)
+        elif (self.episode_data_source == 'plex' and self.library is not None
+            and plex_interface):
+            all_episodes = plex_interface.get_all_episodes(self.library_name,
+                                                           self.series_info)
+        elif (self.episode_data_source == 'tmdb' and self.tmdb_sync
+            and tmdb_interface):
+            all_episodes = tmdb_interface.get_all_episodes(self.series_info)
+        else:
+            log.warning(f'Cannot source episodes for {self} from '
+                        f'{self.episode_data_source}')
+            return None
+
+        # No episodes found by data source
+        if not all_episodes:
+            log.info(f'No episodes found for {self} from '
+                     f'{self.episode_data_source}')
+            return None
+
+        # Apply episode ID's to all episodes
+        def set_ids(episode_info):
+            if (ep := self.episodes.get(episode_info.key)) is not None:
+                ep.episode_info.copy_ids(episode_info)
+        tuple(map(set_ids, all_episodes))
+
+        # Filter out episodes that already exist
+        new_episodes = list(filter(
+            lambda episode: episode.key not in self.episodes,
+            all_episodes,
+        ))
+
+        # Filter episodes that are specials if specials aren't synced
+        if not self.sync_specials:
+            new_episodes = list(filter(
+                lambda episode: episode.season_number != 0,
+                new_episodes,
+            ))
+
+        # If any new episodes remain, add to datafile and create Episode object
+        self.file_interface.add_many_entries(new_episodes)
+        for episode_info in new_episodes:
+            self.episodes[episode_info.key] = Episode(
+                base_source=self.source_directory,
+                destination=self.__get_destination(episode_info),
+                card_class=self.card_class,
+                given_keys=set(),
+                episode_info=episode_info,
+            )
+
+
+    def set_episode_ids(self, sonarr_interface: 'TMDbInterface'=None,
+                        plex_interface: 'PlexInterface'=None,
+                        tmdb_interface: 'TMDbInterface'=None) -> None:
+        """
+        Set episode ID's for all Episodes within this Show, using the given
+        interfaces. Only episodes whose card is not present or still need
+        translations are updated.
+        
+        :param      sonarr_interface:   The SonarrInterface to optionally query.
+        :param      plex_interface:     The PlexInterface to optionally query.
+        :param      tmdb_interface:     The TMDbInterface to optionally query.
+        """
+
+        # Exit if primary data source doesn't have an interface
+        if (self.episode_data_source == 'sonarr'
+            and (not self.sonarr_sync or not sonarr_interface)):
+            return None
+        elif (self.episode_data_source == 'plex'
+            and (self.library is None or not plex_interface)):
+            return None
+        elif (self.episode_data_source == 'tmdb'
+            and (not self.tmdb_sync or not tmdb_interface)):
+            return None
+
+        # Filter episodes not needing ID's - i.e. has card, and has translation
+        def does_need_id(item) -> bool:
+            _, episode = item
+            if episode.episode_info.has_all_ids or episode.destination is None:
+                return False
+            if not episode.destination.exists():
+                return True
+            for translation in self.title_languages:
+                if not episode.key_is_specified(translation['key']):
+                    return True
+            return False
+
+        # Apply filter of only those needing ID's, get only EpisodeInfo objects
+        infos = list(
+            ep.episode_info for _, ep in
+            filter(does_need_id, self.episodes.items())
+        )
+
+        # If no episodes need ID's, exit
+        if not infos:
+            return None
+
+        # Temporary function to load episode ID's
+        def load_sonarr(infos):
+            if self.sonarr_sync and sonarr_interface:
+                sonarr_interface.set_episode_ids(self.series_info, infos)
+        def load_plex(infos):
+            if self.library is not None and plex_interface:
+                plex_interface.set_episode_ids(self.library_name,
+                                               self.series_info, infos)
+        def load_tmdb(infos):
+            if self.tmdb_sync and tmdb_interface:
+                tmdb_interface.set_episode_ids(self.series_info, infos)
+
+        # Identify interface order for ID gathering based on primary episode
+        # data source
+        interface_orders = {
+            'sonarr': [load_sonarr, load_plex, load_tmdb],
+            'plex':   [load_plex, load_sonarr, load_tmdb],
+            'tmdb':   [load_tmdb, load_plex, load_sonarr],
+        }
+        
+        # Go through each interface and load ID's from it
+        for interface_function in interface_orders[self.episode_data_source]:
+            interface_function(infos)
+
+
+    def add_translations(self, tmdb_interface: 'TMDbInterface') -> None:
+        """
+        Add translated episode titles to the Episodes of this series. This 
+        show's source file is re-read if any translations are added.
+        
+        :param      tmdb_interface: Interface to TMDb to query for translated
+                                    episode titles.
+        """
+
+        # If no translations were specified, or TMDb syncing isn't enabled, skip
+        if len(self.title_languages) == 0 or not self.tmdb_sync:
+            return None
+
+        # Go through every episode and look for translations
+        modified = False
+        for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
+            # Get each translation for this series
+            for translation in self.title_languages:
+                # If the key already exists, skip this episode
+                if episode.key_is_specified(translation['key']):
+                    continue
+
+                # Update progress bar
+                pbar.set_description(f'Checking {episode}')
+
+                # Query TMDb for the title of this episode in this language
+                language_title = tmdb_interface.get_episode_title(
+                    self.series_info,
+                    episode.episode_info,
+                    translation['language'],
+                )
+
+                # If episode wasn't found, or original title was returned, skip
+                if (language_title is None
+                    or language_title == episode.episode_info.title.full_title):
+                    continue
+
+                # Modify data file entry with new title
+                modified = True
+                self.file_interface.add_data_to_entry(
+                    episode.episode_info,
+                    **{translation['key']: language_title},
+                )
+
+                # Adding translated title, log it
+                log.debug(f'Added "{language_title}" to '
+                          f'"{translation["key"]}" for {self} {episode}')
+
+        # If any translations were added, re-read source
+        if modified:
+            self.read_source()
+
+
+    def download_logo(self, tmdb_interface: 'TMDbInterface') -> None:
+        """
+        Download the logo for this series from TMDb. Any SVG logos are converted
+        to PNG.
+        
+        :param      tmdb_interface: TMDbInterface to download the logo from.
+        """
+
+        # If not syncing to TMDb, or logo already exists, exit
+        if not self.tmdb_sync or self.logo.exists():
+            return None
+
+        # Download logo
+        if (url := tmdb_interface.get_series_logo(self.series_info)):
+            # SVG logos need to be converted first
+            if url.endswith('.svg'):
+                # Download .svgs to temporary location pre-conversion
+                tmdb_interface.download_image(
+                    url, self.card_class.TEMPORARY_SVG_FILE
+                )
+
+                # Convert temporary SVG to PNG at logo filepath
+                self.card_class.convert_svg_to_png(
+                    self.card_class.TEMPORARY_SVG_FILE,
+                    self.logo,
+                )
+                log.debug(f'Converted logo for {self} from .svg to .png')
+            else:
+                tmdb_interface.download_image(url, self.logo)
+
+            # Convert SVG to PNG
+            log.debug(f'Downloaded logo for {self}')
+
+
+    def __apply_styles(self, plex_interface: 'PlexInterface'=None,
+                       select_only: Episode=None) -> bool:
+        """
+        Modify this series' Episode source images based on their watch statuses,
+        and how that style applies to this show's un/watched styles. Return
+        whether a backdrop should be downloaded.
+        
+        :param      plex_interface: Optional PlexInterface used to modify the
+                                    Episode objects based on the watched status
+                                    of. If not provided, episodes are assumed to
+                                    all be unwatched (i.e. spoiler free).
+        :param      select_only:    Optional Episode object. If provided, only
+                                    this episode's style is applied.
+        
+        :returns:   Whether a backdrop should be downloaded or not.
+        """
+
+        # If no library, ignore styles
+        if self.library is None:
+            return False
+
+        # Update watched statuses via Plex
+        if plex_interface is None:
+            # If no PlexInterface, assume all episodes are unwatched
+            [episode.update_statuses(False, self.watched_style,
+                                     self.unwatched_style)
+             for _, episode in self.episodes.items()]
+        else:
+            episode_map = self.episodes
+            if select_only:
+                episode_map = {select_only.episode_info.key: select_only}
+
+            plex_interface.update_watched_statuses(
+                self.library_name,
+                self.series_info,
+                episode_map,
+                self.watched_style,
+                self.unwatched_style,
+            )
+            
+        # Get show styles
+        watched_style = self.watched_style
+        unwatched_style = self.unwatched_style
+
+        # Go through all episodes and select source images
+        download_backdrop = False
+        for key, episode in self.episodes.items():
+            # If only selecting a specific episode, skip others
+            if select_only is not None and episode is not select_only:
+                continue
+            
+            # Try and get the manually specified source from the episode map
+            manual_source = self.__episode_map.get_source(episode.episode_info)
+            applies_to = self.__episode_map.get_applies_to(episode.episode_info)
+
+            # Update source and blurring based on.. well, everything..
+            found = True
+            if ((applies_to == 'all' and unwatched_style == 'unique'
+                 and watched_style != 'blur') or
+                (applies_to == 'all' and unwatched_style == 'art'
+                 and not (watched_style == 'blur' and episode.watched)) or
+                (applies_to == 'all' and unwatched_style == 'blur'
+                 and watched_style != 'blur' and episode.watched) or
+                (applies_to == 'unwatched' and unwatched_style != 'blur'
+                 and not episode.watched)):
+                found = episode.update_source(manual_source, downloadable=False)
+            elif ((applies_to == 'all') or
+                (applies_to == 'unwatched' and unwatched_style == 'blur'
+                 and not episode.watched)):
+                episode.blur = True
+                found = episode.update_source(manual_source, downloadable=False)
+            elif watched_style == 'unique':
+                continue
+            elif watched_style == 'art':
+                found = episode.update_source(self.backdrop, downloadable=True)
+                download_backdrop = True
+            else:
+                episode.blur = True
+
+            # Override to backdrop if indicated by style, or manual image DNE
+            if (((episode.watched and watched_style == 'art')
+                or (not episode.watched and unwatched_style == 'art'))
+                and not found):
+                episode.update_source(self.backdrop, downloadable=True)
+                download_backdrop = True
+
+        return download_backdrop
+            
+            
+    def select_source_images(self, plex_interface: PlexInterface=None,
+                             tmdb_interface: 'TMDbInterface'=None,
+                             select_only: Episode=None) -> None:
+        """
+        Modify this series' Episode source images based on their watch statuses,
+        and how that style applies to this show's un/watched styles. If a
+        backdrop is required, and TMDb is enabled, then one is downloaded if it
+        does not exist.
+        
+        :param      plex_interface: Optional PlexInterface used to modify the
+                                    Episode objects based on the watched status
+                                    of. If not provided, episodes are assumed to
+                                    all be unwatched (i.e. spoiler free).
+        :param      tmdb_interface: Optional TMDbInterface to query for a
+                                    backdrop if one is needed and DNE.
+        :param      select_only:    Optional Episode object. If provided, only
+                                    this episode's source is selected.
+        """
+
+        # Modify Episodes watched/blur/source files based on plex status
+        download_backdrop = self.__apply_styles(plex_interface,
+                                                select_only=select_only)
+
+        # Don't download source if this card type doesn't use unique images
+        if not self.card_class.USES_UNIQUE_SOURCES:
+            return None
+
+        # Whether to always check TMDb or Plex
+        always_check_tmdb = (self.preferences.use_tmdb and tmdb_interface
+                             and self.tmdb_sync and self.preferences.check_tmdb)
+        always_check_plex = (self.preferences.use_plex and plex_interface
+            and self.library is not None and self.preferences.check_plex
+            and plex_interface.has_series(self.library_name, self.series_info))
+
+        # For each episode, query interfaces (in priority order) for source
+        for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
+            # If only selecting a specific episode, skip others
+            if select_only is not None and episode is not select_only:
+                continue
+            
+            # Skip this episode if not downloadable, or source exists
+            if not episode.downloadable_source or episode.source.exists():
+                continue
+
+            # Update progress bar
+            pbar.set_description(f'Selecting {episode}')
+
+            # Check TMDb if this episode isn't permanently blacklisted
+            if always_check_tmdb:
+                blacklisted =  tmdb_interface.is_permanently_blacklisted(
+                    self.series_info,
+                    episode.episode_info,
+                )
+                check_tmdb = not blacklisted
+            else:
+                check_tmdb, blacklisted = False, False
+
+            # Check Plex if enabled, provided, and valid relative to TMDb
+            if always_check_plex:
+                check_plex = (self.preferences.check_plex_before_tmdb
+                              or blacklisted)
+            else:
+                check_plex = False
+
+            # Go through each source interface indicated, try and get source
+            for source_interface in self.preferences.image_source_priority:
+                # Query either TMDb or Plex for the source image
+                image_url = None
+                if source_interface == 'tmdb' and check_tmdb:
+                    image_url = tmdb_interface.get_source_image(
+                        self.series_info,
+                        episode.episode_info
+                    )
+                elif source_interface == 'plex' and check_plex:
+                    image_url = plex_interface.get_source_image(
+                        self.library_name,
+                        self.series_info,
+                        episode.episode_info,
+                    )
+
+                # If URL was returned by either interface, download
+                if image_url is not None:
+                    WebInterface.download_image(image_url, episode.source)
+                    log.debug(f'Downloaded {episode.source.name} for {self} '
+                              f'from {source_interface}')
+                    break
+        
+        # Query TMDb for the backdrop if one does not exist and is needed
+        if (download_backdrop and tmdb_interface and self.tmdb_sync
+            and not self.backdrop.exists()):
+            # Download background art 
+            if (url := tmdb_interface.get_series_backdrop(self.series_info)):
+                tmdb_interface.download_image(url, self.backdrop)
 
 
     def find_multipart_episodes(self) -> None:
         """
         Find and create all the multipart episodes for this series. This adds
-        MutliEpisode objects to this show's episodes dictionary.
+        MultiEpisode objects to this Show's episodes dictionary.
         """
 
         # Set of episodes already mapped
@@ -391,303 +848,55 @@ class Show(YamlReader):
             self.episodes[f'0{mp.season_number}-{mp.episode_start}'] = mp
 
 
-    def query_sonarr(self, sonarr_interface: 'SonarrInterface') -> None:
+    def remake_card(self, episode_info: 'EpisodeInfo',
+                    plex_interface: 'PlexInterface',
+                    tmdb_interface: 'TMDbInterface'=None) -> None:
         """
-        Query the provided SonarrInterface object, checking if the returned
-        episodes exist in this show's associated source. All new entries are
-        added to this object's DataFileInterface, the source is re-read, and
-        episode ID's are set IF TMDb syncing is enabled.
-
-        This method should only be called if Sonarr syncing is globally enabled.
+        Remake the card associated with the given EpisodeInfo, updating the
+        metadata within Plex.
         
-        :param      sonarr_interface:   The SonarrInterface to query.
+        :param      episode_info:   EpisodeInfo corresponding to the Episode
+                                    being updated. Matched by key.
+        :param      plex_interface: The PlexInterface to utilize for watched
+                                    status identification, source image
+                                    gathering, and metadata refreshing.
+        :param      tmdb_interface: Optional TMDbInterface to utilize for source
+                                    gathering.
         """
 
-        # Check if Sonarr is enabled for this show in partocular
-        if not self.sonarr_sync:
+        # If no episode of the given index (key) exists, nothing to remake, exit
+        if (episode := self.episodes.get(episode_info.key)) is None:
+            log.error(f'Episode {episode_info} not found in datafile')
             return None
 
-        # Get list of EpisodeInfo objects from Sonarr
-        all_episodes = sonarr_interface.get_all_episodes_for_series(
-            self.series_info
+        # Select proper source for this episode
+        self.select_source_images(plex_interface, tmdb_interface,
+                                  select_only=episode)
+
+        # Exit if this card needs a source and it DNE
+        if self.card_class.USES_UNIQUE_SOURCES and not episode.source.exists():
+            log.error(f'Cannot remake card {episode.destination.resolve()} - no'
+                      f'source image')
+            return None
+
+        # If card wasn't deleted, means watch status didn't change, exit
+        if episode.destination.exists():
+            log.debug(f'Not remaking card {episode.destination.resolve()}')
+            return None
+
+        # Create this card
+        TitleCard(
+            episode,
+            self.profile,
+            self.card_class.TITLE_CHARACTERISTICS,
+            **self.extras,
+            **episode.extra_characteristics,
+        ).create()
+
+        # Update Plex
+        plex_interface.set_title_cards_for_series(
+            self.library_name, self.series_info, {episode_info.key: episode}
         )
-
-        # For each episode, check if the data matches any contained Episodes
-        if all_episodes:
-            # Filter out episodes that already exist
-            new_episodes = list(filter(
-                lambda e: e.key not in self.episodes,
-                all_episodes,
-            ))
-
-            # Filter episodes that are specials if sync_specials is False
-            if not self.sync_specials:
-                new_episodes = list(filter(
-                    lambda e: e.season_number != 0,
-                    new_episodes,
-                ))
-
-            # If there are new episodes, add to the datafile, return True
-            if new_episodes:
-                self.file_interface.add_many_entries(new_episodes)
-                self.read_source()
-
-        # If TMDb syncing is enabled, set episode ID's for all episodes
-        if self.tmdb_sync:
-            all_episodes = list(ei for _, ei in self.episodes.items())
-            sonarr_interface.set_all_episode_ids(self.series_info, all_episodes)
-
-
-    def add_translations(self, tmdb_interface: 'TMDbInterface') -> None:
-        """
-        Add translated episode titles to the Episodes of this series. This 
-        show's source file is re-read if any translations are added.
-        
-        :param      tmdb_interface: Interface to TMDb to query for translated
-                                    episode titles.
-        """
-
-        # If no translations were specified, or TMDb syncing isn't enabled, skip
-        if len(self.title_languages) == 0 or not self.tmdb_sync:
-            return None
-
-        # Go through every episode and look for translations
-        modified = False
-        for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
-            # Get each translation for this series
-            for translation in self.title_languages:
-                # If the key already exists, skip this episode
-                if translation['key'] in episode.extra_characteristics:
-                    continue
-
-                # Update progress bar
-                pbar.set_description(f'Checking {episode}')
-
-                # Query TMDb for the title of this episode in this language
-                language_title = tmdb_interface.get_episode_title(
-                    self.series_info,
-                    episode.episode_info,
-                    translation['language'],
-                )
-
-                # If episode wasn't found, or original title was returned, skip
-                if (language_title is None
-                    or language_title == episode.episode_info.title.full_title):
-                    continue
-
-                # Modify data file entry with new title
-                modified = True
-                self.file_interface.add_data_to_entry(
-                    episode.episode_info,
-                    **{translation['key']: language_title},
-                )
-
-                # Adding translated title, log it
-                log.debug(f'Added "{language_title}" to '
-                          f'"{translation["key"]}" for {self}')
-
-        # If any translations were added, re-read source
-        if modified:
-            self.read_source()
-
-
-    def download_logo(self, tmdb_interface: 'TMDbInterface') -> None:
-        """
-        Download the logo for this series from TMDb. Any SVG logos are converted
-        to PNG.
-        
-        :param      tmdb_interface: Interface to TMDb to download the logo from.
-        """
-
-        # If not syncing to TMDb, or logo already exists, exit
-        if not self.tmdb_sync or self.logo.exists():
-            return None
-
-        # Download logo
-        if (url := tmdb_interface.get_series_logo(self.series_info)):
-            # SVG logos need to be converted first
-            if url.endswith('.svg'):
-                # Download .svgs to temporary location pre-conversion
-                tmdb_interface.download_image(
-                    url, self.card_class.TEMPORARY_SVG_FILE
-                )
-
-                # Convert temporary SVG to PNG at logo filepath
-                self.card_class.convert_svg_to_png(
-                    self.card_class.TEMPORARY_SVG_FILE,
-                    self.logo,
-                )
-                log.debug(f'Converted logo for {self} from .svg to .png')
-            else:
-                tmdb_interface.download_image(url, self.logo)
-
-            # Convert SVG to PNG
-            log.debug(f'Downloaded logo for {self}')
-
-
-    def __apply_styles(self, plex_interface: 'PlexInterface'=None) -> bool:
-        """
-        Modify this series' Episode source images based on their watch statuses,
-        and how that style applies to this show's un/watched styles. Return
-        whether a backdrop should be downloaded.
-        
-        :param      plex_interface: Optional PlexInterface used to modify the
-                                    Episode objects based on the watched status
-                                    of. If not provided, episodes are assumed to
-                                    all be unwatched (i.e. spoiler free).
-        
-        :returns:   Whether a backdrop should be downloaded or not.
-        """
-
-        # If no library, ignore styles
-        if self.library is None:
-            return False
-
-        # Update watched statuses via Plex
-        if plex_interface is None:
-            # If no PlexInterface, assume all episodes are unwatched
-            [episode.update_statuses(False, self.watched_style,
-                                     self.unwatched_style)
-             for _, episode in self.episodes.items()]
-        else:
-            plex_interface.update_watched_statuses(
-                self.library_name,
-                self.series_info,
-                self.episodes,
-                self.watched_style,
-                self.unwatched_style,
-            )
-            
-        # Get show styles
-        watched_style = self.watched_style
-        unwatched_style = self.unwatched_style
-
-        # Go through all episodes and select source images
-        download_backdrop = False
-        for key, episode in self.episodes.items():
-            # Try and get the manually specified source from the episode map
-            manual_source = self.__episode_map.get_source(episode.episode_info)
-            applies_to = self.__episode_map.get_applies_to(episode.episode_info)
-
-            # Update source and blurring based on.. well, everything..
-            found = True
-            if ((applies_to == 'all' and unwatched_style == 'unique'
-                 and watched_style != 'blur') or
-                (applies_to == 'all' and unwatched_style == 'art'
-                 and not (watched_style == 'blur' and episode.watched)) or
-                (applies_to == 'all' and unwatched_style == 'blur'
-                 and watched_style != 'blur' and episode.watched) or
-                (applies_to == 'unwatched' and unwatched_style != 'blur'
-                 and not episode.watched)):
-                found = episode.update_source(manual_source, downloadable=False)
-            elif ((applies_to == 'all') or
-                (applies_to == 'unwatched' and unwatched_style == 'blur'
-                 and not episode.watched)):
-                episode.blur = True
-                found = episode.update_source(manual_source, downloadable=False)
-            elif watched_style == 'unique':
-                continue
-            elif watched_style == 'art':
-                found = episode.update_source(self.backdrop, downloadable=True)
-                download_backdrop = True
-            else:
-                episode.blur = True
-
-            # Override to backdrop if indicated by style, or manual image DNE
-            if (((episode.watched and watched_style == 'art')
-                or (not episode.watched and unwatched_style == 'art'))
-                and not found):
-                episode.update_source(self.backdrop, downloadable=True)
-                download_backdrop = True
-
-        return download_backdrop
-            
-            
-    def select_source_images(self, plex_interface: PlexInterface=None,
-                             tmdb_interface: 'TMDbInterface'=None) -> None:
-        """
-        Modify this series' Episode source images based on their watch statuses,
-        and how that style applies to this show's un/watched styles. If a
-        backdrop is required, and TMDb is enabled, then one is downloaded if it
-        does not exist.
-        
-        :param      plex_interface: Optional PlexInterface used to modify the
-                                    Episode objects based on the watched status
-                                    of. If not provided, episodes are assumed to
-                                    all be unwatched (i.e. spoiler free).
-        :param      tmdb_interface: Optional TMDbInterface to query for a
-                                    backdrop if one is needed and DNE.
-        """
-
-        # Modify Episodes watched/blur/source files based on plex status
-        download_backdrop = self.__apply_styles(plex_interface)
-
-        # Don't download source if this card type doesn't use unique images
-        if not self.card_class.USES_UNIQUE_SOURCES:
-            return None
-
-        # Whether to always check TMDb or Plex
-        always_check_tmdb = (self.preferences.use_tmdb and tmdb_interface
-                             and self.tmdb_sync and self.preferences.check_tmdb)
-        always_check_plex = (self.preferences.use_plex and plex_interface
-            and self.library is not None and self.preferences.check_plex
-            and plex_interface.has_series(self.library_name, self.series_info))
-
-        # For each episode, query interfaces (in priority order) for source
-        for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
-            # Skip this episode if not downloadable, or source exists
-            if not episode.downloadable_source or episode.source.exists():
-                continue
-
-            # Update progress bar
-            pbar.set_description(f'Selecting {episode}')
-
-            # Check TMDb if this episode isn't permanently blacklisted
-            if always_check_tmdb:
-                blacklisted =  tmdb_interface.is_permanently_blacklisted(
-                    self.series_info,
-                    episode.episode_info,
-                )
-                check_tmdb = not blacklisted
-            else:
-                check_tmdb, blacklisted = False, False
-
-            # Check Plex if enabled, provided, and valid relative to TMDb
-            if always_check_plex:
-                check_plex = (self.preferences.check_plex_before_tmdb
-                              or blacklisted)
-            else:
-                check_plex = False
-
-            # Go through each source interface indicated, try and get source
-            for source_interface in self.preferences.source_priority:
-                # Query either TMDb or Plex for the source image
-                image_url = None
-                if source_interface == 'tmdb' and check_tmdb:
-                    image_url = tmdb_interface.get_source_image(
-                        self.series_info,
-                        episode.episode_info
-                    )
-                elif source_interface == 'plex' and check_plex:
-                    image_url = plex_interface.get_source_image(
-                        self.library_name,
-                        self.series_info,
-                        episode.episode_info,
-                    )
-
-                # If URL was returned by either interface, download
-                if image_url is not None:
-                    WebInterface.download_image(image_url, episode.source)
-                    log.debug(f'Downloaded {episode.source.name} for {self} '
-                              f'from {source_interface}')
-                    break
-        
-        # Query TMDb for the backdrop if one does not exist and is needed
-        if (download_backdrop and tmdb_interface and self.tmdb_sync
-            and not self.backdrop.exists()):
-            # Download background art 
-            if (url := tmdb_interface.get_series_backdrop(self.series_info)):
-                tmdb_interface.download_image(url, self.backdrop)
 
 
     def create_missing_title_cards(self) ->None:

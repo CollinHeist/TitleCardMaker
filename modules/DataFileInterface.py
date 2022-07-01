@@ -103,7 +103,7 @@ class DataFileInterface:
         self.__write_data(yaml)
 
 
-    def read(self) -> dict:
+    def read(self) -> tuple[dict, set]:
         """
         Read the data file for this object, yielding each valid row.
         
@@ -122,17 +122,20 @@ class DataFileInterface:
 
             # Iterate through each episode of this season
             for episode_number, episode_data in season_data.items():
-                # If the 'title' key is missing (or no subkeys at all..) error
+                # If title is missing (or no subkeys at all..) error
                 if (not isinstance(episode_data, dict)
-                    or ('title' not in episode_data
-                    and 'preferred_title' not in episode_data)):
+                    or ('title' not in episode_data and
+                        'preferred_title' not in episode_data)):
                     log.error(f'Season {season_number}, Episode {episode_number}'
                               f' of "{self.file.resolve()}" is missing title')
                     continue
 
+                # Get existing keys for this episode
+                given_keys = set(episode_data)
+
                 # If translated title is available, prefer that
                 original_title = episode_data.pop('title', None)
-                title = episode_data.pop('preferred_title', original_title)
+                title = episode_data.get('preferred_title', original_title)
                 
                 # Construct EpisodeInfo object for this entry
                 episode_info = EpisodeInfo(
@@ -140,13 +143,15 @@ class DataFileInterface:
                     season_number,
                     episode_number,
                     episode_data.pop('abs_number', None),
+                    episode_data.pop('tvdb_id', None),
+                    episode_data.pop('imdb_id', None),
                 )
 
                 # Add any additional, unexpected keys from the YAML
                 data = {'episode_info': episode_info}
                 data.update(episode_data)
                 
-                yield data
+                yield data, given_keys
 
 
     def read_entries_without_absolute(self) -> dict:
