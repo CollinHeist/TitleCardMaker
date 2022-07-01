@@ -39,7 +39,7 @@ def runtime(arg: str) -> dict:
     try:
         hour, minute = map(int, arg.split(':'))
         assert hour in range(0, 24) and minute in range(0, 60)
-        return {'hour': hour, 'minute': minute}
+        return arg
     except Exception:
         raise ArgumentTypeError(f'Invalid time, specify as HH:MM')
 
@@ -164,6 +164,15 @@ def run():
         log.critical(f'Invalid permissions - {error}')
         exit(1)
 
+# First Manager run that schedules subsequent runs and then cancels itself
+def first_run():
+    # Run, schedule subsequent runs, then remove this function from schedule
+    run()
+    interval, unit = args.frequency['interval'], args.frequency['unit']
+    getattr(schedule.every(interval), unit).do(run)
+    log.debug(f'Scheduled run() every {interval} {unit}')
+    return schedule.CancelJob
+
 # Function to read the Tautulli update list
 def read_update_list():
     # If the file doesn't exist (nothing to parse), exit
@@ -199,31 +208,18 @@ if args.run:
     stats = Stats(pr)
     stats.dump_stats(filename='all.prof')
 
-# Schedule reading the update list if specified
+# Schedule first run, which then schedules subsequent runs
+if hasattr(args, 'runtime'):
+    # Schedule first run
+    schedule.every().day(args.runtime).do(first_run)
+    log.info(f'Starting first run in {schedule.idle_seconds()} seconds')
+
+# Schedule reading the update list
 if hasattr(args, 'tautulli_update_list'):
-    # Set schedule to execute based on given frequency
     interval = args.tautulli_update_frequency['interval']
     unit = args.tautulli_update_frequency['unit']
     getattr(schedule.every(interval), unit).do(read_update_list)
     log.debug(f'Scheduled read_update_list() every {unit} {interval}')
-
-# Schedule subsequent runs if specified
-if hasattr(args, 'runtime'):
-    # Get current time and first run before starting schedule
-    today = datetime.today()
-    first_run = datetime(today.year, today.month, today.day, **args.runtime)
-    first_run += timedelta(days=int(first_run < today))
-
-    # Sleep until first run
-    sleep_seconds = (first_run - today).total_seconds()
-    log.info(f'Starting first run in {int(sleep_seconds)} seconds')
-    sleep(sleep_seconds)
-    run()
-
-    # Set schedule to execute based on given frequency
-    interval, unit = args.frequency['interval'], args.frequency['unit']
-    getattr(schedule.every(interval), unit).do(run)
-    log.debug(f'Scheduled run() every {interval} {unit}')
 
 # Infinte loop if either infinite argument was indicated
 if hasattr(args, 'runtime') or hasattr(args, 'tautulli_update_list'):
@@ -233,4 +229,3 @@ if hasattr(args, 'runtime') or hasattr(args, 'tautulli_update_list'):
         next_run = schedule.next_run().strftime("%H:%M:%S %Y-%m-%d")
         log.info(f'Sleeping until {next_run}')
         sleep(max(0, (schedule.next_run()-datetime.today()).total_seconds()))
-
