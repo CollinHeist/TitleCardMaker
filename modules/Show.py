@@ -559,6 +559,13 @@ class Show(YamlReader):
                 log.debug(f'Added "{language_title}" to '
                           f'"{translation["key"]}" for {self} {episode}')
 
+                # Delete old card
+                if (episode.destination is not None
+                    and episode.destination.exists()):
+                    episode.destination.unlink()
+                    log.debug(f'Deleted card for {self} {episode}, adding '
+                              f'translation')
+
         # If any translations were added, re-read source
         if modified:
             self.read_source()
