@@ -154,25 +154,23 @@ class Profile:
         :returns:   The episode text defined by this profile.
         """
 
+        # Get format string to utilize
+        if self.__use_custom_seasons:
+            format_string = self.episode_text_format
+        else:
+            format_string = episode.card_class.EPISODE_TEXT_FORMAT
+
         # Warn if absolute number is requested but not present
-        if (self.__use_custom_seasons and '{abs_' in self.episode_text_format
-            and episode.episode_info.abs_number is None):
+        if episode.episode_info.abs_number is None and '{abs_' in format_string:
                 log.warning(f'Episode text formatting uses absolute episode '
                             f'number, but {episode} has no absolute number - '
                             f'using episode number instead')
-                new_fmt = self.episode_text_format.replace('{abs_', '{episode_')
-                self.episode_text_format = new_fmt
+                format_string = self.episode_text_format.replace('{abs_',
+                                                                 '{episode_')
 
         # Format MultiEpisode episode text
         if isinstance(episode, MultiEpisode):
-            # If no custom season/episode text, use card class standard
-            new_etf = episode.modify_format_string(
-                self.episode_text_format
-                if self.__use_custom_seasons else
-                episode.card_class.EPISODE_TEXT_FORMAT
-            )
-
-            return new_etf.format(
+            return episode.modify_format_string(format_string).format(
                 season_number=episode.season_number,
                 episode_start=episode.episode_start,
                 episode_end=episode.episode_end,
@@ -181,12 +179,7 @@ class Profile:
                 **episode.extra_characteristics,
             )
 
-        # Standard Episode class
-        if self.__use_custom_seasons:
-            format_string = self.episode_text_format
-        else:
-            format_string = episode.card_class.EPISODE_TEXT_FORMAT
-
+        # Standard Episode object
         try:
             return format_string.format(
                 season_number=episode.episode_info.season_number,
@@ -194,9 +187,9 @@ class Profile:
                 abs_number=episode.episode_info.abs_number,
                 **episode.extra_characteristics,
             )
-        except Exception:
+        except Exception as e:
             log.error(f'Cannot format episode text "{format_string}" for '
-                      f'{episode}')
+                      f'{episode} ({e})')
             return f'EPISODE {episode.episode_info.episode_number}'
 
 
