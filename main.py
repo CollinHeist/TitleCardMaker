@@ -32,7 +32,7 @@ ENV_UPDATE_FREQUENCY = 'TCM_TAUTULLI_UPDATE_FREQUENCY'
 DEFAULT_PREFERENCE_FILE = Path(__file__).parent / 'preferences.yml'
 DEFAULT_MISSING_FILE = Path(__file__).parent / 'missing.yml'
 DEFAULT_FREQUENCY = '12h'
-DEFAULT_UPDATE_FREQUENCY = '2m'
+DEFAULT_UPDATE_FREQUENCY = '4m'
 
 # Pseudo-type functions for argument runtime and frequency
 def runtime(arg: str) -> dict:
