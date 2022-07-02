@@ -560,9 +560,7 @@ class Show(YamlReader):
                           f'"{translation["key"]}" for {self} {episode}')
 
                 # Delete old card
-                if (episode.destination is not None
-                    and episode.destination.exists()):
-                    episode.destination.unlink()
+                if episode.delete_card():
                     log.debug(f'Deleted card for {self} {episode}, adding '
                               f'translation')
 

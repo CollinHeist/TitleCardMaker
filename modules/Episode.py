@@ -141,9 +141,21 @@ class Episode:
         return True
 
 
-    def delete_card(self) -> None:
-        """Delete the title card for this Episode."""
+    def delete_card(self) -> bool:
+        """
+        Delete the title card for this Episode.
 
-        self.destination.unlink(missing_ok=True)
+        :returns:   True if card was deleted, False otherwise.
+
+        """
+
+        if self.destination is None:
+            return False
+
+        if self.destination.exists():
+            self.destination.unlink()
+            return True
+
+        return False
 
         
