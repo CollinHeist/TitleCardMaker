@@ -199,15 +199,8 @@ def read_update_list():
 
 # Run immediately if specified
 if args.run:
-    from cProfile import Profile
-    from pstats import Stats
-
-    with Profile() as pr:
-        run()
-
-    stats = Stats(pr)
-    stats.dump_stats(filename='all.prof')
-
+    run()
+    
 # Schedule first run, which then schedules subsequent runs
 if hasattr(args, 'runtime'):
     # Schedule first run
