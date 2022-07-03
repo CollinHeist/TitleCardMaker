@@ -80,7 +80,20 @@ class EpisodeInfo:
         season_match = (self.season_number == other_info.season_number)
         episode_match = (self.episode_number == other_info.episode_number)
 
-        return season_match and episode_match 
+        return season_match and episode_match
+
+
+    def has_id(self, id_: str) -> bool:
+        """
+        Determine whether this object has defined the given ID.
+        
+        :param      id_:    ID being checked
+        
+        :returns:   True if the given ID is defined (i.e. not None) for this
+                    object. False otherwise.
+        """
+
+        return getattr(self, id_) is not None
 
 
     @property
