@@ -162,11 +162,11 @@ class Profile:
 
         # Warn if absolute number is requested but not present
         if episode.episode_info.abs_number is None and '{abs_' in format_string:
-                log.warning(f'Episode text formatting uses absolute episode '
-                            f'number, but {episode} has no absolute number - '
-                            f'using episode number instead')
-                format_string = self.episode_text_format.replace('{abs_',
-                                                                 '{episode_')
+            log.warning(f'Episode text formatting uses absolute episode number,'
+                        f' but {episode} has no absolute number - using episode'
+                        f' number instead')
+            format_string = self.episode_text_format.replace('{abs_',
+                                                             '{episode_')
 
         # Format MultiEpisode episode text
         if isinstance(episode, MultiEpisode):

@@ -215,7 +215,7 @@ class DataFileInterface:
         self.__write_data(yaml)
 
 
-    def add_many_entries(self, new_episodes: ['EpisodeInfo']) -> None:
+    def add_many_entries(self, new_episodes: list['EpisodeInfo']) -> None:
         """
         Adds many entries at once. An episode is only added if an episode of
         that index does not already exist. This only reads and writes from this 
