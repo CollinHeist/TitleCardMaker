@@ -210,7 +210,7 @@ class SonarrInterface(WebInterface):
                 episode['seasonNumber'],
                 episode['episodeNumber'],
                 episode.get('absoluteEpisodeNumber'),
-                episode.get('tvdbId'),
+                tvdb_id=episode.get('tvdbId'),
             )
 
             all_episode_info.append(episode_info)
