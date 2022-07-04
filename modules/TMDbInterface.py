@@ -284,7 +284,7 @@ class TMDbInterface:
                 series_info.set_imdb_id(imdb_id)
 
             # Series without TVDB ID have 0 in its place
-            if (tvdb_id := result.tvdb_id) == 0:
+            if (tvdb_id := result.tvdb_id) != 0:
                 series_info.set_tvdb_id(tvdb_id)
         else:
             log.warning(f'Series "{series_info}" not found on TMDb')
