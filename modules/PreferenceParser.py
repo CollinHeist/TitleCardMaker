@@ -418,7 +418,7 @@ class PreferenceParser(YamlReader):
                 # Skip if series is not valid
                 if not valid:
                     continue
-                    
+
                 # Yield the Show object created from this entry
                 yield Show(
                     show_name,
@@ -428,6 +428,36 @@ class PreferenceParser(YamlReader):
                     self.source_directory,
                 )
 
+                # If archiving is disabled, skip
+                if not self.create_archive:
+                    continue
+
+                # Get all specified variations for this show
+                variations = file_yaml['series'][show_name].pop(
+                    'archive_variations', []
+                )
+                
+                if not isinstance(variations, list):
+                    log.error(f'Invalid archive variations for {show_name}')
+                    continue
+
+                # Yield each variation
+                for variation in variations:
+                    # Merge variation into base YAML
+                    modified_yaml = file_yaml['series'][show_name] | variation
+
+                    # Remove any library/media directory, only archived
+                    modified_yaml.pop('library', None)
+                    modified_yaml.pop('media_directory', None)
+                    
+                    yield Show(
+                        show_name,
+                        modified_yaml,
+                        library_map,
+                        font_map,
+                        self.source_directory,
+                        self,
+                    )
 
     @property
     def check_tmdb(self):

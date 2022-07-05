@@ -167,8 +167,8 @@ class SonarrInterface(WebInterface):
 
     def __get_all_episode_info(self, series_id: int) -> list[EpisodeInfo]:
         """
-        Gets all episode info for the given series ID. Only returns episodes
-        that have aired already.
+        Gets all episode info for the given series. Only episodes that have 
+        already aired are returned.
         
         :param      series_id:  The series identifier.
         

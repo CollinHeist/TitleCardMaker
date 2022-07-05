@@ -211,7 +211,7 @@ class PlexInterface:
             return None
 
 
-    def get_all_episodes(self, library_name,
+    def get_all_episodes(self, library_name: str,
                          series_info: SeriesInfo) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that have 

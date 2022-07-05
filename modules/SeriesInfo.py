@@ -13,10 +13,10 @@ class SeriesInfo:
     """Initialization fields"""
     name: str
     year: int
-    imdb_id: str = field(init=False, default=None)
-    sonarr_id: int = field(init=False, default=None)
-    tvdb_id: int = field(init=False, default=None)
-    tmdb_id: int = field(init=False, default=None)
+    imdb_id: str=None
+    sonarr_id: int=None
+    tvdb_id: int=None
+    tmdb_id: int=None
 
     """After how many characters to truncate the short name"""
     SHORT_WIDTH: ClassVar[int] = 15
@@ -93,7 +93,7 @@ class SeriesInfo:
         """
         Determine whether this object has defined all the given ID's.
         
-        :param      ids:    Any number of ID's being checked for.
+        :param      ids:    Any ID's being checked for.
         
         :returns:   True if all the given ID's are defined (i.e. not None) for
                     this object. False otherwise.

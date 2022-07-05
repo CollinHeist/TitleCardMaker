@@ -741,7 +741,7 @@ class Show(YamlReader):
 
             # Check TMDb if this episode isn't permanently blacklisted
             if always_check_tmdb:
-                blacklisted =  tmdb_interface.is_permanently_blacklisted(
+                blacklisted = tmdb_interface.is_permanently_blacklisted(
                     self.series_info,
                     episode.episode_info,
                 )
