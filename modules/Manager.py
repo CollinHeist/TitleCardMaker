@@ -139,7 +139,7 @@ class Manager:
             return None
 
         # For each show in the Manager, set IDs for every episode
-        for show in tqdm(self.shows + self.archives, **TQDM_KWARGS):
+        for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
             # Update progress bar
             pbar.set_description(f'Selecting episode IDs for'
                                  f'"{show.series_info.short_name}"')
