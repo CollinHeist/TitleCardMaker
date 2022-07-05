@@ -204,7 +204,7 @@ if args.run:
 # Schedule first run, which then schedules subsequent runs
 if hasattr(args, 'runtime'):
     # Schedule first run
-    schedule.every().day(args.runtime).do(first_run)
+    schedule.every().day.at(args.runtime).do(first_run)
     log.info(f'Starting first run in {schedule.idle_seconds()} seconds')
 
 # Schedule reading the update list
