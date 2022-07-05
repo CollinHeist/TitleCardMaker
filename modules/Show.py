@@ -45,7 +45,8 @@ class Show(YamlReader):
 
 
     def __init__(self, name: str, yaml_dict: dict, library_map: dict, 
-                 font_map: dict, source_directory: Path) -> None:
+                 font_map: dict, source_directory: Path,
+                 preferences: 'PreferenceParser') -> None:
         """
         Constructs a new instance of a Show object from the given YAML
         dictionary, library map, and referencing the base source directory. If
@@ -61,13 +62,15 @@ class Show(YamlReader):
                                         descriptions.
         :param      source_directory:   Base source directory this show should
                                         search for and place source images in.
+        :param      preferences:        PrferenceParser object this object's
+                                        default attributes are derived from.
         """
 
         # Initialize parent YamlReader object
         super().__init__(yaml_dict, log_function=log.error)
 
-        # Get global PreferenceParser object
-        self.preferences = global_objects.pp
+        # Get global objects
+        self.preferences = preferences
         
         # Parse arguments into attribures
         self.__library_map = library_map
@@ -162,7 +165,8 @@ class Show(YamlReader):
         
         # Recreate Show object with modified YAML
         return Show(self.series_info.name, modified_base, self.__library_map,
-                    self.font._Font__font_map, self.source_directory.parent)
+                    self.font._Font__font_map, self.source_directory.parent,
+                    self.preferences)
 
 
     def __parse_card_type(self, card_type: str) -> None:

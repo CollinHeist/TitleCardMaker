@@ -426,6 +426,7 @@ class PreferenceParser(YamlReader):
                     library_map,
                     font_map,
                     self.source_directory,
+                    self,
                 )
 
                 # If archiving is disabled, skip
