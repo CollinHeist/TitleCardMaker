@@ -204,7 +204,7 @@ if args.run:
 # Schedule first run, which then schedules subsequent runs
 if hasattr(args, 'runtime'):
     # Schedule first run
-    schedule.every().day(args.runtime).do(first_run)
+    schedule.every().day.at(args.runtime).do(first_run)
     log.info(f'Starting first run in {schedule.idle_seconds()} seconds')
 
 # Schedule reading the update list
@@ -212,7 +212,7 @@ if hasattr(args, 'tautulli_update_list'):
     interval = args.tautulli_update_frequency['interval']
     unit = args.tautulli_update_frequency['unit']
     getattr(schedule.every(interval), unit).do(read_update_list)
-    log.debug(f'Scheduled read_update_list() every {unit} {interval}')
+    log.debug(f'Scheduled read_update_list() every {interval} {unit}')
 
 # Infinte loop if either infinite argument was indicated
 if hasattr(args, 'runtime') or hasattr(args, 'tautulli_update_list'):
