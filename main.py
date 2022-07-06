@@ -12,8 +12,10 @@ try:
     from modules.FontValidator import FontValidator
     from modules.PreferenceParser import PreferenceParser
     from modules.RemoteFile import RemoteFile
-    from modules.global_objects import set_preference_parser, set_font_validator
+    from modules.global_objects import set_preference_parser, \
+                                       set_font_validator, set_media_info_set
     from modules.Manager import Manager
+    from modules.MediaInfoSet import MediaInfoSet
 except ImportError as e:
     print(f'Required Python packages are missing - execute "pipenv install"')
     print(f'  Specific Error: {e}')
@@ -132,12 +134,13 @@ if not args.preferences.exists():
     log.critical(f'Preference file "{args.preferences.resolve()}" does not exist')
     exit(1)
 
-# Store the PreferenceParser and FontValidator in the global namespace
+# Store objects in global namespace
 if not (pp := PreferenceParser(args.preferences)).valid:
     log.critical(f'Preference file is invalid')
     exit(1)
 set_preference_parser(pp)
 set_font_validator(FontValidator())
+set_media_info_set(MediaInfoSet())
 
 # Function to re-read preference file
 def read_preferences():
