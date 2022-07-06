@@ -9,6 +9,7 @@ try:
     from modules.PreferenceParser import PreferenceParser
     from modules.global_objects import set_preference_parser
     from modules.RemoteCardType import RemoteCardType
+    from modules.RemoteFile import RemoteFile
     from modules.SeasonPoster import SeasonPoster
     from modules.ShowSummary import ShowSummary
     from modules.TitleCard import TitleCard
@@ -214,6 +215,7 @@ set_preference_parser(pp)
 # Execute title card related options
 if hasattr(args, 'title_card'):
     # Attempt to get local card type, if not, try RemoteCardType
+    RemoteFile.LOADED.truncate()
     if args.card_type in TitleCard.CARD_TYPES.keys():
         CardClass = TitleCard.CARD_TYPES[args.card_type]
     elif (remote_card := RemoteCardType(args.card_type)).valid:
