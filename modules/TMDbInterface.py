@@ -59,8 +59,9 @@ class TMDbInterface:
         :param      api_key:    The api key to communicate with TMDb.
         """
 
-        # Store global PreferenceParser object
+        # Store global objects
         self.preferences = global_objects.pp
+        self.info_set = global_objects.info_set
 
         # Create/read blacklist database
         self.__blacklist = TinyDB(self.__BLACKLIST_DB)
@@ -322,12 +323,20 @@ class TMDbInterface:
                 if episode.air_date > datetime.now() + timedelta(hours=2):
                     continue
 
-                # Create EpisodeInfo for this episode, add to list
-                all_episodes.append(EpisodeInfo(
+                # Create either a new EpisodeInfo or get from the MediaInfoSet
+                episode.reload()
+                episode_info = self.info_set.get_episode_info(
+                    series_info,
                     episode.name,
                     season.season_number,
                     episode.episode_number,
-                ))
+                    tvdb_id=episode.tvdb_id if episode.tvdb_id != 0 else None,
+                    imdb_id=None if episode.imdb_id is None else episode.imdb_id,
+                    queried_tmdb=True,
+                )
+
+                # Create EpisodeInfo for this episode, add to list
+                all_episodes.append(episode_info)
 
         return all_episodes
 
@@ -714,5 +723,4 @@ class TMDbInterface:
         TMDbInterface.__BLACKLIST_DB.unlink(missing_ok=True)
         log.info(f'Deleted blacklist file '
                  f'"{TMDbInterface.__BLACKLIST_DB.resolve()}"')
-
 

@@ -109,7 +109,7 @@ class SeriesInfo:
         :param      sonarr_id:  The Sonarr ID used for this series.
         """
         
-        if self.sonarr_id is None:
+        if self.sonarr_id is None and sonarr_id is not None:
             self.sonarr_id = int(sonarr_id)
 
 
@@ -120,7 +120,7 @@ class SeriesInfo:
         :param      tvdb_id:  The TVDb ID for this series.
         """
 
-        if self.tvdb_id is None:
+        if self.tvdb_id is None and tvdb_id is not None:
             self.tvdb_id = int(tvdb_id)
 
 
@@ -131,7 +131,7 @@ class SeriesInfo:
         :param      imdb_id:    The IMDb ID for this series.
         """
         
-        if self.imdb_id is None:
+        if self.imdb_id is None and imdb_id is not None:
             self.imdb_id = str(imdb_id)
 
 
@@ -142,7 +142,7 @@ class SeriesInfo:
         :param      tmdb_id:    The TMDb ID for this series.
         """
         
-        if self.tmdb_id is None:
+        if self.tmdb_id is None and tmdb_id is not None:
             self.tmdb_id = int(tmdb_id)
 
 

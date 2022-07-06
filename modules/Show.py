@@ -225,6 +225,9 @@ class Show(YamlReader):
                 if (card_type := this_library.get('card_type')):
                     self.__parse_card_type(card_type)
 
+        if (id_ := self._get('imdb_id', type_=str)) is not None:
+            self.series_info.set_imdb_id(id_)
+
         if (id_ := self._get('sonarr_id', type_=int)) is not None:
             self.series_info.set_sonarr_id(id_)
 
