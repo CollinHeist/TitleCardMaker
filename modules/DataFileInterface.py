@@ -120,8 +120,8 @@ class DataFileInterface:
                     season_number,
                     episode_number,
                     episode_data.pop('abs_number', None),
-                    episode_data.pop('tvdb_id', None),
-                    episode_data.pop('imdb_id', None),
+                    tvdb_id=episode_data.pop('tvdb_id', None),
+                    imdb_id=episode_data.pop('imdb_id', None),
                 )
 
                 # Add any additional, unexpected keys from the YAML

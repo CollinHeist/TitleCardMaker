@@ -235,14 +235,21 @@ class PlexInterface:
         # Create list of all episodes in Plex
         all_episodes = []
         for plex_episode in series.episodes():
-            episode_info = EpisodeInfo(
+            # Get all ID's for this episode
+            ids = {}
+            for guid in plex_episode.guids:
+                if 'tvdb://' in guid.id:
+                    ids['tvdb_id'] = guid.id[len('tvdb://'):]
+                elif 'imdb://' in guid.id:
+                    ids['imdb_id'] = guid.id[len('imdb://'):]
+
                 plex_episode.title,
                 plex_episode.parentIndex,
                 plex_episode.index,
+                **ids,
             )
 
-            # Assign ID's, add to list
-            episode_info.set_from_guids(plex_episode.guids)
+            # Add to list
             all_episodes.append(episode_info)
 
         return all_episodes
@@ -365,14 +372,19 @@ class PlexInterface:
                     episode=info.episode_number,
                 )
 
-                # Set this episode's ID's from the episode's associated GUID's
-                info.set_from_guids(plex_episode.guids)
+                # Set the ID's for this object
+                ids = {}
+                for guid in plex_episode.guids:
+                    if 'tvdb://' in guid.id:
+                        info.set_tvdb_id(guid.id[len('tvdb://'):])
+                    elif 'imdb://' in guid.id:
+                        info.set_imdb_id(guid.id[len('imdb://'):])
             except NotFound:
                 continue
 
 
     def get_source_image(self, library_name: str, series_info: 'SeriesInfo',
-                         episode_info: 'EpisodeInfo') -> str:
+                         episode_info: EpisodeInfo) -> str:
         """
         Get the source image (i.e. the URL to the existing thumbnail) for the
         given episode within Plex.
@@ -508,8 +520,8 @@ class PlexInterface:
         
         :param      rating_key: Rating key used to fetch the item within Plex.
         
-        :returns:   Tuple of the SeriesInfo, EpisodeInfo, and string of the
-                    library name corresponding to the given episode.
+        :returns:   Tuple of the SeriesInfo, EpisodeInfo, and the library name
+                    corresponding to the given episode.
         """
 
         try:

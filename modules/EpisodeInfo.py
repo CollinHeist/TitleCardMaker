@@ -96,6 +96,19 @@ class EpisodeInfo:
         return getattr(self, id_) is not None
 
 
+    def has_ids(self, *ids: tuple[str]) -> bool:
+        """
+        Determine whether this object has defined all the given ID's.
+        
+        :param      ids:    Any ID's being checked for.
+        
+        :returns:   True if all the given ID's are defined (i.e. not None) for
+                    this object. False otherwise.
+        """
+
+        return all(getattr(self, id_) is not None for id_ in ids)
+
+
     @property
     def has_all_ids(self) -> bool:
         """Whether this object has all ID's defined"""
@@ -166,19 +179,5 @@ class EpisodeInfo:
 
         self.set_tvdb_id(other.tvdb_id)
         self.set_imdb_id(other.imdb_id)
-
-
-    def set_from_guids(self, guids: list['plexapi.media.GuidTag']) -> None:
-        """
-        Set this object's ID's from a list of Plex API list of GuidTags.
-        
-        :param      guids:  List of GUID's to parse for ID's.
-        """
-
-        for guid in guids:
-            if 'tvdb://' in guid.id:
-                self.set_tvdb_id(guid.id[len('tvdb://'):])
-            elif 'imdb://' in guid.id:
-                self.set_imdb_id(guid.id[len('imdb://'):])
 
         
