@@ -71,6 +71,7 @@ class Show(YamlReader):
 
         # Get global objects
         self.preferences = preferences
+        self.info_set = global_objects.info_set
         
         # Parse arguments into attribures
         self.__library_map = library_map
@@ -85,7 +86,7 @@ class Show(YamlReader):
             return None
             
         # Setup default values that may be overwritten by YAML
-        self.series_info = SeriesInfo(name, year)
+        self.series_info = self.info_set.get_series_info(name, year)
         self.card_filename_format = self.preferences.card_filename_format
         self.media_directory = None
         self.card_class = TitleCard.CARD_TYPES[self.preferences.card_type]
@@ -121,6 +122,7 @@ class Show(YamlReader):
 
         # Create DataFileInterface fo this show
         self.file_interface = DataFileInterface(
+            self.series_info,
             self.source_directory / DataFileInterface.GENERIC_DATA_FILE_NAME
         )
 
@@ -134,7 +136,7 @@ class Show(YamlReader):
 
         # Episode dictionary to be filled
         self.episodes = {}
-
+        
 
     def __str__(self) -> str:
         """Returns a string representation of the object."""
@@ -201,7 +203,7 @@ class Show(YamlReader):
         """
 
         if (name := self._get('name', type_=str)) is not None:
-            self.series_info.update_name(name)
+            self.info_set.update_series_name(self.series_info, name)
 
         if (format_ := self._get('filename_format', type_=str)) is not None:
             if not TitleCard.validate_card_format_string(format_):
@@ -415,12 +417,6 @@ class Show(YamlReader):
             log.info(f'No episodes found for {self} from '
                      f'{self.episode_data_source}')
             return None
-
-        # Apply episode ID's to all episodes
-        def set_ids(episode_info):
-            if (ep := self.episodes.get(episode_info.key)) is not None:
-                ep.episode_info.copy_ids(episode_info)
-        tuple(map(set_ids, all_episodes))
 
         # Filter out episodes that already exist
         new_episodes = list(filter(

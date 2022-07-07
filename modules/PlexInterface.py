@@ -6,6 +6,7 @@ from tinydb import TinyDB, where
 from tqdm import tqdm
 
 from modules.Debug import log, TQDM_KWARGS
+import modules.global_objects as global_objects
 from modules.EpisodeInfo import EpisodeInfo
 from modules.SeriesInfo import SeriesInfo
 
@@ -33,6 +34,9 @@ class PlexInterface:
         :param      x_plex_token:   The x plex token for sending API requests to
                                     if the host device is untrusted.
         """
+
+        # Get global MediaInfoSet object
+        self.info_set = global_objects.info_set
 
         # Create PlexServer object with these arguments
         try:
@@ -243,10 +247,14 @@ class PlexInterface:
                 elif 'imdb://' in guid.id:
                     ids['imdb_id'] = guid.id[len('imdb://'):]
 
+            # Create either a new EpisodeInfo or get from the MediaInfoSet
+            episode_info = self.info_set.get_episode_info(
+                series_info,
                 plex_episode.title,
                 plex_episode.parentIndex,
                 plex_episode.index,
                 **ids,
+                queried_plex=True,
             )
 
             # Add to list
@@ -362,11 +370,12 @@ class PlexInterface:
 
         for info in infos:
             # Skip if EpisodeInfo already has IMDb, and TVDb ID's
-            if info.imdb_id is not None and info.tvdb_id is not None:
+            if info.queried_plex or info.has_ids('imdb_id', 'tvdb_id'):
                 continue
 
+            # Get episode from Plex
+            info.queried_plex = True
             try:
-                # Get episode from Plex
                 plex_episode = series.episode(
                     season=info.season_number,
                     episode=info.episode_number,
@@ -510,7 +519,7 @@ class PlexInterface:
                 
         # Log load operations to user
         if loaded_count > 0:
-            log.debug(f'Loaded {loaded_count} cards for "{series_info}"')
+            log.info(f'Loaded {loaded_count} cards for "{series_info}"')
 
 
     def get_episode_details(self, rating_key: int) -> tuple[SeriesInfo,

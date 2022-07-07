@@ -109,8 +109,8 @@ class MediaInfoSet:
     def get_episode_info(self, series_info: SeriesInfo=None,
                          title: 'Title'=None, season_number: int=None,
                          episode_number: int=None,  abs_number: int=None, *,
-                         imdb_id: str=None, tvdb_id: int=None, 
-                         **kwargs: dict) -> EpisodeInfo:
+                         imdb_id: str=None, tvdb_id: int=None,
+                         **queried_kwargs: dict) -> EpisodeInfo:
         """
         Get the EpisodeInfo object indicated by the given attributes. This looks
         for an existing object mapped under any of the given details; if none
@@ -138,6 +138,7 @@ class MediaInfoSet:
         def set_ids(info_obj):
             info_obj.set_imdb_id(imdb_id)
             info_obj.set_tvdb_id(tvdb_id)
+            info_obj.update_queried_statuses(**queried_kwargs)
             return info_obj
 
         # Check under TVDb ID, then IMDb, and finally index
@@ -159,9 +160,9 @@ class MediaInfoSet:
             abs_number,
             tvdb_id=tvdb_id,
             imdb_id=imdb_id,
-            **kwargs,
+            **queried_kwargs,
         )
-
+        
         # Add object to indices set
         key = f'{season_number}-{episode_number}'
         if series_info in self.episode_indices:

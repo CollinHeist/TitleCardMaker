@@ -17,6 +17,9 @@ class EpisodeInfo:
     abs_number: int=None
     tvdb_id: int=None
     imdb_id: str=None
+    queried_plex: bool=False
+    queried_sonarr: bool=False
+    queried_tmdb: bool=False
     key: str = field(init=False, repr=False)
     
 
@@ -134,16 +137,6 @@ class EpisodeInfo:
         }
 
 
-    def set_abs_number(self, abs_number: int) -> None:
-        """
-        Set the absolute number for this object.
-        
-        :param      abs_number: The absolute number to set.
-        """
-
-        self.abs_number = int(abs_number)
-
-
     def set_tvdb_id(self, tvdb_id: int) -> None:
         """
         Sets the TVDb ID for this object.
@@ -164,6 +157,29 @@ class EpisodeInfo:
 
         if self.imdb_id is None and imdb_id is not None:
             self.imdb_id = imdb_id
+
+
+    def update_queried_statuses(self, queried_plex: bool=False,
+                                queried_sonarr: bool=False,
+                                queried_tmdb: bool=False) -> None:
+        """
+        Update the queried attributes of this object to reflect the given
+        arguments. Only updates from False -> True.
+        
+        :param      queried_plex:       Whether this EpisodeInfo has been
+                                        queried on Plex.
+        :param      queried_sonarr:     Whether this EpisodeInfo has been
+                                        queried on Sonarr.
+        :param      queried_tmdb:       Whether this EpisodeInfo has been
+                                        queried on TMDb.
+        """
+
+        if not self.queried_plex and queried_plex:
+            self.queried_plex = queried_plex
+        if not self.queried_sonarr and queried_sonarr:
+            self.queried_sonarr = queried_sonarr
+        if not self.queried_tmdb and queried_tmdb:
+            self.queried_tmdb = queried_tmdb
 
 
     def copy_ids(self, other: 'EpisodeInfo') -> None:

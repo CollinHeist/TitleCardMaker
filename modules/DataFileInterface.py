@@ -3,6 +3,7 @@ from pathlib import Path
 
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
+import modules.global_objects as global_objects
 from modules.Title import Title
 
 class DataFileInterface:
@@ -16,7 +17,7 @@ class DataFileInterface:
     GENERIC_DATA_FILE_NAME = 'data.yml'
 
 
-    def __init__(self, data_file: Path) -> None:
+    def __init__(self, series_info: 'SeriesInfo', data_file: Path) -> None:
         """
         Constructs a new instance of the interface for the specified data file.
         This also creates the parent directories for the data file if they do
@@ -25,7 +26,8 @@ class DataFileInterface:
         :param      data_file:  Path to the data file to interface with.
         """
         
-        # Store the data file for future use
+        # Store the SeriesInfo and data file
+        self.series_info = series_info
         self.file = data_file
 
         # Create parent directories if necessary
@@ -36,7 +38,8 @@ class DataFileInterface:
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
-        return f'<DataFileInterface data_file={self.file.resolve()}>'
+        return (f'<DataFileInterface series_info={self.series_info}, '
+                f'file={self.file.resolve()}>')
 
 
     def __read_data(self) -> dict:
@@ -115,7 +118,9 @@ class DataFileInterface:
                 title = episode_data.get('preferred_title', original_title)
                 
                 # Construct EpisodeInfo object for this entry
-                episode_info = EpisodeInfo(
+                # episode_info = EpisodeInfo(
+                episode_info = global_objects.info_set.get_episode_info(
+                    self.series_info,
                     Title(title, original_title=original_title),
                     season_number,
                     episode_number,
