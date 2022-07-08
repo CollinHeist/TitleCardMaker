@@ -202,16 +202,14 @@ def read_update_list():
 
 # Run immediately if specified
 if args.run:
-    
     log.info(f'Starting TitleCardMaker')
-    from cProfile import Profile
+    run()
 
-    stats = Stats(pr)
 # Schedule first run, which then schedules subsequent runs
 if hasattr(args, 'runtime'):
     # Schedule first run
     schedule.every().day.at(args.runtime).do(first_run)
-    log.info(f'Starting first run in {schedule.idle_seconds()} seconds')
+    log.info(f'Starting first run in {schedule.idle_seconds():,.0f} seconds')
 
 # Schedule reading the update list
 if hasattr(args, 'tautulli_update_list'):
