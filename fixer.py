@@ -44,7 +44,7 @@ parser.add_argument(
 # Argument group for Miscellaneous functions
 misc_group = parser.add_argument_group('Miscellaneous')
 misc_group.add_argument(
-    '--import-archive', '--load-archive',
+    '--import-cards', '--import-archive', '--load-archive',
     type=str,
     nargs=2,
     default=SUPPRESS,
@@ -125,7 +125,7 @@ if not pp.valid:
 set_preference_parser(pp)
 
 # Execute Miscellaneous options
-if hasattr(args, 'import_archive') and pp.use_plex:
+if hasattr(args, 'import_cards') and pp.use_plex:
     # Temporary classes
     @dataclass
     class Episode:
@@ -134,9 +134,6 @@ if hasattr(args, 'import_archive') and pp.use_plex:
         spoil_type: str
         
     # Create PlexInterface
-    if not pp.use_plex:
-        log.critical(f'Cannot import archive if Plex is disabled')
-        exit(1)
     plex_interface = PlexInterface(pp.plex_url, pp.plex_token)
 
     # Get series/name + year from archive directory if unspecified
