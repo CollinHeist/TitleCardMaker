@@ -109,11 +109,11 @@ class MediaInfoSet:
     def __set_episode_imdb_id(self, episode_info: EpisodeInfo,
                               imdb_id: str) -> None:
         """
-        Sets the episode imdb identifier.
+        Set the IMDb ID of the given EpisodeInfo object. This also updates
+        the IMDb ID map of this info set.
         
-        :param      episode_info:  The episode information
-        :type       episode_info:  EpisodeInfo
-        :param      imdb_id:       The imdb identifier
+        :param      episode_info:   The EpisodeInfo to set the ID of.
+        :param      imdb_id:        The IMDb ID.
         """
 
         if imdb_id is None:
@@ -126,11 +126,11 @@ class MediaInfoSet:
     def __set_episode_tvdb_id(self, episode_info: EpisodeInfo,
                               tvdb_id: str) -> None:
         """
-        Sets the episode imdb identifier.
+        Set the TVDb ID of the given EpisodeInfo object. This also updates
+        the TVDb ID map of this info set.
         
-        :param      episode_info:  The episode information
-        :type       episode_info:  EpisodeInfo
-        :param      tvdb_id:       The imdb identifier
+        :param      episode_info:   The EpisodeInfo to set the ID of.
+        :param      tvdb_id:        The TVDb ID.
         """
 
         if tvdb_id is None:
@@ -188,12 +188,10 @@ class MediaInfoSet:
             key = f'{season_number}-{episode_number}'
             if (info := self.episode_indices.get(series_info, {}).get(key)):
                 if not title_match or (title_match and info.title.matches(title)):
-                    if not info.title.matches(title):
-                        log.debug(f'Matched {info} {info.title} <- S{season_number:02}E{episode_number:02} {title}')
                     return set_ids(info)
                 else:
-                    log.warning(f'Index match on {series_info} {key}, but title mismatch ({info.title}) vs ({title})')
-                    breakpoint()
+                    log.debug(f'Index match on {series_info} {key}, but title '
+                              f'mismatch ({info.title}) vs ({title})')
                     return None
 
         # This EpisodeInfo doesn't exist in the set, create new object
