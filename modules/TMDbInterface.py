@@ -8,8 +8,9 @@ from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
 import modules.global_objects as global_objects
 from modules.SeriesInfo import SeriesInfo
+from modules.WebInterface import WebInterface
 
-class TMDbInterface:
+class TMDbInterface(WebInterface):
     """
     This class defines an interface to TheMovieDatabase (TMDb). Once initialized 
     with a valid API key, the primary purpose of this class is to gather images
@@ -320,7 +321,8 @@ class TMDbInterface:
             season.reload()
             for episode in season.episodes:
                 # Skip episodes until 2 hours after airing
-                if episode.air_date > datetime.now() + timedelta(hours=2):
+                if (episode.air_date is not None
+                    and episode.air_date > datetime.now() + timedelta(hours=2)):
                     continue
 
                 # Create either a new EpisodeInfo or get from the MediaInfoSet
@@ -332,6 +334,7 @@ class TMDbInterface:
                     episode.episode_number,
                     tvdb_id=episode.tvdb_id if episode.tvdb_id != 0 else None,
                     imdb_id=None if episode.imdb_id is None else episode.imdb_id,
+                    title_match=True,
                     queried_tmdb=True,
                 )
 

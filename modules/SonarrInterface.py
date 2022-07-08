@@ -169,7 +169,8 @@ class SonarrInterface(WebInterface):
             self.__warn_missing_series(series_info)
 
 
-    def get_all_episodes(self, series_info: SeriesInfo) -> list[EpisodeInfo]:
+    def get_all_episodes(self, series_info: SeriesInfo,
+                         title_match: bool=False) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that have 
         already aired are returned.
@@ -219,10 +220,13 @@ class SonarrInterface(WebInterface):
                 episode['episodeNumber'],
                 episode.get('absoluteEpisodeNumber'),
                 tvdb_id=episode.get('tvdbId'),
+                title_match=title_match,
                 queried_sonarr=True,
             )
 
-            all_episode_info.append(episode_info)
+            # Add to episode list
+            if episode_info is not None:
+                all_episode_info.append(episode_info)
 
         return all_episode_info
 
@@ -238,25 +242,7 @@ class SonarrInterface(WebInterface):
         """
 
         # Get all sonarr-created EpisodeInfo objects
-        all_sonarr_episodes = self.get_all_episodes(series_info)
-        
-        # Go through each episode
-        for info in infos:
-            # Skip if EpisodeInfo already has TVDb ID or previously queried
-            if info.queried_sonarr or info.has_id('tvdb_id'):
-                continue
-
-            # Find the matching EpisodeInfo object returned by Sonarr
-            info.queried_sonarr = True
-            for index, sonarr_info in enumerate(all_sonarr_episodes):
-                # If these objects correspond to the same data, transfer ID's
-                # from the Sonarr EpisodeInfo objects to the primary ones
-                if info == sonarr_info:
-                    info.copy_ids(sonarr_info)
-
-                    # Delete this index for faster searching, exit Sonarr loop
-                    del all_sonarr_episodes[index]
-                    break
+        self.get_all_episodes(series_info, True)
 
 
     def list_all_series_id(self) -> None:

@@ -106,10 +106,45 @@ class MediaInfoSet:
         return series_info
 
 
+    def __set_episode_imdb_id(self, episode_info: EpisodeInfo,
+                              imdb_id: str) -> None:
+        """
+        Sets the episode imdb identifier.
+        
+        :param      episode_info:  The episode information
+        :type       episode_info:  EpisodeInfo
+        :param      imdb_id:       The imdb identifier
+        """
+
+        if imdb_id is None:
+            return None
+
+        episode_info.set_imdb_id(imdb_id)
+        self.episode_imdb_ids[imdb_id] = episode_info
+
+
+    def __set_episode_tvdb_id(self, episode_info: EpisodeInfo,
+                              tvdb_id: str) -> None:
+        """
+        Sets the episode imdb identifier.
+        
+        :param      episode_info:  The episode information
+        :type       episode_info:  EpisodeInfo
+        :param      tvdb_id:       The imdb identifier
+        """
+
+        if tvdb_id is None:
+            return None
+
+        episode_info.set_tvdb_id(tvdb_id)
+        self.episode_tvdb_ids[tvdb_id] = episode_info
+
+
     def get_episode_info(self, series_info: SeriesInfo=None,
                          title: 'Title'=None, season_number: int=None,
                          episode_number: int=None,  abs_number: int=None, *,
                          imdb_id: str=None, tvdb_id: int=None,
+                         title_match: bool=True, 
                          **queried_kwargs: dict) -> EpisodeInfo:
         """
         Get the EpisodeInfo object indicated by the given attributes. This looks
@@ -132,12 +167,14 @@ class MediaInfoSet:
                                     initialization of the EpisodeInfo object, if
                                     indicated.
         
-        :returns:   The SeriesInfo object indicated by the given attributes.
+        :returns:   The EpisodeInfo object indicated by the given attributes.
+                    None if an object does not exist and cannot be created 
+                    due to an index conflict.
         """
 
         def set_ids(info_obj):
-            info_obj.set_imdb_id(imdb_id)
-            info_obj.set_tvdb_id(tvdb_id)
+            self.__set_episode_imdb_id(info_obj, imdb_id)
+            self.__set_episode_tvdb_id(info_obj, tvdb_id)
             info_obj.update_queried_statuses(**queried_kwargs)
             return info_obj
 
@@ -150,7 +187,14 @@ class MediaInfoSet:
             and series_info is not None):
             key = f'{season_number}-{episode_number}'
             if (info := self.episode_indices.get(series_info, {}).get(key)):
-                return set_ids(info)
+                if not title_match or (title_match and info.title.matches(title)):
+                    if not info.title.matches(title):
+                        log.debug(f'Matched {info} {info.title} <- S{season_number:02}E{episode_number:02} {title}')
+                    return set_ids(info)
+                else:
+                    log.warning(f'Index match on {series_info} {key}, but title mismatch ({info.title}) vs ({title})')
+                    breakpoint()
+                    return None
 
         # This EpisodeInfo doesn't exist in the set, create new object
         episode_info = EpisodeInfo(
@@ -158,11 +202,11 @@ class MediaInfoSet:
             season_number,
             episode_number,
             abs_number,
-            tvdb_id=tvdb_id,
             imdb_id=imdb_id,
+            tvdb_id=tvdb_id,
             **queried_kwargs,
         )
-        
+
         # Add object to indices set
         key = f'{season_number}-{episode_number}'
         if series_info in self.episode_indices:
@@ -171,10 +215,8 @@ class MediaInfoSet:
             self.episode_indices[series_info] = {key: episode_info}
 
         # Add object to ID sets
-        if tvdb_id is not None:
-            self.episode_tvdb_ids[tvdb_id] = episode_info
-        if imdb_id is not None:
-            self.episode_imdb_ids[imdb_id] = episode_info
+        self.__set_episode_imdb_id(episode_info, imdb_id)
+        self.__set_episode_tvdb_id(episode_info, tvdb_id)
 
         return episode_info
 

@@ -254,11 +254,13 @@ class PlexInterface:
                 plex_episode.parentIndex,
                 plex_episode.index,
                 **ids,
+                title_match=False,
                 queried_plex=True,
             )
 
             # Add to list
-            all_episodes.append(episode_info)
+            if episode_info is not None:
+                all_episodes.append(episode_info)
 
         return all_episodes
 
