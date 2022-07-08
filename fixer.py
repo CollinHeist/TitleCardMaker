@@ -144,7 +144,7 @@ if hasattr(args, 'import_cards') and pp.use_plex:
     plex_interface = PlexInterface(pp.plex_url, pp.plex_token)
 
     # Get series/name + year from archive directory if unspecified
-    archive = Path(args.import_archive[0])
+    archive = Path(args.import_cards[0])
     if hasattr(args, 'import_series'):
     	series_info = SeriesInfo(*args.import_series)
     else:
@@ -175,7 +175,7 @@ if hasattr(args, 'import_cards') and pp.use_plex:
         
     # Load images into Plex
     plex_interface.set_title_cards_for_series(
-    	args.import_archive[1],
+    	args.import_cards[1],
     	series_info,
     	episode_map
     )
