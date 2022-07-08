@@ -182,19 +182,26 @@ class PlexInterface:
         :returns:   The Series associated with this SeriesInfo object.
         """
 
+        # Try by IMDb ID
+        if series_info.has_id('imdb_id'):
+            try:
+                return library.getGuid(f'imdb://{series_info.imdb_id}')
+            except NotFound:
+                pass
+
         # Try by TVDb ID
-        try:
-            if series_info.tvdb_id is not None:
+        if series_info.has_id('tvdb_id'):
+            try:
                 return library.getGuid(f'tvdb://{series_info.tvdb_id}')
-        except NotFound:
-            pass
+            except NotFound:
+                pass
 
         # Try by TMDb ID
-        try:
-            if series_info.tmdb_id is not None:
+        if series_info.has_id('tmdb_id'):
+            try:
                 return library.getGuid(f'tmdb://{series_info.tmdb_id}')
-        except NotFound:
-            pass
+            except NotFound:
+                pass
 
         # Try by name
         try:
