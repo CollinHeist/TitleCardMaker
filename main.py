@@ -202,8 +202,11 @@ def read_update_list():
 
 # Run immediately if specified
 if args.run:
-    run()
     
+    log.info(f'Starting TitleCardMaker')
+    from cProfile import Profile
+
+    stats = Stats(pr)
 # Schedule first run, which then schedules subsequent runs
 if hasattr(args, 'runtime'):
     # Schedule first run

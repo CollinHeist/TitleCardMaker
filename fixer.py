@@ -69,6 +69,13 @@ misc_group.add_argument(
     default='.jpg',
     metavar='EXTENSION',
     help='Extension of images to delete with --delete-cards')
+misc_group.add_argument(
+    '--forget-cards', '--forget-loaded-cards',
+    type=str,
+    nargs=3,
+    default=SUPPRESS,
+    metavar=('PLEX_LIBRARY', 'NAME', 'YEAR'),
+    help='Remove records of the loaded cards for the given series/library')
 
 # Argument group for Sonarr
 sonarr_group = parser.add_argument_group('Sonarr')
@@ -192,6 +199,14 @@ for directory in args.delete_cards:
         for image in images:
             image.unlink()
             log.debug(f'Deleted {image.resolve()}')
+
+if hasattr(args, 'forget_cards') and pp.use_plex:
+    # Create PlexInterface and remove records for indicated series+library
+    series_info = SeriesInfo(args.forget_cards[1], args.forget_cards[2])
+    PlexInterface(pp.plex_url, pp.plex_token).remove_records(
+        args.forget_cards[0], series_info,
+    )
+
 
 # Execute Sonarr related options
 if hasattr(args, 'read_all_series') and pp.use_sonarr:

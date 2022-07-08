@@ -562,4 +562,24 @@ class PlexInterface:
             log.error(f'No item with ratingKey={rating_key} exists')
             return None
 
+
+    def remove_records(self, library_name: str, series_info: SeriesInfo) ->None:
+        """
+        Remove all records for the given library and series from the loaded
+        database.
+        
+        :param      library_name:   The name of the library containing the
+                                    series whose records are being removed.
+        :param      series_info:    SeriesInfo whose records are being removed.
+        """
+
+        # Get condition to find records matching this library + series
+        condition = self.__get_condition(library_name, series_info)
+
+        # Delete records matching this condition
+        records = self.__db.remove(condition)
+
+        # Log actions to user
+        log.info(f'Deleted {len(records)} records')
+
         
