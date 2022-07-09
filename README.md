@@ -1,5 +1,6 @@
 # <img src="https://user-images.githubusercontent.com/17693271/164274472-c8fa7302-9b38-4fae-94ca-2e683e58d722.png" width="24" alt="logo"> TitleCardMaker
-[![](https://img.shields.io/github/release/CollinHeist/TitleCardMaker.svg)](https://github.com/CollinHeist/TitleCardMaker/releases)
+[![](https://img.shields.io/github/release/CollinHeist/TitleCardMaker.svg?style=flat)](https://github.com/CollinHeist/TitleCardMaker/releases)
+![Docker Build](https://img.shields.io/docker/pulls/collinheist/titlecardmaker?style=flat)
 [![GitHub Develop Commits](https://img.shields.io/github/commits-since/CollinHeist/TitleCardMaker/latest/develop?label=Commits%20in%20Develop&style=flat)](https://github.com/CollinHeist/TitleCardMaker/tree/develop)
 [![Discord](https://img.shields.io/discord/955533113734357125?style=flat&logo=discord&logoColor=white)](https://discord.gg/bJ3bHtw8wH)
 [![Support](https://img.shields.io/badge/-Support_Development-9cf?style=flat&color=informational)](https://github.com/sponsors/CollinHeist)
