@@ -12,8 +12,10 @@ try:
     from modules.FontValidator import FontValidator
     from modules.PreferenceParser import PreferenceParser
     from modules.RemoteFile import RemoteFile
-    from modules.global_objects import set_preference_parser, set_font_validator
+    from modules.global_objects import set_preference_parser, \
+                                       set_font_validator, set_media_info_set
     from modules.Manager import Manager
+    from modules.MediaInfoSet import MediaInfoSet
 except ImportError as e:
     print(f'Required Python packages are missing - execute "pipenv install"')
     print(f'  Specific Error: {e}')
@@ -32,7 +34,7 @@ ENV_UPDATE_FREQUENCY = 'TCM_TAUTULLI_UPDATE_FREQUENCY'
 DEFAULT_PREFERENCE_FILE = Path(__file__).parent / 'preferences.yml'
 DEFAULT_MISSING_FILE = Path(__file__).parent / 'missing.yml'
 DEFAULT_FREQUENCY = '12h'
-DEFAULT_UPDATE_FREQUENCY = '2m'
+DEFAULT_UPDATE_FREQUENCY = '4m'
 
 # Pseudo-type functions for argument runtime and frequency
 def runtime(arg: str) -> dict:
@@ -132,12 +134,13 @@ if not args.preferences.exists():
     log.critical(f'Preference file "{args.preferences.resolve()}" does not exist')
     exit(1)
 
-# Store the PreferenceParser and FontValidator in the global namespace
+# Store objects in global namespace
 if not (pp := PreferenceParser(args.preferences)).valid:
     log.critical(f'Preference file is invalid')
     exit(1)
 set_preference_parser(pp)
 set_font_validator(FontValidator())
+set_media_info_set(MediaInfoSet())
 
 # Function to re-read preference file
 def read_preferences():
@@ -199,13 +202,14 @@ def read_update_list():
 
 # Run immediately if specified
 if args.run:
+    log.info(f'Starting TitleCardMaker')
     run()
-    
+
 # Schedule first run, which then schedules subsequent runs
 if hasattr(args, 'runtime'):
     # Schedule first run
     schedule.every().day.at(args.runtime).do(first_run)
-    log.info(f'Starting first run in {schedule.idle_seconds()} seconds')
+    log.info(f'Starting first run in {schedule.idle_seconds():,.0f} seconds')
 
 # Schedule reading the update list
 if hasattr(args, 'tautulli_update_list'):

@@ -376,8 +376,7 @@ class PreferenceParser(YamlReader):
                 continue
 
             # Skip if there are no series to yield
-            if (file_yaml is None or 'series' not in file_yaml
-                or not file_yaml['series']):
+            if file_yaml is None or file_yaml.get('series') is None:
                 log.warning(f'Series file "{file.resolve()}" has no entries')
                 continue
 
@@ -418,7 +417,7 @@ class PreferenceParser(YamlReader):
                 # Skip if series is not valid
                 if not valid:
                     continue
-                    
+
                 # Yield the Show object created from this entry
                 yield Show(
                     show_name,
@@ -426,8 +425,45 @@ class PreferenceParser(YamlReader):
                     library_map,
                     font_map,
                     self.source_directory,
+                    self,
                 )
 
+                # If archiving is disabled, skip
+                if not self.create_archive:
+                    continue
+
+                # Get all specified variations for this show
+                variations = file_yaml['series'][show_name].pop(
+                    'archive_variations', []
+                )
+                
+                if not isinstance(variations, list):
+                    log.error(f'Invalid archive variations for {show_name}')
+                    continue
+
+                # Yield each variation
+                for variation in variations:
+                    # Apply template to variation
+                    if not self.__apply_template(templates,variation,show_name):
+                        continue
+
+                    # Get priority union of variation and base series
+                    Template('', {}).recurse_priority_union(
+                        variation, file_yaml['series'][show_name]
+                    )
+
+                    # Remove any library/media directory, only archived
+                    variation.pop('library', None)
+                    variation.pop('media_directory', None)
+                    
+                    yield Show(
+                        show_name,
+                        variation,
+                        library_map,
+                        font_map,
+                        self.source_directory,
+                        self,
+                    )
 
     @property
     def check_tmdb(self):

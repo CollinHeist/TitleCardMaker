@@ -265,7 +265,7 @@ class TitleCard:
 
         # Create parent folders if necessary for this card
         self.file.parent.mkdir(parents=True, exist_ok=True)
-            
+        
         # Create card
         self.maker.create()
         

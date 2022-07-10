@@ -6,6 +6,7 @@ from tinydb import TinyDB, where
 from tqdm import tqdm
 
 from modules.Debug import log, TQDM_KWARGS
+import modules.global_objects as global_objects
 from modules.EpisodeInfo import EpisodeInfo
 from modules.SeriesInfo import SeriesInfo
 
@@ -33,6 +34,9 @@ class PlexInterface:
         :param      x_plex_token:   The x plex token for sending API requests to
                                     if the host device is untrusted.
         """
+
+        # Get global MediaInfoSet object
+        self.info_set = global_objects.info_set
 
         # Create PlexServer object with these arguments
         try:
@@ -178,19 +182,26 @@ class PlexInterface:
         :returns:   The Series associated with this SeriesInfo object.
         """
 
+        # Try by IMDb ID
+        if series_info.has_id('imdb_id'):
+            try:
+                return library.getGuid(f'imdb://{series_info.imdb_id}')
+            except NotFound:
+                pass
+
         # Try by TVDb ID
-        try:
-            if series_info.tvdb_id is not None:
+        if series_info.has_id('tvdb_id'):
+            try:
                 return library.getGuid(f'tvdb://{series_info.tvdb_id}')
-        except NotFound:
-            pass
+            except NotFound:
+                pass
 
         # Try by TMDb ID
-        try:
-            if series_info.tmdb_id is not None:
+        if series_info.has_id('tmdb_id'):
+            try:
                 return library.getGuid(f'tmdb://{series_info.tmdb_id}')
-        except NotFound:
-            pass
+            except NotFound:
+                pass
 
         # Try by name
         try:
@@ -211,7 +222,7 @@ class PlexInterface:
             return None
 
 
-    def get_all_episodes(self, library_name,
+    def get_all_episodes(self, library_name: str,
                          series_info: SeriesInfo) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that have 
@@ -235,15 +246,28 @@ class PlexInterface:
         # Create list of all episodes in Plex
         all_episodes = []
         for plex_episode in series.episodes():
-            episode_info = EpisodeInfo(
+            # Get all ID's for this episode
+            ids = {}
+            for guid in plex_episode.guids:
+                if 'tvdb://' in guid.id:
+                    ids['tvdb_id'] = guid.id[len('tvdb://'):]
+                elif 'imdb://' in guid.id:
+                    ids['imdb_id'] = guid.id[len('imdb://'):]
+
+            # Create either a new EpisodeInfo or get from the MediaInfoSet
+            episode_info = self.info_set.get_episode_info(
+                series_info,
                 plex_episode.title,
                 plex_episode.parentIndex,
                 plex_episode.index,
+                **ids,
+                title_match=False,
+                queried_plex=True,
             )
 
-            # Assign ID's, add to list
-            episode_info.set_from_guids(plex_episode.guids)
-            all_episodes.append(episode_info)
+            # Add to list
+            if episode_info is not None:
+                all_episodes.append(episode_info)
 
         return all_episodes
 
@@ -355,24 +379,30 @@ class PlexInterface:
 
         for info in infos:
             # Skip if EpisodeInfo already has IMDb, and TVDb ID's
-            if info.imdb_id is not None and info.tvdb_id is not None:
+            if info.queried_plex or info.has_ids('imdb_id', 'tvdb_id'):
                 continue
 
+            # Get episode from Plex
+            info.queried_plex = True
             try:
-                # Get episode from Plex
                 plex_episode = series.episode(
                     season=info.season_number,
                     episode=info.episode_number,
                 )
 
-                # Set this episode's ID's from the episode's associated GUID's
-                info.set_from_guids(plex_episode.guids)
+                # Set the ID's for this object
+                ids = {}
+                for guid in plex_episode.guids:
+                    if 'tvdb://' in guid.id:
+                        info.set_tvdb_id(guid.id[len('tvdb://'):])
+                    elif 'imdb://' in guid.id:
+                        info.set_imdb_id(guid.id[len('imdb://'):])
             except NotFound:
                 continue
 
 
     def get_source_image(self, library_name: str, series_info: 'SeriesInfo',
-                         episode_info: 'EpisodeInfo') -> str:
+                         episode_info: EpisodeInfo) -> str:
         """
         Get the source image (i.e. the URL to the existing thumbnail) for the
         given episode within Plex.
@@ -498,7 +528,7 @@ class PlexInterface:
                 
         # Log load operations to user
         if loaded_count > 0:
-            log.debug(f'Loaded {loaded_count} cards for "{series_info}"')
+            log.info(f'Loaded {loaded_count} cards for "{series_info}"')
 
 
     def get_episode_details(self, rating_key: int) -> tuple[SeriesInfo,
@@ -508,8 +538,8 @@ class PlexInterface:
         
         :param      rating_key: Rating key used to fetch the item within Plex.
         
-        :returns:   Tuple of the SeriesInfo, EpisodeInfo, and string of the
-                    library name corresponding to the given episode.
+        :returns:   Tuple of the SeriesInfo, EpisodeInfo, and the library name
+                    corresponding to the given episode.
         """
 
         try:
@@ -531,5 +561,25 @@ class PlexInterface:
         except NotFound:
             log.error(f'No item with ratingKey={rating_key} exists')
             return None
+
+
+    def remove_records(self, library_name: str, series_info: SeriesInfo) ->None:
+        """
+        Remove all records for the given library and series from the loaded
+        database.
+        
+        :param      library_name:   The name of the library containing the
+                                    series whose records are being removed.
+        :param      series_info:    SeriesInfo whose records are being removed.
+        """
+
+        # Get condition to find records matching this library + series
+        condition = self.__get_condition(library_name, series_info)
+
+        # Delete records matching this condition
+        records = self.__db.remove(condition)
+
+        # Log actions to user
+        log.info(f'Deleted {len(records)} records')
 
         

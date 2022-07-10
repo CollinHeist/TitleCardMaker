@@ -3,6 +3,7 @@ from pathlib import Path
 
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
+import modules.global_objects as global_objects
 from modules.Title import Title
 
 class DataFileInterface:
@@ -16,7 +17,7 @@ class DataFileInterface:
     GENERIC_DATA_FILE_NAME = 'data.yml'
 
 
-    def __init__(self, data_file: Path) -> None:
+    def __init__(self, series_info: 'SeriesInfo', data_file: Path) -> None:
         """
         Constructs a new instance of the interface for the specified data file.
         This also creates the parent directories for the data file if they do
@@ -25,7 +26,8 @@ class DataFileInterface:
         :param      data_file:  Path to the data file to interface with.
         """
         
-        # Store the data file for future use
+        # Store the SeriesInfo and data file
+        self.series_info = series_info
         self.file = data_file
 
         # Create parent directories if necessary
@@ -36,7 +38,8 @@ class DataFileInterface:
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
-        return f'<DataFileInterface data_file={self.file.resolve()}>'
+        return (f'<DataFileInterface series_info={self.series_info}, '
+                f'file={self.file.resolve()}>')
 
 
     def __read_data(self) -> dict:
@@ -80,29 +83,6 @@ class DataFileInterface:
             dump({'data': yaml}, file_handle, allow_unicode=True, width=100)
 
 
-    def sort_and_write(self, yaml: dict) -> None:
-        """
-        Sort the given YAML and then write it to this interface's file. Sorting
-        is done by season number, and then episode number, and then by info key.
-
-        :param      yaml:   YAML dictionary to sort and write to file.
-        """
-
-        # Sort dictionary by season number
-        sorted_yaml = {}
-        for season in sorted(yaml, key=lambda k: int(k.split(' ')[-1])):
-            # Sort each season by episode number
-            sorted_yaml[season] = {}
-            for episode in sorted(yaml[season]):
-                # Sort each episode by key
-                sorted_yaml[season][episode] = {}
-                for key in sorted(yaml[season][episode]):
-                    sorted_yaml[season][episode][key]=yaml[season][episode][key]
-                    
-        # Write newly sorted YAML
-        self.__write_data(yaml)
-
-
     def read(self) -> tuple[dict, set]:
         """
         Read the data file for this object, yielding each valid row.
@@ -138,13 +118,15 @@ class DataFileInterface:
                 title = episode_data.get('preferred_title', original_title)
                 
                 # Construct EpisodeInfo object for this entry
-                episode_info = EpisodeInfo(
+                # episode_info = EpisodeInfo(
+                episode_info = global_objects.info_set.get_episode_info(
+                    self.series_info,
                     Title(title, original_title=original_title),
                     season_number,
                     episode_number,
                     episode_data.pop('abs_number', None),
-                    episode_data.pop('tvdb_id', None),
-                    episode_data.pop('imdb_id', None),
+                    tvdb_id=episode_data.pop('tvdb_id', None),
+                    imdb_id=episode_data.pop('imdb_id', None),
                 )
 
                 # Add any additional, unexpected keys from the YAML
@@ -152,41 +134,6 @@ class DataFileInterface:
                 data.update(episode_data)
                 
                 yield data, given_keys
-
-
-    def read_entries_without_absolute(self) -> dict:
-        """
-        Read and yield all entries without absolute episode numbers.
-        
-        :returns:   Yields an iterable of dictionaries for entry without an 
-                    absolute episode number. 
-        """
-
-        # Read yaml, returns {} if empty/DNE
-        yaml = self.__read_data()
-
-        # Iterate through entries, yielding if no absolute number
-        for season, season_data in yaml.items():
-            season_number = int(season.rsplit(' ', 1)[-1])
-
-            # Iterate through each episode of this season
-            for episode_number, episode_data in season_data.items():
-                # Skip if this entry has an absolute number
-                if 'abs_number' in episode_data:
-                    continue
-
-                # Create EpisodeInfo object for this entry
-                episode_info = EpisodeInfo(
-                    Title(episode_data.pop('title')),
-                    season_number,
-                    episode_number,
-                )
-
-                # Add any additional, unexpected keys from the YAML
-                data = {'episode_info': episode_info}
-                data.update(episode_data)
-
-                yield data
 
 
     def add_data_to_entry(self, episode_info: EpisodeInfo,
@@ -215,7 +162,7 @@ class DataFileInterface:
         self.__write_data(yaml)
 
 
-    def add_many_entries(self, new_episodes: ['EpisodeInfo']) -> None:
+    def add_many_entries(self, new_episodes: list['EpisodeInfo']) -> None:
         """
         Adds many entries at once. An episode is only added if an episode of
         that index does not already exist. This only reads and writes from this 
@@ -265,5 +212,5 @@ class DataFileInterface:
             log.info(f'Added {added["info"]} to "{self.file.parent.name}"')
 
         # Write updated yaml
-        self.sort_and_write(yaml)
+        self.__write_data(yaml)
 

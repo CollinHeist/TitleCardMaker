@@ -257,7 +257,12 @@ class Title:
                     otherwise.
         """
 
-        matching_titles = map(self.get_matching_title, titles)
+        def _get_title(title):
+            if isinstance(title, Title):
+                return self.get_matching_title(title.match_title)
+            return self.get_matching_title(title)
+
+        matching_titles = map(_get_title, titles)
 
         if self.__original_title is not None:
             return any(title in (self.__original_title, self.match_title)

@@ -1,15 +1,28 @@
+from dataclasses import dataclass, field
+from re import match
+from typing import ClassVar
+
 from modules.Debug import log
 
+@dataclass(eq=False, order=False)
 class SeriesInfo:
     """
     This class encapsulates static information that is tied to a single Series.
     """
 
+    """Initialization fields"""
+    name: str
+    year: int
+    imdb_id: str=None
+    sonarr_id: int=None
+    tvdb_id: int=None
+    tmdb_id: int=None
+
     """After how many characters to truncate the short name"""
-    SHORT_WIDTH = 15
+    SHORT_WIDTH: ClassVar[int] = 15
 
     """Mapping of illegal filename characters and their replacements"""
-    __ILLEGAL_CHARACTERS = {
+    __ILLEGAL_CHARACTERS: ClassVar[dict[str: str]] = {
         '?': '!',
         '<': '',
         '>': '',
@@ -21,46 +34,14 @@ class SeriesInfo:
         '*': '-',
     }
 
-    __slots__ = ('year', 'name', 'full_name', 'short_name', 'match_name',
-                 'full_match_name', 'legal_path', 'sonarr_id', 'tvdb_id',
-                 'tmdb_id')
-    
 
-    def __init__(self, name: str, year: int) -> None:
-        """
-        Constructs a new instance.
-        
-        :param      name:  The name of the series.
-        :param      year:  The air year of the series.
-        """
-
-        # Set year
-        self.year = int(year)
-
-        # Update all name attributes
-        self.update_name(name)
-
-        # Optional attributes
-        self.sonarr_id = None
-        self.tvdb_id = None
-        self.tmdb_id = None
-
+    def __post_init__(self) -> None:
+        self.update_name(self.name)
 
     def __str__(self) -> str:
         """Returns a string representation of the object."""
 
         return self.full_name
-
-
-    def __repr__(self) -> str:
-        """Returns a unambiguous string representation of the object."""
-
-        ret = f'<SeriesInfo name={self.name}, year={self.year}'
-        ret += '' if self.sonarr_id is None else f', sonarr_id={self.sonarr_id}'
-        ret += '' if self.tvdb_id is None else f', tvdb_id={self.tvdb_id}'
-        ret += '' if self.tmdb_id is None else f', tmdb_id={self.tmdb_id}'
-
-        return f'{ret}>'
 
 
     def update_name(self, name: str) -> None:
@@ -71,10 +52,11 @@ class SeriesInfo:
         """
 
         # If the given name already has the year, remove it
-        if f'({self.year})' in str(name):
-            self.name = name.rsplit(' (', 1)[0]
+        name = str(name)
+        if (group := match(rf'^(.*?)\s+\({self.year}\)$', name)) is not None:
+            self.name = group.group(1)
         else:
-            self.name = str(name)
+            self.name = name
 
         # Set full name
         self.full_name = f'{self.name} ({self.year})'
@@ -94,6 +76,32 @@ class SeriesInfo:
         self.legal_path = self.full_name.translate(translation)
 
 
+    def has_id(self, id_: str) -> bool:
+        """
+        Determine whether this object has defined the given ID.
+        
+        :param      id_:    ID being checked
+        
+        :returns:   True if the given ID is defined (i.e. not None) for this
+                    object. False otherwise.
+        """
+
+        return getattr(self, id_) is not None
+
+
+    def has_ids(self, *ids: tuple[str]) -> bool:
+        """
+        Determine whether this object has defined all the given ID's.
+        
+        :param      ids:    Any ID's being checked for.
+        
+        :returns:   True if all the given ID's are defined (i.e. not None) for
+                    this object. False otherwise.
+        """
+
+        return all(getattr(self, id_) is not None for id_ in ids)
+
+
     def set_sonarr_id(self, sonarr_id: int) -> None:
         """
         Set the Sonarr ID for this series.
@@ -101,7 +109,7 @@ class SeriesInfo:
         :param      sonarr_id:  The Sonarr ID used for this series.
         """
         
-        if self.sonarr_id is None:
+        if self.sonarr_id is None and sonarr_id is not None:
             self.sonarr_id = int(sonarr_id)
 
 
@@ -112,8 +120,19 @@ class SeriesInfo:
         :param      tvdb_id:  The TVDb ID for this series.
         """
 
-        if self.tvdb_id is None:
+        if self.tvdb_id is None and tvdb_id is not None:
             self.tvdb_id = int(tvdb_id)
+
+
+    def set_imdb_id(self, imdb_id: str) -> None:
+        """
+        Set the IMDb ID for this series.
+        
+        :param      imdb_id:    The IMDb ID for this series.
+        """
+        
+        if self.imdb_id is None and imdb_id is not None:
+            self.imdb_id = str(imdb_id)
 
 
     def set_tmdb_id(self, tmdb_id: int) -> None:
@@ -123,7 +142,7 @@ class SeriesInfo:
         :param      tmdb_id:    The TMDb ID for this series.
         """
         
-        if self.tmdb_id is None:
+        if self.tmdb_id is None and tmdb_id is not None:
             self.tmdb_id = int(tmdb_id)
 
 

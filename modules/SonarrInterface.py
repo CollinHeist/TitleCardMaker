@@ -4,6 +4,7 @@ from re import IGNORECASE, compile as re_compile
 
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
+import modules.global_objects as global_objects
 from modules.SeriesInfo import SeriesInfo
 from modules.WebInterface import WebInterface
 
@@ -35,6 +36,9 @@ class SonarrInterface(WebInterface):
 
         # Initialize parent WebInterface 
         super().__init__()
+
+        # Get global MediaInfoSet object
+        self.info_set = global_objects.info_set
 
         # Correct URL to end in /api/v3/
         url = url if url.endswith('/') else f'{url}/'
@@ -165,20 +169,25 @@ class SonarrInterface(WebInterface):
             self.__warn_missing_series(series_info)
 
 
-    def __get_all_episode_info(self, series_id: int) -> list[EpisodeInfo]:
+    def get_all_episodes(self, series_info: SeriesInfo,
+                         title_match: bool=False) -> list[EpisodeInfo]:
         """
-        Gets all episode info for the given series ID. Only returns episodes
-        that have aired already.
+        Gets all episode info for the given series. Only episodes that have 
+        already aired are returned.
         
-        :param      series_id:  The series identifier.
+        :param      series_info:    SeriesInfo for the entry.
         
-        :returns:   List of EpisodeInfo for the given series id. Only entries 
-                    that have ALREADY aired (or do not air) are returned.
+        :returns:   List of EpisodeInfo objects for the given series.
         """
+
+        # If no ID was returned, error and return an empty list
+        if series_info.sonarr_id is None:
+            self.__warn_missing_series(series_info)
+            return []
 
         # Construct GET arguments
         url = f'{self.url}episode/'
-        params = {'apikey': self.__api_key, 'seriesId': series_id}
+        params = {'apikey': self.__api_key, 'seriesId': series_info.sonarr_id}
 
         # Query Sonarr to get JSON of all episodes for this series
         all_episodes = self._get(url, params)
@@ -204,36 +213,22 @@ class SonarrInterface(WebInterface):
                 continue
 
             # Create EpisodeInfo object for this entry
-            # Non-canon episodes don't have absolute numbers
-            episode_info = EpisodeInfo(
+            episode_info = self.info_set.get_episode_info(
+                series_info,
                 episode['title'],
                 episode['seasonNumber'],
                 episode['episodeNumber'],
                 episode.get('absoluteEpisodeNumber'),
-                episode.get('tvdbId'),
+                tvdb_id=episode.get('tvdbId'),
+                title_match=title_match,
+                queried_sonarr=True,
             )
 
-            all_episode_info.append(episode_info)
+            # Add to episode list
+            if episode_info is not None:
+                all_episode_info.append(episode_info)
 
         return all_episode_info
-
-
-    def get_all_episodes(self, series_info: SeriesInfo) -> list[EpisodeInfo]:
-        """
-        Gets all episode info for the given series. Only episodes that have 
-        already aired are returned.
-        
-        :param      series_info:    SeriesInfo for the entry.
-        
-        :returns:   List of EpisodeInfo objects for the given series.
-        """
-
-        # If no ID was returned, error and return an empty list
-        if series_info.sonarr_id is None:
-            self.__warn_missing_series(series_info)
-            return []
-
-        return self.__get_all_episode_info(series_info.sonarr_id)
 
 
     def set_episode_ids(self, series_info: SeriesInfo,
@@ -247,24 +242,7 @@ class SonarrInterface(WebInterface):
         """
 
         # Get all sonarr-created EpisodeInfo objects
-        all_sonarr_episodes = self.get_all_episodes(series_info)
-        
-        # Go through each episode 
-        for info in infos:
-            # Skip if EpisodeInfo already has TVDb ID
-            if info.tvdb_id is not None:
-                continue
-
-            # Find the matching EpisodeInfo object returned by Sonarr
-            for index, sonarr_info in enumerate(all_sonarr_episodes):
-                # If these objects correspond to the same data, transfer ID's
-                # from the Sonarr EpisodeInfo objects to the primary ones
-                if info == sonarr_info:
-                    info.copy_ids(sonarr_info)
-
-                    # Delete this index for faster searching, exit Sonarr loop
-                    del all_sonarr_episodes[index]
-                    break
+        self.get_all_episodes(series_info, True)
 
 
     def list_all_series_id(self) -> None:

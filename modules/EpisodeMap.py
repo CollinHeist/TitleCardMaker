@@ -120,6 +120,7 @@ class EpisodeMap:
             try:
                 start, end = map(int, episode_range.split('-'))
             except Exception:
+                self.valid = False
                 log.error(f'Invalid episode range "{episode_range}"')
                 return None
             
@@ -216,11 +217,17 @@ class EpisodeMap:
             return default(episode_info=episode_info)
         
         # Index by absolute episode number
-        if (episode_info.abs_number is None
-            or episode_info.abs_number not in target):
-            return default(episode_info=episode_info)
-        
-        return target[episode_info.abs_number]
+        index_number = episode_info.abs_number
+        if index_number is None:
+            # No absolute number, use episode number instead
+            index_number = episode_info.episode_number
+
+        # Return custom from target
+        if index_number in target:
+            return target[index_number]
+
+        # Use default if index doesn't fall into specified target
+        return default(episode_info=episode_info)
     
     
     def get_season_title(self, episode_info: 'EpisodeInfo') -> str:
@@ -238,8 +245,8 @@ class EpisodeMap:
         if self.__index_by == 'episode':
             if (episode_info.abs_number is None
                 and episode_info.season_number != 0):
-                log.warning(f'Episode range specified, but {episode_info} '
-                            f'has no absolute episode number')
+                log.warning(f'Episode range specified, but {episode_info} has '
+                            f'no absolute episode number')
             elif episode_info.abs_number not in self.__titles:
                 log.warning(f'{episode_info} does not fall into specified '
                             f'episode range')

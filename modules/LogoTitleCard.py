@@ -51,14 +51,13 @@ class LogoTitleCard(CardType):
                  'hide_season', 'separator', 'blur', 'vertical_shift', 
                  'interline_spacing', 'kerning', 'stroke_width')
 
-
-    def __init__(self, output_file: Path, title: str, season_text: str,
+    def __init__(self, *, output_file: Path, title: str, season_text: str,
                  episode_text: str, font: str, font_size: float,
-                 title_color: str, hide_season: bool, separator: str='•',
-                 blur: bool=False, vertical_shift: int=0,
-                 interline_spacing: int=0, kerning: float=1.0,
-                 stroke_width: float=1.0, logo: str=None,
-                 background: str='#000000', **kwargs) -> None:
+                 title_color: str, hide_season: bool, season_number: int=1,
+                 episode_number: int=1, separator: str='•', blur: bool=False,
+                 vertical_shift: int=0, kerning: float=1.0,
+                 interline_spacing: int=0, stroke_width: float=1.0,
+                 logo: str=None,  background: str='#000000', **kwargs) -> None:
         """
         Initialize the TitleCardMaker object. This primarily just stores
         instance variables for later use in `create()`. If the provided font
@@ -74,6 +73,10 @@ class LogoTitleCard(CardType):
         :param  title_color:        Color to use for the episode title.
         :param  hide_season:        Whether to omit the season text (and joining
                                     character) from the title card completely.
+        :param  season_number:      Season number of the episode associated with
+                                    this card.
+        :param  episode_number:     Episode number of the episode associated
+                                    with this card.
         :param  separator:          Character to use to separate season and
                                     episode text.
         :param  blur:               Whether to blur the source image.
@@ -82,7 +85,7 @@ class LogoTitleCard(CardType):
         :param  kerning:            Scalar to apply to kerning of the title text.
         :param  stroke_width:       Scalar to apply to black stroke of the title
                                     text.
-        :param  logo:               Filepath to the logo file.
+        :param  logo:               Filepath (or file format) to the logo file.
         :param  background:         Backround color to use for this card.
         :param  kwargs:             Unused arguments to permit generalized calls
                                     for any CardType.
@@ -91,7 +94,19 @@ class LogoTitleCard(CardType):
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__()
 
-        self.logo = Path(logo) if logo is not None else None
+        # Look for logo if it's a format string
+        if isinstance(logo, str):
+            try:
+                logo = logo.format(season_number=season_number,
+                                   episode_number=episode_number)
+            except Exception:
+                pass
+            
+            # Use either original or modified logo file
+            self.logo = Path(logo)
+        else:
+            self.logo = None
+
         self.output_file = output_file
 
         # Ensure characters that need to be escaped are

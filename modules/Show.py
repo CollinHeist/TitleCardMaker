@@ -45,7 +45,8 @@ class Show(YamlReader):
 
 
     def __init__(self, name: str, yaml_dict: dict, library_map: dict, 
-                 font_map: dict, source_directory: Path) -> None:
+                 font_map: dict, source_directory: Path,
+                 preferences: 'PreferenceParser') -> None:
         """
         Constructs a new instance of a Show object from the given YAML
         dictionary, library map, and referencing the base source directory. If
@@ -61,13 +62,16 @@ class Show(YamlReader):
                                         descriptions.
         :param      source_directory:   Base source directory this show should
                                         search for and place source images in.
+        :param      preferences:        PrferenceParser object this object's
+                                        default attributes are derived from.
         """
 
         # Initialize parent YamlReader object
         super().__init__(yaml_dict, log_function=log.error)
 
-        # Get global PreferenceParser object
-        self.preferences = global_objects.pp
+        # Get global objects
+        self.preferences = preferences
+        self.info_set = global_objects.info_set
         
         # Parse arguments into attribures
         self.__library_map = library_map
@@ -82,7 +86,7 @@ class Show(YamlReader):
             return None
             
         # Setup default values that may be overwritten by YAML
-        self.series_info = SeriesInfo(name, year)
+        self.series_info = self.info_set.get_series_info(name, year)
         self.card_filename_format = self.preferences.card_filename_format
         self.media_directory = None
         self.card_class = TitleCard.CARD_TYPES[self.preferences.card_type]
@@ -118,6 +122,7 @@ class Show(YamlReader):
 
         # Create DataFileInterface fo this show
         self.file_interface = DataFileInterface(
+            self.series_info,
             self.source_directory / DataFileInterface.GENERIC_DATA_FILE_NAME
         )
 
@@ -131,7 +136,7 @@ class Show(YamlReader):
 
         # Episode dictionary to be filled
         self.episodes = {}
-
+        
 
     def __str__(self) -> str:
         """Returns a string representation of the object."""
@@ -162,7 +167,8 @@ class Show(YamlReader):
         
         # Recreate Show object with modified YAML
         return Show(self.series_info.name, modified_base, self.__library_map,
-                    self.font._Font__font_map, self.source_directory.parent)
+                    self.font._Font__font_map, self.source_directory.parent,
+                    self.preferences)
 
 
     def __parse_card_type(self, card_type: str) -> None:
@@ -197,7 +203,7 @@ class Show(YamlReader):
         """
 
         if (name := self._get('name', type_=str)) is not None:
-            self.series_info.update_name(name)
+            self.info_set.update_series_name(self.series_info, name)
 
         if (format_ := self._get('filename_format', type_=str)) is not None:
             if not TitleCard.validate_card_format_string(format_):
@@ -220,6 +226,9 @@ class Show(YamlReader):
                 # If card type was specified for this library, set that
                 if (card_type := this_library.get('card_type')):
                     self.__parse_card_type(card_type)
+
+        if (id_ := self._get('imdb_id', type_=str)) is not None:
+            self.series_info.set_imdb_id(id_)
 
         if (id_ := self._get('sonarr_id', type_=int)) is not None:
             self.series_info.set_sonarr_id(id_)
@@ -409,12 +418,6 @@ class Show(YamlReader):
                      f'{self.episode_data_source}')
             return None
 
-        # Apply episode ID's to all episodes
-        def set_ids(episode_info):
-            if (ep := self.episodes.get(episode_info.key)) is not None:
-                ep.episode_info.copy_ids(episode_info)
-        tuple(map(set_ids, all_episodes))
-
         # Filter out episodes that already exist
         new_episodes = list(filter(
             lambda episode: episode.key not in self.episodes,
@@ -558,6 +561,11 @@ class Show(YamlReader):
                 # Adding translated title, log it
                 log.debug(f'Added "{language_title}" to '
                           f'"{translation["key"]}" for {self} {episode}')
+
+                # Delete old card
+                if episode.delete_card():
+                    log.debug(f'Deleted card for {self} {episode}, adding '
+                              f'translation')
 
         # If any translations were added, re-read source
         if modified:
@@ -736,7 +744,7 @@ class Show(YamlReader):
 
             # Check TMDb if this episode isn't permanently blacklisted
             if always_check_tmdb:
-                blacklisted =  tmdb_interface.is_permanently_blacklisted(
+                blacklisted = tmdb_interface.is_permanently_blacklisted(
                     self.series_info,
                     episode.episode_info,
                 )
