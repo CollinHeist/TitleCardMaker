@@ -28,7 +28,8 @@ ENV_PREFERENCE_FILE = 'TCM_PREFERENCES'
 DEFAULT_PREFERENCE_FILE = Path(__file__).parent / 'preferences.yml'
 
 # Old commands that have moved to mini_maker to warn user about
-OLD_COMMANDS = ('--title-card', '--genre-card', '--show-summary')
+OLD_COMMANDS = ('--title-card', '--genre-card', '--show-summary',
+                '--season-poster')
 
 # Create ArgumentParser object 
 parser = ArgumentParser(description='Manual fixes for the TitleCardMaker')
@@ -106,7 +107,7 @@ tmdb_group.add_argument(
     nargs=5,
     default=SUPPRESS,
     action='append',
-    metavar=('TITLE', 'YEAR', 'SEASON', 'EPISODES', 'DIRECTORY'),
+    metavar=('TITLE', 'YEAR', 'SEASON', 'EPISODE_RANGE', 'DIRECTORY'),
     help='Download the title card source images for the given season of the '
          'given series')
 tmdb_group.add_argument(
@@ -253,12 +254,20 @@ if hasattr(args, 'delete_blacklist'):
 
 if hasattr(args, 'tmdb_download_images') and pp.use_tmdb:
     for arg_set in args.tmdb_download_images:
+        try:
+            start, end = map(int, arg_set[3].split('-'))
+            episode_range = range(start, end+1)
+        except ValueError:
+            log.error(f'Invalid episode range, specify like "START-END", i.e. '
+                      f'2-10 for episodes 2 through 10')
+            continue
+
         TMDbInterface.manually_download_season(
             api_key=pp.tmdb_api_key,
             title=arg_set[0],
             year=int(arg_set[1]),
-            season=int(arg_set[2]),
-            episode_count=int(arg_set[3]),
+            season_number=int(arg_set[2]),
+            episode_range=episode_range,
             directory=Path(arg_set[4]),
         )
 

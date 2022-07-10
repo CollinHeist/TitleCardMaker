@@ -691,7 +691,7 @@ class TMDbInterface(WebInterface):
 
     @staticmethod
     def manually_download_season(api_key: str, title: str, year: int,
-                                 season: int, episode_count: int,
+                                 season_number: int, episode_range: 'iterable',
                                  directory: Path) -> None:
         """
         Download episodes 1-episode_count of the requested season for the given
@@ -700,8 +700,8 @@ class TMDbInterface(WebInterface):
         :param      api_key:        The api key for sending requsts to TMDb.
         :param      title:          The title of the requested show.
         :param      year:           The year of the requested show.
-        :param      season:         The season to download.
-        :param      episode_count:  The number of episodes to download
+        :param      season_number:  Which season to download.
+        :param      episode_range:  Iterable of episode numbers to download.
         :param      directory:      The directory to place the downloaded images
                                     in.
         """
@@ -711,15 +711,17 @@ class TMDbInterface(WebInterface):
 
         # Create SeriesInfo and EpisodeInfo objects
         si = SeriesInfo(title, year)
+        dbi.set_series_ids(si)
 
-        for episode in range(1, episode_count+1):
-            ei = EpisodeInfo('', season, episode)
+        for episode_number in episode_range:
+            ei = EpisodeInfo('', season_number, episode_number)
             image_url = dbi.get_source_image(si, ei, title_match=False)
 
             # If a valid URL was returned, download it
-            if image_url:
-                filename = f's{season}e{episode}.jpg'
+            if image_url is not None:
+                filename = f's{season_number}e{episode_number}.jpg'
                 dbi.download_image(image_url, directory / filename)
+                log.debug(f'Downloaded {(directory / filename).resolve()}')
 
 
     @staticmethod
