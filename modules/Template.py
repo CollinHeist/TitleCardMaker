@@ -89,8 +89,9 @@ class Template:
                 self.__apply_value_to_key(template[t_key], key, value)
 
 
-    def __recurse_priority_union(self, base_yaml: dict,
-                                 template_yaml: dict) -> None:
+    @staticmethod
+    def recurse_priority_union(base_yaml: dict,
+                               template_yaml: dict) -> None:
         """
         Construct the union of the two dictionaries, with all key/values of
         template_yaml being ADDED to the first, priority dictionary IF that
@@ -99,7 +100,7 @@ class Template:
 
         >>> base_yaml = {'a': 123, 'c': {'c1': False}}
         >>> t_yaml = {'a': 999, 'b': 234, 'c': {'c2': True}}
-        >>> __recurse_priority_union(base_yaml, )
+        >>> recurse_priority_union(base_yaml, t_yaml)
         >>> base_yaml
         {'a': 123, 'b': 234, 'c': {'c1': False, 'c2': True}}
         
@@ -114,7 +115,7 @@ class Template:
             if t_key in base_yaml:
                 if isinstance(t_value, dict):
                     # Both have this dictionary, recurse on keys of dictionary
-                    self.__recurse_priority_union(base_yaml[t_key], t_value)
+                    Template.recurse_priority_union(base_yaml[t_key], t_value)
             else:
                 # Key is not present in base, carryover template value
                 base_yaml[t_key] = t_value
@@ -148,7 +149,7 @@ class Template:
         del series_yaml['template']
 
         # Construct union of series and filled-in template YAML
-        self.__recurse_priority_union(series_yaml, modified_template)
+        self.recurse_priority_union(series_yaml, modified_template)
 
         return True
 

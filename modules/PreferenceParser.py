@@ -376,8 +376,7 @@ class PreferenceParser(YamlReader):
                 continue
 
             # Skip if there are no series to yield
-            if (file_yaml is None or 'series' not in file_yaml
-                or not file_yaml['series']):
+            if file_yaml is None or file_yaml.get('series') is None:
                 log.warning(f'Series file "{file.resolve()}" has no entries')
                 continue
 
@@ -444,16 +443,22 @@ class PreferenceParser(YamlReader):
 
                 # Yield each variation
                 for variation in variations:
-                    # Merge variation into base YAML
-                    modified_yaml = file_yaml['series'][show_name] | variation
+                    # Apply template to variation
+                    if not self.__apply_template(templates,variation,show_name):
+                        continue
+
+                    # Get priority union of variation and base series
+                    Template('', {}).recurse_priority_union(
+                        variation, file_yaml['series'][show_name]
+                    )
 
                     # Remove any library/media directory, only archived
-                    modified_yaml.pop('library', None)
-                    modified_yaml.pop('media_directory', None)
+                    variation.pop('library', None)
+                    variation.pop('media_directory', None)
                     
                     yield Show(
                         show_name,
-                        modified_yaml,
+                        variation,
                         library_map,
                         font_map,
                         self.source_directory,
