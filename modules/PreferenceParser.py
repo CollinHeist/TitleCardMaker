@@ -76,6 +76,7 @@ class PreferenceParser(YamlReader):
         self.use_plex = False
         self.plex_url = None
         self.plex_token = 'NA'
+        self.integrate_with_pmm_overlays = False
         self.global_watched_style = 'unique'
         self.global_unwatched_style = 'unique'
         self.use_sonarr = False
@@ -241,6 +242,10 @@ class PreferenceParser(YamlReader):
                 self.valid = False
             else:
                 self.global_unwatched_style = value
+
+        if (value := self._get('plex', 'integrate_with_pmm_overlays',
+                               type_=bool)) is not None:
+            self.integrate_with_pmm_overlays = value
 
         if self._is_specified('sonarr'):
             if (not self._is_specified('sonarr', 'url')

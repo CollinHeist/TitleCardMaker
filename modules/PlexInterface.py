@@ -35,7 +35,8 @@ class PlexInterface:
                                     if the host device is untrusted.
         """
 
-        # Get global MediaInfoSet object
+        # Get global PreferenceParser and MediaInfoSet objects
+        self.preferences = global_objects.pp
         self.info_set = global_objects.info_set
 
         # Create PlexServer object with these arguments
@@ -448,7 +449,12 @@ class PlexInterface:
         :param      filepath:       Filepath to the poster to upload.
         """
 
+        # Upload poster
         plex_episode.uploadPoster(filepath=filepath)
+
+        # If overlay integration is enabled, remove "Overlay" label
+        if self.preferences.integrate_with_pmm_overlays:
+            plex_episode.removeLabel(['Overlay'])
 
 
     def set_title_cards_for_series(self, library_name: str, 
