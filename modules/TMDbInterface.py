@@ -549,7 +549,10 @@ class TMDbInterface(WebInterface):
             return None
 
         # Episode found on TMDb, exit if no backdrops for this episode
-        episode.reload()
+        try:
+            episode.reload()
+        except NotFound:
+            return None
         if len(episode.stills) == 0:
             log.debug(f'TMDb has no images for "{series_info}" {episode_info}')
             self.__update_blacklist(series_info, episode_info, 'image')
