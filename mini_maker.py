@@ -230,7 +230,7 @@ if hasattr(args, 'title_card'):
         args.font = Path(str(CardClass.TITLE_FONT))
     if args.font_color == '__default':
         args.font_color = CardClass.TITLE_COLOR
-
+    
     # Create the given card
     CardClass(
         episode_text=args.episode,
