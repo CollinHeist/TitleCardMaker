@@ -439,7 +439,8 @@ class PlexInterface:
 
 
     @retry(stop=stop_after_attempt(5),
-           wait=wait_fixed(3)+wait_exponential(min=1, max=32))
+           wait=wait_fixed(3)+wait_exponential(min=1, max=32),
+           before_sleep=lambda _:log.warning('Cannot upload image, retrying..'))
     def __retry_upload(self, plex_episode: 'Episode', filepath: Path) -> None:
         """
         Upload the given poster to the given Episode, retrying if it fails.
