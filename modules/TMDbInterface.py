@@ -66,7 +66,7 @@ class TMDbInterface(WebInterface):
 
         # Create/read blacklist database
         self.__blacklist = TinyDB(self.__BLACKLIST_DB)
-
+        
         # Create/read series ID database
         self.__id_map = TinyDB(self.__ID_DB)
         
@@ -366,25 +366,34 @@ class TMDbInterface(WebInterface):
                     entry cannot be found.
         """
 
+        # If series TMDb ID is not present, exit
+        if not series_info.has_id('tmdb_id'):
+            return None
+
         # Query with TVDb ID first
-        if episode_info.has_id('tvdb_id'):
+        result = None
+        if result is None and episode_info.has_id('tvdb_id'):
             try:
                 results = self.api.find_by_id(tvdb_id=episode_info.tvdb_id)
-                return results.tv_episode_results[0]
+                result = results.tv_episode_results[0]
             except (NotFound, IndexError):
                 pass
 
         # Query with IMDB ID
-        if episode_info.has_id('imdb_id'):
+        if result is None and episode_info.has_id('imdb_id'):
             try:
                 results = self.api.find_by_id(tvdb_id=episode_info.tvdb_id)
-                return results.tv_episode_results[0]
+                result = results.tv_episode_results[0]
             except (NotFound, IndexError):
                 pass
 
-        # If series TMDb ID is not present, exit
-        if not series_info.has_id('tmdb_id'):
-            return None
+        # Result has been found, use series ID and returned index
+        if result is not None:
+            try:
+                indices = result.season_number, result.episode_number
+                return self.api.tv_episode(series_info.tmdb_id, *indices)
+            except NotFound:
+                return None
 
         # Verify series ID is valid
         try:
@@ -535,7 +544,7 @@ class TMDbInterface(WebInterface):
         :returns:   URL to the 'best' source image for the requested entry. None
                     if no images are available.
         """
-        
+
         # Don't query the database if this episode is in the blacklist
         if self.__is_blacklisted(series_info, episode_info, 'image'):
             return None
