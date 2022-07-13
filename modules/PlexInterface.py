@@ -449,12 +449,7 @@ class PlexInterface:
         :param      filepath:       Filepath to the poster to upload.
         """
 
-        # Upload poster
         plex_episode.uploadPoster(filepath=filepath)
-
-        # If overlay integration is enabled, remove "Overlay" label
-        if self.preferences.integrate_with_pmm_overlays:
-            plex_episode.removeLabel(['Overlay'])
 
 
     def set_title_cards_for_series(self, library_name: str, 
@@ -508,10 +503,14 @@ class PlexInterface:
             # Update progress bar
             pbar.set_description(f'Updating {pl_episode.seasonEpisode.upper()}')
             
-            # Upload card to Plex
+            # Upload card to Plex, optionally remove Overlay label
             try:
                 self.__retry_upload(pl_episode, episode.destination.resolve())
                 loaded_count += 1
+
+                # If overlay integration is enabled, remove "Overlay" label
+                if self.preferences.integrate_with_pmm_overlays:
+                    pl_episode.removeLabel(['Overlay'])
             except Exception as e:
                 error_count += 1
                 log.warning(f'Unable to upload {episode.destination.resolve()} '
