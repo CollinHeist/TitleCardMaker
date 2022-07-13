@@ -1,0 +1,19 @@
+name: Discord Release
+
+on:
+  release:
+    types: [ published ]
+
+jobs:
+  release-notification:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord Release Notification
+        uses: meisnate12/discord-notifications@master
+        with:
+          webhook_id: ${{ secrets.RELEASE_WEBHOOK_ID }}
+          webhook_token: ${{ secrets.RELEASE_WEBHOOK_TOKEN }}
+          release: true
+          title: TitleCardMaker VERSION
+          username: MakerBot
+          avatar_url: https://raw.githubusercontent.com/CollinHeist/TitleCardMaker/master/.github/logo.png
