@@ -35,7 +35,8 @@ class PlexInterface:
                                     if the host device is untrusted.
         """
 
-        # Get global MediaInfoSet object
+        # Get global PreferenceParser and MediaInfoSet objects
+        self.preferences = global_objects.pp
         self.info_set = global_objects.info_set
 
         # Create PlexServer object with these arguments
@@ -438,7 +439,8 @@ class PlexInterface:
 
 
     @retry(stop=stop_after_attempt(5),
-           wait=wait_fixed(3)+wait_exponential(min=1, max=32))
+           wait=wait_fixed(3)+wait_exponential(min=1, max=32),
+           before_sleep=lambda _:log.warning('Cannot upload image, retrying..'))
     def __retry_upload(self, plex_episode: 'Episode', filepath: Path) -> None:
         """
         Upload the given poster to the given Episode, retrying if it fails.
@@ -502,10 +504,14 @@ class PlexInterface:
             # Update progress bar
             pbar.set_description(f'Updating {pl_episode.seasonEpisode.upper()}')
             
-            # Upload card to Plex
+            # Upload card to Plex, optionally remove Overlay label
             try:
                 self.__retry_upload(pl_episode, episode.destination.resolve())
                 loaded_count += 1
+
+                # If overlay integration is enabled, remove "Overlay" label
+                if self.preferences.integrate_with_pmm_overlays:
+                    pl_episode.removeLabel(['Overlay'])
             except Exception as e:
                 error_count += 1
                 log.warning(f'Unable to upload {episode.destination.resolve()} '

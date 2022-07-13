@@ -66,7 +66,7 @@ class TMDbInterface(WebInterface):
 
         # Create/read blacklist database
         self.__blacklist = TinyDB(self.__BLACKLIST_DB)
-
+        
         # Create/read series ID database
         self.__id_map = TinyDB(self.__ID_DB)
         
@@ -366,25 +366,34 @@ class TMDbInterface(WebInterface):
                     entry cannot be found.
         """
 
+        # If series TMDb ID is not present, exit
+        if not series_info.has_id('tmdb_id'):
+            return None
+
         # Query with TVDb ID first
-        if episode_info.has_id('tvdb_id'):
+        result = None
+        if result is None and episode_info.has_id('tvdb_id'):
             try:
                 results = self.api.find_by_id(tvdb_id=episode_info.tvdb_id)
-                return results.tv_episode_results[0]
+                result = results.tv_episode_results[0]
             except (NotFound, IndexError):
                 pass
 
         # Query with IMDB ID
-        if episode_info.has_id('imdb_id'):
+        if result is None and episode_info.has_id('imdb_id'):
             try:
                 results = self.api.find_by_id(tvdb_id=episode_info.tvdb_id)
-                return results.tv_episode_results[0]
+                result = results.tv_episode_results[0]
             except (NotFound, IndexError):
                 pass
 
-        # If series TMDb ID is not present, exit
-        if not series_info.has_id('tmdb_id'):
-            return None
+        # Result has been found, use series ID and returned index
+        if result is not None:
+            try:
+                indices = result.season_number, result.episode_number
+                return self.api.tv_episode(series_info.tmdb_id, *indices)
+            except NotFound:
+                return None
 
         # Verify series ID is valid
         try:
@@ -535,7 +544,7 @@ class TMDbInterface(WebInterface):
         :returns:   URL to the 'best' source image for the requested entry. None
                     if no images are available.
         """
-        
+
         # Don't query the database if this episode is in the blacklist
         if self.__is_blacklisted(series_info, episode_info, 'image'):
             return None
@@ -691,7 +700,7 @@ class TMDbInterface(WebInterface):
 
     @staticmethod
     def manually_download_season(api_key: str, title: str, year: int,
-                                 season: int, episode_count: int,
+                                 season_number: int, episode_range: 'iterable',
                                  directory: Path) -> None:
         """
         Download episodes 1-episode_count of the requested season for the given
@@ -700,8 +709,8 @@ class TMDbInterface(WebInterface):
         :param      api_key:        The api key for sending requsts to TMDb.
         :param      title:          The title of the requested show.
         :param      year:           The year of the requested show.
-        :param      season:         The season to download.
-        :param      episode_count:  The number of episodes to download
+        :param      season_number:  Which season to download.
+        :param      episode_range:  Iterable of episode numbers to download.
         :param      directory:      The directory to place the downloaded images
                                     in.
         """
@@ -711,15 +720,17 @@ class TMDbInterface(WebInterface):
 
         # Create SeriesInfo and EpisodeInfo objects
         si = SeriesInfo(title, year)
+        dbi.set_series_ids(si)
 
-        for episode in range(1, episode_count+1):
-            ei = EpisodeInfo('', season, episode)
+        for episode_number in episode_range:
+            ei = EpisodeInfo('', season_number, episode_number)
             image_url = dbi.get_source_image(si, ei, title_match=False)
 
             # If a valid URL was returned, download it
-            if image_url:
-                filename = f's{season}e{episode}.jpg'
+            if image_url is not None:
+                filename = f's{season_number}e{episode_number}.jpg'
                 dbi.download_image(image_url, directory / filename)
+                log.debug(f'Downloaded {(directory / filename).resolve()}')
 
 
     @staticmethod
