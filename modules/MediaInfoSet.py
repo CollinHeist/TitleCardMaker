@@ -192,7 +192,9 @@ class MediaInfoSet:
                 else:
                     log.debug(f'Index match on {series_info} {key}, but title '
                               f'mismatch ({info.title}) vs ({title})')
-                    return None
+                    return EpisodeInfo(title, season_number, episode_number,
+                                       abs_number, imdb_id=imdb_id,
+                                       tvdb_id=tvdb_id, **queried_kwargs)
 
         # This EpisodeInfo doesn't exist in the set, create new object
         episode_info = EpisodeInfo(
