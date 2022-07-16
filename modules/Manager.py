@@ -191,7 +191,7 @@ class Manager:
 
         # Go through each show and download source images
         log.info(f'Starting to select source images..')
-        for show in (pbar := tqdm(self.shows, **TQDM_KWARGS)):
+        for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
             # Update progress bar
             pbar.set_description(f'Selecting sources for '
                                  f'"{show.series_info.short_name}"')

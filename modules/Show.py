@@ -623,12 +623,8 @@ class Show(YamlReader):
         :returns:   Whether a backdrop should be downloaded or not.
         """
 
-        # If no library, ignore styles
-        if self.library is None:
-            return False
-
         # Update watched statuses via Plex
-        if plex_interface is None:
+        if self.library is None or plex_interface is None:
             # If no PlexInterface, assume all episodes are unwatched
             [episode.update_statuses(False, self.watched_style,
                                      self.unwatched_style)
@@ -675,7 +671,7 @@ class Show(YamlReader):
             elif ((applies_to == 'all') or
                 (applies_to == 'unwatched' and unwatched_style == 'blur'
                  and not episode.watched)):
-                episode.blur = True
+                episode.blur = True and self.library is not None
                 found = episode.update_source(manual_source, downloadable=False)
             elif watched_style == 'unique':
                 continue
@@ -683,7 +679,7 @@ class Show(YamlReader):
                 found = episode.update_source(self.backdrop, downloadable=True)
                 download_backdrop = True
             else:
-                episode.blur = True
+                episode.blur = True and self.library is not None
 
             # Override to backdrop if indicated by style, or manual image DNE
             if (((episode.watched and watched_style == 'art')
