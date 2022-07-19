@@ -59,9 +59,7 @@ class LogoTitleCard(CardType):
                  interline_spacing: int=0, stroke_width: float=1.0,
                  logo: str=None,  background: str='#000000', **kwargs) -> None:
         """
-        Initialize the TitleCardMaker object. This primarily just stores
-        instance variables for later use in `create()`. If the provided font
-        does not have a character in the title text, a space is used instead.
+        Initialize the CardType object.
 
         :param  output_file:        Output file.
         :param  title:              Episode title.
