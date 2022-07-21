@@ -120,6 +120,7 @@ class ShowSummary(ImageMaker):
 
         command = ' '.join([
             f'montage',
+            f'-set colorspace sRGB',
             f'-background "{self.background_color}"',
             f'-density 300',
             f'-tile 3x3',
