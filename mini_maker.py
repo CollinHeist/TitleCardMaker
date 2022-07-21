@@ -201,7 +201,14 @@ show_summary_group.add_argument(
     type=str,
     default=ShowSummary.BACKGROUND_COLOR,
     metavar='COLOR',
-    help='Specify background color for the created ShowSummary')
+    help='Specify background color for the created show summary')
+show_summary_group.add_argument(
+    '--created-by',
+    type=str,
+    default=None,
+    metavar='CREATOR',
+    help='Specify a custom username for the "Created by .." text on the created'
+         ' show sumamry')
 
 # Argument group for season posters
 season_poster_group = parser.add_argument_group(
@@ -348,7 +355,7 @@ if hasattr(args, 'show_summary'):
     show = Show(args.show_summary[1], args.show_summary[0], episodes)
 
     # Create ShowSummary
-    ShowSummary(show, args.background_color).create()
+    ShowSummary(show, args.background_color, args.created_by).create()
 
 if hasattr(args, 'season_poster'):
     SeasonPoster(

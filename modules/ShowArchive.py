@@ -94,7 +94,8 @@ class ShowArchive:
             self.summaries.append(
                 ShowSummary(
                     new_show,
-                    global_objects.pp.summary_background_color
+                    global_objects.pp.summary_background_color,
+                    global_objects.pp.summary_created_by,
                 )
             )
 

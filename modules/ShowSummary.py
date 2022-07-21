@@ -14,31 +14,37 @@ class ShowSummary(ImageMaker):
     """
 
     """Directory where all reference files used by this card are stored"""
-    REF_DIRECTORY = Path(__file__).parent / 'ref'
+    REF_DIRECTORY = Path(__file__).parent / 'ref' / 'summary'
 
     """Default color for the background of the summary image"""
     BACKGROUND_COLOR = '#1A1A1A'
 
     """Configurations for the header text"""
     HEADER_TEXT = 'EPISODE TITLE CARDS'
-    HEADER_FONT = REF_DIRECTORY / 'Proxima Nova Regular.otf'
+    HEADER_FONT = REF_DIRECTORY.parent / 'Proxima Nova Regular.otf'
     HEADER_FONT_COLOR = '#CFCFCF'
+
+    """Configuration for the created by image creation"""
+    __CREATED_BY_FONT = REF_DIRECTORY.parent / 'star_wars' / 'HelveticaNeue.ttc'
+    __TCM_LOGO = REF_DIRECTORY / 'logo.png'
 
     """Paths to intermediate images created in the process of making a summary."""
     __MONTAGE_PATH = ImageMaker.TEMP_DIR / 'montage.png'
     __MONTAGE_WITH_HEADER_PATH = ImageMaker.TEMP_DIR / 'header.png'
     __RESIZED_LOGO_PATH = ImageMaker.TEMP_DIR / 'resized_logo.png'
     __LOGO_AND_HEADER_PATH = ImageMaker.TEMP_DIR / 'logo_and_header.png'
+    __CREATED_BY_TEMPORARY_PATH = ImageMaker.TEMP_DIR / 'user_created_by.png'
     
     """Path to the 'created by' image to add to all show summaries"""
-    __CREATED_BY_PATH: Path = Path(__file__).parent / 'ref' / 'created_by.png'
-
-    __slots__ = ('show', 'logo', 'output', 'background_color', 'inputs',
-                 'number_rows')
+    __CREATED_BY_PATH = REF_DIRECTORY / 'created_by.png'
 
 
-    def __init__(self, show: 'Show',
-                 background_color: str=BACKGROUND_COLOR) -> None:
+    __slots__ = ('show', 'logo', 'output', 'created_by', 'background_color',
+                 'inputs', 'number_rows')
+
+
+    def __init__(self, show: 'Show', background_color: str=BACKGROUND_COLOR,
+                 created_by: str=None) -> None:
         """
         Constructs a new instance of this object. This initializes a
         ImageMagickInterface object, and searches the provided show object
@@ -47,6 +53,8 @@ class ShowSummary(ImageMaker):
         :param      show:               The Show object of which to create a
                                         summary for.
         :param      background_color:   Background color to use for the summary.
+        :param      created_by:         String to use in custom "Created by .."
+                                        tag at the botom of this summary.
         """
 
         # Initialize parent object
@@ -55,8 +63,10 @@ class ShowSummary(ImageMaker):
         # This summary's logo is an attribute of the provided show
         self.show = show
         self.logo = show.logo
+        self.created_by = created_by
 
-        # Output file is stored in the top-level media directory (usually an archive folder)
+        # Output file is stored in the top-level media directory
+        # (usually an archive folder)
         self.output = show.media_directory / 'Summary.jpg'
 
         # Get global background color
@@ -236,12 +246,47 @@ class ShowSummary(ImageMaker):
         return self.__LOGO_AND_HEADER_PATH
 
 
-    def _add_created_by(self, montage_and_logo: Path) -> Path:
+    def __create_created_by(self) -> Path:
+        """
+        Create a custom "Created by" tag image. This image is formatted like:
+        "Created by {input} with {logo} TitleCardMaker". Image is exactly the
+        correct size.
+         
+        :returns:   Path to the created image.
+        """
+
+        command = ' '.join([
+            f'convert',
+            f'-background transparent',
+            f'-font "{self.__CREATED_BY_FONT.resolve()}"',
+            f'-pointsize 100',
+            f'-fill "{self.HEADER_FONT_COLOR}"',
+            f'label:"Created by"',
+            f'-fill "#DA7855"',
+            f'label:"{self.created_by}"',
+            f'-fill "{self.HEADER_FONT_COLOR}"',
+            f'label:"with"',
+            f'\( "{self.__TCM_LOGO.resolve()}"',
+            f'-resize x100 \)',
+            f'-fill "#5493D7"',
+            f'label:TitleCardMaker',
+            f'+smush 30',
+            f'"{self.__CREATED_BY_TEMPORARY_PATH.resolve()}"'
+        ])
+
+        self.image_magick.run(command)
+        self.image_magick.print_command_history()
+        return self.__CREATED_BY_TEMPORARY_PATH
+
+
+    def _add_created_by(self, montage_and_logo: Path,
+                        created_by: Path) -> Path:
         """
         Add the 'created by' image to the bottom of the montage.
         
         :param      montage_and_logo:   Path to the montage with the logo
                                         already applied.
+        :param      created_by:         "Created by.." tag image to add.
         
         :returns:   Path to the created (output) image.
         """
@@ -252,7 +297,7 @@ class ShowSummary(ImageMaker):
             f'composite',
             f'-gravity south',
             f'-geometry +0+{35+y_offset}',
-            f'"{self.__CREATED_BY_PATH.resolve()}"',
+            f'"{created_by.resolve()}"',
             f'"{montage_and_logo.resolve()}"',
             f'"{self.output.resolve()}"',
         ])
@@ -290,10 +335,16 @@ class ShowSummary(ImageMaker):
         montage_and_logo = self._add_logo(montage_and_header, logo)
 
         # Add created by tag - summary is completed
-        self._add_created_by(montage_and_logo)
+        if self.created_by is None:
+            created_by = self.__CREATED_BY_PATH
+        else:
+            created_by = self.__create_created_by()
+        self._add_created_by(montage_and_logo, created_by)
         
         # Delete temporary files
-        self.image_magick.delete_intermediate_images(
-            montage, montage_and_header, logo, montage_and_logo
-        )
+        images = [montage, montage_and_header, logo, montage_and_logo]
+        if self.created_by is not None:
+            images.append(created_by)
+
+        self.image_magick.delete_intermediate_images(*images)
 
