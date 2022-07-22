@@ -515,7 +515,7 @@ class PlexInterface:
             except Exception as e:
                 error_count += 1
                 log.warning(f'Unable to upload {episode.destination.resolve()} '
-                            f'to {series_info} - Plex returned "{e}"')
+                            f'to {series_info}')
                 continue
             
             # Update the loaded map with this card's size

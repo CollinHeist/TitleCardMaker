@@ -120,7 +120,6 @@ class DataFileInterface:
                 # Ensure Title can be created
                 try:
                     title_obj = Title(title, original_title=original_title)
-                    log.debug(f'Created {title_obj}')
                 except Exception:
                     log.error(f'Title for S{season_number:02}E'
                               f'{episode_number:02} of the {self.series_info} '

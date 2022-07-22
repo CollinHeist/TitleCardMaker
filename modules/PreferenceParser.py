@@ -534,7 +534,8 @@ class PreferenceParser(YamlReader):
         """
 
         # If season folders are hidden, return empty string
-        if len(self.season_folder_format.strip()) == 0: 
+        if (self.season_folder_format is None
+            or len(self.season_folder_format.strip()) == 0): 
             return ''
 
         # Season 0 is always Specials (never padded)

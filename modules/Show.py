@@ -41,7 +41,7 @@ class Show(YamlReader):
                  'sync_specials', 'tmdb_sync','watched_style','unwatched_style',
                  'hide_seasons','__episode_map', 'title_language', 'font',
                  'source_directory', 'logo', 'backdrop', 'file_interface',
-                 'profile', 'episodes')
+                 'profile', 'episodes', '__is_archive')
 
 
     def __init__(self, name: str, yaml_dict: dict, library_map: dict, 
@@ -136,6 +136,7 @@ class Show(YamlReader):
 
         # Episode dictionary to be filled
         self.episodes = {}
+        self.__is_archive = False
         
 
     def __str__(self) -> str:
@@ -161,14 +162,17 @@ class Show(YamlReader):
         :returns:   A newly constructed Show object.
         """
 
-        # Modify base yaml to have overriden media_directory attribute
+        # Modify base yaml to have overritten media_directory
         modified_base = copy(self._base_yaml)
         modified_base['media_directory'] = str(media_directory.resolve())
         
         # Recreate Show object with modified YAML
-        return Show(self.series_info.name, modified_base, self.__library_map,
+        show = Show(self.series_info.name, modified_base, self.__library_map,
                     self.font._Font__font_map, self.source_directory.parent,
                     self.preferences)
+        show.__is_archive = True
+
+        return show
 
 
     def __parse_card_type(self, card_type: str) -> None:
@@ -624,7 +628,7 @@ class Show(YamlReader):
         """
 
         # Update watched statuses via Plex
-        if self.library is None or plex_interface is None:
+        if self.library is None or plex_interface is None or self.__is_archive:
             # If no PlexInterface, assume all episodes are unwatched
             [episode.update_statuses(False, self.watched_style,
                                      self.unwatched_style)
@@ -671,7 +675,7 @@ class Show(YamlReader):
             elif ((applies_to == 'all') or
                 (applies_to == 'unwatched' and unwatched_style == 'blur'
                  and not episode.watched)):
-                episode.blur = True and self.library is not None
+                episode.blur = True and not self.__is_archive
                 found = episode.update_source(manual_source, downloadable=False)
             elif watched_style == 'unique':
                 continue
@@ -679,7 +683,7 @@ class Show(YamlReader):
                 found = episode.update_source(self.backdrop, downloadable=True)
                 download_backdrop = True
             else:
-                episode.blur = True and self.library is not None
+                episode.blur = True and not self.__is_archive
 
             # Override to backdrop if indicated by style, or manual image DNE
             if (((episode.watched and watched_style == 'art')

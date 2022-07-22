@@ -86,8 +86,8 @@ class Episode:
     def update_statuses(self, watched: bool, watched_style: str, 
                         unwatched_style: str) -> None:
         """
-        Update the statuses of this Episode. In particular the watched and
-        spoil type statuses.
+        Update the statuses of this Episode. In particular the watched status
+        and un/watched styles.
         
         :param      watched:          New watched status for this Episode.
         :param      watched_style:    Watched style to assign spoil type from.

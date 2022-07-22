@@ -72,7 +72,7 @@ class Manager:
                 continue
                 
             self.shows.append(show)
-
+            
             # If archives are disabled globally, or for this show - skip 
             if not self.preferences.create_archive or not show.archive:
                 continue

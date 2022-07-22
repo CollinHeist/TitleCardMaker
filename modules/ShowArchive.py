@@ -82,7 +82,7 @@ class ShowArchive:
             new_show = base_show._copy_with_modified_media_directory(
                 new_media_directory
             )
-
+            
             # Convert this new show's profile
             new_show.profile.convert_profile(
                 base_show.card_class,
