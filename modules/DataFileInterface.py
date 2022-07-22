@@ -106,8 +106,8 @@ class DataFileInterface:
                 if (not isinstance(episode_data, dict)
                     or ('title' not in episode_data and
                         'preferred_title' not in episode_data)):
-                    log.error(f'Season {season_number}, Episode {episode_number}'
-                              f' of "{self.file.resolve()}" is missing title')
+                    log.error(f'S{season_number:02}E{episode_number:02} of the '
+                              f'{self.series_info} datafile is missing a title')
                     continue
 
                 # Get existing keys for this episode
@@ -116,12 +116,21 @@ class DataFileInterface:
                 # If translated title is available, prefer that
                 original_title = episode_data.pop('title', None)
                 title = episode_data.get('preferred_title', original_title)
+
+                # Ensure Title can be created
+                try:
+                    title_obj = Title(title, original_title=original_title)
+                    log.debug(f'Created {title_obj}')
+                except Exception:
+                    log.error(f'Title for S{season_number:02}E'
+                              f'{episode_number:02} of the {self.series_info} '
+                              f'datafile is invalid')
+                    continue
                 
                 # Construct EpisodeInfo object for this entry
-                # episode_info = EpisodeInfo(
                 episode_info = global_objects.info_set.get_episode_info(
                     self.series_info,
-                    Title(title, original_title=original_title),
+                    title_obj,
                     season_number,
                     episode_number,
                     episode_data.pop('abs_number', None),
