@@ -65,8 +65,7 @@ class PreferenceParser(YamlReader):
         self.image_source_priority = ('tmdb', 'plex')
         self.episode_data_source = 'sonarr'
         self.validate_fonts = True
-        self.zero_pad_seasons = False
-        self.hide_season_folders = False
+        self.season_folder_format = 'Season {season}'
         self.archive_directory = None
         self.create_archive = False
         self.archive_all_variations = True
@@ -191,12 +190,9 @@ class PreferenceParser(YamlReader):
         if (value := self._get('options', 'validate_fonts', type_=bool)) !=None:
             self.validate_fonts = value
 
-        if (value := self._get('options', 'zero_pad_seasons',type_=bool))!=None:
-            self.zero_pad_seasons = value
-
-        if (value := self._get('options', 'hide_season_folders',
-                               type_=bool)) != None:
-            self.hide_season_folders = value
+        if (value := self._get('options', 'season_folder_format',
+                               type_=str)) is not None:
+            self.season_folder_format = value
 
         if (value := self._get('archive', 'path', type_=Path)) != None:
             self.archive_directory = value
@@ -289,6 +285,16 @@ class PreferenceParser(YamlReader):
         if self._is_specified('options', 'source_priority'):
             log.critical(f'Options "source_priority" setting has been renamed '
                          f'to "image_source_priority"')
+            self.valid = False
+
+        if self._is_specified('options', 'zero_pad_seasons'):
+            log.critical(f'Options "zero_pad_seasons" setting has been '
+                         f'incorporated into "season_folder_format"')
+            self.valid = False
+
+        if self._is_specified('options', 'hide_season_folders'):
+            log.critical(f'Options "hide_season_folders" setting has been '
+                         f'incorporated into "season_folder_format"')
             self.valid = False
 
         if self._is_specified('plex', 'unwatched'):
@@ -528,17 +534,17 @@ class PreferenceParser(YamlReader):
         """
 
         # If season folders are hidden, return empty string
-        if self.hide_season_folders:
+        if len(self.season_folder_format.strip()) == 0: 
             return ''
 
         # Season 0 is always Specials (never padded)
         if season_number == 0:
             return 'Specials'
 
-        # Zero pad the season number if indicated
-        if self.zero_pad_seasons:
-            return f'Season {season_number:02}'
-
-        # Return non-zero-padded season name
-        return f'Season {season_number}'
+        # Format season folder as indicated (zero-padding, whatever..)
+        try:
+            return self.season_folder_format.format(season=season_number)
+        except Exception:
+            log.critical('Invalid season folder format')
+            exit(1)
 
