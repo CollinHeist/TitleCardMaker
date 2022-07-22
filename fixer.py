@@ -111,6 +111,13 @@ tmdb_group.add_argument(
     help='Download the title card source images for the given season of the '
          'given series')
 tmdb_group.add_argument(
+    '--unblacklist',
+    nargs=2,
+    type=str,
+    default=SUPPRESS,
+    metavar=('TITLE', 'YEAR'),
+    help='Unblacklist all requests for the given series')
+tmdb_group.add_argument(
     '--delete-blacklist',
     action='store_true',
     help='Delete the existing TMDb blacklist file')
@@ -248,6 +255,11 @@ if args.sonarr_list_ids and pp.use_sonarr:
     SonarrInterface(pp.sonarr_url, pp.sonarr_api_key).list_all_series_id()
 
 # Execute TMDB related options
+if hasattr(args, 'unblacklist'):
+    TMDbInterface.unblacklist(
+        SeriesInfo(args.unblacklist[0], int(args.unblacklist[1]))
+    )
+
 if hasattr(args, 'delete_blacklist'):
     if args.delete_blacklist:
         TMDbInterface.delete_blacklist()
