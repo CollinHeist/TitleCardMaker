@@ -201,12 +201,14 @@ class SonarrInterface(WebInterface):
                 air_datetime=datetime.strptime(ep_airdate,self.__AIRDATE_FORMAT)
                 if (not episode['hasFile']
                     and air_datetime > datetime.now() + timedelta(hours=2)):
-                        continue
+                    continue
 
                 # Skip temporary placeholder names if aired in the last 48 hours
                 if (self.__TEMP_IGNORE_REGEX.match(episode['title'])
                     and air_datetime > datetime.now() + timedelta(days=2)):
-                        continue
+                    log.debug(f'Temporarily ignoring episode {episode["title"]}'
+                              f' of {series_info} - placeholder title')
+                    continue
 
             # Skip permanent placeholder names
             if self.__ALWAYS_IGNORE_REGEX.match(episode['title']):
