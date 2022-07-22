@@ -6,6 +6,7 @@ import modules.global_objects as global_objects
 # Default CardType classes
 from modules.AnimeTitleCard import AnimeTitleCard
 from modules.LogoTitleCard import LogoTitleCard
+from modules.PosterTitleCard import PosterTitleCard
 from modules.RomanNumeralTitleCard import RomanNumeralTitleCard
 from modules.StandardTitleCard import StandardTitleCard
 from modules.StarWarsTitleCard import StarWarsTitleCard
@@ -32,15 +33,17 @@ class TitleCard:
 
     """Mapping of card type identifiers to CardType classes"""
     CARD_TYPES = {
-        'standard': StandardTitleCard,
-        'generic': StandardTitleCard,
         'anime': AnimeTitleCard,
-        'star wars': StarWarsTitleCard,
-        'textless': TextlessTitleCard,
+        'generic': StandardTitleCard,
+        'gundam': PosterTitleCard,
         'logo': LogoTitleCard,
+        'poster': PosterTitleCard,
         'reality tv': LogoTitleCard,
         'roman': RomanNumeralTitleCard,
         'roman numeral': RomanNumeralTitleCard,
+        'standard': StandardTitleCard,
+        'star wars': StarWarsTitleCard,
+        'textless': TextlessTitleCard,
     }
 
     """Mapping of illegal filename characters and their replacements"""

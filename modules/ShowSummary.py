@@ -275,7 +275,7 @@ class ShowSummary(ImageMaker):
         ])
 
         self.image_magick.run(command)
-        self.image_magick.print_command_history()
+        
         return self.__CREATED_BY_TEMPORARY_PATH
 
 

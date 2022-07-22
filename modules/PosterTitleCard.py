@@ -4,7 +4,7 @@ from re import match
 from modules.CardType import CardType
 from modules.Debug import log
 
-class GundamTitleCard(CardType):
+class PosterTitleCard(CardType):
     """
     This class describes a type of CardType that produces title cards in the
     style of the Gundam series of cards produced by Reddit user
@@ -12,11 +12,11 @@ class GundamTitleCard(CardType):
     """
 
     """Directory where all reference files used by this card are stored"""
-    REF_DIRECTORY = Path(__file__).parent / 'ref' / 'gundam'
+    REF_DIRECTORY = Path(__file__).parent / 'ref' / 'poster_card'
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
-        'max_line_width': 15,   # Character count to begin splitting titles
+        'max_line_width': 16,   # Character count to begin splitting titles
         'max_line_count': 5,    # Maximum number of lines a title can take up
         'top_heavy': True,      # This class uses top heavy titling
     }
@@ -34,9 +34,13 @@ class GundamTitleCard(CardType):
     """Whether this class uses season titles for the purpose of archives"""
     USES_SEASON_TITLE = False
 
-    """How to name archive directories for this type of card"""
-    ARCHIVE_NAME = 'Gundam Style'
+    """This card doesn't use unique sources (uses posters)"""
+    USES_UNIQUE_SOURCES = False
 
+    """How to name archive directories for this type of card"""
+    ARCHIVE_NAME = 'Poster Style'
+
+    """Custom blur profile for the poster"""
     BLUR_PROFILE = '0x30'
 
     """Path to the reference star image to overlay on all source images"""
@@ -76,14 +80,17 @@ class GundamTitleCard(CardType):
 
         # Look for logo if it's a format string
         if isinstance(logo, str):
+            # Attempt to modify as if it's a format string
             try:
                 logo = logo.format(season_number=season_number,
                                    episode_number=episode_number)
             except Exception:
+                # Bad format strings will be caught during card creation
                 pass
-            
-            # Use either original or modified logo file
+
             self.logo = Path(logo)
+        elif isinstance(logo, Path):
+            self.logo = logo
         else:
             self.logo = None
 
@@ -124,7 +131,7 @@ class GundamTitleCard(CardType):
         :returns:   True if custom season titles are indicated, False otherwise.
         """
 
-        return episode_text_format != GundamTitleCard.EPISODE_TEXT_FORMAT
+        return episode_text_format != PosterTitleCard.EPISODE_TEXT_FORMAT
 
 
     def create(self) -> None:
@@ -132,7 +139,8 @@ class GundamTitleCard(CardType):
 
         # If no logo is specified, create empty logo command
         if self.logo is None:
-            logo_command = '',
+            title_offset = 0
+            logo_command = ''
         elif not self.logo.exists():
             # Logo specified, but DNE, error and exit
             log.error(f'Logo file "{self.logo.resolve()}" does not exist')
@@ -148,6 +156,10 @@ class GundamTitleCard(CardType):
                 f'-composite',
             ]
 
+            # Adjust title offset to center in smaller space (due to logo)
+            title_offset = (450 / 2) - (50 / 2)
+
+        # Single command to create card
         command = ' '.join([
             f'convert',
             f'"{self.source_file.resolve()}"',          # Resize source image
@@ -159,12 +171,13 @@ class GundamTitleCard(CardType):
             *logo_command,                              # Optionally add logo
             f'-gravity south',                          # Add episode text
             f'-font "{self.TITLE_FONT}"',
-            f'-pointsize 100',
+            f'-pointsize 75',
             f'-fill "#FFFFFF"',
             f'-annotate +649+50 "{self.episode_text}"',
             f'-gravity center',                         # Add title text
             f'-pointsize 165',
-            f'-annotate +649+0 "{self.title}"',
+            f'-interline-spacing -40', 
+            f'-annotate +649+{title_offset} "{self.title}"',
             f'"{self.output_file.resolve()}"',
         ])
 
