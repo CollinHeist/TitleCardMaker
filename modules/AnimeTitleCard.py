@@ -50,12 +50,15 @@ class AnimeTitleCard(CardType):
 
     __slots__ = ('source_file', 'output_file', 'title', 'kanji', 'use_kanji',
                  'require_kanji', 'season_text', 'episode_text', 'hide_season',
-                 'separator', 'blur', 'font_size')
+                 'separator', 'blur', 'font', 'font_size', 'font_color',
+                 'vertical_shift', 'interline_spacing', 'kerning')
     
     def __init__(self, source: Path, output_file: Path, title: str, 
-                 season_text: str, episode_text: str, hide_season: bool,
-                 kanji: str=None, require_kanji: bool=False, separator: str='·',
-                 blur: bool=False, font_size: float=1.0, **kwargs)->None:
+                 season_text: str, episode_text: str, font: str,font_size:float,
+                 title_color: str, hide_season: bool, vertical_shift: int=0,
+                 interline_spacing: int=0, kerning: float=1.0, kanji: str=None,
+                 require_kanji: bool=False, separator: str='·',
+                 blur: bool=False, **kwargs)->None:
         """
         Constructs a new instance.
         
@@ -99,7 +102,12 @@ class AnimeTitleCard(CardType):
         self.blur = blur
 
         # Font customizations
+        self.font = font
         self.font_size = font_size
+        self.font_color = title_color
+        self.vertical_shift = vertical_shift
+        self.interline_spacing = interline_spacing
+        self.kerning = kerning
 
 
     def __repr__(self) -> str:
@@ -118,11 +126,15 @@ class AnimeTitleCard(CardType):
         :returns:   List of ImageMagick commands.
         """
 
+        kerning = 2.0 * self.kerning
+        interline_spacing = -30 + self.interline_spacing
+        font_size = 150 * self.font_size
+
         return [
-            f'-font "{self.TITLE_FONT}"',
-            f'-kerning 2',
-            f'-interline-spacing -30',
-            f'-pointsize {150 * self.font_size}',
+            f'-font "{self.font}"',
+            f'-kerning {kerning}',
+            f'-interline-spacing {interline_spacing}',
+            f'-pointsize {font_size}',
             f'-gravity southwest',
         ]
 
@@ -149,8 +161,8 @@ class AnimeTitleCard(CardType):
         """
 
         return [
-            f'-fill white',
-            f'-stroke white',
+            f'-fill "{self.font_color}"',
+            f'-stroke "{self.font_color}"',
             f'-strokewidth 0.5',
         ]
 
@@ -230,7 +242,6 @@ class AnimeTitleCard(CardType):
 
         command = ' '.join([
             f'convert "{image.resolve()}"',
-            f'-profile "*"',
             f'-gravity center',
             f'-resize "{self.TITLE_CARD_SIZE}^"',
             f'-extent "{self.TITLE_CARD_SIZE}"',
@@ -285,6 +296,7 @@ class AnimeTitleCard(CardType):
         base_offset = 175
         variable_offset = 200 + (165 * (len(self.title.split('\n'))-1))
         kanji_offset = base_offset + variable_offset * self.font_size
+        kanji_offset += self.vertical_shift
 
         command = ' '.join([
             f'convert "{gradient_image.resolve()}"',
@@ -391,12 +403,16 @@ class AnimeTitleCard(CardType):
         
         :param      font:   The Font being evaluated.
         
-        :returns:   True if the given font uses a case function other than
-                    'title', False otherwise.
+        :returns:   True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.case_name != AnimeTitleCard.DEFAULT_FONT_CASE)
-            or (font.size != 1.0))
+        return ((font.file != AnimeTitleCard.TITLE_FONT)
+            or (font.size != 1.0)
+            or (font.color != AnimeTitleCard.TITLE_COLOR)
+            or (font.vertical_shift != 0)
+            or (font.interline_spacing != 0)
+            or (font.kerning != 1.0)
+            or (font.stroke_width != 1.0))
 
 
     @staticmethod
