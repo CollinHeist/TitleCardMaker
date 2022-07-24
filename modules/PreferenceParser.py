@@ -363,7 +363,7 @@ class PreferenceParser(YamlReader):
         log.info(f'Read preference file "{self.file.resolve()}"')
 
 
-    def iterate_series_files(self) -> [Show]:
+    def iterate_series_files(self) -> list[Show]:
         """
         Iterate through all series file listed in the preferences. For each
         series encountered in each file, yield a Show object. Files that do not

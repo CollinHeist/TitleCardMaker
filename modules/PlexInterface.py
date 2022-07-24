@@ -392,7 +392,6 @@ class PlexInterface:
                 )
 
                 # Set the ID's for this object
-                ids = {}
                 for guid in plex_episode.guids:
                     if 'tvdb://' in guid.id:
                         info.set_tvdb_id(guid.id[len('tvdb://'):])
