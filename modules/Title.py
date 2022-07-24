@@ -47,17 +47,18 @@ class Title:
         """
         
         # If given as str, then title is not manually specified
-        if isinstance(title, str):
-            self.full_title = title
-            self.__title_lines = []
-            self.__manually_specified = False
-        elif isinstance(title, list):
+        if isinstance(title, list):
             # If title was given line-by-line, join with spaces
             self.full_title = ' '.join(title)
             self.__title_lines = title
             self.__manually_specified = True
         else:
-            raise TypeError(f'Title can only be created by str or list')
+            try:
+                self.full_title = str(title)
+                self.__title_lines = []
+                self.__manually_specified = False
+            except Exception:
+                raise TypeError(f'Cannot create Title with {title!r}')
 
         # This title as represented in YAML
         self.title_yaml = title

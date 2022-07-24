@@ -23,7 +23,7 @@ class StarWarsTitleCard(CardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY/'Monstice-Base.ttf').resolve())
+    TITLE_FONT = str((REF_DIRECTORY / 'Monstice-Base.ttf').resolve())
     TITLE_COLOR = '#DAC960'
     FONT_REPLACEMENTS = {'Ō': 'O', 'ō': 'o'}
 
@@ -53,7 +53,7 @@ class StarWarsTitleCard(CardType):
     def __init__(self, source: Path, output_file: Path, title: str,
                  episode_text: str, blur: bool=False, **kwargs) -> None:
         """
-        Constructs a new instance.
+        Initialize the CardType object.
         
         :param      source:         Source image for this card.
         :param      output_file:    Output filepath for this card.

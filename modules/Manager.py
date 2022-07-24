@@ -64,6 +64,7 @@ class Manager:
         self.archives = []
 
         # Go through each Series YAML file
+        log.info(f'Starting to read series YAML files..')
         for show in self.preferences.iterate_series_files():
             # Skip shows whose YAML was invalid
             if not show.valid:
@@ -71,7 +72,7 @@ class Manager:
                 continue
                 
             self.shows.append(show)
-
+            
             # If archives are disabled globally, or for this show - skip 
             if not self.preferences.create_archive or not show.archive:
                 continue
@@ -89,6 +90,7 @@ class Manager:
             return None
 
         # For each show in the Manager, set series IDs
+        log.info(f"Starting to set show ID's..")
         for show in tqdm(self.shows + self.archives, desc='Setting series IDs',
                          **TQDM_KWARGS):
             # Select interfaces based on what's enabled
@@ -102,6 +104,7 @@ class Manager:
         """
 
         # Read source files for Show objects
+        log.info(f'Starting to read source files..')
         for show in tqdm(self.shows, desc='Reading source files',**TQDM_KWARGS):
             show.read_source()
             show.find_multipart_episodes()
@@ -123,6 +126,7 @@ class Manager:
 
         # For each show in the Manager, look for new episodes using any of the
         # possible interfaces
+        log.info(f'Starting to add new episodes..')
         for show in tqdm(self.shows + self.archives, desc='Adding new episodes',
                          **TQDM_KWARGS):
             show.add_new_episodes(
@@ -139,6 +143,7 @@ class Manager:
             return None
 
         # For each show in the Manager, set IDs for every episode
+        log.info(f"Starting to set episode ID's..")
         for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
             # Update progress bar
             pbar.set_description(f'Selecting episode IDs for '
@@ -157,6 +162,7 @@ class Manager:
             return None
 
         # For each show in the Manager, add translation
+        log.info(f'Starting to add translations..')
         for show in (pbar := tqdm(self.shows, **TQDM_KWARGS)):
             pbar.set_description(f'Adding translations for '
                                  f'"{show.series_info.short_name}"')
@@ -171,6 +177,7 @@ class Manager:
             return None
 
         # For each show in the Manager, download a logo
+        log.info(f'Starting to download logos..')
         for show in (pbar := tqdm(self.shows + self.archives,
                                   desc='Downloading logos', **TQDM_KWARGS)):
             show.download_logo(self.tmdb_interface)
@@ -183,7 +190,8 @@ class Manager:
         """
 
         # Go through each show and download source images
-        for show in (pbar := tqdm(self.shows, **TQDM_KWARGS)):
+        log.info(f'Starting to select source images..')
+        for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
             # Update progress bar
             pbar.set_description(f'Selecting sources for '
                                  f'"{show.series_info.short_name}"')
@@ -199,6 +207,7 @@ class Manager:
         """
 
         # Go through every show in the Manager, create cards
+        log.info(f'Starting to create missing title cards..')
         for show in (pbar := tqdm(self.shows, **TQDM_KWARGS)):
             # Update progress bar
             pbar.set_description(f'Creating Title Cards for '
@@ -212,6 +221,7 @@ class Manager:
         """Create season posters for all shows known to this Manager."""
 
         # For each show in the Manager, create its posters
+        log.info(f'Starting to create season posters..')
         for show in (pbar := tqdm(self.shows + self.archives,
                                  desc='Creating season posters',**TQDM_KWARGS)):
             show.create_season_posters()
@@ -229,6 +239,7 @@ class Manager:
             return None
 
         # Go through each show in the Manager, update Plex
+        log.info(f'Starting to update Plex..')
         for show in (pbar := tqdm(self.shows, **TQDM_KWARGS)):
             # Update progress bar
             pbar.set_description(f'Updating Plex for '
@@ -246,6 +257,8 @@ class Manager:
         if not self.preferences.create_archive:
             return None
 
+        # Update each archive
+        log.info(f'Starting to update archives..')
         for show_archive in (pbar := tqdm(self.archives, **TQDM_KWARGS)):
             # Update progress bar
             pbar.set_description(f'Updating archive for '
@@ -266,6 +279,7 @@ class Manager:
             return None
 
         # Go through each archive and create summaries
+        log.info(f'Starting to create summaries..')
         for show_archive in (pbar := tqdm(self.archives, **TQDM_KWARGS)):
             # Update progress bar
             pbar.set_description(f'Creating ShowSummary for "'

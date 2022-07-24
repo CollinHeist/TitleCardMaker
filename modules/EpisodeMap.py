@@ -279,3 +279,4 @@ class EpisodeMap:
         return self.__get_value(episode_info, 'applies_to',
                                 lambda *_, **__: self.DEFAULT_APPLIES_TO)
         
+        

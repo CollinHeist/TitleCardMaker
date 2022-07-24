@@ -734,6 +734,16 @@ class TMDbInterface(WebInterface):
 
 
     @staticmethod
+    def unblacklist(series_info: SeriesInfo) -> None:
+        """Remove all blacklist entries for the given series."""
+
+        blacklist = TinyDB(TMDbInterface.__BLACKLIST_DB)
+        removed = blacklist.remove(where('series') == series_info.full_name)
+
+        log.info(f'Unblacklisted {len(removed)} queries')
+
+
+    @staticmethod
     def delete_blacklist() -> None:
         """Delete the blacklist file referenced by this class."""
 

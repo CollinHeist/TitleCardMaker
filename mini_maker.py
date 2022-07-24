@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from os import environ
 
 try:
+    from modules.CollectionPosterMaker import CollectionPosterMaker
     from modules.Debug import log
     from modules.GenreMaker import GenreMaker
     from modules.PreferenceParser import PreferenceParser
@@ -116,6 +117,51 @@ title_card_group.add_argument(
     metavar='SCALE%',
     help='Specify the font black stroke scale (as percentage)')
     
+# Argument group for collection posters
+collection_group = parser.add_argument_group(
+    'Collection Posters',
+    'Manual collection poster creation')
+collection_group.add_argument(
+    '--collection-poster',
+    type=Path,
+    nargs=2,
+    default=SUPPRESS,
+    metavar=('SOURCE', 'DESTINATION'),
+    help='Create a collection poster with the given files')
+collection_group.add_argument(
+    '--collection-title',
+    type=str,
+    nargs='+',
+    default='',
+    metavar=('TITLE_LINE'),
+    help='Collection title for this collection poster')
+collection_group.add_argument(
+    '--collection-font',
+    type=Path,
+    default=CollectionPosterMaker.FONT,
+    metavar='FONT',
+    help='Custom font for the collection text of the specified poster')
+collection_group.add_argument(
+    '--collection-font-color',
+    type=str,
+    default=CollectionPosterMaker.FONT_COLOR,
+    metavar='COLOR',
+    help='A custom font color for this collection poster')
+collection_group.add_argument(
+    '--collection-font-size',
+    type=str,
+    default='100%',
+    metavar='SCALE%',
+    help='A font scale (as percentage) for this collection poster')
+collection_group.add_argument(
+    '--omit-collection',
+    action='store_true',
+    help='Omit the "COLLECTION" text from this collection poster')
+collection_group.add_argument(
+    '--collection-borderless',
+    action='store_true',
+    help='Omit the white border from this collection poster')
+
 # Argument group for genre cards
 genre_group = parser.add_argument_group(
     'Genre Cards',
@@ -130,7 +176,7 @@ genre_group.add_argument(
 genre_group.add_argument(
     '--borderless',
     action='store_true',
-    help='Make the specified Genre Card transparent')
+    help='Omit the white border from this genre card')
 genre_group.add_argument(
     '--genre-card-batch',
     type=Path,
@@ -155,7 +201,14 @@ show_summary_group.add_argument(
     type=str,
     default=ShowSummary.BACKGROUND_COLOR,
     metavar='COLOR',
-    help='Specify background color for the created ShowSummary')
+    help='Specify background color for the created show summary')
+show_summary_group.add_argument(
+    '--created-by',
+    type=str,
+    default=None,
+    metavar='CREATOR',
+    help='Specify a custom username for the "Created by .." text on the created'
+         ' show sumamry')
 
 # Argument group for season posters
 season_poster_group = parser.add_argument_group(
@@ -183,7 +236,7 @@ season_poster_group.add_argument(
 season_poster_group.add_argument(
     '--season-font-color',
     default=SeasonPoster.SEASON_TEXT_COLOR,
-    metavar='#HEX',
+    metavar='COLOR',
     help='A custom font color for this season poster')
 season_poster_group.add_argument(
     '--season-font-size',
@@ -230,7 +283,7 @@ if hasattr(args, 'title_card'):
         args.font = Path(str(CardClass.TITLE_FONT))
     if args.font_color == '__default':
         args.font_color = CardClass.TITLE_COLOR
-
+    
     # Create the given card
     CardClass(
         episode_text=args.episode,
@@ -250,7 +303,20 @@ if hasattr(args, 'title_card'):
         **arbitrary_data,
     ).create()
 
-# Execute genre card related options
+# Create Colletion Poster
+if hasattr(args, 'collection_poster'):
+    CollectionPosterMaker(
+        source=args.collection_poster[0],
+        output=args.collection_poster[1],
+        title='\n'.join(args.collection_title),
+        font=args.collection_font,
+        font_color=args.collection_font_color,
+        font_size=float(args.collection_font_size[:-1])/100.0,
+        omit_collection=args.omit_collection,
+        borderless=args.collection_borderless,
+    ).create()
+
+# Create Genre Poster
 if hasattr(args, 'genre_card'):
     GenreMaker(
         source=Path(args.genre_card[0]),
@@ -289,7 +355,7 @@ if hasattr(args, 'show_summary'):
     show = Show(args.show_summary[1], args.show_summary[0], episodes)
 
     # Create ShowSummary
-    ShowSummary(show, args.background_color).create()
+    ShowSummary(show, args.background_color, args.created_by).create()
 
 if hasattr(args, 'season_poster'):
     SeasonPoster(

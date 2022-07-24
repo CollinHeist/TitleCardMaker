@@ -15,7 +15,7 @@ plexapi = "==4.11.2"
 tenacity = "*"
 tinydb = "*"
 schedule = "*"
-tmdbapis = "==1.0.5"
+tmdbapis = "==1.0.6"
 
 [dev-packages]
 
