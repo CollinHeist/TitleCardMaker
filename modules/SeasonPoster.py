@@ -87,10 +87,11 @@ class SeasonPoster(ImageMaker):
             f'-compose Darken',                         # Darken mode
             f'-composite',                              # Merge images
             f'\( "{self.logo.resolve()}"',          # Add logo
-            f'-resize 1460x \)',                        # Fit to 730px wide
             f'-gravity south',                          # Begin merge placement
             f'-compose Atop',       
             f'-geometry +0+356',                        # Offset 178px from base
+            f'-resize 1460x',                           # Fit to 1460px wide
+            f'-resize x750\> \)',                       # Constrain to 750px tall
             f'-composite',                              # Merge images
             f'-font "{self.font.resolve()}"',       # Write season text
             f'-fill "{self.font_color}"',
