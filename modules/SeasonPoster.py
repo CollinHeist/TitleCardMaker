@@ -1,3 +1,4 @@
+from cgitb import text
 from pathlib import Path
 
 from modules.Debug import log
@@ -23,24 +24,27 @@ class SeasonPoster(ImageMaker):
     GRADIENT_OVERLAY = REF_DIRECTORY / 'gradient.png'
 
     __slots__ = ('source', 'destination', 'logo', 'season_text', 'font',
-                 'font_color', 'font_size', 'font_kerning')
+                 'font_color', 'font_size', 'font_kerning', 'top_placement')
 
 
     def __init__(self, source: Path, logo: Path, destination: Path, 
                  season_text: str, font: Path=SEASON_TEXT_FONT,
                  font_color: str=SEASON_TEXT_COLOR, font_size: float=1.0,
-                 font_kerning: float=1.0) -> None:
+                 font_kerning: float=1.0, top_placement: bool=False) -> None:
         """
-        Constructs a new instance.
-        
-        :param      source:         The source file.
-        :param      logo:           The logo file.
-        :param      destination:    The destination of this poster.
-        :param      season_text:    The season text.
-        :param      font:           Font file for season text.
-        :param      font_color:     Font color for season text.
-        :param      font_size:      Scalar of season text.
-        :param      kerning:        Scalar of season text kerning.
+        Initialize this SeasonPoster object. This stores these attributes.
+
+        Args:
+            source: Path to the source image to use for the poster.
+            logo: Path to the logo file to use on the poster.
+            destination: Path to the desination file to write the poster at.
+            season_text: Season text to utilize on the poster.
+            font: Path to the font file to use for the season text.
+            font_color: Font color to use for the season text.
+            font_size: Font size scalar to use for the season text.
+            font_kerning: Font kerning scalar to use for the season text.
+            top_placement: Whether to place the logo and season text on the top
+                of the created poster (True), or the bottom (False).
         """
 
         # Initialize parent object
@@ -59,6 +63,30 @@ class SeasonPoster(ImageMaker):
         self.font_color = font_color
         self.font_size = font_size
         self.font_kerning = font_kerning
+        self.top_placement = top_placement
+
+
+    def __get_logo_height(self, logo: Path) -> int:
+        """
+        Get the logo height of the logo after it will be resized.
+
+        Args:
+            logo: Path to the logo being resized.
+
+        Returns:
+            Integer height (in pixels) of the resized logo.
+        """
+        
+        command = ' '.join([
+            f'convert',
+            f'"{logo.resolve()}"',
+            f'-resize 1460x',
+            f'-resize x750\>',
+            f'-format "%[h]"',
+            f'info:',
+        ])
+
+        return int(self.image_magick.run_get_output(command))
 
 
     def create(self) -> None:
@@ -75,29 +103,50 @@ class SeasonPoster(ImageMaker):
         font_size = 20.0 * self.font_size
         kerning = 30 * self.font_kerning
 
+        # How to add gradient (rotated if using top placement)
+        if self.top_placement:
+            add_gradient = [
+                f'\( "{self.GRADIENT_OVERLAY.resolve()}"',
+                f'-rotate 180 \)',
+            ]
+        else:
+            add_gradient = [f'"{self.GRADIENT_OVERLAY.resolve()}"']
+
+        # Top/bottom placement determines gravity and offsets
+        merge_gravity = 'north' if self.top_placement else 'south'
+
+        # Determine logo placement offset depending on  orientation
+        logo_offset = '+212' if self.top_placement else '+356'
+
+        # Determine season text offset depending on orientation
+        if self.top_placement:
+            text_offset = 212 + self.__get_logo_height(self.logo) + 60
+        else:
+            text_offset = 212
+
         # Create the command
         command = ' '.join([
             f'convert',
             f'-density 300',
             f'"{self.source.resolve()}"',           # Resize input image
-            f'-gravity center',         
+            f'-gravity center',                         # Crop around center
             f'-resize "{self.SEASON_POSTER_SIZE}^"',    # Force into 2000x3000
             f'-extent "{self.SEASON_POSTER_SIZE}"',
-            f'"{self.GRADIENT_OVERLAY.resolve()}"', # Apply gradient
+            *add_gradient,                          # Apply gradient
             f'-compose Darken',                         # Darken mode
             f'-composite',                              # Merge images
             f'\( "{self.logo.resolve()}"',          # Add logo
-            f'-gravity south',                          # Begin merge placement
-            f'-compose Atop',       
-            f'-geometry +0+356',                        # Offset 178px from base
             f'-resize 1460x',                           # Fit to 1460px wide
-            f'-resize x750\> \)',                       # Constrain to 750px tall
+            f'-resize x750\> \)',                       # Limit to 750px tall
+            f'-gravity {merge_gravity}',                # Begin logo merge
+            f'-compose Atop',
+            f'-geometry +0{logo_offset}',               # Offset from top/bottom
             f'-composite',                              # Merge images
             f'-font "{self.font.resolve()}"',       # Write season text
             f'-fill "{self.font_color}"',
             f'-pointsize {font_size}',
             f'-kerning {kerning}',
-            f'-annotate +0+212 "{self.season_text}"',
+            f'-annotate +0+{text_offset} "{self.season_text}"',
             f'"{self.destination.resolve()}"',
         ])
 

@@ -250,6 +250,10 @@ season_poster_group.add_argument(
     default='100%',
     metavar='SCALE%',
     help='Specify the font kerning scale (as percentage) for this season poster')
+season_poster_group.add_argument(
+    '--top-placement',
+    action='store_true',
+    help='Create the season poster with the logo and season text at the top')
          
 # Parse given arguments
 args, unknown = parser.parse_known_args()
@@ -367,6 +371,7 @@ if hasattr(args, 'season_poster'):
         font_color=args.season_font_color,
         font_size=float(args.season_font_size[:-1])/100.0,
         font_kerning=float(args.season_font_kerning[:-1])/100.0,
+        top_placement=args.top_placement,
     ).create()
 
     
