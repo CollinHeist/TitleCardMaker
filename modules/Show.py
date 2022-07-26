@@ -628,7 +628,12 @@ class Show(YamlReader):
         """
 
         # Update watched statuses via Plex
-        if self.library is None or plex_interface is None or self.__is_archive:
+        if self.__is_archive:
+            # If archiving, assume all episodes are watched
+            [episode.update_statuses(True, self.watched_style,
+                                     self.unwatched_style)
+             for _, episode in self.episodes.items()]
+        elif self.library is None or plex_interface is None:
             # If no PlexInterface, assume all episodes are unwatched
             [episode.update_statuses(False, self.watched_style,
                                      self.unwatched_style)
