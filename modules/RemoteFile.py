@@ -23,7 +23,8 @@ class RemoteFile:
     TEMP_DIR = Path(__file__).parent / '.objects'
 
     """List of assets that have been loaded already"""
-    LOADED = TinyDB(TEMP_DIR / 'remote_assets.json', create_dirs=True)
+    LOADED_FILE = TEMP_DIR / 'remote_assets.json'
+    LOADED = TinyDB(LOADED_FILE, create_dirs=True)
 
 
     def __init__(self, username: str, filename: str) -> None:
@@ -112,3 +113,15 @@ class RemoteFile:
         with self.local_file.open('wb') as file_handle:
             file_handle.write(content)
 
+    @staticmethod
+    def reset_loaded_database() -> None:
+        """
+        Reset (clear) this class's database of loaded remote files.
+        """
+
+        try:
+            RemoteFile.LOADED.truncate()
+        except Exception:
+            # Misformed databases can cause read errors
+            RemoteFile.LOADED_FILE.unlink(missing_ok=True)
+            pass

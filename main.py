@@ -156,7 +156,7 @@ def run():
     read_preferences()
 
     # Reset previously loaded assets
-    RemoteFile.LOADED.truncate()
+    RemoteFile.reset_loaded_database()
 
     # Create Manager, run, and write missing report
     try:
