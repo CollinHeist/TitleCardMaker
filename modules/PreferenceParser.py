@@ -66,6 +66,7 @@ class PreferenceParser(YamlReader):
         self.episode_data_source = 'sonarr'
         self.validate_fonts = True
         self.season_folder_format = 'Season {season}'
+        self.sync_specials = True
         self.archive_directory = None
         self.create_archive = False
         self.archive_all_variations = True
@@ -82,7 +83,6 @@ class PreferenceParser(YamlReader):
         self.use_sonarr = False
         self.sonarr_url = None
         self.sonarr_api_key = None
-        self.sonarr_sync_specials = True
         self.use_tmdb = False
         self.tmdb_api_key = None
         self.tmdb_retry_count = TMDbInterface.BLACKLIST_THRESHOLD
@@ -155,12 +155,6 @@ class PreferenceParser(YamlReader):
             else:
                 self.card_type = value
 
-        if (value := self._get('options', 'filename_format', type_=str)) !=None:
-            if not TitleCard.validate_card_format_string(value):
-                self.valid = False
-            else:
-                self.card_filename_format = value
-
         if (value := self._get('options', 'card_extension', type_=str)) != None:
             extension = ('' if value[0] == '.' else '.') + value
             if extension not in ImageMaker.VALID_IMAGE_EXTENSIONS:
@@ -168,6 +162,12 @@ class PreferenceParser(YamlReader):
                 self.valid = False
             else:
                 self.card_extension = extension
+
+        if (value := self._get('options', 'filename_format', type_=str)) !=None:
+            if not TitleCard.validate_card_format_string(value):
+                self.valid = False
+            else:
+                self.card_filename_format = value
 
         if (value := self._get('options',
                                'image_source_priority', type_=str)) is not None:
@@ -193,6 +193,9 @@ class PreferenceParser(YamlReader):
         if (value := self._get('options', 'season_folder_format',
                                type_=str)) is not None:
             self.season_folder_format = value
+
+        if (value := self._get('options', 'sync_specials', type_=bool)) != None:
+            self.sync_specials = value
 
         if (value := self._get('archive', 'path', type_=Path)) != None:
             self.archive_directory = value
@@ -258,9 +261,6 @@ class PreferenceParser(YamlReader):
                 self.sonarr_url = self._get('sonarr', 'url', type_=str)
                 self.sonarr_api_key = self._get('sonarr', 'api_key', type_=str)
                 self.use_sonarr = True
-
-        if (value := self._get('sonarr', 'sync_specials', type_=bool)) != None:
-            self.sonarr_sync_specials = value
 
         if (value := self._get('tmdb', 'api_key', type_=str)) != None:
             self.tmdb_api_key = value

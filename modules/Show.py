@@ -96,7 +96,7 @@ class Show(YamlReader):
         self.archive = self.preferences.create_archive
         self.episode_data_source = self.preferences.episode_data_source
         self.sonarr_sync = self.preferences.use_sonarr
-        self.sync_specials = self.preferences.sonarr_sync_specials
+        self.sync_specials = self.preferences.sync_specials
         self.tmdb_sync = self.preferences.use_tmdb
         self.watched_style = self.preferences.global_watched_style
         self.unwatched_style = self.preferences.global_unwatched_style
