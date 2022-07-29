@@ -18,7 +18,7 @@ class YamlReader(ABC):
         self.__log = log_function
 
 
-    def _get(self, *attributes, type_: type=None):
+    def _get(self, *attributes, type_: type=None, default=None):
         """
         Get the value specified by the given attributes/sub-attributes of YAML,
         optionally converting to the given type. Log invalidity and return None
@@ -27,6 +27,7 @@ class YamlReader(ABC):
         :param      attributes: Any number of nested attributes to get value of.
         :param      type_:      Optional callable (i.e.) type to call on
                                 specified value before returning
+        :param      default:    Default value to return if unspecified.
         
         :returns:   Value located at the given attribute specification, None
                     if DNE or cannot be typed.
@@ -50,10 +51,11 @@ class YamlReader(ABC):
                 attrib_string = '", "'.join(attributes)
                 self.__log(f'Value of "{attrib_string}" is invalid')
                 self.valid = False
-                return None
+                
+                return default
         else:
             # No value specified, return None
-            return None
+            return default
 
 
     def _is_specified(self, *attributes) -> bool:

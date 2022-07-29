@@ -2,12 +2,12 @@ from pathlib import Path
 from re import findall
 
 from tqdm import tqdm
-from yaml import safe_load
 
 from modules.Debug import log, TQDM_KWARGS
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.ImageMaker import ImageMaker
 from modules.PlexInterface import PlexInterface
+from modules.SeriesYamlWriter import SeriesYamlWriter
 from modules.Show import Show
 from modules.ShowSummary import ShowSummary
 from modules.Template import Template
@@ -80,9 +80,14 @@ class PreferenceParser(YamlReader):
         self.integrate_with_pmm_overlays = False
         self.global_watched_style = 'unique'
         self.global_unwatched_style = 'unique'
+        self.plex_yaml_writer = None
+        self.plex_yaml_update_args = {'filter_libraries': []}
         self.use_sonarr = False
         self.sonarr_url = None
         self.sonarr_api_key = None
+        self.sonarr_yaml_writer = None
+        self.sonarr_yaml_update_args = {'plex_libraries': {}, 'filter_tags': [],
+                                        'monitored_only': False}
         self.use_tmdb = False
         self.tmdb_api_key = None
         self.tmdb_retry_count = TMDbInterface.BLACKLIST_THRESHOLD
@@ -251,6 +256,18 @@ class PreferenceParser(YamlReader):
                                type_=bool)) is not None:
             self.integrate_with_pmm_overlays = value
 
+        if self._is_specified(*(attrs := ('plex', 'sync')), 'file'):
+            self.plex_yaml_writer = SeriesYamlWriter(
+                self._get(*attrs, 'file', type_=Path),
+                self._get(*attrs, 'mode', type_=str, default='sync'),
+                self._get(*attrs, 'compact_mode', type_=bool, default=True),
+                self._get(*attrs, 'volumes', default={}),
+            )
+            self.plex_yaml_update_args = {
+                'filter_libraries': self._get('plex', 'sync', 'libraries',
+                                              default=[]),
+            }
+
         if self._is_specified('sonarr'):
             if (not self._is_specified('sonarr', 'url')
                 or not self._is_specified('sonarr', 'api_key')):
@@ -262,6 +279,21 @@ class PreferenceParser(YamlReader):
                 self.sonarr_api_key = self._get('sonarr', 'api_key', type_=str)
                 self.use_sonarr = True
 
+        if self._is_specified(*(attrs := ('sonarr', 'sync')), 'file'):
+            self.sonarr_yaml_writer = SeriesYamlWriter(
+                self._get(*attrs, 'file', type_=Path),
+                self._get(*attrs, 'mode', type_=str, default='sync'),
+                self._get(*attrs, 'compact_mode', type_=bool, default=True),
+                self._get(*attrs, 'volumes', default={}),
+            )
+            self.sonarr_yaml_update_args = {
+                'plex_libraries': self._get('sonarr', 'sync', 'plex_libraries',
+                                            default={}),
+                'filter_tags': self._get('sonarr', 'sync', 'tags', default=[]),
+                'monitored_only': self._get('sonarr', 'sync', 'monitored_only',
+                                            default=False),
+            }
+        
         if (value := self._get('tmdb', 'api_key', type_=str)) != None:
             self.tmdb_api_key = value
             self.use_tmdb = True

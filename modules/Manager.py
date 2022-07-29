@@ -52,6 +52,24 @@ class Manager:
         self.archives = []
 
 
+    def update_series_files(self) -> None:
+        """Update the series YAML files for either Sonarr or Plex."""
+
+        # If neither Sonarr or Plex are enabled, skip
+        if not self.preferences.use_sonarr and not self.preferences.use_plex:
+            return None
+
+        if self.preferences.sonarr_yaml_writer is not None:
+            self.preferences.sonarr_yaml_writer.update_from_sonarr(
+                **self.preferences.sonarr_yaml_update_args
+            )
+
+        if self.preferences.plex_yaml_writer is not None:
+            self.preferences.plex_yaml_writer.update_from_plex(
+                **self.preferences.plex_update_args,
+            )
+
+
     def create_shows(self) -> None:
         """
         Create Show and ShowArchive objects for each series YAML files known to
@@ -86,7 +104,7 @@ class Manager:
         """Set the series ID's of each Show known to this Manager"""
 
         # If neither Sonarr nor TMDb are enabled, skip
-        if not self.sonarr_interface and not self.tmdb_interface:
+        if not self.preferences.use_sonarr and not self.preferences.use_tmdb:
             return None
 
         # For each show in the Manager, set series IDs
@@ -120,8 +138,8 @@ class Manager:
         """Add any new episodes to this Manager's shows."""
 
         # If Sonarr, Plex, and TMDb are disabled, exit
-        if (not self.sonarr_interface and not self.plex_interface
-            and not self.tmdb_interface):
+        if (not self.preferences.use_sonarr and not self.preferences.use_tmdb
+            and not self.preferences.use_plex):
             return None
 
         # For each show in the Manager, look for new episodes using any of the
@@ -138,8 +156,8 @@ class Manager:
         """Set all episode ID's for all shows known to this manager."""
 
         # If Sonarr, Plex, and TMDb are disabled, exit
-        if (not self.sonarr_interface and not self.plex_interface
-            and not self.tmdb_interface):
+        if (not self.preferences.use_sonarr and not self.preferences.use_tmdb
+            and not self.preferences.use_plex):
             return None
 
         # For each show in the Manager, set IDs for every episode
@@ -158,7 +176,7 @@ class Manager:
         """Query TMDb for all translated episode titles (if indicated)."""
 
         # If the TMDbInterface isn't enabled, skip
-        if not self.tmdb_interface:
+        if not self.preferences.use_tmdb:
             return None
 
         # For each show in the Manager, add translation
@@ -173,7 +191,7 @@ class Manager:
         """Download logo files for all shows known to this manager."""
 
         # If the TMDbInterface isn't enabled, skip
-        if not self.tmdb_interface:
+        if not self.preferences.use_tmdb:
             return None
 
         # For each show in the Manager, download a logo
@@ -188,6 +206,10 @@ class Manager:
         Select and download the source images for every show known to this
         manager. For each show, this called Show.select_source_images().
         """
+
+        # If Plex and TMDb aren't enabled, skip
+        if not self.preferences.use_plex and not self.preferences.use_tmdb:
+            return None
 
         # Go through each show and download source images
         log.info(f'Starting to select source images..')
@@ -234,7 +256,7 @@ class Manager:
         Show.update_plex().
         """
 
-        # If Plex isn't enabled, return
+        # If Plex isn't enabled, skip
         if not self.preferences.use_plex:
             return None
 
@@ -291,6 +313,7 @@ class Manager:
     def run(self) -> None:
         """Run the manager and exit."""
         
+        self.update_series_files()
         self.create_shows()
         self.set_show_ids()
         self.read_show_source()

@@ -223,6 +223,88 @@ class PlexInterface:
             return None
 
 
+    def get_library_paths(self, filter_libraries: list[str]=[]) ->dict[str:str]:
+        """
+        Get all libraries and their associated base directories.
+
+        Args:
+            filer_libraries: List of library names to filter the return by.
+
+        Returns:
+            Dictionary whose keys are the library names, and whose values are
+            the paths to that library's base directory. If the library has
+            multiple directories, the first one is returned.
+        """
+
+        # Go through every library in this server
+        all_libraries = {}
+        for library in self.__server.library.sections():
+            # Skip non-TV libraries
+            if library.type != 'show':
+                continue
+
+            # If filtering, skip unspecified libraries
+            if (len(filter_libraries) > 0
+                and library.title not in filter_libraries):
+                continue
+
+            # Add library's corresponding (first) path to the dictionary
+            all_libraries[library.title] = library.locations[0]
+
+        return all_libraries
+    
+    def get_all_series(self, filter_libraries: list[str]=[]
+                       ) -> list[tuple[SeriesInfo, str, str]]: 
+        """
+        Get all series within Plex, as filtered by the given libraries.
+
+        Args:
+            filter_libraries: Optional list of library names to filter returned
+                list by. If provided, only series that are within a given
+                library are returned.
+
+        Returns:
+           List of tuples whose elements are the SeriesInfo of the series, the 
+            path (string) it is located, and its corresponding library name.
+        """
+
+        # Go through every library in this server
+        all_series = []
+        for library in self.__server.library.sections():
+            # Skip non-TV libraries
+            if library.type != 'show':
+                continue
+
+            # If filtering, skip unspecified libraries
+            if (len(filter_libraries) > 0
+                and library.title not in filter_libraries):
+                continue
+
+            # Get all Shows in this library
+            for show in library.all():
+                # Get all ID's for this series
+                ids = {}
+                for guid in show.guids:
+                    for id_type in ('imdb', 'tmdb', 'tvdb'):
+                        if (prefix := f'{id_type}://') in guid.id:
+                            ids[f'{id_type}_id'] = guid.id[len(prefix):]
+                            break
+
+                # Create SeriesInfo object for this show
+                series_info = SeriesInfo(
+                    show.title,
+                    show.year,
+                    **ids,
+                )
+
+                # Add to returned list
+                all_series.append(
+                    (series_info, show.locations[0], library.title)
+                )
+
+        return all_series
+    
+    
     def get_all_episodes(self, library_name: str,
                          series_info: SeriesInfo) -> list[EpisodeInfo]:
         """
@@ -507,7 +589,7 @@ class PlexInterface:
             try:
                 self.__retry_upload(pl_episode, episode.destination.resolve())
                 loaded_count += 1
-
+                
                 # If overlay integration is enabled, remove "Overlay" label
                 if self.preferences.integrate_with_pmm_overlays:
                     pl_episode.removeLabel(['Overlay'])

@@ -28,10 +28,14 @@ class SonarrInterface(WebInterface):
 
     def __init__(self, url: str, api_key: str) -> None:
         """
-        Constructs a new instance of an interface to Sonarr.
-        
-        :param      url:        The API url communicating with Sonarr.
-        :param      api_key:    The api key for API requests.
+        Construct a new instance of an interface to Sonarr.
+
+        Args:
+            url (str): The API url communicating with Sonarr.
+            api_key (str): The API key for API requests.
+
+        Raises:
+            SystemExit: Invalid Sonarr URL/API key provided.
         """
 
         # Initialize parent WebInterface 
@@ -129,12 +133,65 @@ class SonarrInterface(WebInterface):
         self.__warned.append(series_info.full_name)
 
 
-    def __set_ids(self, series_info: SeriesInfo) -> None:
+    def get_all_series(self, filter_tags: list[str]=[],
+                       monitored_only: bool=False)->list[tuple[SeriesInfo,str]]:
         """
-        Set the Sonarr series ID and the TVDb ID for the given SeriesInfo
-        object.
+        Get a list of tuples of series and their paths within Sonarr. The list
+        can be filtered by a list of tags, any series with any of those tags
+        are returned.
+
+        :param      filter_tags:    Optional list of tag NAMES to filter the
+                                    returned list by. If provided, a series must
+                                    have at least one of the given tags.
         
-        :param      series_info:    SeriesInfo to modify.
+        :returns:   List of tuples. The tuple contains the SeriesInfo object
+                    for the series, and the Path to the media as reported by
+                    Sonarr.
+        """
+
+        # Construct GET arguments
+        all_series = self._get(f'{self.url}series', self.__standard_params)
+
+        # Get filter tags if indicated
+        filter_tag_ids = []
+        if len(filter_tags) > 0:
+            # Request all Sonarr tags
+            all_tags = self._get(f'{self.url}tag', self.__standard_params)
+            filter_tag_ids = [tag['id'] for tag in all_tags
+                              if tag['label'] in filter_tags]
+
+        # Go through each series in Sonarr
+        series = []
+        for show in all_series:
+            # Skip if monitored only and show isn't monitored
+            if monitored_only and not show['monitored']:
+                continue
+
+            # Skip show if tag isn't in filter (and filter is enabled)
+            if (len(filter_tag_ids) > 0
+                and not any(tag in filter_tag_ids for tag in show['tags'])):
+                    continue
+
+            # Construct SeriesInfo object for this show
+            series_info = SeriesInfo(
+                show['title'],
+                show['year'],
+                imdb_id=show.get('imdbId'),
+                sonarr_id=show.get('id'),
+                tvdb_id=show.get('tvdbId'),
+            )
+            
+            # Add to returned list
+            series.append((series_info, show['path']))
+
+        return series
+
+
+    def set_series_ids(self, series_info: SeriesInfo) -> None:
+        """
+        Set the TVDb ID for the given SeriesInfo object.
+
+        :param      series_info:    SeriesInfo to update.
         """
 
         # Match priority is Sonarr ID > TVDb ID > Series name
@@ -147,26 +204,12 @@ class SonarrInterface(WebInterface):
         elif (ids := self.__series_ids.get(series_info.full_match_name)):
             pass
         else:
+            self.__warn_missing_series(series_info)
             return None
 
         # Set ID's for this series
         series_info.set_sonarr_id(ids['sonarr_id'])
         series_info.set_tvdb_id(ids['tvdb_id'])
-
-
-    def set_series_ids(self, series_info: SeriesInfo) -> None:
-        """
-        Set the TVDb ID for the given SeriesInfo object.
-
-        :param      series_info:    SeriesInfo to update.
-        """
-
-        # Set the Sonarr ID for this series
-        self.__set_ids(series_info)
-
-        # If no ID was returned, error and return
-        if series_info.sonarr_id is None:
-            self.__warn_missing_series(series_info)
 
 
     def get_all_episodes(self, series_info: SeriesInfo,
@@ -264,48 +307,5 @@ class SonarrInterface(WebInterface):
             padding = len(f'{show["id"]} : ')
             titles = f'\n{" " * padding}'.join([main_title] + alt_titles)
             print(f'{show["id"]} : {titles}')
-
-
-    def get_series(self, filter_tags: list=[]) -> [(SeriesInfo, Path)]:
-        """
-        Get a list of tuples of series and their paths within Sonarr. The list
-        can be filtered by a list of tags, any series with any of those tags
-        are returned.
-
-        :param      filter_tags:    Optional list of tag NAMES to filter the
-                                    returned list by. If provided, a series must
-                                    have at least one of the given tags.
-        
-        :returns:   List of tuples. The tuple contains the SeriesInfo object
-                    for the series, and the Path to the media as reported by
-                    Sonarr.
-        """
-
-        # Construct GET arguments
-        all_series = self._get(f'{self.url}series', self.__standard_params)
-
-        # Get filter tags if indicated
-        filter_tag_ids = []
-        if len(filter_tags) > 0:
-            # Request all Sonarr tags
-            all_tags = self._get(f'{self.url}tag', self.__standard_params)
-            filter_tag_ids = [tag['id'] for tag in all_tags
-                              if tag['label'] in filter_tags]
-
-        # Go through each series in Sonarr
-        series = []
-        for show in all_series:
-            # Skip show if tag isn't in filter (and filter is enabled)
-            if (len(filter_tag_ids) > 0
-                and not any(tag in filter_tag_ids for tag in show['tags'])):
-                    continue
-
-            # Construct SeriesInfo object for this show
-            series_info = SeriesInfo(show['title'], show['year'])
-            series_info.set_tvdb_id(show['tvdbId'])
-            
-            series.append((series_info, Path(show['path'])))
-
-        return series
 
         
