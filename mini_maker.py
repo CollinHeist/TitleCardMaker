@@ -197,11 +197,11 @@ show_summary_group.add_argument(
     metavar=('IMAGE_DIRECTORY', 'LOGO'),
     help='Create a show summary for the given directory')
 show_summary_group.add_argument(
-    '--background-color',
+    '--background',
     type=str,
     default=ShowSummary.BACKGROUND_COLOR,
-    metavar='COLOR',
-    help='Specify background color for the created show summary')
+    metavar='COLOR_OR_IMAGE',
+    help='Specify background color or image for the created show summary')
 show_summary_group.add_argument(
     '--created-by',
     type=str,
@@ -359,7 +359,7 @@ if hasattr(args, 'show_summary'):
     show = Show(args.show_summary[1], args.show_summary[0], episodes)
 
     # Create ShowSummary
-    ShowSummary(show, args.background_color, args.created_by).create()
+    ShowSummary(show, args.background, args.created_by).create()
 
 if hasattr(args, 'season_poster'):
     SeasonPoster(

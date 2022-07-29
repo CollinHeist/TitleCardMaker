@@ -34,27 +34,30 @@ class ShowSummary(ImageMaker):
     __RESIZED_LOGO_PATH = ImageMaker.TEMP_DIR / 'resized_logo.png'
     __LOGO_AND_HEADER_PATH = ImageMaker.TEMP_DIR / 'logo_and_header.png'
     __CREATED_BY_TEMPORARY_PATH = ImageMaker.TEMP_DIR / 'user_created_by.png'
+    __TRANSPARENT_MONTAGE = ImageMaker.TEMP_DIR / 'transparent_montage.png'
     
     """Path to the 'created by' image to add to all show summaries"""
     __CREATED_BY_PATH = REF_DIRECTORY / 'created_by.png'
 
 
-    __slots__ = ('show', 'logo', 'output', 'created_by', 'background_color',
-                 'inputs', 'number_rows')
+    __slots__ = ('show', 'logo', 'output', 'created_by', 'background',
+                 '__background_is_image', 'inputs', 'number_rows')
 
 
-    def __init__(self, show: 'Show', background_color: str=BACKGROUND_COLOR,
+    def __init__(self, show: 'Show', background: str=BACKGROUND_COLOR,
                  created_by: str=None) -> None:
         """
         Constructs a new instance of this object. This initializes a
         ImageMagickInterface object, and searches the provided show object
         for existing title cards to use in `create()`.
         
-        :param      show:               The Show object of which to create a
-                                        summary for.
-        :param      background_color:   Background color to use for the summary.
-        :param      created_by:         String to use in custom "Created by .."
-                                        tag at the botom of this summary.
+        Args:
+            show: The Show object to create the Sumamry for.
+            background: Background color or image to use for the summary. Can
+                also be a "format string" that is "{series_backgroun}" to use
+                the given Show object's backdrop.
+            created_by: Optional string to use in custom "Created by .." tag at
+                the botom of this Summary.
         """
 
         # Initialize parent object
@@ -65,12 +68,26 @@ class ShowSummary(ImageMaker):
         self.logo = show.logo
         self.created_by = created_by
 
+        # Get global background color or image
+        if isinstance(background, str):
+            # Attempt to format as this series background - i.e. {series_background}
+            try:
+                background =background.format(series_background=show.backdrop)
+            except Exception:
+                pass
+
+        # If a filepath that exists, use as image
+        if Path(background).exists():
+            self.background = Path(background)
+            self.__background_is_image = True
+            log.debug(f'Identified summary background image {self.background.resolve()}')
+        else:
+            self.background = background
+            self.__background_is_image = False
+
         # Output file is stored in the top-level media directory
         # (usually an archive folder)
         self.output = show.media_directory / 'Summary.jpg'
-
-        # Get global background color
-        self.background_color = background_color
 
         # Initialize variables that will be set upon image selection
         self.inputs = []
@@ -128,15 +145,17 @@ class ShowSummary(ImageMaker):
         :returns:   Path to the created image.
         """
 
+        background = 'None' if self.__background_is_image else self.background
+
         command = ' '.join([
             f'montage',
             f'-set colorspace sRGB',
-            f'-background "{self.background_color}"',
+            f'-background "{background}"',
             f'-density 300',
             f'-tile 3x3',
             f'-geometry +80+80',
             f'-shadow',
-            f'"'+'" "'.join(self.inputs)+'"', # Wrap each filename in ""
+            f'"'+'" "'.join(self.inputs)+'"',       # Wrap each filename in ""
             f'"{self.__MONTAGE_PATH.resolve()}"',
         ])
 
@@ -155,16 +174,23 @@ class ShowSummary(ImageMaker):
         :returns:   Path to the created image.
         """
 
+        background = 'None' if self.__background_is_image else self.background
+
         command = ' '.join([
             f'convert "{montage.resolve()}"',
             f'-resize 50%',
-            f'-background "{self.background_color}"',
+            f'-background "{background}"',
             f'-gravity north',
             f'-splice 0x840',
             f'-font "{self.HEADER_FONT.resolve()}"',
-            f'-fill "{self.HEADER_FONT_COLOR}"',
             f'-pointsize 100',
             f'-kerning 4.52',
+            f'-fill black',
+            f'-stroke black',
+            f'-strokewidth 3',
+            f'-annotate +0+700 "{self.HEADER_TEXT}"',
+            f'-fill "{self.HEADER_FONT_COLOR}"',
+            f'+stroke',
             f'-annotate +0+700 "{self.HEADER_TEXT}"',
             f'-gravity east',
             f'-splice 80x0',
@@ -307,6 +333,49 @@ class ShowSummary(ImageMaker):
         return self.output
 
 
+    def __add_background_image(self, montage_and_logo: Path,
+                               created_by: Path) -> Path:
+
+        # Create transparent montage
+        y_offset = (self.number_rows == 2) * 35 + (self.number_rows == 1) * 15
+        command = ' '.join([
+            f'composite',
+            f'-gravity south',
+            f'-geometry +0+{35+y_offset}',
+            f'"{created_by.resolve()}"',
+            f'"{montage_and_logo.resolve()}"',
+            f'"{self.__TRANSPARENT_MONTAGE.resolve()}"',
+        ])
+
+        self.image_magick.run(command)
+
+        # Get dimensions of transparent montage to fit background
+        dimensions_command = ' '.join([
+            f'identify',
+            f'-format "%w %h"',
+            f'"{self.__TRANSPARENT_MONTAGE.resolve()}"'
+        ])
+
+        dimensions = self.image_magick.run_get_output(dimensions_command)
+        width, height = map(int, dimensions.split(' '))
+
+        # Add background behind transparent montage
+        command = ' '.join([
+            f'convert',
+            f'"{self.background.resolve()}"',
+            f'-gravity center',
+            f'-resize "{width}x{height}"^',
+            # f'-extent "{width}x{height}"',
+            f'"{self.__TRANSPARENT_MONTAGE.resolve()}"',
+            f'-composite',
+            f'"{self.output.resolve()}"',
+        ])
+
+        self.image_magick.run(command)
+
+        return self.output
+
+
     def create(self) -> None:
         """
         Create the ShowSummary defined by this show object. Image selection is
@@ -334,17 +403,24 @@ class ShowSummary(ImageMaker):
         # Add logo to the montage
         montage_and_logo = self._add_logo(montage_and_header, logo)
 
-        # Add created by tag - summary is completed
+        # Create created by tag
         if self.created_by is None:
             created_by = self.__CREATED_BY_PATH
         else:
             created_by = self.__create_created_by()
-        self._add_created_by(montage_and_logo, created_by)
+
+        # Add created by and then optionally add background image
+        if self.__background_is_image:
+            self.__add_background_image(montage_and_logo, created_by)
+        else:
+            self._add_created_by(montage_and_logo, created_by)
         
         # Delete temporary files
         images = [montage, montage_and_header, logo, montage_and_logo]
         if self.created_by is not None:
             images.append(created_by)
+        if self.__background_is_image:
+            images.append(self.__TRANSPARENT_MONTAGE)
 
         self.image_magick.delete_intermediate_images(*images)
 
