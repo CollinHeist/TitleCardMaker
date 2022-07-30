@@ -89,7 +89,7 @@ class Show(YamlReader):
         self.series_info = self.info_set.get_series_info(name, year)
         self.card_filename_format = self.preferences.card_filename_format
         self.media_directory = None
-        self.card_class = TitleCard.CARD_TYPES[self.preferences.card_type]
+        self.card_class = self.preferences.card_class
         self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
         self.library_name = None
         self.library = None
@@ -175,31 +175,6 @@ class Show(YamlReader):
         return show
 
 
-    def __parse_card_type(self, card_type: str) -> None:
-        """
-        Read the card_type specification for this object. This first looks at
-        the locally implemented types in the TitleCard class, then attempts to
-        create a RemoteCardType from the specification. This can be either a
-        local file to inject, or a GitHub-hosted remote file to download and
-        inject. This updates the card_type, valid, and episode_text_format
-        attributes of this object.
-        
-        :param      card_type:  The value of card_type to read/parse.
-        """
-
-        # If known card type, set right away, otherwise check remote repo
-        if card_type in TitleCard.CARD_TYPES:
-            self.card_class = TitleCard.CARD_TYPES[card_type]
-        elif (remote_card_type := RemoteCardType(card_type)).valid:
-            self.card_class = remote_card_type.card_class
-        else:
-            log.error(f'Invalid card type "{card_type}" of series {self}')
-            self.valid = False
-
-        # Update ETF
-        self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
-
-
     def __parse_yaml(self):
         """
         Parse the Show's YAML and update this object's attributes. Error on any
@@ -229,7 +204,8 @@ class Show(YamlReader):
 
                 # If card type was specified for this library, set that
                 if (card_type := this_library.get('card_type')):
-                    self.__parse_card_type(card_type)
+                    self._parse_card_type(card_type)
+                    self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
 
         if (id_ := self._get('imdb_id', type_=str)) is not None:
             self.series_info.set_imdb_id(id_)
@@ -244,7 +220,8 @@ class Show(YamlReader):
             self.series_info.set_tmdb_id(id_)
 
         if (card_type := self._get('card_type', type_=str)) is not None:
-            self.__parse_card_type(card_type)
+            self._parse_card_type(card_type)
+            self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
             
         if (value := self._get('media_directory', type_=Path)) is not None:
             self.media_directory = value

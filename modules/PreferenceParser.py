@@ -59,7 +59,7 @@ class PreferenceParser(YamlReader):
 
         # Setup default values that can be overwritten by YAML
         self.series_files = []
-        self.card_type = 'standard'
+        self._parse_card_type('standard') # Sets self.card_type
         self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
         self.card_extension = TitleCard.DEFAULT_CARD_EXTENSION
         self.image_source_priority = ('tmdb', 'plex')
@@ -154,11 +154,7 @@ class PreferenceParser(YamlReader):
                         f'created')
 
         if (value := self._get('options', 'card_type', type_=lower_str)) !=None:
-            if value not in TitleCard.CARD_TYPES:
-                log.critical(f'Default card type "{value}" is invalid')
-                self.valid = False
-            else:
-                self.card_type = value
+            self._parse_card_type(value)
 
         if (value := self._get('options', 'card_extension', type_=str)) != None:
             extension = ('' if value[0] == '.' else '.') + value
