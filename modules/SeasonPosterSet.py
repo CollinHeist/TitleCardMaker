@@ -127,6 +127,9 @@ class SeasonPosterSet:
         # Get whether to spell or use digits for season numbers (default spell)
         spell = poster_config.get('spell_numbers', True)
 
+        # Get whether to use top or bottom placement
+        top_placement = poster_config.get('placement', 'bottom').lower() =='top'
+
         # Get all the season posters that exist in the source directory
         for poster_file in self.__source_directory.glob('season*.jpg'):
             # Skip files named season*.jpg that aren't numbered
@@ -165,6 +168,7 @@ class SeasonPosterSet:
                 font_color=self.font_color,
                 font_size=self.font_size,
                 font_kerning=self.font_kerning,
+                top_placement=top_placement,
             ))
 
 
