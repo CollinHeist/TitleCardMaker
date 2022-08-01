@@ -66,7 +66,7 @@ class Manager:
 
         if self.preferences.plex_yaml_writer is not None:
             self.preferences.plex_yaml_writer.update_from_plex(
-                **self.preferences.plex_update_args,
+                **self.preferences.plex_yaml_update_args,
             )
 
 
@@ -123,15 +123,10 @@ class Manager:
 
         # Read source files for Show objects
         log.info(f'Starting to read source files..')
-        for show in tqdm(self.shows, desc='Reading source files',**TQDM_KWARGS):
+        for show in tqdm(self.shows + self.archives,desc='Reading source files',
+                         **TQDM_KWARGS):
             show.read_source()
             show.find_multipart_episodes()
-
-        # Read source files for ShowSummary objects
-        for archive in tqdm(self.archives, desc='Reading archive source files',
-                            **TQDM_KWARGS):
-            archive.read_source()
-            archive.find_multipart_episodes()
 
 
     def add_new_episodes(self) -> None:
