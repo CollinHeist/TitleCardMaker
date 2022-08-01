@@ -59,13 +59,17 @@ class Manager:
         if not self.preferences.use_sonarr and not self.preferences.use_plex:
             return None
 
-        if self.preferences.sonarr_yaml_writer is not None:
+        if (self.preferences.use_sonarr
+            and self.preferences.sonarr_yaml_writer is not None):
             self.preferences.sonarr_yaml_writer.update_from_sonarr(
+                self.sonarr_interface,
                 **self.preferences.sonarr_yaml_update_args
             )
 
-        if self.preferences.plex_yaml_writer is not None:
+        if (self.preferences.use_plex
+            and self.preferences.plex_yaml_writer is not None):
             self.preferences.plex_yaml_writer.update_from_plex(
+                self.plex_interface,
                 **self.preferences.plex_yaml_update_args,
             )
 
