@@ -633,6 +633,10 @@ class PlexInterface:
             season_poster_set: SeasonPosterSet with season posters to set.
         """
 
+        # If no posters to upload, skip
+        if not season_poster_set.has_posters:
+            return None
+
         # If the given library cannot be found, exit
         if not (library := self.__get_library(library_name)):
             return None
@@ -677,7 +681,8 @@ class PlexInterface:
             }, condition)
 
         # Log load operations to user
-        log.info(f'Loaded {loaded_count} season posters for "{series_info}"')
+        if loaded_count > 0:
+            log.info(f'Loaded {loaded_count} season posters for "{series_info}"')
 
 
     def get_episode_details(self, rating_key: int) -> tuple[SeriesInfo,

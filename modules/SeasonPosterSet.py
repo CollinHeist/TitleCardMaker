@@ -22,8 +22,9 @@ class SeasonPosterSet:
     """Regex to identify season number from poster filenames"""
     __SEASON_NUMBER_REGEX = re_compile(r'^season(\d+).jpg$')
 
-    __slots__ = ('valid', 'font_file', 'font_color', 'font_kerning','font_size',
-                 'posters', '__source_directory', '__logo', '__media_directory')
+    __slots__ = ('valid', 'font_file', 'font_color', 'font_kerning', 'posters',
+                 'font_size', '__source_directory', '__logo', 'has_posters',
+                 '__media_directory')
     
 
     def __init__(self, episode_map: 'EpisodeMap', source_directory: Path,
@@ -49,6 +50,7 @@ class SeasonPosterSet:
 
         # Future list of SeasonPoster objects
         self.posters = {}
+        self.has_posters = False
 
         # Get all paths for this set
         self.__source_directory = source_directory
@@ -160,6 +162,7 @@ class SeasonPosterSet:
                 season_text = f'Season {season_number}'
 
             # Create SeasonPoster list
+            self.has_posters = True
             self.posters[season_number] = SeasonPoster(
                 source=poster_file,
                 logo=self.__logo,
