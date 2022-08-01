@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Union
 
 from num2words import num2words
 from re import compile as re_compile
@@ -47,7 +48,7 @@ class SeasonPosterSet:
         self.font_size = 1.0
 
         # Future list of SeasonPoster objects
-        self.posters = []
+        self.posters = {}
 
         # Get all paths for this set
         self.__source_directory = source_directory
@@ -159,7 +160,7 @@ class SeasonPosterSet:
                 season_text = f'Season {season_number}'
 
             # Create SeasonPoster list
-            self.posters.append(SeasonPoster(
+            self.posters[season_number] = SeasonPoster(
                 source=poster_file,
                 logo=self.__logo,
                 destination=destination,
@@ -169,7 +170,27 @@ class SeasonPosterSet:
                 font_size=self.font_size,
                 font_kerning=self.font_kerning,
                 top_placement=top_placement,
-            ))
+            )
+
+
+    def get_poster(self, season_number: int) -> Union[Path, None]:
+        """
+        Get the path to the Poster from this set for the given season number.
+
+        Args:
+            season_number: Season number to get the poster of.
+
+        Returns:
+            Path to this set's poster for the given season. None if that poster
+            does not exist.
+        """
+        
+        # Return poster file if given season has poster that exists
+        if ((poster := self.posters.get(season_number)) is not None
+            and poster.destination.exists()):
+            return poster.destination
+
+        return None
 
 
     def create(self) -> None:
@@ -179,9 +200,10 @@ class SeasonPosterSet:
         if len(self.posters) > 1 and not self.__logo.exists():
             log.error(f'Cannot create season posters, logo file '
                       f'"{self.__logo.resolve()}" does not exist')
+            return None
 
         # Go through each season poster within this set
-        for poster in self.posters:
+        for poster in self.posters.values():
             # Skip if poster file already exists
             if poster.destination.exists():
                 continue

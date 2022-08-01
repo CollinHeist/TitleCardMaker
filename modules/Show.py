@@ -41,7 +41,7 @@ class Show(YamlReader):
                  'sync_specials', 'tmdb_sync','watched_style','unwatched_style',
                  'hide_seasons','__episode_map', 'title_language', 'font',
                  'source_directory', 'logo', 'backdrop', 'file_interface',
-                 'profile', 'episodes', '__is_archive')
+                 'profile', 'season_poster_set', 'episodes', '__is_archive')
 
 
     def __init__(self, name: str, yaml_dict: dict, library_map: dict, 
@@ -126,12 +126,20 @@ class Show(YamlReader):
             self.source_directory / DataFileInterface.GENERIC_DATA_FILE_NAME
         )
 
-        # Create the profile for this show
+        # Create the profile
         self.profile = Profile(
             self.font,
             self.hide_seasons,
             self.__episode_map,
             self.episode_text_format,
+        )
+
+        # Create the SeasonPosterSet
+        self.season_poster_set = SeasonPosterSet(
+            self.__episode_map,
+            self.source_directory,
+            self.media_directory,
+            self._get('season_posters'),
         )
 
         # Episode dictionary to be filled
@@ -931,25 +939,18 @@ class Show(YamlReader):
     def create_season_posters(self) -> None:
         """Create season posters for this Show."""
 
-        # Construct SeasonPosterSet and create posters
-        poster_set = SeasonPosterSet(
-            self.__episode_map,
-            self.source_directory,
-            self.media_directory,
-            self._get('season_posters', type_=dict)
-        )
-
         # Create all posters in the set (if specification was valid)
-        if poster_set.valid:
-            poster_set.create()
+        if self.season_poster_set.valid:
+            self.season_poster_set.create()
 
 
     def update_plex(self, plex_interface: PlexInterface) -> None:
         """
-        Update the given PlexInterface with all title cards for all Episodes
-        within this Show.
+        Update the given PlexInterface with all title cards and season posters
+        for all Episodes within this Show.
 
-        :param      plex_interface: PlexInterface object to update.
+        Args:
+            plex_interface: PlexInterface to update.
         """
 
         # Skip if no library specified
@@ -963,3 +964,8 @@ class Show(YamlReader):
             self.episodes,
         )
 
+        plex_interface.set_season_poster(
+            self.library_name,
+            self.series_info,
+            self.season_poster_set,
+        )

@@ -22,6 +22,9 @@ class PlexInterface:
     """Filepath to the database of each episode's loaded card characteristics"""
     LOADED_DB = TEMP_DIR / 'loaded.json'
 
+    """Filepath to the database of the loaded season poster characteristics"""
+    LOADED_POSTERS_DB = TEMP_DIR / 'loaded_posters.json'
+
     """How many failed episodes result in skipping a series"""
     SKIP_SERIES_THRESHOLD = 3
 
@@ -49,6 +52,7 @@ class PlexInterface:
         
         # Create/read loaded card database
         self.__db = TinyDB(self.LOADED_DB)
+        self.__posters = TinyDB(self.LOADED_POSTERS_DB)
 
         # List of "not found" warned series
         self.__warned = set()
@@ -97,8 +101,7 @@ class PlexInterface:
                     of that index DNE in the given list.
         """
         
-        for index, entry in enumerate(loaded_series):
-            # Check index 
+        for entry in loaded_series:
             if (entry['season'] == episode.episode_info.season_number and
                 entry['episode'] == episode.episode_info.episode_number):
                 return entry
@@ -253,6 +256,7 @@ class PlexInterface:
 
         return all_libraries
     
+
     def get_all_series(self, filter_libraries: list[str]=[]
                        ) -> list[tuple[SeriesInfo, str, str]]: 
         """
@@ -522,16 +526,15 @@ class PlexInterface:
     @retry(stop=stop_after_attempt(5),
            wait=wait_fixed(3)+wait_exponential(min=1, max=32),
            before_sleep=lambda _:log.warning('Cannot upload image, retrying..'))
-    def __retry_upload(self, plex_episode: 'Episode', filepath: Path) -> None:
+    def __retry_upload(self, plex_object: 'Episode', filepath: Path) -> None:
         """
         Upload the given poster to the given Episode, retrying if it fails.
         
-        :param      plex_episode:   The plexapi Episode object to upload the
-                                    file to.
+        :param      plex_object:    The plexapi object to upload the file to.
         :param      filepath:       Filepath to the poster to upload.
         """
 
-        plex_episode.uploadPoster(filepath=filepath)
+        plex_object.uploadPoster(filepath=filepath)
 
 
     def set_title_cards_for_series(self, library_name: str, 
@@ -616,6 +619,65 @@ class PlexInterface:
         # Log load operations to user
         if loaded_count > 0:
             log.info(f'Loaded {loaded_count} cards for "{series_info}"')
+
+
+    def set_season_poster(self, library_name: str,
+                          series_info: SeriesInfo,
+                          season_poster_set: 'SeasonPosterSet') -> None:
+        """
+        Set the season posters from the given set within Plex.
+
+        Args:
+            library_name: Name of the library containing the series to update.
+            series_info: The series to update.
+            season_poster_set: SeasonPosterSet with season posters to set.
+        """
+
+        # If the given library cannot be found, exit
+        if not (library := self.__get_library(library_name)):
+            return None
+
+        # If the given series cannot be found in this library, exit
+        if not (series := self.__get_series(library, series_info)):
+            return None
+
+        # Condition for this series
+        loaded_count = 0
+        for season in series.seasons():
+            # Skip if no season poster for this seasons
+            if (poster := season_poster_set.get_poster(season.index)) is None:
+                continue
+
+            # Get the loaded details for this season
+            condition = (
+                (where('library') == library_name) &
+                (where('series') == series_info.full_name) &
+                (where('season') == season.index)
+            )
+            details = self.__posters.get(condition)
+            
+            # Skip if this exact poster has been loaded 
+            if (details is not None
+                and details['filesize'] == poster.stat().st_size):
+                continue
+
+            # Upload this poster
+            try:
+                self.__retry_upload(season, poster)
+                loaded_count += 1
+            except Exception:
+                continue
+
+            # Update loaded database
+            self.__posters.upsert({
+                'library': library_name,
+                'series': series_info.full_name,
+                'season': season.index,
+                'filesize': poster.stat().st_size,
+            }, condition)
+
+        # Log load operations to user
+        log.info(f'Loaded {loaded_count} season posters for "{series_info}"')
 
 
     def get_episode_details(self, rating_key: int) -> tuple[SeriesInfo,
