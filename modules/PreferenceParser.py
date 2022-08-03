@@ -492,11 +492,12 @@ class PreferenceParser(YamlReader):
                         continue
 
                     # Get priority union of variation and base series
+                    file_yaml['series'][show_name].pop('archive_name', None)
                     Template('', {}).recurse_priority_union(
                         variation, file_yaml['series'][show_name]
                     )
 
-                    # Remove any library/media directory, only archived
+                    # Remove any library-specific details
                     variation.pop('library', None)
                     variation.pop('media_directory', None)
                     

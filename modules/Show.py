@@ -35,13 +35,15 @@ class Show(YamlReader):
     """Filename to the backdrop for a series"""
     BACKDROP_FILENAME = 'backdrop.jpg'
 
-    __slots__ = ('preferences', 'valid', '__library_map', 'series_info',
-                 'media_directory', 'card_class', 'episode_text_format',
-                 'library_name', 'library', 'archive', 'sonarr_sync',
-                 'sync_specials', 'tmdb_sync','watched_style','unwatched_style',
-                 'hide_seasons','__episode_map', 'title_language', 'font',
-                 'source_directory', 'logo', 'backdrop', 'file_interface',
-                 'profile', 'season_poster_set', 'episodes', '__is_archive')
+    __slots__ = (
+        'preferences', 'valid', '__library_map', 'series_info',
+        'media_directory', 'card_class', 'episode_text_format', 'library_name',
+        'library', 'archive', 'archive_all_variations', 'sonarr_sync',
+        'sync_specials', 'tmdb_sync', 'watched_style', 'unwatched_style',
+        'hide_seasons','__episode_map', 'title_language', 'font',
+        'source_directory', 'logo','backdrop', 'file_interface', 'profile',
+        'season_poster_set', 'episodes', '__is_archive'
+    )
 
 
     def __init__(self, name: str, yaml_dict: dict, library_map: dict, 
@@ -94,6 +96,8 @@ class Show(YamlReader):
         self.library_name = None
         self.library = None
         self.archive = self.preferences.create_archive
+        self.archive_name = None
+        self.archive_all_variations = self.preferences.archive_all_variations
         self.episode_data_source = self.preferences.episode_data_source
         self.sonarr_sync = self.preferences.use_sonarr
         self.sync_specials = self.preferences.sync_specials
@@ -173,7 +177,7 @@ class Show(YamlReader):
         # Modify base yaml to have overritten media_directory
         modified_base = copy(self._base_yaml)
         modified_base['media_directory'] = str(media_directory.resolve())
-        
+
         # Recreate Show object with modified YAML
         show = Show(self.series_info.name, modified_base, self.__library_map,
                     self.font._Font__font_map, self.source_directory.parent,
@@ -239,6 +243,13 @@ class Show(YamlReader):
 
         if (value := self._get('archive', type_=bool)) is not None:
             self.archive = value
+
+        if (value := self._get('archive_all_variations',type_=bool)) != None:
+            self.archive_all_variations = value
+
+        if (value := self._get('archive_name', type_=str)) is not None:
+            self.archive_name = value
+            self.archive_all_variations = False
 
         if (value := self._get('episode_data_source', type_=str)) is not None:
             value = value.lower().strip()

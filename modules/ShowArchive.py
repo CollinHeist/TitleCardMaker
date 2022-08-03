@@ -61,18 +61,23 @@ class ShowArchive:
 
         # For each applicable sub-profile, create+modify new Show/ShowSummary
         card_class = base_show.card_class
-        valid_profiles = base_show.profile.get_valid_profiles(card_class)
+        valid_profiles = base_show.profile.get_valid_profiles(
+            card_class, base_show.archive_all_variations,
+        )
 
         # Go through each valid profile
-        for profile_attributes in valid_profiles:
+        for attributes in valid_profiles:
             # Get directory name for this profile
-            profile_directory = self.PROFILE_DIRECTORY_MAP[
-                f'{profile_attributes["seasons"]}-{profile_attributes["font"]}'
-            ]
+            if base_show.archive_name is None:
+                # Get directory base from the directory map
+                key = f'{attributes["seasons"]}-{attributes["font"]}'
+                profile_directory = self.PROFILE_DIRECTORY_MAP[key]
 
-            # For non-standard card classes, modify profile directory name
-            if base_show.card_class.ARCHIVE_NAME != 'standard':
-                profile_directory += f' - {base_show.card_class.ARCHIVE_NAME}'
+                # For non-standard card classes, modify profile directory name
+                if base_show.card_class.ARCHIVE_NAME != 'standard':
+                    profile_directory+=f' - {base_show.card_class.ARCHIVE_NAME}'
+            else:
+                profile_directory = base_show.archive_name
 
             # Get modified media directory within the archive directory
             temp_path = archive_directory / base_show.series_info.legal_path
@@ -86,7 +91,7 @@ class ShowArchive:
             # Convert this new show's profile
             new_show.profile.convert_profile(
                 base_show.card_class,
-                **profile_attributes
+                **attributes
             )
 
             # Store this new Show and associated ShowSummary

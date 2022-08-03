@@ -42,7 +42,8 @@ class Profile:
                 f'{self.__use_custom_font=}>')
 
 
-    def get_valid_profiles(self, card_class: CardType) -> [dict]:
+    def get_valid_profiles(self, card_class: CardType,
+                           all_variations: bool) -> list[dict[str: str]]:
         """
         Gets the valid applicable profiles for this profile. For example,
         for a profile with only generic attributes, it's invalid to
@@ -65,7 +66,7 @@ class Profile:
         has_custom_font = card_class.is_custom_font(self.font)
 
         # If not archiving all variations, return only indicated profile
-        if not global_objects.pp.archive_all_variations:
+        if not all_variations:
             seasons = 'generic'
             if self.hide_season_title and card_class.USES_SEASON_TITLE:
                 seasons = 'hidden'
