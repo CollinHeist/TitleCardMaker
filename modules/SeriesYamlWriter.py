@@ -172,6 +172,9 @@ class SeriesYamlWriter:
             existing_lines = file_handle.readlines()
         existing_line_count = len(existing_lines)
 
+        # If file was blank, just use empty dictionary
+        existing_yaml = {} if existing_yaml is None else existing_yaml
+
         # Identify which libraries DNE in existing YAML that need to be added
         add_libraries = {}
         for library_name, library in yaml.get('libraries', {}).items():
@@ -332,6 +335,8 @@ class SeriesYamlWriter:
         elif self.sync_mode == 'append':
             self.__append(yaml)
 
+        log.info(f'Updated {self.file.resolve()} from Sonarr')
+
 
     def __get_yaml_from_plex(self, plex_interface: 'PlexInterface',
                              filter_libraries: list[str]
@@ -416,3 +421,5 @@ class SeriesYamlWriter:
             self.__write(yaml)
         elif self.sync_mode == 'append':
             self.__append(yaml)
+
+        log.info(f'Updated {self.file.resolve()} from Plex')
