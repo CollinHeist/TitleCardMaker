@@ -163,20 +163,26 @@ class Show(YamlReader):
         return f'<Show "{self.series_info}" with {len(self.episodes)} Episodes>'
 
 
-    def _copy_with_modified_media_directory(self,
-                                            media_directory: Path) -> 'Show':
+    def _make_archive(self, media_directory: Path) -> 'Show':
         """
-        Recreate this Show object with a modified media directory.
+        Recreate this Show object as an archive.
 
-        :param      media_directory:    Media directory the returned Show object
-                                        will utilize.
-        
-        :returns:   A newly constructed Show object.
+        Args:
+            media_directory: Media directory the returned Show object will
+                utilize.
+
+        Returns:
+            A newly constructed Show object with a modified 'media_directory'
+            and 'watched_style' attributes.
         """
 
         # Modify base yaml to have overritten media_directory
         modified_base = copy(self._base_yaml)
         modified_base['media_directory'] = str(media_directory.resolve())
+
+        # Set watched_style to archive style (if set)
+        if (value := self._get('archive_style', type_=str)) is not None:
+            modified_base['watched_style'] = value
 
         # Recreate Show object with modified YAML
         show = Show(self.series_info.name, modified_base, self.__library_map,
@@ -283,9 +289,10 @@ class Show(YamlReader):
             else:
                 self.unwatched_style = value
 
-        if self._is_specified('unwatched'):
-            log.error(f'"unwatched" setting has been renamed "unwatched_style"')
-            self.valid = False
+        if (value := self._get('archive_style', type_=str)) is not None:
+            if value not in self.VALID_STYLES:
+                log.error(f'Invalid archive style "{value}" in series {self}')
+                self.valid = False
 
         if (value := self._get('seasons', 'hide', type_=bool)) is not None:
             self.hide_seasons = value
@@ -676,7 +683,7 @@ class Show(YamlReader):
             elif ((applies_to == 'all') or
                 (applies_to == 'unwatched' and unwatched_style == 'blur'
                  and not episode.watched)):
-                episode.blur = True and not self.__is_archive
+                episode.blur = True
                 found = episode.update_source(manual_source, downloadable=False)
             elif watched_style == 'unique':
                 continue
@@ -684,7 +691,7 @@ class Show(YamlReader):
                 found = episode.update_source(self.backdrop, downloadable=True)
                 download_backdrop = True
             else:
-                episode.blur = True and not self.__is_archive
+                episode.blur = True
 
             # Override to backdrop if indicated by style, or manual image DNE
             if (((episode.watched and watched_style == 'art')
