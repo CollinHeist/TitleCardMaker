@@ -325,6 +325,11 @@ class PreferenceParser(YamlReader):
                          f'incorporated into "season_folder_format"')
             self.valid = False
 
+        if self._is_specified('archive', 'summary', 'background_color'):
+            log.critical(f'Archive summary "background_color" option has been '
+                         f'renamed to "background"')
+            self.valid = False
+
         if self._is_specified('plex', 'unwatched'):
             log.critical(f'Plex "unwatched" setting has been renamed to '
                          f'"unwatched_style"')
