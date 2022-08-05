@@ -71,7 +71,7 @@ class PreferenceParser(YamlReader):
         self.create_archive = False
         self.archive_all_variations = True
         self.create_summaries = True
-        self.summary_background_color = ShowSummary.BACKGROUND_COLOR
+        self.summary_background = ShowSummary.BACKGROUND_COLOR
         self.summary_minimum_episode_count = 1
         self.summary_created_by = None
         self.use_plex = False
@@ -213,9 +213,9 @@ class PreferenceParser(YamlReader):
                                type_=str)) is not None:
             self.summary_created_by = value
 
-        if (value := self._get('archive', 'summary', 'background_color',
+        if (value := self._get('archive', 'summary', 'background',
                                type_=str)) != None:
-            self.summary_background_color = value
+            self.summary_background = value
 
         if ((value := self._get('archive', 'summary', 'minimum_episodes',
                                type_=int)) != None):
