@@ -382,7 +382,7 @@ class TMDbInterface(WebInterface):
         # Query with IMDB ID
         if result is None and episode_info.has_id('imdb_id'):
             try:
-                results = self.api.find_by_id(tvdb_id=episode_info.tvdb_id)
+                results = self.api.find_by_id(imdb_id=episode_info.imdb_id)
                 result = results.tv_episode_results[0]
             except (NotFound, IndexError):
                 pass
