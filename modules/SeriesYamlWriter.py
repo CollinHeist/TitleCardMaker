@@ -13,7 +13,7 @@ class SeriesYamlWriter:
 
     """Default arguments for initializing an object"""
     DEFAULT_ARGUMENTS = {
-        'sync_mode': 'sync', 'compact_mode': True, 'volume_map': {}
+        'sync_mode': 'append', 'compact_mode': True, 'volume_map': {}
     }
 
     """Temporary file to read/write YAML from for string conversion"""
@@ -25,7 +25,7 @@ class SeriesYamlWriter:
     """Valid sections for determining YAML indents"""
     __VALID_SECTIONS = ('libraries:', 'templates:', 'fonts:', 'series:')
 
-    def __init__(self, file: Path, sync_mode: str='sync',
+    def __init__(self, file: Path, sync_mode: str='append',
                  compact_mode: bool=True, volume_map: dict[str: str]={}) ->None:
         """
         Initialize an instance of a SeriesYamlWrite object.

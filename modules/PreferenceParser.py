@@ -255,7 +255,7 @@ class PreferenceParser(YamlReader):
         if self._is_specified(*(attrs := ('plex', 'sync')), 'file'):
             self.plex_yaml_writer = SeriesYamlWriter(
                 self._get(*attrs, 'file', type_=Path),
-                self._get(*attrs, 'mode', type_=str, default='sync'),
+                self._get(*attrs, 'mode', type_=str, default='append'),
                 self._get(*attrs, 'compact_mode', type_=bool, default=True),
                 self._get(*attrs, 'volumes', default={}),
             )
@@ -278,7 +278,7 @@ class PreferenceParser(YamlReader):
         if self._is_specified(*(attrs := ('sonarr', 'sync')), 'file'):
             self.sonarr_yaml_writer = SeriesYamlWriter(
                 self._get(*attrs, 'file', type_=Path),
-                self._get(*attrs, 'mode', type_=str, default='sync'),
+                self._get(*attrs, 'mode', type_=str, default='append'),
                 self._get(*attrs, 'compact_mode', type_=bool, default=True),
                 self._get(*attrs, 'volumes', default={}),
             )
