@@ -25,7 +25,8 @@ RUN set -eux; \
 
 # Intall OS dependencies
 RUN apt-get update; \
-    apt-get upgrade -y; \
+    apt-get upgrade -y --no-install-recommends; \
+    apt-get install -y gcc; \
     apt update
 
 # Install ImageMagick
@@ -41,6 +42,11 @@ RUN pip3 install --no-cache-dir --upgrade pipenv; \
 
 # Delete setup files
 RUN rm -f Pipfile Pipfile.lock requirements.txt 
+
+# Uninstall OS dependencies
+RUN apt-get autoremove --purge -y gcc; \
+    apt-get clean; \
+    apt-get autoclean
 
 # Entrypoint
 CMD ["python3", "main.py", "--run", "--no-color"]
