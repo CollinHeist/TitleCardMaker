@@ -1,7 +1,8 @@
 from pathlib import Path
-from re import match, sub, IGNORECASE
+from re import sub, IGNORECASE
 
-from yaml import add_representer, dump, safe_load
+from ruamel.yaml import YAML, round_trip_dump, comments
+from yaml import add_representer, dump
 
 from modules.Debug import log
 
@@ -21,9 +22,6 @@ class SeriesYamlWriter:
 
     """Keyword arguments for yaml.dump()"""
     __WRITE_OPTIONS = {'allow_unicode': True, 'width': 200}
-
-    """Valid sections for determining YAML indents"""
-    __VALID_SECTIONS = ('libraries:', 'templates:', 'fonts:', 'series:')
 
     def __init__(self, file: Path, sync_mode: str='append',
                  compact_mode: bool=True, volume_map: dict[str: str]={}) ->None:
@@ -85,40 +83,6 @@ class SeriesYamlWriter:
         return path
 
 
-    def __yaml_as_string(self, yaml: dict[str: dict[str: str]],
-                         indent: int) -> list[str]:
-        """
-        Get the given YAML as a list of strings that are that YAML written to
-        a file.
-
-        Args:
-            yaml: YAML dictionary to write and convert to a string.
-            indent: Indentation to use for writing the YAML.
-
-        Returns:
-            List of strings that are the lines of the converted YAML object.
-        """
-
-        # Empty YAML, no equivalent lines
-        if len(yaml) == 0:
-            return []
-
-        # Write given YAML to temporary file so formatting is correct
-        with self.__TEMPORARY_FILE.open('w', encoding='utf-8') as file_handle:
-            __temp_yaml = {'header': yaml}
-            dump(__temp_yaml, file_handle, indent=indent,**self.__WRITE_OPTIONS)
-
-        # Read written YAML as lines
-        with self.__TEMPORARY_FILE.open('r', encoding='utf-8') as file_handle:
-            lines = file_handle.readlines()
-
-        # Delete temporary file
-        self.__TEMPORARY_FILE.unlink()
-        
-        # Return string lines, adding newline and skipping header
-        return ['\n'] + lines[1:]
-
-
     def __write(self, yaml: dict[str: dict[str: str]]) -> None:
         """
         Write the given YAML to this Writer's file. This either utilizes compact
@@ -156,90 +120,46 @@ class SeriesYamlWriter:
             self.__write(yaml)
             return None
 
-        # Compact mode, use custom flowmap style on each series
-        if self.compact_mode:
-            # Convert each series dictionary as a Flowmap dictionary
-            yaml['series'] = {
-                k: self.__compact_flowmap(x)
-                for k, x in yaml['series'].items()
-            }
-
         # Read existing lines/YAML for future parsing
-        existing_lines, existing_yaml = [], {}
         with self.file.open('r', encoding='utf-8') as file_handle:
-            existing_yaml = safe_load(file_handle)
-            file_handle.seek(0, 0)
-            existing_lines = file_handle.readlines()
-        existing_line_count = len(existing_lines)
-
-        # If file was blank, just use empty dictionary
-        existing_yaml = {} if existing_yaml is None else existing_yaml
+            existing_yaml = YAML().load(file_handle)
+        
+        if existing_yaml is None or len(existing_yaml) == 0:
+            self.__write(yaml)
+            return None
 
         # Identify which libraries DNE in existing YAML that need to be added
-        add_libraries = {}
         for library_name, library in yaml.get('libraries', {}).items():
+            # Skip entries that exist
             if library_name in existing_yaml.get('libraries', {}).keys():
                 continue
-            add_libraries[library_name] = library
+            existing_yaml['libraries'][library_name] = {'path': library}
 
         # Identify which series DNE in existing YAML that need to be aded
-        add_series = {}
         for series_name, series in yaml.get('series', {}).items():
+            # Skip entries that already exist
             if series_name in existing_yaml.get('series', {}).keys():
                 continue
-            add_series[series_name] = series
 
-         # Determine existing indent
-        indent = 2
-        check_indent = False
-        for line in existing_lines:
-            if check_indent:
-                indent = len(match(r'^(\s+)[a-zA-Z]+', line).group(1))
-                break
-            if line.startswith(self.__VALID_SECTIONS):
-                check_indent = True
+            # If writing compact mode, set flow stype for this entry
+            if self.compact_mode:
+                add_obj = comments.CommentedMap(series)
+                add_obj.fa.set_flow_style()
+            else:
+                add_obj = series
 
-        # Get string lines for the library/series entries to add
-        library_lines = self.__yaml_as_string(add_libraries, indent)
-        series_lines = self.__yaml_as_string(add_series, indent)
+            # Add to YAML
+            existing_yaml['series'][series_name] = add_obj
 
-        # File the lines which the libraries and series_end on, for append
-        library_line_number = existing_line_count
-        series_line_number = existing_line_count
-        counting_libraries, counting_series = False, False
-        for line_number, line in enumerate(existing_lines):
-            if line.startswith('libraries:'):
-                # If entering library section, start counting
-                counting_libraries = True
-                if counting_series:
-                    # Stop counting series, note line number
-                    series_line_number = line_number - 1
-                    counting_series = False
-            elif line.startswith('series:'):
-                # If entering series section, start counting
-                counting_series = True
-                if counting_libraries:
-                    library_line_number = line_number - 1
-                    counting_series = False
-
-        # Insert last elements first (to not mess up prior index)
-        order = [(series_lines, series_line_number),
-                 (library_lines, library_line_number)]
-        if library_line_number > series_line_number:
-            order = order[::-1]
-        for _lines, _base in order:
-            for line_number, line in enumerate(_lines):
-                existing_lines.insert(_base+line_number+1, line)
-        
-        # Write modified line array to file
+        # Write YAML to file
         with self.file.open('w', encoding='utf-8') as file_handle:
-            file_handle.writelines(existing_lines)
+            round_trip_dump(existing_yaml, file_handle)
 
 
     def __get_yaml_from_sonarr(self, sonarr_interface: 'SonarrInterface',
                                plex_libraries: dict[str: str],
                                filter_tags: list[str],
-                               monitored_only: bool) ->dict[str: dict[str: str]]:
+                               monitored_only: bool)->dict[str: dict[str: str]]:
         """
         Get the YAML from Sonarr, as filtered by the given attributes.
 
@@ -283,10 +203,10 @@ class SeriesYamlWriter:
             key = series_info.name
             if key in series_yaml:
                 if series_info.full_name not in series_yaml:
-                    this_entry = {'name': series_info.name}
+                    this_entry['name'] = series_info.name
                     key = series_info.full_name
                 else:
-                    this_entry = {'name': series_info.name}
+                    this_entry['name'] = series_info.name
                     key = f'{series_info.full_name} ({series_info.sonarr_id})'
 
             # Add media directory if path doesn't match default
