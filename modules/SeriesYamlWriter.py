@@ -124,9 +124,14 @@ class SeriesYamlWriter:
         with self.file.open('r', encoding='utf-8') as file_handle:
             existing_yaml = YAML().load(file_handle)
         
+        # Write if file exists but is blank
         if existing_yaml is None or len(existing_yaml) == 0:
             self.__write(yaml)
             return None
+
+        # If series tag is empty, set to empty dictionary 
+        if existing_yaml.get('series') is None:
+            existing_yaml['series'] = {}
 
         # Identify which libraries DNE in existing YAML that need to be added
         for library_name, library in yaml.get('libraries', {}).items():
