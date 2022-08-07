@@ -17,6 +17,7 @@ class EpisodeInfo:
     abs_number: int=None
     tvdb_id: int=None
     imdb_id: str=None
+    tmdb_id: int=None
     queried_plex: bool=False
     queried_sonarr: bool=False
     queried_tmdb: bool=False
@@ -116,14 +117,20 @@ class EpisodeInfo:
     def has_all_ids(self) -> bool:
         """Whether this object has all ID's defined"""
 
-        return (self.tvdb_id is not None) and (self.imdb_id is not None)
+        return ((self.tvdb_id is not None)
+                and (self.imdb_id is not None)
+                and (self.tmdb_id is not None))
 
 
     @property
     def ids(self) -> dict:
         """This object's ID's (as a dictionary)"""
 
-        return {'tvdb_id': self.tvdb_id, 'imdb_id': self.imdb_id}
+        return {
+            'tvdb_id': self.tvdb_id,
+            'imdb_id': self.imdb_id,
+            'tmdb_id': self.tmdb_id
+        }
 
 
     @property
@@ -158,6 +165,17 @@ class EpisodeInfo:
         if self.imdb_id is None and imdb_id is not None:
             self.imdb_id = imdb_id
 
+    
+    def set_tmdb_id(self, tmdb_id: int) -> None:
+        """
+        Sets the TMDb ID for this object.
+        
+        :param      tmdb_id:    The TMDb ID to set.
+        """
+
+        if self.tmdb_id is None and tmdb_id is not None:
+            self.tmdb_id = tmdb_id
+
 
     def update_queried_statuses(self, queried_plex: bool=False,
                                 queried_sonarr: bool=False,
@@ -180,20 +198,5 @@ class EpisodeInfo:
             self.queried_sonarr = queried_sonarr
         if not self.queried_tmdb and queried_tmdb:
             self.queried_tmdb = queried_tmdb
-
-
-    def copy_ids(self, other: 'EpisodeInfo') -> None:
-        """
-        Copy all ID's from the given EpisodeInfo object. This copies the TVDb,
-        and TMDb ID's.
-        
-        :param      other:  The EpisodeInfo object to copy ID's from.
-        """
-
-        if not isinstance(other, EpisodeInfo):
-            raise TypeError(f"Can only copy ID's into an EpisodeInfo object")
-
-        self.set_tvdb_id(other.tvdb_id)
-        self.set_imdb_id(other.imdb_id)
 
         

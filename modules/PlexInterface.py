@@ -340,6 +340,8 @@ class PlexInterface:
                     ids['tvdb_id'] = guid.id[len('tvdb://'):]
                 elif 'imdb://' in guid.id:
                     ids['imdb_id'] = guid.id[len('imdb://'):]
+                elif 'tmdb://' in guid.id:
+                    ids['tmdb_id'] = guid.id[len('tmdb://'):]
 
             # Create either a new EpisodeInfo or get from the MediaInfoSet
             episode_info = self.info_set.get_episode_info(
@@ -476,13 +478,15 @@ class PlexInterface:
                     season=info.season_number,
                     episode=info.episode_number,
                 )
-
+                
                 # Set the ID's for this object
                 for guid in plex_episode.guids:
                     if 'tvdb://' in guid.id:
                         info.set_tvdb_id(guid.id[len('tvdb://'):])
                     elif 'imdb://' in guid.id:
                         info.set_imdb_id(guid.id[len('imdb://'):])
+                    elif 'tmdb://' in guid.id:
+                        info.set_tmdb_id(guid.id[len('tmdb://'):])
             except NotFound:
                 continue
 
