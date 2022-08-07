@@ -365,35 +365,29 @@ class TMDbInterface(WebInterface):
                     has keys 'season' and 'episode'. None if returned if the
                     entry cannot be found.
         """
-
-        # If series TMDb ID is not present, exit
-        if not series_info.has_id('tmdb_id'):
-            return None
-
+        
         # Query with TVDb ID first
         result = None
         if result is None and episode_info.has_id('tvdb_id'):
             try:
                 results = self.api.find_by_id(tvdb_id=episode_info.tvdb_id)
-                result = results.tv_episode_results[0]
-            except (NotFound, IndexError):
+                # result = results.tv_episode_results[0]
+                return results.tv_episode_results[0]
+            except (NotFound, IndexError, TMDbException):
                 pass
 
         # Query with IMDB ID
         if result is None and episode_info.has_id('imdb_id'):
             try:
                 results = self.api.find_by_id(imdb_id=episode_info.imdb_id)
-                result = results.tv_episode_results[0]
-            except (NotFound, IndexError):
+                # result = results.tv_episode_results[0]
+                return results.tv_episode_results[0]
+            except (NotFound, IndexError, TMDbException):
                 pass
 
-        # Result has been found, use series ID and returned index
-        if result is not None:
-            try:
-                indices = result.season_number, result.episode_number
-                return self.api.tv_episode(series_info.tmdb_id, *indices)
-            except NotFound:
-                return None
+        # If series TMDb ID is not present, episode cannot be found
+        if not series_info.has_id('tmdb_id'):
+            return None
 
         # Verify series ID is valid
         try:
