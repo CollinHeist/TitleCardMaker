@@ -367,20 +367,17 @@ class TMDbInterface(WebInterface):
         """
         
         # Query with TVDb ID first
-        result = None
-        if result is None and episode_info.has_id('tvdb_id'):
+        if episode_info.has_id('tvdb_id'):
             try:
                 results = self.api.find_by_id(tvdb_id=episode_info.tvdb_id)
-                # result = results.tv_episode_results[0]
                 return results.tv_episode_results[0]
             except (NotFound, IndexError, TMDbException):
                 pass
 
-        # Query with IMDB ID
-        if result is None and episode_info.has_id('imdb_id'):
+        # Query with IMDb ID
+        if episode_info.has_id('imdb_id'):
             try:
                 results = self.api.find_by_id(imdb_id=episode_info.imdb_id)
-                # result = results.tv_episode_results[0]
                 return results.tv_episode_results[0]
             except (NotFound, IndexError, TMDbException):
                 pass
@@ -392,7 +389,7 @@ class TMDbInterface(WebInterface):
         # Verify series ID is valid
         try:
             series = self.api.tv_show(series_info.tmdb_id)
-        except NotFound:
+        except (NotFound, TMDbException):
             return None
 
         def _match_by_index(episode_info, season_number, episode_number):
@@ -400,7 +397,7 @@ class TMDbInterface(WebInterface):
             try:
                 episode = self.api.tv_episode(series_info.tmdb_id,
                                               season_number, episode_number)
-            except NotFound:
+            except (NotFound, TMDbException):
                 return None
 
             # If TMDb ID matches, or title matches
