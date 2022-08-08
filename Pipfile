@@ -16,6 +16,7 @@ tenacity = "*"
 tinydb = "*"
 schedule = "*"
 tmdbapis = "==1.0.6"
+"ruamel.yaml" = "*"
 
 [dev-packages]
 

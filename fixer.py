@@ -81,19 +81,6 @@ misc_group.add_argument(
 # Argument group for Sonarr
 sonarr_group = parser.add_argument_group('Sonarr')
 sonarr_group.add_argument(
-    '--read-all-series',
-    type=Path,
-    default=SUPPRESS,
-    metavar='FILE',
-    help='Create a generic series YAML file for all the series in Sonarr')
-sonarr_group.add_argument(
-    '--read-tags',
-    nargs='+',
-    type=str,
-    default=[],
-    metavar='TAG',
-    help='Any number of Sonarr tags to filter series of --read-all-series by')
-sonarr_group.add_argument(
     '--sonarr-list-ids',
     action='store_true',
     help="List all the ID's for all shows within Sonarr")
@@ -217,40 +204,6 @@ if hasattr(args, 'forget_cards') and pp.use_plex:
 
 
 # Execute Sonarr related options
-if hasattr(args, 'read_all_series') and pp.use_sonarr:
-    # Create SonarrInterface
-    si = SonarrInterface(pp.sonarr_url, pp.sonarr_api_key)
-
-    # Create YAML
-    yaml = {'libraries': {}, 'series': {}}
-    for series_info, media_directory in si.get_series(args.read_tags):
-        # Add library section
-        library = {'path': str(media_directory.parent.resolve())}
-        yaml['libraries'][media_directory.parent.name] = library
-
-        # Get series key for this series
-        if series_info.name in yaml.get('series', {}):
-            if series_info.full_name in yaml.get('series', {}):
-                key = f'{series_info.name} ({series_info.tvdb_id})'
-            else:
-                key = series_info.full_name
-        else:
-            key = series_info.name
-
-        # Create YAML entry for this series
-        yaml['series'][key] = {
-            'year': series_info.year,
-            'library': media_directory.parent.name,
-            'media_directory': str(media_directory.resolve()),
-        }
-
-    # Write YAML to the specified file
-    with args.read_all_series.open('w', encoding='utf-8') as file_handle:
-        dump(yaml, file_handle, allow_unicode=True)
-
-    log.info(f'Wrote {len(yaml["series"])} series to '
-             f'{args.read_all_series.resolve()}')
-
 if args.sonarr_list_ids and pp.use_sonarr:
     SonarrInterface(pp.sonarr_url, pp.sonarr_api_key).list_all_series_id()
 

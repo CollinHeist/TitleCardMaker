@@ -23,15 +23,13 @@ class Font:
                  'interline_spacing', 'kerning', 'stroke_width')
     
 
-    def __init__(self, yaml, font_map: dict, card_class: 'CardType',
-                 series_info: 'SeriesInfo') -> None:
+    def __init__(self, yaml: dict, font_map: dict[str: dict],
+                 card_class: 'CardType', series_info: 'SeriesInfo') -> None:
         """
         Constructs a new instance of a Font for the given YAML, CardType, and
         series.
         
         :param      yaml:           'font' dictionary from a series YAML file.
-        :type       yaml:           Dict or str. If str, must be a key of
-                                    font_map.
         :param      font_map:       Map of font labels to custom font
                                     dictionaries.
         :param      card_class:     CardType class to use values from.
@@ -44,13 +42,13 @@ class Font:
         # If the given value is a key of the font map, use those values instead
         if isinstance(yaml, str) and yaml in font_map:
             yaml = font_map[yaml]
-        
+
         # If font YAML (either from map or directly) is not a dictionary, bad!
         if not isinstance(yaml, dict):
             log.error(f'Invalid font for series "{series_info}"')
             self.valid = False
             yaml = {}
-
+        
         # Store arguments
         self.__yaml = yaml
         self.__card_class = card_class
@@ -97,7 +95,7 @@ class Font:
         if (value := self.__yaml.get('validate')) is not None:
             self.__validate = bool(value)
 
-        # Font case
+        # Case
         if (value := self.__yaml.get('case', '').lower()) != '':
             if value not in self.__card_class.CASE_FUNCTIONS:
                 self.__error('case', value)
@@ -105,15 +103,11 @@ class Font:
                 self.case_name = value
                 self.case = self.__card_class.CASE_FUNCTIONS[value]
 
-        # Font color
+        # Color
         if (value := self.__yaml.get('color')) is not None:
-            if (not isinstance(value, str)
-                or not bool(match('^#[a-fA-F0-9]{6}$', value))):
-                self.__error('color', value, 'specify as "#xxxxxx"')
-            else:
-                self.color = value
+            self.color = value
 
-        # Font file
+        # File
         if (value := self.__yaml.get('file')) is not None:
             if not isinstance(value, str):
                 self.__error('file', value, 'not a valid path')
@@ -128,7 +122,7 @@ class Font:
             else:
                 self.__error('file', value, 'no font file found')
 
-        # Font replacements
+        # Replacements
         if (value := self.__yaml.get('replacements')) is not None:
             if not isinstance(value, dict):
                 self.__error('replacements', value, 'must be character set')
@@ -140,7 +134,7 @@ class Font:
             else:
                 self.replacements = value
 
-        # Font Size
+        # Size
         if (value := self.__yaml.get('size')) is not None:
             if (not isinstance(value, str)
                 or not bool(self._PERCENT_REGEX_POSITIVE.match(value))):

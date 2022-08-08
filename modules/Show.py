@@ -35,13 +35,15 @@ class Show(YamlReader):
     """Filename to the backdrop for a series"""
     BACKDROP_FILENAME = 'backdrop.jpg'
 
-    __slots__ = ('preferences', 'valid', '__library_map', 'series_info',
-                 'media_directory', 'card_class', 'episode_text_format',
-                 'library_name', 'library', 'archive', 'sonarr_sync',
-                 'sync_specials', 'tmdb_sync','watched_style','unwatched_style',
-                 'hide_seasons','__episode_map', 'title_language', 'font',
-                 'source_directory', 'logo', 'backdrop', 'file_interface',
-                 'profile', 'episodes', '__is_archive')
+    __slots__ = (
+        'preferences', 'valid', '__library_map', 'series_info',
+        'media_directory', 'card_class', 'episode_text_format', 'library_name',
+        'library', 'archive', 'archive_all_variations', 'sonarr_sync',
+        'sync_specials', 'tmdb_sync', 'watched_style', 'unwatched_style',
+        'hide_seasons','__episode_map', 'title_language', 'font',
+        'source_directory', 'logo','backdrop', 'file_interface', 'profile',
+        'season_poster_set', 'episodes', '__is_archive'
+    )
 
 
     def __init__(self, name: str, yaml_dict: dict, library_map: dict, 
@@ -89,14 +91,16 @@ class Show(YamlReader):
         self.series_info = self.info_set.get_series_info(name, year)
         self.card_filename_format = self.preferences.card_filename_format
         self.media_directory = None
-        self.card_class = TitleCard.CARD_TYPES[self.preferences.card_type]
+        self.card_class = self.preferences.card_class
         self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
         self.library_name = None
         self.library = None
         self.archive = self.preferences.create_archive
+        self.archive_name = None
+        self.archive_all_variations = self.preferences.archive_all_variations
         self.episode_data_source = self.preferences.episode_data_source
         self.sonarr_sync = self.preferences.use_sonarr
-        self.sync_specials = self.preferences.sonarr_sync_specials
+        self.sync_specials = self.preferences.sync_specials
         self.tmdb_sync = self.preferences.use_tmdb
         self.watched_style = self.preferences.global_watched_style
         self.unwatched_style = self.preferences.global_unwatched_style
@@ -126,12 +130,20 @@ class Show(YamlReader):
             self.source_directory / DataFileInterface.GENERIC_DATA_FILE_NAME
         )
 
-        # Create the profile for this show
+        # Create the profile
         self.profile = Profile(
             self.font,
             self.hide_seasons,
             self.__episode_map,
             self.episode_text_format,
+        )
+
+        # Create the SeasonPosterSet
+        self.season_poster_set = SeasonPosterSet(
+            self.__episode_map,
+            self.source_directory,
+            self.media_directory,
+            self._get('season_posters'),
         )
 
         # Episode dictionary to be filled
@@ -151,21 +163,27 @@ class Show(YamlReader):
         return f'<Show "{self.series_info}" with {len(self.episodes)} Episodes>'
 
 
-    def _copy_with_modified_media_directory(self,
-                                            media_directory: Path) -> 'Show':
+    def _make_archive(self, media_directory: Path) -> 'Show':
         """
-        Recreate this Show object with a modified media directory.
+        Recreate this Show object as an archive.
 
-        :param      media_directory:    Media directory the returned Show object
-                                        will utilize.
-        
-        :returns:   A newly constructed Show object.
+        Args:
+            media_directory: Media directory the returned Show object will
+                utilize.
+
+        Returns:
+            A newly constructed Show object with a modified 'media_directory'
+            and 'watched_style' attributes.
         """
 
         # Modify base yaml to have overritten media_directory
         modified_base = copy(self._base_yaml)
         modified_base['media_directory'] = str(media_directory.resolve())
-        
+
+        # Set watched_style to archive style (if set)
+        if (value := self._get('archive_style', type_=str)) is not None:
+            modified_base['watched_style'] = value
+
         # Recreate Show object with modified YAML
         show = Show(self.series_info.name, modified_base, self.__library_map,
                     self.font._Font__font_map, self.source_directory.parent,
@@ -173,31 +191,6 @@ class Show(YamlReader):
         show.__is_archive = True
 
         return show
-
-
-    def __parse_card_type(self, card_type: str) -> None:
-        """
-        Read the card_type specification for this object. This first looks at
-        the locally implemented types in the TitleCard class, then attempts to
-        create a RemoteCardType from the specification. This can be either a
-        local file to inject, or a GitHub-hosted remote file to download and
-        inject. This updates the card_type, valid, and episode_text_format
-        attributes of this object.
-        
-        :param      card_type:  The value of card_type to read/parse.
-        """
-
-        # If known card type, set right away, otherwise check remote repo
-        if card_type in TitleCard.CARD_TYPES:
-            self.card_class = TitleCard.CARD_TYPES[card_type]
-        elif (remote_card_type := RemoteCardType(card_type)).valid:
-            self.card_class = remote_card_type.card_class
-        else:
-            log.error(f'Invalid card type "{card_type}" of series {self}')
-            self.valid = False
-
-        # Update ETF
-        self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
 
 
     def __parse_yaml(self):
@@ -229,7 +222,8 @@ class Show(YamlReader):
 
                 # If card type was specified for this library, set that
                 if (card_type := this_library.get('card_type')):
-                    self.__parse_card_type(card_type)
+                    self._parse_card_type(card_type)
+                    self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
 
         if (id_ := self._get('imdb_id', type_=str)) is not None:
             self.series_info.set_imdb_id(id_)
@@ -244,7 +238,8 @@ class Show(YamlReader):
             self.series_info.set_tmdb_id(id_)
 
         if (card_type := self._get('card_type', type_=str)) is not None:
-            self.__parse_card_type(card_type)
+            self._parse_card_type(card_type)
+            self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
             
         if (value := self._get('media_directory', type_=Path)) is not None:
             self.media_directory = value
@@ -254,6 +249,13 @@ class Show(YamlReader):
 
         if (value := self._get('archive', type_=bool)) is not None:
             self.archive = value
+
+        if (value := self._get('archive_all_variations',type_=bool)) != None:
+            self.archive_all_variations = value
+
+        if (value := self._get('archive_name', type_=str)) is not None:
+            self.archive_name = value
+            self.archive_all_variations = False
 
         if (value := self._get('episode_data_source', type_=str)) is not None:
             value = value.lower().strip()
@@ -287,9 +289,10 @@ class Show(YamlReader):
             else:
                 self.unwatched_style = value
 
-        if self._is_specified('unwatched'):
-            log.error(f'"unwatched" setting has been renamed "unwatched_style"')
-            self.valid = False
+        if (value := self._get('archive_style', type_=str)) is not None:
+            if value not in self.VALID_STYLES:
+                log.error(f'Invalid archive style "{value}" in series {self}')
+                self.valid = False
 
         if (value := self._get('seasons', 'hide', type_=bool)) is not None:
             self.hide_seasons = value
@@ -680,7 +683,7 @@ class Show(YamlReader):
             elif ((applies_to == 'all') or
                 (applies_to == 'unwatched' and unwatched_style == 'blur'
                  and not episode.watched)):
-                episode.blur = True and not self.__is_archive
+                episode.blur = True
                 found = episode.update_source(manual_source, downloadable=False)
             elif watched_style == 'unique':
                 continue
@@ -688,7 +691,7 @@ class Show(YamlReader):
                 found = episode.update_source(self.backdrop, downloadable=True)
                 download_backdrop = True
             else:
-                episode.blur = True and not self.__is_archive
+                episode.blur = True
 
             # Override to backdrop if indicated by style, or manual image DNE
             if (((episode.watched and watched_style == 'art')
@@ -954,25 +957,18 @@ class Show(YamlReader):
     def create_season_posters(self) -> None:
         """Create season posters for this Show."""
 
-        # Construct SeasonPosterSet and create posters
-        poster_set = SeasonPosterSet(
-            self.__episode_map,
-            self.source_directory,
-            self.media_directory,
-            self._get('season_posters', type_=dict)
-        )
-
         # Create all posters in the set (if specification was valid)
-        if poster_set.valid:
-            poster_set.create()
+        if self.season_poster_set.valid:
+            self.season_poster_set.create()
 
 
     def update_plex(self, plex_interface: PlexInterface) -> None:
         """
-        Update the given PlexInterface with all title cards for all Episodes
-        within this Show.
+        Update the given PlexInterface with all title cards and season posters
+        for all Episodes within this Show.
 
-        :param      plex_interface: PlexInterface object to update.
+        Args:
+            plex_interface: PlexInterface to update.
         """
 
         # Skip if no library specified
@@ -986,3 +982,8 @@ class Show(YamlReader):
             self.episodes,
         )
 
+        plex_interface.set_season_poster(
+            self.library_name,
+            self.series_info,
+            self.season_poster_set,
+        )

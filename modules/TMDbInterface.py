@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from tinydb import TinyDB, where
 
-from tmdbapis import TMDbAPIs, NotFound, Unauthorized
+from tmdbapis import TMDbAPIs, NotFound, Unauthorized, TMDbException
 
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
@@ -365,53 +365,48 @@ class TMDbInterface(WebInterface):
                     has keys 'season' and 'episode'. None if returned if the
                     entry cannot be found.
         """
-
-        # If series TMDb ID is not present, exit
-        if not series_info.has_id('tmdb_id'):
-            return None
-
+        
         # Query with TVDb ID first
-        result = None
-        if result is None and episode_info.has_id('tvdb_id'):
+        if episode_info.has_id('tvdb_id'):
             try:
                 results = self.api.find_by_id(tvdb_id=episode_info.tvdb_id)
-                result = results.tv_episode_results[0]
-            except (NotFound, IndexError):
+                return results.tv_episode_results[0]
+            except (NotFound, IndexError, TMDbException):
                 pass
 
-        # Query with IMDB ID
-        if result is None and episode_info.has_id('imdb_id'):
+        # Query with IMDb ID
+        if episode_info.has_id('imdb_id'):
             try:
                 results = self.api.find_by_id(imdb_id=episode_info.imdb_id)
-                result = results.tv_episode_results[0]
-            except (NotFound, IndexError):
+                return results.tv_episode_results[0]
+            except (NotFound, IndexError, TMDbException):
                 pass
 
-        # Result has been found, use series ID and returned index
-        if result is not None:
-            try:
-                indices = result.season_number, result.episode_number
-                return self.api.tv_episode(series_info.tmdb_id, *indices)
-            except NotFound:
-                return None
+        # If series TMDb ID is not present, episode cannot be found
+        if not series_info.has_id('tmdb_id'):
+            return None
 
         # Verify series ID is valid
         try:
             series = self.api.tv_show(series_info.tmdb_id)
-        except NotFound:
+        except (NotFound, TMDbException):
             return None
 
         def _match_by_index(episode_info, season_number, episode_number):
+            # Find episode with series TMDb ID and given index
             try:
                 episode = self.api.tv_episode(series_info.tmdb_id,
                                               season_number, episode_number)
-                if ((title_match and episode_info.title.matches(episode.name))
-                    or not title_match):
-                    return episode
-                return None
-            except NotFound:
+            except (NotFound, TMDbException):
                 return None
 
+            # If TMDb ID matches, or title matches
+            id_match = (episode_info.has_id('tmdb_id')
+                        and episode_info.tmdb_id == episode.id)
+            does_match = (not title_match or (title_match and
+                          episode_info.title.matches(episode.name)))
+            return episode if id_match or does_match else None
+            
         # Try and match by index
         indices = episode_info.season_number, episode_info.episode_number
         if (episode := _match_by_index(episode_info, *indices)) is not None:
@@ -438,7 +433,9 @@ class TMDbInterface(WebInterface):
         for season in series.seasons:
             season.reload()
             for episode in season.episodes:
-                if episode_info.title.matches(episode.name):
+                if ((episode_info.has_id('tmdb_id') and
+                    episode_info.tmdb_id == episode.id)
+                    or episode_info.title.matches(episode.name)):
                     return episode
 
         return None

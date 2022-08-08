@@ -197,11 +197,11 @@ show_summary_group.add_argument(
     metavar=('IMAGE_DIRECTORY', 'LOGO'),
     help='Create a show summary for the given directory')
 show_summary_group.add_argument(
-    '--background-color',
+    '--background',
     type=str,
     default=ShowSummary.BACKGROUND_COLOR,
-    metavar='COLOR',
-    help='Specify background color for the created show summary')
+    metavar='COLOR_OR_IMAGE',
+    help='Specify background color or image for the created show summary')
 show_summary_group.add_argument(
     '--created-by',
     type=str,
@@ -250,6 +250,10 @@ season_poster_group.add_argument(
     default='100%',
     metavar='SCALE%',
     help='Specify the font kerning scale (as percentage) for this season poster')
+season_poster_group.add_argument(
+    '--top-placement',
+    action='store_true',
+    help='Create the season poster with the logo and season text at the top')
          
 # Parse given arguments
 args, unknown = parser.parse_known_args()
@@ -268,7 +272,7 @@ set_preference_parser(pp)
 # Execute title card related options
 if hasattr(args, 'title_card'):
     # Attempt to get local card type, if not, try RemoteCardType
-    RemoteFile.LOADED.truncate()
+    RemoteFile.reset_loaded_database()
     if args.card_type in TitleCard.CARD_TYPES.keys():
         CardClass = TitleCard.CARD_TYPES[args.card_type]
     elif (remote_card := RemoteCardType(args.card_type)).valid:
@@ -355,7 +359,7 @@ if hasattr(args, 'show_summary'):
     show = Show(args.show_summary[1], args.show_summary[0], episodes)
 
     # Create ShowSummary
-    ShowSummary(show, args.background_color, args.created_by).create()
+    ShowSummary(show, args.background, args.created_by).create()
 
 if hasattr(args, 'season_poster'):
     SeasonPoster(
@@ -367,6 +371,7 @@ if hasattr(args, 'season_poster'):
         font_color=args.season_font_color,
         font_size=float(args.season_font_size[:-1])/100.0,
         font_kerning=float(args.season_font_kerning[:-1])/100.0,
+        top_placement=args.top_placement,
     ).create()
 
     

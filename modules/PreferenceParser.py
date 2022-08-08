@@ -2,12 +2,12 @@ from pathlib import Path
 from re import findall
 
 from tqdm import tqdm
-from yaml import safe_load
 
 from modules.Debug import log, TQDM_KWARGS
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.ImageMaker import ImageMaker
 from modules.PlexInterface import PlexInterface
+from modules.SeriesYamlWriter import SeriesYamlWriter
 from modules.Show import Show
 from modules.ShowSummary import ShowSummary
 from modules.Template import Template
@@ -59,18 +59,19 @@ class PreferenceParser(YamlReader):
 
         # Setup default values that can be overwritten by YAML
         self.series_files = []
-        self.card_type = 'standard'
+        self._parse_card_type('standard') # Sets self.card_type
         self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
         self.card_extension = TitleCard.DEFAULT_CARD_EXTENSION
         self.image_source_priority = ('tmdb', 'plex')
         self.episode_data_source = 'sonarr'
         self.validate_fonts = True
         self.season_folder_format = 'Season {season}'
+        self.sync_specials = True
         self.archive_directory = None
         self.create_archive = False
         self.archive_all_variations = True
         self.create_summaries = True
-        self.summary_background_color = ShowSummary.BACKGROUND_COLOR
+        self.summary_background = ShowSummary.BACKGROUND_COLOR
         self.summary_minimum_episode_count = 1
         self.summary_created_by = None
         self.use_plex = False
@@ -79,10 +80,14 @@ class PreferenceParser(YamlReader):
         self.integrate_with_pmm_overlays = False
         self.global_watched_style = 'unique'
         self.global_unwatched_style = 'unique'
+        self.plex_yaml_writer = None
+        self.plex_yaml_update_args = {'filter_libraries': []}
         self.use_sonarr = False
         self.sonarr_url = None
         self.sonarr_api_key = None
-        self.sonarr_sync_specials = True
+        self.sonarr_yaml_writer = None
+        self.sonarr_yaml_update_args = {'plex_libraries': {}, 'filter_tags': [],
+                                        'monitored_only': False}
         self.use_tmdb = False
         self.tmdb_api_key = None
         self.tmdb_retry_count = TMDbInterface.BLACKLIST_THRESHOLD
@@ -149,17 +154,7 @@ class PreferenceParser(YamlReader):
                         f'created')
 
         if (value := self._get('options', 'card_type', type_=lower_str)) !=None:
-            if value not in TitleCard.CARD_TYPES:
-                log.critical(f'Default card type "{value}" is invalid')
-                self.valid = False
-            else:
-                self.card_type = value
-
-        if (value := self._get('options', 'filename_format', type_=str)) !=None:
-            if not TitleCard.validate_card_format_string(value):
-                self.valid = False
-            else:
-                self.card_filename_format = value
+            self._parse_card_type(value)
 
         if (value := self._get('options', 'card_extension', type_=str)) != None:
             extension = ('' if value[0] == '.' else '.') + value
@@ -168,6 +163,12 @@ class PreferenceParser(YamlReader):
                 self.valid = False
             else:
                 self.card_extension = extension
+
+        if (value := self._get('options', 'filename_format', type_=str)) !=None:
+            if not TitleCard.validate_card_format_string(value):
+                self.valid = False
+            else:
+                self.card_filename_format = value
 
         if (value := self._get('options',
                                'image_source_priority', type_=str)) is not None:
@@ -194,6 +195,9 @@ class PreferenceParser(YamlReader):
                                type_=str)) is not None:
             self.season_folder_format = value
 
+        if (value := self._get('options', 'sync_specials', type_=bool)) != None:
+            self.sync_specials = value
+
         if (value := self._get('archive', 'path', type_=Path)) != None:
             self.archive_directory = value
             self.create_archive = True
@@ -209,9 +213,9 @@ class PreferenceParser(YamlReader):
                                type_=str)) is not None:
             self.summary_created_by = value
 
-        if (value := self._get('archive', 'summary', 'background_color',
+        if (value := self._get('archive', 'summary', 'background',
                                type_=str)) != None:
-            self.summary_background_color = value
+            self.summary_background = value
 
         if ((value := self._get('archive', 'summary', 'minimum_episodes',
                                type_=int)) != None):
@@ -248,6 +252,18 @@ class PreferenceParser(YamlReader):
                                type_=bool)) is not None:
             self.integrate_with_pmm_overlays = value
 
+        if self._is_specified(*(attrs := ('plex', 'sync')), 'file'):
+            self.plex_yaml_writer = SeriesYamlWriter(
+                self._get(*attrs, 'file', type_=Path),
+                self._get(*attrs, 'mode', type_=str, default='append'),
+                self._get(*attrs, 'compact_mode', type_=bool, default=True),
+                self._get(*attrs, 'volumes', default={}),
+            )
+            self.plex_yaml_update_args = {
+                'filter_libraries': self._get('plex', 'sync', 'libraries',
+                                              default=[]),
+            }
+
         if self._is_specified('sonarr'):
             if (not self._is_specified('sonarr', 'url')
                 or not self._is_specified('sonarr', 'api_key')):
@@ -259,9 +275,21 @@ class PreferenceParser(YamlReader):
                 self.sonarr_api_key = self._get('sonarr', 'api_key', type_=str)
                 self.use_sonarr = True
 
-        if (value := self._get('sonarr', 'sync_specials', type_=bool)) != None:
-            self.sonarr_sync_specials = value
-
+        if self._is_specified(*(attrs := ('sonarr', 'sync')), 'file'):
+            self.sonarr_yaml_writer = SeriesYamlWriter(
+                self._get(*attrs, 'file', type_=Path),
+                self._get(*attrs, 'mode', type_=str, default='append'),
+                self._get(*attrs, 'compact_mode', type_=bool, default=True),
+                self._get(*attrs, 'volumes', default={}),
+            )
+            self.sonarr_yaml_update_args = {
+                'plex_libraries': self._get('sonarr', 'sync', 'plex_libraries',
+                                            default={}),
+                'filter_tags': self._get('sonarr', 'sync', 'tags', default=[]),
+                'monitored_only': self._get('sonarr', 'sync', 'monitored_only',
+                                            default=False),
+            }
+        
         if (value := self._get('tmdb', 'api_key', type_=str)) != None:
             self.tmdb_api_key = value
             self.use_tmdb = True
@@ -295,6 +323,11 @@ class PreferenceParser(YamlReader):
         if self._is_specified('options', 'hide_season_folders'):
             log.critical(f'Options "hide_season_folders" setting has been '
                          f'incorporated into "season_folder_format"')
+            self.valid = False
+
+        if self._is_specified('archive', 'summary', 'background_color'):
+            log.critical(f'Archive summary "background_color" option has been '
+                         f'renamed to "background"')
             self.valid = False
 
         if self._is_specified('plex', 'unwatched'):
@@ -464,11 +497,12 @@ class PreferenceParser(YamlReader):
                         continue
 
                     # Get priority union of variation and base series
+                    file_yaml['series'][show_name].pop('archive_name', None)
                     Template('', {}).recurse_priority_union(
                         variation, file_yaml['series'][show_name]
                     )
 
-                    # Remove any library/media directory, only archived
+                    # Remove any library-specific details
                     variation.pop('library', None)
                     variation.pop('media_directory', None)
                     

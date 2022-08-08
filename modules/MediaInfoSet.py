@@ -37,6 +37,8 @@ class MediaInfoSet:
         self.episode_tvdb_ids = {}
         # IMDb ID -> EpisodeInfo
         self.episode_imdb_ids = {}
+        # TMDb ID -> EpisodeInfo
+        self.episode_tmdb_ids = {}
 
 
     def get_series_info(self, name: str=None, year: int=None, *,
@@ -140,10 +142,27 @@ class MediaInfoSet:
         self.episode_tvdb_ids[tvdb_id] = episode_info
 
 
+    def __set_episode_tmdb_id(self, episode_info: EpisodeInfo,
+                              tmdb_id: str) -> None:
+        """
+        Set the TMDb ID of the given EpisodeInfo object. This also updates
+        the TMDb ID map of this info set.
+        
+        :param      episode_info:   The EpisodeInfo to set the ID of.
+        :param      tmdb_id:        The TMDb ID.
+        """
+
+        if tmdb_id is None:
+            return None
+
+        episode_info.set_tmdb_id(tmdb_id)
+        self.episode_tmdb_ids[tmdb_id] = episode_info
+
+
     def get_episode_info(self, series_info: SeriesInfo=None,
                          title: 'Title'=None, season_number: int=None,
                          episode_number: int=None,  abs_number: int=None, *,
-                         imdb_id: str=None, tvdb_id: int=None,
+                         imdb_id: str=None, tvdb_id: int=None, tmdb_id:int=None,
                          title_match: bool=True, 
                          **queried_kwargs: dict) -> EpisodeInfo:
         """
@@ -163,6 +182,7 @@ class MediaInfoSet:
         :param      abs_number:     Optional absolute number of the episode.
         :param      imdb_id:        Optional IMDb ID.
         :param      tvdb_id:        Optional TVDb ID.
+        :param      tmdb_id:        Optional TMDb ID.
         :param      kwargs:         Any keyword arguments to pass to the
                                     initialization of the EpisodeInfo object, if
                                     indicated.
@@ -175,6 +195,7 @@ class MediaInfoSet:
         def set_ids(info_obj):
             self.__set_episode_imdb_id(info_obj, imdb_id)
             self.__set_episode_tvdb_id(info_obj, tvdb_id)
+            self.__set_episode_tmdb_id(info_obj, tmdb_id)
             info_obj.update_queried_statuses(**queried_kwargs)
             return info_obj
 
@@ -182,6 +203,8 @@ class MediaInfoSet:
         if tvdb_id is not None and (info := self.episode_tvdb_ids.get(tvdb_id)):
             return set_ids(info)
         if imdb_id is not None and (info := self.episode_imdb_ids.get(imdb_id)):
+            return set_ids(info)
+        if tmdb_id is not None and (info := self.episode_tmdb_ids.get(tmdb_id)):
             return set_ids(info)
         if (season_number is not None and episode_number is not None
             and series_info is not None):
@@ -194,7 +217,8 @@ class MediaInfoSet:
                               f'mismatch ({info.title}) vs ({title})')
                     return EpisodeInfo(title, season_number, episode_number,
                                        abs_number, imdb_id=imdb_id,
-                                       tvdb_id=tvdb_id, **queried_kwargs)
+                                       tvdb_id=tvdb_id, tmdb_id=tmdb_id,
+                                       **queried_kwargs)
 
         # This EpisodeInfo doesn't exist in the set, create new object
         episode_info = EpisodeInfo(
@@ -204,6 +228,7 @@ class MediaInfoSet:
             abs_number,
             imdb_id=imdb_id,
             tvdb_id=tvdb_id,
+            tmdb_id=tmdb_id,
             **queried_kwargs,
         )
 
@@ -217,6 +242,7 @@ class MediaInfoSet:
         # Add object to ID sets
         self.__set_episode_imdb_id(episode_info, imdb_id)
         self.__set_episode_tvdb_id(episode_info, tvdb_id)
+        self.__set_episode_tmdb_id(episode_info, tmdb_id)
 
         return episode_info
 
