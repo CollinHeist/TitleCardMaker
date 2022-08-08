@@ -153,7 +153,7 @@ class PreferenceParser(YamlReader):
             log.warning(f'No series YAML files indicated, no cards will be '
                         f'created')
 
-        if (value := self._get('options', 'card_type', type_=lower_str)) !=None:
+        if (value := self._get('options', 'card_type', type_=str)) !=None:
             self._parse_card_type(value)
 
         if (value := self._get('options', 'card_extension', type_=str)) != None:
