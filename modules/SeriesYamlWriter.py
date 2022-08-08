@@ -1,7 +1,8 @@
 from pathlib import Path
 from re import sub, IGNORECASE
 
-from ruamel.yaml import YAML, round_trip_dump, comments
+from ruamel.yaml import YAML, round_trip_dump, comments, 
+from ruamel.yaml.constructor import DuplicateKeyError
 from yaml import add_representer, dump
 
 from modules.Debug import log
@@ -121,8 +122,17 @@ class SeriesYamlWriter:
             return None
 
         # Read existing lines/YAML for future parsing
-        with self.file.open('r', encoding='utf-8') as file_handle:
-            existing_yaml = YAML().load(file_handle)
+        try:
+            with self.file.open('r', encoding='utf-8') as file_handle:
+                existing_yaml = YAML().load(file_handle)
+        except DuplicateKeyError as e:
+            log.error(f'Cannot sync to file "{self.file.resolve()}"')
+            log.error(f'Invalid YAML encountered {e}')
+            return None
+        except Exception as e:
+            log.error(f'Cannot sync to file "{self.file.resolve()}"')
+            log.error(f'Error occured {e}')
+            return None
         
         # Write if file exists but is blank
         if existing_yaml is None or len(existing_yaml) == 0:
