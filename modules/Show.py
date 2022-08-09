@@ -70,7 +70,7 @@ class Show(YamlReader):
 
         # Initialize parent YamlReader object
         super().__init__(yaml_dict, log_function=log.error)
-
+        
         # Get global objects
         self.preferences = preferences
         self.info_set = global_objects.info_set
@@ -79,16 +79,14 @@ class Show(YamlReader):
         self.__library_map = library_map
 
         # Set this show's SeriesInfo object with blank year to start
-        self.series_info = SeriesInfo(name, 0)
-
-        # If year isn't given, skip completely
-        if (year := self._get('year', type_=int)) is None:
+        try:
+            self.series_info = SeriesInfo(name, self._get('year', type_=int))
+        except ValueError:
             log.error(f'Series "{name}" is missing the required "year"')
             self.valid = False
             return None
             
         # Setup default values that may be overwritten by YAML
-        self.series_info = self.info_set.get_series_info(name, year)
         self.card_filename_format = self.preferences.card_filename_format
         self.media_directory = None
         self.card_class = self.preferences.card_class
@@ -185,9 +183,11 @@ class Show(YamlReader):
             modified_base['watched_style'] = value
 
         # Recreate Show object with modified YAML
-        show = Show(self.series_info.name, modified_base, self.__library_map,
-                    self.font._Font__font_map, self.source_directory.parent,
-                    self.preferences)
+        show = Show(
+            self.series_info.full_name, modified_base, self.__library_map,
+            self.font._Font__font_map, self.source_directory.parent,
+            self.preferences
+        )
         show.__is_archive = True
 
         return show
