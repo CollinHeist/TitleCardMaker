@@ -133,32 +133,39 @@ class SonarrInterface(WebInterface):
         self.__warned.append(series_info.full_name)
 
 
-    def get_all_series(self, filter_tags: list[str]=[],
+    def get_all_series(self, required_tags: list[str]=[], 
+                       excluded_tags: list[str]=[],
                        monitored_only: bool=False)->list[tuple[SeriesInfo,str]]:
         """
-        Get a list of tuples of series and their paths within Sonarr. The list
-        can be filtered by a list of tags, any series with any of those tags
-        are returned.
+        Get all the series within Sonarr, filtered by the given parameters.
 
-        :param      filter_tags:    Optional list of tag NAMES to filter the
-                                    returned list by. If provided, a series must
-                                    have at least one of the given tags.
-        
-        :returns:   List of tuples. The tuple contains the SeriesInfo object
-                    for the series, and the Path to the media as reported by
-                    Sonarr.
+         Args:
+            required_tags: List of tags to filter return by. If provided, only
+                series that have at least one of the given tags are returned.
+            excluded_tags: List of tags to filter return by. If provided, series
+                with any of the given tags are excluded from return.
+            monitored_only: Whether to filter return by onyl series that are
+                monitored within Sonarr.
+
+        Returns:
+            List of tuples. Tuple contains the SeriesInfo object for the series,
+            and the Path to the series' media as reported by Sonarr.
         """
 
         # Construct GET arguments
         all_series = self._get(f'{self.url}series', self.__standard_params)
 
         # Get filter tags if indicated
-        filter_tag_ids = []
-        if len(filter_tags) > 0:
+        required_tag_ids, excluded_tag_ids = [], []
+        if len(required_tags) > 0 or len(excluded_tags) > 0:
             # Request all Sonarr tags
             all_tags = self._get(f'{self.url}tag', self.__standard_params)
-            filter_tag_ids = [tag['id'] for tag in all_tags
-                              if tag['label'] in filter_tags]
+
+            # Convert tag names to ID's
+            required_tag_ids = [tag['id'] for tag in all_tags
+                                if tag['label'] in required_tags]
+            excluded_tag_ids = [tag['id'] for tag in all_tags
+                                if tag['label'] in excluded_tags]
 
         # Go through each series in Sonarr
         series = []
@@ -167,10 +174,15 @@ class SonarrInterface(WebInterface):
             if monitored_only and not show['monitored']:
                 continue
 
+            # Skip show if tag is in exclude list
+            if (len(excluded_tag_ids) > 0
+                and any(tag in excluded_tag_ids for tag in show['tags'])):
+                continue
+
             # Skip show if tag isn't in filter (and filter is enabled)
-            if (len(filter_tag_ids) > 0
-                and not any(tag in filter_tag_ids for tag in show['tags'])):
-                    continue
+            if (len(required_tag_ids) > 0
+                and not any(tag in required_tag_ids for tag in show['tags'])):
+                continue
 
             # Construct SeriesInfo object for this show
             series_info = SeriesInfo(
