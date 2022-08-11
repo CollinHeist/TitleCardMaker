@@ -265,7 +265,7 @@ class PreferenceParser(YamlReader):
         if (value := self._get('plex', 'sync', 'libraries')) is not None:
             self.plex_yaml_update_args['filter_libraries'] = value
 
-        if (value := self._get('plex', 'sync', 'exclude')) is not None:
+        if (value := self._get('plex', 'sync', 'exclusions')) is not None:
             self.plex_yaml_update_args['exclusions'] = value
 
         if self._is_specified('sonarr'):
@@ -302,7 +302,7 @@ class PreferenceParser(YamlReader):
         if (value := self._get('sonarr', 'sync', 'required_tags')) is not None:
             self.sonarr_yaml_update_args['required_tags'] = value
 
-        if (value := self._get('sonarr', 'sync', 'exclude')) is not None:
+        if (value := self._get('sonarr', 'sync', 'exclusions')) is not None:
             self.sonarr_yaml_update_args['exclusions'] = value
 
         if (value := self._get('sonarr', 'sync', 'monitored_only',
