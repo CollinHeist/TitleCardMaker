@@ -257,6 +257,11 @@ class PreferenceParser(YamlReader):
                 self._get(*attrs, 'add_template', type_=str, default=None),
             )
 
+            if (self._get(*attrs, 'mode', type_=lower_str) == 'sync'
+                and self._get(*attrs, 'add_template', type_=str)):
+                log.warning(f'Adding a template during "sync" mode will do '
+                            f'nothing')
+
         if (value := self._get('plex', 'sync', 'libraries')) is not None:
             self.plex_yaml_update_args['filter_libraries'] = value
 
@@ -282,6 +287,11 @@ class PreferenceParser(YamlReader):
                 self._get(*attrs, 'volumes', default={}),
                 self._get(*attrs, 'add_template', type_=str, default=None),
             )
+
+            if (self._get(*attrs, 'mode', type_=lower_str) == 'sync'
+                and self._get(*attrs, 'add_template', type_=str)):
+                log.warning(f'Adding a template during "sync" mode will do '
+                            f'nothing')
             
         if (value := self._get('sonarr', 'sync', 'plex_libraries')) is not None:
             self.sonarr_yaml_update_args['plex_libraries'] = value
