@@ -254,6 +254,7 @@ class PreferenceParser(YamlReader):
                 self._get(*attrs, 'mode', type_=str, default='append'),
                 self._get(*attrs, 'compact_mode', type_=bool, default=True),
                 self._get(*attrs, 'volumes', default={}),
+                self._get(*attrs, 'add_template', type_=str, default=None),
             )
 
         if (value := self._get('plex', 'sync', 'libraries')) is not None:
@@ -279,6 +280,7 @@ class PreferenceParser(YamlReader):
                 self._get(*attrs, 'mode', type_=str, default='append'),
                 self._get(*attrs, 'compact_mode', type_=bool, default=True),
                 self._get(*attrs, 'volumes', default={}),
+                self._get(*attrs, 'add_template', type_=str, default=None),
             )
             
         if (value := self._get('sonarr', 'sync', 'plex_libraries')) is not None:

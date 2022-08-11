@@ -23,7 +23,8 @@ class SeriesYamlWriter:
 
 
     def __init__(self, file: Path, sync_mode: str='append',
-                 compact_mode: bool=True, volume_map: dict[str: str]={}) ->None:
+                 compact_mode: bool=True, volume_map: dict[str: str]={},
+                 template: str=None) ->None:
         """
         Initialize an instance of a SeriesYamlWrite object.
 
@@ -33,6 +34,7 @@ class SeriesYamlWriter:
                 'sync' or 'append'.
             compact_mode: Whether to write this YAML in compact mode or not.
             volume_map: Mapping of interface paths to corresponding TCM paths.
+            template: Template to add to all synced series.
             
         Raises:
             ValueError: If sync mode isn't 'sync' or 'append'.
@@ -47,6 +49,9 @@ class SeriesYamlWriter:
         if (sync_mode := sync_mode.lower()) not in ('sync', 'append'):
             raise ValueError(f'Sync mode must be "sync" or "append"')
         self.sync_mode = sync_mode
+
+        # Store optional template to add
+        self.template = template
 
         # Add representer for compact YAML writing
         # Pseudo-class for a flow map - i.e. dictionary
@@ -276,7 +281,9 @@ class SeriesYamlWriter:
                     break
 
             # Add details to eventual YAML object
-            this_entry = {}
+            this_entry = {} if library is None else {'library': library}
+            if self.template is not None:
+                this_entry['template'] = self.template
 
             # Add under "full name", then "name [sonarr:sonarr_id]""
             key = series_info.full_name
@@ -288,10 +295,6 @@ class SeriesYamlWriter:
             # Add media directory if path doesn't match default
             if Path(sonarr_path).name != series_info.legal_path:
                 this_entry['media_directory'] = sonarr_path
-
-            # Add library key to this entry
-            if library is not None:
-                this_entry['library'] = library
 
             # Add this entry to main supposed YAML
             series_yaml[key] = this_entry
@@ -373,17 +376,16 @@ class SeriesYamlWriter:
             series_path = self.__convert_path(plex_path)
 
             # Add details to eventual YAML object
-            this_entry = {'year': series_info.year, 'library': library}
+            this_entry = {'library': library}
+            if self.template is not None:
+                this_entry['template'] = self.template
 
-            # Add under key: name > full name > full name (imdb_id)
-            key = series_info.name
+            # Add under key: full name > name [imdb:imdb_id]
+            key = series_info.full_name
             if key in series_yaml:
-                if series_info.full_name not in series_yaml:
-                    this_entry = {'name': series_info.name}
-                    key = series_info.full_name
-                else:
-                    this_entry = {'name': series_info.name}
-                    key = f'{series_info.full_name} ({series_info.imdb_id})'
+                this_entry['name'] = series_info.name
+                this_entry['year'] = series_info.year
+                key = f'{series_info.name} [imdb:{series_info.imdb_id}]'
 
             # Add media directory if path doesn't match default
             if Path(series_path).name != series_info.legal_path:
