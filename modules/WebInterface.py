@@ -25,6 +25,9 @@ class WebInterface:
             verify_ssl: Whether to verify SSL requests with this Interface.
         """
 
+        # Store name of this interface
+        self.name = name
+
         # Create session for persistent requests
         self.session = Session()
 
@@ -32,7 +35,7 @@ class WebInterface:
         self.session.verify = verify_ssl
         if not self.session.verify:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-            log.debug(f'Not verifying SSL connections')
+            log.debug(f'Not verifying SSL connections for {name}')
 
         # Cache of the last requests to speed up identical sequential requests
         self.__cache = []
