@@ -596,9 +596,13 @@ class Show(YamlReader):
             # SVG logos need to be converted first
             if url.endswith('.svg'):
                 # Download .svgs to temporary location pre-conversion
-                tmdb_interface.download_image(
+                success = tmdb_interface.download_image(
                     url, self.card_class.TEMPORARY_SVG_FILE
                 )
+
+                # If failed to downlaod, skip
+                if not success:
+                    return None
 
                 # Convert temporary SVG to PNG at logo filepath
                 self.card_class.convert_svg_to_png(
@@ -785,9 +789,9 @@ class Show(YamlReader):
 
                 # If URL was returned by either interface, download
                 if image_url is not None:
-                    WebInterface.download_image(image_url, episode.source)
-                    log.debug(f'Downloaded {episode.source.name} for {self} '
-                              f'from {source_interface}')
+                    if WebInterface.download_image(image_url, episode.source):
+                        log.debug(f'Downloaded {episode.source.name} for {self}'
+                                  f' from {source_interface}')
                     break
         
         # Query TMDb for the backdrop if one does not exist and is needed

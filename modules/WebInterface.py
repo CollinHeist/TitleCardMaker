@@ -86,12 +86,16 @@ class WebInterface:
 
 
     @staticmethod
-    def download_image(image_url: str, destination: 'Path') -> None:
+    def download_image(image_url: str, destination: 'Path') -> bool:
         """
         Download the provided image URL to the destination filepath.
         
-        :param      image_url:      The image url to download.
-        :param      destination:    The destination for the requested image.
+        Args:
+            image_url: URL to the image to download.
+            destination: Destination path to download the image to.
+
+        Returns:
+            Whether the image was successfully downloaded.
         """
 
         # Make parent folder structure
@@ -99,7 +103,11 @@ class WebInterface:
 
         # Attempt to download the image, if an error happens log to user
         try:
+            image = get(image_url).content
             with destination.open('wb') as file_handle:
-                file_handle.write(get(image_url).content)
+                file_handle.write(image)
+
+            return True
         except Exception as e:
             log.error(f'Cannot download image, error: "{e}"')
+            return False
