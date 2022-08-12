@@ -32,6 +32,7 @@ class Manager:
             self.plex_interface = PlexInterface(
                 url=self.preferences.plex_url,
                 x_plex_token=self.preferences.plex_token,
+                verify_ssl=self.preferences.plex_verify_ssl,
             )
 
         # Optionally assign SonarrInterface

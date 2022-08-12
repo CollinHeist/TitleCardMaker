@@ -77,6 +77,7 @@ class PreferenceParser(YamlReader):
         self.use_plex = False
         self.plex_url = None
         self.plex_token = 'NA'
+        self.plex_verify_ssl = True
         self.integrate_with_pmm_overlays = False
         self.global_watched_style = 'unique'
         self.global_unwatched_style = 'unique'
@@ -227,6 +228,9 @@ class PreferenceParser(YamlReader):
 
         if (value := self._get('plex', 'token', type_=str)) != None:
             self.plex_token = value
+
+        if (value := self._get('plex', 'verify_ssl', type_=bool)) is not None:
+            self.plex_verify_ssl = value
 
         if (value := self._get('plex', 'watched_style', type_=lower_str))!=None:
             if value not in Show.VALID_STYLES:

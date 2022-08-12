@@ -40,7 +40,7 @@ class SonarrInterface(WebInterface):
         """
 
         # Initialize parent WebInterface 
-        super().__init__(verify_ssl)
+        super().__init__('Sonarr', verify_ssl)
         
         # Get global MediaInfoSet object
         self.info_set = global_objects.info_set
@@ -77,7 +77,7 @@ class SonarrInterface(WebInterface):
 
         # Parse all Sonarr series
         self.__map_all_ids()
-
+        
 
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""

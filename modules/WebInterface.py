@@ -15,12 +15,13 @@ class WebInterface:
     CACHE_LENGTH = 10
     
     
-    def __init__(self, verify_ssl: bool=True) -> None:
+    def __init__(self, name: str, verify_ssl: bool=True) -> None:
         """
         Construct a new instance of a WebInterface. This creates creates cached
         request and results lists, and establishes a session for future use.
 
         Args:
+            name: Name (for logging) of this Interface.
             verify_ssl: Whether to verify SSL requests with this Interface.
         """
 
