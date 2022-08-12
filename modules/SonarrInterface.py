@@ -260,9 +260,9 @@ class SonarrInterface(WebInterface):
 
                 # Skip temporary placeholder names if aired in the last 48 hours
                 if (self.__TEMP_IGNORE_REGEX.match(episode['title'])
-                    and air_datetime > datetime.now() + timedelta(days=2)):
-                    log.debug(f'Temporarily ignoring episode {episode["title"]}'
-                              f' of {series_info} - placeholder title')
+                    and air_datetime < datetime.now() + timedelta(days=2)):
+                    log.debug(f'Temporarily ignoring "{episode["title"]}" of '
+                              f'{series_info} - placeholder title')
                     continue
 
             # Skip permanent placeholder names
