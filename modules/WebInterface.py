@@ -1,4 +1,4 @@
-from requests import Session
+from requests import get, Session
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 import urllib3
 
@@ -31,6 +31,7 @@ class WebInterface:
         self.session.verify = verify_ssl
         if not self.session.verify:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            log.debug(f'Not verifying SSL connections')
 
         # Cache of the last requests to speed up identical sequential requests
         self.__cache = []

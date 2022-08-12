@@ -16,7 +16,7 @@ class SonarrInterface(WebInterface):
     """
 
     """Regex to match Sonarr URL's"""
-    __SONARR_URL_REGEX = re_compile(r'^((?:https?:\/\/)?.+?)(?=\/)', IGNORECASE)
+    __SONARR_URL_REGEX = re_compile(r'^((?:https?:\/\/)?.+)(?=\/)', IGNORECASE)
 
     """Episode titles that indicate a placeholder and are to be ignored"""
     __TEMP_IGNORE_REGEX = re_compile(r'^(tba|tbd|episode \d+)$', IGNORECASE)
@@ -45,9 +45,11 @@ class SonarrInterface(WebInterface):
         # Get global MediaInfoSet object
         self.info_set = global_objects.info_set
 
-        # Correct URL to end in /api/v3/
+        # Get correct URL
         url = url if url.endswith('/') else f'{url}/'
-        if (re_match := self.__SONARR_URL_REGEX.match(url)) is None:
+        if url.endswith('/api/v3/'):
+            self.url = url
+        elif (re_match := self.__SONARR_URL_REGEX.match(url)) is None:
             log.critical(f'Invalid Sonarr URL "{url}"')
             exit(1)
         else:

@@ -40,6 +40,7 @@ class Manager:
             self.sonarr_interface = SonarrInterface(
                 url=self.preferences.sonarr_url,
                 api_key=self.preferences.sonarr_api_key,
+                verify_ssl=self.preferences.sonarr_verify_ssl,
             )
 
         # Optionally assign TMDbInterface
