@@ -26,21 +26,22 @@ class SonarrInterface(WebInterface):
     __AIRDATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 
 
-    def __init__(self, url: str, api_key: str) -> None:
+    def __init__(self, url: str, api_key: str, verify_ssl: bool=True) -> None:
         """
         Construct a new instance of an interface to Sonarr.
 
         Args:
-            url (str): The API url communicating with Sonarr.
-            api_key (str): The API key for API requests.
+            url: The API url communicating with Sonarr.
+            api_key: The API key for API requests.
+            verify_ssl: Whether to verify SSL requests to Sonarr.
 
         Raises:
             SystemExit: Invalid Sonarr URL/API key provided.
         """
 
         # Initialize parent WebInterface 
-        super().__init__()
-
+        super().__init__(verify_ssl)
+        
         # Get global MediaInfoSet object
         self.info_set = global_objects.info_set
 

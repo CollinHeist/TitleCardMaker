@@ -1,5 +1,6 @@
 from requests import get
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
+import urllib3
 
 from modules.Debug import log
 
@@ -13,11 +14,16 @@ class WebInterface:
     CACHE_LENGTH = 10
     
     
-    def __init__(self) -> None:
+    def __init__(self, verify_ssl: bool=True) -> None:
         """
         Constructs a new instance of a WebInterface. This creates creates a 
         cached request and result, but no other attributes.
         """
+
+        # Whether to verify SSL
+        self.__verify_ssl = verify_ssl
+        if not verify_ssl:
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
         # Cache of the last requests to speed up identical sequential requests
         self.__cache = []
@@ -36,7 +42,10 @@ class WebInterface:
         :retuns:    Dict made from the JSON return of the specified GET request.
         """
 
-        return get(url=url, params=params).json()
+        if self.__verify_ssl:
+            return get(url=url, params=params).json()
+        
+        return get(url=url, params=params, verify=False).json()
 
 
     def _get(self, url: str, params: dict) -> dict:

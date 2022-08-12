@@ -85,6 +85,7 @@ class PreferenceParser(YamlReader):
         self.use_sonarr = False
         self.sonarr_url = None
         self.sonarr_api_key = None
+        self.sonarr_verify_ssl = True
         self.sonarr_yaml_writer = None
         self.sonarr_yaml_update_args = {}
         self.use_tmdb = False
@@ -278,6 +279,9 @@ class PreferenceParser(YamlReader):
                 self.sonarr_url = self._get('sonarr', 'url', type_=str)
                 self.sonarr_api_key = self._get('sonarr', 'api_key', type_=str)
                 self.use_sonarr = True
+
+        if (value := self._get('sonarr', 'verify_ssl', type_=bool)) is not None:
+            self.sonarr_verify_ssl = value
 
         if self._is_specified(*(attrs := ('sonarr', 'sync')), 'file'):
             self.sonarr_yaml_writer = SeriesYamlWriter(
