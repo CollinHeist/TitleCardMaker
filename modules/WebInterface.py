@@ -1,4 +1,4 @@
-from requests import get
+from requests import Session
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 import urllib3
 
@@ -6,8 +6,9 @@ from modules.Debug import log
 
 class WebInterface:
     """
-    Abstract class that defines a WebInterface, which is a type of interface
-    that makes GET requests and returns some JSON result. 
+    This class defines a WebInterface, which is a type of interface that makes
+    requests using some persistent session and returns JSON results. This object
+    caches requests/results for better performance.
     """
 
     """How many requests to cache"""
@@ -16,13 +17,19 @@ class WebInterface:
     
     def __init__(self, verify_ssl: bool=True) -> None:
         """
-        Constructs a new instance of a WebInterface. This creates creates a 
-        cached request and result, but no other attributes.
+        Construct a new instance of a WebInterface. This creates creates cached
+        request and results lists, and establishes a session for future use.
+
+        Args:
+            verify_ssl: Whether to verify SSL requests with this Interface.
         """
 
+        # Create session for persistent requests
+        self.session = Session()
+
         # Whether to verify SSL
-        self.__verify_ssl = verify_ssl
-        if not verify_ssl:
+        self.session.verify = verify_ssl
+        if not self.session.verify:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
         # Cache of the last requests to speed up identical sequential requests
@@ -42,10 +49,7 @@ class WebInterface:
         :retuns:    Dict made from the JSON return of the specified GET request.
         """
 
-        if self.__verify_ssl:
-            return get(url=url, params=params).json()
-        
-        return get(url=url, params=params, verify=False).json()
+        return self.session.get(url=url, params=params).json()
 
 
     def _get(self, url: str, params: dict) -> dict:
@@ -98,6 +102,3 @@ class WebInterface:
                 file_handle.write(get(image_url).content)
         except Exception as e:
             log.error(f'Cannot download image, error: "{e}"')
-
-
-        
