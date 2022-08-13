@@ -70,7 +70,7 @@ class Show(YamlReader):
 
         # Initialize parent YamlReader object
         super().__init__(yaml_dict, log_function=log.error)
-
+        
         # Get global objects
         self.preferences = preferences
         self.info_set = global_objects.info_set
@@ -79,16 +79,14 @@ class Show(YamlReader):
         self.__library_map = library_map
 
         # Set this show's SeriesInfo object with blank year to start
-        self.series_info = SeriesInfo(name, 0)
-
-        # If year isn't given, skip completely
-        if (year := self._get('year', type_=int)) is None:
+        try:
+            self.series_info = SeriesInfo(name, self._get('year', type_=int))
+        except ValueError:
             log.error(f'Series "{name}" is missing the required "year"')
             self.valid = False
             return None
             
         # Setup default values that may be overwritten by YAML
-        self.series_info = self.info_set.get_series_info(name, year)
         self.card_filename_format = self.preferences.card_filename_format
         self.media_directory = None
         self.card_class = self.preferences.card_class
@@ -185,9 +183,11 @@ class Show(YamlReader):
             modified_base['watched_style'] = value
 
         # Recreate Show object with modified YAML
-        show = Show(self.series_info.name, modified_base, self.__library_map,
-                    self.font._Font__font_map, self.source_directory.parent,
-                    self.preferences)
+        show = Show(
+            self.series_info.full_name, modified_base, self.__library_map,
+            self.font._Font__font_map, self.source_directory.parent,
+            self.preferences
+        )
         show.__is_archive = True
 
         return show
@@ -596,9 +596,13 @@ class Show(YamlReader):
             # SVG logos need to be converted first
             if url.endswith('.svg'):
                 # Download .svgs to temporary location pre-conversion
-                tmdb_interface.download_image(
+                success = tmdb_interface.download_image(
                     url, self.card_class.TEMPORARY_SVG_FILE
                 )
+
+                # If failed to downlaod, skip
+                if not success:
+                    return None
 
                 # Convert temporary SVG to PNG at logo filepath
                 self.card_class.convert_svg_to_png(
@@ -785,9 +789,9 @@ class Show(YamlReader):
 
                 # If URL was returned by either interface, download
                 if image_url is not None:
-                    WebInterface.download_image(image_url, episode.source)
-                    log.debug(f'Downloaded {episode.source.name} for {self} '
-                              f'from {source_interface}')
+                    if WebInterface.download_image(image_url, episode.source):
+                        log.debug(f'Downloaded {episode.source.name} for {self}'
+                                  f' from {source_interface}')
                     break
         
         # Query TMDb for the backdrop if one does not exist and is needed

@@ -77,17 +77,18 @@ class PreferenceParser(YamlReader):
         self.use_plex = False
         self.plex_url = None
         self.plex_token = 'NA'
+        self.plex_verify_ssl = True
         self.integrate_with_pmm_overlays = False
         self.global_watched_style = 'unique'
         self.global_unwatched_style = 'unique'
         self.plex_yaml_writer = None
-        self.plex_yaml_update_args = {'filter_libraries': []}
+        self.plex_yaml_update_args = {}
         self.use_sonarr = False
         self.sonarr_url = None
         self.sonarr_api_key = None
+        self.sonarr_verify_ssl = True
         self.sonarr_yaml_writer = None
-        self.sonarr_yaml_update_args = {'plex_libraries': {}, 'filter_tags': [],
-                                        'monitored_only': False}
+        self.sonarr_yaml_update_args = {}
         self.use_tmdb = False
         self.tmdb_api_key = None
         self.tmdb_retry_count = TMDbInterface.BLACKLIST_THRESHOLD
@@ -228,22 +229,22 @@ class PreferenceParser(YamlReader):
         if (value := self._get('plex', 'token', type_=str)) != None:
             self.plex_token = value
 
+        if (value := self._get('plex', 'verify_ssl', type_=bool)) is not None:
+            self.plex_verify_ssl = value
+
         if (value := self._get('plex', 'watched_style', type_=lower_str))!=None:
             if value not in Show.VALID_STYLES:
-                options = '", "'.join(Show.VALID_STYLES)
-                log.critical(f'Invalid watched style, must be one of "{opts}"')
+                opt = '", "'.join(Show.VALID_STYLES)
+                log.critical(f'Invalid watched style, must be one of "{opt}"')
                 self.valid = False
             else:
                 self.global_watched_style = value
 
         if (value := self._get('plex', 'unwatched_style',
                                type_=lower_str)) != None:
-            if value == 'ignore':
-                log.critical(f'Unwatched style "ignore" is now "unique"')
-                self.valid = False
-            elif value not in Show.VALID_STYLES:
-                opts = '", "'.join(Show.VALID_STYLES)
-                log.critical(f'Invalid unwatched style, must be one of "{opts}"')
+            if value not in Show.VALID_STYLES:
+                opt = '", "'.join(Show.VALID_STYLES)
+                log.critical(f'Invalid unwatched style, must be one of "{opt}"')
                 self.valid = False
             else:
                 self.global_unwatched_style = value
@@ -258,11 +259,19 @@ class PreferenceParser(YamlReader):
                 self._get(*attrs, 'mode', type_=str, default='append'),
                 self._get(*attrs, 'compact_mode', type_=bool, default=True),
                 self._get(*attrs, 'volumes', default={}),
+                self._get(*attrs, 'add_template', type_=str, default=None),
             )
-            self.plex_yaml_update_args = {
-                'filter_libraries': self._get('plex', 'sync', 'libraries',
-                                              default=[]),
-            }
+
+            if (self._get(*attrs, 'mode', type_=lower_str) == 'sync'
+                and self._get(*attrs, 'add_template', type_=str)):
+                log.warning(f'Adding a template during "sync" mode will do '
+                            f'nothing')
+
+        if (value := self._get('plex', 'sync', 'libraries')) is not None:
+            self.plex_yaml_update_args['filter_libraries'] = value
+
+        if (value := self._get('plex', 'sync', 'exclusions')) is not None:
+            self.plex_yaml_update_args['exclusions'] = value
 
         if self._is_specified('sonarr'):
             if (not self._is_specified('sonarr', 'url')
@@ -275,27 +284,45 @@ class PreferenceParser(YamlReader):
                 self.sonarr_api_key = self._get('sonarr', 'api_key', type_=str)
                 self.use_sonarr = True
 
+        if (value := self._get('sonarr', 'verify_ssl', type_=bool)) is not None:
+            self.sonarr_verify_ssl = value
+
         if self._is_specified(*(attrs := ('sonarr', 'sync')), 'file'):
             self.sonarr_yaml_writer = SeriesYamlWriter(
                 self._get(*attrs, 'file', type_=Path),
                 self._get(*attrs, 'mode', type_=str, default='append'),
                 self._get(*attrs, 'compact_mode', type_=bool, default=True),
                 self._get(*attrs, 'volumes', default={}),
+                self._get(*attrs, 'add_template', type_=str, default=None),
             )
-            self.sonarr_yaml_update_args = {
-                'plex_libraries': self._get('sonarr', 'sync', 'plex_libraries',
-                                            default={}),
-                'filter_tags': self._get('sonarr', 'sync', 'tags', default=[]),
-                'monitored_only': self._get('sonarr', 'sync', 'monitored_only',
-                                            default=False),
-            }
+
+            if (self._get(*attrs, 'mode', type_=lower_str) == 'sync'
+                and self._get(*attrs, 'add_template', type_=str)):
+                log.warning(f'Adding a template during "sync" mode will do '
+                            f'nothing')
+            
+        if (value := self._get('sonarr', 'sync', 'plex_libraries')) is not None:
+            self.sonarr_yaml_update_args['plex_libraries'] = value
+        
+        if (value := self._get('sonarr', 'sync', 'plex_libraries')) is not None:
+            self.sonarr_yaml_update_args['plex_libraries'] = value
+
+        if (value := self._get('sonarr', 'sync', 'required_tags')) is not None:
+            self.sonarr_yaml_update_args['required_tags'] = value
+
+        if (value := self._get('sonarr', 'sync', 'exclusions')) is not None:
+            self.sonarr_yaml_update_args['exclusions'] = value
+
+        if (value := self._get('sonarr', 'sync', 'monitored_only',
+                               type_=bool)) is not None:
+            self.sonarr_yaml_update_args['monitored_only'] = value
         
         if (value := self._get('tmdb', 'api_key', type_=str)) != None:
             self.tmdb_api_key = value
             self.use_tmdb = True
 
         if (value := self._get('tmdb', 'retry_count', type_=int)) != None:
-            self.tmdb_retry_count = int(value)
+            self.tmdb_retry_count = value
 
         if (value := self._get('tmdb', 'minimum_resolution', type_=str)) !=None:
             try:
@@ -310,11 +337,6 @@ class PreferenceParser(YamlReader):
             self.imagemagick_container = value
 
         # Warn for renamed settings
-        if self._is_specified('options', 'source_priority'):
-            log.critical(f'Options "source_priority" setting has been renamed '
-                         f'to "image_source_priority"')
-            self.valid = False
-
         if self._is_specified('options', 'zero_pad_seasons'):
             log.critical(f'Options "zero_pad_seasons" setting has been '
                          f'incorporated into "season_folder_format"')
@@ -330,9 +352,9 @@ class PreferenceParser(YamlReader):
                          f'renamed to "background"')
             self.valid = False
 
-        if self._is_specified('plex', 'unwatched'):
-            log.critical(f'Plex "unwatched" setting has been renamed to '
-                         f'"unwatched_style"')
+        if self._is_specified('sonarr', 'sync', 'tags'):
+            log.critical(f'Sonarr sync "tags" option has been renamed '
+                         f'"required_tags".')
             self.valid = False
 
 

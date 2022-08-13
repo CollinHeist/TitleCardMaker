@@ -264,6 +264,9 @@ class MediaInfoSet:
         self.series_names[f'{name} ({series_info.year})'] = series_info
 
         # Delete old key
-        del self.series_names[old_key]
+        try:
+            del self.series_names[old_key]
+        except KeyError:
+            pass
 
         

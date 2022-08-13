@@ -1,23 +1,41 @@
-from requests import get
+from requests import get, Session
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
+import urllib3
 
 from modules.Debug import log
 
 class WebInterface:
     """
-    Abstract class that defines a WebInterface, which is a type of interface
-    that makes GET requests and returns some JSON result. 
+    This class defines a WebInterface, which is a type of interface that makes
+    requests using some persistent session and returns JSON results. This object
+    caches requests/results for better performance.
     """
 
     """How many requests to cache"""
     CACHE_LENGTH = 10
     
     
-    def __init__(self) -> None:
+    def __init__(self, name: str, verify_ssl: bool=True) -> None:
         """
-        Constructs a new instance of a WebInterface. This creates creates a 
-        cached request and result, but no other attributes.
+        Construct a new instance of a WebInterface. This creates creates cached
+        request and results lists, and establishes a session for future use.
+
+        Args:
+            name: Name (for logging) of this Interface.
+            verify_ssl: Whether to verify SSL requests with this Interface.
         """
+
+        # Store name of this interface
+        self.name = name
+
+        # Create session for persistent requests
+        self.session = Session()
+
+        # Whether to verify SSL
+        self.session.verify = verify_ssl
+        if not self.session.verify:
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            log.debug(f'Not verifying SSL connections for {name}')
 
         # Cache of the last requests to speed up identical sequential requests
         self.__cache = []
@@ -36,7 +54,7 @@ class WebInterface:
         :retuns:    Dict made from the JSON return of the specified GET request.
         """
 
-        return get(url=url, params=params).json()
+        return self.session.get(url=url, params=params).json()
 
 
     def _get(self, url: str, params: dict) -> dict:
@@ -72,12 +90,16 @@ class WebInterface:
 
 
     @staticmethod
-    def download_image(image_url: str, destination: 'Path') -> None:
+    def download_image(image_url: str, destination: 'Path') -> bool:
         """
         Download the provided image URL to the destination filepath.
         
-        :param      image_url:      The image url to download.
-        :param      destination:    The destination for the requested image.
+        Args:
+            image_url: URL to the image to download.
+            destination: Destination path to download the image to.
+
+        Returns:
+            Whether the image was successfully downloaded.
         """
 
         # Make parent folder structure
@@ -85,10 +107,11 @@ class WebInterface:
 
         # Attempt to download the image, if an error happens log to user
         try:
+            image = get(image_url).content
             with destination.open('wb') as file_handle:
-                file_handle.write(get(image_url).content)
+                file_handle.write(image)
+
+            return True
         except Exception as e:
             log.error(f'Cannot download image, error: "{e}"')
-
-
-        
+            return False

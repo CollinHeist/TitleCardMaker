@@ -16,7 +16,7 @@ class SonarrInterface(WebInterface):
     """
 
     """Regex to match Sonarr URL's"""
-    __SONARR_URL_REGEX = re_compile(r'^((?:https?:\/\/)?.+?)(?=\/)', IGNORECASE)
+    __SONARR_URL_REGEX = re_compile(r'^((?:https?:\/\/)?.+)(?=\/)', IGNORECASE)
 
     """Episode titles that indicate a placeholder and are to be ignored"""
     __TEMP_IGNORE_REGEX = re_compile(r'^(tba|tbd|episode \d+)$', IGNORECASE)
@@ -26,27 +26,30 @@ class SonarrInterface(WebInterface):
     __AIRDATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 
 
-    def __init__(self, url: str, api_key: str) -> None:
+    def __init__(self, url: str, api_key: str, verify_ssl: bool=True) -> None:
         """
         Construct a new instance of an interface to Sonarr.
 
         Args:
-            url (str): The API url communicating with Sonarr.
-            api_key (str): The API key for API requests.
+            url: The API url communicating with Sonarr.
+            api_key: The API key for API requests.
+            verify_ssl: Whether to verify SSL requests to Sonarr.
 
         Raises:
             SystemExit: Invalid Sonarr URL/API key provided.
         """
 
         # Initialize parent WebInterface 
-        super().__init__()
-
+        super().__init__('Sonarr', verify_ssl)
+        
         # Get global MediaInfoSet object
         self.info_set = global_objects.info_set
 
-        # Correct URL to end in /api/v3/
+        # Get correct URL
         url = url if url.endswith('/') else f'{url}/'
-        if (re_match := self.__SONARR_URL_REGEX.match(url)) is None:
+        if url.endswith('/api/v3/'):
+            self.url = url
+        elif (re_match := self.__SONARR_URL_REGEX.match(url)) is None:
             log.critical(f'Invalid Sonarr URL "{url}"')
             exit(1)
         else:
@@ -74,7 +77,7 @@ class SonarrInterface(WebInterface):
 
         # Parse all Sonarr series
         self.__map_all_ids()
-
+        
 
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
@@ -133,32 +136,39 @@ class SonarrInterface(WebInterface):
         self.__warned.append(series_info.full_name)
 
 
-    def get_all_series(self, filter_tags: list[str]=[],
+    def get_all_series(self, required_tags: list[str]=[], 
+                       excluded_tags: list[str]=[],
                        monitored_only: bool=False)->list[tuple[SeriesInfo,str]]:
         """
-        Get a list of tuples of series and their paths within Sonarr. The list
-        can be filtered by a list of tags, any series with any of those tags
-        are returned.
+        Get all the series within Sonarr, filtered by the given parameters.
 
-        :param      filter_tags:    Optional list of tag NAMES to filter the
-                                    returned list by. If provided, a series must
-                                    have at least one of the given tags.
-        
-        :returns:   List of tuples. The tuple contains the SeriesInfo object
-                    for the series, and the Path to the media as reported by
-                    Sonarr.
+         Args:
+            required_tags: List of tags to filter return by. If provided, only
+                series that have at least one of the given tags are returned.
+            excluded_tags: List of tags to filter return by. If provided, series
+                with any of the given tags are excluded from return.
+            monitored_only: Whether to filter return by onyl series that are
+                monitored within Sonarr.
+
+        Returns:
+            List of tuples. Tuple contains the SeriesInfo object for the series,
+            and the Path to the series' media as reported by Sonarr.
         """
 
         # Construct GET arguments
         all_series = self._get(f'{self.url}series', self.__standard_params)
 
         # Get filter tags if indicated
-        filter_tag_ids = []
-        if len(filter_tags) > 0:
+        required_tag_ids, excluded_tag_ids = [], []
+        if len(required_tags) > 0 or len(excluded_tags) > 0:
             # Request all Sonarr tags
             all_tags = self._get(f'{self.url}tag', self.__standard_params)
-            filter_tag_ids = [tag['id'] for tag in all_tags
-                              if tag['label'] in filter_tags]
+
+            # Convert tag names to ID's
+            required_tag_ids = [tag['id'] for tag in all_tags
+                                if tag['label'] in required_tags]
+            excluded_tag_ids = [tag['id'] for tag in all_tags
+                                if tag['label'] in excluded_tags]
 
         # Go through each series in Sonarr
         series = []
@@ -167,10 +177,15 @@ class SonarrInterface(WebInterface):
             if monitored_only and not show['monitored']:
                 continue
 
+            # Skip show if tag is in exclude list
+            if (len(excluded_tag_ids) > 0
+                and any(tag in excluded_tag_ids for tag in show['tags'])):
+                continue
+
             # Skip show if tag isn't in filter (and filter is enabled)
-            if (len(filter_tag_ids) > 0
-                and not any(tag in filter_tag_ids for tag in show['tags'])):
-                    continue
+            if (len(required_tag_ids) > 0
+                and not any(tag in required_tag_ids for tag in show['tags'])):
+                continue
 
             # Construct SeriesInfo object for this show
             series_info = SeriesInfo(
@@ -248,9 +263,9 @@ class SonarrInterface(WebInterface):
 
                 # Skip temporary placeholder names if aired in the last 48 hours
                 if (self.__TEMP_IGNORE_REGEX.match(episode['title'])
-                    and air_datetime > datetime.now() + timedelta(days=2)):
-                    log.debug(f'Temporarily ignoring episode {episode["title"]}'
-                              f' of {series_info} - placeholder title')
+                    and air_datetime + timedelta(days=2) > datetime.now()):
+                    log.debug(f'Temporarily ignoring "{episode["title"]}" of '
+                              f'{series_info} - placeholder title')
                     continue
 
             # Skip permanent placeholder names

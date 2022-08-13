@@ -9,6 +9,7 @@ from modules.Debug import log, TQDM_KWARGS
 import modules.global_objects as global_objects
 from modules.EpisodeInfo import EpisodeInfo
 from modules.SeriesInfo import SeriesInfo
+from modules.WebInterface import WebInterface
 
 class PlexInterface:
     """
@@ -29,23 +30,28 @@ class PlexInterface:
     SKIP_SERIES_THRESHOLD = 3
 
 
-    def __init__(self, url: str, x_plex_token: str=None) -> None:
+    def __init__(self, url: str, x_plex_token: str=None,
+                 verify_ssl: bool=True) -> None:
         """
         Constructs a new instance of a Plex Interface.
         
-        :param      url:            The url at which Plex is hosted.
-        :param      x_plex_token:   The x plex token for sending API requests to
-                                    if the host device is untrusted.
+        Args:
+            url: URL of plex server.
+            x_plex_token: X-Plex Token for sending API requests to Plex.
+            verify_ssl: Whether to verify SSL requests when querying Plex.
         """
 
         # Get global PreferenceParser and MediaInfoSet objects
         self.preferences = global_objects.pp
         self.info_set = global_objects.info_set
 
+        # Create Session for caching HTTP responses
+        self.__session = WebInterface('Plex', verify_ssl).session
+
         # Create PlexServer object with these arguments
         try:
             self.__token = x_plex_token
-            self.__server = PlexServer(url, x_plex_token)
+            self.__server = PlexServer(url, x_plex_token, self.__session)
         except Unauthorized:
             log.critical(f'Invalid Plex Token "{x_plex_token}"')
             exit(1)

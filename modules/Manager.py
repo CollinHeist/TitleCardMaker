@@ -32,6 +32,7 @@ class Manager:
             self.plex_interface = PlexInterface(
                 url=self.preferences.plex_url,
                 x_plex_token=self.preferences.plex_token,
+                verify_ssl=self.preferences.plex_verify_ssl,
             )
 
         # Optionally assign SonarrInterface
@@ -40,6 +41,7 @@ class Manager:
             self.sonarr_interface = SonarrInterface(
                 url=self.preferences.sonarr_url,
                 api_key=self.preferences.sonarr_api_key,
+                verify_ssl=self.preferences.sonarr_verify_ssl,
             )
 
         # Optionally assign TMDbInterface

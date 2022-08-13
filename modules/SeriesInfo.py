@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from re import match
+from re import match, compile as re_compile
 from typing import ClassVar
 
 from modules.Debug import log
@@ -12,7 +12,7 @@ class SeriesInfo:
 
     """Initialization fields"""
     name: str
-    year: int
+    year: int=None
     imdb_id: str=None
     sonarr_id: int=None
     tvdb_id: int=None
@@ -34,9 +34,23 @@ class SeriesInfo:
         '*': '-',
     }
 
+    """Regex to match name + year from given full name"""
+    __FULL_NAME_REGEX = re_compile(r'^(.*?)\s+\((\d{4})\)$')
+
 
     def __post_init__(self) -> None:
+        # Try and parse name and year from full name
+        if (self.year is None
+            and (group := match(self.__FULL_NAME_REGEX,self.name)) is not None):
+            self.name = group.group(1)
+            self.year = int(group.group(2))
+        
+        # If year isn't specified still, exit
+        if self.year is None:
+            raise ValueError(f'Year not provided')
+
         self.update_name(self.name)
+
 
     def __str__(self) -> str:
         """Returns a string representation of the object."""

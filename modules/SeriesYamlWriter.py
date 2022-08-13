@@ -2,6 +2,7 @@ from pathlib import Path
 from re import sub, IGNORECASE
 
 from ruamel.yaml import YAML, round_trip_dump, comments
+from ruamel.yaml.constructor import DuplicateKeyError
 from yaml import add_representer, dump
 
 from modules.Debug import log
@@ -9,7 +10,7 @@ from modules.Debug import log
 class SeriesYamlWriter:
     """
     This class describes a SeriesYamlWriter. This is an object that writes
-    formatted series YAML files.
+    formatted series YAML files by syncing with Sonarr or Plex.
     """
 
     """Default arguments for initializing an object"""
@@ -17,14 +18,13 @@ class SeriesYamlWriter:
         'sync_mode': 'append', 'compact_mode': True, 'volume_map': {}
     }
 
-    """Temporary file to read/write YAML from for string conversion"""
-    __TEMPORARY_FILE = Path(__file__).parent / '.objects' / 'tmp.yml'
-
     """Keyword arguments for yaml.dump()"""
     __WRITE_OPTIONS = {'allow_unicode': True, 'width': 200}
 
+
     def __init__(self, file: Path, sync_mode: str='append',
-                 compact_mode: bool=True, volume_map: dict[str: str]={}) ->None:
+                 compact_mode: bool=True, volume_map: dict[str: str]={},
+                 template: str=None) ->None:
         """
         Initialize an instance of a SeriesYamlWrite object.
 
@@ -34,6 +34,7 @@ class SeriesYamlWriter:
                 'sync' or 'append'.
             compact_mode: Whether to write this YAML in compact mode or not.
             volume_map: Mapping of interface paths to corresponding TCM paths.
+            template: Template to add to all synced series.
             
         Raises:
             ValueError: If sync mode isn't 'sync' or 'append'.
@@ -48,6 +49,9 @@ class SeriesYamlWriter:
         if (sync_mode := sync_mode.lower()) not in ('sync', 'append'):
             raise ValueError(f'Sync mode must be "sync" or "append"')
         self.sync_mode = sync_mode
+
+        # Store optional template to add
+        self.template = template
 
         # Add representer for compact YAML writing
         # Pseudo-class for a flow map - i.e. dictionary
@@ -73,6 +77,17 @@ class SeriesYamlWriter:
 
 
     def __convert_path(self, path: str) -> str:
+        """
+        Convert the given path string to its TCM-equivalent by using this 
+        object's volume map.
+
+        Args:
+            path: Path (as string) to convert.
+
+        Returns:
+            Converted Path (as string). If no conversion was applied, then the 
+            original path is returned.
+        """
 
         # Use volume map to convert Sonarr path to TCM path
         for source_base, tcm_base in self.volume_map.items():
@@ -81,6 +96,51 @@ class SeriesYamlWriter:
                 return adj_path
 
         return path
+
+
+    def __apply_exclusion(self, yaml: dict[str: dict[str: str]],
+                          exclusions: list[dict[str: str]]) -> None:
+        """
+        Apply the given exclusions to the given YAML. This modifies the YAML
+        object in-place.
+
+        Args:
+            yaml: YAML being modified.
+            exclusions: List of labelled exclusions to apply to sync.
+        """
+
+        # No exclusions to apply, exit
+        if len(exclusions) == 0 or len(yaml.get('series', {})) == 0:
+            return None
+
+        # Go through each exclusion in the given list
+        for exclusion in exclusions:
+            # Validate this exclusion is a dictionary
+            if not isinstance(exclusion, dict):
+                log.error(f'Invalid exclusion {exclusion}')
+                continue
+
+            # Get exclusion label and value
+            label, value = list(exclusion.items())[0]
+            
+            # If this exclusion is a YAML file, read and filter each series
+            if (label := label.lower()) == 'yaml':
+                # Attempt to read file, error and skip if invalid
+                try:
+                    with Path(value).open('r', encoding='utf-8') as file_handle:
+                        read_yaml = YAML().load(file_handle)
+                except Exception:
+                    log.error(f'Cannot read "{value}" as exclusion file')
+                    continue
+                
+                # Delete each file's specified series
+                for series in read_yaml.get('series', {}).keys():
+                    if series in yaml.get('series', {}):
+                        del yaml['series'][series]
+            # If this exclusion is a specific series, remove
+            elif label == 'series':
+                if value in yaml.get('series', {}):
+                    del yaml['series'][value]
 
 
     def __write(self, yaml: dict[str: dict[str: str]]) -> None:
@@ -97,7 +157,7 @@ class SeriesYamlWriter:
             # Convert each series dictionary as a Flowmap dictionary
             yaml['series'] = {
                 k: self.__compact_flowmap(x)
-                for k, x in yaml['series'].items()
+                for k, x in yaml.get('series', {}).items()
             }
 
         # Write modified YAML to this writer's file
@@ -121,8 +181,17 @@ class SeriesYamlWriter:
             return None
 
         # Read existing lines/YAML for future parsing
-        with self.file.open('r', encoding='utf-8') as file_handle:
-            existing_yaml = YAML().load(file_handle)
+        try:
+            with self.file.open('r', encoding='utf-8') as file_handle:
+                existing_yaml = YAML().load(file_handle)
+        except DuplicateKeyError as e:
+            log.error(f'Cannot sync to file "{self.file.resolve()}"')
+            log.error(f'Invalid YAML encountered {e}')
+            return None
+        except Exception as e:
+            log.error(f'Cannot sync to file "{self.file.resolve()}"')
+            log.error(f'Error occured {e}')
+            return None
         
         # Write if file exists but is blank
         if existing_yaml is None or len(existing_yaml) == 0:
@@ -163,7 +232,8 @@ class SeriesYamlWriter:
 
     def __get_yaml_from_sonarr(self, sonarr_interface: 'SonarrInterface',
                                plex_libraries: dict[str: str],
-                               filter_tags: list[str],
+                               required_tags: list[str],
+                               exclusions: list[dict[str: str]],
                                monitored_only: bool)->dict[str: dict[str: str]]:
         """
         Get the YAML from Sonarr, as filtered by the given attributes.
@@ -172,7 +242,8 @@ class SeriesYamlWriter:
             sonarr_interface: SonarrInterface to sync from.
             plex_libraries: Dictionary of TCM paths to their corresponding
                 libraries.
-            filter_tags: List of tags to filter the Sonarr sync from.
+            required_tags: List of requried tags to filter the Sonarr sync with.
+            exclusions: List of labelled exclusions to apply to sync.
             monitored_only: Whether to only sync monitored series from Sonarr.
 
         Returns:
@@ -180,9 +251,17 @@ class SeriesYamlWriter:
             contains the YAML for that series, such as the 'name', 'year',
             'media_directory', and 'library'.
         """
+
+        # Get list of excluded tags
+        excluded_tags = [
+               list(exclusion.items())[0][1] for exclusion in exclusions
+            if list(exclusion.items())[0][0] == 'tag'
+        ]
         
         # Get list of SeriesInfo and paths from Sonarr
-        all_series = sonarr_interface.get_all_series(filter_tags,monitored_only)
+        all_series = sonarr_interface.get_all_series(
+            required_tags, excluded_tags, monitored_only
+        )
 
         # Exit if no series were returned
         if len(all_series) == 0:
@@ -202,25 +281,20 @@ class SeriesYamlWriter:
                     break
 
             # Add details to eventual YAML object
-            this_entry = {'year': series_info.year}
+            this_entry = {} if library is None else {'library': library}
+            if self.template is not None:
+                this_entry['template'] = self.template
 
-            # Add under key: name > full name > full name (sonarr_id)
-            key = series_info.name
+            # Add under "full name", then "name [sonarr:sonarr_id]""
+            key = series_info.full_name
             if key in series_yaml:
-                if series_info.full_name not in series_yaml:
-                    this_entry['name'] = series_info.name
-                    key = series_info.full_name
-                else:
-                    this_entry['name'] = series_info.name
-                    key = f'{series_info.full_name} ({series_info.sonarr_id})'
+                this_entry['name'] = series_info.name
+                this_entry['year'] = series_info.year
+                key = f'{series_info.name} [sonarr:{series_info.sonarr_id}]'
 
             # Add media directory if path doesn't match default
             if Path(sonarr_path).name != series_info.legal_path:
                 this_entry['media_directory'] = sonarr_path
-
-            # Add library key to this entry
-            if library is not None:
-                this_entry['library'] = library
 
             # Add this entry to main supposed YAML
             series_yaml[key] = this_entry
@@ -231,12 +305,17 @@ class SeriesYamlWriter:
             libraries_yaml[library] = {'path': path}
 
         # Create end-YAML as combination of series and libraries
-        return {'libraries': libraries_yaml, 'series': series_yaml}
+        yaml = {'libraries': libraries_yaml, 'series': series_yaml}
+        
+        # Apply exclusions and return yaml
+        self.__apply_exclusion(yaml, exclusions)
+        return yaml
 
 
     def update_from_sonarr(self, sonarr_interface: 'SonarrInterface',
-                           plex_libraries: dict[str: str],
-                           filter_tags: list[str]=[],
+                           plex_libraries: dict[str: str]={},
+                           required_tags: list[str]=[],
+                           exclusions: list[dict[str: str]]=[],
                            monitored_only: bool=False) -> None:
         """
         Update this object's file from Sonarr.
@@ -245,13 +324,15 @@ class SeriesYamlWriter:
             sonarr_interface: SonarrInterface to sync from.
             plex_libraries: Dictionary of TCM paths to their corresponding
                 libraries.
-            filter_tags: List of tags to filter the Sonarr sync from.
+            required_tags: List of tags to filter the Sonarr sync from.
+            exclusions: List of labelled exclusions to apply to sync.
             monitored_only: Whether to only sync monitored series from Sonarr.
         """
 
         # Get complete file YAML from Sonarr
         yaml = self.__get_yaml_from_sonarr(
-            sonarr_interface, plex_libraries, filter_tags, monitored_only
+            sonarr_interface, plex_libraries, required_tags, exclusions,
+            monitored_only
         )
 
         # Either sync of append this YAML to this object's file
@@ -264,15 +345,16 @@ class SeriesYamlWriter:
 
 
     def __get_yaml_from_plex(self, plex_interface: 'PlexInterface',
-                             filter_libraries: list[str]
+                             filter_libraries: list[str],
+                             exclusions: list[dict[str: str]]=[]
                              ) -> dict[str: dict[str: str]]:
         """
        Get the YAML from Plex, as filtered by the given libraries.
 
         Args:
             plex_interface: PlexInterface to sync from.
-            filter_libraries: List of libraries to filter the returned YAML
-                by.
+            filter_libraries: List of libraries to filter the returned YAML by.
+            exclusions: List of labelled exclusions to apply to sync.
 
         Returns:
             Series YAML as reported by Plex. Keys are series names, and each
@@ -294,17 +376,16 @@ class SeriesYamlWriter:
             series_path = self.__convert_path(plex_path)
 
             # Add details to eventual YAML object
-            this_entry = {'year': series_info.year, 'library': library}
+            this_entry = {'library': library}
+            if self.template is not None:
+                this_entry['template'] = self.template
 
-            # Add under key: name > full name > full name (imdb_id)
-            key = series_info.name
+            # Add under key: full name > name [imdb:imdb_id]
+            key = series_info.full_name
             if key in series_yaml:
-                if series_info.full_name not in series_yaml:
-                    this_entry = {'name': series_info.name}
-                    key = series_info.full_name
-                else:
-                    this_entry = {'name': series_info.name}
-                    key = f'{series_info.full_name} ({series_info.imdb_id})'
+                this_entry['name'] = series_info.name
+                this_entry['year'] = series_info.year
+                key = f'{series_info.name} [imdb:{series_info.imdb_id}]'
 
             # Add media directory if path doesn't match default
             if Path(series_path).name != series_info.legal_path:
@@ -321,17 +402,23 @@ class SeriesYamlWriter:
         }
 
         # Create end-YAML as combination of series and libraries
-        return {'libraries': libraries_yaml, 'series': series_yaml}
+        yaml = {'libraries': libraries_yaml, 'series': series_yaml}
+
+         # Apply exclusions and return yaml
+        self.__apply_exclusion(yaml, exclusions)
+        return yaml
 
 
     def update_from_plex(self, plex_interface: 'PlexInterface',
-                         filter_libraries: list[str]=[]) -> None:
+                         filter_libraries: list[str]=[],
+                         exclusions: list[dict[str: str]]=[]) -> None:
         """
         Update this object's file from Plex.
 
         Args:
             plex_interface: PlexInterface to sync from.
             filter_libraries: List of libraries to filter Plex sync from.
+            exclusions: List of labelled exclusions to apply to sync.
         """
 
         if not isinstance(filter_libraries, (list, tuple)):
@@ -339,7 +426,9 @@ class SeriesYamlWriter:
             exit(1)
 
         # Get complete file YAML from Sonarr
-        yaml = self.__get_yaml_from_plex(plex_interface, filter_libraries)
+        yaml = self.__get_yaml_from_plex(
+            plex_interface, filter_libraries, exclusions
+        )
 
         # Either sync of append this YAML to this object's file
         if self.sync_mode == 'sync':
