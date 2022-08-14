@@ -358,6 +358,9 @@ if hasattr(args, 'show_summary'):
     episodes = {f'1-{(episode := episode+1)}': Episode(f) for f in all_images}
     show = Show(args.show_summary[1], args.show_summary[0], episodes)
 
+    # Override minimum episode count
+    pp.summary_minimum_episode_count = 0
+
     # Create ShowSummary
     ShowSummary(show, args.background, args.created_by).create()
 

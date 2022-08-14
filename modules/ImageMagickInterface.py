@@ -135,6 +135,3 @@ class ImageMagickInterface:
             sep = '-' * 60
             log.debug(f'Command: {command}\n\nstdout: {stdout}\n\nstderr: '
                       f'{stderr}\n{sep}')
-
-
-
