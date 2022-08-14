@@ -292,6 +292,11 @@ class PlexInterface:
 
             # Get all Shows in this library
             for show in library.all():
+                # Skip show if has no year
+                if show.year is None:
+                    log.warning(f'Series {show.title} has no year - skipping')
+                    continue
+
                 # Get all ID's for this series
                 ids = {}
                 for guid in show.guids:
