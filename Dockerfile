@@ -37,7 +37,7 @@ RUN export MAGICK_HOME="$HOME/ImageMagick-7.1.0"; \
 
 # Install TCM package dependencies
 RUN pip3 install --no-cache-dir --upgrade pipenv; \
-    pipenv lock --keep-outdated --requirements > requirements.txt; \
+    pipenv requirements > requirements.txt; \
     pip3 install -r requirements.txt
 
 # Delete setup files
