@@ -114,26 +114,34 @@ class YamlReader(ABC):
 
 
     @staticmethod
-    def _read_file(file: 'Path') -> dict:
+    def _read_file(file: 'Path', *, critical: bool=False) -> dict:
         """
         Read the given file and return the contained YAML.
+
+        Args:
+            file: Path to the file to read.
+            critical: Whether YAML read errors should result in a critical
+                error and exit.
         
-        :param      file:   Path to the file to read.
-        
-        :returns:   Empty dictionary if the file DNE, otherwise the content of
-                    the file.
+        Returns:
+            Empty dictionary if the file DNE, otherwise the content of the file.
         """
 
         # If file does not exist, return blank dictionary
         if not file.exists():
             return {}
 
+        # Open file and return contents
         with file.open('r', encoding='utf-8') as file_handle:
             try:
                 return safe_load(file_handle)
             except Exception as e:
-                log.critical(f'Error reading "{file.resolve()}":\n{e}\n')
-                exit(1)
+                # Log error, if critical then exit with error code
+                if critical:
+                    log.critical(f'Error reading "{file.resolve()}":\n{e}\n')
+                    exit(1)
+                else:
+                    log.error(f'Error reading "{file.resolve()}":\n{e}\n')
 
         return {}
         

@@ -412,7 +412,7 @@ class PreferenceParser(YamlReader):
             exit(1)
 
         # Read file 
-        self._base_yaml = self._read_file(self.file)
+        self._base_yaml = self._read_file(self.file, critical=True)
 
         # Log reading, return that YAML
         log.info(f'Read preference file "{self.file.resolve()}"')
@@ -443,7 +443,7 @@ class PreferenceParser(YamlReader):
                 continue
 
             # Read file, parse yaml
-            if (file_yaml := self._read_file(file)) == {}:
+            if (file_yaml := self._read_file(file, critical=False)) == {}:
                 continue
 
             # Skip if there are no series to yield
