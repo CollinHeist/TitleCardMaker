@@ -141,7 +141,7 @@ if hasattr(args, 'import_cards') and pp.use_plex:
     # Get series/name + year from archive directory if unspecified
     archive = Path(args.import_cards[0])
     if hasattr(args, 'import_series'):
-    	series_info = SeriesInfo(*args.import_series)
+        series_info = SeriesInfo(*args.import_series)
     else:
         if (groups := match(r'^(.*) \((\d+)\)$', archive.parent.name)):
             series_info = SeriesInfo(*groups.groups())
@@ -175,7 +175,6 @@ if hasattr(args, 'import_cards') and pp.use_plex:
     	episode_map
     )
     
-    
 for directory in args.delete_cards:
     # Get all images in this directory
     directory = Path(directory)
@@ -186,14 +185,22 @@ for directory in args.delete_cards:
         log.info(f'No images to delete from "{directory.resolve()}"')
         continue
 
-    # Ask user to confirm deletion
+    # Log each image to be deleted
+    base_length = len(str(directory.resolve()))
+    for image in images:
+        log.info(f'Identified [...]{str(image.resolve())[base_length:]}')
+
+    # Ask for confirmation
     log.warning(f'Deleting {len(images)} images from "{directory.resolve()}"')
-    confirmation = input(f'  Continue [Y/N]?  ')
+    confirmation = input(f'  Continue [Y/N]? ')
+
+    # Delete each image
     if confirmation in ('y', 'Y', 'yes', 'YES'):
-        # Delete each image returned by glob
         for image in images:
             image.unlink()
             log.debug(f'Deleted {image.resolve()}')
+    else:
+        log.info(f'Not deleting any images')
 
 if hasattr(args, 'forget_cards') and pp.use_plex:
     # Create PlexInterface and remove records for indicated series+library
@@ -213,9 +220,8 @@ if hasattr(args, 'unblacklist'):
         SeriesInfo(args.unblacklist[0], int(args.unblacklist[1]))
     )
 
-if hasattr(args, 'delete_blacklist'):
-    if args.delete_blacklist:
-        TMDbInterface.delete_blacklist()
+if hasattr(args, 'delete_blacklist') and args.delete_blacklist:
+    TMDbInterface.delete_blacklist()
 
 if hasattr(args, 'tmdb_download_images') and pp.use_tmdb:
     for arg_set in args.tmdb_download_images:
