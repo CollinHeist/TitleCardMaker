@@ -84,6 +84,31 @@ class TMDbInterface(WebInterface):
         return f'<TMDbInterface {self.api=}>'
 
 
+    def catch_and_log(message: str, log_func=log.error) -> callable:
+        """
+        Return a decorator that logs (with the given log function) the given
+        message if the decorated function raises an uncaught TMDbException.
+
+        Args:
+            message: Message to log upon uncaught exception.
+            log_func: Log function to call upon uncaught exception.
+
+        Returns:
+            Wrapped decorator of that returns a wrapped callable.
+        """
+
+        def decorator(function: callable) -> callable:
+            def inner(*args, **kwargs):
+                try:
+                    return function(*args, **kwargs)
+                except TMDbException:
+                    log_func(message)
+                    log.debug(f'TMDbException from {function}({args}, {kwargs})')
+                    return None
+            return inner
+        return decorator
+
+    
     def __get_condition(self, query_type: str, series_info: SeriesInfo,
                         episode_info: EpisodeInfo=None) -> 'QueryInstance':
         """
@@ -213,6 +238,7 @@ class TMDbInterface(WebInterface):
         return entry['failures'] > self.preferences.tmdb_retry_count
 
 
+    @catch_and_log('Error setting series ID', log.error)
     def set_series_ids(self, series_info: SeriesInfo) -> None:
         """
         Set the TMDb and TVDb ID's for the given SeriesInfo object.
@@ -445,6 +471,7 @@ class TMDbInterface(WebInterface):
         return None
 
 
+    @catch_and_log('Error setting episode IDs', log.error)
     def set_episode_ids(self, series_info: SeriesInfo,
                         infos: list[EpisodeInfo]) -> None:
         """
@@ -530,6 +557,7 @@ class TMDbInterface(WebInterface):
         return title == generic.format(number=episode_info.episode_number)
 
 
+    @catch_and_log('Error getting source image', log.error)
     def get_source_image(self, series_info: SeriesInfo,
                          episode_info: EpisodeInfo,
                          title_match: bool=True) -> str:
@@ -578,6 +606,7 @@ class TMDbInterface(WebInterface):
         return None
 
 
+    @catch_and_log('Error getting episode title', log.error)
     def get_episode_title(self, series_info: SeriesInfo,
                           episode_info: EpisodeInfo,
                           language_code: str='en-US') -> str:
@@ -619,6 +648,7 @@ class TMDbInterface(WebInterface):
                 return title
 
 
+    @catch_and_log('Error getting series logo', log.error)
     def get_series_logo(self, series_info: SeriesInfo) -> str:
         """
         Get the 'best' logo for the given series.
@@ -666,6 +696,7 @@ class TMDbInterface(WebInterface):
         return best.url
 
 
+    @catch_and_log('Error setting series backdrop', log.error)
     def get_series_backdrop(self, series_info: SeriesInfo) -> str:
         """
         Get the 'best' backdrop for the given series.
@@ -751,4 +782,3 @@ class TMDbInterface(WebInterface):
         TMDbInterface.__BLACKLIST_DB.unlink(missing_ok=True)
         log.info(f'Deleted blacklist file '
                  f'"{TMDbInterface.__BLACKLIST_DB.resolve()}"')
-
