@@ -171,14 +171,19 @@ class Profile:
 
         # Format MultiEpisode episode text
         if isinstance(episode, MultiEpisode):
-            return episode.modify_format_string(format_string).format(
-                season_number=episode.season_number,
-                episode_start=episode.episode_start,
-                episode_end=episode.episode_end,
-                abs_start=episode.abs_start,
-                abs_end=episode.abs_end,
-                **episode.extra_characteristics,
-            )
+            try:
+                return episode.modify_format_string(format_string).format(
+                    season_number=episode.season_number,
+                    episode_start=episode.episode_start,
+                    episode_end=episode.episode_end,
+                    abs_start=episode.abs_start,
+                    abs_end=episode.abs_end,
+                    **episode.extra_characteristics,
+                )
+            except Exception as e:
+                log.error(f'Cannot format episode text "{format_string}" for '
+                          f'{episode} ({e})')
+                return f'EPISODES {episode.episode_range}'
 
         # Standard Episode object
         try:

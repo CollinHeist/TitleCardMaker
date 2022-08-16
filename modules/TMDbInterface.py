@@ -318,6 +318,7 @@ class TMDbInterface(WebInterface):
             log.warning(f'Series "{series_info}" not found on TMDb')
 
 
+    @catch_and_log('Error getting all episodes', log.error)
     def get_all_episodes(self, series_info: SeriesInfo) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that have 
