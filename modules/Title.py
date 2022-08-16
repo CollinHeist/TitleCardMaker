@@ -30,7 +30,7 @@ class Title:
         # Match for "title" (Part (word))
         re_compile(r'^(.*?)\s*\(Part\s*[a-zA-Z0-9]+\)', IGNORECASE),
         # Match for "title" (roman numeral)
-        re_compile(r'^(.*?)\s*[IVXLCDM]+', IGNORECASE),
+        re_compile(r'^(.*?)\s+[IVXLCDM]+$', IGNORECASE),
     )
 
     __slots__ = ('full_title', '__title_lines', '__manually_specified',
