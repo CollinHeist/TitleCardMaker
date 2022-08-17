@@ -213,15 +213,17 @@ class PlexInterface:
             except NotFound:
                 pass
 
-        # Try by name
-        try:
-            return library.get(series_info.name)
-        except NotFound:
-            pass
-
         # Try by full name
         try:
             return library.get(series_info.full_name)
+        except NotFound:
+            pass
+
+        # Try by name and match the year
+        try:
+            if (ser := library.get(series_info.name)).year == series_info.year:
+                return ser
+            raise NotFound
         except NotFound:
             key = f'{library.title}-{series_info.full_name}'
             if key not in self.__warned:
@@ -585,7 +587,7 @@ class PlexInterface:
         # If the given series cannot be found in this library, exit
         if not (series := self.__get_series(library, series_info)):
             return None
-
+        
         # Go through each episode within Plex, set title cards
         error_count, loaded_count = 0, 0
         for pl_episode in (pbar := tqdm(series.episodes(), **TQDM_KWARGS)):
