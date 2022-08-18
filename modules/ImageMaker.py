@@ -44,6 +44,7 @@ class ImageMaker(ABC):
         self.image_magick = ImageMagickInterface(
             self.preferences.imagemagick_container,
             self.preferences.use_magick_prefix,
+            self.preferences.imagemagick_timeout,
         )
 
 
@@ -68,6 +69,7 @@ class ImageMaker(ABC):
         image_magick_interface = ImageMagickInterface(
             global_objects.pp.imagemagick_container,
             global_objects.pp.use_magick_prefix,
+            global_objects.pp.imagemagick_timeout,
         )
 
         # Command to convert file to PNG

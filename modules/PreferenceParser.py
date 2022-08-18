@@ -94,6 +94,7 @@ class PreferenceParser(YamlReader):
         self.tmdb_retry_count = TMDbInterface.BLACKLIST_THRESHOLD
         self.tmdb_minimum_resolution = {'width': 0, 'height': 0}
         self.imagemagick_container = None
+        self.imagemagick_timeout = ImageMagickInterface.COMMAND_TIMEOUT_SECONDS
 
         # Modify object attributes based off YAML, assume valid to start
         self.__parse_yaml()
@@ -119,7 +120,11 @@ class PreferenceParser(YamlReader):
         # Try variations of the font list command with/out the "magick " prefix
         for prefix, use_magick in zip(('', 'magick '), (False, True)):
             # Create ImageMagickInterface object to test font command
-            imi = ImageMagickInterface(self.imagemagick_container, use_magick)
+            imi = ImageMagickInterface(
+                self.imagemagick_container,
+                use_magick,
+                self.imagemagick_timeout
+            )
 
             # Run font list command
             font_output = imi.run_get_output(f'convert -list font')
@@ -335,6 +340,9 @@ class PreferenceParser(YamlReader):
 
         if (value := self._get('imagemagick', 'container', type_=str)) != None:
             self.imagemagick_container = value
+
+        if (value := self._get('imagemagick', 'timeout',type_=int)) is not None:
+            self.imagemagick_timeout = value
 
         # Warn for renamed settings
         if self._is_specified('options', 'zero_pad_seasons'):

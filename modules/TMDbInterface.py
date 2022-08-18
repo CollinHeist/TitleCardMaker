@@ -528,36 +528,6 @@ class TMDbInterface(WebInterface):
         return images[best_image['index']] if valid_image else None
 
 
-    def __is_generic_title(self, title: str, language_code: str,
-                           episode_info: EpisodeInfo) -> bool:
-        """
-        Determine whether the given title is a generic translation of
-        "Episode (x)" for the indicated language. 
-        
-        :param      title:          The translated title.
-        :param      language_code:  The language code of the translation.
-        :param      episode_info:   The EpisodeInfo for this title.
-        
-        :returns:   True if the title is a generic translation, False otherwise.
-        """
-
-        # Assume non-generic if the code isn't pre-mapped
-        if not (generic := self.GENERIC_TITLE_FORMATS.get(language_code, None)):
-            log.debug(f'Unrecognized language code "{language_code}"')
-            return False
-
-        # Format with this episode, return whether this matches the translation
-        if episode_info.abs_number is not None:
-            # Check against episode and absolute number
-            return title in (
-                generic.format(number=episode_info.episode_number),
-                generic.format(number=episode_info.abs_number),
-            )
-
-        # Only check against episode number (no absolute)
-        return title == generic.format(number=episode_info.episode_number)
-
-
     @catch_and_log('Error getting source image', log.error)
     def get_source_image(self, series_info: SeriesInfo,
                          episode_info: EpisodeInfo,
@@ -605,6 +575,36 @@ class TMDbInterface(WebInterface):
                   f'dimensional requirements')
         self.__update_blacklist(series_info, episode_info, 'image')
         return None
+
+
+    def __is_generic_title(self, title: str, language_code: str,
+                           episode_info: EpisodeInfo) -> bool:
+        """
+        Determine whether the given title is a generic translation of
+        "Episode (x)" for the indicated language. 
+        
+        :param      title:          The translated title.
+        :param      language_code:  The language code of the translation.
+        :param      episode_info:   The EpisodeInfo for this title.
+        
+        :returns:   True if the title is a generic translation, False otherwise.
+        """
+
+        # Assume non-generic if the code isn't pre-mapped
+        if not (generic := self.GENERIC_TITLE_FORMATS.get(language_code, None)):
+            log.debug(f'Unrecognized language code "{language_code}"')
+            return False
+
+        # Format with this episode, return whether this matches the translation
+        if episode_info.abs_number is not None:
+            # Check against episode and absolute number
+            return title in (
+                generic.format(number=episode_info.episode_number),
+                generic.format(number=episode_info.abs_number),
+            )
+
+        # Only check against episode number (no absolute)
+        return title == generic.format(number=episode_info.episode_number)
 
 
     @catch_and_log('Error getting episode title', log.error)

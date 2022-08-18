@@ -1,5 +1,5 @@
 from shlex import split as command_split
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, TimeoutExpired
 
 from modules.Debug import log
 
@@ -19,14 +19,24 @@ class ImageMagickInterface:
         -dit -v "/mnt/user/":"/mnt/user/" 'dpokidov/imagemagick'
     """
 
-    def __init__(self, container: str=None,
-                 use_magick_prefix: bool=False) -> None:
+    """How long to wait before terminating a command as timed out"""
+    COMMAND_TIMEOUT_SECONDS = 240
+
+    __slots__ = ('container', 'use_docker', 'prefix', 'timeout', '__history')
+
+
+    def __init__(self, container: str=None, use_magick_prefix: bool=False,
+                 timeout: int=COMMAND_TIMEOUT_SECONDS) -> None:
         """
         Constructs a new instance. If docker_id is None/0/False, then commands
         will not use a docker container.
         
-        :param      container:  The container for sending requests to
-                                ImageMagick, can be a name or container ID.
+       Args:
+            container: Optional docker container name/ID to sending ImageMagick
+                commands to.
+            use_magick_prefix: Whether to use 'magick' command prefix.
+            timeout: How many seconds to wait for a command to execute. Defaults
+                to COMMAND_TIMEOUT_SECONDS.
         """
         
         # Definitions of this interface, i.e. whether to use docker and how
@@ -35,6 +45,9 @@ class ImageMagickInterface:
 
         # Whether to prefix commands with "magick" or not
         self.prefix = 'magick ' if use_magick_prefix else ''
+
+        # Store command timeout
+        self.timeout = timeout
 
         # Command history for debug purposes
         self.__history = []
@@ -60,7 +73,7 @@ class ImageMagickInterface:
         return string.replace('"', r'\"').replace('`', r'\`')
 
 
-    def run(self, command: str) -> (bytes, bytes):
+    def run(self, command: str) -> tuple[bytes, bytes]:
         """
         Wrapper for running a given command. This uses either the host machine
         (i.e. direct calls); or through the provided docker container (if
@@ -71,7 +84,6 @@ class ImageMagickInterface:
 
         :returns:   Tuple of the STDOUT and STDERR of the executed command.
         """
-        
         
         # If a docker image ID is specified, execute the command in that container
         # otherwise, execute on the host machine (no docker wrapper)
@@ -85,13 +97,12 @@ class ImageMagickInterface:
 
         # Execute, capturing stdout and stderr
         stdout, stderr = b'', b''
+        process = Popen(cmd, stdout=PIPE, stderr=PIPE)
         try:
-            stdout, stderr = Popen(cmd, stdout=PIPE, stderr=PIPE).communicate()
-
-            # Add command to history
-            self.__history.append((command, stdout, stderr))
-
-            return stdout, stderr
+            stdout, stderr = process.communicate(timeout=self.timeout)
+        except TimeoutExpired:
+            log.error(f'ImageMagick command timed out')
+            log.debug(command)
         except FileNotFoundError as e:
             if 'docker' in str(e):
                 log.critical(f'ImageMagick docker container not found')
@@ -99,6 +110,10 @@ class ImageMagickInterface:
             else:
                 log.error(f'Command error "{e}"')
                 return b'', b''
+        else:
+            # Add command to history and return results
+            self.__history.append((command, stdout, stderr))
+            return stdout, stderr
 
 
     def run_get_output(self, command: str) -> str:
