@@ -382,8 +382,8 @@ class PreferenceParser(YamlReader):
                     variables for application, False if it did not.
         """
 
-        # No templates defined, skip
-        if templates == {} or 'template' not in series_yaml:
+        # No templates defined for this series, skip
+        if 'template' not in series_yaml:
             return True
 
         # Get the specified template for this series
