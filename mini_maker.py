@@ -33,6 +33,10 @@ parser.add_argument(
     help=f'File to read global preferences from. Environment variable '
          f'{ENV_PREFERENCE_FILE}. Defaults to '
          f'"{DEFAULT_PREFERENCE_FILE.resolve()}"')
+parser.add_argument(
+    '--no-gradient', '--omit-gradient',
+    action='store_true',
+    help='Omit the gradient from the created Collection/Genre/Season image')
 
 # Argument group for 'manual' title card creation
 title_card_group = parser.add_argument_group('Title Cards',
@@ -318,6 +322,7 @@ if hasattr(args, 'collection_poster'):
         font_size=float(args.collection_font_size[:-1])/100.0,
         omit_collection=args.omit_collection,
         borderless=args.collection_borderless,
+        omit_gradient=args.no_gradient,
     ).create()
 
 # Create Genre Poster
