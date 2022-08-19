@@ -330,3 +330,4 @@ class OlivierTitleCard(CardType):
 
         # Delete all intermediate images
         self.image_magick.delete_intermediate_images(resized)
+        # self.image_magick.print_command_history()

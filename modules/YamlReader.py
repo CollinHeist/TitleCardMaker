@@ -6,15 +6,20 @@ from modules.Debug import log
 from modules.RemoteCardType import RemoteCardType
 from modules.TitleCard import TitleCard
 
-class YamlReader(ABC):
-    """
-    This abstract class describes some class that reads and parses YAML.
-    """
+class YamlReader:
+    """This class describes an object capable of reading and parsing YAML."""
     
-    @abstractmethod
+    
     def __init__(self, yaml: dict={}, *,
                  log_function: callable=log.error) -> None:
-        """Initialization function of this class"""
+        """
+        Initialize this object.
+
+        Args:
+            yaml: Base YAML to read.
+            log_function: Function to call and log with for any YAML read
+                failures. Defaults to log.error.
+        """
         self._base_yaml = yaml
         self.valid = True
         self.__log = log_function

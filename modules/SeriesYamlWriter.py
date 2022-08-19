@@ -198,9 +198,11 @@ class SeriesYamlWriter:
             self.__write(yaml)
             return None
 
-        # If series tag is empty, set to empty dictionary 
+        # If series or libraries are empty, set to empty dictionary 
         if existing_yaml.get('series') is None:
             existing_yaml['series'] = {}
+        if existing_yaml.get('libraries') is None:
+            existing_yaml['libraries'] = {}
 
         # Identify which libraries DNE in existing YAML that need to be added
         for library_name, library in yaml.get('libraries', {}).items():

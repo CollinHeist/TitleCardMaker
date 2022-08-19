@@ -69,13 +69,14 @@ class PlexInterface:
         """
         Get the tinydb query condition for the given entry.
         
-        :param      library_name:   The name of the library containing the
-                                    series to get the details of.
-        :param      series_info:    The series to get the details of.
-        :param      episode:        Optional Episode object to get details of.
-        
-        :returns:   The condition that matches the given library, series, and
-                    Episode season+episode number if provided.
+        Args:
+            library_name: Library name containing the series to get the details
+                of.
+            series_info: Series to get the details of.
+            episode: Optional Episode to get the series of.
+
+        Returns:
+            tinydb Query condition.
         """
 
         # If no episode was given, get condition for entire series
@@ -752,5 +753,3 @@ class PlexInterface:
 
         # Log actions to user
         log.info(f'Deleted {len(records)} records')
-
-        
