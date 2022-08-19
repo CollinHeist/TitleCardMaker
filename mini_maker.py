@@ -34,6 +34,10 @@ parser.add_argument(
          f'{ENV_PREFERENCE_FILE}. Defaults to '
          f'"{DEFAULT_PREFERENCE_FILE.resolve()}"')
 parser.add_argument(
+    '--borderless', '--omit-border',
+    action='store_true',
+    help='Omit the border from the created Collection/Genre image')
+parser.add_argument(
     '--no-gradient', '--omit-gradient',
     action='store_true',
     help='Omit the gradient from the created Collection/Genre/Season image')
@@ -161,10 +165,6 @@ collection_group.add_argument(
     '--omit-collection',
     action='store_true',
     help='Omit the "COLLECTION" text from this collection poster')
-collection_group.add_argument(
-    '--collection-borderless',
-    action='store_true',
-    help='Omit the white border from this collection poster')
 
 # Argument group for genre cards
 genre_group = parser.add_argument_group(
@@ -177,10 +177,6 @@ genre_group.add_argument(
     default=SUPPRESS,
     metavar=('SOURCE', 'GENRE', 'DESTINATION'),
     help='Create a genre card with the given text')
-genre_group.add_argument(
-    '--borderless',
-    action='store_true',
-    help='Omit the white border from this genre card')
 genre_group.add_argument(
     '--genre-card-batch',
     type=Path,
@@ -321,7 +317,7 @@ if hasattr(args, 'collection_poster'):
         font_color=args.collection_font_color,
         font_size=float(args.collection_font_size[:-1])/100.0,
         omit_collection=args.omit_collection,
-        borderless=args.collection_borderless,
+        borderless=args.borderless,
         omit_gradient=args.no_gradient,
     ).create()
 
