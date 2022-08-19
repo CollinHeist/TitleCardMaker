@@ -333,6 +333,7 @@ if hasattr(args, 'genre_card'):
         output=Path(args.genre_card[2]),
         font_size=float(args.font_size[:-1])/100.0,
         borderless=args.borderless,
+        omit_gradient=args.no_gradient,
     ).create()
 
 if hasattr(args, 'genre_card_batch'):
@@ -343,6 +344,8 @@ if hasattr(args, 'genre_card_batch'):
                 genre=file.stem.upper(),
                 output=Path(file.parent /f'{file.stem}-GenreCard{file.suffix}'),
                 font_size=float(args.font_size[:-1])/100.0,
+                borderless=args.borderless,
+                omit_gradient=args.no_gradient,
             ).create()
             
 if hasattr(args, 'show_summary'):

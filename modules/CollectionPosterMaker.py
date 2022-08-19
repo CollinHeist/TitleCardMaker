@@ -63,7 +63,7 @@ class CollectionPosterMaker(ImageMaker):
     def create(self) -> None:
         """
         Create this object's poster. This WILL overwrite the existing file if it 
-        already exists. Errors and returns if the image source does not exist.
+        already exists. Errors and returns if the source image does not exist.
         """
 
         # If the source file doesn't exist, exit
@@ -82,6 +82,7 @@ class CollectionPosterMaker(ImageMaker):
                 f'-composite',
             ]
 
+        # Command to create collection poster
         command = ' '.join([
             f'convert',
             f'"{self.source.resolve()}"',               # Resize source
