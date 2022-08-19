@@ -68,11 +68,10 @@ class Manager:
                 writer.update_from_sonarr(self.sonarr_interface, **update_args)
 
         if (self.preferences.use_plex
-            and self.preferences.plex_yaml_writer is not None):
-            self.preferences.plex_yaml_writer.update_from_plex(
-                self.plex_interface,
-                **self.preferences.plex_yaml_update_args,
-            )
+            and len(self.preferences.plex_yaml_writers) > 0):
+            for writer, update_args in zip(self.preferences.plex_yaml_writers,
+                                           self.preferences.plex_yaml_update_args):
+                writer.update_from_plex(self.plex_interface, **update_args)
 
 
     def create_shows(self) -> None:
