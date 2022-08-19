@@ -383,6 +383,7 @@ if hasattr(args, 'season_poster'):
         font_size=float(args.season_font_size[:-1])/100.0,
         font_kerning=float(args.season_font_kerning[:-1])/100.0,
         top_placement=args.top_placement,
+        omit_gradient=args.no_gradient,
     ).create()
 
     
