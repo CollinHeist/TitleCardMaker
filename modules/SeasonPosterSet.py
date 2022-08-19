@@ -133,6 +133,9 @@ class SeasonPosterSet:
         # Get whether to use top or bottom placement
         top_placement = poster_config.get('placement', 'bottom').lower() =='top'
 
+        # Get whether to omit gradient
+        omit_gradient = poster_config.get('omit_gradient', False)
+
         # Get all the season posters that exist in the source directory
         for poster_file in self.__source_directory.glob('season*.jpg'):
             # Skip files named season*.jpg that aren't numbered
@@ -173,6 +176,7 @@ class SeasonPosterSet:
                 font_size=self.font_size,
                 font_kerning=self.font_kerning,
                 top_placement=top_placement,
+                omit_gradient=omit_gradient,
             )
 
 
