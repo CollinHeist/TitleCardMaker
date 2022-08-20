@@ -62,18 +62,16 @@ class Manager:
             return None
 
         if (self.preferences.use_sonarr
-            and self.preferences.sonarr_yaml_writer is not None):
-            self.preferences.sonarr_yaml_writer.update_from_sonarr(
-                self.sonarr_interface,
-                **self.preferences.sonarr_yaml_update_args
-            )
+            and len(self.preferences.sonarr_yaml_writers) > 0):
+            for writer, update_args in zip(self.preferences.sonarr_yaml_writers,
+                                           self.preferences.sonarr_yaml_update_args):
+                writer.update_from_sonarr(self.sonarr_interface, **update_args)
 
         if (self.preferences.use_plex
-            and self.preferences.plex_yaml_writer is not None):
-            self.preferences.plex_yaml_writer.update_from_plex(
-                self.plex_interface,
-                **self.preferences.plex_yaml_update_args,
-            )
+            and len(self.preferences.plex_yaml_writers) > 0):
+            for writer, update_args in zip(self.preferences.plex_yaml_writers,
+                                           self.preferences.plex_yaml_update_args):
+                writer.update_from_plex(self.plex_interface, **update_args)
 
 
     def create_shows(self) -> None:
@@ -165,7 +163,7 @@ class Manager:
         log.info(f"Starting to set episode ID's..")
         for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
             # Update progress bar
-            pbar.set_description(f'Selecting episode IDs for '
+            pbar.set_description(f'Setting episode IDs for '
                                  f'"{show.series_info.short_name}"')
 
             show.set_episode_ids(

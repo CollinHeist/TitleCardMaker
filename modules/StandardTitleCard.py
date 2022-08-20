@@ -60,31 +60,26 @@ class StandardTitleCard(CardType):
                  interline_spacing: int=0, kerning: float=1.0,
                  stroke_width: float=1.0, **kwargs) -> None:
         """
-        Initialize the TitleCardMaker object. This primarily just stores
-        instance variables for later use in `create()`. If the provided font
-        does not have a character in the title text, a space is used instead.
+        Initialize this CardType object. This primarily just stores instance
+        variables for later use in `create()`.
 
-        :param  source:             Source image.
-        :param  output_file:        Output file.
-        :param  title:              Episode title.
-        :param  season_text:        Text to use as season count text. Ignored if
-                                    hide_season is True.
-        :param  episode_text:       Text to use as episode count text.
-        :param  font:               Font to use for the episode title.
-        :param  font_size:          Scalar to apply to the title font size.
-        :param  title_color:        Color to use for the episode title.
-        :param  hide_season:        Whether to omit the season text (and joining
-                                    character) from the title card completely.
-        :param  separator:          Character to use to separate season and
-                                    episode text.
-        :param  blur:               Whether to blur the source image.
-        :param  vertical_shift:     Pixels to adjust title vertical shift by.
-        :param  interline_spacing:  Pixels to adjust title interline spacing by.
-        :param  kerning:            Scalar to apply to kerning of the title text.
-        :param  stroke_width:       Scalar to apply to black stroke of the title
-                                    text.
-        :param  kwargs:             Unused arguments to permit generalized calls
-                                    for any CardType.
+        Args:
+            source: Source image to base the card on.
+            output_file: Output file where to create the card.
+            title: Title text to add to created card.
+            season_text: Season text to add to created card.
+            episode_text: Episode text to add to created card.
+            font: Font name or path (as string) to use for episode title.
+            font_size: Scalar to apply to title font size.
+            title_color: Color to use for title text.
+            hide_season: Whether to ignore season_text.
+            separator: Character to use to separate season and episode text.
+            blur: Whether to blur the source image.
+            vertical_shift: Pixel count to adjust the title vertical offset by.
+            interline_spacing: Pixel count to adjust title interline spacing by.
+            kerning: Scalar to apply to kerning of the title text.
+            stroke_width: Scalar to apply to black stroke of the title text.
+            kwargs: Unused arguments.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface

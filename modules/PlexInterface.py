@@ -69,13 +69,14 @@ class PlexInterface:
         """
         Get the tinydb query condition for the given entry.
         
-        :param      library_name:   The name of the library containing the
-                                    series to get the details of.
-        :param      series_info:    The series to get the details of.
-        :param      episode:        Optional Episode object to get details of.
-        
-        :returns:   The condition that matches the given library, series, and
-                    Episode season+episode number if provided.
+        Args:
+            library_name: Library name containing the series to get the details
+                of.
+            series_info: Series to get the details of.
+            episode: Optional Episode to get the series of.
+
+        Returns:
+            tinydb Query condition.
         """
 
         # If no episode was given, get condition for entire series
@@ -213,15 +214,17 @@ class PlexInterface:
             except NotFound:
                 pass
 
-        # Try by name
-        try:
-            return library.get(series_info.name)
-        except NotFound:
-            pass
-
         # Try by full name
         try:
             return library.get(series_info.full_name)
+        except NotFound:
+            pass
+        
+        # Try by name and match the year
+        try:
+            if (ser := library.get(series_info.name)).year == series_info.year:
+                return ser
+            raise NotFound
         except NotFound:
             key = f'{library.title}-{series_info.full_name}'
             if key not in self.__warned:
@@ -292,6 +295,11 @@ class PlexInterface:
 
             # Get all Shows in this library
             for show in library.all():
+                # Skip show if has no year
+                if show.year is None:
+                    log.warning(f'Series {show.title} has no year - skipping')
+                    continue
+
                 # Get all ID's for this series
                 ids = {}
                 for guid in show.guids:
@@ -580,7 +588,7 @@ class PlexInterface:
         # If the given series cannot be found in this library, exit
         if not (series := self.__get_series(library, series_info)):
             return None
-
+        
         # Go through each episode within Plex, set title cards
         error_count, loaded_count = 0, 0
         for pl_episode in (pbar := tqdm(series.episodes(), **TQDM_KWARGS)):
@@ -745,5 +753,3 @@ class PlexInterface:
 
         # Log actions to user
         log.info(f'Deleted {len(records)} records')
-
-        

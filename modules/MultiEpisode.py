@@ -15,10 +15,11 @@ class MultiEpisode:
     ETF_REGEX = re_compile(r'^(.*?)(\s*){(episode|abs)_number(.*?)}(.*)')
 
     __slots__ = ('season_number', 'episode_start', 'episode_end', 'abs_start',
-                 'abs_end', '_first_episode', 'episode_info', 'destination')
+                 'abs_end', '_first_episode', 'episode_info', 'destination',
+                 'episode_range')
 
 
-    def __init__(self, episodes: ['Episode'], title: 'Title') -> None:
+    def __init__(self, episodes: list['Episode'], title: 'Title') -> None:
         """
         Constructs a new instance of a MultiEpisode that represents the given
         list of Episode objects, and has the given (modified) Title.
@@ -47,6 +48,7 @@ class MultiEpisode:
         episode_numbers = tuple(map(lambda e: e.episode_number, episode_infos))
         self.episode_start = min(episode_numbers)
         self.episode_end = max(episode_numbers)
+        self.episode_range = f'{self.episode_start}-{self.episode_end}'
         
         # If all episode have absolute numbers, get their range
         self.abs_start, self.abs_end = None, None

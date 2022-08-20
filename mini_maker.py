@@ -33,6 +33,14 @@ parser.add_argument(
     help=f'File to read global preferences from. Environment variable '
          f'{ENV_PREFERENCE_FILE}. Defaults to '
          f'"{DEFAULT_PREFERENCE_FILE.resolve()}"')
+parser.add_argument(
+    '--borderless', '--omit-border',
+    action='store_true',
+    help='Omit the border from the created Collection/Genre image')
+parser.add_argument(
+    '--no-gradient', '--omit-gradient',
+    action='store_true',
+    help='Omit the gradient from the created Collection/Genre/Season image')
 
 # Argument group for 'manual' title card creation
 title_card_group = parser.add_argument_group('Title Cards',
@@ -157,10 +165,6 @@ collection_group.add_argument(
     '--omit-collection',
     action='store_true',
     help='Omit the "COLLECTION" text from this collection poster')
-collection_group.add_argument(
-    '--collection-borderless',
-    action='store_true',
-    help='Omit the white border from this collection poster')
 
 # Argument group for genre cards
 genre_group = parser.add_argument_group(
@@ -173,10 +177,6 @@ genre_group.add_argument(
     default=SUPPRESS,
     metavar=('SOURCE', 'GENRE', 'DESTINATION'),
     help='Create a genre card with the given text')
-genre_group.add_argument(
-    '--borderless',
-    action='store_true',
-    help='Omit the white border from this genre card')
 genre_group.add_argument(
     '--genre-card-batch',
     type=Path,
@@ -317,7 +317,8 @@ if hasattr(args, 'collection_poster'):
         font_color=args.collection_font_color,
         font_size=float(args.collection_font_size[:-1])/100.0,
         omit_collection=args.omit_collection,
-        borderless=args.collection_borderless,
+        borderless=args.borderless,
+        omit_gradient=args.no_gradient,
     ).create()
 
 # Create Genre Poster
@@ -328,6 +329,7 @@ if hasattr(args, 'genre_card'):
         output=Path(args.genre_card[2]),
         font_size=float(args.font_size[:-1])/100.0,
         borderless=args.borderless,
+        omit_gradient=args.no_gradient,
     ).create()
 
 if hasattr(args, 'genre_card_batch'):
@@ -338,6 +340,8 @@ if hasattr(args, 'genre_card_batch'):
                 genre=file.stem.upper(),
                 output=Path(file.parent /f'{file.stem}-GenreCard{file.suffix}'),
                 font_size=float(args.font_size[:-1])/100.0,
+                borderless=args.borderless,
+                omit_gradient=args.no_gradient,
             ).create()
             
 if hasattr(args, 'show_summary'):
@@ -358,8 +362,19 @@ if hasattr(args, 'show_summary'):
     episodes = {f'1-{(episode := episode+1)}': Episode(f) for f in all_images}
     show = Show(args.show_summary[1], args.show_summary[0], episodes)
 
+    # Override minimum episode count
+    pp.summary_minimum_episode_count = 0
+
     # Create ShowSummary
-    ShowSummary(show, args.background, args.created_by).create()
+    summary = ShowSummary(show, args.background, args.created_by)
+    summary.create()
+
+    # Log success/failure
+    if summary.output.exists():
+        log.info(f'Created "{summary.output.resolve()}"')
+    else:
+        log.warning(f'Failed to create "{summary.output.resolve()}"')
+
 
 if hasattr(args, 'season_poster'):
     SeasonPoster(
@@ -372,6 +387,7 @@ if hasattr(args, 'season_poster'):
         font_size=float(args.season_font_size[:-1])/100.0,
         font_kerning=float(args.season_font_kerning[:-1])/100.0,
         top_placement=args.top_placement,
+        omit_gradient=args.no_gradient,
     ).create()
 
     

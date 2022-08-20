@@ -1,5 +1,5 @@
 from pathlib import Path
-from re import findall
+from typing import Iterable
 
 from tqdm import tqdm
 
@@ -81,22 +81,24 @@ class PreferenceParser(YamlReader):
         self.integrate_with_pmm_overlays = False
         self.global_watched_style = 'unique'
         self.global_unwatched_style = 'unique'
-        self.plex_yaml_writer = None
-        self.plex_yaml_update_args = {}
+        self.plex_yaml_writers = []
+        self.plex_yaml_update_args = []
         self.use_sonarr = False
         self.sonarr_url = None
         self.sonarr_api_key = None
         self.sonarr_verify_ssl = True
-        self.sonarr_yaml_writer = None
-        self.sonarr_yaml_update_args = {}
+        self.sonarr_yaml_writers = []
+        self.sonarr_yaml_update_args = []
         self.use_tmdb = False
         self.tmdb_api_key = None
         self.tmdb_retry_count = TMDbInterface.BLACKLIST_THRESHOLD
         self.tmdb_minimum_resolution = {'width': 0, 'height': 0}
         self.imagemagick_container = None
+        self.imagemagick_timeout = ImageMagickInterface.COMMAND_TIMEOUT_SECONDS
 
         # Modify object attributes based off YAML, assume valid to start
         self.__parse_yaml()
+        self.__parse_sync()
 
         # Whether to use magick prefix
         self.use_magick_prefix = False
@@ -119,7 +121,11 @@ class PreferenceParser(YamlReader):
         # Try variations of the font list command with/out the "magick " prefix
         for prefix, use_magick in zip(('', 'magick '), (False, True)):
             # Create ImageMagickInterface object to test font command
-            imi = ImageMagickInterface(self.imagemagick_container, use_magick)
+            imi = ImageMagickInterface(
+                self.imagemagick_container,
+                use_magick,
+                self.imagemagick_timeout
+            )
 
             # Run font list command
             font_output = imi.run_get_output(f'convert -list font')
@@ -135,6 +141,90 @@ class PreferenceParser(YamlReader):
         log.critical(f"ImageMagick doesn't appear to be installed")
         exit(1)
 
+
+    def __parse_sync(self) -> None:
+        """
+        Parse the YAML sync sections of this preference file. This updates the
+        lists of SeriesYamlWriter objects for Plex and Sonarr.
+        """
+        
+        # Inner function to create and add SeriesYamlWriter objects (and)
+        # their update args dictionaries to this object's lists
+        def append_writer_and_args(sync_type, sync, static):
+            # Combine static and given sync YAML
+            sync_yaml = YamlReader(static | sync, log_function=log.warning)
+
+            # Skip if file wasn't specified
+            if (file := sync_yaml._get('file', type_=Path)) is None:
+                log.debug(f'Skipping sync, no file specified')
+                return None
+
+            def mode_type(val):
+                assert (val := val.lower()) in ('append', 'sync')
+                return val
+
+            # Create SeriesYamlWriter with this config
+            writer = SeriesYamlWriter(
+                file,
+                sync_yaml._get('mode', type_=mode_type, default='append'),
+                sync_yaml._get('compact_mode', type_=bool, default=True),
+                sync_yaml._get('volumes', default={}),
+                sync_yaml._get('add_template', type_=str, default=None),
+            )
+
+            # Parse update args
+            update_args = {}
+            if (value := sync_yaml._get('libraries')) is not None:
+                update_args['filter_libraries'] = value
+            if (value := sync_yaml._get('exclusions')) is not None:
+                update_args['exclusions'] = value
+            if (value := sync_yaml._get('plex_libraries')) is not None:
+                update_args['plex_libraries'] = value
+            if (value := sync_yaml._get('required_tags')) is not None:
+                update_args['required_tags'] = value
+            if (value := sync_yaml._get('monitored_only', 
+                                        type_=bool)) is not None:
+                update_args['monitored_only'] = value
+
+            # Skip if YAML was invalidated at any point
+            if not sync_yaml.valid:
+                log.error(f'Cannot sync to "{file.resolve()}" - invalid YAML')
+                return None
+
+            # Add to either Plex or Sonarr lists
+            if sync_type == 'plex':
+                self.plex_yaml_writers.append(writer)
+                self.plex_yaml_update_args.append(update_args)
+            else:
+                self.sonarr_yaml_writers.append(writer)
+                self.sonarr_yaml_update_args.append(update_args)
+
+        # Create Plex SeriesYamlWriter objects
+        if (plex_sync := self._get('plex', 'sync')) is not None:
+            # Singular sync specification
+            if isinstance(plex_sync, dict):
+                append_writer_and_args('plex', plex_sync, {})
+            # List of syncs, no globals
+            elif isinstance(plex_sync, list) and len(plex_sync) > 0:
+                base_sync = plex_sync[0]
+                for sync in plex_sync:
+                    append_writer_and_args('plex', sync, base_sync)
+            else:
+                log.error(f'Invalid plex sync: {plex_sync}')
+
+        # Create Sonarr SeriesYamlWriter objects
+        if (sonarr_sync := self._get('sonarr', 'sync')) is not None:
+            # Singular sync specification
+            if isinstance(sonarr_sync, dict):
+                append_writer_and_args('sonarr', sonarr_sync, {})
+            # List of syncs, no globals
+            elif isinstance(sonarr_sync, list) and len(sonarr_sync) > 0:
+                base_sync = sonarr_sync[0]
+                for sync in sonarr_sync:
+                    append_writer_and_args('sonarr', sync, base_sync)
+            else:
+                log.error(f'Invalid sonarr sync: {plex_sync}')
+            
 
     def __parse_yaml(self) -> None:
         """
@@ -195,6 +285,7 @@ class PreferenceParser(YamlReader):
         if (value := self._get('options', 'season_folder_format',
                                type_=str)) is not None:
             self.season_folder_format = value
+            self.get_season_folder(1)
 
         if (value := self._get('options', 'sync_specials', type_=bool)) != None:
             self.sync_specials = value
@@ -253,26 +344,6 @@ class PreferenceParser(YamlReader):
                                type_=bool)) is not None:
             self.integrate_with_pmm_overlays = value
 
-        if self._is_specified(*(attrs := ('plex', 'sync')), 'file'):
-            self.plex_yaml_writer = SeriesYamlWriter(
-                self._get(*attrs, 'file', type_=Path),
-                self._get(*attrs, 'mode', type_=str, default='append'),
-                self._get(*attrs, 'compact_mode', type_=bool, default=True),
-                self._get(*attrs, 'volumes', default={}),
-                self._get(*attrs, 'add_template', type_=str, default=None),
-            )
-
-            if (self._get(*attrs, 'mode', type_=lower_str) == 'sync'
-                and self._get(*attrs, 'add_template', type_=str)):
-                log.warning(f'Adding a template during "sync" mode will do '
-                            f'nothing')
-
-        if (value := self._get('plex', 'sync', 'libraries')) is not None:
-            self.plex_yaml_update_args['filter_libraries'] = value
-
-        if (value := self._get('plex', 'sync', 'exclusions')) is not None:
-            self.plex_yaml_update_args['exclusions'] = value
-
         if self._is_specified('sonarr'):
             if (not self._is_specified('sonarr', 'url')
                 or not self._is_specified('sonarr', 'api_key')):
@@ -286,36 +357,6 @@ class PreferenceParser(YamlReader):
 
         if (value := self._get('sonarr', 'verify_ssl', type_=bool)) is not None:
             self.sonarr_verify_ssl = value
-
-        if self._is_specified(*(attrs := ('sonarr', 'sync')), 'file'):
-            self.sonarr_yaml_writer = SeriesYamlWriter(
-                self._get(*attrs, 'file', type_=Path),
-                self._get(*attrs, 'mode', type_=str, default='append'),
-                self._get(*attrs, 'compact_mode', type_=bool, default=True),
-                self._get(*attrs, 'volumes', default={}),
-                self._get(*attrs, 'add_template', type_=str, default=None),
-            )
-
-            if (self._get(*attrs, 'mode', type_=lower_str) == 'sync'
-                and self._get(*attrs, 'add_template', type_=str)):
-                log.warning(f'Adding a template during "sync" mode will do '
-                            f'nothing')
-            
-        if (value := self._get('sonarr', 'sync', 'plex_libraries')) is not None:
-            self.sonarr_yaml_update_args['plex_libraries'] = value
-        
-        if (value := self._get('sonarr', 'sync', 'plex_libraries')) is not None:
-            self.sonarr_yaml_update_args['plex_libraries'] = value
-
-        if (value := self._get('sonarr', 'sync', 'required_tags')) is not None:
-            self.sonarr_yaml_update_args['required_tags'] = value
-
-        if (value := self._get('sonarr', 'sync', 'exclusions')) is not None:
-            self.sonarr_yaml_update_args['exclusions'] = value
-
-        if (value := self._get('sonarr', 'sync', 'monitored_only',
-                               type_=bool)) is not None:
-            self.sonarr_yaml_update_args['monitored_only'] = value
         
         if (value := self._get('tmdb', 'api_key', type_=str)) != None:
             self.tmdb_api_key = value
@@ -335,6 +376,9 @@ class PreferenceParser(YamlReader):
 
         if (value := self._get('imagemagick', 'container', type_=str)) != None:
             self.imagemagick_container = value
+
+        if (value := self._get('imagemagick', 'timeout',type_=int)) is not None:
+            self.imagemagick_timeout = value
 
         # Warn for renamed settings
         if self._is_specified('options', 'zero_pad_seasons'):
@@ -364,18 +408,19 @@ class PreferenceParser(YamlReader):
         Apply the correct Template object (if indicated) to the given series
         YAML. This effectively "fill out" the indicated template, and updates
         the series YAML directly.
+
+        Args:
+            templates: Dictionary of Template objects to potentially apply.
+            series_yaml: The YAML of the series to modify.
+            series_name: The name of the series being modified.
         
-        :param      templates:      Dictionary of Template objects to
-                                    potentially apply.
-        :param      series_yaml:    The YAML of the series to modify.
-        :param      series_name:    The name of the series being modified.
-        
-        :returns:   True if the given series contained all the required template
-                    variables for application, False if it did not.
+        Returns:
+            True if the given series contained all the required template
+            variables for application, False if it did not.
         """
 
-        # No templates defined, skip
-        if templates == {} or 'template' not in series_yaml:
+        # No templates defined for this series, skip
+        if 'template' not in series_yaml:
             return True
 
         # Get the specified template for this series
@@ -400,9 +445,8 @@ class PreferenceParser(YamlReader):
 
     def read_file(self) -> None:
         """
-        Reads this associated preference file and store in `__yaml` attribute.
-
-        If reading the YAML fails, the error is printed and the program exits.
+        Read this associated preference file and store in `_base_yaml` attribute
+        and critically error if reading fails.
         """
 
         # If the file doesn't exist, error and exit
@@ -412,20 +456,21 @@ class PreferenceParser(YamlReader):
             exit(1)
 
         # Read file 
-        self._base_yaml = self._read_file(self.file)
+        self._base_yaml = self._read_file(self.file, critical=True)
 
         # Log reading, return that YAML
         log.info(f'Read preference file "{self.file.resolve()}"')
 
 
-    def iterate_series_files(self) -> list[Show]:
+    def iterate_series_files(self) -> Iterable[Show]:
         """
         Iterate through all series file listed in the preferences. For each
         series encountered in each file, yield a Show object. Files that do not
         exist or have invalid YAML are skipped.
-        
-        :returns:   An iterable of Show objects created by the entry listed in
-                    all the known (valid) series files. 
+
+        Returns:
+            An iterable of Show objects created by the entry listed in all the
+            known (valid) series files. 
         """
 
         # For each file in the cards list
@@ -443,7 +488,7 @@ class PreferenceParser(YamlReader):
                 continue
 
             # Read file, parse yaml
-            if (file_yaml := self._read_file(file)) == {}:
+            if (file_yaml := self._read_file(file, critical=False)) == {}:
                 continue
 
             # Skip if there are no series to yield
@@ -561,13 +606,15 @@ class PreferenceParser(YamlReader):
                 
     def meets_minimum_resolution(self, width: int, height: int) -> bool:
         """
-        Return whether the given dimensions meet the minimum resolution
+        Determine whether the given dimensions meet the minimum resolution
         requirements indicated in the preference file.
+
+        Args:
+            width: The width of the image.
+            height: The height of the image.
         
-        :param      width:   The width of the image.
-        :param      height:  The height of the image.
-        
-        :returns:   True if the dimensions are suitable, False otherwise.
+        Returns:
+            True if the dimensions are suitable, False otherwise.
         """
 
         width_ok = (width >= self.tmdb_minimum_resolution['width'])
@@ -582,11 +629,16 @@ class PreferenceParser(YamlReader):
         season number if indicated by the preference file, and returning an
         empty string if season folders are hidden.
         
-        :param      season_number:  The season number to get the folder name of.
+        Args:
+            season_number: The season number to get the folder name of.
         
-        :returns:   The season folder name. Empty string if folders are hidden,
-                    'Specials' for season 0, and either a zero-padded or not
-                    zero-padded version of "Season {x}" otherwise.
+        Returns:
+            The season folder name. Empty string if folders are hidden,
+            'Specials' for season 0, and either a zero-padded or not zero-
+            padded version of "Season {x}" otherwise.
+
+        Raises:
+            SystemExit if the season folder formatting fails.
         """
 
         # If season folders are hidden, return empty string
@@ -601,7 +653,6 @@ class PreferenceParser(YamlReader):
         # Format season folder as indicated (zero-padding, whatever..)
         try:
             return self.season_folder_format.format(season=season_number)
-        except Exception:
-            log.critical('Invalid season folder format')
+        except Exception as e:
+            log.critical(f'Invalid season folder format - {e}')
             exit(1)
-

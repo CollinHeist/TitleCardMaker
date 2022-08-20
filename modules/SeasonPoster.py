@@ -24,13 +24,15 @@ class SeasonPoster(ImageMaker):
     GRADIENT_OVERLAY = REF_DIRECTORY / 'gradient.png'
 
     __slots__ = ('source', 'destination', 'logo', 'season_text', 'font',
-                 'font_color', 'font_size', 'font_kerning', 'top_placement')
+                 'font_color', 'font_size', 'font_kerning', 'top_placement',
+                 'omit_gradient')
 
 
     def __init__(self, source: Path, logo: Path, destination: Path, 
                  season_text: str, font: Path=SEASON_TEXT_FONT,
                  font_color: str=SEASON_TEXT_COLOR, font_size: float=1.0,
-                 font_kerning: float=1.0, top_placement: bool=False) -> None:
+                 font_kerning: float=1.0, top_placement: bool=False,
+                 omit_gradient: bool=False) -> None:
         """
         Initialize this SeasonPoster object. This stores these attributes.
 
@@ -45,9 +47,10 @@ class SeasonPoster(ImageMaker):
             font_kerning: Font kerning scalar to use for the season text.
             top_placement: Whether to place the logo and season text on the top
                 of the created poster (True), or the bottom (False).
+            omit_gradient: Whether to omit the gradient overlay.
         """
 
-        # Initialize parent object
+        # Initialize parent object for the ImageMagickInterface
         super().__init__()
         
         # Store provided file attributes
@@ -64,6 +67,7 @@ class SeasonPoster(ImageMaker):
         self.font_size = font_size
         self.font_kerning = font_kerning
         self.top_placement = top_placement
+        self.omit_gradient = omit_gradient
 
 
     def __get_logo_height(self, logo: Path) -> int:
@@ -103,14 +107,22 @@ class SeasonPoster(ImageMaker):
         font_size = 20.0 * self.font_size
         kerning = 30 * self.font_kerning
 
-        # How to add gradient (rotated if using top placement)
-        if self.top_placement:
-            add_gradient = [
+        # How to add gradient; rotated if using top placement/optionally omitted
+        if self.omit_gradient:
+            gradient_command = []
+        elif self.top_placement:
+            gradient_command = [
                 f'\( "{self.GRADIENT_OVERLAY.resolve()}"',
                 f'-rotate 180 \)',
+                f'-compose Darken',
+                f'-composite',
             ]
         else:
-            add_gradient = [f'"{self.GRADIENT_OVERLAY.resolve()}"']
+            gradient_command = [
+                f'"{self.GRADIENT_OVERLAY.resolve()}"',
+                f'-compose Darken',
+                f'-composite',
+            ]
 
         # Top/bottom placement determines gravity and offsets
         merge_gravity = 'north' if self.top_placement else 'south'
@@ -132,9 +144,7 @@ class SeasonPoster(ImageMaker):
             f'-gravity center',                         # Crop around center
             f'-resize "{self.SEASON_POSTER_SIZE}^"',    # Force into 2000x3000
             f'-extent "{self.SEASON_POSTER_SIZE}"',
-            *add_gradient,                          # Apply gradient
-            f'-compose Darken',                         # Darken mode
-            f'-composite',                              # Merge images
+            *gradient_command,                      # Apply gradient
             f'\( "{self.logo.resolve()}"',          # Add logo
             f'-resize 1460x',                           # Fit to 1460px wide
             f'-resize x750\> \)',                       # Limit to 750px tall
@@ -151,4 +161,3 @@ class SeasonPoster(ImageMaker):
         ])
 
         self.image_magick.run(command)
-

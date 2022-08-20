@@ -79,6 +79,7 @@ class Show(YamlReader):
         self.__library_map = library_map
 
         # Set this show's SeriesInfo object with blank year to start
+        self.series_info = SeriesInfo(name, 0)
         try:
             self.series_info = SeriesInfo(name, self._get('year', type_=int))
         except ValueError:

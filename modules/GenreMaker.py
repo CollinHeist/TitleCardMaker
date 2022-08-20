@@ -19,21 +19,20 @@ class GenreMaker(ImageMaker):
     """Base gradient image to overlay over source image"""
     __GENRE_GRADIENT = REF_DIRECTORY / 'genre_gradient.png'
 
-    """Temporary image paths used in the process of title card making"""
-    __RESIZED_SOURCE = ImageMaker.TEMP_DIR / 'resized.png'
-    __SOURCE_WITH_GRADIENT = ImageMaker.TEMP_DIR / 'swg.png'
-
 
     def __init__(self, source: Path, genre: str, output: Path,
-                 font_size: float=1.0, borderless: bool=False) -> None:
+                 font_size: float=1.0, borderless: bool=False,
+                 omit_gradient: bool=False) -> None:
         """
-        Constructs a new instance.
-        
-        :param      source:     The source image to use for the genre card.
-        :param      genre:      The genre text to put on the genre card.
-        :param      output:     The output path to write the genre card to.
-        :param      font_size:  Scalar to apply to the title font size.
-        :param      borderless: Whether to make the card as borderless or not.
+        Construct a new instance of this object.
+
+        Args:
+            source: The source image to use for the genre card.
+            genre: The genre text to put on the genre card.
+            output: The output path to write the genre card to.
+            font_size: Scalar to apply to the title font size.
+            borderless: Whether to make the card as borderless or not.
+            omit_gradient: Whether to omit the gradient overlay or not.
         """
 
         # Initialize parent object for the ImageMagickInterface
@@ -45,68 +44,46 @@ class GenreMaker(ImageMaker):
         self.output = output
         self.font_size = font_size
         self.borderless = borderless
+        self.omit_gradient = omit_gradient
 
-
-    def __resize_source(self) -> Path:
-        """
-        Resize the source file for this card into the necessary dimensions
-        (946x1446).
         
-        :returns:   Path to the created image.
+    def create(self) -> None:
+        """
+        Create the genre card. This WILL overwrite the existing file if it 
+        already exists. Errors and returns if the source image does not exist.
         """
 
+        # If the source file doesn't exist, exit
+        if not self.source.exists():
+            log.error(f'Cannot create genre card, "{self.source.resolve()}" '
+                      f'does not exist.')
+            return None
+
+        # Create the output directory and any necessary parents 
+        self.output.parent.mkdir(parents=True, exist_ok=True)
+
+        # Gradient command to either add/omit gradient
+        if self.omit_gradient:
+            gradient_command = []
+        else:
+            gradient_command = [
+                f'"{self.__GENRE_GRADIENT.resolve()}"',
+                f'-gravity south',
+                f'-composite',
+            ]
+
+        # Command to create genre poster
         command = ' '.join([
-            f'convert "{self.source.resolve()}"',
+            f'convert "{self.source.resolve()}"',       # Resize source image
             f'-background transparent',
             f'-resize "946x1446^"',
             f'-gravity center',
             f'-extent "946x1446"',
-            f'"{self.__RESIZED_SOURCE.resolve()}"',
-        ])
-
-        self.image_magick.run(command)
-
-        return self.__RESIZED_SOURCE
-
-
-    def __add_gradient(self, resized_source: Path) -> Path:
-        """
-        Add the static gradient image to the given resized image.
-        
-        :param      resized_source: Path to the image to add a gradient to.
-        
-        :returns:   Path to the created image.
-        """
-
-        command = ' '.join([
-            f'convert "{resized_source.resolve()}"',
-            f'"{self.__GENRE_GRADIENT.resolve()}"',
-            f'-gravity south',
-            f'-composite',
-            f'"{self.__SOURCE_WITH_GRADIENT.resolve()}"'
-        ])
-
-        self.image_magick.run(command)
-
-        return self.__SOURCE_WITH_GRADIENT
-
-
-    def __add_text_and_border(self, source_with_gradient: Path) -> Path:
-        """
-        Add the genre text and the white border to the given image.
-        
-        :param      source_with_gradient:   The source image with the gradient
-                                            applied.
-        
-        :returns:   Path to the created image (the output file).
-        """
-
-        command = ' '.join([
-            f'convert "{source_with_gradient.resolve()}"',
-            f'-gravity center',
+            *gradient_command,                          # Optionally add gradient
+            f'-gravity center',                         # Add border
             f'-bordercolor white',
             f'-border 27x27' if not self.borderless else f'',
-            f'-font "{self.FONT.resolve()}"',
+            f'-font "{self.FONT.resolve()}"',           # Add genre text
             f'-fill white',
             f'-pointsize {self.font_size * 159.0}',
             f'-kerning 2.25',
@@ -115,37 +92,3 @@ class GenreMaker(ImageMaker):
         ])
 
         self.image_magick.run(command)
-
-        return self.output
-
-        
-    def create(self) -> None:
-        """
-        Create the genre card. This WILL overwrite the existing file if it 
-        already exists. Errors and returns if the image source does not exist.
-        """
-
-        # If the source file doesn't exist, exit
-        if not self.source.exists():
-            log.error(f'Cannot create genre card, "{self.source.resolve()}" '
-                      f'does not exist.')
-            return None
-        
-        # Resize source to fit in contrained space
-        resized_source = self.__resize_source()
-
-        # Add gradient overlay to the image
-        source_with_gradient = self.__add_gradient(resized_source)
-
-        # Create the output directory and any necessary parents 
-        self.output.parent.mkdir(parents=True, exist_ok=True)
-
-        # Add genre text and outer border, result is the genre card
-        output = self.__add_text_and_border(source_with_gradient)
-        
-        # Delete intermediate files
-        self.image_magick.delete_intermediate_images(
-            resized_source,
-            source_with_gradient
-        )
-

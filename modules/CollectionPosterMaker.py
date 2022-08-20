@@ -4,9 +4,7 @@ from modules.Debug import log
 from modules.ImageMaker import ImageMaker
 
 class CollectionPosterMaker(ImageMaker):
-    """
-    This class defines a type of maker that creates collection posters.
-    """
+    """This class defines a type of maker that creates collection posters."""
 
     """Directory where all reference files used by this maker are stored"""
     REF_DIRECTORY = Path(__file__).parent / 'ref' / 'collection'
@@ -19,25 +17,23 @@ class CollectionPosterMaker(ImageMaker):
     """Base gradient image to overlay over source image"""
     __GRADIENT = REF_DIRECTORY.parent / 'genre' / 'genre_gradient.png'
 
-    """Temporary image paths used in the process of title card making"""
-    __RESIZED_SOURCE = ImageMaker.TEMP_DIR / 'resized.png'
-    __SOURCE_WITH_GRADIENT = ImageMaker.TEMP_DIR / 'swg.png'
-
 
     def __init__(self, source: Path, output: Path, title: str, font: Path=FONT,
                  font_color: str=FONT_COLOR, font_size: float=1.0,
-                 omit_collection: str=False, borderless: bool=False) -> None:
+                 omit_collection: bool=False, borderless: bool=False,
+                 omit_gradient: bool=False) -> None:
         """
-        Constructs a new instance of a CollectionPosterMaker.
-        
-        :param      source:             The source image to use for the poster.
-        :param      output:             The output path to write the poster to.
-        :param      title:              Title to use on the created poster.
-        :param      font:               Font of the poster's title.
-        :param      font_color:         Font color of the poster text.
-        :param      omit_collection:    Whether to omit "COLLECTION" from the
-                                        created poster.
-        :param      borderless:         Whether to make the poster borderless.
+        Construct a new instance of a CollectionPosterMaker.
+
+        Args:
+            source: The source image to use for the poster.
+            output: The output path to write the poster to.
+            title: String to use on the created poster.
+            font: Path to the font file of the poster's title.
+            font_color: Font color of the poster text.
+            omit_collection: Whether to omit "COLLECTION" from the poster.
+            borderless:  Whether to make the poster borderless.
+            omit_gradient: Whether to make the poster with no gradient overlay.
         """
 
         # Initialize parent object for the ImageMagickInterface
@@ -51,6 +47,7 @@ class CollectionPosterMaker(ImageMaker):
         self.font_size = font_size
         self.omit_collection = omit_collection
         self.borderless = borderless
+        self.omit_gradient = omit_gradient
 
         # Uppercase title if using default font
         if font == self.FONT:
@@ -62,7 +59,7 @@ class CollectionPosterMaker(ImageMaker):
     def create(self) -> None:
         """
         Create this object's poster. This WILL overwrite the existing file if it 
-        already exists. Errors and returns if the image source does not exist.
+        already exists. Errors and returns if the source image does not exist.
         """
 
         # If the source file doesn't exist, exit
@@ -71,16 +68,25 @@ class CollectionPosterMaker(ImageMaker):
                       f'does not exist.')
             return None
 
+        # Gradient command to either add/omit gradient
+        if self.omit_gradient:
+            gradient_command = []
+        else:
+            gradient_command = [
+                f'"{self.__GRADIENT.resolve()}"',
+                f'-gravity south',
+                f'-composite',
+            ]
+
+        # Command to create collection poster
         command = ' '.join([
             f'convert',
             f'"{self.source.resolve()}"',               # Resize source
-            f'-background transparent',                 
+            f'-background transparent',
             f'-resize "946x1446^"',
             f'-gravity center',
             f'-extent "946x1446"',
-            f'"{self.__GRADIENT.resolve()}"',           # Add gradient overlay
-            f'-gravity south',
-            f'-composite',
+            *gradient_command,                          # Optionally add gradient
             f'-gravity center',                         # Add border
             f'-bordercolor white',
             f'-border 27x27' if not self.borderless else f'',
@@ -99,4 +105,3 @@ class CollectionPosterMaker(ImageMaker):
         ])
 
         self.image_magick.run(command)
-

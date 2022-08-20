@@ -49,6 +49,9 @@ class SeriesInfo:
         if self.year is None:
             raise ValueError(f'Year not provided')
 
+        # Ensure year is integer
+        self.year = int(self.year)
+
         self.update_name(self.name)
 
 
@@ -186,4 +189,3 @@ class SeriesInfo:
         matching_names = map(self.get_matching_title, names)
 
         return any(name == self.match_name for name in matching_names)
-        
