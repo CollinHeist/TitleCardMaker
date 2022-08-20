@@ -107,10 +107,14 @@ class WebInterface:
 
         # Attempt to download the image, if an error happens log to user
         try:
+            # Get content from URL
             image = get(image_url).content
+            assert len(image) > 0, f'URL {image_url} returned no content'
+
+            # Write content to file
             with destination.open('wb') as file_handle:
                 file_handle.write(image)
-
+            
             return True
         except Exception as e:
             log.error(f'Cannot download image, error: "{e}"')
