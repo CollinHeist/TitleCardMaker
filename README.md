@@ -19,7 +19,7 @@ An automated title card maker for Plex.
 
 `TitleCardMaker` is a program and [Docker container](https://hub.docker.com/r/collinheist/titlecardmaker) written in Python that automates the creation of customized title cards (which are image previews of an episode of TV) for use in personal media services like [Plex](https://www.plex.tv/), [Emby](https://emby.media/), or [Jellyfin](https://jellyfin.org/).
 
-The Maker can be automated such that everything can be pulled without manual intervention (except for a few exceptions). Episode titles can be pulled from an instance of [Sonarr](https://sonarr.tv/), images and logos from [TheMovieDatabase](https://www.themoviedb.org/) and Plex, and the maker can even utilize an episode's watch status within Plex to create "spoiler free" versions of title cards automatically, as shown below:
+TitleCardMaker can be automated such that everything can be pulled without manual intervention. All your series can be read from [Sonarr](https://sonarr.tv/) or Plex; episode data can be pulled from Sonarr, Plex or [TheMovieDatabase](https://www.themoviedb.org/); images from TheMovieDatabase or Plex; and TitleCardMaker can even utilize an episode's watch status within Plex to create "spoiler free" versions of title cards automatically, as shown below:
 
 <img src="https://user-images.githubusercontent.com/17693271/174520069-d981b33e-df93-4166-a4dc-b898af82eb3f.jpg"/>
   
@@ -27,7 +27,9 @@ The actual image creation is done using the open-source and free image library c
 
 ## Getting Started
 
-Read the [Getting Started](https://github.com/CollinHeist/TitleCardMaker/wiki) page on the Wiki.
+Read the [Getting Started](https://github.com/CollinHeist/TitleCardMaker/wiki) page on the Wiki for the traditional install, or the [Getting Started on Docker](https://github.com/CollinHeist/TitleCardMaker/wiki/Docker-Tutorial) page to install using Docker.
+
+If you're using Unraid, there is a template available for easy setup - just search `titlecardmaker` on the Unraid Community Apps store.
 
 ## Usage and Troubleshooting
 Assuming you're using the default preference filename, invoking the Maker is as simple as:
