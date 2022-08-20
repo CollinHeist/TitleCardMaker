@@ -60,7 +60,7 @@ class StandardTitleCard(CardType):
                  interline_spacing: int=0, kerning: float=1.0,
                  stroke_width: float=1.0, **kwargs) -> None:
         """
-        Initialize this TitleCard object. This primarily just stores instance
+        Initialize this CardType object. This primarily just stores instance
         variables for later use in `create()`.
 
         Args:

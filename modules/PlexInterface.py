@@ -219,7 +219,7 @@ class PlexInterface:
             return library.get(series_info.full_name)
         except NotFound:
             pass
-
+        
         # Try by name and match the year
         try:
             if (ser := library.get(series_info.name)).year == series_info.year:

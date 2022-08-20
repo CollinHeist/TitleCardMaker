@@ -423,4 +423,3 @@ class ShowSummary(ImageMaker):
             images.append(self.__TRANSPARENT_MONTAGE)
 
         self.image_magick.delete_intermediate_images(*images)
-

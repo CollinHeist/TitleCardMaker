@@ -54,7 +54,7 @@ misc_group.add_argument(
 misc_group.add_argument(
     '--import-series', '--load-series',
     type=str,
-    nargs=2,
+    nargs='+',
     default=SUPPRESS,
     metavar=('NAME', 'YEAR'),
     help='Override/set the name of the series imported with --import-archive')
@@ -143,7 +143,7 @@ if hasattr(args, 'import_cards') and pp.use_plex:
     if hasattr(args, 'import_series'):
         series_info = SeriesInfo(*args.import_series)
     else:
-        if (groups := match(r'^(.*) \((\d+)\)$', archive.parent.name)):
+        if (groups := match(r'^(.*) \((\d{4})\)$', archive.parent.name)):
             series_info = SeriesInfo(*groups.groups())
         else:
             log.critical(f'Cannot identify series name/year; specify with '

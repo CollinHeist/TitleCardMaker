@@ -366,7 +366,15 @@ if hasattr(args, 'show_summary'):
     pp.summary_minimum_episode_count = 0
 
     # Create ShowSummary
-    ShowSummary(show, args.background, args.created_by).create()
+    summary = ShowSummary(show, args.background, args.created_by)
+    summary.create()
+
+    # Log success/failure
+    if summary.output.exists():
+        log.info(f'Created "{summary.output.resolve()}"')
+    else:
+        log.warning(f'Failed to create "{summary.output.resolve()}"')
+
 
 if hasattr(args, 'season_poster'):
     SeasonPoster(
