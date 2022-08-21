@@ -2,10 +2,11 @@ from argparse import ArgumentParser, ArgumentTypeError, SUPPRESS
 from pathlib import Path
 from os import environ
 from re import match
+from requests import get
 from time import sleep
 
 try:
-    from datetime import datetime, timedelta
+    from datetime import datetime
     import schedule
 
     from modules.Debug import log, apply_no_color_formatter
@@ -21,7 +22,13 @@ except ImportError as e:
     print(f'  Specific Error: {e}')
     exit(1)
 
+# Version information
+CURRENT_VERSION = 'v1.10.3'
+REPO_URL = ('https://api.github.com/repos/'
+            'CollinHeist/TitleCardMaker/releases/latest')
+
 # Environment variables
+ENV_IS_DOCKER = 'TCM_IS_DOCKER'
 ENV_PREFERENCE_FILE = 'TCM_PREFERENCES'
 ENV_RUNTIME = 'TCM_RUNTIME'
 ENV_FREQUENCY = 'TCM_FREQUENCY'
@@ -142,6 +149,22 @@ set_preference_parser(pp)
 set_font_validator(FontValidator())
 set_media_info_set(MediaInfoSet())
 
+# Function to check for new version of TCM
+def check_for_update():
+    if (response := get(REPO_URL)).ok:
+        if (available_version := response.json().get('name')) !=CURRENT_VERSION:
+            log.info(f'New version of TitleCardMaker ({available_version}) '
+                     f'available.')
+            log.debug(f'{ENV_IS_DOCKER}={environ.get(ENV_IS_DOCKER, False)}')
+            if environ.get(ENV_IS_DOCKER, False):
+                log.info(f'Update your Docker container')
+            else:
+                log.info(f'Get the latest version with "git pull origin"')
+        else:
+            log.debug(f'Latest remote version is {available_version}')
+    else:
+        log.debug(f'Failed to check for new version')
+
 # Function to re-read preference file
 def read_preferences():
     # Read the preference file, verify it is valid and exit if not
@@ -152,6 +175,9 @@ def read_preferences():
     
 # Function to create and run Manager object
 def run():
+    # Check for new version
+    check_for_update()
+
     # Re-read preferences
     read_preferences()
 
@@ -202,7 +228,7 @@ def read_update_list():
 
 # Run immediately if specified
 if args.run:
-    log.info(f'Starting TitleCardMaker')
+    log.info(f'Starting TitleCardMaker ({CURRENT_VERSION})')
     run()
 
 # Schedule first run, which then schedules subsequent runs
