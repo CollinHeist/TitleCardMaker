@@ -356,6 +356,7 @@ class TMDbInterface(WebInterface):
                 try:
                     episode.reload()
                 except NotFound:
+                    log.error(f'TMDb error - skipping {episode}')
                     continue
 
                 episode_info = self.info_set.get_episode_info(

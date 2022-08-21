@@ -156,7 +156,6 @@ class PreferenceParser(YamlReader):
 
             # Skip if file wasn't specified
             if (file := sync_yaml._get('file', type_=Path)) is None:
-                log.debug(f'Skipping sync, no file specified')
                 return None
 
             def mode_type(val):
