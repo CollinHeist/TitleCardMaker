@@ -156,7 +156,7 @@ def check_for_update():
             log.info(f'New version of TitleCardMaker ({available_version}) '
                      f'available.')
             log.debug(f'{ENV_IS_DOCKER}={environ.get(ENV_IS_DOCKER, False)}')
-            if environ.get(ENV_IS_DOCKER, False):
+            if environ.get(ENV_IS_DOCKER, 'false').lower() == 'true':
                 log.info(f'Update your Docker container')
             else:
                 log.info(f'Get the latest version with "git pull origin"')
@@ -180,10 +180,10 @@ def run():
 
     # Re-read preferences
     read_preferences()
-
+    
     # Reset previously loaded assets
     RemoteFile.reset_loaded_database()
-
+    
     # Create Manager, run, and write missing report
     try:
         tcm = Manager()
