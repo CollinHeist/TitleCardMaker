@@ -708,10 +708,13 @@ class PlexInterface:
         """
         Get all details for the episode indicated by the given Plex rating key.
         
-        :param      rating_key: Rating key used to fetch the item within Plex.
+        Args:
+            rating_key: Rating key used to fetch the item within Plex.
         
-        :returns:   Tuple of the SeriesInfo, EpisodeInfo, and the library name
-                    corresponding to the given episode.
+        Returns:
+            Tuple of the SeriesInfo, EpisodeInfo, and the library name
+            corresponding to the given rating key. None if the item cannot be
+            found, or if a valid tuple of info cannot be returned.
         """
 
         try:
@@ -723,16 +726,21 @@ class PlexInterface:
                 log.error(f'Item {episode} is not an Episode')
                 raise NotFound
 
+            # Get series for this episode
             series = self.__server.fetchItem(episode.grandparentKey)
-
+            assert series.year is not None
+        except NotFound:
+            log.error(f'No item with ratingKey={rating_key} exists')
+            return None
+        except AssertionError:
+            log.warning(f'Item with ratingKey={rating_key} has no year')
+            return None
+        else:
             return (
                 SeriesInfo(episode.grandparentTitle, series.year),
                 EpisodeInfo(episode.title, episode.parentIndex, episode.index),
                 episode.librarySectionTitle,
             )
-        except NotFound:
-            log.error(f'No item with ratingKey={rating_key} exists')
-            return None
 
 
     def remove_records(self, library_name: str, series_info: SeriesInfo) ->None:
