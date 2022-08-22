@@ -524,24 +524,20 @@ class PreferenceParser(YamlReader):
             # Go through each series in this file
             for show_name in tqdm(file_yaml['series'], desc='Creating Shows',
                                   **TQDM_KWARGS):
-                # Apply template to series
-                valid = self.__apply_template(
-                    templates, file_yaml['series'][show_name], show_name,
-                )
-
-                # Skip if series is not valid
-                if not valid:
+                # Skip if not a dictionary
+                if not isinstance(file_yaml['series'][show_name], dict):
+                    log.error(f'Skipping "{show_name}" from "{file_}"')
+                    continue
+                
+                # Apply template to series, skip if invalid
+                if not self.__apply_template(templates,
+                                    file_yaml['series'][show_name], show_name):
+                    log.error(f'Skipping "{show_name}" from "{file_}"')
                     continue
 
                 # Yield the Show object created from this entry
-                yield Show(
-                    show_name,
-                    file_yaml['series'][show_name],
-                    library_map,
-                    font_map,
-                    self.source_directory,
-                    self,
-                )
+                yield Show(show_name, file_yaml['series'][show_name],
+                           library_map, font_map, self.source_directory, self)
 
                 # If archiving is disabled, skip
                 if not self.create_archive:
@@ -572,14 +568,8 @@ class PreferenceParser(YamlReader):
                     variation.pop('library', None)
                     variation.pop('media_directory', None)
                     
-                    yield Show(
-                        show_name,
-                        variation,
-                        library_map,
-                        font_map,
-                        self.source_directory,
-                        self,
-                    )
+                    yield Show(show_name, variation, library_map, font_map,
+                               self.source_directory, self)
 
     @property
     def check_tmdb(self):
