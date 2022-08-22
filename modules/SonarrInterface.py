@@ -187,6 +187,10 @@ class SonarrInterface(WebInterface):
                 and not any(tag in required_tag_ids for tag in show['tags'])):
                 continue
 
+            # Skip show if it has a year of 0
+            if show['year'] == 0:
+                continue
+
             # Construct SeriesInfo object for this show
             series_info = SeriesInfo(
                 show['title'],
