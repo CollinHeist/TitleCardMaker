@@ -402,7 +402,8 @@ class TMDbInterface(WebInterface):
         if episode_info.has_id('tvdb_id'):
             try:
                 results = self.api.find_by_id(tvdb_id=episode_info.tvdb_id)
-                return results.tv_episode_results[0]
+                (episode := results.tv_episode_results[0]).reload()
+                return episode
             except (NotFound, IndexError, TMDbException):
                 pass
 
@@ -410,7 +411,8 @@ class TMDbInterface(WebInterface):
         if episode_info.has_id('imdb_id'):
             try:
                 results = self.api.find_by_id(imdb_id=episode_info.imdb_id)
-                return results.tv_episode_results[0]
+                (episode := results.tv_episode_results[0]).reload()
+                return episode
             except (NotFound, IndexError, TMDbException):
                 pass
 
@@ -429,6 +431,7 @@ class TMDbInterface(WebInterface):
             try:
                 episode = self.api.tv_episode(series_info.tmdb_id,
                                               season_number, episode_number)
+                episode.reload()
             except (NotFound, TMDbException):
                 return None
 
@@ -442,6 +445,7 @@ class TMDbInterface(WebInterface):
         # Try and match by index
         indices = episode_info.season_number, episode_info.episode_number
         if (episode := _match_by_index(episode_info, *indices)) is not None:
+            episode.reload()
             return episode
         
         # Match by absolute number
@@ -449,12 +453,14 @@ class TMDbInterface(WebInterface):
             # Try for this season
             indices = episode_info.season_number, episode_info.abs_number
             if (ep := _match_by_index(episode_info, *indices)) is not None:
+                ep.reload()
                 return ep
 
             # Try for all seasons
             for season in series.seasons:
                 indices = season.season_number, episode_info.abs_number
                 if (ep := _match_by_index(episode_info, *indices)) is not None:
+                    ep.reload()
                     return ep
         
         # If title match is disabled, cannot identify
@@ -468,6 +474,7 @@ class TMDbInterface(WebInterface):
                 if ((episode_info.has_id('tmdb_id') and
                     episode_info.tmdb_id == episode.id)
                     or episode_info.title.matches(episode.name)):
+                    episode.reload()
                     return episode
 
         return None
@@ -559,10 +566,6 @@ class TMDbInterface(WebInterface):
             return None
 
         # Episode found on TMDb, exit if no backdrops for this episode
-        try:
-            episode.reload()
-        except NotFound:
-            return None
         if len(episode.stills) == 0:
             log.debug(f'TMDb has no images for "{series_info}" {episode_info}')
             self.__update_blacklist(series_info, episode_info, 'image')
