@@ -16,17 +16,15 @@ An automated title card maker for Plex.
 - [Support](#support)
 
 ## Description
-
 `TitleCardMaker` is a program and [Docker container](https://hub.docker.com/r/collinheist/titlecardmaker) written in Python that automates the creation of customized title cards (which are image previews of an episode of TV) for use in personal media services like [Plex](https://www.plex.tv/), [Emby](https://emby.media/), or [Jellyfin](https://jellyfin.org/).
 
 TitleCardMaker can be automated such that everything can be pulled without manual intervention. All your series can be read from [Sonarr](https://sonarr.tv/) or Plex; episode data can be pulled from Sonarr, Plex or [TheMovieDatabase](https://www.themoviedb.org/); images from TheMovieDatabase or Plex; and TitleCardMaker can even utilize an episode's watch status within Plex to create "spoiler free" versions of title cards automatically, as shown below:
 
-<img src="https://user-images.githubusercontent.com/17693271/174520069-d981b33e-df93-4166-a4dc-b898af82eb3f.jpg"/>
+<img alt="card unblurring process" src="https://user-images.githubusercontent.com/17693271/185819730-a2c55a3a-63cc-4f0e-8061-891edd8d64d0.gif"/>
   
 The actual image creation is done using the open-source and free image library called [ImageMagick](https://imagemagick.org/).
 
 ## Getting Started
-
 Read the [Getting Started](https://github.com/CollinHeist/TitleCardMaker/wiki) page on the Wiki for the traditional install, or the [Getting Started on Docker](https://github.com/CollinHeist/TitleCardMaker/wiki/Docker-Tutorial) page to install using Docker.
 
 If you're using Unraid, there is a template available for easy setup - just search `titlecardmaker` on the Unraid Community Apps store.
@@ -46,8 +44,7 @@ For invocation and configuration details, read [here](https://github.com/CollinH
 Below are some examples of each style of title card that can be created automatically by the TitleCardMaker:
 
 ### Built-in Card Types
-
-<img alt="AnimeTitleCard" src="https://i.ibb.co/HDQMFyT/Demon-Slayer-Kimetsu-no-Yaiba-2019-S03-E10.jpg" height="175"/> <img alt="LogoTitleCard" src="https://user-images.githubusercontent.com/17693271/172227163-0ee4990a-b0a8-4dbd-91b3-3f57dfe6e732.jpg" height="175"/> <img alt="OlivierTitleCard" src="https://user-images.githubusercontent.com/17693271/185699576-87fad0ac-86d5-4fb6-9b08-e7db6e47d23f.jpg" height="175"/> <img alt="PosterTitleCard" src="https://user-images.githubusercontent.com/17693271/180627387-f72bb58e-e001-4608-b4be-82a26263c628.jpg" height="175"/> <img alt="RomanTitleCard" src="https://user-images.githubusercontent.com/17693271/173495131-5712c9ff-e0f4-4370-8f95-d99c5192df60.jpg" height="175"> <img src="https://user-images.githubusercontent.com/17693271/162633928-9c943ede-b309-4cf0-9798-9a196ed8791e.jpg" height="175">  <img src="https://user-images.githubusercontent.com/17693271/170836059-136fa6eb-40ef-4cd7-9aca-8ad8e0537239.jpg" height="175"/>
+<img alt="AnimeTitleCard" src="https://user-images.githubusercontent.com/17693271/185820454-4e3dca1c-c0df-4fa0-a7a7-81e070aa9e69.jpg" height="175"/> <img alt="LogoTitleCard" src="https://user-images.githubusercontent.com/17693271/172227163-0ee4990a-b0a8-4dbd-91b3-3f57dfe6e732.jpg" height="175"/> <img alt="OlivierTitleCard" src="https://user-images.githubusercontent.com/17693271/185699576-87fad0ac-86d5-4fb6-9b08-e7db6e47d23f.jpg" height="175"/> <img alt="PosterTitleCard" src="https://user-images.githubusercontent.com/17693271/180627387-f72bb58e-e001-4608-b4be-82a26263c628.jpg" height="175"/> <img alt="RomanTitleCard" src="https://user-images.githubusercontent.com/17693271/173495131-5712c9ff-e0f4-4370-8f95-d99c5192df60.jpg" height="175"> <img src="https://user-images.githubusercontent.com/17693271/162633928-9c943ede-b309-4cf0-9798-9a196ed8791e.jpg" height="175">  <img src="https://user-images.githubusercontent.com/17693271/170836059-136fa6eb-40ef-4cd7-9aca-8ad8e0537239.jpg" height="175"/>
 
 > The above cards are, in order, the [anime](https://github.com/CollinHeist/TitleCardMaker/wiki/AnimeTitleCard), [logo](https://github.com/CollinHeist/TitleCardMaker/wiki/LogoTitleCard), [olivier](https://github.com/CollinHeist/TitleCardMaker/wiki/OlivierTitleCard), [poster](https://github.com/CollinHeist/TitleCardMaker/wiki/PosterTitleCard), [roman](https://github.com/CollinHeist/TitleCardMaker/wiki/RomanNumeralTitleCard), [standard](https://github.com/CollinHeist/TitleCardMaker/wiki/StandardTitleCard), and the [star wars](https://github.com/CollinHeist/TitleCardMaker/wiki/StarWarsTitleCard) title cards - the [textless](https://github.com/CollinHeist/TitleCardMaker/wiki/TitleCard) card is not shown.
 
