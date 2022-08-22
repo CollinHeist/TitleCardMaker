@@ -180,7 +180,7 @@ def run():
 
     # Re-read preferences
     read_preferences()
-    
+
     # Reset previously loaded assets
     RemoteFile.reset_loaded_database()
     
@@ -217,7 +217,8 @@ def read_update_list():
             update_list = list(map(int, file_handle.readlines()))
         log.debug(f'Read update list ({update_list})')
     except ValueError:
-        log.error(f'Error reading update list, skipping')
+        log.error(f'Error reading update list, skipping and deleting')
+        args.tautulli_update_list.unlink(missing_ok=True)
         return None
         
     # Delete (clear) update list
