@@ -5,6 +5,7 @@ import modules.global_objects as global_objects
 
 # Default CardType classes
 from modules.AnimeTitleCard import AnimeTitleCard
+from modules.LandscapeTitleCard import LandscapeTitleCard
 from modules.LogoTitleCard import LogoTitleCard
 from modules.OlivierTitleCard import OlivierTitleCard
 from modules.PosterTitleCard import PosterTitleCard
@@ -37,6 +38,7 @@ class TitleCard:
         'anime': AnimeTitleCard,
         'generic': StandardTitleCard,
         'gundam': PosterTitleCard,
+        'landscape': LandscapeTitleCard,
         'logo': LogoTitleCard,
         'olivier': OlivierTitleCard,
         'poster': PosterTitleCard,
