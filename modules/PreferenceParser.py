@@ -168,19 +168,19 @@ class PreferenceParser(YamlReader):
                 file,
                 sync_yaml._get('mode', type_=mode_type, default='append'),
                 sync_yaml._get('compact_mode', type_=bool, default=True),
-                sync_yaml._get('volumes', default={}),
+                sync_yaml._get('volumes', type_=dict, default={}),
                 sync_yaml._get('add_template', type_=str, default=None),
             )
 
             # Parse update args
             update_args = {}
-            if (value := sync_yaml._get('libraries')) is not None:
+            if (value := sync_yaml._get('libraries', type_=list)) is not None:
                 update_args['filter_libraries'] = value
-            if (value := sync_yaml._get('exclusions')) is not None:
+            if (value := sync_yaml._get('exclusions', type_=list)) is not None:
                 update_args['exclusions'] = value
-            if (value := sync_yaml._get('plex_libraries')) is not None:
+            if (value := sync_yaml._get('plex_libraries', type_=dict)) is not None:
                 update_args['plex_libraries'] = value
-            if (value := sync_yaml._get('required_tags')) is not None:
+            if (value := sync_yaml._get('required_tags', type_=list)) is not None:
                 update_args['required_tags'] = value
             if (value := sync_yaml._get('monitored_only', 
                                         type_=bool)) is not None:
