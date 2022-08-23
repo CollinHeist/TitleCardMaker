@@ -7,6 +7,7 @@ from modules.Debug import log, TQDM_KWARGS
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.ImageMaker import ImageMaker
 from modules.PlexInterface import PlexInterface
+from modules.SeriesInfo import SeriesInfo
 from modules.SeriesYamlWriter import SeriesYamlWriter
 from modules.Show import Show
 from modules.ShowSummary import ShowSummary
@@ -401,7 +402,7 @@ class PreferenceParser(YamlReader):
             self.valid = False
 
 
-    def __apply_template(self, templates: dict, series_yaml: dict,
+    def __apply_template(self, templates: dict[str, Template],series_yaml: dict,
                          series_name: str) -> bool:
         """
         Apply the correct Template object (if indicated) to the given series
@@ -437,6 +438,14 @@ class PreferenceParser(YamlReader):
         if not (template := templates.get(template_name, None)):
             log.error(f'Template "{template_name}" not defined')
             return False
+
+        # Parse title/year from the series to add as "built-in" template data
+        try:
+            series_info = SeriesInfo(series_name, series_yaml.get('year', None))
+            built_in_data = {'title': series_info.name, 'year':series_info.year}
+            series_yaml['template'] = built_in_data | series_yaml['template']
+        except Exception:
+            pass
 
         # Apply using Template object
         return template.apply_to_series(series_name, series_yaml)
