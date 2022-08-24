@@ -81,6 +81,10 @@ parser.add_argument(
     action='store_true',
     help='Run the TitleCardMaker')
 parser.add_argument(
+    '-s', '--sync', '--run-sync',
+    action='store_true',
+    help='Sync from Sonarr/Plex without running')
+parser.add_argument(
     '-t', '--runtime', '--time', 
     type=runtime,
     default=environ.get(ENV_RUNTIME, SUPPRESS),
@@ -231,6 +235,13 @@ def read_update_list():
 if args.run:
     log.info(f'Starting TitleCardMaker ({CURRENT_VERSION})')
     run()
+# Sync if specified
+if args.sync:
+    # Re-read preferences
+    read_preferences()
+    
+    # Create Manager, run, and write missing report
+    Manager().update_series_files()
 
 # Schedule first run, which then schedules subsequent runs
 if hasattr(args, 'runtime'):
