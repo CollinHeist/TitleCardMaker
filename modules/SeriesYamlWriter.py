@@ -209,7 +209,7 @@ class SeriesYamlWriter:
             # Skip entries that exist
             if library_name in existing_yaml.get('libraries', {}).keys():
                 continue
-            existing_yaml['libraries'][library_name] = {'path': library}
+            existing_yaml['libraries'][library_name] = library
 
         # Identify which series DNE in existing YAML that need to be aded
         for series_name, series in yaml.get('series', {}).items():
