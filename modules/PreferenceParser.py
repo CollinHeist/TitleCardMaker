@@ -511,11 +511,15 @@ class PreferenceParser(YamlReader):
 
             # Get library map for this file; error+skip missing library paths
             if (library_map := file_yaml.get('libraries', {})):
-                if not isinstance(library_map, dict):
+                # Validate map and all libraries are dictionaries
+                if (not isinstance(library_map, dict)
+                    or not all(isinstance(library_map[lib], dict)
+                               for lib in library_map)):
                     log.error(f'Invalid library specification for series file '
                               f'"{file.resolve()}"')
                     continue
-                if not all('path' in library_map[lib] for lib in library_map):
+                if not all('path' in library_map[lib].keys()
+                           for lib in library_map):
                     log.error(f'Libraries are missing required "path" in series'
                               f' file "{file.resolve()}"')
                     continue
