@@ -94,6 +94,7 @@ class PreferenceParser(YamlReader):
         self.tmdb_api_key = None
         self.tmdb_retry_count = TMDbInterface.BLACKLIST_THRESHOLD
         self.tmdb_minimum_resolution = {'width': 0, 'height': 0}
+        self.tmdb_skip_localized_images = False
         self.imagemagick_container = None
         self.imagemagick_timeout = ImageMagickInterface.COMMAND_TIMEOUT_SECONDS
 
@@ -178,9 +179,9 @@ class PreferenceParser(YamlReader):
                 update_args['filter_libraries'] = value
             if (value := sync_yaml._get('exclusions', type_=list)) is not None:
                 update_args['exclusions'] = value
-            if (value := sync_yaml._get('plex_libraries', type_=dict)) is not None:
+            if (value := sync_yaml._get('plex_libraries', type_=dict)) != None:
                 update_args['plex_libraries'] = value
-            if (value := sync_yaml._get('required_tags', type_=list)) is not None:
+            if (value := sync_yaml._get('required_tags', type_=list)) != None:
                 update_args['required_tags'] = value
             if (value := sync_yaml._get('monitored_only', 
                                         type_=bool)) is not None:
@@ -373,6 +374,10 @@ class PreferenceParser(YamlReader):
                 log.critical(f'Invalid minimum resolution - specify as '
                              f'WIDTHxHEIGHT')
                 self.valid = False
+
+        if (value := self._get('tmdb', 'skip_localized_images',
+                               type_=bool)) is not None:
+            self.tmdb_skip_localized_images = value
 
         if (value := self._get('imagemagick', 'container', type_=str)) != None:
             self.imagemagick_container = value

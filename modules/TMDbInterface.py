@@ -495,20 +495,24 @@ class TMDbInterface(WebInterface):
 
 
     def __determine_best_image(self, images: list['tmdbapis.objs.image.Still'],
-                               source_image: bool=True) -> dict:
+                               *, is_source_image: bool=True,
+                               skip_localized: bool=False) -> dict:
         """
         Determines the best image, returning it's contents from within the
         database return JSON.
         
-        :param      images:         The results from the database. Each entry is
-                                    a new image to be considered.
-        :param      source_image:   Whether the images being selected are source
-                                    images or not. If True, then images must
-                                    meet the minimum resolution requirements.
+        Args:
+            images: The results from the database. Each entry is a new image to
+                be considered.
+            is_source_image: (Keyword only) Whether the images being selected
+                are source images or not. If True, then images must meet the
+                minimum resolution requirements.
+            skip_localized: (Keyword only) Whether to skip localized images.
         
-        :returns:   The "best" image for title card creation. This is determined
-                    using the images' dimensions. Priority given to largest
-                    image. None if there are no valid images.
+        Args:
+            The "best" image for title card creation. This is determined using
+            the images dimensions. Priority given to largest image. None if
+            there are no valid images.
         """
 
         # Pick the best image based on image dimensions, and then vote average
@@ -518,10 +522,12 @@ class TMDbInterface(WebInterface):
             # Get image dimensions
             width, height = image.width, image.height
 
-            # If source image selection, check dimensions
-            if (source_image and
-                not self.preferences.meets_minimum_resolution(width, height)):
-                continue
+            # If source image selection, check dimensions and localization
+            if is_source_image:
+                if not self.preferences.meets_minimum_resolution(width, height):
+                    continue
+                if skip_localized and image.iso_639_1 is not None:
+                    continue
 
             # If the image has valid dimensions,get pixel count and vote average
             valid_image = True
@@ -538,19 +544,23 @@ class TMDbInterface(WebInterface):
 
     @catch_and_log('Error getting source image', log.error)
     def get_source_image(self, series_info: SeriesInfo,
-                         episode_info: EpisodeInfo,
-                         title_match: bool=True) -> str:
+                         episode_info: EpisodeInfo, *, title_match: bool=True,
+                         skip_localized_images: bool=False) -> str:
         """
         Get the best source image for the requested entry. The URL of this image
         is returned.
         
-        :param      series_info:    SeriesInfo for this entry.
-        :param      episode_info:   EpisodeInfo for this entry.
-        :param      title_match:    Whether to require the episode title to
-                                    match when querying TMDb.
+        Args:
+            series_info: SeriesInfo for this entry.
+            episode_info: EpisodeInfo for this entry.
+            title_match:  (Keyword only) Whether to require the episode title to
+                 match when querying TMDb.
+            skip_localized_images: (Keyword only) Whether to skip images with a
+                non-null language code - i.e. skipping localized images.
         
-        :returns:   URL to the 'best' source image for the requested entry. None
-                    if no images are available.
+        Returns:
+            URL to the 'best' source image for the requested entry. None if no
+            images are available.
         """
 
         # Don't query the database if this episode is in the blacklist
@@ -572,7 +582,8 @@ class TMDbInterface(WebInterface):
             return None
 
         # Get the best image for this Episode
-        if (best_image := self.__determine_best_image(episode.stills, True)):
+        if (best_image := self.__determine_best_image(episode.stills,
+                                                      is_source_image=True)):
             return best_image.url
         
         log.debug(f'TMDb images for "{series_info}" {episode_info} do not meet '
