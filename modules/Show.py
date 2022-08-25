@@ -533,12 +533,13 @@ class Show(YamlReader):
         Add translated episode titles to the Episodes of this series. This 
         show's source file is re-read if any translations are added.
         
-        :param      tmdb_interface: Interface to TMDb to query for translated
-                                    episode titles.
+        Args:
+            tmdb_interface: Interface to TMDb to query for translated titles.
         """
 
         # If no translations were specified, or TMDb syncing isn't enabled, skip
-        if len(self.title_languages) == 0 or not self.tmdb_sync:
+        if (not tmdb_interface or not self.tmdb_sync
+            or len(self.title_languages) == 0):
             return None
 
         # Go through every episode and look for translations
@@ -591,11 +592,12 @@ class Show(YamlReader):
         Download the logo for this series from TMDb. Any SVG logos are converted
         to PNG.
         
-        :param      tmdb_interface: TMDbInterface to download the logo from.
+        Args:
+            tmdb_interface: TMDbInterface to download the logo from.
         """
 
         # If not syncing to TMDb, or logo already exists, exit
-        if not self.tmdb_sync or self.logo.exists():
+        if not tmdb_interface or not self.tmdb_sync or self.logo.exists():
             return None
 
         # Download logo
@@ -984,7 +986,7 @@ class Show(YamlReader):
         """
 
         # Skip if no library specified
-        if self.library_name is None:
+        if not plex_interface or self.library_name is None:
             return None
 
         # Update Plex

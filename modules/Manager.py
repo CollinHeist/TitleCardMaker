@@ -81,10 +81,6 @@ class Manager:
         archives lists.
         """
 
-        # Reset this Manager's list of Show and ShowArchive objects
-        self.shows = []
-        self.archives = []
-
         # Go through each Series YAML file
         log.info(f'Starting to read series YAML files..')
         for show in self.preferences.iterate_series_files():
@@ -180,7 +176,7 @@ class Manager:
 
         # For each show in the Manager, add translation
         log.info(f'Starting to add translations..')
-        for show in (pbar := tqdm(self.shows, **TQDM_KWARGS)):
+        for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
             pbar.set_description(f'Adding translations for '
                                  f'"{show.series_info.short_name}"')
             show.add_translations(self.tmdb_interface)

@@ -583,7 +583,7 @@ class TMDbInterface(WebInterface):
 
         # Get the best image for this Episode
         if (best_image := self.__determine_best_image(episode.stills,
-            is_source_image=True, skip_localized_images=skip_localized_images)):
+                   is_source_image=True, skip_localized=skip_localized_images)):
             return best_image.url
         
         log.debug(f'TMDb images for "{series_info}" {episode_info} do not meet '
