@@ -38,6 +38,7 @@ class TitleCard:
         'anime': AnimeTitleCard,
         'generic': StandardTitleCard,
         'gundam': PosterTitleCard,
+        'ishalioh': OlivierTitleCard,
         'landscape': LandscapeTitleCard,
         'logo': LogoTitleCard,
         'olivier': OlivierTitleCard,
