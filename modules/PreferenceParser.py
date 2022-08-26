@@ -6,7 +6,7 @@ from tqdm import tqdm
 from modules.Debug import log, TQDM_KWARGS
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.ImageMaker import ImageMaker
-from modules.PlexInterface import PlexInterface
+from modules.Manager import Manager
 from modules.SeriesInfo import SeriesInfo
 from modules.SeriesYamlWriter import SeriesYamlWriter
 from modules.Show import Show
@@ -60,6 +60,7 @@ class PreferenceParser(YamlReader):
 
         # Setup default values that can be overwritten by YAML
         self.series_files = []
+        self.execution_mode = Manager.DEFAULT_EXECUTION_MODE
         self._parse_card_type('standard') # Sets self.card_type
         self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
         self.card_extension = TitleCard.DEFAULT_CARD_EXTENSION
@@ -237,6 +238,14 @@ class PreferenceParser(YamlReader):
 
         lower_str = lambda v: str(v).lower()
 
+        if (value := self._get('options', 'execution_mode',
+                               type_=lower_str)) is not None:
+            if value not in Manager.VALID_EXECUTION_MODES:
+                log.critical(f'Execution mode "{value}" is invalid')
+                self.valid = False
+            else:
+                self.execution_mode = value
+
         if (value := self._get('options', 'series')) is not None:
             if isinstance(value, list):
                 self.series_files = value
@@ -266,7 +275,7 @@ class PreferenceParser(YamlReader):
         if (value := self._get('options',
                                'image_source_priority', type_=str)) is not None:
             lower_strip = lambda s: str(s).lower().strip()
-            sources = tuple(map(lower_strip, value.split(', ')))
+            sources = tuple(map(lower_strip, value.split(',')))
             if not all(_ in self.VALID_IMAGE_SOURCES for _ in sources):
                 log.critical(f'Image source priority "{value}" is invalid')
                 self.valid = False
