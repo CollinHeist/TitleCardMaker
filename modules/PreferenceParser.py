@@ -160,18 +160,19 @@ class PreferenceParser(YamlReader):
             if (file := sync_yaml._get('file', type_=Path)) is None:
                 return None
 
-            def mode_type(val):
-                assert (val := val.lower()) in ('append', 'sync')
-                return val
-
             # Create SeriesYamlWriter with this config
             writer = SeriesYamlWriter(
                 file,
-                sync_yaml._get('mode', type_=mode_type, default='append'),
+                sync_yaml._get('mode', type_=str, default='append'),
                 sync_yaml._get('compact_mode', type_=bool, default=True),
                 sync_yaml._get('volumes', type_=dict, default={}),
                 sync_yaml._get('add_template', type_=str, default=None),
             )
+
+            # If invalid after initialization, error and exit
+            if not writer.valid:
+                log.error(f'Cannot sync to "{file.resolve()}" - invalid sync')
+                return None
 
             # Parse update args
             update_args = {}
@@ -189,7 +190,7 @@ class PreferenceParser(YamlReader):
 
             # Skip if YAML was invalidated at any point
             if not sync_yaml.valid:
-                log.error(f'Cannot sync to "{file.resolve()}" - invalid YAML')
+                log.error(f'Cannot sync to "{file.resolve()}" - invalid sync')
                 return None
 
             # Add to either Plex or Sonarr lists

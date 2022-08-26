@@ -98,7 +98,7 @@ class SonarrInterface(WebInterface):
         url = f'{self.url}series'
         params = self.__standard_params
         all_series = self._get(url, params)
-
+        
         # Reset series dictionary
         self.__series_ids = {}
 

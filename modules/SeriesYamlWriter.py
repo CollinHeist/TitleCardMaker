@@ -40,15 +40,28 @@ class SeriesYamlWriter:
             ValueError: If sync mode isn't 'sync' or 'append'.
         """
 
+        # Start off as valid
+        self.valid = True
+
         # Store base attributes
         self.file = file
         self.compact_mode = compact_mode
-        self.volume_map = volume_map
 
+        # Convert volume map
+        try:
+            p_as_str =lambda p: str(p) if str(p).endswith('/') else f'{str(p)}/'
+            self.volume_map = {p_as_str(source): p_as_str(tcm)
+                               for source, tcm in volume_map.items()}
+        except Exception as e:
+            log.error(f'Invalid "volumes" - must all be paths')
+            self.valid = False
+        
         # Validate/store sync mode
-        if (sync_mode := sync_mode.lower()) not in ('sync', 'append'):
-            raise ValueError(f'Sync mode must be "sync" or "append"')
-        self.sync_mode = sync_mode
+        if (sync_mode := sync_mode.lower()) not in ('append', 'sync'):
+            log.error(f'Invalid sync mode - must be "append" or "sync"')
+            self.valid = False
+        else:
+            self.sync_mode = sync_mode
 
         # Store optional template to add
         self.template = template
@@ -89,11 +102,10 @@ class SeriesYamlWriter:
             original path is returned.
         """
 
-        # Use volume map to convert Sonarr path to TCM path
+        # Use volume map to convert path to TCM path
         for source_base, tcm_base in self.volume_map.items():
-            # If modification occurs, update Sonarr path, stop substitution
-            if (adj_path := sub(fr'^{source_base}', tcm_base, path, 1)) != path:
-                return adj_path
+            if path.startswith(source_base):
+                return path.replace(source_base, tcm_base)
 
         return path
 
@@ -295,7 +307,8 @@ class SeriesYamlWriter:
                 key = f'{series_info.name} [sonarr:{series_info.sonarr_id}]'
 
             # Add media directory if path doesn't match default
-            if Path(sonarr_path).name != series_info.legal_path:
+            if (library is None
+                or Path(sonarr_path).name != series_info.legal_path):
                 this_entry['media_directory'] = sonarr_path
 
             # Add this entry to main supposed YAML

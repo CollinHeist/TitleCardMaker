@@ -60,7 +60,7 @@ class Manager:
         # If neither Sonarr or Plex are enabled, skip
         if not self.preferences.use_sonarr and not self.preferences.use_plex:
             return None
-
+        
         if (self.preferences.use_sonarr
             and len(self.preferences.sonarr_yaml_writers) > 0):
             for writer, update_args in zip(self.preferences.sonarr_yaml_writers,
@@ -72,7 +72,7 @@ class Manager:
             for writer, update_args in zip(self.preferences.plex_yaml_writers,
                                            self.preferences.plex_yaml_update_args):
                 writer.update_from_plex(self.plex_interface, **update_args)
-
+        
 
     def create_shows(self) -> None:
         """
@@ -306,7 +306,7 @@ class Manager:
 
 
     def run(self) -> None:
-        """Run the manager and exit."""
+        """Run the manager"""
         
         self.update_series_files()
         self.create_shows()
