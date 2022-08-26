@@ -94,16 +94,17 @@ class TMDbInterface(WebInterface):
             log_func: Log function to call upon uncaught exception.
 
         Returns:
-            Wrapped decorator of that returns a wrapped callable.
+            Wrapped decorator that returns a wrapped callable.
         """
 
         def decorator(function: callable) -> callable:
             def inner(*args, **kwargs):
                 try:
                     return function(*args, **kwargs)
-                except TMDbException:
+                except TMDbException as e:
                     log_func(message)
                     log.debug(f'TMDbException from {function}({args}, {kwargs})')
+                    log.debug(f'Exception[{e}]')
                     return None
             return inner
         return decorator

@@ -155,7 +155,13 @@ set_media_info_set(MediaInfoSet())
 
 # Function to check for new version of TCM
 def check_for_update():
-    if (response := get(REPO_URL)).ok:
+    # Make API call to get latest version
+    try:
+        response = get(REPO_URL)
+        assert response.ok
+    except Exception:
+        log.debug(f'Failed to check for new version')
+    else:
         if (available_version := response.json().get('name')) !=CURRENT_VERSION:
             log.info(f'New version of TitleCardMaker ({available_version}) '
                      f'available.')
@@ -166,8 +172,7 @@ def check_for_update():
                 log.info(f'Get the latest version with "git pull origin"')
         else:
             log.debug(f'Latest remote version is {available_version}')
-    else:
-        log.debug(f'Failed to check for new version')
+        
 
 # Function to re-read preference file
 def read_preferences():
