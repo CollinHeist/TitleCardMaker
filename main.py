@@ -246,7 +246,7 @@ if args.sync:
     read_preferences()
     
     # Create Manager, run, and write missing report
-    Manager().update_series_files()
+    Manager().sync_series_files()
 
 # Schedule first run, which then schedules subsequent runs
 if hasattr(args, 'runtime'):
