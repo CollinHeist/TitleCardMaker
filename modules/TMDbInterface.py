@@ -85,7 +85,8 @@ class TMDbInterface(WebInterface):
         return f'<TMDbInterface {self.api=}>'
 
 
-    def catch_and_log(message: str, log_func=log.error) -> callable:
+    def catch_and_log(message: str, log_func=log.error, *,
+                      default=None) -> callable:
         """
         Return a decorator that logs (with the given log function) the given
         message if the decorated function raises an uncaught TMDbException.
@@ -93,6 +94,8 @@ class TMDbInterface(WebInterface):
         Args:
             message: Message to log upon uncaught exception.
             log_func: Log function to call upon uncaught exception.
+            default: (Keyword only) Value to return if decorated function raises
+                an uncaught exception.
 
         Returns:
             Wrapped decorator that returns a wrapped callable.
@@ -104,9 +107,10 @@ class TMDbInterface(WebInterface):
                     return function(*args, **kwargs)
                 except TMDbException as e:
                     log_func(message)
-                    log.debug(f'TMDbException from {function}({args}, {kwargs})')
+                    log.debug(f'TMDbException from {function.__name__}'
+                              f'({args}, {kwargs})')
                     log.debug(f'Exception[{e}]')
-                    return None
+                    return default
             return inner
         return decorator
 
@@ -240,7 +244,7 @@ class TMDbInterface(WebInterface):
         return entry['failures'] > self.preferences.tmdb_retry_count
 
 
-    @catch_and_log('Error setting series ID', log.error)
+    @catch_and_log('Error setting series ID')
     def set_series_ids(self, series_info: SeriesInfo) -> None:
         """
         Set the TMDb and TVDb ID's for the given SeriesInfo object.
@@ -320,7 +324,7 @@ class TMDbInterface(WebInterface):
             log.warning(f'Series "{series_info}" not found on TMDb')
 
 
-    @catch_and_log('Error getting all episodes', log.error)
+    @catch_and_log('Error getting all episodes', default=[])
     def get_all_episodes(self, series_info: SeriesInfo) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that have 
@@ -484,7 +488,7 @@ class TMDbInterface(WebInterface):
         return None
 
 
-    @catch_and_log('Error setting episode IDs', log.error)
+    @catch_and_log('Error setting episode IDs')
     def set_episode_ids(self, series_info: SeriesInfo,
                         infos: list[EpisodeInfo]) -> None:
         """
@@ -547,7 +551,7 @@ class TMDbInterface(WebInterface):
         return images[best_image['index']] if valid_image else None
 
 
-    @catch_and_log('Error getting source image', log.error)
+    @catch_and_log('Error getting source image', default=None)
     def get_source_image(self, series_info: SeriesInfo,
                          episode_info: EpisodeInfo, *, title_match: bool=True,
                          skip_localized_images: bool=False) -> str:
@@ -627,7 +631,7 @@ class TMDbInterface(WebInterface):
         return title == generic.format(number=episode_info.episode_number)
 
 
-    @catch_and_log('Error getting episode title', log.error)
+    @catch_and_log('Error getting episode title', default=None)
     def get_episode_title(self, series_info: SeriesInfo,
                           episode_info: EpisodeInfo,
                           language_code: str='en-US') -> str:
@@ -671,7 +675,7 @@ class TMDbInterface(WebInterface):
                 return title
 
 
-    @catch_and_log('Error getting series logo', log.error)
+    @catch_and_log('Error getting series logo', default=None)
     def get_series_logo(self, series_info: SeriesInfo) -> str:
         """
         Get the best logo for the given series.
@@ -721,7 +725,7 @@ class TMDbInterface(WebInterface):
         return best.url
 
 
-    @catch_and_log('Error setting series backdrop', log.error)
+    @catch_and_log('Error setting series backdrop', default=None)
     def get_series_backdrop(self, series_info: SeriesInfo) -> str:
         """
         Get the best backdrop for the given series.
