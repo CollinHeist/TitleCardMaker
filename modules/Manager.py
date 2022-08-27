@@ -478,6 +478,11 @@ class Manager:
     def report_missing(self, file: 'Path') -> None:
         """Report all missing assets for Shows known to the Manager."""
 
+        # Serial mode won't have an accurate show list
+        if self.preferences.execution_mode == 'serial':
+            self.create_shows()
+            self.read_show_source()
+
         missing = {}
         # Go through each show
         for show in self.shows:
@@ -488,19 +493,30 @@ class Manager:
                 if episode.episode_info.season_number == 0:
                     continue
 
+                # Add key for this episode
+                show_dict[str(episode)] = {}
+
                 # If source file doesn't exist, add to report
                 if (show.card_class.USES_UNIQUE_SOURCES
                     and not episode.source.exists()):
-                    if str(episode) not in show_dict:
-                        show_dict[str(episode)] = {}
                     show_dict[str(episode)]['source'] = episode.source.name
 
                 # If destination card doesn't exist, add to report
                 if (episode.destination is not None
                     and not episode.destination.exists()):
-                    if str(episode) not in show_dict:
-                        show_dict[str(episode)] = {}
                     show_dict[str(episode)]['card'] = episode.destination.name
+
+                # If translation is requested and doesn't exist, add
+                missing_translations = [
+                    translation['key'] for translation in show.title_languages
+                    if not episode.key_is_specified(translation['key'])
+                ]
+                if len(missing_translations) > 0:
+                    show_dict[str(episode)]['translations'] = missing_translations
+
+                # Delete entry if no missing assets
+                if len(show_dict[str(episode)]) == 0:
+                    del show_dict[str(episode)]
 
             # Report missing logo if archives and summaries are enabled
             if (show.archive and self.preferences.create_summaries
@@ -524,5 +540,3 @@ class Manager:
             dump(missing, file_handle, allow_unicode=True, width=160)
 
         log.info(f'Wrote missing assets to "{file.name}"')
-
-        

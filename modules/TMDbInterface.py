@@ -55,9 +55,10 @@ class TMDbInterface(WebInterface):
 
     def __init__(self, api_key: str) -> None:
         """
-        Constructs a new instance of an interface to TheMovieDB.
+        Construct a new instance of an interface to TMDb.
         
-        :param      api_key:    The api key to communicate with TMDb.
+        Args:
+            api_key: The api key to communicate with TMDb.
         """
 
         # Store global objects
@@ -384,19 +385,21 @@ class TMDbInterface(WebInterface):
         Finds the episode index for the given entry. Searching is done in the
         following priority:
 
-        1. Episode TVDb ID
-        2. Series TMDb ID and season+episode index with title match
-        3. Series TMDb ID and season+absolute episode index with title match
-        3. Series TMDb ID and title match on any episode
+          1. Episode TVDb ID
+          2. Series TMDb ID and season+episode index with title match
+          3. Series TMDb ID and season+absolute episode index with title match
+          4. Series TMDb ID and title match on any episode
         
-        :param      series_info:    The series information.
-        :param      episode_info:   The episode information.
-        :para       title_match:    Whether to require the title within
-                                    episode_info to match the title on TMDb.
+        Args:
+            series_info: The series information.
+            episode_info: The episode information.
+            title_match: Whether to require the title within episode_info to
+                match the title on TMDb.
         
-        :returns:   Dictionary of the index for the given entry. This dictionary
-                    has keys 'season' and 'episode'. None if returned if the
-                    entry cannot be found.
+        Returns:
+            Dictionary of the index for the given entry. This dictionary has
+            keys 'season' and 'episode'. None if returned if the entry cannot be
+            found.
         """
         
         # Query with TVDb ID first
@@ -488,8 +491,9 @@ class TMDbInterface(WebInterface):
         Set all the episode ID's for the given list of EpisodeInfo objects. For
         TMDb, this does nothing, as TMDb cannot provide any useful episode ID's.
         
-        :param      series_info:    SeriesInfo for the entry.
-        :param      infos:          List of EpisodeInfo objects to update.
+        Args:
+            series_info: SeriesInfo for the entry.
+            infos: List of EpisodeInfo objects to update.
         """
 
         return None
@@ -630,11 +634,13 @@ class TMDbInterface(WebInterface):
         """
         Get the episode title for the given entry for the given language.
         
-        :param      series_info:    SeriesInfo for the entry.
-        :param      episode_info:   EpisodeInfo for the entry.
-        :param      language_code:  The language code for the desired title.
+        Args:
+            series_info: SeriesInfo for the entry.
+            episode_info: EpisodeInfo for the entry.
+            language_code: The language code for the desired title.
         
-        :returns:   The episode title, None if the entry does not exist.
+        Args:
+            The episode title, None if the entry does not exist.
         """
 
         # Don't query the database if this episode is in the blacklist
@@ -668,12 +674,14 @@ class TMDbInterface(WebInterface):
     @catch_and_log('Error getting series logo', log.error)
     def get_series_logo(self, series_info: SeriesInfo) -> str:
         """
-        Get the 'best' logo for the given series.
+        Get the best logo for the given series.
         
-        :param      series_info:    Series to get the logo of.
+        Args:
+            series_info: Series to get the logo of.
         
-        :returns:   URL to the 'best' logo for the given series, and None if no
-                    images are available.
+        Returns:
+            URL to the 'best' logo for the given series, and None if no images 
+            are available.
         """
 
         # Don't query the database if this series' logo is blacklisted
@@ -716,12 +724,14 @@ class TMDbInterface(WebInterface):
     @catch_and_log('Error setting series backdrop', log.error)
     def get_series_backdrop(self, series_info: SeriesInfo) -> str:
         """
-        Get the 'best' backdrop for the given series.
+        Get the best backdrop for the given series.
         
-        :param      series_info:    Series to get the logo of.
+        Args:
+            series_info: Series to get the logo of.
         
-        :returns:   URL to the 'best' backdrop for the given series, and None if
-                    no images are available.
+        Returns:
+            URL to the 'best' backdrop for the given series, and None if no 
+            images are available.
         """
 
         # Don't query the database if this episode is in the blacklist
@@ -755,13 +765,13 @@ class TMDbInterface(WebInterface):
         Download episodes 1-episode_count of the requested season for the given
         show. They will be named as s{season}e{episode}.jpg.
         
-        :param      api_key:        The api key for sending requsts to TMDb.
-        :param      title:          The title of the requested show.
-        :param      year:           The year of the requested show.
-        :param      season_number:  Which season to download.
-        :param      episode_range:  Iterable of episode numbers to download.
-        :param      directory:      The directory to place the downloaded images
-                                    in.
+        Args:
+            api_key: The api key for sending requsts to TMDb.
+            title: The title of the requested show.
+            year: The year of the requested show.
+            season_number: Which season to download.
+            episode_range: Iterable of episode numbers to download.
+            directory: The directory to place the downloaded images in.
         """
 
         # Create a temporary interface object for this function
