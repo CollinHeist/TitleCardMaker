@@ -55,9 +55,10 @@ class TMDbInterface(WebInterface):
 
     def __init__(self, api_key: str) -> None:
         """
-        Constructs a new instance of an interface to TheMovieDB.
+        Construct a new instance of an interface to TMDb.
         
-        :param      api_key:    The api key to communicate with TMDb.
+        Args:
+            api_key: The api key to communicate with TMDb.
         """
 
         # Store global objects
@@ -84,7 +85,8 @@ class TMDbInterface(WebInterface):
         return f'<TMDbInterface {self.api=}>'
 
 
-    def catch_and_log(message: str, log_func=log.error) -> callable:
+    def catch_and_log(message: str, log_func=log.error, *,
+                      default=None) -> callable:
         """
         Return a decorator that logs (with the given log function) the given
         message if the decorated function raises an uncaught TMDbException.
@@ -92,19 +94,23 @@ class TMDbInterface(WebInterface):
         Args:
             message: Message to log upon uncaught exception.
             log_func: Log function to call upon uncaught exception.
+            default: (Keyword only) Value to return if decorated function raises
+                an uncaught exception.
 
         Returns:
-            Wrapped decorator of that returns a wrapped callable.
+            Wrapped decorator that returns a wrapped callable.
         """
 
         def decorator(function: callable) -> callable:
             def inner(*args, **kwargs):
                 try:
                     return function(*args, **kwargs)
-                except TMDbException:
+                except TMDbException as e:
                     log_func(message)
-                    log.debug(f'TMDbException from {function}({args}, {kwargs})')
-                    return None
+                    log.debug(f'TMDbException from {function.__name__}'
+                              f'({args}, {kwargs})')
+                    log.debug(f'Exception[{e}]')
+                    return default
             return inner
         return decorator
 
@@ -238,7 +244,7 @@ class TMDbInterface(WebInterface):
         return entry['failures'] > self.preferences.tmdb_retry_count
 
 
-    @catch_and_log('Error setting series ID', log.error)
+    @catch_and_log('Error setting series ID')
     def set_series_ids(self, series_info: SeriesInfo) -> None:
         """
         Set the TMDb and TVDb ID's for the given SeriesInfo object.
@@ -318,7 +324,7 @@ class TMDbInterface(WebInterface):
             log.warning(f'Series "{series_info}" not found on TMDb')
 
 
-    @catch_and_log('Error getting all episodes', log.error)
+    @catch_and_log('Error getting all episodes', default=[])
     def get_all_episodes(self, series_info: SeriesInfo) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that have 
@@ -356,6 +362,7 @@ class TMDbInterface(WebInterface):
                 try:
                     episode.reload()
                 except NotFound:
+                    log.error(f'TMDb error - skipping {episode}')
                     continue
 
                 episode_info = self.info_set.get_episode_info(
@@ -382,26 +389,29 @@ class TMDbInterface(WebInterface):
         Finds the episode index for the given entry. Searching is done in the
         following priority:
 
-        1. Episode TVDb ID
-        2. Series TMDb ID and season+episode index with title match
-        3. Series TMDb ID and season+absolute episode index with title match
-        3. Series TMDb ID and title match on any episode
+          1. Episode TVDb ID
+          2. Series TMDb ID and season+episode index with title match
+          3. Series TMDb ID and season+absolute episode index with title match
+          4. Series TMDb ID and title match on any episode
         
-        :param      series_info:    The series information.
-        :param      episode_info:   The episode information.
-        :para       title_match:    Whether to require the title within
-                                    episode_info to match the title on TMDb.
+        Args:
+            series_info: The series information.
+            episode_info: The episode information.
+            title_match: Whether to require the title within episode_info to
+                match the title on TMDb.
         
-        :returns:   Dictionary of the index for the given entry. This dictionary
-                    has keys 'season' and 'episode'. None if returned if the
-                    entry cannot be found.
+        Returns:
+            Dictionary of the index for the given entry. This dictionary has
+            keys 'season' and 'episode'. None if returned if the entry cannot be
+            found.
         """
         
         # Query with TVDb ID first
         if episode_info.has_id('tvdb_id'):
             try:
                 results = self.api.find_by_id(tvdb_id=episode_info.tvdb_id)
-                return results.tv_episode_results[0]
+                (episode := results.tv_episode_results[0]).reload()
+                return episode
             except (NotFound, IndexError, TMDbException):
                 pass
 
@@ -409,7 +419,8 @@ class TMDbInterface(WebInterface):
         if episode_info.has_id('imdb_id'):
             try:
                 results = self.api.find_by_id(imdb_id=episode_info.imdb_id)
-                return results.tv_episode_results[0]
+                (episode := results.tv_episode_results[0]).reload()
+                return episode
             except (NotFound, IndexError, TMDbException):
                 pass
 
@@ -428,6 +439,7 @@ class TMDbInterface(WebInterface):
             try:
                 episode = self.api.tv_episode(series_info.tmdb_id,
                                               season_number, episode_number)
+                episode.reload()
             except (NotFound, TMDbException):
                 return None
 
@@ -441,6 +453,7 @@ class TMDbInterface(WebInterface):
         # Try and match by index
         indices = episode_info.season_number, episode_info.episode_number
         if (episode := _match_by_index(episode_info, *indices)) is not None:
+            episode.reload()
             return episode
         
         # Match by absolute number
@@ -448,12 +461,14 @@ class TMDbInterface(WebInterface):
             # Try for this season
             indices = episode_info.season_number, episode_info.abs_number
             if (ep := _match_by_index(episode_info, *indices)) is not None:
+                ep.reload()
                 return ep
 
             # Try for all seasons
             for season in series.seasons:
                 indices = season.season_number, episode_info.abs_number
                 if (ep := _match_by_index(episode_info, *indices)) is not None:
+                    ep.reload()
                     return ep
         
         # If title match is disabled, cannot identify
@@ -467,40 +482,46 @@ class TMDbInterface(WebInterface):
                 if ((episode_info.has_id('tmdb_id') and
                     episode_info.tmdb_id == episode.id)
                     or episode_info.title.matches(episode.name)):
+                    episode.reload()
                     return episode
 
         return None
 
 
-    @catch_and_log('Error setting episode IDs', log.error)
+    @catch_and_log('Error setting episode IDs')
     def set_episode_ids(self, series_info: SeriesInfo,
                         infos: list[EpisodeInfo]) -> None:
         """
         Set all the episode ID's for the given list of EpisodeInfo objects. For
         TMDb, this does nothing, as TMDb cannot provide any useful episode ID's.
         
-        :param      series_info:    SeriesInfo for the entry.
-        :param      infos:          List of EpisodeInfo objects to update.
+        Args:
+            series_info: SeriesInfo for the entry.
+            infos: List of EpisodeInfo objects to update.
         """
 
         return None
 
 
     def __determine_best_image(self, images: list['tmdbapis.objs.image.Still'],
-                               source_image: bool=True) -> dict:
+                               *, is_source_image: bool=True,
+                               skip_localized: bool=False) -> dict:
         """
         Determines the best image, returning it's contents from within the
         database return JSON.
         
-        :param      images:         The results from the database. Each entry is
-                                    a new image to be considered.
-        :param      source_image:   Whether the images being selected are source
-                                    images or not. If True, then images must
-                                    meet the minimum resolution requirements.
+        Args:
+            images: The results from the database. Each entry is a new image to
+                be considered.
+            is_source_image: (Keyword only) Whether the images being selected
+                are source images or not. If True, then images must meet the
+                minimum resolution requirements.
+            skip_localized: (Keyword only) Whether to skip localized images.
         
-        :returns:   The "best" image for title card creation. This is determined
-                    using the images' dimensions. Priority given to largest
-                    image. None if there are no valid images.
+        Args:
+            The "best" image for title card creation. This is determined using
+            the images dimensions. Priority given to largest image. None if
+            there are no valid images.
         """
 
         # Pick the best image based on image dimensions, and then vote average
@@ -510,10 +531,12 @@ class TMDbInterface(WebInterface):
             # Get image dimensions
             width, height = image.width, image.height
 
-            # If source image selection, check dimensions
-            if (source_image and
-                not self.preferences.meets_minimum_resolution(width, height)):
-                continue
+            # If source image selection, check dimensions and localization
+            if is_source_image:
+                if not self.preferences.meets_minimum_resolution(width, height):
+                    continue
+                if skip_localized and image.iso_639_1 is not None:
+                    continue
 
             # If the image has valid dimensions,get pixel count and vote average
             valid_image = True
@@ -528,21 +551,25 @@ class TMDbInterface(WebInterface):
         return images[best_image['index']] if valid_image else None
 
 
-    @catch_and_log('Error getting source image', log.error)
+    @catch_and_log('Error getting source image', default=None)
     def get_source_image(self, series_info: SeriesInfo,
-                         episode_info: EpisodeInfo,
-                         title_match: bool=True) -> str:
+                         episode_info: EpisodeInfo, *, title_match: bool=True,
+                         skip_localized_images: bool=False) -> str:
         """
         Get the best source image for the requested entry. The URL of this image
         is returned.
         
-        :param      series_info:    SeriesInfo for this entry.
-        :param      episode_info:   EpisodeInfo for this entry.
-        :param      title_match:    Whether to require the episode title to
-                                    match when querying TMDb.
+        Args:
+            series_info: SeriesInfo for this entry.
+            episode_info: EpisodeInfo for this entry.
+            title_match:  (Keyword only) Whether to require the episode title to
+                 match when querying TMDb.
+            skip_localized_images: (Keyword only) Whether to skip images with a
+                non-null language code - i.e. skipping localized images.
         
-        :returns:   URL to the 'best' source image for the requested entry. None
-                    if no images are available.
+        Returns:
+            URL to the 'best' source image for the requested entry. None if no
+            images are available.
         """
 
         # Don't query the database if this episode is in the blacklist
@@ -558,17 +585,14 @@ class TMDbInterface(WebInterface):
             return None
 
         # Episode found on TMDb, exit if no backdrops for this episode
-        try:
-            episode.reload()
-        except NotFound:
-            return None
         if len(episode.stills) == 0:
             log.debug(f'TMDb has no images for "{series_info}" {episode_info}')
             self.__update_blacklist(series_info, episode_info, 'image')
             return None
 
         # Get the best image for this Episode
-        if (best_image := self.__determine_best_image(episode.stills, True)):
+        if (best_image := self.__determine_best_image(episode.stills,
+                   is_source_image=True, skip_localized=skip_localized_images)):
             return best_image.url
         
         log.debug(f'TMDb images for "{series_info}" {episode_info} do not meet '
@@ -607,18 +631,20 @@ class TMDbInterface(WebInterface):
         return title == generic.format(number=episode_info.episode_number)
 
 
-    @catch_and_log('Error getting episode title', log.error)
+    @catch_and_log('Error getting episode title', default=None)
     def get_episode_title(self, series_info: SeriesInfo,
                           episode_info: EpisodeInfo,
                           language_code: str='en-US') -> str:
         """
         Get the episode title for the given entry for the given language.
         
-        :param      series_info:    SeriesInfo for the entry.
-        :param      episode_info:   EpisodeInfo for the entry.
-        :param      language_code:  The language code for the desired title.
+        Args:
+            series_info: SeriesInfo for the entry.
+            episode_info: EpisodeInfo for the entry.
+            language_code: The language code for the desired title.
         
-        :returns:   The episode title, None if the entry does not exist.
+        Args:
+            The episode title, None if the entry does not exist.
         """
 
         # Don't query the database if this episode is in the blacklist
@@ -649,15 +675,17 @@ class TMDbInterface(WebInterface):
                 return title
 
 
-    @catch_and_log('Error getting series logo', log.error)
+    @catch_and_log('Error getting series logo', default=None)
     def get_series_logo(self, series_info: SeriesInfo) -> str:
         """
-        Get the 'best' logo for the given series.
+        Get the best logo for the given series.
         
-        :param      series_info:    Series to get the logo of.
+        Args:
+            series_info: Series to get the logo of.
         
-        :returns:   URL to the 'best' logo for the given series, and None if no
-                    images are available.
+        Returns:
+            URL to the 'best' logo for the given series, and None if no images 
+            are available.
         """
 
         # Don't query the database if this series' logo is blacklisted
@@ -697,15 +725,17 @@ class TMDbInterface(WebInterface):
         return best.url
 
 
-    @catch_and_log('Error setting series backdrop', log.error)
+    @catch_and_log('Error setting series backdrop', default=None)
     def get_series_backdrop(self, series_info: SeriesInfo) -> str:
         """
-        Get the 'best' backdrop for the given series.
+        Get the best backdrop for the given series.
         
-        :param      series_info:    Series to get the logo of.
+        Args:
+            series_info: Series to get the logo of.
         
-        :returns:   URL to the 'best' backdrop for the given series, and None if
-                    no images are available.
+        Returns:
+            URL to the 'best' backdrop for the given series, and None if no 
+            images are available.
         """
 
         # Don't query the database if this episode is in the blacklist
@@ -739,13 +769,13 @@ class TMDbInterface(WebInterface):
         Download episodes 1-episode_count of the requested season for the given
         show. They will be named as s{season}e{episode}.jpg.
         
-        :param      api_key:        The api key for sending requsts to TMDb.
-        :param      title:          The title of the requested show.
-        :param      year:           The year of the requested show.
-        :param      season_number:  Which season to download.
-        :param      episode_range:  Iterable of episode numbers to download.
-        :param      directory:      The directory to place the downloaded images
-                                    in.
+        Args:
+            api_key: The api key for sending requsts to TMDb.
+            title: The title of the requested show.
+            year: The year of the requested show.
+            season_number: Which season to download.
+            episode_range: Iterable of episode numbers to download.
+            directory: The directory to place the downloaded images in.
         """
 
         # Create a temporary interface object for this function

@@ -7,7 +7,7 @@ from re import match, IGNORECASE
 try:
     from yaml import dump
 
-    from modules.Debug import log
+    from modules.Debug import log, LOG_FILE
     from modules.DataFileInterface import DataFileInterface
     from modules.EpisodeInfo import EpisodeInfo
     from modules.PlexInterface import PlexInterface
@@ -45,20 +45,6 @@ parser.add_argument(
 # Argument group for Miscellaneous functions
 misc_group = parser.add_argument_group('Miscellaneous')
 misc_group.add_argument(
-    '--import-cards', '--import-archive', '--load-archive',
-    type=str,
-    nargs=2,
-    default=SUPPRESS,
-    metavar=('ARCHIVE_DIRECTORY', 'PLEX_LIBRARY'),
-    help='Import an archive of Title Cards into Plex')
-misc_group.add_argument(
-    '--import-series', '--load-series',
-    type=str,
-    nargs='+',
-    default=SUPPRESS,
-    metavar=('NAME', 'YEAR'),
-    help='Override/set the name of the series imported with --import-archive')
-misc_group.add_argument(
     '--delete-cards',
     nargs='+',
     default=[],
@@ -71,6 +57,28 @@ misc_group.add_argument(
     metavar='EXTENSION',
     help='Extension of images to delete with --delete-cards')
 misc_group.add_argument(
+    '--print-log',
+    action='store_true',
+    default=SUPPRESS,
+    help='Print the last log file')
+
+# Argument group for Plex
+plex_group = parser.add_argument_group('Plex')
+plex_group.add_argument(
+    '--import-cards', '--import-archive', '--load-archive',
+    type=str,
+    nargs=2,
+    default=SUPPRESS,
+    metavar=('ARCHIVE_DIRECTORY', 'PLEX_LIBRARY'),
+    help='Import an archive of Title Cards into Plex')
+plex_group.add_argument(
+    '--import-series', '--load-series',
+    type=str,
+    nargs='+',
+    default=SUPPRESS,
+    metavar=('NAME', 'YEAR'),
+    help='Override/set the name of the series imported with --import-archive')
+plex_group.add_argument(
     '--forget-cards', '--forget-loaded-cards',
     type=str,
     nargs=3,
@@ -78,12 +86,14 @@ misc_group.add_argument(
     metavar=('PLEX_LIBRARY', 'NAME', 'YEAR'),
     help='Remove records of the loaded cards for the given series/library')
 
+
 # Argument group for Sonarr
 sonarr_group = parser.add_argument_group('Sonarr')
 sonarr_group.add_argument(
     '--sonarr-list-ids',
     action='store_true',
     help="List all the ID's for all shows within Sonarr")
+
 
 # Argument group for TMDb
 tmdb_group = parser.add_argument_group(
@@ -126,7 +136,41 @@ if not pp.valid:
     exit(1)
 set_preference_parser(pp)
 
-# Execute Miscellaneous options
+# Execute miscellaneous arguments
+for directory in args.delete_cards:
+    # Get all images in this directory
+    directory = Path(directory)
+    images = tuple(directory.glob(f'**/*{args.delete_extension}'))
+
+    # If no images to delete, skip
+    if len(images) == 0:
+        log.info(f'No images to delete from "{directory.resolve()}"')
+        continue
+
+    # Log each image to be deleted
+    base_length = len(str(directory.resolve()))
+    for image in images:
+        log.info(f'Identified [...]{str(image.resolve())[base_length:]}')
+
+    # Ask for confirmation
+    log.warning(f'Deleting {len(images)} images from "{directory.resolve()}"')
+    confirmation = input(f'  Continue [Y/N]? ')
+
+    # Delete each image
+    if confirmation in ('y', 'Y', 'yes', 'YES'):
+        for image in images:
+            image.unlink()
+            log.debug(f'Deleted {image.resolve()}')
+    else:
+        log.info(f'Not deleting any images')
+
+if hasattr(args, 'print_log') and args.print_log:
+    if LOG_FILE.exists():
+        with LOG_FILE.open('r') as file_handle:
+            print(file_handle.read())
+
+
+# Execute Plex options
 if hasattr(args, 'import_cards') and pp.use_plex:
     # Temporary classes
     @dataclass
@@ -174,33 +218,6 @@ if hasattr(args, 'import_cards') and pp.use_plex:
     	series_info,
     	episode_map
     )
-    
-for directory in args.delete_cards:
-    # Get all images in this directory
-    directory = Path(directory)
-    images = tuple(directory.glob(f'**/*{args.delete_extension}'))
-
-    # If no images to delete, skip
-    if len(images) == 0:
-        log.info(f'No images to delete from "{directory.resolve()}"')
-        continue
-
-    # Log each image to be deleted
-    base_length = len(str(directory.resolve()))
-    for image in images:
-        log.info(f'Identified [...]{str(image.resolve())[base_length:]}')
-
-    # Ask for confirmation
-    log.warning(f'Deleting {len(images)} images from "{directory.resolve()}"')
-    confirmation = input(f'  Continue [Y/N]? ')
-
-    # Delete each image
-    if confirmation in ('y', 'Y', 'yes', 'YES'):
-        for image in images:
-            image.unlink()
-            log.debug(f'Deleted {image.resolve()}')
-    else:
-        log.info(f'Not deleting any images')
 
 if hasattr(args, 'forget_cards') and pp.use_plex:
     # Create PlexInterface and remove records for indicated series+library
@@ -262,4 +279,3 @@ if hasattr(args, 'add_translation') and pp.use_tmdb:
             continue
 
         dfi.modify_entry(**entry, **{args.add_translation[4]: new_title})
-

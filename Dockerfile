@@ -11,6 +11,7 @@ COPY . /maker
 
 # Script environments
 ENV TCM_PREFERENCES=/config/preferences.yml
+ENV TCM_IS_DOCKER=TRUE
 
 # Create user and group to run the container
 RUN groupadd -g 314 titlecardmaker; \

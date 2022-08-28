@@ -292,11 +292,12 @@ class Profile:
         and the given `title_text` was 'Chapter 1: Pilot', then the returned
         text (excluding any replacements or case mappings) would be 'Pilot'.
         
-        :param      title_text:         The title text to convert.
-        :param      manually_specified: Whether the given title text has been
-                                        manually specified.
+        Args:
+            title_text:  The title text to convert.
+            manually_specified: Whether the given title was manually specified.
         
-        :returns:   The processed text.
+        Returns:
+            The processed text.
         """
 
         # Modify the title if it contains the episode text format
@@ -305,17 +306,15 @@ class Profile:
             # Attempt to remove text that matches the episode text format string
             title_text = self.__remove_episode_text_format(title_text)
 
+        # Apply this profile's font function to the translated text, unless
+        # this is a manually specified title and we're apply title casing
+        if manually_specified and self.font.case_name in ('title', 'source'):
+            cased_title = title_text
+        else:
+            cased_title = self.font.case(title_text)
+
         # Create translation table for this profile's replacements
         translation = str.maketrans(self.font.replacements)
 
         # Apply translation table to this text
-        translated_text = title_text.translate(translation)
-
-        # Apply this profile's font function to the translated text, unless
-        # this is a manually specified title and we're apply title casing
-        if manually_specified and self.font.case_name in ('title', 'source'):
-            return translated_text
-
-        return self.font.case(translated_text)
-
-
+        return cased_title.translate(translation)

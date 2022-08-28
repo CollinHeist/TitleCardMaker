@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from plexapi.exceptions import PlexApiException
 from plexapi.server import PlexServer, NotFound, Unauthorized
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 from tinydb import TinyDB, where
@@ -12,10 +13,7 @@ from modules.SeriesInfo import SeriesInfo
 from modules.WebInterface import WebInterface
 
 class PlexInterface:
-    """
-    This class describes an interface to Plex for the purpose of pulling in new
-    title card images.
-    """
+    """This class describes an interface to Plex."""
 
     """Directory for all temporary objects"""
     TEMP_DIR = Path(__file__).parent / '.objects'
@@ -64,6 +62,36 @@ class PlexInterface:
         self.__warned = set()
 
 
+    def catch_and_log(message: str, log_func=log.error, *,
+                      default=None) -> callable:
+        """
+        Return a decorator that logs (with the given log function) the given
+        message if the decorated function raises an uncaught PlexApiException.
+
+        Args:
+            message: Message to log upon uncaught exception.
+            log_func: Log function to call upon uncaught exception.
+            default: (Keyword only) Value to return if decorated function raises
+                an uncaught exception.
+
+        Returns:
+            Wrapped decorator that returns a wrapped callable.
+        """
+
+        def decorator(function: callable) -> callable:
+            def inner(*args, **kwargs):
+                try:
+                    return function(*args, **kwargs)
+                except PlexApiException as e:
+                    log_func(message)
+                    log.debug(f'PlexApiException from {function.__name__}'
+                              f'({args}, {kwargs})')
+                    log.debug(f'Exception[{e}]')
+                    return default
+            return inner
+        return decorator
+
+
     def __get_condition(self, library_name: str, series_info: 'SeriesInfo',
                         episode: 'Episode'=None) -> 'QueryInstance':
         """
@@ -100,12 +128,13 @@ class PlexInterface:
         Get the loaded details of the given Episode from the given list of
         loaded series details.
         
-        :param      loaded_series:  Filtered List from the loaded database to
-                                    look through.
-        :param      episode:        The Episode to get the details of.
+        Args:
+            loaded_series: Filtered List from the loaded database to search.
+            episode: The Episode to get the details of.
 
-        :returns:   Loaded details for the specified episode. None if an episode
-                    of that index DNE in the given list.
+        Returns:
+            Loaded details for the specified episode. None if an episode of that
+            index DNE in the given list.
         """
         
         for entry in loaded_series:
@@ -235,6 +264,7 @@ class PlexInterface:
             return None
 
 
+    @catch_and_log('Error getting library paths', default={})
     def get_library_paths(self, filter_libraries: list[str]=[]) ->dict[str:str]:
         """
         Get all libraries and their associated base directories.
@@ -266,6 +296,7 @@ class PlexInterface:
         return all_libraries
     
 
+    @catch_and_log('Error getting all series', default=[])
     def get_all_series(self, filter_libraries: list[str]=[]
                        ) -> list[tuple[SeriesInfo, str, str]]: 
         """
@@ -277,7 +308,7 @@ class PlexInterface:
                 library are returned.
 
         Returns:
-           List of tuples whose elements are the SeriesInfo of the series, the 
+            List of tuples whose elements are the SeriesInfo of the series, the 
             path (string) it is located, and its corresponding library name.
         """
 
@@ -316,24 +347,24 @@ class PlexInterface:
                 )
 
                 # Add to returned list
-                all_series.append(
-                    (series_info, show.locations[0], library.title)
-                )
+                all_series.append((series_info,show.locations[0],library.title))
 
         return all_series
     
     
+    @catch_and_log('Error getting all episodes', default=[])
     def get_all_episodes(self, library_name: str,
                          series_info: SeriesInfo) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that have 
         already aired are returned.
         
-        :param      library_name:   The name of the library containing the
-                                    series.
-        :param      series_info:    Series to get the episodes of.
+        Args:
+            library_name: The name of the library containing the series.
+            series_info: Series to get the episodes of.
         
-        :returns:   List of EpisodeInfo objects for this series.
+        Returns:
+            List of EpisodeInfo objects for this series.
         """
 
         # If the given library cannot be found, exit
@@ -379,11 +410,13 @@ class PlexInterface:
         """
         Determine whether the given series is present within Plex.
         
-        :param      library_name:   The name of the library potentially
-                                    containing the series.
-        :param      series_info:    The series to update.
+        Args:
+            library_name: The name of the library potentially containing the
+                series.
+            series_info: The series to update.
         
-        :returns:   True if the series is present within Plex.
+        Returns:
+            True if the series is present within Plex.
         """
 
         # If the given library cannot be found, exit
@@ -394,6 +427,7 @@ class PlexInterface:
         return self.__get_series(library, series_info) is not None
 
 
+    @catch_and_log('Error updating watched statuses')
     def update_watched_statuses(self, library_name: str,
                                 series_info: 'SeriesInfo', episode_map: dict,
                                 watched_style: str, unwatched_style: str)->None:
@@ -403,13 +437,12 @@ class PlexInterface:
         If a loaded card needs its spoiler status changed, the card is deleted
         and the loaded map is forced to reload that card.
         
-        :param      library_name:   The name of the library containing the
-                                    series to update.
-        :param      series_info:    The series to update.
-        :param      episode_map:    Dictionary of episode keys to Episode
-                                    objects to modify.
-        :param      watched_style:  Desired card style of watched episodes.
-        :param      unwatched:      Desired card style of unwatched episodes.
+        Args:
+            library_name: The name of the library containing the series to update
+            series_info: The series to update.
+            episode_map: Dictionary of episode keys to Episode objects to modify
+            watched_style: Desired card style of watched episodes.
+            unwatched_style: Desired card style of unwatched episodes.
         """
 
         # If no episodes, or unwatched setting is ignored, exit
@@ -425,9 +458,8 @@ class PlexInterface:
             return None
 
         # Get loaded characteristics of the series
-        loaded_series = self.__db.search(
-            self.__get_condition(library_name, series_info)
-        )
+        loaded_series = self.__db.search(self.__get_condition(library_name,
+                                                              series_info))
 
         # Go through each episode within Plex and update Episode spoiler status
         for plex_episode in series.episodes():
@@ -460,6 +492,7 @@ class PlexInterface:
                 )
 
 
+    @catch_and_log("Error setting episode ID's")
     def set_episode_ids(self, library_name: str, series_info: SeriesInfo,
                         infos: list[EpisodeInfo]) -> None:
         """
@@ -467,9 +500,10 @@ class PlexInterface:
         sets the Sonarr and TVDb ID's for each episode. As a byproduct, this
         also updates the series ID's for the SeriesInfo object
         
-        :param      library_name:   Name of the library the series is under.
-        :param      series_info:    SeriesInfo for the entry.
-        :param      infos:          List of EpisodeInfo objects to update.
+        Args:
+            library_name: Name of the library the series is under.
+            series_info: SeriesInfo for the entry.
+            infos: List of EpisodeInfo objects to update.
         """
 
         # If the given library cannot be found, exit
@@ -505,18 +539,20 @@ class PlexInterface:
                 continue
 
 
+    @catch_and_log('Error getting source image', default=None)
     def get_source_image(self, library_name: str, series_info: 'SeriesInfo',
                          episode_info: EpisodeInfo) -> str:
         """
         Get the source image (i.e. the URL to the existing thumbnail) for the
         given episode within Plex.
         
-        :param      library_name:   Name of the library the series is under.
-        :param      series_info:    The series to get the thumbnail of.
-        :param      episode_info:   The episode to get the thumbnail of.
+        Args:
+            library_name: Name of the library the series is under.
+            series_info: The series to get the thumbnail of.
+            episode_info: The episode to get the thumbnail of.
         
-        :returns:   URL to the thumbnail of the given Episode. None if the
-                    episode DNE.
+        Returns:
+            URL to the thumbnail of the given Episode. None if the episode DNE.
         """
 
         # If the given library cannot be found, exit
@@ -548,13 +584,15 @@ class PlexInterface:
         """
         Upload the given poster to the given Episode, retrying if it fails.
         
-        :param      plex_object:    The plexapi object to upload the file to.
-        :param      filepath:       Filepath to the poster to upload.
+        Args:
+            plex_object: The plexapi object to upload the file to.
+            filepath: Filepath to the poster to upload.
         """
 
         plex_object.uploadPoster(filepath=filepath)
 
 
+    @catch_and_log('Error uploading title cards')
     def set_title_cards_for_series(self, library_name: str, 
                                    series_info: 'SeriesInfo',
                                    episode_map: dict) -> None:
@@ -563,18 +601,16 @@ class PlexInterface:
         that have title cards, and those episodes whose card filesizes are
         different than what has been set previously.
         
-        :param      library_name:   The name of the library containing the
-                                    series to update.
-        :param      series_info:    The series to update.
-        :param      episode_map:    Dictionary of episode keys to Episode
-                                    objects to update the cards of.
+        Args:
+            library_name: Name of the library containing the series to update.
+            series_info: The series to update.
+            episode_map: Dictionary of episode keys to Episode objects to update
+                the cards of.
         """
 
         # Filter episodes without cards, or whose cards have not changed
         filtered_episodes = self.__filter_loaded_cards(
-            library_name,
-            series_info,
-            episode_map
+            library_name, series_info, episode_map
         )
 
         # If no episodes remain, exit
@@ -639,6 +675,7 @@ class PlexInterface:
             log.info(f'Loaded {loaded_count} cards for "{series_info}"')
 
 
+    @catch_and_log('Error uploading season posters')
     def set_season_poster(self, library_name: str,
                           series_info: SeriesInfo,
                           season_poster_set: 'SeasonPosterSet') -> None:
@@ -703,15 +740,19 @@ class PlexInterface:
             log.info(f'Loaded {loaded_count} season posters for "{series_info}"')
 
 
+    @catch_and_log('Error getting episode details', default=None)
     def get_episode_details(self, rating_key: int) -> tuple[SeriesInfo,
                                                             EpisodeInfo, str]:
         """
         Get all details for the episode indicated by the given Plex rating key.
         
-        :param      rating_key: Rating key used to fetch the item within Plex.
+        Args:
+            rating_key: Rating key used to fetch the item within Plex.
         
-        :returns:   Tuple of the SeriesInfo, EpisodeInfo, and the library name
-                    corresponding to the given episode.
+        Returns:
+            Tuple of the SeriesInfo, EpisodeInfo, and the library name
+            corresponding to the given rating key. None if the item cannot be
+            found, or if a valid tuple of info cannot be returned.
         """
 
         try:
@@ -723,16 +764,21 @@ class PlexInterface:
                 log.error(f'Item {episode} is not an Episode')
                 raise NotFound
 
+            # Get series for this episode
             series = self.__server.fetchItem(episode.grandparentKey)
-
+            assert series.year is not None
+        except NotFound:
+            log.error(f'No item with ratingKey={rating_key} exists')
+            return None
+        except AssertionError:
+            log.warning(f'Item with ratingKey={rating_key} has no year')
+            return None
+        else:
             return (
                 SeriesInfo(episode.grandparentTitle, series.year),
                 EpisodeInfo(episode.title, episode.parentIndex, episode.index),
                 episode.librarySectionTitle,
             )
-        except NotFound:
-            log.error(f'No item with ratingKey={rating_key} exists')
-            return None
 
 
     def remove_records(self, library_name: str, series_info: SeriesInfo) ->None:
@@ -740,9 +786,10 @@ class PlexInterface:
         Remove all records for the given library and series from the loaded
         database.
         
-        :param      library_name:   The name of the library containing the
-                                    series whose records are being removed.
-        :param      series_info:    SeriesInfo whose records are being removed.
+        Args:
+            library_name: The name of the library containing the series whose
+                records are being removed.
+            series_info: SeriesInfo whose records are being removed.
         """
 
         # Get condition to find records matching this library + series

@@ -11,9 +11,9 @@ class ImageMagickInterface:
 
     Note: This class does not validate the provided container corresponds to
     a valid ImageMagick container. Commands are passed to docker so long as any
-    container is fiben.
+    container name/ID is provided.
 
-    The command I use for launching an ImageMagick container is:
+    An example command
 
     >>> docker run --name="ImageMagick" --entrypoint="/bin/bash" \
         -dit -v "/mnt/user/":"/mnt/user/" 'dpokidov/imagemagick'
@@ -28,8 +28,8 @@ class ImageMagickInterface:
     def __init__(self, container: str=None, use_magick_prefix: bool=False,
                  timeout: int=COMMAND_TIMEOUT_SECONDS) -> None:
         """
-        Constructs a new instance. If docker_id is None/0/False, then commands
-        will not use a docker container.
+        Construct a new instance. If container is falsey, then commands will not
+        use a docker container.
         
        Args:
             container: Optional docker container name/ID to sending ImageMagick
@@ -59,11 +59,13 @@ class ImageMagickInterface:
         Escape the necessary characters within the given string so that they
         can be sent to ImageMagick.
         
-        :param      string: The string to escape.
+        Args:
+            string: The string to escape.
         
-        :returns:   Input string with all necessary characters escaped. This 
-                    assumes that text will be wrapped in "", and so only escapes
-                    " and ` characters.
+        Returns:
+            Input string with all necessary characters escaped. This assumes
+            that text will be wrapped in "", and so only escapes " and `
+            characters.
         """
 
         # Handle possible None strings
@@ -80,9 +82,11 @@ class ImageMagickInterface:
         preferences has been set; i.e. wrapped through "docker exec -t {id}
         {command}").
 
-        :param      command:    The command (as string) to execute.
+        Args:
+            command: The command (as string) to execute.
 
-        :returns:   Tuple of the STDOUT and STDERR of the executed command.
+        Returns:
+            Tuple of the STDOUT and STDERR of the executed command.
         """
         
         # If a docker image ID is specified, execute the command in that container
@@ -120,9 +124,11 @@ class ImageMagickInterface:
         """
         Wrapper for run(), but return the byte-decoded stdout.
         
-        :param      command:    The command (as string) being executed.
+        Args:
+            command: The command (as string) being executed.
 
-        :returns:   The decoded stdout output of the executed command.
+        Returns:
+            The decoded stdout output of the executed command.
         """
 
         return b''.join(self.run(command)).decode()
@@ -132,7 +138,8 @@ class ImageMagickInterface:
         """
         Delete all the provided intermediate files.
         
-        :param      paths:  Any number of files to delete. Must be Path objects.
+        Args:
+            paths: Any number of files to delete. Must be Path objects.
         """
 
         # Delete (unlink) each image, don't raise FileNotFoundError if DNE
@@ -141,12 +148,10 @@ class ImageMagickInterface:
 
 
     def print_command_history(self) -> None:
-        """
-        Prints the command history of this Interface.
-        """
+        """Print the command history of this Interface."""
 
-        for entry in self.__history:
-            command, stdout, stderr = entry
-            sep = '-' * 60
-            log.debug(f'Command: {command}\n\nstdout: {stdout}\n\nstderr: '
-                      f'{stderr}\n{sep}')
+        for command, stdout, stderr in self.__history:
+            log.debug(f'Command: {command}\n\n'
+                      f'stdout: {stdout}\n\n'
+                      f'stderr: {stderr}\n'
+                      f'{"-" * 60}')

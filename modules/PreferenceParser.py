@@ -6,7 +6,8 @@ from tqdm import tqdm
 from modules.Debug import log, TQDM_KWARGS
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.ImageMaker import ImageMaker
-from modules.PlexInterface import PlexInterface
+from modules.Manager import Manager
+from modules.SeriesInfo import SeriesInfo
 from modules.SeriesYamlWriter import SeriesYamlWriter
 from modules.Show import Show
 from modules.ShowSummary import ShowSummary
@@ -59,6 +60,7 @@ class PreferenceParser(YamlReader):
 
         # Setup default values that can be overwritten by YAML
         self.series_files = []
+        self.execution_mode = Manager.DEFAULT_EXECUTION_MODE
         self._parse_card_type('standard') # Sets self.card_type
         self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
         self.card_extension = TitleCard.DEFAULT_CARD_EXTENSION
@@ -93,6 +95,7 @@ class PreferenceParser(YamlReader):
         self.tmdb_api_key = None
         self.tmdb_retry_count = TMDbInterface.BLACKLIST_THRESHOLD
         self.tmdb_minimum_resolution = {'width': 0, 'height': 0}
+        self.tmdb_skip_localized_images = False
         self.imagemagick_container = None
         self.imagemagick_timeout = ImageMagickInterface.COMMAND_TIMEOUT_SECONDS
 
@@ -156,31 +159,31 @@ class PreferenceParser(YamlReader):
 
             # Skip if file wasn't specified
             if (file := sync_yaml._get('file', type_=Path)) is None:
-                log.debug(f'Skipping sync, no file specified')
                 return None
-
-            def mode_type(val):
-                assert (val := val.lower()) in ('append', 'sync')
-                return val
 
             # Create SeriesYamlWriter with this config
             writer = SeriesYamlWriter(
                 file,
-                sync_yaml._get('mode', type_=mode_type, default='append'),
+                sync_yaml._get('mode', type_=str, default='append'),
                 sync_yaml._get('compact_mode', type_=bool, default=True),
-                sync_yaml._get('volumes', default={}),
+                sync_yaml._get('volumes', type_=dict, default={}),
                 sync_yaml._get('add_template', type_=str, default=None),
             )
 
+            # If invalid after initialization, error and exit
+            if not writer.valid:
+                log.error(f'Cannot sync to "{file.resolve()}" - invalid sync')
+                return None
+
             # Parse update args
             update_args = {}
-            if (value := sync_yaml._get('libraries')) is not None:
+            if (value := sync_yaml._get('libraries', type_=list)) is not None:
                 update_args['filter_libraries'] = value
-            if (value := sync_yaml._get('exclusions')) is not None:
+            if (value := sync_yaml._get('exclusions', type_=list)) is not None:
                 update_args['exclusions'] = value
-            if (value := sync_yaml._get('plex_libraries')) is not None:
+            if (value := sync_yaml._get('plex_libraries', type_=dict)) != None:
                 update_args['plex_libraries'] = value
-            if (value := sync_yaml._get('required_tags')) is not None:
+            if (value := sync_yaml._get('required_tags', type_=list)) != None:
                 update_args['required_tags'] = value
             if (value := sync_yaml._get('monitored_only', 
                                         type_=bool)) is not None:
@@ -188,7 +191,7 @@ class PreferenceParser(YamlReader):
 
             # Skip if YAML was invalidated at any point
             if not sync_yaml.valid:
-                log.error(f'Cannot sync to "{file.resolve()}" - invalid YAML')
+                log.error(f'Cannot sync to "{file.resolve()}" - invalid sync')
                 return None
 
             # Add to either Plex or Sonarr lists
@@ -235,6 +238,14 @@ class PreferenceParser(YamlReader):
 
         lower_str = lambda v: str(v).lower()
 
+        if (value := self._get('options', 'execution_mode',
+                               type_=lower_str)) is not None:
+            if value not in Manager.VALID_EXECUTION_MODES:
+                log.critical(f'Execution mode "{value}" is invalid')
+                self.valid = False
+            else:
+                self.execution_mode = value
+
         if (value := self._get('options', 'series')) is not None:
             if isinstance(value, list):
                 self.series_files = value
@@ -264,7 +275,7 @@ class PreferenceParser(YamlReader):
         if (value := self._get('options',
                                'image_source_priority', type_=str)) is not None:
             lower_strip = lambda s: str(s).lower().strip()
-            sources = tuple(map(lower_strip, value.split(', ')))
+            sources = tuple(map(lower_strip, value.split(',')))
             if not all(_ in self.VALID_IMAGE_SOURCES for _ in sources):
                 log.critical(f'Image source priority "{value}" is invalid')
                 self.valid = False
@@ -374,6 +385,10 @@ class PreferenceParser(YamlReader):
                              f'WIDTHxHEIGHT')
                 self.valid = False
 
+        if (value := self._get('tmdb', 'skip_localized_images',
+                               type_=bool)) is not None:
+            self.tmdb_skip_localized_images = value
+
         if (value := self._get('imagemagick', 'container', type_=str)) != None:
             self.imagemagick_container = value
 
@@ -402,7 +417,7 @@ class PreferenceParser(YamlReader):
             self.valid = False
 
 
-    def __apply_template(self, templates: dict, series_yaml: dict,
+    def __apply_template(self, templates: dict[str, Template],series_yaml: dict,
                          series_name: str) -> bool:
         """
         Apply the correct Template object (if indicated) to the given series
@@ -438,6 +453,14 @@ class PreferenceParser(YamlReader):
         if not (template := templates.get(template_name, None)):
             log.error(f'Template "{template_name}" not defined')
             return False
+
+        # Parse title/year from the series to add as "built-in" template data
+        try:
+            series_info = SeriesInfo(series_name, series_yaml.get('year', None))
+            built_in_data = {'title': series_info.name, 'year':series_info.year}
+            series_yaml['template'] = built_in_data | series_yaml['template']
+        except Exception:
+            pass
 
         # Apply using Template object
         return template.apply_to_series(series_name, series_yaml)
@@ -498,11 +521,15 @@ class PreferenceParser(YamlReader):
 
             # Get library map for this file; error+skip missing library paths
             if (library_map := file_yaml.get('libraries', {})):
-                if not isinstance(library_map, dict):
+                # Validate map and all libraries are dictionaries
+                if (not isinstance(library_map, dict)
+                    or not all(isinstance(library_map[lib], dict)
+                               for lib in library_map)):
                     log.error(f'Invalid library specification for series file '
                               f'"{file.resolve()}"')
                     continue
-                if not all('path' in library_map[lib] for lib in library_map):
+                if not all('path' in library_map[lib].keys()
+                           for lib in library_map):
                     log.error(f'Libraries are missing required "path" in series'
                               f' file "{file.resolve()}"')
                     continue
@@ -525,24 +552,20 @@ class PreferenceParser(YamlReader):
             # Go through each series in this file
             for show_name in tqdm(file_yaml['series'], desc='Creating Shows',
                                   **TQDM_KWARGS):
-                # Apply template to series
-                valid = self.__apply_template(
-                    templates, file_yaml['series'][show_name], show_name,
-                )
-
-                # Skip if series is not valid
-                if not valid:
+                # Skip if not a dictionary
+                if not isinstance(file_yaml['series'][show_name], dict):
+                    log.error(f'Skipping "{show_name}" from "{file_}"')
+                    continue
+                
+                # Apply template to series, skip if invalid
+                if not self.__apply_template(templates,
+                                    file_yaml['series'][show_name], show_name):
+                    log.error(f'Skipping "{show_name}" from "{file_}"')
                     continue
 
                 # Yield the Show object created from this entry
-                yield Show(
-                    show_name,
-                    file_yaml['series'][show_name],
-                    library_map,
-                    font_map,
-                    self.source_directory,
-                    self,
-                )
+                yield Show(show_name, file_yaml['series'][show_name],
+                           library_map, font_map, self.source_directory, self)
 
                 # If archiving is disabled, skip
                 if not self.create_archive:
@@ -573,14 +596,8 @@ class PreferenceParser(YamlReader):
                     variation.pop('library', None)
                     variation.pop('media_directory', None)
                     
-                    yield Show(
-                        show_name,
-                        variation,
-                        library_map,
-                        font_map,
-                        self.source_directory,
-                        self,
-                    )
+                    yield Show(show_name, variation, library_map, font_map,
+                               self.source_directory, self)
 
     @property
     def check_tmdb(self):

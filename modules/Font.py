@@ -1,9 +1,7 @@
 from pathlib import Path
-from re import match
 from re import compile as re_compile
 
 from modules.Debug import log
-from modules.TitleCard import TitleCard
 import modules.global_objects as global_objects
 
 class Font:
@@ -26,14 +24,13 @@ class Font:
     def __init__(self, yaml: dict, font_map: dict[str: dict],
                  card_class: 'CardType', series_info: 'SeriesInfo') -> None:
         """
-        Constructs a new instance of a Font for the given YAML, CardType, and
-        series.
+        Construct a new instance of a Font.
         
-        :param      yaml:           'font' dictionary from a series YAML file.
-        :param      font_map:       Map of font labels to custom font
-                                    dictionaries.
-        :param      card_class:     CardType class to use values from.
-        :param      series_info:    Associated SeriesInfo (for logging).
+        Args:
+            yaml: 'font' dictionary from a series YAML file.
+            font_map: Dictionary of font labels to custom font definitions.
+            card_class:  CardType class to use values from.
+            series_info: Associated SeriesInfo (for logging).
         """
 
         # Assume object is valid to start with
@@ -76,10 +73,10 @@ class Font:
         Print an error message for the given attribute of the given value. Also
         sets the valid attribute of this object to False.
         
-        :param      attribute:      Font attribute that is incorrect.
-        :param      value:          Value of attribute that is incorrect.
-        :param      description:    Optional description for why the given value
-                                    is incorrect.
+        Args:
+            attribute: Font attribute that is incorrect.
+            value: Value of attribute that is incorrect.
+            description: Optional description for why the given value is wrong.
         """
 
         description_tag = f' - {description}' if description else ''
@@ -192,11 +189,14 @@ class Font:
         self.stroke_width = 1.0
 
 
-    def get_attributes(self) -> dict:
+    def get_attributes(self) -> dict[str: 'str | float | Path']:
         """
         Return a dictionary of attributes for this font to be unpacked.
         
-        :returns:   Dictionary of attributes.
+        Returns:
+            Dictionary of attributes whose keys are 'title_color', 'font_size',
+            'font', 'vertical_shift', 'interline_spacing', 'kerning', and
+            'stroke_width'.
         """
 
         return {
@@ -213,13 +213,14 @@ class Font:
     def validate_title(self, title: 'Title') -> bool:
         """
         Return whether all the characters of the given Title are valid for this
-        font. This uses the global FontValidator object, and always returns True
-        if validation is not enabled.
+        font. This uses the global FontValidator object.
         
-        :param      title:  The Title being validated.
+        Args:
+            title: The Title being validated.
         
-        :returns:   True if all the characters of the given Title are contained
-                    within this font, False otherwise.
+        Returns:
+            True if all the characters of the given Title are contained within
+            this font, or if validation is not enabled. False otherwise.
         """
 
         # Validate title against this font
@@ -227,5 +228,3 @@ class Font:
 
         # If validation isn't enabled, ignore result and return True
         return validity if self.__validate else True
-
-        

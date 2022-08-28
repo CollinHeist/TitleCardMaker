@@ -98,7 +98,7 @@ class SonarrInterface(WebInterface):
         url = f'{self.url}series'
         params = self.__standard_params
         all_series = self._get(url, params)
-
+        
         # Reset series dictionary
         self.__series_ids = {}
 
@@ -144,7 +144,7 @@ class SonarrInterface(WebInterface):
 
          Args:
             required_tags: List of tags to filter return by. If provided, only
-                series that have at least one of the given tags are returned.
+                series that have all of the given tags are returned.
             excluded_tags: List of tags to filter return by. If provided, series
                 with any of the given tags are excluded from return.
             monitored_only: Whether to filter return by onyl series that are
@@ -184,7 +184,11 @@ class SonarrInterface(WebInterface):
 
             # Skip show if tag isn't in filter (and filter is enabled)
             if (len(required_tag_ids) > 0
-                and not any(tag in required_tag_ids for tag in show['tags'])):
+                and not all(tag in show['tags'] for tag in required_tag_ids)):
+                continue
+
+            # Skip show if it has a year of 0
+            if show['year'] == 0:
                 continue
 
             # Construct SeriesInfo object for this show

@@ -2,10 +2,11 @@ from argparse import ArgumentParser, ArgumentTypeError, SUPPRESS
 from pathlib import Path
 from os import environ
 from re import match
+from requests import get
 from time import sleep
 
 try:
-    from datetime import datetime, timedelta
+    from datetime import datetime
     import schedule
 
     from modules.Debug import log, apply_no_color_formatter
@@ -21,7 +22,13 @@ except ImportError as e:
     print(f'  Specific Error: {e}')
     exit(1)
 
+# Version information
+CURRENT_VERSION = 'v1.10.3'
+REPO_URL = ('https://api.github.com/repos/'
+            'CollinHeist/TitleCardMaker/releases/latest')
+
 # Environment variables
+ENV_IS_DOCKER = 'TCM_IS_DOCKER'
 ENV_PREFERENCE_FILE = 'TCM_PREFERENCES'
 ENV_RUNTIME = 'TCM_RUNTIME'
 ENV_FREQUENCY = 'TCM_FREQUENCY'
@@ -73,6 +80,10 @@ parser.add_argument(
     '-r', '--run',
     action='store_true',
     help='Run the TitleCardMaker')
+parser.add_argument(
+    '-s', '--sync', '--run-sync',
+    action='store_true',
+    help='Sync from Sonarr/Plex without running')
 parser.add_argument(
     '-t', '--runtime', '--time', 
     type=runtime,
@@ -142,6 +153,27 @@ set_preference_parser(pp)
 set_font_validator(FontValidator())
 set_media_info_set(MediaInfoSet())
 
+# Function to check for new version of TCM
+def check_for_update():
+    # Make API call to get latest version
+    try:
+        response = get(REPO_URL)
+        assert response.ok
+    except Exception:
+        log.debug(f'Failed to check for new version')
+    else:
+        if (available_version := response.json().get('name')) !=CURRENT_VERSION:
+            log.info(f'New version of TitleCardMaker ({available_version}) '
+                     f'available.')
+            log.debug(f'{ENV_IS_DOCKER}={environ.get(ENV_IS_DOCKER, False)}')
+            if environ.get(ENV_IS_DOCKER, 'false').lower() == 'true':
+                log.info(f'Update your Docker container')
+            else:
+                log.info(f'Get the latest version with "git pull origin"')
+        else:
+            log.debug(f'Latest remote version is {available_version}')
+        
+
 # Function to re-read preference file
 def read_preferences():
     # Read the preference file, verify it is valid and exit if not
@@ -152,12 +184,15 @@ def read_preferences():
     
 # Function to create and run Manager object
 def run():
+    # Check for new version
+    check_for_update()
+
     # Re-read preferences
     read_preferences()
 
     # Reset previously loaded assets
     RemoteFile.reset_loaded_database()
-
+    
     # Create Manager, run, and write missing report
     try:
         tcm = Manager()
@@ -191,7 +226,8 @@ def read_update_list():
             update_list = list(map(int, file_handle.readlines()))
         log.debug(f'Read update list ({update_list})')
     except ValueError:
-        log.error(f'Error reading update list, skipping')
+        log.error(f'Error reading update list, skipping and deleting')
+        args.tautulli_update_list.unlink(missing_ok=True)
         return None
         
     # Delete (clear) update list
@@ -202,8 +238,15 @@ def read_update_list():
 
 # Run immediately if specified
 if args.run:
-    log.info(f'Starting TitleCardMaker')
+    log.info(f'Starting TitleCardMaker ({CURRENT_VERSION})')
     run()
+# Sync if specified
+if args.sync:
+    # Re-read preferences
+    read_preferences()
+    
+    # Create Manager, run, and write missing report
+    Manager().sync_series_files()
 
 # Schedule first run, which then schedules subsequent runs
 if hasattr(args, 'runtime'):

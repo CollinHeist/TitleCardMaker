@@ -28,7 +28,7 @@ class AnimeTitleCard(CardType):
     TITLE_FONT = str((REF_DIRECTORY / 'Flanker Griffo.otf').resolve())
     DEFAULT_FONT_CASE = 'source'
     TITLE_COLOR = 'white'
-    FONT_REPLACEMENTS = {"♡": "", "☆": ""}
+    FONT_REPLACEMENTS = {'♡': '', '☆': '', '✕': 'x'}
 
     """Whether this class uses season titles for the purpose of archives"""
     USES_SEASON_TITLE = True

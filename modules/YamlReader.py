@@ -20,6 +20,7 @@ class YamlReader:
             log_function: Function to call and log with for any YAML read
                 failures. Defaults to log.error.
         """
+        
         self._base_yaml = yaml
         self.valid = True
         self.__log = log_function

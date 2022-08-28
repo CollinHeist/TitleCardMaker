@@ -39,10 +39,11 @@ class Show(YamlReader):
         'preferences', 'valid', '__library_map', 'series_info',
         'media_directory', 'card_class', 'episode_text_format', 'library_name',
         'library', 'archive', 'archive_all_variations', 'sonarr_sync',
-        'sync_specials', 'tmdb_sync', 'watched_style', 'unwatched_style',
-        'hide_seasons','__episode_map', 'title_language', 'font',
-        'source_directory', 'logo','backdrop', 'file_interface', 'profile',
-        'season_poster_set', 'episodes', '__is_archive'
+        'sync_specials', 'tmdb_sync', 'tmdb_skip_localized_images',
+        'watched_style', 'unwatched_style', 'hide_seasons','__episode_map',
+        'title_language', 'font', 'source_directory', 'logo', 'backdrop',
+        'file_interface', 'profile', 'season_poster_set', 'episodes',
+        '__is_archive'
     )
 
 
@@ -101,6 +102,7 @@ class Show(YamlReader):
         self.sonarr_sync = self.preferences.use_sonarr
         self.sync_specials = self.preferences.sync_specials
         self.tmdb_sync = self.preferences.use_tmdb
+        self.tmdb_skip_localized_images = self.preferences.tmdb_skip_localized_images
         self.watched_style = self.preferences.global_watched_style
         self.unwatched_style = self.preferences.global_unwatched_style
         self.hide_seasons = False
@@ -209,7 +211,7 @@ class Show(YamlReader):
             else:
                 self.card_filename_format = format_
 
-        if (library := self._get('library')) is not None:
+        if (library := self._get('library', type_=str)) is not None:
             # If the given library isn't in libary map, invalid
             if not (this_library := self.__library_map.get(library)):
                 log.error(f'Library "{library}" of series {self} is not found '
@@ -251,7 +253,7 @@ class Show(YamlReader):
         if (value := self._get('archive', type_=bool)) is not None:
             self.archive = value
 
-        if (value := self._get('archive_all_variations',type_=bool)) != None:
+        if (value := self._get('archive_all_variations', type_=bool)) != None:
             self.archive_all_variations = value
 
         if (value := self._get('archive_name', type_=str)) is not None:
@@ -275,6 +277,10 @@ class Show(YamlReader):
 
         if (value := self._get('tmdb_sync', type_=bool)) is not None:
             self.tmdb_sync = value
+
+        if (value := self._get('tmdb_skip_localized_images',
+                               type_=bool)) is not None:
+            self.tmdb_skip_localized_images = value
 
         if (value := self._get('watched_style', type_=str)) is not None:
             if value not in self.VALID_STYLES:
@@ -527,12 +533,13 @@ class Show(YamlReader):
         Add translated episode titles to the Episodes of this series. This 
         show's source file is re-read if any translations are added.
         
-        :param      tmdb_interface: Interface to TMDb to query for translated
-                                    episode titles.
+        Args:
+            tmdb_interface: Interface to TMDb to query for translated titles.
         """
 
         # If no translations were specified, or TMDb syncing isn't enabled, skip
-        if len(self.title_languages) == 0 or not self.tmdb_sync:
+        if (not tmdb_interface or not self.tmdb_sync
+            or len(self.title_languages) == 0):
             return None
 
         # Go through every episode and look for translations
@@ -585,11 +592,12 @@ class Show(YamlReader):
         Download the logo for this series from TMDb. Any SVG logos are converted
         to PNG.
         
-        :param      tmdb_interface: TMDbInterface to download the logo from.
+        Args:
+            tmdb_interface: TMDbInterface to download the logo from.
         """
 
         # If not syncing to TMDb, or logo already exists, exit
-        if not self.tmdb_sync or self.logo.exists():
+        if not tmdb_interface or not self.tmdb_sync or self.logo.exists():
             return None
 
         # Download logo
@@ -779,7 +787,8 @@ class Show(YamlReader):
                 if source_interface == 'tmdb' and check_tmdb:
                     image_url = tmdb_interface.get_source_image(
                         self.series_info,
-                        episode.episode_info
+                        episode.episode_info,
+                        skip_localized_images=self.tmdb_skip_localized_images,
                     )
                 elif source_interface == 'plex' and check_plex:
                     image_url = plex_interface.get_source_image(
@@ -977,7 +986,7 @@ class Show(YamlReader):
         """
 
         # Skip if no library specified
-        if self.library_name is None:
+        if not plex_interface or self.library_name is None:
             return None
 
         # Update Plex

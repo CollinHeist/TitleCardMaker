@@ -222,14 +222,8 @@ class MediaInfoSet:
 
         # This EpisodeInfo doesn't exist in the set, create new object
         episode_info = EpisodeInfo(
-            title,
-            season_number,
-            episode_number,
-            abs_number,
-            imdb_id=imdb_id,
-            tvdb_id=tvdb_id,
-            tmdb_id=tmdb_id,
-            **queried_kwargs,
+            title, season_number, episode_number, abs_number, imdb_id=imdb_id,
+            tvdb_id=tvdb_id, tmdb_id=tmdb_id, **queried_kwargs,
         )
 
         # Add object to indices set

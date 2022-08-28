@@ -42,10 +42,11 @@ class Title:
         Constructs a new instance of a Title from either a full, unsplit title,
         or a list of title lines.
         
-        :param      title:          Title for this object.
-        :type       title:          str if the full title (from any source), or 
-                                    a list if parsed from YAML
-        :param      original_title: Original title only for matching.
+        Args:
+            title: Title for this object.
+            title: str if the full title (from any source), or a list if parsed
+                from YAML
+            original_title: Original title for matching.
         """
         
         # If given as str, then title is not manually specified
@@ -93,14 +94,17 @@ class Title:
         Gets the partless title for this object. This removes parenthesized
         digits, and title with "part" in them.
         
-        :returns:   The partless title.
+        Returns:
+            The partless title for this object.
         """
 
         # Attempt to match any compiled partless regex
         for regex in self.PARTLESS_REGEX:
             if (partless := regex.match(self.full_title)):
+                # If this regex matched, return partless group
                 return partless.group(1)
 
+        # No match, return full title
         return self.full_title
 
 
@@ -111,15 +115,15 @@ class Title:
         into the given parameters, line width might not be respected, but the
         maximum number of lines will be.
         
-        :param      max_line_width: Maximum line width to base splitting on. 
-        :param      max_line_count: The maximum line count to split the title
-                                    into.
-        :param      top_heavy:      Whether to split the title in a top-heavy
-                                    style. This means the top lines will likely
-                                    be longer than the bottom ones. False for
-                                    bottom-heavy splitting.
+        Args:
+            max_line_width: Maximum line width to base splitting on. 
+            max_line_count: The maximum line count to split the title into.
+            top_heavy: Whether to split the title in a top-heavy style. This
+                means the top lines will likely be longer than the bottom ones.
+                False for bottom-heavy splitting.
         
-        :returns:   List of split title text to be read top to bottom.
+        Returns:
+            List of split title text to be read top to bottom.
         """
 
         # If the object was initialized with lines, return those
@@ -217,10 +221,11 @@ class Title:
         line, otherwise it's applied to the full title. Then newlines are used
         to join each line
         
-        :param      profile:    Profile object to call `convert_title()`.
+        Args:
+            profile: Profile object to convert title with.
         
-        :returns:   This title with the given profile and splitting details
-                    applied.
+        Returns:
+            This title with the given profile and splitting details applied.
         """
 
         # If manually specified, apply the profile to each line, skip splitting
@@ -242,9 +247,11 @@ class Title:
         """
         Remove all non A-Z characters from the given title.
         
-        :param      text:   The title to strip of special characters.
+        Args:
+            text: The title to strip of special characters.
         
-        :returns:   The input `text` with all non A-Z characters removed.
+        Returns:
+            The input text with all non A-Z characters removed.
         """
 
         return ''.join(filter(str.isalnum, text)).lower()
@@ -254,10 +261,11 @@ class Title:
         """
         Get whether any of the given titles match this object.
         
-        :param      titles: The titles to check.
+        Args:
+            titles: The titles to check.
         
-        :returns:   True if any of the given titles match this series, False
-                    otherwise.
+        Returns:
+            True if any of the given titles match this series, False otherwise.
         """
 
         def _get_title(title):
@@ -272,4 +280,3 @@ class Title:
                        for title in matching_titles)
         
         return any(title == self.match_title for title in matching_titles)
-        
