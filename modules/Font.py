@@ -189,7 +189,7 @@ class Font:
         self.stroke_width = 1.0
 
 
-    def get_attributes(self) -> dict[str: 'str | float | Path']:
+    def get_attributes(self) -> dict[str: 'str | float']:
         """
         Return a dictionary of attributes for this font to be unpacked.
         

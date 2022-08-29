@@ -110,7 +110,8 @@ class StandardTitleCard(CardType):
         ImageMagick commands to implement the title text's global effects.
         Specifically the the font, kerning, fontsize, and center gravity.
         
-        :returns:   List of ImageMagick commands.
+        Returns:
+            List of ImageMagick commands.
         """
 
         font_size = 157.41 * self.font_size
@@ -131,7 +132,8 @@ class StandardTitleCard(CardType):
         """
         ImageMagick commands to implement the title text's black stroke.
         
-        :returns:   List of ImageMagick commands.
+        Returns:
+            List of ImageMagick commands.
         """
 
         stroke_width = 3.0 * self.stroke_width
@@ -148,7 +150,8 @@ class StandardTitleCard(CardType):
         ImageMagick commands for global text effects applied to all series count
         text (season/episode count and dot).
         
-        :returns:   List of ImageMagick commands.
+        Returns:
+            List of ImageMagick commands.
         """
 
         return [
@@ -162,7 +165,8 @@ class StandardTitleCard(CardType):
         ImageMagick commands for adding the necessary black stroke effects to
         series count text.
         
-        :returns:   List of ImageMagick commands.
+        Returns:
+            List of ImageMagick commands.
         """
 
         return [
@@ -177,7 +181,8 @@ class StandardTitleCard(CardType):
         ImageMagick commands for adding the necessary text effects to the series
         count text.
         
-        :returns:   List of ImageMagick commands.
+        Returns:
+            List of ImageMagick commands.
         """
 
         return [
@@ -191,7 +196,8 @@ class StandardTitleCard(CardType):
         """
         Add the static gradient to this object's source image.
         
-        :returns:   Path to the created image.
+        Returns:
+            Path to the created image.
         """
 
         command = ' '.join([
@@ -216,10 +222,11 @@ class StandardTitleCard(CardType):
         """
         Adds episode title text to the provide image.
 
-        :param      gradient_image: The image with gradient added.
+        Args:
+            gradient_image: The image with gradient added.
         
-        :returns:   Path to the created image that has a gradient and the title
-                    text added.
+        Returns:
+            Path to the created image that has the gradient and title text added
         """
 
         vertical_shift = 245 + self.vertical_shift
@@ -243,9 +250,11 @@ class StandardTitleCard(CardType):
         """
         Adds the series count text without season title/number.
         
-        :param      titled_image:  The titled image to add text to.
+        Args:
+            titled_image: The titled image to add text to.
 
-        :returns:   Path to the created image (the output file).
+        Returns:
+            Path to the created image (the output file).
         """
 
         command = ' '.join([
@@ -269,7 +278,8 @@ class StandardTitleCard(CardType):
         """
         Gets the series count text dimensions.
         
-        :returns:   The series count text dimensions.
+        Returns:
+            The series count text dimensions.
         """
 
         command = ' '.join([
@@ -314,7 +324,8 @@ class StandardTitleCard(CardType):
         Creates an image with only series count text. This image is transparent,
         and not any wider than is necessary (as indicated by `dimensions`).
         
-        :returns:   Path to the created image containing only series count text.
+        Returns:
+            Path to the created image containing only series count text.
         """
 
         # Create text only transparent image of season count text
@@ -353,11 +364,12 @@ class StandardTitleCard(CardType):
         count image (optional season number+optional dot+episode number) into a
         single image. This is written into the output image for this object.
 
-        :param      titled_image:       Path to the titled image to add.
-        :param      series_count_image: Path to the series count transparent
-                                        image to add.
+        Args:
+            titled_image: Path to the titled image to add.
+            series_count_image: Path to the series count image to add.
 
-        :returns:   Path to the created image (the output file).
+        Returns:
+            Path to the created image (the output file).
         """
 
         command = ' '.join([
@@ -380,9 +392,11 @@ class StandardTitleCard(CardType):
         Determine whether the given font characteristics constitute a default or
         custom font.
         
-        :param      font:   The Font being evaluated.
+        Args:
+            font: The Font being evaluated.
         
-        :returns:   True if a custom font is indicated, False otherwise.
+        Returns:
+            True if a custom font is indicated, False otherwise.
         """
 
         return ((font.file != StandardTitleCard.TITLE_FONT)

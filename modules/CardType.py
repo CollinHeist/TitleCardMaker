@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from pathlib import Path
 
 from titlecase import titlecase
 
@@ -129,4 +128,3 @@ class CardType(ImageMaker):
         implementations of this method should delete any intermediate files.
         """
         raise NotImplementedError(f'All CardType objects must implement this')
-

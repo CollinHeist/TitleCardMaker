@@ -404,9 +404,10 @@ class Show(YamlReader):
         that interface. All new entries are added to this object's datafile,
         and an Episode object is created.
         
-        :param      sonarr_interface:   The SonarrInterface to optionally query.
-        :param      plex_interface:     The PlexInterface to optionally query.
-        :param      tmdb_interface:     The TMDbInterface to optionally query.
+        Args:
+            sonarr_interface: The SonarrInterface to optionally query.
+            plex_interface: The PlexInterface to optionally query.
+            tmdb_interface: The TMDbInterface to optionally query.
         """
 
         # Get episodes from indicated data source
@@ -464,9 +465,10 @@ class Show(YamlReader):
         interfaces. Only episodes whose card is not present or still need
         translations are updated.
         
-        :param      sonarr_interface:   The SonarrInterface to optionally query.
-        :param      plex_interface:     The PlexInterface to optionally query.
-        :param      tmdb_interface:     The TMDbInterface to optionally query.
+        Args:
+            sonarr_interface: The SonarrInterface to optionally query.
+            plex_interface: The PlexInterface to optionally query.
+            tmdb_interface: The TMDbInterface to optionally query.
         """
 
         # Exit if primary data source doesn't have an interface
@@ -724,14 +726,14 @@ class Show(YamlReader):
         backdrop is required, and TMDb is enabled, then one is downloaded if it
         does not exist.
         
-        :param      plex_interface: Optional PlexInterface used to modify the
-                                    Episode objects based on the watched status
-                                    of. If not provided, episodes are assumed to
-                                    all be unwatched (i.e. spoiler free).
-        :param      tmdb_interface: Optional TMDbInterface to query for a
-                                    backdrop if one is needed and DNE.
-        :param      select_only:    Optional Episode object. If provided, only
-                                    this episode's source is selected.
+        Args:
+            plex_interface: Optional PlexInterface used to modify the Episode
+                objects based on the watched status of. If not provided,
+                episodes are assumed to all be unwatched (i.e. spoiler free).
+            tmdb_interface: Optional TMDbInterface to query for a backdrop if
+                one is needed and DNE.
+            select_only: Optional Episode object. If provided, only this
+                episode's source is selected.
         """
 
         # Modify Episodes watched/blur/source files based on plex status

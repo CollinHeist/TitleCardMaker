@@ -23,10 +23,10 @@ class EpisodeMap:
         images to episodes, and can be initialized with EITHER a season map or
         episode range directly from series YAML; NOT both.
         
-        :param      seasons:        Optional 'seasons' key from series YAML to
-                                    initialize with.
-        :param      episode_ranges: Optional 'episode_ranges' key from series 
-                                    YAML to initialize with.
+        Args:
+            seasons: Optional 'seasons' key from series YAML to initialize with.
+            episode_ranges: Optional 'episode_ranges' key from series YAML to
+                initialize with.
         """
         
         # Assume object is valid until invalidated, and generic until customized
@@ -71,7 +71,8 @@ class EpisodeMap:
         Parse the given season map, filling this object's title, source, and
         applies dictionaries. Also update's object validity.
 
-        :param      seasons:    'series' key from series YAML to parse.
+        Args:
+            seasons: 'series' key from series YAML to parse.
         """
         
         # Go through each season of mapping
@@ -111,8 +112,8 @@ class EpisodeMap:
         Parse the given episode range map, filling this object's title, source,
         and applies dictionaries. Also update's object validity.
 
-        :param      episode_ranges: 'episode_ranges' key from series YAML to
-                                    parse.
+        Args:
+            episode_ranges: 'episode_ranges' key from series YAML to parse.
         """
         
         # Go through each episode range of mapping
@@ -157,15 +158,20 @@ class EpisodeMap:
         """
         Get the generic season title for the given entry.
         
-        :param      season_number:  Season number to get the generic title of.
-        :param      episode_info:   EpisodeInfo to the get season title of.
+        Args:
+            season_number: Season number to get the generic title of.
+            episode_info: EpisodeInfo to the get season title of.
         
-        :returns:   'Specials' for season 0 episodes, 'Season {n}' otherwise.
+        Returns:
+            'Specials' for season 0 episodes, 'Season {n}' otherwise.
+
+        Raises:
+            ValueError if neither season_number nor episode_info is provided.
         """
 
         # Ensure at least one argument was provided
         if season_number is None and episode_info is None:
-            raise ArgumentError(f'Must provide season_number or episode_info')
+            raise ValueError(f'Must provide season_number or episode_info')
         
         # Get episode's season number if not provided directly
         if season_number is None:
@@ -176,9 +182,10 @@ class EpisodeMap:
 
     def get_all_season_titles(self) -> dict:
         """
-        Gets all titles.
+        Get the dictionary of season titles.
         
-        :returns:   Dictionary of indices to season titles.
+        Returns:
+            Dictionary of indices to season titles.
         """
 
         return self.__titles if self.__index_by == 'season' else {}
@@ -278,5 +285,3 @@ class EpisodeMap:
 
         return self.__get_value(episode_info, 'applies_to',
                                 lambda *_, **__: self.DEFAULT_APPLIES_TO)
-        
-        

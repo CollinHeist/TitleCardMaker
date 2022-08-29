@@ -15,13 +15,14 @@ class Profile:
     def __init__(self, font: 'Font', hide_seasons: bool,
                  episode_map: 'EpisodeMap', episode_text_format: str) -> None:
         """
-        Constructs a new instance of a Profile. All given arguments will be
+        Construct a new instance of a Profile. All given arguments will be
         applied through this Profile (and whether it's generic/custom).
         
-        :param      font:                   The Font for this profile.
-        :param      hide_seasons:           Whether to hide/show seasons.
-        :param      episode_map:            EpisodeMap for the series.
-        :param      episode_text_format:    The episode text format string.
+        Args:
+            font: The Font for this profile.
+            hide_seasons: Whether to hide/show seasons.
+            episode_map: EpisodeMap for the series.
+            episode_text_format: The episode text format string.
         """
 
         # Store this profiles arguments as attributes
@@ -49,11 +50,12 @@ class Profile:
         for a profile with only generic attributes, it's invalid to
         apply a custom font profile from there.
 
-        :param      card_class: Implementation of CardType whose valid 
-                                subprofiles are requested. 
+        Args:
+            card_class: Implementation of CardType whose valid subprofiles are
+                requested. 
         
-        :returns:   The profiles that can be created as subprofiles from this
-                    object.
+        Returns:
+            The profiles that can be created as subprofiles from this object.
         """
 
         # Determine whether this profile uses custom season titles
@@ -123,12 +125,13 @@ class Profile:
     def get_season_text(self, episode_info: 'EpisodeInfo') -> str:
         """
         Gets the season text for the given season number, after applying this
-        profile's 'rules' about season text.
+        profile's rules about season text.
         
-        :param      episode_info:   Episode info to get the season text of.
+        Args:
+            episode_info: Episode info to get the season text of.
         
-        :returns:   The season text for the given entry as defined by this
-                    profile.
+        Returns:
+            The season text for the given entry as defined by this profile.
         """
 
         # If this profile has hidden season titles, return blank string
@@ -150,9 +153,11 @@ class Profile:
         Gets the episode text for the given episode info, as defined by this
         profile.
         
-        :param      episode_info:   Episode info to get the episode text of.
+        Args:
+            episode_info: Episode info to get the episode text of.
         
-        :returns:   The episode text defined by this profile.
+        Returns:
+            The episode text defined by this profile.
         """
 
         # Get format string to utilize
@@ -217,11 +222,13 @@ class Profile:
         >>> self.__remove_episode_text_format('Chapter Eighty Eight Example 2')
         'Example 2'
         
-        :param      episode_text:  The episode text to process.
+        Args:
+            episode_text:The episode text to process.
         
-        :returns:   The episode text with all text that matches the format
-                    specified in this profile's episode text format REMOVED. If
-                    there is no matching text, the title is returned unaltered.
+        Returns:
+            The episode text with all text that matches the format specified in
+            this profile's episode text format REMOVED. If there is no matching
+            text, the title is returned unaltered.
         """
 
         # Regex group for matching 1-9 called "one_to_9"

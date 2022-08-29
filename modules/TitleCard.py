@@ -73,16 +73,13 @@ class TitleCard:
         """
         Constructs a new instance of this class.
         
-        :param      episode:                The episode whose TitleCard this
-                                            corresponds to.
-        :param      profile:                The profile to apply to the creation
-                                            of this title card.
-        :param      title_characteristics:  Dictionary of characteristics from
-                                            the CardType class for this Episode
-                                            to pass to Title.apply_profile().
-        :param      extra_characteristics:  Any extra keyword arguments to pass
-                                            directly to the creation of the
-                                            CardType object.
+        Args:
+            episode: The episode whose TitleCard this corresponds to.
+            profile: The profile to apply to the creation of this title card.
+            title_characteristics: Dictionary of characteristics from the
+                CardType class for this Episode to pass to Title.apply_profile()
+            extra_characteristics: Any extra keyword arguments to pass directly
+                to the creation of the CardType object.
         """
 
         # Store this card's associated episode and profile
