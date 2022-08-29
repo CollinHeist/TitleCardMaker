@@ -55,7 +55,7 @@ body:
       label: Series YAML
       description: Paste the YAML of the relevent series.
       render: yaml
-  - type: input
+  - type: textarea
     id: log
     attributes:
       label: Debug Log

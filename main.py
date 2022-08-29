@@ -23,7 +23,7 @@ except ImportError as e:
     exit(1)
 
 # Version information
-CURRENT_VERSION = 'v1.10.3'
+CURRENT_VERSION = 'v1.10.4'
 REPO_URL = ('https://api.github.com/repos/'
             'CollinHeist/TitleCardMaker/releases/latest')
 
