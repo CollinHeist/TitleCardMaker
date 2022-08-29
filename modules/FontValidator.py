@@ -18,9 +18,8 @@ class FontValidator:
 
     def __init__(self) -> None:
         """
-        Constructs a new instance. This creates the parent directory for the 
-        temporary validation database if it does not exist, and reads it if it
-        does.
+        Constructs a new instance. This reads the font validation map if it
+        exists, and creates the file if it does not.
         """
 
         # Create/read font validation database

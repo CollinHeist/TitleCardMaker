@@ -301,19 +301,23 @@ class OlivierTitleCard(CardType):
 
 
     @staticmethod
-    def is_custom_season_titles(*args, **kwargs) -> bool:
+    def is_custom_season_titles(custom_episode_map: bool, 
+                                episode_text_format: str) -> bool:
         """
         Determine whether the given attributes constitute custom or generic
         season titles.
-
+        
         Args:
-            args and kwargs: Generic arguments.
-
+            custom_episode_map: Whether the EpisodeMap was customized.
+            episode_text_format: The episode text format in use.
+        
         Returns:
-            False, as custom season titles aren't used.
+            True if custom season titles are indicated, False otherwise.
         """
 
-        return False
+        standard_etf = OlivierTitleCard.EPISODE_TEXT_FORMAT.upper()
+
+        return episode_text_format.upper() != standard_etf
 
 
     def create(self) -> None:

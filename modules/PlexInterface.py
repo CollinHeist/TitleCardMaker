@@ -656,17 +656,13 @@ class PlexInterface:
                             f'to {series_info}')
                 continue
             
-            # Update the loaded map with this card's size
-            size = episode.destination.stat().st_size
-            series_name = series_info.full_name
-
             # Update/add loaded map with this entry
             self.__db.upsert({
                 'library': library_name,
                 'series': series_info.full_name,
                 'season': episode.episode_info.season_number,
                 'episode': episode.episode_info.episode_number,
-                'filesize': size,
+                'filesize': episode.destination.stat().st_size,
                 'spoiler': episode.spoil_type,
             }, self.__get_condition(library_name, series_info, episode))
                 

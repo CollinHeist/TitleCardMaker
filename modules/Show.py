@@ -56,17 +56,16 @@ class Show(YamlReader):
         the initialization fails to produce a 'valid' show object, the `valid`
         attribute is set to False.
 
-        :param      name:               The name or title of the series.
-        :param      yaml_dict:          YAML dictionary of the associated series
-                                        as found in a card YAML file.
-        :param      library_map:        Map of library titles to media
-                                        directories.
-        :param      font_map:           Map of font labels to custom font
-                                        descriptions.
-        :param      source_directory:   Base source directory this show should
-                                        search for and place source images in.
-        :param      preferences:        PrferenceParser object this object's
-                                        default attributes are derived from.
+        Args:
+            name: The name/title of the series.
+            yaml_dict: YAML dictionary of the associated series as found in the
+                series YAML file.
+            library_map: Map of library titles to media directories.
+            font_map: Map of font labels to custom font descriptions.
+            source_directory: Base source directory this show should search for
+                and place source images in.
+            preferences: PreferenceParser object this object's default
+                attributes are derived from.
         """
 
         # Initialize parent YamlReader object

@@ -401,11 +401,12 @@ class StandardTitleCard(CardType):
         Determine whether the given attributes constitute custom or generic
         season titles.
         
-        :param      custom_episode_map:     Whether the EpisodeMap was
-                                            customized.
-        :param      episode_text_format:    The episode text format in use.
+        Args:
+            custom_episode_map: Whether the EpisodeMap was customized.
+            episode_text_format: The episode text format in use.
         
-        :returns:   True if custom season titles are indicated, False otherwise.
+        Returns:
+            True if custom season titles are indicated, False otherwise.
         """
 
         standard_etf = StandardTitleCard.EPISODE_TEXT_FORMAT.upper()
