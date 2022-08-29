@@ -144,21 +144,31 @@ class Episode:
         return True
 
 
-    def delete_card(self) -> bool:
+    def delete_card(self, *, reason: str=None) -> bool:
         """
         Delete the title card for this Episode.
 
-        :returns:   True if card was deleted, False otherwise.
+        Args:
+            reason: Optional string to log why the card is being deleted.
 
+        Returns:
+            True if card was deleted, False otherwise.
         """
 
+        # No destination, nothing to delete
         if self.destination is None:
             return False
 
+        # Destination exists, delete and return True
         if self.destination.exists():
             self.destination.unlink()
+
+            # Log deletion 
+            message = f'Deleted "{self.destination.name}"'
+            if reason:
+                message += f' [{reason}]'
+            log.debug(message)
+
             return True
 
         return False
-
-        

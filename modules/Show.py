@@ -201,12 +201,12 @@ class Show(YamlReader):
         invalid attributes.
         """
 
-        if (name := self._get('name', type_=str)) is not None:
-            self.info_set.update_series_name(self.series_info, name)
+        if (value := self._get('name', type_=str)) is not None:
+            self.info_set.update_series_name(self.series_info, value)
 
-        if (format_ := self._get('filename_format', type_=str)) is not None:
-            if not TitleCard.validate_card_format_string(format_):
-                self.valid = False
+        if (value := self._get('filename_format', type_=str)) is not None:
+            if TitleCard.validate_card_format_string(value):
+                self.card_filename_format = value
             else:
                 self.card_filename_format = format_
 
@@ -226,21 +226,20 @@ class Show(YamlReader):
                 if (card_type := this_library.get('card_type')):
                     self._parse_card_type(card_type)
                     self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
+        if (value := self._get('imdb_id', type_=str)) is not None:
+            self.series_info.set_imdb_id(value)
 
-        if (id_ := self._get('imdb_id', type_=str)) is not None:
-            self.series_info.set_imdb_id(id_)
+        if (value := self._get('sonarr_id', type_=int)) is not None:
+            self.series_info.set_sonarr_id(value)
 
-        if (id_ := self._get('sonarr_id', type_=int)) is not None:
-            self.series_info.set_sonarr_id(id_)
+        if (value := self._get('tvdb_id', type_=int)) is not None:
+            self.series_info.set_tvdb_id(value)
 
-        if (id_ := self._get('tvdb_id', type_=int)) is not None:
-            self.series_info.set_tvdb_id(id_)
+        if (value := self._get('tmdb_id', type_=int)) is not None:
+            self.series_info.set_tmdb_id(value)
 
-        if (id_ := self._get('tmdb_id', type_=int)) is not None:
-            self.series_info.set_tmdb_id(id_)
-
-        if (card_type := self._get('card_type', type_=str)) is not None:
-            self._parse_card_type(card_type)
+        if (value := self._get('card_type', type_=str)) is not None:
+            self._parse_card_type(value)
             self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
             
         if (value := self._get('media_directory', type_=Path)) is not None:

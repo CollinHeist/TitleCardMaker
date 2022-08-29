@@ -87,10 +87,7 @@ class ShowArchive:
             new_show = base_show._make_archive(new_media_directory)
             
             # Convert this new show's profile
-            new_show.profile.convert_profile(
-                base_show.card_class,
-                **attributes
-            )
+            new_show.profile.convert_profile(**attributes)
 
             # Store this new Show and associated ShowSummary
             self.shows.append(new_show)

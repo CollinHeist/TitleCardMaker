@@ -98,18 +98,15 @@ class Profile:
         return valid_profiles
 
 
-    def convert_profile(self, card_class: CardType, seasons: str,
-                        font: str) -> None:
+    def convert_profile(self, seasons: str, font: str) -> None:
         """
         Convert this profile to the provided profile attributes. This modifies
         what characteristics are presented by the object.
         
-        :param      card_class: CardType whose default characteristics should
-                                be used if converting to default values.
-        :param      seasons:    String of how to modify seasons. Must be one of
-                                'custom', 'generic', or 'hidden'.
-        :param      font:       String of how to modify fonts. Must be 'custom'
-                                or 'generic'.
+        Args:
+            seasons: String of how to modify seasons. Must be one of 'custom',
+                'generic', or 'hidden'.
+            font: String of how to modify fonts. Must be 'custom' or 'generic'.
         """
 
         # Update this object's data

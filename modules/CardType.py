@@ -2,6 +2,7 @@ from abc import abstractmethod
 
 from titlecase import titlecase
 
+from modules.Debug import log
 from modules.ImageMaker import ImageMaker
 
 class CardType(ImageMaker):
@@ -95,7 +96,7 @@ class CardType(ImageMaker):
         """
         
         super().__init__()
-
+        
 
     @staticmethod
     @abstractmethod

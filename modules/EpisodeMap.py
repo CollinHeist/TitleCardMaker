@@ -64,6 +64,13 @@ class EpisodeMap:
         elif episode_ranges:
             self.__index_by = 'episode'
             self.__parse_episode_ranges(episode_ranges)
+
+
+    def __repr__(self) -> str:
+        """Returns an unambiguous string representation of the object."""
+
+        return (f'<EpisodeRange {self.__titles=}, {self.__sources=}, '
+                f'{self.__applies=}, {self.__index_by=}>')
             
     
     def __parse_seasons(self, seasons: dict) -> None:
@@ -144,13 +151,6 @@ class EpisodeMap:
                             self.valid = False
                             return None
                         self.__applies[episode_number] = value
-                    
-                    
-    def __repr__(self) -> str:
-        """Returns a unambiguous string representation of the object."""
-
-        return (f'<EpisodeRange {self.__titles=}, {self.__sources=}, '
-               f'{self.__applies=}, {self.__index_by=}>')
     
     
     def get_generic_season_title(self, *, season_number: int=None,

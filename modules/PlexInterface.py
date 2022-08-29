@@ -483,9 +483,7 @@ class PlexInterface:
 
             # Delete card, reset size in loaded map to force reload
             if delete_and_reset and loaded:
-                episode.delete_card()
-                log.debug(f'Deleted card for "{series_info}" {episode}, '
-                          f'updating spoil status')
+                episode.delete_card(reason='updating style')
                 self.__db.update(
                     {'filesize': 0},
                     self.__get_condition(library_name, series_info, episode)
