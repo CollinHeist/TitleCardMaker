@@ -26,7 +26,7 @@ class StandardTitleCard(CardType):
     TITLE_FONT = str((REF_DIRECTORY / 'Sequel-Neue.otf').resolve())
     TITLE_COLOR = '#EBEBEB'
     FONT_REPLACEMENTS = {'[': '(', ']': ')', '(': '[', ')': ']', '―': '-',
-                         '…': '...'}
+                         '…': '...', '“': '"'}
 
     """Whether this CardType uses season titles for archival purposes"""
     USES_SEASON_TITLE = True
