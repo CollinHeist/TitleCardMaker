@@ -114,13 +114,14 @@ class Template:
 
         # Go through each key in template and add to priority YAML if not present
         for t_key, t_value in template_yaml.items():
-            if t_key in base_yaml:
-                if isinstance(t_value, dict):
-                    # Both have this dictionary, recurse on keys of dictionary
-                    Template.recurse_priority_union(base_yaml[t_key], t_value)
-            else:
-                # Key is not present in base, carryover template value
-                base_yaml[t_key] = t_value
+            if isinstance(base_yaml, dict):
+                if t_key in base_yaml:
+                    if isinstance(t_value, dict):
+                        # Both have this dictionary, recurse on keys of dictionary
+                        Template.recurse_priority_union(base_yaml[t_key],t_value)
+                else:
+                    # Key is not present in base, carryover template value
+                    base_yaml[t_key] = t_value
 
 
     def apply_to_series(self, series_name: str, series_yaml: dict) -> bool:

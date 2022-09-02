@@ -152,4 +152,3 @@ class YamlReader:
                     log.error(f'Error reading "{file.resolve()}":\n{e}\n')
 
         return {}
-        

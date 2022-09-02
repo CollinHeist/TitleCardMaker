@@ -120,12 +120,14 @@ class TMDbInterface(WebInterface):
         """
         Get the tinydb query condition for the given query.
         
-        :param      query_type:     The type of request being updated.
-        :param      series_info:    SeriesInfo for the request.
-        :param      episode_info:   EpisodeInfo for the request.
+        Args:
+            query_type: The type of request being updated.
+            series_info: SeriesInfo for the request.
+            episode_info: EpisodeInfo for the request.
         
-        :returns:   The condition that matches the given query type, series, and
-                    Episode season+episode number and episode.
+        Returns:
+            The condition that matches the given query type, series, and Episode
+            season+episode number and episode.
         """
 
         # Logo and backdrop queries don't use episode index
@@ -151,9 +153,10 @@ class TMDbInterface(WebInterface):
         request shouldn't be queried to TMDb for another day. Write the updated
         blacklist to file
         
-        :param      series_info:    SeriesInfo for the request.
-        :param      episode_info:   EpisodeInfo for the request.
-        :param      query_type:     The type of request being updated.
+        Args:
+            series_info: SeriesInfo for the request.
+            episode_info: EpisodeInfo for the request.
+            query_type: The type of request being updated.
         """
 
         # Get the entry for this request
@@ -225,10 +228,12 @@ class TMDbInterface(WebInterface):
         """
         Determines if permanently blacklisted.
         
-        :param      series_info:   The series information
-        :param      episode_info:  The episode information
+        Args:
+            series_info: The series information
+            episode_info: The episode information
         
-        :returns:   True if permanently blacklisted, False otherwise.
+        Returns:
+            True if permanently blacklisted, False otherwise.
         """
 
         # Get the blacklist entry for this request
@@ -249,7 +254,8 @@ class TMDbInterface(WebInterface):
         """
         Set the TMDb and TVDb ID's for the given SeriesInfo object.
         
-        :param      series_info:    SeriesInfo to update.
+        Args:
+            series_info: SeriesInfo to update.
         """
 
         # TMDb can set the TMDb, TVDb, and IMDb ID's - exit if all defined
@@ -330,9 +336,11 @@ class TMDbInterface(WebInterface):
         Gets all episode info for the given series. Only episodes that have 
         already aired are returned.
         
-        :param      series_info:    SeriesInfo for the entry.
+        Args:
+            series_info: SeriesInfo for the entry.
         
-        :returns:   List of EpisodeInfo objects for this series.
+        Returns:
+            List of EpisodeInfo objects for this series.
         """
 
         # Cannot query TMDb if no series TMDb ID 
@@ -607,11 +615,13 @@ class TMDbInterface(WebInterface):
         Determine whether the given title is a generic translation of
         "Episode (x)" for the indicated language. 
         
-        :param      title:          The translated title.
-        :param      language_code:  The language code of the translation.
-        :param      episode_info:   The EpisodeInfo for this title.
+        Args:
+            title: The translated title.
+            language_code: The language code of the translation.
+            episode_info: The EpisodeInfo for this title.
         
-        :returns:   True if the title is a generic translation, False otherwise.
+        Returns:
+            True if the title is a generic translation, False otherwise.
         """
 
         # Assume non-generic if the code isn't pre-mapped

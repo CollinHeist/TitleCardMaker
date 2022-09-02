@@ -97,13 +97,13 @@ class Manager:
         if (self.preferences.use_sonarr
             and len(self.preferences.sonarr_yaml_writers) > 0):
             for writer, update_args in zip(self.preferences.sonarr_yaml_writers,
-                                           self.preferences.sonarr_yaml_update_args):
+                                    self.preferences.sonarr_yaml_update_args):
                 writer.update_from_sonarr(self.sonarr_interface, **update_args)
 
         if (self.preferences.use_plex
             and len(self.preferences.plex_yaml_writers) > 0):
             for writer, update_args in zip(self.preferences.plex_yaml_writers,
-                                           self.preferences.plex_yaml_update_args):
+                                        self.preferences.plex_yaml_update_args):
                 writer.update_from_plex(self.plex_interface, **update_args)
         
 
@@ -410,8 +410,8 @@ class Manager:
         Plex.
         
         Args:
-            rating_keys: List of rating keys corresponding to Episodes to update
-                the cards of.
+            rating_keys: List of Plex rating keys corresponding to Episodes to
+                update the cards of.
         """
         
         # Get the global preferences, exit if Plex is not enabled
@@ -431,7 +431,7 @@ class Manager:
         if preference_parser.use_tmdb:
             tmdb_interface = TMDbInterface(preference_parser.tmdb_api_key)
 
-        # Get details for each rating key, removing 
+        # Get details for each rating key from Plex
         entry_list = []
         for key in rating_keys:
             if (details := plex_interface.get_episode_details(key)) is None:
