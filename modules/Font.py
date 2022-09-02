@@ -10,35 +10,37 @@ class Font:
     it's color, size, file, replacements, case function, vertical offset, and 
     interline spacing.
     """
+
+    """Valid YAML attributes to customize a font"""
+    VALID_ATTRIBUTES = (
+        'validate', 'color', 'size', 'file', 'case', 'replacements',
+        'vertical_shift', 'interline_spacing', 'kerning', 'stroke_width',
+    )
     
     """Compiled regex to identify percentage values for font scalars"""
     _PERCENT_REGEX = re_compile(r'^-?\d+\.?\d*%$')
     _PERCENT_REGEX_POSITIVE = re_compile(r'^\d+\.?\d*%$')
 
-    __slots__ = ('valid', '__yaml', '__card_class','__font_map','__series_info',
-                 '__validator', '__validate', 'color', 'size', 'file',
-                 'replacements', 'case_name', 'case', 'vertical_shift',
-                 'interline_spacing', 'kerning', 'stroke_width')
+    __slots__ = (
+        'valid', '__yaml', '__card_class', '__series_info', '__validator',
+        '__validate', 'color', 'size', 'file', 'replacements', 'case_name',
+        'case', 'vertical_shift', 'interline_spacing', 'kerning', 'stroke_width'
+    )
     
 
-    def __init__(self, yaml: dict, font_map: dict[str: dict],
-                 card_class: 'CardType', series_info: 'SeriesInfo') -> None:
+    def __init__(self, yaml: dict, card_class: 'CardType',
+                 series_info: 'SeriesInfo') -> None:
         """
         Construct a new instance of a Font.
         
         Args:
             yaml: 'font' dictionary from a series YAML file.
-            font_map: Dictionary of font labels to custom font definitions.
-            card_class:  CardType class to use values from.
+            card_class:  CardType subclass to get default values from.
             series_info: Associated SeriesInfo (for logging).
         """
 
         # Assume object is valid to start with
         self.valid = True
-
-        # If the given value is a key of the font map, use those values instead
-        if isinstance(yaml, str) and yaml in font_map:
-            yaml = font_map[yaml]
 
         # If font YAML (either from map or directly) is not a dictionary, bad!
         if not isinstance(yaml, dict):
@@ -49,7 +51,6 @@ class Font:
         # Store arguments
         self.__yaml = yaml
         self.__card_class = card_class
-        self.__font_map = font_map
         self.__series_info = series_info
 
         # Use the global FontValidator object

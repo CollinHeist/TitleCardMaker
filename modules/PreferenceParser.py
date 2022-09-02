@@ -4,6 +4,7 @@ from typing import Iterable
 from tqdm import tqdm
 
 from modules.Debug import log, TQDM_KWARGS
+from modules.Font import Font
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.ImageMaker import ImageMaker
 from modules.Manager import Manager
@@ -111,7 +112,7 @@ class PreferenceParser(YamlReader):
         else:
             self.database_directory = self.DEFAULT_TEMP_DIR
         self.database_directory.mkdir(parents=True, exist_ok=True)
-        
+
 
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
@@ -422,6 +423,79 @@ class PreferenceParser(YamlReader):
             self.valid = False
 
 
+    def __validate_libraries(self, library_yaml: dict[str: str],
+                             file: Path) -> bool:
+        """
+        Validate the given libraries YAML.
+
+        Args:
+            library_yaml: YAML from the 'libraries' key to validate.
+            file: File whose YAML is being evaluated - for logging only.
+
+        Returns:
+            True if the given YAML is valid, False otherwise.
+        """
+
+        # Libraries must be a dictionary
+        if not isinstance(library_yaml, dict):
+            log.error(f'Invalid library specification for series file '
+                      f'"{file.resolve()}"')
+            return False
+        
+        # Validate all given libraries
+        for name, spec in library_yaml.items():
+            # All libraries must be dictionaries
+            if not isinstance(spec, dict):
+                log.error(f'Library "{name}" is invalid for series file '
+                          f'"{file.resolve()}"')
+                return False
+
+            # All libraries must provide paths
+            if spec.get('path') is None:
+                log.error(f'Library "{name}" is missing required "path" in '
+                          f'series file "{file.resolve()}"')
+                return False
+
+        return True
+
+
+    def __validate_fonts(self, font_yaml: dict[str: 'str | float'],
+                         file: Path) -> bool:
+        """
+        Validate the given font YAML.
+
+        Args:
+            font_yaml: Font map YAML to validate.
+            file: File whose YAML is being evaluated - for logging only.
+
+        Returns:
+            True if the given YAML is valid, False otherwise.
+        """
+
+        # Font map must be a dictionary
+        if not isinstance(font_yaml, dict):
+            log.error(f'Invalid font specification for series file '
+                      f'"{file.resolve()}"')
+            return False
+
+        # Validate all given fonts
+        for name, spec in font_yaml.items():
+            # All fonts must be dictionaries
+            if not isinstance(spec, dict):
+                log.error(f'Font "{name}" is invalid for series file '
+                          f'"{file.resolve()}"')
+                return False
+
+            # All fonts must provide valid font attributes
+            for attrib in spec.keys():
+                if attrib not in Font.VALID_ATTRIBUTES:
+                    log.error(f'Font "{name}" has unrecognized attribute '
+                              f'"{attrib}"')
+                    return False
+
+        return True
+
+    
     def __apply_template(self, templates: dict[str, Template],series_yaml: dict,
                          series_name: str) -> bool:
         """
@@ -471,6 +545,59 @@ class PreferenceParser(YamlReader):
         return template.apply_to_series(series_name, series_yaml)
 
 
+    def __finalize_show_yaml(self, show_name: str, show_yaml: dict,
+                             templates: list[Template], library_map: dict,
+                             font_map: dict) -> 'dict | None':
+        """
+        Apply the indicated template, and merge the specified library/font to
+        the given show YAML.
+
+        Args:
+            show_yaml: Base show YAML with potential template/library/font
+                identifiers.
+            library_map: Library map of library names/identifiers to library
+                specifications.
+            font_map: Font map of font names/identifiers to custom font
+                specifications.
+
+        Returns:
+            Modified YAML, None if the modification failed.
+        """
+        
+        # Apply template to series, stop if invalid
+        if not self.__apply_template(templates, show_yaml, show_name):
+            return None
+        
+        # Parse library from map
+        if (len(library_map) > 0
+            and (library_name := show_yaml.get('library')) is not None):
+            if (library_yaml := library_map.get(library_name)) is None:
+                log.error(f'Library "{library_name}" of series "{show_name}" is'
+                          f' not present in libraries list')
+                return None
+            else:
+                Template.recurse_priority_union(show_yaml, library_yaml)
+                show_yaml['library'] = {
+                    'name': library_yaml.get('plex_name', library_name),
+                    'path': Path(library_yaml.get('path'))
+                }
+                
+        # Parse font from map (if given font is just an identifier)
+        if (len(font_map) > 0
+            and (font_name := show_yaml.get('font')) is not None
+            and isinstance(font_name, str)):
+            # If font identifier is not in map
+            if (font_yaml := font_map.get(font_name)) is None:
+                log.error(f'Font "{font_name}" of series "{show_name}" is '
+                            f'not present in font list')
+                return None
+            else:
+                show_yaml['font'] = {}
+                Template.recurse_priority_union(show_yaml['font'], font_yaml)
+        
+        return show_yaml
+    
+    
     def read_file(self) -> None:
         """
         Read this associated preference file and store in `_base_yaml` attribute
@@ -527,23 +654,15 @@ class PreferenceParser(YamlReader):
                 log.warning(f'Series file "{file.resolve()}" has no entries')
                 continue
 
-            # Get library map for this file; error+skip missing library paths
-            if (library_map := file_yaml.get('libraries', {})):
-                # Validate map and all libraries are dictionaries
-                if (not isinstance(library_map, dict)
-                    or not all(isinstance(library_map[lib], dict)
-                               for lib in library_map)):
-                    log.error(f'Invalid library specification for series file '
-                              f'"{file.resolve()}"')
-                    continue
-                if not all('path' in library_map[lib].keys()
-                           for lib in library_map):
-                    log.error(f'Libraries are missing required "path" in series'
-                              f' file "{file.resolve()}"')
-                    continue
+            # Validate the libraries provided in this file
+            library_map = file_yaml.get('libraries', {})
+            if not self.__validate_libraries(library_map, file):
+                continue
 
             # Get font map for this file
             font_map = file_yaml.get('fonts', {})
+            if not self.__validate_fonts(font_map, file):
+                continue
 
             # Construct Template objects for this file
             templates = {}
@@ -564,48 +683,49 @@ class PreferenceParser(YamlReader):
                 if not isinstance(file_yaml['series'][show_name], dict):
                     log.error(f'Skipping "{show_name}" from "{file_}"')
                     continue
-                
-                # Apply template to series, skip if invalid
-                if not self.__apply_template(templates,
-                                    file_yaml['series'][show_name], show_name):
+
+                # Apply template and merge libraries+font maps
+                show_yaml = self.__finalize_show_yaml(
+                    show_name,
+                    file_yaml['series'][show_name],
+                    templates,
+                    library_map,
+                    font_map,
+                )
+
+                # If returned YAML is None (invalid) skip series
+                if show_yaml is None:
                     log.error(f'Skipping "{show_name}" from "{file_}"')
                     continue
 
-                # Yield the Show object created from this entry
-                yield Show(show_name, file_yaml['series'][show_name],
-                           library_map, font_map, self.source_directory, self)
+                yield Show(show_name, show_yaml, self.source_directory, self)
 
                 # If archiving is disabled, skip
                 if not self.create_archive:
                     continue
 
                 # Get all specified variations for this show
-                variations = file_yaml['series'][show_name].pop(
-                    'archive_variations', []
-                )
-                
+                variations = show_yaml.pop('archive_variations', [])
                 if not isinstance(variations, list):
                     log.error(f'Invalid archive variations for {show_name}')
                     continue
 
                 # Yield each variation
+                show_yaml.pop('archive_name', None)
                 for variation in variations:
-                    # Apply template to variation
-                    if not self.__apply_template(templates,variation,show_name):
-                        continue
-
-                    # Get priority union of variation and base series
-                    file_yaml['series'][show_name].pop('archive_name', None)
-                    Template('', {}).recurse_priority_union(
-                        variation, file_yaml['series'][show_name]
+                    # Apply template and merge libraries+font maps to variation
+                    variation = self.__finalize_show_yaml(
+                        show_name, variation, templates, library_map, font_map,
                     )
 
-                    # Remove any library-specific details
-                    variation.pop('library', None)
-                    variation.pop('media_directory', None)
+                    # Get priority union of variation and base series
+                    Template.recurse_priority_union(variation, show_yaml)
                     
-                    yield Show(show_name, variation, library_map, font_map,
-                               self.source_directory, self)
+                    # Remove any library-specific details
+                    variation.pop('media_directory', None)
+                    variation.pop('library', None)
+                    
+                    yield Show(show_name, variation, self.source_directory,self)
 
     @property
     def check_tmdb(self):

@@ -123,6 +123,10 @@ class Profile:
         if not self.__use_custom_font:
             self.font.set_default()
 
+        # If the new profile has generic seasons, reset EpisodeMap
+        if not self.__use_custom_seasons:
+            self.__episode_map.reset()
+
 
     def get_season_text(self, episode_info: 'EpisodeInfo') -> str:
         """

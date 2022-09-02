@@ -35,19 +35,16 @@ class Show(YamlReader):
     BACKDROP_FILENAME = 'backdrop.jpg'
 
     __slots__ = (
-        'preferences', 'valid', '__library_map', 'series_info',
-        'media_directory', 'card_class', 'episode_text_format', 'library_name',
-        'library', 'archive', 'archive_all_variations', 'sonarr_sync',
-        'sync_specials', 'tmdb_sync', 'tmdb_skip_localized_images',
-        'watched_style', 'unwatched_style', 'hide_seasons','__episode_map',
-        'title_language', 'font', 'source_directory', 'logo', 'backdrop',
-        'file_interface', 'profile', 'season_poster_set', 'episodes',
-        '__is_archive'
+        'preferences', 'valid', 'series_info', 'media_directory', 'card_class',
+        'episode_text_format', 'library_name', 'library', 'archive',
+        'archive_all_variations', 'sonarr_sync', 'sync_specials', 'tmdb_sync',
+        'tmdb_skip_localized_images', 'watched_style', 'unwatched_style',
+        'hide_seasons','__episode_map', 'title_language', 'font',
+        'source_directory', 'logo', 'backdrop', 'file_interface', 'profile',
+        'season_poster_set', 'episodes', '__is_archive'
     )
 
-
-    def __init__(self, name: str, yaml_dict: dict, library_map: dict, 
-                 font_map: dict, source_directory: Path,
+    def __init__(self, name: str, yaml_dict: dict, source_directory: Path,
                  preferences: 'PreferenceParser') -> None:
         """
         Constructs a new instance of a Show object from the given YAML
@@ -59,8 +56,6 @@ class Show(YamlReader):
             name: The name/title of the series.
             yaml_dict: YAML dictionary of the associated series as found in the
                 series YAML file.
-            library_map: Map of library titles to media directories.
-            font_map: Map of font labels to custom font descriptions.
             source_directory: Base source directory this show should search for
                 and place source images in.
             preferences: PreferenceParser object this object's default
@@ -74,9 +69,6 @@ class Show(YamlReader):
         self.preferences = preferences
         self.info_set = global_objects.info_set
         
-        # Parse arguments into attribures
-        self.__library_map = library_map
-
         # Set this show's SeriesInfo object with blank year to start
         self.series_info = SeriesInfo(name, 0)
         try:
@@ -87,13 +79,13 @@ class Show(YamlReader):
             return None
             
         # Setup default values that may be overwritten by YAML
-        self.card_filename_format = self.preferences.card_filename_format
-        self.media_directory = None
-        self.card_class = self.preferences.card_class
+        self.card_filename_format = preferences.card_filename_format
+        self.card_class = preferences.card_class
         self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
         self.library_name = None
         self.library = None
-        self.archive = self.preferences.create_archive
+        self.media_directory = None
+        self.archive = preferences.create_archive
         self.archive_name = None
         self.archive_all_variations = preferences.archive_all_variations
         self.episode_data_source = preferences.episode_data_source
@@ -107,14 +99,11 @@ class Show(YamlReader):
         self.__episode_map = EpisodeMap()
         self.title_languages = {}
         self.extras = {}
-
-        # Set object attributes based off YAML and update validity
         self.__parse_yaml()
+
+        # Create Font object, update validity
         self.font = Font(
-            self._base_yaml.get('font', {}),
-            font_map,
-            self.card_class,
-            self.series_info,
+            self._base_yaml.get('font', {}), self.card_class, self.series_info,
         )
         self.valid &= self.font.valid
 
@@ -185,8 +174,8 @@ class Show(YamlReader):
 
         # Recreate Show object with modified YAML
         show = Show(
-            self.series_info.full_name, modified_base, self.__library_map,
-            self.font._Font__font_map, self.source_directory.parent,
+            self.series_info.full_name, modified_base,
+            self.source_directory.parent,
             self.preferences
         )
         show.__is_archive = True
@@ -203,28 +192,20 @@ class Show(YamlReader):
         if (value := self._get('name', type_=str)) is not None:
             self.info_set.update_series_name(self.series_info, value)
 
+        if (value := self._get('library', type_=dict)) is not None:
+            self.library_name = value['name']
+            self.library = value['path']
+            self.media_directory = self.library / self.series_info.legal_path
+
+        if (value := self._get('media_directory', type_=Path)) is not None:
+            self.media_directory = value
+
         if (value := self._get('filename_format', type_=str)) is not None:
             if TitleCard.validate_card_format_string(value):
                 self.card_filename_format = value
             else:
-                self.card_filename_format = format_
-
-        if (library := self._get('library', type_=str)) is not None:
-            # If the given library isn't in libary map, invalid
-            if not (this_library := self.__library_map.get(library)):
-                log.error(f'Library "{library}" of series {self} is not found '
-                          f'in libraries list')
                 self.valid = False
-            else:
-                # Valid library, update library and media directory
-                self.library_name = this_library.get('plex_name', library)
-                self.library = Path(this_library['path'])
-                self.media_directory = self.library /self.series_info.legal_path
 
-                # If card type was specified for this library, set that
-                if (card_type := this_library.get('card_type')):
-                    self._parse_card_type(card_type)
-                    self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
         if (value := self._get('imdb_id', type_=str)) is not None:
             self.series_info.set_imdb_id(value)
 
@@ -240,9 +221,6 @@ class Show(YamlReader):
         if (value := self._get('card_type', type_=str)) is not None:
             self._parse_card_type(value)
             self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
-            
-        if (value := self._get('media_directory', type_=Path)) is not None:
-            self.media_directory = value
 
         if (value := self._get('episode_text_format', type_=str)) is not None:
             self.episode_text_format = value
