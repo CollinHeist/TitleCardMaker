@@ -34,8 +34,9 @@ class FontValidator:
         Warn a given character is missing from a given font, but only if it 
         hasn't already been warned.
         
-        :param      char:           The missing character
-        :param      font_filepath:  Filepath to the relevant font.
+        Args:
+            char: The missing character
+            font_filepath: Filepath to the relevant font.
         """
 
         # If this character (for this font) has already been warned, return
@@ -51,11 +52,13 @@ class FontValidator:
         """
         Determines whether the given character exists in the given Font. 
         
-        :param      font_filepath:  Filepath to the font being validated against
-        :param      character:      Character being checked.
+        Args:
+            font_filepath: Filepath to the font being validated against
+            character: Character being checked.
         
-        :returns:   True if the given character exists in the given font, False
-                    otherwise.
+        Returns:
+            True if the given character exists in the given font, False
+            otherwise.
         """
 
         # All fonts have spaces
@@ -95,11 +98,13 @@ class FontValidator:
         Validate the given Title, returning whether all characters are contained
         within the given Font.
         
-        :param      font_filepath:  Filepath to the font being validated against
-        :param      title:          The title being validated.
+        Args:
+            font_filepath: Filepath to the font being validated against
+            title: The title being validated.
         
-        :returns:   True if all characters in the title are found within the
-                    given font, False otherwise.
+        Returns:
+            True if all characters in the title are found within the given font,
+            False otherwise.
         """
 
         # Map __has_character() to all characters in the title
@@ -114,4 +119,3 @@ class FontValidator:
                 self.__warn_missing(char, font_filepath)
 
         return all(has_characters)
-

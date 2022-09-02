@@ -134,6 +134,7 @@ parser.add_argument(
 
 # Parse given arguments
 args = parser.parse_args()
+is_docker = environ.get(ENV_IS_DOCKER, 'false').lower() == 'true'
 
 # Set global log level and coloring
 log.handlers[0].setLevel(args.log)
@@ -165,8 +166,7 @@ def check_for_update():
         if (available_version := response.json().get('name')) !=CURRENT_VERSION:
             log.info(f'New version of TitleCardMaker ({available_version}) '
                      f'available.')
-            log.debug(f'{ENV_IS_DOCKER}={environ.get(ENV_IS_DOCKER, False)}')
-            if environ.get(ENV_IS_DOCKER, 'false').lower() == 'true':
+            if is_docker:
                 log.info(f'Update your Docker container')
             else:
                 log.info(f'Get the latest version with "git pull origin"')

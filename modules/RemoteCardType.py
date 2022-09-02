@@ -90,4 +90,3 @@ class RemoteCardType:
             log.error(f'Cannot load CardType "{remote}", returned "{e}"')
             self.card_class = None
             self.valid = False
-

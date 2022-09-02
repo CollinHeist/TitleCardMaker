@@ -32,9 +32,9 @@ class RemoteFile:
         Construct a new RemoteFile object. This downloads the file for the given
         user and file into the temporary directory of the Maker.
         
-        :param      username:   Username containing the file.
-        :param      filename:   Filename of the file within the user's folder
-                                to download.
+        Args:
+            username: Username containing the file.
+            filename: Filename of the file within the user's folder to download.
         """
         
         # Remote font will be stored at github/username/filename

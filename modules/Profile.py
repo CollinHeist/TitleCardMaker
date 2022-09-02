@@ -12,6 +12,11 @@ class Profile:
     season titles.
     """
 
+    __slots__ = (
+        'font', 'hide_season_title', '__episode_map', 'episode_text_format',
+        '__use_custom_seasons', '__use_custom_font'
+    )
+
     def __init__(self, font: 'Font', hide_seasons: bool,
                  episode_map: 'EpisodeMap', episode_text_format: str) -> None:
         """

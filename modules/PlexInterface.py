@@ -444,7 +444,7 @@ class PlexInterface:
             watched_style: Desired card style of watched episodes.
             unwatched_style: Desired card style of unwatched episodes.
         """
-
+        
         # If no episodes, or unwatched setting is ignored, exit
         if len(episode_map) == 0:
             return None
@@ -471,16 +471,16 @@ class PlexInterface:
             # Set Episode watched/spoil statuses
             episode.update_statuses(plex_episode.isWatched, watched_style,
                                     unwatched_style)
-
+            
             # Get loaded card characteristics for this episode
             details = self.__get_loaded_episode(loaded_series, episode)
             loaded = (details is not None)
             spoiler_status = details['spoiler'] if loaded else None
-
+            
             # Delete and reset card if current spoiler type doesnt match
             delete_and_reset = ((episode.spoil_type != spoiler_status)
-                                and spoiler_status)
-
+                                and bool(spoiler_status))
+            
             # Delete card, reset size in loaded map to force reload
             if delete_and_reset and loaded:
                 episode.delete_card(reason='updating style')

@@ -25,8 +25,7 @@ class Show(YamlReader):
     This class describes a show. A Show encapsulates the names and preferences
     with a complete series of episodes. Each object inherits many preferences 
     from the global `PreferenceParser` object, but manually specified attributes
-    within the Show's YAML take precedence over the global enables, with the
-    exception of Interface objects (such as Sonarr and TMDb).
+    within the Show's YAML take precedence over the global values.
     """
     
     """Valid card styles for a series"""
@@ -96,14 +95,14 @@ class Show(YamlReader):
         self.library = None
         self.archive = self.preferences.create_archive
         self.archive_name = None
-        self.archive_all_variations = self.preferences.archive_all_variations
-        self.episode_data_source = self.preferences.episode_data_source
-        self.sonarr_sync = self.preferences.use_sonarr
-        self.sync_specials = self.preferences.sync_specials
-        self.tmdb_sync = self.preferences.use_tmdb
-        self.tmdb_skip_localized_images = self.preferences.tmdb_skip_localized_images
-        self.watched_style = self.preferences.global_watched_style
-        self.unwatched_style = self.preferences.global_unwatched_style
+        self.archive_all_variations = preferences.archive_all_variations
+        self.episode_data_source = preferences.episode_data_source
+        self.sonarr_sync = preferences.use_sonarr
+        self.sync_specials = preferences.sync_specials
+        self.tmdb_sync = preferences.use_tmdb
+        self.tmdb_skip_localized_images = preferences.tmdb_skip_localized_images
+        self.watched_style = preferences.global_watched_style
+        self.unwatched_style = preferences.global_unwatched_style
         self.hide_seasons = False
         self.__episode_map = EpisodeMap()
         self.title_languages = {}
@@ -356,10 +355,12 @@ class Show(YamlReader):
         """
         Get the destination filename for the given entry of a datafile.
         
-        :param      episode_info:   EpisodeInfo for this episode.
+        Args:
+            episode_info: EpisodeInfo for this episode.
         
-        :returns:   Path for the full title card destination, and None if this
-                    show has no media directory.
+        Returns:
+            Path for the full title card destination, and None if this show has
+            no media directory.
         """
 
         # If this entry should not be written to a media directory, return 
@@ -578,9 +579,7 @@ class Show(YamlReader):
                           f'"{translation["key"]}" for {self} {episode}')
 
                 # Delete old card
-                if episode.delete_card():
-                    log.debug(f'Deleted card for {self} {episode}, adding '
-                              f'translation')
+                episode.delete_card(reason='adding translation')
 
         # If any translations were added, re-read source
         if modified:
@@ -633,12 +632,12 @@ class Show(YamlReader):
         and how that style applies to this show's un/watched styles. Return
         whether a backdrop should be downloaded.
         
-        :param      plex_interface: Optional PlexInterface used to modify the
-                                    Episode objects based on the watched status
-                                    of. If not provided, episodes are assumed to
-                                    all be unwatched (i.e. spoiler free).
-        :param      select_only:    Optional Episode object. If provided, only
-                                    this episode's style is applied.
+        Args:
+            plex_interface: Optional PlexInterface used to modify the Episode
+                objects based on the watched status of. If not provided,
+                episodes are assumed to all be unwatched (i.e. spoiler free).
+            select_only: Optional Episode object. If provided, only this
+                episode's style is applied.
         
         :returns:   Whether a backdrop should be downloaded or not.
         """
@@ -658,7 +657,7 @@ class Show(YamlReader):
             episode_map = self.episodes
             if select_only:
                 episode_map = {select_only.episode_info.key: select_only}
-
+            
             plex_interface.update_watched_statuses(
                 self.library_name,
                 self.series_info,

@@ -38,10 +38,12 @@ class PreferenceParser(YamlReader):
         errors and exits if any required options are missing, and then parses
         the preferences into object attributes.
         
-        :param      file:   The preference file to parse.
+        Args:
+            file: The file to parse for preferences.
+            is_docker: Whether executing within a Docker container.
         """
 
-        # Initialize parent YamlReader object
+        # Initialize parent YamlReader object - errors are critical
         super().__init__(log_function=log.critical)
 
         # Create temporary directory if DNE
@@ -99,7 +101,7 @@ class PreferenceParser(YamlReader):
         self.imagemagick_container = None
         self.imagemagick_timeout = ImageMagickInterface.COMMAND_TIMEOUT_SECONDS
 
-        # Modify object attributes based off YAML, assume valid to start
+        # Modify object attributes based off YAML, updating validiry
         self.__parse_yaml()
         self.__parse_sync()
 

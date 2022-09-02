@@ -24,8 +24,8 @@ class TextlessTitleCard(CardType):
     EPISODE_TEXT_FORMAT = ''
 
     """Characteristics of the default title font"""
-    TITLE_FONT = None
-    TITLE_COLOR = None
+    TITLE_FONT = ''
+    TITLE_COLOR = ''
     FONT_REPLACEMENTS = {}
 
     """Whether this CardType uses season titles for archival purposes"""

@@ -11,7 +11,6 @@ class EpisodeMap:
     """How to apply manual source if not explicitly stated"""
     DEFAULT_APPLIES_TO = 'all'
 
-
     __slots__ = ('valid', 'is_custom', '__index_by', '__titles', '__sources',
                  '__applies')
 
@@ -152,6 +151,11 @@ class EpisodeMap:
                             return None
                         self.__applies[episode_number] = value
     
+    
+    def reset(self) -> None:
+        # Reset all mappings
+        self.__index_by = 'season'
+        self.__titles, self.__sources, self.__applies = {}, {}, {}
     
     def get_generic_season_title(self, *, season_number: int=None,
                                  episode_info: 'EpisodeInfo'=None) -> str:

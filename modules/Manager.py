@@ -409,8 +409,9 @@ class Manager:
         These keys are used to identify their corresponding episodes within
         Plex.
         
-        :param      rating_keys:    List of rating keys corresponding to
-                                    Episodes to update the cards of.
+        Args:
+            rating_keys: List of rating keys corresponding to Episodes to update
+                the cards of.
         """
         
         # Get the global preferences, exit if Plex is not enabled
@@ -539,4 +540,4 @@ class Manager:
         with file.open('w', encoding='utf-8') as file_handle:
             dump(missing, file_handle, allow_unicode=True, width=160)
 
-        log.info(f'Wrote missing assets to "{file.name}"')
+        log.info(f'Wrote missing assets to "{file.resolve()}"')

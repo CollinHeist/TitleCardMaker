@@ -65,9 +65,12 @@ class Episode:
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object"""
 
-        return (f'<Episode {self.episode_info=}, {self.card_class=}, '
-                f'{self.source=}, {self.destination=}, {self.watched=}, '
-                f'{self.blur=}, {self.extra_characteristics=}>')
+        return (
+            f'<Episode {self.episode_info=}, {self.card_class=}, {self.source=}'
+            f', {self.destination=}, {self.downloadable_source=}, '
+            f'{self.extra_characteristics=}, {self.watched=}, {self.blur=}, '
+            f'{self.spoil_type=}'
+        )
 
 
     def key_is_specified(self, key: str) -> bool:
@@ -165,7 +168,7 @@ class Episode:
 
             # Log deletion 
             message = f'Deleted "{self.destination.name}"'
-            if reason:
+            if reason is not None:
                 message += f' [{reason}]'
             log.debug(message)
 

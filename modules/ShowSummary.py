@@ -99,7 +99,8 @@ class ShowSummary(ImageMaker):
         Select the images that are to be incorporated into the show summary.
         This updates the object's inputs and number_rows attributes.
 
-        :returns:   Whether the ShowSummary should/can be created.
+        Returns:
+            Whether the ShowSummary should/can be created.
         """
         
         # Filter out episodes that don't have an existing title card
@@ -142,7 +143,8 @@ class ShowSummary(ImageMaker):
         """
         Create a (max) 3x3 montage of input images.
         
-        :returns:   Path to the created image.
+        Returns:
+            Path to the created image.
         """
 
         background = 'None' if self.__background_is_image else self.background
@@ -169,9 +171,11 @@ class ShowSummary(ImageMaker):
         Pad 80 pixels of blank space around the image, and add a header of text
         that says "EPISODE TITLE CARDS".
         
-        :param      montage:    The montage of images to add a header to.
+        Args:
+            montage: The montage of images to add a header to.
         
-        :returns:   Path to the created image.
+        Returns:
+            Path to the created image.
         """
 
         background = 'None' if self.__background_is_image else self.background
@@ -232,9 +236,11 @@ class ShowSummary(ImageMaker):
         """
         Gets the height of the provided logo.
         
-        :param      logo:  The path to the logo image.
+        Args:
+            logo: The path to the logo image.
         
-        :returns:   The logo height.
+        Returns:
+            The logo height.
         """
 
         command = ' '.join([
@@ -250,10 +256,12 @@ class ShowSummary(ImageMaker):
         """
         Add the logo to the top of the montage image.
         
-        :param      montage:    Path to the montage image to add the logo to.
-        :param      logo:       Path to the logo image to add to the montage.
+        Args:
+            montage: Path to the montage image to add the logo to.
+            logo: Path to the logo image to add to the montage.
 
-        :returns:   Path to the created images.
+        Returns:
+            Path to the created images.
         """
 
         logo_height = self._get_logo_height(logo)
@@ -278,7 +286,8 @@ class ShowSummary(ImageMaker):
         "Created by {input} with {logo} TitleCardMaker". Image is exactly the
         correct size.
          
-        :returns:   Path to the created image.
+        Returns:
+            Path to the created image.
         """
 
         command = ' '.join([
@@ -310,11 +319,12 @@ class ShowSummary(ImageMaker):
         """
         Add the 'created by' image to the bottom of the montage.
         
-        :param      montage_and_logo:   Path to the montage with the logo
-                                        already applied.
-        :param      created_by:         "Created by.." tag image to add.
+        Args:
+            montage_and_logo: Path to the montage with the logo already applied.
+            created_by: Path to the created by tag image.
         
-        :returns:   Path to the created (output) image.
+        Returns:
+            Path to the created (output) image.
         """
 
         y_offset = (self.number_rows == 2) * 35 + (self.number_rows == 1) * 15
@@ -335,6 +345,16 @@ class ShowSummary(ImageMaker):
 
     def __add_background_image(self, montage_and_logo: Path,
                                created_by: Path) -> Path:
+        """
+        Add the two images on top of the background image.
+
+        Args:
+            montage_and_logo: Path to the montage with the logo already applied.
+            created_by: Path to the created by tag image.
+
+        Returns:
+            Path to the created (output) image.
+        """
 
         # Create transparent montage
         y_offset = (self.number_rows == 2) * 35 + (self.number_rows == 1) * 15
