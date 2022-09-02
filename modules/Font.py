@@ -11,7 +11,7 @@ class Font:
     interline spacing.
     """
     
-    """Compiled regex to identify percentage values"""
+    """Compiled regex to identify percentage values for font scalars"""
     _PERCENT_REGEX = re_compile(r'^-?\d+\.?\d*%$')
     _PERCENT_REGEX_POSITIVE = re_compile(r'^\d+\.?\d*%$')
 

@@ -9,7 +9,7 @@ LABEL description="Automated title card maker for Plex"
 WORKDIR /maker
 COPY . /maker
 
-# Script environments
+# Script environment variables
 ENV TCM_PREFERENCES=/config/preferences.yml
 ENV TCM_IS_DOCKER=TRUE
 

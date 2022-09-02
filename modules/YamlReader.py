@@ -1,6 +1,7 @@
 from yaml import safe_load
 
 from modules.Debug import log
+import modules.global_objects as global_objects
 from modules.RemoteCardType import RemoteCardType
 from modules.TitleCard import TitleCard
 
@@ -110,11 +111,12 @@ class YamlReader:
         Args:
             card_type: The value of card_type to read/parse.
         """
-
+        
         # If known card type, set right away, otherwise check remote repo
+        db_dir = global_objects.pp.database_directory
         if card_type in TitleCard.CARD_TYPES:
             self.card_class = TitleCard.CARD_TYPES[card_type]
-        elif (remote_card_type := RemoteCardType(card_type)).valid:
+        elif (remote_card_type := RemoteCardType(db_dir, card_type)).valid:
             self.card_class = remote_card_type.card_class
         else:
             log.error(f'Invalid card type "{card_type}"')

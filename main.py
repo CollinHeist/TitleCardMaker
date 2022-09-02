@@ -147,12 +147,13 @@ if not args.preferences.exists():
     exit(1)
 
 # Store objects in global namespace
-if not (pp := PreferenceParser(args.preferences)).valid:
+if not (pp := PreferenceParser(args.preferences, is_docker)).valid:
     log.critical(f'Preference file is invalid')
     exit(1)
 set_preference_parser(pp)
-set_font_validator(FontValidator())
+set_font_validator(FontValidator(pp.database_directory))
 set_media_info_set(MediaInfoSet())
+set_show_record_keeper(ShowRecordKeeper(pp.database_directory))
 
 # Function to check for new version of TCM
 def check_for_update():
@@ -177,7 +178,7 @@ def check_for_update():
 # Function to re-read preference file
 def read_preferences():
     # Read the preference file, verify it is valid and exit if not
-    if (pp := PreferenceParser(args.preferences)).valid:
+    if (pp := PreferenceParser(args.preferences, is_docker)).valid:
         set_preference_parser(pp)
     else:
         log.critical(f'Preference file is invalid, not updating preferences')
@@ -191,7 +192,7 @@ def run():
     read_preferences()
 
     # Reset previously loaded assets
-    RemoteFile.reset_loaded_database()
+    RemoteFile.reset_loaded_database(pp.database_directory)
     
     # Create Manager, run, and write missing report
     try:

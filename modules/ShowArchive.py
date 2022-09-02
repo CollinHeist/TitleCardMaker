@@ -88,6 +88,8 @@ class ShowArchive:
             
             # Convert this new show's profile
             new_show.profile.convert_profile(**attributes)
+            if not new_show.profile._Profile__use_custom_seasons:
+                new_show.episode_text_format = new_show.card_class.EPISODE_TEXT_FORMAT
 
             # Store this new Show and associated ShowSummary
             self.shows.append(new_show)

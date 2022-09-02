@@ -2,9 +2,10 @@ from pathlib import Path
 
 from requests import get
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
+from tinydb import TinyDB, where
 
 from modules.Debug import log
-from tinydb import TinyDB, where
+import modules.global_objects as global_objects
 
 class RemoteFile:
     """
@@ -22,9 +23,8 @@ class RemoteFile:
     """Temporary directory all files will be downloaded into"""
     TEMP_DIR = Path(__file__).parent / '.objects'
 
-    """List of assets that have been loaded already"""
-    LOADED_FILE = TEMP_DIR / 'remote_assets.json'
-    LOADED = TinyDB(LOADED_FILE, create_dirs=True)
+    """Database of assets that have been loaded already"""
+    LOADED_FILE = 'remote_assets.json'
 
 
     def __init__(self, username: str, filename: str) -> None:
@@ -36,6 +36,10 @@ class RemoteFile:
             username: Username containing the file.
             filename: Filename of the file within the user's folder to download.
         """
+
+        # Get database of loaded assets
+        database_directory = global_objects.pp.database_directory
+        self.loaded = TinyDB(database_directory / self.LOADED_FILE)
         
         # Remote font will be stored at github/username/filename
         self.remote_source = f'{self.BASE_URL}/{username}/{filename}'
@@ -47,7 +51,7 @@ class RemoteFile:
         self.local_file.parent.mkdir(parents=True, exist_ok=True)
 
         # If file has already been loaded this run, skip
-        if self.LOADED.get(where('remote') == self.remote_source) is not None:
+        if self.loaded.get(where('remote') == self.remote_source) is not None:
             return None
 
         # Download the remote file for local use
@@ -55,7 +59,7 @@ class RemoteFile:
             self.download()
             log.debug(f'Downloaded RemoteFile "{username}/{filename}"')
             try:
-                self.LOADED.insert({'remote': self.remote_source})
+                self.loaded.insert({'remote': self.remote_source})
             except Exception:
                 pass
         except Exception as e:
@@ -114,14 +118,21 @@ class RemoteFile:
             file_handle.write(content)
 
     @staticmethod
-    def reset_loaded_database() -> None:
+    def reset_loaded_database(database_directory: Path) -> None:
         """
         Reset (clear) this class's database of loaded remote files.
+
+        Args:
+            database_directory: Base Path to read/write any databases from.
         """
 
+        database_file = database_directory / RemoteFile.LOADED_FILE
+        database = TinyDB(database_file)
+
         try:
-            RemoteFile.LOADED.truncate()
+            # Remove all records
+            database.truncate()
         except Exception:
             # Misformed databases can cause read errors
-            RemoteFile.LOADED_FILE.unlink(missing_ok=True)
+            database_file.unlink(missing_ok=True)
             pass

@@ -13,17 +13,20 @@ class FontValidator:
     """
 
     """File to the font character validation database"""
-    CHARACTER_DATABASE = Path(__file__).parent / '.objects' / 'fvm.json'
+    CHARACTER_DATABASE = 'fvm.json'
     
 
-    def __init__(self) -> None:
+    def __init__(self, database_directory: Path) -> None:
         """
         Constructs a new instance. This reads the font validation map if it
         exists, and creates the file if it does not.
+
+        Args:
+            database_directory: Base Path to read/write any databases from.
         """
 
         # Create/read font validation database
-        self.__db = TinyDB(self.CHARACTER_DATABASE)
+        self.__db = TinyDB(database_directory / self.CHARACTER_DATABASE)
 
         # List of missing characters that have already been warned
         self.__warned = []

@@ -47,17 +47,18 @@ class TMDbInterface(WebInterface):
     }
 
     """Filename for where to store blacklisted entries"""
-    __BLACKLIST_DB = Path(__file__).parent / '.objects' / 'tmdb_blacklist.json'
+    __BLACKLIST_DB = 'tmdb_blacklist.json'
 
     """Filename where mappings of series full titles to TMDB ids is stored"""
-    __ID_DB = Path(__file__).parent / '.objects' / 'tmdb_ids.json'
+    __ID_DB = 'tmdb_ids.json'
 
 
-    def __init__(self, api_key: str) -> None:
+    def __init__(self, database_directory: Path, api_key: str) -> None:
         """
         Construct a new instance of an interface to TMDb.
         
         Args:
+            database_directory: Base Path to read/write any databases from.
             api_key: The api key to communicate with TMDb.
         """
 
@@ -66,10 +67,10 @@ class TMDbInterface(WebInterface):
         self.info_set = global_objects.info_set
 
         # Create/read blacklist database
-        self.__blacklist = TinyDB(self.__BLACKLIST_DB)
+        self.__blacklist = TinyDB(database_directory / self.__BLACKLIST_DB)
         
         # Create/read series ID database
-        self.__id_map = TinyDB(self.__ID_DB)
+        self.__id_map = TinyDB(database_directory / self.__ID_DB)
         
         # Create API object, validate key
         try:
@@ -195,14 +196,16 @@ class TMDbInterface(WebInterface):
     def __is_blacklisted(self, series_info: SeriesInfo,
                          episode_info: EpisodeInfo, query_type: str) -> bool:
         """
-        Determines if the specified entry is in the blacklist (i.e. should
-        not bother querying TMDb.
+        Determines if the specified entry is in the blacklist (e.g. should not
+        bother querying TMDb.
         
-        :param      series_info:    SeriesInfo for the entry.
-        :param      episode_info:   EpisodeInfo for the entry.
-        :param      query_type:     The type of request being checked.
+        Args:
+            series_info: SeriesInfo for the entry.
+            episode_info: EpisodeInfo for the entry.
+            query_type: The type of request being checked.
         
-        :returns:   True if the entry is blacklisted, False otherwise.
+        Returns:
+            True if the entry is blacklisted, False otherwise.
         """
 
         # Get the blacklist entry for this request

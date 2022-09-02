@@ -37,6 +37,7 @@ class Manager:
         self.plex_interface = None
         if global_objects.pp.use_plex:
             self.plex_interface = PlexInterface(
+                database_directory=global_objects.pp.database_directory,
                 url=self.preferences.plex_url,
                 x_plex_token=self.preferences.plex_token,
                 verify_ssl=self.preferences.plex_verify_ssl,
@@ -54,7 +55,10 @@ class Manager:
         # Optionally assign TMDbInterface
         self.tmdb_interface = None
         if self.preferences.use_tmdb:
-            self.tmdb_interface = TMDbInterface(self.preferences.tmdb_api_key)
+            self.tmdb_interface = TMDbInterface(
+                database_directory=global_objects.pp.database_directory,
+                api_key=self.preferences.tmdb_api_key,
+            )
 
         # Setup blank show and archive lists
         self.shows = []
@@ -422,14 +426,19 @@ class Manager:
 
         # Construct PlexInterface
         plex_interface = PlexInterface(
+            database_directory=preference_parser.database_directory,
             url=preference_parser.plex_url,
             x_plex_token=preference_parser.plex_token,
+            verify_ssl=preference_parser.plex_verify_ssl,
         )
 
         # If TMDb is globally enabled, construct that interface
         tmdb_interface = None
         if preference_parser.use_tmdb:
-            tmdb_interface = TMDbInterface(preference_parser.tmdb_api_key)
+            tmdb_interface = TMDbInterface(
+                database_directory=preference_parser.database_directory,
+                api_key=preference_parser.tmdb_api_key
+            )
 
         # Get details for each rating key from Plex
         entry_list = []
@@ -460,7 +469,9 @@ class Manager:
                     and full_match_name == series_info.full_match_name):
                     log.info(f'Remaking "{series_info}" {episode_info} within '
                              f'library "{library_name}"')
-                    # Read this show's source
+                    # Look for new episodes, then read this show's source
+                    show.add_new_episodes(sonarr_interface,plex_interface,
+                                          tmdb_interface)
                     show.read_source()
 
                     # Remake card

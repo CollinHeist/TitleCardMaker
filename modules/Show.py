@@ -118,12 +118,12 @@ class Show(YamlReader):
         )
         self.valid &= self.font.valid
 
-        # Update derived attributes
+        # Update derived (and not adjustable) attributes
         self.source_directory = source_directory / self.series_info.legal_path
         self.logo = self.source_directory / 'logo.png'
         self.backdrop = self.source_directory / self.BACKDROP_FILENAME
 
-        # Create DataFileInterface fo this show
+        # Create DataFileInterface for this show
         self.file_interface = DataFileInterface(
             self.series_info,
             self.source_directory / DataFileInterface.GENERIC_DATA_FILE_NAME
@@ -320,8 +320,6 @@ class Show(YamlReader):
             self._get('seasons', type_=dict),
             self._get('episode_ranges', type_=dict)
         )
-
-        # Update object validity with EpisodeMap validity
         self.valid &= self.__episode_map.valid
 
         # Read all extras
@@ -639,7 +637,8 @@ class Show(YamlReader):
             select_only: Optional Episode object. If provided, only this
                 episode's style is applied.
         
-        :returns:   Whether a backdrop should be downloaded or not.
+        Returns:
+            Whether a backdrop should be downloaded or not.
         """
 
         # Update watched statuses via Plex
@@ -884,13 +883,13 @@ class Show(YamlReader):
         Remake the card associated with the given EpisodeInfo, updating the
         metadata within Plex.
         
-        :param      episode_info:   EpisodeInfo corresponding to the Episode
-                                    being updated. Matched by key.
-        :param      plex_interface: The PlexInterface to utilize for watched
-                                    status identification, source image
-                                    gathering, and metadata refreshing.
-        :param      tmdb_interface: Optional TMDbInterface to utilize for source
-                                    gathering.
+        Args:
+            episode_info: EpisodeInfo corresponding to the Episode being
+                updated. Matched by key.
+            plex_interface: The PlexInterface to utilize for watched status
+                identification, source image gathering, and metadata refreshing.
+            tmdb_interface: Optional TMDbInterface to utilize for source
+                gathering.
         """
 
         # If no episode of the given index (key) exists, nothing to remake, exit

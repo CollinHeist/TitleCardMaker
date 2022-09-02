@@ -272,7 +272,7 @@ set_preference_parser(pp)
 # Execute title card related options
 if hasattr(args, 'title_card'):
     # Attempt to get local card type, if not, try RemoteCardType
-    RemoteFile.reset_loaded_database()
+    RemoteFile.reset_loaded_database(pp.database_directory)
     if args.card_type in TitleCard.CARD_TYPES.keys():
         CardClass = TitleCard.CARD_TYPES[args.card_type]
     elif (remote_card := RemoteCardType(args.card_type)).valid:

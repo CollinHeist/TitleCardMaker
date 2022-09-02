@@ -21,24 +21,30 @@ class RemoteCardType:
     """Temporary directory all card types are written to"""
     TEMP_DIR = Path(__file__).parent / '.objects'
 
-    """List of assets that have been loaded already"""
-    LOADED = TinyDB(TEMP_DIR / 'remote_assets.json', create_dirs=True)
+    """Database of assets that have been loaded already this run"""
+    LOADED = 'remote_assets.json'
 
-    __slots__ = ('card_class', 'valid')
+    __slots__ = ('loaded', 'card_class', 'valid')
 
 
-    def __init__(self, remote: str) -> None:
+    def __init__(self, database_directory: Path, remote: str) -> None:
         """
         Construct a new RemoteCardType. This downloads the source file at the
         specified location and loads it as a class in the global modules, under
         the interpreted class name. If the given remote specification is a file
         that exists, that file is loaded.
         
-        :param      remote: URL to remote card to inject. Should omit repo base.
-                            Should be specified like {username}/{class_name}.
-                            Can also be a local filepath.
+        Args:
+            database_directory: Base Path to read/write any databases from.
+            remote: URL to remote card to inject. Should omit repo base. Should
+                be specified like {username}/{class_name}. Can also be a local
+                filepath.
         """
 
+        # Get database of loaded assets/cards
+        self.loaded = TinyDB(database_directory / self.LOADED)
+
+        # If local file has been specified..
         if (file := Path(remote)).exists():
             # Get class name from file
             class_name = file.stem
@@ -53,9 +59,8 @@ class RemoteCardType:
             url = f'{self.URL_BASE}/{remote}.py'
 
             # Only request and write file if not loaded this run
-            if (not self.LOADED.get(where('remote') == url)
+            if (not self.loaded.get(where('remote') == url)
                 or not file_name.exists()):
-            # if url not in loaded_remote_assets:
                 # Make GET request for the contents of the specified value
                 if (response := get(url)).status_code >= 400:
                     log.error(f'Cannot identify remote Card Type "{remote}"')
@@ -81,7 +86,7 @@ class RemoteCardType:
 
             # Add this url to the loaded database
             try:
-                self.LOADED.insert({'remote': url})
+                self.loaded.insert({'remote': url})
                 log.debug(f'Loaded RemoteCardType "{remote}"')
             except Exception:
                 pass

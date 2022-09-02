@@ -15,25 +15,23 @@ from modules.WebInterface import WebInterface
 class PlexInterface:
     """This class describes an interface to Plex."""
 
-    """Directory for all temporary objects"""
-    TEMP_DIR = Path(__file__).parent / '.objects'
-
     """Filepath to the database of each episode's loaded card characteristics"""
-    LOADED_DB = TEMP_DIR / 'loaded.json'
+    LOADED_DB = 'loaded.json'
 
     """Filepath to the database of the loaded season poster characteristics"""
-    LOADED_POSTERS_DB = TEMP_DIR / 'loaded_posters.json'
+    LOADED_POSTERS_DB = 'loaded_posters.json'
 
     """How many failed episodes result in skipping a series"""
     SKIP_SERIES_THRESHOLD = 3
 
 
-    def __init__(self, url: str, x_plex_token: str=None,
-                 verify_ssl: bool=True) -> None:
+    def __init__(self, database_directory: Path, url: str,
+                 x_plex_token: str=None, verify_ssl: bool=True) -> None:
         """
         Constructs a new instance of a Plex Interface.
         
         Args:
+            database_directory: Base Path to read/write any databases from.
             url: URL of plex server.
             x_plex_token: X-Plex Token for sending API requests to Plex.
             verify_ssl: Whether to verify SSL requests when querying Plex.
@@ -55,8 +53,8 @@ class PlexInterface:
             exit(1)
         
         # Create/read loaded card database
-        self.__db = TinyDB(self.LOADED_DB)
-        self.__posters = TinyDB(self.LOADED_POSTERS_DB)
+        self.__db = TinyDB(database_directory / self.LOADED_DB)
+        self.__posters = TinyDB(database_directory / self.LOADED_POSTERS_DB)
 
         # List of "not found" warned series
         self.__warned = set()

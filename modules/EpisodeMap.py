@@ -156,6 +156,7 @@ class EpisodeMap:
         # Reset all mappings
         self.__index_by = 'season'
         self.__titles, self.__sources, self.__applies = {}, {}, {}
+
     
     def get_generic_season_title(self, *, season_number: int=None,
                                  episode_info: 'EpisodeInfo'=None) -> str:

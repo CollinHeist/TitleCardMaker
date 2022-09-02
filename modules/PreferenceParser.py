@@ -28,11 +28,10 @@ class PreferenceParser(YamlReader):
     """Valid episode data source identifiers"""
     VALID_EPISODE_DATA_SOURCES = ('sonarr', 'plex', 'tmdb')
 
-    """Directory for all temporary objects created/maintained by the Maker"""
-    TEMP_DIR = Path(__file__).parent / '.objects'
+    DEFAULT_TEMP_DIR = Path(__file__).parent / '.objects'
 
 
-    def __init__(self, file: Path) -> None:
+    def __init__(self, file: Path, is_docker: bool=False) -> None:
         """
         Constructs a new instance of this object. This reads the given file,
         errors and exits if any required options are missing, and then parses
@@ -45,9 +44,6 @@ class PreferenceParser(YamlReader):
 
         # Initialize parent YamlReader object - errors are critical
         super().__init__(log_function=log.critical)
-
-        # Create temporary directory if DNE
-        self.TEMP_DIR.mkdir(parents=True, exist_ok=True)
         
         # Store and read file
         self.file = file
@@ -109,6 +105,13 @@ class PreferenceParser(YamlReader):
         self.use_magick_prefix = False
         self.__determine_imagemagick_prefix()
 
+        # Database object directory, create if DNE
+        if is_docker and not (self.DEFAULT_TEMP_DIR / 'loaded.json').exists():
+            self.database_directory = self.file.parent / '.objects'
+        else:
+            self.database_directory = self.DEFAULT_TEMP_DIR
+        self.database_directory.mkdir(parents=True, exist_ok=True)
+        
 
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
@@ -498,25 +501,28 @@ class PreferenceParser(YamlReader):
             known (valid) series files. 
         """
 
-        # For each file in the cards list
+        # Reach each file in the list of series YAML files
         for file_ in (pbar := tqdm(self.series_files, **TQDM_KWARGS)):
             # Create Path object for this file
-            file = Path(file_)
+            try:
+                file = Path(file_)
+            except Exception:
+                log.error(f'Invalid series file "{file_}"')
+                continue
 
             # Update progress bar for this file
             pbar.set_description(f'Reading {file.name}')
 
             # If the file doesn't exist, error and skip
             if not file.exists():
-                log.error(f'Series file "{file.resolve()}" does not '
-                          f'exist')
+                log.error(f'Series file "{file.resolve()}" does not exist')
                 continue
 
             # Read file, parse yaml
             if (file_yaml := self._read_file(file, critical=False)) == {}:
                 continue
 
-            # Skip if there are no series to yield
+            # Skip if there are no series provided
             if file_yaml is None or file_yaml.get('series') is None:
                 log.warning(f'Series file "{file.resolve()}" has no entries')
                 continue
@@ -539,7 +545,7 @@ class PreferenceParser(YamlReader):
             # Get font map for this file
             font_map = file_yaml.get('fonts', {})
 
-            # Get templates for this file, validate they're all dictionaries
+            # Construct Template objects for this file
             templates = {}
             value = file_yaml.get('templates', {})
             if isinstance(value, dict):
