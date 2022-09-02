@@ -9,7 +9,7 @@ LABEL description="Automated title card maker for Plex"
 WORKDIR /maker
 COPY . /maker
 
-# Script environment variables
+# Script environments
 ENV TCM_PREFERENCES=/config/preferences.yml
 ENV TCM_IS_DOCKER=TRUE
 
@@ -35,9 +35,6 @@ RUN apt install -y imagemagick
 RUN export MAGICK_HOME="$HOME/ImageMagick-7.1.0"; \
     export PATH="$MAGICK_HOME/bin:$PATH"; \
     export DYLD_LIBRARY_PATH="$MAGICK_HOME/lib/"
-
-# Override default ImageMagick policy XML file
-RUN cp /maker/modules/ref/policy.xml /etc/ImageMagick-6/policy.xml
 
 # Install TCM package dependencies
 RUN pip3 install --no-cache-dir --upgrade pipenv; \
