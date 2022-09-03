@@ -2,6 +2,7 @@ from argparse import ArgumentParser, ArgumentTypeError, SUPPRESS
 from pathlib import Path
 from dataclasses import dataclass
 from os import environ
+from re import match, IGNORECASE
 
 try:
     from modules.CollectionPosterMaker import CollectionPosterMaker
@@ -358,8 +359,18 @@ if hasattr(args, 'show_summary'):
 
     # Get all images in folder
     all_images = args.show_summary[0].glob('**/*.jpg')
-    episode = 1
-    episodes = {f'1-{(episode := episode+1)}': Episode(f) for f in all_images}
+    season, episode = 1, 1
+    episodes = {}
+    for file in all_images:
+        # Attempt to get index from filename, if not just increment last number
+        if (groups := match(r'.*s(\d+).*e(\d+)', file.name, IGNORECASE)):
+            season, episode = map(int, groups.groups())
+            episodes[f'{season}-{episode}'] = Episode(file)
+        else:
+            episodes[f'{season}-{episode}'] = Episode(file)
+            episode += 1
+    
+    # Create pseudo "show" of these episodes
     show = Show(args.show_summary[1], args.show_summary[0], episodes)
 
     # Override minimum episode count
