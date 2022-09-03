@@ -406,8 +406,7 @@ class Manager:
             self.__run()
 
 
-    @staticmethod
-    def remake_cards(rating_keys: list[int]) -> None:
+    def remake_cards(self, rating_keys: list[int]) -> None:
         """
         Remake the title cards associated with the given list of rating keys.
         These keys are used to identify their corresponding episodes within
@@ -418,39 +417,22 @@ class Manager:
                 update the cards of.
         """
         
-        # Get the global preferences, exit if Plex is not enabled
-        preference_parser = global_objects.pp
-        if not preference_parser.use_plex:
+        # Exit if Plex is not enabled
+        if not self.preferences.use_plex:
             log.error(f'Cannot remake card if Plex is not enabled')
             return None
-
-        # Construct PlexInterface
-        plex_interface = PlexInterface(
-            database_directory=preference_parser.database_directory,
-            url=preference_parser.plex_url,
-            x_plex_token=preference_parser.plex_token,
-            verify_ssl=preference_parser.plex_verify_ssl,
-        )
-
-        # If TMDb is globally enabled, construct that interface
-        tmdb_interface = None
-        if preference_parser.use_tmdb:
-            tmdb_interface = TMDbInterface(
-                database_directory=preference_parser.database_directory,
-                api_key=preference_parser.tmdb_api_key
-            )
 
         # Get details for each rating key from Plex
         entry_list = []
         for key in rating_keys:
-            if (details := plex_interface.get_episode_details(key)) is None:
+            if (details := self.plex_interface.get_episode_details(key)) is None:
                 log.error(f'Cannot remake card, episode not found')
             else:
                 entry_list.append(details)
 
         # Go through every series in all series YAML files
         found = set()
-        for show in preference_parser.iterate_series_files():
+        for show in self.preferences.iterate_series_files():
             # If no more entries, exit
             if len(entry_list) == 0:
                 break
@@ -467,16 +449,8 @@ class Manager:
                 if (show.valid
                     and show.library_name == library_name
                     and full_match_name == series_info.full_match_name):
-                    log.info(f'Remaking "{series_info}" {episode_info} within '
-                             f'library "{library_name}"')
-                    # Look for new episodes, then read this show's source
-                    show.add_new_episodes(sonarr_interface,plex_interface,
-                                          tmdb_interface)
-                    show.read_source()
-
-                    # Remake card
-                    show.remake_card(episode_info,plex_interface,tmdb_interface)
-                    found.add(index)
+                    self.shows = [show]
+                    self.__run(serial=True)
 
         # Warn for all entries not found
         for index, (series_info, episode_info, library_name) \

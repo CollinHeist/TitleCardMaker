@@ -236,7 +236,7 @@ def read_update_list():
     args.tautulli_update_list.unlink(missing_ok=True)
 
     # Remake all indicated cards
-    Manager.remake_cards(update_list)
+    Manager().remake_cards(update_list)
 
 # Run immediately if specified
 if args.run:
