@@ -69,6 +69,15 @@ class Font:
         return f'<CustomFont for series "{self.__series_info}">'
 
 
+    @property
+    def custom_hash(self) -> str:
+        """Custom string to hash for this object for record keeping"""
+        font_file_name = Path(self.file).name
+        return (f'{self.color}|{self.size}|{font_file_name}|{self.replacements}'
+                f'|{self.case_name}|{self.vertical_shift}|'
+                f'{self.interline_spacing}|{self.kerning}|{self.stroke_width}')
+
+
     def __error(self, attribute: str, value: str, description: str=None) ->None:
         """
         Print an error message for the given attribute of the given value. Also

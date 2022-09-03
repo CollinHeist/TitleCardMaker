@@ -18,3 +18,8 @@ info_set = None
 def set_media_info_set(to: 'MediaInfoSet') -> None:
     global info_set
     info_set = to
+
+show_record_keeper = None
+def set_show_record_keeper(to: 'ShowRecordKeeper') -> None:
+    global show_record_keeper
+    show_record_keeper = to

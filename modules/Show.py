@@ -912,6 +912,12 @@ class Show(YamlReader):
         if self.media_directory is None:
             return False
 
+        # See if these cards need to be deleted/updated for new config
+        if global_objects.show_record_keeper.is_updated(self):
+            log.info(f'Detected new YAML for {self} - deleting old cards')
+            for episode in self.episodes.values():
+                episode.delete_card(reason='new config')
+
         # Go through each episode for this show
         for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
             # Skip episodes without a destination or that already exist
@@ -942,6 +948,9 @@ class Show(YamlReader):
 
             # Source exists, create the title card
             title_card.create()
+        
+        # Update record keeeper
+        global_objects.show_record_keeper.add_config(self)
 
 
     def create_season_posters(self) -> None:

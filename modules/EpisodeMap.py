@@ -70,6 +70,11 @@ class EpisodeMap:
 
         return (f'<EpisodeRange {self.__titles=}, {self.__sources=}, '
                 f'{self.__applies=}, {self.__index_by=}>')
+
+
+    @property
+    def custom_hash(self) -> str:
+        return f'{self.__titles}|{self.__sources}|{self.__applies}'
             
     
     def __parse_seasons(self, seasons: dict) -> None:

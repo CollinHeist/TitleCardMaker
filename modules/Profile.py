@@ -48,6 +48,12 @@ class Profile:
                 f'{self.__use_custom_font=}>')
 
 
+    @property
+    def custom_hash(self) -> str:
+        return (f'{self.hide_season_title}|{self.__use_custom_seasons}|'
+                f'{self.__use_custom_font}')
+
+
     def get_valid_profiles(self, card_class: CardType,
                            all_variations: bool) -> list[dict[str: str]]:
         """

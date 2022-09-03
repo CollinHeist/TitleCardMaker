@@ -14,9 +14,10 @@ try:
     from modules.PreferenceParser import PreferenceParser
     from modules.RemoteFile import RemoteFile
     from modules.global_objects import set_preference_parser, \
-                                       set_font_validator, set_media_info_set
+        set_font_validator, set_media_info_set, set_show_record_keeper
     from modules.Manager import Manager
     from modules.MediaInfoSet import MediaInfoSet
+    from modules.ShowRecordKeeper import ShowRecordKeeper
 except ImportError as e:
     print(f'Required Python packages are missing - execute "pipenv install"')
     print(f'  Specific Error: {e}')
