@@ -36,6 +36,9 @@ RUN export MAGICK_HOME="$HOME/ImageMagick-7.1.0"; \
     export PATH="$MAGICK_HOME/bin:$PATH"; \
     export DYLD_LIBRARY_PATH="$MAGICK_HOME/lib/"
 
+# Override default ImageMagick policy XML file
+RUN cp /maker/modules/ref/policy.xml /etc/ImageMagick-6/policy.xml
+
 # Install TCM package dependencies
 RUN pip3 install --no-cache-dir --upgrade pipenv; \
     pipenv requirements > requirements.txt; \
