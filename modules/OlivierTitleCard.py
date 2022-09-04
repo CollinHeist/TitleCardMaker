@@ -153,7 +153,7 @@ class OlivierTitleCard(CardType):
         stroke_width = 6.0 * self.stroke_width
         kerning = 0.5 * self.kerning
         interline_spacing = -20 + self.interline_spacing
-        vertical_shift = 320 + self.vertical_shift
+        vertical_shift = 785 + self.vertical_shift
 
         return [
             f'\( -font "{self.font}"',
@@ -164,11 +164,11 @@ class OlivierTitleCard(CardType):
             f'-fill black',
             f'-stroke black',
             f'-strokewidth {stroke_width}',
-            f'-annotate +{vertical_shift}+785 "{self.title}" \)',
+            f'-annotate +320+{vertical_shift} "{self.title}" \)',
             f'\( -fill "{self.title_color}"',
             f'-stroke "{self.title_color}"',
             f'-strokewidth 0',
-            f'-annotate +{vertical_shift}+785 "{self.title}" \)',
+            f'-annotate +320+{vertical_shift} "{self.title}" \)',
         ]
 
 
