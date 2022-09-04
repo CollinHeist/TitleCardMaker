@@ -65,7 +65,7 @@ class ShowRecordKeeper:
         # If the object defines a custom hash property/attribute, use that
         elif hasattr(record, 'custom_hash'):
             record = record.custom_hash
-        log.debug(f'     SHA256({record})')
+        
         # Hash this recrd (as a UTF-8 encoded string)
         hash_obj.update(str(record).encode('utf-8'))
 
@@ -135,7 +135,7 @@ class ShowRecordKeeper:
             (where('series') == show.series_info.full_name) &
             (where('directory') == str(show.media_directory.resolve()))
         )
-        log.info(f'HASH[{show}]={self.__get_show_hash(show)}')
+
         # Either insert or update hash of this show
         self.records.upsert({
             'series': show.series_info.full_name,
