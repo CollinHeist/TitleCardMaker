@@ -42,7 +42,7 @@ ENV_UPDATE_FREQUENCY = 'TCM_TAUTULLI_UPDATE_FREQUENCY'
 DEFAULT_PREFERENCE_FILE = Path(__file__).parent / 'preferences.yml'
 DEFAULT_MISSING_FILE = Path(__file__).parent / 'missing.yml'
 DEFAULT_FREQUENCY = '12h'
-DEFAULT_UPDATE_FREQUENCY = '4m'
+DEFAULT_TAUTULLI_FREQUENCY = '4m'
 
 # Pseudo-type functions for argument runtime and frequency
 def runtime(arg: str) -> dict:
@@ -118,20 +118,20 @@ parser.add_argument(
     action='store_true',
     help='Omit color from all print messages')
 parser.add_argument(
-    '--tautulli-update-list',
+    '--tautulli-list', '--tautulli-update-list',
     type=Path,
     default=environ.get(ENV_UPDATE_LIST, SUPPRESS),
     metavar='FILE',
     help=f'File to monitor for Tautulli-driven episode watch-status updates. '
          f'Environment variable {ENV_UPDATE_LIST}.')
 parser.add_argument(
-    '--tautulli-update-frequency',
+    '--tautulli-frequency', '--tautulli-update-frequency',
     type=frequency,
-    default=environ.get(ENV_UPDATE_FREQUENCY, DEFAULT_UPDATE_FREQUENCY),
+    default=environ.get(ENV_UPDATE_FREQUENCY, DEFAULT_TAUTULLI_FREQUENCY),
     metavar='FREQUENCY',
     help=f'How often to check the Tautulli update list. Units can be s/m/h/d/w '
          f'for seconds/minutes/hours/days/weeks. Environment variable '
-         f'{ENV_UPDATE_FREQUENCY}. Defaults to "{DEFAULT_UPDATE_FREQUENCY}"')
+         f'{ENV_UPDATE_FREQUENCY}. Defaults to "{DEFAULT_TAUTULLI_FREQUENCY}"')
 
 # Parse given arguments
 args = parser.parse_args()
@@ -216,7 +216,7 @@ def first_run():
 # Function to read the Tautulli update list
 def read_update_list():
     # If the file doesn't exist (nothing to parse), exit
-    if not args.tautulli_update_list.exists():
+    if not args.tautulli_list.exists():
         return None
 
     # Re-read preferences
@@ -224,16 +224,16 @@ def read_update_list():
 
     # Read update list contents
     try:
-        with args.tautulli_update_list.open('r') as file_handle:
+        with args.tautulli_list.open('r') as file_handle:
             update_list = list(map(int, file_handle.readlines()))
         log.debug(f'Read update list ({update_list})')
     except ValueError:
         log.error(f'Error reading update list, skipping and deleting')
-        args.tautulli_update_list.unlink(missing_ok=True)
+        args.tautulli_list.unlink(missing_ok=True)
         return None
         
     # Delete (clear) update list
-    args.tautulli_update_list.unlink(missing_ok=True)
+    args.tautulli_list.unlink(missing_ok=True)
 
     # Remake all indicated cards
     Manager().remake_cards(update_list)
@@ -257,14 +257,14 @@ if hasattr(args, 'runtime'):
     log.info(f'Starting first run in {schedule.idle_seconds():,.0f} seconds')
 
 # Schedule reading the update list
-if hasattr(args, 'tautulli_update_list'):
-    interval = args.tautulli_update_frequency['interval']
-    unit = args.tautulli_update_frequency['unit']
+if hasattr(args, 'tautulli_list'):
+    interval = args.tautulli_frequency['interval']
+    unit = args.tautulli_frequency['unit']
     getattr(schedule.every(interval), unit).do(read_update_list)
     log.debug(f'Scheduled read_update_list() every {interval} {unit}')
 
 # Infinte loop if either infinite argument was indicated
-if hasattr(args, 'runtime') or hasattr(args, 'tautulli_update_list'):
+if hasattr(args, 'runtime') or hasattr(args, 'tautulli_list'):
     while True:
         # Run schedule, sleep until next run
         schedule.run_pending()

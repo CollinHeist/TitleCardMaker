@@ -585,7 +585,7 @@ class Show(YamlReader):
                     url, self.card_class.TEMPORARY_SVG_FILE
                 )
 
-                # If failed to downlaod, skip
+                # If failed to download, skip
                 if not success:
                     return None
 
@@ -598,7 +598,7 @@ class Show(YamlReader):
             else:
                 tmdb_interface.download_image(url, self.logo)
 
-            # Convert SVG to PNG
+            # Log to user
             log.debug(f'Downloaded logo for {self}')
 
 
@@ -977,13 +977,9 @@ class Show(YamlReader):
 
         # Update Plex
         plex_interface.set_title_cards_for_series(
-            self.library_name,
-            self.series_info,
-            self.episodes,
+            self.library_name, self.series_info, self.episodes,
         )
 
         plex_interface.set_season_poster(
-            self.library_name,
-            self.series_info,
-            self.season_poster_set,
+            self.library_name, self.series_info, self.season_poster_set,
         )
