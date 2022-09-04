@@ -8,6 +8,7 @@ try:
     from modules.CollectionPosterMaker import CollectionPosterMaker
     from modules.Debug import log
     from modules.GenreMaker import GenreMaker
+    from modules.MoviePosterMaker import MoviePosterMaker
     from modules.PreferenceParser import PreferenceParser
     from modules.global_objects import set_preference_parser
     from modules.RemoteCardType import RemoteCardType
@@ -149,7 +150,7 @@ collection_group.add_argument(
     type=Path,
     default=CollectionPosterMaker.FONT,
     metavar='FONT',
-    help='Custom font for the collection text of the specified poster')
+    help='Custom font for the collection text of the collection poster')
 collection_group.add_argument(
     '--collection-font-color',
     type=str,
@@ -166,6 +167,49 @@ collection_group.add_argument(
     '--omit-collection',
     action='store_true',
     help='Omit the "COLLECTION" text from this collection poster')
+
+# Argument group for movie posters
+movie_poster_group = parser.add_argument_group(
+    'Movie Posters',
+    'Manual movie poster creation')
+movie_poster_group.add_argument(
+    '--movie-poster',
+    type=Path,
+    nargs=2,
+    default=SUPPRESS,
+    metavar=('SOURCE', 'DESTINATION'),
+    help='Create a movie poster with the given files')
+movie_poster_group.add_argument(
+    '--movie-title',
+    type=str,
+    nargs='+',
+    default='',
+    metavar=('TITLE_LINE'),
+    help='Movie title for the movie poster')
+movie_poster_group.add_argument(
+    '--movie-subtitle',
+    type=str,
+    default='',
+    metavar='SUBTITLE',
+    help='Subtitle for the movie poster')
+movie_poster_group.add_argument(
+    '--movie-font',
+    type=Path,
+    default=MoviePosterMaker.FONT,
+    metavar='FONT',
+    help='Custom font for the title text of the movie poster')
+movie_poster_group.add_argument(
+    '--movie-font-color',
+    type=str,
+    default=MoviePosterMaker.FONT_COLOR,
+    metavar='COLOR',
+    help='A custom font color for the movie poster')
+movie_poster_group.add_argument(
+    '--movie-font-size',
+    type=str,
+    default='100%',
+    metavar='SCALE%',
+    help='A font scale (as percentage) for the movie poster')
 
 # Argument group for genre cards
 genre_group = parser.add_argument_group(
@@ -308,7 +352,7 @@ if hasattr(args, 'title_card'):
         **arbitrary_data,
     ).create()
 
-# Create Colletion Poster
+# Create Collection Poster
 if hasattr(args, 'collection_poster'):
     CollectionPosterMaker(
         source=args.collection_poster[0],
@@ -319,6 +363,19 @@ if hasattr(args, 'collection_poster'):
         font_size=float(args.collection_font_size[:-1])/100.0,
         omit_collection=args.omit_collection,
         borderless=args.borderless,
+        omit_gradient=args.no_gradient,
+    ).create()
+
+# Create Movie Poster
+if hasattr(args, 'movie_poster'):
+    MoviePosterMaker(
+        source=args.movie_poster[0],
+        output=args.movie_poster[1],
+        title='\n'.join(args.movie_title),
+        subtitle=args.movie_subtitle,
+        font=args.movie_font,
+        font_color=args.movie_font_color,
+        font_size=float(args.movie_font_size[:-1])/100.0,
         omit_gradient=args.no_gradient,
     ).create()
 
