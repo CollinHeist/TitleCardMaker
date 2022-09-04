@@ -62,21 +62,20 @@ class AnimeTitleCard(CardType):
         """
         Constructs a new instance.
         
-        :param      source:         Source image for this card.
-        :param      output_file:    Output filepath for this card.
-        :param      title:          The title for this card.
-        :param      season_text:    The season text for this card.
-        :param      episode_text:   The episode text for this card.
-        :param      hide_season:    Whether to hide the season text on this card
-        :param      kanji:          Kanji text to place above the episode title
-                                    on this card.
-        :param      require_kanji:  Whether to require kanji for this card.
-        :param      separator:      Character to use to separate season and
-                                    episode text.
-        :param      blur:           Whether to blur the source image.
-        :param      font_size:      Scalar to apply to the title font size.
-        :param      kwargs:         Unused arguments to permit generalized
-                                    function calls for any CardType.
+        Args:
+            source: Source image for this card.
+            output_file: Output filepath for this card.
+            title: The title for this card.
+            season_text: The season text for this card.
+            episode_text: The episode text for this card.
+            hide_season: Whether to hide the season text on this card
+            kanji: Kanji text to place above the episode title on this card.
+            require_kanji: Whether to require kanji for this card.
+            separator: Character to use to separate season and episode text.
+            blur: Whether to blur the source image.
+            font_size: Scalar to apply to the title font size.
+            kwargs: Unused arguments to permit generalized function calls for
+                any CardType.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface
@@ -123,7 +122,8 @@ class AnimeTitleCard(CardType):
         ImageMagick commands to implement the title text's global effects.
         Specifically the the font, kerning, fontsize, and southwest gravity.
         
-        :returns:   List of ImageMagick commands.
+        Returns:
+            List of ImageMagick commands.
         """
 
         kerning = 2.0 * self.kerning
@@ -143,7 +143,8 @@ class AnimeTitleCard(CardType):
         """
         ImageMagick commands to implement the title text's black stroke.
         
-        :returns:   List of ImageMagick commands.
+        Returns:
+            List of ImageMagick commands.
         """
 
         return [
@@ -157,7 +158,8 @@ class AnimeTitleCard(CardType):
         """
         ImageMagick commands to implement the title text's standard effects.
         
-        :returns:   List of ImageMagick commands.
+        Returns:
+            List of ImageMagick commands.
         """
 
         return [
@@ -172,7 +174,8 @@ class AnimeTitleCard(CardType):
         ImageMagick commands for global text effects applied to all series count
         text (season/episode count and dot).
         
-        :returns:   List of ImageMagick commands.
+        Returns:
+            List of ImageMagick commands.
         """
 
         return [
@@ -189,7 +192,8 @@ class AnimeTitleCard(CardType):
         ImageMagick commands for adding the necessary black stroke effects to
         series count text.
         
-        :returns:   List of ImageMagick commands.
+        Returns:
+            List of ImageMagick commands.
         """
 
         return [
@@ -204,7 +208,8 @@ class AnimeTitleCard(CardType):
         ImageMagick commands for adding the necessary text effects to the series
         count text.
         
-        :returns:   List of ImageMagick commands.
+        Returns:
+            List of ImageMagick commands.
         """
 
         return [
@@ -217,7 +222,8 @@ class AnimeTitleCard(CardType):
         """
         Increases the contrast of this card's source image.
         
-        :returns:   Path to the created image.
+        Returns:
+            Path to the created image.
         """
 
         command = ' '.join([
@@ -237,7 +243,8 @@ class AnimeTitleCard(CardType):
         Add the static gradient to the given image, and resizes to the standard
         title card size.
         
-        :returns:   Path to the created image.
+        Returns:
+            Path to the created image.
         """
 
         command = ' '.join([
@@ -261,10 +268,11 @@ class AnimeTitleCard(CardType):
         """
         Adds episode title text to the provide image.
 
-        :param      gradient_image: The image with gradient added.
+        Args:
+            gradient_image: The image with gradient added.
         
-        :returns:   Path to the created image that has a gradient and the title
-                    text added.
+        Returns:
+            Path to the created image.
         """
 
         command = ' '.join([
@@ -286,10 +294,11 @@ class AnimeTitleCard(CardType):
         """
         Adds episode title text and kanji to the provide image.
 
-        :param      gradient_image: The image with gradient added.
+        Args:
+            gradient_image: The image with gradient added.
         
-        :returns:   Path to the created image that has a gradient, the title
-                    text, and kanji added.
+        Returns:
+            Path to the created image.
         """
 
         # Shift kanji text up based on the number of lines in the title
@@ -323,9 +332,11 @@ class AnimeTitleCard(CardType):
         """
         Adds the series count text; including season and episode number.
         
-        :param      titled_image:  The titled image to add text to.
+        Args:
+            titled_image: The titled image to add text to.
 
-        :returns:   Path to the created image (the output file).
+        Returns:
+            Path to the created image (the output file).
         """
 
         # Construct season text
@@ -374,9 +385,11 @@ class AnimeTitleCard(CardType):
         """
         Adds the series count text without the season text.
         
-        :param      titled_image:  The titled image to add text to.
+        Args:
+            itled_image: The titled image to add text to.
 
-        :returns:   Path to the created image (the output file).
+        Returns:
+            Path to the created image (the output file).
         """
 
         command = ' '.join([
@@ -401,9 +414,11 @@ class AnimeTitleCard(CardType):
         Determines whether the given arguments represent a custom font for this
         card. This CardType only uses custom font cases.
         
-        :param      font:   The Font being evaluated.
+        Args:
+            font: The Font being evaluated.
         
-        :returns:   True if a custom font is indicated, False otherwise.
+        Returns:
+            True if a custom font is indicated, False otherwise.
         """
 
         return ((font.file != AnimeTitleCard.TITLE_FONT)
@@ -422,11 +437,12 @@ class AnimeTitleCard(CardType):
         Determines whether the given attributes constitute custom or generic
         season titles.
         
-        :param      custom_episode_map:     Whether the EpisodeMap was
-                                            customized.
-        :param      episode_text_format:    The episode text format in use.
+        Args:
+            custom_episode_map: Whether the EpisodeMap was customized.
+            episode_text_format: The episode text format in use.
         
-        :returns:   True if custom season titles are indicated, False otherwise.
+        Returns:
+            True if custom season titles are indicated, False otherwise.
         """
 
         standard_etf = AnimeTitleCard.EPISODE_TEXT_FORMAT.upper()
@@ -469,4 +485,3 @@ class AnimeTitleCard(CardType):
         self.image_magick.delete_intermediate_images(
             adjusted_image, gradient_image, titled_image
         )
-

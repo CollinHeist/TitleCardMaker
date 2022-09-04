@@ -207,15 +207,16 @@ class EpisodeMap:
         Get the value for the given Episode from the target associated with
         'which' (i.e. the season title/source/applies map).
         
-        :param      episode_info:   Episode to get the value of.
-        :param      which:          Which dictionary to get the value from.
-        :param      default:        Function to call if the given Episode does
-                                    not exist in the indicated map. It's return
-                                    is returned.
+        Args:
+            episode_info: Episode to get the value of.
+            which: Which dictionary to get the value from.
+            default: Function to call if the given Episode does not exist in the
+                indicated map. It's return is returned.
         
-        :returns:   If the Episode exists, returns the value from the indicated
-                    map. If it does not exist, returns the return of default
-                    with EpisodeInfo passed.
+        Returns:
+            If the Episode exists, returns the value from the indicated map. If
+            it does not exist, returns the return of default with EpisodeInfo
+            passed.
         """
 
         # Get target to look through
@@ -251,9 +252,11 @@ class EpisodeMap:
         """
         Get the season title for the given Episode.
 
-        :param      episode_info:   Episode to get the season title of.
+        Args:
+            episode_info: Episode to get the season title of.
 
-        :returns:   Season title defined by this map for this Episode.
+        Returns:
+            Season title defined by this map for this Episode.
         """
 
         season_title = self.__get_value(episode_info, 'season_title',
@@ -275,9 +278,11 @@ class EpisodeMap:
         """
         Get the specified source filename for the given Episode.
 
-        :param      episode_info:   Episode to get the source filename of.
+        Args:
+            episode_info: Episode to get the source filename of.
 
-        :returns:   Source filename defined by this map for this Episode.
+        Returns:
+            Source filename defined by this map for this Episode.
         """
 
         return self.__get_value(episode_info, 'source', lambda *_, **__: None)
@@ -287,10 +292,12 @@ class EpisodeMap:
         """
         Get the specified applies to value of for the given Episode.
 
-        :param      episode_info:   Episode to get the applies to value of.
+        Args:
+            episode_info: Episode to get the applies to value of.
 
-        :returns:   Applies to value defined by this map for this Episode; 
-                    either 'all' or 'unwatched'.
+        Returns:
+            Applies to value defined by this map for this Episode; either 'all'
+            or 'unwatched'.
         """
 
         return self.__get_value(episode_info, 'applies_to',

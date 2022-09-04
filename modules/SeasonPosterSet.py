@@ -33,12 +33,13 @@ class SeasonPosterSet:
         Construct a new instance of the set. This parses all YAML attributes,
         and looks for input poster images within the given source directory.
         
-        :param      episode_map:        EpisodeMap containing season titles.
-        :param      source_directory:   Base source directory to look for the
-                                        logo and season files at.
-        :param      media_directory:    Base media directory to create season
-                                        posters within.
-        :param      poster_config:      Config from the container series' YAML.
+        Args:
+            episode_map: EpisodeMap containing season titles.
+            source_directory: Base source directory to look for the logo and
+                season files at.
+            media_directory: Base media directory to create season posters
+                within.
+            poster_config: Config from the container series' YAML.
         """
 
         # Assign default attributes
@@ -74,7 +75,8 @@ class SeasonPosterSet:
         """
         Read the given font config for this poster set.
         
-        :param      font_config:    The specified font configuration to read.
+        Args:
+            font_config: The specified font configuration to read.
         """
 
         # Exit if no config to parse
@@ -118,9 +120,10 @@ class SeasonPosterSet:
         Create SeasonPoster objects for all available season poster images,
         using the given config.
         
-        :param      season_config:  The YAML config for this PosterSet.
-        :param      episode_map:    EpisodeMap object containing custom defined
-                                    season titles.
+        Args:
+            season_config: The YAML config for this PosterSet.
+            episode_map: EpisodeMap object containing custom defined season
+                titles.
         """
 
         # Get all manually specified titles
@@ -225,4 +228,3 @@ class SeasonPosterSet:
                 log.debug(f'Could not create poster '
                           f'"{poster.destination.resolve()}"')
                 poster.image_magick.print_command_history()
-

@@ -38,7 +38,7 @@ class ShowArchive:
         'hidden-generic':  'No Season Titles, Generic Font',
     }
 
-    __slots__ = ('series_info', '__base_show', 'shows', 'summaries')
+    __slots__ = ('series_info', 'shows', 'summaries')
 
 
     def __init__(self, archive_directory: 'Path', base_show: 'Show') -> None:
@@ -46,14 +46,14 @@ class ShowArchive:
         Constructs a new instance of this class. Creates a list of all
         applicable Show objects for later us.
         
-        :param      archive_directory:  The base directory where this
-                                        show should generate its archive.
-        :param      base_show:          Base Show this Archive is based on.
+        Args:
+            archive_directory: The base directory where this show should
+                generate its archive.
+            base_show: Base Show this Archive is based on.
         """
 
         # If the base show for this object has archiving disabled, exit
         self.series_info = base_show.series_info
-        self.__base_show = base_show
 
         # Empty lists to be populated with modified Show and ShowSummary objects
         self.shows = []
@@ -115,10 +115,12 @@ class ShowArchive:
         version of the given function that calls that function on all Show
         objects within this Archive.
         
-        :param      show_function:  The function to wrap.
+        Args:
+            show_function: The function to wrap.
         
-        :returns:   Wrapped callable that is the indicated function called on
-                    each Show object within this Archive.
+        Returns:
+            Wrapped callable that is the indicated function called on each Show
+            object within this Archive.
         """
 
         # Define wrapper that calls given function on all Shows of this object

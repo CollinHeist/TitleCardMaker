@@ -115,7 +115,7 @@ class ShowRecordKeeper:
         if self.records.contains(condition):
             existing_hash = self.records.get(condition)['hash']
             new_hash = self.__get_show_hash(show)
-
+            
             return existing_hash != new_hash
 
         # No existing hash
@@ -135,7 +135,7 @@ class ShowRecordKeeper:
             (where('series') == show.series_info.full_name) &
             (where('directory') == str(show.media_directory.resolve()))
         )
-
+        
         # Either insert or update hash of this show
         self.records.upsert({
             'series': show.series_info.full_name,

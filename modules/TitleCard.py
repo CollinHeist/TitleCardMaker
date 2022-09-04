@@ -116,9 +116,11 @@ class TitleCard:
         Replace the given filename's illegal characters with their legal
         counterparts.
         
-        :param      filename:   The filename (as a string) to modify.
+        Args:
+            filename: The filename (as a string) to modify.
         
-        :returns:   The modified filename.
+        returns:
+            The modified filename.
         """
 
         return filename.translate(str.maketrans(TitleCard.__ILLEGAL_CHARACTERS))
@@ -131,13 +133,15 @@ class TitleCard:
         """
         Get the output filename for a title card described by the given values.
         
-        :param      format_string:      Format string that specifies how to 
-                                        construct the filename.
-        :param      series_info:        SeriesInfo for this entry.
-        :param      episode_info:       EpisodeInfo to get filename of.
-        :param      media_directory:    Top-level media directory.
+        Args:
+            format_string: Format string that specifies how to construct the
+                filename.
+            series_info: SeriesInfo for this entry.
+            episode_info: EpisodeInfo to get filename of.
+            media_directory: Top-level media directory.
         
-        :returns:   Path for the full title card destination.
+        Returns:
+            Path for the full title card destination.
         """
         
         # Get the season folder for this entry's season
@@ -173,13 +177,15 @@ class TitleCard:
         Get the output filename for a title card described by the given values,
         and that represents a range of Episodes (not just one).
         
-        :param      format_string:      Format string that specifies how to
-                                        construct the filename.
-        :param      series_info:        Series info for this entry.
-        :param      multi_episode:      MultiEpisode object to get filename of.
-        :param      media_directory:    Top-level media directory.
+        Args:
+            format_string: Format string that specifies how to construct the
+                filename.
+            series_info: Series info for this entry.
+            multi_episode: MultiEpisode object to get filename of.
+            media_directory: Top-level media directory.
 
-        :returns:   Path to the full title card destination.
+        Returns:
+            Path to the full title card destination.
         """
 
         # If there is an episode key to modify, do so
@@ -238,9 +244,11 @@ class TitleCard:
         """
         Return whether the given card filename format string is valid or not.
         
-        :param      format_string:  Format string being validated.
+        Args:
+            format_string:  Format string being validated.
         
-        :returns:   True if the given string can be formatted, False otherwise.
+        Returns:
+            True if the given string can be formatted, False otherwise.
         """
         
         try:
@@ -261,7 +269,8 @@ class TitleCard:
         Create this title card. If the card already exists, a new one is not 
         created. Return whether a card was created.
 
-        :returns:   True if a title card was created, False otherwise.
+        Returns:
+            True if a title card was created, False otherwise.
         """
 
         # If the card already exists, exit
@@ -284,4 +293,3 @@ class TitleCard:
         self.maker.image_magick.print_command_history()
         
         return False
-        

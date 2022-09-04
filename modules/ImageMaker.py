@@ -54,11 +54,13 @@ class ImageMaker(ABC):
         """
         Convert the given SVG image to PNG format.
 
-        :param      image:          Path to the image being converted.
-        :param      destination:    Path to the destination image location.
-        :param      min_dimension:  Minimum dimension of converted image.
+        Args:
+            image: Path to the image being converted.
+            destination: Path to the destination image location.
+            min_dimension: Minimum dimension of converted image.
         
-        :returns:   Path to the converted file.
+        Returns:
+            Path to the converted file.
         """
 
         # If the temp file doesn't exist, return

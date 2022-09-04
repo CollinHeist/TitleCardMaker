@@ -167,7 +167,7 @@ class Episode:
             self.destination.unlink()
 
             # Log deletion 
-            message = f'Deleted "{self.destination.name}"'
+            message = f'Deleted "{self.destination.resolve()}"'
             if reason is not None:
                 message += f' [{reason}]'
             log.debug(message)

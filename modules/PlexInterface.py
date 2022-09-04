@@ -150,13 +150,14 @@ class PlexInterface:
         created cards, or whose card's filesizes matches that of the already
         uploaded card.
             
-        :param      library_name:   Name of the library containing this series.
-        :param      series_info:    SeriesInfo object for these episodes.
-        :param      episode_map:    Dictionary of Episode objects to filter.
+        Args:
+            library_name: Name of the library containing this series.
+            series_info: SeriesInfo object for these episodes.
+            episode_map: Dictionary of Episode objects to filter.
         
-        :returns:   Filtered episode map. Episodes without existing cards, or
-                    whose existing card filesizes' match those already loaded
-                    are removed.
+        Returns:
+            Filtered episode map. Episodes without existing cards, or whose
+            existing card filesizes' match those already loaded are removed.
         """
 
         # Get all loaded details for this series
@@ -194,9 +195,11 @@ class PlexInterface:
         """
         Get the Library object under the given name.
         
-        :param      library_name:   The name of the library to get.
+        Args:
+            library_name: The name of the library to get.
 
-        :returns:   The Library object if found, None otherwise.
+        Returns:
+            The Library object if found, None otherwise.
         """
 
         try:
@@ -215,9 +218,11 @@ class PlexInterface:
         given SeriesInfo. This tries to match by TVDb ID, TMDb ID, name, and
         finally full name.
         
-        :param      library:    The Library object to search for within Plex.
+        Args:
+            library: The Library object to search for within Plex.
         
-        :returns:   The Series associated with this SeriesInfo object.
+        Returns:
+            The Series associated with this SeriesInfo object.
         """
 
         # Try by IMDb ID

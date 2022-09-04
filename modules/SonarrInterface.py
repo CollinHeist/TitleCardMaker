@@ -124,7 +124,8 @@ class SonarrInterface(WebInterface):
         Warn a given series is missing from Sonarr, but only if it hasn't
         already been warned.
         
-        :param      series_info:  The SeriesInfo being warned.
+        Args:
+            series_info: The SeriesInfo being warned.
         """
 
         # If this series has already been warned, return
@@ -210,7 +211,8 @@ class SonarrInterface(WebInterface):
         """
         Set the TVDb ID for the given SeriesInfo object.
 
-        :param      series_info:    SeriesInfo to update.
+        Args:
+            series_info: SeriesInfo to update.
         """
 
         # Match priority is Sonarr ID > TVDb ID > Series name
@@ -237,9 +239,11 @@ class SonarrInterface(WebInterface):
         Gets all episode info for the given series. Only episodes that have 
         already aired are returned.
         
-        :param      series_info:    SeriesInfo for the entry.
+        Args:
+            series_info: SeriesInfo for the entry.
         
-        :returns:   List of EpisodeInfo objects for the given series.
+        Returns:
+            List of EpisodeInfo objects for the given series.
         """
 
         # If no ID was returned, error and return an empty list
@@ -301,8 +305,9 @@ class SonarrInterface(WebInterface):
         Set all the episode ID's for the given list of EpisodeInfo objects. This
         sets the TVDb ID for each episode.
         
-        :param      series_info:    SeriesInfo for the entry.
-        :param      infos:          List of EpisodeInfo objects to update.
+        Args:
+            series_info: SeriesInfo for the entry.
+            infos: List of EpisodeInfo objects to update.
         """
 
         # Get all sonarr-created EpisodeInfo objects
@@ -326,5 +331,3 @@ class SonarrInterface(WebInterface):
             padding = len(f'{show["id"]} : ')
             titles = f'\n{" " * padding}'.join([main_title] + alt_titles)
             print(f'{show["id"]} : {titles}')
-
-        

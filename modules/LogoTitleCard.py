@@ -61,32 +61,30 @@ class LogoTitleCard(CardType):
         """
         Initialize the CardType object.
 
-        :param  output_file:        Output file.
-        :param  title:              Episode title.
-        :param  season_text:        Text to use as season count text. Ignored if
-                                    hide_season is True.
-        :param  episode_text:       Text to use as episode count text.
-        :param  font:               Font to use for the episode title.
-        :param  font_size:          Scalar to apply to the title font size.
-        :param  title_color:        Color to use for the episode title.
-        :param  hide_season:        Whether to omit the season text (and joining
-                                    character) from the title card completely.
-        :param  season_number:      Season number of the episode associated with
-                                    this card.
-        :param  episode_number:     Episode number of the episode associated
-                                    with this card.
-        :param  separator:          Character to use to separate season and
-                                    episode text.
-        :param  blur:               Whether to blur the source image.
-        :param  vertical_shift:     Pixels to adjust title vertical shift by.
-        :param  interline_spacing:  Pixels to adjust title interline spacing by.
-        :param  kerning:            Scalar to apply to kerning of the title text.
-        :param  stroke_width:       Scalar to apply to black stroke of the title
-                                    text.
-        :param  logo:               Filepath (or file format) to the logo file.
-        :param  background:         Backround color to use for this card.
-        :param  kwargs:             Unused arguments to permit generalized calls
-                                    for any CardType.
+        Args:
+            output_file: Output file.
+            title: Episode title.
+            season_text: Text to use as season count text. Ignored if
+                hide_season is True.
+            episode_text: Text to use as episode count text.
+            font: Font to use for the episode title.
+            font_size: Scalar to apply to the title font size.
+            title_color: Color to use for the episode title.
+            hide_season: Whether to omit the season text (and joining character)
+                from the title card completely.
+            season_number: Season number of the episode associated with this
+                card.
+            episode_number: Episode number of the episode associated with this
+                card.
+            separator: Character to use to separate season and episode text.
+            blur: Whether to blur the source image.
+            vertical_shift: Pixels to adjust title vertical shift by.
+            interline_spacing: Pixels to adjust title interline spacing by.
+            kerning: Scalar to apply to kerning of the title text.
+            stroke_width: Scalar to apply to black stroke of the title text.
+            logo: Filepath (or file format) to the logo file.
+            background: Backround color to use for this card.
+            kwargs: Unused arguments to permit generalized callsfor any CardType
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface
@@ -133,7 +131,8 @@ class LogoTitleCard(CardType):
         ImageMagick commands to implement the title text's global effects.
         Specifically the the font, kerning, fontsize, and center gravity.
         
-        :returns:   List of ImageMagick commands.
+        Returns:
+            List of ImageMagick commands.
         """
 
         font_size = 157.41 * self.font_size
@@ -154,7 +153,8 @@ class LogoTitleCard(CardType):
         """
         ImageMagick commands to implement the title text's black stroke.
         
-        :returns:   List of ImageMagick commands.
+        Returns:
+            List of ImageMagick commands.
         """
 
         stroke_width = 3.0 * self.stroke_width
@@ -171,7 +171,8 @@ class LogoTitleCard(CardType):
         ImageMagick commands for global text effects applied to all series count
         text (season/episode count and dot).
         
-        :returns:   List of ImageMagick commands.
+        Returns:
+            List of ImageMagick commands.
         """
 
         return [
@@ -185,7 +186,8 @@ class LogoTitleCard(CardType):
         ImageMagick commands for adding the necessary black stroke effects to
         series count text.
         
-        :returns:   List of ImageMagick commands.
+        Returns:
+            List of ImageMagick commands.
         """
 
         return [
@@ -200,7 +202,8 @@ class LogoTitleCard(CardType):
         ImageMagick commands for adding the necessary text effects to the series
         count text.
         
-        :returns:   List of ImageMagick commands.
+        Returns:
+            List of ImageMagick commands.
         """
 
         return [
@@ -214,7 +217,8 @@ class LogoTitleCard(CardType):
         """
         Resize the logo into at most a 1875x1030 bounding box.
         
-        :returns:   Path to the created image.
+        Returns:
+            Path to the created image.
         """
 
         command = ' '.join([
@@ -233,8 +237,12 @@ class LogoTitleCard(CardType):
     def _add_logo_to_backdrop(self, resized_logo: Path) -> Path:
         """
         Add the resized logo to a fixed color backdrop.
+
+        Args:
+            resized_logo: Resized logo to add.
         
-        :returns:   Path to the created image.
+        Returns:
+            Path to the created image.
         """
 
         # Get height of the resized logo to determine offset
@@ -269,9 +277,11 @@ class LogoTitleCard(CardType):
         """
         Adds episode title text to the provide image.
 
-        :param      backdrop_logo:  The backdrop and logo image.
+        Args:
+            backdrop_logo: The backdrop and logo image.
         
-        :returns:   Path to the created image that has the title text added.
+        Returns:
+            Path to the created image.
         """
 
         vertical_shift = 245 + self.vertical_shift
@@ -296,9 +306,11 @@ class LogoTitleCard(CardType):
         """
         Adds the series count text without season title/number.
         
-        :param      titled_image:  The titled image to add text to.
+        Args:
+            titled_image: The titled image to add text to.
 
-        :returns:   Path to the created image (the output file).
+        Returns:
+            Path to the created image (the output file).
         """
 
         command = ' '.join([
@@ -318,11 +330,12 @@ class LogoTitleCard(CardType):
         return self.output_file
 
 
-    def _get_series_count_text_dimensions(self) -> dict:
+    def _get_series_count_text_dimensions(self) -> dict[str: float]:
         """
         Gets the series count text dimensions.
         
-        :returns:   The series count text dimensions.
+        Returns:
+            The series count text dimensions.
         """
 
         command = ' '.join([
@@ -367,7 +380,8 @@ class LogoTitleCard(CardType):
         Creates an image with only series count text. This image is transparent,
         and not any wider than is necessary (as indicated by `dimensions`).
         
-        :returns:   Path to the created image containing only series count text.
+        Returns:
+            Path to the created image containing only series count text.
         """
 
         # Create text only transparent image of season count text
@@ -406,11 +420,13 @@ class LogoTitleCard(CardType):
         count image (optional season number+optional dot+episode number) into a
         single image. This is written into the output image for this object.
 
-        :param      titled_image:       Path to the titled image to add.
-        :param      series_count_image: Path to the series count transparent
-                                        image to add.
+        Args:
+            titled_image: Path to the titled image to add.
+            series_count_image: Path to the series count transparent image to
+                add.
 
-        :returns:   Path to the created image (the output file).
+        Returns:
+            Path to the created image (the output file).
         """
 
         command = ' '.join([
@@ -433,9 +449,11 @@ class LogoTitleCard(CardType):
         Determines whether the given font characteristics constitute a default
         or custom font.
         
-        :param      font:   The Font being evaluated.
+        Args:
+            font: The Font being evaluated.
         
-        :returns:   True if a custom font is indicated, False otherwise.
+        Returns:
+            True if a custom font is indicated, False otherwise.
         """
 
         return ((font.file != LogoTitleCard.TITLE_FONT)
@@ -455,11 +473,12 @@ class LogoTitleCard(CardType):
         Determines whether the given attributes constitute custom or generic
         season titles.
         
-        :param      custom_episode_map:     Whether the EpisodeMap was
-                                            customized.
-        :param      episode_text_format:    The episode text format in use.
+        Args:
+            custom_episode_map: Whether the EpisodeMap was customized.
+            episode_text_format: The episode text format in use.
         
-        :returns:   True if custom season titles are indicated, False otherwise.
+        Returns:
+            True if custom season titles are indicated, False otherwise.
         """
 
         standard_etf = LogoTitleCard.EPISODE_TEXT_FORMAT.upper()

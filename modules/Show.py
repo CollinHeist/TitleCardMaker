@@ -310,8 +310,9 @@ class Show(YamlReader):
         """
         Set the series ID's for this show using the given interfaces.
         
-        :param      sonarr_interface:   The SonarrInterface to query.
-        :param      tmdb_interface:     The TMDbInterface to query.
+        Args:
+            sonarr_interface: The SonarrInterface to query.
+            tmdb_interface: The TMDbInterface to query.
         """
 
         # Sonarr can provide Sonarr and TVDb ID's

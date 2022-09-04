@@ -48,10 +48,12 @@ class WebInterface:
         """
         Retry the given GET request until successful (or really fails).
         
-        :param      url:    The URL of the GET request.
-        :param      params: The params of  the GET request.
+        Args:
+            url: The URL of the GET request.
+            params: The params of  the GET request.
 
-        :retuns:    Dict made from the JSON return of the specified GET request.
+        Returns:
+            Dict made from the JSON return of the specified GET request.
         """
 
         return self.session.get(url=url, params=params).json()
@@ -63,11 +65,12 @@ class WebInterface:
         provided URL and parameters are identical to the previous request, then
         a cached result is returned instead.
         
-        :param      url:    URL to pass to GET.
-
-        :param      params: Parameters to pass to GET.
+        Args:
+            url: URL to pass to GET.
+            Parameters to pass to GET.
         
-        :returns:   Dict made from the JSON return of the specified GET request.
+        Returns:
+            Dict made from the JSON return of the specified GET request.
         """
         
         # Look through all cached results for this exact URL+params; if found,
