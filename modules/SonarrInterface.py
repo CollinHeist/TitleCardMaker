@@ -66,7 +66,7 @@ class SonarrInterface(WebInterface):
                 log.critical(f'Cannot get Sonarr status - invalid URL/API key')
                 exit(1)
         except Exception as e:
-            log.critical(f'Cannot query Sonarr - returned error: "{e}"')
+            log.critical(f'Cannot connect to Sonarr - returned error: "{e}"')
             exit(1)
         
         # Create blank dictionary of titles -> ID's

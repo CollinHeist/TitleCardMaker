@@ -174,7 +174,6 @@ def check_for_update():
                 log.info(f'Get the latest version with "git pull origin"')
         else:
             log.debug(f'Latest remote version is {available_version}')
-        
 
 # Function to re-read preference file
 def read_preferences():

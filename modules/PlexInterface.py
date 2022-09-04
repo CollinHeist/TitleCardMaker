@@ -51,6 +51,9 @@ class PlexInterface:
         except Unauthorized:
             log.critical(f'Invalid Plex Token "{x_plex_token}"')
             exit(1)
+        except Exception as e:
+            log.critical(f'Cannot connect to Plex - returned error: "{e}"')
+            exit(1)
         
         # Create/read loaded card database
         self.__db = TinyDB(database_directory / self.LOADED_DB)
