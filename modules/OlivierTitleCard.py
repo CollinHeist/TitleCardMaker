@@ -30,7 +30,7 @@ class OlivierTitleCard(CardType):
 
     """Characteristics of the episode text"""
     EPISODE_TEXT_FORMAT = 'EPISODE {episode_number}'
-    EPISODE_TEXT_COLOR = 'white'#'#CFCFCF'
+    EPISODE_TEXT_COLOR = 'white'
     EPISODE_PREFIX_FONT = SW_REF_DIRECTORY / 'HelveticaNeue.ttc'
     EPISODE_NUMBER_FONT = SW_REF_DIRECTORY / 'HelveticaNeue-Bold.ttf'
 
@@ -85,7 +85,7 @@ class OlivierTitleCard(CardType):
         self.output_file = output_file
 
         # Store attributes of the text
-        self.title = self.image_magick.escape_chars(title.upper())
+        self.title = self.image_magick.escape_chars(title)
         self.hide_episode_text = len(episode_text) == 0
         self.episode_prefix = None
         
@@ -153,6 +153,7 @@ class OlivierTitleCard(CardType):
         stroke_width = 6.0 * self.stroke_width
         kerning = 0.5 * self.kerning
         interline_spacing = -20 + self.interline_spacing
+        vertical_shift = 320 + self.vertical_shift
 
         return [
             f'\( -font "{self.font}"',
@@ -163,11 +164,11 @@ class OlivierTitleCard(CardType):
             f'-fill black',
             f'-stroke black',
             f'-strokewidth {stroke_width}',
-            f'-annotate +320+785 "{self.title}" \)',
+            f'-annotate +{vertical_shift}+785 "{self.title}" \)',
             f'\( -fill "{self.title_color}"',
             f'-stroke "{self.title_color}"',
             f'-strokewidth 0',
-            f'-annotate +320+785 "{self.title}" \)',
+            f'-annotate +{vertical_shift}+785 "{self.title}" \)',
         ]
 
 
@@ -244,7 +245,7 @@ class OlivierTitleCard(CardType):
         """
 
         command = ' '.join([
-            f'convert "{gradient_source.resolve()}"',
+            f'convert "{resized_source.resolve()}"',
             *self.__add_title_text(),
             f'"{self.output_file.resolve()}"',
         ])
