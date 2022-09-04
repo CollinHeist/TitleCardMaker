@@ -147,7 +147,12 @@ class ImageMagickInterface:
             The decoded stdout output of the executed command.
         """
 
-        return b''.join(self.run(command)).decode()
+        output = self.run(command)
+        
+        try:
+            return b''.join(output).decode()
+        except UnicodeDecodeError:
+            return b''.join(output).decode('iso8859')
 
 
     def delete_intermediate_images(self, *paths: tuple) -> None:
