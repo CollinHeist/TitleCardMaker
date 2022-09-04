@@ -22,6 +22,9 @@ class ImageMagickInterface:
     """How long to wait before terminating a command as timed out"""
     COMMAND_TIMEOUT_SECONDS = 240
 
+    """Substrings that must be present in --version output"""
+    __REQUIRED_VERSION_SUBSTRINGS = ('Version','Copyright','License','Features')
+
     __slots__ = ('container', 'use_docker', 'prefix', 'timeout', '__history')
 
 
@@ -51,6 +54,19 @@ class ImageMagickInterface:
 
         # Command history for debug purposes
         self.__history = []
+
+
+    def verify_interface(self) -> bool:
+        """
+        Verify this interface has a valid connection to ImageMagick.
+
+        Returns:
+            True if the connection is valid, False otherwise.
+        """
+
+        output = self.run_get_output('convert --version')
+
+        return all(_ in output for _ in self.__REQUIRED_VERSION_SUBSTRINGS)
 
 
     @staticmethod

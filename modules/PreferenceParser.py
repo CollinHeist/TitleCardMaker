@@ -129,19 +129,9 @@ class PreferenceParser(YamlReader):
 
         # Try variations of the font list command with/out the "magick " prefix
         for prefix, use_magick in zip(('', 'magick '), (False, True)):
-            # Create ImageMagickInterface object to test font command
-            imi = ImageMagickInterface(
-                self.imagemagick_container,
-                use_magick,
-                self.imagemagick_timeout
-            )
-
-            # Run font list command
-            font_output = imi.run_get_output(f'convert -list font')
-
-            # Check for standard font output to determine if it worked
-            if all(_ in font_output for _ in ('Font:', 'family:', 'style:')):
-                # Font command worked, exit function
+            # Create ImageMagickInterface and verify validity
+            if ImageMagickInterface(self.imagemagick_container, use_magick,
+                                    self.imagemagick_timeout).verify_interface():
                 self.use_magick_prefix = use_magick
                 log.debug(f'Using "{prefix}" ImageMagick command prefix')
                 return None
