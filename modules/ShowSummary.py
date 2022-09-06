@@ -13,7 +13,7 @@ class ShowSummary(ImageMaker):
     cards.
     """
 
-    """Directory where all reference files used by this card are stored"""
+    """Directory where all reference files are stored"""
     REF_DIRECTORY = Path(__file__).parent / 'ref' / 'summary'
 
     """Default color for the background of the summary image"""
@@ -52,7 +52,7 @@ class ShowSummary(ImageMaker):
         for existing title cards to use in `create()`.
         
         Args:
-            show: The Show object to create the Sumamry for.
+            show: The Show object to create the Summary for.
             background: Background color or image to use for the summary. Can
                 also be a "format string" that is "{series_backgroun}" to use
                 the given Show object's backdrop.
@@ -80,7 +80,8 @@ class ShowSummary(ImageMaker):
         if Path(background).exists():
             self.background = Path(background)
             self.__background_is_image = True
-            log.debug(f'Identified summary background image {self.background.resolve()}')
+            log.debug(f'Identified summary background image '
+                      f'{self.background.resolve()}')
         else:
             self.background = background
             self.__background_is_image = False

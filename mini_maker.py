@@ -457,5 +457,3 @@ if hasattr(args, 'season_poster'):
         top_placement=args.top_placement,
         omit_gradient=args.no_gradient,
     ).create()
-
-    

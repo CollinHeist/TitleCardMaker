@@ -39,7 +39,7 @@ class Font:
             series_info: Associated SeriesInfo (for logging).
         """
 
-        # Assume object is valid to start with
+       # Assume object is valid to start with
         self.valid = True
 
         # If font YAML (either from map or directly) is not a dictionary, bad!
@@ -103,9 +103,9 @@ class Font:
             self.__validate = bool(value)
 
         # Case
-        if (value := self.__yaml.get('case', '').lower()) != '':
-            if value not in self.__card_class.CASE_FUNCTIONS:
-                self.__error('case', value)
+        if (value := self.__yaml.get('case')):
+            if (value := value.lower()) not in self.__card_class.CASE_FUNCTIONS:
+                self.__error('case', value, 'unrecognized value')
             else:
                 self.case_name = value
                 self.case = self.__card_class.CASE_FUNCTIONS[value]
@@ -113,7 +113,7 @@ class Font:
         # Color
         if (value := self.__yaml.get('color')) is not None:
             self.color = value
-
+        
         # File
         if (value := self.__yaml.get('file')) is not None:
             if not isinstance(value, str):
