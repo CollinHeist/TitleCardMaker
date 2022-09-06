@@ -14,7 +14,6 @@ try:
     from modules.PreferenceParser import PreferenceParser
     from modules.global_objects import set_preference_parser
     from modules.SeriesInfo import SeriesInfo
-    from modules.ShowSummary import ShowSummary
     from modules.SonarrInterface import SonarrInterface
     from modules.TMDbInterface import TMDbInterface
 except ImportError:
@@ -26,10 +25,6 @@ ENV_PREFERENCE_FILE = 'TCM_PREFERENCES'
 
 # Default values
 DEFAULT_PREFERENCE_FILE = Path(__file__).parent / 'preferences.yml'
-
-# Old commands that have moved to mini_maker to warn user about
-OLD_COMMANDS = ('--title-card', '--genre-card', '--show-summary',
-                '--season-poster')
 
 # Create ArgumentParser object 
 parser = ArgumentParser(description='Manual fixes for the TitleCardMaker')
@@ -127,8 +122,6 @@ tmdb_group.add_argument(
 
 # Parse given arguments
 args, unknown = parser.parse_known_args()
-if any(old_arg in unknown for old_arg in OLD_COMMANDS):
-    log.warning(f'Manual card creation has moved to "mini_maker.py"')
 
 # Parse preference file for options that might need it
 pp = PreferenceParser(args.preferences)

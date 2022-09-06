@@ -11,7 +11,8 @@ from modules.Manager import Manager
 from modules.SeriesInfo import SeriesInfo
 from modules.SeriesYamlWriter import SeriesYamlWriter
 from modules.Show import Show
-from modules.ShowSummary import ShowSummary
+from modules.StandardSummary import StandardSummary
+from modules.StylizedSummary import StylizedSummary
 from modules.Template import Template
 from modules.TitleCard import TitleCard
 from modules.TMDbInterface import TMDbInterface
@@ -73,7 +74,8 @@ class PreferenceParser(YamlReader):
         self.create_archive = False
         self.archive_all_variations = True
         self.create_summaries = True
-        self.summary_background = ShowSummary.BACKGROUND_COLOR
+        self.summary_class = StylizedSummary
+        self.summary_background = self.summary_class.BACKGROUND_COLOR
         self.summary_minimum_episode_count = 1
         self.summary_created_by = None
         self.use_plex = False
@@ -308,6 +310,19 @@ class PreferenceParser(YamlReader):
         if (value := self._get('archive', 'summary', 'create',
                                type_=bool)) != None:
             self.create_summaries = value
+
+        if (value := self._get('archive', 'summary', 'type',
+                               type_=lower_str)) is not None:
+            if value == 'standard':
+                self.summary_class = StandardSummary
+                self.summary_background = self.summary_class.BACKGROUND_COLOR
+            elif value == 'stylized':
+                self.summary_class = StylizedSummary
+                self.summary_background = self.summary_class.BACKGROUND_COLOR
+            else:
+                log.critical(f'Summary type "{value}" is invalid - must be '
+                             f'"standard" or "stylized"')
+                self.valid = False
 
         if (value := self._get('archive', 'summary', 'created_by',
                                type_=str)) is not None:

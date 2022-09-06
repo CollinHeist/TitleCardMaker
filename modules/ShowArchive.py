@@ -1,7 +1,6 @@
 from copy import copy
 
 from modules.Debug import log
-from modules.ShowSummary import ShowSummary
 import modules.global_objects as global_objects
 
 class ShowArchive:
@@ -55,11 +54,11 @@ class ShowArchive:
         # If the base show for this object has archiving disabled, exit
         self.series_info = base_show.series_info
 
-        # Empty lists to be populated with modified Show and ShowSummary objects
+        # Empty lists to be populated with modified Show and Summary objects
         self.shows = []
         self.summaries = []
 
-        # For each applicable sub-profile, create+modify new Show/ShowSummary
+        # For each applicable sub-profile, create+modify new Show/Summary
         card_class = base_show.card_class
         valid_profiles = base_show.profile.get_valid_profiles(
             card_class, base_show.archive_all_variations,
@@ -89,12 +88,13 @@ class ShowArchive:
             # Convert this new show's profile
             new_show.profile.convert_profile(**attributes)
             if not new_show.profile._Profile__use_custom_seasons:
-                new_show.episode_text_format = new_show.card_class.EPISODE_TEXT_FORMAT
+                new_show.episode_text_format =\
+                    new_show.card_class.EPISODE_TEXT_FORMAT
 
-            # Store this new Show and associated ShowSummary
+            # Store this new Show and associated Summary
             self.shows.append(new_show)
             self.summaries.append(
-                ShowSummary(
+                global_objects.pp.summary_class(
                     new_show,
                     global_objects.pp.summary_background,
                     global_objects.pp.summary_created_by,
@@ -135,9 +135,9 @@ class ShowArchive:
 
 
     def create_summary(self) -> None:
-        """Create the ShowSummary image for each archive in this object."""
+        """Create the Summary image for each archive in this object."""
 
-        # Go through each ShowSummary object within this Archive
+        # Go through each Summary object within this Archive
         for summary in self.summaries:
             # If summary already exists, skip
             if summary.output.exists() or not summary.logo.exists():
@@ -148,5 +148,4 @@ class ShowArchive:
 
             # If the summary exists, log that
             if summary.output.exists():
-                log.debug(f'Created ImageSummary {summary.output.resolve()}')
-
+                log.debug(f'Created Summary {summary.output.resolve()}')

@@ -14,7 +14,8 @@ try:
     from modules.RemoteCardType import RemoteCardType
     from modules.RemoteFile import RemoteFile
     from modules.SeasonPoster import SeasonPoster
-    from modules.ShowSummary import ShowSummary
+    from modules.StandardSummary import StandardSummary
+    from modules.StylizedSummary import StylizedSummary
     from modules.TitleCard import TitleCard
 except ImportError:
     print(f'Required Python packages are missing - execute "pipenv install"')
@@ -244,7 +245,7 @@ show_summary_group.add_argument(
 show_summary_group.add_argument(
     '--background',
     type=str,
-    default=ShowSummary.BACKGROUND_COLOR,
+    default='default',
     metavar='COLOR_OR_IMAGE',
     help='Specify background color or image for the created show summary')
 show_summary_group.add_argument(
@@ -253,7 +254,13 @@ show_summary_group.add_argument(
     default=None,
     metavar='CREATOR',
     help='Specify a custom username for the "Created by .." text on the created'
-         ' show sumamry')
+         ' show summary')
+show_summary_group.add_argument(
+    '--summary-type',
+    type=str,
+    default='default',
+    metavar='SUMMARY_TYPE',
+    help='Summary type to create - must be "standard" or "sylized"')
 
 # Argument group for season posters
 season_poster_group = parser.add_argument_group(
@@ -433,8 +440,16 @@ if hasattr(args, 'show_summary'):
     # Override minimum episode count
     pp.summary_minimum_episode_count = 0
 
-    # Create ShowSummary
-    summary = ShowSummary(show, args.background, args.created_by)
+    # Create Summary
+    if args.summary_type.lower() == 'default':
+        summary = pp.summary_class(show, args.background, args.created_by)
+    elif args.summary_type.lower() == 'standard':
+        summary = StandardSummary(show, args.background, args.created_by)
+    elif args.summary_type.lower() == 'stylized':
+        summary = StylizedSummary(show, args.background, args.created_by)
+    else:
+        log.warning(f'Invalid summary style - using default')
+        summary = pp.summary_class(show, args.background, args.created_by)
     summary.create()
 
     # Log success/failure

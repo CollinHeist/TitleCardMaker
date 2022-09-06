@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
+from re import match
 
+from modules.Debug import log
 from modules.ImageMagickInterface import ImageMagickInterface
 import modules.global_objects as global_objects
 
@@ -46,6 +48,40 @@ class ImageMaker(ABC):
             self.preferences.use_magick_prefix,
             self.preferences.imagemagick_timeout,
         )
+
+
+    def get_image_dimensions(self, image: Path) -> dict[str: int]:
+        """
+        Get the dimensions of the given image.
+
+        Args:
+            image: Path to the image to get the dimensions of.
+
+        Returns:
+            Dictionary of the image dimensions whose keys are 'width' and
+            'height'.
+        """
+
+        # Return dimenions of zero if image DNE
+        if not image.exists():
+            return {'width': 0, 'height': 0}
+
+        # Get the dimensions
+        command = ' '.join([
+            f'identify',
+            f'-format "%w %h"',
+            f'"{image.resolve()}"',
+        ])
+
+        output = self.image_magick.run_get_output(command)
+
+        # Get width/height from output
+        try:
+            width, height = map(int, match(r'^(\d+)\s+(\d+)$', output).groups())
+            return {'width': width, 'height': height}
+        except Exception as e:
+            log.debug(f'Cannot identify dimensions of {image.resolve()}')
+            return {'width': 0, 'height': 0}
 
 
     @staticmethod
