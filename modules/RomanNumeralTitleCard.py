@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from modules.CardType import CardType
+from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 
-class RomanNumeralTitleCard(CardType):
+class RomanNumeralTitleCard(BaseCardType):
     """
     This class defines a type of CardType that produces un-imaged title cards
     with roman numeral text behind the central title. The style is inspired
@@ -48,6 +48,7 @@ class RomanNumeralTitleCard(CardType):
 
     __slots__ = ('output_file', 'title', 'title_color', 'background', 'blur',
                  'roman_numeral_color', 'roman_numeral', '__roman_text_scalar')
+                 
 
     def __init__(self, output_file: Path, title: str, episode_text: str,
                  title_color: str, episode_number: int=1, blur: bool=False, 

@@ -1,10 +1,10 @@
 from pathlib import Path
 from re import match
 
-from modules.CardType import CardType
+from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 
-class PosterTitleCard(CardType):
+class PosterTitleCard(BaseCardType):
     """
     This class describes a type of CardType that produces title cards in the
     style of the Gundam series of cards produced by Reddit user
@@ -45,7 +45,6 @@ class PosterTitleCard(CardType):
 
     """Path to the reference star image to overlay on all source images"""
     __GRADIENT_OVERLAY = REF_DIRECTORY / 'stars-overlay.png'
-
 
     __slots__ = ('source_file', 'output_file', 'logo', 'title', 'episode_text',
                  'blur')

@@ -3,10 +3,10 @@ from re import match
 
 from num2words import num2words
 
-from modules.CardType import CardType
+from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 
-class OlivierTitleCard(CardType):
+class OlivierTitleCard(BaseCardType):
     """
     This class describes a type of ImageMaker that produces title cards in the
     style of those designed by Reddit user /u/Olivier_286.
@@ -41,7 +41,7 @@ class OlivierTitleCard(CardType):
     ARCHIVE_NAME = 'Olivier Style'
 
     """Paths to intermediate files created for this card"""
-    __RESIZED_SOURCE = CardType.TEMP_DIR / 'resized_source.png'
+    __RESIZED_SOURCE = BaseCardType.TEMP_DIR / 'resized_source.png'
 
     __slots__ = ('source_file', 'output_file', 'title', 'hide_episode_text', 
                  'episode_prefix', 'episode_text', 'font', 'title_color',

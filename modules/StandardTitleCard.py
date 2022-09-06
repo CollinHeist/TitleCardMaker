@@ -1,10 +1,10 @@
 from pathlib import Path
 from re import findall
 
-from modules.CardType import CardType
+from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 
-class StandardTitleCard(CardType):
+class StandardTitleCard(BaseCardType):
     """
     This class describes a type of CardType that produces the 'generic' title
     cards based on Reddit user /u/UniversalPolymath. This card supports 
@@ -43,9 +43,9 @@ class StandardTitleCard(CardType):
     __GRADIENT_IMAGE = REF_DIRECTORY / 'GRADIENT.png'
 
     """Paths to intermediate files that are deleted after the card is created"""
-    __SOURCE_WITH_GRADIENT = CardType.TEMP_DIR / 'source_gradient.png'
-    __GRADIENT_WITH_TITLE = CardType.TEMP_DIR / 'gradient_title.png'
-    __SERIES_COUNT_TEXT = CardType.TEMP_DIR / 'series_count_text.png'
+    __SOURCE_WITH_GRADIENT = BaseCardType.TEMP_DIR / 'source_gradient.png'
+    __GRADIENT_WITH_TITLE = BaseCardType.TEMP_DIR / 'gradient_title.png'
+    __SERIES_COUNT_TEXT = BaseCardType.TEMP_DIR / 'series_count_text.png'
 
     __slots__ = ('source_file', 'output_file', 'title', 'season_text',
                  'episode_text', 'font', 'font_size', 'title_color',
@@ -60,8 +60,7 @@ class StandardTitleCard(CardType):
                  interline_spacing: int=0, kerning: float=1.0,
                  stroke_width: float=1.0, **kwargs) -> None:
         """
-        Initialize this CardType object. This primarily just stores instance
-        variables for later use in `create()`.
+        Initialize this CardType object.
 
         Args:
             source: Source image to base the card on.

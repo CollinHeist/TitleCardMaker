@@ -3,7 +3,7 @@ from hashlib import sha256
 
 from tinydb import TinyDB, where
 
-from modules.CardType import CardType
+from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 
 class ShowRecordKeeper:
@@ -68,7 +68,7 @@ class ShowRecordKeeper:
         """
 
         # For CardType classes use their class name as the hash value
-        if isinstance(record, type) and issubclass(record, CardType):
+        if isinstance(record, type) and issubclass(record, BaseCardType):
             record = record.__name__
         # If the object defines a custom hash property/attribute, use that
         elif hasattr(record, 'custom_hash'):

@@ -5,18 +5,17 @@ from titlecase import titlecase
 from modules.Debug import log
 from modules.ImageMaker import ImageMaker
 
-class CardType(ImageMaker):
+class BaseCardType(ImageMaker):
     """
-    This class describes an abstract card type. A CardType is a subclass of
+    This class describes an abstract card type. A BaseCardType is a subclass of
     ImageMaker, because all CardTypes are designed to create title cards. This
     class outlines the requirements for creating a custom type of title card.
 
-    All subclasses of CardType must implement this class's abstract properties
-    and methods in order to work with the TitleCardMaker. However, not all
-    CardTypes need to use every argument of these methods. For example, the
-    StandardTitleCard utilizes most all customizations for a title card (i.e.
-    custom fonts, colors, sizing, season titles, etc.), while a
-    StarWarsTitleCard doesn't use anything except the episode title and number.
+    All implementations of BaseCardType must implement this class's abstract
+    properties and methods in order to work with the TitleCardMaker. However,
+    not all CardTypes need to use every argument of these methods. For example,
+    the StandardTitleCard utilizes most all customizations for a title card,
+    while a StarWarsTitleCard hardly uses anything.
     """
 
     """Default case string for all title text"""

@@ -1,10 +1,10 @@
 from pathlib import Path
 from re import findall
 
-from modules.CardType import CardType
+from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 
-class AnimeTitleCard(CardType):
+class AnimeTitleCard(BaseCardType):
     """
     This class describes a type of CardType that produces title cards in the
     anime-styled cards designed by reddit user /u/Recker_Man. These cards don't
@@ -44,14 +44,15 @@ class AnimeTitleCard(CardType):
     SERIES_COUNT_TEXT_COLOR = '#CFCFCF'
 
     """Paths to intermediate files that are deleted after the card is created"""
-    __CONSTRAST_SOURCE = CardType.TEMP_DIR / 'adj_source.png'
-    __SOURCE_WITH_GRADIENT = CardType.TEMP_DIR / 'source_with_gradient.png'
-    __GRADIENT_WITH_TITLE = CardType.TEMP_DIR / 'gradient_with_title.png'
+    __CONSTRAST_SOURCE = BaseCardType.TEMP_DIR / 'adj_source.png'
+    __SOURCE_WITH_GRADIENT = BaseCardType.TEMP_DIR / 'source_with_gradient.png'
+    __GRADIENT_WITH_TITLE = BaseCardType.TEMP_DIR / 'gradient_with_title.png'
 
     __slots__ = ('source_file', 'output_file', 'title', 'kanji', 'use_kanji',
                  'require_kanji', 'season_text', 'episode_text', 'hide_season',
                  'separator', 'blur', 'font', 'font_size', 'font_color',
                  'vertical_shift', 'interline_spacing', 'kerning')
+
     
     def __init__(self, source: Path, output_file: Path, title: str, 
                  season_text: str, episode_text: str, font: str,font_size:float,
@@ -60,7 +61,7 @@ class AnimeTitleCard(CardType):
                  require_kanji: bool=False, separator: str='·',
                  blur: bool=False, **kwargs)->None:
         """
-        Constructs a new instance.
+        Construct a new instance.
         
         Args:
             source: Source image for this card.

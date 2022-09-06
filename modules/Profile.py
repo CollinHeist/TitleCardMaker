@@ -1,6 +1,5 @@
 from regex import match, IGNORECASE
 
-from modules.CardType import CardType
 from modules.Debug import log
 from modules.MultiEpisode import MultiEpisode
 import modules.global_objects as global_objects
@@ -54,7 +53,7 @@ class Profile:
                 f'{self.__use_custom_font}')
 
 
-    def get_valid_profiles(self, card_class: CardType,
+    def get_valid_profiles(self, card_class: 'CardType',
                            all_variations: bool) -> list[dict[str: str]]:
         """
         Gets the valid applicable profiles for this profile. For example,

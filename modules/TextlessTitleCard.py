@@ -1,10 +1,10 @@
 from pathlib import Path
 from re import findall
 
-from modules.CardType import CardType
+from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 
-class TextlessTitleCard(CardType):
+class TextlessTitleCard(BaseCardType):
     """
     This class describes a type of CardType that does not modify the source
     image in anyway, only optionally blurring it. No text of any kind is added.
@@ -48,7 +48,7 @@ class TextlessTitleCard(CardType):
             source: Source image.
             output_file: Output file.
             blur: Whether to blur the source image.
-            kwargs: Unused arguments to permit general calls for any CardType
+            kwargs: Unused arguments to permit general calls for any CardType.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface
@@ -124,7 +124,5 @@ class TextlessTitleCard(CardType):
         defined title card.
         """
         
-        # Only ImageMagick calls are resizing and an optional blur
+        # Only ImageMagick call is resizing and an optional blur
         self._resize_and_blur()
-
-        

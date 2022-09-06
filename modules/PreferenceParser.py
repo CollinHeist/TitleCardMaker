@@ -279,9 +279,9 @@ class PreferenceParser(YamlReader):
             else:
                 self.image_source_priority = sources
 
-        if (value := self._get('options',
-                               'episode_data_source', type_=str)) is not None:
-            if (value := value.lower()) in self.VALID_EPISODE_DATA_SOURCES:
+        if (value := self._get('options', 'episode_data_source',
+                               type_=lower_str)) is not None:
+            if value in self.VALID_EPISODE_DATA_SOURCES:
                 self.episode_data_source = value
             else:
                 log.critical(f'Episode data source "{value}" is invalid')
