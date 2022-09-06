@@ -29,6 +29,7 @@ class PreferenceParser(YamlReader):
     """Valid episode data source identifiers"""
     VALID_EPISODE_DATA_SOURCES = ('sonarr', 'plex', 'tmdb')
 
+    """Default directory for temporary database objects"""
     DEFAULT_TEMP_DIR = Path(__file__).parent / '.objects'
 
 

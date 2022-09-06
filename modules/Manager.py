@@ -330,7 +330,7 @@ class Manager:
         # Go through each archive and create summaries
         for show_archive in (pbar := tqdm(self.archives, **TQDM_KWARGS)):
             # Update progress bar
-            pbar.set_description(f'Creating ShowSummary for "'
+            pbar.set_description(f'Creating Summary for "'
                                  f'{show_archive.series_info.short_name}"')
 
             show_archive.create_summary()

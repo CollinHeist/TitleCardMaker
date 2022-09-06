@@ -40,7 +40,15 @@ class ShowRecordKeeper:
         """
 
         # Read record database
-        self.records = TinyDB(database_directory / self.RECORD_DATABASE)
+        database = database_directory / self.RECORD_DATABASE
+        self.records = TinyDB(database)
+
+        # Attempt to read length, error indicates bad database
+        try:
+            log.debug(f'Read {len(self.records)} show records')
+        except Exception:
+            log.warning(f'Show record database is corrupted - resetting')
+            database.unlink(missing_ok=True)
 
 
     def __get_record_hash(self, hash_obj: 'hashalg', record) -> None:
@@ -48,7 +56,7 @@ class ShowRecordKeeper:
         Get the hash of the given record.
 
         Args:
-            hash_obj: Initialzied hash object to update with the record.
+            hash_obj: Initialized hash object to update with the record.
             record: Value to get the hash of. If this object is a subclass of
                 the CardType abstract class, then the class name is hashed. If
                 this object defines a custom_hash attribute, that value is
