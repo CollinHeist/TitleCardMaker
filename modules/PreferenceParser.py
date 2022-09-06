@@ -738,6 +738,30 @@ class PreferenceParser(YamlReader):
 
         return False
 
+    @property
+    def plex_interface_kwargs(self) -> dict[str: 'Path | str | bool']:
+        return {
+            'database_directory': self.database_directory,
+            'url': self.plex_url,
+            'x_plex_token': self.plex_token,
+            'verify_ssl': self.plex_verify_ssl,
+        }
+
+    @property
+    def sonarr_interface_kwargs(self) -> dict[str: 'str | bool']:
+        return {
+            'url': self.sonarr_url,
+            'api_key': self.sonarr_api_key,
+            'verify_ssl': self.sonarr_verify_ssl,
+        }
+
+    @property
+    def tmdb_interface_kwargs(self) -> dict[str: 'Path | str']:
+        return {
+            'database_directory': self.database_directory,
+            'api_key': self.tmdb_api_key,
+        }
+
                 
     def meets_minimum_resolution(self, width: int, height: int) -> bool:
         """

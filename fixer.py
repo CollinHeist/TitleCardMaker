@@ -180,7 +180,7 @@ if hasattr(args, 'import_cards') and pp.use_plex:
         spoil_type: str
         
     # Create PlexInterface
-    plex_interface = PlexInterface(pp.plex_url, pp.plex_token)
+    plex_interface = PlexInterface(**pp.plex_interface_kwargs)
 
     # Get series/name + year from archive directory if unspecified
     archive = Path(args.import_cards[0])
@@ -222,14 +222,14 @@ if hasattr(args, 'import_cards') and pp.use_plex:
 if hasattr(args, 'forget_cards') and pp.use_plex:
     # Create PlexInterface and remove records for indicated series+library
     series_info = SeriesInfo(args.forget_cards[1], args.forget_cards[2])
-    PlexInterface(pp.plex_url, pp.plex_token).remove_records(
+    PlexInterface(**pp.plex_interface_kwargs).remove_records(
         args.forget_cards[0], series_info,
     )
 
 
 # Execute Sonarr related options
 if args.sonarr_list_ids and pp.use_sonarr:
-    SonarrInterface(pp.sonarr_url, pp.sonarr_api_key).list_all_series_id()
+    SonarrInterface(**pp.sonarr_interface_kwargs).list_all_series_id()
 
 # Execute TMDB related options
 if hasattr(args, 'unblacklist'):
@@ -261,7 +261,7 @@ if hasattr(args, 'tmdb_download_images') and pp.use_tmdb:
 
 if hasattr(args, 'add_translation') and pp.use_tmdb:
     dfi = DataFileInterface(Path(args.add_translation[2]))
-    tmdbi = TMDbInterface(pp.tmdb_api_key)
+    tmdbi = TMDbInterface(**pp.tmdb_interface_kwargs)
 
     for entry in dfi.read():
         if args.add_translation[4] in entry:

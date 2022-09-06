@@ -35,29 +35,23 @@ class Manager:
 
         # Optionally assign PlexInterface
         self.plex_interface = None
-        if global_objects.pp.use_plex:
+        if self.preferences.use_plex:
             self.plex_interface = PlexInterface(
-                database_directory=global_objects.pp.database_directory,
-                url=self.preferences.plex_url,
-                x_plex_token=self.preferences.plex_token,
-                verify_ssl=self.preferences.plex_verify_ssl,
+                **self.preferences.plex_interface_kwargs
             )
 
         # Optionally assign SonarrInterface
         self.sonarr_interface = None
         if self.preferences.use_sonarr:
             self.sonarr_interface = SonarrInterface(
-                url=self.preferences.sonarr_url,
-                api_key=self.preferences.sonarr_api_key,
-                verify_ssl=self.preferences.sonarr_verify_ssl,
+                **self.preferences.sonarr_interface_kwargs,
             )
 
         # Optionally assign TMDbInterface
         self.tmdb_interface = None
         if self.preferences.use_tmdb:
             self.tmdb_interface = TMDbInterface(
-                database_directory=global_objects.pp.database_directory,
-                api_key=self.preferences.tmdb_api_key,
+                **self.preferences.tmdb_interface_kwargs,
             )
 
         # Setup blank show and archive lists
