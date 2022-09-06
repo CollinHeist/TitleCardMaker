@@ -10,6 +10,7 @@ try:
     from modules.Debug import log, LOG_FILE
     from modules.DataFileInterface import DataFileInterface
     from modules.EpisodeInfo import EpisodeInfo
+    from modules.ImageMaker import ImageMaker
     from modules.PlexInterface import PlexInterface
     from modules.PreferenceParser import PreferenceParser
     from modules.global_objects import set_preference_parser
@@ -74,6 +75,13 @@ plex_group.add_argument(
     metavar=('NAME', 'YEAR'),
     help='Override/set the name of the series imported with --import-archive')
 plex_group.add_argument(
+    '--import-extension', '--import-ext',
+    type=str,
+    choices=ImageMaker.VALID_IMAGE_EXTENSIONS,
+    default='.jpg',
+    metavar='.EXT',
+    help='Extension of images to look for alongside --import-cards')
+plex_group.add_argument(
     '--forget-cards', '--forget-loaded-cards',
     type=str,
     nargs=3,
@@ -81,14 +89,12 @@ plex_group.add_argument(
     metavar=('PLEX_LIBRARY', 'NAME', 'YEAR'),
     help='Remove records of the loaded cards for the given series/library')
 
-
 # Argument group for Sonarr
 sonarr_group = parser.add_argument_group('Sonarr')
 sonarr_group.add_argument(
     '--sonarr-list-ids',
     action='store_true',
     help="List all the ID's for all shows within Sonarr")
-
 
 # Argument group for TMDb
 tmdb_group = parser.add_argument_group(
@@ -188,7 +194,8 @@ if hasattr(args, 'import_cards') and pp.use_plex:
             exit(1)
             
     # Get all images from import archive
-    if len(all_images := list(archive.glob('**/*.jpg'))) == 0:
+    ext = args.import_extension
+    if len(all_images := list(archive.glob(f'**/*{ext}'))) == 0:
         log.warning(f'No images to import')
         exit(1)
     

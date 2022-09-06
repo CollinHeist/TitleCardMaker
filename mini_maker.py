@@ -1,7 +1,7 @@
 from argparse import ArgumentParser, SUPPRESS
-from pathlib import Path
 from dataclasses import dataclass
 from os import environ
+from pathlib import Path
 from re import match, IGNORECASE
 
 try:
