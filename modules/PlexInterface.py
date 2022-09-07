@@ -628,7 +628,7 @@ class PlexInterface:
                 return None
 
         # Compression successful, log and return intermediate image
-        log.debug(f'Compressed "{card.resolve()}" with {quality}% quality')
+        log.debug(f'Compressed "{image.resolve()}" with {quality}% quality')
         return image
 
 
