@@ -76,7 +76,7 @@ class PreferenceParser(YamlReader):
         self.create_summaries = True
         self.summary_class = StylizedSummary
         self.summary_background = self.summary_class.BACKGROUND_COLOR
-        self.summary_minimum_episode_count = 1
+        self.summary_minimum_episode_count = 3
         self.summary_created_by = None
         self.use_plex = False
         self.plex_url = None
