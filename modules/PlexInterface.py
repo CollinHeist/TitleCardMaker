@@ -614,7 +614,7 @@ class PlexInterface:
             return image
 
         # Start with a quality of 90%, decrement by 5% each time
-        quality = 90
+        quality = 95
         small_image = image
 
         # Compress the given image until below the filesize limit
@@ -629,7 +629,7 @@ class PlexInterface:
 
         # Compression successful, log and return intermediate image
         log.debug(f'Compressed "{image.resolve()}" with {quality}% quality')
-        return image
+        return small_image
 
 
     @catch_and_log('Error uploading title cards')
@@ -682,7 +682,7 @@ class PlexInterface:
             # Update progress bar
             pbar.set_description(f'Updating {pl_episode.seasonEpisode.upper()}')
 
-            # Shrink image if necessary
+            # Shrink image if necessary, skip if cannot be compressed
             if (card := self.__compress_image(episode.destination)) is None:
                 continue
             
@@ -694,6 +694,7 @@ class PlexInterface:
             except Exception as e:
                 error_count += 1
                 log.warning(f'Unable to upload {card.resolve()} to {series_info}')
+                log.debug(f'Exception[{e}]')
                 continue
             else:
                 loaded_count += 1
