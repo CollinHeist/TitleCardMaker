@@ -373,6 +373,8 @@ class PreferenceParser(YamlReader):
                                type_=self.filesize_as_bytes)) is not None:
             self.plex_filesize_limit = value
             log.debug(f'Plex filesize limit is {self.plex_filesize_limit} bytes')
+            if value > self.filesize_as_bytes('10 MB'):
+                log.warning(f'Plex will reject all images larger than 10 MB')
 
         if self._is_specified('sonarr'):
             if (not self._is_specified('sonarr', 'url')
