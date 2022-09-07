@@ -9,6 +9,7 @@ from tqdm import tqdm
 from modules.Debug import log, TQDM_KWARGS
 import modules.global_objects as global_objects
 from modules.EpisodeInfo import EpisodeInfo
+from modules.ImageMaker import ImageMaker
 from modules.SeriesInfo import SeriesInfo
 from modules.WebInterface import WebInterface
 
@@ -596,6 +597,41 @@ class PlexInterface:
         plex_object.uploadPoster(filepath=filepath)
 
 
+    def __compress_image(self, image: Path) -> 'Path | None':
+        """
+        Compress the given image until below the filesize limit.
+
+        Args:
+            image: Path to the image to compress.
+
+        Returns:
+            Path to the compressed image, or None if the image could not be
+            compressed.
+        """
+
+        # No compression necessary
+        if image.stat().st_size < self.preferences.plex_filesize_limit:
+            return image
+
+        # Start with a quality of 90%, decrement by 5% each time
+        quality = 90
+        small_image = image
+
+        # Compress the given image until below the filesize limit
+        while small_image.stat().st_size > self.preferences.plex_filesize_limit:
+            # Process image, exit if cannot be reduced
+            quality -= 5
+            if (small_image := ImageMaker.reduce_file_size(image,
+                                                           quality)) is None:
+                log.warning(f'Cannot reduce filesize of "{image.resolve()}" '
+                            f'below limit')
+                return None
+
+        # Compression successful, log and return intermediate image
+        log.debug(f'Compressed "{card.resolve()}" with {quality}% quality')
+        return image
+
+
     @catch_and_log('Error uploading title cards')
     def set_title_cards_for_series(self, library_name: str, 
                                    series_info: 'SeriesInfo',
@@ -645,20 +681,22 @@ class PlexInterface:
 
             # Update progress bar
             pbar.set_description(f'Updating {pl_episode.seasonEpisode.upper()}')
+
+            # Shrink image if necessary
+            if (card := self.__compress_image(episode.destination)) is None:
+                continue
             
             # Upload card to Plex, optionally remove Overlay label
             try:
-                self.__retry_upload(pl_episode, episode.destination.resolve())
-                loaded_count += 1
-                
-                # If overlay integration is enabled, remove "Overlay" label
+                self.__retry_upload(pl_episode, card.resolve())
                 if self.preferences.integrate_with_pmm_overlays:
                     pl_episode.removeLabel(['Overlay'])
             except Exception as e:
                 error_count += 1
-                log.warning(f'Unable to upload {episode.destination.resolve()} '
-                            f'to {series_info}')
+                log.warning(f'Unable to upload {card.resolve()} to {series_info}')
                 continue
+            else:
+                loaded_count += 1
             
             # Update/add loaded map with this entry
             self.__db.upsert({
@@ -720,12 +758,17 @@ class PlexInterface:
                 and details['filesize'] == poster.stat().st_size):
                 continue
 
+            # Shrink image if necessary
+            if (resized_poster := self.__compress_image(poster)) is None:
+                continue
+
             # Upload this poster
             try:
-                self.__retry_upload(season, poster)
-                loaded_count += 1
+                self.__retry_upload(season, resized_poster)
             except Exception:
                 continue
+            else:
+                loaded_count += 1
 
             # Update loaded database
             self.__posters.upsert({

@@ -83,6 +83,7 @@ class PreferenceParser(YamlReader):
         self.plex_token = 'NA'
         self.plex_verify_ssl = True
         self.integrate_with_pmm_overlays = False
+        self.plex_filesize_limit = self.filesize_as_bytes('10 MB')
         self.global_watched_style = 'unique'
         self.global_unwatched_style = 'unique'
         self.plex_yaml_writers = []
@@ -110,6 +111,7 @@ class PreferenceParser(YamlReader):
         self.__determine_imagemagick_prefix()
 
         # Database object directory, create if DNE
+        self.DEFAULT_TEMP_DIR.mkdir(parents=True, exist_ok=True)
         if is_docker and not (self.DEFAULT_TEMP_DIR / 'loaded.json').exists():
             self.database_directory = self.file.parent / '.objects'
         else:
@@ -366,6 +368,11 @@ class PreferenceParser(YamlReader):
         if (value := self._get('plex', 'integrate_with_pmm_overlays',
                                type_=bool)) is not None:
             self.integrate_with_pmm_overlays = value
+
+        if (value := self._get('plex', 'filesize_limit', 
+                               type_=self.filesize_as_bytes)) is not None:
+            self.plex_filesize_limit = value
+            log.debug(f'Plex filesize limit is {self.plex_filesize_limit} bytes')
 
         if self._is_specified('sonarr'):
             if (not self._is_specified('sonarr', 'url')
@@ -831,3 +838,25 @@ class PreferenceParser(YamlReader):
         except Exception as e:
             log.critical(f'Invalid season folder format - {e}')
             exit(1)
+
+
+    def filesize_as_bytes(self, filesize: str) -> 'int | None':
+        """
+        Convert the given filesize string to its integer byte equivalent. If the
+        string cannot be converted, a critical error is logged and this object
+        is set to invalid.
+
+        Args:
+            filesize: Filesize (string) to convert. Should be formatted like 
+                '{integer} {unit}' - e.g. 2 KB, 4 GiB, 1 B, etc.
+
+        Returns:
+            Number of bytes of the string. None if the string cannot be
+            converted.
+        """
+        units = {'B': 1, 'KB': 2**10, 'MB': 2**20, 'GB': 2**30, 'TB': 2**40,
+                 '': 1, 'KIB': 10**3, 'MIB': 10**6, 'GIB': 10**9, 'TIB': 10**12}
+
+        number, unit = map(str.strip, filesize.split())
+        value, unit_scale = float(number), units[unit.upper()]
+        return int(value * unit_scale)

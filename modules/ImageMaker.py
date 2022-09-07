@@ -22,6 +22,9 @@ class ImageMaker(ABC):
     """Temporary file location for svg -> png conversion"""
     TEMPORARY_SVG_FILE = TEMP_DIR / 'temp_logo.svg'
 
+    """Temporary file location for image filesize reduction"""
+    TEMPORARY_COMPRESS_FILE = TEMP_DIR / 'temp_compress.jpg'
+
     """
     Valid file extensions for input images - ImageMagick supports more than just
     these types, but these are the most common across all OS's.
@@ -82,6 +85,50 @@ class ImageMaker(ABC):
         except Exception as e:
             log.debug(f'Cannot identify dimensions of {image.resolve()}')
             return {'width': 0, 'height': 0}
+
+
+    @staticmethod
+    def reduce_file_size(image: Path, quality: int=90) -> Path:
+        """
+        Reduce the file size of the given image.
+
+        Args:
+            image: Path to the image to reduce the file size of.
+            quality: Quality of the 
+
+        Returns:
+            Path to the created image.
+        """
+
+        # Verify quality is 0-100
+        if (quality := int(quality)) not in range(0, 100):
+            return None
+
+        # If image DNE, warn and return
+        if not image.exists():
+            log.warning(f'Cannot reduce file size of non-existent image '
+                        f'"{image.resolve()}"')
+            return None
+
+        # Create ImageMagickInterface for this command
+        image_magick_interface = ImageMagickInterface(
+            global_objects.pp.imagemagick_container,
+            global_objects.pp.use_magick_prefix,
+            global_objects.pp.imagemagick_timeout,
+        )
+
+        # Command to convert essentially downsample the image
+        command = ' '.join([
+            f'convert',
+            f'"{image.resolve()}"',
+            f'-sampling-factor 4:2:0',
+            f'-quality {quality}%',
+            f'"{ImageMaker.TEMPORARY_COMPRESS_FILE.resolve()}"',
+        ])
+
+        image_magick_interface.run(command)
+
+        return ImageMaker.TEMPORARY_COMPRESS_FILE
 
 
     @staticmethod
