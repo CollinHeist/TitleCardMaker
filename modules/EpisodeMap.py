@@ -99,10 +99,7 @@ class EpisodeMap:
                 return None
             
             # Parse title/source mapping
-            if isinstance(mapping, str):
-                self.__titles[season_number] = mapping
-                self.is_custom = True
-            elif isinstance(mapping, dict):
+            if isinstance(mapping, dict):
                 if (value := mapping.get('title')):
                     self.__titles[season_number] = value
                     self.is_custom = True
@@ -116,6 +113,9 @@ class EpisodeMap:
                         self.valid = False
                         return None
                     self.__applies[season_number] = value
+            else:
+                self.__titles[season_number] = str(mapping)
+                self.is_custom = True
         
         
     def __parse_episode_ranges(self, episode_ranges: dict) -> None:
