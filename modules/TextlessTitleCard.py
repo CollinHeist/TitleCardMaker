@@ -1,10 +1,10 @@
 from pathlib import Path
 from re import findall
 
-from modules.CardType import CardType
+from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 
-class TextlessTitleCard(CardType):
+class TextlessTitleCard(BaseCardType):
     """
     This class describes a type of CardType that does not modify the source
     image in anyway, only optionally blurring it. No text of any kind is added.
@@ -24,8 +24,8 @@ class TextlessTitleCard(CardType):
     EPISODE_TEXT_FORMAT = ''
 
     """Characteristics of the default title font"""
-    TITLE_FONT = None
-    TITLE_COLOR = None
+    TITLE_FONT = ''
+    TITLE_COLOR = ''
     FONT_REPLACEMENTS = {}
 
     """Whether this CardType uses season titles for archival purposes"""
@@ -44,11 +44,11 @@ class TextlessTitleCard(CardType):
         instance variables for later use in `create()`. If the provided font
         does not have a character in the title text, a space is used instead.
 
-        :param  source:         Source image.
-        :param  output_file:    Output file.
-        :param  blur:           Whether to blur the source image.
-        :param  kwargs:         Unused arguments to permit generalized calls for
-                                any CardType.
+        Args:
+            source: Source image.
+            output_file: Output file.
+            blur: Whether to blur the source image.
+            kwargs: Unused arguments to permit general calls for any CardType.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface
@@ -65,7 +65,8 @@ class TextlessTitleCard(CardType):
         Resize the source image, optionally blurring. Write the resulting image
         to the output filepath.
         
-        :returns:   Path to the created image (the output file).
+        Returns:
+            Path to the created image (the output file).
         """
 
         command = ' '.join([
@@ -89,9 +90,11 @@ class TextlessTitleCard(CardType):
         Determines whether the given font characteristics constitute a default
         or custom font.
         
-        :param      font:   The Font being evaluated.
+        Args:
+            font: The Font being evaluated.
         
-        :returns:   False, as fonts are not customizable with this card.
+        Returns:
+            False, as fonts are not customizable with this card.
         """
 
         return False
@@ -104,11 +107,12 @@ class TextlessTitleCard(CardType):
         Determines whether the given attributes constitute custom or generic
         season titles.
         
-        :param      custom_episode_map:     Whether the EpisodeMap was
-                                            customized.
-        :param      episode_text_format:    The episode text format in use.
+        Args:
+            custom_episode_map: Whether the EpisodeMap was customized.
+            episode_text_format: The episode text format in use.
         
-        :returns:   False, as season titles are not customizable with this card.
+        Returns:
+            False, as season titles are not customizable with this card.
         """
 
         return False
@@ -120,7 +124,5 @@ class TextlessTitleCard(CardType):
         defined title card.
         """
         
-        # Only ImageMagick calls are resizing and an optional blur
+        # Only ImageMagick call is resizing and an optional blur
         self._resize_and_blur()
-
-        

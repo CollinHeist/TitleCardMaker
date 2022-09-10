@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from modules.CardType import CardType
+from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 
-class LandscapeTitleCard(CardType):
+class LandscapeTitleCard(BaseCardType):
     """
     This class defines a type of CardType that produces un-imaged title cards
     with roman numeral text behind the central title. The style is inspired

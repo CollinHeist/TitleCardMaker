@@ -19,17 +19,18 @@ class Episode:
                  base_source: Path, destination: Path, given_keys: set,
                  **extras: dict) -> None:
         """
-        Constructs a new instance of an Episode.
+        Construct a new instance of an Episode.
 
-        :param      episode_info:   Episode info for this episode.
-        :param      base_source:    The base source directory to look for source
-                                    images within.
-        :param      destination:    The destination for the title card
-                                    associated with this Episode.
-        :param      given_keys:     Set of keys present in the initialization of
-                                    this Episode.
-        :param      extras:         Additional characteristics to pass to the
-                                    creation of the TitleCard from this Episode.
+        Args:
+            episode_info: Episode info for this episode.
+            base_source: The base source directory to look for source images
+                within.
+            destination: The destination for the title card associated with this
+                Episode.
+            given_keys: Set of keys present in the initialization of this
+                Episode.
+            extras: Additional characteristics to pass to the creation of the
+                TitleCard from this Episode.
         """
 
         # Set object attributes
@@ -64,9 +65,12 @@ class Episode:
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object"""
 
-        return (f'<Episode {self.episode_info=}, {self.card_class=}, '
-                f'{self.source=}, {self.destination=}, {self.watched=}, '
-                f'{self.blur=}, {self.extra_characteristics=}>')
+        return (
+            f'<Episode {self.episode_info=}, {self.card_class=}, {self.source=}'
+            f', {self.destination=}, {self.downloadable_source=}, '
+            f'{self.extra_characteristics=}, {self.watched=}, {self.blur=}, '
+            f'{self.spoil_type=}'
+        )
 
 
     def key_is_specified(self, key: str) -> bool:
@@ -74,10 +78,12 @@ class Episode:
         Return whether the given key was present in the initialization for this
         Episode, i.e. whether the key can be added to the datafile.
         
-        :param      key:    The key being checked.
+        Args:
+            key: The key being checked.
         
-        :returns:   Whether the given key was specified in the initialization
-                    of this Episode.
+        Returns:
+            Whether the given key was specified in the initialization of this
+            Episode.
         """
 
         return key in self.given_keys
@@ -89,9 +95,10 @@ class Episode:
         Update the statuses of this Episode. In particular the watched status
         and un/watched styles.
         
-        :param      watched:          New watched status for this Episode.
-        :param      watched_style:    Watched style to assign spoil type from.
-        :param      unwatched_style:  Unwatched style to assign spoil tyle from.
+        Args:
+            watched: New watched status for this Episode.
+            watched_style: Watched style to assign spoil type from.
+            unwatched_style: Unwatched style to assign spoil tyle from.
         """
 
         # Update watched attribute
@@ -105,22 +112,21 @@ class Episode:
             self.spoil_type = SPOIL_TYPE_STYLE_MAP[unwatched_style]
 
 
-    def update_source(self, new_source, *, downloadable: bool) -> bool:
+    def update_source(self, new_source: 'Path | str | None', *, downloadable: bool) -> bool:
         """
         Update the source image for this Episode, as well as the downloadable
         flag for the source.
         
-        :param      new_source:     New source file.
-        :type       new_source:     If Path, then source is taken as-is. If a
-                                    str, the the file is looked for within this
-                                    Episode's base source directory. If that
-                                    file doesn't exist under the base source,
-                                    then the string source is taken as a Path
-                                    and converted. If None nothing happens.
-        :param      downloadable:   Keyword-only argument for whether the new
-                                    source is downloadable or not.
+        Args:
+            new_source: New source file. If source the path is taken as-is; if
+                string, then the file is looked for within this Episode's base
+                source directory - if that file DNE then it's taken as a Path
+                and converted; if None, nothing happens.
+            downloadable: (Keyword only) Whether the new source is downloadable
+                or not.
 
-        :returns:   True if a new non-None source was provided, False otherwise.
+        Returns:
+            True if a new non-None source was provided, False otherwise.
         """
 
         # If no actual new source was provided, return
@@ -141,21 +147,31 @@ class Episode:
         return True
 
 
-    def delete_card(self) -> bool:
+    def delete_card(self, *, reason: str=None) -> bool:
         """
         Delete the title card for this Episode.
 
-        :returns:   True if card was deleted, False otherwise.
+        Args:
+            reason: Optional string to log why the card is being deleted.
 
+        Returns:
+            True if card was deleted, False otherwise.
         """
 
+        # No destination, nothing to delete
         if self.destination is None:
             return False
 
+        # Destination exists, delete and return True
         if self.destination.exists():
             self.destination.unlink()
+
+            # Log deletion 
+            message = f'Deleted "{self.destination.resolve()}"'
+            if reason is not None:
+                message += f' [{reason}]'
+            log.debug(message)
+
             return True
 
         return False
-
-        

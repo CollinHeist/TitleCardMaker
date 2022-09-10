@@ -25,8 +25,7 @@ class Show(YamlReader):
     This class describes a show. A Show encapsulates the names and preferences
     with a complete series of episodes. Each object inherits many preferences 
     from the global `PreferenceParser` object, but manually specified attributes
-    within the Show's YAML take precedence over the global enables, with the
-    exception of Interface objects (such as Sonarr and TMDb).
+    within the Show's YAML take precedence over the global values.
     """
     
     """Valid card styles for a series"""
@@ -36,19 +35,16 @@ class Show(YamlReader):
     BACKDROP_FILENAME = 'backdrop.jpg'
 
     __slots__ = (
-        'preferences', 'valid', '__library_map', 'series_info',
-        'media_directory', 'card_class', 'episode_text_format', 'library_name',
-        'library', 'archive', 'archive_all_variations', 'sonarr_sync',
-        'sync_specials', 'tmdb_sync', 'tmdb_skip_localized_images',
-        'watched_style', 'unwatched_style', 'hide_seasons','__episode_map',
-        'title_language', 'font', 'source_directory', 'logo', 'backdrop',
-        'file_interface', 'profile', 'season_poster_set', 'episodes',
-        '__is_archive'
+        'preferences', 'valid', 'series_info', 'media_directory', 'card_class',
+        'episode_text_format', 'library_name', 'library', 'archive',
+        'archive_all_variations', 'sonarr_sync', 'sync_specials', 'tmdb_sync',
+        'tmdb_skip_localized_images', 'watched_style', 'unwatched_style',
+        'hide_seasons','__episode_map', 'title_language', 'font',
+        'source_directory', 'logo', 'backdrop', 'file_interface', 'profile',
+        'season_poster_set', 'episodes', '__is_archive'
     )
 
-
-    def __init__(self, name: str, yaml_dict: dict, library_map: dict, 
-                 font_map: dict, source_directory: Path,
+    def __init__(self, name: str, yaml_dict: dict, source_directory: Path,
                  preferences: 'PreferenceParser') -> None:
         """
         Constructs a new instance of a Show object from the given YAML
@@ -56,17 +52,14 @@ class Show(YamlReader):
         the initialization fails to produce a 'valid' show object, the `valid`
         attribute is set to False.
 
-        :param      name:               The name or title of the series.
-        :param      yaml_dict:          YAML dictionary of the associated series
-                                        as found in a card YAML file.
-        :param      library_map:        Map of library titles to media
-                                        directories.
-        :param      font_map:           Map of font labels to custom font
-                                        descriptions.
-        :param      source_directory:   Base source directory this show should
-                                        search for and place source images in.
-        :param      preferences:        PrferenceParser object this object's
-                                        default attributes are derived from.
+        Args:
+            name: The name/title of the series.
+            yaml_dict: YAML dictionary of the associated series as found in the
+                series YAML file.
+            source_directory: Base source directory this show should search for
+                and place source images in.
+            preferences: PreferenceParser object this object's default
+                attributes are derived from.
         """
 
         # Initialize parent YamlReader object
@@ -76,9 +69,6 @@ class Show(YamlReader):
         self.preferences = preferences
         self.info_set = global_objects.info_set
         
-        # Parse arguments into attribures
-        self.__library_map = library_map
-
         # Set this show's SeriesInfo object with blank year to start
         self.series_info = SeriesInfo(name, 0)
         try:
@@ -89,43 +79,40 @@ class Show(YamlReader):
             return None
             
         # Setup default values that may be overwritten by YAML
-        self.card_filename_format = self.preferences.card_filename_format
-        self.media_directory = None
-        self.card_class = self.preferences.card_class
+        self.card_filename_format = preferences.card_filename_format
+        self.card_class = preferences.card_class
         self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
         self.library_name = None
         self.library = None
-        self.archive = self.preferences.create_archive
+        self.media_directory = None
+        self.archive = preferences.create_archive
         self.archive_name = None
-        self.archive_all_variations = self.preferences.archive_all_variations
-        self.episode_data_source = self.preferences.episode_data_source
-        self.sonarr_sync = self.preferences.use_sonarr
-        self.sync_specials = self.preferences.sync_specials
-        self.tmdb_sync = self.preferences.use_tmdb
-        self.tmdb_skip_localized_images = self.preferences.tmdb_skip_localized_images
-        self.watched_style = self.preferences.global_watched_style
-        self.unwatched_style = self.preferences.global_unwatched_style
+        self.archive_all_variations = preferences.archive_all_variations
+        self.episode_data_source = preferences.episode_data_source
+        self.sonarr_sync = preferences.use_sonarr
+        self.sync_specials = preferences.sync_specials
+        self.tmdb_sync = preferences.use_tmdb
+        self.tmdb_skip_localized_images = preferences.tmdb_skip_localized_images
+        self.watched_style = preferences.global_watched_style
+        self.unwatched_style = preferences.global_unwatched_style
         self.hide_seasons = False
         self.__episode_map = EpisodeMap()
         self.title_languages = {}
         self.extras = {}
-
-        # Set object attributes based off YAML and update validity
         self.__parse_yaml()
+
+        # Create Font object, update validity
         self.font = Font(
-            self._base_yaml.get('font', {}),
-            font_map,
-            self.card_class,
-            self.series_info,
+            self._base_yaml.get('font', {}), self.card_class, self.series_info,
         )
         self.valid &= self.font.valid
 
-        # Update derived attributes
+        # Update derived (and not adjustable) attributes
         self.source_directory = source_directory / self.series_info.legal_path
         self.logo = self.source_directory / 'logo.png'
         self.backdrop = self.source_directory / self.BACKDROP_FILENAME
 
-        # Create DataFileInterface fo this show
+        # Create DataFileInterface for this show
         self.file_interface = DataFileInterface(
             self.series_info,
             self.source_directory / DataFileInterface.GENERIC_DATA_FILE_NAME
@@ -187,8 +174,8 @@ class Show(YamlReader):
 
         # Recreate Show object with modified YAML
         show = Show(
-            self.series_info.full_name, modified_base, self.__library_map,
-            self.font._Font__font_map, self.source_directory.parent,
+            self.series_info.full_name, modified_base,
+            self.source_directory.parent,
             self.preferences
         )
         show.__is_archive = True
@@ -202,50 +189,38 @@ class Show(YamlReader):
         invalid attributes.
         """
 
-        if (name := self._get('name', type_=str)) is not None:
-            self.info_set.update_series_name(self.series_info, name)
+        if (value := self._get('name', type_=str)) is not None:
+            self.info_set.update_series_name(self.series_info, value)
 
-        if (format_ := self._get('filename_format', type_=str)) is not None:
-            if not TitleCard.validate_card_format_string(format_):
-                self.valid = False
-            else:
-                self.card_filename_format = format_
+        if (value := self._get('library', type_=dict)) is not None:
+            self.library_name = value['name']
+            self.library = value['path']
+            self.media_directory = self.library / self.series_info.legal_path
 
-        if (library := self._get('library', type_=str)) is not None:
-            # If the given library isn't in libary map, invalid
-            if not (this_library := self.__library_map.get(library)):
-                log.error(f'Library "{library}" of series {self} is not found '
-                          f'in libraries list')
-                self.valid = False
-            else:
-                # Valid library, update library and media directory
-                self.library_name = this_library.get('plex_name', library)
-                self.library = Path(this_library['path'])
-                self.media_directory = self.library /self.series_info.legal_path
-
-                # If card type was specified for this library, set that
-                if (card_type := this_library.get('card_type')):
-                    self._parse_card_type(card_type)
-                    self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
-
-        if (id_ := self._get('imdb_id', type_=str)) is not None:
-            self.series_info.set_imdb_id(id_)
-
-        if (id_ := self._get('sonarr_id', type_=int)) is not None:
-            self.series_info.set_sonarr_id(id_)
-
-        if (id_ := self._get('tvdb_id', type_=int)) is not None:
-            self.series_info.set_tvdb_id(id_)
-
-        if (id_ := self._get('tmdb_id', type_=int)) is not None:
-            self.series_info.set_tmdb_id(id_)
-
-        if (card_type := self._get('card_type', type_=str)) is not None:
-            self._parse_card_type(card_type)
-            self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
-            
         if (value := self._get('media_directory', type_=Path)) is not None:
             self.media_directory = value
+
+        if (value := self._get('filename_format', type_=str)) is not None:
+            if TitleCard.validate_card_format_string(value):
+                self.card_filename_format = value
+            else:
+                self.valid = False
+
+        if (value := self._get('imdb_id', type_=str)) is not None:
+            self.series_info.set_imdb_id(value)
+
+        if (value := self._get('sonarr_id', type_=int)) is not None:
+            self.series_info.set_sonarr_id(value)
+
+        if (value := self._get('tvdb_id', type_=int)) is not None:
+            self.series_info.set_tvdb_id(value)
+
+        if (value := self._get('tmdb_id', type_=int)) is not None:
+            self.series_info.set_tmdb_id(value)
+
+        if (value := self._get('card_type', type_=str)) is not None:
+            self._parse_card_type(value)
+            self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
 
         if (value := self._get('episode_text_format', type_=str)) is not None:
             self.episode_text_format = value
@@ -323,8 +298,6 @@ class Show(YamlReader):
             self._get('seasons', type_=dict),
             self._get('episode_ranges', type_=dict)
         )
-
-        # Update object validity with EpisodeMap validity
         self.valid &= self.__episode_map.valid
 
         # Read all extras
@@ -337,8 +310,9 @@ class Show(YamlReader):
         """
         Set the series ID's for this show using the given interfaces.
         
-        :param      sonarr_interface:   The SonarrInterface to query.
-        :param      tmdb_interface:     The TMDbInterface to query.
+        Args:
+            sonarr_interface: The SonarrInterface to query.
+            tmdb_interface: The TMDbInterface to query.
         """
 
         # Sonarr can provide Sonarr and TVDb ID's
@@ -358,10 +332,12 @@ class Show(YamlReader):
         """
         Get the destination filename for the given entry of a datafile.
         
-        :param      episode_info:   EpisodeInfo for this episode.
+        Args:
+            episode_info: EpisodeInfo for this episode.
         
-        :returns:   Path for the full title card destination, and None if this
-                    show has no media directory.
+        Returns:
+            Path for the full title card destination, and None if this show has
+            no media directory.
         """
 
         # If this entry should not be written to a media directory, return 
@@ -405,9 +381,10 @@ class Show(YamlReader):
         that interface. All new entries are added to this object's datafile,
         and an Episode object is created.
         
-        :param      sonarr_interface:   The SonarrInterface to optionally query.
-        :param      plex_interface:     The PlexInterface to optionally query.
-        :param      tmdb_interface:     The TMDbInterface to optionally query.
+        Args:
+            sonarr_interface: The SonarrInterface to optionally query.
+            plex_interface: The PlexInterface to optionally query.
+            tmdb_interface: The TMDbInterface to optionally query.
         """
 
         # Get episodes from indicated data source
@@ -465,9 +442,10 @@ class Show(YamlReader):
         interfaces. Only episodes whose card is not present or still need
         translations are updated.
         
-        :param      sonarr_interface:   The SonarrInterface to optionally query.
-        :param      plex_interface:     The PlexInterface to optionally query.
-        :param      tmdb_interface:     The TMDbInterface to optionally query.
+        Args:
+            sonarr_interface: The SonarrInterface to optionally query.
+            plex_interface: The PlexInterface to optionally query.
+            tmdb_interface: The TMDbInterface to optionally query.
         """
 
         # Exit if primary data source doesn't have an interface
@@ -578,9 +556,7 @@ class Show(YamlReader):
                           f'"{translation["key"]}" for {self} {episode}')
 
                 # Delete old card
-                if episode.delete_card():
-                    log.debug(f'Deleted card for {self} {episode}, adding '
-                              f'translation')
+                episode.delete_card(reason='adding translation')
 
         # If any translations were added, re-read source
         if modified:
@@ -609,7 +585,7 @@ class Show(YamlReader):
                     url, self.card_class.TEMPORARY_SVG_FILE
                 )
 
-                # If failed to downlaod, skip
+                # If failed to download, skip
                 if not success:
                     return None
 
@@ -622,7 +598,7 @@ class Show(YamlReader):
             else:
                 tmdb_interface.download_image(url, self.logo)
 
-            # Convert SVG to PNG
+            # Log to user
             log.debug(f'Downloaded logo for {self}')
 
 
@@ -633,14 +609,15 @@ class Show(YamlReader):
         and how that style applies to this show's un/watched styles. Return
         whether a backdrop should be downloaded.
         
-        :param      plex_interface: Optional PlexInterface used to modify the
-                                    Episode objects based on the watched status
-                                    of. If not provided, episodes are assumed to
-                                    all be unwatched (i.e. spoiler free).
-        :param      select_only:    Optional Episode object. If provided, only
-                                    this episode's style is applied.
+        Args:
+            plex_interface: Optional PlexInterface used to modify the Episode
+                objects based on the watched status of. If not provided,
+                episodes are assumed to all be unwatched (i.e. spoiler free).
+            select_only: Optional Episode object. If provided, only this
+                episode's style is applied.
         
-        :returns:   Whether a backdrop should be downloaded or not.
+        Returns:
+            Whether a backdrop should be downloaded or not.
         """
 
         # Update watched statuses via Plex
@@ -658,7 +635,7 @@ class Show(YamlReader):
             episode_map = self.episodes
             if select_only:
                 episode_map = {select_only.episode_info.key: select_only}
-
+            
             plex_interface.update_watched_statuses(
                 self.library_name,
                 self.series_info,
@@ -725,14 +702,14 @@ class Show(YamlReader):
         backdrop is required, and TMDb is enabled, then one is downloaded if it
         does not exist.
         
-        :param      plex_interface: Optional PlexInterface used to modify the
-                                    Episode objects based on the watched status
-                                    of. If not provided, episodes are assumed to
-                                    all be unwatched (i.e. spoiler free).
-        :param      tmdb_interface: Optional TMDbInterface to query for a
-                                    backdrop if one is needed and DNE.
-        :param      select_only:    Optional Episode object. If provided, only
-                                    this episode's source is selected.
+        Args:
+            plex_interface: Optional PlexInterface used to modify the Episode
+                objects based on the watched status of. If not provided,
+                episodes are assumed to all be unwatched (i.e. spoiler free).
+            tmdb_interface: Optional TMDbInterface to query for a backdrop if
+                one is needed and DNE.
+            select_only: Optional Episode object. If provided, only this
+                episode's source is selected.
         """
 
         # Modify Episodes watched/blur/source files based on plex status
@@ -885,13 +862,13 @@ class Show(YamlReader):
         Remake the card associated with the given EpisodeInfo, updating the
         metadata within Plex.
         
-        :param      episode_info:   EpisodeInfo corresponding to the Episode
-                                    being updated. Matched by key.
-        :param      plex_interface: The PlexInterface to utilize for watched
-                                    status identification, source image
-                                    gathering, and metadata refreshing.
-        :param      tmdb_interface: Optional TMDbInterface to utilize for source
-                                    gathering.
+        Args:
+            episode_info: EpisodeInfo corresponding to the Episode being
+                updated. Matched by key.
+            plex_interface: The PlexInterface to utilize for watched status
+                identification, source image gathering, and metadata refreshing.
+            tmdb_interface: Optional TMDbInterface to utilize for source
+                gathering.
         """
 
         # If no episode of the given index (key) exists, nothing to remake, exit
@@ -936,6 +913,12 @@ class Show(YamlReader):
         if self.media_directory is None:
             return False
 
+        # See if these cards need to be deleted/updated for new config
+        if global_objects.show_record_keeper.is_updated(self):
+            log.info(f'Detected new YAML for {self} - deleting old cards')
+            for episode in self.episodes.values():
+                episode.delete_card(reason='new config')
+
         # Go through each episode for this show
         for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
             # Skip episodes without a destination or that already exist
@@ -966,6 +949,9 @@ class Show(YamlReader):
 
             # Source exists, create the title card
             title_card.create()
+        
+        # Update record keeeper
+        global_objects.show_record_keeper.add_config(self)
 
 
     def create_season_posters(self) -> None:
@@ -991,13 +977,9 @@ class Show(YamlReader):
 
         # Update Plex
         plex_interface.set_title_cards_for_series(
-            self.library_name,
-            self.series_info,
-            self.episodes,
+            self.library_name, self.series_info, self.episodes,
         )
 
         plex_interface.set_season_poster(
-            self.library_name,
-            self.series_info,
-            self.season_poster_set,
+            self.library_name, self.series_info, self.season_poster_set,
         )

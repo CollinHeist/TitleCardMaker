@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
+from re import match
 
+from modules.Debug import log
 from modules.ImageMagickInterface import ImageMagickInterface
 import modules.global_objects as global_objects
 
@@ -19,6 +21,9 @@ class ImageMaker(ABC):
 
     """Temporary file location for svg -> png conversion"""
     TEMPORARY_SVG_FILE = TEMP_DIR / 'temp_logo.svg'
+
+    """Temporary file location for image filesize reduction"""
+    TEMPORARY_COMPRESS_FILE = TEMP_DIR / 'temp_compress.jpg'
 
     """
     Valid file extensions for input images - ImageMagick supports more than just
@@ -48,17 +53,97 @@ class ImageMaker(ABC):
         )
 
 
+    def get_image_dimensions(self, image: Path) -> dict[str: int]:
+        """
+        Get the dimensions of the given image.
+
+        Args:
+            image: Path to the image to get the dimensions of.
+
+        Returns:
+            Dictionary of the image dimensions whose keys are 'width' and
+            'height'.
+        """
+
+        # Return dimenions of zero if image DNE
+        if not image.exists():
+            return {'width': 0, 'height': 0}
+
+        # Get the dimensions
+        command = ' '.join([
+            f'identify',
+            f'-format "%w %h"',
+            f'"{image.resolve()}"',
+        ])
+
+        output = self.image_magick.run_get_output(command)
+
+        # Get width/height from output
+        try:
+            width, height = map(int, match(r'^(\d+)\s+(\d+)$', output).groups())
+            return {'width': width, 'height': height}
+        except Exception as e:
+            log.debug(f'Cannot identify dimensions of {image.resolve()}')
+            return {'width': 0, 'height': 0}
+
+
+    @staticmethod
+    def reduce_file_size(image: Path, quality: int=90) -> Path:
+        """
+        Reduce the file size of the given image.
+
+        Args:
+            image: Path to the image to reduce the file size of.
+            quality: Quality of the 
+
+        Returns:
+            Path to the created image.
+        """
+
+        # Verify quality is 0-100
+        if (quality := int(quality)) not in range(0, 100):
+            return None
+
+        # If image DNE, warn and return
+        if not image.exists():
+            log.warning(f'Cannot reduce file size of non-existent image '
+                        f'"{image.resolve()}"')
+            return None
+
+        # Create ImageMagickInterface for this command
+        image_magick_interface = ImageMagickInterface(
+            global_objects.pp.imagemagick_container,
+            global_objects.pp.use_magick_prefix,
+            global_objects.pp.imagemagick_timeout,
+        )
+
+        # Command to convert essentially downsample the image
+        command = ' '.join([
+            f'convert',
+            f'"{image.resolve()}"',
+            f'-sampling-factor 4:2:0',
+            f'-quality {quality}%',
+            f'"{ImageMaker.TEMPORARY_COMPRESS_FILE.resolve()}"',
+        ])
+
+        image_magick_interface.run(command)
+
+        return ImageMaker.TEMPORARY_COMPRESS_FILE
+
+
     @staticmethod
     def convert_svg_to_png(image: Path, destination: Path,
                            min_dimension: int=2500) -> Path:
         """
         Convert the given SVG image to PNG format.
 
-        :param      image:          Path to the image being converted.
-        :param      destination:    Path to the destination image location.
-        :param      min_dimension:  Minimum dimension of converted image.
+        Args:
+            image: Path to the image being converted.
+            destination: Path to the destination image location.
+            min_dimension: Minimum dimension of converted image.
         
-        :returns:   Path to the converted file.
+        Returns:
+            Path to the converted file.
         """
 
         # If the temp file doesn't exist, return

@@ -1,8 +1,7 @@
-from abc import ABC, abstractmethod
-
 from yaml import safe_load
 
 from modules.Debug import log
+import modules.global_objects as global_objects
 from modules.RemoteCardType import RemoteCardType
 from modules.TitleCard import TitleCard
 
@@ -32,13 +31,15 @@ class YamlReader:
         optionally converting to the given type. Log invalidity and return None
         if value is either unspecified or cannot be converted to the type.
         
-        :param      attributes: Any number of nested attributes to get value of.
-        :param      type_:      Optional callable (i.e.) type to call on
-                                specified value before returning
-        :param      default:    Default value to return if unspecified.
+        Args:
+            attributes:Any number of nested attributes to get value of.
+            type_: Optional callable (i.e.) type to call on specified value
+                before returning
+            default: Default value to return if unspecified.
         
-        :returns:   Value located at the given attribute specification, None
-                    if DNE or cannot be typed.
+        Returns:
+            Value located at the given attribute specification, value of
+            default if DNE or cannot be converted to given type.
         """
 
         # If the value is specified
@@ -71,11 +72,12 @@ class YamlReader:
         Determines whether the given attribute/sub-attribute has been manually 
         specified in the show's YAML.
         
-        :param      attributes: Any number of attributes to check for. Each
-                                subsequent argument is checked for as a sub-
-                                attribute of the prior one.
+        Args:
+            attributes: Any number of attributes to check for. Each subsequent
+                argument is checked for as a sub-attribute of the prior one.
         
-        :returns:   True if ALL attributes are specified, False otherwise.
+        Returns:
+            True if ALL attributes are specified, False otherwise.
         """
 
         # Start on the top-level YAML
@@ -106,13 +108,15 @@ class YamlReader:
         inject. This updates the card_type, valid, and episode_text_format
         attributes of this object.
         
-        :param      card_type:  The value of card_type to read/parse.
+        Args:
+            card_type: The value of card_type to read/parse.
         """
-
+        
         # If known card type, set right away, otherwise check remote repo
+        db_dir = global_objects.pp.database_directory
         if card_type in TitleCard.CARD_TYPES:
             self.card_class = TitleCard.CARD_TYPES[card_type]
-        elif (remote_card_type := RemoteCardType(card_type)).valid:
+        elif (remote_card_type := RemoteCardType(db_dir, card_type)).valid:
             self.card_class = remote_card_type.card_class
         else:
             log.error(f'Invalid card type "{card_type}"')
@@ -150,4 +154,3 @@ class YamlReader:
                     log.error(f'Error reading "{file.resolve()}":\n{e}\n')
 
         return {}
-        

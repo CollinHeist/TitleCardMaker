@@ -35,26 +35,24 @@ class Manager:
 
         # Optionally assign PlexInterface
         self.plex_interface = None
-        if global_objects.pp.use_plex:
+        if self.preferences.use_plex:
             self.plex_interface = PlexInterface(
-                url=self.preferences.plex_url,
-                x_plex_token=self.preferences.plex_token,
-                verify_ssl=self.preferences.plex_verify_ssl,
+                **self.preferences.plex_interface_kwargs
             )
 
         # Optionally assign SonarrInterface
         self.sonarr_interface = None
         if self.preferences.use_sonarr:
             self.sonarr_interface = SonarrInterface(
-                url=self.preferences.sonarr_url,
-                api_key=self.preferences.sonarr_api_key,
-                verify_ssl=self.preferences.sonarr_verify_ssl,
+                **self.preferences.sonarr_interface_kwargs,
             )
 
         # Optionally assign TMDbInterface
         self.tmdb_interface = None
         if self.preferences.use_tmdb:
-            self.tmdb_interface = TMDbInterface(self.preferences.tmdb_api_key)
+            self.tmdb_interface = TMDbInterface(
+                **self.preferences.tmdb_interface_kwargs,
+            )
 
         # Setup blank show and archive lists
         self.shows = []
@@ -97,13 +95,13 @@ class Manager:
         if (self.preferences.use_sonarr
             and len(self.preferences.sonarr_yaml_writers) > 0):
             for writer, update_args in zip(self.preferences.sonarr_yaml_writers,
-                                           self.preferences.sonarr_yaml_update_args):
+                                    self.preferences.sonarr_yaml_update_args):
                 writer.update_from_sonarr(self.sonarr_interface, **update_args)
 
         if (self.preferences.use_plex
             and len(self.preferences.plex_yaml_writers) > 0):
             for writer, update_args in zip(self.preferences.plex_yaml_writers,
-                                           self.preferences.plex_yaml_update_args):
+                                        self.preferences.plex_yaml_update_args):
                 writer.update_from_plex(self.plex_interface, **update_args)
         
 
@@ -332,7 +330,7 @@ class Manager:
         # Go through each archive and create summaries
         for show_archive in (pbar := tqdm(self.archives, **TQDM_KWARGS)):
             # Update progress bar
-            pbar.set_description(f'Creating ShowSummary for "'
+            pbar.set_description(f'Creating Summary for "'
                                  f'{show_archive.series_info.short_name}"')
 
             show_archive.create_summary()
@@ -402,45 +400,33 @@ class Manager:
             self.__run()
 
 
-    @staticmethod
-    def remake_cards(rating_keys: list[int]) -> None:
+    def remake_cards(self, rating_keys: list[int]) -> None:
         """
         Remake the title cards associated with the given list of rating keys.
         These keys are used to identify their corresponding episodes within
         Plex.
         
-        :param      rating_keys:    List of rating keys corresponding to
-                                    Episodes to update the cards of.
+        Args:
+            rating_keys: List of Plex rating keys corresponding to Episodes to
+                update the cards of.
         """
         
-        # Get the global preferences, exit if Plex is not enabled
-        preference_parser = global_objects.pp
-        if not preference_parser.use_plex:
+        # Exit if Plex is not enabled
+        if not self.preferences.use_plex:
             log.error(f'Cannot remake card if Plex is not enabled')
             return None
 
-        # Construct PlexInterface
-        plex_interface = PlexInterface(
-            url=preference_parser.plex_url,
-            x_plex_token=preference_parser.plex_token,
-        )
-
-        # If TMDb is globally enabled, construct that interface
-        tmdb_interface = None
-        if preference_parser.use_tmdb:
-            tmdb_interface = TMDbInterface(preference_parser.tmdb_api_key)
-
-        # Get details for each rating key, removing 
+        # Get details for each rating key from Plex
         entry_list = []
         for key in rating_keys:
-            if (details := plex_interface.get_episode_details(key)) is None:
+            if (details := self.plex_interface.get_episode_details(key)) is None:
                 log.error(f'Cannot remake card, episode not found')
             else:
                 entry_list.append(details)
 
         # Go through every series in all series YAML files
         found = set()
-        for show in preference_parser.iterate_series_files():
+        for show in self.preferences.iterate_series_files():
             # If no more entries, exit
             if len(entry_list) == 0:
                 break
@@ -457,14 +443,8 @@ class Manager:
                 if (show.valid
                     and show.library_name == library_name
                     and full_match_name == series_info.full_match_name):
-                    log.info(f'Remaking "{series_info}" {episode_info} within '
-                             f'library "{library_name}"')
-                    # Read this show's source
-                    show.read_source()
-
-                    # Remake card
-                    show.remake_card(episode_info,plex_interface,tmdb_interface)
-                    found.add(index)
+                    self.shows = [show]
+                    self.__run(serial=True)
 
         # Warn for all entries not found
         for index, (series_info, episode_info, library_name) \
@@ -539,4 +519,4 @@ class Manager:
         with file.open('w', encoding='utf-8') as file_handle:
             dump(missing, file_handle, allow_unicode=True, width=160)
 
-        log.info(f'Wrote missing assets to "{file.name}"')
+        log.info(f'Wrote missing assets to "{file.resolve()}"')

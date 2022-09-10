@@ -10,11 +10,11 @@ try:
     from modules.Debug import log, LOG_FILE
     from modules.DataFileInterface import DataFileInterface
     from modules.EpisodeInfo import EpisodeInfo
+    from modules.ImageMaker import ImageMaker
     from modules.PlexInterface import PlexInterface
     from modules.PreferenceParser import PreferenceParser
     from modules.global_objects import set_preference_parser
     from modules.SeriesInfo import SeriesInfo
-    from modules.ShowSummary import ShowSummary
     from modules.SonarrInterface import SonarrInterface
     from modules.TMDbInterface import TMDbInterface
 except ImportError:
@@ -26,10 +26,6 @@ ENV_PREFERENCE_FILE = 'TCM_PREFERENCES'
 
 # Default values
 DEFAULT_PREFERENCE_FILE = Path(__file__).parent / 'preferences.yml'
-
-# Old commands that have moved to mini_maker to warn user about
-OLD_COMMANDS = ('--title-card', '--genre-card', '--show-summary',
-                '--season-poster')
 
 # Create ArgumentParser object 
 parser = ArgumentParser(description='Manual fixes for the TitleCardMaker')
@@ -79,6 +75,13 @@ plex_group.add_argument(
     metavar=('NAME', 'YEAR'),
     help='Override/set the name of the series imported with --import-archive')
 plex_group.add_argument(
+    '--import-extension', '--import-ext',
+    type=str,
+    choices=ImageMaker.VALID_IMAGE_EXTENSIONS,
+    default='.jpg',
+    metavar='.EXT',
+    help='Extension of images to look for alongside --import-cards')
+plex_group.add_argument(
     '--forget-cards', '--forget-loaded-cards',
     type=str,
     nargs=3,
@@ -86,14 +89,12 @@ plex_group.add_argument(
     metavar=('PLEX_LIBRARY', 'NAME', 'YEAR'),
     help='Remove records of the loaded cards for the given series/library')
 
-
 # Argument group for Sonarr
 sonarr_group = parser.add_argument_group('Sonarr')
 sonarr_group.add_argument(
     '--sonarr-list-ids',
     action='store_true',
     help="List all the ID's for all shows within Sonarr")
-
 
 # Argument group for TMDb
 tmdb_group = parser.add_argument_group(
@@ -127,8 +128,6 @@ tmdb_group.add_argument(
 
 # Parse given arguments
 args, unknown = parser.parse_known_args()
-if any(old_arg in unknown for old_arg in OLD_COMMANDS):
-    log.warning(f'Manual card creation has moved to "mini_maker.py"')
 
 # Parse preference file for options that might need it
 pp = PreferenceParser(args.preferences)
@@ -180,7 +179,7 @@ if hasattr(args, 'import_cards') and pp.use_plex:
         spoil_type: str
         
     # Create PlexInterface
-    plex_interface = PlexInterface(pp.plex_url, pp.plex_token)
+    plex_interface = PlexInterface(**pp.plex_interface_kwargs)
 
     # Get series/name + year from archive directory if unspecified
     archive = Path(args.import_cards[0])
@@ -195,7 +194,8 @@ if hasattr(args, 'import_cards') and pp.use_plex:
             exit(1)
             
     # Get all images from import archive
-    if len(all_images := list(archive.glob('**/*.jpg'))) == 0:
+    ext = args.import_extension
+    if len(all_images := list(archive.glob(f'**/*{ext}'))) == 0:
         log.warning(f'No images to import')
         exit(1)
     
@@ -222,14 +222,14 @@ if hasattr(args, 'import_cards') and pp.use_plex:
 if hasattr(args, 'forget_cards') and pp.use_plex:
     # Create PlexInterface and remove records for indicated series+library
     series_info = SeriesInfo(args.forget_cards[1], args.forget_cards[2])
-    PlexInterface(pp.plex_url, pp.plex_token).remove_records(
+    PlexInterface(**pp.plex_interface_kwargs).remove_records(
         args.forget_cards[0], series_info,
     )
 
 
 # Execute Sonarr related options
 if args.sonarr_list_ids and pp.use_sonarr:
-    SonarrInterface(pp.sonarr_url, pp.sonarr_api_key).list_all_series_id()
+    SonarrInterface(**pp.sonarr_interface_kwargs).list_all_series_id()
 
 # Execute TMDB related options
 if hasattr(args, 'unblacklist'):
@@ -261,7 +261,7 @@ if hasattr(args, 'tmdb_download_images') and pp.use_tmdb:
 
 if hasattr(args, 'add_translation') and pp.use_tmdb:
     dfi = DataFileInterface(Path(args.add_translation[2]))
-    tmdbi = TMDbInterface(pp.tmdb_api_key)
+    tmdbi = TMDbInterface(**pp.tmdb_interface_kwargs)
 
     for entry in dfi.read():
         if args.add_translation[4] in entry:

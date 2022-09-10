@@ -53,9 +53,11 @@ class EpisodeInfo:
         after this one. For example. if this object is S01E05, adding 5 would 
         return '1-10'.
         
-        :param      count:  The number of episodes to increment the index by.
+        Args:
+            count: The number of episodes to increment the index by.
         
-        :returns:   The key for count many episodes after this one.
+        Returns:
+            The key for count many episodes after this one.
         """
 
         if not isinstance(count, int):
@@ -69,10 +71,12 @@ class EpisodeInfo:
         Returns whether the given EpisodeInfo object corresponds to the same
         entry (has the same season and episode index).
 
-        :param      other_info: EpisodeInfo object to compare.
+        Args:
+            other_info: EpisodeInfo object to compare.
 
-        :returns:   True if the season and episode number of the two objects
-                    match, False otherwise.
+        Returns:
+            True if the season and episode number of the two objects match, 
+            False otherwise.
         """
 
         # Verify the comparison is another EpisodeInfo object
@@ -91,10 +95,12 @@ class EpisodeInfo:
         """
         Determine whether this object has defined the given ID.
         
-        :param      id_:    ID being checked
+        Args:
+            id_: ID being checked
         
-        :returns:   True if the given ID is defined (i.e. not None) for this
-                    object. False otherwise.
+        Returns:
+            True if the given ID is defined (i.e. not None) for this object.
+            False otherwise.
         """
 
         return getattr(self, id_) is not None
@@ -104,10 +110,12 @@ class EpisodeInfo:
         """
         Determine whether this object has defined all the given ID's.
         
-        :param      ids:    Any ID's being checked for.
+        Args:
+            ids: Any ID's being checked for.
         
-        :returns:   True if all the given ID's are defined (i.e. not None) for
-                    this object. False otherwise.
+        Returns:
+            True if all the given ID's are defined (i.e. not None) for this
+            object. False otherwise.
         """
 
         return all(getattr(self, id_) is not None for id_ in ids)
@@ -148,7 +156,8 @@ class EpisodeInfo:
         """
         Sets the TVDb ID for this object.
         
-        :param      tmdb_id:    The TVDb ID to set.
+        Args:
+            tmdb_id: The TVDb ID to set.
         """
 
         if self.tvdb_id is None and tvdb_id is not None:
@@ -159,7 +168,8 @@ class EpisodeInfo:
         """
         Sets the IMDb ID for this object.
         
-        :param      imdb_id:    The IMDb ID to set.
+        Args:
+            imdb_id: The IMDb ID to set.
         """
 
         if self.imdb_id is None and imdb_id is not None:
@@ -170,7 +180,8 @@ class EpisodeInfo:
         """
         Sets the TMDb ID for this object.
         
-        :param      tmdb_id:    The TMDb ID to set.
+        Args:
+            tmdb_id: The TMDb ID to set.
         """
 
         if self.tmdb_id is None and tmdb_id is not None:
@@ -184,12 +195,10 @@ class EpisodeInfo:
         Update the queried attributes of this object to reflect the given
         arguments. Only updates from False -> True.
         
-        :param      queried_plex:       Whether this EpisodeInfo has been
-                                        queried on Plex.
-        :param      queried_sonarr:     Whether this EpisodeInfo has been
-                                        queried on Sonarr.
-        :param      queried_tmdb:       Whether this EpisodeInfo has been
-                                        queried on TMDb.
+        Args:
+            queried_plex: Whether this EpisodeInfo has been queried on Plex.
+            queried_sonarr: Whether this EpisodeInfo has been queried on Sonarr.
+            queried_tmdb: Whether this EpisodeInfo has been queried on TMDb.
         """
 
         if not self.queried_plex and queried_plex:
@@ -198,5 +207,3 @@ class EpisodeInfo:
             self.queried_sonarr = queried_sonarr
         if not self.queried_tmdb and queried_tmdb:
             self.queried_tmdb = queried_tmdb
-
-        

@@ -1,18 +1,21 @@
-from argparse import ArgumentParser, ArgumentTypeError, SUPPRESS
-from pathlib import Path
+from argparse import ArgumentParser, SUPPRESS
 from dataclasses import dataclass
 from os import environ
+from pathlib import Path
+from re import match, IGNORECASE
 
 try:
     from modules.CollectionPosterMaker import CollectionPosterMaker
     from modules.Debug import log
     from modules.GenreMaker import GenreMaker
+    from modules.MoviePosterMaker import MoviePosterMaker
     from modules.PreferenceParser import PreferenceParser
     from modules.global_objects import set_preference_parser
     from modules.RemoteCardType import RemoteCardType
     from modules.RemoteFile import RemoteFile
     from modules.SeasonPoster import SeasonPoster
-    from modules.ShowSummary import ShowSummary
+    from modules.StandardSummary import StandardSummary
+    from modules.StylizedSummary import StylizedSummary
     from modules.TitleCard import TitleCard
 except ImportError:
     print(f'Required Python packages are missing - execute "pipenv install"')
@@ -148,7 +151,7 @@ collection_group.add_argument(
     type=Path,
     default=CollectionPosterMaker.FONT,
     metavar='FONT',
-    help='Custom font for the collection text of the specified poster')
+    help='Custom font for the collection text of the collection poster')
 collection_group.add_argument(
     '--collection-font-color',
     type=str,
@@ -165,6 +168,49 @@ collection_group.add_argument(
     '--omit-collection',
     action='store_true',
     help='Omit the "COLLECTION" text from this collection poster')
+
+# Argument group for movie posters
+movie_poster_group = parser.add_argument_group(
+    'Movie Posters',
+    'Manual movie poster creation')
+movie_poster_group.add_argument(
+    '--movie-poster',
+    type=Path,
+    nargs=2,
+    default=SUPPRESS,
+    metavar=('SOURCE', 'DESTINATION'),
+    help='Create a movie poster with the given files')
+movie_poster_group.add_argument(
+    '--movie-title',
+    type=str,
+    nargs='+',
+    default='',
+    metavar=('TITLE_LINE'),
+    help='Movie title for the movie poster')
+movie_poster_group.add_argument(
+    '--movie-subtitle',
+    type=str,
+    default='',
+    metavar='SUBTITLE',
+    help='Subtitle for the movie poster')
+movie_poster_group.add_argument(
+    '--movie-font',
+    type=Path,
+    default=MoviePosterMaker.FONT,
+    metavar='FONT',
+    help='Custom font for the title text of the movie poster')
+movie_poster_group.add_argument(
+    '--movie-font-color',
+    type=str,
+    default=MoviePosterMaker.FONT_COLOR,
+    metavar='COLOR',
+    help='A custom font color for the movie poster')
+movie_poster_group.add_argument(
+    '--movie-font-size',
+    type=str,
+    default='100%',
+    metavar='SCALE%',
+    help='A font scale (as percentage) for the movie poster')
 
 # Argument group for genre cards
 genre_group = parser.add_argument_group(
@@ -199,7 +245,7 @@ show_summary_group.add_argument(
 show_summary_group.add_argument(
     '--background',
     type=str,
-    default=ShowSummary.BACKGROUND_COLOR,
+    default='default',
     metavar='COLOR_OR_IMAGE',
     help='Specify background color or image for the created show summary')
 show_summary_group.add_argument(
@@ -208,7 +254,13 @@ show_summary_group.add_argument(
     default=None,
     metavar='CREATOR',
     help='Specify a custom username for the "Created by .." text on the created'
-         ' show sumamry')
+         ' show summary')
+show_summary_group.add_argument(
+    '--summary-type',
+    type=str,
+    default='default',
+    metavar='SUMMARY_TYPE',
+    help='Summary type to create - must be "standard" or "sylized"')
 
 # Argument group for season posters
 season_poster_group = parser.add_argument_group(
@@ -272,7 +324,7 @@ set_preference_parser(pp)
 # Execute title card related options
 if hasattr(args, 'title_card'):
     # Attempt to get local card type, if not, try RemoteCardType
-    RemoteFile.reset_loaded_database()
+    RemoteFile.reset_loaded_database(pp.database_directory)
     if args.card_type in TitleCard.CARD_TYPES.keys():
         CardClass = TitleCard.CARD_TYPES[args.card_type]
     elif (remote_card := RemoteCardType(args.card_type)).valid:
@@ -307,7 +359,7 @@ if hasattr(args, 'title_card'):
         **arbitrary_data,
     ).create()
 
-# Create Colletion Poster
+# Create Collection Poster
 if hasattr(args, 'collection_poster'):
     CollectionPosterMaker(
         source=args.collection_poster[0],
@@ -318,6 +370,19 @@ if hasattr(args, 'collection_poster'):
         font_size=float(args.collection_font_size[:-1])/100.0,
         omit_collection=args.omit_collection,
         borderless=args.borderless,
+        omit_gradient=args.no_gradient,
+    ).create()
+
+# Create Movie Poster
+if hasattr(args, 'movie_poster'):
+    MoviePosterMaker(
+        source=args.movie_poster[0],
+        output=args.movie_poster[1],
+        title='\n'.join(args.movie_title),
+        subtitle=args.movie_subtitle,
+        font=args.movie_font,
+        font_color=args.movie_font_color,
+        font_size=float(args.movie_font_size[:-1])/100.0,
         omit_gradient=args.no_gradient,
     ).create()
 
@@ -358,15 +423,33 @@ if hasattr(args, 'show_summary'):
 
     # Get all images in folder
     all_images = args.show_summary[0].glob('**/*.jpg')
-    episode = 1
-    episodes = {f'1-{(episode := episode+1)}': Episode(f) for f in all_images}
+    season, episode = 1, 1
+    episodes = {}
+    for file in all_images:
+        # Attempt to get index from filename, if not just increment last number
+        if (groups := match(r'.*s(\d+).*e(\d+)', file.name, IGNORECASE)):
+            season, episode = map(int, groups.groups())
+            episodes[f'{season}-{episode}'] = Episode(file)
+        else:
+            episodes[f'{season}-{episode}'] = Episode(file)
+            episode += 1
+    
+    # Create pseudo "show" of these episodes
     show = Show(args.show_summary[1], args.show_summary[0], episodes)
 
     # Override minimum episode count
     pp.summary_minimum_episode_count = 0
 
-    # Create ShowSummary
-    summary = ShowSummary(show, args.background, args.created_by)
+    # Create Summary
+    if args.summary_type.lower() == 'default':
+        summary = pp.summary_class(show, args.background, args.created_by)
+    elif args.summary_type.lower() == 'standard':
+        summary = StandardSummary(show, args.background, args.created_by)
+    elif args.summary_type.lower() == 'stylized':
+        summary = StylizedSummary(show, args.background, args.created_by)
+    else:
+        log.warning(f'Invalid summary style - using default')
+        summary = pp.summary_class(show, args.background, args.created_by)
     summary.create()
 
     # Log success/failure
@@ -389,5 +472,3 @@ if hasattr(args, 'season_poster'):
         top_placement=args.top_placement,
         omit_gradient=args.no_gradient,
     ).create()
-
-    

@@ -115,7 +115,8 @@ def apply_no_color_formatter(log_object: 'Logger') -> None:
     Modify the given logger object, removing the colored Handler, adding an
     instance of the colorless one.
     
-    :param      log_object: The log object to modify.
+    Args:
+        log_object: The log object to modify.
     """
 
     # Create colorless Formatter

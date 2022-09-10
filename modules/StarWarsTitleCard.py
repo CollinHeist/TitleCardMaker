@@ -3,10 +3,10 @@ from re import match
 
 from num2words import num2words
 
-from modules.CardType import CardType
+from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 
-class StarWarsTitleCard(CardType):
+class StarWarsTitleCard(BaseCardType):
     """
     This class describes a type of ImageMaker that produces title cards in the
     theme of Star Wars cards as designed by reddit user /u/Olivier_286.
@@ -43,8 +43,7 @@ class StarWarsTitleCard(CardType):
     __STAR_GRADIENT_IMAGE = REF_DIRECTORY / 'star_gradient.png'
 
     """Paths to intermediate files that are deleted after the card is created"""
-    __SOURCE_WITH_STARS = CardType.TEMP_DIR / 'source_gradient.png'
-
+    __SOURCE_WITH_STARS = BaseCardType.TEMP_DIR / 'source_gradient.png'
 
     __slots__ = ('source_file', 'output_file', 'title', 'hide_episode_text', 
                  'episode_prefix', 'episode_text', 'blur')
@@ -55,13 +54,14 @@ class StarWarsTitleCard(CardType):
         """
         Initialize the CardType object.
         
-        :param      source:         Source image for this card.
-        :param      output_file:    Output filepath for this card.
-        :param      title:          The title for this card.
-        :param      episode_text:   The episode text for this card.
-        :param      blur:           Whether to blur the source image.
-        :param      kwargs:         Unused arguments to permit generalized
-                                    function calls for any CardType.
+        Args:
+            source: Source image for this card.
+            output_file: Output filepath for this card.
+            title: The title for this card.
+            episode_text: The episode text for this card.
+            blur: Whether to blur the source image.
+            kwargs: Unused arguments to permit generalized function calls for
+                any CardType.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface
@@ -102,11 +102,13 @@ class StarWarsTitleCard(CardType):
         >>> self.__modify_episode_text('PART 14')
         'FOURTEEN'
         
-        :param      text:   The episode text to modify.
+        Args:
+            text: The episode text to modify.
         
-        :returns:   The modified episode text with preface text removed, numbers
-                    replaced with words, and converted to uppercase. If numbers
-                    cannot be replaced, that step is skipped.
+        Returns:
+            The modified episode text with preface text removed, numbers
+            replaced with words, and converted to uppercase. If numbers cannot
+            be replaced, that step is skipped.
         """
 
         # Convert to uppercase, remove space padding
@@ -135,9 +137,11 @@ class StarWarsTitleCard(CardType):
         """
         Add the static star gradient to the given source image.
         
-        :param      source: The source image to modify.
+        Args:
+            source: The source image to modify.
         
-        :returns:   Path to the created image.
+        Returns:
+            Path to the created image.
         """
 
         command = ' '.join([
@@ -162,7 +166,8 @@ class StarWarsTitleCard(CardType):
         """
         ImageMagick commands to add the episode title text to an image.
         
-        :returns:   List of ImageMagick commands.
+        Returns:
+            List of ImageMagick commands.
         """
 
         return [
@@ -181,7 +186,8 @@ class StarWarsTitleCard(CardType):
         ImageMagick commands to add the episode prefix text to an image. This is
         either "EPISODE" or "CHAPTER".
         
-        :returns:   List of ImageMagick commands.
+        Returns:
+            List of ImageMagick commands.
         """
 
         return [
@@ -198,7 +204,8 @@ class StarWarsTitleCard(CardType):
         """
         ImageMagick commands to add the episode text to an image.
         
-        :returns:   List of ImageMagick commands.
+        Returns:
+            List of ImageMagick commands.
         """
 
         # Get variable horizontal offset based of episode prefix
@@ -218,10 +225,11 @@ class StarWarsTitleCard(CardType):
         """
         Add the title to the given image.
         
-        :param      gradient_source:    Source image with starry gradient
-                                        overlaid.
+        Args:
+            gradient_source: Source image with starry gradient overlaid.
         
-        :returns:   Path to the created image (the output file).
+        Returns:
+            List of ImageMagick commands.
         """
 
         command = ' '.join([
@@ -239,10 +247,11 @@ class StarWarsTitleCard(CardType):
         """
         Add the title, "EPISODE" prefix, and episode text to the given image.
         
-        :param      gradient_source:    Source image with starry gradient
-                                        overlaid.
+        Args:
+            gradient_source: Source image with starry gradient overlaid.
         
-        :returns:   Path to the created image (the output file).
+        Returns:
+            List of ImageMagick commands.
         """
 
         command = ' '.join([
@@ -264,27 +273,29 @@ class StarWarsTitleCard(CardType):
         Determines whether the given arguments represent a custom font for this
         card. This CardType does not use custom fonts, so this is always False.
         
-        :param      font:   The Font being evaluated.
+        Args:
+            font: The Font being evaluated.
         
-        :returns:   False, as fonts are not customizable with this card.
+        Returns:
+            False, as fonts are not customizable with this card.
         """
 
         return False
 
 
     @staticmethod
-    def is_custom_season_titles(episode_text_format: str,
-                                *args, **kwargs) -> bool:
+    def is_custom_season_titles(custom_episode_map: bool, 
+                                episode_text_format: str) -> bool:
         """
         Determines whether the given attributes constitute custom or generic
         season titles.
         
-        :param      episode_text_format:    The episode text format in use.
-        :param      args and kwargs:        Generic arguments to permit 
-                                            generalized function calls for any
-                                            CardType.
+        Args:
+            custom_episode_map: Whether the EpisodeMap was customized.
+            episode_text_format: The episode text format in use.
         
-        :returns:   True if custom season titles are indicated, False otherwise.
+        Returns:
+            True if custom season titles are indicated, False otherwise.
         """
 
         generic_formats = (
@@ -313,5 +324,3 @@ class StarWarsTitleCard(CardType):
 
         # Delete all intermediate images
         self.image_magick.delete_intermediate_images(star_image)
-
-        

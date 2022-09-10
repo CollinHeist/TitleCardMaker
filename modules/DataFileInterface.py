@@ -23,7 +23,8 @@ class DataFileInterface:
         This also creates the parent directories for the data file if they do
         not exist.
 
-        :param      data_file:  Path to the data file to interface with.
+        Args:
+            data_file: Path to the data file to interface with.
         """
         
         # Store the SeriesInfo and data file
@@ -42,12 +43,13 @@ class DataFileInterface:
                 f'file={self.file.resolve()}>')
 
 
-    def __read_data(self) -> dict:
+    def __read_data(self) -> dict[str: dict[float: dict]]:
         """
         Read this interface's data from file. Returns an empty dictionary if the
         file does not exist, is misformatted, or if 'data' key is missing.
         
-        :returns:   Contents under 'data' key of this interface's file.
+        Returns:
+            Contents under 'data' key of this interface's file.
         """
 
         # If the file DNE, return empty dictionary
@@ -75,7 +77,8 @@ class DataFileInterface:
         Write the given YAML data to this interface's file. This puts all data
         under the 'data' key.
 
-        :param      yaml:   YAML dictionary to write to file.
+        Args:
+            yaml: YAML dictionary to write to file.
         """
 
         # Write updated data with this entry added
@@ -87,10 +90,10 @@ class DataFileInterface:
         """
         Read the data file for this object, yielding each valid row.
         
-        :returns:   Yields a dictionary for each entry in this datafile. The
-                    dictionary has a key 'episode_info' with an EpisodeInfo
-                    object, and arbitrary keys for all other data found within
-                    the entry's YAML.
+        Returns:
+            Yields a dictionary for each entry in this datafile. The dictionary
+            has a key 'episode_info' with an EpisodeInfo object, and arbitrary
+            keys for all other data found within the entry's YAML.
         """
 
         # Read yaml, returns {} if empty/DNE
@@ -149,8 +152,9 @@ class DataFileInterface:
         """
         Add any generic data to the YAML entry associated with this EpisodeInfo.
         
-        :param      episode_info:   Episode Info to add to YAML.
-        :param      new_data:       Generic new data to write.
+        Args:
+            episode_info: Episode Info to add to YAML.
+            new_data: Generic new data to write.
         """
 
         yaml = self.__read_data()
@@ -176,7 +180,8 @@ class DataFileInterface:
         that index does not already exist. This only reads and writes from this 
         interface's file once.
 
-        :param      new_episodes:   List of EpisodeInfo objects to write.
+        Args:
+            new_episodes: List of EpisodeInfo objects to write.
         """
 
         # If no new episodes are being added, exit
@@ -221,4 +226,3 @@ class DataFileInterface:
 
         # Write updated yaml
         self.__write_data(yaml)
-

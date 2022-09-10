@@ -1,10 +1,10 @@
 from pathlib import Path
 from re import match
 
-from modules.CardType import CardType
+from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 
-class PosterTitleCard(CardType):
+class PosterTitleCard(BaseCardType):
     """
     This class describes a type of CardType that produces title cards in the
     style of the Gundam series of cards produced by Reddit user
@@ -46,7 +46,6 @@ class PosterTitleCard(CardType):
     """Path to the reference star image to overlay on all source images"""
     __GRADIENT_OVERLAY = REF_DIRECTORY / 'stars-overlay.png'
 
-
     __slots__ = ('source_file', 'output_file', 'logo', 'title', 'episode_text',
                  'blur')
 
@@ -57,18 +56,19 @@ class PosterTitleCard(CardType):
         """
         Initialize the CardType object.
         
-        :param      source:         Source image for this card.
-        :param      output_file:    Output filepath for this card.
-        :param      title:          The title for this card.
-        :param      episode_text:   The episode text for this card.
-        :param      season_number:  Season number of the episode associated with
-                                    this card.
-        :param      episode_number: Episode number of the episode associated
-                                    with this card.
-        :param      blur:           Whether to blur the source image.
-        :param      logo:           Filepath (or file format) to the logo file.
-        :param      kwargs:         Unused arguments to permit generalized
-                                    function calls for any CardType.
+        Args:
+            source: Source image for this card.
+            output_file: Output filepath for this card.
+            title: The title for this card.
+            episode_text: The episode text for this card.
+            season_number: Season number of the episode associated with this
+                card.
+            episode_number: Episode number of the episode associated with this
+                card.
+            blur: Whether to blur the source image.
+            logo: Filepath (or file format) to the logo file.
+            kwargs: Unused arguments to permit generalized function calls for
+                any CardType.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface
@@ -108,9 +108,11 @@ class PosterTitleCard(CardType):
         Determines whether the given arguments represent a custom font for this
         card. This CardType does not use custom fonts, so this is always False.
         
-        :param      font:   The Font being evaluated.
+        Args:
+            font: The Font being evaluated.
         
-        :returns:   False, as fonts are not customizable with this card.
+        returns:
+            False, as fonts are not customizable with this card.
         """
 
         return False
@@ -123,12 +125,13 @@ class PosterTitleCard(CardType):
         Determines whether the given attributes constitute custom or generic
         season titles.
         
-        :param      episode_text_format:    The episode text format in use.
-        :param      args and kwargs:        Generic arguments to permit 
-                                            generalized function calls for any
-                                            CardType.
+        Args:
+            episode_text_format: The episode text format in use.
+            args and kwargs: Generic arguments to permit  generalized function
+                calls for any CardType.
         
-        :returns:   True if custom season titles are indicated, False otherwise.
+        Returns:
+            True if custom season titles are indicated, False otherwise.
         """
 
         return episode_text_format != PosterTitleCard.EPISODE_TEXT_FORMAT
@@ -182,5 +185,3 @@ class PosterTitleCard(CardType):
         ])
 
         self.image_magick.run(command)
-
-        

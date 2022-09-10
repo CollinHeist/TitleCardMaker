@@ -65,7 +65,8 @@ class SeriesInfo:
         """
         Update all names for this series.
         
-        :param      name:  The new name of the series info.
+        Args:
+            name: The new name of the series info.
         """
 
         # If the given name already has the year, remove it
@@ -97,10 +98,12 @@ class SeriesInfo:
         """
         Determine whether this object has defined the given ID.
         
-        :param      id_:    ID being checked
+        Args:
+            id_: ID being checked
         
-        :returns:   True if the given ID is defined (i.e. not None) for this
-                    object. False otherwise.
+        Returns:
+            True if the given ID is defined (i.e. not None) for this object.
+            False otherwise.
         """
 
         return getattr(self, id_) is not None
@@ -110,10 +113,12 @@ class SeriesInfo:
         """
         Determine whether this object has defined all the given ID's.
         
-        :param      ids:    Any ID's being checked for.
+        Args:
+            ids: Any ID's being checked for.
         
-        :returns:   True if all the given ID's are defined (i.e. not None) for
-                    this object. False otherwise.
+        Returns:
+            True if all the given ID's are defined (i.e. not None) for this
+            object. False otherwise.
         """
 
         return all(getattr(self, id_) is not None for id_ in ids)
@@ -123,7 +128,8 @@ class SeriesInfo:
         """
         Set the Sonarr ID for this series.
         
-        :param      sonarr_id:  The Sonarr ID used for this series.
+        Args:
+            sonarr_id: The Sonarr ID used for this series.
         """
         
         if self.sonarr_id is None and sonarr_id is not None:
@@ -134,7 +140,8 @@ class SeriesInfo:
         """
         Set the TVDb ID for this series.
         
-        :param      tvdb_id:  The TVDb ID for this series.
+        Args:
+            tvdb_id: The TVDb ID for this series.
         """
 
         if self.tvdb_id is None and tvdb_id is not None:
@@ -145,7 +152,8 @@ class SeriesInfo:
         """
         Set the IMDb ID for this series.
         
-        :param      imdb_id:    The IMDb ID for this series.
+        Args:
+            imdb_id: The IMDb ID for this series.
         """
         
         if self.imdb_id is None and imdb_id is not None:
@@ -156,7 +164,8 @@ class SeriesInfo:
         """
         Set the TMDb ID for this series.
         
-        :param      tmdb_id:    The TMDb ID for this series.
+        Args:
+            tmdb_id: The TMDb ID for this series.
         """
         
         if self.tmdb_id is None and tmdb_id is not None:
@@ -168,9 +177,11 @@ class SeriesInfo:
         """
         Remove all non A-Z characters from the given title.
         
-        :param      text:   The title to strip of special characters.
+        Args:
+            text: The title to strip of special characters.
         
-        :returns:   The input `text` with all non A-Z characters removed.
+        Returns:
+            The input `text` with all non A-Z characters removed.
         """
 
         return ''.join(filter(str.isalnum, text)).lower()
@@ -180,10 +191,11 @@ class SeriesInfo:
         """
         Get whether any of the given names match this Series.
         
-        :param      names:  The names to check
+        Args:
+            names: The names to check
         
-        :returns:   True if any of the given names match this series, False
-                    otherwise.
+        Returns:
+            True if any of the given names match this series, False otherwise.
         """
 
         matching_names = map(self.get_matching_title, names)

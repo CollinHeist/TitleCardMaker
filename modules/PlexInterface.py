@@ -9,31 +9,30 @@ from tqdm import tqdm
 from modules.Debug import log, TQDM_KWARGS
 import modules.global_objects as global_objects
 from modules.EpisodeInfo import EpisodeInfo
+from modules.ImageMaker import ImageMaker
 from modules.SeriesInfo import SeriesInfo
 from modules.WebInterface import WebInterface
 
 class PlexInterface:
     """This class describes an interface to Plex."""
 
-    """Directory for all temporary objects"""
-    TEMP_DIR = Path(__file__).parent / '.objects'
-
     """Filepath to the database of each episode's loaded card characteristics"""
-    LOADED_DB = TEMP_DIR / 'loaded.json'
+    LOADED_DB = 'loaded.json'
 
     """Filepath to the database of the loaded season poster characteristics"""
-    LOADED_POSTERS_DB = TEMP_DIR / 'loaded_posters.json'
+    LOADED_POSTERS_DB = 'loaded_posters.json'
 
     """How many failed episodes result in skipping a series"""
     SKIP_SERIES_THRESHOLD = 3
 
 
-    def __init__(self, url: str, x_plex_token: str=None,
-                 verify_ssl: bool=True) -> None:
+    def __init__(self, database_directory: Path, url: str,
+                 x_plex_token: str=None, verify_ssl: bool=True) -> None:
         """
         Constructs a new instance of a Plex Interface.
         
         Args:
+            database_directory: Base Path to read/write any databases from.
             url: URL of plex server.
             x_plex_token: X-Plex Token for sending API requests to Plex.
             verify_ssl: Whether to verify SSL requests when querying Plex.
@@ -53,10 +52,13 @@ class PlexInterface:
         except Unauthorized:
             log.critical(f'Invalid Plex Token "{x_plex_token}"')
             exit(1)
+        except Exception as e:
+            log.critical(f'Cannot connect to Plex - returned error: "{e}"')
+            exit(1)
         
         # Create/read loaded card database
-        self.__db = TinyDB(self.LOADED_DB)
-        self.__posters = TinyDB(self.LOADED_POSTERS_DB)
+        self.__db = TinyDB(database_directory / self.LOADED_DB)
+        self.__posters = TinyDB(database_directory / self.LOADED_POSTERS_DB)
 
         # List of "not found" warned series
         self.__warned = set()
@@ -152,13 +154,14 @@ class PlexInterface:
         created cards, or whose card's filesizes matches that of the already
         uploaded card.
             
-        :param      library_name:   Name of the library containing this series.
-        :param      series_info:    SeriesInfo object for these episodes.
-        :param      episode_map:    Dictionary of Episode objects to filter.
+        Args:
+            library_name: Name of the library containing this series.
+            series_info: SeriesInfo object for these episodes.
+            episode_map: Dictionary of Episode objects to filter.
         
-        :returns:   Filtered episode map. Episodes without existing cards, or
-                    whose existing card filesizes' match those already loaded
-                    are removed.
+        Returns:
+            Filtered episode map. Episodes without existing cards, or whose
+            existing card filesizes' match those already loaded are removed.
         """
 
         # Get all loaded details for this series
@@ -196,9 +199,11 @@ class PlexInterface:
         """
         Get the Library object under the given name.
         
-        :param      library_name:   The name of the library to get.
+        Args:
+            library_name: The name of the library to get.
 
-        :returns:   The Library object if found, None otherwise.
+        Returns:
+            The Library object if found, None otherwise.
         """
 
         try:
@@ -217,9 +222,11 @@ class PlexInterface:
         given SeriesInfo. This tries to match by TVDb ID, TMDb ID, name, and
         finally full name.
         
-        :param      library:    The Library object to search for within Plex.
+        Args:
+            library: The Library object to search for within Plex.
         
-        :returns:   The Series associated with this SeriesInfo object.
+        Returns:
+            The Series associated with this SeriesInfo object.
         """
 
         # Try by IMDb ID
@@ -444,7 +451,7 @@ class PlexInterface:
             watched_style: Desired card style of watched episodes.
             unwatched_style: Desired card style of unwatched episodes.
         """
-
+        
         # If no episodes, or unwatched setting is ignored, exit
         if len(episode_map) == 0:
             return None
@@ -471,21 +478,19 @@ class PlexInterface:
             # Set Episode watched/spoil statuses
             episode.update_statuses(plex_episode.isWatched, watched_style,
                                     unwatched_style)
-
+            
             # Get loaded card characteristics for this episode
             details = self.__get_loaded_episode(loaded_series, episode)
             loaded = (details is not None)
             spoiler_status = details['spoiler'] if loaded else None
-
+            
             # Delete and reset card if current spoiler type doesnt match
             delete_and_reset = ((episode.spoil_type != spoiler_status)
-                                and spoiler_status)
-
+                                and bool(spoiler_status))
+            
             # Delete card, reset size in loaded map to force reload
             if delete_and_reset and loaded:
-                episode.delete_card()
-                log.debug(f'Deleted card for "{series_info}" {episode}, '
-                          f'updating spoil status')
+                episode.delete_card(reason='updating style')
                 self.__db.update(
                     {'filesize': 0},
                     self.__get_condition(library_name, series_info, episode)
@@ -592,6 +597,41 @@ class PlexInterface:
         plex_object.uploadPoster(filepath=filepath)
 
 
+    def __compress_image(self, image: Path) -> 'Path | None':
+        """
+        Compress the given image until below the filesize limit.
+
+        Args:
+            image: Path to the image to compress.
+
+        Returns:
+            Path to the compressed image, or None if the image could not be
+            compressed.
+        """
+
+        # No compression necessary
+        if image.stat().st_size < self.preferences.plex_filesize_limit:
+            return image
+
+        # Start with a quality of 90%, decrement by 5% each time
+        quality = 95
+        small_image = image
+
+        # Compress the given image until below the filesize limit
+        while small_image.stat().st_size > self.preferences.plex_filesize_limit:
+            # Process image, exit if cannot be reduced
+            quality -= 5
+            if (small_image := ImageMaker.reduce_file_size(image,
+                                                           quality)) is None:
+                log.warning(f'Cannot reduce filesize of "{image.resolve()}" '
+                            f'below limit')
+                return None
+
+        # Compression successful, log and return intermediate image
+        log.debug(f'Compressed "{image.resolve()}" with {quality}% quality')
+        return small_image
+
+
     @catch_and_log('Error uploading title cards')
     def set_title_cards_for_series(self, library_name: str, 
                                    series_info: 'SeriesInfo',
@@ -641,32 +681,31 @@ class PlexInterface:
 
             # Update progress bar
             pbar.set_description(f'Updating {pl_episode.seasonEpisode.upper()}')
+
+            # Shrink image if necessary, skip if cannot be compressed
+            if (card := self.__compress_image(episode.destination)) is None:
+                continue
             
             # Upload card to Plex, optionally remove Overlay label
             try:
-                self.__retry_upload(pl_episode, episode.destination.resolve())
-                loaded_count += 1
-                
-                # If overlay integration is enabled, remove "Overlay" label
+                self.__retry_upload(pl_episode, card.resolve())
                 if self.preferences.integrate_with_pmm_overlays:
                     pl_episode.removeLabel(['Overlay'])
             except Exception as e:
                 error_count += 1
-                log.warning(f'Unable to upload {episode.destination.resolve()} '
-                            f'to {series_info}')
+                log.warning(f'Unable to upload {card.resolve()} to {series_info}')
+                log.debug(f'Exception[{e}]')
                 continue
+            else:
+                loaded_count += 1
             
-            # Update the loaded map with this card's size
-            size = episode.destination.stat().st_size
-            series_name = series_info.full_name
-
             # Update/add loaded map with this entry
             self.__db.upsert({
                 'library': library_name,
                 'series': series_info.full_name,
                 'season': episode.episode_info.season_number,
                 'episode': episode.episode_info.episode_number,
-                'filesize': size,
+                'filesize': episode.destination.stat().st_size,
                 'spoiler': episode.spoil_type,
             }, self.__get_condition(library_name, series_info, episode))
                 
@@ -720,12 +759,17 @@ class PlexInterface:
                 and details['filesize'] == poster.stat().st_size):
                 continue
 
+            # Shrink image if necessary
+            if (resized_poster := self.__compress_image(poster)) is None:
+                continue
+
             # Upload this poster
             try:
-                self.__retry_upload(season, poster)
-                loaded_count += 1
+                self.__retry_upload(season, resized_poster)
             except Exception:
                 continue
+            else:
+                loaded_count += 1
 
             # Update loaded database
             self.__posters.upsert({

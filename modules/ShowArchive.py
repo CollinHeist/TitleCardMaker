@@ -1,7 +1,6 @@
 from copy import copy
 
 from modules.Debug import log
-from modules.ShowSummary import ShowSummary
 import modules.global_objects as global_objects
 
 class ShowArchive:
@@ -38,7 +37,7 @@ class ShowArchive:
         'hidden-generic':  'No Season Titles, Generic Font',
     }
 
-    __slots__ = ('series_info', '__base_show', 'shows', 'summaries')
+    __slots__ = ('series_info', 'shows', 'summaries')
 
 
     def __init__(self, archive_directory: 'Path', base_show: 'Show') -> None:
@@ -46,20 +45,20 @@ class ShowArchive:
         Constructs a new instance of this class. Creates a list of all
         applicable Show objects for later us.
         
-        :param      archive_directory:  The base directory where this
-                                        show should generate its archive.
-        :param      base_show:          Base Show this Archive is based on.
+        Args:
+            archive_directory: The base directory where this show should
+                generate its archive.
+            base_show: Base Show this Archive is based on.
         """
 
         # If the base show for this object has archiving disabled, exit
         self.series_info = base_show.series_info
-        self.__base_show = base_show
 
-        # Empty lists to be populated with modified Show and ShowSummary objects
+        # Empty lists to be populated with modified Show and Summary objects
         self.shows = []
         self.summaries = []
 
-        # For each applicable sub-profile, create+modify new Show/ShowSummary
+        # For each applicable sub-profile, create+modify new Show/Summary
         card_class = base_show.card_class
         valid_profiles = base_show.profile.get_valid_profiles(
             card_class, base_show.archive_all_variations,
@@ -87,15 +86,15 @@ class ShowArchive:
             new_show = base_show._make_archive(new_media_directory)
             
             # Convert this new show's profile
-            new_show.profile.convert_profile(
-                base_show.card_class,
-                **attributes
-            )
+            new_show.profile.convert_profile(**attributes)
+            if not new_show.profile._Profile__use_custom_seasons:
+                new_show.episode_text_format =\
+                    new_show.card_class.EPISODE_TEXT_FORMAT
 
-            # Store this new Show and associated ShowSummary
+            # Store this new Show and associated Summary
             self.shows.append(new_show)
             self.summaries.append(
-                ShowSummary(
+                global_objects.pp.summary_class(
                     new_show,
                     global_objects.pp.summary_background,
                     global_objects.pp.summary_created_by,
@@ -116,10 +115,12 @@ class ShowArchive:
         version of the given function that calls that function on all Show
         objects within this Archive.
         
-        :param      show_function:  The function to wrap.
+        Args:
+            show_function: The function to wrap.
         
-        :returns:   Wrapped callable that is the indicated function called on
-                    each Show object within this Archive.
+        Returns:
+            Wrapped callable that is the indicated function called on each Show
+            object within this Archive.
         """
 
         # Define wrapper that calls given function on all Shows of this object
@@ -134,9 +135,9 @@ class ShowArchive:
 
 
     def create_summary(self) -> None:
-        """Create the ShowSummary image for each archive in this object."""
+        """Create the Summary image for each archive in this object."""
 
-        # Go through each ShowSummary object within this Archive
+        # Go through each Summary object within this Archive
         for summary in self.summaries:
             # If summary already exists, skip
             if summary.output.exists() or not summary.logo.exists():
@@ -147,5 +148,4 @@ class ShowArchive:
 
             # If the summary exists, log that
             if summary.output.exists():
-                log.debug(f'Created ImageSummary {summary.output.resolve()}')
-
+                log.debug(f'Created Summary {summary.output.resolve()}')

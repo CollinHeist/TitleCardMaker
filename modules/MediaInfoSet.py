@@ -49,16 +49,18 @@ class MediaInfoSet:
         for an existing object mapped under any of the given details; if none
         exists, a new SeriesInfo object is created with the given details.
         
-        :param      name:       The name of the series. Optional if the
-                                associated object already exists.
-        :param      year:       The year of the series. Optional if the
-                                associated object already exists.
-        :param      imdb_id:    Optional IMDb ID.
-        :param      sonarr_id:  Optional Sonarr ID.
-        :param      tmdb_id:    Optional TMDb ID.
-        :param      tvdb_id:    Optional TVDb ID.
+        Args:
+            name: The name of the series. Optional if the associated object
+                already exists.
+            year: The year of the series. Optional if the associated object
+                already exists.
+            imdb_id: Optional IMDb ID.
+            sonarr_id: Optional Sonarr ID.
+            tmdb_id: Optional TMDb ID.
+            tvdb_id: Optional TVDb ID.
         
-        :returns:   The SeriesInfo object indicated by the given attributes.
+        Returns:
+            The SeriesInfo object indicated by the given attributes.
         """
 
         # Inner function to set all ID's of the given SeriesInfo object
@@ -114,8 +116,9 @@ class MediaInfoSet:
         Set the IMDb ID of the given EpisodeInfo object. This also updates
         the IMDb ID map of this info set.
         
-        :param      episode_info:   The EpisodeInfo to set the ID of.
-        :param      imdb_id:        The IMDb ID.
+        Args:
+            episode_info: The EpisodeInfo to set the ID of.
+            imdb_id: The IMDb ID.
         """
 
         if imdb_id is None:
@@ -131,8 +134,9 @@ class MediaInfoSet:
         Set the TVDb ID of the given EpisodeInfo object. This also updates
         the TVDb ID map of this info set.
         
-        :param      episode_info:   The EpisodeInfo to set the ID of.
-        :param      tvdb_id:        The TVDb ID.
+        Args:
+            episode_info: The EpisodeInfo to set the ID of.
+            tvdb_id: The TVDb ID.
         """
 
         if tvdb_id is None:
@@ -148,8 +152,9 @@ class MediaInfoSet:
         Set the TMDb ID of the given EpisodeInfo object. This also updates
         the TMDb ID map of this info set.
         
-        :param      episode_info:   The EpisodeInfo to set the ID of.
-        :param      tmdb_id:        The TMDb ID.
+        Args:
+            episode_info: The EpisodeInfo to set the ID of.
+            tmdb_id: The TMDb ID.
         """
 
         if tmdb_id is None:
@@ -170,26 +175,25 @@ class MediaInfoSet:
         for an existing object mapped under any of the given details; if none
         exists, a new EpisodeInfo object is created with the given details.
         
-        :param      series_info:    SeriesInfo object the EpisodeInfo object
-                                    might be indexed under.
-        :param      title:          The Title of the episode. Optional if
-                                    associated object already exists
-                                    Optional if associated object already exists
-        :param      season_number:  Season number of the episode. Optional if
-                                    associated object already exists
-        :param      episode_number: Episode number of the episode. Optional if
-                                    associated object already exists
-        :param      abs_number:     Optional absolute number of the episode.
-        :param      imdb_id:        Optional IMDb ID.
-        :param      tvdb_id:        Optional TVDb ID.
-        :param      tmdb_id:        Optional TMDb ID.
-        :param      kwargs:         Any keyword arguments to pass to the
-                                    initialization of the EpisodeInfo object, if
-                                    indicated.
+        Args:
+            series_info: SeriesInfo object the EpisodeInfo object might be
+                indexed under.
+            title: The Title of the episode. Optional if associated object
+                already exists. Optional if associated object already exists
+            season_number: Season number of the episode. Optional if associated
+                object already exists
+            episode_number: Episode number of the episode. Optional if
+                associated object already exists
+            abs_number: Optional absolute number of the episode.
+            imdb_id: Optional IMDb ID.
+            tvdb_id: Optional TVDb ID.
+            tmdb_id: Optional TMDb ID.
+            kwargs: Any keyword arguments to pass to the initialization of the
+                EpisodeInfo object, if indicated.
         
-        :returns:   The EpisodeInfo object indicated by the given attributes.
-                    None if an object does not exist and cannot be created 
-                    due to an index conflict.
+        Returns:
+            The EpisodeInfo object indicated by the given attributes. None if an
+            object does not exist and cannot be created due to an index conflict
         """
 
         def set_ids(info_obj):
@@ -246,8 +250,9 @@ class MediaInfoSet:
         Update the name of the associated SeriesInfo object. This also updates
         the mapping in this object's set.
         
-        :param      series_info:    The SeriesInfo object being updated.
-        :param      name:           New name of the associated series.
+        Args:
+            series_info: The SeriesInfo object being updated.
+            name:New name of the associated series.
         """
 
         # Update name of the object itself
@@ -262,5 +267,3 @@ class MediaInfoSet:
             del self.series_names[old_key]
         except KeyError:
             pass
-
-        

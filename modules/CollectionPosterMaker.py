@@ -31,6 +31,7 @@ class CollectionPosterMaker(ImageMaker):
             title: String to use on the created poster.
             font: Path to the font file of the poster's title.
             font_color: Font color of the poster text.
+            font_size: Scalar for the font size of the poster's title.
             omit_collection: Whether to omit "COLLECTION" from the poster.
             borderless:  Whether to make the poster borderless.
             omit_gradient: Whether to make the poster with no gradient overlay.

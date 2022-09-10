@@ -3,10 +3,10 @@ from re import match
 
 from num2words import num2words
 
-from modules.CardType import CardType
+from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 
-class OlivierTitleCard(CardType):
+class OlivierTitleCard(BaseCardType):
     """
     This class describes a type of ImageMaker that produces title cards in the
     style of those designed by Reddit user /u/Olivier_286.
@@ -30,7 +30,7 @@ class OlivierTitleCard(CardType):
 
     """Characteristics of the episode text"""
     EPISODE_TEXT_FORMAT = 'EPISODE {episode_number}'
-    EPISODE_TEXT_COLOR = 'white'#'#CFCFCF'
+    EPISODE_TEXT_COLOR = 'white'
     EPISODE_PREFIX_FONT = SW_REF_DIRECTORY / 'HelveticaNeue.ttc'
     EPISODE_NUMBER_FONT = SW_REF_DIRECTORY / 'HelveticaNeue-Bold.ttf'
 
@@ -41,7 +41,7 @@ class OlivierTitleCard(CardType):
     ARCHIVE_NAME = 'Olivier Style'
 
     """Paths to intermediate files created for this card"""
-    __RESIZED_SOURCE = CardType.TEMP_DIR / 'resized_source.png'
+    __RESIZED_SOURCE = BaseCardType.TEMP_DIR / 'resized_source.png'
 
     __slots__ = ('source_file', 'output_file', 'title', 'hide_episode_text', 
                  'episode_prefix', 'episode_text', 'font', 'title_color',
@@ -85,7 +85,7 @@ class OlivierTitleCard(CardType):
         self.output_file = output_file
 
         # Store attributes of the text
-        self.title = self.image_magick.escape_chars(title.upper())
+        self.title = self.image_magick.escape_chars(title)
         self.hide_episode_text = len(episode_text) == 0
         self.episode_prefix = None
         
@@ -153,6 +153,7 @@ class OlivierTitleCard(CardType):
         stroke_width = 6.0 * self.stroke_width
         kerning = 0.5 * self.kerning
         interline_spacing = -20 + self.interline_spacing
+        vertical_shift = 785 + self.vertical_shift
 
         return [
             f'\( -font "{self.font}"',
@@ -163,11 +164,11 @@ class OlivierTitleCard(CardType):
             f'-fill black',
             f'-stroke black',
             f'-strokewidth {stroke_width}',
-            f'-annotate +320+785 "{self.title}" \)',
+            f'-annotate +320+{vertical_shift} "{self.title}" \)',
             f'\( -fill "{self.title_color}"',
             f'-stroke "{self.title_color}"',
             f'-strokewidth 0',
-            f'-annotate +320+785 "{self.title}" \)',
+            f'-annotate +320+{vertical_shift} "{self.title}" \)',
         ]
 
 
@@ -244,7 +245,7 @@ class OlivierTitleCard(CardType):
         """
 
         command = ' '.join([
-            f'convert "{gradient_source.resolve()}"',
+            f'convert "{resized_source.resolve()}"',
             *self.__add_title_text(),
             f'"{self.output_file.resolve()}"',
         ])
@@ -301,19 +302,23 @@ class OlivierTitleCard(CardType):
 
 
     @staticmethod
-    def is_custom_season_titles(*args, **kwargs) -> bool:
+    def is_custom_season_titles(custom_episode_map: bool, 
+                                episode_text_format: str) -> bool:
         """
         Determine whether the given attributes constitute custom or generic
         season titles.
-
+        
         Args:
-            args and kwargs: Generic arguments.
-
+            custom_episode_map: Whether the EpisodeMap was customized.
+            episode_text_format: The episode text format in use.
+        
         Returns:
-            False, as custom season titles aren't used.
+            True if custom season titles are indicated, False otherwise.
         """
 
-        return False
+        standard_etf = OlivierTitleCard.EPISODE_TEXT_FORMAT.upper()
+
+        return episode_text_format.upper() != standard_etf
 
 
     def create(self) -> None:
@@ -330,4 +335,3 @@ class OlivierTitleCard(CardType):
 
         # Delete all intermediate images
         self.image_magick.delete_intermediate_images(resized)
-        # self.image_magick.print_command_history()

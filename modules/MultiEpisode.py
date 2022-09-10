@@ -24,10 +24,9 @@ class MultiEpisode:
         Constructs a new instance of a MultiEpisode that represents the given
         list of Episode objects, and has the given (modified) Title.
         
-        :param      episodes:   List of Episode objects this MultiEpisode
-                                describes.
-        :param      title:      The modified title that describes these multiple
-                                episodes.
+        Args:
+            episodes: List of Episode objects this MultiEpisode describes.
+            title: The modified title that describes these multiple episodes.
         """
         
         # Verify at least two episodes have been provided
@@ -94,7 +93,8 @@ class MultiEpisode:
         """
         Get an attribute from the first episode of this object.
         
-        :param      attribute:  The attribute to get from the first Episode.
+        Args:
+            attribute:  The attribute to get from the first Episode.
         """
 
         return getattr(self._first_episode, attribute)
@@ -104,8 +104,9 @@ class MultiEpisode:
         """
         Set an attribute of the first episode of this object.
         
-        :param      attribute:  The attribute to set on the first Episode.
-        :param      value:      The value to set on the attribute.
+        Args:
+            attribute: The attribute to set on the first Episode.
+            value: The value to set on the attribute.
         """
 
         # If an attribute of this object, set, otherwise set on first Episode
@@ -128,9 +129,11 @@ class MultiEpisode:
         >>> modify_format_string('E{episode_number}')
         'E{episode_start}-{episode_end}'
         
-        :param      episode_format_string:  The episode format string to modify.
+        Args:
+            episode_format_string: The episode format string to modify.
         
-        :returns:   The modified format string.
+        Returns:
+            The modified format string.
         """
 
         # Attempt to match with regex
@@ -154,17 +157,12 @@ class MultiEpisode:
         """
         Set the destination for the card associated with these Episdoes.
         
-        :param      destination:    The destination for the card that is created
-                                    for these episodes.
+        Args:
+            destination: The destination for the card that is created for these
+                episodes.
         """
 
         self.destination = destination
-
-
-    def delete_card(self) -> None:
-        """Delete the title card for this Episode."""
-
-        self.destination.unlink(missing_ok=True)
 
 
     def make_spoiler_free(self, action: str) -> None:
@@ -173,7 +171,8 @@ class MultiEpisode:
         action. This updates the spoiler and blur attribute flags, and changes
         the source Path for the Episode if art is the specified action.
         
-        :param      action: Spoiler action to update according to.
+        Args:
+            action: Spoiler action to update according to.
         """
 
         # Return if action isn't blur or art
@@ -188,4 +187,3 @@ class MultiEpisode:
         # Blurring, set source to blurred source in 
         if action in ('art', 'art_all'):
             self.source = self.source.parent / 'backdrop.jpg'
-        

@@ -1,5 +1,4 @@
 from pathlib import Path
-from re import sub, IGNORECASE
 
 from ruamel.yaml import YAML, round_trip_dump, comments
 from ruamel.yaml.constructor import DuplicateKeyError

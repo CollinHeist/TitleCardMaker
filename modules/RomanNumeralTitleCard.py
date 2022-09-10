@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from modules.CardType import CardType
+from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 
-class RomanNumeralTitleCard(CardType):
+class RomanNumeralTitleCard(BaseCardType):
     """
     This class defines a type of CardType that produces un-imaged title cards
     with roman numeral text behind the central title. The style is inspired
@@ -48,6 +48,7 @@ class RomanNumeralTitleCard(CardType):
 
     __slots__ = ('output_file', 'title', 'title_color', 'background', 'blur',
                  'roman_numeral_color', 'roman_numeral', '__roman_text_scalar')
+                 
 
     def __init__(self, output_file: Path, title: str, episode_text: str,
                  title_color: str, episode_number: int=1, blur: bool=False, 
@@ -55,19 +56,18 @@ class RomanNumeralTitleCard(CardType):
                  roman_numeral_color: str=ROMAN_NUMERAL_TEXT_COLOR,
                  **kwargs) -> None:
         """
-        Constructs a new instance.
+        Construct a new instance.
         
-        :param      output_file:            Output file.
-        :param      title:                  Episode title.
-        :param      episode_text:           The episode text to parse the roman
-                                            numeral from.
-        :param      episode_number:         Episode number for the roman
-                                            numerals.
-        :param      title_color:            Color to use for the episode title.
-        :param      background:             Color for the background.
-        :param      roman_numeral_color:    Color for the roman numerals.
-        :param      blur:                   Whether to blur the source image.
-        :param      kwargs:                 Unused arguments.
+        Args:
+            output_file: Output file.
+            title: Episode title.
+            episode_text: The episode text to parse the roman numeral from.
+            episode_number: Episode number for the roman numerals.
+            title_color: Color to use for the episode title.
+            background: Color for the background.
+            roman_numeral_color: Color for the roman numerals.
+            blur: Whether to blur the source image.
+            kwargs: Unused arguments.
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
@@ -92,7 +92,8 @@ class RomanNumeralTitleCard(CardType):
         Convert the given number to a roman numeral, update the scalar and text
         attributes of this object.
         
-        :param      number: The number to become the roman numeral.
+        Args:
+            number: The number to become the roman numeral.
         """
 
         # Index-sorted places -> roman numerals
@@ -127,8 +128,9 @@ class RomanNumeralTitleCard(CardType):
         Assign the roman text scalar for this text based on the widest line of
         the given roman numeral text.
         
-        :param      roman_text: List of strings, where each entry is a new line
-                                in the roman numeral string.
+        Args:
+            roman_text: List of strings, where each entry is a new line in the
+                roman numeral string.
         """
 
         # Width of each roman numeral
@@ -156,9 +158,11 @@ class RomanNumeralTitleCard(CardType):
         Determine whether the given font characteristics constitute a default
         or custom font.
         
-        :param      font:   The Font being evaluated.
+        Args:
+            font: The Font being evaluated.
         
-        :returns:   False, as custom fonts aren't used.
+        Returns:
+            False, as custom fonts aren't used.
         """
 
         return False
@@ -171,11 +175,12 @@ class RomanNumeralTitleCard(CardType):
         Determine whether the given attributes constitute custom or generic
         season titles.
         
-        :param      custom_episode_map:     Whether the EpisodeMap was
-                                            customized.
-        :param      episode_text_format:    The episode text format in use.
+        Args:
+            custom_episode_map: Whether the EpisodeMap was customized.
+            episode_text_format: The episode text format in use.
         
-        :returns:   False, as season titles aren't used.
+        Returns:
+            False, as season titles aren't used.
         """
 
         return False
@@ -214,4 +219,3 @@ class RomanNumeralTitleCard(CardType):
         
         # Create the card
         self.image_magick.run(command)
-

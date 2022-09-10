@@ -4,13 +4,15 @@ from typing import Iterable
 from tqdm import tqdm
 
 from modules.Debug import log, TQDM_KWARGS
+from modules.Font import Font
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.ImageMaker import ImageMaker
 from modules.Manager import Manager
 from modules.SeriesInfo import SeriesInfo
 from modules.SeriesYamlWriter import SeriesYamlWriter
 from modules.Show import Show
-from modules.ShowSummary import ShowSummary
+from modules.StandardSummary import StandardSummary
+from modules.StylizedSummary import StylizedSummary
 from modules.Template import Template
 from modules.TitleCard import TitleCard
 from modules.TMDbInterface import TMDbInterface
@@ -28,24 +30,23 @@ class PreferenceParser(YamlReader):
     """Valid episode data source identifiers"""
     VALID_EPISODE_DATA_SOURCES = ('sonarr', 'plex', 'tmdb')
 
-    """Directory for all temporary objects created/maintained by the Maker"""
-    TEMP_DIR = Path(__file__).parent / '.objects'
+    """Default directory for temporary database objects"""
+    DEFAULT_TEMP_DIR = Path(__file__).parent / '.objects'
 
 
-    def __init__(self, file: Path) -> None:
+    def __init__(self, file: Path, is_docker: bool=False) -> None:
         """
         Constructs a new instance of this object. This reads the given file,
         errors and exits if any required options are missing, and then parses
         the preferences into object attributes.
         
-        :param      file:   The preference file to parse.
+        Args:
+            file: The file to parse for preferences.
+            is_docker: Whether executing within a Docker container.
         """
 
-        # Initialize parent YamlReader object
+        # Initialize parent YamlReader object - errors are critical
         super().__init__(log_function=log.critical)
-
-        # Create temporary directory if DNE
-        self.TEMP_DIR.mkdir(parents=True, exist_ok=True)
         
         # Store and read file
         self.file = file
@@ -73,14 +74,16 @@ class PreferenceParser(YamlReader):
         self.create_archive = False
         self.archive_all_variations = True
         self.create_summaries = True
-        self.summary_background = ShowSummary.BACKGROUND_COLOR
-        self.summary_minimum_episode_count = 1
+        self.summary_class = StylizedSummary
+        self.summary_background = self.summary_class.BACKGROUND_COLOR
+        self.summary_minimum_episode_count = 3
         self.summary_created_by = None
         self.use_plex = False
         self.plex_url = None
         self.plex_token = 'NA'
         self.plex_verify_ssl = True
         self.integrate_with_pmm_overlays = False
+        self.plex_filesize_limit = self.filesize_as_bytes('10 MB')
         self.global_watched_style = 'unique'
         self.global_unwatched_style = 'unique'
         self.plex_yaml_writers = []
@@ -99,13 +102,21 @@ class PreferenceParser(YamlReader):
         self.imagemagick_container = None
         self.imagemagick_timeout = ImageMagickInterface.COMMAND_TIMEOUT_SECONDS
 
-        # Modify object attributes based off YAML, assume valid to start
+        # Modify object attributes based off YAML, updating validiry
         self.__parse_yaml()
         self.__parse_sync()
 
         # Whether to use magick prefix
         self.use_magick_prefix = False
         self.__determine_imagemagick_prefix()
+
+        # Database object directory, create if DNE
+        self.DEFAULT_TEMP_DIR.mkdir(parents=True, exist_ok=True)
+        if is_docker and not (self.DEFAULT_TEMP_DIR / 'loaded.json').exists():
+            self.database_directory = self.file.parent / '.objects'
+        else:
+            self.database_directory = self.DEFAULT_TEMP_DIR
+        self.database_directory.mkdir(parents=True, exist_ok=True)
 
 
     def __repr__(self) -> str:
@@ -123,19 +134,9 @@ class PreferenceParser(YamlReader):
 
         # Try variations of the font list command with/out the "magick " prefix
         for prefix, use_magick in zip(('', 'magick '), (False, True)):
-            # Create ImageMagickInterface object to test font command
-            imi = ImageMagickInterface(
-                self.imagemagick_container,
-                use_magick,
-                self.imagemagick_timeout
-            )
-
-            # Run font list command
-            font_output = imi.run_get_output(f'convert -list font')
-
-            # Check for standard font output to determine if it worked
-            if all(_ in font_output for _ in ('Font:', 'family:', 'style:')):
-                # Font command worked, exit function
+            # Create ImageMagickInterface and verify validity
+            if ImageMagickInterface(self.imagemagick_container, use_magick,
+                                    self.imagemagick_timeout).verify_interface():
                 self.use_magick_prefix = use_magick
                 log.debug(f'Using "{prefix}" ImageMagick command prefix')
                 return None
@@ -282,9 +283,9 @@ class PreferenceParser(YamlReader):
             else:
                 self.image_source_priority = sources
 
-        if (value := self._get('options',
-                               'episode_data_source', type_=str)) is not None:
-            if (value := value.lower()) in self.VALID_EPISODE_DATA_SOURCES:
+        if (value := self._get('options', 'episode_data_source',
+                               type_=lower_str)) is not None:
+            if value in self.VALID_EPISODE_DATA_SOURCES:
                 self.episode_data_source = value
             else:
                 log.critical(f'Episode data source "{value}" is invalid')
@@ -311,6 +312,19 @@ class PreferenceParser(YamlReader):
         if (value := self._get('archive', 'summary', 'create',
                                type_=bool)) != None:
             self.create_summaries = value
+
+        if (value := self._get('archive', 'summary', 'type',
+                               type_=lower_str)) is not None:
+            if value == 'standard':
+                self.summary_class = StandardSummary
+                self.summary_background = self.summary_class.BACKGROUND_COLOR
+            elif value == 'stylized':
+                self.summary_class = StylizedSummary
+                self.summary_background = self.summary_class.BACKGROUND_COLOR
+            else:
+                log.critical(f'Summary type "{value}" is invalid - must be '
+                             f'"standard" or "stylized"')
+                self.valid = False
 
         if (value := self._get('archive', 'summary', 'created_by',
                                type_=str)) is not None:
@@ -354,6 +368,13 @@ class PreferenceParser(YamlReader):
         if (value := self._get('plex', 'integrate_with_pmm_overlays',
                                type_=bool)) is not None:
             self.integrate_with_pmm_overlays = value
+
+        if (value := self._get('plex', 'filesize_limit', 
+                               type_=self.filesize_as_bytes)) is not None:
+            self.plex_filesize_limit = value
+            log.debug(f'Plex filesize limit is {self.plex_filesize_limit} bytes')
+            if value > self.filesize_as_bytes('10 MB'):
+                log.warning(f'Plex will reject all images larger than 10 MB')
 
         if self._is_specified('sonarr'):
             if (not self._is_specified('sonarr', 'url')
@@ -417,6 +438,79 @@ class PreferenceParser(YamlReader):
             self.valid = False
 
 
+    def __validate_libraries(self, library_yaml: dict[str: str],
+                             file: Path) -> bool:
+        """
+        Validate the given libraries YAML.
+
+        Args:
+            library_yaml: YAML from the 'libraries' key to validate.
+            file: File whose YAML is being evaluated - for logging only.
+
+        Returns:
+            True if the given YAML is valid, False otherwise.
+        """
+
+        # Libraries must be a dictionary
+        if not isinstance(library_yaml, dict):
+            log.error(f'Invalid library specification for series file '
+                      f'"{file.resolve()}"')
+            return False
+        
+        # Validate all given libraries
+        for name, spec in library_yaml.items():
+            # All libraries must be dictionaries
+            if not isinstance(spec, dict):
+                log.error(f'Library "{name}" is invalid for series file '
+                          f'"{file.resolve()}"')
+                return False
+
+            # All libraries must provide paths
+            if spec.get('path') is None:
+                log.error(f'Library "{name}" is missing required "path" in '
+                          f'series file "{file.resolve()}"')
+                return False
+
+        return True
+
+
+    def __validate_fonts(self, font_yaml: dict[str: 'str | float'],
+                         file: Path) -> bool:
+        """
+        Validate the given font YAML.
+
+        Args:
+            font_yaml: Font map YAML to validate.
+            file: File whose YAML is being evaluated - for logging only.
+
+        Returns:
+            True if the given YAML is valid, False otherwise.
+        """
+
+        # Font map must be a dictionary
+        if not isinstance(font_yaml, dict):
+            log.error(f'Invalid font specification for series file '
+                      f'"{file.resolve()}"')
+            return False
+
+        # Validate all given fonts
+        for name, spec in font_yaml.items():
+            # All fonts must be dictionaries
+            if not isinstance(spec, dict):
+                log.error(f'Font "{name}" is invalid for series file '
+                          f'"{file.resolve()}"')
+                return False
+
+            # All fonts must provide valid font attributes
+            for attrib in spec.keys():
+                if attrib not in Font.VALID_ATTRIBUTES:
+                    log.error(f'Font "{name}" has unrecognized attribute '
+                              f'"{attrib}"')
+                    return False
+
+        return True
+
+    
     def __apply_template(self, templates: dict[str, Template],series_yaml: dict,
                          series_name: str) -> bool:
         """
@@ -466,6 +560,59 @@ class PreferenceParser(YamlReader):
         return template.apply_to_series(series_name, series_yaml)
 
 
+    def __finalize_show_yaml(self, show_name: str, show_yaml: dict,
+                             templates: list[Template], library_map: dict,
+                             font_map: dict) -> 'dict | None':
+        """
+        Apply the indicated template, and merge the specified library/font to
+        the given show YAML.
+
+        Args:
+            show_yaml: Base show YAML with potential template/library/font
+                identifiers.
+            library_map: Library map of library names/identifiers to library
+                specifications.
+            font_map: Font map of font names/identifiers to custom font
+                specifications.
+
+        Returns:
+            Modified YAML, None if the modification failed.
+        """
+        
+        # Apply template to series, stop if invalid
+        if not self.__apply_template(templates, show_yaml, show_name):
+            return None
+        
+        # Parse library from map
+        if (len(library_map) > 0
+            and (library_name := show_yaml.get('library')) is not None):
+            if (library_yaml := library_map.get(library_name)) is None:
+                log.error(f'Library "{library_name}" of series "{show_name}" is'
+                          f' not present in libraries list')
+                return None
+            else:
+                Template.recurse_priority_union(show_yaml, library_yaml)
+                show_yaml['library'] = {
+                    'name': library_yaml.get('plex_name', library_name),
+                    'path': Path(library_yaml.get('path'))
+                }
+                
+        # Parse font from map (if given font is just an identifier)
+        if (len(font_map) > 0
+            and (font_name := show_yaml.get('font')) is not None
+            and isinstance(font_name, str)):
+            # If font identifier is not in map
+            if (font_yaml := font_map.get(font_name)) is None:
+                log.error(f'Font "{font_name}" of series "{show_name}" is '
+                            f'not present in font list')
+                return None
+            else:
+                show_yaml['font'] = {}
+                Template.recurse_priority_union(show_yaml['font'], font_yaml)
+        
+        return show_yaml
+    
+    
     def read_file(self) -> None:
         """
         Read this associated preference file and store in `_base_yaml` attribute
@@ -496,48 +643,43 @@ class PreferenceParser(YamlReader):
             known (valid) series files. 
         """
 
-        # For each file in the cards list
+        # Reach each file in the list of series YAML files
         for file_ in (pbar := tqdm(self.series_files, **TQDM_KWARGS)):
             # Create Path object for this file
-            file = Path(file_)
+            try:
+                file = Path(file_)
+            except Exception:
+                log.error(f'Invalid series file "{file_}"')
+                continue
 
             # Update progress bar for this file
             pbar.set_description(f'Reading {file.name}')
 
             # If the file doesn't exist, error and skip
             if not file.exists():
-                log.error(f'Series file "{file.resolve()}" does not '
-                          f'exist')
+                log.error(f'Series file "{file.resolve()}" does not exist')
                 continue
 
             # Read file, parse yaml
             if (file_yaml := self._read_file(file, critical=False)) == {}:
                 continue
 
-            # Skip if there are no series to yield
+            # Skip if there are no series provided
             if file_yaml is None or file_yaml.get('series') is None:
                 log.warning(f'Series file "{file.resolve()}" has no entries')
                 continue
 
-            # Get library map for this file; error+skip missing library paths
-            if (library_map := file_yaml.get('libraries', {})):
-                # Validate map and all libraries are dictionaries
-                if (not isinstance(library_map, dict)
-                    or not all(isinstance(library_map[lib], dict)
-                               for lib in library_map)):
-                    log.error(f'Invalid library specification for series file '
-                              f'"{file.resolve()}"')
-                    continue
-                if not all('path' in library_map[lib].keys()
-                           for lib in library_map):
-                    log.error(f'Libraries are missing required "path" in series'
-                              f' file "{file.resolve()}"')
-                    continue
+            # Validate the libraries provided in this file
+            library_map = file_yaml.get('libraries', {})
+            if not self.__validate_libraries(library_map, file):
+                continue
 
             # Get font map for this file
             font_map = file_yaml.get('fonts', {})
+            if not self.__validate_fonts(font_map, file):
+                continue
 
-            # Get templates for this file, validate they're all dictionaries
+            # Construct Template objects for this file
             templates = {}
             value = file_yaml.get('templates', {})
             if isinstance(value, dict):
@@ -556,48 +698,54 @@ class PreferenceParser(YamlReader):
                 if not isinstance(file_yaml['series'][show_name], dict):
                     log.error(f'Skipping "{show_name}" from "{file_}"')
                     continue
-                
-                # Apply template to series, skip if invalid
-                if not self.__apply_template(templates,
-                                    file_yaml['series'][show_name], show_name):
+
+                # Apply template and merge libraries+font maps
+                show_yaml = self.__finalize_show_yaml(
+                    show_name,
+                    file_yaml['series'][show_name],
+                    templates,
+                    library_map,
+                    font_map,
+                )
+
+                # If returned YAML is None (invalid) skip series
+                if show_yaml is None:
                     log.error(f'Skipping "{show_name}" from "{file_}"')
                     continue
 
-                # Yield the Show object created from this entry
-                yield Show(show_name, file_yaml['series'][show_name],
-                           library_map, font_map, self.source_directory, self)
+                yield Show(show_name, show_yaml, self.source_directory, self)
 
                 # If archiving is disabled, skip
                 if not self.create_archive:
                     continue
 
                 # Get all specified variations for this show
-                variations = file_yaml['series'][show_name].pop(
-                    'archive_variations', []
-                )
-                
+                variations = show_yaml.pop('archive_variations', [])
                 if not isinstance(variations, list):
                     log.error(f'Invalid archive variations for {show_name}')
                     continue
 
                 # Yield each variation
+                show_yaml.pop('archive_name', None)
                 for variation in variations:
-                    # Apply template to variation
-                    if not self.__apply_template(templates,variation,show_name):
-                        continue
-
-                    # Get priority union of variation and base series
-                    file_yaml['series'][show_name].pop('archive_name', None)
-                    Template('', {}).recurse_priority_union(
-                        variation, file_yaml['series'][show_name]
+                    # Apply template and merge libraries+font maps to variation
+                    variation = self.__finalize_show_yaml(
+                        show_name, variation, templates, library_map, font_map,
                     )
 
-                    # Remove any library-specific details
-                    variation.pop('library', None)
-                    variation.pop('media_directory', None)
+                    # Skip if finalization failed
+                    if variation is None:
+                        log.error(f'Skipping archive variation of "{show_name}"'
+                                  f'from "{file_}"')
+
+                    # Get priority union of variation and base series
+                    Template.recurse_priority_union(variation, show_yaml)
                     
-                    yield Show(show_name, variation, library_map, font_map,
-                               self.source_directory, self)
+                    # Remove any library-specific details
+                    variation.pop('media_directory', None)
+                    variation.pop('library', None)
+                    
+                    yield Show(show_name, variation, self.source_directory,self)
 
     @property
     def check_tmdb(self):
@@ -619,6 +767,30 @@ class PreferenceParser(YamlReader):
             return True
 
         return False
+
+    @property
+    def plex_interface_kwargs(self) -> dict[str: 'Path | str | bool']:
+        return {
+            'database_directory': self.database_directory,
+            'url': self.plex_url,
+            'x_plex_token': self.plex_token,
+            'verify_ssl': self.plex_verify_ssl,
+        }
+
+    @property
+    def sonarr_interface_kwargs(self) -> dict[str: 'str | bool']:
+        return {
+            'url': self.sonarr_url,
+            'api_key': self.sonarr_api_key,
+            'verify_ssl': self.sonarr_verify_ssl,
+        }
+
+    @property
+    def tmdb_interface_kwargs(self) -> dict[str: 'Path | str']:
+        return {
+            'database_directory': self.database_directory,
+            'api_key': self.tmdb_api_key,
+        }
 
                 
     def meets_minimum_resolution(self, width: int, height: int) -> bool:
@@ -673,3 +845,25 @@ class PreferenceParser(YamlReader):
         except Exception as e:
             log.critical(f'Invalid season folder format - {e}')
             exit(1)
+
+
+    def filesize_as_bytes(self, filesize: str) -> 'int | None':
+        """
+        Convert the given filesize string to its integer byte equivalent. If the
+        string cannot be converted, a critical error is logged and this object
+        is set to invalid.
+
+        Args:
+            filesize: Filesize (string) to convert. Should be formatted like 
+                '{integer} {unit}' - e.g. 2 KB, 4 GiB, 1 B, etc.
+
+        Returns:
+            Number of bytes of the string. None if the string cannot be
+            converted.
+        """
+        units = {'B': 1, 'KB': 2**10, 'MB': 2**20, 'GB': 2**30, 'TB': 2**40,
+                 '': 1, 'KIB': 10**3, 'MIB': 10**6, 'GIB': 10**9, 'TIB': 10**12}
+
+        number, unit = map(str.strip, filesize.split())
+        value, unit_scale = float(number), units[unit.upper()]
+        return int(value * unit_scale)

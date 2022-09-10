@@ -12,14 +12,15 @@ class Template:
     instances of the data, in which the series data takes priority.
     """
 
-    def __init__(self, name: str, template: dict) -> None:
+    def __init__(self, name: str, template: dict[str: str]) -> None:
         """
         Construct a new Template object with the given name, and with the given
         template dictionary. Keys of the form <<{key}>> are search for through
         this template.
         
-        :param      name:       The template name/identifier. For logging only.
-        :param      template:   The template YAML to implement.
+        Args:
+            name: The template name/identifier. For logging only.
+            template: The template YAML to implement.
         """
 
         self.name = name
@@ -39,11 +40,12 @@ class Template:
         all unique values like "<<{key}>>". This is a recursive function, and
         searches through all sub-dictionaries of template.
         
-        :param      template:   The template dictionary to search through.
-        :param      keys:       The existing keys identified, only used for
-                                recursion.
+        Args:
+            template: The template dictionary to search through.
+            keys: The existing keys identified, only used for recursion.
         
-        :returns:   Set of keys required by the given template.
+        Returns:
+            Set of keys required by the given template.
         """
 
         for _, value in template.items():
@@ -70,14 +72,14 @@ class Template:
         >>> temp
         {'year': 1234, 'b': 'b1': False, 'b2': 'Hey 1234'}
         
-        :param      template:   The dictionary to modify any instances of
-                                <<{key}>> within. Modified in-place.
-        :param      key:        The key to search/replace for.
-        :param      value:      The value to replace the key with.
+        Args:
+            template: The dictionary to modify any instances of <<{key}>>
+                within. Modified in-place.
+            key: The key to search/replace for.
+            value: The value to replace the key with.
         """
 
         for t_key, t_value in template.items():
-            # log.info(f'template[{t_key}]={t_value}, {type(t_value)=}')
             if isinstance(t_value, str):
                 # If the templated value is JUST the replacement, just copy over
                 if t_value == f'<<{key}>>':
@@ -104,21 +106,22 @@ class Template:
         >>> base_yaml
         {'a': 123, 'b': 234, 'c': {'c1': False, 'c2': True}}
         
-        :param      base_yaml:      The base - i.e. higher priority - YAML that 
-                                    forms the basis of the union of these
-                                    dictionaries. Modified in-place.
-        :param      template_yaml:  The templated - i.e. lower priority - YAML.
+        Args:
+            base_yaml: The base - i.e. higher priority - YAML that forms the
+                basis of the union of these dictionaries. Modified in-place.
+            template_yaml: The templated - i.e. lower priority - YAML.
         """
 
         # Go through each key in template and add to priority YAML if not present
         for t_key, t_value in template_yaml.items():
-            if t_key in base_yaml:
-                if isinstance(t_value, dict):
-                    # Both have this dictionary, recurse on keys of dictionary
-                    Template.recurse_priority_union(base_yaml[t_key], t_value)
-            else:
-                # Key is not present in base, carryover template value
-                base_yaml[t_key] = t_value
+            if isinstance(base_yaml, dict):
+                if t_key in base_yaml:
+                    if isinstance(t_value, dict):
+                        # Both have this dictionary, recurse on keys of dictionary
+                        Template.recurse_priority_union(base_yaml[t_key],t_value)
+                else:
+                    # Key is not present in base, carryover template value
+                    base_yaml[t_key] = t_value
 
 
     def apply_to_series(self, series_name: str, series_yaml: dict) -> bool:
@@ -127,12 +130,14 @@ class Template:
         to include the templated values. This function assumes that the given
         series YAML has a template attribute, and that it applies to this object
         
-        :param      series_name:    The name of the series being modified.
-        :param      series_yaml:    The series YAML to modify. Must have
-                                    'template' key. Modified in-place.
+        Args:
+            series_name: The name of the series being modified.
+            series_yaml: The series YAML to modify. Must have 'template' key.
+                Modified in-place.
 
-        :returns:   True if the given series contained all the required template
-                    variables for application, False if it did not.
+        Returns:
+            True if the given series contained all the required template
+            variables for application, False if it did not.
         """
         
         # If not all required template keys are specified, warn and exit
@@ -152,4 +157,3 @@ class Template:
         self.recurse_priority_union(series_yaml, modified_template)
 
         return True
-

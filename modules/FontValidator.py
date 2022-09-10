@@ -13,18 +13,20 @@ class FontValidator:
     """
 
     """File to the font character validation database"""
-    CHARACTER_DATABASE = Path(__file__).parent / '.objects' / 'fvm.json'
+    CHARACTER_DATABASE = 'fvm.json'
     
 
-    def __init__(self) -> None:
+    def __init__(self, database_directory: Path) -> None:
         """
-        Constructs a new instance. This creates the parent directory for the 
-        temporary validation database if it does not exist, and reads it if it
-        does.
+        Constructs a new instance. This reads the font validation map if it
+        exists, and creates the file if it does not.
+
+        Args:
+            database_directory: Base Path to read/write any databases from.
         """
 
         # Create/read font validation database
-        self.__db = TinyDB(self.CHARACTER_DATABASE)
+        self.__db = TinyDB(database_directory / self.CHARACTER_DATABASE)
 
         # List of missing characters that have already been warned
         self.__warned = []
@@ -35,8 +37,9 @@ class FontValidator:
         Warn a given character is missing from a given font, but only if it 
         hasn't already been warned.
         
-        :param      char:           The missing character
-        :param      font_filepath:  Filepath to the relevant font.
+        Args:
+            char: The missing character
+            font_filepath: Filepath to the relevant font.
         """
 
         # If this character (for this font) has already been warned, return
@@ -52,11 +55,13 @@ class FontValidator:
         """
         Determines whether the given character exists in the given Font. 
         
-        :param      font_filepath:  Filepath to the font being validated against
-        :param      character:      Character being checked.
+        Args:
+            font_filepath: Filepath to the font being validated against
+            character: Character being checked.
         
-        :returns:   True if the given character exists in the given font, False
-                    otherwise.
+        Returns:
+            True if the given character exists in the given font, False
+            otherwise.
         """
 
         # All fonts have spaces
@@ -96,11 +101,13 @@ class FontValidator:
         Validate the given Title, returning whether all characters are contained
         within the given Font.
         
-        :param      font_filepath:  Filepath to the font being validated against
-        :param      title:          The title being validated.
+        Args:
+            font_filepath: Filepath to the font being validated against
+            title: The title being validated.
         
-        :returns:   True if all characters in the title are found within the
-                    given font, False otherwise.
+        Returns:
+            True if all characters in the title are found within the given font,
+            False otherwise.
         """
 
         # Map __has_character() to all characters in the title
@@ -115,4 +122,3 @@ class FontValidator:
                 self.__warn_missing(char, font_filepath)
 
         return all(has_characters)
-

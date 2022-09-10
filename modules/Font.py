@@ -10,35 +10,37 @@ class Font:
     it's color, size, file, replacements, case function, vertical offset, and 
     interline spacing.
     """
+
+    """Valid YAML attributes to customize a font"""
+    VALID_ATTRIBUTES = (
+        'validate', 'color', 'size', 'file', 'case', 'replacements',
+        'vertical_shift', 'interline_spacing', 'kerning', 'stroke_width',
+    )
     
-    """Compiled regex to identify percentage values"""
+    """Compiled regex to identify percentage values for font scalars"""
     _PERCENT_REGEX = re_compile(r'^-?\d+\.?\d*%$')
     _PERCENT_REGEX_POSITIVE = re_compile(r'^\d+\.?\d*%$')
 
-    __slots__ = ('valid', '__yaml', '__card_class','__font_map','__series_info',
-                 '__validator', '__validate', 'color', 'size', 'file',
-                 'replacements', 'case_name', 'case', 'vertical_shift',
-                 'interline_spacing', 'kerning', 'stroke_width')
+    __slots__ = (
+        'valid', '__yaml', '__card_class', '__series_info', '__validator',
+        '__validate', 'color', 'size', 'file', 'replacements', 'case_name',
+        'case', 'vertical_shift', 'interline_spacing', 'kerning', 'stroke_width'
+    )
     
 
-    def __init__(self, yaml: dict, font_map: dict[str: dict],
-                 card_class: 'CardType', series_info: 'SeriesInfo') -> None:
+    def __init__(self, yaml: dict, card_class: 'CardType',
+                 series_info: 'SeriesInfo') -> None:
         """
         Construct a new instance of a Font.
         
         Args:
             yaml: 'font' dictionary from a series YAML file.
-            font_map: Dictionary of font labels to custom font definitions.
-            card_class:  CardType class to use values from.
+            card_class:  CardType subclass to get default values from.
             series_info: Associated SeriesInfo (for logging).
         """
 
-        # Assume object is valid to start with
+       # Assume object is valid to start with
         self.valid = True
-
-        # If the given value is a key of the font map, use those values instead
-        if isinstance(yaml, str) and yaml in font_map:
-            yaml = font_map[yaml]
 
         # If font YAML (either from map or directly) is not a dictionary, bad!
         if not isinstance(yaml, dict):
@@ -49,7 +51,6 @@ class Font:
         # Store arguments
         self.__yaml = yaml
         self.__card_class = card_class
-        self.__font_map = font_map
         self.__series_info = series_info
 
         # Use the global FontValidator object
@@ -66,6 +67,15 @@ class Font:
         """Returns an unambiguous string representation of the object."""
         
         return f'<CustomFont for series "{self.__series_info}">'
+
+
+    @property
+    def custom_hash(self) -> str:
+        """Custom string to hash for this object for record keeping"""
+        font_file_name = Path(self.file).name
+        return (f'{self.color}|{self.size}|{font_file_name}|{self.replacements}'
+                f'|{self.case_name}|{self.vertical_shift}|'
+                f'{self.interline_spacing}|{self.kerning}|{self.stroke_width}')
 
 
     def __error(self, attribute: str, value: str, description: str=None) ->None:
@@ -93,9 +103,9 @@ class Font:
             self.__validate = bool(value)
 
         # Case
-        if (value := self.__yaml.get('case', '').lower()) != '':
-            if value not in self.__card_class.CASE_FUNCTIONS:
-                self.__error('case', value)
+        if (value := self.__yaml.get('case')):
+            if (value := value.lower()) not in self.__card_class.CASE_FUNCTIONS:
+                self.__error('case', value, 'unrecognized value')
             else:
                 self.case_name = value
                 self.case = self.__card_class.CASE_FUNCTIONS[value]
@@ -103,7 +113,7 @@ class Font:
         # Color
         if (value := self.__yaml.get('color')) is not None:
             self.color = value
-
+        
         # File
         if (value := self.__yaml.get('file')) is not None:
             if not isinstance(value, str):
@@ -189,7 +199,7 @@ class Font:
         self.stroke_width = 1.0
 
 
-    def get_attributes(self) -> dict[str: 'str | float | Path']:
+    def get_attributes(self) -> dict[str: 'str | float']:
         """
         Return a dictionary of attributes for this font to be unpacked.
         
