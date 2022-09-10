@@ -733,6 +733,11 @@ class PreferenceParser(YamlReader):
                         show_name, variation, templates, library_map, font_map,
                     )
 
+                    # Skip if finalization failed
+                    if variation is None:
+                        log.error(f'Skipping archive variation of "{show_name}"'
+                                  f'from "{file_}"')
+
                     # Get priority union of variation and base series
                     Template.recurse_priority_union(variation, show_yaml)
                     
