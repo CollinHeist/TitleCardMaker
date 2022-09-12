@@ -637,11 +637,8 @@ class Show(YamlReader):
                 episode_map = {select_only.episode_info.key: select_only}
             
             plex_interface.update_watched_statuses(
-                self.library_name,
-                self.series_info,
-                episode_map,
-                self.watched_style,
-                self.unwatched_style,
+                self.library_name, self.series_info, episode_map,
+                self.watched_style, self.unwatched_style,
             )
             
         # Get show styles
@@ -918,7 +915,7 @@ class Show(YamlReader):
             log.info(f'Detected new YAML for {self} - deleting old cards')
             for episode in self.episodes.values():
                 episode.delete_card(reason='new config')
-
+        
         # Go through each episode for this show
         for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
             # Skip episodes without a destination or that already exist

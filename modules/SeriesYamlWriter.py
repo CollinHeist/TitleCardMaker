@@ -30,19 +30,14 @@ class SeriesYamlWriter:
         Args:
             file: File to read/write series YAML.
             sync_mode: How to write to this series YAML file. Must be either
-                'sync' or 'append'.
+                'append' or 'match'.
             compact_mode: Whether to write this YAML in compact mode or not.
             volume_map: Mapping of interface paths to corresponding TCM paths.
             template: Template to add to all synced series.
-            
-        Raises:
-            ValueError: If sync mode isn't 'sync' or 'append'.
         """
 
-        # Start off as valid
+        # Start as valid, Store base attributes
         self.valid = True
-
-        # Store base attributes
         self.file = file
         self.compact_mode = compact_mode
 
@@ -56,8 +51,8 @@ class SeriesYamlWriter:
             self.valid = False
         
         # Validate/store sync mode
-        if (sync_mode := sync_mode.lower()) not in ('append', 'sync'):
-            log.error(f'Invalid sync mode - must be "append" or "sync"')
+        if (sync_mode := sync_mode.lower()) not in ('append', 'match'):
+            log.error(f'Invalid sync mode - must be "append" or "match"')
             self.valid = False
         else:
             self.sync_mode = sync_mode
@@ -123,7 +118,7 @@ class SeriesYamlWriter:
         # No exclusions to apply, exit
         if len(exclusions) == 0 or len(yaml.get('series', {})) == 0:
             return None
-
+        
         # Go through each exclusion in the given list
         for exclusion in exclusions:
             # Validate this exclusion is a dictionary
@@ -176,14 +171,18 @@ class SeriesYamlWriter:
             dump(yaml, file_handle, **self.__WRITE_OPTIONS)
 
 
-    def __append(self, yaml: dict[str: dict[str: str]]) -> None:
+    def __read_existing_file(self,  yaml: dict[str: dict[str: str]]
+                             ) -> dict[str: dict[str: str]]:
         """
-        Append the given YAML to this Writer's file. This either utilizes
-        compact or verbose style. Appending does not modify library or series
-        entries whose keys already exist.
+        Read the existing YAML from this writer's file. If the file has no
+        existing YAML to read, then just write the given YAML.
 
         Args:
             yaml: YAML (dictionary) to write.
+
+        Returns:
+            Dictionary that is the existing YAML. None if there is no existing
+            YAML, or if an error occured during the read.
         """
 
         # If the file DNE, just use write technique
@@ -215,6 +214,23 @@ class SeriesYamlWriter:
         if existing_yaml.get('libraries') is None:
             existing_yaml['libraries'] = {}
 
+        return existing_yaml
+
+
+    def __append(self, yaml: dict[str: dict[str: str]]) -> None:
+        """
+        Append the given YAML to this Writer's file. This either utilizes
+        compact or verbose style. Appending does not modify library or series
+        entries whose keys already exist.
+
+        Args:
+            yaml: YAML (dictionary) to write.
+        """
+
+        # Read existing YAML, exit if nothing else to parse
+        if (existing_yaml := self.__read_existing_file(yaml)) is None:
+            return None
+
         # Identify which libraries DNE in existing YAML that need to be added
         for library_name, library in yaml.get('libraries', {}).items():
             # Skip entries that exist
@@ -237,6 +253,50 @@ class SeriesYamlWriter:
 
             # Add to YAML
             existing_yaml['series'][series_name] = add_obj
+
+        # Write YAML to file
+        with self.file.open('w', encoding='utf-8') as file_handle:
+            round_trip_dump(existing_yaml, file_handle)
+
+
+    def __match(self, yaml: dict[str: dict[str: str]]) -> None:
+        """
+        Match this Writer's file to the given YAML - i.e. remove series that
+        shouldn't be present, and add series that should. Does not modify
+        anything except the series of the file.
+
+        Args:
+            yaml: YAML (dictionary) to write.
+        """
+
+        # Read existing YAML, exit if nothing else to parse
+        if (existing_yaml := self.__read_existing_file(yaml)) is None:
+            return None
+
+        # Add series that aren't present in existing YAML
+        for series_name, series in yaml.get('series', {}).items():
+            # If this series already exists, skip
+            if series_name in existing_yaml.get('series', {}).keys():
+                continue
+
+            # If writing compact mode, set flow stype for this entry
+            if self.compact_mode:
+                add_obj = comments.CommentedMap(series)
+                add_obj.fa.set_flow_style()
+            else:
+                add_obj = series
+
+            # Series DNE, add to existing YAML
+            existing_yaml['series'][series_name] = add_obj
+            log.debug(f'Added {series_name} to "{self.file}"')
+
+        # Remove series that shouldn't be present in existing YAML
+        existing_series = tuple(existing_yaml.get('series', {}).keys())
+        actual_series = yaml.get('series', {}).keys()
+        for series_name in existing_series:
+            if series_name not in actual_series:
+                existing_yaml['series'].pop(series_name, None)
+                log.debug(f'Removed {series_name} from "{self.file}"')
 
         # Write YAML to file
         with self.file.open('w', encoding='utf-8') as file_handle:
@@ -350,8 +410,8 @@ class SeriesYamlWriter:
         )
 
         # Either sync of append this YAML to this object's file
-        if self.sync_mode == 'sync':
-            self.__write(yaml)
+        if self.sync_mode == 'match':
+            self.__match(yaml)
         elif self.sync_mode == 'append':
             self.__append(yaml)
 
@@ -445,8 +505,8 @@ class SeriesYamlWriter:
         )
 
         # Either sync of append this YAML to this object's file
-        if self.sync_mode == 'sync':
-            self.__write(yaml)
+        if self.sync_mode == 'match':
+            self.__match(yaml)
         elif self.sync_mode == 'append':
             self.__append(yaml)
 
