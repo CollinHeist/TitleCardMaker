@@ -268,8 +268,8 @@ class EpisodeMap:
                 log.warning(f'Episode range specified, but {episode_info} has '
                             f'no absolute episode number')
             elif episode_info.abs_number not in self.__titles:
-                log.warning(f'{episode_info} does not fall into specified '
-                            f'episode range')
+                log.warning(f'{episode_info} does not fall into given episode '
+                            f'ranges')
 
         return season_title
 

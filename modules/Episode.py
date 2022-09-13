@@ -51,7 +51,7 @@ class Episode:
         self.extra_characteristics = extras
 
         # Episodes are watched, not blurred, and spoiled - until updated
-        self.watched = True
+        self.watched = False
         self.blur = False
         self.spoil_type = 'spoiled'
 

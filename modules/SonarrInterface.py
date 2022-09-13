@@ -279,7 +279,7 @@ class SonarrInterface(WebInterface):
             # Skip permanent placeholder names
             if self.__ALWAYS_IGNORE_REGEX.match(episode['title']):
                 continue
-
+            
             # Create EpisodeInfo object for this entry
             episode_info = self.info_set.get_episode_info(
                 series_info,
