@@ -42,11 +42,6 @@ class StandardTitleCard(BaseCardType):
     """Source path for the gradient image overlayed over all title cards"""
     __GRADIENT_IMAGE = REF_DIRECTORY / 'GRADIENT.png'
 
-    """Paths to intermediate files that are deleted after the card is created"""
-    __SOURCE_WITH_GRADIENT = BaseCardType.TEMP_DIR / 'source_gradient.png'
-    __GRADIENT_WITH_TITLE = BaseCardType.TEMP_DIR / 'gradient_title.png'
-    __SERIES_COUNT_TEXT = BaseCardType.TEMP_DIR / 'series_count_text.png'
-
     __slots__ = ('source_file', 'output_file', 'title', 'season_text',
                  'episode_text', 'font', 'font_size', 'title_color',
                  'hide_season', 'separator', 'blur', 'vertical_shift', 
@@ -58,7 +53,8 @@ class StandardTitleCard(BaseCardType):
                  font_size: float, title_color: str, hide_season: bool,
                  separator: str='•', blur: bool=False, vertical_shift: int=0,
                  interline_spacing: int=0, kerning: float=1.0,
-                 stroke_width: float=1.0, **kwargs) -> None:
+                 stroke_width: float=1.0, omit_gradient: bool=False,
+                 **kwargs) -> None:
         """
         Initialize this CardType object.
 
@@ -92,6 +88,7 @@ class StandardTitleCard(BaseCardType):
         self.season_text = self.image_magick.escape_chars(season_text.upper())
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
 
+        # Font/card customizations
         self.font = font
         self.font_size = font_size
         self.title_color = title_color
@@ -103,286 +100,8 @@ class StandardTitleCard(BaseCardType):
         self.kerning = kerning
         self.stroke_width = stroke_width
 
-
-    def __title_text_global_effects(self) -> list:
-        """
-        ImageMagick commands to implement the title text's global effects.
-        Specifically the the font, kerning, fontsize, and center gravity.
-        
-        Returns:
-            List of ImageMagick commands.
-        """
-
-        font_size = 157.41 * self.font_size
-        interline_spacing = -22 + self.interline_spacing
-        kerning = -1.25 * self.kerning
-
-        return [
-            f'-font "{self.font}"',
-            f'-kerning {kerning}',
-            f'-interword-spacing 50',
-            f'-interline-spacing {interline_spacing}',
-            f'-pointsize {font_size}',
-            f'-gravity south',
-        ]   
-
-
-    def __title_text_black_stroke(self) -> list:
-        """
-        ImageMagick commands to implement the title text's black stroke.
-        
-        Returns:
-            List of ImageMagick commands.
-        """
-
-        stroke_width = 3.0 * self.stroke_width
-
-        return [
-            f'-fill black',
-            f'-stroke black',
-            f'-strokewidth {stroke_width}',
-        ]
-
-
-    def __series_count_text_global_effects(self) -> list:
-        """
-        ImageMagick commands for global text effects applied to all series count
-        text (season/episode count and dot).
-        
-        Returns:
-            List of ImageMagick commands.
-        """
-
-        return [
-            f'-kerning 5.42',
-            f'-pointsize 67.75',
-        ]
-
-
-    def __series_count_text_black_stroke(self) -> list:
-        """
-        ImageMagick commands for adding the necessary black stroke effects to
-        series count text.
-        
-        Returns:
-            List of ImageMagick commands.
-        """
-
-        return [
-            f'-fill black',
-            f'-stroke black',
-            f'-strokewidth 6',
-        ]
-
-
-    def __series_count_text_effects(self) -> list:
-        """
-        ImageMagick commands for adding the necessary text effects to the series
-        count text.
-        
-        Returns:
-            List of ImageMagick commands.
-        """
-
-        return [
-            f'-fill "{self.SERIES_COUNT_TEXT_COLOR}"',
-            f'-stroke "{self.SERIES_COUNT_TEXT_COLOR}"',
-            f'-strokewidth 0.75',
-        ]
-
-
-    def _add_gradient(self) -> Path:
-        """
-        Add the static gradient to this object's source image.
-        
-        Returns:
-            Path to the created image.
-        """
-
-        command = ' '.join([
-            f'convert "{self.source_file.resolve()}"',
-            f'+profile "*"',
-            f'-gravity center',
-            f'-resize "{self.TITLE_CARD_SIZE}^"',
-            f'-extent "{self.TITLE_CARD_SIZE}"',
-            f'-blur {self.BLUR_PROFILE}' if self.blur else '',
-            f'"{self.__GRADIENT_IMAGE.resolve()}"',
-            f'-background None',
-            f'-layers Flatten',
-            f'"{self.__SOURCE_WITH_GRADIENT.resolve()}"',
-        ])
-
-        self.image_magick.run(command)
-
-        return self.__SOURCE_WITH_GRADIENT
-
-
-    def _add_title_text(self, gradient_image: Path) -> Path:
-        """
-        Adds episode title text to the provide image.
-
-        Args:
-            gradient_image: The image with gradient added.
-        
-        Returns:
-            Path to the created image that has the gradient and title text added
-        """
-
-        vertical_shift = 245 + self.vertical_shift
-
-        command = ' '.join([
-            f'convert "{gradient_image.resolve()}"',
-            *self.__title_text_global_effects(),
-            *self.__title_text_black_stroke(),
-            f'-annotate +0+{vertical_shift} "{self.title}"',
-            f'-fill "{self.title_color}"',
-            f'-annotate +0+{vertical_shift} "{self.title}"',
-            f'"{self.__GRADIENT_WITH_TITLE.resolve()}"',
-        ])
-
-        self.image_magick.run(command)
-
-        return self.__GRADIENT_WITH_TITLE
-
-
-    def _add_series_count_text_no_season(self, titled_image: Path) -> Path:
-        """
-        Adds the series count text without season title/number.
-        
-        Args:
-            titled_image: The titled image to add text to.
-
-        Returns:
-            Path to the created image (the output file).
-        """
-
-        command = ' '.join([
-            f'convert "{titled_image.resolve()}"',
-            *self.__series_count_text_global_effects(),
-            f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
-            f'-gravity center',
-            *self.__series_count_text_black_stroke(),
-            f'-annotate +0+697.2 "{self.episode_text}"',
-            *self.__series_count_text_effects(),
-            f'-annotate +0+697.2 "{self.episode_text}"',
-            f'"{self.output_file.resolve()}"',
-        ])
-
-        self.image_magick.run(command)
-
-        return self.output_file
-
-
-    def _get_series_count_text_dimensions(self) -> dict:
-        """
-        Gets the series count text dimensions.
-        
-        Returns:
-            The series count text dimensions.
-        """
-
-        command = ' '.join([
-            f'convert -debug annotate xc: ',
-            *self.__series_count_text_global_effects(),
-            f'-font "{self.SEASON_COUNT_FONT.resolve()}"',
-            f'-gravity east',
-            *self.__series_count_text_effects(),
-            f'-annotate +1600+697.2 "{self.season_text} "',
-            f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
-            f'-gravity center',
-            *self.__series_count_text_effects(),
-            f'-annotate +0+689.5 "{self.separator} "',
-            f'-gravity west',
-            *self.__series_count_text_effects(),
-            f'-annotate +1640+697.2 "{self.episode_text}"',
-            f'null: 2>&1'
-        ])
-
-        # Get text dimensions from the output
-        metrics = self.image_magick.run_get_output(command)
-        widths = list(map(int, findall(r'Metrics:.*width:\s+(\d+)', metrics)))
-        heights = list(map(int, findall(r'Metrics:.*height:\s+(\d+)', metrics)))
-
-        # Don't raise IndexError if no dimensions were found
-        if len(widths) < 2 or len(heights) < 2:
-            log.warning(f'Unable to identify font dimensions, file bug report')
-            widths = [370, 47, 357]
-            heights = [68, 83, 83]
-
-        return {
-            'width':    sum(widths),
-            'width1':   widths[0],
-            'width2':   widths[1],
-            'height':   max(heights)+25,
-        }
-
-
-    def _create_series_count_text_image(self, width: float, width1: float,
-                                        width2: float, height: float) -> Path:
-        """
-        Creates an image with only series count text. This image is transparent,
-        and not any wider than is necessary (as indicated by `dimensions`).
-        
-        Returns:
-            Path to the created image containing only series count text.
-        """
-
-        # Create text only transparent image of season count text
-        command = ' '.join([
-            f'convert -size "{width}x{height}"',
-            f'-alpha on',
-            f'-background transparent',
-            f'xc:transparent',
-            *self.__series_count_text_global_effects(),
-            f'-font "{self.SEASON_COUNT_FONT.resolve()}"',
-            *self.__series_count_text_black_stroke(),
-            f'-annotate +0+{height-25} "{self.season_text} "',
-            *self.__series_count_text_effects(),
-            f'-annotate +0+{height-25} "{self.season_text} "',
-            f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
-            *self.__series_count_text_black_stroke(),
-            f'-annotate +{width1}+{height-25-6.5} "{self.separator}"',
-            *self.__series_count_text_effects(),
-            f'-annotate +{width1}+{height-25-6.5} "{self.separator}"',
-            *self.__series_count_text_black_stroke(),
-            f'-annotate +{width1+width2}+{height-25} "{self.episode_text}"',
-            *self.__series_count_text_effects(),
-            f'-annotate +{width1+width2}+{height-25} "{self.episode_text}"',
-            f'"PNG32:{self.__SERIES_COUNT_TEXT.resolve()}"',
-        ])
-
-        self.image_magick.run(command)
-
-        return self.__SERIES_COUNT_TEXT
-
-
-    def _combine_titled_image_series_count_text(self, titled_image: Path,
-                                                series_count_image: Path)->Path:
-        """
-        Combine the titled image (image+gradient+episode title) and the series
-        count image (optional season number+optional dot+episode number) into a
-        single image. This is written into the output image for this object.
-
-        Args:
-            titled_image: Path to the titled image to add.
-            series_count_image: Path to the series count image to add.
-
-        Returns:
-            Path to the created image (the output file).
-        """
-
-        command = ' '.join([
-            f'composite',
-            f'-gravity center',
-            f'-geometry +0+690.2',
-            f'"{series_count_image.resolve()}"',
-            f'"{titled_image.resolve()}"',
-            f'"{self.output_file.resolve()}"',
-        ])
-
-        self.image_magick.run(command)
-
-        return self.output_file
+        # Optional extras
+        self.omit_gradient = omit_gradient
 
 
     @staticmethod
@@ -433,29 +152,106 @@ class StandardTitleCard(BaseCardType):
         Make the necessary ImageMagick and system calls to create this object's
         defined title card.
         """
-        
-        # Add the gradient to the source image (always)
-        gradient_image = self._add_gradient()
 
-        # Add either one or two lines of episode text 
-        titled_image = self._add_title_text(gradient_image)
+        # Font customizations
+        vertical_shift = 245 + self.vertical_shift
+        font_size = 157.41 * self.font_size
+        interline_spacing = -22 + self.interline_spacing
+        kerning = -1.25 * self.kerning
+        stroke_width = 3.0 * self.stroke_width
 
-        # If season text is hidden, just add episode text 
+        # Sub-command to optionally add gradient
+        gradient_command = []
+        if not self.omit_gradient:
+            gradient_command = [
+                f'"{self.__GRADIENT_IMAGE.resolve()}"',
+                f'-composite',
+            ]
+
+        # Sub-command for adding season/episode text
         if self.hide_season:
-            self._add_series_count_text_no_season(titled_image)
+            index_command = [
+                f'-kerning 5.42',       
+                f'-pointsize 67.75',
+                f'-interword-spacing 14.5',
+                f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
+                f'-gravity center',
+                f'-fill black',
+                f'-stroke black',
+                f'-strokewidth 6',
+                f'-annotate +0+697.2 "{self.episode_text}"',
+                f'-fill "{self.SERIES_COUNT_TEXT_COLOR}"',
+                f'-stroke "{self.SERIES_COUNT_TEXT_COLOR}"',
+                f'-strokewidth 0.75',
+                f'-annotate +0+697.2 "{self.episode_text}"',
+            ]
         else:
-            # If adding season text, create intermediate images and combine them
-            series_count_image = self._create_series_count_text_image(
-                **self._get_series_count_text_dimensions()
-            )
-            self._combine_titled_image_series_count_text(
-                titled_image,
-                series_count_image
-            )
+            index_command = [
+                # Global text effects
+                f'-background transparent',
+                f'-gravity center',                     
+                f'-kerning 5.42',       
+                f'-pointsize 67.75',
+                f'-interword-spacing 14.5',
+                # Black stroke behind primary text
+                f'\( -fill black',
+                f'-stroke black',
+                f'-strokewidth 6',
+                # Add season text
+                f'-font "{self.SEASON_COUNT_FONT.resolve()}"',
+                f'label:"{self.season_text} {self.separator}"',
+                # Add episode text
+                f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
+                f'label:"{self.episode_text}"',
+                # Combine season+episode text into one "image"
+                f'+smush 25 \)',
+                # Add season+episode text "image" to source image
+                f'-geometry +0+697.2',
+                f'-composite',
+                # Primary text
+                f'\( -fill "{self.SERIES_COUNT_TEXT_COLOR}"',
+                f'-stroke "{self.SERIES_COUNT_TEXT_COLOR}"',
+                f'-strokewidth 0.75',
+                # Add season text
+                f'-font "{self.SEASON_COUNT_FONT.resolve()}"',
+                f'label:"{self.season_text} {self.separator}"',
+                # Add episode text
+                f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
+                f'label:"{self.episode_text}"',
+                f'+smush 30 \)',
+                f'-geometry +0+697.2',
+                f'-composite',
+            ]
 
-        # Delete all intermediate images
-        images = [gradient_image, titled_image]
-        if not self.hide_season:
-            images.append(series_count_image)
+        command = ' '.join([
+            f'convert "{self.source_file.resolve()}"',
+            # Resize source image
+            f'+profile "*"',    
+            f'-gravity center',
+            f'-resize "{self.TITLE_CARD_SIZE}^"',
+            f'-extent "{self.TITLE_CARD_SIZE}"',
+            # Optionally blur source image
+            f'-blur {self.BLUR_PROFILE}' if self.blur else '',
+            # Overlay gradient
+            *gradient_command,
+            # Global title text options
+            f'-gravity south',
+            f'-font "{self.font}"',                     
+            f'-kerning {kerning}',
+            f'-interword-spacing 50',
+            f'-interline-spacing {interline_spacing}',
+            f'-pointsize {font_size}',
+            # Black stroke behind title text
+            f'-fill black',
+            f'-stroke black',
+            f'-strokewidth {stroke_width}',
+            f'-annotate +0+{vertical_shift} "{self.title}"',
+            # Title text
+            f'-fill "{self.title_color}"',
+            f'-annotate +0+{vertical_shift} "{self.title}"',
+            # Add episode or season+episode "image"
+            *index_command,
+            f'"{self.output_file.resolve()}"',
+        ])
 
-        self.image_magick.delete_intermediate_images(*images)
+        self.image_magick.run(command)
