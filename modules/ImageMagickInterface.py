@@ -117,8 +117,8 @@ class ImageMagickInterface:
 
         # Execute, capturing stdout and stderr
         stdout, stderr = b'', b''
-        process = Popen(cmd, stdout=PIPE, stderr=PIPE)
         try:
+            process = Popen(cmd, stdout=PIPE, stderr=PIPE)
             stdout, stderr = process.communicate(timeout=self.timeout)
         except TimeoutExpired:
             log.error(f'ImageMagick command timed out')
