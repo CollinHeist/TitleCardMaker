@@ -41,13 +41,14 @@ class SeriesYamlWriter:
         self.file = file
         self.compact_mode = compact_mode
 
-        # Convert volume map
+        # Convert volume map to POSIX (unix) fully resolved directories with /
         try:
-            p_as_str =lambda p: str(p) if str(p).endswith('/') else f'{str(p)}/'
-            self.volume_map = {p_as_str(source): p_as_str(tcm)
+            posix_eq = lambda p: f'{Path(p).resolve().as_posix()}/'
+            self.volume_map = {posix_eq(source): posix_eq(tcm)
                                for source, tcm in volume_map.items()}
         except Exception as e:
             log.error(f'Invalid "volumes" - must all be paths')
+            log.debug(f'Error[{e}]')
             self.valid = False
         
         # Validate/store sync mode
@@ -97,10 +98,13 @@ class SeriesYamlWriter:
         """
 
         # Use volume map to convert path to TCM path
+        posix_path = Path(path).resolve().as_posix()
         for source_base, tcm_base in self.volume_map.items():
-            if path.startswith(source_base):
-                return path.replace(source_base, tcm_base)
+            # Apply substitution on their POSIX equivalent strings
+            if posix_path.startswith(source_base):
+                return posix_path.replace(source_base, tcm_base)
 
+        # No defined substituion, return original path
         return path
 
 
