@@ -34,6 +34,7 @@ class TitleCard:
     DEFAULT_FILENAME_FORMAT = '{full_name} - S{season:02}E{episode:02}'
 
     """Mapping of card type identifiers to CardType classes"""
+    DEFAULT_CARD_TYPE = 'standard'
     CARD_TYPES = {
         'anime': AnimeTitleCard,
         'generic': StandardTitleCard,
@@ -58,11 +59,10 @@ class TitleCard:
         '>': '',
         ':':' -',
         '"': '',
-        '/': '+',
-        '\\': '+',
         '|': '',
         '*': '-',
     }
+    __ILLEGAL_NAME_CHARACTERS = {'/': '+', '\\': '+'}
 
     __slots__ = ('episode', 'profile', 'converted_title', 'maker', 'file')
     
@@ -111,19 +111,41 @@ class TitleCard:
 
 
     @staticmethod
-    def __replace_illegal_characters(filename: str) -> str:
+    def sanitize_full_directory(path: str) -> str:
         """
-        Replace the given filename's illegal characters with their legal
-        counterparts.
-        
+        Sanitize the entire path and remove all invalid characters. This is
+        different to sanitizing a name as '/' and '\' characters aren't
+        sanitized in names.
+
         Args:
-            filename: The filename (as a string) to modify.
-        
-        returns:
-            The modified filename.
+            path: Directory path (as a string) to sanitize.
+
+        Returns:
+            Modified directory.
         """
 
-        return filename.translate(str.maketrans(TitleCard.__ILLEGAL_CHARACTERS))
+        replacements = TitleCard.__ILLEGAL_CHARACTERS
+
+        return path.translate(str.maketrans(replacements))
+
+
+    @staticmethod
+    def sanitize_name(filename: str) -> str:
+        """
+        Sanitize the filename and remove all invalid characters.
+
+        Args:
+            path: Filename (as a string) to sanitize.
+
+        Returns:
+            Modified filename.
+        """
+
+        # Replace all characters (including / and \)
+        replacements =\
+            TitleCard.__ILLEGAL_CHARACTERS | TitleCard.__ILLEGAL_NAME_CHARACTERS
+
+        return filename.translate(str.maketrans(replacements))
 
         
     @staticmethod
@@ -151,7 +173,7 @@ class TitleCard:
         
         # Get filename from the given format string, with illegals removed
         abs_number = episode_info.abs_number
-        filename = TitleCard.__replace_illegal_characters(
+        filename = TitleCard.sanitize_name(
             format_string.format(
                 name=series_info.name,
                 full_name=series_info.full_name,
@@ -220,7 +242,7 @@ class TitleCard:
 
         # Get filename from the modified format string
         abs_number = multi_episode.episode_info.abs_number
-        filename = TitleCard.__replace_illegal_characters(
+        filename = TitleCard.sanitize_name(
             modified_format_string.format(
                 name=series_info.name,
                 full_name=series_info.full_name,

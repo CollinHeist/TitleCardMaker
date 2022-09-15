@@ -8,6 +8,7 @@ from modules.Font import Font
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.ImageMaker import ImageMaker
 from modules.Manager import Manager
+from modules.PlexInterface import PlexInterface
 from modules.SeriesInfo import SeriesInfo
 from modules.SeriesYamlWriter import SeriesYamlWriter
 from modules.Show import Show
@@ -29,6 +30,10 @@ class PreferenceParser(YamlReader):
 
     """Valid episode data source identifiers"""
     VALID_EPISODE_DATA_SOURCES = ('sonarr', 'plex', 'tmdb')
+    DEFAULT_EPISODE_DATA_SOURCE = 'sonarr'
+
+    """Default season folder format string"""
+    DEFAULT_SEASON_FOLDER_FORMAT = 'Season {season}'
 
     """Default directory for temporary database objects"""
     DEFAULT_TEMP_DIR = Path(__file__).parent / '.objects'
@@ -53,22 +58,22 @@ class PreferenceParser(YamlReader):
         self.read_file()
 
         # Check for required source directory
-        if (value := self._get('options', 'source', type_=Path)) is None:
+        if (value := self._get('options', 'source', type_=str)) is None:
             log.critical(f'Preference file missing required options/source '
                          f'attribute')
             exit(1)
-        self.source_directory = value
+        self.source_directory = Path(TitleCard.sanitize_full_directory(value))
 
         # Setup default values that can be overwritten by YAML
         self.series_files = []
         self.execution_mode = Manager.DEFAULT_EXECUTION_MODE
-        self._parse_card_type('standard') # Sets self.card_type
+        self._parse_card_type(TitleCard.DEFAULT_CARD_TYPE) # Sets self.card_type
         self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
         self.card_extension = TitleCard.DEFAULT_CARD_EXTENSION
         self.image_source_priority = ('tmdb', 'plex')
-        self.episode_data_source = 'sonarr'
+        self.episode_data_source = self.DEFAULT_EPISODE_DATA_SOURCE
         self.validate_fonts = True
-        self.season_folder_format = 'Season {season}'
+        self.season_folder_format = self.DEFAULT_SEASON_FOLDER_FORMAT
         self.sync_specials = True
         self.archive_directory = None
         self.create_archive = False
@@ -83,7 +88,9 @@ class PreferenceParser(YamlReader):
         self.plex_token = 'NA'
         self.plex_verify_ssl = True
         self.integrate_with_pmm_overlays = False
-        self.plex_filesize_limit = self.filesize_as_bytes('10 MB')
+        self.plex_filesize_limit = self.filesize_as_bytes(
+            PlexInterface.DEFAULT_FILESIZE_LIMIT
+        )
         self.global_watched_style = 'unique'
         self.global_unwatched_style = 'unique'
         self.plex_yaml_writers = []
@@ -143,7 +150,7 @@ class PreferenceParser(YamlReader):
 
         # If none of the font commands worked, IM might not be installed
         log.critical(f"ImageMagick doesn't appear to be installed")
-        exit(1)
+        self.valid = False
 
 
     def __parse_sync(self) -> None:

@@ -25,6 +25,9 @@ class PlexInterface:
     """How many failed episodes result in skipping a series"""
     SKIP_SERIES_THRESHOLD = 3
 
+    """Default filesize limit for all uploaded assets"""
+    DEFAULT_FILESIZE_LIMIT = '10 MB'
+
 
     def __init__(self, database_directory: Path, url: str,
                  x_plex_token: str=None, verify_ssl: bool=True) -> None:
