@@ -212,9 +212,11 @@ class AnimeTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
+        # Base offset for the title text
+        base_offset = 175 + self.vertical_shift
+
         # If adding kanji, add additional annotate commands for kanji
         if self.use_kanji:
-            base_offset = 175
             variable_offset = 200 + (165 * (len(self.title.split('\n'))-1))
             kanji_offset = base_offset + variable_offset * self.font_size
             kanji_offset += self.vertical_shift
@@ -222,9 +224,9 @@ class AnimeTitleCard(BaseCardType):
             return [
                 *self.__title_text_global_effects,
                 *self.__title_text_black_stroke,
-                f'-annotate +75+175 "{self.title}"',
+                f'-annotate +75+{base_offset} "{self.title}"',
                 *self.__title_text_effects,
-                f'-annotate +75+175 "{self.title}"',
+                f'-annotate +75+{base_offset} "{self.title}"',
                 f'-font "{self.KANJI_FONT.resolve()}"',
                 *self.__title_text_black_stroke,
                 f'-pointsize {85 * self.font_size}',
@@ -237,9 +239,9 @@ class AnimeTitleCard(BaseCardType):
         return [
             *self.__title_text_global_effects,
             *self.__title_text_black_stroke,
-            f'-annotate +75+175 "{self.title}"',
+            f'-annotate +75+{base_offset} "{self.title}"',
             *self.__title_text_effects,
-            f'-annotate +75+175 "{self.title}"',
+            f'-annotate +75+{base_offset} "{self.title}"',
         ]
 
 
