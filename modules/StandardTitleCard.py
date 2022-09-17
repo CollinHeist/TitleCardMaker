@@ -219,6 +219,7 @@ class StandardTitleCard(BaseCardType):
                 f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
                 f'label:"{self.episode_text}"',
                 f'+smush 30 \)',
+                # Add text to source image
                 f'-geometry +0+697.2',
                 f'-composite',
             ]

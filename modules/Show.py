@@ -905,7 +905,7 @@ class Show(YamlReader):
 
     def create_missing_title_cards(self) ->None:
         """Create any missing title cards for each episode of this show."""
-
+        
         # If the media directory is unspecified, exit
         if self.media_directory is None:
             return False

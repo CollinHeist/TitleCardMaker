@@ -193,22 +193,22 @@ class RomanNumeralTitleCard(BaseCardType):
         """
 
         # Scale font size and interline spacing of roman text
-        font_size = int(1250 * self.__roman_text_scalar)
-        interline_spacing = int(-400 * self.__roman_text_scalar) # -700
+        font_size = 1250 * self.__roman_text_scalar
+        interline_spacing = -400 * self.__roman_text_scalar
         
         # Generate command to create card
         command = ' '.join([
             f'convert',
             f'-size "{self.TITLE_CARD_SIZE}"',
-            f'xc:"{self.background}"',
-            f'-font "{self.ROMAN_NUMERAL_FONT.resolve()}"',
+            f'xc:"{self.background}"',                      # Create background
+            f'-font "{self.ROMAN_NUMERAL_FONT.resolve()}"', # Add roman numerals
             f'-fill "{self.roman_numeral_color}"',
             f'-pointsize {font_size}',
             f'-gravity center',
             f'-interline-spacing {interline_spacing}',
-            f'-annotate +0+0 "{self.roman_numeral}"',     # +0-175
-            f'-blur {self.BLUR_PROFILE}' if self.blur else '',
-            f'-font "{self.TITLE_FONT}"',
+            f'-annotate +0+0 "{self.roman_numeral}"',
+            f'-blur {self.BLUR_PROFILE}' if self.blur else '',  # Optional blur
+            f'-font "{self.TITLE_FONT}"',                   # Add title
             f'-pointsize 150',
             f'-interword-spacing 40',
             f'-interline-spacing 0',

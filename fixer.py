@@ -127,7 +127,7 @@ tmdb_group.add_argument(
     help='Add title translations from TMDb to the given datafile')
 
 # Parse given arguments
-args, unknown = parser.parse_known_args()
+args = parser.parse_args()
 
 # Parse preference file for options that might need it
 pp = PreferenceParser(args.preferences)
