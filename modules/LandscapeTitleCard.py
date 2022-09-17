@@ -151,13 +151,16 @@ class LandscapeTitleCard(BaseCardType):
  
         # Generate command to create card
         command = ' '.join([
-            f'convert "{self.source.resolve()}"',       # Resize source
+            f'convert "{self.source.resolve()}"',
             f'+profile "*"',
             f'-gravity center',
+            # Resize source image
             f'-resize "{self.TITLE_CARD_SIZE}^"',
             f'-extent "{self.TITLE_CARD_SIZE}"',
-            f'-blur {self.BLUR_PROFILE}' if self.blur else '', # Optional blur
-            f'\( -background None',                     # Add title
+            # Optionally blur
+            f'-blur {self.BLUR_PROFILE}' if self.blur else '',
+            # Add title text
+            f'\( -background None',
             f'-font "{self.font}"',
             f'-pointsize {font_size}',
             f'-gravity center',
@@ -166,14 +169,17 @@ class LandscapeTitleCard(BaseCardType):
             f'-interword-spacing 40',
             f'-fill "{self.title_color}"',
             f'label:"{self.title}"',
-            f'\( +clone',                               # Add drop shadow
+            # Create drop shadow of title text
+            f'\( +clone',
             f'-background None',
             f'-shadow 80x3+10+10 \)',
-            f'+swap',                                   # Underlay drop shadow
+            # Underlay drop shadow 
+            f'+swap',
             f'-background None',
             f'-layers merge',
             f'+repage \)',
-            f'-composite',                              # Add text to source
+            # Add title image(s) to source
+            f'-composite',
             f'"{self.output_file.resolve()}"',
         ])
         

@@ -278,7 +278,7 @@ class StandardSummary(BaseSummary):
             return None
 
         # Select images for montaging
-        if not self._select_images() or len(self.inputs) == 0:
+        if not self._select_images(9) or len(self.inputs) == 0:
             return None
             
         # Create montage of title cards

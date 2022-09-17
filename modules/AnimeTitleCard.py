@@ -1,5 +1,4 @@
 from pathlib import Path
-from re import findall
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
@@ -350,7 +349,7 @@ class AnimeTitleCard(BaseCardType):
         defined title card.
         """
 
-        # If kanji is required (and not given), error
+        # If kanji is required, and not given, error
         if self.require_kanji and not self.use_kanji:
             log.error(f'Kanji is required and not provided - skipping card '
                       f'"{self.output_file.name}"')
@@ -361,6 +360,7 @@ class AnimeTitleCard(BaseCardType):
             f'+profile "*"',
             # Increase contrast of source image
             f'-modulate 100,125',
+            # Resize to proper title card dimensions
             f'-gravity center',
             f'-resize "{self.TITLE_CARD_SIZE}^"',
             f'-extent "{self.TITLE_CARD_SIZE}"',

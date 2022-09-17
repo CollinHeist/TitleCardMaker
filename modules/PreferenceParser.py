@@ -83,6 +83,7 @@ class PreferenceParser(YamlReader):
         self.summary_background = self.summary_class.BACKGROUND_COLOR
         self.summary_minimum_episode_count = 3
         self.summary_created_by = None
+        self.summary_ignore_specials = False
         self.use_plex = False
         self.plex_url = None
         self.plex_token = 'NA'
@@ -309,7 +310,7 @@ class PreferenceParser(YamlReader):
         if (value := self._get('options', 'sync_specials', type_=bool)) != None:
             self.sync_specials = value
 
-        if (value := self._get('archive', 'path', type_=Path)) != None:
+        if (value := self._get('archive', 'path', type_=Path)) is not None:
             self.archive_directory = value
             self.create_archive = True
 
@@ -317,7 +318,7 @@ class PreferenceParser(YamlReader):
             self.archive_all_variations = value
 
         if (value := self._get('archive', 'summary', 'create',
-                               type_=bool)) != None:
+                               type_=bool)) is not None:
             self.create_summaries = value
 
         if (value := self._get('archive', 'summary', 'type',
@@ -338,18 +339,22 @@ class PreferenceParser(YamlReader):
             self.summary_created_by = value
 
         if (value := self._get('archive', 'summary', 'background',
-                               type_=str)) != None:
+                               type_=str)) is not None:
             self.summary_background = value
 
-        if ((value := self._get('archive', 'summary', 'minimum_episodes',
-                               type_=int)) != None):
+        if (value := self._get('archive', 'summary', 'minimum_episodes',
+                               type_=int)) is not None:
             self.summary_minimum_episode_count = value
 
-        if (value := self._get('plex', 'url', type_=str)) != None:
+        if (value := self._get('archive', 'summary', 'ignore_specials',
+                               type_=bool)) is not None:
+            self.summary_ignore_specials = value
+
+        if (value := self._get('plex', 'url', type_=str)) is not None:
             self.plex_url = value
             self.use_plex = True
 
-        if (value := self._get('plex', 'token', type_=str)) != None:
+        if (value := self._get('plex', 'token', type_=str)) is not None:
             self.plex_token = value
 
         if (value := self._get('plex', 'verify_ssl', type_=bool)) is not None:
@@ -364,7 +369,7 @@ class PreferenceParser(YamlReader):
                 self.global_watched_style = value
 
         if (value := self._get('plex', 'unwatched_style',
-                               type_=lower_str)) != None:
+                               type_=lower_str)) is not None:
             if value not in Show.VALID_STYLES:
                 opt = '", "'.join(Show.VALID_STYLES)
                 log.critical(f'Invalid unwatched style, must be one of "{opt}"')
@@ -397,11 +402,11 @@ class PreferenceParser(YamlReader):
         if (value := self._get('sonarr', 'verify_ssl', type_=bool)) is not None:
             self.sonarr_verify_ssl = value
         
-        if (value := self._get('tmdb', 'api_key', type_=str)) != None:
+        if (value := self._get('tmdb', 'api_key', type_=str)) is not None:
             self.tmdb_api_key = value
             self.use_tmdb = True
 
-        if (value := self._get('tmdb', 'retry_count', type_=int)) != None:
+        if (value := self._get('tmdb', 'retry_count', type_=int)) is not None:
             self.tmdb_retry_count = value
 
         if (value := self._get('tmdb', 'minimum_resolution', type_=str)) !=None:
@@ -432,11 +437,6 @@ class PreferenceParser(YamlReader):
         if self._is_specified('options', 'hide_season_folders'):
             log.critical(f'Options "hide_season_folders" setting has been '
                          f'incorporated into "season_folder_format"')
-            self.valid = False
-
-        if self._is_specified('archive', 'summary', 'background_color'):
-            log.critical(f'Archive summary "background_color" option has been '
-                         f'renamed to "background"')
             self.valid = False
 
         if self._is_specified('sonarr', 'sync', 'tags'):
