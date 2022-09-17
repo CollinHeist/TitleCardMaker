@@ -42,18 +42,20 @@ class AnimeTitleCard(BaseCardType):
     SERIES_COUNT_FONT = REF_DIRECTORY / 'Avenir.ttc'
     SERIES_COUNT_TEXT_COLOR = '#CFCFCF'
 
-    __slots__ = ('source_file', 'output_file', 'title', 'kanji', 'use_kanji',
-                 'require_kanji', 'season_text', 'episode_text', 'hide_season',
-                 'separator', 'blur', 'font', 'font_size', 'font_color',
-                 'vertical_shift', 'interline_spacing', 'kerning')
+    __slots__ = (
+        'source_file', 'output_file', 'title', 'kanji', 'use_kanji',
+        'require_kanji', 'kanji_vertical_shift', 'season_text', 'episode_text',
+        'hide_season', 'separator', 'blur', 'font', 'font_size', 'font_color',
+        'vertical_shift', 'interline_spacing', 'kerning'
+    )
 
     
     def __init__(self, source: Path, output_file: Path, title: str, 
                  season_text: str, episode_text: str, font: str,font_size:float,
                  title_color: str, hide_season: bool, vertical_shift: int=0,
                  interline_spacing: int=0, kerning: float=1.0, kanji: str=None,
-                 require_kanji: bool=False, separator: str='·',
-                 blur: bool=False, **kwargs)->None:
+                 require_kanji: bool=False, kanji_vertical_shift: float=0,
+                 separator: str='·', blur: bool=False, **kwargs)->None:
         """
         Construct a new instance.
         
@@ -64,8 +66,12 @@ class AnimeTitleCard(BaseCardType):
             season_text: The season text for this card.
             episode_text: The episode text for this card.
             hide_season: Whether to hide the season text on this card
+            vertical_shift: Vertical shift to apply to the title and kanji
+                text.
+            interline_spacing: Offset to interline spacing of the title text
             kanji: Kanji text to place above the episode title on this card.
             require_kanji: Whether to require kanji for this card.
+            kanji_vertical_shift: Vertical shift to apply to just kanji text.
             separator: Character to use to separate season and episode text.
             blur: Whether to blur the source image.
             font_size: Scalar to apply to the title font size.
@@ -87,6 +93,7 @@ class AnimeTitleCard(BaseCardType):
         self.kanji = self.image_magick.escape_chars(kanji)
         self.use_kanji = (kanji is not None)
         self.require_kanji = require_kanji
+        self.kanji_vertical_shift = kanji_vertical_shift
 
         # Store season and episode text
         self.season_text = self.image_magick.escape_chars(season_text.upper())
@@ -217,9 +224,10 @@ class AnimeTitleCard(BaseCardType):
 
         # If adding kanji, add additional annotate commands for kanji
         if self.use_kanji:
-            variable_offset = 200 + (165 * (len(self.title.split('\n'))-1))
+            linecount = len(self.title.split('\n')) - 1
+            variable_offset = 200 + ((165 + self.interline_spacing) * linecount)
             kanji_offset = base_offset + variable_offset * self.font_size
-            kanji_offset += self.vertical_shift
+            kanji_offset += self.vertical_shift + self.kanji_vertical_shift
             
             return [
                 *self.__title_text_global_effects,
