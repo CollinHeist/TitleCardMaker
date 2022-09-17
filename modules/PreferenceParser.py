@@ -719,7 +719,7 @@ class PreferenceParser(YamlReader):
                 if show_yaml is None:
                     log.error(f'Skipping "{show_name}" from "{file_}"')
                     continue
-
+                
                 yield Show(show_name, show_yaml, self.source_directory, self)
 
                 # If archiving is disabled, skip
