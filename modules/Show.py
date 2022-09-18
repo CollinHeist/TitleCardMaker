@@ -792,13 +792,9 @@ class Show(YamlReader):
         MultiEpisode objects to this Show's episodes dictionary.
         """
 
-        # Set of episodes already mapped
-        matched = set()
-
-        # List of multipart episodes
-        multiparts = []
-
         # Go through each episode to check if it can be made into a MultiEpisode
+        matched = set()
+        multiparts = []
         for _, episode in self.episodes.items():
             # If this episode has already been used in MultiEpisode, skip
             if episode in matched:
