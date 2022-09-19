@@ -215,7 +215,7 @@ class OlivierTitleCard(BaseCardType):
             offset = text_offset[self.episode_prefix]
         else:
             offset_per_char = text_offset['EPISODE'] / len('EPISODE')
-            offset = offset_per_char * len(self.episode_prefix)
+            offset = offset_per_char * len(self.episode_prefix) * 1.10
 
         return [
             f'-gravity west',
