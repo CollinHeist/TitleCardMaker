@@ -389,6 +389,13 @@ class PlexInterface:
         # Create list of all episodes in Plex
         all_episodes = []
         for plex_episode in series.episodes():
+            # Skip if episode has no season or episode number
+            if (plex_episode.parentIndex is None
+                or plex_episode.index is None):
+                log.warning(f'Episode {plex_episode} of {series_info} in '
+                            f'"{library_name}" has no index - skipping')
+                continue
+            
             # Get all ID's for this episode
             ids = {}
             for guid in plex_episode.guids:
