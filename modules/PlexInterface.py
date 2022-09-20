@@ -340,6 +340,11 @@ class PlexInterface:
                 if show.year is None:
                     log.warning(f'Series {show.title} has no year - skipping')
                     continue
+                    
+                # Skip show if has no locations.. somehow..
+                if len(show.locations) == 0:
+                    log.warning(f'Series {show.title} has no files - skipping')
+                    continue
 
                 # Get all ID's for this series
                 ids = {}
@@ -350,11 +355,7 @@ class PlexInterface:
                             break
 
                 # Create SeriesInfo object for this show
-                series_info = SeriesInfo(
-                    show.title,
-                    show.year,
-                    **ids,
-                )
+                series_info = SeriesInfo(show.title, show.year, **ids)
 
                 # Add to returned list
                 all_series.append((series_info,show.locations[0],library.title))
