@@ -340,7 +340,7 @@ class PlexInterface:
                 if show.year is None:
                     log.warning(f'Series {show.title} has no year - skipping')
                     continue
-                    
+
                 # Skip show if has no locations.. somehow..
                 if len(show.locations) == 0:
                     log.warning(f'Series {show.title} has no files - skipping')
@@ -395,7 +395,7 @@ class PlexInterface:
                 log.warning(f'Episode {plex_episode} of {series_info} in '
                             f'"{library_name}" has no index - skipping')
                 continue
-            
+
             # Get all ID's for this episode
             ids = {}
             for guid in plex_episode.guids:
