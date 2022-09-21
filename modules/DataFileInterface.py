@@ -214,12 +214,10 @@ class DataFileInterface:
                 yaml[season_key][episode_info.episode_number]['abs_number'] =\
                     episode_info.abs_number
 
-        # If nothing was added, exit
+        # If nothing was added, exit - otherwise log to user
         if (count := added['count']) == 0:
             return None
-        
-        # Log add operations to user
-        if count > 1:
+        elif count > 1:
             log.info(f'Added {count} episodes to "{self.file.parent.name}"')
         else:
             log.info(f'Added {added["info"]} to "{self.file.parent.name}"')

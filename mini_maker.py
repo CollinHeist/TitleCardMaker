@@ -188,6 +188,12 @@ movie_poster_group.add_argument(
     metavar=('TITLE_LINE'),
     help='Movie title for the movie poster')
 movie_poster_group.add_argument(
+    '--movie-top-subtitle',
+    type=str,
+    default='',
+    metavar='TOP_SUBTITLE',
+    help='Top subtitle line for the movie poster')    
+movie_poster_group.add_argument(
     '--movie-subtitle',
     type=str,
     default='',
@@ -380,6 +386,7 @@ if hasattr(args, 'movie_poster'):
         output=args.movie_poster[1],
         title='\n'.join(args.movie_title),
         subtitle=args.movie_subtitle,
+        top_subtitle=args.movie_top_subtitle,
         font=args.movie_font,
         font_color=args.movie_font_color,
         font_size=float(args.movie_font_size[:-1])/100.0,
