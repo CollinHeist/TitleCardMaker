@@ -12,11 +12,6 @@ class SeriesYamlWriter:
     formatted series YAML files by syncing with Sonarr or Plex.
     """
 
-    """Default arguments for initializing an object"""
-    DEFAULT_ARGUMENTS = {
-        'sync_mode': 'append', 'compact_mode': True, 'volume_map': {}
-    }
-
     """Keyword arguments for yaml.dump()"""
     __WRITE_OPTIONS = {'allow_unicode': True, 'width': 200}
 
@@ -33,7 +28,7 @@ class SeriesYamlWriter:
                 'append' or 'match'.
             compact_mode: Whether to write this YAML in compact mode or not.
             volume_map: Mapping of interface paths to corresponding TCM paths.
-            template: Template to add to all synced series.
+            template: Template name to add to all synced series.
         """
 
         # Start as valid, Store base attributes
@@ -64,8 +59,6 @@ class SeriesYamlWriter:
         # Add representer for compact YAML writing
         # Pseudo-class for a flow map - i.e. dictionary
         class flowmap(dict): pass
-
-        # Representor using flow style
         def flowmap_rep(dumper, data):
             return dumper.represent_mapping(
                 u'tag:yaml.org,2002:map', data, flow_style=True
@@ -394,7 +387,8 @@ class SeriesYamlWriter:
                            plex_libraries: dict[str: str]={},
                            required_tags: list[str]=[],
                            exclusions: list[dict[str: str]]=[],
-                           monitored_only: bool=False) -> None:
+                           monitored_only: bool=False,
+                           downloaded_only: bool=False) -> None:
         """
         Update this object's file from Sonarr.
 
@@ -405,12 +399,13 @@ class SeriesYamlWriter:
             required_tags: List of tags to filter the Sonarr sync from.
             exclusions: List of labelled exclusions to apply to sync.
             monitored_only: Whether to only sync monitored series from Sonarr.
+            downloaded_only: Whether to only sync downloaded series from Sonarr.
         """
 
         # Get complete file YAML from Sonarr
         yaml = self.__get_yaml_from_sonarr(
             sonarr_interface, plex_libraries, required_tags, exclusions,
-            monitored_only
+            monitored_only, downloaded_only
         )
 
         # Either sync of append this YAML to this object's file
@@ -419,7 +414,7 @@ class SeriesYamlWriter:
         elif self.sync_mode == 'append':
             self.__append(yaml)
 
-        log.info(f'Updated {self.file.resolve()} from Sonarr')
+        log.info(f'Synced {self.file.resolve()} from Sonarr')
 
 
     def __get_yaml_from_plex(self, plex_interface: 'PlexInterface',
@@ -514,7 +509,7 @@ class SeriesYamlWriter:
         Args:
             plex_interface: PlexInterface to sync from.
             filter_libraries: List of libraries to filter Plex sync from.
-            exclusions: List of labelled exclusions to apply to sync.
+            exclusions: List of labeled exclusions to apply to sync.
         """
 
         if not isinstance(filter_libraries, (list, tuple)):
@@ -532,4 +527,4 @@ class SeriesYamlWriter:
         elif self.sync_mode == 'append':
             self.__append(yaml)
 
-        log.info(f'Updated {self.file.resolve()} from Plex')
+        log.info(f'Synced {self.file.resolve()} from Plex')

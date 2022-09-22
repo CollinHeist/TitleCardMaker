@@ -138,8 +138,8 @@ class SonarrInterface(WebInterface):
 
 
     def get_all_series(self, required_tags: list[str]=[], 
-                       excluded_tags: list[str]=[],
-                       monitored_only: bool=False)->list[tuple[SeriesInfo,str]]:
+                       excluded_tags: list[str]=[], monitored_only: bool=False,
+                       downloaded_only:bool=False)->list[tuple[SeriesInfo,str]]:
         """
         Get all the series within Sonarr, filtered by the given parameters.
 
@@ -148,8 +148,10 @@ class SonarrInterface(WebInterface):
                 series that have all of the given tags are returned.
             excluded_tags: List of tags to filter return by. If provided, series
                 with any of the given tags are excluded from return.
-            monitored_only: Whether to filter return by onyl series that are
-                monitored within Sonarr.
+            monitored_only: Whether to filter return to exclude series that are
+                unmonitored within Sonarr.
+            downloaded_only: Whether to filter return to exclude series that do
+                not have any downloaded episodes.
 
         Returns:
             List of tuples. Tuple contains the SeriesInfo object for the series,
@@ -176,6 +178,10 @@ class SonarrInterface(WebInterface):
         for show in all_series:
             # Skip if monitored only and show isn't monitored
             if monitored_only and not show['monitored']:
+                continue
+
+            # Skip if downloaded only and filesize is 0
+            if downloaded_only and show['sizeOnDisk'] == 0:
                 continue
 
             # Skip show if tag is in exclude list

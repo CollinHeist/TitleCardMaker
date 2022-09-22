@@ -184,19 +184,24 @@ class PreferenceParser(YamlReader):
                 log.error(f'Cannot sync to "{file.resolve()}" - invalid sync')
                 return None
 
-            # Parse update args
+            # Parse args applicable to Plex and Sonarr
             update_args = {}
-            if (value := sync_yaml._get('libraries', type_=list)) is not None:
-                update_args['filter_libraries'] = value
             if (value := sync_yaml._get('exclusions', type_=list)) is not None:
                 update_args['exclusions'] = value
-            if (value := sync_yaml._get('plex_libraries', type_=dict)) != None:
-                update_args['plex_libraries'] = value
-            if (value := sync_yaml._get('required_tags', type_=list)) != None:
-                update_args['required_tags'] = value
-            if (value := sync_yaml._get('monitored_only', 
-                                        type_=bool)) is not None:
-                update_args['monitored_only'] = value
+
+            # Parse args applicable only to Plex or Sonarr
+            if sync_type == 'plex':
+                if (value := sync_yaml._get('libraries', type_=list)) != None:
+                    update_args['filter_libraries'] = value
+            elif sync_type == 'sonarr':
+                if (value := sync_yaml._get('plex_libraries', type_=dict)) != None:
+                    update_args['plex_libraries'] = value
+                if (value := sync_yaml._get('required_tags', type_=list)) != None:
+                    update_args['required_tags'] = value
+                if (value := sync_yaml._get('monitored_only', type_=bool)) != None:
+                    update_args['monitored_only'] = value
+                if (value := sync_yaml._get('downloaded_only', type_=bool)) != None:
+                    update_args['downloaded_only'] = value
 
             # Skip if YAML was invalidated at any point
             if not sync_yaml.valid:
@@ -216,7 +221,7 @@ class PreferenceParser(YamlReader):
             # Singular sync specification
             if isinstance(plex_sync, dict):
                 append_writer_and_args('plex', plex_sync, {})
-            # List of syncs, no globals
+            # List of syncs
             elif isinstance(plex_sync, list) and len(plex_sync) > 0:
                 base_sync = plex_sync[0]
                 for sync in plex_sync:
@@ -229,7 +234,7 @@ class PreferenceParser(YamlReader):
             # Singular sync specification
             if isinstance(sonarr_sync, dict):
                 append_writer_and_args('sonarr', sonarr_sync, {})
-            # List of syncs, no globals
+            # List of syncs
             elif isinstance(sonarr_sync, list) and len(sonarr_sync) > 0:
                 base_sync = sonarr_sync[0]
                 for sync in sonarr_sync:
