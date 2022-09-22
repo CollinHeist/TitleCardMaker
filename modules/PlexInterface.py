@@ -275,7 +275,8 @@ class PlexInterface:
 
 
     @catch_and_log('Error getting library paths', default={})
-    def get_library_paths(self, filter_libraries: list[str]=[]) ->dict[str:str]:
+    def get_library_paths(self, filter_libraries: list[str]=[]
+                          ) -> dict[str: list[str]]:
         """
         Get all libraries and their associated base directories.
 
@@ -284,8 +285,7 @@ class PlexInterface:
 
         Returns:
             Dictionary whose keys are the library names, and whose values are
-            the paths to that library's base directory. If the library has
-            multiple directories, the first one is returned.
+            the list of paths to that library's base directories.
         """
 
         # Go through every library in this server
@@ -300,8 +300,8 @@ class PlexInterface:
                 and library.title not in filter_libraries):
                 continue
 
-            # Add library's corresponding (first) path to the dictionary
-            all_libraries[library.title] = library.locations[0]
+            # Add library's paths to the dictionary under the library name
+            all_libraries[library.title] = library.locations
 
         return all_libraries
     
@@ -555,7 +555,7 @@ class PlexInterface:
                 continue
 
 
-    @catch_and_log('Error getting source image', default=None)
+    @catch_and_log('Error getting source image')
     def get_source_image(self, library_name: str, series_info: 'SeriesInfo',
                          episode_info: EpisodeInfo) -> str:
         """
@@ -795,7 +795,7 @@ class PlexInterface:
             log.info(f'Loaded {loaded_count} season posters for "{series_info}"')
 
 
-    @catch_and_log('Error getting episode details', default=None)
+    @catch_and_log('Error getting episode details')
     def get_episode_details(self, rating_key: int) -> tuple[SeriesInfo,
                                                             EpisodeInfo, str]:
         """

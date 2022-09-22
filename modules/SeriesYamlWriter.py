@@ -447,20 +447,45 @@ class SeriesYamlWriter:
         if len(all_series) == 0:
             return {}
 
-        # Generate YAML to write
+        # Get dictionary of libraries and their directories from Plex
+        libraries = plex_interface.get_library_paths(filter_libraries)
+
+        # Create libraries YAML
+        libraries_yaml = {}
+        for library, paths in libraries.items():
+            # If this library has multiple directories, create entry for each
+            if len(paths) > 1:
+                for index, path in enumerate(paths):
+                    libraries_yaml[f'{library} - Directory {index+1}'] = {
+                        'path': self.__convert_path(path),
+                        'plex_name': library,
+                    }
+            # Library only has one directory, add directly
+            else:
+                libraries_yaml[library]={'path':self.__convert_path(paths[0])}
+
+        # Create series YAML
         series_yaml = {}
         for series_info, plex_path, library in all_series:
             # Use volume map to convert Plex path to TCM path
             series_path = self.__convert_path(plex_path)
+
+            # If part of a multi-directory library, use adjusted library name
+            if libraries_yaml.get(library) is None:
+                for library_key, library_yaml in libraries_yaml.items():
+                    # Find matching library 
+                    if (library_yaml.get('plex_name') == library
+                        and series_path.startswith(library_yaml['path'])):
+                        library = library_key
+                        break
 
             # Add details to eventual YAML object
             this_entry = {'library': library}
             if self.template is not None:
                 this_entry['template'] = self.template
 
-            # Add under key: full name > name [imdb:imdb_id]
-            key = series_info.full_name
-            if key in series_yaml:
+            # Add under key: "full name" then "name [imdb:imdb_id]"
+            if (key := series_info.full_name) in series_yaml:
                 this_entry['name'] = series_info.name
                 this_entry['year'] = series_info.year
                 key = f'{series_info.name} [imdb:{series_info.imdb_id}]'
@@ -472,17 +497,10 @@ class SeriesYamlWriter:
             # Add this entry to main supposed YAML
             series_yaml[key] = this_entry
 
-        # Create libraries YAML
-        libraries_yaml = {
-            library: {'path': self.__convert_path(path)}
-            for library, path in
-            plex_interface.get_library_paths(filter_libraries).items()
-        }
-
         # Create end-YAML as combination of series and libraries
         yaml = {'libraries': libraries_yaml, 'series': series_yaml}
 
-         # Apply exclusions and return yaml
+         # Apply exclusions, then return yaml finalized YAML
         self.__apply_exclusion(yaml, exclusions)
         return yaml
 
