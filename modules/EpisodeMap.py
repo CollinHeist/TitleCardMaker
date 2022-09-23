@@ -56,6 +56,7 @@ class EpisodeMap:
             return None
 
         # If both mappings are provided, invalidate 
+        seasons.pop('hide', None)
         if seasons and episode_ranges:
             log.error(f'Cannot specify both seasons and episode ranges')
             self.valid = False
@@ -65,8 +66,8 @@ class EpisodeMap:
         if seasons and len(seasons) > 0:
             self.__index_by = 'season'
             self.__parse_seasons(seasons)
-        elif (episode_ranges and len(episode_ranges) > 0
-            and 's' in list(episode_ranges)[0]):
+        if (episode_ranges and len(episode_ranges) > 0
+            and list(episode_ranges.keys())[0][0] == 's'):
             self.__index_by = 'index'
             self.__parse_index_episode_range(episode_ranges)
         elif episode_ranges and len(episode_ranges) > 0:
@@ -186,9 +187,10 @@ class EpisodeMap:
         for episode_range, mapping in episode_ranges.items():
             try:
                 start, end = map(int, episode_range.split('-'))
-            except Exception:
+            except Exception as e:
                 self.valid = False
                 log.error(f'Invalid episode range "{episode_range}"')
+                log.debug(e)
                 continue
             
             # Assign attributes for every episode in this range
