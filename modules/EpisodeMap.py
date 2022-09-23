@@ -213,9 +213,14 @@ class EpisodeMap:
     
     
     def reset(self) -> None:
-        # Reset all mappings
-        self.__index_by = 'season'
-        self.__titles, self.__sources, self.__applies = {}, {}, {}
+        """Reset this object go have generic titles."""
+
+        # Always reset titles/applies - never reset sources
+        self.__titles, self.__applies = {}, {}
+
+        # If no manual sources have been specified, reset index by flag
+        if len(self.__sources) == 0:
+            self.__index_by = 'season'
 
     
     def get_generic_season_title(self, *, season_number: int=None,
