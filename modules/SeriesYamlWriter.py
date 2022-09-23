@@ -304,7 +304,8 @@ class SeriesYamlWriter:
                                plex_libraries: dict[str: str],
                                required_tags: list[str],
                                exclusions: list[dict[str: str]],
-                               monitored_only: bool)->dict[str: dict[str: str]]:
+                               monitored_only: bool, downloaded_only: bool
+                               )->dict[str: dict[str: str]]:
         """
         Get the YAML from Sonarr, as filtered by the given attributes.
 
@@ -315,6 +316,7 @@ class SeriesYamlWriter:
             required_tags: List of requried tags to filter the Sonarr sync with.
             exclusions: List of labelled exclusions to apply to sync.
             monitored_only: Whether to only sync monitored series from Sonarr.
+            downloaded_only: Whether to only sync downloaded series from Sonarr.
 
         Returns:
             Series YAML as reported by Sonarr. Keys are series names, and each
@@ -330,7 +332,7 @@ class SeriesYamlWriter:
         
         # Get list of SeriesInfo and paths from Sonarr
         all_series = sonarr_interface.get_all_series(
-            required_tags, excluded_tags, monitored_only
+            required_tags, excluded_tags, monitored_only, downloaded_only,
         )
 
         # Exit if no series were returned

@@ -181,7 +181,8 @@ class SonarrInterface(WebInterface):
                 continue
 
             # Skip if downloaded only and filesize is 0
-            if downloaded_only and show['sizeOnDisk'] == 0:
+            if (downloaded_only
+                and show.get('statistics', {}).get('sizeOnDisk') == 0):
                 continue
 
             # Skip show if tag is in exclude list
