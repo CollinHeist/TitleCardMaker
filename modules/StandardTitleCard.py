@@ -226,13 +226,8 @@ class StandardTitleCard(BaseCardType):
 
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
-            # Resize source image
-            f'+profile "*"',    
-            f'-gravity center',
-            f'-resize "{self.TITLE_CARD_SIZE}^"',
-            f'-extent "{self.TITLE_CARD_SIZE}"',
-            # Optionally blur source image
-            f'-blur {self.BLUR_PROFILE}' if self.blur else '',
+            # Resize and optionally blur source image
+            *self.resize_and_blur,
             # Overlay gradient
             *gradient_command,
             # Global title text options

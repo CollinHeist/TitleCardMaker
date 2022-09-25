@@ -166,9 +166,8 @@ class PosterTitleCard(BaseCardType):
         command = ' '.join([
             f'convert',
             f'"{self.source_file.resolve()}"',          # Resize source image
-            f'-resize "x1800"',
-            f'-extent "3200x1800"',
-            f'-blur {self.BLUR_PROFILE}' if self.blur else '',
+            # Resize and optionally blur source image
+            *self.resize_and_blur,
             f'"{self.__GRADIENT_OVERLAY.resolve()}"',   # Add gradient overlay
             f'-flatten',                                # Combine images
             *logo_command,                              # Optionally add logo

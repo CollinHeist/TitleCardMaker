@@ -367,15 +367,10 @@ class AnimeTitleCard(BaseCardType):
 
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
-            f'+profile "*"',
+            # Resize and optionally blur source image
+            *self.resize_and_blur,
             # Increase contrast of source image
             f'-modulate 100,125',
-            # Resize to proper title card dimensions
-            f'-gravity center',
-            f'-resize "{self.TITLE_CARD_SIZE}^"',
-            f'-extent "{self.TITLE_CARD_SIZE}"',
-            # Optionally blur source image
-            f'-blur {self.BLUR_PROFILE}' if self.blur else '',
             # Overlay gradient
             f'"{self.__GRADIENT_IMAGE.resolve()}"',
             f'-composite',

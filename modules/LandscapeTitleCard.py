@@ -233,13 +233,8 @@ class LandscapeTitleCard(BaseCardType):
         # Generate command to create card
         command = ' '.join([
             f'convert "{self.source.resolve()}"',
-            f'+profile "*"',
-            f'-gravity center',
-            # Resize source image
-            f'-resize "{self.TITLE_CARD_SIZE}^"',
-            f'-extent "{self.TITLE_CARD_SIZE}"',
-            # Optionally blur
-            f'-blur {self.BLUR_PROFILE}' if self.blur else '',
+            # Resize and optionally blur source image
+            *self.resize_and_blur,
             # Add title text
             f'\( -background None',
             f'-font "{self.font}"',
