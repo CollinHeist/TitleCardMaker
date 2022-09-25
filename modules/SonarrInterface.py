@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from pathlib import Path
 from re import IGNORECASE, compile as re_compile
 
 from modules.Debug import log
@@ -13,10 +12,7 @@ class SonarrInterface(WebInterface):
     This class describes a Sonarr interface, which is a type of WebInterface.
     The primary purpose of this class is to get episode titles, as well as
     database ID's for episodes.
-    """
-
-    """Regex to match Sonarr URL's"""
-    __SONARR_URL_REGEX = re_compile(r'^((?:https?:\/\/)?.+)(?=\/)', IGNORECASE)
+    """    
 
     """Episode titles that indicate a placeholder and are to be ignored"""
     __TEMP_IGNORE_REGEX = re_compile(r'^(tba|tbd|episode \d+)$', IGNORECASE)
@@ -49,7 +45,7 @@ class SonarrInterface(WebInterface):
         url = url if url.endswith('/') else f'{url}/'
         if url.endswith('/api/v3/'):
             self.url = url
-        elif (re_match := self.__SONARR_URL_REGEX.match(url)) is None:
+        elif (re_match := self._URL_REGEX.match(url)) is None:
             log.critical(f'Invalid Sonarr URL "{url}"')
             exit(1)
         else:

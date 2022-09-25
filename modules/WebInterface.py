@@ -1,3 +1,4 @@
+from re import IGNORECASE, compile as re_compile
 from requests import get, Session
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 import urllib3
@@ -14,6 +15,9 @@ class WebInterface:
     """How many requests to cache"""
     CACHE_LENGTH = 10
     
+    """Regex to match URL's"""
+    _URL_REGEX = re_compile(r'^((?:https?:\/\/)?.+)(?=\/)', IGNORECASE)
+
     
     def __init__(self, name: str, verify_ssl: bool=True) -> None:
         """
@@ -40,6 +44,12 @@ class WebInterface:
         # Cache of the last requests to speed up identical sequential requests
         self.__cache = []
         self.__cached_results = []
+
+
+    def __repr__(self) -> str:
+        """Returns an unambiguous string representation of the object."""
+        
+        return f'<WebInterface to {self.name}>'
 
 
     @retry(stop=stop_after_attempt(10),
