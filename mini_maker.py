@@ -419,9 +419,13 @@ if hasattr(args, 'genre_card_batch'):
 if hasattr(args, 'show_summary'):
     # Temporary classes
     @dataclass
+    class EpisodeInfo:
+        season_number: int
+        episode_number: int
+    @dataclass
     class Episode:
+        episode_info: EpisodeInfo
         destination: Path
-
     @dataclass
     class Show:
         logo: Path
@@ -436,9 +440,11 @@ if hasattr(args, 'show_summary'):
         # Attempt to get index from filename, if not just increment last number
         if (groups := match(r'.*s(\d+).*e(\d+)', file.name, IGNORECASE)):
             season, episode = map(int, groups.groups())
-            episodes[f'{season}-{episode}'] = Episode(file)
+            info = EpisodeInfo(season, episode)
+            episodes[f'{season}-{episode}'] = Episode(info, file)
         else:
-            episodes[f'{season}-{episode}'] = Episode(file)
+            info = EpisodeInfo(season, episode)
+            episodes[f'{season}-{episode}'] = Episode(info, file)
             episode += 1
     
     # Create pseudo "show" of these episodes

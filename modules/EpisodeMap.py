@@ -55,8 +55,11 @@ class EpisodeMap:
             self.valid = False
             return None
 
+        # Remove hide key from seasons if indicated
+        if isinstance(seasons, dict):
+            seasons.pop('hide', None)
+
         # If both mappings are provided, invalidate 
-        seasons.pop('hide', None)
         if seasons and episode_ranges:
             log.error(f'Cannot specify both seasons and episode ranges')
             self.valid = False
