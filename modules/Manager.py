@@ -7,6 +7,7 @@ import modules.global_objects as global_objects
 from modules.Show import Show
 from modules.ShowArchive import ShowArchive
 from modules.SonarrInterface import SonarrInterface
+from modules.TautulliInterface import TautulliInterface
 from modules.TMDbInterface import TMDbInterface
 
 class Manager:
@@ -33,6 +34,12 @@ class Manager:
         # Get the global preferences
         self.preferences = global_objects.pp
 
+        # Optionally integrate with Tautulli
+        if self.preferences.use_tautulli:
+            TautulliInterface(
+                **self.preferences.tautulli_interface_args
+            ).integrate()
+            
         # Optionally assign PlexInterface
         self.plex_interface = None
         if self.preferences.use_plex:
