@@ -796,8 +796,8 @@ class PlexInterface:
 
 
     @catch_and_log('Error getting episode details')
-    def get_episode_details(self, rating_key: int) -> tuple[SeriesInfo,
-                                                            EpisodeInfo, str]:
+    def get_episode_details(self, rating_key: int) -> list[tuple[SeriesInfo,
+                                                            EpisodeInfo, str]]:
         """
         Get all details for the episode indicated by the given Plex rating key.
         
@@ -805,35 +805,63 @@ class PlexInterface:
             rating_key: Rating key used to fetch the item within Plex.
         
         Returns:
-            Tuple of the SeriesInfo, EpisodeInfo, and the library name
-            corresponding to the given rating key. None if the item cannot be
-            found, or if a valid tuple of info cannot be returned.
+            List of tuples of the SeriesInfo, EpisodeInfo, and the library name
+            corresponding to the given rating key. If the object associated with
+            the rating key was a show/season, then all contained episodes are
+            detailed. An empty list is returned if the item(s) associated with
+            the given key cannot be found.
         """
 
         try:
             # Get the episode for this key
-            episode = self.__server.fetchItem(rating_key)
+            entry = self.__server.fetchItem(rating_key)
+            
+            # New show, return all episodes in series
+            if entry.type == 'show':
+                assert entry.year is not None
+                series_info = SeriesInfo(entry.title, entry.year)
 
-            # Make sure result is an episode
-            if episode.TYPE != 'episode':
-                log.error(f'Item {episode} is not an Episode')
-                raise NotFound
+                # Return all episodes
+                return [
+                    (series_info,
+                     EpisodeInfo(ep.title, ep.parentIndex, ep.index),
+                     entry.librarySectionTitle)
+                    for ep in entry.episodes()
+                ]
+            # New season, return all episodes in season
+            elif entry.type == 'season':
+                # Get series associated with this season
+                series = self.__server.fetchItem(entry.parentKey)
+                assert series.year is not None
+                series_info = SeriesInfo(series.title, series.year)
 
-            # Get series for this episode
-            series = self.__server.fetchItem(episode.grandparentKey)
-            assert series.year is not None
+                # 
+                return [
+                    (series_info,
+                     EpisodeInfo(ep.title, entry.index, ep.index),
+                     series.librarySectionTitle)
+                    for ep in entry.episodes()
+                ]
+            # New episode, return just that
+            elif entry.TYPE == 'episode':
+                series = self.__server.fetchItem(entry.grandparentKey)
+                assert series.year is not None
+                return [(
+                    SeriesInfo(entry.grandparentTitle, series.year),
+                    EpisodeInfo(entry.title, entry.parentIndex, entry.index),
+                    entry.librarySectionTitle,
+                )]
+            # Movie, warn and return empty list
+            elif entry.type == 'movie':
+                log.warning(f'Item with rating key {rating_key} is a movie')
+            return []
         except NotFound:
-            log.error(f'No item with ratingKey={rating_key} exists')
-            return None
+            log.error(f'No item with rating key {rating_key} exists')
         except AssertionError:
-            log.warning(f'Item with ratingKey={rating_key} has no year')
-            return None
-        else:
-            return (
-                SeriesInfo(episode.grandparentTitle, series.year),
-                EpisodeInfo(episode.title, episode.parentIndex, episode.index),
-                episode.librarySectionTitle,
-            )
+            log.warning(f'Item with rating key {rating_key} has no year')
+
+        # Error occurred, return empty list
+        return []
 
 
     def remove_records(self, library_name: str, series_info: SeriesInfo) ->None:

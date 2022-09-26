@@ -7,11 +7,13 @@ from modules.WebInterface import WebInterface
 
 class TautulliInterface(WebInterface):
     """
-    This class describes an interface to Tautulli
+    This class describes an interface to Tautulli. This interface can configure
+    notification agents within Tautulli to enable fast card updating/creation.
     """
 
+    """Default configurations for the notification agent(s)"""
     DEFAULT_AGENT_NAME = 'Update TitleCardMaker'
-    DEFAULT_SCRIPT_TIMEOUT = 120
+    DEFAULT_SCRIPT_TIMEOUT = 30
 
     """Agent ID for a custom Script"""
     AGENT_ID = 15
@@ -159,9 +161,12 @@ class TautulliInterface(WebInterface):
             # Conditions for watched agent
             # Always add condition for the episode
             conditions = [{
-                'parameter': 'media_type', 'operator': 'is','value':['episode'],
+                'parameter': 'media_type',
+                'operator':  'is',
+                'value':     ['episode'],
+                'type':      'str',
             }]
-            # Optionally add condition for username (if provided)
+            # If provided, add condition for username
             if self.username is not None:
                 conditions.append({
                     'parameter': 'username',
