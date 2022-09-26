@@ -11,7 +11,7 @@ class TautulliInterface(WebInterface):
     """
 
     DEFAULT_AGENT_NAME = 'Update TitleCardMaker'
-    DEFAULT_SCRIPT_TIMEOUT = 60
+    DEFAULT_SCRIPT_TIMEOUT = 120
 
     """Agent ID for a custom Script"""
     AGENT_ID = 15
@@ -67,45 +67,58 @@ class TautulliInterface(WebInterface):
         self.agent_name = agent_name
         self.script_timeout = script_timeout
         self.username = username
+
+        # Warn if invalid timeout was provided
+        if self.script_timeout < 0:
+            log.error(f'Script timeout must be >= 0 (seconds) - using 0')
+            self.script_timeout = 0
         
 
-    def is_integrated(self) -> bool:
+    def is_integrated(self) -> tuple[bool, bool]:
         """
         Check if this interface's Tautulli instance already has integration set
         up.
 
         Returns:
-            True if Tautulli has integration is already set up, False otherwise.
+            Tuple of booleans. First value is True if the watched agent is
+            already integrated (False otherwise); second value is True if the
+            newly added agent is already integrated (False otherwise).
         """
 
         # Get all notifiers
         response = self._get(self.url, self.__params | {'cmd': 'get_notifiers'})
         notifiers = response['response']['data']
-
-        # Check each agent's name 
-        for agent in notifiers:
-            name = agent['friendly_name'].lower()
-            if (agent['agent_label'] == 'Script'
-                and ('tcm' in name or 'titlecardmaker' in name)):
-                log.debug(f'Tautulli already integrated in agent '
-                          f'{agent["id"]} ("{agent["friendly_name"]}")')
-                return True
-
-        log.debug(f'Tautulli not integrated')
-        return False
-
-
-    def integrate(self) -> None:
-        """
-        Integrate this interface's instance of Tautulli with TCM. This
-        configures a new notification agent if a valid one does not exist or
-        cannot be identified.
-        """
-
-        # If already integrated, skip
-        if self.is_integrated():
-            return None
         
+        # Check each agent's name 
+        watched_integrated, created_integrated = False, False
+        for agent in notifiers:
+            # Exit loop if both agents found
+            if watched_integrated and created_integrated:
+                break
+
+            # If agent is a Script with the right name..
+            if (agent['agent_label'] == 'Script'
+                and agent['friendly_name'].startswith(self.agent_name)):
+                # Get the config of this agent, check action flags
+                params = self.__params | {'cmd': 'get_notifier_config',
+                                          'notifier_id': agent['id']}
+                response = self._get(self.url, params)['response']['data']
+                if response['actions']['on_watched'] == 1:
+                    watched_integrated = True
+                if response['actions']['on_created'] == 1:
+                    created_integrated = True
+
+        return watched_integrated, created_integrated
+
+
+    def __create_agent(self) -> 'int | None':
+        """
+        Create a new Notification Agent.
+
+        Returns:
+            Notifier ID of created agent, None if agent was not created.
+        """
+
         # Get all existing notifier ID's
         response = self._get(self.url, self.__params | {'cmd': 'get_notifiers'})
         existing_ids = {agent['id'] for agent in response['response']['data']}
@@ -124,41 +137,90 @@ class TautulliInterface(WebInterface):
             return None
         
         # Get ID of created notifier
-        notifier_id = list(new_ids - existing_ids)[0]
-        log.info(f'Created Tautulli notification agent {notifier_id}')
+        return list(new_ids - existing_ids)[0]
 
-        # Determine condition(s)
-        # Always add condition for the episode
-        conditions = [{
-            'parameter': 'media_type', 'operator': 'is', 'value': ['episode'],
-        }]
-        # Optionally add condition for username (if provided)
-        if self.username is not None:
-            conditions.append({
-                'parameter': 'username',
+
+    def integrate(self) -> None:
+        """
+        Integrate this interface's instance of Tautulli with TCM. This
+        configures a new notification agent if a valid one does not exist or
+        cannot be identified.
+        """
+
+        # If already integrated, skip
+        watched_integrated, created_integrated = self.is_integrated()
+        if watched_integrated and created_integrated:
+            log.debug('Tautulli integrated detected')
+            return None
+        
+        # Integrate watched agent if required
+        if (not watched_integrated
+            and (watched_id := self.__create_agent()) is not None):
+            # Conditions for watched agent
+            # Always add condition for the episode
+            conditions = [{
+                'parameter': 'media_type', 'operator': 'is','value':['episode'],
+            }]
+            # Optionally add condition for username (if provided)
+            if self.username is not None:
+                conditions.append({
+                    'parameter': 'username',
+                    'operator':  'is',
+                    'value':     [self.username],
+                })
+
+            # Configure this agent
+            friendly_name = f'{self.agent_name} - Watched'
+            params = self.__params | {
+                # API arguments
+                'cmd': 'set_notifier_config',
+                'notifier_id': watched_id,
+                'agent_id': self.AGENT_ID,
+                # Configuration
+                'friendly_name': friendly_name,
+                'scripts_script_folder': str(self.update_script.parent.resolve()),
+                'scripts_script': str(self.update_script.resolve()),
+                'scripts_timeout': self.script_timeout,
+                # Triggers
+                'on_watched': 1,
+                # Conditions
+                'custom_conditions': dumps(conditions),
+                # Arguments
+                'on_watched_subject': '{rating_key}',
+            }
+            self._get(self.url, params)
+            log.info(f'Creatd and configured Tautulli notification agent '
+                     f'{watched_id} ("{friendly_name}")')
+            
+        # Integrate created agent if required
+        if (not created_integrated
+            and (created_id := self.__create_agent()) is not None):
+            # Conditions for new content is just a show/season/episode
+            conditions = [{
+                'parameter': 'media_type',
                 'operator':  'is',
-                'value':     [self.username],
-            })
+                'value':     ['show', 'season', 'episode'],
+            }]
 
-        # Configure this notifier
-        params = self.__params | {
-            # API arguments
-            'cmd': 'set_notifier_config',
-            'notifier_id': notifier_id,
-            'agent_id': self.AGENT_ID,
-            # Configuration
-            'friendly_name': self.agent_name,
-            'scripts_script_folder': str(self.update_script.parent.resolve()),
-            'scripts_script': str(self.update_script.resolve()),
-            'scripts_timeout': self.script_timeout,
-            # Triggers
-            'on_watched': 1,
-            'on_created': 1,
-            # Conditions
-            'custom_conditions': dumps(conditions),
-            # Arguments
-            'on_watched_subject': '{rating_key}',
-            'on_created_subject': '{rating_key}',
-        }
-        self._get(self.url, params)
-        log.info(f'Configured Tautulli notification agent {notifier_id}')
+            # Configure this agent
+            friendly_name = f'{self.agent_name} - Recently Added'
+            params = self.__params | {
+                # API arguments
+                'cmd': 'set_notifier_config',
+                'notifier_id': created_id,
+                'agent_id': self.AGENT_ID,
+                # Configuration
+                'friendly_name': friendly_name,
+                'scripts_script_folder': str(self.update_script.parent.resolve()),
+                'scripts_script': str(self.update_script.resolve()),
+                'scripts_timeout': self.script_timeout,
+                # Triggers
+                'on_created': 1,
+                # Conditions
+                'custom_conditions': dumps(conditions),
+                # Arguments
+                'on_created_subject': '{rating_key}',
+            }
+            self._get(self.url, params)
+            log.info(f'Created and configured Tautulli notification agent '
+                     f'{created_id} ("{friendly_name}")')
