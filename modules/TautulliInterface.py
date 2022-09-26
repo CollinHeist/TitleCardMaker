@@ -167,6 +167,7 @@ class TautulliInterface(WebInterface):
                     'parameter': 'username',
                     'operator':  'is',
                     'value':     [self.username],
+                    'type':      'str',
                 })
 
             # Configure this agent
@@ -200,6 +201,7 @@ class TautulliInterface(WebInterface):
                 'parameter': 'media_type',
                 'operator':  'is',
                 'value':     ['show', 'season', 'episode'],
+                'type':      'str',
             }]
 
             # Configure this agent

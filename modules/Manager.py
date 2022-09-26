@@ -452,6 +452,7 @@ class Manager:
                     and full_match_name == series_info.full_match_name):
                     self.shows = [show]
                     self.__run(serial=True)
+                    found.add(index)
 
         # Warn for all entries not found
         for index, (series_info, episode_info, library_name) \
