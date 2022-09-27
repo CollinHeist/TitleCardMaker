@@ -1,4 +1,5 @@
 from pathlib import Path
+from re import findall
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
@@ -39,13 +40,19 @@ class LandscapeTitleCard(BaseCardType):
     """Standard class has standard archive name"""
     ARCHIVE_NAME = 'Landscape Style'
 
-    __slots__ = ('source', 'output_file', 'title', 'font', 'font_size',
-                 'title_color', 'interline_spacing', 'kerning', 'blur')
+    """Additional spacing (in pixels) between bounding box and title text"""
+    BOUNDING_BOX_SPACING = 150
+
+    __slots__ = (
+        'source', 'output_file', 'title', 'font', 'font_size', 'title_color',
+        'interline_spacing', 'kerning', 'blur', 'add_bounding_box'
+    )
 
 
     def __init__(self, source: Path, output_file: Path, title: str, font: str,
                  font_size: float, title_color: str, blur: bool=False, 
-                 interline_spacing: int=0, kerning: float=1.0, **kwargs) ->None:
+                 interline_spacing: int=0, kerning: float=1.0, 
+                 add_bounding_box: bool=False, **kwargs) ->None:
         """
         Initialize this TitleCard object. This primarily just stores instance
         variables for later use in `create()`.
@@ -60,6 +67,8 @@ class LandscapeTitleCard(BaseCardType):
             blur: Whether to blur the source image.
             interline_spacing: Pixel count to adjust title interline spacing by.
             kerning: Scalar to apply to kerning of the title text.
+            add_bounding_box: Extra - whether to add a bounding box around the
+                title text.
             kwargs: Unused arguments.
         """
 
@@ -76,6 +85,9 @@ class LandscapeTitleCard(BaseCardType):
         self.interline_spacing = interline_spacing
         self.kerning = kerning
         self.blur = blur
+
+        # Store extras
+        self.add_bounding_box = add_bounding_box
 
 
     def __add_no_title(self) -> None:
@@ -95,6 +107,75 @@ class LandscapeTitleCard(BaseCardType):
         self.image_magick.run(command)
 
 
+    def add_bounding_box_command(self, font_size: float,
+                                 interline_spacing: float,
+                                 kerning: float) -> list[str]:
+        """
+        Subcommand to add the bounding box around the title text.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        # If no bounding box indicated, return blank command
+        if not self.add_bounding_box:
+            return []
+
+        # Get (approximate) dimensions of title
+        text_command = ' '.join([
+            f'convert',
+            f'-debug annotate',
+            f'xc: ',
+            f'-font "{self.font}"',
+            f'-pointsize {font_size}',
+            f'-gravity center',
+            f'-interline-spacing {interline_spacing}',
+            f'-kerning {kerning}',
+            f'-interword-spacing 40',
+            f'-fill "{self.title_color}"',
+            f'label:"{self.title}"',
+            f'null: 2>&1',
+        ])
+
+        # Execute dimension command, parse output
+        metrics = self.image_magick.run_get_output(text_command)
+        width = max(map(int, findall(r'Metrics:.*width:\s+(\d+)', metrics)))
+        height = sum(map(int,findall(r'Metrics:.*height:\s+(\d+)', metrics)))//2
+        
+        # Get start coordinates of the bounding box
+        x_start, x_end = 3200/2 - width/2, 3200/2 + width/2
+        y_start, y_end = 1800/2 - height/2, 1800/2 + height/2
+        y_end -= 35     # Additional offset necessary 
+
+        # Adjust corodinates by spacing
+        x_start -= self.BOUNDING_BOX_SPACING
+        x_end += self.BOUNDING_BOX_SPACING
+        y_start -= self.BOUNDING_BOX_SPACING
+        y_end += self.BOUNDING_BOX_SPACING
+
+        return [
+            # Create blank image 
+            f'\( -size 3200x1800',
+            f'xc: ',
+            # Create bounding box
+            f'-fill transparent',
+            f'-strokewidth 10',
+            f'-stroke {self.title_color}',
+            f'-draw "rectangle {x_start},{y_start},{x_end},{y_end}"',
+            # Create shadow of the bounding box
+            f'\( +clone',
+            f'-background None',
+            f'-shadow 80x3+10+10 \)',
+            # Underlay drop shadow 
+            f'+swap',
+            f'-background None',
+            f'-layers merge',
+            f'+repage \)',
+            # Add bounding box and shadow to base image
+            f'-composite',
+        ]
+
+    
     @staticmethod
     def is_custom_font(font: 'Font') -> bool:
         """
@@ -151,13 +232,11 @@ class LandscapeTitleCard(BaseCardType):
  
         # Generate command to create card
         command = ' '.join([
-            f'convert "{self.source.resolve()}"',       # Resize source
-            f'+profile "*"',
-            f'-gravity center',
-            f'-resize "{self.TITLE_CARD_SIZE}^"',
-            f'-extent "{self.TITLE_CARD_SIZE}"',
-            f'-blur {self.BLUR_PROFILE}' if self.blur else '', # Optional blur
-            f'\( -background None',                     # Add title
+            f'convert "{self.source.resolve()}"',
+            # Resize and optionally blur source image
+            *self.resize_and_blur,
+            # Add title text
+            f'\( -background None',
             f'-font "{self.font}"',
             f'-pointsize {font_size}',
             f'-gravity center',
@@ -166,14 +245,19 @@ class LandscapeTitleCard(BaseCardType):
             f'-interword-spacing 40',
             f'-fill "{self.title_color}"',
             f'label:"{self.title}"',
-            f'\( +clone',                               # Add drop shadow
+            # Create drop shadow of title text
+            f'\( +clone',
             f'-background None',
             f'-shadow 80x3+10+10 \)',
-            f'+swap',                                   # Underlay drop shadow
+            # Underlay drop shadow 
+            f'+swap',
             f'-background None',
             f'-layers merge',
             f'+repage \)',
-            f'-composite',                              # Add text to source
+            # Add title image(s) to source
+            f'-composite',
+            # Optionally add bounding box
+            *self.add_bounding_box_command(font_size,interline_spacing,kerning),
             f'"{self.output_file.resolve()}"',
         ])
         

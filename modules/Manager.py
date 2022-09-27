@@ -7,6 +7,7 @@ import modules.global_objects as global_objects
 from modules.Show import Show
 from modules.ShowArchive import ShowArchive
 from modules.SonarrInterface import SonarrInterface
+from modules.TautulliInterface import TautulliInterface
 from modules.TMDbInterface import TMDbInterface
 
 class Manager:
@@ -23,16 +24,26 @@ class Manager:
     VALID_EXECUTION_MODES = ('serial', 'batch')
 
 
-    def __init__(self) -> None:
+    def __init__(self, check_tautulli: bool=True) -> None:
         """
         Constructs a new instance of the Manager. This uses the global
         PreferenceParser object in preferences, and optionally creates
         interfaces as indicated by that parser.
+
+        Args:
+            check_tautulli: Whether to check Tautulli integration (for fast
+                start).
         """
 
         # Get the global preferences
         self.preferences = global_objects.pp
 
+        # Optionally integrate with Tautulli
+        if check_tautulli and self.preferences.use_tautulli:
+            TautulliInterface(
+                **self.preferences.tautulli_interface_args
+            ).integrate()
+            
         # Optionally assign PlexInterface
         self.plex_interface = None
         if self.preferences.use_plex:
@@ -419,10 +430,11 @@ class Manager:
         # Get details for each rating key from Plex
         entry_list = []
         for key in rating_keys:
-            if (details := self.plex_interface.get_episode_details(key)) is None:
-                log.error(f'Cannot remake card, episode not found')
+            if len(details := self.plex_interface.get_episode_details(key)) ==0:
+                log.error(f'Cannot remake cards, no episodes found')
             else:
-                entry_list.append(details)
+                log.debug(f'{len(details)} items associated with rating key {key}')
+                entry_list += details
 
         # Go through every series in all series YAML files
         found = set()
@@ -445,6 +457,7 @@ class Manager:
                     and full_match_name == series_info.full_match_name):
                     self.shows = [show]
                     self.__run(serial=True)
+                    found.add(index)
 
         # Warn for all entries not found
         for index, (series_info, episode_info, library_name) \

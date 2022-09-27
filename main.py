@@ -24,7 +24,7 @@ except ImportError as e:
     exit(1)
 
 # Version information
-CURRENT_VERSION = 'v1.11.0'
+CURRENT_VERSION = 'v1.11.1'
 REPO_URL = ('https://api.github.com/repos/'
             'CollinHeist/TitleCardMaker/releases/latest')
 
@@ -142,6 +142,12 @@ log.handlers[0].setLevel(args.log)
 if args.no_color:
     apply_no_color_formatter(log)
 
+# Log parsed arguments
+log.debug('Runtime arguments:')
+max_width = max(map(len, vars(args).keys()))
+for arg, value in vars(args).items():
+    log.debug(f'{arg:>{max_width}} : {value}')
+
 # Check if preference file exists
 if not args.preferences.exists():
     log.critical(f'Preference file "{args.preferences.resolve()}" does not exist')
@@ -235,7 +241,7 @@ def read_update_list():
     args.tautulli_list.unlink(missing_ok=True)
 
     # Remake all indicated cards
-    Manager().remake_cards(update_list)
+    Manager(check_tautulli=False).remake_cards(update_list)
 
 # Run immediately if specified
 if args.run:

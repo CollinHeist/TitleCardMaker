@@ -117,23 +117,19 @@ class ImageMagickInterface:
 
         # Execute, capturing stdout and stderr
         stdout, stderr = b'', b''
-        process = Popen(cmd, stdout=PIPE, stderr=PIPE)
         try:
+            process = Popen(cmd, stdout=PIPE, stderr=PIPE)
             stdout, stderr = process.communicate(timeout=self.timeout)
         except TimeoutExpired:
             log.error(f'ImageMagick command timed out')
             log.debug(command)
         except FileNotFoundError as e:
-            if 'docker' in str(e):
-                log.critical(f'ImageMagick docker container not found')
-                exit(1)
-            else:
-                log.error(f'Command error "{e}"')
-                return b'', b''
-        else:
-            # Add command to history and return results
-            self.__history.append((command, stdout, stderr))
-            return stdout, stderr
+            log.error(f'Command error "{e}"')
+            log.debug(command)
+            
+        # Add command to history and return results
+        self.__history.append((command, stdout, stderr))
+        return stdout, stderr
 
 
     def run_get_output(self, command: str) -> str:

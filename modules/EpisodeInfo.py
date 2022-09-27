@@ -152,6 +152,13 @@ class EpisodeInfo:
         }
 
 
+    @property
+    def index(self) -> str:
+        """This object's index - i.e. s{season}e{episode}"""
+
+        return f's{self.season_number}e{self.episode_number}'
+
+
     def set_tvdb_id(self, tvdb_id: int) -> None:
         """
         Sets the TVDb ID for this object.

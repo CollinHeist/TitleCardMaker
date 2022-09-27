@@ -84,7 +84,7 @@ class Profile:
                 seasons = 'hidden'
             elif has_custom_season_titles:
                 seasons = 'custom'
-
+                
             return [{
                 'seasons': seasons,
                 'font': 'custom' if has_custom_font else 'generic'
@@ -120,7 +120,7 @@ class Profile:
         """
 
         # Update this object's data
-        self.__use_custom_seasons = (seasons == 'custom')
+        self.__use_custom_seasons = (seasons in ('custom', 'hidden'))
         self.hide_season_title = (seasons == 'hidden')
         self.__use_custom_font = (font == 'custom')
 

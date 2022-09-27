@@ -19,8 +19,9 @@ class MoviePosterMaker(ImageMaker):
 
 
     def __init__(self, source: Path, output: Path, title: str, subtitle: str='',
-                 font: Path=FONT, font_color: str=FONT_COLOR,
-                 font_size: float=1.0, omit_gradient: bool=False) -> None:
+                 top_subtitle: str='', font: Path=FONT,
+                 font_color: str=FONT_COLOR, font_size: float=1.0,
+                 omit_gradient: bool=False) -> None:
         """
         Construct a new instance of a CollectionPosterMaker.
 
@@ -29,6 +30,8 @@ class MoviePosterMaker(ImageMaker):
             output: The output path to write the poster to.
             title: String to use on the created poster.
             subtitle: String to use for smaller title text.
+            top_subtitle: String to use for smaller subtitle text that appears
+                above the title text.
             font: Path to the font file of the poster's title.
             font_color: Font color of the poster text.
             font_size: Scalar for the font size of the poster's title.
@@ -38,7 +41,7 @@ class MoviePosterMaker(ImageMaker):
         # Initialize parent object for the ImageMagickInterface
         super().__init__()
 
-        # Store the arguments
+        # Store arguments as attributes
         self.source = source
         self.output = output
         self.font = font
@@ -46,13 +49,71 @@ class MoviePosterMaker(ImageMaker):
         self.font_size = font_size
         self.omit_gradient = omit_gradient
 
-        # Uppercase title if using default font
+        # Uppercase title(s) if using default font
         if font == self.FONT:
+            self.top_subtitle = top_subtitle.upper()
             self.title = title.upper()
             self.subtitle = subtitle.upper()
         else:
+            self.top_subtitle = top_subtitle
             self.title = title
             self.subtitle = subtitle
+
+
+    @property
+    def gradient_command(self) -> list[str]:
+        """
+        ImageMagick commands to add the gradient to the source image.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        # If gradient is omitted, return empty command
+        if self.omit_gradient:
+            return []
+        
+        return [
+            f'"{self.__GRADIENT.resolve()}"',
+            f'-compose Multiply',
+            f'-composite',
+        ]
+
+
+    @property
+    def title_font_attributes(self) -> list[str]:
+        """
+        Imagemagick commands to define the font attributes of the title text.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        title_font_size = 190 * self.font_size
+        
+        return [
+            f'-pointsize {title_font_size}',
+            f'-interline-spacing -40',
+            f'+kerning',
+        ]
+
+
+    @property
+    def subtitle_font_attributes(self) -> list[str]:
+        """
+        Imagemagick commands to define the font attributes of the subtitle text.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        subtitle_font_size = 95 * self.font_size
+
+        return [
+            f'-pointsize {subtitle_font_size}',
+            f'-interword-spacing 15',
+            f'-kerning 7',
+        ]
 
 
     def create(self) -> None:
@@ -66,44 +127,44 @@ class MoviePosterMaker(ImageMaker):
             log.error(f'Cannot create movie poster, "{self.source.resolve()}" '
                       f'does not exist.')
             return None
-
-        # Gradient command to either add/omit gradient
-        if self.omit_gradient:
-            gradient_command = []
-        else:
-            gradient_command = [
-                f'"{self.__GRADIENT.resolve()}"',
-                f'-compose Multiply',
-                f'-composite',
-            ]
-
-        # Set variables
-        title_font_size = 190 * self.font_size
-        subtitle_font_size = 95 * self.font_size
         
         # Command to create collection poster
         command = ' '.join([
             f'convert',
+            # Start with frame
             f'"{self.__FRAME.resolve()}"',
+            # Add source image
             f'\( "{self.source.resolve()}"',
+            # Resize image
             f'-gravity center',
             f'-resize "1892x2892^"',
             f'-extent 1892x2892',
-            *gradient_command,
+            # Add gradient to source image
+            *self.gradient_command,
             f'-background None',
             f'-extent 2000x3000 \)',
+            # Swap, putting frame on top of source+gradient
             f'+swap',
             f'-composite',
-            f'-gravity south',
+            # Add title text
+            ## Global font attributes
             f'-font "{self.font.resolve()}"',
-            f'-pointsize {title_font_size}',
             f'-fill {self.font_color}',
-            f'-interline-spacing -40',
-            f'-annotate +0+265 "{self.title}"',
-            f'-pointsize {subtitle_font_size}',
-            f'-interword-spacing 15',
-            f'-kerning 7',
-            f'-annotate +0+185 "{self.subtitle}"',
+            # Create an image for each title
+            f'\( -background transparent',
+            *self.subtitle_font_attributes,
+            f'label:"{self.top_subtitle}"',
+            *self.title_font_attributes,
+            f'label:"{self.title}"',
+            *self.subtitle_font_attributes,
+            f'label:"{self.subtitle}"',
+            # Combine in order [TOP SUBTITLE] / [TITLE] / [SUBTITLE]
+            f'-smush 30 \)',
+            # Add titles to image
+            f'-gravity south',
+            f'-geometry +0+{185 if len(self.subtitle) > 0 else 265}',
+            f'-compose atop',
+            f'-composite',
             f'"{self.output.resolve()}"',
         ])
 

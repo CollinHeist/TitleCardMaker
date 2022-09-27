@@ -8,11 +8,13 @@ from modules.Font import Font
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.ImageMaker import ImageMaker
 from modules.Manager import Manager
+from modules.PlexInterface import PlexInterface
 from modules.SeriesInfo import SeriesInfo
 from modules.SeriesYamlWriter import SeriesYamlWriter
 from modules.Show import Show
 from modules.StandardSummary import StandardSummary
 from modules.StylizedSummary import StylizedSummary
+from modules.TautulliInterface import TautulliInterface
 from modules.Template import Template
 from modules.TitleCard import TitleCard
 from modules.TMDbInterface import TMDbInterface
@@ -29,6 +31,10 @@ class PreferenceParser(YamlReader):
 
     """Valid episode data source identifiers"""
     VALID_EPISODE_DATA_SOURCES = ('sonarr', 'plex', 'tmdb')
+    DEFAULT_EPISODE_DATA_SOURCE = 'sonarr'
+
+    """Default season folder format string"""
+    DEFAULT_SEASON_FOLDER_FORMAT = 'Season {season}'
 
     """Default directory for temporary database objects"""
     DEFAULT_TEMP_DIR = Path(__file__).parent / '.objects'
@@ -53,22 +59,22 @@ class PreferenceParser(YamlReader):
         self.read_file()
 
         # Check for required source directory
-        if (value := self._get('options', 'source', type_=Path)) is None:
+        if (value := self._get('options', 'source', type_=str)) is None:
             log.critical(f'Preference file missing required options/source '
                          f'attribute')
             exit(1)
-        self.source_directory = value
+        self.source_directory = Path(TitleCard.sanitize_full_directory(value))
 
         # Setup default values that can be overwritten by YAML
         self.series_files = []
         self.execution_mode = Manager.DEFAULT_EXECUTION_MODE
-        self._parse_card_type('standard') # Sets self.card_type
+        self._parse_card_type(TitleCard.DEFAULT_CARD_TYPE) # Sets self.card_type
         self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
         self.card_extension = TitleCard.DEFAULT_CARD_EXTENSION
         self.image_source_priority = ('tmdb', 'plex')
-        self.episode_data_source = 'sonarr'
+        self.episode_data_source = self.DEFAULT_EPISODE_DATA_SOURCE
         self.validate_fonts = True
-        self.season_folder_format = 'Season {season}'
+        self.season_folder_format = self.DEFAULT_SEASON_FOLDER_FORMAT
         self.sync_specials = True
         self.archive_directory = None
         self.create_archive = False
@@ -78,12 +84,15 @@ class PreferenceParser(YamlReader):
         self.summary_background = self.summary_class.BACKGROUND_COLOR
         self.summary_minimum_episode_count = 3
         self.summary_created_by = None
+        self.summary_ignore_specials = False
         self.use_plex = False
         self.plex_url = None
         self.plex_token = 'NA'
         self.plex_verify_ssl = True
         self.integrate_with_pmm_overlays = False
-        self.plex_filesize_limit = self.filesize_as_bytes('10 MB')
+        self.plex_filesize_limit = self.filesize_as_bytes(
+            PlexInterface.DEFAULT_FILESIZE_LIMIT
+        )
         self.global_watched_style = 'unique'
         self.global_unwatched_style = 'unique'
         self.plex_yaml_writers = []
@@ -99,6 +108,14 @@ class PreferenceParser(YamlReader):
         self.tmdb_retry_count = TMDbInterface.BLACKLIST_THRESHOLD
         self.tmdb_minimum_resolution = {'width': 0, 'height': 0}
         self.tmdb_skip_localized_images = False
+        self.use_tautulli = False
+        self.tautulli_url = None
+        self.tautulli_api_key = None
+        self.tautulli_verify_ssl = True
+        self.tautulli_username = None
+        self.tautulli_update_script = None
+        self.tautulli_agent_name = TautulliInterface.DEFAULT_AGENT_NAME
+        self.tautulli_script_timeout = TautulliInterface.DEFAULT_SCRIPT_TIMEOUT
         self.imagemagick_container = None
         self.imagemagick_timeout = ImageMagickInterface.COMMAND_TIMEOUT_SECONDS
 
@@ -143,7 +160,7 @@ class PreferenceParser(YamlReader):
 
         # If none of the font commands worked, IM might not be installed
         log.critical(f"ImageMagick doesn't appear to be installed")
-        exit(1)
+        self.valid = False
 
 
     def __parse_sync(self) -> None:
@@ -176,19 +193,24 @@ class PreferenceParser(YamlReader):
                 log.error(f'Cannot sync to "{file.resolve()}" - invalid sync')
                 return None
 
-            # Parse update args
+            # Parse args applicable to Plex and Sonarr
             update_args = {}
-            if (value := sync_yaml._get('libraries', type_=list)) is not None:
-                update_args['filter_libraries'] = value
             if (value := sync_yaml._get('exclusions', type_=list)) is not None:
                 update_args['exclusions'] = value
-            if (value := sync_yaml._get('plex_libraries', type_=dict)) != None:
-                update_args['plex_libraries'] = value
-            if (value := sync_yaml._get('required_tags', type_=list)) != None:
-                update_args['required_tags'] = value
-            if (value := sync_yaml._get('monitored_only', 
-                                        type_=bool)) is not None:
-                update_args['monitored_only'] = value
+
+            # Parse args applicable only to Plex or Sonarr
+            if sync_type == 'plex':
+                if (value := sync_yaml._get('libraries', type_=list)) != None:
+                    update_args['filter_libraries'] = value
+            elif sync_type == 'sonarr':
+                if (value := sync_yaml._get('plex_libraries', type_=dict)) != None:
+                    update_args['plex_libraries'] = value
+                if (value := sync_yaml._get('required_tags', type_=list)) != None:
+                    update_args['required_tags'] = value
+                if (value := sync_yaml._get('monitored_only', type_=bool)) != None:
+                    update_args['monitored_only'] = value
+                if (value := sync_yaml._get('downloaded_only', type_=bool)) != None:
+                    update_args['downloaded_only'] = value
 
             # Skip if YAML was invalidated at any point
             if not sync_yaml.valid:
@@ -208,7 +230,7 @@ class PreferenceParser(YamlReader):
             # Singular sync specification
             if isinstance(plex_sync, dict):
                 append_writer_and_args('plex', plex_sync, {})
-            # List of syncs, no globals
+            # List of syncs
             elif isinstance(plex_sync, list) and len(plex_sync) > 0:
                 base_sync = plex_sync[0]
                 for sync in plex_sync:
@@ -221,27 +243,26 @@ class PreferenceParser(YamlReader):
             # Singular sync specification
             if isinstance(sonarr_sync, dict):
                 append_writer_and_args('sonarr', sonarr_sync, {})
-            # List of syncs, no globals
+            # List of syncs
             elif isinstance(sonarr_sync, list) and len(sonarr_sync) > 0:
                 base_sync = sonarr_sync[0]
                 for sync in sonarr_sync:
                     append_writer_and_args('sonarr', sync, base_sync)
             else:
                 log.error(f'Invalid sonarr sync: {plex_sync}')
-            
 
-    def __parse_yaml(self) -> None:
+
+    def __parse_yaml_options(self) -> None:
         """
-        Parse the raw YAML dictionary into object attributes. This also errors
-        to the user if any provided values are overtly invalid (i.e. missing
-        where necessary, fails type conversion).
+        Parse the 'options' section of the raw YAML dictionary into attributes.
         """
 
-        lower_str = lambda v: str(v).lower()
+        # Skip if sections omitted
+        if not self._is_specified('options'):
+            return None
 
-        if (value := self._get('options', 'execution_mode',
-                               type_=lower_str)) is not None:
-            if value not in Manager.VALID_EXECUTION_MODES:
+        if (value := self._get('options', 'execution_mode', type_=str)) != None:
+            if (value := value.lower()) not in Manager.VALID_EXECUTION_MODES:
                 log.critical(f'Execution mode "{value}" is invalid')
                 self.valid = False
             else:
@@ -256,7 +277,7 @@ class PreferenceParser(YamlReader):
             log.warning(f'No series YAML files indicated, no cards will be '
                         f'created')
 
-        if (value := self._get('options', 'card_type', type_=str)) !=None:
+        if (value := self._get('options', 'card_type', type_=str)) is not None:
             self._parse_card_type(value)
 
         if (value := self._get('options', 'card_extension', type_=str)) != None:
@@ -284,8 +305,8 @@ class PreferenceParser(YamlReader):
                 self.image_source_priority = sources
 
         if (value := self._get('options', 'episode_data_source',
-                               type_=lower_str)) is not None:
-            if value in self.VALID_EPISODE_DATA_SOURCES:
+                               type_=str)) is not None:
+            if (value := value.lower()) in self.VALID_EPISODE_DATA_SOURCES:
                 self.episode_data_source = value
             else:
                 log.critical(f'Episode data source "{value}" is invalid')
@@ -302,7 +323,17 @@ class PreferenceParser(YamlReader):
         if (value := self._get('options', 'sync_specials', type_=bool)) != None:
             self.sync_specials = value
 
-        if (value := self._get('archive', 'path', type_=Path)) != None:
+
+    def __parse_yaml_archive(self) -> None:
+        """
+        Parse the 'archive' section of the raw YAML dictionary into attributes.
+        """
+
+        # Skip if section omitted
+        if not self._is_specified('archive'):
+            return None
+
+        if (value := self._get('archive', 'path', type_=Path)) is not None:
             self.archive_directory = value
             self.create_archive = True
 
@@ -310,12 +341,11 @@ class PreferenceParser(YamlReader):
             self.archive_all_variations = value
 
         if (value := self._get('archive', 'summary', 'create',
-                               type_=bool)) != None:
+                               type_=bool)) is not None:
             self.create_summaries = value
 
-        if (value := self._get('archive', 'summary', 'type',
-                               type_=lower_str)) is not None:
-            if value == 'standard':
+        if (value := self._get('archive', 'summary', 'type', type_=str)) != None:
+            if (value := value.lower()) == 'standard':
                 self.summary_class = StandardSummary
                 self.summary_background = self.summary_class.BACKGROUND_COLOR
             elif value == 'stylized':
@@ -331,34 +361,47 @@ class PreferenceParser(YamlReader):
             self.summary_created_by = value
 
         if (value := self._get('archive', 'summary', 'background',
-                               type_=str)) != None:
+                               type_=str)) is not None:
             self.summary_background = value
 
-        if ((value := self._get('archive', 'summary', 'minimum_episodes',
-                               type_=int)) != None):
+        if (value := self._get('archive', 'summary', 'minimum_episodes',
+                               type_=int)) is not None:
             self.summary_minimum_episode_count = value
 
-        if (value := self._get('plex', 'url', type_=str)) != None:
+        if (value := self._get('archive', 'summary', 'ignore_specials',
+                               type_=bool)) is not None:
+            self.summary_ignore_specials = value
+            
+
+    def __parse_yaml_plex(self) -> None:
+        """
+        Parse the 'plex' section of the raw YAML dictionary into attributes.
+        """
+
+        # Skip if section omitted
+        if not self._is_specified('plex'):
+            return None
+
+        if (value := self._get('plex', 'url', type_=str)) is not None:
             self.plex_url = value
             self.use_plex = True
 
-        if (value := self._get('plex', 'token', type_=str)) != None:
+        if (value := self._get('plex', 'token', type_=str)) is not None:
             self.plex_token = value
 
         if (value := self._get('plex', 'verify_ssl', type_=bool)) is not None:
             self.plex_verify_ssl = value
 
-        if (value := self._get('plex', 'watched_style', type_=lower_str))!=None:
-            if value not in Show.VALID_STYLES:
+        if (value := self._get('plex', 'watched_style', type_=str)) is not None:
+            if (value := value.lower()) not in Show.VALID_STYLES:
                 opt = '", "'.join(Show.VALID_STYLES)
                 log.critical(f'Invalid watched style, must be one of "{opt}"')
                 self.valid = False
             else:
                 self.global_watched_style = value
 
-        if (value := self._get('plex', 'unwatched_style',
-                               type_=lower_str)) != None:
-            if value not in Show.VALID_STYLES:
+        if (value := self._get('plex','unwatched_style',type_=str)) is not None:
+            if (value := value.lower()) not in Show.VALID_STYLES:
                 opt = '", "'.join(Show.VALID_STYLES)
                 log.critical(f'Invalid unwatched style, must be one of "{opt}"')
                 self.valid = False
@@ -376,25 +419,43 @@ class PreferenceParser(YamlReader):
             if value > self.filesize_as_bytes('10 MB'):
                 log.warning(f'Plex will reject all images larger than 10 MB')
 
-        if self._is_specified('sonarr'):
-            if (not self._is_specified('sonarr', 'url')
-                or not self._is_specified('sonarr', 'api_key')):
-                log.critical(f'Sonarr preferences must contain "url" and '
-                             f'"api_key"')
-                self.valid = False
-            else:
-                self.sonarr_url = self._get('sonarr', 'url', type_=str)
-                self.sonarr_api_key = self._get('sonarr', 'api_key', type_=str)
-                self.use_sonarr = True
+
+    def __parse_yaml_sonarr(self) -> None:
+        """
+        Parse the 'sonarr' section of the raw YAML dictionary into attributes.
+        """
+
+        # Skip if section omitted
+        if not self._is_specified('sonarr'):
+            return None
+
+        if ((url := self._get('sonarr', 'url', type_=str)) != None
+            and (api_key := self._get('sonarr', 'api_key', type_=str)) != None):
+            self.sonarr_url = url
+            self.sonarr_api_key = api_key
+            self.use_sonarr = True
+        else:
+            log.critical(f'Sonarr preferences must contain "url" and "api_key"')
+            self.valid = False
 
         if (value := self._get('sonarr', 'verify_ssl', type_=bool)) is not None:
             self.sonarr_verify_ssl = value
-        
-        if (value := self._get('tmdb', 'api_key', type_=str)) != None:
+
+
+    def __parse_yaml_tmdb(self) -> None:
+        """
+        Parse the 'tmdb' section of the raw YAML dictionary into attributes.
+        """
+
+        # Skip if section omitted
+        if not self._is_specified('tmdb'):
+            return None
+
+        if (value := self._get('tmdb', 'api_key', type_=str)) is not None:
             self.tmdb_api_key = value
             self.use_tmdb = True
 
-        if (value := self._get('tmdb', 'retry_count', type_=int)) != None:
+        if (value := self._get('tmdb', 'retry_count', type_=int)) is not None:
             self.tmdb_retry_count = value
 
         if (value := self._get('tmdb', 'minimum_resolution', type_=str)) !=None:
@@ -410,32 +471,78 @@ class PreferenceParser(YamlReader):
                                type_=bool)) is not None:
             self.tmdb_skip_localized_images = value
 
+
+    def __parse_yaml_tautulli(self) -> None:
+        """
+        Parse the 'tautulli' section of the raw YAML dictionary into attributes.
+        """
+
+        # Skip if section omitted
+        if not self._is_specified('tautulli'):
+            return None
+
+        # Parse required attributes
+        if ((url := self._get('tautulli', 'url', type_=str)) != None
+            and (api_key := self._get('tautulli', 'api_key', type_=str)) != None
+            and (script := self._get('tautulli', 'update_script',
+                                     type_=Path)) != None):
+            self.tautulli_url = url
+            self.tautulli_api_key = api_key
+            self.tautulli_update_script = script
+            self.use_tautulli = True
+        else:
+            log.critical(f'Tautulli preferences must contain "url", "api_key", '
+                         f'and "update_script"')
+            self.valid = False
+
+        if (value := self._get('tautulli', 'verify_ssl', type_=bool)) is not None:
+            self.tautulli_verify_ssl = value
+
+        if (value := self._get('tautulli', 'username', type_=str)) is not None:
+            self.tautulli_username = value
+
+        if (value := self._get('tautulli', 'agent_name', type_=str)) is not None:
+            self.tautulli_agent_name = value
+
+        if (value := self._get('tautulli', 'script_timeout',type_=int)) != None:
+            self.tautulli_script_timeout = value
+
+
+    def __parse_yaml_imagemagick(self) -> None:
+        """
+        Parse the 'imagemagick' section of the raw YAML dictionary into
+        attributes.
+        """
+
+        # Skip if section omitted
+        if not self._is_specified('imagemagick'):
+            return None
+
         if (value := self._get('imagemagick', 'container', type_=str)) != None:
             self.imagemagick_container = value
 
         if (value := self._get('imagemagick', 'timeout',type_=int)) is not None:
             self.imagemagick_timeout = value
 
+
+    def __parse_yaml(self) -> None:
+        """
+        Parse the raw YAML dictionary into object attributes. This also errors
+        to the user if any provided values are overtly invalid (i.e. missing
+        where necessary, fails type conversion).
+        """
+
+        # Parse each section
+        self.__parse_yaml_options()
+        self.__parse_yaml_archive()
+        self.__parse_yaml_plex()
+        self.__parse_yaml_sonarr()
+        self.__parse_yaml_tmdb()
+        self.__parse_yaml_tautulli()
+        self.__parse_yaml_imagemagick()
+
         # Warn for renamed settings
-        if self._is_specified('options', 'zero_pad_seasons'):
-            log.critical(f'Options "zero_pad_seasons" setting has been '
-                         f'incorporated into "season_folder_format"')
-            self.valid = False
-
-        if self._is_specified('options', 'hide_season_folders'):
-            log.critical(f'Options "hide_season_folders" setting has been '
-                         f'incorporated into "season_folder_format"')
-            self.valid = False
-
-        if self._is_specified('archive', 'summary', 'background_color'):
-            log.critical(f'Archive summary "background_color" option has been '
-                         f'renamed to "background"')
-            self.valid = False
-
-        if self._is_specified('sonarr', 'sync', 'tags'):
-            log.critical(f'Sonarr sync "tags" option has been renamed '
-                         f'"required_tags".')
-            self.valid = False
+        pass
 
 
     def __validate_libraries(self, library_yaml: dict[str: str],
@@ -712,7 +819,7 @@ class PreferenceParser(YamlReader):
                 if show_yaml is None:
                     log.error(f'Skipping "{show_name}" from "{file_}"')
                     continue
-
+                
                 yield Show(show_name, show_yaml, self.source_directory, self)
 
                 # If archiving is disabled, skip
@@ -736,7 +843,8 @@ class PreferenceParser(YamlReader):
                     # Skip if finalization failed
                     if variation is None:
                         log.error(f'Skipping archive variation of "{show_name}"'
-                                  f'from "{file_}"')
+                                  f' from "{file_}"')
+                        continue
 
                     # Get priority union of variation and base series
                     Template.recurse_priority_union(variation, show_yaml)
@@ -767,6 +875,18 @@ class PreferenceParser(YamlReader):
             return True
 
         return False
+
+    @property
+    def tautulli_interface_args(self) -> dict[str: 'Path | str | int']:
+        return {
+            'url': self.tautulli_url,
+            'api_key': self.tautulli_api_key,
+            'verify_ssl': self.tautulli_verify_ssl,
+            'update_script': self.tautulli_update_script,
+            'agent_name': self.tautulli_agent_name,
+            'script_timeout': self.tautulli_script_timeout,
+            'username': self.tautulli_username,
+        }
 
     @property
     def plex_interface_kwargs(self) -> dict[str: 'Path | str | bool']:

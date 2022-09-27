@@ -25,6 +25,9 @@ class PlexInterface:
     """How many failed episodes result in skipping a series"""
     SKIP_SERIES_THRESHOLD = 3
 
+    """Default filesize limit for all uploaded assets"""
+    DEFAULT_FILESIZE_LIMIT = '10 MB'
+
 
     def __init__(self, database_directory: Path, url: str,
                  x_plex_token: str=None, verify_ssl: bool=True) -> None:
@@ -272,7 +275,8 @@ class PlexInterface:
 
 
     @catch_and_log('Error getting library paths', default={})
-    def get_library_paths(self, filter_libraries: list[str]=[]) ->dict[str:str]:
+    def get_library_paths(self, filter_libraries: list[str]=[]
+                          ) -> dict[str: list[str]]:
         """
         Get all libraries and their associated base directories.
 
@@ -281,8 +285,7 @@ class PlexInterface:
 
         Returns:
             Dictionary whose keys are the library names, and whose values are
-            the paths to that library's base directory. If the library has
-            multiple directories, the first one is returned.
+            the list of paths to that library's base directories.
         """
 
         # Go through every library in this server
@@ -297,8 +300,8 @@ class PlexInterface:
                 and library.title not in filter_libraries):
                 continue
 
-            # Add library's corresponding (first) path to the dictionary
-            all_libraries[library.title] = library.locations[0]
+            # Add library's paths to the dictionary under the library name
+            all_libraries[library.title] = library.locations
 
         return all_libraries
     
@@ -338,6 +341,11 @@ class PlexInterface:
                     log.warning(f'Series {show.title} has no year - skipping')
                     continue
 
+                # Skip show if has no locations.. somehow..
+                if len(show.locations) == 0:
+                    log.warning(f'Series {show.title} has no files - skipping')
+                    continue
+
                 # Get all ID's for this series
                 ids = {}
                 for guid in show.guids:
@@ -347,11 +355,7 @@ class PlexInterface:
                             break
 
                 # Create SeriesInfo object for this show
-                series_info = SeriesInfo(
-                    show.title,
-                    show.year,
-                    **ids,
-                )
+                series_info = SeriesInfo(show.title, show.year, **ids)
 
                 # Add to returned list
                 all_series.append((series_info,show.locations[0],library.title))
@@ -385,6 +389,13 @@ class PlexInterface:
         # Create list of all episodes in Plex
         all_episodes = []
         for plex_episode in series.episodes():
+            # Skip if episode has no season or episode number
+            if (plex_episode.parentIndex is None
+                or plex_episode.index is None):
+                log.warning(f'Episode {plex_episode} of {series_info} in '
+                            f'"{library_name}" has no index - skipping')
+                continue
+
             # Get all ID's for this episode
             ids = {}
             for guid in plex_episode.guids:
@@ -544,7 +555,7 @@ class PlexInterface:
                 continue
 
 
-    @catch_and_log('Error getting source image', default=None)
+    @catch_and_log('Error getting source image')
     def get_source_image(self, library_name: str, series_info: 'SeriesInfo',
                          episode_info: EpisodeInfo) -> str:
         """
@@ -784,9 +795,9 @@ class PlexInterface:
             log.info(f'Loaded {loaded_count} season posters for "{series_info}"')
 
 
-    @catch_and_log('Error getting episode details', default=None)
-    def get_episode_details(self, rating_key: int) -> tuple[SeriesInfo,
-                                                            EpisodeInfo, str]:
+    @catch_and_log('Error getting episode details')
+    def get_episode_details(self, rating_key: int) -> list[tuple[SeriesInfo,
+                                                            EpisodeInfo, str]]:
         """
         Get all details for the episode indicated by the given Plex rating key.
         
@@ -794,35 +805,63 @@ class PlexInterface:
             rating_key: Rating key used to fetch the item within Plex.
         
         Returns:
-            Tuple of the SeriesInfo, EpisodeInfo, and the library name
-            corresponding to the given rating key. None if the item cannot be
-            found, or if a valid tuple of info cannot be returned.
+            List of tuples of the SeriesInfo, EpisodeInfo, and the library name
+            corresponding to the given rating key. If the object associated with
+            the rating key was a show/season, then all contained episodes are
+            detailed. An empty list is returned if the item(s) associated with
+            the given key cannot be found.
         """
 
         try:
             # Get the episode for this key
-            episode = self.__server.fetchItem(rating_key)
+            entry = self.__server.fetchItem(rating_key)
+            
+            # New show, return all episodes in series
+            if entry.type == 'show':
+                assert entry.year is not None
+                series_info = SeriesInfo(entry.title, entry.year)
 
-            # Make sure result is an episode
-            if episode.TYPE != 'episode':
-                log.error(f'Item {episode} is not an Episode')
-                raise NotFound
+                # Return all episodes
+                return [
+                    (series_info,
+                     EpisodeInfo(ep.title, ep.parentIndex, ep.index),
+                     entry.librarySectionTitle)
+                    for ep in entry.episodes()
+                ]
+            # New season, return all episodes in season
+            elif entry.type == 'season':
+                # Get series associated with this season
+                series = self.__server.fetchItem(entry.parentKey)
+                assert series.year is not None
+                series_info = SeriesInfo(series.title, series.year)
 
-            # Get series for this episode
-            series = self.__server.fetchItem(episode.grandparentKey)
-            assert series.year is not None
+                # 
+                return [
+                    (series_info,
+                     EpisodeInfo(ep.title, entry.index, ep.index),
+                     series.librarySectionTitle)
+                    for ep in entry.episodes()
+                ]
+            # New episode, return just that
+            elif entry.TYPE == 'episode':
+                series = self.__server.fetchItem(entry.grandparentKey)
+                assert series.year is not None
+                return [(
+                    SeriesInfo(entry.grandparentTitle, series.year),
+                    EpisodeInfo(entry.title, entry.parentIndex, entry.index),
+                    entry.librarySectionTitle,
+                )]
+            # Movie, warn and return empty list
+            elif entry.type == 'movie':
+                log.warning(f'Item with rating key {rating_key} is a movie')
+            return []
         except NotFound:
-            log.error(f'No item with ratingKey={rating_key} exists')
-            return None
+            log.error(f'No item with rating key {rating_key} exists')
         except AssertionError:
-            log.warning(f'Item with ratingKey={rating_key} has no year')
-            return None
-        else:
-            return (
-                SeriesInfo(episode.grandparentTitle, series.year),
-                EpisodeInfo(episode.title, episode.parentIndex, episode.index),
-                episode.librarySectionTitle,
-            )
+            log.warning(f'Item with rating key {rating_key} has no year')
+
+        # Error occurred, return empty list
+        return []
 
 
     def remove_records(self, library_name: str, series_info: SeriesInfo) ->None:

@@ -1,5 +1,3 @@
-from copy import copy
-
 from modules.Debug import log
 import modules.global_objects as global_objects
 

@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 from tinydb import TinyDB, where
+from typing import Iterable
 
 from tmdbapis import TMDbAPIs, NotFound, Unauthorized, TMDbException
 
@@ -775,8 +776,8 @@ class TMDbInterface(WebInterface):
 
 
     @staticmethod
-    def manually_download_season(api_key: str, title: str, year: int,
-                                 season_number: int, episode_range: 'iterable',
+    def manually_download_season(self, title: str, year: int,season_number: int,
+                                 episode_range: Iterable[int],
                                  directory: Path) -> None:
         """
         Download episodes 1-episode_count of the requested season for the given
@@ -791,38 +792,35 @@ class TMDbInterface(WebInterface):
             directory: The directory to place the downloaded images in.
         """
 
-        # Create a temporary interface object for this function
-        dbi = TMDbInterface(api_key)
-
-        # Create SeriesInfo and EpisodeInfo objects
+        # Create SeriesInfo for the series
         si = SeriesInfo(title, year)
-        dbi.set_series_ids(si)
+        self.set_series_ids(si)
 
+        # Go through each episode in the given range
         for episode_number in episode_range:
             ei = EpisodeInfo('', season_number, episode_number)
-            image_url = dbi.get_source_image(si, ei, title_match=False)
+            image_url = self.get_source_image(si, ei, title_match=False)
 
             # If a valid URL was returned, download it
             if image_url is not None:
                 filename = f's{season_number}e{episode_number}.jpg'
-                dbi.download_image(image_url, directory / filename)
+                self.download_image(image_url, directory / filename)
                 log.debug(f'Downloaded {(directory / filename).resolve()}')
 
 
     @staticmethod
-    def unblacklist(series_info: SeriesInfo) -> None:
+    def unblacklist(database_directory: Path, series_info: SeriesInfo) -> None:
         """Remove all blacklist entries for the given series."""
 
-        blacklist = TinyDB(TMDbInterface.__BLACKLIST_DB)
+        blacklist = TinyDB(database_directory / TMDbInterface.__BLACKLIST_DB)
         removed = blacklist.remove(where('series') == series_info.full_name)
-
         log.info(f'Unblacklisted {len(removed)} queries')
 
 
     @staticmethod
-    def delete_blacklist() -> None:
+    def delete_blacklist(database_directory: Path) -> None:
         """Delete the blacklist file referenced by this class."""
 
-        TMDbInterface.__BLACKLIST_DB.unlink(missing_ok=True)
-        log.info(f'Deleted blacklist file '
-                 f'"{TMDbInterface.__BLACKLIST_DB.resolve()}"')
+        database = database_directory / TMDbInterface.__BLACKLIST_DB
+        database.unlink(missing_ok=True)
+        log.info(f'Deleted blacklist file "{database.resolve()}"')

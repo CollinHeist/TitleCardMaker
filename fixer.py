@@ -127,7 +127,7 @@ tmdb_group.add_argument(
     help='Add title translations from TMDb to the given datafile')
 
 # Parse given arguments
-args, unknown = parser.parse_known_args()
+args = parser.parse_args()
 
 # Parse preference file for options that might need it
 pp = PreferenceParser(args.preferences)
@@ -234,11 +234,12 @@ if args.sonarr_list_ids and pp.use_sonarr:
 # Execute TMDB related options
 if hasattr(args, 'unblacklist'):
     TMDbInterface.unblacklist(
+        pp.database_directory,
         SeriesInfo(args.unblacklist[0], int(args.unblacklist[1]))
     )
 
 if hasattr(args, 'delete_blacklist') and args.delete_blacklist:
-    TMDbInterface.delete_blacklist()
+    TMDbInterface.delete_blacklist(pp.database_directory)
 
 if hasattr(args, 'tmdb_download_images') and pp.use_tmdb:
     for arg_set in args.tmdb_download_images:
@@ -250,8 +251,8 @@ if hasattr(args, 'tmdb_download_images') and pp.use_tmdb:
                       f'2-10 for episodes 2 through 10')
             continue
 
-        TMDbInterface.manually_download_season(
-            api_key=pp.tmdb_api_key,
+        tmdb_interface = TMDbInterface(pp.database_directory, pp.tmdb_api_key)
+        tmdb_interface.manually_download_season(
             title=arg_set[0],
             year=int(arg_set[1]),
             season_number=int(arg_set[2]),

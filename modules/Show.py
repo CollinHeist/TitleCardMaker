@@ -133,7 +133,7 @@ class Show(YamlReader):
             self.media_directory,
             self._get('season_posters'),
         )
-
+        
         # Episode dictionary to be filled
         self.episodes = {}
         self.__is_archive = False
@@ -197,8 +197,8 @@ class Show(YamlReader):
             self.library = value['path']
             self.media_directory = self.library / self.series_info.legal_path
 
-        if (value := self._get('media_directory', type_=Path)) is not None:
-            self.media_directory = value
+        if (value := self._get('media_directory', type_=str)) is not None:
+            self.media_directory =Path(TitleCard.sanitize_full_directory(value))
 
         if (value := self._get('filename_format', type_=str)) is not None:
             if TitleCard.validate_card_format_string(value):
@@ -637,11 +637,8 @@ class Show(YamlReader):
                 episode_map = {select_only.episode_info.key: select_only}
             
             plex_interface.update_watched_statuses(
-                self.library_name,
-                self.series_info,
-                episode_map,
-                self.watched_style,
-                self.unwatched_style,
+                self.library_name, self.series_info, episode_map,
+                self.watched_style, self.unwatched_style,
             )
             
         # Get show styles
@@ -795,13 +792,9 @@ class Show(YamlReader):
         MultiEpisode objects to this Show's episodes dictionary.
         """
 
-        # Set of episodes already mapped
-        matched = set()
-
-        # List of multipart episodes
-        multiparts = []
-
         # Go through each episode to check if it can be made into a MultiEpisode
+        matched = set()
+        multiparts = []
         for _, episode in self.episodes.items():
             # If this episode has already been used in MultiEpisode, skip
             if episode in matched:
@@ -908,7 +901,7 @@ class Show(YamlReader):
 
     def create_missing_title_cards(self) ->None:
         """Create any missing title cards for each episode of this show."""
-
+        
         # If the media directory is unspecified, exit
         if self.media_directory is None:
             return False
@@ -918,7 +911,7 @@ class Show(YamlReader):
             log.info(f'Detected new YAML for {self} - deleting old cards')
             for episode in self.episodes.values():
                 episode.delete_card(reason='new config')
-
+        
         # Go through each episode for this show
         for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
             # Skip episodes without a destination or that already exist

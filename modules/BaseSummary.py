@@ -69,6 +69,9 @@ class BaseSummary(ImageMaker):
         Select the images that are to be incorporated into the show summary.
         This updates the object's inputs and number_rows attributes.
 
+        Args:
+            maximum_images: maximum number of images to select. Defaults to 9.
+
         Returns:
             Whether the ShowSummary should/can be created.
         """
@@ -78,6 +81,13 @@ class BaseSummary(ImageMaker):
             lambda e: self.show.episodes[e].destination.exists(),
             self.show.episodes
         ))
+
+        # Filter specials if indicated
+        if self.preferences.summary_ignore_specials:
+            available_episodes = list(filter(
+                lambda e: self.show.episodes[e].episode_info.season_number != 0,
+                self.show.episodes
+            ))
 
         # Warn if this show has no episodes to work with
         if (episode_count := len(available_episodes)) == 0:
@@ -99,9 +109,7 @@ class BaseSummary(ImageMaker):
 
         # Get the full filepath for each of the selected images
         get_destination = lambda e_key: self.show.episodes[e_key].destination
-        self.inputs = [
-            str(get_destination(e).resolve()) for e in episode_keys
-        ]
+        self.inputs = [str(get_destination(e).resolve()) for e in episode_keys]
 
         # The number of rows is necessary to determine how to scale y-values
         self.number_rows = ceil(len(episode_keys) / 3)
@@ -133,7 +141,7 @@ class BaseSummary(ImageMaker):
             f'\( "{self.__TCM_LOGO.resolve()}"',
             f'-resize x100 \)',
             f'-fill "#5493D7"',
-            f'label:TitleCardMaker',
+            f'label:"TitleCardMaker"',
             f'+smush 30',
             f'"{self.__CREATED_BY_TEMPORARY_PATH.resolve()}"'
         ])

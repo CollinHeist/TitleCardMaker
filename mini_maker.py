@@ -188,6 +188,12 @@ movie_poster_group.add_argument(
     metavar=('TITLE_LINE'),
     help='Movie title for the movie poster')
 movie_poster_group.add_argument(
+    '--movie-top-subtitle',
+    type=str,
+    default='',
+    metavar='TOP_SUBTITLE',
+    help='Top subtitle line for the movie poster')    
+movie_poster_group.add_argument(
     '--movie-subtitle',
     type=str,
     default='',
@@ -380,6 +386,7 @@ if hasattr(args, 'movie_poster'):
         output=args.movie_poster[1],
         title='\n'.join(args.movie_title),
         subtitle=args.movie_subtitle,
+        top_subtitle=args.movie_top_subtitle,
         font=args.movie_font,
         font_color=args.movie_font_color,
         font_size=float(args.movie_font_size[:-1])/100.0,
@@ -412,9 +419,13 @@ if hasattr(args, 'genre_card_batch'):
 if hasattr(args, 'show_summary'):
     # Temporary classes
     @dataclass
+    class EpisodeInfo:
+        season_number: int
+        episode_number: int
+    @dataclass
     class Episode:
+        episode_info: EpisodeInfo
         destination: Path
-
     @dataclass
     class Show:
         logo: Path
@@ -429,9 +440,11 @@ if hasattr(args, 'show_summary'):
         # Attempt to get index from filename, if not just increment last number
         if (groups := match(r'.*s(\d+).*e(\d+)', file.name, IGNORECASE)):
             season, episode = map(int, groups.groups())
-            episodes[f'{season}-{episode}'] = Episode(file)
+            info = EpisodeInfo(season, episode)
+            episodes[f'{season}-{episode}'] = Episode(info, file)
         else:
-            episodes[f'{season}-{episode}'] = Episode(file)
+            info = EpisodeInfo(season, episode)
+            episodes[f'{season}-{episode}'] = Episode(info, file)
             episode += 1
     
     # Create pseudo "show" of these episodes

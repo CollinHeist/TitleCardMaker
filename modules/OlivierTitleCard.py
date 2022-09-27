@@ -128,11 +128,7 @@ class OlivierTitleCard(BaseCardType):
 
         command = ' '.join([
             f'convert "{source.resolve()}"',
-            f'+profile "*"',
-            f'-gravity center',
-            f'-resize "{self.TITLE_CARD_SIZE}^"',
-            f'-extent "{self.TITLE_CARD_SIZE}"',
-            f'-blur {self.BLUR_PROFILE}' if self.blur else '',
+            *self.resize_and_blur,
             f'"{self.__RESIZED_SOURCE.resolve()}"',
         ])
 
@@ -215,7 +211,7 @@ class OlivierTitleCard(BaseCardType):
             offset = text_offset[self.episode_prefix]
         else:
             offset_per_char = text_offset['EPISODE'] / len('EPISODE')
-            offset = offset_per_char * len(self.episode_prefix)
+            offset = offset_per_char * len(self.episode_prefix) * 1.10
 
         return [
             f'-gravity west',

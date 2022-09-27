@@ -3,6 +3,7 @@ from re import match, compile as re_compile
 from typing import ClassVar
 
 from modules.Debug import log
+from modules.TitleCard import TitleCard
 
 @dataclass(eq=False, order=False)
 class SeriesInfo:
@@ -90,8 +91,7 @@ class SeriesInfo:
         self.full_match_name = self.get_matching_title(self.full_name)
 
         # Set folder-safe name
-        translation = str.maketrans(self.__ILLEGAL_CHARACTERS)
-        self.legal_path = self.full_name.translate(translation)
+        self.legal_path = TitleCard.sanitize_name(self.full_name)
 
 
     def has_id(self, id_: str) -> bool:
