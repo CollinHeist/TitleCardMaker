@@ -782,7 +782,8 @@ class Show(YamlReader):
         if (download_backdrop and tmdb_interface and self.tmdb_sync
             and not self.backdrop.exists()):
             # Download background art 
-            if (url := tmdb_interface.get_series_backdrop(self.series_info)):
+            if (url := tmdb_interface.get_series_backdrop(self.series_info,
+                skip_localized_images=self.tmdb_skip_localized_images)):
                 tmdb_interface.download_image(url, self.backdrop)
 
 

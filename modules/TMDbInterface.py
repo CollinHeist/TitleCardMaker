@@ -740,12 +740,15 @@ class TMDbInterface(WebInterface):
 
 
     @catch_and_log('Error setting series backdrop', default=None)
-    def get_series_backdrop(self, series_info: SeriesInfo) -> str:
+    def get_series_backdrop(self, series_info: SeriesInfo, *,
+                            skip_localized_images: bool=False) -> str:
         """
         Get the best backdrop for the given series.
         
         Args:
             series_info: Series to get the logo of.
+            skip_localized_images: Whether to skip images with a non-null
+                language code - i.e. skipping localized images.
         
         Returns:
             URL to the 'best' backdrop for the given series, and None if no 
@@ -768,7 +771,13 @@ class TMDbInterface(WebInterface):
             self.__update_blacklist(series_info, None, 'backdrop')
             return None
 
-        if (best_image := self.__determine_best_image(series.backdrops, True)):
+        best_image = self.__determine_best_image(
+            series.backdrops,
+            is_source_image=True,
+            skip_localized=skip_localized_images,
+        )
+
+        if best_image:
             return best_image.url
         
         self.__update_blacklist(series_info, None, 'backdrop')
