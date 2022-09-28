@@ -713,7 +713,7 @@ class Show(YamlReader):
         download_backdrop = self.__apply_styles(plex_interface,
                                                 select_only=select_only)
 
-        # Don't download source if this card type doesn't use unique images
+        # Don't download sources if this card type doesn't use unique images
         if not self.card_class.USES_UNIQUE_SOURCES:
             return None
 
@@ -745,7 +745,7 @@ class Show(YamlReader):
                 )
                 check_tmdb = not blacklisted
             else:
-                check_tmdb, blacklisted = False, False
+                check_tmdb, blacklisted = False, not self.tmdb_sync
 
             # Check Plex if enabled, provided, and valid relative to TMDb
             if always_check_plex:
