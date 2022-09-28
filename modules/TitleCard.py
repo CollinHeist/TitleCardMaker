@@ -54,7 +54,7 @@ class TitleCard:
     }
 
     """Mapping of illegal filename characters and their replacements"""
-    __ILLEGAL_CHARACTERS = {
+    __ILLEGAL_FILE_CHARACTERS = {
         '?': '!',
         '<': '',
         '>': '',
@@ -62,8 +62,9 @@ class TitleCard:
         '"': '',
         '|': '',
         '*': '-',
+        '/': '+',
+        '\\': '+'
     }
-    __ILLEGAL_NAME_CHARACTERS = {'/': '+', '\\': '+'}
 
     __slots__ = ('episode', 'profile', 'converted_title', 'maker', 'file')
     
@@ -125,13 +126,16 @@ class TitleCard:
             Modified directory instantiated as a Path object.
         """
 
-        replacements = TitleCard.__ILLEGAL_CHARACTERS
+        # Create Path object from this path
+        path_ = Path(path)
+        
+        # On Windows, sanitize each part individually EXCEPT the root/drive
+        if isinstance(path_, WindowsPath):
+            parts = (TitleCard.sanitize_name(part) for part in path_.parts[1:])
+            return Path(path_.drive, *parts)
 
-        # On windows don't replace colons
-        if isinstance(Path(path), WindowsPath):
-            replacements.pop(':', None)
-
-        return Path(path.translate(str.maketrans(replacements)))
+        # On Unix, sanitize all parts individually and re-join
+        return Path(*(TitleCard.sanitize_name(part) for part in path_.parts))
 
 
     @staticmethod
@@ -146,10 +150,8 @@ class TitleCard:
             Modified filename.
         """
 
-        # Replace all characters (including / and \)
-        replacements =\
-            TitleCard.__ILLEGAL_CHARACTERS | TitleCard.__ILLEGAL_NAME_CHARACTERS
-
+        replacements = TitleCard.__ILLEGAL_FILE_CHARACTERS
+        
         return filename.translate(str.maketrans(replacements))
 
         
