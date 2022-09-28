@@ -200,6 +200,12 @@ movie_poster_group.add_argument(
     metavar='SUBTITLE',
     help='Subtitle for the movie poster')
 movie_poster_group.add_argument(
+    '--movie-index', '--movie-number',
+    type=str,
+    default='',
+    metavar='INDEX',
+    help='Index number/text to place behind the title text on the movie poster')
+movie_poster_group.add_argument(
     '--movie-font',
     type=Path,
     default=MoviePosterMaker.FONT,
@@ -387,6 +393,7 @@ if hasattr(args, 'movie_poster'):
         title='\n'.join(args.movie_title),
         subtitle=args.movie_subtitle,
         top_subtitle=args.movie_top_subtitle,
+        movie_index=args.movie_index,
         font=args.movie_font,
         font_color=args.movie_font_color,
         font_size=float(args.movie_font_size[:-1])/100.0,
