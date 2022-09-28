@@ -1,3 +1,4 @@
+from pathlib import Path, WindowsPath
 from re import match, sub, IGNORECASE
 
 from modules.Debug import log
@@ -111,7 +112,7 @@ class TitleCard:
 
 
     @staticmethod
-    def sanitize_full_directory(path: str) -> str:
+    def sanitize_full_directory(path: str) -> Path:
         """
         Sanitize the entire path and remove all invalid characters. This is
         different to sanitizing a name as '/' and '\' characters aren't
@@ -121,12 +122,16 @@ class TitleCard:
             path: Directory path (as a string) to sanitize.
 
         Returns:
-            Modified directory.
+            Modified directory instantiated as a Path object.
         """
 
         replacements = TitleCard.__ILLEGAL_CHARACTERS
 
-        return path.translate(str.maketrans(replacements))
+        # On windows don't replace colons
+        if isinstance(Path(path), WindowsPath):
+            replacements.pop(':', None)
+
+        return Path(path.translate(str.maketrans(replacements)))
 
 
     @staticmethod

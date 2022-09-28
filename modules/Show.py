@@ -198,7 +198,7 @@ class Show(YamlReader):
             self.media_directory = self.library / self.series_info.legal_path
 
         if (value := self._get('media_directory', type_=str)) is not None:
-            self.media_directory =Path(TitleCard.sanitize_full_directory(value))
+            self.media_directory = TitleCard.sanitize_full_directory(value)
 
         if (value := self._get('filename_format', type_=str)) is not None:
             if TitleCard.validate_card_format_string(value):

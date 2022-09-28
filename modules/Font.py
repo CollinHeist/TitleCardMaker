@@ -57,7 +57,7 @@ class Font:
         self.__validator = global_objects.fv
         
         # Generic font attributes
-        self.set_default()
+        self.reset()
         
         # Parse YAML, update validity
         self.__parse_attributes()
@@ -180,7 +180,7 @@ class Font:
                 self.stroke_width = float(value[:-1]) / 100.0
 
 
-    def set_default(self) -> None:
+    def reset(self) -> None:
         """Reset this object's attributes to its default values."""
 
         # Whether to validate for this font

@@ -126,7 +126,7 @@ class Profile:
 
         # If the new profile has a generic font, reset font attributes
         if not self.__use_custom_font:
-            self.font.set_default()
+            self.font.reset()
 
         # If the new profile has generic seasons, reset EpisodeMap
         if not self.__use_custom_seasons:
