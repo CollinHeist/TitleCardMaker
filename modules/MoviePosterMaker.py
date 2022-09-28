@@ -142,6 +142,43 @@ class MoviePosterMaker(ImageMaker):
             f'-kerning 0.5',
         ]
 
+    @property
+    def title_command(self) -> list[str]:
+        """
+        _summary_
+
+        Returns:
+            _description_
+        """
+
+        # No titles, return empty command
+        if (len(self.top_subtitle.strip()) == 0
+            and len(self.title.strip()) == 0
+            and len(self.subtitle.strip()) == 0):
+            return []
+
+        # At least one title being added, return entire command
+        return [
+            ## Global font attributes
+            f'-font "{self.font.resolve()}"',
+            f'-fill "{self.font_color}"',
+            # Create an image for each title
+            f'\( -background transparent',
+            *self.subtitle_font_attributes,
+            f'label:"{self.top_subtitle}"',
+            *self.title_font_attributes,
+            f'label:"{self.title}"',
+            *self.subtitle_font_attributes,
+            f'label:"{self.subtitle}"',
+            # Combine in order [TOP SUBTITLE] / [TITLE] / [SUBTITLE]
+            f'-smush 30 \)',
+            # Add titles to image
+            f'-gravity south',
+            f'-geometry +0+{182.5 if len(self.subtitle) > 0 else 262.5}',
+            f'-compose atop',
+            f'-composite',
+        ]
+
 
     def create(self) -> None:
         """
@@ -176,24 +213,7 @@ class MoviePosterMaker(ImageMaker):
             # Add index text
             *self.index_command,
             # Add title text
-            ## Global font attributes
-            f'-font "{self.font.resolve()}"',
-            f'-fill "{self.font_color}"',
-            # Create an image for each title
-            f'\( -background transparent',
-            *self.subtitle_font_attributes,
-            f'label:"{self.top_subtitle}"',
-            *self.title_font_attributes,
-            f'label:"{self.title}"',
-            *self.subtitle_font_attributes,
-            f'label:"{self.subtitle}"',
-            # Combine in order [TOP SUBTITLE] / [TITLE] / [SUBTITLE]
-            f'-smush 30 \)',
-            # Add titles to image
-            f'-gravity south',
-            f'-geometry +0+{182.5 if len(self.subtitle) > 0 else 262.5}',
-            f'-compose atop',
-            f'-composite',
+            *self.title_command,
             f'"{self.output.resolve()}"',
         ])
 
