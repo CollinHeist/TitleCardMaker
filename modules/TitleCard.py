@@ -131,8 +131,12 @@ class TitleCard:
         
         # On Windows, sanitize each part individually EXCEPT the root/drive
         if isinstance(path_, WindowsPath):
-            parts = (TitleCard.sanitize_name(part)
-                     for part in path_.resolve().parts[1:])
+            parts = path_.resolve().parts
+            # Skip drive to avoid bad colon replacement
+            if parts[0].startswith(path_.drive):
+                parts = parts[1:]
+
+            parts = (TitleCard.sanitize_name(part) for part in parts)
             return Path(path_.drive, *parts)
 
         # On Unix, sanitize all parts individually and re-join
