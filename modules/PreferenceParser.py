@@ -64,7 +64,7 @@ class PreferenceParser(YamlReader):
                          f'attribute')
             exit(1)
         self.source_directory = TitleCard.sanitize_full_directory(value)
-
+        
         # Setup default values that can be overwritten by YAML
         self.series_files = []
         self.execution_mode = Manager.DEFAULT_EXECUTION_MODE

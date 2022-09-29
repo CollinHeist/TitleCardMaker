@@ -128,11 +128,11 @@ class TitleCard:
 
         # Create Path object from this path
         path_ = Path(path)
-        if isinstance(path_, WindowsPath):
-            root = path_.drive
-        else:
-            root = path_.resolve().root
 
+        # Don't sanitize root (either drive or /)
+        root = path_.resolve().anchor
+
+        # Sanitize each part (folder) individually
         parts = (TitleCard.sanitize_name(part)
                  for part in path_.resolve().parts[1:])
         
