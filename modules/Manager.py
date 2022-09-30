@@ -1,5 +1,6 @@
 from yaml import dump
 from tqdm import tqdm
+from typing import Iterable
 
 from modules.Debug import log, TQDM_KWARGS
 from modules.PlexInterface import PlexInterface
@@ -411,7 +412,7 @@ class Manager:
             self.__run()
 
 
-    def remake_cards(self, rating_keys: list[int]) -> None:
+    def remake_cards(self, rating_keys: Iterable[int]) -> None:
         """
         Remake the title cards associated with the given list of rating keys.
         These keys are used to identify their corresponding episodes within
@@ -444,12 +445,9 @@ class Manager:
                 break
 
             # Check if this show is one of the entries to update
+            is_found = False
             for index, (series_info, episode_info, library_name) \
                 in enumerate(entry_list):
-                # Skip entries already found
-                if index in found:
-                    continue
-
                 # Match the library and series name
                 full_match_name = show.series_info.full_match_name
                 if (show.valid
@@ -457,7 +455,12 @@ class Manager:
                     and full_match_name == series_info.full_match_name):
                     self.shows = [show]
                     self.__run(serial=True)
-                    found.add(index)
+                    is_found = True
+                    break
+
+            # If an entry was found, delete from list 
+            if is_found:
+                del entry_list[index]
 
         # Warn for all entries not found
         for index, (series_info, episode_info, library_name) \

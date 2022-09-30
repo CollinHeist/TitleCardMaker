@@ -230,7 +230,7 @@ def read_update_list():
     # Read update list contents
     try:
         with args.tautulli_list.open('r') as file_handle:
-            update_list = list(map(int, file_handle.readlines()))
+            update_list = set(map(int, file_handle.readlines()))
         log.debug(f'Read update list ({update_list})')
     except ValueError:
         log.error(f'Error reading update list, skipping and deleting')
