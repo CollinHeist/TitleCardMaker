@@ -350,7 +350,8 @@ class Manager:
 
     def __run(self, *, serial: bool=False) -> None:
         """
-        Run the Manager.
+        Run the Manager. If serial execution is not indicated, then sync is run
+        and Show/ShowArchive objects are created.
         
         Args:
             serial: (Keyword only) Whether execution is serial.
