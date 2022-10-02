@@ -218,7 +218,7 @@ class MediaInfoSet:
                     return set_ids(info)
                 else:
                     log.debug(f'Index match on {series_info} {key}, but title '
-                              f'mismatch ({info.title}) vs ({title})')
+                              f'mismatch ({info.title}) vs ("{title}")')
                     return EpisodeInfo(title, season_number, episode_number,
                                        abs_number, imdb_id=imdb_id,
                                        tvdb_id=tvdb_id, tmdb_id=tmdb_id,

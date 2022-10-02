@@ -414,18 +414,20 @@ class Show(YamlReader):
 
         # Inner function to filter episodes
         def filter_ep(episode) -> bool:
-            # Filter out if a special and sync_specials is disabled
+            # Exclude special if special and not syncing specials
             if not self.sync_specials and episode.season_number == 0:
-                return True
+                return False
 
-            # Filter episode if refresh_titles and title doesn't match
-            if (self.refresh_titles
-                and (existing_ep := self.episodes.get(episode.key)) is not None
-                and not existing_ep.episode_info.title.matches(episode.title)):
-                existing_ep.delete_card(reason='Updating title')
-                return True
-
-            return False
+            # If episode is not new, include if title needs refreshed
+            if (existing_ep := self.episodes.get(episode.key)) is not None:
+                if (self.refresh_titles and not
+                    existing_ep.episode_info.title.matches(episode.title)):
+                    existing_ep.delete_card(reason='Updating title')
+                    return True
+                return False
+            
+            # New episode, include
+            return True
         
         # Apply filter formula to list of Episodes from data source
         new_episodes = tuple(filter(filter_ep, all_episodes))
