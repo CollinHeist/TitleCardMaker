@@ -814,7 +814,7 @@ class PreferenceParser(YamlReader):
                     library_map,
                     font_map,
                 )
-
+                
                 # If returned YAML is None (invalid) skip series
                 if show_yaml is None:
                     log.error(f'Skipping "{show_name}" from "{file_}"')

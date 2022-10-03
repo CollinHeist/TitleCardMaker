@@ -1,5 +1,6 @@
 from copy import deepcopy
 from re import findall
+from typing import Any
 
 from modules.Debug import log
 
@@ -53,14 +54,18 @@ class Template:
             if (isinstance(value, str)
                 and (new_keys := findall(r'<<(.+?)>>', value))):
                 keys.update(new_keys)
+            # Recurse through this sub-attribute
             elif isinstance(value, dict):
-                # Recurse through this sub-attribute
                 keys.update(self.__identify_template_keys(value, keys))
+            # List of values, recurse through each item
+            elif isinstance(value, list):
+                for value_ in value:
+                    keys.update(self.__identify_template_keys(value_, keys))
 
         return keys
 
 
-    def __apply_value_to_key(self, template: dict, key: str, value) -> None:
+    def __apply_value_to_key(self, template: dict, key: str, value: Any) -> None:
         """
         Apply the given value to all instances of the given key in the template.
         This looks for <<{key}>>, and puts value in place. This function is
@@ -80,15 +85,24 @@ class Template:
         """
 
         for t_key, t_value in template.items():
+            # If the templated value is JUST the replacement, just copy over
             if isinstance(t_value, str):
-                # If the templated value is JUST the replacement, just copy over
                 if t_value == f'<<{key}>>':
                     template[t_key] = value
                 else:
                     template[t_key] = t_value.replace(f'<<{key}>>', str(value))
+            # Template'd value is dictionary, recurse
             elif isinstance(t_value, dict):
-                # Template'd value is dictionary, recurse
                 self.__apply_value_to_key(template[t_key], key, value)
+            # Template'd value is list, apply to each value individually
+            elif isinstance(t_value, list):
+                for index, sub_value in enumerate(t_value):
+                    if isinstance(sub_value, str):
+                        template[t_key][index] = sub_value.replace(f'<<{key}>>',
+                                                                   str(value))
+                    elif isinstance(sub_value, dict):
+                        self.__apply_value_to_key(template[t_key][index], key,
+                                                  value)
 
 
     @staticmethod
@@ -118,13 +132,16 @@ class Template:
                 if t_key in base_yaml:
                     if isinstance(t_value, dict):
                         # Both have this dictionary, recurse on keys of dictionary
-                        Template.recurse_priority_union(base_yaml[t_key],t_value)
+                        Template.recurse_priority_union(
+                            base_yaml[t_key], t_value
+                        )
                 else:
                     # Key is not present in base, carryover template value
                     base_yaml[t_key] = t_value
 
 
-    def apply_to_series(self, series_name: str, series_yaml: dict) -> bool:
+    def apply_to_series(self, series_name: str,
+                        series_yaml: dict[str: Any]) -> bool:
         """
         Apply this Template object to the given series YAML, modifying it
         to include the templated values. This function assumes that the given
