@@ -403,7 +403,8 @@ class PlexInterface:
 
             # Skip temporary titles
             airdate = plex_episode.originallyAvailableAt
-            if (self.__TEMP_IGNORE_REGEX.match(plex_episode.title)
+            if (airdate is not None
+                and self.__TEMP_IGNORE_REGEX.match(plex_episode.title)
                 and airdate + timedelta(days=2) > datetime.now()):
                 log.debug(f'Temporarily ignoring '
                           f'{plex_episode.seasonEpisode.upper()} of '

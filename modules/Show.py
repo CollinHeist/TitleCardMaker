@@ -422,7 +422,7 @@ class Show(YamlReader):
             if (existing_ep := self.episodes.get(episode.key)) is not None:
                 if (self.refresh_titles and not
                     existing_ep.episode_info.title.matches(episode.title)):
-                    existing_ep.delete_card(reason='Updating title')
+                    existing_ep.delete_card(reason='updating title')
                     return True
                 return False
             
@@ -436,14 +436,7 @@ class Show(YamlReader):
         
         # If any new episodes remain, add to datafile and create Episode object
         self.file_interface.add_many_entries(new_episodes)
-        for episode_info in new_episodes:
-            self.episodes[episode_info.key] = Episode(
-                base_source=self.source_directory,
-                destination=self.__get_destination(episode_info),
-                card_class=self.card_class,
-                given_keys=set(),
-                episode_info=episode_info,
-            )
+        self.read_source()
 
 
     def set_episode_ids(self, sonarr_interface: 'TMDbInterface'=None,
