@@ -133,11 +133,16 @@ class Font:
         if (value := self.__yaml.get('replacements')) is not None:
             if not isinstance(value, dict):
                 self.__error('replacements', value, 'must be character set')
-            if not all(isinstance(repl, str) for _, repl in value.items()):
-                self.__error('replacements',value,'can only substitute strings')
             else:
-                self.replacements = value
-
+                # Convert each replacement to string, exit if impossible
+                self.replacements = {}
+                for in_, out_ in value.items():
+                    try:
+                        self.replacements[str(in_)] = str(out_)
+                    except Exception:
+                        self.__error('replacements', value,
+                                     f'bad replacement for "{in_}"')
+        
         # Size
         if (value := self.__yaml.get('size')) is not None:
             if (not isinstance(value, str)
