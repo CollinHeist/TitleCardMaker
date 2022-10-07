@@ -118,14 +118,14 @@ parser.add_argument(
     action='store_true',
     help='Omit color from all print messages')
 parser.add_argument(
-    '--tautulli-list', '--tautulli-update-list',
+    '-tl', '--tautulli-list', '--tautulli-update-list',
     type=Path,
     default=environ.get(ENV_UPDATE_LIST, SUPPRESS),
     metavar='FILE',
     help=f'File to monitor for Tautulli-driven episode watch-status updates. '
          f'Environment variable {ENV_UPDATE_LIST}.')
 parser.add_argument(
-    '--tautulli-frequency', '--tautulli-update-frequency',
+    '-tf', '--tautulli-frequency', '--tautulli-update-frequency',
     type=frequency,
     default=environ.get(ENV_UPDATE_FREQUENCY, DEFAULT_TAUTULLI_FREQUENCY),
     metavar='FREQUENCY',
