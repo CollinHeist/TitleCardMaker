@@ -126,7 +126,7 @@ class Profile:
 
         # If the new profile has a generic font, reset font attributes
         if not self.__use_custom_font:
-            self.font.set_default()
+            self.font.reset()
 
         # If the new profile has generic seasons, reset EpisodeMap
         if not self.__use_custom_seasons:
@@ -331,8 +331,9 @@ class Profile:
         else:
             cased_title = self.font.case(title_text)
 
-        # Create translation table for this profile's replacements
-        translation = str.maketrans(self.font.replacements)
-
-        # Apply translation table to this text
-        return cased_title.translate(translation)
+        # Apply font replacements
+        replaced_title = cased_title
+        for old, new in self.font.replacements.items():
+            replaced_title = replaced_title.replace(old, new)
+            
+        return replaced_title

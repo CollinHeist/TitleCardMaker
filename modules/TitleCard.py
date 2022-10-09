@@ -1,3 +1,4 @@
+from pathlib import Path, WindowsPath
 from re import match, sub, IGNORECASE
 
 from modules.Debug import log
@@ -53,7 +54,7 @@ class TitleCard:
     }
 
     """Mapping of illegal filename characters and their replacements"""
-    __ILLEGAL_CHARACTERS = {
+    __ILLEGAL_FILE_CHARACTERS = {
         '?': '!',
         '<': '',
         '>': '',
@@ -61,8 +62,9 @@ class TitleCard:
         '"': '',
         '|': '',
         '*': '-',
+        '/': '+',
+        '\\': '+'
     }
-    __ILLEGAL_NAME_CHARACTERS = {'/': '+', '\\': '+'}
 
     __slots__ = ('episode', 'profile', 'converted_title', 'maker', 'file')
     
@@ -111,7 +113,7 @@ class TitleCard:
 
 
     @staticmethod
-    def sanitize_full_directory(path: str) -> str:
+    def sanitize_full_directory(path: str) -> Path:
         """
         Sanitize the entire path and remove all invalid characters. This is
         different to sanitizing a name as '/' and '\' characters aren't
@@ -121,12 +123,20 @@ class TitleCard:
             path: Directory path (as a string) to sanitize.
 
         Returns:
-            Modified directory.
+            Modified directory instantiated as a Path object.
         """
 
-        replacements = TitleCard.__ILLEGAL_CHARACTERS
+        # Create Path object from this path
+        path_ = Path(path)
 
-        return path.translate(str.maketrans(replacements))
+        # Don't sanitize root (either drive or /)
+        root = path_.resolve().anchor
+
+        # Sanitize each part (folder) individually
+        parts = (TitleCard.sanitize_name(part)
+                 for part in path_.resolve().parts[1:])
+        
+        return Path(root, *parts)
 
 
     @staticmethod
@@ -141,10 +151,8 @@ class TitleCard:
             Modified filename.
         """
 
-        # Replace all characters (including / and \)
-        replacements =\
-            TitleCard.__ILLEGAL_CHARACTERS | TitleCard.__ILLEGAL_NAME_CHARACTERS
-
+        replacements = TitleCard.__ILLEGAL_FILE_CHARACTERS
+        
         return filename.translate(str.maketrans(replacements))
 
         

@@ -24,7 +24,7 @@ except ImportError as e:
     exit(1)
 
 # Version information
-CURRENT_VERSION = 'v1.11.1'
+CURRENT_VERSION = 'v1.11.2'
 REPO_URL = ('https://api.github.com/repos/'
             'CollinHeist/TitleCardMaker/releases/latest')
 
@@ -118,14 +118,14 @@ parser.add_argument(
     action='store_true',
     help='Omit color from all print messages')
 parser.add_argument(
-    '--tautulli-list', '--tautulli-update-list',
+    '-tl', '--tautulli-list', '--tautulli-update-list',
     type=Path,
     default=environ.get(ENV_UPDATE_LIST, SUPPRESS),
     metavar='FILE',
     help=f'File to monitor for Tautulli-driven episode watch-status updates. '
          f'Environment variable {ENV_UPDATE_LIST}.')
 parser.add_argument(
-    '--tautulli-frequency', '--tautulli-update-frequency',
+    '-tf', '--tautulli-frequency', '--tautulli-update-frequency',
     type=frequency,
     default=environ.get(ENV_UPDATE_FREQUENCY, DEFAULT_TAUTULLI_FREQUENCY),
     metavar='FREQUENCY',
@@ -230,7 +230,7 @@ def read_update_list():
     # Read update list contents
     try:
         with args.tautulli_list.open('r') as file_handle:
-            update_list = list(map(int, file_handle.readlines()))
+            update_list = set(map(int, file_handle.readlines()))
         log.debug(f'Read update list ({update_list})')
     except ValueError:
         log.error(f'Error reading update list, skipping and deleting')
@@ -253,7 +253,7 @@ if args.sync:
     read_preferences()
     
     # Create Manager, run, and write missing report
-    Manager().sync_series_files()
+    Manager(check_tautulli=False).sync_series_files()
 
 # Schedule first run, which then schedules subsequent runs
 if hasattr(args, 'runtime'):

@@ -1,4 +1,6 @@
+from datetime import datetime, timedelta
 from pathlib import Path
+from re import IGNORECASE, compile as re_compile
 
 from plexapi.exceptions import PlexApiException
 from plexapi.server import PlexServer, NotFound, Unauthorized
@@ -27,6 +29,9 @@ class PlexInterface:
 
     """Default filesize limit for all uploaded assets"""
     DEFAULT_FILESIZE_LIMIT = '10 MB'
+
+    """Episode titles that indicate a placeholder and are to be ignored"""
+    __TEMP_IGNORE_REGEX = re_compile(r'^(tba|tbd|episode \d+)$', IGNORECASE)
 
 
     def __init__(self, database_directory: Path, url: str,
@@ -396,6 +401,16 @@ class PlexInterface:
                             f'"{library_name}" has no index - skipping')
                 continue
 
+            # Skip temporary titles
+            airdate = plex_episode.originallyAvailableAt
+            if (airdate is not None
+                and self.__TEMP_IGNORE_REGEX.match(plex_episode.title)
+                and airdate + timedelta(days=2) > datetime.now()):
+                log.debug(f'Temporarily ignoring '
+                          f'{plex_episode.seasonEpisode.upper()} of '
+                          f'{series_info} - placeholder title')
+                continue
+
             # Get all ID's for this episode
             ids = {}
             for guid in plex_episode.guids:
@@ -413,7 +428,7 @@ class PlexInterface:
                 plex_episode.parentIndex,
                 plex_episode.index,
                 **ids,
-                title_match=False,
+                title_match=True,
                 queried_plex=True,
             )
 

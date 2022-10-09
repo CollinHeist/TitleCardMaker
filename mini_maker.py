@@ -5,6 +5,7 @@ from pathlib import Path
 from re import match, IGNORECASE
 
 try:
+    from modules.AspectRatioFixer import AspectRatioFixer
     from modules.CollectionPosterMaker import CollectionPosterMaker
     from modules.Debug import log
     from modules.GenreMaker import GenreMaker
@@ -128,6 +129,30 @@ title_card_group.add_argument(
     metavar='SCALE%',
     help='Specify the font black stroke scale (as percentage)')
     
+# Argument group for aspect ratio fixing
+aspect_ratio_group = parser.add_argument_group(
+    'Aspect Ratio Correction',
+    'Fit images into a 16:9 aspect ratio')
+aspect_ratio_group.add_argument(
+    '--ratio', '--aspect-ratio',
+    type=Path,
+    nargs=2,
+    default=SUPPRESS,
+    metavar=('SOURCE', 'DESTINATION'),
+    help='Correct the aspect ratio of the given image, write to destination')
+aspect_ratio_group.add_argument(
+    '--ratio-batch', '--aspect-ratio-batch',
+    type=Path,
+    default=SUPPRESS,
+    metavar='DIRECTORY',
+    help='Correct the aspect ratios of all images in the given directory')
+aspect_ratio_group.add_argument(
+    '--ratio-style', '--aspect-ratio-style',
+    type=str,
+    default=AspectRatioFixer.DEFAULT_STYLE,
+    choices=AspectRatioFixer.VALID_STYLES,
+    help='Style of the aspect-ratio correction to utilize')
+
 # Argument group for collection posters
 collection_group = parser.add_argument_group(
     'Collection Posters',
@@ -199,6 +224,12 @@ movie_poster_group.add_argument(
     default='',
     metavar='SUBTITLE',
     help='Subtitle for the movie poster')
+movie_poster_group.add_argument(
+    '--movie-index', '--movie-number',
+    type=str,
+    default='',
+    metavar='INDEX',
+    help='Index number/text to place behind the title text on the movie poster')
 movie_poster_group.add_argument(
     '--movie-font',
     type=Path,
@@ -365,6 +396,23 @@ if hasattr(args, 'title_card'):
         **arbitrary_data,
     ).create()
 
+# Correct aspect ration
+if hasattr(args, 'ratio'):
+    AspectRatioFixer(
+        source=args.ratio[0],
+        destination=args.ratio[1],
+        style=args.ratio_style,
+    ).create()
+
+if hasattr(args, 'ratio_batch'):
+    for file in args.ratio_batch.glob('*'):
+        if file.suffix.lower() in AspectRatioFixer.VALID_IMAGE_EXTENSIONS:
+            AspectRatioFixer(
+                source=file,
+                destination=file.with_stem(f'{file.stem}-corrected'),
+                style=args.ratio_style,
+            ).create()
+
 # Create Collection Poster
 if hasattr(args, 'collection_poster'):
     CollectionPosterMaker(
@@ -387,6 +435,7 @@ if hasattr(args, 'movie_poster'):
         title='\n'.join(args.movie_title),
         subtitle=args.movie_subtitle,
         top_subtitle=args.movie_top_subtitle,
+        movie_index=args.movie_index,
         font=args.movie_font,
         font_color=args.movie_font_color,
         font_size=float(args.movie_font_size[:-1])/100.0,
@@ -410,12 +459,13 @@ if hasattr(args, 'genre_card_batch'):
             GenreMaker(
                 source=file,
                 genre=file.stem.upper(),
-                output=Path(file.parent /f'{file.stem}-GenreCard{file.suffix}'),
+                output=file.with_stem(f'{file.stem}-GenreCard'),
                 font_size=float(args.font_size[:-1])/100.0,
                 borderless=args.borderless,
                 omit_gradient=args.no_gradient,
             ).create()
             
+# Create show summaries
 if hasattr(args, 'show_summary'):
     # Temporary classes
     @dataclass
@@ -471,7 +521,7 @@ if hasattr(args, 'show_summary'):
     else:
         log.warning(f'Failed to create "{summary.output.resolve()}"')
 
-
+# Create season posters
 if hasattr(args, 'season_poster'):
     SeasonPoster(
         source=args.season_poster[0],

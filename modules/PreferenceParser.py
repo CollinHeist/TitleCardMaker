@@ -63,8 +63,8 @@ class PreferenceParser(YamlReader):
             log.critical(f'Preference file missing required options/source '
                          f'attribute')
             exit(1)
-        self.source_directory = Path(TitleCard.sanitize_full_directory(value))
-
+        self.source_directory = TitleCard.sanitize_full_directory(value)
+        
         # Setup default values that can be overwritten by YAML
         self.series_files = []
         self.execution_mode = Manager.DEFAULT_EXECUTION_MODE
@@ -814,7 +814,7 @@ class PreferenceParser(YamlReader):
                     library_map,
                     font_map,
                 )
-
+                
                 # If returned YAML is None (invalid) skip series
                 if show_yaml is None:
                     log.error(f'Skipping "{show_name}" from "{file_}"')

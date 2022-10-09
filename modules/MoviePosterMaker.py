@@ -12,6 +12,7 @@ class MoviePosterMaker(ImageMaker):
     """Base font for title text"""
     FONT = REF_DIRECTORY / 'Arial Bold.ttf'
     FONT_COLOR = 'white'
+    INDEX_FONT_COLOR = 'rgb(154,154,154)'
 
     """Paths to reference images to overlay"""
     __FRAME = REF_DIRECTORY / 'frame.png'
@@ -19,7 +20,7 @@ class MoviePosterMaker(ImageMaker):
 
 
     def __init__(self, source: Path, output: Path, title: str, subtitle: str='',
-                 top_subtitle: str='', font: Path=FONT,
+                 top_subtitle: str='', movie_index: str='', font: Path=FONT,
                  font_color: str=FONT_COLOR, font_size: float=1.0,
                  omit_gradient: bool=False) -> None:
         """
@@ -32,6 +33,8 @@ class MoviePosterMaker(ImageMaker):
             subtitle: String to use for smaller title text.
             top_subtitle: String to use for smaller subtitle text that appears
                 above the title text.
+            movie_index: Optional (series) index to place behind the movie
+                title.
             font: Path to the font file of the poster's title.
             font_color: Font color of the poster text.
             font_size: Scalar for the font size of the poster's title.
@@ -44,6 +47,7 @@ class MoviePosterMaker(ImageMaker):
         # Store arguments as attributes
         self.source = source
         self.output = output
+        self.movie_index = movie_index
         self.font = font
         self.font_color = font_color
         self.font_size = font_size
@@ -81,6 +85,28 @@ class MoviePosterMaker(ImageMaker):
 
 
     @property
+    def index_command(self) -> list[str]:
+        """
+        ImageMagick command(s) to add the underlying index text behind the
+        title text.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        # No index, return empty command
+        if len(self.movie_index) == 0:
+            return []
+
+        return [
+            f'-font "{self.FONT.resolve()}"',
+            f'-pointsize 598',
+            f'-fill "{self.INDEX_FONT_COLOR}"',
+            f'-annotate +0+1150 "{self.movie_index}"',
+        ]
+
+
+    @property
     def title_font_attributes(self) -> list[str]:
         """
         Imagemagick commands to define the font attributes of the title text.
@@ -93,8 +119,9 @@ class MoviePosterMaker(ImageMaker):
         
         return [
             f'-pointsize {title_font_size}',
-            f'-interline-spacing -40',
-            f'+kerning',
+            f'-interline-spacing -44.5',
+            f'-interword-spacing 55',
+            f'-kerning 0.70',
         ]
 
 
@@ -111,8 +138,45 @@ class MoviePosterMaker(ImageMaker):
 
         return [
             f'-pointsize {subtitle_font_size}',
-            f'-interword-spacing 15',
-            f'-kerning 7',
+            f'-interword-spacing 18',
+            f'-kerning 0.5',
+        ]
+
+    @property
+    def title_command(self) -> list[str]:
+        """
+        _summary_
+
+        Returns:
+            _description_
+        """
+
+        # No titles, return empty command
+        if (len(self.top_subtitle.strip()) == 0
+            and len(self.title.strip()) == 0
+            and len(self.subtitle.strip()) == 0):
+            return []
+
+        # At least one title being added, return entire command
+        return [
+            ## Global font attributes
+            f'-font "{self.font.resolve()}"',
+            f'-fill "{self.font_color}"',
+            # Create an image for each title
+            f'\( -background transparent',
+            *self.subtitle_font_attributes,
+            f'label:"{self.top_subtitle}"',
+            *self.title_font_attributes,
+            f'label:"{self.title}"',
+            *self.subtitle_font_attributes,
+            f'label:"{self.subtitle}"',
+            # Combine in order [TOP SUBTITLE] / [TITLE] / [SUBTITLE]
+            f'-smush 30 \)',
+            # Add titles to image
+            f'-gravity south',
+            f'-geometry +0+{182.5 if len(self.subtitle) > 0 else 262.5}',
+            f'-compose atop',
+            f'-composite',
         ]
 
 
@@ -146,25 +210,10 @@ class MoviePosterMaker(ImageMaker):
             # Swap, putting frame on top of source+gradient
             f'+swap',
             f'-composite',
+            # Add index text
+            *self.index_command,
             # Add title text
-            ## Global font attributes
-            f'-font "{self.font.resolve()}"',
-            f'-fill {self.font_color}',
-            # Create an image for each title
-            f'\( -background transparent',
-            *self.subtitle_font_attributes,
-            f'label:"{self.top_subtitle}"',
-            *self.title_font_attributes,
-            f'label:"{self.title}"',
-            *self.subtitle_font_attributes,
-            f'label:"{self.subtitle}"',
-            # Combine in order [TOP SUBTITLE] / [TITLE] / [SUBTITLE]
-            f'-smush 30 \)',
-            # Add titles to image
-            f'-gravity south',
-            f'-geometry +0+{185 if len(self.subtitle) > 0 else 265}',
-            f'-compose atop',
-            f'-composite',
+            *self.title_command,
             f'"{self.output.resolve()}"',
         ])
 

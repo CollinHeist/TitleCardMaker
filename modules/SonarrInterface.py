@@ -236,8 +236,7 @@ class SonarrInterface(WebInterface):
         series_info.set_tvdb_id(ids['tvdb_id'])
 
 
-    def get_all_episodes(self, series_info: SeriesInfo,
-                         title_match: bool=False) -> list[EpisodeInfo]:
+    def get_all_episodes(self, series_info: SeriesInfo) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that have 
         already aired are returned.
@@ -291,7 +290,7 @@ class SonarrInterface(WebInterface):
                 episode['episodeNumber'],
                 episode.get('absoluteEpisodeNumber'),
                 tvdb_id=episode.get('tvdbId'),
-                title_match=title_match,
+                title_match=True,
                 queried_sonarr=True,
             )
 
@@ -310,11 +309,11 @@ class SonarrInterface(WebInterface):
         
         Args:
             series_info: SeriesInfo for the entry.
-            infos: List of EpisodeInfo objects to update.
+            infos: List of EpisodeInfo objects to update. Not used.
         """
 
-        # Get all sonarr-created EpisodeInfo objects
-        self.get_all_episodes(series_info, True)
+        # Get all Sonarr-created EpisodeInfo objects
+        self.get_all_episodes(series_info)
 
 
     def list_all_series_id(self) -> None:

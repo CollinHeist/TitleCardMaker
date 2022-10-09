@@ -160,7 +160,7 @@ class LandscapeTitleCard(BaseCardType):
             # Create bounding box
             f'-fill transparent',
             f'-strokewidth 10',
-            f'-stroke {self.title_color}',
+            f'-stroke "{self.title_color}"',
             f'-draw "rectangle {x_start},{y_start},{x_end},{y_end}"',
             # Create shadow of the bounding box
             f'\( +clone',

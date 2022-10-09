@@ -22,7 +22,7 @@ TitleCardMaker can be automated such that everything can be pulled without manua
 
 <img alt="card unblurring process" src="https://user-images.githubusercontent.com/17693271/185819730-a2c55a3a-63cc-4f0e-8061-891edd8d64d0.gif"/>
   
-The actual image creation is done using the open-source and free image library called [ImageMagick](https://imagemagick.org/).
+All configuration/automation of the TitleCardMaker is done via YAML files, and the actual image creation is done using the open-source and free image library called [ImageMagick](https://imagemagick.org/).
 
 ## Getting Started
 Read the [Getting Started](https://github.com/CollinHeist/TitleCardMaker/wiki) page on the Wiki for the traditional install, or the [Getting Started on Docker](https://github.com/CollinHeist/TitleCardMaker/wiki/Docker-Tutorial) page to install using Docker.
@@ -33,7 +33,7 @@ If you're using Unraid, there is a template available for easy setup - just sear
 Assuming you're using the default preference filename, invoking the Maker is as simple as:
 
 ```console
-$ pipenv run python3 main.py --run
+pipenv run python main.py --run
 ```
 
 For invocation and configuration details, read [here](https://github.com/CollinHeist/TitleCardMaker/wiki/Running-the-TitleCardMaker).
@@ -57,6 +57,13 @@ The TitleCardMaker can also use user-created and maintained card types hosted on
 > The above cards are, in order, `Yozora/BarebonesTitleCard`, `Beedman/GradientLogoTitleCard`, `Yozora/RetroTitleCard`, `Yozora/SlimTitleCard`, `Wdvh/StarWarsTitleOnly`, `Wdvh/WhiteTextAbsolute`, `lyonza/WhiteTextBroadcast`, `Wdvh/WhiteTextStandard`, `Wdvh/WhiteTextTitleOnly`, and `azuravian/TitleColorMatch`
 
 </details>
+
+## Other Features
+In addition to title card creation and management, the TitleCardMaker can also be used for other image-creation functionality. For example, the [mini maker](https://github.com/CollinHeist/TitleCardMaker/wiki/Using-the-Mini-Maker) - a.k.a. `mini_maker.py` - can be used to "manually" create collection posters, genre cards, movie posters, show summaries, and season posters. An example of each is shown below:
+
+<img alt="Example Collection Poster" src="https://user-images.githubusercontent.com/17693271/180630284-57e6d14a-025b-439f-9a84-696749b92c8d.jpg" height="200"/> <img alt="Example Genre Card" src="https://user-images.githubusercontent.com/17693271/166091004-c8cf6afe-7cdf-4ba2-b16d-8a1c13236df8.jpg" height="200"/> <img alt="Example Movie Poster" src="https://user-images.githubusercontent.com/17693271/188292228-c57b7415-63ee-4907-9886-dd94e7d94a6b.jpg" height="200"/> <img alt="Example Genre Card" src="https://user-images.githubusercontent.com/17693271/188784303-a80f0e1c-e1c3-43b0-8591-fa0eb3aafabc.jpg" height="200"/> <img alt="Example Genre Card" src="https://user-images.githubusercontent.com/17693271/172294392-ecababbe-eeef-4e28-b08c-814b7e02f4c7.png" height="200"/>
+
+This is largely done via the command-line, and is described on the wiki [here](https://github.com/CollinHeist/TitleCardMaker/wiki/Using-the-Mini-Maker).
 
 ## Contributing
 If you'd like to contribute - whether that's a suggested feature, a bug fix, or anything else - please do so on GitHub by creating an issue, or [join the Discord](https://discord.gg/bJ3bHtw8wH). The best way for me to manage technical aspects of the project is on GitHub.

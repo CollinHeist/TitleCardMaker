@@ -57,7 +57,7 @@ class Font:
         self.__validator = global_objects.fv
         
         # Generic font attributes
-        self.set_default()
+        self.reset()
         
         # Parse YAML, update validity
         self.__parse_attributes()
@@ -118,12 +118,12 @@ class Font:
         if (value := self.__yaml.get('file')) is not None:
             if not isinstance(value, str):
                 self.__error('file', value, 'not a valid path')
+            # If specified as direct path, check for existance
             elif (value := Path(value)).exists():
-                # If specified as direct path, check for existance
                 self.file = str(value.resolve())
                 self.replacements = {}
+            # If specified indirectly (or DNE), glob for any extension
             elif len(matches := tuple(value.parent.glob(f'{value.name}*'))) ==1:
-                # If specified indirectly (or DNE), glob for any extension
                 self.file = str(matches[0].resolve())
                 self.replacements = {}
             else:
@@ -133,14 +133,16 @@ class Font:
         if (value := self.__yaml.get('replacements')) is not None:
             if not isinstance(value, dict):
                 self.__error('replacements', value, 'must be character set')
-            if any(len(key) != 1 for key in value.keys()):
-                self.__error('replacements', value,
-                             'can only specify single character replacements')
-            elif not all(isinstance(repl, str) for _, repl in value.items()):
-                self.__error('replacements',value,'can only substitute strings')
             else:
-                self.replacements = value
-
+                # Convert each replacement to string, exit if impossible
+                self.replacements = {}
+                for in_, out_ in value.items():
+                    try:
+                        self.replacements[str(in_)] = str(out_)
+                    except Exception:
+                        self.__error('replacements', value,
+                                     f'bad replacement for "{in_}"')
+        
         # Size
         if (value := self.__yaml.get('size')) is not None:
             if (not isinstance(value, str)
@@ -180,7 +182,7 @@ class Font:
                 self.stroke_width = float(value[:-1]) / 100.0
 
 
-    def set_default(self) -> None:
+    def reset(self) -> None:
         """Reset this object's attributes to its default values."""
 
         # Whether to validate for this font

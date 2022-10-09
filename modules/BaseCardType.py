@@ -126,7 +126,7 @@ class BaseCardType(ImageMaker):
         """ImageMagick commands to resize and blur an image."""
 
         return [
-            f'-profile "*"',
+            f'+profile "*"',
             f'-background transparent',
             f'-gravity center',
             f'-resize "{self.TITLE_CARD_SIZE}^"',

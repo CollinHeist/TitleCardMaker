@@ -165,18 +165,24 @@ class PosterTitleCard(BaseCardType):
         # Single command to create card
         command = ' '.join([
             f'convert',
-            f'"{self.source_file.resolve()}"',          # Resize source image
             # Resize and optionally blur source image
-            *self.resize_and_blur,
-            f'"{self.__GRADIENT_OVERLAY.resolve()}"',   # Add gradient overlay
-            f'-flatten',                                # Combine images
-            *logo_command,                              # Optionally add logo
-            f'-gravity south',                          # Add episode text
+            f'"{self.source_file.resolve()}"',
+            f'-resize "x1800"',
+            f'-extent "3200x1800"',
+            f'-blur {self.BLUR_PROFILE}' if self.blur else '',
+            # Add gradient overlay
+            f'"{self.__GRADIENT_OVERLAY.resolve()}"',
+            f'-flatten',
+            # Optionally add logo
+            *logo_command,
+            # Add episode text
+            f'-gravity south',
             f'-font "{self.TITLE_FONT}"',
             f'-pointsize 75',
             f'-fill "#FFFFFF"',
             f'-annotate +649+50 "{self.episode_text}"',
-            f'-gravity center',                         # Add title text
+            # Add title text
+            f'-gravity center',                         
             f'-pointsize 165',
             f'-interline-spacing -40', 
             f'-annotate +649+{title_offset} "{self.title}"',

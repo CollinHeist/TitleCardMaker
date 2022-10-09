@@ -41,7 +41,7 @@ class Show(YamlReader):
         'tmdb_skip_localized_images', 'watched_style', 'unwatched_style',
         'hide_seasons','__episode_map', 'title_language', 'font',
         'source_directory', 'logo', 'backdrop', 'file_interface', 'profile',
-        'season_poster_set', 'episodes', '__is_archive'
+        'season_poster_set', 'episodes', '__is_archive', 'refresh_titles',
     )
 
     def __init__(self, name: str, yaml_dict: dict, source_directory: Path,
@@ -89,6 +89,7 @@ class Show(YamlReader):
         self.archive_name = None
         self.archive_all_variations = preferences.archive_all_variations
         self.episode_data_source = preferences.episode_data_source
+        self.refresh_titles = True
         self.sonarr_sync = preferences.use_sonarr
         self.sync_specials = preferences.sync_specials
         self.tmdb_sync = preferences.use_tmdb
@@ -198,7 +199,7 @@ class Show(YamlReader):
             self.media_directory = self.library / self.series_info.legal_path
 
         if (value := self._get('media_directory', type_=str)) is not None:
-            self.media_directory =Path(TitleCard.sanitize_full_directory(value))
+            self.media_directory = TitleCard.sanitize_full_directory(value)
 
         if (value := self._get('filename_format', type_=str)) is not None:
             if TitleCard.validate_card_format_string(value):
@@ -243,6 +244,9 @@ class Show(YamlReader):
                 log.error(f'Invalid episode data source "{value}" in series '
                           f'{self}')
                 self.valid = False
+
+        if (value := self._get('refresh_titles', type_=bool)) is not None:
+            self.refresh_titles = value
 
         if (value := self._get('sonarr_sync', type_=bool)) is not None:
             self.sonarr_sync = value
@@ -405,33 +409,34 @@ class Show(YamlReader):
 
         # No episodes found by data source
         if not all_episodes:
-            log.info(f'No episodes found for {self} from '
-                     f'{self.episode_data_source}')
+            log.info(f'{self.episode_data_source} has no episodes for {self}')
             return None
 
-        # Filter out episodes that already exist
-        new_episodes = list(filter(
-            lambda episode: episode.key not in self.episodes,
-            all_episodes,
-        ))
+        # Inner function to filter episodes
+        def filter_ep(episode) -> bool:
+            # Exclude special if special and not syncing specials
+            if not self.sync_specials and episode.season_number == 0:
+                return False
 
-        # Filter episodes that are specials if specials aren't synced
-        if not self.sync_specials:
-            new_episodes = list(filter(
-                lambda episode: episode.season_number != 0,
-                new_episodes,
-            ))
-
+            # If episode is not new, include if title needs refreshed
+            if (existing_ep := self.episodes.get(episode.key)) is not None:
+                if (self.refresh_titles and not
+                    existing_ep.episode_info.title.matches(episode.title)):
+                    existing_ep.delete_card(reason='updating title')
+                    return True
+                return False
+            
+            # New episode, include
+            return True
+        
+        # Apply filter formula to list of Episodes from data source
+        new_episodes = tuple(filter(filter_ep, all_episodes))
+        if len(new_episodes) == 0:
+            return None
+        
         # If any new episodes remain, add to datafile and create Episode object
         self.file_interface.add_many_entries(new_episodes)
-        for episode_info in new_episodes:
-            self.episodes[episode_info.key] = Episode(
-                base_source=self.source_directory,
-                destination=self.__get_destination(episode_info),
-                card_class=self.card_class,
-                given_keys=set(),
-                episode_info=episode_info,
-            )
+        self.read_source()
 
 
     def set_episode_ids(self, sonarr_interface: 'TMDbInterface'=None,
@@ -713,7 +718,7 @@ class Show(YamlReader):
         download_backdrop = self.__apply_styles(plex_interface,
                                                 select_only=select_only)
 
-        # Don't download source if this card type doesn't use unique images
+        # Don't download sources if this card type doesn't use unique images
         if not self.card_class.USES_UNIQUE_SOURCES:
             return None
 
@@ -745,7 +750,7 @@ class Show(YamlReader):
                 )
                 check_tmdb = not blacklisted
             else:
-                check_tmdb, blacklisted = False, False
+                check_tmdb, blacklisted = False, not self.tmdb_sync
 
             # Check Plex if enabled, provided, and valid relative to TMDb
             if always_check_plex:

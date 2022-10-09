@@ -1,5 +1,6 @@
-from yaml import safe_load, dump
 from pathlib import Path
+from typing import Any, Iterable
+from yaml import safe_load, dump
 
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
@@ -43,7 +44,7 @@ class DataFileInterface:
                 f'file={self.file.resolve()}>')
 
 
-    def __read_data(self) -> dict[str: dict[float: dict]]:
+    def __read_data(self) -> dict[str, dict[float, dict]]:
         """
         Read this interface's data from file. Returns an empty dictionary if the
         file does not exist, is misformatted, or if 'data' key is missing.
@@ -72,7 +73,7 @@ class DataFileInterface:
         return yaml['data']
 
 
-    def __write_data(self, yaml: dict) -> None:
+    def __write_data(self, yaml: dict[str, Any]) -> None:
         """
         Write the given YAML data to this interface's file. This puts all data
         under the 'data' key.
@@ -86,7 +87,7 @@ class DataFileInterface:
             dump({'data': yaml}, file_handle, allow_unicode=True, width=100)
 
 
-    def read(self) -> tuple[dict, set]:
+    def read(self) -> tuple[dict[str, Any], set[str]]:
         """
         Read the data file for this object, yielding each valid row.
         
@@ -136,8 +137,9 @@ class DataFileInterface:
                     season_number,
                     episode_number,
                     episode_data.pop('abs_number', None),
-                    tvdb_id=episode_data.pop('tvdb_id', None),
                     imdb_id=episode_data.pop('imdb_id', None),
+                    tmdb_id=episode_data.pop('tmdb_id', None),
+                    tvdb_id=episode_data.pop('tvdb_id', None),
                 )
 
                 # Add any additional, unexpected keys from the YAML
@@ -147,8 +149,32 @@ class DataFileInterface:
                 yield data, given_keys
 
 
+    def __info_as_entry(self, episode_info: EpisodeInfo) -> dict[str, Any]:
+        """
+        Get the given EpisodeInfo object as it's equivalent YAML entry.
+
+        Args:
+            episode_info: EpisodeInfo to get the entry of.
+
+        Returns:
+            Dictionary to write under episode number key of the given info.
+            Possible keys are 'title', 'abs_number', and the database ID's.
+        """
+
+        entry = {'title': episode_info.title.title_yaml}
+
+        if episode_info.abs_number is not None:
+            entry['abs_number'] = episode_info.abs_number
+
+        # for id_type in ('imdb_id', 'tmdb_id', 'tvdb_id'):
+        #     if episode_info.has_id(id_type):
+        #         entry[id_type] = getattr(episode_info, id_type)
+
+        return entry
+
+
     def add_data_to_entry(self, episode_info: EpisodeInfo,
-                          **new_data: dict) -> None:
+                          **new_data: dict[str, Any]) -> None:
         """
         Add any generic data to the YAML entry associated with this EpisodeInfo.
         
@@ -174,14 +200,13 @@ class DataFileInterface:
         self.__write_data(yaml)
 
 
-    def add_many_entries(self, new_episodes: list['EpisodeInfo']) -> None:
+    def add_many_entries(self, new_episodes: Iterable['EpisodeInfo']) -> None:
         """
-        Adds many entries at once. An episode is only added if an episode of
-        that index does not already exist. This only reads and writes from this 
+        Adds many entries at once. This only reads and writes from this
         interface's file once.
 
         Args:
-            new_episodes: List of EpisodeInfo objects to write.
+            new_episodes: Iterable of EpisodeInfo objects to write.
         """
 
         # If no new episodes are being added, exit
@@ -199,20 +224,15 @@ class DataFileInterface:
             if season_key not in yaml:
                 yaml[season_key] = {}
 
-            # If this episde already exists, skip
-            if episode_info.episode_number in yaml[season_key]:
-                continue
-
             # Construct episode data
-            added = {'count': added['count'] + 1, 'info': episode_info}
-            yaml[season_key][episode_info.episode_number] = {
-                'title': episode_info.title.title_yaml
-            }
+            data = self.__info_as_entry(episode_info)
 
-            # Add absolute number if given
-            if episode_info.abs_number is not None:
-                yaml[season_key][episode_info.episode_number]['abs_number'] =\
-                    episode_info.abs_number
+            # Add episode data to existing entry or create new entry for episode
+            added = {'count': added['count'] + 1, 'info': episode_info}
+            if yaml[season_key].get(episode_info.episode_number) is not None:
+                yaml[season_key][episode_info.episode_number].update(data)
+            else:
+                yaml[season_key][episode_info.episode_number] = data
 
         # If nothing was added, exit - otherwise log to user
         if (count := added['count']) == 0:

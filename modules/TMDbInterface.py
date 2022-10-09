@@ -784,7 +784,6 @@ class TMDbInterface(WebInterface):
         return None
 
 
-    @staticmethod
     def manually_download_season(self, title: str, year: int,season_number: int,
                                  episode_range: Iterable[int],
                                  directory: Path) -> None:

@@ -1,4 +1,3 @@
-from cgitb import text
 from pathlib import Path
 
 from modules.Debug import log
@@ -23,9 +22,10 @@ class SeasonPoster(ImageMaker):
     """Paths for the gradient overlay"""
     GRADIENT_OVERLAY = REF_DIRECTORY / 'gradient.png'
 
-    __slots__ = ('source', 'destination', 'logo', 'season_text', 'font',
-                 'font_color', 'font_size', 'font_kerning', 'top_placement',
-                 'omit_gradient')
+    __slots__ = (
+        'source', 'destination', 'logo', 'season_text', 'font', 'font_color',
+        'font_size', 'font_kerning', 'top_placement', 'omit_gradient'
+    )
 
 
     def __init__(self, source: Path, logo: Path, destination: Path, 
@@ -140,19 +140,27 @@ class SeasonPoster(ImageMaker):
         command = ' '.join([
             f'convert',
             f'-density 300',
-            f'"{self.source.resolve()}"',           # Resize input image
-            f'-gravity center',                         # Crop around center
-            f'-resize "{self.SEASON_POSTER_SIZE}^"',    # Force into 2000x3000
+            # Resize input image
+            f'"{self.source.resolve()}"',
+            f'-gravity center',
+            f'-resize "{self.SEASON_POSTER_SIZE}^"',
             f'-extent "{self.SEASON_POSTER_SIZE}"',
-            *gradient_command,                      # Apply gradient
-            f'\( "{self.logo.resolve()}"',          # Add logo
-            f'-resize 1460x',                           # Fit to 1460px wide
-            f'-resize x750\> \)',                       # Limit to 750px tall
-            f'-gravity {merge_gravity}',                # Begin logo merge
+            # Apply gradient
+            *gradient_command,
+            # Overlay logo
+            f'\( "{self.logo.resolve()}"',
+            ## Fit to 1460px wide
+            f'-resize 1460x',
+            ## Limit to 750px tall
+            f'-resize x750\> \)',       
+            # Begin logo merge                
+            f'-gravity {merge_gravity}',
             f'-compose Atop',
-            f'-geometry +0{logo_offset}',               # Offset from top/bottom
-            f'-composite',                              # Merge images
-            f'-font "{self.font.resolve()}"',       # Write season text
+            f'-geometry +0{logo_offset}',
+            # Merge logo and source
+            f'-composite',
+            # Write season text
+            f'-font "{self.font.resolve()}"',
             f'-fill "{self.font_color}"',
             f'-pointsize {font_size}',
             f'-kerning {kerning}',

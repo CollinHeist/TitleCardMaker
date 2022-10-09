@@ -28,28 +28,6 @@ class FontValidator:
         # Create/read font validation database
         self.__db = TinyDB(database_directory / self.CHARACTER_DATABASE)
 
-        # List of missing characters that have already been warned
-        self.__warned = []
-
-
-    def __warn_missing(self, char: str, font_filepath: str) -> None:
-        """
-        Warn a given character is missing from a given font, but only if it 
-        hasn't already been warned.
-        
-        Args:
-            char: The missing character
-            font_filepath: Filepath to the relevant font.
-        """
-
-        # If this character (for this font) has already been warned, return
-        if (key := f'{char}-{font_filepath}') in self.__warned:
-            return None
-
-        # Character (and font) hasn't been warned yet - warn and add to list
-        log.warning(f'Character "{char}" missing from "{font_filepath}"')
-        self.__warned.append(key)
-
 
     def __has_character(self, font_filepath: str, character: str) -> bool:
         """
@@ -83,7 +61,9 @@ class FontValidator:
             if glyph in table.cmap:
                 # Update map for this character, return True
                 self.__db.insert({
-                    'file': font_filepath, 'character': character, 'status':True
+                    'file': font_filepath,
+                    'character': character,
+                    'status': True
                 })
 
                 return True
@@ -119,6 +99,6 @@ class FontValidator:
         # Log all missing characters
         for char, has_character in zip(title, has_characters):
             if not has_character:
-                self.__warn_missing(char, font_filepath)
+                log.warning(f'Character "{char}" missing from "{font_filepath}"')
 
         return all(has_characters)
