@@ -70,7 +70,7 @@ class EpisodeMap:
             self.__index_by = 'season'
             self.__parse_seasons(seasons)
         if (episode_ranges and len(episode_ranges) > 0
-            and list(episode_ranges.keys())[0][0] == 's'):
+            and str(list(episode_ranges.keys())[0])[0] == 's'):
             self.__index_by = 'index'
             self.__parse_index_episode_range(episode_ranges)
         elif episode_ranges and len(episode_ranges) > 0:
@@ -210,8 +210,8 @@ class EpisodeMap:
                     if (value := mapping.get('source_applies_to', '').lower()):
                         if value not in ('all', 'unwatched'):
                             # Invalid applies, error and exit
-                            log.error(f'Source applies to "{value}" of episodes '
-                                      f'{episode_range} is invalid')
+                            log.error(f'Source applies to "{value}" of episodes'
+                                      f' {episode_range} is invalid')
                             self.valid = False
                             continue
                         self.__applies[episode_number] = value
