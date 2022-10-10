@@ -43,16 +43,22 @@ class LandscapeTitleCard(BaseCardType):
     """Additional spacing (in pixels) between bounding box and title text"""
     BOUNDING_BOX_SPACING = 150
 
+    __ADJUSTMENT_ERROR = (
+        'must provide adjustments for all sides like "top right bottom left"'
+    )
+
     __slots__ = (
         'source', 'output_file', 'title', 'font', 'font_size', 'title_color',
-        'interline_spacing', 'kerning', 'blur', 'add_bounding_box'
+        'interline_spacing', 'kerning', 'blur', 'add_bounding_box',
+        'box_adjustments'
     )
 
 
     def __init__(self, source: Path, output_file: Path, title: str, font: str,
                  font_size: float, title_color: str, blur: bool=False, 
                  interline_spacing: int=0, kerning: float=1.0, 
-                 add_bounding_box: bool=False, **kwargs) ->None:
+                 add_bounding_box: bool=False,
+                 box_adjustments: str=None, **kwargs) ->None:
         """
         Initialize this TitleCard object. This primarily just stores instance
         variables for later use in `create()`.
@@ -69,6 +75,10 @@ class LandscapeTitleCard(BaseCardType):
             kerning: Scalar to apply to kerning of the title text.
             add_bounding_box: Extra - whether to add a bounding box around the
                 title text.
+            box_adjustments: How to adjust the bounds of the bounding box. Given
+                as a string of pixels in clockwise order relative to the center.
+                For example, "10 10 10 10" will expand the box by 10 pixels in
+                each direction.
             kwargs: Unused arguments.
         """
 
@@ -88,6 +98,15 @@ class LandscapeTitleCard(BaseCardType):
 
         # Store extras
         self.add_bounding_box = add_bounding_box
+        self.box_adjustments = (0, 0, 0, 0)
+        if box_adjustments:
+            try:
+                adjustments = box_adjustments.split(' ')
+                self.box_adjustments = tuple(map(float, adjustments))
+                assert len(self.box_adjustments) == 4, self.__ADJUSTMENT_ERROR
+            except Exception as e:
+                log.error(f'Invalid box adjustments "{box_adjustments}" - {e}')
+                self.box_adjustments = (0, 0, 0, 0)
 
 
     def __add_no_title(self) -> None:
@@ -147,11 +166,11 @@ class LandscapeTitleCard(BaseCardType):
         y_start, y_end = 1800/2 - height/2, 1800/2 + height/2
         y_end -= 35     # Additional offset necessary 
 
-        # Adjust corodinates by spacing
-        x_start -= self.BOUNDING_BOX_SPACING
-        x_end += self.BOUNDING_BOX_SPACING
-        y_start -= self.BOUNDING_BOX_SPACING
-        y_end += self.BOUNDING_BOX_SPACING
+        # Adjust corodinates by spacing and manual adjustments
+        x_start -= self.BOUNDING_BOX_SPACING + self.box_adjustments[3]
+        x_end += self.BOUNDING_BOX_SPACING + self.box_adjustments[1]
+        y_start -= self.BOUNDING_BOX_SPACING  + self.box_adjustments[0]
+        y_end += self.BOUNDING_BOX_SPACING + self.box_adjustments[2]
 
         return [
             # Create blank image 
