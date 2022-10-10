@@ -20,9 +20,9 @@ class MoviePosterMaker(ImageMaker):
 
 
     def __init__(self, source: Path, output: Path, title: str, subtitle: str='',
-                 top_subtitle: str='', movie_index: str='', font: Path=FONT,
-                 font_color: str=FONT_COLOR, font_size: float=1.0,
-                 omit_gradient: bool=False) -> None:
+                 top_subtitle: str='', movie_index: str='', logo: Path=None,
+                 font: Path=FONT, font_color: str=FONT_COLOR,
+                 font_size: float=1.0, omit_gradient: bool=False) -> None:
         """
         Construct a new instance of a CollectionPosterMaker.
 
@@ -35,6 +35,7 @@ class MoviePosterMaker(ImageMaker):
                 above the title text.
             movie_index: Optional (series) index to place behind the movie
                 title.
+            logo: Optional path to a logo file to place on top of the poster.
             font: Path to the font file of the poster's title.
             font_color: Font color of the poster text.
             font_size: Scalar for the font size of the poster's title.
@@ -48,6 +49,7 @@ class MoviePosterMaker(ImageMaker):
         self.source = source
         self.output = output
         self.movie_index = movie_index
+        self.logo = logo
         self.font = font
         self.font_color = font_color
         self.font_size = font_size
@@ -142,13 +144,41 @@ class MoviePosterMaker(ImageMaker):
             f'-kerning 0.5',
         ]
 
+    
+    @property
+    def logo_command(self) -> list[str]:
+        """
+        ImageMagick subcommands to add the logo file to the poster.
+
+        Returns:
+            List of Imagemagick commands.
+        """
+
+        # Logo not indicated, return empty command
+        if self.logo is None:
+            return []
+
+        return [
+            # Bring in logo image
+            f'\( "{self.logo.resolve()}"',
+            # Resize to 400px wide, limit to 200px tall
+            f'-resize 400x',
+            f'-resize x200\> \)',
+            # Overlay 100px from top of image
+            f'-gravity north',
+            f'-geometry +0+100',
+            f'-compose Atop',
+            f'-composite',
+        ]
+
+
     @property
     def title_command(self) -> list[str]:
         """
-        _summary_
+        ImageGagick subcommands to add the title text to the poster.
 
         Returns:
-            _description_
+            List of ImageMagick commands
         """
 
         # No titles, return empty command
@@ -188,7 +218,11 @@ class MoviePosterMaker(ImageMaker):
 
         # If the source file doesn't exist, exit
         if not self.source.exists():
-            log.error(f'Cannot create movie poster, "{self.source.resolve()}" '
+            log.error(f'Cannot create movie poster - "{self.source.resolve()}" '
+                      f'does not exist.')
+            return None
+        elif isinstance(self.logo, Path) and not self.logo.exists():
+            log.error(f'Cannot create movie poster - "{self.logo.resolve()}" '
                       f'does not exist.')
             return None
         
@@ -210,6 +244,8 @@ class MoviePosterMaker(ImageMaker):
             # Swap, putting frame on top of source+gradient
             f'+swap',
             f'-composite',
+            # Optionally overlay logo
+            *self.logo_command,
             # Add index text
             *self.index_command,
             # Add title text
@@ -218,3 +254,4 @@ class MoviePosterMaker(ImageMaker):
         ])
 
         self.image_magick.run(command)
+        self.image_magick.print_command_history()

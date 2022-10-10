@@ -231,6 +231,12 @@ movie_poster_group.add_argument(
     metavar='INDEX',
     help='Index number/text to place behind the title text on the movie poster')
 movie_poster_group.add_argument(
+    '--movie-logo',
+    type=Path,
+    default=None,
+    metavar='LOGO_FILE',
+    help='Logo file to overlay on top of movie poster')
+movie_poster_group.add_argument(
     '--movie-font',
     type=Path,
     default=MoviePosterMaker.FONT,
@@ -436,6 +442,7 @@ if hasattr(args, 'movie_poster'):
         subtitle=args.movie_subtitle,
         top_subtitle=args.movie_top_subtitle,
         movie_index=args.movie_index,
+        logo=args.movie_logo,
         font=args.movie_font,
         font_color=args.movie_font_color,
         font_size=float(args.movie_font_size[:-1])/100.0,
