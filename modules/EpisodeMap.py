@@ -358,8 +358,21 @@ class EpisodeMap:
             Source filename defined by this map for this Episode.
         """
 
-        return self.__get_value(episode_info, 'source', lambda *_, **__: None)
-    
+        source = self.__get_value(episode_info, 'source', lambda *_, **__: None)
+
+        if isinstance(source, str):
+            try:
+                return source.format(
+                    season_number=episode_info.season_number,
+                    episode_number=episode_info.episode_number,
+                    abs_number=episode_info.abs_number,
+                )
+            except Exception as e:
+                log.warning(f'Cannot format source "{source}" - {e}')
+                return source
+            
+        return source
+
     
     def get_applies_to(self, episode_info: 'EpisodeInfo') -> str:
         """
