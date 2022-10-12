@@ -186,7 +186,7 @@ if hasattr(args, 'import_cards') and pp.use_plex:
     if hasattr(args, 'import_series'):
         series_info = SeriesInfo(*args.import_series)
     else:
-        if (groups := match(r'^(.*) \((\d{4})\)$', archive.parent.name)):
+        if (groups := match(r'^(.*)\s+\((\d{4})\)$', archive.parent.name)):
             series_info = SeriesInfo(*groups.groups())
         else:
             log.critical(f'Cannot identify series name/year; specify with '
@@ -214,9 +214,7 @@ if hasattr(args, 'import_cards') and pp.use_plex:
         
     # Load images into Plex
     plex_interface.set_title_cards_for_series(
-    	args.import_cards[1],
-    	series_info,
-    	episode_map
+    	args.import_cards[1], series_info, episode_map
     )
 
 if hasattr(args, 'forget_cards') and pp.use_plex:

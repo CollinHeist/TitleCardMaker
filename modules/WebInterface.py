@@ -1,6 +1,7 @@
 from re import IGNORECASE, compile as re_compile
 from requests import get, Session
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
+from typing import Any
 import urllib3
 
 from modules.Debug import log
@@ -19,7 +20,8 @@ class WebInterface:
     _URL_REGEX = re_compile(r'^((?:https?:\/\/)?.+)(?=\/)', IGNORECASE)
 
     
-    def __init__(self, name: str, verify_ssl: bool=True) -> None:
+    def __init__(self, name: str, verify_ssl: bool=True, *,
+                 cache: bool=True) -> None:
         """
         Construct a new instance of a WebInterface. This creates creates cached
         request and results lists, and establishes a session for future use.
@@ -27,6 +29,7 @@ class WebInterface:
         Args:
             name: Name (for logging) of this Interface.
             verify_ssl: Whether to verify SSL requests with this Interface.
+            cache: (Keyword only) Whether to cache requests with this interface.
         """
 
         # Store name of this interface
@@ -42,6 +45,7 @@ class WebInterface:
             log.debug(f'Not verifying SSL connections for {name}')
 
         # Cache of the last requests to speed up identical sequential requests
+        self.__do_cache = cache
         self.__cache = []
         self.__cached_results = []
 
@@ -54,7 +58,7 @@ class WebInterface:
 
     @retry(stop=stop_after_attempt(10),
            wait=wait_fixed(3)+wait_exponential(min=1, max=32))
-    def __retry_get(self, url: str, params: dict) -> dict:
+    def __retry_get(self, url: str, params: dict[str: Any]) -> dict[str: Any]:
         """
         Retry the given GET request until successful (or really fails).
         
@@ -73,7 +77,7 @@ class WebInterface:
         """
         Wrapper for getting the JSON return of the specified GET request. If the
         provided URL and parameters are identical to the previous request, then
-        a cached result is returned instead.
+        a cached result is returned instead (if enabled).
         
         Args:
             url: URL to pass to GET.
@@ -82,6 +86,10 @@ class WebInterface:
         Returns:
             Dict made from the JSON return of the specified GET request.
         """
+
+        # If not caching, just query and return
+        if not self.__do_cache:
+            return self.__retry_get(url=url, params=params)
         
         # Look through all cached results for this exact URL+params; if found,
         # skip the request and return that result

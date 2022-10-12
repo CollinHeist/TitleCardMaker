@@ -18,9 +18,6 @@ class TautulliInterface(WebInterface):
     """Agent ID for a custom Script"""
     AGENT_ID = 15
 
-    """Only cache one request at a time"""
-    CACHE_LENGTH = 1
-
 
     def __init__(self, url: str, api_key: str, verify_ssl: bool,
                  update_script: Path, agent_name: str=DEFAULT_AGENT_NAME,
@@ -39,7 +36,7 @@ class TautulliInterface(WebInterface):
         """
 
         # Initialize parent WebInterface 
-        super().__init__('Tautulli', verify_ssl)
+        super().__init__('Tautulli', verify_ssl, cache=False)
 
         # Get correct URL
         url = url if url.endswith('/') else f'{url}/'
