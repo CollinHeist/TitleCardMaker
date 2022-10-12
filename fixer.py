@@ -192,6 +192,9 @@ if hasattr(args, 'import_cards') and pp.use_plex:
             log.critical(f'Cannot identify series name/year; specify with '
                          f'--import-series')
             exit(1)
+
+    # Forget cards associated with this series
+    plex_interface.remove_records(args.import_cards[1], series_info)
             
     # Get all images from import archive
     ext = args.import_extension
