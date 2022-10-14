@@ -49,16 +49,16 @@ class LandscapeTitleCard(BaseCardType):
 
     __slots__ = (
         'source', 'output_file', 'title', 'font', 'font_size', 'title_color',
-        'interline_spacing', 'kerning', 'blur', 'add_bounding_box',
+        'interline_spacing', 'kerning', 'add_bounding_box',
         'box_adjustments'
     )
 
 
     def __init__(self, source: Path, output_file: Path, title: str, font: str,
-                 font_size: float, title_color: str, blur: bool=False, 
-                 interline_spacing: int=0, kerning: float=1.0, 
-                 add_bounding_box: bool=False,
-                 box_adjustments: str=None, **kwargs) ->None:
+                 font_size: float, title_color: str, interline_spacing: int=0,
+                 kerning: float=1.0, blur: bool=False, grayscale: bool=False,
+                 add_bounding_box: bool=False, box_adjustments: str=None,
+                 **kwargs) ->None:
         """
         Initialize this TitleCard object. This primarily just stores instance
         variables for later use in `create()`.
@@ -70,9 +70,10 @@ class LandscapeTitleCard(BaseCardType):
             font: Font name or path (as string) to use for episode title.
             font_size: Scalar to apply to title font size.
             title_color: Color to use for title text.
-            blur: Whether to blur the source image.
             interline_spacing: Pixel count to adjust title interline spacing by.
             kerning: Scalar to apply to kerning of the title text.
+            blur: Whether to blur the source image.
+            grayscale: Whether to make the source image grayscale.
             add_bounding_box: Extra - whether to add a bounding box around the
                 title text.
             box_adjustments: How to adjust the bounds of the bounding box. Given
@@ -83,7 +84,7 @@ class LandscapeTitleCard(BaseCardType):
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__()
+        super().__init__(blur, grayscale)
 
         # Store object attributes
         self.source = source
@@ -94,12 +95,12 @@ class LandscapeTitleCard(BaseCardType):
         self.title_color = title_color
         self.interline_spacing = interline_spacing
         self.kerning = kerning
-        self.blur = blur
 
         # Store extras
         self.add_bounding_box = add_bounding_box
         self.box_adjustments = (0, 0, 0, 0)
         if box_adjustments:
+            # Verify adjustments are properly provided
             try:
                 adjustments = box_adjustments.split(' ')
                 self.box_adjustments = tuple(map(float, adjustments))
@@ -110,16 +111,11 @@ class LandscapeTitleCard(BaseCardType):
 
 
     def __add_no_title(self) -> None:
-        """Only resize and blur this source."""
+        """Only resize and apply style to this source image."""
 
-        # Command to resize and optionally blur the source
         command = ' '.join([
             f'convert "{self.source.resolve()}"',
-            f'+profile "*"',
-            f'-gravity center',
-            f'-resize "{self.TITLE_CARD_SIZE}^"',
-            f'-extent "{self.TITLE_CARD_SIZE}"',
-            f'-blur {self.BLUR_PROFILE}' if self.blur else '',
+            *self.resize_and_style,
             f'"{self.output_file.resolve()}"',
         ])
 
@@ -253,7 +249,7 @@ class LandscapeTitleCard(BaseCardType):
         command = ' '.join([
             f'convert "{self.source.resolve()}"',
             # Resize and optionally blur source image
-            *self.resize_and_blur,
+            *self.resize_and_style,
             # Add title text
             f'\( -background None',
             f'-font "{self.font}"',

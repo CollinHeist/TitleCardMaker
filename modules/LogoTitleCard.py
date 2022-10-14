@@ -46,19 +46,23 @@ class LogoTitleCard(BaseCardType):
     __LOGO_WITH_TITLE = BaseCardType.TEMP_DIR / 'logo_title.png'
     __SERIES_COUNT_TEXT = BaseCardType.TEMP_DIR / 'series_count_text.png'
 
-    __slots__ = ('source_file', 'output_file', 'title', 'season_text',
-                 'episode_text', 'font', 'font_size', 'title_color',
-                 'hide_season', 'separator', 'blur', 'vertical_shift', 
-                 'interline_spacing', 'kerning', 'stroke_width')
+    __slots__ = (
+        'source_file', 'output_file', 'title', 'season_text', 'episode_text',
+        'font', 'font_size', 'title_color', 'hide_season', 'separator', 'blur',
+        'vertical_shift',  'interline_spacing', 'kerning', 'stroke_width', 'logo',
+        'background',
+    )
                  
 
-    def __init__(self, *, output_file: Path, title: str, season_text: str,
-                 episode_text: str, font: str, font_size: float,
-                 title_color: str, hide_season: bool, season_number: int=1,
-                 episode_number: int=1, separator: str='•', blur: bool=False,
-                 vertical_shift: int=0, kerning: float=1.0,
-                 interline_spacing: int=0, stroke_width: float=1.0,
-                 logo: str=None,  background: str='#000000', **kwargs) -> None:
+    def __init__(self, *, output_file: Path, title: str, hide_season: bool,
+                 season_text: str, episode_text: str, title_color: str,
+                 font: str, font_size: float, vertical_shift: int=0,
+                 kerning: float=1.0, interline_spacing: int=0,
+                 stroke_width: float=1.0, blur: bool=False,
+                 grayscale: bool=False, season_number: int=1,
+                 episode_number: int=1, separator: str='•', logo: str=None,
+                 background: str='#000000',
+                 **kwargs) -> None:
         """
         Initialize the CardType object.
 
@@ -78,18 +82,19 @@ class LogoTitleCard(BaseCardType):
             episode_number: Episode number of the episode associated with this
                 card.
             separator: Character to use to separate season and episode text.
-            blur: Whether to blur the source image.
             vertical_shift: Pixels to adjust title vertical shift by.
             interline_spacing: Pixels to adjust title interline spacing by.
             kerning: Scalar to apply to kerning of the title text.
             stroke_width: Scalar to apply to black stroke of the title text.
             logo: Filepath (or file format) to the logo file.
+            blur: Whether to blur the source image.
+            grayscale: Whether to make the source image grayscale.
             background: Backround color to use for this card.
-            kwargs: Unused arguments to permit generalized callsfor any CardType
+            kwargs: Unused arguments.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__()
+        super().__init__(blur, grayscale)
 
         # Look for logo if it's a format string
         if isinstance(logo, str):
@@ -127,94 +132,7 @@ class LogoTitleCard(BaseCardType):
         self.separator = separator
 
 
-    def __title_text_global_effects(self) -> list:
-        """
-        ImageMagick commands to implement the title text's global effects.
-        Specifically the the font, kerning, fontsize, and center gravity.
-        
-        Returns:
-            List of ImageMagick commands.
-        """
-
-        font_size = 157.41 * self.font_size
-        interline_spacing = -22 + self.interline_spacing
-        kerning = -1.25 * self.kerning
-
-        return [
-            f'-font "{self.font}"',
-            f'-kerning {kerning}',
-            f'-interword-spacing 50',
-            f'-interline-spacing {interline_spacing}',
-            f'-pointsize {font_size}',
-            f'-gravity south',
-        ]   
-
-
-    def __title_text_black_stroke(self) -> list:
-        """
-        ImageMagick commands to implement the title text's black stroke.
-        
-        Returns:
-            List of ImageMagick commands.
-        """
-
-        stroke_width = 3.0 * self.stroke_width
-
-        return [
-            f'-fill black',
-            f'-stroke black',
-            f'-strokewidth {stroke_width}',
-        ]
-
-
-    def __series_count_text_global_effects(self) -> list:
-        """
-        ImageMagick commands for global text effects applied to all series count
-        text (season/episode count and dot).
-        
-        Returns:
-            List of ImageMagick commands.
-        """
-
-        return [
-            f'-kerning 5.42',
-            f'-pointsize 67.75',
-        ]
-
-
-    def __series_count_text_black_stroke(self) -> list:
-        """
-        ImageMagick commands for adding the necessary black stroke effects to
-        series count text.
-        
-        Returns:
-            List of ImageMagick commands.
-        """
-
-        return [
-            f'-fill black',
-            f'-stroke black',
-            f'-strokewidth 6',
-        ]
-
-
-    def __series_count_text_effects(self) -> list:
-        """
-        ImageMagick commands for adding the necessary text effects to the series
-        count text.
-        
-        Returns:
-            List of ImageMagick commands.
-        """
-
-        return [
-            f'-fill "{self.SERIES_COUNT_TEXT_COLOR}"',
-            f'-stroke "{self.SERIES_COUNT_TEXT_COLOR}"',
-            f'-strokewidth 0.75',
-        ]
-
-
-    def _resize_logo(self) -> Path:
+    def resize_logo(self) -> Path:
         """
         Resize the logo into at most a 1875x1030 bounding box.
         
@@ -235,213 +153,70 @@ class LogoTitleCard(BaseCardType):
         return self.__RESIZED_LOGO
 
 
-    def _add_logo_to_backdrop(self, resized_logo: Path) -> Path:
+    @property
+    def index_command(self) -> list[str]:
         """
-        Add the resized logo to a fixed color backdrop.
-
-        Args:
-            resized_logo: Resized logo to add.
-        
-        Returns:
-            Path to the created image.
-        """
-
-        # Get height of the resized logo to determine offset
-        height_command = ' '.join([
-            f'identify',
-            f'-format "%h"',
-            f'"{resized_logo.resolve()}"',
-        ])
-
-        height = int(self.image_magick.run_get_output(height_command))
-
-        # Get offset of where to place logo onto card
-        offset = 60 + ((1030 - height) // 2)
-
-        command = ' '.join([
-            f'convert',
-            f'-size "{self.TITLE_CARD_SIZE}"',  # Create backdrop
-            f'xc:"{self.background}"',          # Fill canvas with color
-            f'"{resized_logo.resolve()}"',
-            f'-set colorspace sRGB',
-            f'-gravity north',
-            f'-geometry "+0+{offset}"',         # Put logo on backdrop
-            f'-composite "{self.__BACKDROP_WITH_LOGO.resolve()}"',
-        ])
-
-        self.image_magick.run(command)
-
-        return self.__BACKDROP_WITH_LOGO
-
-
-    def _add_title_text(self, backdrop_logo: Path) -> Path:
-        """
-        Adds episode title text to the provide image.
-
-        Args:
-            backdrop_logo: The backdrop and logo image.
-        
-        Returns:
-            Path to the created image.
-        """
-
-        vertical_shift = 245 + self.vertical_shift
-
-        command = ' '.join([
-            f'convert "{backdrop_logo.resolve()}"',
-            f'-blur {self.BLUR_PROFILE}' if self.blur else '',
-            *self.__title_text_global_effects(),
-            *self.__title_text_black_stroke(),
-            f'-annotate +0+{vertical_shift} "{self.title}"',
-            f'-fill "{self.title_color}"',
-            f'-annotate +0+{vertical_shift} "{self.title}"',
-            f'"{self.__LOGO_WITH_TITLE.resolve()}"',
-        ])
-
-        self.image_magick.run(command)
-
-        return self.__LOGO_WITH_TITLE
-
-
-    def _add_series_count_text_no_season(self, titled_image: Path) -> Path:
-        """
-        Adds the series count text without season title/number.
-        
-        Args:
-            titled_image: The titled image to add text to.
+        Subcommand for adding the index text to the source image.
 
         Returns:
-            Path to the created image (the output file).
+            List of ImageMagick commands.
         """
 
-        command = ' '.join([
-            f'convert "{titled_image.resolve()}"',
-            *self.__series_count_text_global_effects(),
-            f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
-            f'-gravity center',
-            *self.__series_count_text_black_stroke(),
-            f'-annotate +0+697.2 "{self.episode_text}"',
-            *self.__series_count_text_effects(),
-            f'-annotate +0+697.2 "{self.episode_text}"',
-            f'"{self.output_file.resolve()}"',
-        ])
-
-        self.image_magick.run(command)
-
-        return self.output_file
-
-
-    def _get_series_count_text_dimensions(self) -> dict[str: float]:
-        """
-        Gets the series count text dimensions.
-        
-        Returns:
-            The series count text dimensions.
-        """
-
-        command = ' '.join([
-            f'convert -debug annotate xc: ',
-            *self.__series_count_text_global_effects(),
-            f'-font "{self.SEASON_COUNT_FONT.resolve()}"',
-            f'-gravity east',
-            *self.__series_count_text_effects(),
-            f'-annotate +1600+697.2 "{self.season_text} "',
-            f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
-            f'-gravity center',
-            *self.__series_count_text_effects(),
-            f'-annotate +0+689.5 "{self.separator} "',
-            f'-gravity west',
-            *self.__series_count_text_effects(),
-            f'-annotate +1640+697.2 "{self.episode_text}"',
-            f'null: 2>&1'
-        ])
-
-        # Get text dimensions from the output
-        metrics = self.image_magick.run_get_output(command)
-        widths = list(map(int, findall(r'Metrics:.*width:\s+(\d+)', metrics)))
-        heights = list(map(int, findall(r'Metrics:.*height:\s+(\d+)', metrics)))
-
-        # Don't raise IndexError if no dimensions were found
-        if len(widths) < 2 or len(heights) < 2:
-            log.warning(f'Unable to identify font dimensions, file bug report')
-            widths = [370, 47, 357]
-            heights = [68, 83, 83]
-
-        return {
-            'width':    sum(widths),
-            'width1':   widths[0],
-            'width2':   widths[1],
-            'height':   max(heights)+25,
-        }
-
-
-    def _create_series_count_text_image(self, width: float, width1: float,
-                                        width2: float, height: float) -> Path:
-        """
-        Creates an image with only series count text. This image is transparent,
-        and not any wider than is necessary (as indicated by `dimensions`).
-        
-        Returns:
-            Path to the created image containing only series count text.
-        """
-
-        # Create text only transparent image of season count text
-        command = ' '.join([
-            f'convert -size "{width}x{height}"',
-            f'-alpha on',
-            f'-background transparent',
-            f'xc:transparent',
-            *self.__series_count_text_global_effects(),
-            f'-font "{self.SEASON_COUNT_FONT.resolve()}"',
-            *self.__series_count_text_black_stroke(),
-            f'-annotate +0+{height-25} "{self.season_text} "',
-            *self.__series_count_text_effects(),
-            f'-annotate +0+{height-25} "{self.season_text} "',
-            f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
-            *self.__series_count_text_black_stroke(),
-            f'-annotate +{width1}+{height-25-6.5} "{self.separator}"',
-            *self.__series_count_text_effects(),
-            f'-annotate +{width1}+{height-25-6.5} "{self.separator}"',
-            *self.__series_count_text_black_stroke(),
-            f'-annotate +{width1+width2}+{height-25} "{self.episode_text}"',
-            *self.__series_count_text_effects(),
-            f'-annotate +{width1+width2}+{height-25} "{self.episode_text}"',
-            f'"PNG32:{self.__SERIES_COUNT_TEXT.resolve()}"',
-        ])
-
-        self.image_magick.run(command)
-
-        return self.__SERIES_COUNT_TEXT
-
-
-    def _combine_titled_image_series_count_text(self, titled_image: Path,
-                                                series_count_image: Path)->Path:
-        """
-        Combine the titled image (image+backdrop+episode title) and the series
-        count image (optional season number+optional dot+episode number) into a
-        single image. This is written into the output image for this object.
-
-        Args:
-            titled_image: Path to the titled image to add.
-            series_count_image: Path to the series count transparent image to
-                add.
-
-        Returns:
-            Path to the created image (the output file).
-        """
-
-        command = ' '.join([
-            f'composite',
-            f'-gravity center',
-            f'-geometry +0+690.2',
-            f'"{series_count_image.resolve()}"',
-            f'"{titled_image.resolve()}"',
-            f'"{self.output_file.resolve()}"',
-        ])
-
-        self.image_magick.run(command)
-
-        return self.output_file
+        # Sub-command for adding season/episode text
+        if self.hide_season:
+            return [
+                f'-kerning 5.42',       
+                f'-pointsize 67.75',
+                f'-interword-spacing 14.5',
+                f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
+                f'-gravity center',
+                f'-fill black',
+                f'-stroke black',
+                f'-strokewidth 6',
+                f'-annotate +0+697.2 "{self.episode_text}"',
+                f'-fill "{self.SERIES_COUNT_TEXT_COLOR}"',
+                f'-stroke "{self.SERIES_COUNT_TEXT_COLOR}"',
+                f'-strokewidth 0.75',
+                f'-annotate +0+697.2 "{self.episode_text}"',
+            ]
+        else:
+            return [
+                # Global text effects
+                f'-background transparent',
+                f'-gravity center',                     
+                f'-kerning 5.42',       
+                f'-pointsize 67.75',
+                f'-interword-spacing 14.5',
+                # Black stroke behind primary text
+                f'\( -fill black',
+                f'-stroke black',
+                f'-strokewidth 6',
+                # Add season text
+                f'-font "{self.SEASON_COUNT_FONT.resolve()}"',
+                f'label:"{self.season_text} {self.separator}"',
+                # Add episode text
+                f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
+                f'label:"{self.episode_text}"',
+                # Combine season+episode text into one "image"
+                f'+smush 25 \)',
+                # Add season+episode text "image" to source image
+                f'-geometry +0+697.2',
+                f'-composite',
+                # Primary text
+                f'\( -fill "{self.SERIES_COUNT_TEXT_COLOR}"',
+                f'-stroke "{self.SERIES_COUNT_TEXT_COLOR}"',
+                f'-strokewidth 0.75',
+                # Add season text
+                f'-font "{self.SEASON_COUNT_FONT.resolve()}"',
+                f'label:"{self.season_text} {self.separator}"',
+                # Add episode text
+                f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
+                f'label:"{self.episode_text}"',
+                f'+smush 30 \)',
+                # Add text to source image
+                f'-geometry +0+697.2',
+                f'-composite',
+            ]
 
 
     @staticmethod
@@ -502,31 +277,52 @@ class LogoTitleCard(BaseCardType):
             log.error(f'Logo file "{self.logo.resolve()}" does not exist')
             return None
 
-        # Resize logo
-        resized_logo = self._resize_logo()
-        
-        # Create backdrop+logo image
-        backdrop_logo = self._add_logo_to_backdrop(resized_logo)
+        # Resize logo, get resized height to determine offset
+        resized_logo = self.resize_logo()
+        height = self.get_image_dimensions(resized_logo)['height']
+        offset = 60 + ((1030 - height) // 2)
 
-        # Add either one or two lines of episode text 
-        titled_image = self._add_title_text(backdrop_logo)
+        # Font customizations
+        vertical_shift = 245 + self.vertical_shift
+        font_size = 157.41 * self.font_size
+        interline_spacing = -22 + self.interline_spacing
+        kerning = -1.25 * self.kerning
+        stroke_width = 3.0 * self.stroke_width
 
-        # If season text is hidden, just add episode text 
-        if self.hide_season:
-            self._add_series_count_text_no_season(titled_image)
-        else:
-            # If adding season text, create intermediate images and combine them
-            series_count_image = self._create_series_count_text_image(
-                **self._get_series_count_text_dimensions()
-            )
-            self._combine_titled_image_series_count_text(
-                titled_image,
-                series_count_image
-            )
+        command = ' '.join([
+            f'convert',
+            f'-set colorspace sRGB',
+            # Crate canvas of static background color
+            f'-size "{self.TITLE_CARD_SIZE}"',
+            f'xc:"{self.background}"',
+            # Overlay resized logo
+            f'"{resized_logo.resolve()}"',
+            f'-gravity north',
+            f'-geometry "+0+{offset}"',
+            f'-composite',
+            # Resize and optionally blur source image
+            *self.resize_and_style,
+            # Global title text options
+            f'-gravity south',
+            f'-font "{self.font}"',                     
+            f'-kerning {kerning}',
+            f'-interword-spacing 50',
+            f'-interline-spacing {interline_spacing}',
+            f'-pointsize {font_size}',
+            # Black stroke behind title text
+            f'-fill black',
+            f'-stroke black',
+            f'-strokewidth {stroke_width}',
+            f'-annotate +0+{vertical_shift} "{self.title}"',
+            # Title text
+            f'-fill "{self.title_color}"',
+            f'-annotate +0+{vertical_shift} "{self.title}"',
+            # Add episode or season+episode "image"
+            *self.index_command,
+            f'"{self.output_file.resolve()}"',
+        ])
 
-        # Delete all intermediate images
-        images = [resized_logo, backdrop_logo, titled_image]
-        if not self.hide_season:
-            images.append(series_count_image)
-        
-        self.image_magick.delete_intermediate_images(*images)
+        self.image_magick.run(command)
+
+        # Delete resized logo
+        self.image_magick.delete_intermediate_images(resized_logo)

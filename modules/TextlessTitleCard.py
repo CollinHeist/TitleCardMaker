@@ -1,5 +1,4 @@
 from pathlib import Path
-from re import findall
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
@@ -34,11 +33,11 @@ class TextlessTitleCard(BaseCardType):
     """Label to archive cards under"""
     ARCHIVE_NAME = 'Textless Version'
 
-    __slots__ = ('source_file', 'output_file', 'blur')
+    __slots__ = ('source_file', 'output_file')
 
 
     def __init__(self, source: Path, output_file: Path, blur: bool=False,
-                 **kwargs) -> None:
+                 grayscale: bool=False, **kwargs) -> None:
         """
         Initialize the TitleCardMaker object. This primarily just stores
         instance variables for later use in `create()`. If the provided font
@@ -48,36 +47,16 @@ class TextlessTitleCard(BaseCardType):
             source: Source image.
             output_file: Output file.
             blur: Whether to blur the source image.
-            kwargs: Unused arguments to permit general calls for any CardType.
+            grayscale: Whether to make the source image grayscale.
+            kwargs: Unused arguments.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__()
+        super().__init__(blur, grayscale)
 
-        # Store arguments as attributes
+        # Store input/output files
         self.source_file = source
         self.output_file = output_file
-        self.blur = blur
-
-
-    def _resize_and_blur(self) -> Path:
-        """
-        Resize the source image, optionally blurring. Write the resulting image
-        to the output filepath.
-        
-        Returns:
-            Path to the created image (the output file).
-        """
-
-        command = ' '.join([
-            f'convert "{self.source_file.resolve()}"',
-            *self.resize_and_blur,
-            f'"{self.output_file.resolve()}"',
-        ])
-
-        self.image_magick.run(command)
-
-        return self.output_file
 
 
     @staticmethod
@@ -120,5 +99,10 @@ class TextlessTitleCard(BaseCardType):
         defined title card.
         """
         
-        # Only ImageMagick call is resizing and an optional blur
-        self._resize_and_blur()
+        command = ' '.join([
+            f'convert "{self.source_file.resolve()}"',
+            *self.resize_and_style,
+            f'"{self.output_file.resolve()}"',
+        ])
+
+        self.image_magick.run(command)

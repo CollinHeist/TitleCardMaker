@@ -46,13 +46,14 @@ class RomanNumeralTitleCard(BaseCardType):
     ROMAN_NUMERAL_FONT = REF_DIRECTORY / 'sinete-regular.otf'
     ROMAN_NUMERAL_TEXT_COLOR = '#AE2317'
 
-    __slots__ = ('output_file', 'title', 'title_color', 'background', 'blur',
-                 'roman_numeral_color', 'roman_numeral', '__roman_text_scalar')
-                 
+    __slots__ = (
+        'output_file', 'title', 'title_color', 'background', 'blur',
+        'roman_numeral_color', 'roman_numeral', '__roman_text_scalar'
+    )
 
     def __init__(self, output_file: Path, title: str, episode_text: str,
                  title_color: str, episode_number: int=1, blur: bool=False, 
-                 background: str='black', 
+                 grayscale: bool=False, background: str='black', 
                  roman_numeral_color: str=ROMAN_NUMERAL_TEXT_COLOR,
                  **kwargs) -> None:
         """
@@ -67,11 +68,12 @@ class RomanNumeralTitleCard(BaseCardType):
             background: Color for the background.
             roman_numeral_color: Color for the roman numerals.
             blur: Whether to blur the source image.
+            grayscale: Whether to make the source image grayscale.
             kwargs: Unused arguments.
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__()
+        super().__init__(blur, grayscale)
 
         # Store object attributes
         self.output_file = output_file
@@ -79,12 +81,12 @@ class RomanNumeralTitleCard(BaseCardType):
         self.title_color = title_color
         self.background = background
         self.roman_numeral_color = roman_numeral_color
-        self.blur = blur
 
         # Try and parse roman digit from the episode text, if cannot be done,
         # just use actual episode number
         digit = int(episode_text) if episode_text.isdigit() else episode_number
         self.__assign_roman_numeral(digit)
+        breakpoint()
 
 
     def __assign_roman_numeral(self, number: int) -> None:
@@ -107,7 +109,7 @@ class RomanNumeralTitleCard(BaseCardType):
         hundreds = c_text[(number % 1000) // 100]
         tens = x_text[(number % 100) // 10]
         ones = i_text[number % 10]
-      
+
         numeral = (thousands + hundreds + tens + ones).strip()
 
         # Split roman numerals that are longer than 6 chars into two lines
@@ -152,6 +154,48 @@ class RomanNumeralTitleCard(BaseCardType):
             self.__roman_text_scalar = 1.0
 
 
+    @property
+    def roman_numeral_command(self) -> list[str]:
+        """
+        Subcommand to add roman numerals to the image.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        # Scale font size and interline spacing of roman text
+        font_size = 1250 * self.__roman_text_scalar
+        interline_spacing = -400 * self.__roman_text_scalar
+
+        return [
+            f'-font "{self.ROMAN_NUMERAL_FONT.resolve()}"',
+            f'-fill "{self.roman_numeral_color}"',
+            f'-pointsize {font_size}',
+            f'-gravity center',
+            f'-interline-spacing {interline_spacing}',
+            f'-annotate +0+0 "{self.roman_numeral}"',
+        ]
+
+
+    @property
+    def title_text_command(self) -> list[str]:
+        """
+        Subcommand to add title text to the image.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        return [
+            f'-font "{self.TITLE_FONT}"',
+            f'-pointsize 150',
+            f'-interword-spacing 40',
+            f'-interline-spacing 0',
+            f'-fill "{self.title_color}"',            
+            f'-annotate +0+0 "{self.title}"',
+        ]
+
+
     @staticmethod
     def is_custom_font(font: 'Font') -> bool:
         """
@@ -191,31 +235,20 @@ class RomanNumeralTitleCard(BaseCardType):
         Make the necessary ImageMagick and system calls to create this object's
         defined title card.
         """
-
-        # Scale font size and interline spacing of roman text
-        font_size = 1250 * self.__roman_text_scalar
-        interline_spacing = -400 * self.__roman_text_scalar
         
-        # Generate command to create card
         command = ' '.join([
             f'convert',
+            # Create fixed color background
             f'-size "{self.TITLE_CARD_SIZE}"',
-            f'xc:"{self.background}"',                      # Create background
-            f'-font "{self.ROMAN_NUMERAL_FONT.resolve()}"', # Add roman numerals
-            f'-fill "{self.roman_numeral_color}"',
-            f'-pointsize {font_size}',
-            f'-gravity center',
-            f'-interline-spacing {interline_spacing}',
-            f'-annotate +0+0 "{self.roman_numeral}"',
-            f'-blur {self.BLUR_PROFILE}' if self.blur else '',  # Optional blur
-            f'-font "{self.TITLE_FONT}"',                   # Add title
-            f'-pointsize 150',
-            f'-interword-spacing 40',
-            f'-interline-spacing 0',
-            f'-fill "{self.title_color}"',            
-            f'-annotate +0+0 "{self.title}"',
+            f'xc:"{self.background}"',
+            # Overlay roman numerals
+            *self.roman_numeral_command,
+            # Optionally blur and apply grayscale
+            f'-blur {self.BLUR_PROFILE}' if self.blur else '',
+            f'-colorspace gray' if self.grayscale else '',
+            # Overlay title text
+            *self.title_text_command,
             f'"{self.output_file.resolve()}"',
         ])
         
-        # Create the card
         self.image_magick.run(command)
