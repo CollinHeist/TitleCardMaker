@@ -68,6 +68,10 @@ title_card_group.add_argument(
     action='store_true',
     help='Blur the source image for this card')
 title_card_group.add_argument(
+    '--grayscale',
+    action='store_true',
+    help='Convert the source image to grayscale for this card')
+title_card_group.add_argument(
     '--episode',
     type=str,
     default='EPISODE',
@@ -394,11 +398,12 @@ if hasattr(args, 'title_card'):
         font_size=float(args.font_size[:-1])/100.0,
         title_color=args.font_color,
         hide_season=(not bool(args.season)),
-        blur=args.blur,
         vertical_shift=args.vertical_shift,
         interline_spacing=args.interline_spacing,
         kerning=float(args.kerning[:-1])/100.0,
         stroke_width=float(args.stroke_width[:-1])/100.0,
+        blur=args.blur,
+        grayscale=args.grayscale,
         **arbitrary_data,
     ).create()
 
