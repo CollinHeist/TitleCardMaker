@@ -642,11 +642,11 @@ class PreferenceParser(YamlReader):
         # Get the specified template for this series
         if isinstance((series_template := series_yaml['template']), str):
             # Assume if only a string, then its the template name
-            series_template = {'name': series_template}
+            template_name = series_template
+            series_template = {'template_name': series_template}
             series_yaml['template'] = series_template
-
         # Warn and return if no template name given
-        if not (template_name := series_template.get('name', None)):
+        elif not (template_name := series_template.get('name', None)):
             log.error(f'Missing template name for "{series_name}"')
             return False
 
