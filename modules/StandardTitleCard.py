@@ -45,7 +45,8 @@ class StandardTitleCard(BaseCardType):
     __slots__ = (
         'source_file', 'output_file', 'title', 'season_text', 'episode_text',
         'font', 'font_size', 'title_color', 'hide_season', 'separator',
-        'vertical_shift', 'interline_spacing', 'kerning', 'stroke_width'
+        'vertical_shift', 'interline_spacing', 'kerning', 'stroke_width',
+        'omit_gradient',
     )
 
     def __init__(self, source: Path, output_file: Path, title: str,

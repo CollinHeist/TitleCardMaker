@@ -224,7 +224,7 @@ class PlexInterface:
     @retry(stop=stop_after_attempt(5),
            wait=wait_fixed(3)+wait_exponential(min=1, max=32))
     def __get_series(self, library: 'Library',
-                     series_info: 'SeriesInfo') -> 'Show':
+                     series_info: SeriesInfo) -> 'Show':
         """
         Get the Series object from within the given Library associated with the
         given SeriesInfo. This tries to match by TVDb ID, TMDb ID, name, and

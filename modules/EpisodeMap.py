@@ -360,6 +360,7 @@ class EpisodeMap:
 
         source = self.__get_value(episode_info, 'source', lambda *_, **__: None)
 
+        # Attempt to format string for this episode index
         if isinstance(source, str):
             try:
                 return source.format(
