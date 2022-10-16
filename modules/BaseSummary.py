@@ -86,7 +86,7 @@ class BaseSummary(ImageMaker):
         if self.preferences.summary_ignore_specials:
             available_episodes = list(filter(
                 lambda e: self.show.episodes[e].episode_info.season_number != 0,
-                self.show.episodes
+                available_episodes
             ))
 
         # Warn if this show has no episodes to work with

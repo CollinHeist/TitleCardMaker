@@ -140,7 +140,7 @@ class ShowArchive:
             # If summary already exists, skip
             if summary.output.exists() or not summary.logo.exists():
                 continue
-
+            
             # Create summary image
             summary.create()
 

@@ -178,7 +178,8 @@ class Template:
         given_keys = set(series_yaml['template'].keys())
         default_keys = set(self.defaults.keys())
         if not (given_keys | default_keys).issuperset(self.keys):
-            log.warning(f'Missing "{self.name}" template data for "{series_name}"')
+            log.warning(f'Missing "{self.name}" template data for '
+                        f'"{series_name}"')
             return False
 
         # Copy base template before modification
@@ -203,7 +204,8 @@ class Template:
         if count > 1:
             log.debug(f'Applied template "{self.name}" in {count} iterations')
         if count >= self.MAX_TEMPLATE_DEPTH:
-            log.warning(f'Unable to apply template "{self.name}" to "{series_name}"')
+            log.warning(f'Unable to apply template "{self.name}" to '
+                        f'"{series_name}"')
             return False
 
         # Delete the template section from the series YAML

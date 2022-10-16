@@ -98,7 +98,7 @@ class StylizedSummary(BaseSummary):
         # Select images for montaging
         if not self._select_images(12) or len(self.inputs) == 0:
             return None
-
+        
         # Create montage
         montage = self.__create_montage()
 
@@ -157,4 +157,4 @@ class StylizedSummary(BaseSummary):
             images = [montage]
         else:
             images = [montage, created_by]
-        self.image_magick.delete_intermediate_images(*images)    
+        self.image_magick.delete_intermediate_images(*images)
