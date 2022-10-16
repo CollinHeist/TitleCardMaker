@@ -34,7 +34,7 @@ class StylizedSummary(BaseSummary):
                 the botom of this Summary. Defaults to None.
         """
 
-        # Initialize parent Summary object
+        # Initialize parent BaseSummary object
         super().__init__(show, created_by)
 
 
@@ -120,31 +120,41 @@ class StylizedSummary(BaseSummary):
             
         command = ' '.join([
             f'convert "{montage.resolve()}"',
-            f'\( +clone',                       # Create reflection of montage
+            # Create reflection of montage
+            f'\( +clone',
             f'-flip',
-            f'-blur 0x8',                       # Blur reflection
-            f'-fill black',                     # Darken reflection
+            # Blur reflection
+            f'-blur 0x8',
+            # Darken reflection
+            f'-fill black',
             f'-colorize 75% \)',
             f'-append',
-            f'-size {width+200}x{height+700}',  # Create colored background
-            f'xc:"{self.BACKGROUND_COLOR}"',          
-            f'+swap',                           # Reverse reflection/montage(s)
-            f'-gravity north',                  # Put montage+reflection on bg
+            # Create colored background
+            f'-size {width+200}x{height+700}',
+            f'xc:"{self.BACKGROUND_COLOR}"',    
+            # Reverse reflection/montage(s)      
+            f'+swap',
+            # Put montage+reflection on background
+            f'-gravity north',
             f'-geometry +0+400',
             f'-composite',
-            f'\( {created_by.resolve()}',       # Append created by image
+            # Overlay created by image
+            f'\( {created_by.resolve()}',
             f'-resize x75',
-            f'\( +clone',                       # Create created by reflection
+            # Create reflection of created by image
+            f'\( +clone',
             f'-flip',
             f'-blur 0x2',
-            f'-fill black',                     # Darken reflection
+            # Darken reflection of created by image
+            f'-fill black',
             f'-colorize 75% \)',
             f'-append \)',
             f'-gravity south',
             f'-geometry +0+50',
             f'-composite',
+            # Overlay resized logo
             f'-gravity north',
-            f'"{resized_logo.resolve()}"',      # Add logo
+            f'"{resized_logo.resolve()}"',
             f'-geometry +0+{400//2-logo_height//2}',
             f'-composite',
             f'"{self.output.resolve()}"',

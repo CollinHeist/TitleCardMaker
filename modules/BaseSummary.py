@@ -129,19 +129,26 @@ class BaseSummary(ImageMaker):
 
         command = ' '.join([
             f'convert',
+            # Create blank background
             f'-background transparent',
+            # Create "Created by" image/text
             f'-font "{self.__CREATED_BY_FONT.resolve()}"',
             f'-pointsize 100',
             f'-fill "#CFCFCF"',
             f'label:"Created by"',
+            # Create "{username}" image/text
             f'-fill "#DA7855"',
             f'label:"{created_by}"',
+            # Create "with" image/text
             f'-fill "#CFCFCF"',
             f'label:"with"',
+            # Resize TCM logo
             f'\( "{self.__TCM_LOGO.resolve()}"',
             f'-resize x100 \)',
+            # Create "TitleCardMaker" image/text
             f'-fill "#5493D7"',
             f'label:"TitleCardMaker"',
+            # Combine all text images with 30px padding
             f'+smush 30',
             f'"{self.__CREATED_BY_TEMPORARY_PATH.resolve()}"'
         ])

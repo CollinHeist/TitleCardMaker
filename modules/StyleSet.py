@@ -11,7 +11,7 @@ class StyleSet:
         'art blur':                 'art blur',
         'art blur grayscale':       'art blur grayscale',
         'art grayscale':            'art grayscale',
-       #'art unique':               # INVALID COMBINATION
+      # 'art unique':               # INVALID COMBINATION
         'blur':                     'blur',
         'blur grayscale':           'blur grayscale',
         'blur unique':              'blur',
