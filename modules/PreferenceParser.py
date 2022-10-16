@@ -812,10 +812,6 @@ class PreferenceParser(YamlReader):
                 
                 yield Show(show_name, show_yaml, self.source_directory, self)
 
-                # If archiving is disabled, skip
-                if not self.create_archive:
-                    continue
-
                 # Get all specified variations for this show
                 variations = show_yaml.pop('archive_variations', [])
                 if not isinstance(variations, list):
@@ -824,6 +820,7 @@ class PreferenceParser(YamlReader):
 
                 # Yield each variation
                 show_yaml.pop('archive_name', None)
+                show_yaml.pop('archive', None)
                 for variation in variations:
                     # Apply template and merge libraries+font maps to variation
                     variation = self.__finalize_show_yaml(
