@@ -13,6 +13,9 @@ class Template:
     instances of the data, in which the series data takes priority.
     """
 
+    """Maximum number of template application iterations"""
+    MAX_TEMPLATE_DEPTH = 10
+
     def __init__(self, name: str, template: dict[str: str]) -> None:
         """
         Construct a new Template object with the given name, and with the given
@@ -25,14 +28,28 @@ class Template:
         """
 
         self.name = name
-        self.__template = template
-        self.__keys = self.__identify_template_keys(self.__template, set())
+        self.valid = True
+
+        # Validate template is dictionary
+        if isinstance(template, dict):
+            self.template = template
+            self.keys = self.__identify_template_keys(self.template, set())
+        else:
+            log.error(f'Invalid template "{self.name}"')
+            self.valid = False
+
+        # Get validate/defaults
+        if isinstance((defaults := template.get('defaults', {})), dict):
+            self.defaults = defaults
+        else:
+            log.error(f'Invalid defaults for template "{self.name}"')
+            self.valid = False
 
 
     def __repr__(self) -> str:
         """Returns a unambiguous string representation of the object."""
 
-        return f'<Template {self.name=}, {self.__keys=}, {self.__template=}>'
+        return f'<Template {self.name=}, {self.keys=}, {self.template=}>'
 
 
     def __identify_template_keys(self, template: dict, keys: set) -> set:
@@ -103,7 +120,7 @@ class Template:
                     elif isinstance(sub_value, dict):
                         self.__apply_value_to_key(template[t_key][index], key,
                                                   value)
-
+        
 
     @staticmethod
     def recurse_priority_union(base_yaml: dict,
@@ -158,14 +175,36 @@ class Template:
         """
         
         # If not all required template keys are specified, warn and exit
-        if not set(series_yaml['template'].keys()).issuperset(self.__keys):
-            log.warning(f'Missing template data for "{series_name}"')
+        given_keys = set(series_yaml['template'].keys())
+        default_keys = set(self.defaults.keys())
+        if not (given_keys | default_keys).issuperset(self.keys):
+            log.warning(f'Missing "{self.name}" template data for "{series_name}"')
             return False
 
-        # Take given template values, fill in template object
-        modified_template = deepcopy(self.__template)
-        for key, value in series_yaml['template'].items():
-            self.__apply_value_to_key(modified_template, key, value)
+        # Copy base template before modification
+        modified_template = deepcopy(self.template)
+
+        # Iteratively apply template until all keys are removed
+        count = 0
+        while self.keys and count < self.MAX_TEMPLATE_DEPTH:
+            # Take given template values, fill in template object
+            for key, value in series_yaml['template'].items():
+                self.__apply_value_to_key(modified_template, key, value)
+
+            # Fill any remaining template keys with default values
+            for key, value in self.defaults.items():
+                self.__apply_value_to_key(modified_template, key, value)
+
+            # Identify any remaining keys after application
+            self.keys = self.__identify_template_keys(modified_template, set())
+            count += 1
+
+        # Log or exit if failed to apply
+        if count > 1:
+            log.debug(f'Applied template "{self.name}" in {count} iterations')
+        if count >= self.MAX_TEMPLATE_DEPTH:
+            log.warning(f'Unable to apply template "{self.name}" to "{series_name}"')
+            return False
 
         # Delete the template section from the series YAML
         del series_yaml['template']

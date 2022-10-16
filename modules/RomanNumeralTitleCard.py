@@ -86,7 +86,6 @@ class RomanNumeralTitleCard(BaseCardType):
         # just use actual episode number
         digit = int(episode_text) if episode_text.isdigit() else episode_number
         self.__assign_roman_numeral(digit)
-        breakpoint()
 
 
     def __assign_roman_numeral(self, number: int) -> None:
