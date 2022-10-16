@@ -103,6 +103,7 @@ class TitleCard:
             hide_season=profile.hide_season_title,
             blur=episode.blur,
             watched=episode.watched,
+            grayscale=episode.grayscale,
             **profile.font.get_attributes(),
             **extra_characteristics,
             **self.episode.episode_info.episode_characteristics,

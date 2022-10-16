@@ -461,9 +461,9 @@ class PlexInterface:
 
 
     @catch_and_log('Error updating watched statuses')
-    def update_watched_statuses(self, library_name: str,
-                                series_info: 'SeriesInfo', episode_map: dict,
-                                watched_style: str, unwatched_style: str)->None:
+    def update_watched_statuses(self, library_name: str,series_info: SeriesInfo,
+                                episode_map: dict[str, 'Episode'],
+                                style_set: 'StyleSet') -> None:
         """
         Modify the Episode objects according to the watched status of the
         corresponding episodes within Plex, and the spoil status of the object.
@@ -474,8 +474,7 @@ class PlexInterface:
             library_name: The name of the library containing the series to update
             series_info: The series to update.
             episode_map: Dictionary of episode keys to Episode objects to modify
-            watched_style: Desired card style of watched episodes.
-            unwatched_style: Desired card style of unwatched episodes.
+            style_set: StyleSet object to update the status of Episodes with.
         """
         
         # If no episodes, or unwatched setting is ignored, exit
@@ -502,8 +501,7 @@ class PlexInterface:
                 continue
             
             # Set Episode watched/spoil statuses
-            episode.update_statuses(plex_episode.isWatched, watched_style,
-                                    unwatched_style)
+            episode.update_statuses(plex_episode.isWatched, style_set)
             
             # Get loaded card characteristics for this episode
             details = self.__get_loaded_episode(loaded_series, episode)

@@ -491,17 +491,18 @@ class Manager:
                     continue
 
                 # Add key for this episode
-                show_dict[str(episode)] = {}
+                key = str(episode)
+                show_dict[key] = {}
 
                 # If source file doesn't exist, add to report
                 if (show.card_class.USES_UNIQUE_SOURCES
                     and not episode.source.exists()):
-                    show_dict[str(episode)]['source'] = episode.source.name
+                    show_dict[key]['source'] = episode.source.name
 
                 # If destination card doesn't exist, add to report
                 if (episode.destination is not None
                     and not episode.destination.exists()):
-                    show_dict[str(episode)]['card'] = episode.destination.name
+                    show_dict[key]['card'] = episode.destination.name
 
                 # If translation is requested and doesn't exist, add
                 missing_translations = [
@@ -509,11 +510,11 @@ class Manager:
                     if not episode.key_is_specified(translation['key'])
                 ]
                 if len(missing_translations) > 0:
-                    show_dict[str(episode)]['translations'] = missing_translations
+                    show_dict[key]['translations'] = missing_translations
 
                 # Delete entry if no missing assets
-                if len(show_dict[str(episode)]) == 0:
-                    del show_dict[str(episode)]
+                if len(show_dict[key]) == 0:
+                    del show_dict[key]
 
             # Report missing logo if archives and summaries are enabled
             if (show.archive and self.preferences.create_summaries
@@ -521,7 +522,8 @@ class Manager:
                 show_dict['logo'] = show.logo.name
 
             # Report missing backdrop if art style is used
-            if (show.watched_style == 'art' or show.unwatched_style == 'art'
+            if ((show.style_set.watched_style_is_art or
+                show.style_set.unwatched_style_is_art)
                 and not show.backdrop.exists()):
                 show_dict['backdrop'] = show.backdrop.name
 
