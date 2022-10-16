@@ -186,20 +186,20 @@ class Template:
         modified_template = deepcopy(self.template)
 
         # Iteratively apply template until all keys are removed
-        count = 0
-        while self.keys and count < self.MAX_TEMPLATE_DEPTH:
+        count, remaining_keys = 0, self.keys
+        while remaining_keys and count < self.MAX_TEMPLATE_DEPTH:
             # Take given template values, fill in template object
             for key, value in series_yaml['template'].items():
                 self.__apply_value_to_key(modified_template, key, value)
-
+            
             # Fill any remaining template keys with default values
             for key, value in self.defaults.items():
                 self.__apply_value_to_key(modified_template, key, value)
-
+            
             # Identify any remaining keys after application
-            self.keys = self.__identify_template_keys(modified_template, set())
+            remaining_keys=self.__identify_template_keys(modified_template,set())
             count += 1
-
+            
         # Log or exit if failed to apply
         if count > 1:
             log.debug(f'Applied template "{self.name}" in {count} iterations')
