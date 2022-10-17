@@ -100,8 +100,14 @@ class ShowArchive:
             )
 
 
+    def __str__(self) -> str:
+        """Returns a string representation of the object."""
+
+        return f'"{self.series_info.full_name}"'
+
+
     def __repr__(self) -> str:
-        """Returns a unambiguous string representation of the object."""
+        """Returns an unambiguous string representation of the object."""
 
         return (f'<ShowArchive for {self.series_info} with {len(self.shows)} '
                 f'profiles>')

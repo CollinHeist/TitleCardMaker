@@ -5,10 +5,12 @@ from logging import NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL
 from pathlib import Path
 from tqdm import tqdm
 
-"""TQDM bar format string"""
+"""Global tqdm arguments"""
 TQDM_KWARGS = {
-    'bar_format': ('{desc} {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt} '
-                   '[{elapsed}, {rate_fmt}{postfix}]'),
+    # Progress bar format string
+    'bar_format': ('{desc:.50s} {percentage:2.0f}%|{bar}| {n_fmt}/{total_fmt} '
+                   '[{elapsed}]'),
+    # Progress bars should disappear when finished
     'leave': False,
 }
 
@@ -110,13 +112,10 @@ file_handler.setFormatter(Formatter(
 file_handler.setLevel(DEBUG)
 log.addHandler(file_handler)
 
-def apply_no_color_formatter(log_object: 'Logger') -> None:
+def apply_no_color_formatter() -> None:
     """
-    Modify the given logger object, removing the colored Handler, adding an
-    instance of the colorless one.
-    
-    Args:
-        log_object: The log object to modify.
+    Modify the global logger object by replacing the colored Handler with an
+    instance of the LogFormatterNoColor Handler class.
     """
 
     # Create colorless Formatter

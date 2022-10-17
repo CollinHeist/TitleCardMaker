@@ -19,9 +19,6 @@ class SeriesInfo:
     tvdb_id: int=None
     tmdb_id: int=None
 
-    """After how many characters to truncate the short name"""
-    SHORT_WIDTH: ClassVar[int] = 15
-
     """Regex to match name + year from given full name"""
     __FULL_NAME_REGEX: ClassVar['Pattern'] =re_compile(r'^(.*?)\s+\((\d{4})\)$')
 
@@ -66,12 +63,6 @@ class SeriesInfo:
 
         # Set full name
         self.full_name = f'{self.name} ({self.year})'
-        
-        # Set short name
-        if len(self.name) > self.SHORT_WIDTH:
-            self.short_name = f'{self.name[:self.SHORT_WIDTH]}..'
-        else:
-            self.short_name = self.name
             
         # Set match names
         self.match_name = self.get_matching_title(self.name)

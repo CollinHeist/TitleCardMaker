@@ -140,7 +140,7 @@ is_docker = environ.get(ENV_IS_DOCKER, 'false').lower() == 'true'
 # Set global log level and coloring
 log.handlers[0].setLevel(args.log)
 if args.no_color:
-    apply_no_color_formatter(log)
+    apply_no_color_formatter()
 
 # Log parsed arguments
 log.debug('Runtime arguments:')

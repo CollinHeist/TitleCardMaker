@@ -201,9 +201,7 @@ class Template:
             remaining_keys=self.__identify_template_keys(modified_template,set())
             count += 1
             
-        # Log or exit if failed to apply
-        if count > 1:
-            log.debug(f'Applied template "{self.name}" in {count} iterations')
+        # Log and exit if failed to apply
         if count >= self.MAX_TEMPLATE_DEPTH:
             log.warning(f'Unable to apply template "{self.name}" to '
                         f'"{series_name}"')

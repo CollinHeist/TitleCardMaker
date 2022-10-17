@@ -789,7 +789,7 @@ class PreferenceParser(YamlReader):
                     templates[name] = Template(name, template)
 
             # Go through each series in this file
-            for show_name in tqdm(file_yaml['series'], desc='Creating Shows',
+            for show_name in tqdm(file_yaml['series'], desc='Reading entries',
                                   **TQDM_KWARGS):
                 # Skip if not a dictionary
                 if not isinstance(file_yaml['series'][show_name], dict):
