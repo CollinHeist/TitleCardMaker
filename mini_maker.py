@@ -23,6 +23,7 @@ except ImportError:
     exit(1)
 
 # Environment Variables
+ENV_IS_DOCKER = 'TCM_IS_DOCKER'
 ENV_PREFERENCE_FILE = 'TCM_PREFERENCES'
 
 # Default values
@@ -356,6 +357,7 @@ season_poster_group.add_argument(
          
 # Parse given arguments
 args, unknown = parser.parse_known_args()
+is_docker = environ.get(ENV_IS_DOCKER, 'false').lower() == 'true'
 
 # Create dictionary of unknown arguments
 arbitrary_data = {}
@@ -363,8 +365,7 @@ if len(unknown) % 2 == 0 and len(unknown) > 1:
     arbitrary_data = {key: val for key, val in zip(unknown[::2], unknown[1::2])}
 
 # Parse preference file for options that might need it
-pp = PreferenceParser(args.preferences)
-if not pp.valid:
+if not (pp := PreferenceParser(args.preferences, is_docker)).valid:
     exit(1)
 set_preference_parser(pp)
 

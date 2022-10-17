@@ -22,6 +22,7 @@ except ImportError:
     exit(1)
 
 # Environment Variables
+ENV_IS_DOCKER = 'TCM_IS_DOCKER'
 ENV_PREFERENCE_FILE = 'TCM_PREFERENCES'
 
 # Default values
@@ -128,10 +129,10 @@ tmdb_group.add_argument(
 
 # Parse given arguments
 args = parser.parse_args()
+is_docker = environ.get(ENV_IS_DOCKER, 'false').lower() == 'true'
 
 # Parse preference file for options that might need it
-pp = PreferenceParser(args.preferences)
-if not pp.valid:
+if not (pp := PreferenceParser(args.preferences, is_docker)).valid:
     exit(1)
 set_preference_parser(pp)
 

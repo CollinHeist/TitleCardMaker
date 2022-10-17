@@ -173,7 +173,7 @@ def check_for_update():
     else:
         if (available_version := response.json().get('name')) !=CURRENT_VERSION:
             log.info(f'New version of TitleCardMaker ({available_version}) '
-                     f'available.')
+                     f'available')
             if is_docker:
                 log.info(f'Update your Docker container')
             else:

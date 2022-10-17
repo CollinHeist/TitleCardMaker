@@ -15,6 +15,7 @@ class Template:
 
     """Maximum number of template application iterations"""
     MAX_TEMPLATE_DEPTH = 10
+    
 
     def __init__(self, name: str, template: dict[str: str]) -> None:
         """
