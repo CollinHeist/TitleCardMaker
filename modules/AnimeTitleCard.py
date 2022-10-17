@@ -97,7 +97,7 @@ class AnimeTitleCard(BaseCardType):
         self.kanji = self.image_magick.escape_chars(kanji)
         self.use_kanji = (kanji is not None)
         self.require_kanji = require_kanji
-        self.kanji_vertical_shift = kanji_vertical_shift
+        self.kanji_vertical_shift = float(kanji_vertical_shift)
 
         # Font customizations
         self.font = font
