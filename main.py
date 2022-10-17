@@ -245,14 +245,7 @@ def read_update_list():
 # Run immediately if specified
 if args.run:
     log.info(f'Starting TitleCardMaker ({pp.version})')
-    from cProfile import Profile
-    from pstats import Stats
-
-    with Profile() as pr:
-        run()
-
-    stats = Stats(pr)
-    stats.dump_stats(filename='all.prof')
+    run()
 
 # Sync if specified
 if args.sync:
