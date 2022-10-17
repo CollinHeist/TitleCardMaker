@@ -5,6 +5,7 @@ from tinydb import TinyDB, where
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
+import modules.global_objects as global_objects
 
 class ShowRecordKeeper:
     """
@@ -29,6 +30,9 @@ class ShowRecordKeeper:
     """Record database of hashes corresponding to specified shows"""
     RECORD_DATABASE = 'show_records.json'
 
+    """Version of the existing record database"""
+    DATABASE_VERSION = 'show_records_version.txt'
+
 
     def __init__(self, database_directory: Path) -> None:
         """
@@ -42,6 +46,21 @@ class ShowRecordKeeper:
         # Read record database
         database = database_directory / self.RECORD_DATABASE
         self.records = TinyDB(database)
+
+        # Read version of record database
+        version = database_directory / self.DATABASE_VERSION
+        if version.exists():
+            self.version = version.read_text()
+        else:
+            self.version = global_objects.pp.version
+
+        # Delete database if version does not match
+        if self.version != global_objects.pp.version:
+            # database.unlink(missing_ok=True)
+            log.debug(f'Deleted show record database, was version {self.version}')
+
+        # Write current version to file
+        version.write_text(global_objects.pp.version)
 
         # Attempt to read length, error indicates bad database
         try:

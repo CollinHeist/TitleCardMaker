@@ -40,6 +40,9 @@ class PreferenceParser(YamlReader):
     """Default directory for temporary database objects"""
     DEFAULT_TEMP_DIR = Path(__file__).parent / '.objects'
 
+    """File containing the executing version of TitleCardMaker"""
+    VERSION_FILE = Path(__file__).parent / 'ref' / 'version'
+
 
     def __init__(self, file: Path, is_docker: bool=False) -> None:
         """
@@ -54,6 +57,7 @@ class PreferenceParser(YamlReader):
 
         # Initialize parent YamlReader object - errors are critical
         super().__init__(log_function=log.critical)
+        self.version = self.VERSION_FILE.read_text()
         
         # Store and read file
         self.file = file

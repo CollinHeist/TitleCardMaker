@@ -24,7 +24,6 @@ except ImportError as e:
     exit(1)
 
 # Version information
-CURRENT_VERSION = 'v1.11.2'
 REPO_URL = ('https://api.github.com/repos/'
             'CollinHeist/TitleCardMaker/releases/latest')
 
@@ -171,7 +170,7 @@ def check_for_update():
     except Exception:
         log.debug(f'Failed to check for new version')
     else:
-        if (available_version := response.json().get('name')) !=CURRENT_VERSION:
+        if (available_version := response.json().get('name')) != pp.version:
             log.info(f'New version of TitleCardMaker ({available_version}) '
                      f'available')
             if is_docker:
@@ -245,8 +244,16 @@ def read_update_list():
 
 # Run immediately if specified
 if args.run:
-    log.info(f'Starting TitleCardMaker ({CURRENT_VERSION})')
-    run()
+    log.info(f'Starting TitleCardMaker ({pp.version})')
+    from cProfile import Profile
+    from pstats import Stats
+
+    with Profile() as pr:
+        run()
+
+    stats = Stats(pr)
+    stats.dump_stats(filename='all.prof')
+
 # Sync if specified
 if args.sync:
     # Re-read preferences
