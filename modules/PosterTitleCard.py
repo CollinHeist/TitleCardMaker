@@ -46,8 +46,9 @@ class PosterTitleCard(BaseCardType):
     """Path to the reference star image to overlay on all source images"""
     __GRADIENT_OVERLAY = REF_DIRECTORY / 'stars-overlay.png'
 
-    __slots__ = ('source_file', 'output_file', 'logo', 'title', 'episode_text',
-                 'blur')
+    __slots__ = (
+        'source_file', 'output_file', 'logo', 'title', 'episode_text',
+    )
 
     
     def __init__(self, source: Path, output_file: Path, title: str,

@@ -46,13 +46,12 @@ class LandscapeTitleCard(BaseCardType):
     """Additional spacing (in pixels) between bounding box and title text"""
     BOUNDING_BOX_SPACING = 150
 
-    __ADJUSTMENT_ERROR = (
-        'must provide adjustments for all sides like "top right bottom left"'
-    )
+    """Color for darkening is black at 30% transparency"""
+    DARKEN_COLOR = '#00000030'
 
     __slots__ = (
         'source', 'output_file', 'title', 'font', 'font_size', 'title_color',
-        'interline_spacing', 'kerning', 'add_bounding_box',
+        'interline_spacing', 'kerning', 'darken', 'add_bounding_box',
         'box_adjustments'
     )
 
@@ -60,7 +59,8 @@ class LandscapeTitleCard(BaseCardType):
     def __init__(self, source: Path, output_file: Path, title: str, font: str,
                  font_size: float, title_color: str, interline_spacing: int=0,
                  kerning: float=1.0, blur: bool=False, grayscale: bool=False,
-                 add_bounding_box: bool=False, box_adjustments: str=None,
+                 darken: 'bool | str'=False, add_bounding_box: bool=False,
+                 box_adjustments: str=None,
                  **kwargs) ->None:
         """
         Initialize this TitleCard object. This primarily just stores instance
@@ -77,6 +77,7 @@ class LandscapeTitleCard(BaseCardType):
             kerning: Scalar to apply to kerning of the title text.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
+            darken: Extra - whether to darken the image (if not blurred).
             add_bounding_box: Extra - whether to add a bounding box around the
                 title text.
             box_adjustments: How to adjust the bounds of the bounding box. Given
@@ -101,16 +102,67 @@ class LandscapeTitleCard(BaseCardType):
 
         # Store extras
         self.add_bounding_box = add_bounding_box
+        if isinstance(darken, str):
+            try:
+                er1 = '"darken" must be "all" or "box"'
+                er2 = '"add_bounding_box" must be true if "darken" is "box"'
+                assert (darken := str(darken).lower()) in ('all', 'box'), er1
+                assert not (darken == 'box' and not self.add_bounding_box), er2
+                self.darken = darken
+            except Exception as e:
+                log.error(f'Invalid extras - {e}')
+                self.valid = False
+                self.darken = False
+        else:
+            self.darken = bool(darken)
+
+        # Parse box adjustments
         self.box_adjustments = (0, 0, 0, 0)
         if box_adjustments:
             # Verify adjustments are properly provided
             try:
                 adjustments = box_adjustments.split(' ')
                 self.box_adjustments = tuple(map(float, adjustments))
-                assert len(self.box_adjustments) == 4, self.__ADJUSTMENT_ERROR
+                error = ('must provide numeric adjustments for all sides like '
+                         '"top right bottom left", e.g. "20 0 40 0"')
+                assert len(self.box_adjustments) == 4, error
+            # Invalid adjustments, log and mark invalid
             except Exception as e:
                 log.error(f'Invalid box adjustments "{box_adjustments}" - {e}')
                 self.box_adjustments = (0, 0, 0, 0)
+                self.valid = False
+
+
+    def darken_command(self, coordinates: tuple[float, float, float, float]
+                       ) -> list[str]:
+        """
+        Subcommand to darken the image if indicated.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        # Don't darken if blurring or not enabled
+        if self.blur or not self.darken:
+            return []
+
+        # Darken only the bounding box coorindates
+        if self.darken == 'box':
+            x_start, y_start, x_end, y_end = coordinates
+
+            return [
+                f'-fill "{self.DARKEN_COLOR}"',
+                f'-draw "rectangle {x_start},{y_start},{x_end},{y_end}"',
+            ]
+
+        return [
+            # Create image the size of the title card
+            f'\( -size "{self.TITLE_CARD_SIZE}"',
+            f'xc:"{self.DARKEN_COLOR}" \)',
+            # Compose atop of source image
+            f'-gravity center',
+            f'-composite',
+        ]
 
 
     def __add_no_title(self) -> None:
@@ -119,25 +171,32 @@ class LandscapeTitleCard(BaseCardType):
         command = ' '.join([
             f'convert "{self.source.resolve()}"',
             *self.resize_and_style,
+            *self.darken_command,
             f'"{self.output_file.resolve()}"',
         ])
 
         self.image_magick.run(command)
 
 
-    def add_bounding_box_command(self, font_size: float,
-                                 interline_spacing: float,
-                                 kerning: float) -> list[str]:
+    def get_bounding_box_coordinates(self, font_size: float,
+                                     interline_spacing: float, kerning: float
+                                     ) -> tuple[float, float, float, float]:
         """
-        Subcommand to add the bounding box around the title text.
+        Get the coordinates of the bounding box around the title.
+
+        Args:
+            font_size: Font size.
+            interline_spacing: Font interline spacing.
+            kerning: Font kerning.
 
         Returns:
-            List of ImageMagick commands.
+            Tuple of x/y coordinates for the bounding box. Ordered as x0, y0,
+            x1, y1.
         """
 
         # If no bounding box indicated, return blank command
         if not self.add_bounding_box:
-            return []
+            return 0, 0, 0, 0
 
         # Get (approximate) dimensions of title
         text_command = ' '.join([
@@ -170,6 +229,21 @@ class LandscapeTitleCard(BaseCardType):
         x_end += self.BOUNDING_BOX_SPACING + self.box_adjustments[1]
         y_start -= self.BOUNDING_BOX_SPACING  + self.box_adjustments[0]
         y_end += self.BOUNDING_BOX_SPACING + self.box_adjustments[2]
+
+        return x_start, y_start, x_end, y_end
+
+
+    def add_bounding_box_command(self,
+                                 coordinates: tuple[float, float, float, float]
+                                 ) -> list[str]:
+        """
+        Subcommand to add the bounding box around the title text.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        x_start, y_start, x_end, y_end = coordinates
 
         return [
             # Create blank image 
@@ -247,12 +321,18 @@ class LandscapeTitleCard(BaseCardType):
         font_size = int(150 * self.font_size)
         interline_spacing = int(60 * self.interline_spacing)
         kerning = int(40 * self.kerning)
+
+        # Get coordinates for bounding box
+        bounding_box = self.get_bounding_box_coordinates(
+            font_size, interline_spacing, kerning
+        )
  
         # Generate command to create card
         command = ' '.join([
             f'convert "{self.source.resolve()}"',
             # Resize and optionally blur source image
             *self.resize_and_style,
+            *self.darken_command(bounding_box),
             # Add title text
             f'\( -background None',
             f'-font "{self.font}"',
@@ -275,7 +355,7 @@ class LandscapeTitleCard(BaseCardType):
             # Add title image(s) to source
             f'-composite',
             # Optionally add bounding box
-            *self.add_bounding_box_command(font_size,interline_spacing,kerning),
+            *self.add_bounding_box_command(bounding_box),
             f'"{self.output_file.resolve()}"',
         ])
         
