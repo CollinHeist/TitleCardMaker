@@ -160,6 +160,7 @@ class BaseCardType(ImageMaker):
         """
 
         return [
+            f'-set colorspace sRGB',
             f'+profile "*"',
             f'-background transparent',
             f'-gravity center',
