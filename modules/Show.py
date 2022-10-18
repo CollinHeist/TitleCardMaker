@@ -117,7 +117,7 @@ class Show(YamlReader):
             self._base_yaml.get('font', {}), self.card_class, self.series_info,
         )
         self.valid &= self.font.valid
-
+        
         # Update derived (and not adjustable) attributes
         self.source_directory = source_directory / self.series_info.legal_path
         self.logo = self.source_directory / 'logo.png'

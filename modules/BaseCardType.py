@@ -87,7 +87,7 @@ class BaseCardType(ImageMaker):
 
 
     """Slots for standard style attributes"""
-    __slots__ = ('blur', 'grayscale')
+    __slots__ = ('valid', 'blur', 'grayscale')
 
 
     @abstractmethod
@@ -105,6 +105,9 @@ class BaseCardType(ImageMaker):
         
         # Initialize parent ImageMaker
         super().__init__()
+
+        # Object starts as valid
+        self.valid = True
 
         # Store style attributes
         self.blur = blur

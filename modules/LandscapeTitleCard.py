@@ -6,9 +6,12 @@ from modules.Debug import log
 
 class LandscapeTitleCard(BaseCardType):
     """
-    This class defines a type of CardType that produces un-imaged title cards
-    with roman numeral text behind the central title. The style is inspired
-    from the official Devilman Crybaby title cards.
+    This class defines a type of CardType that produces title-centric cards that
+    do not feature any index text (i.e. season or episode text). The title is
+    prominently featured in the center of the image, and is intended for 
+    landscape-centric images (hence the name) such as Planet Earth - as it
+    well likely cover faces in a "typical" image. A bounding box around the
+    title can be added/adjusted via extras.
     """
 
     """Directory where all reference files used by this card are stored"""
@@ -235,7 +238,7 @@ class LandscapeTitleCard(BaseCardType):
         defined title card.
         """
 
-        # If title is 0-length, just optionally blur
+        # If title is 0-length, just stylize
         if len(self.title.strip()) == 0:
             self.__add_no_title()
             return None
