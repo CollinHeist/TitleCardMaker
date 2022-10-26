@@ -171,7 +171,7 @@ class LandscapeTitleCard(BaseCardType):
         command = ' '.join([
             f'convert "{self.source.resolve()}"',
             *self.resize_and_style,
-            *self.darken_command,
+            *self.darken_command((0, 0, 0, 0)),
             f'"{self.output_file.resolve()}"',
         ])
 
