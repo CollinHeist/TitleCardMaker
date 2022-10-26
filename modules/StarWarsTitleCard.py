@@ -293,16 +293,9 @@ class StarWarsTitleCard(BaseCardType):
             True if custom season titles are indicated, False otherwise.
         """
 
-        generic_formats = (
-            'episode {episode_number}',
-            'chapter {episode_number}',
-            'part {episode_number}',
-            'episode {abs_number}',
-            'chapter {abs_number}',
-            'part {abs_number}',
-        )
-        
-        return episode_text_format.lower() not in generic_formats
+        standard_etf = StarWarsTitleCard.EPISODE_TEXT_FORMAT.upper()
+
+        return episode_text_format.upper() != standard_etf
 
 
     def create(self) -> None:
