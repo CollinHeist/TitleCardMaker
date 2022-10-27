@@ -100,8 +100,10 @@ class Show(YamlReader):
 
         # Construct StyleSet
         self.style_set = StyleSet(
-            self._get('watched_style', type_=str, default='unique'),
-            self._get('unwatched_style', type_=str, default='unique'),
+            self._get('watched_style', type_=str,
+                      default=self.style_set.watched),
+            self._get('unwatched_style', type_=str,
+                      default=self.style_set.unwatched),
         )
         self.valid &= self.style_set.valid
 
