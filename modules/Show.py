@@ -99,14 +99,16 @@ class Show(YamlReader):
         self.__parse_yaml()
 
         # Construct StyleSet
-        self.style_set = StyleSet(
-            self._get('watched_style', type_=str,
-                      default=self.style_set.watched),
-            self._get('unwatched_style', type_=str,
-                      default=self.style_set.unwatched),
-        )
+        if self._is_specified('watched_style'):
+            self.style_set.update_watched_style(
+                self._get('watched_style', type_=str)
+            )
+        if self._is_specified('unwatched_style'):
+            self.style_set.update_unwatched_style(
+                self._get('unwatched_style', type_=str)
+            )
         self.valid &= self.style_set.valid
-
+        
         # Construct EpisodeMap on seasons/episode ranges specification
         self.__episode_map = EpisodeMap(
             self._get('seasons', type_=dict),

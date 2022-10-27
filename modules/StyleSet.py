@@ -37,26 +37,24 @@ class StyleSet:
         # Start as valid
         self.valid = True
 
-        # Function to standardize style strings
-        standardize=lambda s:' '.join(sorted(str(s).lower().strip().split(' ')))
-
-        # Parse the watched style
-        if (value := standardize(watched)) in self.SPOIL_TYPE_STYLE_MAP:
-            self.watched = self.SPOIL_TYPE_STYLE_MAP[value]
-        else:
-            log.error(f'Invalid style "{watched}"')
-            self.valid = False
-
-        # Parse the unwatched style
-        if (value := standardize(unwatched)) in self.SPOIL_TYPE_STYLE_MAP:
-            self.unwatched = self.SPOIL_TYPE_STYLE_MAP[value]
-        else:
-            log.error(f'Invalid style "{unwatched}"')
-            self.valid = False
+        # Parse each style
+        self.update_watched_style(watched)
+        self.update_unwatched_style(unwatched)
 
         # Unique styles should be stored as unique, not spoiled
         self.watched = 'unique' if self.watched == 'spoiled' else self.watched
         self.unwatched = 'unique' if self.unwatched == 'spoiled' else self.unwatched
+
+
+    def __repr__(self) -> str:
+        """Return an unambigious string representation of the object."""
+
+        return f'<StyleSet {self.watched=}, {self.unwatched=}>'
+
+
+    @staticmethod
+    def __standardize(style: str) -> str:
+        return ' '.join(sorted(str(style).lower().strip().split(' ')))
 
 
     @property
@@ -85,3 +83,33 @@ class StyleSet:
         return self.SPOIL_TYPE_STYLE_MAP[self.watched
                                          if watch_status else
                                          self.unwatched]
+
+
+    def update_watched_style(self, style: str) -> None:
+        """
+        Set the watched style for this set.
+
+        Args:
+            style: Style to set.
+        """
+
+        if (value := self.__standardize(style)) in self.SPOIL_TYPE_STYLE_MAP:
+            self.watched = self.SPOIL_TYPE_STYLE_MAP[value]
+        else:
+            log.error(f'Invalid style "{style}"')
+            self.valid = False
+
+
+    def update_unwatched_style(self, style: str) -> None:
+        """
+        Set the unwatched style for this set.
+
+        Args:
+            style: Style to set.
+        """
+
+        if (value := self.__standardize(style)) in self.SPOIL_TYPE_STYLE_MAP:
+            self.unwatched = self.SPOIL_TYPE_STYLE_MAP[value]
+        else:
+            log.error(f'Invalid style "{style}"')
+            self.valid = False

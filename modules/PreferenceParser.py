@@ -408,8 +408,8 @@ class PreferenceParser(YamlReader):
                 log.warning(f'Plex will reject all images larger than 10 MB')
 
         self.global_style_set = StyleSet(
-            self._get('watched_style', type_=str, default='unique'),
-            self._get('unwatched_style', type_=str, default='unique'),
+            self._get('plex', 'watched_style', type_=str, default='unique'),
+            self._get('plex', 'unwatched_style', type_=str, default='unique'),
         )
         self.valid &= self.global_style_set.valid
 
