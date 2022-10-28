@@ -92,7 +92,7 @@ class Show(YamlReader):
         self.sync_specials = preferences.sync_specials
         self.tmdb_sync = preferences.use_tmdb
         self.tmdb_skip_localized_images = preferences.tmdb_skip_localized_images
-        self.style_set = preferences.global_style_set
+        self.style_set = copy(preferences.global_style_set)
         self.hide_seasons = False
         self.title_languages = {}
         self.extras = {}
