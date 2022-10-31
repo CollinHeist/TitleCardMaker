@@ -13,6 +13,7 @@ from modules.SeriesInfo import SeriesInfo
 from modules.SeriesYamlWriter import SeriesYamlWriter
 from modules.Show import Show
 from modules.StandardSummary import StandardSummary
+from modules.StyleSet import StyleSet
 from modules.StylizedSummary import StylizedSummary
 from modules.TautulliInterface import TautulliInterface
 from modules.Template import Template
@@ -39,6 +40,9 @@ class PreferenceParser(YamlReader):
     """Default directory for temporary database objects"""
     DEFAULT_TEMP_DIR = Path(__file__).parent / '.objects'
 
+    """File containing the executing version of TitleCardMaker"""
+    VERSION_FILE = Path(__file__).parent / 'ref' / 'version'
+
 
     def __init__(self, file: Path, is_docker: bool=False) -> None:
         """
@@ -53,6 +57,7 @@ class PreferenceParser(YamlReader):
 
         # Initialize parent YamlReader object - errors are critical
         super().__init__(log_function=log.critical)
+        self.version = self.VERSION_FILE.read_text()
         
         # Store and read file
         self.file = file
@@ -93,8 +98,7 @@ class PreferenceParser(YamlReader):
         self.plex_filesize_limit = self.filesize_as_bytes(
             PlexInterface.DEFAULT_FILESIZE_LIMIT
         )
-        self.global_watched_style = 'unique'
-        self.global_unwatched_style = 'unique'
+        self.global_style_set = StyleSet()
         self.plex_yaml_writers = []
         self.plex_yaml_update_args = []
         self.use_sonarr = False
@@ -392,22 +396,6 @@ class PreferenceParser(YamlReader):
         if (value := self._get('plex', 'verify_ssl', type_=bool)) is not None:
             self.plex_verify_ssl = value
 
-        if (value := self._get('plex', 'watched_style', type_=str)) is not None:
-            if (value := value.lower()) not in Show.VALID_STYLES:
-                opt = '", "'.join(Show.VALID_STYLES)
-                log.critical(f'Invalid watched style, must be one of "{opt}"')
-                self.valid = False
-            else:
-                self.global_watched_style = value
-
-        if (value := self._get('plex','unwatched_style',type_=str)) is not None:
-            if (value := value.lower()) not in Show.VALID_STYLES:
-                opt = '", "'.join(Show.VALID_STYLES)
-                log.critical(f'Invalid unwatched style, must be one of "{opt}"')
-                self.valid = False
-            else:
-                self.global_unwatched_style = value
-
         if (value := self._get('plex', 'integrate_with_pmm_overlays',
                                type_=bool)) is not None:
             self.integrate_with_pmm_overlays = value
@@ -418,6 +406,12 @@ class PreferenceParser(YamlReader):
             log.debug(f'Plex filesize limit is {self.plex_filesize_limit} bytes')
             if value > self.filesize_as_bytes('10 MB'):
                 log.warning(f'Plex will reject all images larger than 10 MB')
+
+        self.global_style_set = StyleSet(
+            self._get('plex', 'watched_style', type_=str, default='unique'),
+            self._get('plex', 'unwatched_style', type_=str, default='unique'),
+        )
+        self.valid &= self.global_style_set.valid
 
 
     def __parse_yaml_sonarr(self) -> None:
@@ -618,8 +612,8 @@ class PreferenceParser(YamlReader):
         return True
 
     
-    def __apply_template(self, templates: dict[str, Template],series_yaml: dict,
-                         series_name: str) -> bool:
+    def __apply_template(self, templates: dict[str, Template],
+                         series_yaml: dict, series_name: str) -> bool:
         """
         Apply the correct Template object (if indicated) to the given series
         YAML. This effectively "fill out" the indicated template, and updates
@@ -642,11 +636,11 @@ class PreferenceParser(YamlReader):
         # Get the specified template for this series
         if isinstance((series_template := series_yaml['template']), str):
             # Assume if only a string, then its the template name
-            series_template = {'name': series_template}
+            template_name = series_template
+            series_template = {'template_name': series_template}
             series_yaml['template'] = series_template
-
         # Warn and return if no template name given
-        if not (template_name := series_template.get('name', None)):
+        elif not (template_name := series_template.get('name', None)):
             log.error(f'Missing template name for "{series_name}"')
             return False
 
@@ -799,7 +793,7 @@ class PreferenceParser(YamlReader):
                     templates[name] = Template(name, template)
 
             # Go through each series in this file
-            for show_name in tqdm(file_yaml['series'], desc='Creating Shows',
+            for show_name in tqdm(file_yaml['series'], desc='Reading entries',
                                   **TQDM_KWARGS):
                 # Skip if not a dictionary
                 if not isinstance(file_yaml['series'][show_name], dict):
@@ -822,10 +816,6 @@ class PreferenceParser(YamlReader):
                 
                 yield Show(show_name, show_yaml, self.source_directory, self)
 
-                # If archiving is disabled, skip
-                if not self.create_archive:
-                    continue
-
                 # Get all specified variations for this show
                 variations = show_yaml.pop('archive_variations', [])
                 if not isinstance(variations, list):
@@ -834,6 +824,7 @@ class PreferenceParser(YamlReader):
 
                 # Yield each variation
                 show_yaml.pop('archive_name', None)
+                show_yaml.pop('archive', None)
                 for variation in variations:
                     # Apply template and merge libraries+font maps to variation
                     variation = self.__finalize_show_yaml(

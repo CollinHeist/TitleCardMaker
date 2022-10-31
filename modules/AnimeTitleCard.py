@@ -45,17 +45,17 @@ class AnimeTitleCard(BaseCardType):
     __slots__ = (
         'source_file', 'output_file', 'title', 'kanji', 'use_kanji',
         'require_kanji', 'kanji_vertical_shift', 'season_text', 'episode_text',
-        'hide_season', 'separator', 'blur', 'font', 'font_size', 'font_color',
+        'hide_season', 'separator', 'font', 'font_size', 'font_color',
         'vertical_shift', 'interline_spacing', 'kerning'
     )
-
     
     def __init__(self, source: Path, output_file: Path, title: str, 
                  season_text: str, episode_text: str, font: str,font_size:float,
                  title_color: str, hide_season: bool, vertical_shift: int=0,
                  interline_spacing: int=0, kerning: float=1.0, kanji: str=None,
                  require_kanji: bool=False, kanji_vertical_shift: float=0,
-                 separator: str='·', blur: bool=False, **kwargs)->None:
+                 separator: str='·', blur: bool=False, grayscale: bool=False,
+                 **kwargs)->None:
         """
         Construct a new instance.
         
@@ -65,6 +65,9 @@ class AnimeTitleCard(BaseCardType):
             title: The title for this card.
             season_text: The season text for this card.
             episode_text: The episode text for this card.
+            font: Font name or path (as string) to use for episode title.
+            font_size: Scalar to apply to the title font size.
+            title_color: Color to use for title text.
             hide_season: Whether to hide the season text on this card
             vertical_shift: Vertical shift to apply to the title and kanji
                 text.
@@ -74,33 +77,27 @@ class AnimeTitleCard(BaseCardType):
             kanji_vertical_shift: Vertical shift to apply to just kanji text.
             separator: Character to use to separate season and episode text.
             blur: Whether to blur the source image.
-            font_size: Scalar to apply to the title font size.
-            kwargs: Unused arguments to permit generalized function calls for
-                any CardType.
+            grayscale: Whether to make the source image grayscale.
+            kwargs: Unused arguments.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__()
+        super().__init__(blur, grayscale)
 
         # Store source and output file
         self.source_file = source
         self.output_file = output_file
 
-        # Apply titlecase case function, escape characters
+        # Escape title, season, and episode text
         self.title = self.image_magick.escape_chars(title)
+        self.season_text = self.image_magick.escape_chars(season_text.upper())
+        self.episode_text = self.image_magick.escape_chars(episode_text.upper())
 
         # Store kanji, set bool for whether to use it or not
         self.kanji = self.image_magick.escape_chars(kanji)
         self.use_kanji = (kanji is not None)
         self.require_kanji = require_kanji
-        self.kanji_vertical_shift = kanji_vertical_shift
-
-        # Store season and episode text
-        self.season_text = self.image_magick.escape_chars(season_text.upper())
-        self.episode_text = self.image_magick.escape_chars(episode_text.upper())
-        self.hide_season = hide_season
-        self.separator = separator
-        self.blur = blur
+        self.kanji_vertical_shift = float(kanji_vertical_shift)
 
         # Font customizations
         self.font = font
@@ -110,13 +107,9 @@ class AnimeTitleCard(BaseCardType):
         self.interline_spacing = interline_spacing
         self.kerning = kerning
 
-
-    def __repr__(self) -> str:
-        """Returns a unambiguous string representation of the object."""
-
-        return (f'<AnimeTitleCard {self.source_file=}, {self.output_file=}, '
-                f'{self.title=}, {self.kanji=}, {self.season_text=}, '
-                f'{self.episode_text=}, {self.blur=}, {self.font_size=}>')
+        # Miscellaneous attributes
+        self.hide_season = hide_season
+        self.separator = separator
 
 
     @property
@@ -368,7 +361,7 @@ class AnimeTitleCard(BaseCardType):
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
             # Resize and optionally blur source image
-            *self.resize_and_blur,
+            *self.resize_and_style,
             # Increase contrast of source image
             f'-modulate 100,125',
             # Overlay gradient

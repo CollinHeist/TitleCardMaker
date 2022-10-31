@@ -46,13 +46,15 @@ class PosterTitleCard(BaseCardType):
     """Path to the reference star image to overlay on all source images"""
     __GRADIENT_OVERLAY = REF_DIRECTORY / 'stars-overlay.png'
 
-    __slots__ = ('source_file', 'output_file', 'logo', 'title', 'episode_text',
-                 'blur')
+    __slots__ = (
+        'source_file', 'output_file', 'logo', 'title', 'episode_text',
+    )
 
     
     def __init__(self, source: Path, output_file: Path, title: str,
                  episode_text: str, season_number: int=1, episode_number: int=1,
-                 blur: bool=False, logo: str=None, **kwargs) -> None:
+                 blur: bool=False, grayscale: bool=False, logo: str=None,
+                 **kwargs) -> None:
         """
         Initialize the CardType object.
         
@@ -66,13 +68,14 @@ class PosterTitleCard(BaseCardType):
             episode_number: Episode number of the episode associated with this
                 card.
             blur: Whether to blur the source image.
+            grayscale: Whether to make the source image grayscale.
             logo: Filepath (or file format) to the logo file.
             kwargs: Unused arguments to permit generalized function calls for
                 any CardType.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__()
+        super().__init__(blur, grayscale)
 
         # Store source and output file
         self.source_file = source
@@ -84,8 +87,10 @@ class PosterTitleCard(BaseCardType):
             try:
                 logo = logo.format(season_number=season_number,
                                    episode_number=episode_number)
-            except Exception:
+            except Exception as e:
                 # Bad format strings will be caught during card creation
+                self.valid = False
+                log.debug(f'Invalid logo file "{logo}" - {e}')
                 pass
 
             self.logo = Path(logo)
@@ -97,9 +102,6 @@ class PosterTitleCard(BaseCardType):
         # Store text
         self.title = self.image_magick.escape_chars(title.upper())
         self.episode_text = self.image_magick.escape_chars(episode_text)
-
-        # Store blur flag
-        self.blur = blur
 
 
     @staticmethod
@@ -144,12 +146,12 @@ class PosterTitleCard(BaseCardType):
         if self.logo is None:
             title_offset = 0
             logo_command = ''
+        # Logo specified but does not exist - error and exit
         elif not self.logo.exists():
-            # Logo specified, but DNE, error and exit
             log.error(f'Logo file "{self.logo.resolve()}" does not exist')
             return None
+        # Logo specified and exists, create command to resize and add image
         else:
-            # Logo specified and exists, create command to resize and add image
             logo_command = [
                 f'-gravity north',
                 f'\( "{self.logo.resolve()}"',
@@ -170,6 +172,7 @@ class PosterTitleCard(BaseCardType):
             f'-resize "x1800"',
             f'-extent "3200x1800"',
             f'-blur {self.BLUR_PROFILE}' if self.blur else '',
+            f'-colorspace gray' if self.grayscale else '',
             # Add gradient overlay
             f'"{self.__GRADIENT_OVERLAY.resolve()}"',
             f'-flatten',

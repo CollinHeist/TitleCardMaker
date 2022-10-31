@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 from modules.Debug import log
 from modules.TitleCard import TitleCard
@@ -10,14 +11,16 @@ class Episode:
     map that info to a source and destination file.
     """
 
-    __slots__ = ('episode_info', 'card_class', '__base_source', 'source',
-                 'destination', 'downloadable_source', 'extra_characteristics',
-                 'given_keys', 'watched', 'blur', 'spoil_type', )
+    __slots__ = (
+        'episode_info', 'card_class', '__base_source', 'source', 'destination',
+        'downloadable_source', 'extra_characteristics', 'given_keys', 'watched',
+        'blur', 'grayscale', 'spoil_type', 
+    )
     
 
     def __init__(self, episode_info: 'EpisodeInfo', card_class: 'CardType',
                  base_source: Path, destination: Path, given_keys: set,
-                 **extras: dict) -> None:
+                 **extras: dict[str, Any]) -> None:
         """
         Construct a new instance of an Episode.
 
@@ -53,6 +56,7 @@ class Episode:
         # Episodes are watched, not blurred, and spoiled - until updated
         self.watched = False
         self.blur = False
+        self.grayscale = False
         self.spoil_type = 'spoiled'
 
 
@@ -89,30 +93,22 @@ class Episode:
         return key in self.given_keys
 
 
-    def update_statuses(self, watched: bool, watched_style: str, 
-                        unwatched_style: str) -> None:
+    def update_statuses(self, watched: bool, style_set: 'StyleSet') -> None:
         """
         Update the statuses of this Episode. In particular the watched status
         and un/watched styles.
         
         Args:
             watched: New watched status for this Episode.
-            watched_style: Watched style to assign spoil type from.
-            unwatched_style: Unwatched style to assign spoil tyle from.
+            style_set: StyleSet object to assign spoil type with.
         """
 
-        # Update watched attribute
         self.watched = watched
-
-        # Update spoil type based on given style and new watch status
-        SPOIL_TYPE_STYLE_MAP={'unique': 'spoiled', 'art': 'art', 'blur': 'blur'}
-        if self.watched:
-            self.spoil_type = SPOIL_TYPE_STYLE_MAP[watched_style]
-        else:
-            self.spoil_type = SPOIL_TYPE_STYLE_MAP[unwatched_style]
+        self.spoil_type = style_set.effective_spoil_type(watched)
 
 
-    def update_source(self, new_source: 'Path | str | None', *, downloadable: bool) -> bool:
+    def update_source(self, new_source: 'Path | str | None', *,
+                      downloadable: bool) -> bool:
         """
         Update the source image for this Episode, as well as the downloadable
         flag for the source.

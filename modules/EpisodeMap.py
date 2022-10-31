@@ -70,7 +70,7 @@ class EpisodeMap:
             self.__index_by = 'season'
             self.__parse_seasons(seasons)
         if (episode_ranges and len(episode_ranges) > 0
-            and list(episode_ranges.keys())[0][0] == 's'):
+            and str(list(episode_ranges.keys())[0])[0] == 's'):
             self.__index_by = 'index'
             self.__parse_index_episode_range(episode_ranges)
         elif episode_ranges and len(episode_ranges) > 0:
@@ -210,8 +210,8 @@ class EpisodeMap:
                     if (value := mapping.get('source_applies_to', '').lower()):
                         if value not in ('all', 'unwatched'):
                             # Invalid applies, error and exit
-                            log.error(f'Source applies to "{value}" of episodes '
-                                      f'{episode_range} is invalid')
+                            log.error(f'Source applies to "{value}" of episodes'
+                                      f' {episode_range} is invalid')
                             self.valid = False
                             continue
                         self.__applies[episode_number] = value
@@ -358,8 +358,22 @@ class EpisodeMap:
             Source filename defined by this map for this Episode.
         """
 
-        return self.__get_value(episode_info, 'source', lambda *_, **__: None)
-    
+        source = self.__get_value(episode_info, 'source', lambda *_, **__: None)
+
+        # Attempt to format string for this episode index
+        if isinstance(source, str):
+            try:
+                return source.format(
+                    season_number=episode_info.season_number,
+                    episode_number=episode_info.episode_number,
+                    abs_number=episode_info.abs_number,
+                )
+            except Exception as e:
+                log.warning(f'Cannot format source "{source}" - {e}')
+                return source
+            
+        return source
+
     
     def get_applies_to(self, episode_info: 'EpisodeInfo') -> str:
         """

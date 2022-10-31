@@ -24,7 +24,6 @@ except ImportError as e:
     exit(1)
 
 # Version information
-CURRENT_VERSION = 'v1.11.2'
 REPO_URL = ('https://api.github.com/repos/'
             'CollinHeist/TitleCardMaker/releases/latest')
 
@@ -140,7 +139,7 @@ is_docker = environ.get(ENV_IS_DOCKER, 'false').lower() == 'true'
 # Set global log level and coloring
 log.handlers[0].setLevel(args.log)
 if args.no_color:
-    apply_no_color_formatter(log)
+    apply_no_color_formatter()
 
 # Log parsed arguments
 log.debug('Runtime arguments:')
@@ -171,9 +170,9 @@ def check_for_update():
     except Exception:
         log.debug(f'Failed to check for new version')
     else:
-        if (available_version := response.json().get('name')) !=CURRENT_VERSION:
+        if (available_version := response.json().get('name')) != pp.version:
             log.info(f'New version of TitleCardMaker ({available_version}) '
-                     f'available.')
+                     f'available')
             if is_docker:
                 log.info(f'Update your Docker container')
             else:
@@ -245,8 +244,9 @@ def read_update_list():
 
 # Run immediately if specified
 if args.run:
-    log.info(f'Starting TitleCardMaker ({CURRENT_VERSION})')
+    log.info(f'Starting TitleCardMaker ({pp.version})')
     run()
+
 # Sync if specified
 if args.sync:
     # Re-read preferences

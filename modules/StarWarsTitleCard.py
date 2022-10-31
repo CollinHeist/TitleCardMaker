@@ -45,12 +45,14 @@ class StarWarsTitleCard(BaseCardType):
     """Paths to intermediate files that are deleted after the card is created"""
     __SOURCE_WITH_STARS = BaseCardType.TEMP_DIR / 'source_gradient.png'
 
-    __slots__ = ('source_file', 'output_file', 'title', 'hide_episode_text', 
-                 'episode_prefix', 'episode_text', 'blur')
-
+    __slots__ = (
+        'source_file', 'output_file', 'title', 'hide_episode_text', 
+        'episode_prefix', 'episode_text', 'blur'
+    )
     
     def __init__(self, source: Path, output_file: Path, title: str,
-                 episode_text: str, blur: bool=False, **kwargs) -> None:
+                 episode_text: str, blur: bool=False, grayscale: bool=False,
+                 **kwargs) -> None:
         """
         Initialize the CardType object.
         
@@ -60,12 +62,12 @@ class StarWarsTitleCard(BaseCardType):
             title: The title for this card.
             episode_text: The episode text for this card.
             blur: Whether to blur the source image.
-            kwargs: Unused arguments to permit generalized function calls for
-                any CardType.
+            grayscale: Whether to make the source image grayscale.
+            kwargs: Unused arguments.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__()
+        super().__init__(blur, grayscale)
 
         # Store source and output file
         self.source_file = source
@@ -85,9 +87,6 @@ class StarWarsTitleCard(BaseCardType):
             self.episode_text = self.image_magick.escape_chars(
                 self.__modify_episode_text(episode_text)
             )
-
-        # Store blur flag
-        self.blur = blur
 
 
     def __modify_episode_text(self, text: str) -> str:
@@ -146,7 +145,7 @@ class StarWarsTitleCard(BaseCardType):
 
         command = ' '.join([
             f'convert "{source.resolve()}"',
-            *self.resize_and_blur,
+            *self.resize_and_style,
             f'"{self.__STAR_GRADIENT_IMAGE.resolve()}"',
             f'-background None',
             f'-layers Flatten',
@@ -294,16 +293,9 @@ class StarWarsTitleCard(BaseCardType):
             True if custom season titles are indicated, False otherwise.
         """
 
-        generic_formats = (
-            'episode {episode_number}',
-            'chapter {episode_number}',
-            'part {episode_number}',
-            'episode {abs_number}',
-            'chapter {abs_number}',
-            'part {abs_number}',
-        )
-        
-        return episode_text_format.lower() not in generic_formats
+        standard_etf = StarWarsTitleCard.EPISODE_TEXT_FORMAT.upper()
+
+        return episode_text_format.upper() != standard_etf
 
 
     def create(self) -> None:

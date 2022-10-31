@@ -12,9 +12,9 @@ from modules.MultiEpisode import MultiEpisode
 import modules.global_objects as global_objects
 from modules.PlexInterface import PlexInterface
 from modules.Profile import Profile
-from modules.RemoteCardType import RemoteCardType
 from modules.SeasonPosterSet import SeasonPosterSet
 from modules.SeriesInfo import SeriesInfo
+from modules.StyleSet import StyleSet
 from modules.TitleCard import TitleCard
 from modules.Title import Title
 from modules.WebInterface import WebInterface
@@ -28,9 +28,6 @@ class Show(YamlReader):
     within the Show's YAML take precedence over the global values.
     """
     
-    """Valid card styles for a series"""
-    VALID_STYLES = ('unique', 'art', 'blur')
-
     """Filename to the backdrop for a series"""
     BACKDROP_FILENAME = 'backdrop.jpg'
 
@@ -42,6 +39,7 @@ class Show(YamlReader):
         'hide_seasons','__episode_map', 'title_language', 'font',
         'source_directory', 'logo', 'backdrop', 'file_interface', 'profile',
         'season_poster_set', 'episodes', '__is_archive', 'refresh_titles',
+        'style_set',
     )
 
     def __init__(self, name: str, yaml_dict: dict, source_directory: Path,
@@ -94,20 +92,36 @@ class Show(YamlReader):
         self.sync_specials = preferences.sync_specials
         self.tmdb_sync = preferences.use_tmdb
         self.tmdb_skip_localized_images = preferences.tmdb_skip_localized_images
-        self.watched_style = preferences.global_watched_style
-        self.unwatched_style = preferences.global_unwatched_style
+        self.style_set = copy(preferences.global_style_set)
         self.hide_seasons = False
-        self.__episode_map = EpisodeMap()
         self.title_languages = {}
         self.extras = {}
         self.__parse_yaml()
+
+        # Construct StyleSet
+        if self._is_specified('watched_style'):
+            self.style_set.update_watched_style(
+                self._get('watched_style', type_=str)
+            )
+        if self._is_specified('unwatched_style'):
+            self.style_set.update_unwatched_style(
+                self._get('unwatched_style', type_=str)
+            )
+        self.valid &= self.style_set.valid
+        
+        # Construct EpisodeMap on seasons/episode ranges specification
+        self.__episode_map = EpisodeMap(
+            self._get('seasons', type_=dict),
+            self._get('episode_ranges', type_=dict)
+        )
+        self.valid &= self.__episode_map.valid
 
         # Create Font object, update validity
         self.font = Font(
             self._base_yaml.get('font', {}), self.card_class, self.series_info,
         )
         self.valid &= self.font.valid
-
+        
         # Update derived (and not adjustable) attributes
         self.source_directory = source_directory / self.series_info.legal_path
         self.logo = self.source_directory / 'logo.png'
@@ -190,6 +204,8 @@ class Show(YamlReader):
         invalid attributes.
         """
 
+        lstr = lambda s: str(s).lower().strip()
+
         if (value := self._get('name', type_=str)) is not None:
             self.info_set.update_series_name(self.series_info, value)
 
@@ -229,15 +245,14 @@ class Show(YamlReader):
         if (value := self._get('archive', type_=bool)) is not None:
             self.archive = value
 
-        if (value := self._get('archive_all_variations', type_=bool)) != None:
+        if (value :=self._get('archive_all_variations',type_=bool)) is not None:
             self.archive_all_variations = value
 
         if (value := self._get('archive_name', type_=str)) is not None:
             self.archive_name = value
             self.archive_all_variations = False
 
-        if (value := self._get('episode_data_source', type_=str)) is not None:
-            value = value.lower().strip()
+        if (value := self._get('episode_data_source', type_=lstr)) is not None:
             if value in self.preferences.VALID_EPISODE_DATA_SOURCES:
                 self.episode_data_source = value
             else:
@@ -261,34 +276,15 @@ class Show(YamlReader):
                                type_=bool)) is not None:
             self.tmdb_skip_localized_images = value
 
-        if (value := self._get('watched_style', type_=str)) is not None:
-            if value not in self.VALID_STYLES:
-                log.error(f'Invalid watched style "{value}" in series {self}')
-                self.valid = False
-            else:
-                self.watched_style = value
-
-        if (value := self._get('unwatched_style', type_=str)) is not None:
-            if value not in self.VALID_STYLES:
-                log.error(f'Invalid unwatched style "{value}" in series {self}')
-                self.valid = False
-            else:
-                self.unwatched_style = value
-
-        if (value := self._get('archive_style', type_=str)) is not None:
-            if value not in self.VALID_STYLES:
-                log.error(f'Invalid archive style "{value}" in series {self}')
-                self.valid = False
-
         if (value := self._get('seasons', 'hide', type_=bool)) is not None:
             self.hide_seasons = value
 
         if (value := self._get('translation')) is not None:
+            # Single translation
             if isinstance(value, dict) and value.keys() == {'language', 'key'}:
-                # Single translation
                 self.title_languages = [value]
+            # List of translations
             elif isinstance(value, list):
-                # List of translations
                 if all(isinstance(t, dict) and t.keys() == {'language', 'key'}
                        for t in value):
                     self.title_languages = value
@@ -296,13 +292,6 @@ class Show(YamlReader):
                     log.error(f'Invalid language translations in series {self}')
             else:
                 log.error(f'Invalid language translations in series {self}')
-                
-        # Construct EpisodeMap on seasons/episode ranges specification
-        self.__episode_map = EpisodeMap(
-            self._get('seasons', type_=dict),
-            self._get('episode_ranges', type_=dict)
-        )
-        self.valid &= self.__episode_map.valid
 
         # Read all extras
         if self._is_specified('extras'):
@@ -625,72 +614,52 @@ class Show(YamlReader):
             Whether a backdrop should be downloaded or not.
         """
 
-        # Update watched statuses via Plex
+        # If this is an archive, assume all episodes are watched
         if self.__is_archive:
-            # If archiving, assume all episodes are watched
-            [episode.update_statuses(True, self.watched_style,
-                                     self.unwatched_style)
+            [episode.update_statuses(True, self.style_set)
              for _, episode in self.episodes.items()]
+        # If no PlexInterface, assume all episodes are unwatched
         elif self.library is None or plex_interface is None:
-            # If no PlexInterface, assume all episodes are unwatched
-            [episode.update_statuses(False, self.watched_style,
-                                     self.unwatched_style)
+            [episode.update_statuses(False, self.style_set)
              for _, episode in self.episodes.items()]
+        # Update watch statuses from Plex
         else:
             episode_map = self.episodes
             if select_only:
                 episode_map = {select_only.episode_info.key: select_only}
             
             plex_interface.update_watched_statuses(
-                self.library_name, self.series_info, episode_map,
-                self.watched_style, self.unwatched_style,
+                self.library_name, self.series_info, episode_map, self.style_set
             )
-            
-        # Get show styles
-        watched_style = self.watched_style
-        unwatched_style = self.unwatched_style
 
         # Go through all episodes and select source images
         download_backdrop = False
-        for key, episode in self.episodes.items():
+        for _, episode in self.episodes.items():
             # If only selecting a specific episode, skip others
             if select_only is not None and episode is not select_only:
                 continue
             
-            # Try and get the manually specified source from the episode map
+            # Get the manually specified source from the episode map
             manual_source = self.__episode_map.get_source(episode.episode_info)
             applies_to = self.__episode_map.get_applies_to(episode.episode_info)
 
-            # Update source and blurring based on.. well, everything..
-            found = True
-            if ((applies_to == 'all' and unwatched_style == 'unique'
-                 and watched_style != 'blur') or
-                (applies_to == 'all' and unwatched_style == 'art'
-                 and not (watched_style == 'blur' and episode.watched)) or
-                (applies_to == 'all' and unwatched_style == 'blur'
-                 and watched_style != 'blur' and episode.watched) or
-                (applies_to == 'unwatched' and unwatched_style != 'blur'
-                 and not episode.watched)):
-                found = episode.update_source(manual_source, downloadable=False)
-            elif ((applies_to == 'all') or
-                (applies_to == 'unwatched' and unwatched_style == 'blur'
-                 and not episode.watched)):
-                episode.blur = True
-                found = episode.update_source(manual_source, downloadable=False)
-            elif watched_style == 'unique':
-                continue
-            elif watched_style == 'art':
-                found = episode.update_source(self.backdrop, downloadable=True)
+            # Default source if the effective style is art
+            if self.style_set.effective_style_is_art(episode.watched):
                 download_backdrop = True
-            else:
+                episode.update_source(self.backdrop, downloadable=True)
+
+            # Override source if applies to all, or unwatched if ep is unwatched
+            if (applies_to == 'all' or 
+                (applies_to == 'unwatched' and not episode.watched)):
+                episode.update_source(manual_source, downloadable=False)
+            
+            # Blur if indicated by style
+            if self.style_set.effective_style_is_blur(episode.watched):
                 episode.blur = True
 
-            # Override to backdrop if indicated by style, or manual image DNE
-            if (((episode.watched and watched_style == 'art')
-                or (not episode.watched and unwatched_style == 'art'))
-                and not found):
-                episode.update_source(self.backdrop, downloadable=True)
-                download_backdrop = True
+            # Grayscale if indicated by style
+            if self.style_set.effective_style_is_grayscale(episode.watched):
+                episode.grayscale = True
 
         return download_backdrop
             

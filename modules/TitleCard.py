@@ -103,6 +103,7 @@ class TitleCard:
             hide_season=profile.hide_season_title,
             blur=episode.blur,
             watched=episode.watched,
+            grayscale=episode.grayscale,
             **profile.font.get_attributes(),
             **extra_characteristics,
             **self.episode.episode_info.episode_characteristics,
@@ -305,6 +306,10 @@ class TitleCard:
 
         # If the card already exists, exit
         if self.file.exists():
+            return False
+
+        # If card is invalid, exit
+        if not self.maker.valid:
             return False
 
         # Create parent folders if necessary for this card

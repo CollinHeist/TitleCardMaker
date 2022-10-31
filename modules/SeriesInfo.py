@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from re import match, compile as re_compile
 from typing import ClassVar
 
@@ -19,24 +19,8 @@ class SeriesInfo:
     tvdb_id: int=None
     tmdb_id: int=None
 
-    """After how many characters to truncate the short name"""
-    SHORT_WIDTH: ClassVar[int] = 15
-
-    """Mapping of illegal filename characters and their replacements"""
-    __ILLEGAL_CHARACTERS: ClassVar[dict[str: str]] = {
-        '?': '!',
-        '<': '',
-        '>': '',
-        ':':' -',
-        '"': '',
-        '/': '+',
-        '\\': '+',
-        '|': '',
-        '*': '-',
-    }
-
     """Regex to match name + year from given full name"""
-    __FULL_NAME_REGEX = re_compile(r'^(.*?)\s+\((\d{4})\)$')
+    __FULL_NAME_REGEX: ClassVar['Pattern'] =re_compile(r'^(.*?)\s+\((\d{4})\)$')
 
 
     def __post_init__(self) -> None:
@@ -79,12 +63,6 @@ class SeriesInfo:
 
         # Set full name
         self.full_name = f'{self.name} ({self.year})'
-        
-        # Set short name
-        if len(self.name) > self.SHORT_WIDTH:
-            self.short_name = f'{self.name[:self.SHORT_WIDTH]}..'
-        else:
-            self.short_name = self.name
             
         # Set match names
         self.match_name = self.get_matching_title(self.name)
@@ -124,7 +102,7 @@ class SeriesInfo:
         return all(getattr(self, id_) is not None for id_ in ids)
 
 
-    def set_sonarr_id(self, sonarr_id: int) -> None:
+    def set_sonarr_id(self, sonarr_id: 'int | None') -> None:
         """
         Set the Sonarr ID for this series.
         
@@ -136,7 +114,7 @@ class SeriesInfo:
             self.sonarr_id = int(sonarr_id)
 
 
-    def set_tvdb_id(self, tvdb_id: int) -> None:
+    def set_tvdb_id(self, tvdb_id: 'int | None') -> None:
         """
         Set the TVDb ID for this series.
         
@@ -148,7 +126,7 @@ class SeriesInfo:
             self.tvdb_id = int(tvdb_id)
 
 
-    def set_imdb_id(self, imdb_id: str) -> None:
+    def set_imdb_id(self, imdb_id: 'str | None') -> None:
         """
         Set the IMDb ID for this series.
         
@@ -160,7 +138,7 @@ class SeriesInfo:
             self.imdb_id = str(imdb_id)
 
 
-    def set_tmdb_id(self, tmdb_id: int) -> None:
+    def set_tmdb_id(self, tmdb_id: 'int | None') -> None:
         """
         Set the TMDb ID for this series.
         
@@ -187,7 +165,7 @@ class SeriesInfo:
         return ''.join(filter(str.isalnum, text)).lower()
 
 
-    def matches(self, *names: tuple) -> bool:
+    def matches(self, *names: tuple[str]) -> bool:
         """
         Get whether any of the given names match this Series.
         

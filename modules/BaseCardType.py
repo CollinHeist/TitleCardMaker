@@ -86,15 +86,42 @@ class BaseCardType(ImageMaker):
         raise NotImplementedError(f'All CardType objects must implement this')
 
 
+    """Slots for standard style attributes"""
+    __slots__ = ('valid', 'blur', 'grayscale')
+
+
     @abstractmethod
-    def __init__(self) -> None:
+    def __init__(self, blur: bool=False, grayscale: bool=False) -> None:
         """
         Construct a new CardType. Must call super().__init__() to initialize the
         parent ImageMaker class (for PreferenceParser and ImageMagickInterface
         objects).
+
+        Args:
+            blur: Whether to blur the source image. Defaults to False.
+            grayscale: Whether to convert the source image to grayscale.
+                Defaults to False.
         """
         
+        # Initialize parent ImageMaker
         super().__init__()
+
+        # Object starts as valid
+        self.valid = True
+
+        # Store style attributes
+        self.blur = blur
+        self.grayscale = grayscale
+
+    
+    def __repr__(self) -> str:
+        """Returns an unambiguous string representation of the object."""
+
+        attributes = ', '.join(f'{attr}={getattr(self, attr)!r}'
+                               for attr in self.__slots__
+                               if not attr.startswith('__'))
+
+        return (f'<{self.__class__.__name__} {attributes}>')
         
 
     @staticmethod
@@ -104,7 +131,8 @@ class BaseCardType(ImageMaker):
         Abstract method to determine whether the given font characteristics
         indicate the use of a custom font or not.
         
-        :returns:   True if a custom font is indicated, False otherwise.
+        Returns:
+            True if a custom font is indicated, False otherwise.
         """
         raise NotImplementedError(f'All CardType objects must implement this')
 
@@ -116,22 +144,30 @@ class BaseCardType(ImageMaker):
         Abstract method to determine whether the given season characteristics
         indicate the use of a custom season title or not.
         
-        :returns:   True if a custom season title is indicated, False otherwise.
+        Returns:
+            True if a custom season title is indicated, False otherwise.
         """
         raise NotImplementedError(f'All CardType objects must implement this')
 
     
     @property
-    def resize_and_blur(self) -> list[str]:
-        """ImageMagick commands to resize and blur an image."""
+    def resize_and_style(self) -> list[str]:
+        """
+        ImageMagick commands to resize and apply any style modifiers to an image
+        
+        Returns:
+            List of ImageMagick commands.
+        """
 
         return [
+            f'-set colorspace sRGB',
             f'+profile "*"',
             f'-background transparent',
             f'-gravity center',
             f'-resize "{self.TITLE_CARD_SIZE}^"',
             f'-extent "{self.TITLE_CARD_SIZE}"',
             f'-blur {self.BLUR_PROFILE}' if self.blur else '',
+            f'-colorspace gray' if self.grayscale else '',
         ]
 
 

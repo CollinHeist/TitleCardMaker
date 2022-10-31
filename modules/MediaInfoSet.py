@@ -4,10 +4,10 @@ from modules.SeriesInfo import SeriesInfo
 
 class MediaInfoSet:
     """
-    This class describes a set of Info, notably SeriesInfo and EpisodeInfo,
+    This class describes a set of media info; notably SeriesInfo and EpisodeInfo
     objects. This object can be viewed as an interface to creating and getting
     these objects, so that database ID's can be preserved between instances of
-    Show objects (as variations are created for archiving purposes).
+    Show and Episode objects.
     """
 
 

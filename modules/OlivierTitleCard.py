@@ -43,17 +43,19 @@ class OlivierTitleCard(BaseCardType):
     """Paths to intermediate files created for this card"""
     __RESIZED_SOURCE = BaseCardType.TEMP_DIR / 'resized_source.png'
 
-    __slots__ = ('source_file', 'output_file', 'title', 'hide_episode_text', 
-                 'episode_prefix', 'episode_text', 'font', 'title_color',
-                 'episode_text_color', 'font_size', 'stroke_width', 'kerning',
-                 'vertical_shift', 'interline_spacing', 'blur')
-
+    __slots__ = (
+        'source_file', 'output_file', 'title', 'hide_episode_text', 
+        'episode_prefix', 'episode_text', 'font', 'title_color',
+        'episode_text_color', 'font_size', 'stroke_width', 'kerning',
+        'vertical_shift', 'interline_spacing', 'blur'
+    )
     
     def __init__(self, source: Path, output_file: Path, title: str,
-                 episode_text: str, font: str, font_size:float,title_color: str,
-                 stroke_width: float=1.0, vertical_shift: int=0,
-                 interline_spacing: int=0, kerning: float=1.0,
-                 episode_text_color: str=EPISODE_TEXT_COLOR, blur: bool=False,
+                 episode_text: str, font: str, font_size:float,
+                 title_color: str, stroke_width: float=1.0,
+                 vertical_shift: int=0, interline_spacing: int=0,
+                 kerning: float=1.0, episode_text_color: str=EPISODE_TEXT_COLOR,
+                 blur: bool=False, grayscale: bool=False,
                  **kwargs) -> None:
         """
         Initialize this TitleCard object. This primarily just stores instance
@@ -74,11 +76,12 @@ class OlivierTitleCard(BaseCardType):
             kerning: Scalar to apply to kerning of the title text.
             episode_text_color: Color to use for the episode text.
             blur: Whether to blur the source image.
+            grayscale: Whether to make the source image grayscale.
             kwargs: Unused arguments.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__()
+        super().__init__(blur, grayscale)
 
         # Store source and output file
         self.source_file = source
@@ -111,9 +114,6 @@ class OlivierTitleCard(BaseCardType):
         self.interline_spacing = interline_spacing
         self.kerning = kerning
 
-        # Store blur flag
-        self.blur = blur
-
 
     def __resize_source(self, source: Path) -> Path:
         """
@@ -128,7 +128,7 @@ class OlivierTitleCard(BaseCardType):
 
         command = ' '.join([
             f'convert "{source.resolve()}"',
-            *self.resize_and_blur,
+            *self.resize_and_style,
             f'"{self.__RESIZED_SOURCE.resolve()}"',
         ])
 
@@ -137,7 +137,8 @@ class OlivierTitleCard(BaseCardType):
         return self.__RESIZED_SOURCE
 
 
-    def __add_title_text(self) -> list[str]:
+    @property
+    def title_text_command(self) -> list[str]:
         """
         Get the ImageMagick commands to add the episode title text to an image.
         
@@ -168,7 +169,8 @@ class OlivierTitleCard(BaseCardType):
         ]
 
 
-    def __add_episode_prefix(self) -> list[str]:
+    @property
+    def episode_prefix_command(self) -> list[str]:
         """
         Get the ImageMagick commands to add the episode prefix text to an image.
 
@@ -176,7 +178,7 @@ class OlivierTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
-        if self.episode_prefix is None:
+        if self.episode_prefix is None or self.hide_episode_text:
             return []
 
         return [
@@ -195,13 +197,17 @@ class OlivierTitleCard(BaseCardType):
         ]
 
 
-    def __add_episode_number_text(self) -> list[str]:
+    @property
+    def episode_number_text_command(self) -> list[str]:
         """
         Get the ImageMagick commands to add the episode number text to an image.
 
         Returns:
             List of ImageMagick commands.
         """
+
+        if self.hide_episode_text:
+            return []
 
         # Get variable horizontal offset based of episode prefix
         text_offset = {'EPISODE': 400, 'CHAPTER': 400, 'PART': 250}
@@ -227,52 +233,6 @@ class OlivierTitleCard(BaseCardType):
             f'-strokewidth 1',
             f'-annotate +{325+offset}-140 "{self.episode_text}"',
         ]
-
-
-    def __add_only_title(self, resized_source: Path) -> Path:
-        """
-        Add only the title to the given image.
-        
-        Args:
-            resized_source: Source image to add title to.
-
-        Returns:
-            Path to the created image (the output file).
-        """
-
-        command = ' '.join([
-            f'convert "{resized_source.resolve()}"',
-            *self.__add_title_text(),
-            f'"{self.output_file.resolve()}"',
-        ])
-
-        self.image_magick.run(command)
-
-        return self.output_file
-
-
-    def __add_all_text(self, gradient_source: Path) -> Path:
-        """
-        Add the title, episode prefix, and episode text to the given image.
-        
-        Args:
-            resized_source: Source image to add title to.
-
-        Returns:
-            Path to the created image (the output file).
-        """
-
-        command = ' '.join([
-            f'convert "{gradient_source.resolve()}"',
-            *self.__add_title_text(),
-            *self.__add_episode_prefix(),
-            *self.__add_episode_number_text(),
-            f'"{self.output_file.resolve()}"',
-        ])
-
-        self.image_magick.run(command)
-
-        return self.output_file
 
 
     @staticmethod
@@ -320,14 +280,13 @@ class OlivierTitleCard(BaseCardType):
     def create(self) -> None:
         """Create the title card as defined by this object."""
 
-        # Resize the source image
-        resized = self.__resize_source(self.source_file)
+        command = ' '.join([
+            f'convert "{self.source_file.resolve()}"',
+            *self.resize_and_style,
+            *self.title_text_command,
+            *self.episode_prefix_command,
+            *self.episode_number_text_command,
+            f'"{self.output_file.resolve()}"',
+        ])
 
-        # Add text to resized image
-        if self.hide_episode_text:
-            self.__add_only_title(resized)
-        else:
-            self.__add_all_text(resized)
-
-        # Delete all intermediate images
-        self.image_magick.delete_intermediate_images(resized)
+        self.image_magick.run(command)

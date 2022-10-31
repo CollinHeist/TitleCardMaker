@@ -166,8 +166,9 @@ class Manager:
         """
 
         # Read source files for Show objects
-        for show in tqdm(self.shows + self.archives,desc='Reading source files',
-                         **TQDM_KWARGS):
+        for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
+            pbar.set_description(f'Reading source files for {show}')
+
             show.read_source()
             show.find_multipart_episodes()
 
@@ -183,8 +184,9 @@ class Manager:
 
         # For each show in the Manager, look for new episodes using any of the
         # possible interfaces
-        for show in tqdm(self.shows + self.archives, desc='Adding new episodes',
-                         **TQDM_KWARGS):
+        for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
+            pbar.set_description(f'Adding new episodes for {show}')
+
             show.add_new_episodes(
                 self.sonarr_interface, self.plex_interface, self.tmdb_interface
             )
@@ -201,9 +203,7 @@ class Manager:
 
         # For each show in the Manager, set IDs for every episode
         for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
-            # Update progress bar
-            pbar.set_description(f'Setting episode IDs for '
-                                 f'"{show.series_info.short_name}"')
+            pbar.set_description(f'Setting episode IDs for {show}')
 
             show.set_episode_ids(
                 self.sonarr_interface, self.plex_interface, self.tmdb_interface
@@ -220,8 +220,8 @@ class Manager:
 
         # For each show in the Manager, add translation
         for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
-            pbar.set_description(f'Adding translations for '
-                                 f'"{show.series_info.short_name}"')
+            pbar.set_description(f'Adding translations for {show}')
+
             show.add_translations(self.tmdb_interface)
 
 
@@ -235,7 +235,10 @@ class Manager:
 
         # For each show in the Manager, download a logo
         for show in (pbar := tqdm(self.shows + self.archives,
-                                  desc='Downloading logos', **TQDM_KWARGS)):
+                                  #desc='Downloading logos',
+                                  **TQDM_KWARGS)):
+            pbar.set_description(f'Downloading logo for {show}')
+
             show.download_logo(self.tmdb_interface)
 
 
@@ -252,11 +255,8 @@ class Manager:
 
         # Go through each show and download source images
         for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
-            # Update progress bar
-            pbar.set_description(f'Selecting sources for '
-                                 f'"{show.series_info.short_name}"')
+            pbar.set_description(f'Selecting sources for {show}')
 
-            # Select source images from Plex and/or TMDb
             show.select_source_images(self.plex_interface, self.tmdb_interface)
 
 
@@ -269,11 +269,8 @@ class Manager:
 
         # Go through every show in the Manager, create cards
         for show in (pbar := tqdm(self.shows, **TQDM_KWARGS)):
-            # Update progress bar
-            pbar.set_description(f'Creating Title Cards for '
-                                 f'"{show.series_info.short_name}"')
+            pbar.set_description(f'Creating cards for {show}')
 
-            # Create cards
             show.create_missing_title_cards()
 
 
@@ -282,8 +279,8 @@ class Manager:
         """Create season posters for all shows known to this Manager."""
 
         # For each show in the Manager, create its posters
-        for show in (pbar := tqdm(self.shows + self.archives,
-                                 desc='Creating season posters',**TQDM_KWARGS)):
+        for show in tqdm(self.shows + self.archives,
+                         desc='Creating season posters',**TQDM_KWARGS):
             show.create_season_posters()
 
     
@@ -301,9 +298,7 @@ class Manager:
 
         # Go through each show in the Manager, update Plex
         for show in (pbar := tqdm(self.shows, **TQDM_KWARGS)):
-            # Update progress bar
-            pbar.set_description(f'Updating Plex for '
-                                 f'"{show.series_info.short_name}"')
+            pbar.set_description(f'Updating Plex for {show}')
 
             show.update_plex(self.plex_interface)
 
@@ -320,9 +315,7 @@ class Manager:
 
         # Update each archive
         for show_archive in (pbar := tqdm(self.archives, **TQDM_KWARGS)):
-            # Update progress bar
-            pbar.set_description(f'Updating archive for '
-                                 f'"{show_archive.series_info.short_name}"')
+            pbar.set_description(f'Updating archive for {show_archive}')
             
             show_archive.create_missing_title_cards()
 
@@ -341,9 +334,7 @@ class Manager:
 
         # Go through each archive and create summaries
         for show_archive in (pbar := tqdm(self.archives, **TQDM_KWARGS)):
-            # Update progress bar
-            pbar.set_description(f'Creating Summary for "'
-                                 f'{show_archive.series_info.short_name}"')
+            pbar.set_description(f'Creating Summary for {show_archive}')
 
             show_archive.create_summary()
 
@@ -384,15 +375,11 @@ class Manager:
         self.sync_series_files()
 
         # Go through each Series YAML file, creating Show/ShowArchive objects
-        for show in (pbar := tqdm(self.preferences.iterate_series_files(),
-                                  **TQDM_KWARGS)):
+        for show in self.preferences.iterate_series_files():
             # Skip shows whose YAML was invalid
             if not show.valid:
                 log.warning(f'Skipping series {show}')
                 continue
-
-            # Update progress bar
-            pbar.set_description(f'Updating {show}')
 
             # Create ShowArchive object if archive enabled globally + show
             self.shows = [show]
@@ -491,17 +478,18 @@ class Manager:
                     continue
 
                 # Add key for this episode
-                show_dict[str(episode)] = {}
+                key = str(episode)
+                show_dict[key] = {}
 
                 # If source file doesn't exist, add to report
                 if (show.card_class.USES_UNIQUE_SOURCES
                     and not episode.source.exists()):
-                    show_dict[str(episode)]['source'] = episode.source.name
+                    show_dict[key]['source'] = episode.source.name
 
                 # If destination card doesn't exist, add to report
                 if (episode.destination is not None
                     and not episode.destination.exists()):
-                    show_dict[str(episode)]['card'] = episode.destination.name
+                    show_dict[key]['card'] = episode.destination.name
 
                 # If translation is requested and doesn't exist, add
                 missing_translations = [
@@ -509,11 +497,11 @@ class Manager:
                     if not episode.key_is_specified(translation['key'])
                 ]
                 if len(missing_translations) > 0:
-                    show_dict[str(episode)]['translations'] = missing_translations
+                    show_dict[key]['translations'] = missing_translations
 
                 # Delete entry if no missing assets
-                if len(show_dict[str(episode)]) == 0:
-                    del show_dict[str(episode)]
+                if len(show_dict[key]) == 0:
+                    del show_dict[key]
 
             # Report missing logo if archives and summaries are enabled
             if (show.archive and self.preferences.create_summaries
@@ -521,7 +509,8 @@ class Manager:
                 show_dict['logo'] = show.logo.name
 
             # Report missing backdrop if art style is used
-            if (show.watched_style == 'art' or show.unwatched_style == 'art'
+            if ((show.style_set.watched_style_is_art or
+                show.style_set.unwatched_style_is_art)
                 and not show.backdrop.exists()):
                 show_dict['backdrop'] = show.backdrop.name
 

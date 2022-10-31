@@ -5,6 +5,7 @@ from tinydb import TinyDB, where
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
+import modules.global_objects as global_objects
 
 class ShowRecordKeeper:
     """
@@ -22,12 +23,15 @@ class ShowRecordKeeper:
 
     """Attributes of a Show object that should affect a shows record"""
     HASH_RELEVANT_ATTRIBUTES = (
-        'card_class', 'episode_text_format', 'watched_style',
+        'card_class', 'episode_text_format', 'style_set.watched',
         '_Show__episode_map', 'title_languages', 'extras', 'font', 'profile',
     )
 
     """Record database of hashes corresponding to specified shows"""
     RECORD_DATABASE = 'show_records.json'
+
+    """Version of the existing record database"""
+    DATABASE_VERSION = 'show_records_version.txt'
 
 
     def __init__(self, database_directory: Path) -> None:
@@ -42,6 +46,21 @@ class ShowRecordKeeper:
         # Read record database
         database = database_directory / self.RECORD_DATABASE
         self.records = TinyDB(database)
+
+        # Read version of record database
+        version = database_directory / self.DATABASE_VERSION
+        if version.exists():
+            self.version = version.read_text()
+        else:
+            self.version = global_objects.pp.version
+
+        # Delete database if version does not match
+        if self.version != global_objects.pp.version:
+            # database.unlink(missing_ok=True)
+            log.debug(f'Deleted show record database, was version {self.version}')
+
+        # Write current version to file
+        version.write_text(global_objects.pp.version)
 
         # Attempt to read length, error indicates bad database
         try:
@@ -95,7 +114,16 @@ class ShowRecordKeeper:
 
         # Hash each relevant attribute of the Show object
         for attr in self.HASH_RELEVANT_ATTRIBUTES:
-            self.__get_record_hash(hash_obj, getattr(show, attr))
+            # If a nested attribute, iterate through objects
+            if '.' in attr:
+                subs = attr.split('.')
+                obj = getattr(show, subs[0])
+                for sub_attr in subs[1:]:
+                    obj = getattr(obj, sub_attr)
+                self.__get_record_hash(hash_obj, obj)
+            # Singular attribute, get directly from show object
+            else:
+                self.__get_record_hash(hash_obj, getattr(show, attr))
 
         # Return the hash as an integer
         return int.from_bytes(hash_obj.digest(), 'big')

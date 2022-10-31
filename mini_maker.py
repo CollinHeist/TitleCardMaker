@@ -23,6 +23,7 @@ except ImportError:
     exit(1)
 
 # Environment Variables
+ENV_IS_DOCKER = 'TCM_IS_DOCKER'
 ENV_PREFERENCE_FILE = 'TCM_PREFERENCES'
 
 # Default values
@@ -67,6 +68,10 @@ title_card_group.add_argument(
     '--blur',
     action='store_true',
     help='Blur the source image for this card')
+title_card_group.add_argument(
+    '--grayscale',
+    action='store_true',
+    help='Convert the source image to grayscale for this card')
 title_card_group.add_argument(
     '--episode',
     type=str,
@@ -231,6 +236,12 @@ movie_poster_group.add_argument(
     metavar='INDEX',
     help='Index number/text to place behind the title text on the movie poster')
 movie_poster_group.add_argument(
+    '--movie-logo',
+    type=Path,
+    default=None,
+    metavar='LOGO_FILE',
+    help='Logo file to overlay on top of movie poster')
+movie_poster_group.add_argument(
     '--movie-font',
     type=Path,
     default=MoviePosterMaker.FONT,
@@ -346,6 +357,7 @@ season_poster_group.add_argument(
          
 # Parse given arguments
 args, unknown = parser.parse_known_args()
+is_docker = environ.get(ENV_IS_DOCKER, 'false').lower() == 'true'
 
 # Create dictionary of unknown arguments
 arbitrary_data = {}
@@ -353,8 +365,7 @@ if len(unknown) % 2 == 0 and len(unknown) > 1:
     arbitrary_data = {key: val for key, val in zip(unknown[::2], unknown[1::2])}
 
 # Parse preference file for options that might need it
-pp = PreferenceParser(args.preferences)
-if not pp.valid:
+if not (pp := PreferenceParser(args.preferences, is_docker)).valid:
     exit(1)
 set_preference_parser(pp)
 
@@ -388,11 +399,12 @@ if hasattr(args, 'title_card'):
         font_size=float(args.font_size[:-1])/100.0,
         title_color=args.font_color,
         hide_season=(not bool(args.season)),
-        blur=args.blur,
         vertical_shift=args.vertical_shift,
         interline_spacing=args.interline_spacing,
         kerning=float(args.kerning[:-1])/100.0,
         stroke_width=float(args.stroke_width[:-1])/100.0,
+        blur=args.blur,
+        grayscale=args.grayscale,
         **arbitrary_data,
     ).create()
 
@@ -436,6 +448,7 @@ if hasattr(args, 'movie_poster'):
         subtitle=args.movie_subtitle,
         top_subtitle=args.movie_top_subtitle,
         movie_index=args.movie_index,
+        logo=args.movie_logo,
         font=args.movie_font,
         font_color=args.movie_font_color,
         font_size=float(args.movie_font_size[:-1])/100.0,
