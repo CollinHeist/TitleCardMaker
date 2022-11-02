@@ -163,27 +163,3 @@ class MultiEpisode:
         """
 
         self.destination = destination
-
-
-    def make_spoiler_free(self, action: str) -> None:
-        """
-        Modify this Episode to be spoiler-free according to the given spoil
-        action. This updates the spoiler and blur attribute flags, and changes
-        the source Path for the Episode if art is the specified action.
-        
-        Args:
-            action: Spoiler action to update according to.
-        """
-
-        # Return if action isn't blur or art
-        if action == 'ignore':
-            return None
-
-        # Update spoiler and blur attributes
-        self.spoiler = False
-        self.blur = action in ('blur', 'blur_all')
-        self._spoil_type = 'art' if 'art' in action else 'blur'
-
-        # Blurring, set source to blurred source in 
-        if action in ('art', 'art_all'):
-            self.source = self.source.parent / 'backdrop.jpg'
