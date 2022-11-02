@@ -202,7 +202,7 @@ class LandscapeTitleCard(BaseCardType):
         text_command = ' '.join([
             f'convert',
             f'-debug annotate',
-            f'xc: ',
+            f'xc:None',
             f'-font "{self.font}"',
             f'-pointsize {font_size}',
             f'-gravity center',
@@ -243,12 +243,15 @@ class LandscapeTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
+        if not self.add_bounding_box:
+            return []
+
         x_start, y_start, x_end, y_end = coordinates
 
         return [
             # Create blank image 
             f'\( -size 3200x1800',
-            f'xc: ',
+            f'xc:None',
             # Create bounding box
             f'-fill transparent',
             f'-strokewidth 10',
