@@ -160,14 +160,22 @@ class BaseCardType(ImageMaker):
         """
 
         return [
+            # Full sRGB colorspace on source image
             f'-set colorspace sRGB',
+            # Ignore profile conversion warnings
             f'+profile "*"',
+            # Background resize shouldn't fill with any color
             f'-background transparent',
             f'-gravity center',
+            # Fit to title card size
             f'-resize "{self.TITLE_CARD_SIZE}^"',
             f'-extent "{self.TITLE_CARD_SIZE}"',
+            # Optionally blur
             f'-blur {self.BLUR_PROFILE}' if self.blur else '',
+            # Optionally set gray colorspace
             f'-colorspace gray' if self.grayscale else '',
+            # Reset to full colorspace
+            f'-set colorspace sRGB',
         ]
 
 

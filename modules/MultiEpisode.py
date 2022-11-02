@@ -1,8 +1,6 @@
 from copy import deepcopy
 from re import compile as re_compile
 
-from modules.TitleCard import TitleCard
-
 class MultiEpisode:
     """
     This class describes a MultiEpisode, which is a 'type' (practically a 
@@ -14,9 +12,10 @@ class MultiEpisode:
     """Regex to match/modify ETF strings for multi episodes"""
     ETF_REGEX = re_compile(r'^(.*?)(\s*){(episode|abs)_number(.*?)}(.*)')
 
-    __slots__ = ('season_number', 'episode_start', 'episode_end', 'abs_start',
-                 'abs_end', '_first_episode', 'episode_info', 'destination',
-                 'episode_range')
+    __slots__ = (
+        'season_number', 'episode_start', 'episode_end', 'abs_start', 'abs_end',
+        '_first_episode', 'episode_info', 'destination', 'episode_range'
+    )
 
 
     def __init__(self, episodes: list['Episode'], title: 'Title') -> None:

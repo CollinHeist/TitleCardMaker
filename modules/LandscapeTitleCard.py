@@ -243,6 +243,7 @@ class LandscapeTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
+        # No bounding box, return empty command
         if not self.add_bounding_box:
             return []
 
