@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Any
 
 from modules.Debug import log
+from modules.StyleSet import StyleSet
 from modules.TitleCard import TitleCard
 
 class Episode:
@@ -57,7 +58,7 @@ class Episode:
         self.watched = False
         self.blur = False
         self.grayscale = False
-        self.spoil_type = 'spoiled'
+        self.spoil_type = StyleSet.DEFAULT_SPOIL_TYPE
 
 
     def __str__(self) -> str:

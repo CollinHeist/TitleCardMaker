@@ -5,6 +5,9 @@ class StyleSet:
     Set of watched and unwatched styles. 
     """
 
+    """Default spoil type for all episodes without explicit watch statuses"""
+    DEFAULT_SPOIL_TYPE = 'spoiled'
+
     """Mapping of style values to spoil types for Episode objects"""
     SPOIL_TYPE_STYLE_MAP = {
         'art':                      'art',
@@ -41,10 +44,6 @@ class StyleSet:
         # Parse each style
         self.update_watched_style(watched)
         self.update_unwatched_style(unwatched)
-
-        # Unique styles should be stored as unique, not spoiled
-        self.watched = 'unique' if self.watched == 'spoiled' else self.watched
-        self.unwatched = 'unique' if self.unwatched == 'spoiled' else self.unwatched
 
 
     def __repr__(self) -> str:
@@ -85,7 +84,7 @@ class StyleSet:
         """
 
         if (value := self.__standardize(style)) in self.SPOIL_TYPE_STYLE_MAP:
-            self.watched = self.SPOIL_TYPE_STYLE_MAP[value]
+            self.watched = value
         else:
             log.error(f'Invalid style "{style}"')
             self.valid = False
@@ -100,7 +99,7 @@ class StyleSet:
         """
 
         if (value := self.__standardize(style)) in self.SPOIL_TYPE_STYLE_MAP:
-            self.unwatched = self.SPOIL_TYPE_STYLE_MAP[value]
+            self.unwatched = value
         else:
             log.error(f'Invalid style "{style}"')
             self.valid = False
