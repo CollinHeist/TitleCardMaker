@@ -18,7 +18,7 @@ class SeriesYamlWriter:
 
     def __init__(self, file: Path, sync_mode: str='append',
                  compact_mode: bool=True, volume_map: dict[str: str]={},
-                 template: str=None) ->None:
+                 template: str=None, card_directory: Path=None) -> None:
         """
         Initialize an instance of a SeriesYamlWrite object.
 
@@ -29,6 +29,9 @@ class SeriesYamlWriter:
             compact_mode: Whether to write this YAML in compact mode or not.
             volume_map: Mapping of interface paths to corresponding TCM paths.
             template: Template name to add to all synced series.
+            card_directory: Override directory all cards should be directed to,
+                instead of the series-specific directory reported by the sync
+                source.
         """
 
         # Start as valid, Store base attributes
@@ -38,9 +41,10 @@ class SeriesYamlWriter:
 
         # Convert volume map to POSIX (unix) fully resolved directories with /
         try:
-            posix_eq = lambda p: f'{Path(p).resolve().as_posix()}/'
-            self.volume_map = {posix_eq(source): posix_eq(tcm)
+            std = lambda p: str(self.__standardize(p))
+            self.volume_map = {std(source): std(tcm) 
                                for source, tcm in volume_map.items()}
+            log.critical(f'{self.volume_map=}')
         except Exception as e:
             log.error(f'Invalid "volumes" - must all be paths')
             log.debug(f'Error[{e}]')
@@ -56,6 +60,13 @@ class SeriesYamlWriter:
         # Store optional template to add
         self.template = template
 
+        # Standardize card directory, create parent folders
+        if card_directory is None:
+            self.card_directory = None
+        else:
+            self.card_directory = self.__standardize(card_directory)
+            card_directory.mkdir(parents=True, exist_ok=True)
+        
         # Add representer for compact YAML writing
         # Pseudo-class for a flow map - i.e. dictionary
         class flowmap(dict): pass
@@ -77,28 +88,45 @@ class SeriesYamlWriter:
                 f'{self.compact_mode=}, {self.volume_map=}>')
 
 
-    def __convert_path(self, path: str) -> str:
+    @staticmethod
+    def __standardize(path: 'str | Path') -> Path:
+        return (Path.cwd() / Path(path)).resolve()
+    
+    
+    def __convert_path(self, path: str, *, media: bool) -> str:
         """
         Convert the given path string to its TCM-equivalent by using this 
-        object's volume map.
+        object's volume map and card (override) directory.
 
         Args:
             path: Path (as string) to convert.
+            media: (Keyword only) Whether the path being converted corresponds
+                to a specific piece of media.
 
         Returns:
-            Converted Path (as string). If no conversion was applied, then the 
+            Converted Path (as string). If this object was initialized with an
+            override card directory, the path (or base if media) is modified to
+            that override directory. If no conversion was applied, then the 
             original path is returned.
         """
 
-        # Use volume map to convert path to TCM path
-        posix_path = Path(path).resolve().as_posix()
-        for source_base, tcm_base in self.volume_map.items():
-            # Apply substitution on their POSIX equivalent strings
-            if posix_path.startswith(source_base):
-                return posix_path.replace(source_base, tcm_base)
+        # An override directory has been provided
+        if self.card_directory is not None:
+            # Path is media, only substitute up to parent directory
+            if media:
+                return str(self.card_directory / Path(path).name)
+            # Non-media, override entire directory 
+            else:
+                return str(self.card_directory)
 
-        # No defined substituion, return original path
-        return path
+        # Use volume map to convert (standardized) path to TCM path
+        standard_path = str(self.__standardize(path))
+        for source_base, tcm_base in self.volume_map.items():
+            if standard_path.startswith(source_base):
+                return standard_path.replace(source_base, tcm_base)
+
+        # No defined substitution, return original path
+        return standard_path
 
 
     def __apply_exclusion(self, yaml: dict[str: dict[str: str]],
@@ -342,13 +370,14 @@ class SeriesYamlWriter:
         # Generate YAML to write
         series_yaml = {}
         for series_info, sonarr_path in all_series:
-            # Use volume map to convert Sonarr path to TCM path
-            sonarr_path = self.__convert_path(sonarr_path)
-
+            # Convert Sonarr path to TCM path
+            original_path = sonarr_path
+            sonarr_path = self.__convert_path(sonarr_path, media=True)
+            
             # Attempt to find matching Plex library
             library = None
             for tcm_base, library_name in plex_libraries.items():
-                if tcm_base in sonarr_path:
+                if original_path.startswith(tcm_base):
                     library = library_name
                     break
 
@@ -375,6 +404,10 @@ class SeriesYamlWriter:
         # Create libraries YAML
         libraries_yaml = {}
         for path, library in plex_libraries.items():
+            if self.card_directory is None:
+                path = self.__convert_path(path, media=False)
+            else:
+                path = str(self.card_directory)
             libraries_yaml[library] = {'path': path}
 
         # Create end-YAML as combination of series and libraries
@@ -399,7 +432,7 @@ class SeriesYamlWriter:
             plex_libraries: Dictionary of TCM paths to their corresponding
                 libraries.
             required_tags: List of tags to filter the Sonarr sync from.
-            exclusions: List of labelled exclusions to apply to sync.
+            exclusions: List of labeled exclusions to apply to sync.
             monitored_only: Whether to only sync monitored series from Sonarr.
             downloaded_only: Whether to only sync downloaded series from Sonarr.
         """
@@ -451,21 +484,24 @@ class SeriesYamlWriter:
         libraries_yaml = {}
         for library, paths in libraries.items():
             # If this library has multiple directories, create entry for each
-            if len(paths) > 1:
+            # if no override card directory is provided
+            if len(paths) > 1 and self.card_directory is None:
                 for index, path in enumerate(paths):
                     libraries_yaml[f'{library} - Directory {index+1}'] = {
-                        'path': self.__convert_path(path),
+                        'path': self.__convert_path(path, media=False),
                         'plex_name': library,
                     }
             # Library only has one directory, add directly
             else:
-                libraries_yaml[library]={'path':self.__convert_path(paths[0])}
+                libraries_yaml[library] = {
+                    'path': self.__convert_path(paths[0], media=False)
+                }
 
         # Create series YAML
         series_yaml = {}
         for series_info, plex_path, library in all_series:
-            # Use volume map to convert Plex path to TCM path
-            series_path = self.__convert_path(plex_path)
+            # Convert Plex path to TCM path
+            series_path = self.__convert_path(plex_path, media=True)
 
             # If part of a multi-directory library, use adjusted library name
             if libraries_yaml.get(library) is None:

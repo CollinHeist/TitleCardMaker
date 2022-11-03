@@ -190,6 +190,7 @@ class PreferenceParser(YamlReader):
                 sync_yaml._get('compact_mode', type_=bool, default=True),
                 sync_yaml._get('volumes', type_=dict, default={}),
                 sync_yaml._get('add_template', type_=str, default=None),
+                sync_yaml._get('card_directory', type_=Path, default=None),
             )
 
             # If invalid after initialization, error and exit
