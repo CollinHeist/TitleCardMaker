@@ -14,7 +14,6 @@ from modules.PlexInterface import PlexInterface
 from modules.Profile import Profile
 from modules.SeasonPosterSet import SeasonPosterSet
 from modules.SeriesInfo import SeriesInfo
-from modules.StyleSet import StyleSet
 from modules.TitleCard import TitleCard
 from modules.Title import Title
 from modules.WebInterface import WebInterface

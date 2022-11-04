@@ -269,8 +269,8 @@ class Profile:
             f'{two_digit_prefix_group}{one_to_99_group})'
         )
 
-        # Full regex for any number followed by colon, comma, or dash (+spaces)
-        full_regex = rf'{define_all}(?&one_to_99)\s*[:,-]?\s*'
+        # Full regex for any number followed by colon, comma, dash, or period
+        full_regex = rf'{define_all}(?&one_to_99)\s*[:,.-]?\s*'
 
         # Look for number indicator to replace with above regex
         format_string = self.episode_text_format
