@@ -68,7 +68,7 @@ class PreferenceParser(YamlReader):
             log.critical(f'Preference file missing required options/source '
                          f'attribute')
             exit(1)
-        self.source_directory = TitleCard.sanitize_full_directory(value)
+        self.source_directory = TitleCard.sanitize_full_directory(True, value)
         
         # Setup default values that can be overwritten by YAML
         self.series_files = []

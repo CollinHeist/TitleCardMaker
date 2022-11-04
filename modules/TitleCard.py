@@ -3,6 +3,7 @@ from re import match, sub, IGNORECASE
 
 from modules.Debug import log
 import modules.global_objects as global_objects
+import os
 
 # Default CardType classes
 from modules.AnimeTitleCard import AnimeTitleCard
@@ -114,7 +115,7 @@ class TitleCard:
 
 
     @staticmethod
-    def sanitize_full_directory(path: str) -> Path:
+    def sanitize_full_directory(prefs, path: str) -> Path:
         """
         Sanitize the entire path and remove all invalid characters. This is
         different to sanitizing a name as '/' and '\' characters aren't
@@ -130,13 +131,17 @@ class TitleCard:
         # Create Path object from this path
         path_ = Path(path)
 
+        # Set windows to true if running on Windows
+        windows = os.name == 'nt'
         # Don't sanitize root (either drive or /)
-        root = path_.resolve().anchor
-
+        root = path_.anchor if windows and not prefs else path_.resolve().anchor
         # Sanitize each part (folder) individually
-        parts = (TitleCard.sanitize_name(part)
+        if windows and not prefs:
+            parts = (TitleCard.sanitize_name(part)
+                 for part in path_.parts[1:])
+        else:
+            parts = (TitleCard.sanitize_name(part)
                  for part in path_.resolve().parts[1:])
-        
         return Path(root, *parts)
 
 
