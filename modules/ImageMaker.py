@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from re import match
+from re import findall, match
+from typing import Literal
 
 from modules.Debug import log
 from modules.ImageMagickInterface import ImageMagickInterface
@@ -85,6 +86,29 @@ class ImageMaker(ABC):
         except Exception as e:
             log.debug(f'Cannot identify dimensions of {image.resolve()}')
             return {'width': 0, 'height': 0}
+
+
+    def get_text_dimensions(self, text_command: list[str], *,
+                            width: Literal['sum', 'max'],
+                            height: Literal['sum', 'max']) -> dict[str: int]:
+
+        text_command = ' '.join([
+            f'convert',
+            f'-debug annotate',
+            # f'xc:None',
+            *text_command,
+            f'null: 2>&1',
+        ])
+
+        # Execute dimension command, parse output
+        metrics = self.image_magick.run_get_output(text_command)
+        widths = map(int, findall(r'Metrics:.*width:\s+(\d+)', metrics))
+        heights = map(int, findall(r'Metrics:.*height:\s+(\d+)', metrics))
+
+        return {
+            'width':  sum(widths)//2  if width  == 'sum' else max(widths),
+            'height': sum(heights)//2 if height == 'sum' else max(heights),
+        }
 
 
     @staticmethod
