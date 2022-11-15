@@ -1,10 +1,10 @@
-from pathlib import Path, WindowsPath
+from pathlib import Path
 from re import match, sub, IGNORECASE
 
 from modules.Debug import log
 import modules.global_objects as global_objects
 
-# Default CardType classes
+# Built-in CardType classes
 from modules.AnimeTitleCard import AnimeTitleCard
 from modules.LandscapeTitleCard import LandscapeTitleCard
 from modules.LogoTitleCard import LogoTitleCard

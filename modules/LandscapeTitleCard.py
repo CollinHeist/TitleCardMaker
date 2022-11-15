@@ -156,7 +156,7 @@ class LandscapeTitleCard(BaseCardType):
             ]
 
         return [
-            # Create image the size of the title card
+            # Create image the size of the title card filled with darken color
             f'\( -size "{self.TITLE_CARD_SIZE}"',
             f'xc:"{self.DARKEN_COLOR}" \)',
             # Compose atop of source image
