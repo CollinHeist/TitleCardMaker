@@ -179,6 +179,29 @@ class BaseCardType(ImageMaker):
         ]
 
 
+    @property
+    def style(self) -> list[str]:
+        """
+        ImageMagick commands to apply any style modifiers to an image.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        return [
+            # Full sRGB colorspace on source image
+            f'-set colorspace sRGB',
+            # Ignore profile conversion warnings
+            f'+profile "*"',
+            # Optionally blur
+            f'-blur {self.BLUR_PROFILE}' if self.blur else '',
+            # Optionally set gray colorspace
+            f'-colorspace gray' if self.grayscale else '',
+            # Reset to full colorspace
+            f'-set colorspace sRGB',
+        ]
+
+
     @abstractmethod
     def create(self) -> None:
         """
