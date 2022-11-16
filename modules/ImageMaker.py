@@ -95,7 +95,6 @@ class ImageMaker(ABC):
         text_command = ' '.join([
             f'convert',
             f'-debug annotate',
-            # f'xc:None',
             *text_command,
             f'null: 2>&1',
         ])
@@ -105,10 +104,15 @@ class ImageMaker(ABC):
         widths = map(int, findall(r'Metrics:.*width:\s+(\d+)', metrics))
         heights = map(int, findall(r'Metrics:.*height:\s+(\d+)', metrics))
 
-        return {
-            'width':  sum(widths)//2  if width  == 'sum' else max(widths),
-            'height': sum(heights)//2 if height == 'sum' else max(heights),
-        }
+        try:
+            # Process according to given methods
+            return {
+                'width':  sum(widths)//2  if width  == 'sum' else max(widths),
+                'height': sum(heights)//2 if height == 'sum' else max(heights),
+            }
+        except ValueError as e:
+            log.debug(f'Cannot identify text dimensions - {e}')
+            return {'width': 0, 'height': 0}
 
 
     @staticmethod

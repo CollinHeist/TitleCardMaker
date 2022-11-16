@@ -49,7 +49,6 @@ class FontValidator:
         # If character has been checked, return status
         if self.__db.contains((where('file') == font_filepath) &
                               (where('character') == character)):
-            # Get entry, return status
             return self.__db.get((where('file') == font_filepath) &
                                  (where('character') == character))['status']
 

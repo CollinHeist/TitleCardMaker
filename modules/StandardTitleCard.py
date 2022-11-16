@@ -1,5 +1,4 @@
 from pathlib import Path
-from re import findall
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log

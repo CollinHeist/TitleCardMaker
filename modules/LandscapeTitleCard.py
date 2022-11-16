@@ -198,11 +198,8 @@ class LandscapeTitleCard(BaseCardType):
         if not self.add_bounding_box:
             return 0, 0, 0, 0
 
-        # Get (approximate) dimensions of title
-        text_command = ' '.join([
-            f'convert',
-            f'-debug annotate',
-            f'xc:None',
+        # Text-relevant commands
+        text_command = [
             f'-font "{self.font}"',
             f'-pointsize {font_size}',
             f'-gravity center',
@@ -211,13 +208,12 @@ class LandscapeTitleCard(BaseCardType):
             f'-interword-spacing 40',
             f'-fill "{self.title_color}"',
             f'label:"{self.title}"',
-            f'null: 2>&1',
-        ])
+        ]
 
-        # Execute dimension command, parse output
-        metrics = self.image_magick.run_get_output(text_command)
-        width = max(map(int, findall(r'Metrics:.*width:\s+(\d+)', metrics)))
-        height = sum(map(int,findall(r'Metrics:.*height:\s+(\d+)', metrics)))//2
+        # Get dimensions of text - since text is stacked, do max/sum operations
+        dimensions = self.get_text_dimensions(text_command,
+                                              width='max', height='sum')
+        width, height = dimensions['width'], dimensions['height']
         
         # Get start coordinates of the bounding box
         x_start, x_end = 3200/2 - width/2, 3200/2 + width/2
