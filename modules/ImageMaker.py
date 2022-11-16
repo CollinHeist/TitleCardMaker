@@ -91,6 +91,28 @@ class ImageMaker(ABC):
     def get_text_dimensions(self, text_command: list[str], *,
                             width: Literal['sum', 'max'],
                             height: Literal['sum', 'max']) -> dict[str: int]:
+        """
+        Get the dimensions of the text produced by the given text command. For
+        'width' and 'height' arguments, if 'max' then the maximum value of the
+        text is utilized, while 'sum' will add each value. For example, if the
+        given text command produces text like:
+
+            Top Line Text
+            Bottom Text
+
+        Specifying width='sum', will add the widths of the two lines (not very
+        meaningful), width='max' will return the maximum width of the two lines.
+        Specifying height='sum' will return the total height of the text, and
+        height='max' will return the tallest single line of text.
+
+        Args:
+            text_command: ImageMagick commands to produce text(s) to measure.
+            width: How to process the width of the produced text(s).
+            height: How to process the height of the produced text(s).
+
+        Returns:
+            Dictionary of dimensions whose keys are 'width' and 'height'.
+        """
 
         text_command = ' '.join([
             f'convert',

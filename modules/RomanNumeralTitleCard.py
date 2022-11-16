@@ -43,6 +43,7 @@ class RomanNumeralTitleCard(BaseCardType):
     BLUR_PROFILE = '0x30'
 
     """Default fonts and color for series count text"""
+    BACKGROUND_COLOR = 'black'
     ROMAN_NUMERAL_FONT = REF_DIRECTORY / 'sinete-regular.otf'
     ROMAN_NUMERAL_TEXT_COLOR = '#AE2317'
 
@@ -53,7 +54,7 @@ class RomanNumeralTitleCard(BaseCardType):
 
     def __init__(self, output_file: Path, title: str, episode_text: str,
                  title_color: str, episode_number: int=1, blur: bool=False, 
-                 grayscale: bool=False, background: str='black', 
+                 grayscale: bool=False, background: str=BACKGROUND_COLOR, 
                  roman_numeral_color: str=ROMAN_NUMERAL_TEXT_COLOR,
                  **kwargs) -> None:
         """
@@ -208,7 +209,7 @@ class RomanNumeralTitleCard(BaseCardType):
             False, as custom fonts aren't used.
         """
 
-        return False
+        return ((font.color != RomanNumeralTitleCard.TITLE_COLOR))
 
 
     @staticmethod
