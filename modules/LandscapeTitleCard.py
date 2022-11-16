@@ -1,5 +1,5 @@
 from pathlib import Path
-from re import findall
+from typing import Any
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
@@ -266,6 +266,25 @@ class LandscapeTitleCard(BaseCardType):
             # Add bounding box and shadow to base image
             f'-composite',
         ]
+
+
+    @staticmethod
+    def modify_extras(extras: dict[str, Any], custom_font: bool,
+                      custom_season_titles: bool) -> None:
+        """
+        Modify the given extras base on whether font or season titles are
+        custom.
+
+        Args:
+            extras: Dictionary to modify.
+            custom_font: Whether the font are custom.
+            custom_season_titles: Whether the season titles are custom.
+        """
+
+        # Generic font, reset box adjustments
+        if not custom_font:
+            if 'box_adjustments' in extras:
+                extras['box_adjustments'] = '0 0 0 0'
 
     
     @staticmethod

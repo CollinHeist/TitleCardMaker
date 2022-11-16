@@ -1,8 +1,8 @@
 from regex import match, IGNORECASE
+from typing import Any
 
 from modules.Debug import log
 from modules.MultiEpisode import MultiEpisode
-import modules.global_objects as global_objects
 
 class Profile:
     """
@@ -131,6 +131,21 @@ class Profile:
         # If the new profile has generic seasons, reset EpisodeMap
         if not self.__use_custom_seasons:
             self.__episode_map.reset()
+
+
+    def convert_extras(self, card_type: 'BaseCardType',
+                       extras: dict[str, Any]) -> None:
+        """
+        Convert the given extras according to this profile's rules.
+
+        Args:
+            card_type: BaseCardType class to call `modify_extras` on.
+            extras: Dictionary of extras to convert/modify.
+        """
+
+        card_type.modify_extras(
+            extras, self.__use_custom_font, self.__use_custom_seasons
+        )
 
 
     def get_season_text(self, episode_info: 'EpisodeInfo') -> str:

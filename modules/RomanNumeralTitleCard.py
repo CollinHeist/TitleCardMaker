@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
@@ -194,6 +195,28 @@ class RomanNumeralTitleCard(BaseCardType):
             f'-fill "{self.title_color}"',            
             f'-annotate +0+0 "{self.title}"',
         ]
+
+
+    @staticmethod
+    def modify_extras(extras: dict[str, Any], custom_font: bool,
+                      custom_season_titles: bool) -> None:
+        """
+        Modify the given extras base on whether font or season titles are
+        custom.
+
+        Args:
+            extras: Dictionary to modify.
+            custom_font: Whether the font are custom.
+            custom_season_titles: Whether the season titles are custom.
+        """
+
+        # Generic font, reset roman numeral color and background
+        if not custom_font:
+            if 'background' in extras:
+                extras['background'] = RomanNumeralTitleCard.BACKGROUND_COLOR
+            if 'roman_numeral_color' in extras:
+                extras['roman_numeral_color'] =\
+                    RomanNumeralTitleCard.ROMAN_NUMERAL_TEXT_COLOR
 
 
     @staticmethod

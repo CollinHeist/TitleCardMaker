@@ -1,5 +1,6 @@
 from pathlib import Path
 from re import match
+from typing import Any
 
 from num2words import num2words
 
@@ -233,6 +234,26 @@ class OlivierTitleCard(BaseCardType):
             f'-strokewidth 1',
             f'-annotate +{325+offset}-140 "{self.episode_text}"',
         ]
+
+
+    @staticmethod
+    def modify_extras(extras: dict[str, Any], custom_font: bool,
+                      custom_season_titles: bool) -> None:
+        """
+        Modify the given extras base on whether font or season titles are
+        custom.
+
+        Args:
+            extras: Dictionary to modify.
+            custom_font: Whether the font are custom.
+            custom_season_titles: Whether the season titles are custom.
+        """
+
+        # Generic font, reset custom episode text color
+        if not custom_font:
+            if 'episode_text_color' in extras:
+                extras['episode_text_color'] =\
+                    OlivierTitleCard.EPISODE_TEXT_COLOR
 
 
     @staticmethod
