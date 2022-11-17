@@ -136,9 +136,6 @@ class BaseCardType(ImageMaker):
             extras: Dictionary to modify.
             custom_font: Whether the font are custom.
             custom_season_titles: Whether the season titles are custom.
-
-        Returns:
-            _description_
         """
 
         pass

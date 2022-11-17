@@ -330,7 +330,7 @@ class LandscapeTitleCard(BaseCardType):
         Make the necessary ImageMagick and system calls to create this object's
         defined title card.
         """
-
+        
         # If title is 0-length, just stylize
         if len(self.title.strip()) == 0:
             self.__add_no_title()
