@@ -101,3 +101,23 @@ class FontValidator:
                 log.warning(f'Character "{char}" missing from "{font_filepath}"')
 
         return all(has_characters)
+
+
+    def get_missing_characters(self, font_filepath: str) -> set[str]:
+        """
+        Get a set of all (known) missing characters for the given font.
+
+        Args:
+            font_filepath: Filepath to the font being evaluated.
+
+        Returns:
+            Set of all characters present in this object's database that are
+            marked as missing for the given font.
+        """
+
+        # Get all missing entries
+        missing = self.__db.search((where('file') == font_filepath) &
+                                   (where('status') == False))
+
+        # Return set of just characters from entries
+        return {entry['character'] for entry in missing}

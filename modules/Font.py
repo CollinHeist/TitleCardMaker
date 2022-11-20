@@ -23,8 +23,9 @@ class Font:
 
     __slots__ = (
         'valid', '__yaml', '__card_class', '__series_info', '__validator',
-        '__validate', 'color', 'size', 'file', 'replacements', 'case_name',
-        'case', 'vertical_shift', 'interline_spacing', 'kerning', 'stroke_width'
+        '__validate', 'color', 'size', 'file', 'replacements', 'delete_missing',
+        'case_name', 'case', 'vertical_shift', 'interline_spacing', 'kerning',
+        'stroke_width',
     )
     
 
@@ -72,7 +73,9 @@ class Font:
     @property
     def custom_hash(self) -> str:
         """Custom string to hash for this object for record keeping"""
+
         font_file_name = Path(self.file).name
+
         return (f'{self.color}|{self.size}|{font_file_name}|{self.replacements}'
                 f'|{self.case_name}|{self.vertical_shift}'
                 f'|{self.interline_spacing}|{self.kerning}|{self.stroke_width}')
@@ -129,12 +132,13 @@ class Font:
             else:
                 self.__error('file', value, 'no font file found')
 
-        # Replacements
+        # Replacements and delete_missing
         if (value := self.__yaml.get('replacements')) is not None:
             if not isinstance(value, dict):
                 self.__error('replacements', value, 'must be character set')
             else:
                 # Convert each replacement to string, exit if impossible
+                self.delete_missing = bool(value.pop('delete_missing', True))
                 self.replacements = {}
                 for in_, out_ in value.items():
                     try:
@@ -193,6 +197,7 @@ class Font:
         self.size = 1.0
         self.file = self.__card_class.TITLE_FONT
         self.replacements = self.__card_class.FONT_REPLACEMENTS
+        self.delete_missing = True
         self.case_name = self.__card_class.DEFAULT_FONT_CASE
         self.case = self.__card_class.CASE_FUNCTIONS[self.case_name]
         self.vertical_shift = 0
@@ -222,21 +227,33 @@ class Font:
         }
 
 
-    def validate_title(self, title: 'Title') -> bool:
+    def validate_title(self, title: str) -> tuple[str, bool]:
         """
-        Return whether all the characters of the given Title are valid for this
-        font. This uses the global FontValidator object.
+        Return whether all the characters of the given title are valid for this
+        font. This uses this object's FontValidator object.
         
         Args:
             title: The title (string) being validated.
         
         Returns:
-            True if all the characters of the given Title are contained within
-            this font, or if validation is not enabled. False otherwise.
+            Tuple of the modified title, and whether the title is now valid.
+            The title is only modified if missing deletion is enabled (and
+            applied); validity is True if all the characters of the given title
+            are contained within this font, or if validation is not enabled and
+            is False otherwise.
         """
 
         # Validate title against this font
-        validity = self.__validator.validate_title(self.file, title)
+        valid = self.__validator.validate_title(self.file, title)
+
+        # If invalid, and missing characters are set to be deleted, modify title
+        if not valid and self.delete_missing:
+            # Delete each missing character from title
+            for missing in self.__validator.get_missing_characters(self.file):
+                title = title.replace(missing, '')
+                
+            # Return modified title, and title is now guaranteed to be valid
+            return title, True
 
         # If validation isn't enabled, ignore result and return True
-        return validity if self.__validate else True
+        return title, (valid if self.__validate else True)

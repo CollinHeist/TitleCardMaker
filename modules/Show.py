@@ -910,7 +910,10 @@ class Show(YamlReader):
             )
 
             # Skip if title is invalid for font
-            if not self.font.validate_title(title_card.converted_title):
+            title_card.converted_title, valid = self.font.validate_title(
+                title_card.converted_title
+            )
+            if not valid:
                 log.warning(f'Invalid font for {episode} of {self}')
                 continue
 
