@@ -301,7 +301,9 @@ class EpisodeMap:
         # Index by season
         if self.__index_by == 'season':
             if episode_info.season_number in target:
-                return target[episode_info.season_number]
+                # Format this season's title with the episode characteristics
+                base_title = target[episode_info.season_number]
+                return base_title.format(**episode_info.characteristics)
 
             return default(episode_info=episode_info)
         # Index by index

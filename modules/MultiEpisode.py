@@ -1,5 +1,6 @@
 from copy import deepcopy
 from re import compile as re_compile
+from typing import Any
 
 class MultiEpisode:
     """
@@ -115,6 +116,26 @@ class MultiEpisode:
             setattr(self._first_episode, attribute, value)
         
         
+    @property
+    def characteristics(self) -> dict[str, Any]:
+        """
+        Get the characteristics of this object for formatting.
+
+        Returns:
+            Dictionary of characteristics that define this object. Keys are the
+            start/end indices of the range, and the extra characteristics of the
+            first episode.
+        """
+        
+        return {
+            'season_number': self.season_number,
+            'episode_start': self.episode_start,
+            'episode_end': self.episode_end,
+            'abs_start': self.abs_start,
+            'abs_end': self.abs_end,
+        } | self._first_episode.extra_characteristics
+
+    
     @staticmethod
     def modify_format_string(episode_format_string: str) -> str:
         """

@@ -74,8 +74,8 @@ class Font:
         """Custom string to hash for this object for record keeping"""
         font_file_name = Path(self.file).name
         return (f'{self.color}|{self.size}|{font_file_name}|{self.replacements}'
-                f'|{self.case_name}|{self.vertical_shift}|'
-                f'{self.interline_spacing}|{self.kerning}|{self.stroke_width}')
+                f'|{self.case_name}|{self.vertical_shift}'
+                f'|{self.interline_spacing}|{self.kerning}|{self.stroke_width}')
 
 
     def __error(self, attribute: str, value: str, description: str=None) ->None:
@@ -228,7 +228,7 @@ class Font:
         font. This uses the global FontValidator object.
         
         Args:
-            title: The Title being validated.
+            title: The title (string) being validated.
         
         Returns:
             True if all the characters of the given Title are contained within

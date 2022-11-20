@@ -110,7 +110,7 @@ class TitleCard:
             grayscale=episode.grayscale,
             **profile.font.get_attributes(),
             **extra_characteristics,
-            **self.episode.episode_info.episode_characteristics,
+            **self.episode.episode_info.indices,
         )
         
         # File associated with this card is the episode's destination

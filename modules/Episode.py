@@ -76,6 +76,20 @@ class Episode:
         return f'<Episode {attrs}>'
 
 
+    @property
+    def characteristics(self) -> dict[str, Any]:
+        """
+        Get the characteristics of this object for formatting.
+
+        Returns:
+            Dictionary of characteristics that define this object. Keys are the
+            start/end indices of the range, and the extra characteristics of the
+            first episode.
+        """
+
+        return self.episode_info.characteristics | self.extra_characteristics
+
+    
     def key_is_specified(self, key: str) -> bool:
         """
         Return whether the given key was present in the initialization for this
