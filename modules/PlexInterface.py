@@ -341,12 +341,12 @@ class PlexInterface:
 
             # Get all Shows in this library
             for show in library.all():
-                # Skip show if has no year
+                # Skip show if it has no year
                 if show.year is None:
                     log.warning(f'Series {show.title} has no year - skipping')
                     continue
 
-                # Skip show if has no locations.. somehow..
+                # Skip show if it has no locations.. somehow..
                 if len(show.locations) == 0:
                     log.warning(f'Series {show.title} has no files - skipping')
                     continue

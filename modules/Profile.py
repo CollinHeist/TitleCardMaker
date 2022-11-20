@@ -24,7 +24,7 @@ class Profile:
         
         Args:
             font: The Font for this profile.
-            hide_seasons: Whether to hide/show seasons.
+            hide_seasons: Whether to hide season text.
             episode_map: EpisodeMap for the series.
             episode_text_format: The episode text format string.
         """

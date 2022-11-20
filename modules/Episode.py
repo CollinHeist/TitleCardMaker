@@ -147,7 +147,8 @@ class Episode:
         Delete the title card for this Episode.
 
         Args:
-            reason: Optional string to log why the card is being deleted.
+            reason: (Keyword only) Optional string to log why the card is being
+                deleted.
 
         Returns:
             True if card was deleted, False otherwise.

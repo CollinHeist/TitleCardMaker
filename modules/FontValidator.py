@@ -94,7 +94,7 @@ class FontValidator:
             lambda char: self.__has_character(font_filepath, char),
             (title := title.replace('\n', ''))
         ))
-
+        
         # Log all missing characters
         for char, has_character in zip(title, has_characters):
             if not has_character:

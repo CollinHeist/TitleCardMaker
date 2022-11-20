@@ -90,7 +90,7 @@ class ImageMaker(ABC):
 
     def get_text_dimensions(self, text_command: list[str], *,
                             width: Literal['sum', 'max'],
-                            height: Literal['sum', 'max']) -> dict[str: int]:
+                            height: Literal['sum', 'max']) -> dict[str, int]:
         """
         Get the dimensions of the text produced by the given text command. For
         'width' and 'height' arguments, if 'max' then the maximum value of the
@@ -117,6 +117,7 @@ class ImageMaker(ABC):
         text_command = ' '.join([
             f'convert',
             f'-debug annotate',
+            f'xc: ', # Create blank image if -annotate is used
             *text_command,
             f'null: 2>&1',
         ])
@@ -127,10 +128,13 @@ class ImageMaker(ABC):
         heights = map(int, findall(r'Metrics:.*height:\s+(\d+)', metrics))
 
         try:
+            # Label text produces duplicate Metrics
+            sum_ = lambda v: sum(v)//(2 if ' label:"' in text_command else 1)
+
             # Process according to given methods
             return {
-                'width':  sum(widths)//2  if width  == 'sum' else max(widths),
-                'height': sum(heights)//2 if height == 'sum' else max(heights),
+                'width':  sum_(widths)  if width  == 'sum' else max(widths),
+                'height': sum_(heights) if height == 'sum' else max(heights),
             }
         except ValueError as e:
             log.debug(f'Cannot identify text dimensions - {e}')
@@ -144,7 +148,8 @@ class ImageMaker(ABC):
 
         Args:
             image: Path to the image to reduce the file size of.
-            quality: Quality of the 
+            quality: Quality of the reduction. 100 being no reduction, 0 being
+                complete reduction. Passed to ImageMagick -quality.
 
         Returns:
             Path to the created image.
@@ -167,7 +172,7 @@ class ImageMaker(ABC):
             global_objects.pp.imagemagick_timeout,
         )
 
-        # Command to convert essentially downsample the image
+        # Downsample and reduce quality of source image
         command = ' '.join([
             f'convert',
             f'"{image.resolve()}"',

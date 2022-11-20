@@ -7,8 +7,8 @@ import modules.global_objects as global_objects
 class Font:
     """
     This class describes a font and all of its configurable attributes. Notably,
-    it's color, size, file, replacements, case function, vertical offset, and 
-    interline spacing.
+    it's color, size, file, replacements, case function, vertical offset, 
+    interline spacing, kerning, and stroke width.
     """
 
     """Valid YAML attributes to customize a font"""
@@ -17,7 +17,7 @@ class Font:
         'vertical_shift', 'interline_spacing', 'kerning', 'stroke_width',
     )
     
-    """Compiled regex to identify percentage values for font scalars"""
+    """Compiled regex to identify percentage values for scalars"""
     _PERCENT_REGEX = re_compile(r'^-?\d+\.?\d*%$')
     _PERCENT_REGEX_POSITIVE = re_compile(r'^\d+\.?\d*%$')
 
@@ -188,7 +188,7 @@ class Font:
         # Whether to validate for this font
         self.__validate = global_objects.pp.validate_fonts
 
-        # Title card characteristics
+        # Default itle card characteristics and font values
         self.color = self.__card_class.TITLE_COLOR
         self.size = 1.0
         self.file = self.__card_class.TITLE_FONT
