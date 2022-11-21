@@ -174,7 +174,7 @@ class RomanNumeralTitleCard(BaseCardType):
             f'-pointsize {font_size}',
             f'-gravity center',
             f'-interline-spacing {interline_spacing}',
-            f'-annotate +0+0 "{self.roman_numeral}"',
+            f'-annotate +0-30 "{self.roman_numeral}"',
         ]
 
 

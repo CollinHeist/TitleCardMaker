@@ -117,7 +117,7 @@ class ImageMaker(ABC):
         text_command = ' '.join([
             f'convert',
             f'-debug annotate',
-            f'xc: ', # Create blank image if -annotate is used
+            f'' if '-annotate ' in ' '.join(text_command) else f'xc: ',
             *text_command,
             f'null: 2>&1',
         ])
