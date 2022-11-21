@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 from tqdm import tqdm
 
@@ -122,7 +122,7 @@ class PreferenceParser(YamlReader):
         self.tautulli_script_timeout = TautulliInterface.DEFAULT_SCRIPT_TIMEOUT
         self.imagemagick_container = None
         self.imagemagick_timeout = ImageMagickInterface.COMMAND_TIMEOUT_SECONDS
-
+        
         # Modify object attributes based off YAML, updating validiry
         self.__parse_yaml()
         self.__parse_sync()
@@ -143,7 +143,11 @@ class PreferenceParser(YamlReader):
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
-        return f'<PreferenceParser {self.file=}, {self.valid=}>'
+        attributes = ', '.join(f'{attr}={getattr(self, attr)!r}'
+                               for attr in self.__dict__
+                               if not attr.startswith('_'))
+
+        return f'<PreferenceParser {attributes}>'
 
 
     def __determine_imagemagick_prefix(self) -> None:
@@ -403,7 +407,7 @@ class PreferenceParser(YamlReader):
         if (value := self._get('plex', 'filesize_limit', 
                                type_=self.filesize_as_bytes)) is not None:
             self.plex_filesize_limit = value
-            log.debug(f'Plex filesize limit is {self.plex_filesize_limit} bytes')
+
             if value > self.filesize_as_bytes('10 MB'):
                 log.warning(f'Plex will reject all images larger than 10 MB')
 
@@ -485,7 +489,7 @@ class PreferenceParser(YamlReader):
             self.tautulli_update_script = script
             self.use_tautulli = True
         else:
-            log.critical(f'Tautulli preferences must contain "url", "api_key", '
+            log.critical(f'tautulli preferences must contain "url", "api_key", '
                          f'and "update_script"')
             self.valid = False
 
@@ -512,7 +516,8 @@ class PreferenceParser(YamlReader):
         if not self._is_specified('imagemagick'):
             return None
 
-        if (value := self._get('imagemagick', 'container', type_=str)) != None:
+        if (value := self._get('imagemagick', 'container',
+                               type_=str)) is not None:
             self.imagemagick_container = value
 
         if (value := self._get('imagemagick', 'timeout',type_=int)) is not None:
@@ -539,7 +544,7 @@ class PreferenceParser(YamlReader):
         pass
 
 
-    def __validate_libraries(self, library_yaml: dict[str: str],
+    def __validate_libraries(self, library_yaml: dict[str, str],
                              file: Path) -> bool:
         """
         Validate the given libraries YAML.
@@ -575,7 +580,7 @@ class PreferenceParser(YamlReader):
         return True
 
 
-    def __validate_fonts(self, font_yaml: dict[str: 'str | float'],
+    def __validate_fonts(self, font_yaml: dict[str, 'str | float'],
                          file: Path) -> bool:
         """
         Validate the given font YAML.
@@ -613,7 +618,7 @@ class PreferenceParser(YamlReader):
 
     
     def __apply_template(self, templates: dict[str, Template],
-                         series_yaml: dict, series_name: str) -> bool:
+                         series_yaml: dict[str, Any], series_name: str) -> bool:
         """
         Apply the correct Template object (if indicated) to the given series
         YAML. This effectively "fill out" the indicated template, and updates
@@ -661,9 +666,10 @@ class PreferenceParser(YamlReader):
         return template.apply_to_series(series_name, series_yaml)
 
 
-    def __finalize_show_yaml(self, show_name: str, show_yaml: dict,
-                             templates: list[Template], library_map: dict,
-                             font_map: dict) -> 'dict | None':
+    def __finalize_show_yaml(self, show_name: str, show_yaml: dict[str, Any],
+                             templates: list[Template],
+                             library_map: dict[str, Any],
+                             font_map: dict[str, Any]) -> 'dict | None':
         """
         Apply the indicated template, and merge the specified library/font to
         the given show YAML.
@@ -687,10 +693,12 @@ class PreferenceParser(YamlReader):
         # Parse library from map
         if (len(library_map) > 0
             and (library_name := show_yaml.get('library')) is not None):
+            # If library identifier is not in the map, error and exit
             if (library_yaml := library_map.get(library_name)) is None:
                 log.error(f'Library "{library_name}" of series "{show_name}" is'
                           f' not present in libraries list')
                 return None
+            # Library identifier in map, merge YAML
             else:
                 Template.recurse_priority_union(show_yaml, library_yaml)
                 show_yaml['library'] = {
@@ -702,11 +710,12 @@ class PreferenceParser(YamlReader):
         if (len(font_map) > 0
             and (font_name := show_yaml.get('font')) is not None
             and isinstance(font_name, str)):
-            # If font identifier is not in map
+            # If font identifier is not in map, error and exit
             if (font_yaml := font_map.get(font_name)) is None:
                 log.error(f'Font "{font_name}" of series "{show_name}" is '
                             f'not present in font list')
                 return None
+            # Font identifer in map, merge YAML
             else:
                 show_yaml['font'] = {}
                 Template.recurse_priority_union(show_yaml['font'], font_yaml)
@@ -728,8 +737,6 @@ class PreferenceParser(YamlReader):
 
         # Read file 
         self._base_yaml = self._read_file(self.file, critical=True)
-
-        # Log reading, return that YAML
         log.info(f'Read preference file "{self.file.resolve()}"')
 
 
@@ -847,11 +854,11 @@ class PreferenceParser(YamlReader):
                     yield Show(show_name, variation, self.source_directory,self)
 
     @property
-    def check_tmdb(self):
+    def check_tmdb(self) -> bool:
         return 'tmdb' in self.image_source_priority
 
     @property
-    def check_plex(self):
+    def check_plex(self) -> bool:
         return 'plex' in self.image_source_priority
 
     @property
@@ -868,7 +875,7 @@ class PreferenceParser(YamlReader):
         return False
 
     @property
-    def tautulli_interface_args(self) -> dict[str: 'Path | str | int']:
+    def tautulli_interface_args(self) -> dict[str, 'Path | str | int']:
         return {
             'url': self.tautulli_url,
             'api_key': self.tautulli_api_key,
@@ -880,7 +887,7 @@ class PreferenceParser(YamlReader):
         }
 
     @property
-    def plex_interface_kwargs(self) -> dict[str: 'Path | str | bool']:
+    def plex_interface_kwargs(self) -> dict[str, 'Path | str | bool']:
         return {
             'database_directory': self.database_directory,
             'url': self.plex_url,
@@ -889,7 +896,7 @@ class PreferenceParser(YamlReader):
         }
 
     @property
-    def sonarr_interface_kwargs(self) -> dict[str: 'str | bool']:
+    def sonarr_interface_kwargs(self) -> dict[str, 'str | bool']:
         return {
             'url': self.sonarr_url,
             'api_key': self.sonarr_api_key,
@@ -897,7 +904,7 @@ class PreferenceParser(YamlReader):
         }
 
     @property
-    def tmdb_interface_kwargs(self) -> dict[str: 'Path | str']:
+    def tmdb_interface_kwargs(self) -> dict[str, 'Path | str']:
         return {
             'database_directory': self.database_directory,
             'api_key': self.tmdb_api_key,
@@ -958,23 +965,22 @@ class PreferenceParser(YamlReader):
             exit(1)
 
 
-    def filesize_as_bytes(self, filesize: str) -> 'int | None':
+    def filesize_as_bytes(self, filesize: str) -> int:
         """
-        Convert the given filesize string to its integer byte equivalent. If the
-        string cannot be converted, a critical error is logged and this object
-        is set to invalid.
+        Convert the given filesize string to its integer byte equivalent.
 
         Args:
-            filesize: Filesize (string) to convert. Should be formatted like 
+            filesize: Filesize string to parse. Should be formatted like 
                 '{integer} {unit}' - e.g. 2 KB, 4 GiB, 1 B, etc.
 
         Returns:
-            Number of bytes of the string. None if the string cannot be
-            converted.
+            Number of bytes indicated by the given filesize string.
         """
-        units = {'B': 1, 'KB': 2**10, 'MB': 2**20, 'GB': 2**30, 'TB': 2**40,
-                 '': 1, 'KIB': 10**3, 'MIB': 10**6, 'GIB': 10**9, 'TIB': 10**12}
+
+        units = {'B': 1, 'KB':  2**10, 'MB':  2**20, 'GB':  2**30, 'TB':  2**40,
+                  '': 1, 'KIB': 10**3, 'MIB': 10**6, 'GIB': 10**9, 'TIB':10**12}
 
         number, unit = map(str.strip, filesize.split())
         value, unit_scale = float(number), units[unit.upper()]
+
         return int(value * unit_scale)
