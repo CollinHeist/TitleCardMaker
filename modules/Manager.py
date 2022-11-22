@@ -52,12 +52,12 @@ class Manager:
                 **self.preferences.plex_interface_kwargs
             )
 
-        # Optionally assign SonarrInterface
-        self.sonarr_interface = None
+        # Optionally assign SonarrInterface(s)
+        self.sonarr_interfaces = []
         if self.preferences.use_sonarr:
-            self.sonarr_interface = SonarrInterface(
-                **self.preferences.sonarr_interface_kwargs,
-            )
+            self.sonarr_interfaces = [
+                SonarrInterface(**kw) for kw in self.preferences.sonarr_kwargs
+            ]
 
         # Optionally assign TMDbInterface
         self.tmdb_interface = None
@@ -143,6 +143,20 @@ class Manager:
             )
 
 
+    @notify('Starting to assign interfaces..')
+    def assign_interfaces(self) -> None:
+        """
+        
+        """
+
+        # Assign interfaces for each show
+        for show in tqdm(self.shows + self.archives, desc='Assign interfaces',
+                         **TQDM_KWARGS):
+            show.assign_interfaces(
+                self.plex_interface, self.sonarr_interfaces, self.tmdb_interface
+            )
+
+    
     @notify("Starting to set show ID's..")
     def set_show_ids(self) -> None:
         """Set the series ID's of each Show known to this Manager"""
@@ -155,7 +169,7 @@ class Manager:
         for show in tqdm(self.shows + self.archives, desc='Setting series IDs',
                          **TQDM_KWARGS):
             # Select interfaces based on what's enabled
-            show.set_series_ids(self.sonarr_interface, self.tmdb_interface)
+            show.set_series_ids(self.sonarr_interfaces, self.tmdb_interface)
 
 
     @notify('Starting to read source files..')

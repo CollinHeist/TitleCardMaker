@@ -102,9 +102,7 @@ class PreferenceParser(YamlReader):
         self.plex_yaml_writers = []
         self.plex_yaml_update_args = []
         self.use_sonarr = False
-        self.sonarr_url = None
-        self.sonarr_api_key = None
-        self.sonarr_verify_ssl = True
+        self.sonarr_kwargs = []
         self.sonarr_yaml_writers = []
         self.sonarr_yaml_update_args = []
         self.use_tmdb = False
@@ -427,17 +425,31 @@ class PreferenceParser(YamlReader):
         if not self._is_specified('sonarr'):
             return None
 
-        if ((url := self._get('sonarr', 'url', type_=str)) != None
-            and (api_key := self._get('sonarr', 'api_key', type_=str)) != None):
-            self.sonarr_url = url
-            self.sonarr_api_key = api_key
-            self.use_sonarr = True
-        else:
-            log.critical(f'Sonarr preferences must contain "url" and "api_key"')
-            self.valid = False
+        # Inner function to parse a single instance of server YAML
+        def parse_server(yaml: dict[str, Any]):
+            reader = YamlReader(yaml)
 
-        if (value := self._get('sonarr', 'verify_ssl', type_=bool)) is not None:
-            self.sonarr_verify_ssl = value
+            # Server must provide URL and API key
+            if ((url := reader._get('url', type_=str)) is None or
+                (api_key := reader._get('api_key', type_=str)) is None):
+                log.critical(f'Sonarr server must contain "url" and "api_key"')
+                self.valid = False
+            else:
+                verify_ssl = reader._get('verify_ssl', type_=bool, default=True)
+                self.sonarr_kwargs.append({
+                    'url': url, 'api_key': api_key, 'verify_ssl': verify_ssl
+                })
+                self.use_sonarr = True
+
+        # If multiple servers were specified, parse all specificiations
+        if isinstance(self._get('sonarr'), list):
+            [parse_server(server) for server in self._get('sonarr')]
+        # Single server specification
+        elif isinstance(self._get('sonarr'), dict):
+            parse_server(self._get('sonarr'))
+        else:
+            log.critical(f'Invalid Sonarr preferences')
+            self.valid = False
 
 
     def __parse_yaml_tmdb(self) -> None:
@@ -895,15 +907,7 @@ class PreferenceParser(YamlReader):
             'verify_ssl': self.plex_verify_ssl,
         }
 
-    @property
-    def sonarr_interface_kwargs(self) -> dict[str, 'str | bool']:
-        return {
-            'url': self.sonarr_url,
-            'api_key': self.sonarr_api_key,
-            'verify_ssl': self.sonarr_verify_ssl,
-        }
-
-    @property
+     @property
     def tmdb_interface_kwargs(self) -> dict[str, 'Path | str']:
         return {
             'database_directory': self.database_directory,

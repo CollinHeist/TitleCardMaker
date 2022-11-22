@@ -39,6 +39,7 @@ class Show(YamlReader):
         'source_directory', 'logo', 'backdrop', 'file_interface', 'profile',
         'season_poster_set', 'episodes', '__is_archive', 'refresh_titles',
         'style_set',
+        'interfaces'
     )
 
     def __init__(self, name: str, yaml_dict: dict, source_directory: Path,
@@ -148,8 +149,9 @@ class Show(YamlReader):
             self._get('season_posters'),
         )
         
-        # Episode dictionary to be filled
+        # Attributes to be filled/modified later
         self.episodes = {}
+        self.interfaces = {'plex': None, 'sonarr': None, 'tmdb': None}
         self.__is_archive = False
         
 
@@ -297,7 +299,33 @@ class Show(YamlReader):
             self.extras = self._get('extras', type_=dict)
 
 
-    def set_series_ids(self, sonarr_interface: 'SonarrInterface'=None,
+    def assign_interfaces(self, plex_interface: 'PlexInterface',
+                          sonarr_interfaces: Iterable['SonarrInterface'],
+                          tmdb_interface: 'TMDbInterface') -> None:
+        """
+        
+        """
+
+        if self.library is not None and plex_interface is not None:
+            self.interfaces['plex'] = plex_interface
+
+        if self.sonarr_sync and len(sonarr_interfaces) > 0:
+            # If an interface was manually assigned
+            if (index := self._get('sonarr_server_id', type_=int)) is not None:
+                if index > len(sonarr_interfaces)-1:
+                    log.error(f'No Sonarr server associated with '
+                              f'sonarr_server_id={index}')
+                    self.valid = False
+                else:
+                    self.interfaces['sonarr'] = sonarr_interfaces[index]
+            # TODO determine proper interface
+            pass
+
+        if self.tmdb_sync and tmdb_interface is not None:
+            self.interfaces['tmdb'] = tmdb_interface
+
+
+    def set_series_ids(self, sonarr_interface: list['SonarrInterface']=[],
                        tmdb_interface: 'TMDbInterface'=None) -> None:
         """
         Set the series ID's for this show using the given interfaces.
@@ -311,7 +339,7 @@ class Show(YamlReader):
         if (sonarr_interface and self.sonarr_sync and
             (self.series_info.sonarr_id is None or
              self.series_info.tvdb_id is None)):
-            sonarr_interface.set_series_ids(self.series_info)
+            sonarr_interface.set_dseries_ids(self.series_info)
 
         # TMDb can provide TMDb and TVDb ID's
         if (tmdb_interface and self.tmdb_sync and
