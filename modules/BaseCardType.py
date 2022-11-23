@@ -130,7 +130,7 @@ class BaseCardType(ImageMaker):
                       custom_season_titles: bool) -> None:
         """
         Modify the given extras base on whether font or season titles are
-        custom.
+        custom. The default behavior is to not modify the extras at all.
 
         Args:
             extras: Dictionary to modify.
@@ -215,7 +215,7 @@ class BaseCardType(ImageMaker):
             # Optionally set gray colorspace
             f'-colorspace gray' if self.grayscale else '',
             # Reset to full colorspace
-            f'-set colorspace sRGB',
+            f'-set colorspace sRGB' if self.grayscale else '',
         ]
 
 

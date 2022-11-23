@@ -117,7 +117,7 @@ class FontValidator:
 
         # Get all missing entries
         missing = self.__db.search((where('file') == font_filepath) &
-                                   (where('status') == False))
+                                   (where('status') is False))
 
         # Return set of just characters from entries
         return {entry['character'] for entry in missing}
