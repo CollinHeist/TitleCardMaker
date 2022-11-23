@@ -1,3 +1,4 @@
+from collections import namedtuple
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -20,6 +21,8 @@ from modules.Template import Template
 from modules.TitleCard import TitleCard
 from modules.TMDbInterface import TMDbInterface
 from modules.YamlReader import YamlReader
+
+YamlWriterSet = namedtuple('YamlWriterSet', ('interface_id', 'writer', 'update_args'))
 
 class PreferenceParser(YamlReader):
     """
@@ -101,10 +104,8 @@ class PreferenceParser(YamlReader):
         self.global_style_set = StyleSet()
         self.plex_yaml_writers = []
         self.plex_yaml_update_args = []
-        self.use_sonarr = False
         self.sonarr_kwargs = []
         self.sonarr_yaml_writers = []
-        self.sonarr_yaml_update_args = []
         self.use_tmdb = False
         self.tmdb_api_key = None
         self.tmdb_retry_count = TMDbInterface.BLACKLIST_THRESHOLD
@@ -177,7 +178,7 @@ class PreferenceParser(YamlReader):
         
         # Inner function to create and add SeriesYamlWriter objects (and)
         # their update args dictionaries to this object's lists
-        def append_writer_and_args(sync_type, sync, static):
+        def append_writer_and_args(sync_type, interface_id, sync, static):
             # Combine static and given sync YAML
             sync_yaml = YamlReader(static | sync, log_function=log.warning)
 
@@ -228,8 +229,9 @@ class PreferenceParser(YamlReader):
                 self.plex_yaml_writers.append(writer)
                 self.plex_yaml_update_args.append(update_args)
             else:
-                self.sonarr_yaml_writers.append(writer)
-                self.sonarr_yaml_update_args.append(update_args)
+                self.sonarr_yaml_writers.append(
+                    YamlWriterSet(interface_id, writer, update_args)
+                )
 
         # Create Plex SeriesYamlWriter objects
         if (plex_sync := self._get('plex', 'sync')) is not None:
@@ -245,17 +247,34 @@ class PreferenceParser(YamlReader):
                 log.error(f'Invalid plex sync: {plex_sync}')
 
         # Create Sonarr SeriesYamlWriter objects
-        if (sonarr_sync := self._get('sonarr', 'sync')) is not None:
-            # Singular sync specification
-            if isinstance(sonarr_sync, dict):
-                append_writer_and_args('sonarr', sonarr_sync, {})
-            # List of syncs
-            elif isinstance(sonarr_sync, list) and len(sonarr_sync) > 0:
-                base_sync = sonarr_sync[0]
-                for sync in sonarr_sync:
-                    append_writer_and_args('sonarr', sync, base_sync)
-            else:
-                log.error(f'Invalid sonarr sync: {plex_sync}')
+        if self._is_specified('sonarr'):
+            # Singular server
+            if (isinstance(self._get('sonarr'), dict)
+                and (sonarr_sync := self._get('sonarr', 'sync')) is not None):
+                # Singular sync specification
+                if isinstance(sonarr_sync, dict):
+                    append_writer_and_args('sonarr', 0, sonarr_sync, {})
+                # List of syncs
+                elif isinstance(sonarr_sync, list) and len(sonarr_sync) > 0:
+                    base_sync = sonarr_sync[0]
+                    for sync in sonarr_sync:
+                        append_writer_and_args('sonarr', 0, sync, base_sync)
+                else:
+                    log.error(f'Invalid sonarr sync: {plex_sync}')
+            # Multiple sonarr interfaces, check for sync on each
+            elif isinstance(self._get('sonarr'), list):
+                for interface_id, server in enumerate(self._get('sonarr')):
+                    reader = YamlReader(server)
+                    # Singular sync for this server
+                    if isinstance((sync := reader._get('sync')), dict):
+                        append_writer_and_args('sonarr', interface_id, sync, {})
+                    # List of syncs for this server
+                    elif isinstance(sync, list) and len(sync) > 0:
+                        base_sync = sync[0]
+                        for sub_sync in sync:
+                            append_writer_and_args(
+                                'sonarr', interface_id, sub_sync, base_sync
+                            )
 
 
     def __parse_yaml_options(self) -> None:
@@ -439,7 +458,6 @@ class PreferenceParser(YamlReader):
                 self.sonarr_kwargs.append({
                     'url': url, 'api_key': api_key, 'verify_ssl': verify_ssl
                 })
-                self.use_sonarr = True
 
         # If multiple servers were specified, parse all specificiations
         if isinstance(self._get('sonarr'), list):
@@ -865,6 +883,11 @@ class PreferenceParser(YamlReader):
                     
                     yield Show(show_name, variation, self.source_directory,self)
 
+    
+    @property
+    def use_sonarr(self) -> bool:
+        return len(self.sonarr_kwargs) > 0
+    
     @property
     def check_tmdb(self) -> bool:
         return 'tmdb' in self.image_source_priority
@@ -899,15 +922,17 @@ class PreferenceParser(YamlReader):
         }
 
     @property
-    def plex_interface_kwargs(self) -> dict[str, 'Path | str | bool']:
+    def plex_interface_kwargs(self) -> dict[str, 'Path | str | bool | int']:
         return {
             'database_directory': self.database_directory,
             'url': self.plex_url,
             'x_plex_token': self.plex_token,
             'verify_ssl': self.plex_verify_ssl,
+            'integrate_with_pmm_overlays': self.integrate_with_pmm_overlays,
+            'filesize_limit': self.plex_filesize_limit,
         }
 
-     @property
+    @property
     def tmdb_interface_kwargs(self) -> dict[str, 'Path | str']:
         return {
             'database_directory': self.database_directory,
