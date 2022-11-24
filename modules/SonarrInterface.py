@@ -145,6 +145,14 @@ class SonarrInterface(WebInterface):
             name); False otherwise.
         """
 
+        # If known series ID, check under that ID and name
+        if series_info.has_id('sonarr_id'):
+            id_ = f'sonarr:{series_info.sonarr_id}'
+            return (
+                self.__series_ids.get(id_) is not None or
+                self.__series_ids.get(series_info.full_match_name) is not None
+            )
+
         return self.__series_ids.get(series_info.full_match_name) is not None
 
 

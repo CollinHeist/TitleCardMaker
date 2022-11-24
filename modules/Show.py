@@ -324,13 +324,6 @@ class Show(YamlReader):
             # Only one interface, assign immediately
             if len(sonarr_interfaces) == 1:
                 self.sonarr_interface = sonarr_interfaces[0]
-            # Multiple interfaces, interface ID was manually specified
-            elif (index := self._get('sonarr_server_id',type_=int)) is not None:
-                if index > len(sonarr_interfaces)-1:
-                    log.error(f'No Sonarr server associated with ID {index}')
-                    self.valid = False
-                else:
-                    self.sonarr_interface = sonarr_interfaces[index]
             # Multiple interfaces, associated interface must be determined
             else:
                 for interface in sonarr_interfaces:
