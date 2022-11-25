@@ -502,6 +502,15 @@ class RomanNumeralTitleCard(BaseCardType):
 
         # Inner function to randomize position and determine if overlapping
         def select_position() -> bool:
+            """
+            Select a random position for season text.
+
+            Returns:
+                True if the selected position is invalid (i.e. overlaps the
+                title, or extends beyond the bounds of the card). False
+                otherwise.
+            """
+
             # Select random position and get it's associated offset
             rotation, offset = self.randomize_season_text_position()
             self.rotation, self.offset = rotation, offset
@@ -540,9 +549,16 @@ class RomanNumeralTitleCard(BaseCardType):
                 'end_y': offset.y + season_dims['height']/2 + 1800/2 + margin,
             }
 
+            # If outside the bounds of the image, return invalid
+            if (box1['start_x'] < 0 or box1['start_x'] > 3200
+                or box1['end_x'] < 0 or box1['end_x'] > 3200
+                or box1['start_y'] < 0 or box1['start_y'] > 1800
+                or box1['end_y'] < 0 or box1['end_y'] > 1800):
+                return True
+
             # Return whether the bounds of the season text overlap the title 
-            return (box0['start_x'] < box1['end_x']  # Box0 left before Box1
-                and box0['end_x'] > box1['start_x']  # Box0 right after Box1
+            return (box0['start_x'] < box1['end_x']  # Box0 left before Box1 right
+                and box0['end_x'] > box1['start_x']  # Box0 right after Box1 left
                 and box0['start_y'] < box1['end_y']  # Box0 top before Box1 bottom
                 and box0['end_y'] > box1['start_y']) # Box0 bottom after Box1 top
 
