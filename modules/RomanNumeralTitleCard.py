@@ -209,6 +209,9 @@ class RomanNumeralTitleCard(BaseCardType):
     ROMAN_NUMERAL_TEXT_COLOR = '#AE2317'
     SEASON_TEXT_COLOR = 'rgb(200, 200, 200)'
 
+    """Maximum possible roman numeral (as overline'd characters are invalid)"""
+    MAX_ROMAN_NUMERAL = 3999
+
     """Maximum number of attempts for season text placement (if overlapping)"""
     SEASON_TEXT_PLACEMENT_ATTEMPS = 10
 
@@ -272,6 +275,12 @@ class RomanNumeralTitleCard(BaseCardType):
             number: The number to become the roman numeral.
         """
 
+        # Limit to maximum possible roman numeral
+        if number > self.MAX_ROMAN_NUMERAL:
+            log.warning(f'Numbers larger than {self.MAX_ROMAN_NUMERAL:,} cannot'
+                        f' be represented as roman numerals')
+            number = self.MAX_ROMAN_NUMERAL
+
         # Index-sorted places -> roman numerals
         m_text = ['', 'M', 'MM', 'MMM']
         c_text = ['', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM']
@@ -314,7 +323,7 @@ class RomanNumeralTitleCard(BaseCardType):
         # Width of each roman numeral
         widths = {
             'I': 364, 'V': 782, 'X': 727, 'L': 599,
-            'C': 779, 'D': 856, 'M': 1004
+            'C': 779, 'D': 856, 'M': 1004,
         }
 
         # Get max width of all lines
