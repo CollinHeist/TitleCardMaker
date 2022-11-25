@@ -131,19 +131,23 @@ POSITIONS: dict[str, list[Position]] = {
         Position('Lower Right', Offset('+240+425'), '0x0'),
         Position('Lower Left', Offset('-240+425'), '0x0'),
         Position('Lower Middle', Offset('+0+325'), '0x0'),
+        Position('Right Rotated', Offset('+175+150'), '55x55'),
     ], 'L': [
         Position('Below', Offset('+0+425'), '0x0'),
         Position('Top Left', Offset('-110-365'), '0x0'),
-        Position('Left', Offset('-200+0'), '-90x-90'),
+        Position('Left', Offset('-190+0'), '-90x-90'),
+        Position('Right', Offset('-45+0'), '90x90'),
     ], 'C': [
         Position('Above', Offset('+0-375'), '0x0'),
         Position('Below', Offset('+0+425'), '0x0'),
         Position('Left', Offset('-365+0'), '-90x-90'),
+        Position('Center', Offset('+0+0'), '0x0'),
     ], 'D': [
         Position('Above', Offset('+0-375'), '0x0'),
         Position('Below', Offset('+0+425'), '0x0'),
         Position('Left', Offset('-325+0'), '-90x-90'),
         Position('Right', Offset('+400+0'), '90x90'),
+        Position('Center', Offset('+0+0'), '0x0'),
         Position('Above Left', Offset('-240-355'), '0x0'),
         Position('Below Left', Offset('-240+425'), '0x0'),
     ], 'M': [
@@ -151,7 +155,7 @@ POSITIONS: dict[str, list[Position]] = {
         Position('Below', Offset('+0+300'), '0x0'),
         Position('Below Left', Offset('-350+425'), '0x0'),
         Position('Below Right', Offset('+340+425'), '0x0'),
-        Position('Upper Left', Offset('-185-240'), '60x60'),
+        Position('Upper Left', Offset('-145-180'), '59x59'),
         Position('Left', Offset('-375+0'), '-88x-88'),
         Position('Right', Offset('+395+0'), '88x88'),
     ]
@@ -634,7 +638,7 @@ class RomanNumeralTitleCard(BaseCardType):
         Make the necessary ImageMagick and system calls to create this object's
         defined title card.
         """
-        
+
         # Determine placement of season text
         self.place_season_text()
 
