@@ -1,8 +1,11 @@
+from collections import namedtuple
 from pathlib import Path
 from typing import Any
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
+
+BoxCoordinates = namedtuple('BoxCoordinates', ('x0', 'y0', 'x1', 'y1'))
 
 class LandscapeTitleCard(BaseCardType):
     """
@@ -51,16 +54,16 @@ class LandscapeTitleCard(BaseCardType):
 
     __slots__ = (
         'source', 'output_file', 'title', 'font', 'font_size', 'title_color',
-        'interline_spacing', 'kerning', 'darken', 'add_bounding_box',
-        'box_adjustments'
+        'interline_spacing', 'kerning', 'vertical_shift', 'darken',
+        'add_bounding_box', 'box_adjustments'
     )
 
 
     def __init__(self, source: Path, output_file: Path, title: str, font: str,
                  font_size: float, title_color: str, interline_spacing: int=0,
                  kerning: float=1.0, blur: bool=False, grayscale: bool=False,
-                 darken: 'bool | str'=False, add_bounding_box: bool=False,
-                 box_adjustments: str=None,
+                 vertical_shift: float=0, darken: 'bool | str'=False,
+                 add_bounding_box: bool=False, box_adjustments: str=None,
                  **kwargs) ->None:
         """
         Initialize this TitleCard object. This primarily just stores instance
@@ -77,6 +80,7 @@ class LandscapeTitleCard(BaseCardType):
             kerning: Scalar to apply to kerning of the title text.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
+            vertical_shift: Vertical shift to apply to the title text.
             darken: Extra - whether to darken the image (if not blurred).
             add_bounding_box: Extra - whether to add a bounding box around the
                 title text.
@@ -99,6 +103,7 @@ class LandscapeTitleCard(BaseCardType):
         self.title_color = title_color
         self.interline_spacing = interline_spacing
         self.kerning = kerning
+        self.vertical_shift = vertical_shift
 
         # Store extras
         self.add_bounding_box = add_bounding_box
@@ -133,10 +138,12 @@ class LandscapeTitleCard(BaseCardType):
                 self.valid = False
 
 
-    def darken_command(self, coordinates: tuple[float, float, float, float]
-                       ) -> list[str]:
+    def darken_command(self, coordinates: BoxCoordinates) -> list[str]:
         """
         Subcommand to darken the image if indicated.
+
+        Args:
+            coordinates: Tuple of coordinates to that indicate where to darken.
 
         Returns:
             List of ImageMagick commands.
@@ -180,7 +187,7 @@ class LandscapeTitleCard(BaseCardType):
 
     def get_bounding_box_coordinates(self, font_size: float,
                                      interline_spacing: float, kerning: float
-                                     ) -> tuple[float, float, float, float]:
+                                     ) -> BoxCoordinates:
         """
         Get the coordinates of the bounding box around the title.
 
@@ -190,13 +197,12 @@ class LandscapeTitleCard(BaseCardType):
             kerning: Font kerning.
 
         Returns:
-            Tuple of x/y coordinates for the bounding box. Ordered as x0, y0,
-            x1, y1.
+            Tuple of x/y coordinates for the bounding box.
         """
 
         # If no bounding box indicated, return blank command
         if not self.add_bounding_box:
-            return 0, 0, 0, 0
+            return BoxCoordinates(0, 0, 0, 0)
 
         # Text-relevant commands
         text_command = [
@@ -218,7 +224,7 @@ class LandscapeTitleCard(BaseCardType):
         # Get start coordinates of the bounding box
         x_start, x_end = 3200/2 - width/2, 3200/2 + width/2
         y_start, y_end = 1800/2 - height/2, 1800/2 + height/2
-        y_end -= 35     # Additional offset necessary 
+        y_end -= 35     # Additional offset necessary for things to work out
 
         # Adjust corodinates by spacing and manual adjustments
         x_start -= self.BOUNDING_BOX_SPACING + self.box_adjustments[3]
@@ -226,14 +232,19 @@ class LandscapeTitleCard(BaseCardType):
         y_start -= self.BOUNDING_BOX_SPACING  + self.box_adjustments[0]
         y_end += self.BOUNDING_BOX_SPACING + self.box_adjustments[2]
 
-        return x_start, y_start, x_end, y_end
+        # Shift y coordinates by vertical shift
+        y_start += self.vertical_shift
+        y_end += self.vertical_shift
+
+        return BoxCoordinates(x_start, y_start, x_end, y_end)
 
 
-    def add_bounding_box_command(self,
-                                 coordinates: tuple[float, float, float, float]
-                                 ) -> list[str]:
+    def add_bounding_box_command(self, coordinates: BoxCoordinates) ->list[str]:
         """
         Subcommand to add the bounding box around the title text.
+
+        Args:
+            coordinates: Tuple of coordinates to that indicate where to darken.
 
         Returns:
             List of ImageMagick commands.
@@ -349,7 +360,7 @@ class LandscapeTitleCard(BaseCardType):
         # Generate command to create card
         command = ' '.join([
             f'convert "{self.source.resolve()}"',
-            # Resize and optionally blur source image
+            # Resize and apply any style modifiers
             *self.resize_and_style,
             *self.darken_command(bounding_box),
             # Add title text
@@ -372,6 +383,8 @@ class LandscapeTitleCard(BaseCardType):
             f'-layers merge',
             f'+repage \)',
             # Add title image(s) to source
+            # Shift images vertically by indicated shift
+            f'-geometry +0+{self.vertical_shift}',
             f'-composite',
             # Optionally add bounding box
             *self.add_bounding_box_command(bounding_box),
