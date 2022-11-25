@@ -237,12 +237,12 @@ class PreferenceParser(YamlReader):
         if (plex_sync := self._get('plex', 'sync')) is not None:
             # Singular sync specification
             if isinstance(plex_sync, dict):
-                append_writer_and_args('plex', plex_sync, {})
+                append_writer_and_args('plex', 0, plex_sync, {})
             # List of syncs
             elif isinstance(plex_sync, list) and len(plex_sync) > 0:
                 base_sync = plex_sync[0]
                 for sync in plex_sync:
-                    append_writer_and_args('plex', sync, base_sync)
+                    append_writer_and_args('plex', 0, sync, base_sync)
             else:
                 log.error(f'Invalid plex sync: {plex_sync}')
 
