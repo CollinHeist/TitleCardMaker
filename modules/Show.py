@@ -695,9 +695,8 @@ class Show(YamlReader):
             return None
 
         # Whether to always check TMDb or Plex
-        always_check_tmdb = all((self.preferences.use_tmdb, self.tmdb_interface,
-                                self.preferences.check_tmdb))
-        always_check_plex = (self.preferences.use_plex and self.plex_interface
+        always_check_tmdb = self.tmdb_interface and self.preferences.check_tmdb
+        always_check_plex = (self.plex_interface
             and self.preferences.check_plex and
             self.plex_interface.has_series(self.library_name, self.series_info)
         )

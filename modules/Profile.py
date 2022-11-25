@@ -335,10 +335,10 @@ class Profile:
             cased_title = title_text
         else:
             cased_title = self.font.case(title_text)
-
+        
         # Apply font replacements
         replaced_title = cased_title
         for old, new in self.font.replacements.items():
             replaced_title = replaced_title.replace(old, new)
-            
+        
         return replaced_title

@@ -268,7 +268,7 @@ class AnimeTitleCard(BaseCardType):
                 f'-annotate +75+90 "{self.episode_text}"',
             ]
             
-        # Add season+episode text
+        # Add season and episode text
         return [
             f'-background transparent',
             *self.__series_count_text_global_effects,
