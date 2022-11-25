@@ -365,11 +365,17 @@ class RomanNumeralTitleCard(BaseCardType):
         if self.hide_season or rotation is None or offset is None:
             return []
 
+        # Override font color only if a custom background color was specified
+        if self.background != self.BACKGROUND_COLOR:
+            color = self.title_color
+        else:
+            color = self.SEASON_TEXT_COLOR
+
         return [
             f'-size "{self.TITLE_CARD_SIZE}"',
             f'-gravity center',
             f'-font "{self.TITLE_FONT}"',
-            f'-fill "{self.SEASON_TEXT_COLOR}"',
+            f'-fill "{color}"',
             f'-pointsize 50',
             f'+interword-spacing',
             f'-annotate {rotation}{offset} "{self.season_text}"',
