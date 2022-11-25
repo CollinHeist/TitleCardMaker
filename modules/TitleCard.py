@@ -48,6 +48,7 @@ class TitleCard:
         'logo': LogoTitleCard,
         'olivier': OlivierTitleCard,
         'photo': FrameTitleCard,
+        'polymath': StandardTitleCard,
         'poster': PosterTitleCard,
         'reality tv': LogoTitleCard,
         'roman': RomanNumeralTitleCard,
