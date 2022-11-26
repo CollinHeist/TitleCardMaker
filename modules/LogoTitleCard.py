@@ -42,9 +42,6 @@ class LogoTitleCard(BaseCardType):
 
     """Paths to intermediate files that are deleted after the card is created"""
     __RESIZED_LOGO = BaseCardType.TEMP_DIR / 'resized_logo.png'
-    __BACKDROP_WITH_LOGO = BaseCardType.TEMP_DIR / 'backdrop_logo.png'
-    __LOGO_WITH_TITLE = BaseCardType.TEMP_DIR / 'logo_title.png'
-    __SERIES_COUNT_TEXT = BaseCardType.TEMP_DIR / 'series_count_text.png'
 
     __slots__ = (
         'source_file', 'output_file', 'title', 'season_text', 'episode_text',

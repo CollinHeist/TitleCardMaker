@@ -1,4 +1,7 @@
 from dataclasses import dataclass, field
+from typing import Any
+
+from num2words import num2words
 
 from modules.Title import Title
 
@@ -142,7 +145,43 @@ class EpisodeInfo:
 
 
     @property
-    def episode_characteristics(self) -> dict:
+    def characteristics(self) -> dict[str, Any]:
+        """
+        Get the characteristics of this object for formatting.
+
+        Returns:
+            Dictionary of characteristics that define this object. Keys are the
+            indices of the episode in numeric, cardinal, and ordinal form.
+        """
+
+        # Get the cardinal/ordinal values of this episode's indices
+        season_number_cardinal = num2words(self.season_number, to='cardinal')
+        season_number_ordinal = num2words(self.season_number, to='ordinal')
+        episode_number_cardinal = num2words(self.episode_number, to='cardinal')
+        episode_number_ordinal = num2words(self.episode_number, to='ordinal')
+
+        # Only convert if absolute number is set
+        if self.abs_number is None:
+            abs_number_cardinal, abs_number_ordinal = None, None
+        else:
+            abs_number_cardinal = num2words(self.abs_number, to='cardinal')
+            abs_number_ordinal = num2words(self.abs_number, to='ordinal')
+
+        return {
+            'season_number': self.season_number,
+            'season_number_cardinal': season_number_cardinal,
+            'season_number_ordinal': season_number_ordinal,
+            'episode_number': self.episode_number,
+            'episode_number_cardinal': episode_number_cardinal,
+            'episode_number_ordinal': episode_number_ordinal,
+            'abs_number': self.abs_number,
+            'abs_number_cardinal': abs_number_cardinal,
+            'abs_number_ordinal': abs_number_ordinal,
+        }
+
+
+    @property
+    def indices(self) -> dict:
         """This object's season/episode indices (as a dictionary)"""
 
         return {

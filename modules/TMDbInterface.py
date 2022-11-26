@@ -171,27 +171,27 @@ class TMDbInterface(WebInterface):
         # If this entry exists, check that next has passed
         if entry is not None:
             if datetime.now().timestamp() >= entry['next']:
-                self.__blacklist.update(
+                self.__blacklist.upsert(
                     {'failures': entry['failures']+1, 'next': later},
                     condition
                 )
         else:
             if query_type in ('logo', 'backdrop'):
-                self.__blacklist.insert({
+                self.__blacklist.upsert({
                     'query': query_type,
                     'series': series_info.full_name,
                     'failures': 1,
                     'next': later,    
-                })
+                }, condition)
             else:
-                self.__blacklist.insert({
+                self.__blacklist.upsert({
                     'query': query_type,
                     'series': series_info.full_name,
                     'season': episode_info.season_number,
                     'episode': episode_info.episode_number,
                     'failures': 1,
                     'next': later,
-                })
+                }, condition)
 
 
     def __is_blacklisted(self, series_info: SeriesInfo,

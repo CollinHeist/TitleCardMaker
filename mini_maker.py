@@ -372,15 +372,9 @@ set_preference_parser(pp)
 # Execute title card related options
 if hasattr(args, 'title_card'):
     # Attempt to get local card type, if not, try RemoteCardType
+    pp._parse_card_type(args.card_type)
+    CardClass = pp.card_class
     RemoteFile.reset_loaded_database(pp.database_directory)
-    if args.card_type in TitleCard.CARD_TYPES.keys():
-        CardClass = TitleCard.CARD_TYPES[args.card_type]
-    elif (remote_card := RemoteCardType(args.card_type)).valid:
-        CardClass = remote_card.card_class
-    else:
-        log.error(f'Cannot identify card type "{args.card_type}" as either '
-                  f'local or remote card type')
-        exit(1)
 
     # Override unspecified defaults with their class specific defaults
     if args.font == Path('__default'):

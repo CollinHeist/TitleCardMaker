@@ -1,11 +1,13 @@
-from pathlib import Path, WindowsPath
+from pathlib import Path
 from re import match, sub, IGNORECASE
+from typing import Any
 
 from modules.Debug import log
 import modules.global_objects as global_objects
 
-# Default CardType classes
+# Built-in CardType classes
 from modules.AnimeTitleCard import AnimeTitleCard
+from modules.FrameTitleCard import FrameTitleCard
 from modules.LandscapeTitleCard import LandscapeTitleCard
 from modules.LogoTitleCard import LogoTitleCard
 from modules.OlivierTitleCard import OlivierTitleCard
@@ -38,12 +40,15 @@ class TitleCard:
     DEFAULT_CARD_TYPE = 'standard'
     CARD_TYPES = {
         'anime': AnimeTitleCard,
+        'frame': FrameTitleCard,
         'generic': StandardTitleCard,
         'gundam': PosterTitleCard,
         'ishalioh': OlivierTitleCard,
         'landscape': LandscapeTitleCard,
         'logo': LogoTitleCard,
         'olivier': OlivierTitleCard,
+        'photo': FrameTitleCard,
+        'polymath': StandardTitleCard,
         'poster': PosterTitleCard,
         'reality tv': LogoTitleCard,
         'roman': RomanNumeralTitleCard,
@@ -70,8 +75,8 @@ class TitleCard:
     
 
     def __init__(self, episode: 'Episode', profile: 'Profile',
-                 title_characteristics: dict,
-                 **extra_characteristics: dict) -> None:
+                 title_characteristics: dict[str, Any],
+                 **extra_characteristics: dict[str, Any]) -> None:
         """
         Constructs a new instance of this class.
         
@@ -93,7 +98,7 @@ class TitleCard:
             profile, **title_characteristics
         )   
         
-        # Construct this episode's CardType instance
+        # Initialize this episode's CardType instance
         self.maker = self.episode.card_class(
             source=episode.source,
             output_file=episode.destination,
@@ -106,7 +111,7 @@ class TitleCard:
             grayscale=episode.grayscale,
             **profile.font.get_attributes(),
             **extra_characteristics,
-            **self.episode.episode_info.episode_characteristics,
+            **self.episode.episode_info.indices,
         )
         
         # File associated with this card is the episode's destination
@@ -187,9 +192,9 @@ class TitleCard:
                 name=series_info.name,
                 full_name=series_info.full_name,
                 year=series_info.year,
+                title=episode_info.title.full_title,
                 season=episode_info.season_number,
                 episode=episode_info.episode_number,
-                title=episode_info.title.full_title,
                 abs_number=abs_number if abs_number is not None else 0,
             )
         )
@@ -226,9 +231,7 @@ class TitleCard:
 
             # Episode number formatting with prefix
             episode_text = match(
-                r'.*?(e?{episode_start.*?})',
-                mod_format_string,
-                IGNORECASE
+                r'.*?(e?{episode_start.*?})', mod_format_string, IGNORECASE
             ).group(1)
 
             # Duplicate episode text format for end text format
@@ -256,10 +259,10 @@ class TitleCard:
                 name=series_info.name,
                 full_name=series_info.full_name,
                 year=series_info.year,
+                title=multi_episode.episode_info.title.full_title,
                 season=multi_episode.season_number,
                 episode_start=multi_episode.episode_start,
                 episode_end=multi_episode.episode_end,
-                title=multi_episode.episode_info.title.full_title,
                 abs_number=abs_number if abs_number is not None else 0,
             )
         )

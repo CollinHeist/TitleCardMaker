@@ -129,6 +129,7 @@ class ImageMagickInterface:
             
         # Add command to history and return results
         self.__history.append((command, stdout, stderr))
+        
         return stdout, stderr
 
 

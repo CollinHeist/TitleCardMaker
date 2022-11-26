@@ -231,7 +231,7 @@ if hasattr(args, 'forget_cards') and pp.use_plex:
 
 # Execute Sonarr related options
 if args.sonarr_list_ids and pp.use_sonarr:
-    SonarrInterface(**pp.sonarr_interface_kwargs).list_all_series_id()
+    SonarrInterface(**pp.sonarr_kwargs[0]).list_all_series_id()
 
 # Execute TMDB related options
 if hasattr(args, 'unblacklist'):

@@ -142,13 +142,17 @@ class EpisodeMap:
 
         # Go through each index range of mapping
         for episode_range, mapping in episode_ranges.items():
+            # Parse start and end of the range
             try:
                 start, end = episode_range.split('-')
                 start_season, start_episode =\
                     map(int, self.INDEX_RANGE_REGEX.match(start).groups())
                 end_season, end_episode =\
                     map(int, self.INDEX_RANGE_REGEX.match(end).groups())
-                assert start_season == end_season, 'Cannot span multiple seasons'
+
+                # Error if range spans multiple seasons
+                assert start_season == end_season,'Cannot span multiple seasons'
+            # Some error ocurred while parsing this range
             except Exception as e:
                 self.valid = False
                 log.error(f'Invalid episode range "{episode_range}"')
@@ -158,15 +162,20 @@ class EpisodeMap:
             # Assign attributes for each index in this range
             for episode_number in range(start_episode, end_episode+1):
                 key = f's{start_season}e{episode_number}'
+                # Title specified directly
                 if isinstance(mapping, str):
                     self.__titles[key] = mapping
                     self.is_custom = True
+                # Season specification is more complex
                 elif isinstance(mapping, dict):
+                    # Title specified (via key)
                     if (value := mapping.get('title')):
                         self.__titles[key] = value
                         self.is_custom = True
+                    # Source specified (via key)
                     if (value := mapping.get('source')):
                         self.__sources[key] = value
+                    # Source application specified (via key)
                     if (value := mapping.get('source_applies_to', '').lower()):
                         if value not in ('all', 'unwatched'):
                             # Invalid applies, error and exit
@@ -292,7 +301,9 @@ class EpisodeMap:
         # Index by season
         if self.__index_by == 'season':
             if episode_info.season_number in target:
-                return target[episode_info.season_number]
+                # Format this season's title with the episode characteristics
+                base_title = target[episode_info.season_number]
+                return base_title.format(**episode_info.characteristics)
 
             return default(episode_info=episode_info)
         # Index by index

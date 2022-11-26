@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from typing import Any
 
 from titlecase import titlecase
 
@@ -122,6 +123,22 @@ class BaseCardType(ImageMaker):
                                if not attr.startswith('__'))
 
         return (f'<{self.__class__.__name__} {attributes}>')
+
+
+    @staticmethod
+    def modify_extras(extras: dict[str, Any], custom_font: bool,
+                      custom_season_titles: bool) -> None:
+        """
+        Modify the given extras base on whether font or season titles are
+        custom. The default behavior is to not modify the extras at all.
+
+        Args:
+            extras: Dictionary to modify.
+            custom_font: Whether the font are custom.
+            custom_season_titles: Whether the season titles are custom.
+        """
+
+        pass
         
 
     @staticmethod
@@ -160,14 +177,45 @@ class BaseCardType(ImageMaker):
         """
 
         return [
+            # Full sRGB colorspace on source image
             f'-set colorspace sRGB',
+            # Ignore profile conversion warnings
             f'+profile "*"',
+            # Background resize shouldn't fill with any color
             f'-background transparent',
             f'-gravity center',
+            # Fit to title card size
             f'-resize "{self.TITLE_CARD_SIZE}^"',
             f'-extent "{self.TITLE_CARD_SIZE}"',
+            # Optionally blur
             f'-blur {self.BLUR_PROFILE}' if self.blur else '',
+            # Optionally set gray colorspace
             f'-colorspace gray' if self.grayscale else '',
+            # Reset to full colorspace
+            f'-set colorspace sRGB',
+        ]
+
+
+    @property
+    def style(self) -> list[str]:
+        """
+        ImageMagick commands to apply any style modifiers to an image.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        return [
+            # Full sRGB colorspace on source image
+            f'-set colorspace sRGB',
+            # Ignore profile conversion warnings
+            f'+profile "*"',
+            # Optionally blur
+            f'-blur {self.BLUR_PROFILE}' if self.blur else '',
+            # Optionally set gray colorspace
+            f'-colorspace gray' if self.grayscale else '',
+            # Reset to full colorspace
+            f'-set colorspace sRGB' if self.grayscale else '',
         ]
 
 
