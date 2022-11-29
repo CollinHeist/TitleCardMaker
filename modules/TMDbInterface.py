@@ -402,9 +402,10 @@ class TMDbInterface(WebInterface):
         following priority:
 
           1. Episode TVDb ID
-          2. Series TMDb ID and season+episode index with title match
-          3. Series TMDb ID and season+absolute episode index with title match
-          4. Series TMDb ID and title match on any episode
+          2. Episode IMDb ID
+          3. Series TMDb ID and season+episode index with title match
+          4. Series TMDb ID and season+absolute episode index with title match
+          5. Series TMDb ID and title match on any episode
         
         Args:
             series_info: The series information.
@@ -431,7 +432,13 @@ class TMDbInterface(WebInterface):
         if episode_info.has_id('imdb_id'):
             try:
                 results = self.api.find_by_id(imdb_id=episode_info.imdb_id)
-                (episode := results.tv_episode_results[0]).reload()
+                # Check for an episode, then check for a movie
+                if len(results.tv_episode_results) > 0:
+                    (episode := results.tv_episode_results[0]).reload()
+                elif len(results.movie_results) > 0:
+                    (episode := results.movie_results[0]).reload()
+                else:
+                    raise NotFound
                 return episode
             except (NotFound, IndexError, TMDbException):
                 pass
@@ -596,15 +603,19 @@ class TMDbInterface(WebInterface):
             self.__update_blacklist(series_info, episode_info, 'image')
             return None
 
-        # Episode found on TMDb, exit if no backdrops for this episode
-        if len(episode.stills) == 0:
+        # Episode found on TMDb, get images/backdrops based on episode/movie
+        if hasattr(episode, 'stills'): images = episode.stills
+        else: images = episode.backdrops
+        
+        # Exit if no backdrops for this episode
+        if len(images) == 0:
             log.debug(f'TMDb has no images for "{series_info}" {episode_info}')
             self.__update_blacklist(series_info, episode_info, 'image')
             return None
 
         # Get the best image for this Episode
-        if (best_image := self.__determine_best_image(episode.stills,
-                   is_source_image=True, skip_localized=skip_localized_images)):
+        kwargs = {'is_source_image':True,'skip_localized':skip_localized_images}
+        if (best_image := self.__determine_best_image(images, **kwargs)):
             return best_image.url
         
         log.debug(f'TMDb images for "{series_info}" {episode_info} do not meet '
@@ -674,8 +685,8 @@ class TMDbInterface(WebInterface):
         # Look for this translation
         for translation in episode.translations:
             if language_code in (translation.iso_3166_1, translation.iso_639_1):
-                # If the title translation is blank (i.e. non-existant)
-                title = translation.name
+                # If the title translation is blank (i.e. non-existent)
+                title = getattr(translation, 'name', translation.title)
                 if len(title) == 0:
                     break
 
