@@ -41,9 +41,6 @@ class OlivierTitleCard(BaseCardType):
     """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Olivier Style'
 
-    """Paths to intermediate files created for this card"""
-    __RESIZED_SOURCE = BaseCardType.TEMP_DIR / 'resized_source.png'
-
     __slots__ = (
         'source_file', 'output_file', 'title', 'hide_episode_text', 
         'episode_prefix', 'episode_text', 'font', 'title_color',
@@ -114,28 +111,6 @@ class OlivierTitleCard(BaseCardType):
         self.vertical_shift = vertical_shift
         self.interline_spacing = interline_spacing
         self.kerning = kerning
-
-
-    def __resize_source(self, source: Path) -> Path:
-        """
-        Resize the given source image. Optionally blur the image as well.
-        
-        Args:
-            source: The source image to modify.
-        
-        Returns:
-            Path to the created image.
-        """
-
-        command = ' '.join([
-            f'convert "{source.resolve()}"',
-            *self.resize_and_style,
-            f'"{self.__RESIZED_SOURCE.resolve()}"',
-        ])
-
-        self.image_magick.run(command)
-
-        return self.__RESIZED_SOURCE
 
 
     @property
