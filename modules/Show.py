@@ -3,6 +3,7 @@ from pathlib import Path
 
 from tqdm import tqdm
 
+from modules.CleanPath import CleanPath
 from modules.DataFileInterface import DataFileInterface
 from modules.Debug import log, TQDM_KWARGS
 from modules.Episode import Episode
@@ -215,7 +216,7 @@ class Show(YamlReader):
             self.media_directory = self.library / self.series_info.legal_path
 
         if (value := self._get('media_directory', type_=str)) is not None:
-            self.media_directory = TitleCard.sanitize_full_directory(value)
+            self.media_directory = CleanPath(value).sanitize()
 
         if (value := self._get('filename_format', type_=str)) is not None:
             if TitleCard.validate_card_format_string(value):

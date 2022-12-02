@@ -2,6 +2,7 @@ from pathlib import Path
 from re import match, sub, IGNORECASE
 from typing import Any
 
+from modules.CleanPath import CleanPath
 from modules.Debug import log
 import modules.global_objects as global_objects
 
@@ -117,50 +118,6 @@ class TitleCard:
         # File associated with this card is the episode's destination
         self.file = episode.destination
 
-
-    @staticmethod
-    def sanitize_full_directory(path: str) -> Path:
-        """
-        Sanitize the entire path and remove all invalid characters. This is
-        different to sanitizing a name as '/' and '\' characters aren't
-        sanitized in names.
-
-        Args:
-            path: Directory path (as a string) to sanitize.
-
-        Returns:
-            Modified directory instantiated as a Path object.
-        """
-
-        # Create Path object from this path
-        path_ = Path(path)
-
-        # Don't sanitize root (either drive or /)
-        root = path_.resolve().anchor
-
-        # Sanitize each part (folder) individually
-        parts = (TitleCard.sanitize_name(part)
-                 for part in path_.resolve().parts[1:])
-        
-        return Path(root, *parts)
-
-
-    @staticmethod
-    def sanitize_name(filename: str) -> str:
-        """
-        Sanitize the filename and remove all invalid characters.
-
-        Args:
-            path: Filename (as a string) to sanitize.
-
-        Returns:
-            Modified filename.
-        """
-
-        replacements = TitleCard.__ILLEGAL_FILE_CHARACTERS
-        
-        return filename.translate(str.maketrans(replacements))
-
         
     @staticmethod
     def get_output_filename(format_string: str, series_info: 'SeriesInfo', 
@@ -187,7 +144,7 @@ class TitleCard:
         
         # Get filename from the given format string, with illegals removed
         abs_number = episode_info.abs_number
-        filename = TitleCard.sanitize_name(
+        filename = CleanPath.sanitize_name(
             format_string.format(
                 name=series_info.name,
                 full_name=series_info.full_name,
@@ -254,7 +211,7 @@ class TitleCard:
 
         # Get filename from the modified format string
         abs_number = multi_episode.episode_info.abs_number
-        filename = TitleCard.sanitize_name(
+        filename = CleanPath.sanitize_name(
             modified_format_string.format(
                 name=series_info.name,
                 full_name=series_info.full_name,

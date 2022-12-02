@@ -4,6 +4,7 @@ from typing import Any, Iterable
 
 from tqdm import tqdm
 
+from modules.CleanPath import CleanPath
 from modules.Debug import log, TQDM_KWARGS
 from modules.Font import Font
 from modules.ImageMagickInterface import ImageMagickInterface
@@ -71,7 +72,7 @@ class PreferenceParser(YamlReader):
             log.critical(f'Preference file missing required options/source '
                          f'attribute')
             exit(1)
-        self.source_directory = TitleCard.sanitize_full_directory(value)
+        self.source_directory = CleanPath(value).sanitize()
         
         # Setup default values that can be overwritten by YAML
         self.series_files = []
@@ -183,16 +184,18 @@ class PreferenceParser(YamlReader):
             sync_yaml = YamlReader(static | sync, log_function=log.warning)
 
             # Skip if file wasn't specified
-            if (file := sync_yaml._get('file', type_=Path)) is None:
+            if (file := sync_yaml._get('file', type_=CleanPath)) is None:
                 return None
 
             # Create SeriesYamlWriter with this config
+            file = file.sanitize()
             writer = SeriesYamlWriter(
                 file,
                 sync_yaml._get('mode', type_=str, default='append'),
                 sync_yaml._get('compact_mode', type_=bool, default=True),
                 sync_yaml._get('volumes', type_=dict, default={}),
                 sync_yaml._get('add_template', type_=str, default=None),
+                sync_yaml._get('card_directory', type_=CleanPath, default=None),
             )
 
             # If invalid after initialization, error and exit
@@ -734,7 +737,7 @@ class PreferenceParser(YamlReader):
                 Template.recurse_priority_union(show_yaml, library_yaml)
                 show_yaml['library'] = {
                     'name': library_yaml.get('plex_name', library_name),
-                    'path': Path(library_yaml.get('path'))
+                    'path': CleanPath(library_yaml.get('path')).sanitize(),
                 }
                 
         # Parse font from map (if given font is just an identifier)
@@ -786,9 +789,10 @@ class PreferenceParser(YamlReader):
         for file_ in (pbar := tqdm(self.series_files, **TQDM_KWARGS)):
             # Create Path object for this file
             try:
-                file = Path(file_)
-            except Exception:
+                file = CleanPath(file_).sanitize()
+            except Exception as e:
                 log.error(f'Invalid series file "{file_}"')
+                log.debug(f'Error[{e}]')
                 continue
 
             # Update progress bar for this file
