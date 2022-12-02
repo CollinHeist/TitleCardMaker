@@ -4,6 +4,7 @@ from ruamel.yaml import YAML, round_trip_dump, comments
 from ruamel.yaml.constructor import DuplicateKeyError
 from yaml import add_representer, dump
 
+from modules.CleanPath import CleanPath
 from modules.Debug import log
 
 class SeriesYamlWriter:
@@ -16,9 +17,9 @@ class SeriesYamlWriter:
     __WRITE_OPTIONS = {'allow_unicode': True, 'width': 200}
 
 
-    def __init__(self, file: Path, sync_mode: str='append',
-                 compact_mode: bool=True, volume_map: dict[str: str]={},
-                 template: str=None, card_directory: Path=None) -> None:
+    def __init__(self, file: CleanPath, sync_mode: str='append',
+                 compact_mode: bool=True, volume_map: dict[str, str]={},
+                 template: str=None, card_directory: CleanPath=None) -> None:
         """
         Initialize an instance of a SeriesYamlWrite object.
 
@@ -39,23 +40,22 @@ class SeriesYamlWriter:
         self.file = file
         self.compact_mode = compact_mode
 
-        # Convert volume map to POSIX (unix) fully resolved directories with /
+        # Convert volume map to string of sanitized paths
         try:
-            std = lambda p: str(self.__standardize(p))
+            std = lambda p: str(CleanPath(p).sanitize())
             self.volume_map = {std(source): std(tcm) 
                                for source, tcm in volume_map.items()}
-            log.critical(f'{self.volume_map=}')
         except Exception as e:
-            log.error(f'Invalid "volumes" - must all be paths')
+            log.error(f'Invalid "volumes" - must all be valid paths')
             log.debug(f'Error[{e}]')
             self.valid = False
         
         # Validate/store sync mode
-        if (sync_mode := sync_mode.lower()) not in ('append', 'match'):
-            log.error(f'Invalid sync mode - must be "append" or "match"')
-            self.valid = False
-        else:
+        if (sync_mode := sync_mode.lower()) in ('append', 'match'):
             self.sync_mode = sync_mode
+        else:
+            log.error(f'Invalid sync mode - must be "append" or "match"')
+            self.valid = False            
 
         # Store optional template to add
         self.template = template
@@ -64,8 +64,8 @@ class SeriesYamlWriter:
         if card_directory is None:
             self.card_directory = None
         else:
-            self.card_directory = self.__standardize(card_directory)
-            card_directory.mkdir(parents=True, exist_ok=True)
+            self.card_directory = card_directory.sanitize()
+            self.card_directory.mkdir(parents=True, exist_ok=True)
         
         # Add representer for compact YAML writing
         # Pseudo-class for a flow map - i.e. dictionary
@@ -86,11 +86,6 @@ class SeriesYamlWriter:
 
         return (f'<SeriesYamlWriter {self.file=}, {self.sync_mode=}, '
                 f'{self.compact_mode=}, {self.volume_map=}>')
-
-
-    @staticmethod
-    def __standardize(path: 'str | Path') -> Path:
-        return (Path.cwd() / Path(path)).resolve()
     
     
     def __convert_path(self, path: str, *, media: bool) -> str:
@@ -114,13 +109,14 @@ class SeriesYamlWriter:
         if self.card_directory is not None:
             # Path is media, only substitute up to parent directory
             if media:
-                return str(self.card_directory / Path(path).name)
+                clean_name = CleanPath(path).sanitize().name
+                return str(self.card_directory / clean_name)
             # Non-media, override entire directory 
             else:
                 return str(self.card_directory)
 
         # Use volume map to convert (standardized) path to TCM path
-        standard_path = str(self.__standardize(path))
+        standard_path = str(CleanPath(path).sanitize())
         for source_base, tcm_base in self.volume_map.items():
             if standard_path.startswith(source_base):
                 return standard_path.replace(source_base, tcm_base)
@@ -129,15 +125,15 @@ class SeriesYamlWriter:
         return standard_path
 
 
-    def __apply_exclusion(self, yaml: dict[str: dict[str: str]],
-                          exclusions: list[dict[str: str]]) -> None:
+    def __apply_exclusion(self, yaml: dict[str, dict[str, str]],
+                          exclusions: list[dict[str, str]]) -> None:
         """
         Apply the given exclusions to the given YAML. This modifies the YAML
         object in-place.
 
         Args:
             yaml: YAML being modified.
-            exclusions: List of labelled exclusions to apply to sync.
+            exclusions: List of labeled exclusions to apply to sync.
         """
 
         # No exclusions to apply, exit
@@ -210,8 +206,8 @@ class SeriesYamlWriter:
             dump(yaml, file_handle, **self.__WRITE_OPTIONS)
 
 
-    def __read_existing_file(self,  yaml: dict[str: dict[str: str]]
-                             ) -> dict[str: dict[str: str]]:
+    def __read_existing_file(self,  yaml: dict[str, dict[str, str]]
+                             ) -> dict[str, dict[str, str]]:
         """
         Read the existing YAML from this writer's file. If the file has no
         existing YAML to read, then just write the given YAML.
@@ -256,7 +252,7 @@ class SeriesYamlWriter:
         return existing_yaml
 
 
-    def __append(self, yaml: dict[str: dict[str: str]]) -> None:
+    def __append(self, yaml: dict[str, dict[str, str]]) -> None:
         """
         Append the given YAML to this Writer's file. This either utilizes
         compact or verbose style. Appending does not modify library or series
@@ -298,7 +294,7 @@ class SeriesYamlWriter:
             round_trip_dump(existing_yaml, file_handle)
 
 
-    def __match(self, yaml: dict[str: dict[str: str]]) -> None:
+    def __match(self, yaml: dict[str, dict[str, str]]) -> None:
         """
         Match this Writer's file to the given YAML - i.e. remove series that
         shouldn't be present, and add series that should. Does not modify
@@ -343,11 +339,11 @@ class SeriesYamlWriter:
 
 
     def __get_yaml_from_sonarr(self, sonarr_interface: 'SonarrInterface',
-                               plex_libraries: dict[str: str],
+                               plex_libraries: dict[str, str],
                                required_tags: list[str],
-                               exclusions: list[dict[str: str]],
+                               exclusions: list[dict[str, str]],
                                monitored_only: bool, downloaded_only: bool
-                               )->dict[str: dict[str: str]]:
+                               )->dict[str, dict[str, str]]:
         """
         Get the YAML from Sonarr, as filtered by the given attributes.
 
@@ -433,9 +429,9 @@ class SeriesYamlWriter:
 
 
     def update_from_sonarr(self, sonarr_interface: 'SonarrInterface',
-                           plex_libraries: dict[str: str]={},
+                           plex_libraries: dict[str, str]={},
                            required_tags: list[str]=[],
-                           exclusions: list[dict[str: str]]=[],
+                           exclusions: list[dict[str, str]]=[],
                            monitored_only: bool=False,
                            downloaded_only: bool=False) -> None:
         """
@@ -468,8 +464,8 @@ class SeriesYamlWriter:
 
     def __get_yaml_from_plex(self, plex_interface: 'PlexInterface',
                              filter_libraries: list[str],
-                             exclusions: list[dict[str: str]]=[]
-                             ) -> dict[str: dict[str: str]]:
+                             exclusions: list[dict[str, str]]=[]
+                             ) -> dict[str, dict[str, str]]:
         """
        Get the YAML from Plex, as filtered by the given libraries.
 
@@ -554,7 +550,7 @@ class SeriesYamlWriter:
 
     def update_from_plex(self, plex_interface: 'PlexInterface',
                          filter_libraries: list[str]=[],
-                         exclusions: list[dict[str: str]]=[]) -> None:
+                         exclusions: list[dict[str, str]]=[]) -> None:
         """
         Update this object's file from Plex.
 

@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from re import match, compile as re_compile
 from typing import ClassVar
 
+from modules.CleanPath import CleanPath
 from modules.Debug import log
-from modules.TitleCard import TitleCard
 
 @dataclass(eq=False, order=False)
 class SeriesInfo:
@@ -69,7 +69,7 @@ class SeriesInfo:
         self.full_match_name = self.get_matching_title(self.full_name)
 
         # Set folder-safe name
-        self.legal_path = TitleCard.sanitize_name(self.full_name)
+        self.legal_path = CleanPath.sanitize_name(self.full_name)
 
 
     def has_id(self, id_: str) -> bool:

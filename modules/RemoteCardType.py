@@ -4,6 +4,7 @@ from importlib.util import spec_from_file_location, module_from_spec
 from pathlib import Path
 from requests import get
 
+from modules.CleanPath import CleanPath
 from modules.Debug import log
 from tinydb import TinyDB, where
 
@@ -45,7 +46,7 @@ class RemoteCardType:
         self.loaded = TinyDB(database_directory / self.LOADED)
 
         # If local file has been specified..
-        if (file := Path(remote)).exists():
+        if (file := CleanPath(remote).sanitize()).exists():
             # Get class name from file
             class_name = file.stem
             file_name = str(file.resolve())
