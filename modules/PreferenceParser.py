@@ -286,12 +286,13 @@ class PreferenceParser(YamlReader):
         if not self._is_specified('options'):
             return None
 
-        if (value := self._get('options', 'execution_mode', type_=str)) != None:
-            if (value := value.lower()) not in Manager.VALID_EXECUTION_MODES:
+        if (value := self._get('options', 'execution_mode',
+                               type_=self.TYPE_LOWER_STR)) != None:
+            if value in Manager.VALID_EXECUTION_MODES:
+                self.execution_mode = value
+            else:
                 log.critical(f'Execution mode "{value}" is invalid')
                 self.valid = False
-            else:
-                self.execution_mode = value
 
         if (value := self._get('options', 'series')) is not None:
             if isinstance(value, list):
@@ -321,8 +322,7 @@ class PreferenceParser(YamlReader):
 
         if (value := self._get('options',
                                'image_source_priority', type_=str)) is not None:
-            lower_strip = lambda s: str(s).lower().strip()
-            sources = tuple(map(lower_strip, value.split(',')))
+            sources = tuple(map(self.TYPE_LOWER_STR, value.split(',')))
             if not all(_ in self.VALID_IMAGE_SOURCES for _ in sources):
                 log.critical(f'Image source priority "{value}" is invalid')
                 self.valid = False
@@ -330,8 +330,8 @@ class PreferenceParser(YamlReader):
                 self.image_source_priority = sources
 
         if (value := self._get('options', 'episode_data_source',
-                               type_=str)) is not None:
-            if (value := value.lower()) in self.VALID_EPISODE_DATA_SOURCES:
+                               type_=self.TYPE_LOWER_STR)) is not None:
+            if value in self.VALID_EPISODE_DATA_SOURCES:
                 self.episode_data_source = value
             else:
                 log.critical(f'Episode data source "{value}" is invalid')
@@ -369,8 +369,9 @@ class PreferenceParser(YamlReader):
                                type_=bool)) is not None:
             self.create_summaries = value
 
-        if (value := self._get('archive', 'summary', 'type', type_=str)) != None:
-            if (value := value.lower()) == 'standard':
+        if (value := self._get('archive', 'summary', 'type',
+                               type_=self.TYPE_LOWER_STR)) is not None:
+            if value == 'standard':
                 self.summary_class = StandardSummary
                 self.summary_background = self.summary_class.BACKGROUND_COLOR
             elif value == 'stylized':
@@ -523,13 +524,13 @@ class PreferenceParser(YamlReader):
                          f'and "update_script"')
             self.valid = False
 
-        if (value := self._get('tautulli', 'verify_ssl', type_=bool)) is not None:
+        if (value := self._get('tautulli', 'verify_ssl', type_=bool)) != None:
             self.tautulli_verify_ssl = value
 
-        if (value := self._get('tautulli', 'username', type_=str)) is not None:
+        if (value := self._get('tautulli', 'username', type_=str)) != None:
             self.tautulli_username = value
 
-        if (value := self._get('tautulli', 'agent_name', type_=str)) is not None:
+        if (value := self._get('tautulli', 'agent_name', type_=str)) != None:
             self.tautulli_agent_name = value
 
         if (value := self._get('tautulli', 'script_timeout',type_=int)) != None:

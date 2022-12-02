@@ -7,6 +7,9 @@ from modules.TitleCard import TitleCard
 
 class YamlReader:
     """This class describes an object capable of reading and parsing YAML."""
+
+    """Function for getting the lowercase, stripped equivalent of a string"""
+    TYPE_LOWER_STR = lambda s: str(s).lower().strip()
     
     
     def __init__(self, yaml: dict={}, *,
@@ -24,6 +27,11 @@ class YamlReader:
         self.valid = True
         self.__log = log_function
 
+        # Verify base YAML is a dictionary
+        if not isinstance(yaml, dict):
+            self.__log(f'Specified YAML is invalid')
+            self.valid = False
+
 
     def _get(self, *attributes, type_: type=None, default=None):
         """
@@ -33,8 +41,8 @@ class YamlReader:
         
         Args:
             attributes:Any number of nested attributes to get value of.
-            type_: Optional callable (i.e.) type to call on specified value
-                before returning
+            type_: Optional callable (i.e. type) to call on specified value
+                before returning.
             default: Default value to return if unspecified.
         
         Returns:

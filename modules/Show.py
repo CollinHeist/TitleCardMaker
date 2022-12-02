@@ -206,8 +206,6 @@ class Show(YamlReader):
         invalid attributes.
         """
 
-        lstr = lambda s: str(s).lower().strip()
-
         if (value := self._get('name', type_=str)) is not None:
             self.info_set.update_series_name(self.series_info, value)
 
@@ -254,7 +252,8 @@ class Show(YamlReader):
             self.archive_name = value
             self.archive_all_variations = False
 
-        if (value := self._get('episode_data_source', type_=lstr)) is not None:
+        if (value := self._get('episode_data_source',
+                               type_=self.TYPE_LOWER_STR)) is not None:
             if value in self.preferences.VALID_EPISODE_DATA_SOURCES:
                 self.episode_data_source = value
             else:

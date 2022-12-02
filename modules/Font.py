@@ -3,8 +3,9 @@ from re import compile as re_compile
 
 from modules.Debug import log
 import modules.global_objects as global_objects
+from modules.YamlReader import YamlReader
 
-class Font:
+class Font(YamlReader):
     """
     This class describes a font and all of its configurable attributes. Notably,
     it's color, size, file, replacements, case function, vertical offset, 
@@ -40,14 +41,8 @@ class Font:
             series_info: Associated SeriesInfo (for logging).
         """
 
-       # Assume object is valid to start with
-        self.valid = True
-
-        # If font YAML (either from map or directly) is not a dictionary, bad!
-        if not isinstance(yaml, dict):
-            log.error(f'Invalid font for series "{series_info}"')
-            self.valid = False
-            yaml = {}
+        # Initialize parent YamlReader
+        super().__init__(yaml)
         
         # Store arguments
         self.__yaml = yaml
@@ -57,10 +52,10 @@ class Font:
         # Use the global FontValidator object
         self.__validator = global_objects.fv
         
-        # Generic font attributes
+        # Set generic font attributes
         self.reset()
         
-        # Parse YAML, update validity
+        # Parse YAML, update attributes and validity
         self.__parse_attributes()
 
         
@@ -102,27 +97,25 @@ class Font:
         """Parse this object's YAML and update the validity and attributes."""
 
         # Whether to validate for this font
-        if (value := self.__yaml.get('validate')) is not None:
-            self.__validate = bool(value)
+        if (value := self._get('validate', type_=bool)) is not None:
+            self.__validate = value
 
         # Case
-        if (value := self.__yaml.get('case')):
-            if (value := value.lower()) not in self.__card_class.CASE_FUNCTIONS:
-                self.__error('case', value, 'unrecognized value')
-            else:
+        if (value := self._get('case', type_=self.TYPE_LOWER_STR)):
+            if value in self.__card_class.CASE_FUNCTIONS:
                 self.case_name = value
                 self.case = self.__card_class.CASE_FUNCTIONS[value]
+            else:
+                self.__error('case', value, 'unrecognized value')
 
         # Color
-        if (value := self.__yaml.get('color')) is not None:
+        if (value := self._get('color', type_=str)) is not None:
             self.color = value
         
         # File
-        if (value := self.__yaml.get('file')) is not None:
-            if not isinstance(value, str):
-                self.__error('file', value, 'not a valid path')
+        if (value := self._get('file', type_=Path)) is not None:
             # If specified as direct path, check for existance
-            elif (value := Path(value)).exists():
+            if value.exists():
                 self.file = str(value.resolve())
                 self.replacements = {}
             # If specified indirectly (or DNE), glob for any extension
@@ -133,58 +126,52 @@ class Font:
                 self.__error('file', value, 'no font file found')
 
         # Replacements and delete_missing
-        if (value := self.__yaml.get('replacements')) is not None:
-            if not isinstance(value, dict):
-                self.__error('replacements', value, 'must be character set')
-            else:
-                # Convert each replacement to string, exit if impossible
-                self.delete_missing = bool(value.pop('delete_missing', True))
-                self.replacements = {}
-                for in_, out_ in value.items():
-                    try:
-                        self.replacements[str(in_)] = str(out_)
-                    except Exception:
-                        self.__error('replacements', value,
-                                     f'bad replacement for "{in_}"')
+        if (value := self._get('replacements', type_=dict)) is not None:
+            # Convert each replacement to string, exit if impossible
+            self.delete_missing = bool(value.pop('delete_missing', True))
+            self.replacements = {}
+            for in_, out_ in value.items():
+                try:
+                    self.replacements[str(in_)] = str(out_)
+                except Exception:
+                    self.__error('replacements', value,
+                                f'bad replacement for "{in_}"')
         
         # Size
-        if (value := self.__yaml.get('size')) is not None:
-            if (not isinstance(value, str)
-                or not bool(self._PERCENT_REGEX_POSITIVE.match(value))):
-                self.__error('size', value, 'specify as "x%')
-            else:
+        if (value := self._get('size', type_=str)) is not None:
+            if bool(self._PERCENT_REGEX_POSITIVE.match(value)):
                 self.size = float(value[:-1]) / 100.0
+            else:
+                self.__error('size', value, 'specify as "x%')                
 
         # Vertical shift
-        if (value := self.__yaml.get('vertical_shift')) is not None:
-            if not isinstance(value, int):
-                self.__error('vertical_shift', value, 'must be integer')
-            else:
+        if (value := self._get('vertical_shift', type_=int)) is not None:
+            if isinstance(value, int):
                 self.vertical_shift = value
+            else:
+                self.__error('vertical_shift', value, 'must be integer')
 
         # Interline spacing
-        if (value := self.__yaml.get('interline_spacing')) is not None:
-            if not isinstance(value, int):
-                self.__error('interline_spacing', value, 'must be integer')
-            else:
+        if (value := self._get('interline_spacing', type_=int)) is not None:
+            if isinstance(value, int):
                 self.interline_spacing = value
+            else:
+                self.__error('interline_spacing', value, 'must be integer')
                 
         # Kerning
-        if (value := self.__yaml.get('kerning')) is not None:
-            if (not isinstance(value, str)
-                or not bool(self._PERCENT_REGEX.match(value))):
-                self.__error('kerning', value, 'specify as "x%"')
-            else:
+        if (value := self._get('kerning', type_=str)) is not None:
+            if bool(self._PERCENT_REGEX.match(value)):
                 self.kerning = float(value[:-1]) / 100.0
+            else:
+                self.__error('kerning', value, 'specify as "x%"')
 
         # Stroke width
-        if (value := self.__yaml.get('stroke_width')) is not None:
-            if (not isinstance(value, str)
-                or not bool(self._PERCENT_REGEX_POSITIVE.match(value))):
-                self.__error('stroke_width', value, 'specify as "x%"')
-            else:
+        if (value := self._get('stroke_width', type_=str)) is not None:
+            if bool(self._PERCENT_REGEX_POSITIVE.match(value)):
                 self.stroke_width = float(value[:-1]) / 100.0
-
+            else:
+                self.__error('stroke_width', value, 'specify as "x%"')
+                
 
     def reset(self) -> None:
         """Reset this object's attributes to its default values."""
