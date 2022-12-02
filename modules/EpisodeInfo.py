@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Any
 
 from num2words import num2words
 
@@ -145,7 +144,7 @@ class EpisodeInfo:
 
 
     @property
-    def characteristics(self) -> dict[str, Any]:
+    def characteristics(self) -> dict[str, 'int | str']:
         """
         Get the characteristics of this object for formatting.
 

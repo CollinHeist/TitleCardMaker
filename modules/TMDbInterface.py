@@ -686,7 +686,10 @@ class TMDbInterface(WebInterface):
         for translation in episode.translations:
             if language_code in (translation.iso_3166_1, translation.iso_639_1):
                 # If the title translation is blank (i.e. non-existent)
-                title = getattr(translation, 'name', translation.title)
+                if hasattr(translation, 'name'):
+                    title = translation.name
+                else:
+                    title = translation.title
                 if len(title) == 0:
                     break
 
