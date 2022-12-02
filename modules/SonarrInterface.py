@@ -133,6 +133,35 @@ class SonarrInterface(WebInterface):
         self.__warned.append(series_info.full_name)
 
 
+    def has_series(self, series_info: SeriesInfo) -> bool:
+        """
+        Query whether this Sonarr server has the given series.
+
+        Args:
+            series_info: Series being evaluated.
+
+        Returns:
+            True if the series is present on this server (checked under the full
+            name); False otherwise.
+        """
+
+        # If known series ID, check under that ID and name
+        if series_info.has_id('sonarr_id'):
+            id_ = f'sonarr:{series_info.sonarr_id}'
+            return (
+                self.__series_ids.get(id_) is not None or
+                self.__series_ids.get(series_info.full_match_name) is not None
+            )
+        if series_info.has_id('tvdb_id'):
+            id_ = f'tvdb:{series_info.tvdb_id}'
+            return (
+                self.__series_ids.get(id_) is not None or
+                self.__series_ids.get(series_info.full_match_name) is not None
+            )
+
+        return self.__series_ids.get(series_info.full_match_name) is not None
+
+
     def get_all_series(self, required_tags: list[str]=[], 
                        excluded_tags: list[str]=[], monitored_only: bool=False,
                        downloaded_only:bool=False)->list[tuple[SeriesInfo,str]]:

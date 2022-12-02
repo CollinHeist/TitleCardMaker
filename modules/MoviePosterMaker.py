@@ -57,13 +57,13 @@ class MoviePosterMaker(ImageMaker):
 
         # Uppercase title(s) if using default font
         if font == self.FONT:
-            self.top_subtitle = top_subtitle.upper()
-            self.title = title.upper()
-            self.subtitle = subtitle.upper()
+            self.top_subtitle = top_subtitle.upper().strip()
+            self.title = title.upper().strip()
+            self.subtitle = subtitle.upper().strip()
         else:
-            self.top_subtitle = top_subtitle
-            self.title = title
-            self.subtitle = subtitle
+            self.top_subtitle = top_subtitle.strip()
+            self.title = title.strip()
+            self.subtitle = subtitle.strip()
 
 
     @property
@@ -104,6 +104,7 @@ class MoviePosterMaker(ImageMaker):
             f'-font "{self.FONT.resolve()}"',
             f'-pointsize 598',
             f'-fill "{self.INDEX_FONT_COLOR}"',
+            f'-gravity center',
             f'-annotate +0+1150 "{self.movie_index}"',
         ]
 
@@ -182,9 +183,7 @@ class MoviePosterMaker(ImageMaker):
         """
 
         # No titles, return empty command
-        if (len(self.top_subtitle.strip()) == 0
-            and len(self.title.strip()) == 0
-            and len(self.subtitle.strip()) == 0):
+        if not any(map(len, (self.top_subtitle, self.title, self.subtitle))):
             return []
 
         # At least one title being added, return entire command
@@ -195,11 +194,11 @@ class MoviePosterMaker(ImageMaker):
             # Create an image for each title
             f'\( -background transparent',
             *self.subtitle_font_attributes,
-            f'label:"{self.top_subtitle}"',
+            f'label:"{self.top_subtitle}"' if len(self.top_subtitle) > 0 else '',
             *self.title_font_attributes,
-            f'label:"{self.title}"',
+            f'label:"{self.title}"' if len(self.title) > 0 else '',
             *self.subtitle_font_attributes,
-            f'label:"{self.subtitle}"',
+            f'label:"{self.subtitle}"' if len(self.subtitle) > 0 else '',
             # Combine in order [TOP SUBTITLE] / [TITLE] / [SUBTITLE]
             f'-smush 30 \)',
             # Add titles to image
@@ -229,20 +228,18 @@ class MoviePosterMaker(ImageMaker):
         # Command to create collection poster
         command = ' '.join([
             f'convert',
-            # Start with frame
-            f'"{self.__FRAME.resolve()}"',
-            # Add source image
-            f'\( "{self.source.resolve()}"',
-            # Resize image
+            # Start with source
+            f'"{self.source.resolve()}"',
+            # Fit to size within frame
             f'-gravity center',
             f'-resize "1892x2892^"',
             f'-extent 1892x2892',
-            # Add gradient to source image
+            # Optionally overlay gradient
             *self.gradient_command,
+            # Add frame
             f'-background None',
-            f'-extent 2000x3000 \)',
-            # Swap, putting frame on top of source+gradient
-            f'+swap',
+            f'"{self.__FRAME.resolve()}"',
+            f'-extent 2000x3000',
             f'-composite',
             # Optionally overlay logo
             *self.logo_command,

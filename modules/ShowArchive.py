@@ -89,6 +89,9 @@ class ShowArchive:
                 new_show.episode_text_format =\
                     new_show.card_class.EPISODE_TEXT_FORMAT
 
+            # Override any extras
+            new_show.profile.convert_extras(new_show.card_class,new_show.extras)
+
             # Store this new Show and associated Summary
             self.shows.append(new_show)
             self.summaries.append(

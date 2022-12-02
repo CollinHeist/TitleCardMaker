@@ -1,5 +1,6 @@
 from pathlib import Path
 from re import match
+from typing import Any
 
 from num2words import num2words
 
@@ -39,9 +40,6 @@ class OlivierTitleCard(BaseCardType):
 
     """How to name archive directories for this type of card"""
     ARCHIVE_NAME = 'Olivier Style'
-
-    """Paths to intermediate files created for this card"""
-    __RESIZED_SOURCE = BaseCardType.TEMP_DIR / 'resized_source.png'
 
     __slots__ = (
         'source_file', 'output_file', 'title', 'hide_episode_text', 
@@ -113,28 +111,6 @@ class OlivierTitleCard(BaseCardType):
         self.vertical_shift = vertical_shift
         self.interline_spacing = interline_spacing
         self.kerning = kerning
-
-
-    def __resize_source(self, source: Path) -> Path:
-        """
-        Resize the given source image. Optionally blur the image as well.
-        
-        Args:
-            source: The source image to modify.
-        
-        Returns:
-            Path to the created image.
-        """
-
-        command = ' '.join([
-            f'convert "{source.resolve()}"',
-            *self.resize_and_style,
-            f'"{self.__RESIZED_SOURCE.resolve()}"',
-        ])
-
-        self.image_magick.run(command)
-
-        return self.__RESIZED_SOURCE
 
 
     @property
@@ -233,6 +209,26 @@ class OlivierTitleCard(BaseCardType):
             f'-strokewidth 1',
             f'-annotate +{325+offset}-140 "{self.episode_text}"',
         ]
+
+
+    @staticmethod
+    def modify_extras(extras: dict[str, Any], custom_font: bool,
+                      custom_season_titles: bool) -> None:
+        """
+        Modify the given extras base on whether font or season titles are
+        custom.
+
+        Args:
+            extras: Dictionary to modify.
+            custom_font: Whether the font are custom.
+            custom_season_titles: Whether the season titles are custom.
+        """
+
+        # Generic font, reset custom episode text color
+        if not custom_font:
+            if 'episode_text_color' in extras:
+                extras['episode_text_color'] =\
+                    OlivierTitleCard.EPISODE_TEXT_COLOR
 
 
     @staticmethod

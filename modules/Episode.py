@@ -13,7 +13,7 @@ class Episode:
     """
 
     __slots__ = (
-        'episode_info', 'card_class', '__base_source', 'source', 'destination',
+        'episode_info', 'card_class', '_base_source', 'source', 'destination',
         'downloadable_source', 'extra_characteristics', 'given_keys', 'watched',
         'blur', 'grayscale', 'spoil_type', 
     )
@@ -36,13 +36,13 @@ class Episode:
             extras: Additional characteristics to pass to the creation of the
                 TitleCard from this Episode.
         """
-
+        
         # Set object attributes
         self.episode_info = episode_info
         self.card_class = card_class
 
         # Set source/destination paths
-        self.__base_source = base_source
+        self._base_source = base_source
         source_name = (f's{episode_info.season_number}'
                        f'e{episode_info.episode_number}'
                        f'{TitleCard.INPUT_CARD_EXTENSION}')
@@ -70,14 +70,26 @@ class Episode:
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object"""
 
-        return (
-            f'<Episode {self.episode_info=}, {self.card_class=}, {self.source=}'
-            f', {self.destination=}, {self.downloadable_source=}, '
-            f'{self.extra_characteristics=}, {self.watched=}, {self.blur=}, '
-            f'{self.spoil_type=}'
-        )
+        attrs = ', '.join(f'{attr}={getattr(self, attr)}'
+                          for attr in self.__slots__)
+
+        return f'<Episode {attrs}>'
 
 
+    @property
+    def characteristics(self) -> dict[str, Any]:
+        """
+        Get the characteristics of this object for formatting.
+
+        Returns:
+            Dictionary of characteristics that define this object. Keys are the
+            start/end indices of the range, and the extra characteristics of the
+            first episode.
+        """
+
+        return self.episode_info.characteristics | self.extra_characteristics
+
+    
     def key_is_specified(self, key: str) -> bool:
         """
         Return whether the given key was present in the initialization for this
@@ -133,8 +145,8 @@ class Episode:
         # Update source path based on input (Path/str of filename in source,etc)
         if isinstance(new_source, Path):
             self.source = new_source
-        elif (self.__base_source / new_source).exists():
-            self.source = self.__base_source / new_source
+        elif (self._base_source / new_source).exists():
+            self.source = self._base_source / new_source
         else:
             self.source = Path(new_source)
 
@@ -149,7 +161,8 @@ class Episode:
         Delete the title card for this Episode.
 
         Args:
-            reason: Optional string to log why the card is being deleted.
+            reason: (Keyword only) Optional string to log why the card is being
+                deleted.
 
         Returns:
             True if card was deleted, False otherwise.

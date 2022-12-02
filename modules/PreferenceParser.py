@@ -1,5 +1,6 @@
+from collections import namedtuple
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 from tqdm import tqdm
 
@@ -20,6 +21,8 @@ from modules.Template import Template
 from modules.TitleCard import TitleCard
 from modules.TMDbInterface import TMDbInterface
 from modules.YamlReader import YamlReader
+
+YamlWriterSet = namedtuple('YamlWriterSet', ('interface_id', 'writer', 'update_args'))
 
 class PreferenceParser(YamlReader):
     """
@@ -101,12 +104,8 @@ class PreferenceParser(YamlReader):
         self.global_style_set = StyleSet()
         self.plex_yaml_writers = []
         self.plex_yaml_update_args = []
-        self.use_sonarr = False
-        self.sonarr_url = None
-        self.sonarr_api_key = None
-        self.sonarr_verify_ssl = True
+        self.sonarr_kwargs = []
         self.sonarr_yaml_writers = []
-        self.sonarr_yaml_update_args = []
         self.use_tmdb = False
         self.tmdb_api_key = None
         self.tmdb_retry_count = TMDbInterface.BLACKLIST_THRESHOLD
@@ -122,7 +121,7 @@ class PreferenceParser(YamlReader):
         self.tautulli_script_timeout = TautulliInterface.DEFAULT_SCRIPT_TIMEOUT
         self.imagemagick_container = None
         self.imagemagick_timeout = ImageMagickInterface.COMMAND_TIMEOUT_SECONDS
-
+        
         # Modify object attributes based off YAML, updating validiry
         self.__parse_yaml()
         self.__parse_sync()
@@ -143,7 +142,11 @@ class PreferenceParser(YamlReader):
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
-        return f'<PreferenceParser {self.file=}, {self.valid=}>'
+        attributes = ', '.join(f'{attr}={getattr(self, attr)!r}'
+                               for attr in self.__dict__
+                               if not attr.startswith('_'))
+
+        return f'<PreferenceParser {attributes}>'
 
 
     def __determine_imagemagick_prefix(self) -> None:
@@ -175,7 +178,7 @@ class PreferenceParser(YamlReader):
         
         # Inner function to create and add SeriesYamlWriter objects (and)
         # their update args dictionaries to this object's lists
-        def append_writer_and_args(sync_type, sync, static):
+        def append_writer_and_args(sync_type, interface_id, sync, static):
             # Combine static and given sync YAML
             sync_yaml = YamlReader(static | sync, log_function=log.warning)
 
@@ -227,34 +230,52 @@ class PreferenceParser(YamlReader):
                 self.plex_yaml_writers.append(writer)
                 self.plex_yaml_update_args.append(update_args)
             else:
-                self.sonarr_yaml_writers.append(writer)
-                self.sonarr_yaml_update_args.append(update_args)
+                self.sonarr_yaml_writers.append(
+                    YamlWriterSet(interface_id, writer, update_args)
+                )
 
         # Create Plex SeriesYamlWriter objects
         if (plex_sync := self._get('plex', 'sync')) is not None:
             # Singular sync specification
             if isinstance(plex_sync, dict):
-                append_writer_and_args('plex', plex_sync, {})
+                append_writer_and_args('plex', 0, plex_sync, {})
             # List of syncs
             elif isinstance(plex_sync, list) and len(plex_sync) > 0:
                 base_sync = plex_sync[0]
                 for sync in plex_sync:
-                    append_writer_and_args('plex', sync, base_sync)
+                    append_writer_and_args('plex', 0, sync, base_sync)
             else:
                 log.error(f'Invalid plex sync: {plex_sync}')
 
         # Create Sonarr SeriesYamlWriter objects
-        if (sonarr_sync := self._get('sonarr', 'sync')) is not None:
-            # Singular sync specification
-            if isinstance(sonarr_sync, dict):
-                append_writer_and_args('sonarr', sonarr_sync, {})
-            # List of syncs
-            elif isinstance(sonarr_sync, list) and len(sonarr_sync) > 0:
-                base_sync = sonarr_sync[0]
-                for sync in sonarr_sync:
-                    append_writer_and_args('sonarr', sync, base_sync)
-            else:
-                log.error(f'Invalid sonarr sync: {plex_sync}')
+        if self._is_specified('sonarr'):
+            # Singular server
+            if (isinstance(self._get('sonarr'), dict)
+                and (sonarr_sync := self._get('sonarr', 'sync')) is not None):
+                # Singular sync specification
+                if isinstance(sonarr_sync, dict):
+                    append_writer_and_args('sonarr', 0, sonarr_sync, {})
+                # List of syncs
+                elif isinstance(sonarr_sync, list) and len(sonarr_sync) > 0:
+                    base_sync = sonarr_sync[0]
+                    for sync in sonarr_sync:
+                        append_writer_and_args('sonarr', 0, sync, base_sync)
+                else:
+                    log.error(f'Invalid sonarr sync: {plex_sync}')
+            # Multiple sonarr interfaces, check for sync on each
+            elif isinstance(self._get('sonarr'), list):
+                for interface_id, server in enumerate(self._get('sonarr')):
+                    reader = YamlReader(server)
+                    # Singular sync for this server
+                    if isinstance((sync := reader._get('sync')), dict):
+                        append_writer_and_args('sonarr', interface_id, sync, {})
+                    # List of syncs for this server
+                    elif isinstance(sync, list) and len(sync) > 0:
+                        base_sync = sync[0]
+                        for sub_sync in sync:
+                            append_writer_and_args(
+                                'sonarr', interface_id, sub_sync, base_sync
+                            )
 
 
     def __parse_yaml_options(self) -> None:
@@ -266,12 +287,13 @@ class PreferenceParser(YamlReader):
         if not self._is_specified('options'):
             return None
 
-        if (value := self._get('options', 'execution_mode', type_=str)) != None:
-            if (value := value.lower()) not in Manager.VALID_EXECUTION_MODES:
+        if (value := self._get('options', 'execution_mode',
+                               type_=self.TYPE_LOWER_STR)) != None:
+            if value in Manager.VALID_EXECUTION_MODES:
+                self.execution_mode = value
+            else:
                 log.critical(f'Execution mode "{value}" is invalid')
                 self.valid = False
-            else:
-                self.execution_mode = value
 
         if (value := self._get('options', 'series')) is not None:
             if isinstance(value, list):
@@ -301,8 +323,7 @@ class PreferenceParser(YamlReader):
 
         if (value := self._get('options',
                                'image_source_priority', type_=str)) is not None:
-            lower_strip = lambda s: str(s).lower().strip()
-            sources = tuple(map(lower_strip, value.split(',')))
+            sources = tuple(map(self.TYPE_LOWER_STR, value.split(',')))
             if not all(_ in self.VALID_IMAGE_SOURCES for _ in sources):
                 log.critical(f'Image source priority "{value}" is invalid')
                 self.valid = False
@@ -310,8 +331,8 @@ class PreferenceParser(YamlReader):
                 self.image_source_priority = sources
 
         if (value := self._get('options', 'episode_data_source',
-                               type_=str)) is not None:
-            if (value := value.lower()) in self.VALID_EPISODE_DATA_SOURCES:
+                               type_=self.TYPE_LOWER_STR)) is not None:
+            if value in self.VALID_EPISODE_DATA_SOURCES:
                 self.episode_data_source = value
             else:
                 log.critical(f'Episode data source "{value}" is invalid')
@@ -349,8 +370,9 @@ class PreferenceParser(YamlReader):
                                type_=bool)) is not None:
             self.create_summaries = value
 
-        if (value := self._get('archive', 'summary', 'type', type_=str)) != None:
-            if (value := value.lower()) == 'standard':
+        if (value := self._get('archive', 'summary', 'type',
+                               type_=self.TYPE_LOWER_STR)) is not None:
+            if value == 'standard':
                 self.summary_class = StandardSummary
                 self.summary_background = self.summary_class.BACKGROUND_COLOR
             elif value == 'stylized':
@@ -404,7 +426,7 @@ class PreferenceParser(YamlReader):
         if (value := self._get('plex', 'filesize_limit', 
                                type_=self.filesize_as_bytes)) is not None:
             self.plex_filesize_limit = value
-            log.debug(f'Plex filesize limit is {self.plex_filesize_limit} bytes')
+
             if value > self.filesize_as_bytes('10 MB'):
                 log.warning(f'Plex will reject all images larger than 10 MB')
 
@@ -424,17 +446,30 @@ class PreferenceParser(YamlReader):
         if not self._is_specified('sonarr'):
             return None
 
-        if ((url := self._get('sonarr', 'url', type_=str)) != None
-            and (api_key := self._get('sonarr', 'api_key', type_=str)) != None):
-            self.sonarr_url = url
-            self.sonarr_api_key = api_key
-            self.use_sonarr = True
-        else:
-            log.critical(f'Sonarr preferences must contain "url" and "api_key"')
-            self.valid = False
+        # Inner function to parse a single instance of server YAML
+        def parse_server(yaml: dict[str, Any]):
+            reader = YamlReader(yaml)
 
-        if (value := self._get('sonarr', 'verify_ssl', type_=bool)) is not None:
-            self.sonarr_verify_ssl = value
+            # Server must provide URL and API key
+            if ((url := reader._get('url', type_=str)) is None or
+                (api_key := reader._get('api_key', type_=str)) is None):
+                log.critical(f'Sonarr server must contain "url" and "api_key"')
+                self.valid = False
+            else:
+                verify_ssl = reader._get('verify_ssl', type_=bool, default=True)
+                self.sonarr_kwargs.append({
+                    'url': url, 'api_key': api_key, 'verify_ssl': verify_ssl
+                })
+
+        # If multiple servers were specified, parse all specificiations
+        if isinstance(self._get('sonarr'), list):
+            [parse_server(server) for server in self._get('sonarr')]
+        # Single server specification
+        elif isinstance(self._get('sonarr'), dict):
+            parse_server(self._get('sonarr'))
+        else:
+            log.critical(f'Invalid Sonarr preferences')
+            self.valid = False
 
 
     def __parse_yaml_tmdb(self) -> None:
@@ -486,17 +521,17 @@ class PreferenceParser(YamlReader):
             self.tautulli_update_script = script
             self.use_tautulli = True
         else:
-            log.critical(f'Tautulli preferences must contain "url", "api_key", '
+            log.critical(f'tautulli preferences must contain "url", "api_key", '
                          f'and "update_script"')
             self.valid = False
 
-        if (value := self._get('tautulli', 'verify_ssl', type_=bool)) is not None:
+        if (value := self._get('tautulli', 'verify_ssl', type_=bool)) != None:
             self.tautulli_verify_ssl = value
 
-        if (value := self._get('tautulli', 'username', type_=str)) is not None:
+        if (value := self._get('tautulli', 'username', type_=str)) != None:
             self.tautulli_username = value
 
-        if (value := self._get('tautulli', 'agent_name', type_=str)) is not None:
+        if (value := self._get('tautulli', 'agent_name', type_=str)) != None:
             self.tautulli_agent_name = value
 
         if (value := self._get('tautulli', 'script_timeout',type_=int)) != None:
@@ -513,7 +548,8 @@ class PreferenceParser(YamlReader):
         if not self._is_specified('imagemagick'):
             return None
 
-        if (value := self._get('imagemagick', 'container', type_=str)) != None:
+        if (value := self._get('imagemagick', 'container',
+                               type_=str)) is not None:
             self.imagemagick_container = value
 
         if (value := self._get('imagemagick', 'timeout',type_=int)) is not None:
@@ -540,7 +576,7 @@ class PreferenceParser(YamlReader):
         pass
 
 
-    def __validate_libraries(self, library_yaml: dict[str: str],
+    def __validate_libraries(self, library_yaml: dict[str, str],
                              file: Path) -> bool:
         """
         Validate the given libraries YAML.
@@ -576,7 +612,7 @@ class PreferenceParser(YamlReader):
         return True
 
 
-    def __validate_fonts(self, font_yaml: dict[str: 'str | float'],
+    def __validate_fonts(self, font_yaml: dict[str, 'str | float'],
                          file: Path) -> bool:
         """
         Validate the given font YAML.
@@ -614,7 +650,7 @@ class PreferenceParser(YamlReader):
 
     
     def __apply_template(self, templates: dict[str, Template],
-                         series_yaml: dict, series_name: str) -> bool:
+                         series_yaml: dict[str, Any], series_name: str) -> bool:
         """
         Apply the correct Template object (if indicated) to the given series
         YAML. This effectively "fill out" the indicated template, and updates
@@ -662,9 +698,10 @@ class PreferenceParser(YamlReader):
         return template.apply_to_series(series_name, series_yaml)
 
 
-    def __finalize_show_yaml(self, show_name: str, show_yaml: dict,
-                             templates: list[Template], library_map: dict,
-                             font_map: dict) -> 'dict | None':
+    def __finalize_show_yaml(self, show_name: str, show_yaml: dict[str, Any],
+                             templates: list[Template],
+                             library_map: dict[str, Any],
+                             font_map: dict[str, Any]) -> 'dict | None':
         """
         Apply the indicated template, and merge the specified library/font to
         the given show YAML.
@@ -688,10 +725,12 @@ class PreferenceParser(YamlReader):
         # Parse library from map
         if (len(library_map) > 0
             and (library_name := show_yaml.get('library')) is not None):
+            # If library identifier is not in the map, error and exit
             if (library_yaml := library_map.get(library_name)) is None:
                 log.error(f'Library "{library_name}" of series "{show_name}" is'
                           f' not present in libraries list')
                 return None
+            # Library identifier in map, merge YAML
             else:
                 Template.recurse_priority_union(show_yaml, library_yaml)
                 show_yaml['library'] = {
@@ -703,11 +742,12 @@ class PreferenceParser(YamlReader):
         if (len(font_map) > 0
             and (font_name := show_yaml.get('font')) is not None
             and isinstance(font_name, str)):
-            # If font identifier is not in map
+            # If font identifier is not in map, error and exit
             if (font_yaml := font_map.get(font_name)) is None:
                 log.error(f'Font "{font_name}" of series "{show_name}" is '
                             f'not present in font list')
                 return None
+            # Font identifer in map, merge YAML
             else:
                 show_yaml['font'] = {}
                 Template.recurse_priority_union(show_yaml['font'], font_yaml)
@@ -729,8 +769,6 @@ class PreferenceParser(YamlReader):
 
         # Read file 
         self._base_yaml = self._read_file(self.file, critical=True)
-
-        # Log reading, return that YAML
         log.info(f'Read preference file "{self.file.resolve()}"')
 
 
@@ -847,12 +885,17 @@ class PreferenceParser(YamlReader):
                     
                     yield Show(show_name, variation, self.source_directory,self)
 
+    
     @property
-    def check_tmdb(self):
+    def use_sonarr(self) -> bool:
+        return len(self.sonarr_kwargs) > 0
+    
+    @property
+    def check_tmdb(self) -> bool:
         return 'tmdb' in self.image_source_priority
 
     @property
-    def check_plex(self):
+    def check_plex(self) -> bool:
         return 'plex' in self.image_source_priority
 
     @property
@@ -869,7 +912,7 @@ class PreferenceParser(YamlReader):
         return False
 
     @property
-    def tautulli_interface_args(self) -> dict[str: 'Path | str | int']:
+    def tautulli_interface_args(self) -> dict[str, 'Path | str | int']:
         return {
             'url': self.tautulli_url,
             'api_key': self.tautulli_api_key,
@@ -881,24 +924,18 @@ class PreferenceParser(YamlReader):
         }
 
     @property
-    def plex_interface_kwargs(self) -> dict[str: 'Path | str | bool']:
+    def plex_interface_kwargs(self) -> dict[str, 'Path | str | bool | int']:
         return {
             'database_directory': self.database_directory,
             'url': self.plex_url,
             'x_plex_token': self.plex_token,
             'verify_ssl': self.plex_verify_ssl,
+            'integrate_with_pmm_overlays': self.integrate_with_pmm_overlays,
+            'filesize_limit': self.plex_filesize_limit,
         }
 
     @property
-    def sonarr_interface_kwargs(self) -> dict[str: 'str | bool']:
-        return {
-            'url': self.sonarr_url,
-            'api_key': self.sonarr_api_key,
-            'verify_ssl': self.sonarr_verify_ssl,
-        }
-
-    @property
-    def tmdb_interface_kwargs(self) -> dict[str: 'Path | str']:
+    def tmdb_interface_kwargs(self) -> dict[str, 'Path | str']:
         return {
             'database_directory': self.database_directory,
             'api_key': self.tmdb_api_key,
@@ -959,23 +996,22 @@ class PreferenceParser(YamlReader):
             exit(1)
 
 
-    def filesize_as_bytes(self, filesize: str) -> 'int | None':
+    def filesize_as_bytes(self, filesize: str) -> int:
         """
-        Convert the given filesize string to its integer byte equivalent. If the
-        string cannot be converted, a critical error is logged and this object
-        is set to invalid.
+        Convert the given filesize string to its integer byte equivalent.
 
         Args:
-            filesize: Filesize (string) to convert. Should be formatted like 
+            filesize: Filesize string to parse. Should be formatted like 
                 '{integer} {unit}' - e.g. 2 KB, 4 GiB, 1 B, etc.
 
         Returns:
-            Number of bytes of the string. None if the string cannot be
-            converted.
+            Number of bytes indicated by the given filesize string.
         """
-        units = {'B': 1, 'KB': 2**10, 'MB': 2**20, 'GB': 2**30, 'TB': 2**40,
-                 '': 1, 'KIB': 10**3, 'MIB': 10**6, 'GIB': 10**9, 'TIB': 10**12}
+
+        units = {'B': 1, 'KB':  2**10, 'MB':  2**20, 'GB':  2**30, 'TB':  2**40,
+                  '': 1, 'KIB': 10**3, 'MIB': 10**6, 'GIB': 10**9, 'TIB':10**12}
 
         number, unit = map(str.strip, filesize.split())
         value, unit_scale = float(number), units[unit.upper()]
+
         return int(value * unit_scale)

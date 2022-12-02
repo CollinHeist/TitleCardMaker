@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
@@ -267,7 +268,7 @@ class AnimeTitleCard(BaseCardType):
                 f'-annotate +75+90 "{self.episode_text}"',
             ]
             
-        # Add season+episode text
+        # Add season and episode text
         return [
             f'-background transparent',
             *self.__series_count_text_global_effects,
@@ -301,6 +302,25 @@ class AnimeTitleCard(BaseCardType):
             f'-geometry +75+90',
             f'-composite',
         ]
+
+
+    @staticmethod
+    def modify_extras(extras: dict[str, Any], custom_font: bool,
+                      custom_season_titles: bool) -> None:
+        """
+        Modify the given extras base on whether font or season titles are
+        custom.
+
+        Args:
+            extras: Dictionary to modify.
+            custom_font: Whether the font are custom.
+            custom_season_titles: Whether the season titles are custom.
+        """
+
+        # Generic font, reset kanji vertical shift key
+        if not custom_font:
+            if 'kanji_vertical_shift' in extras:
+                extras['kanji_vertical_shift'] = 0
 
 
     @staticmethod

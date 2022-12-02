@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from re import match
+from re import findall, match
+from typing import Literal
 
 from modules.Debug import log
 from modules.ImageMagickInterface import ImageMagickInterface
@@ -87,6 +88,59 @@ class ImageMaker(ABC):
             return {'width': 0, 'height': 0}
 
 
+    def get_text_dimensions(self, text_command: list[str], *,
+                            width: Literal['sum', 'max'],
+                            height: Literal['sum', 'max']) -> dict[str, int]:
+        """
+        Get the dimensions of the text produced by the given text command. For
+        'width' and 'height' arguments, if 'max' then the maximum value of the
+        text is utilized, while 'sum' will add each value. For example, if the
+        given text command produces text like:
+
+            Top Line Text
+            Bottom Text
+
+        Specifying width='sum', will add the widths of the two lines (not very
+        meaningful), width='max' will return the maximum width of the two lines.
+        Specifying height='sum' will return the total height of the text, and
+        height='max' will return the tallest single line of text.
+
+        Args:
+            text_command: ImageMagick commands to produce text(s) to measure.
+            width: How to process the width of the produced text(s).
+            height: How to process the height of the produced text(s).
+
+        Returns:
+            Dictionary of dimensions whose keys are 'width' and 'height'.
+        """
+
+        text_command = ' '.join([
+            f'convert',
+            f'-debug annotate',
+            f'' if '-annotate ' in ' '.join(text_command) else f'xc: ',
+            *text_command,
+            f'null: 2>&1',
+        ])
+
+        # Execute dimension command, parse output
+        metrics = self.image_magick.run_get_output(text_command)
+        widths = map(int, findall(r'Metrics:.*width:\s+(\d+)', metrics))
+        heights = map(int, findall(r'Metrics:.*height:\s+(\d+)', metrics))
+
+        try:
+            # Label text produces duplicate Metrics
+            sum_ = lambda v: sum(v)//(2 if ' label:"' in text_command else 1)
+
+            # Process according to given methods
+            return {
+                'width':  sum_(widths)  if width  == 'sum' else max(widths),
+                'height': sum_(heights) if height == 'sum' else max(heights),
+            }
+        except ValueError as e:
+            log.debug(f'Cannot identify text dimensions - {e}')
+            return {'width': 0, 'height': 0}
+
+
     @staticmethod
     def reduce_file_size(image: Path, quality: int=90) -> Path:
         """
@@ -94,7 +148,8 @@ class ImageMaker(ABC):
 
         Args:
             image: Path to the image to reduce the file size of.
-            quality: Quality of the 
+            quality: Quality of the reduction. 100 being no reduction, 0 being
+                complete reduction. Passed to ImageMagick -quality.
 
         Returns:
             Path to the created image.
@@ -117,7 +172,7 @@ class ImageMaker(ABC):
             global_objects.pp.imagemagick_timeout,
         )
 
-        # Command to convert essentially downsample the image
+        # Downsample and reduce quality of source image
         command = ' '.join([
             f'convert',
             f'"{image.resolve()}"',

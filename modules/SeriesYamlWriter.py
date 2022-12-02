@@ -143,6 +143,18 @@ class SeriesYamlWriter:
         # No exclusions to apply, exit
         if len(exclusions) == 0 or len(yaml.get('series', {})) == 0:
             return None
+
+        # Inner function to match case-insentively
+        def yaml_contains(yaml: dict, key: str) -> tuple[bool, str]:
+            # If present under given case
+            if key in yaml.get('series', {}):
+                return True, key
+            # If present in lowercase
+            for yaml_key in yaml.get('series', {}).keys():
+                if key.lower() == yaml_key.lower():
+                    return True, yaml_key
+            # Not present at all
+            return False, key
         
         # Go through each exclusion in the given list
         for exclusion in exclusions:
@@ -166,12 +178,14 @@ class SeriesYamlWriter:
                 
                 # Delete each file's specified series
                 for series in read_yaml.get('series', {}).keys():
-                    if series in yaml.get('series', {}):
-                        del yaml['series'][series]
+                    contains, key = yaml_contains(yaml, series)
+                    if contains:
+                        del yaml['series'][key]
             # If this exclusion is a specific series, remove
             elif label == 'series':
-                if value in yaml.get('series', {}):
-                    del yaml['series'][value]
+                contains, key = yaml_contains(yaml, value)
+                if contains:
+                    del yaml['series'][key]
 
 
     def __write(self, yaml: dict[str: dict[str: str]]) -> None:

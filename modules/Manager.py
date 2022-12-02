@@ -5,7 +5,6 @@ from typing import Iterable
 from modules.Debug import log, TQDM_KWARGS
 from modules.PlexInterface import PlexInterface
 import modules.global_objects as global_objects
-from modules.Show import Show
 from modules.ShowArchive import ShowArchive
 from modules.SonarrInterface import SonarrInterface
 from modules.TautulliInterface import TautulliInterface
@@ -53,11 +52,11 @@ class Manager:
             )
 
         # Optionally assign SonarrInterface
-        self.sonarr_interface = None
+        self.sonarr_interfaces = []
         if self.preferences.use_sonarr:
-            self.sonarr_interface = SonarrInterface(
-                **self.preferences.sonarr_interface_kwargs,
-            )
+            self.sonarr_interfaces = [
+                SonarrInterface(**kw) for kw in self.preferences.sonarr_kwargs
+            ]
 
         # Optionally assign TMDbInterface
         self.tmdb_interface = None
@@ -106,9 +105,11 @@ class Manager:
 
         if (self.preferences.use_sonarr
             and len(self.preferences.sonarr_yaml_writers) > 0):
-            for writer, update_args in zip(self.preferences.sonarr_yaml_writers,
-                                    self.preferences.sonarr_yaml_update_args):
-                writer.update_from_sonarr(self.sonarr_interface, **update_args)
+            for interface_id, writer, args in self.preferences.sonarr_yaml_writers:
+                writer.update_from_sonarr(
+                    self.sonarr_interfaces[interface_id],
+                    **args
+                )
 
         if (self.preferences.use_plex
             and len(self.preferences.plex_yaml_writers) > 0):
@@ -143,6 +144,18 @@ class Manager:
             )
 
 
+    @notify('Starting to assign interfaces..')
+    def assign_interfaces(self) -> None:
+        """Assign all interfaces to each Show known to this Manager"""
+
+        # Assign interfaces for each show
+        for show in tqdm(self.shows + self.archives, desc='Assign interfaces',
+                         **TQDM_KWARGS):
+            show.assign_interfaces(
+                self.plex_interface, self.sonarr_interfaces, self.tmdb_interface
+            )
+
+
     @notify("Starting to set show ID's..")
     def set_show_ids(self) -> None:
         """Set the series ID's of each Show known to this Manager"""
@@ -155,7 +168,7 @@ class Manager:
         for show in tqdm(self.shows + self.archives, desc='Setting series IDs',
                          **TQDM_KWARGS):
             # Select interfaces based on what's enabled
-            show.set_series_ids(self.sonarr_interface, self.tmdb_interface)
+            show.set_series_ids()
 
 
     @notify('Starting to read source files..')
@@ -168,7 +181,6 @@ class Manager:
         # Read source files for Show objects
         for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
             pbar.set_description(f'Reading source files for {show}')
-
             show.read_source()
             show.find_multipart_episodes()
 
@@ -186,10 +198,7 @@ class Manager:
         # possible interfaces
         for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
             pbar.set_description(f'Adding new episodes for {show}')
-
-            show.add_new_episodes(
-                self.sonarr_interface, self.plex_interface, self.tmdb_interface
-            )
+            show.add_new_episodes()
 
 
     @notify("Starting to set episode ID's..")
@@ -204,10 +213,7 @@ class Manager:
         # For each show in the Manager, set IDs for every episode
         for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
             pbar.set_description(f'Setting episode IDs for {show}')
-
-            show.set_episode_ids(
-                self.sonarr_interface, self.plex_interface, self.tmdb_interface
-            )
+            show.set_episode_ids()
 
 
     @notify('Starting to add translations..')
@@ -221,8 +227,7 @@ class Manager:
         # For each show in the Manager, add translation
         for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
             pbar.set_description(f'Adding translations for {show}')
-
-            show.add_translations(self.tmdb_interface)
+            show.add_translations()
 
 
     @notify('Starting to download logos..')
@@ -234,12 +239,9 @@ class Manager:
             return None
 
         # For each show in the Manager, download a logo
-        for show in (pbar := tqdm(self.shows + self.archives,
-                                  #desc='Downloading logos',
-                                  **TQDM_KWARGS)):
+        for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
             pbar.set_description(f'Downloading logo for {show}')
-
-            show.download_logo(self.tmdb_interface)
+            show.download_logo()
 
 
     @notify('Starting to select source images..')
@@ -256,8 +258,7 @@ class Manager:
         # Go through each show and download source images
         for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
             pbar.set_description(f'Selecting sources for {show}')
-
-            show.select_source_images(self.plex_interface, self.tmdb_interface)
+            show.select_source_images()
 
 
     @notify('Starting to create missing title cards..')
@@ -270,7 +271,6 @@ class Manager:
         # Go through every show in the Manager, create cards
         for show in (pbar := tqdm(self.shows, **TQDM_KWARGS)):
             pbar.set_description(f'Creating cards for {show}')
-
             show.create_missing_title_cards()
 
 
@@ -299,8 +299,7 @@ class Manager:
         # Go through each show in the Manager, update Plex
         for show in (pbar := tqdm(self.shows, **TQDM_KWARGS)):
             pbar.set_description(f'Updating Plex for {show}')
-
-            show.update_plex(self.plex_interface)
+            show.update_plex()
 
 
     @notify('Starting to update archives..')
@@ -316,7 +315,6 @@ class Manager:
         # Update each archive
         for show_archive in (pbar := tqdm(self.archives, **TQDM_KWARGS)):
             pbar.set_description(f'Updating archive for {show_archive}')
-            
             show_archive.create_missing_title_cards()
 
 
@@ -335,7 +333,6 @@ class Manager:
         # Go through each archive and create summaries
         for show_archive in (pbar := tqdm(self.archives, **TQDM_KWARGS)):
             pbar.set_description(f'Creating Summary for {show_archive}')
-
             show_archive.create_summary()
 
 
@@ -354,6 +351,7 @@ class Manager:
             self.create_shows()
 
         # Always execute these, even in serial mode
+        self.assign_interfaces()
         self.set_show_ids()
         self.read_show_source()
         self.add_new_episodes()

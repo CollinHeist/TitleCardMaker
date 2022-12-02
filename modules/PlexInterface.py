@@ -35,7 +35,9 @@ class PlexInterface:
 
 
     def __init__(self, database_directory: Path, url: str,
-                 x_plex_token: str=None, verify_ssl: bool=True) -> None:
+                 x_plex_token: str='NA', verify_ssl: bool=True,
+                 integrate_with_pmm_overlays: bool=False,
+                 filesize_limit: int=10485760) -> None:
         """
         Constructs a new instance of a Plex Interface.
         
@@ -44,10 +46,13 @@ class PlexInterface:
             url: URL of plex server.
             x_plex_token: X-Plex Token for sending API requests to Plex.
             verify_ssl: Whether to verify SSL requests when querying Plex.
+            integrate_with_pmm_overlays: Whether to integrate with PMM overlays
+                in image uploading.
+            filesize_limit: Number of bytes to limit a single file to during
+                upload.
         """
 
-        # Get global PreferenceParser and MediaInfoSet objects
-        self.preferences = global_objects.pp
+        # Get global MediaInfoSet objects
         self.info_set = global_objects.info_set
 
         # Create Session for caching HTTP responses
@@ -63,6 +68,10 @@ class PlexInterface:
         except Exception as e:
             log.critical(f'Cannot connect to Plex - returned error: "{e}"')
             exit(1)
+
+        # Store integration/filesize limit
+        self.integrate_with_pmm_overlays = integrate_with_pmm_overlays
+        self.filesize_limit = filesize_limit
         
         # Create/read loaded card database
         self.__db = TinyDB(database_directory / self.LOADED_DB)
@@ -341,12 +350,12 @@ class PlexInterface:
 
             # Get all Shows in this library
             for show in library.all():
-                # Skip show if has no year
+                # Skip show if it has no year
                 if show.year is None:
                     log.warning(f'Series {show.title} has no year - skipping')
                     continue
 
-                # Skip show if has no locations.. somehow..
+                # Skip show if it has no locations.. somehow..
                 if len(show.locations) == 0:
                     log.warning(f'Series {show.title} has no files - skipping')
                     continue
@@ -634,7 +643,7 @@ class PlexInterface:
         """
 
         # No compression necessary
-        if image.stat().st_size < self.preferences.plex_filesize_limit:
+        if image.stat().st_size < self.filesize_limit:
             return image
 
         # Start with a quality of 90%, decrement by 5% each time
@@ -642,7 +651,7 @@ class PlexInterface:
         small_image = image
 
         # Compress the given image until below the filesize limit
-        while small_image.stat().st_size > self.preferences.plex_filesize_limit:
+        while small_image.stat().st_size > self.filesize_limit:
             # Process image, exit if cannot be reduced
             quality -= 5
             if (small_image := ImageMaker.reduce_file_size(image,
@@ -713,7 +722,7 @@ class PlexInterface:
             # Upload card to Plex, optionally remove Overlay label
             try:
                 self.__retry_upload(pl_episode, card.resolve())
-                if self.preferences.integrate_with_pmm_overlays:
+                if self.integrate_with_pmm_overlays:
                     pl_episode.removeLabel(['Overlay'])
             except Exception as e:
                 error_count += 1

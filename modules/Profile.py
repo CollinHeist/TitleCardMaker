@@ -1,8 +1,8 @@
 from regex import match, IGNORECASE
+from typing import Any
 
 from modules.Debug import log
 from modules.MultiEpisode import MultiEpisode
-import modules.global_objects as global_objects
 
 class Profile:
     """
@@ -24,7 +24,7 @@ class Profile:
         
         Args:
             font: The Font for this profile.
-            hide_seasons: Whether to hide/show seasons.
+            hide_seasons: Whether to hide season text.
             episode_map: EpisodeMap for the series.
             episode_text_format: The episode text format string.
         """
@@ -133,6 +133,21 @@ class Profile:
             self.__episode_map.reset()
 
 
+    def convert_extras(self, card_type: 'BaseCardType',
+                       extras: dict[str, Any]) -> None:
+        """
+        Convert the given extras according to this profile's rules.
+
+        Args:
+            card_type: BaseCardType class to call `modify_extras` on.
+            extras: Dictionary of extras to convert/modify.
+        """
+
+        card_type.modify_extras(
+            extras, self.__use_custom_font, self.__use_custom_seasons
+        )
+
+
     def get_season_text(self, episode_info: 'EpisodeInfo') -> str:
         """
         Gets the season text for the given season number, after applying this
@@ -189,12 +204,7 @@ class Profile:
         if isinstance(episode, MultiEpisode):
             try:
                 return episode.modify_format_string(format_string).format(
-                    season_number=episode.season_number,
-                    episode_start=episode.episode_start,
-                    episode_end=episode.episode_end,
-                    abs_start=episode.abs_start,
-                    abs_end=episode.abs_end,
-                    **episode.extra_characteristics,
+                    **episode.characteristics,
                 )
             except Exception as e:
                 log.error(f'Cannot format episode text "{format_string}" for '
@@ -203,12 +213,7 @@ class Profile:
 
         # Standard Episode object
         try:
-            return format_string.format(
-                season_number=episode.episode_info.season_number,
-                episode_number=episode.episode_info.episode_number,
-                abs_number=episode.episode_info.abs_number,
-                **episode.extra_characteristics,
-            )
+            return format_string.format(**episode.characteristics)
         except Exception as e:
             log.error(f'Cannot format episode text "{format_string}" for '
                       f'{episode} ({e})')
@@ -269,8 +274,8 @@ class Profile:
             f'{two_digit_prefix_group}{one_to_99_group})'
         )
 
-        # Full regex for any number followed by colon, comma, or dash (+spaces)
-        full_regex = rf'{define_all}(?&one_to_99)\s*[:,-]?\s*'
+        # Full regex for any number followed by colon, comma, dash, or period
+        full_regex = rf'{define_all}(?&one_to_99)\s*[:,.-]?\s*'
 
         # Look for number indicator to replace with above regex
         format_string = self.episode_text_format
@@ -330,10 +335,10 @@ class Profile:
             cased_title = title_text
         else:
             cased_title = self.font.case(title_text)
-
+        
         # Apply font replacements
         replaced_title = cased_title
         for old, new in self.font.replacements.items():
             replaced_title = replaced_title.replace(old, new)
-            
+        
         return replaced_title

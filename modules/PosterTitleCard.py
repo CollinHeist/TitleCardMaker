@@ -142,6 +142,11 @@ class PosterTitleCard(BaseCardType):
     def create(self) -> None:
         """Create the title card as defined by this object."""
 
+        # Source DNE, error and exit
+        if not self.source_file.exists():
+            log.error(f'Poster "{self.source_file.resolve()}" does not exist')
+            return None
+
         # If no logo is specified, create empty logo command
         if self.logo is None:
             title_offset = 0
@@ -167,12 +172,13 @@ class PosterTitleCard(BaseCardType):
         # Single command to create card
         command = ' '.join([
             f'convert',
-            # Resize and optionally blur source image
+            # Resize poster
             f'"{self.source_file.resolve()}"',
             f'-resize "x1800"',
-            f'-extent "3200x1800"',
-            f'-blur {self.BLUR_PROFILE}' if self.blur else '',
-            f'-colorspace gray' if self.grayscale else '',
+            # Extend image canvas to full size
+            f'-extent "{self.TITLE_CARD_SIZE}"',
+            # Apply style modifiers
+            *self.style,
             # Add gradient overlay
             f'"{self.__GRADIENT_OVERLAY.resolve()}"',
             f'-flatten',
