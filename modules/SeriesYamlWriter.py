@@ -41,6 +41,7 @@ class SeriesYamlWriter:
         self.compact_mode = compact_mode
 
         # Convert volume map to string of sanitized paths
+        self.volume_map = {}
         try:
             std = lambda p: str(CleanPath(p).sanitize())
             self.volume_map = {std(source): std(tcm) 
@@ -55,7 +56,7 @@ class SeriesYamlWriter:
             self.sync_mode = sync_mode
         else:
             log.error(f'Invalid sync mode - must be "append" or "match"')
-            self.valid = False            
+            self.valid = False
 
         # Store optional template to add
         self.template = template
@@ -66,7 +67,7 @@ class SeriesYamlWriter:
         else:
             self.card_directory = card_directory.sanitize()
             self.card_directory.mkdir(parents=True, exist_ok=True)
-        
+
         # Add representer for compact YAML writing
         # Pseudo-class for a flow map - i.e. dictionary
         class flowmap(dict): pass
@@ -86,8 +87,8 @@ class SeriesYamlWriter:
 
         return (f'<SeriesYamlWriter {self.file=}, {self.sync_mode=}, '
                 f'{self.compact_mode=}, {self.volume_map=}>')
-    
-    
+
+
     def __convert_path(self, path: str, *, media: bool) -> str:
         """
         Convert the given path string to its TCM-equivalent by using this 
@@ -184,7 +185,7 @@ class SeriesYamlWriter:
                     del yaml['series'][key]
 
 
-    def __write(self, yaml: dict[str: dict[str: str]]) -> None:
+    def __write(self, yaml: dict[str, dict[str, str]]) -> None:
         """
         Write the given YAML to this Writer's file. This either utilizes compact
         or verbose style.
@@ -343,7 +344,7 @@ class SeriesYamlWriter:
                                required_tags: list[str],
                                exclusions: list[dict[str, str]],
                                monitored_only: bool, downloaded_only: bool
-                               )->dict[str, dict[str, str]]:
+                               ) -> dict[str: dict[str, str]]:
         """
         Get the YAML from Sonarr, as filtered by the given attributes.
 
@@ -383,7 +384,7 @@ class SeriesYamlWriter:
             # Convert Sonarr path to TCM path
             original_path = sonarr_path
             sonarr_path = self.__convert_path(sonarr_path, media=True)
-            
+
             # Attempt to find matching Plex library
             library = None
             for tcm_base, library_name in plex_libraries.items():
@@ -493,8 +494,8 @@ class SeriesYamlWriter:
         # Create libraries YAML
         libraries_yaml = {}
         for library, paths in libraries.items():
-            # If this library has multiple directories, create entry for each
-            # if no override card directory is provided
+            # If this library has multiple directories, create entry for each if
+            # no override card directory is provided
             if len(paths) > 1 and self.card_directory is None:
                 for index, path in enumerate(paths):
                     libraries_yaml[f'{library} - Directory {index+1}'] = {

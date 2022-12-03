@@ -19,6 +19,12 @@ class WebInterface:
     """Regex to match URL's"""
     _URL_REGEX = re_compile(r'^((?:https?:\/\/)?.+)(?=\/)', IGNORECASE)
 
+    """404 content to ignore"""
+    BAD_CONTENT = (
+        b'<html><head><title>Not Found</title></head>'
+        b'<body><h1>404 Not Found</h1></body></html>',
+    )
+
     
     def __init__(self, name: str, verify_ssl: bool=True, *,
                  cache: bool=True) -> None:
@@ -129,8 +135,10 @@ class WebInterface:
         # Attempt to download the image, if an error happens log to user
         try:
             # Get content from URL
+            error = lambda s: f'URL {image_url} returned {s} content'
             image = get(image_url).content
-            assert len(image) > 0, f'URL {image_url} returned no content'
+            assert len(image) > 0, error('no')
+            assert image not in WebInterface.BAD_CONTENT, error('bad')
 
             # Write content to file
             with destination.open('wb') as file_handle:
