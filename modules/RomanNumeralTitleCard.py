@@ -636,10 +636,14 @@ class RomanNumeralTitleCard(BaseCardType):
             episode_text_format: The episode text format in use.
         
         Returns:
-            The boolean value of custom_episode_map.
+            True if the episode map or episode text format is custom, False
+            otherwise.
         """
 
-        return custom_episode_map
+        standard_etf = RomanNumeralTitleCard.EPISODE_TEXT_FORMAT
+
+        return (custom_episode_map 
+                or episode_text_format != standard_etf)
 
 
     def create(self):

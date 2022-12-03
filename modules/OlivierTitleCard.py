@@ -265,7 +265,8 @@ class OlivierTitleCard(BaseCardType):
             episode_text_format: The episode text format in use.
         
         Returns:
-            True if custom season titles are indicated, False otherwise.
+            True if the episode map or episode text format is custom, False
+            otherwise.
         """
 
         standard_etf = OlivierTitleCard.EPISODE_TEXT_FORMAT.upper()
