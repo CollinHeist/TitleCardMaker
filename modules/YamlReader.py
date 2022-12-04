@@ -1,3 +1,5 @@
+from typing import Any
+
 from yaml import safe_load
 
 from modules.Debug import log
@@ -8,8 +10,7 @@ from modules.TitleCard import TitleCard
 class YamlReader:
     """This class describes an object capable of reading and parsing YAML."""
 
-    """Function for getting the lowercase, stripped equivalent of a string"""
-    TYPE_LOWER_STR = lambda s: str(s).lower().strip()
+    __slots__ = ('_base_yaml', 'valid', '__log')
     
     
     def __init__(self, yaml: dict={}, *,
@@ -31,6 +32,15 @@ class YamlReader:
         if not isinstance(yaml, dict):
             self.__log(f'Specified YAML is invalid')
             self.valid = False
+
+
+    @staticmethod
+    def TYPE_LOWER_STR(value: Any) -> str:
+        """
+        Function for getting the lowercase, stripped equivalent of a string.
+        """
+
+        return str(value).lower().strip()
 
 
     def _get(self, *attributes, type_: type=None, default=None):

@@ -32,14 +32,15 @@ class Show(YamlReader):
     BACKDROP_FILENAME = 'backdrop.jpg'
 
     __slots__ = (
-        'preferences', 'valid', 'series_info', 'media_directory', 'card_class',
-        'episode_text_format', 'library_name', 'library', 'archive',
-        'archive_all_variations', 'sonarr_sync', 'sync_specials', 'tmdb_sync',
-        'tmdb_skip_localized_images', 'watched_style', 'unwatched_style',
-        'hide_seasons','__episode_map', 'title_language', 'font',
-        'source_directory', 'logo', 'backdrop', 'file_interface', 'profile',
-        'season_poster_set', 'episodes', '__is_archive', 'refresh_titles',
-        'style_set', 'plex_interface', 'sonarr_interface', 'tmdb_interface',
+        'preferences', 'info_set', 'series_info', 'card_filename_format',
+        'card_class', 'episode_text_format', 'library_name', 'library',
+        'media_directory', 'archive', 'archive_name', 'archive_all_variations',
+        'episode_data_source', 'refresh_titles', 'sonarr_sync', 'sync_specials',
+        'tmdb_sync', 'tmdb_skip_localized_images', 'style_set', 'hide_seasons',
+        'title_languages', 'extras', '__episode_map', 'font','source_directory',
+        'logo', 'backdrop', 'file_interface', 'profile', 'season_poster_set',
+        'episodes', 'plex_interface', 'sonarr_interface', 'tmdb_interface',
+        '__is_archive',
     )
 
     def __init__(self, name: str, yaml_dict: dict, source_directory: Path,

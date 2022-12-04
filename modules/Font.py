@@ -23,10 +23,9 @@ class Font(YamlReader):
     _PERCENT_REGEX_POSITIVE = re_compile(r'^\d+\.?\d*%$')
 
     __slots__ = (
-        'valid', '__yaml', '__card_class', '__series_info', '__validator',
-        '__validate', 'color', 'size', 'file', 'replacements', 'delete_missing',
-        'case_name', 'case', 'vertical_shift', 'interline_spacing', 'kerning',
-        'stroke_width',
+        '__card_class', '__series_info', '__validator', '__validate', 'color',
+        'size', 'file', 'replacements', 'delete_missing', 'case_name', 'case',
+        'vertical_shift', 'interline_spacing', 'kerning', 'stroke_width',
     )
     
 
@@ -45,7 +44,6 @@ class Font(YamlReader):
         super().__init__(yaml)
         
         # Store arguments
-        self.__yaml = yaml
         self.__card_class = card_class
         self.__series_info = series_info
 
@@ -101,7 +99,7 @@ class Font(YamlReader):
             self.__validate = value
 
         # Case
-        if (value := self._get('case', type_=self.TYPE_LOWER_STR)):
+        if (value := self._get('case', type_=self.TYPE_LOWER_STR)) is not None:
             if value in self.__card_class.CASE_FUNCTIONS:
                 self.case_name = value
                 self.case = self.__card_class.CASE_FUNCTIONS[value]
