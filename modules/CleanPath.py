@@ -35,10 +35,10 @@ class CleanPath(_Path_):
     def finalize(self) -> 'CleanPath':
         """
         Finalize this path by properly resolving if absolute or relative.
-        
+
         Returns:
             This object as a fully resolved path.
-            
+
         Raises:
             OSError if the resolution fails (likely due to an unresolvable
             filename).
@@ -73,11 +73,10 @@ class CleanPath(_Path_):
             path: Path to sanitize.
 
         Returns:
-            Sanitized path. If on Windows, this is is all parts but the root; if
-            on UNIX, this all is parts.
+            Sanitized path. This is a reconstructed CleanPath object with each
+            folder (or part), except the root/drive, sanitized.
         """
 
-        # Sanitize all parts except the root/drive
         return CleanPath(
             path.parts[0],
             *[CleanPath.sanitize_name(name) for name in path.parts[1:]]
