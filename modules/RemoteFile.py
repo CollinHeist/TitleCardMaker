@@ -55,6 +55,7 @@ class RemoteFile:
             return None
 
         # Download the remote file for local use
+        self.valid = True
         try:
             self.download()
             log.debug(f'Downloaded RemoteFile "{username}/{filename}"')
@@ -63,6 +64,7 @@ class RemoteFile:
             except Exception:
                 pass
         except Exception as e:
+            self.valid = False
             log.error(f'Could not download RemoteFile "{username}/{filename}", '
                       f'returned "{e}"')
 
@@ -86,7 +88,8 @@ class RemoteFile:
         """
         Get the absolute path of the locally downloaded file.
         
-        :returns:   Path to the locally downloaded file.
+        Returns:
+            Path to the locally downloaded file.
         """
 
         return self.local_file.resolve()
@@ -94,28 +97,37 @@ class RemoteFile:
 
     @retry(stop=stop_after_attempt(3),
            wait=wait_fixed(3)+wait_exponential(min=1, max=16))
-    def __get_remote_content(self) -> bytes:
+    def __get_remote_content(self) -> 'Response':
         """
         Get the content at the remote source.
 
-        :returns:   Bytes of the remote content
+        Returns:
+            Response object from this object's remote source.
         """
 
-        return get(self.remote_source).content
+        return get(self.remote_source)
 
 
     def download(self):
         """
         Download the specified remote file from the TCM CardTypes github, and
         write it to a temporary local file.
+
+        Raises:
+            AssertionError if the Response is not OK; Exception if there is some
+            uncaught error.
         """
 
         # Download remote file
         content = self.__get_remote_content()
 
+        # Verify content is valid
+        assert content.ok, 'File does not exist'
+        
         # Write content to file
         with self.local_file.open('wb') as file_handle:
-            file_handle.write(content)
+            file_handle.write(content.content)
+
 
     @staticmethod
     def reset_loaded_database(database_directory: Path) -> None:
