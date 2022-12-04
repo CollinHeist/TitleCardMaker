@@ -33,8 +33,11 @@ class FrameTitleCard(BaseCardType):
     """Whether this class uses season titles for the purpose of archives"""
     USES_SEASON_TITLE = True
 
-    """Defaults color for space outside the frame, and the index text"""
+    """Default colors for space outside the frame, and index text"""
     BACKGROUND_COLOR = 'black'
+
+    """Index text font characteristics"""
+    EPISODE_TEXT_FONT = REF_DIRECTORY / 'guess-sans-medium.otf'
     EPISODE_TEXT_COLOR = 'rgb(100, 100, 100)'
 
     """Source path for the gradient image overlayed over all title cards"""
@@ -149,7 +152,7 @@ class FrameTitleCard(BaseCardType):
 
         return [
             f'-background transparent',
-            f'-font "{self.font}"',
+            f'-font "{self.EPISODE_TEXT_FONT.resolve()}"',
             f'-pointsize 50',
             f'-fill "{self.episode_text_color}"',
         ]
