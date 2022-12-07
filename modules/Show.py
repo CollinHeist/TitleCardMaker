@@ -265,6 +265,7 @@ class Show(YamlReader):
 
         if (value := self._get('refresh_titles', type_=bool)) is not None:
             self.refresh_titles = value
+            self.series_info.match_titles = value
 
         if (value := self._get('sonarr_sync', type_=bool)) is not None:
             self.sonarr_sync = value
@@ -438,8 +439,8 @@ class Show(YamlReader):
             return None
 
         # Inner function to filter episodes
-        def filter_ep(episode) -> bool:
-            # Exclude special if special and not syncing specials
+        def filter_ep(episode: Episode) -> bool:
+            # Exclude if special and not syncing specials
             if not self.sync_specials and episode.season_number == 0:
                 return False
 

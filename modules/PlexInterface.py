@@ -81,7 +81,7 @@ class PlexInterface:
         self.__warned = set()
 
 
-    def catch_and_log(message: str, log_func=log.error, *,
+    def catch_and_log(message: str, log_func: callable=log.error, *,
                       default=None) -> callable:
         """
         Return a decorator that logs (with the given log function) the given
@@ -290,7 +290,7 @@ class PlexInterface:
 
     @catch_and_log('Error getting library paths', default={})
     def get_library_paths(self, filter_libraries: list[str]=[]
-                          ) -> dict[str: list[str]]:
+                          ) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
 
