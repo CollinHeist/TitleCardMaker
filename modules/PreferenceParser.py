@@ -311,26 +311,26 @@ class PreferenceParser(YamlReader):
 
         if (value := self._get('options', 'card_extension', type_=str)) != None:
             extension = ('' if value[0] == '.' else '.') + value
-            if extension not in ImageMaker.VALID_IMAGE_EXTENSIONS:
+            if extension in ImageMaker.VALID_IMAGE_EXTENSIONS:
+                self.card_extension = extension
+            else:
                 log.critical(f'Card extension "{extension}" is invalid')
                 self.valid = False
-            else:
-                self.card_extension = extension
 
         if (value := self._get('options', 'filename_format', type_=str)) !=None:
-            if not TitleCard.validate_card_format_string(value):
-                self.valid = False
-            else:
+            if TitleCard.validate_card_format_string(value):
                 self.card_filename_format = value
+            else:
+                self.valid = False
 
-        if (value := self._get('options',
-                               'image_source_priority', type_=str)) is not None:
-            sources = tuple(map(self.TYPE_LOWER_STR, value.split(',')))
-            if not all(_ in self.VALID_IMAGE_SOURCES for _ in sources):
+        if (value := self._get('options', 'image_source_priority',
+                               type_=self.TYPE_LOWER_STR)) is not None:
+            sources = tuple(value.replace(' ', '').split(','))
+            if all(_ in self.VALID_IMAGE_SOURCES for _ in sources):
+                self.image_source_priority = sources
+            else:
                 log.critical(f'Image source priority "{value}" is invalid')
                 self.valid = False
-            else:
-                self.image_source_priority = sources
 
         if (value := self._get('options', 'episode_data_source',
                                type_=self.TYPE_LOWER_STR)) is not None:
