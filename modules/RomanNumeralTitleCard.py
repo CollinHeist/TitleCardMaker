@@ -190,6 +190,9 @@ class RomanNumeralTitleCard(BaseCardType):
 
     """Default episode text format for this class"""
     EPISODE_TEXT_FORMAT = '{episode_number}'
+    GENERIC_EPISODE_TEXT_FORMATS = (
+        EPISODE_TEXT_FORMAT, '{abs_number}',
+    )
 
     """Whether this CardType uses season titles for archival purposes"""
     USES_SEASON_TITLE = True
@@ -640,10 +643,10 @@ class RomanNumeralTitleCard(BaseCardType):
             otherwise.
         """
 
-        standard_etf = RomanNumeralTitleCard.EPISODE_TEXT_FORMAT
+        standard_etfs = RomanNumeralTitleCard.GENERIC_EPISODE_TEXT_FORMATS
 
         return (custom_episode_map 
-                or episode_text_format != standard_etf)
+                or episode_text_format not in standard_etfs)
 
 
     def create(self):
