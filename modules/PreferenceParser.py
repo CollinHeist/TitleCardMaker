@@ -2,6 +2,7 @@ from collections import namedtuple
 from pathlib import Path
 from typing import Any, Iterable
 
+from num2words import CONVERTER_CLASSES as SUPPORTED_LANGUAGE_CODES
 from tqdm import tqdm
 
 from modules.CleanPath import CleanPath
@@ -85,6 +86,7 @@ class PreferenceParser(YamlReader):
         self.validate_fonts = True
         self.season_folder_format = self.DEFAULT_SEASON_FOLDER_FORMAT
         self.sync_specials = True
+        self.supported_language_codes = []
         self.archive_directory = None
         self.create_archive = False
         self.archive_all_variations = True
@@ -350,6 +352,15 @@ class PreferenceParser(YamlReader):
 
         if (value := self._get('options', 'sync_specials', type_=bool)) != None:
             self.sync_specials = value
+
+        if (value := self._get('options', 'language_codes', type_=list)) !=None:
+            if all(code in SUPPORTED_LANGUAGE_CODES.keys() for code in value):
+                self.supported_language_codes = value
+            else:
+                codes = ', '.join(SUPPORTED_LANGUAGE_CODES)
+                log.critical(f'Not all language codes are recognized')
+                log.info(f'Must be one of {codes}')
+                self.valid = False
 
 
     def __parse_yaml_archive(self) -> None:
