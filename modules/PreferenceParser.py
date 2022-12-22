@@ -63,6 +63,10 @@ class PreferenceParser(YamlReader):
         # Initialize parent YamlReader object - errors are critical
         super().__init__(log_function=log.critical)
         self.version = self.VERSION_FILE.read_text()
+        
+        # Store and read file
+        self.file = file
+        self.read_file()
 
         # Database object directory, create if DNE
         self.DEFAULT_TEMP_DIR.mkdir(parents=True, exist_ok=True)
@@ -71,10 +75,6 @@ class PreferenceParser(YamlReader):
         else:
             self.database_directory = self.DEFAULT_TEMP_DIR
         self.database_directory.mkdir(parents=True, exist_ok=True)
-        
-        # Store and read file
-        self.file = file
-        self.read_file()
 
         # Check for required source directory
         if (value := self._get('options', 'source', type_=str)) is None:

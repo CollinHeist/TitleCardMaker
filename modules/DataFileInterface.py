@@ -166,10 +166,6 @@ class DataFileInterface:
         if episode_info.abs_number is not None:
             entry['abs_number'] = episode_info.abs_number
 
-        # for id_type in ('imdb_id', 'tmdb_id', 'tvdb_id'):
-        #     if episode_info.has_id(id_type):
-        #         entry[id_type] = getattr(episode_info, id_type)
-
         return entry
 
 
