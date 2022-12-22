@@ -63,6 +63,14 @@ class PreferenceParser(YamlReader):
         # Initialize parent YamlReader object - errors are critical
         super().__init__(log_function=log.critical)
         self.version = self.VERSION_FILE.read_text()
+
+        # Database object directory, create if DNE
+        self.DEFAULT_TEMP_DIR.mkdir(parents=True, exist_ok=True)
+        if is_docker:
+            self.database_directory = self.file.parent / '.objects'
+        else:
+            self.database_directory = self.DEFAULT_TEMP_DIR
+        self.database_directory.mkdir(parents=True, exist_ok=True)
         
         # Store and read file
         self.file = file
@@ -132,14 +140,6 @@ class PreferenceParser(YamlReader):
         # Whether to use magick prefix
         self.use_magick_prefix = False
         self.__determine_imagemagick_prefix()
-
-        # Database object directory, create if DNE
-        self.DEFAULT_TEMP_DIR.mkdir(parents=True, exist_ok=True)
-        if is_docker and not (self.DEFAULT_TEMP_DIR / 'loaded.json').exists():
-            self.database_directory = self.file.parent / '.objects'
-        else:
-            self.database_directory = self.DEFAULT_TEMP_DIR
-        self.database_directory.mkdir(parents=True, exist_ok=True)
 
 
     def __repr__(self) -> str:
