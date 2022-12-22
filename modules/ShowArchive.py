@@ -73,6 +73,7 @@ class ShowArchive:
                 # For non-standard card classes, modify profile directory name
                 if base_show.card_class.ARCHIVE_NAME != 'standard':
                     profile_directory+=f' - {base_show.card_class.ARCHIVE_NAME}'
+            # Manually specified archive name
             else:
                 profile_directory = base_show.archive_name
 
@@ -82,12 +83,13 @@ class ShowArchive:
 
             # Create modified Show object for this profile
             new_show = base_show._make_archive(new_media_directory)
-            
-            # Convert this new show's profile
-            new_show.profile.convert_profile(**attributes)
-            if not new_show.profile._Profile__use_custom_seasons:
-                new_show.episode_text_format =\
-                    new_show.card_class.EPISODE_TEXT_FORMAT
+
+            # Convert this new show's profile if no manual archive name
+            if base_show.archive_name is None:
+                new_show.profile.convert_profile(**attributes)
+                if not new_show.profile._Profile__use_custom_seasons:
+                    new_show.episode_text_format = \
+                        new_show.card_class.EPISODE_TEXT_FORMAT
 
             # Override any extras
             new_show.profile.convert_extras(new_show.card_class,new_show.extras)

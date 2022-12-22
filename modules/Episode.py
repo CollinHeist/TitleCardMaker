@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Any
 
+from modules.CleanPath import CleanPath
 from modules.Debug import log
 from modules.StyleSet import StyleSet
 from modules.TitleCard import TitleCard
@@ -148,7 +149,7 @@ class Episode:
         elif (self._base_source / new_source).exists():
             self.source = self._base_source / new_source
         else:
-            self.source = Path(new_source)
+            self.source = CleanPath(new_source).sanitize()
 
         # Set the downloadable flag for the new source
         self.downloadable_source = downloadable

@@ -3,9 +3,11 @@ from importlib.util import spec_from_file_location, module_from_spec
 
 from pathlib import Path
 from requests import get
-
-from modules.Debug import log
 from tinydb import TinyDB, where
+
+from modules.CleanPath import CleanPath
+from modules.Debug import log
+from modules.RemoteFile import RemoteFile
 
 class RemoteCardType:
     """
@@ -44,8 +46,11 @@ class RemoteCardType:
         # Get database of loaded assets/cards
         self.loaded = TinyDB(database_directory / self.LOADED)
 
+        # Assume file is valid until invalidated
+        self.valid = True
+
         # If local file has been specified..
-        if (file := Path(remote)).exists():
+        if (file := CleanPath(remote).sanitize()).exists():
             # Get class name from file
             class_name = file.stem
             file_name = str(file.resolve())
@@ -82,8 +87,13 @@ class RemoteCardType:
 
             # Get class from module namespace
             self.card_class = module.__dict__[class_name]
-            self.valid = True
-
+            
+            # Validate that each RemoteFile of this class loaded correctly
+            for attribute_name in dir(self.card_class):
+                attribute = getattr(self.card_class, attribute_name)
+                if isinstance(attribute, RemoteFile):
+                    self.valid &= attribute.valid
+            
             # Add this url to the loaded database
             try:
                 self.loaded.insert({'remote': url})

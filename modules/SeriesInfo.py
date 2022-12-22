@@ -1,9 +1,9 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from re import match, compile as re_compile
-from typing import ClassVar
+from typing import ClassVar, Any
 
+from modules.CleanPath import CleanPath
 from modules.Debug import log
-from modules.TitleCard import TitleCard
 
 @dataclass(eq=False, order=False)
 class SeriesInfo:
@@ -18,6 +18,7 @@ class SeriesInfo:
     sonarr_id: int=None
     tvdb_id: int=None
     tmdb_id: int=None
+    match_titles: bool=field(default=True, repr=False)
 
     """Regex to match name + year from given full name"""
     __FULL_NAME_REGEX: ClassVar['Pattern'] =re_compile(r'^(.*?)\s+\((\d{4})\)$')
@@ -69,7 +70,7 @@ class SeriesInfo:
         self.full_match_name = self.get_matching_title(self.full_name)
 
         # Set folder-safe name
-        self.legal_path = TitleCard.sanitize_name(self.full_name)
+        self.legal_path = CleanPath.sanitize_name(self.full_name)
 
 
     def has_id(self, id_: str) -> bool:

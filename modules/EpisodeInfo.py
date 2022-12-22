@@ -1,9 +1,60 @@
 from dataclasses import dataclass, field
-from typing import Any
 
 from num2words import num2words
 
+from modules.Debug import log
+import modules.global_objects as global_objects
 from modules.Title import Title
+
+
+class WordSet(dict):
+    """
+    Dictionary subclass that contains keys for translated word-versions of
+    numbers.
+    """
+
+    def add_numeral(self, label: str, number: int, lang: str=None) -> None:
+        """
+        Add the cardinal and ordinal versions of the given number under the
+        given label. For example:
+
+        >>> word_set = WordSet()
+        >>> word_set.add_numeral('season_number', 4)
+        >>> print(word_set)
+        {'season_number_cardinal': 'four', 'season_number_ordinal': 'fourth'}
+        >>> word_set.add_numeral('abs_number', 2, 'es')
+        {'season_number_cardinal': 'four', 'season_number_ordinal': 'fourth',
+         'abs_number_cardinal_es': 'dos', 'abs_number_ordinal_es': 'segundo'}
+
+        Args:
+            label: Label key to add the converted number under.
+            number: Number to wordify and add into this object.
+            lang: Optional language to wordify the object into. Appended to any
+                added keys.
+        """
+
+        # If value is None, do nothing
+        if number is None:
+            return None
+
+        # If a specific language was indicated, use in conversion
+        if lang:
+            # Catch exceptions caused by an unsupported language
+            try:
+                cardinal = num2words(number, to='cardinal', lang=lang)
+                self.update({f'{label}_cardinal_{lang}': cardinal})
+            except NotImplementedError: pass
+            try:
+                ordinal = num2words(number, to='ordinal', lang=lang)
+                self.update({f'{label}_ordinal_{lang}': ordinal})
+            except NotImplementedError: pass
+        # No language indicated, convert using base language
+        else:
+            self.update({
+                f'{label}_cardinal': num2words(number, to='cardinal'),
+                f'{label}_ordinal': num2words(number, to='ordinal'),
+            })
+
 
 @dataclass(eq=False, order=False)
 class EpisodeInfo:
@@ -25,6 +76,7 @@ class EpisodeInfo:
     queried_sonarr: bool=False
     queried_tmdb: bool=False
     key: str = field(init=False, repr=False)
+    word_set: WordSet = field(init=False, repr=False)
     
 
     def __post_init__(self):
@@ -42,6 +94,22 @@ class EpisodeInfo:
 
         # Create key
         self.key = f'{self.season_number}-{self.episode_number}'
+
+        # Add word variations for each of this episode's indices
+        self.word_set = WordSet()
+        for label, number in (
+            ('season_number', self.season_number),
+            ('episode_number', self.episode_number),
+            ('abs_number', self.abs_number)):
+            self.word_set.add_numeral(label, number)
+
+        # Add translated word variations for each globally enabled language
+        for lang in global_objects.pp.supported_language_codes:
+            for label, number in (
+                ('season_number', self.season_number),
+                ('episode_number', self.episode_number),
+                ('abs_number', self.abs_number)):
+                self.word_set.add_numeral(label, number, lang)
 
 
     def __str__(self) -> str:
@@ -145,7 +213,7 @@ class EpisodeInfo:
 
 
     @property
-    def characteristics(self) -> dict[str, Any]:
+    def characteristics(self) -> dict[str, 'int | str']:
         """
         Get the characteristics of this object for formatting.
 
@@ -154,29 +222,11 @@ class EpisodeInfo:
             indices of the episode in numeric, cardinal, and ordinal form.
         """
 
-        # Get the cardinal/ordinal values of this episode's indices
-        season_number_cardinal = num2words(self.season_number, to='cardinal')
-        season_number_ordinal = num2words(self.season_number, to='ordinal')
-        episode_number_cardinal = num2words(self.episode_number, to='cardinal')
-        episode_number_ordinal = num2words(self.episode_number, to='ordinal')
-
-        # Only convert if absolute number is set
-        if self.abs_number is None:
-            abs_number_cardinal, abs_number_ordinal = None, None
-        else:
-            abs_number_cardinal = num2words(self.abs_number, to='cardinal')
-            abs_number_ordinal = num2words(self.abs_number, to='ordinal')
-
         return {
             'season_number': self.season_number,
-            'season_number_cardinal': season_number_cardinal,
-            'season_number_ordinal': season_number_ordinal,
             'episode_number': self.episode_number,
-            'episode_number_cardinal': episode_number_cardinal,
-            'episode_number_ordinal': episode_number_ordinal,
             'abs_number': self.abs_number,
-            'abs_number_cardinal': abs_number_cardinal,
-            'abs_number_ordinal': abs_number_ordinal,
+            **self.word_set,
         }
 
 

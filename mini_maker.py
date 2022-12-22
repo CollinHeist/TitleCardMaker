@@ -6,6 +6,7 @@ from re import match, IGNORECASE
 
 try:
     from modules.AspectRatioFixer import AspectRatioFixer
+    from modules.CleanPath import CleanPath
     from modules.CollectionPosterMaker import CollectionPosterMaker
     from modules.Debug import log
     from modules.GenreMaker import GenreMaker
@@ -383,10 +384,12 @@ if hasattr(args, 'title_card'):
         args.font_color = CardClass.TITLE_COLOR
     
     # Create the given card
-    CardClass(
+    output_file = CleanPath(args.title_card[1]).sanitize()
+    output_file.unlink(missing_ok=True)
+    card = CardClass(
         episode_text=args.episode,
         source=Path(args.title_card[0]), 
-        output_file=Path(args.title_card[1]),
+        output_file=output_file,
         season_text=('' if not args.season else args.season),
         title='\n'.join(args.title),
         font=args.font.resolve(),
@@ -400,7 +403,15 @@ if hasattr(args, 'title_card'):
         blur=args.blur,
         grayscale=args.grayscale,
         **arbitrary_data,
-    ).create()
+    )
+
+    # Create, log success/failure
+    card.create()
+    if output_file.exists():
+        log.info(f'Created "{output_file.resolve()}"')
+    else:
+        log.warning(f'Could not create "{output_file.resolve()}"')
+        card.image_magick.print_command_history()
 
 # Correct aspect ration
 if hasattr(args, 'ratio'):

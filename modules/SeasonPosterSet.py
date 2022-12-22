@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Union
 
 from num2words import num2words
 from re import compile as re_compile
@@ -7,8 +6,9 @@ from re import compile as re_compile
 from modules.Debug import log
 import modules.global_objects as global_objects
 from modules.SeasonPoster import SeasonPoster
+from modules.YamlReader import YamlReader
 
-class SeasonPosterSet:
+class SeasonPosterSet(YamlReader):
     """
     This class defines a set of SeasonPoster objects for a single show. This
     class is initialized with via the season poster config, and mainly wraps the
@@ -22,9 +22,11 @@ class SeasonPosterSet:
     """Regex to identify season number from poster filenames"""
     __SEASON_NUMBER_REGEX = re_compile(r'^season(\d+).jpg$')
 
-    __slots__ = ('valid', 'font_file', 'font_color', 'font_kerning', 'posters',
-                 'font_size', '__source_directory', '__logo', 'has_posters',
-                 '__media_directory')
+    __slots__ = (
+        'valid', 'font_file', 'font_color', 'font_kerning', 'posters',
+        'font_size', '__source_directory', '__logo', 'has_posters',
+        '__media_directory'
+    )
     
 
     def __init__(self, episode_map: 'EpisodeMap', source_directory: Path,
@@ -42,8 +44,11 @@ class SeasonPosterSet:
             poster_config: Config from the container series' YAML.
         """
 
+        # Initialize parent YamlReader
+        poster_config = {} if poster_config is None else poster_config
+        super().__init__(poster_config)
+
         # Assign default attributes
-        self.valid = True
         self.font_file = SeasonPoster.SEASON_TEXT_FONT
         self.font_color = SeasonPoster.SEASON_TEXT_COLOR
         self.font_kerning = 1.0
@@ -59,59 +64,52 @@ class SeasonPosterSet:
         self.__media_directory = media_directory
         
         # If posters aren't enabled, skip rest of parsing
-        poster_config = {} if poster_config is None else poster_config
-        if (self.__media_directory is None
-            or not poster_config.get('create', True)):
+        if media_directory is None or not poster_config.get('create', True):
             return None
 
-        #  Read the font specification
-        self.__read_font(poster_config.get('font', {}))
+        # Read the font specification
+        self.__read_font()
 
         # Create SeasonPoster objects
         self.__prepare_posters(poster_config, episode_map)
 
 
-    def __read_font(self, font_config: dict) -> None:
+    def __read_font(self) -> None:
         """
-        Read the given font config for this poster set.
-        
-        Args:
-            font_config: The specified font configuration to read.
+        Read this object's font config for this poster set, updating attributes
+        and validity for each element.
         """
 
         # Exit if no config to parse
-        if font_config == {}:
+        if not self._is_specified('font'):
             return None
 
-        if (file := font_config.get('file')) != None:
-            if Path(file).exists():
-                self.font_file = Path(file)
+        if (file := self._get('font', 'file', type_=Path)) is not None:
+            if file.exists():
+                self.font_file = file
             else:
                 log.error(f'Font file "{file}" is invalid, no font file found.')
                 self.valid = False
 
-        if (color := font_config.get('color')) != None:
-            if (not isinstance(color, str)
-                or not bool(match('^#[a-fA-F0-9]{6}$', color))):
-                log.error(f'Font color "{color}" is invalid, specify as '
-                          f'"#xxxxxx"')
-            else:
-                self.font_color = color
+        if (color := self._get('font', 'color',
+                               type_=self.TYPE_LOWER_STR)) is not None:
+            self.font_color = color
 
-        if (kerning := font_config.get('kerning')) != None:
-            if (not isinstance(kerning, str)
-                or not bool(self.__PERCENT_REGEX.match(kerning))):
-                log.error(f'Font kerning "{kerning}" is invalid, specify as "x%')
-            else:
+        if (kerning := self._get('font', 'kerning',
+                                 type_=self.TYPE_LOWER_STR)) is not None:
+            if bool(self.__PERCENT_REGEX.match(kerning)):
                 self.font_kerning = float(kerning[:-1]) / 100.0
+            else:
+                log.error(f'Font kerning "{kerning}" is invalid, specify as "x%')
+                self.valid = False
 
-        if (size := font_config.get('size')) != None:
-            if (not isinstance(size, str)
-                or not bool(self.__PERCENT_REGEX_POSITIVE.match(size))):
+        if (size := self._get('font', 'size',
+                              type_=self.TYPE_LOWER_STR)) is not None:
+            if bool(self.__PERCENT_REGEX_POSITIVE.match(size)):
+                self.font_size = float(size[:-1]) / 100.0
+            else:
                 log.error(f'Font size "{size}" is invalid, specify as "x%"')
                 self.valid = False
-            else:
-                self.font_size = float(size[:-1]) / 100.0
 
 
     def __prepare_posters(self, poster_config: dict,
@@ -183,7 +181,7 @@ class SeasonPosterSet:
             )
 
 
-    def get_poster(self, season_number: int) -> Union[Path, None]:
+    def get_poster(self, season_number: int) -> 'Path | None':
         """
         Get the path to the Poster from this set for the given season number.
 

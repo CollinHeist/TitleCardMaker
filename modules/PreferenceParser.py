@@ -2,8 +2,10 @@ from collections import namedtuple
 from pathlib import Path
 from typing import Any, Iterable
 
+from num2words import CONVERTER_CLASSES as SUPPORTED_LANGUAGE_CODES
 from tqdm import tqdm
 
+from modules.CleanPath import CleanPath
 from modules.Debug import log, TQDM_KWARGS
 from modules.Font import Font
 from modules.ImageMagickInterface import ImageMagickInterface
@@ -71,7 +73,7 @@ class PreferenceParser(YamlReader):
             log.critical(f'Preference file missing required options/source '
                          f'attribute')
             exit(1)
-        self.source_directory = TitleCard.sanitize_full_directory(value)
+        self.source_directory = CleanPath(value).sanitize()
         
         # Setup default values that can be overwritten by YAML
         self.series_files = []
@@ -84,6 +86,7 @@ class PreferenceParser(YamlReader):
         self.validate_fonts = True
         self.season_folder_format = self.DEFAULT_SEASON_FOLDER_FORMAT
         self.sync_specials = True
+        self.supported_language_codes = []
         self.archive_directory = None
         self.create_archive = False
         self.archive_all_variations = True
@@ -183,16 +186,18 @@ class PreferenceParser(YamlReader):
             sync_yaml = YamlReader(static | sync, log_function=log.warning)
 
             # Skip if file wasn't specified
-            if (file := sync_yaml._get('file', type_=Path)) is None:
+            if (file := sync_yaml._get('file', type_=CleanPath)) is None:
                 return None
 
             # Create SeriesYamlWriter with this config
+            file = file.sanitize()
             writer = SeriesYamlWriter(
                 file,
                 sync_yaml._get('mode', type_=str, default='append'),
                 sync_yaml._get('compact_mode', type_=bool, default=True),
                 sync_yaml._get('volumes', type_=dict, default={}),
                 sync_yaml._get('add_template', type_=str, default=None),
+                sync_yaml._get('card_directory', type_=CleanPath, default=None),
             )
 
             # If invalid after initialization, error and exit
@@ -286,12 +291,13 @@ class PreferenceParser(YamlReader):
         if not self._is_specified('options'):
             return None
 
-        if (value := self._get('options', 'execution_mode', type_=str)) != None:
-            if (value := value.lower()) not in Manager.VALID_EXECUTION_MODES:
+        if (value := self._get('options', 'execution_mode',
+                               type_=self.TYPE_LOWER_STR)) != None:
+            if value in Manager.VALID_EXECUTION_MODES:
+                self.execution_mode = value
+            else:
                 log.critical(f'Execution mode "{value}" is invalid')
                 self.valid = False
-            else:
-                self.execution_mode = value
 
         if (value := self._get('options', 'series')) is not None:
             if isinstance(value, list):
@@ -307,31 +313,30 @@ class PreferenceParser(YamlReader):
 
         if (value := self._get('options', 'card_extension', type_=str)) != None:
             extension = ('' if value[0] == '.' else '.') + value
-            if extension not in ImageMaker.VALID_IMAGE_EXTENSIONS:
+            if extension in ImageMaker.VALID_IMAGE_EXTENSIONS:
+                self.card_extension = extension
+            else:
                 log.critical(f'Card extension "{extension}" is invalid')
                 self.valid = False
-            else:
-                self.card_extension = extension
 
         if (value := self._get('options', 'filename_format', type_=str)) !=None:
-            if not TitleCard.validate_card_format_string(value):
-                self.valid = False
-            else:
+            if TitleCard.validate_card_format_string(value):
                 self.card_filename_format = value
+            else:
+                self.valid = False
 
-        if (value := self._get('options',
-                               'image_source_priority', type_=str)) is not None:
-            lower_strip = lambda s: str(s).lower().strip()
-            sources = tuple(map(lower_strip, value.split(',')))
-            if not all(_ in self.VALID_IMAGE_SOURCES for _ in sources):
+        if (value := self._get('options', 'image_source_priority',
+                               type_=self.TYPE_LOWER_STR)) is not None:
+            sources = tuple(value.replace(' ', '').split(','))
+            if all(_ in self.VALID_IMAGE_SOURCES for _ in sources):
+                self.image_source_priority = sources
+            else:
                 log.critical(f'Image source priority "{value}" is invalid')
                 self.valid = False
-            else:
-                self.image_source_priority = sources
 
         if (value := self._get('options', 'episode_data_source',
-                               type_=str)) is not None:
-            if (value := value.lower()) in self.VALID_EPISODE_DATA_SOURCES:
+                               type_=self.TYPE_LOWER_STR)) is not None:
+            if value in self.VALID_EPISODE_DATA_SOURCES:
                 self.episode_data_source = value
             else:
                 log.critical(f'Episode data source "{value}" is invalid')
@@ -347,6 +352,15 @@ class PreferenceParser(YamlReader):
 
         if (value := self._get('options', 'sync_specials', type_=bool)) != None:
             self.sync_specials = value
+
+        if (value := self._get('options', 'language_codes', type_=list)) !=None:
+            if all(code in SUPPORTED_LANGUAGE_CODES.keys() for code in value):
+                self.supported_language_codes = value
+            else:
+                codes = ', '.join(SUPPORTED_LANGUAGE_CODES)
+                log.critical(f'Not all language codes are recognized')
+                log.info(f'Must be one of {codes}')
+                self.valid = False
 
 
     def __parse_yaml_archive(self) -> None:
@@ -369,8 +383,9 @@ class PreferenceParser(YamlReader):
                                type_=bool)) is not None:
             self.create_summaries = value
 
-        if (value := self._get('archive', 'summary', 'type', type_=str)) != None:
-            if (value := value.lower()) == 'standard':
+        if (value := self._get('archive', 'summary', 'type',
+                               type_=self.TYPE_LOWER_STR)) is not None:
+            if value == 'standard':
                 self.summary_class = StandardSummary
                 self.summary_background = self.summary_class.BACKGROUND_COLOR
             elif value == 'stylized':
@@ -523,13 +538,13 @@ class PreferenceParser(YamlReader):
                          f'and "update_script"')
             self.valid = False
 
-        if (value := self._get('tautulli', 'verify_ssl', type_=bool)) is not None:
+        if (value := self._get('tautulli', 'verify_ssl', type_=bool)) != None:
             self.tautulli_verify_ssl = value
 
-        if (value := self._get('tautulli', 'username', type_=str)) is not None:
+        if (value := self._get('tautulli', 'username', type_=str)) != None:
             self.tautulli_username = value
 
-        if (value := self._get('tautulli', 'agent_name', type_=str)) is not None:
+        if (value := self._get('tautulli', 'agent_name', type_=str)) != None:
             self.tautulli_agent_name = value
 
         if (value := self._get('tautulli', 'script_timeout',type_=int)) != None:
@@ -733,7 +748,7 @@ class PreferenceParser(YamlReader):
                 Template.recurse_priority_union(show_yaml, library_yaml)
                 show_yaml['library'] = {
                     'name': library_yaml.get('plex_name', library_name),
-                    'path': Path(library_yaml.get('path'))
+                    'path': CleanPath(library_yaml.get('path')).sanitize(),
                 }
                 
         # Parse font from map (if given font is just an identifier)
@@ -785,9 +800,10 @@ class PreferenceParser(YamlReader):
         for file_ in (pbar := tqdm(self.series_files, **TQDM_KWARGS)):
             # Create Path object for this file
             try:
-                file = Path(file_)
-            except Exception:
+                file = CleanPath(file_).sanitize()
+            except Exception as e:
                 log.error(f'Invalid series file "{file_}"')
+                log.debug(f'Error[{e}]')
                 continue
 
             # Update progress bar for this file
