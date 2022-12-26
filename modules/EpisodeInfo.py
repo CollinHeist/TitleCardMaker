@@ -6,7 +6,6 @@ from modules.Debug import log
 import modules.global_objects as global_objects
 from modules.Title import Title
 
-
 class WordSet(dict):
     """
     Dictionary subclass that contains keys for translated word-versions of
@@ -69,9 +68,9 @@ class EpisodeInfo:
     season_number: int
     episode_number: int
     abs_number: int=None
-    tvdb_id: int=None
     imdb_id: str=None
     tmdb_id: int=None
+    tvdb_id: int=None
     queried_plex: bool=False
     queried_sonarr: bool=False
     queried_tmdb: bool=False

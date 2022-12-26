@@ -26,6 +26,8 @@ class RemoteFile:
     """Database of assets that have been loaded already"""
     LOADED_FILE = 'remote_assets.json'
 
+    __slots__ = ('loaded', 'remote_source', 'local_file', 'valid')
+
 
     def __init__(self, username: str, filename: str) -> None:
         """
@@ -36,6 +38,9 @@ class RemoteFile:
             username: Username containing the file.
             filename: Filename of the file within the user's folder to download.
         """
+
+        # Object validity to be updated
+        self.valid = True
 
         # Get database of loaded assets
         database_directory = global_objects.pp.database_directory
@@ -53,9 +58,8 @@ class RemoteFile:
         # If file has already been loaded this run, skip
         if self.loaded.get(where('remote') == self.remote_source) is not None:
             return None
-
+            
         # Download the remote file for local use
-        self.valid = True
         try:
             self.download()
             log.debug(f'Downloaded RemoteFile "{username}/{filename}"')
@@ -81,7 +85,8 @@ class RemoteFile:
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
-        return f'<RemoteFile {self.remote_source=}, {self.local_file=}>'
+        return (f'<RemoteFile remote_source={self.remote_source}, local_file='
+                f'{self.local_file}, valid={self.valid}>')
 
 
     def resolve(self) -> Path:
