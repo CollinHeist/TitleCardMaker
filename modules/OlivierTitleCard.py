@@ -45,16 +45,17 @@ class OlivierTitleCard(BaseCardType):
         'source_file', 'output_file', 'title', 'hide_episode_text', 
         'episode_prefix', 'episode_text', 'font', 'title_color',
         'episode_text_color', 'font_size', 'stroke_width', 'kerning',
-        'vertical_shift', 'interline_spacing', 'blur'
+        'vertical_shift', 'interline_spacing', 'blur', 'stroke_color',
     )
     
     def __init__(self, source: Path, output_file: Path, title: str,
                  episode_text: str, font: str, font_size:float,
                  title_color: str, stroke_width: float=1.0,
                  vertical_shift: int=0, interline_spacing: int=0,
-                 kerning: float=1.0, episode_text_color: str=EPISODE_TEXT_COLOR,
-                 blur: bool=False, grayscale: bool=False,
-                 **kwargs) -> None:
+                 kerning: float=1.0, blur: bool=False, grayscale: bool=False,
+                 episode_text_color: str=EPISODE_TEXT_COLOR,
+                 stroke_color: str='black',
+                 **unused) -> None:
         """
         Initialize this TitleCard object. This primarily just stores instance
         variables for later use in `create()`. It also determines the episode
@@ -72,10 +73,11 @@ class OlivierTitleCard(BaseCardType):
             vertical_shift: Pixel count to adjust the title vertical offset by.
             interline_spacing: Pixel count to adjust title interline spacing by.
             kerning: Scalar to apply to kerning of the title text.
-            episode_text_color: Color to use for the episode text.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
-            kwargs: Unused arguments.
+            episode_text_color: (Extra) Color to use for the episode text.
+            stroke_color: (Extra) Color to use for the back-stroke color.
+            unused: Unused arguments.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface
@@ -105,12 +107,15 @@ class OlivierTitleCard(BaseCardType):
         # Font customizations
         self.font = font
         self.title_color = title_color
-        self.episode_text_color = episode_text_color
         self.font_size = font_size
         self.stroke_width = stroke_width
         self.vertical_shift = vertical_shift
         self.interline_spacing = interline_spacing
         self.kerning = kerning
+
+        # Optional extras
+        self.episode_text_color = episode_text_color
+        self.stroke_color = stroke_color
 
 
     @property
@@ -134,8 +139,8 @@ class OlivierTitleCard(BaseCardType):
             f'-pointsize {font_size}',
             f'-kerning {kerning}',
             f'-interline-spacing {interline_spacing}',
-            f'-fill black',
-            f'-stroke black',
+            f'-fill "{self.stroke_color}"',
+            f'-stroke "{self.stroke_color}"',
             f'-strokewidth {stroke_width}',
             f'-annotate +320+{vertical_shift} "{self.title}" \)',
             f'\( -fill "{self.title_color}"',
@@ -226,11 +231,13 @@ class OlivierTitleCard(BaseCardType):
             custom_season_titles: Whether the season titles are custom.
         """
 
-        # Generic font, reset custom episode text color
+        # Generic font, reset custom episode text color and stroke color
         if not custom_font:
             if 'episode_text_color' in extras:
                 extras['episode_text_color'] =\
                     OlivierTitleCard.EPISODE_TEXT_COLOR
+            if 'stroke_color' in extras:
+                extras['stroke_color'] = 'black'
 
 
     @staticmethod
