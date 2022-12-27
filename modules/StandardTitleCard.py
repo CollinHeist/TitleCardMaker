@@ -170,6 +170,30 @@ class StandardTitleCard(BaseCardType):
             ]
 
 
+    @property
+    def black_title_command(self) -> list[str]:
+        """
+        Subcommand for adding the black stroke behind the title text.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        # Stroke disabled, return empty command
+        if self.stroke_width == 0:
+            return []
+
+        vertical_shift = 245 + self.vertical_shift
+        stroke_width = 3.0 * self.stroke_width
+
+        return [
+            f'-fill black',
+            f'-stroke black',
+            f'-strokewidth {stroke_width}',
+            f'-annotate +0+{vertical_shift} "{self.title}"',
+        ]
+
+
     @staticmethod
     def is_custom_font(font: 'Font') -> bool:
         """
@@ -248,10 +272,7 @@ class StandardTitleCard(BaseCardType):
             f'-interline-spacing {interline_spacing}',
             f'-pointsize {font_size}',
             # Black stroke behind title text
-            f'-fill black',
-            f'-stroke black',
-            f'-strokewidth {stroke_width}',
-            f'-annotate +0+{vertical_shift} "{self.title}"',
+            *self.black_title_command,
             # Title text
             f'-fill "{self.title_color}"',
             f'-annotate +0+{vertical_shift} "{self.title}"',
