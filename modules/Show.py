@@ -439,7 +439,7 @@ class Show(YamlReader):
             return None
 
         # Inner function to filter episodes
-        def filter_ep(episode: Episode) -> bool:
+        def include_episode(episode: Episode) -> bool:
             # Exclude if special and not syncing specials
             if not self.sync_specials and episode.season_number == 0:
                 return False
@@ -452,11 +452,10 @@ class Show(YamlReader):
                     return True
                 return False
             
-            # New episode, include
             return True
         
         # Apply filter formula to list of Episodes from data source
-        new_episodes = tuple(filter(filter_ep, all_episodes))
+        new_episodes = tuple(filter(include_episode, all_episodes))
         if len(new_episodes) == 0:
             return None
         

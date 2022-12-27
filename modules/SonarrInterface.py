@@ -296,8 +296,7 @@ class SonarrInterface(WebInterface):
             if (ep_airdate := episode.get('airDateUtc')) is not None:
                 # If episode hasn't aired, skip
                 air_datetime=datetime.strptime(ep_airdate,self.__AIRDATE_FORMAT)
-                if (not episode['hasFile']
-                    and air_datetime > datetime.now() + timedelta(hours=2)):
+                if not episode['hasFile']and air_datetime > datetime.now():
                     continue
 
                 # Skip temporary placeholder names if aired in the last 48 hours
