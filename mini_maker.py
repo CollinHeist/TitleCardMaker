@@ -402,6 +402,7 @@ if hasattr(args, 'title_card'):
         stroke_width=float(args.stroke_width[:-1])/100.0,
         blur=args.blur,
         grayscale=args.grayscale,
+        omit_gradient=args.no_gradient,
         **arbitrary_data,
     )
 
