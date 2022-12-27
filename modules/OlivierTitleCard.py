@@ -123,7 +123,7 @@ class OlivierTitleCard(BaseCardType):
         """
 
         font_size = 124 * self.font_size
-        stroke_width = 6.0 * self.stroke_width
+        stroke_width = 8.0 * self.stroke_width
         kerning = 0.5 * self.kerning
         interline_spacing = -20 + self.interline_spacing
         vertical_shift = 785 + self.vertical_shift
@@ -154,22 +154,23 @@ class OlivierTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
+        # No episode prefix/text, return empty command
         if self.episode_prefix is None or self.hide_episode_text:
             return []
 
         return [
             f'-gravity west',
             f'-font "{self.EPISODE_PREFIX_FONT.resolve()}"',
-            f'-pointsize 53',
+            f'-pointsize 60',
             f'-kerning 19',
             f'-fill black',
             f'-stroke black',
-            f'-strokewidth 4',
-            f'-annotate +325-140 "{self.episode_prefix}"',
+            f'-strokewidth 5',
+            f'-annotate +325-150 "{self.episode_prefix}"',
             f'-fill "{self.episode_text_color}"',
             f'-stroke "{self.episode_text_color}"',
             f'-strokewidth 0',
-            f'-annotate +325-140 "{self.episode_prefix}"',
+            f'-annotate +325-150 "{self.episode_prefix}"',
         ]
 
 
@@ -182,11 +183,12 @@ class OlivierTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
+        # No episode text, return empty command
         if self.hide_episode_text:
             return []
 
         # Get variable horizontal offset based of episode prefix
-        text_offset = {'EPISODE': 400, 'CHAPTER': 400, 'PART': 250}
+        text_offset = {'EPISODE': 425, 'CHAPTER': 425, 'PART': 275}
         if self.episode_prefix is None:
             offset = 0
         elif self.episode_prefix in text_offset.keys():
@@ -198,16 +200,16 @@ class OlivierTitleCard(BaseCardType):
         return [
             f'-gravity west',
             f'-font "{self.EPISODE_NUMBER_FONT.resolve()}"',
-            f'-pointsize 53',
+            f'-pointsize 60',
             f'-kerning 19',
             f'-fill black',
             f'-stroke black',
-            f'-strokewidth 5',
-            f'-annotate +{325+offset}-140 "{self.episode_text}"',
+            f'-strokewidth 7',
+            f'-annotate +{325+offset}-150 "{self.episode_text}"',
             f'-fill "{self.episode_text_color}"',
             f'-stroke "{self.episode_text_color}"',
             f'-strokewidth 1',
-            f'-annotate +{325+offset}-140 "{self.episode_text}"',
+            f'-annotate +{325+offset}-150 "{self.episode_text}"',
         ]
 
 
@@ -215,7 +217,7 @@ class OlivierTitleCard(BaseCardType):
     def modify_extras(extras: dict[str, Any], custom_font: bool,
                       custom_season_titles: bool) -> None:
         """
-        Modify the given extras base on whether font or season titles are
+        Modify the given extras based on whether font or season titles are
         custom.
 
         Args:
