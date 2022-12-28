@@ -167,8 +167,9 @@ class MediaInfoSet:
     def get_episode_info(self, series_info: SeriesInfo=None,
                          title: 'Title'=None, season_number: int=None,
                          episode_number: int=None,  abs_number: int=None, *,
-                         imdb_id: str=None, tvdb_id: int=None, tmdb_id:int=None,
-                         title_match: bool=True, 
+                         imdb_id: str=None, tvdb_id: int=None,
+                         tmdb_id:int=None, airdate: 'datetime'=None,
+                         title_match: bool=True,
                          **queried_kwargs: dict) -> EpisodeInfo:
         """
         Get the EpisodeInfo object indicated by the given attributes. This looks
@@ -185,18 +186,23 @@ class MediaInfoSet:
             episode_number: Episode number of the episode. Optional if
                 associated object already exists
             abs_number: Optional absolute number of the episode.
-            imdb_id: Optional IMDb ID.
-            tvdb_id: Optional TVDb ID.
-            tmdb_id: Optional TMDb ID.
-            kwargs: Any keyword arguments to pass to the initialization of the
-                EpisodeInfo object, if indicated.
+            imdb_id: (Keyword only) Optional IMDb ID.
+            tvdb_id: (Keyword only) Optional TVDb ID.
+            tmdb_id: (Keyword only) Optional TMDb ID.
+            airdate: (Keyword only) Optional airdate of the episode
+            queried_kwargs: Any queried_{interface} keyword arguments.
         
         Returns:
             The EpisodeInfo object indicated by the given attributes. None if an
             object does not exist and cannot be created due to an index conflict
         """
 
+        def set_airdate(info_obj):
+            if airdate is not None and info_obj.airdate is None:
+                info_obj.airdate = airdate
+
         def set_ids(info_obj):
+            set_airdate(info_obj)
             self.__set_episode_imdb_id(info_obj, imdb_id)
             self.__set_episode_tvdb_id(info_obj, tvdb_id)
             self.__set_episode_tmdb_id(info_obj, tmdb_id)
@@ -223,12 +229,13 @@ class MediaInfoSet:
                     return EpisodeInfo(title, season_number, episode_number,
                                        abs_number, imdb_id=imdb_id,
                                        tvdb_id=tvdb_id, tmdb_id=tmdb_id,
+                                       airdate=airdate,
                                        **queried_kwargs)
 
         # This EpisodeInfo doesn't exist in the set, create new object
         episode_info = EpisodeInfo(
             title, season_number, episode_number, abs_number, imdb_id=imdb_id,
-            tvdb_id=tvdb_id, tmdb_id=tmdb_id, **queried_kwargs,
+            tvdb_id=tvdb_id, tmdb_id=tmdb_id, airdate=airdate, **queried_kwargs,
         )
 
         # Add object to indices set

@@ -384,6 +384,7 @@ class TMDbInterface(WebInterface):
                     episode.episode_number,
                     tvdb_id=episode.tvdb_id if episode.tvdb_id != 0 else None,
                     imdb_id=None if episode.imdb_id is None else episode.imdb_id,
+                    airdate=episode.air_date,
                     title_match=True,
                     queried_tmdb=True,
                 )

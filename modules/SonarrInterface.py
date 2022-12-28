@@ -293,6 +293,7 @@ class SonarrInterface(WebInterface):
         # Go through each episode and get its season/episode number, and title
         for episode in all_episodes:
             # Get airdate of this episode
+            air_datetime = None
             if (ep_airdate := episode.get('airDateUtc')) is not None:
                 # If episode hasn't aired, skip
                 air_datetime=datetime.strptime(ep_airdate,self.__AIRDATE_FORMAT)
@@ -320,6 +321,7 @@ class SonarrInterface(WebInterface):
                 tvdb_id=episode.get('tvdbId'),
                 title_match=True,
                 queried_sonarr=True,
+                airdate=air_datetime,
             )
 
             # Add to episode list

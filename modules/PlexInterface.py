@@ -445,6 +445,7 @@ class PlexInterface:
                 plex_episode.parentIndex,
                 plex_episode.index,
                 **ids,
+                airdate=airdate,
                 title_match=True,
                 queried_plex=True,
             )
