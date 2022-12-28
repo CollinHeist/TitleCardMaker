@@ -4,6 +4,7 @@ from re import IGNORECASE, compile as re_compile
 
 from plexapi.exceptions import PlexApiException
 from plexapi.server import PlexServer, NotFound, Unauthorized
+from requests.exceptions import ReadTimeout, ConnectionError
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 from tinydb import TinyDB, where
 from tqdm import tqdm
@@ -104,9 +105,16 @@ class PlexInterface:
                 except PlexApiException as e:
                     log_func(message)
                     log.debug(f'PlexApiException from {function.__name__}'
-                              f'({args}, {kwargs})')
-                    log.debug(f'Exception[{e}]')
+                              f'({args}, {kwargs}) -> Error[{e}]')
                     return default
+                except (ReadTimeout, ConnectionError) as e:
+                    log_func('Plex API has timed out - database might be busy')
+                    log.debug(f'ReadTimeout from {function.__name__}'
+                              f'({args}, {kwargs}) -> Error[{e}]')
+                    raise e
+                except Exception as e:
+                    log.info(e)
+                    raise e
             return inner
         return decorator
 
