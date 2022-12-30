@@ -291,6 +291,7 @@ class SonarrInterface(WebInterface):
         all_episode_info = []
 
         # Go through each episode and get its season/episode number, and title
+        has_bad_ids = False
         for episode in all_episodes:
             # Get airdate of this episode
             air_datetime = None
@@ -310,6 +311,11 @@ class SonarrInterface(WebInterface):
             # Skip permanent placeholder names
             if self.__ALWAYS_IGNORE_REGEX.match(episode['title']):
                 continue
+
+            # If the episode's TVDb ID is 0, then set to None to avoid mismatch
+            if episode.get('tvdbId') == 0:
+                episode['tvdbId'] = None
+                has_bad_ids = True
             
             # Create EpisodeInfo object for this entry
             episode_info = self.info_set.get_episode_info(
@@ -327,6 +333,11 @@ class SonarrInterface(WebInterface):
             # Add to episode list
             if episode_info is not None:
                 all_episode_info.append(episode_info)
+
+        # If any episodes had TVDb ID's of 0, then warn user to refresh series
+        if has_bad_ids:
+            log.warning(f'Series "{series_info}" has no TVDb episode ID data - '
+                        f'Refresh & Scan in Sonarr')
 
         return all_episode_info
 
