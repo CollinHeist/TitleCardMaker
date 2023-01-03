@@ -781,11 +781,12 @@ class TMDbInterface(WebInterface):
             self.__update_blacklist(series_info, None, 'backdrop')
             return None
 
-        # Blacklist if tthere are no backdrops
+        # Blacklist if there are no backdrops
         if len(series.backdrops) == 0:
             self.__update_blacklist(series_info, None, 'backdrop')
             return None
 
+        # Find and return best image
         best_image = self.__determine_best_image(
             series.backdrops,
             is_source_image=True,
