@@ -4,6 +4,8 @@ from typing import Literal
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 
+Position = Literal['left', 'surround', 'right']
+
 class FrameTitleCard(BaseCardType):
     """
     This class describes a type of CardType that produces title cards in a
@@ -16,7 +18,7 @@ class FrameTitleCard(BaseCardType):
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
-        'max_line_width': 32,   # Character count to begin splitting titles
+        'max_line_width': 31,   # Character count to begin splitting titles
         'max_line_count': 2,    # Maximum number of lines a title can take up
         'top_heavy': False,     # This class uses bottom heavy titling
     }
@@ -56,9 +58,8 @@ class FrameTitleCard(BaseCardType):
                  vertical_shift: int=0, interline_spacing: int=0,
                  kerning: float=1.0, blur: bool=False, grayscale: bool=False,
                  episode_text_color: str=EPISODE_TEXT_COLOR,
-                 episode_text_position: Literal['left', 'surround',
-                                                'right']='surround',
-                 **kwargs) -> None:
+                 episode_text_position: Position='surround',
+                 **unused) -> None:
         """
         Construct a new instance.
         
@@ -81,7 +82,7 @@ class FrameTitleCard(BaseCardType):
                 text.
             episode_text_position: (Extra) How to position the episode text
                 relative to the title text.
-            kwargs: Unused arguments.
+            unused: Unused arguments.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface
