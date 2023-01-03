@@ -658,7 +658,7 @@ class Show(YamlReader):
             # Default source if the effective style is art
             if self.style_set.effective_style_is_art(episode.watched):
                 download_backdrop = True
-                episode.update_source(self.backdrop, downloadable=True)
+                episode.update_source(self.backdrop, downloadable=False)
 
             # Override source if applies to all, or unwatched if ep is unwatched
             if (applies_to == 'all' or 
@@ -694,6 +694,13 @@ class Show(YamlReader):
         # Don't download sources if this card type doesn't use unique images
         if not self.card_class.USES_UNIQUE_SOURCES:
             return None
+
+        # Query TMDb for the backdrop if one does not exist and is needed
+        if (download_backdrop and self.tmdb_interface
+            and not self.backdrop.exists()):
+            if (url := self.tmdb_interface.get_series_backdrop(self.series_info,
+                skip_localized_images=self.tmdb_skip_localized_images)):
+                self.tmdb_interface.download_image(url, self.backdrop)
 
         # Whether to always check TMDb or Plex
         always_check_tmdb = self.tmdb_interface and self.preferences.check_tmdb
@@ -755,14 +762,6 @@ class Show(YamlReader):
                         log.debug(f'Downloaded {episode.source.name} for {self}'
                                   f' from {source_interface}')
                     break
-        
-        # Query TMDb for the backdrop if one does not exist and is needed
-        if (download_backdrop and self.tmdb_interface
-            and not self.backdrop.exists()):
-            # Download background art 
-            if (url := self.tmdb_interface.get_series_backdrop(self.series_info,
-                skip_localized_images=self.tmdb_skip_localized_images)):
-                self.tmdb_interface.download_image(url, self.backdrop)
 
 
     def find_multipart_episodes(self) -> None:
