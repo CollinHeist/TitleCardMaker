@@ -63,6 +63,7 @@ class PreferenceParser(YamlReader):
         # Initialize parent YamlReader object - errors are critical
         super().__init__(log_function=log.critical)
         self.version = self.VERSION_FILE.read_text()
+        self.is_docker = is_docker
         
         # Store and read file
         self.file = file
@@ -560,6 +561,11 @@ class PreferenceParser(YamlReader):
         # Skip if section omitted
         if not self._is_specified('imagemagick'):
             return None
+
+        # Warn if ImageMagick provided in a Docker environment
+        if self.is_docker:
+            log.warning(f'Specifying the "imagemagick" section is not '
+                        f'recommended when using TitleCardMaker in Docker')
 
         if (value := self._get('imagemagick', 'container',
                                type_=str)) is not None:
