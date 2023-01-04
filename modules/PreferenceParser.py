@@ -702,7 +702,9 @@ class PreferenceParser(YamlReader):
 
         # Warn and return if template name not mapped
         if not (template := templates.get(template_name, None)):
+            template_names = '"' + '", "'.join(templates.keys()) + '"'
             log.error(f'Template "{template_name}" not defined')
+            log.info(f'Defined templates are {template_names}')
             return False
 
         # Parse title/year from the series to add as "built-in" template data
@@ -746,8 +748,10 @@ class PreferenceParser(YamlReader):
             and (library_name := show_yaml.get('library')) is not None):
             # If library identifier is not in the map, error and exit
             if (library_yaml := library_map.get(library_name)) is None:
+                library_names = '"' + '", "'.join(library_map.keys()) + '"'
                 log.error(f'Library "{library_name}" of series "{show_name}" is'
                           f' not present in libraries list')
+                log.info(f'Listed library names are {library_names}')
                 return None
             # Library identifier in map, merge YAML
             else:
@@ -763,8 +767,10 @@ class PreferenceParser(YamlReader):
             and isinstance(font_name, str)):
             # If font identifier is not in map, error and exit
             if (font_yaml := font_map.get(font_name)) is None:
+                font_names = '"' + '", "'.join(font_map.keys()) + '"'
                 log.error(f'Font "{font_name}" of series "{show_name}" is '
                             f'not present in font list')
+                log.info(f'Listed font names are {font_names}')
                 return None
             # Font identifer in map, merge YAML
             else:
@@ -809,7 +815,7 @@ class PreferenceParser(YamlReader):
                 file = CleanPath(file_).sanitize()
             except Exception as e:
                 log.error(f'Invalid series file "{file_}"')
-                log.debug(f'Error[{e}]')
+                log.info(f'Error[{e}]')
                 continue
 
             # Update progress bar for this file
