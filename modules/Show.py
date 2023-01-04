@@ -701,6 +701,7 @@ class Show(YamlReader):
             if (url := self.tmdb_interface.get_series_backdrop(self.series_info,
                 skip_localized_images=self.tmdb_skip_localized_images)):
                 self.tmdb_interface.download_image(url, self.backdrop)
+                log.debug(f'Downloaded backdrop for {self} from tmdb')
 
         # Whether to always check TMDb or Plex
         always_check_tmdb = self.tmdb_interface and self.preferences.check_tmdb
