@@ -818,6 +818,11 @@ class PreferenceParser(YamlReader):
             # If the file doesn't exist, error and skip
             if not file.exists():
                 log.error(f'Series file "{file.resolve()}" does not exist')
+
+                # If on Docker and missing file was relative, warn first
+                if (self.is_docker
+                    and len(file.parts) > 1 and file.parts[1] == 'maker'):
+                    log.warning(f'Did you mean "/config/{file.name}"?')
                 continue
 
             # Read file, parse yaml
