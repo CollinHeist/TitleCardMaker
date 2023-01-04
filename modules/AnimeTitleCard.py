@@ -51,15 +51,21 @@ class AnimeTitleCard(BaseCardType):
     )
     
     def __init__(self, source: Path, output_file: Path, title: str, 
-                 season_text: str, episode_text: str, font: str,font_size:float,
-                 title_color: str, hide_season: bool, vertical_shift: int=0,
-                 interline_spacing: int=0, kerning: float=1.0,
-                 blur: bool=False, grayscale: bool=False, kanji: str=None,
-                 separator: str='·', omit_gradient: bool=False,
-                 require_kanji: bool=False, kanji_vertical_shift: float=0,
+                 season_text: str, episode_text: str, font: str,
+                 font_size: float, title_color: str, hide_season: bool,
+                 vertical_shift: int=0,
+                 interline_spacing: int=0,
+                 kerning: float=1.0,
+                 blur: bool=False,
+                 grayscale: bool=False,
+                 kanji: str=None,
+                 separator: str='·',
+                 omit_gradient: bool=False,
+                 require_kanji: bool=False,
+                 kanji_vertical_shift: float=0,
                  **unused) -> None:
         """
-        Construct a new instance.
+        Construct a new instance of this card.
         
         Args:
             source: Source image for this card.

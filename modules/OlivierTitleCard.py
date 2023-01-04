@@ -49,17 +49,19 @@ class OlivierTitleCard(BaseCardType):
     )
     
     def __init__(self, source: Path, output_file: Path, title: str,
-                 episode_text: str, font: str, font_size:float,
-                 title_color: str, stroke_width: float=1.0,
-                 vertical_shift: int=0, interline_spacing: int=0,
-                 kerning: float=1.0, blur: bool=False, grayscale: bool=False,
+                 episode_text: str, font: str, font_size: float,
+                 title_color: str,
+                 stroke_width: float=1.0,
+                 vertical_shift: int=0,
+                 interline_spacing: int=0,
+                 kerning: float=1.0,
+                 blur: bool=False,
+                 grayscale: bool=False,
                  episode_text_color: str=EPISODE_TEXT_COLOR,
                  stroke_color: str='black',
                  **unused) -> None:
         """
-        Initialize this TitleCard object. This primarily just stores instance
-        variables for later use in `create()`. It also determines the episode
-        prefix text.
+        Construct a new instance of this card.
 
         Args:
             source: Source image to base the card on.

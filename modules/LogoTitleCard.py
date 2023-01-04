@@ -54,18 +54,25 @@ class LogoTitleCard(BaseCardType):
     )
                  
 
-    def __init__(self, *, output_file: Path, title: str, hide_season: bool,
+    def __init__(self, output_file: Path, title: str, hide_season: bool,
                  season_text: str, episode_text: str, title_color: str,
-                 font: str, font_size: float, vertical_shift: int=0,
-                 kerning: float=1.0, interline_spacing: int=0,
-                 stroke_width: float=1.0, blur: bool=False,
-                 grayscale: bool=False, season_number: int=1,
-                 episode_number: int=1, logo: str=None, separator: str='•', 
-                 background: str='black', stroke_color: str='black',
+                 font: str, font_size: float,
+                 vertical_shift: int=0,
+                 kerning: float=1.0,
+                 interline_spacing: int=0,
+                 stroke_width: float=1.0,
+                 blur: bool=False,
+                 grayscale: bool=False,
+                 season_number: int=1,
+                 episode_number: int=1,
+                 logo: str=None,
+                 separator: str='•', 
+                 background: str='black',
+                 stroke_color: str='black',
                  omit_gradient: bool=True,
                  **unused) -> None:
         """
-        Initialize the CardType object.
+        Construct a new instance of this card.
 
         Args:
             output_file: Output file.

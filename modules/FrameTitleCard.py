@@ -55,8 +55,11 @@ class FrameTitleCard(BaseCardType):
     def __init__(self, source: Path, output_file: Path, title: str, 
                  season_text: str, episode_text: str, hide_season: bool,
                  font: str, font_size: float, title_color: str,
-                 vertical_shift: int=0, interline_spacing: int=0,
-                 kerning: float=1.0, blur: bool=False, grayscale: bool=False,
+                 vertical_shift: int=0,
+                 interline_spacing: int=0,
+                 kerning: float=1.0,
+                 blur: bool=False,
+                 grayscale: bool=False,
                  episode_text_color: str=EPISODE_TEXT_COLOR,
                  episode_text_position: Position='surround',
                  **unused) -> None:
