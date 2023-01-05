@@ -698,8 +698,11 @@ class Show(YamlReader):
         # Query TMDb for the backdrop if one does not exist and is needed
         if (download_backdrop and self.tmdb_interface
             and not self.backdrop.exists()):
-            if (url := self.tmdb_interface.get_series_backdrop(self.series_info,
-                skip_localized_images=self.tmdb_skip_localized_images)):
+            url = self.tmdb_interface.get_series_backdrop(
+                self.series_info,
+                skip_localized_images=self.tmdb_skip_localized_images
+            )
+            if url:
                 self.tmdb_interface.download_image(url, self.backdrop)
                 log.debug(f'Downloaded backdrop for {self} from tmdb')
 

@@ -527,7 +527,7 @@ class TMDbInterface(WebInterface):
                                *, is_source_image: bool=True,
                                skip_localized: bool=False) -> dict:
         """
-        Determines the best image, returning it's contents from within the
+        Determine the best image and return it's contents from within the
         database return JSON.
         
         Args:
