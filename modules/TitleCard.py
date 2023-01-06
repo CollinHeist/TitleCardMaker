@@ -59,19 +59,6 @@ class TitleCard:
         'textless': TextlessTitleCard,
     }
 
-    """Mapping of illegal filename characters and their replacements"""
-    __ILLEGAL_FILE_CHARACTERS = {
-        '?': '!',
-        '<': '',
-        '>': '',
-        ':':' -',
-        '"': '',
-        '|': '',
-        '*': '-',
-        '/': '+',
-        '\\': '+'
-    }
-
     __slots__ = ('episode', 'profile', 'converted_title', 'maker', 'file')
     
 
