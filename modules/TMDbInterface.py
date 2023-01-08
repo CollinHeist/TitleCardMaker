@@ -737,6 +737,10 @@ class TMDbInterface(WebInterface):
         best = series.logos[0]
         valid_image = False
         for logo in series.logos:
+            # Skip non-English logos
+            if logo.iso_639_1 != 'en':
+                continue
+
             # SVG images are always the best
             if logo.url.endswith('.svg'):
                 return logo.url
