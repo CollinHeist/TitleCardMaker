@@ -239,7 +239,7 @@ class Profile:
         'Example 2'
         
         Args:
-            episode_text:The episode text to process.
+            episode_text:The title text to process.
         
         Returns:
             The episode text with all text that matches the format specified in
@@ -265,7 +265,7 @@ class Profile:
         # Regex group for 1-99 called "one_to_99"
         one_to_99_group = (
             r'(?<one_to_99>(?&two_digit_prefix)(?:[- ](?&one_to_9))?|'
-            r'(?&ten_to_19)|(?&one_to_9)|\d+)'
+            r'(?&ten_to_19)|(?&one_to_9)|\d+|[IVXLCDM]+)'
         )
 
         # Define all the groups used in the regex

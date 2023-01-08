@@ -225,7 +225,7 @@ class MediaInfoSet:
                 else:
                     if series_info.match_titles:
                         log.debug(f'Index match on {series_info} {key}, but '
-                                  f'title mismatch - {info.title} / "{title}"')
+                                  f'title mismatch - {info.title} / {title}')
                     return EpisodeInfo(title, season_number, episode_number,
                                        abs_number, imdb_id=imdb_id,
                                        tvdb_id=tvdb_id, tmdb_id=tmdb_id,
