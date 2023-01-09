@@ -8,6 +8,7 @@ import modules.global_objects as global_objects
 
 # Built-in CardType classes
 from modules.AnimeTitleCard import AnimeTitleCard
+from modules.CutoutTitleCard import CutoutTitleCard
 from modules.FrameTitleCard import FrameTitleCard
 from modules.LandscapeTitleCard import LandscapeTitleCard
 from modules.LogoTitleCard import LogoTitleCard
@@ -41,6 +42,7 @@ class TitleCard:
     DEFAULT_CARD_TYPE = 'standard'
     CARD_TYPES = {
         'anime': AnimeTitleCard,
+        'cutout': CutoutTitleCard,
         'frame': FrameTitleCard,
         'generic': StandardTitleCard,
         'gundam': PosterTitleCard,
@@ -48,6 +50,7 @@ class TitleCard:
         'landscape': LandscapeTitleCard,
         'logo': LogoTitleCard,
         'olivier': OlivierTitleCard,
+        'phendrena': CutoutTitleCard,
         'photo': FrameTitleCard,
         'polymath': StandardTitleCard,
         'poster': PosterTitleCard,
