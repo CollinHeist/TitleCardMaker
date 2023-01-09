@@ -1,4 +1,4 @@
-from regex import match, IGNORECASE
+from regex import compile as re_compile, match, IGNORECASE
 from typing import Any
 
 from modules.Debug import log
@@ -10,6 +10,9 @@ class Profile:
     specific aspects of a card - i.e. custom/generic font, custom/generic
     season titles.
     """
+
+    """Regex (format string) to match a season title preceding title text"""
+    SEASON_TITLE_REGEX = r'^{season_title}\s*(?::|-|,)?\s+(.+)'
 
     __slots__ = (
         'font', 'hide_season_title', '__episode_map', 'episode_text_format',
@@ -294,13 +297,22 @@ class Profile:
             # Regex match error, return title text
             return title_text
 
-        # If there's no match, return the original title
-        if not text_to_remove:
-            return title_text
+        # If there was a match, remove the matched text and return
+        if text_to_remove:
+            finalized_title = title_text.replace(text_to_remove.group(), '')
 
-        # Replace removal text, return original if all text was removed
-        finalized_title = title_text.replace(text_to_remove.group(), '')
-        return title_text if len(finalized_title) == 0 else finalized_title
+            # If not all text was removed, return modified title
+            return title_text if len(finalized_title) == 0 else finalized_title
+
+        # No match, attempt to match any provided season titles
+        for season_title in self.__episode_map.unique_season_titles:
+            st_regex = self.SEASON_TITLE_REGEX.format(season_title=season_title)
+            season_title_regex = re_compile(st_regex, IGNORECASE)
+            if (finalized_title := season_title_regex.match(title_text)):
+                return finalized_title.group(1)
+
+        # No match for episode text or any season titles
+        return title_text
 
 
     def convert_title(self, title_text: str,
