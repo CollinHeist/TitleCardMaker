@@ -47,7 +47,8 @@ class AnimeTitleCard(BaseCardType):
         'source_file', 'output_file', 'title', 'kanji', 'use_kanji',
         'require_kanji', 'kanji_vertical_shift', 'season_text', 'episode_text',
         'hide_season', 'separator', 'font', 'font_size', 'font_color',
-        'vertical_shift', 'interline_spacing', 'kerning', 'omit_gradient',
+        'vertical_shift', 'interline_spacing', 'kerning', 'stroke_width',
+        'omit_gradient', 'stroke_color',
     )
     
     def __init__(self, source: Path, output_file: Path, title: str, 
@@ -64,6 +65,7 @@ class AnimeTitleCard(BaseCardType):
                  omit_gradient: bool=False,
                  require_kanji: bool=False,
                  kanji_vertical_shift: float=0,
+                 stroke_color: str='black',
                  **unused) -> None:
         """
         Construct a new instance of this card.
@@ -90,6 +92,7 @@ class AnimeTitleCard(BaseCardType):
             omit_gradient: (Extra) Whether to omit the gradient overlay.
             require_kanji: (Extra) Whether to require kanji for this card.
             kanji_vertical_shift: (Extra) Vertical shift to apply to kanji text.
+            stroke_color: (Extra) Color to use for the back-stroke color.
             unused: Unused arguments.
         """
         
@@ -124,6 +127,7 @@ class AnimeTitleCard(BaseCardType):
         # Optional extras
         self.separator = separator
         self.omit_gradient = omit_gradient
+        self.stroke_color = stroke_color
 
 
     @property
@@ -165,8 +169,8 @@ class AnimeTitleCard(BaseCardType):
         stroke_width = 5 * self.stroke_width
 
         return [
-            f'-fill black',
-            f'-stroke black',
+            f'-fill "{self.stroke_color}"',
+            f'-stroke "{self.stroke_color}"',
             f'-strokewidth {stroke_width}',
         ]
 
