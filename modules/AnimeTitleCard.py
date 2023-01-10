@@ -56,6 +56,7 @@ class AnimeTitleCard(BaseCardType):
                  vertical_shift: int=0,
                  interline_spacing: int=0,
                  kerning: float=1.0,
+                 stroke_width: float=1.0,
                  blur: bool=False,
                  grayscale: bool=False,
                  kanji: str=None,
@@ -79,6 +80,8 @@ class AnimeTitleCard(BaseCardType):
             hide_season: Whether to hide the season text.
             vertical_shift: Vertical shift to apply to the title and kanji text.
             interline_spacing: Offset to interline spacing of the title text
+            kerning: Scalar to apply to kerning of the title text.
+            stroke_width: Scalar to apply to black stroke of the title text.
             kanji: (Extra) Kanji text to place above the episode title.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
@@ -116,6 +119,7 @@ class AnimeTitleCard(BaseCardType):
         self.vertical_shift = vertical_shift
         self.interline_spacing = interline_spacing
         self.kerning = kerning
+        self.stroke_width = stroke_width
 
         # Optional extras
         self.separator = separator
@@ -154,10 +158,16 @@ class AnimeTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
+        # No stroke, return empty command
+        if self.stroke_width == 0:
+            return []
+
+        stroke_width = 5 * self.stroke_width
+
         return [
             f'-fill black',
             f'-stroke black',
-            f'-strokewidth 5',
+            f'-strokewidth {stroke_width}',
         ]
 
 
