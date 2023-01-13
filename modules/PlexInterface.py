@@ -219,7 +219,8 @@ class PlexInterface:
     
 
     @retry(stop=stop_after_attempt(5),
-           wait=wait_fixed(3)+wait_exponential(min=1, max=32))
+           wait=wait_fixed(3)+wait_exponential(min=1, max=32),
+           reraise=True)
     def __get_library(self, library_name: str) -> 'Library':
         """
         Get the Library object under the given name.
@@ -239,7 +240,8 @@ class PlexInterface:
 
 
     @retry(stop=stop_after_attempt(5),
-           wait=wait_fixed(3)+wait_exponential(min=1, max=32))
+           wait=wait_fixed(3)+wait_exponential(min=1, max=32)
+           reraise=True)
     def __get_series(self, library: 'Library',
                      series_info: SeriesInfo) -> 'Show':
         """
@@ -626,7 +628,8 @@ class PlexInterface:
 
     @retry(stop=stop_after_attempt(5),
            wait=wait_fixed(3)+wait_exponential(min=1, max=32),
-           before_sleep=lambda _:log.warning('Cannot upload image, retrying..'))
+           before_sleep=lambda _: log.warning('Cannot upload image, retrying..')
+           reraise=True)
     def __retry_upload(self, plex_object: 'Episode', filepath: Path) -> None:
         """
         Upload the given poster to the given Episode, retrying if it fails.
