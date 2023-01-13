@@ -70,6 +70,10 @@ class DataFileInterface:
             log.error(f'Datafile "{self.file.resolve()}" missing "data" key')
             return {}
 
+        if not isinstance(yaml['data'], dict):
+            log.error(f'Data in "{self.file.resolve()}" is invalid')
+            return {}
+
         return yaml['data']
 
 
