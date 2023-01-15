@@ -411,20 +411,19 @@ class Manager:
         
         # Exit if Plex is not enabled
         if not self.preferences.use_plex:
-            log.error(f'Cannot remake card if Plex is not enabled')
+            log.error(f'Tautulli integration requires Plex')
             return None
 
         # Get details for each rating key from Plex
         entry_list = []
         for key in rating_keys:
             if len(details := self.plex_interface.get_episode_details(key)) ==0:
-                log.error(f'Cannot remake cards, no episodes found')
+                log.error(f'Rating key {key} has no associated episodes')
             else:
-                log.debug(f'{len(details)} items associated with rating key {key}')
+                log.debug(f'Rating key {key} -> {len(details)} item(s)')
                 entry_list += details
 
         # Go through every series in all series YAML files
-        found = set()
         for show in self.preferences.iterate_series_files():
             # If no more entries, exit
             if len(entry_list) == 0:
@@ -449,12 +448,10 @@ class Manager:
                 del entry_list[index]
 
         # Warn for all entries not found
-        for index, (series_info, episode_info, library_name) \
-            in enumerate(entry_list):
-            if index not in found:
-                log.warning(f'Cannot update card for "{series_info}" '
-                            f'{episode_info} within library "{library_name}" - '
-                            f'no matching YAML entry was found')
+        for series_info, episode_info, library_name in entry_list:
+            log.warning(f'Cannot update card for "{series_info}" {episode_info}'
+                        f' within library "{library_name}" - no matching YAML '
+                        f'entry was found')
 
 
     def report_missing(self, file: 'Path') -> None:
