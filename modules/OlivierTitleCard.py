@@ -44,7 +44,7 @@ class OlivierTitleCard(BaseCardType):
         'episode_text_color', 'font_size', 'stroke_width', 'kerning',
         'vertical_shift', 'interline_spacing', 'blur', 'stroke_color',
     )
-    
+
     def __init__(self, source: Path, output_file: Path, title: str,
                  episode_text: str, font: str, font_size: float,
                  title_color: str,
@@ -78,7 +78,7 @@ class OlivierTitleCard(BaseCardType):
             stroke_color: (Extra) Color to use for the back-stroke color.
             unused: Unused arguments.
         """
-        
+
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale)
 
@@ -89,7 +89,7 @@ class OlivierTitleCard(BaseCardType):
         # Store attributes of the text
         self.title = self.image_magick.escape_chars(title)
         self.hide_episode_text = len(episode_text) == 0
-        
+
         # Determine episode prefix, modify text to remove prefix
         self.episode_prefix = None
         if not self.hide_episode_text and ' ' in episode_text:
@@ -118,7 +118,7 @@ class OlivierTitleCard(BaseCardType):
     def title_text_command(self) -> list[str]:
         """
         Get the ImageMagick commands to add the episode title text to an image.
-        
+
         Returns:
             List of ImageMagick commands.
         """
@@ -264,11 +264,11 @@ class OlivierTitleCard(BaseCardType):
         """
         Determine whether the given attributes constitute custom or generic
         season titles.
-        
+
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
             episode_text_format: The episode text format in use.
-        
+
         Returns:
             True if the episode map or episode text format is custom, False
             otherwise.

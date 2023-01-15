@@ -14,7 +14,7 @@ class FontValidator:
 
     """File to the font character validation database"""
     CHARACTER_DATABASE = 'fvm.json'
-    
+
 
     def __init__(self, database_directory: Path) -> None:
         """
@@ -32,11 +32,11 @@ class FontValidator:
     def __has_character(self, font_filepath: str, character: str) -> bool:
         """
         Determines whether the given character exists in the given Font. 
-        
+
         Args:
             font_filepath: Filepath to the font being validated against
             character: Character being checked.
-        
+
         Returns:
             True if the given character exists in the given font, False
             otherwise.
@@ -79,11 +79,11 @@ class FontValidator:
         """
         Validate the given Title, returning whether all characters are contained
         within the given Font.
-        
+
         Args:
             font_filepath: Filepath to the font being validated against
             title: The title being validated.
-        
+
         Returns:
             True if all characters in the title are found within the given font,
             False otherwise.
@@ -94,7 +94,7 @@ class FontValidator:
             lambda char: self.__has_character(font_filepath, char),
             (title := title.replace('\n', ''))
         ))
-        
+
         # Log all missing characters
         for char, has_character in zip(title, has_characters):
             if not has_character:

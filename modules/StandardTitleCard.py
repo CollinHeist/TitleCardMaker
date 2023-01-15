@@ -11,7 +11,7 @@ class StandardTitleCard(BaseCardType):
     customization of every aspect of the card, but does not use any arbitrary
     data.
     """
-    
+
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = Path(__file__).parent / 'ref'
 
@@ -87,7 +87,7 @@ class StandardTitleCard(BaseCardType):
             stroke_color: (Extra) Color to use for the back-stroke color.
             unused: Unused arguments.
         """
-        
+
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale)
 
@@ -229,10 +229,10 @@ class StandardTitleCard(BaseCardType):
         """
         Determine whether the given font characteristics constitute a default or
         custom font.
-        
+
         Args:
             font: The Font being evaluated.
-        
+
         Returns:
             True if a custom font is indicated, False otherwise.
         """
@@ -252,11 +252,11 @@ class StandardTitleCard(BaseCardType):
         """
         Determine whether the given attributes constitute custom or generic
         season titles.
-        
+
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
             episode_text_format: The episode text format in use.
-        
+
         Returns:
             True if custom season titles are indicated, False otherwise.
         """

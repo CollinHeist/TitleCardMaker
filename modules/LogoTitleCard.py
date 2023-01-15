@@ -9,7 +9,7 @@ class LogoTitleCard(BaseCardType):
     This class describes a type of CardType that produces logo-centric title
     cards, primarily for the purpose of reality TV shows.
     """
-    
+
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = Path(__file__).parent / 'ref'
 
@@ -52,7 +52,7 @@ class LogoTitleCard(BaseCardType):
         'vertical_shift',  'interline_spacing', 'kerning', 'stroke_width',
         'logo', 'omit_gradient', 'background', 'stroke_color',
     )
-                 
+
 
     def __init__(self, output_file: Path, title: str, hide_season: bool,
                  season_text: str, episode_text: str, title_color: str,
@@ -101,7 +101,7 @@ class LogoTitleCard(BaseCardType):
             stroke_color: (Extra) Color to use for the back-stroke color.
             unused: Unused arguments.
         """
-        
+
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale)
 
@@ -112,7 +112,7 @@ class LogoTitleCard(BaseCardType):
                                    episode_number=episode_number)
             except Exception:
                 pass
-            
+
             # Use either original or modified logo file
             self.logo = Path(logo)
         else:
@@ -145,7 +145,7 @@ class LogoTitleCard(BaseCardType):
     def resize_logo(self) -> Path:
         """
         Resize the logo into at most a 1875x1030 bounding box.
-        
+
         Returns:
             Path to the created image.
         """
@@ -234,10 +234,10 @@ class LogoTitleCard(BaseCardType):
         """
         Determines whether the given font characteristics constitute a default
         or custom font.
-        
+
         Args:
             font: The Font being evaluated.
-        
+
         Returns:
             True if a custom font is indicated, False otherwise.
         """
@@ -258,11 +258,11 @@ class LogoTitleCard(BaseCardType):
         """
         Determines whether the given attributes constitute custom or generic
         season titles.
-        
+
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
             episode_text_format: The episode text format in use.
-        
+
         Returns:
             True if custom season titles are indicated, False otherwise.
         """
@@ -278,7 +278,7 @@ class LogoTitleCard(BaseCardType):
         Make the necessary ImageMagick and system calls to create this object's
         defined title card.
         """
-        
+
         # Skip card if logo doesn't exist
         if self.logo is None:
             log.error(f'Logo file not specified')

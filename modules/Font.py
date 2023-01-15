@@ -17,7 +17,7 @@ class Font(YamlReader):
         'validate', 'color', 'size', 'file', 'case', 'replacements',
         'vertical_shift', 'interline_spacing', 'kerning', 'stroke_width',
     )
-    
+
     """Compiled regex to identify percentage values for scalars"""
     _PERCENT_REGEX = re_compile(r'^-?\d+\.?\d*%$')
     _PERCENT_REGEX_POSITIVE = re_compile(r'^\d+\.?\d*%$')
@@ -27,13 +27,13 @@ class Font(YamlReader):
         'size', 'file', 'replacements', 'delete_missing', 'case_name', 'case',
         'vertical_shift', 'interline_spacing', 'kerning', 'stroke_width',
     )
-    
+
 
     def __init__(self, yaml: dict, card_class: 'CardType',
                  series_info: 'SeriesInfo') -> None:
         """
         Construct a new instance of a Font.
-        
+
         Args:
             yaml: 'font' dictionary from a series YAML file.
             card_class:  CardType subclass to get default values from.
@@ -42,24 +42,24 @@ class Font(YamlReader):
 
         # Initialize parent YamlReader
         super().__init__(yaml)
-        
+
         # Store arguments
         self.__card_class = card_class
         self.__series_info = series_info
 
         # Use the global FontValidator object
         self.__validator = global_objects.fv
-        
+
         # Set generic font attributes
         self.reset()
-        
+
         # Parse YAML, update attributes and validity
         self.__parse_attributes()
 
-        
+
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
-        
+
         return f'<Font for series "{self.__series_info}">'
 
 
@@ -78,7 +78,7 @@ class Font(YamlReader):
         """
         Print an error message for the given attribute of the given value. Also
         sets the valid attribute of this object to False.
-        
+
         Args:
             attribute: Font attribute that is incorrect.
             value: Value of attribute that is incorrect.
@@ -109,7 +109,7 @@ class Font(YamlReader):
         # Color
         if (value := self._get('color', type_=str)) is not None:
             self.color = value
-        
+
         # File
         if (value := self._get('file', type_=Path)) is not None:
             # If specified as direct path, check for existance
@@ -134,7 +134,7 @@ class Font(YamlReader):
                 except Exception:
                     self.__error('replacements', value,
                                 f'bad replacement for "{in_}"')
-        
+
         # Size
         if (value := self._get('size', type_=str)) is not None:
             if bool(self._PERCENT_REGEX_POSITIVE.match(value)):
@@ -155,7 +155,7 @@ class Font(YamlReader):
                 self.interline_spacing = value
             else:
                 self.__error('interline_spacing', value, 'must be integer')
-                
+
         # Kerning
         if (value := self._get('kerning', type_=str)) is not None:
             if bool(self._PERCENT_REGEX.match(value)):
@@ -169,7 +169,7 @@ class Font(YamlReader):
                 self.stroke_width = float(value[:-1]) / 100.0
             else:
                 self.__error('stroke_width', value, 'specify as "x%"')
-                
+
 
     def reset(self) -> None:
         """Reset this object's attributes to its default values."""
@@ -194,7 +194,7 @@ class Font(YamlReader):
     def get_attributes(self) -> dict[str: 'str | float']:
         """
         Return a dictionary of attributes for this font to be unpacked.
-        
+
         Returns:
             Dictionary of attributes whose keys are 'title_color', 'font_size',
             'font', 'vertical_shift', 'interline_spacing', 'kerning', and
@@ -216,10 +216,10 @@ class Font(YamlReader):
         """
         Return whether all the characters of the given title are valid for this
         font. This uses this object's FontValidator object.
-        
+
         Args:
             title: The title (string) being validated.
-        
+
         Returns:
             Tuple of the modified title, and whether the title is now valid.
             The title is only modified if missing deletion is enabled (and
@@ -236,7 +236,7 @@ class Font(YamlReader):
             # Delete each missing character from title
             for missing in self.__validator.get_missing_characters(self.file):
                 title = title.replace(missing, '')
-                
+
             # Return modified title, and title is now guaranteed to be valid
             return title, True
 

@@ -27,7 +27,7 @@ class DataFileInterface:
         Args:
             data_file: Path to the data file to interface with.
         """
-        
+
         # Store the SeriesInfo and data file
         self.series_info = series_info
         self.file = data_file
@@ -48,7 +48,7 @@ class DataFileInterface:
         """
         Read this interface's data from file. Returns an empty dictionary if the
         file does not exist, is misformatted, or if 'data' key is missing.
-        
+
         Returns:
             Contents under 'data' key of this interface's file.
         """
@@ -94,7 +94,7 @@ class DataFileInterface:
     def read(self) -> tuple[dict[str, Any], set[str]]:
         """
         Read the data file for this object, yielding each valid row.
-        
+
         Returns:
             Yields a dictionary for each entry in this datafile. The dictionary
             has a key 'episode_info' with an EpisodeInfo object, and arbitrary
@@ -133,7 +133,7 @@ class DataFileInterface:
                               f'{episode_number:02} of the {self.series_info} '
                               f'datafile is invalid')
                     continue
-                
+
                 # Construct EpisodeInfo object for this entry
                 episode_info = global_objects.info_set.get_episode_info(
                     self.series_info,
@@ -149,7 +149,7 @@ class DataFileInterface:
                 # Add any additional, unexpected keys from the YAML
                 data = {'episode_info': episode_info}
                 data.update(episode_data)
-                
+
                 yield data, given_keys
 
 
@@ -177,7 +177,7 @@ class DataFileInterface:
                           **new_data: dict[str, Any]) -> None:
         """
         Add any generic data to the YAML entry associated with this EpisodeInfo.
-        
+
         Args:
             episode_info: Episode Info to add to YAML.
             new_data: Generic new data to write.

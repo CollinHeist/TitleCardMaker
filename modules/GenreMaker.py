@@ -46,7 +46,7 @@ class GenreMaker(ImageMaker):
         self.borderless = borderless
         self.omit_gradient = omit_gradient
 
-        
+
     def create(self) -> None:
         """
         Create the genre card. This WILL overwrite the existing file if it 

@@ -9,7 +9,7 @@ class EpisodeMap:
     basically contains the `seasons` and `episode_ranges` attributes for a given
     Show.
     """
-    
+
     """How to apply manual source if not explicitly stated"""
     DEFAULT_APPLIES_TO = 'all'
 
@@ -21,20 +21,20 @@ class EpisodeMap:
         '__applies', 'unique_season_titles',
     )
 
-    
+
     def __init__(self, seasons: dict=None,
                  episode_ranges: dict=None) -> None:
         """
         Construct a new instance of an EpisodeMap. This maps titles and source
         images to episodes, and can be initialized with EITHER a season map or
         episode range directly from series YAML; NOT both.
-        
+
         Args:
             seasons: Optional 'seasons' key from series YAML to initialize with.
             episode_ranges: Optional 'episode_ranges' key from series YAML to
                 initialize with.
         """
-        
+
         # Generic object attributes
         self.valid = True
         self.is_custom = False
@@ -45,7 +45,7 @@ class EpisodeMap:
         # If no custom specification, nothing else to parse
         if not seasons and not episode_ranges:
             return None
-        
+
         # Validate type of provided mapping
         if seasons and not isinstance(seasons, dict):
             log.error(f'Season map "{seasons}" is invalid')
@@ -65,7 +65,7 @@ class EpisodeMap:
             log.error(f'Cannot specify both seasons and episode ranges')
             self.valid = False
             return None
-        
+
         # Specify how to index this Episode Map, parse that YAML
         if seasons and len(seasons) > 0:
             self.__index_by = 'season'
@@ -92,8 +92,8 @@ class EpisodeMap:
     @property
     def custom_hash(self) -> str:
         return f'{self.__titles}|{self.__sources}|{self.__applies}'
-            
-    
+
+
     def __parse_seasons(self, seasons: dict) -> None:
         """
         Parse the given season map, filling this object's title, source, and
@@ -102,7 +102,7 @@ class EpisodeMap:
         Args:
             seasons: 'series' key from series YAML to parse.
         """
-        
+
         # Go through each season of mapping
         for season_number, mapping in seasons.items():
             # Skip hide key
@@ -114,7 +114,7 @@ class EpisodeMap:
                 log.warning(f'Invalid season number "{season_number}"')
                 self.valid = False
                 continue
-            
+
             # Parse title/source mapping
             if isinstance(mapping, dict):
                 if (value := mapping.get('title')):
@@ -188,8 +188,8 @@ class EpisodeMap:
                             self.valid = False
                             continue
                         self.__applies[key] = value
-        
-        
+
+
     def __parse_absolute_episode_ranges(self, episode_ranges: dict) -> None:
         """
         Parse the given episode range map, filling this object's title, source,
@@ -198,7 +198,7 @@ class EpisodeMap:
         Args:
             episode_ranges: 'episode_ranges' key from series YAML to parse.
         """
-        
+
         # Go through each episode range of mapping
         for episode_range, mapping in episode_ranges.items():
             try:
@@ -208,7 +208,7 @@ class EpisodeMap:
                 log.error(f'Invalid episode range "{episode_range}"')
                 log.debug(e)
                 continue
-            
+
             # Assign attributes for every episode in this range
             for episode_number in range(start, end+1):
                 if isinstance(mapping, str):
@@ -228,8 +228,8 @@ class EpisodeMap:
                             self.valid = False
                             continue
                         self.__applies[episode_number] = value
-    
-    
+
+
     def reset(self) -> None:
         """Reset this object go have generic titles."""
 
@@ -240,16 +240,16 @@ class EpisodeMap:
         if len(self.__sources) == 0:
             self.__index_by = 'season'
 
-    
+
     def get_generic_season_title(self, *, season_number: int=None,
                                  episode_info: 'EpisodeInfo'=None) -> str:
         """
         Get the generic season title for the given entry.
-        
+
         Args:
             season_number: Season number to get the generic title of.
             episode_info: EpisodeInfo to the get season title of.
-        
+
         Returns:
             'Specials' for season 0 episodes, 'Season {n}' otherwise.
 
@@ -260,7 +260,7 @@ class EpisodeMap:
         # Ensure at least one argument was provided
         if season_number is None and episode_info is None:
             raise ValueError(f'Must provide season_number or episode_info')
-        
+
         # Get episode's season number if not provided directly
         if season_number is None:
             season_number = episode_info.season_number
@@ -271,7 +271,7 @@ class EpisodeMap:
     def get_all_season_titles(self) -> dict:
         """
         Get the dictionary of season titles.
-        
+
         Returns:
             Dictionary of indices to season titles.
         """
@@ -284,13 +284,13 @@ class EpisodeMap:
         """
         Get the value for the given Episode from the target associated with
         'which' (i.e. the season title/source/applies map).
-        
+
         Args:
             episode_info: Episode to get the value of.
             which: Which dictionary to get the value from.
             default: Function to call if the given Episode does not exist in the
                 indicated map. It's return is returned.
-        
+
         Returns:
             If the Episode exists, returns the value from the indicated map. If
             it does not exist, returns the return of default with EpisodeInfo
@@ -301,7 +301,7 @@ class EpisodeMap:
         target = {'season_title':   self.__titles,
                   'source':         self.__sources,
                   'applies_to':     self.__applies}[which]
-        
+
         # Index by season
         if self.__index_by == 'season':
             if episode_info.season_number in target:
@@ -328,8 +328,8 @@ class EpisodeMap:
 
             # Use default if index doesn't fall into specified target
             return default(episode_info=episode_info)
-    
-    
+
+
     def get_season_title(self, episode_info: 'EpisodeInfo') -> str:
         """
         Get the season title for the given Episode.
@@ -340,7 +340,7 @@ class EpisodeMap:
         Returns:
             Season title defined by this map for this Episode.
         """
-        
+
         # Get season title for this episode
         season_title = self.__get_value(episode_info, 'season_title',
                                         self.get_generic_season_title)
@@ -386,10 +386,10 @@ class EpisodeMap:
             except Exception as e:
                 log.warning(f'Cannot format source "{source}" - {e}')
                 return source
-            
+
         return source
 
-    
+
     def get_applies_to(self, episode_info: 'EpisodeInfo') -> str:
         """
         Get the specified applies to value of for the given Episode.

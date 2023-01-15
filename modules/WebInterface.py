@@ -15,7 +15,7 @@ class WebInterface:
 
     """How many requests to cache"""
     CACHE_LENGTH = 10
-    
+
     """Regex to match URL's"""
     _URL_REGEX = re_compile(r'^((?:https?:\/\/)?.+)(?=\/)', IGNORECASE)
 
@@ -25,7 +25,7 @@ class WebInterface:
         b'<body><h1>404 Not Found</h1></body></html>',
     )
 
-    
+
     def __init__(self, name: str, verify_ssl: bool=True, *,
                  cache: bool=True) -> None:
         """
@@ -58,7 +58,7 @@ class WebInterface:
 
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
-        
+
         return f'<WebInterface to {self.name}>'
 
 
@@ -67,7 +67,7 @@ class WebInterface:
     def __retry_get(self, url: str, params: dict[str: Any]) -> dict[str: Any]:
         """
         Retry the given GET request until successful (or really fails).
-        
+
         Args:
             url: The URL of the GET request.
             params: The params of  the GET request.
@@ -84,11 +84,11 @@ class WebInterface:
         Wrapper for getting the JSON return of the specified GET request. If the
         provided URL and parameters are identical to the previous request, then
         a cached result is returned instead (if enabled).
-        
+
         Args:
             url: URL to pass to GET.
             Parameters to pass to GET.
-        
+
         Returns:
             Dict made from the JSON return of the specified GET request.
         """
@@ -96,7 +96,7 @@ class WebInterface:
         # If not caching, just query and return
         if not self.__do_cache:
             return self.__retry_get(url=url, params=params)
-        
+
         # Look through all cached results for this exact URL+params; if found,
         # skip the request and return that result
         for cache, result in zip(self.__cache, self.__cached_results):
@@ -106,7 +106,7 @@ class WebInterface:
         # Make new request, add to cache
         self.__cached_results.append(self.__retry_get(url=url, params=params))
         self.__cache.append({'url': url, 'params': str(params)})
-        
+
         # Delete element from cache if length has been exceeded
         if len(self.__cache) > self.CACHE_LENGTH:
             self.__cache.pop(0)
@@ -120,7 +120,7 @@ class WebInterface:
     def download_image(image_url: str, destination: 'Path') -> bool:
         """
         Download the provided image URL to the destination filepath.
-        
+
         Args:
             image_url: URL to the image to download.
             destination: Destination path to download the image to.
@@ -143,7 +143,7 @@ class WebInterface:
             # Write content to file
             with destination.open('wb') as file_handle:
                 file_handle.write(image)
-            
+
             return True
         except Exception as e:
             log.error(f'Cannot download image, error: "{e}"')

@@ -52,7 +52,7 @@ class SeasonPoster(ImageMaker):
 
         # Initialize parent object for the ImageMagickInterface
         super().__init__()
-        
+
         # Store provided file attributes
         self.source = source
         self.destination = destination
@@ -80,7 +80,7 @@ class SeasonPoster(ImageMaker):
         Returns:
             Integer height (in pixels) of the resized logo.
         """
-        
+
         command = ' '.join([
             f'convert',
             f'"{logo.resolve()}"',

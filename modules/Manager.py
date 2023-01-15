@@ -19,7 +19,7 @@ class Manager:
 
     """Default execution mode for Manager.run()"""
     DEFAULT_EXECUTION_MODE = 'serial'
-    
+
     """Valid execution modes for Manager.run()"""
     VALID_EXECUTION_MODES = ('serial', 'batch')
 
@@ -43,7 +43,7 @@ class Manager:
             TautulliInterface(
                 **self.preferences.tautulli_interface_args
             ).integrate()
-            
+
         # Optionally assign PlexInterface
         self.plex_interface = None
         if self.preferences.use_plex:
@@ -116,7 +116,7 @@ class Manager:
             for writer, update_args in zip(self.preferences.plex_yaml_writers,
                                         self.preferences.plex_yaml_update_args):
                 writer.update_from_plex(self.plex_interface, **update_args)
-        
+
 
     @notify('Starting to read series YAML files..')
     def create_shows(self) -> None:
@@ -132,9 +132,9 @@ class Manager:
             if not show.valid:
                 log.warning(f'Skipping series {show}')
                 continue
-                
+
             self.shows.append(show)
-            
+
             # If archives are disabled globally, or for this show - skip 
             if not self.preferences.create_archive or not show.archive:
                 continue
@@ -283,7 +283,7 @@ class Manager:
                          desc='Creating season posters',**TQDM_KWARGS):
             show.create_season_posters()
 
-    
+
     @notify('Starting to update Plex..')
     def update_plex(self) -> None:
         """
@@ -340,11 +340,11 @@ class Manager:
         """
         Run the Manager. If serial execution is not indicated, then sync is run
         and Show/ShowArchive objects are created.
-        
+
         Args:
             serial: (Keyword only) Whether execution is serial.
         """
-        
+
         # If serial, don't update series files or create shows
         if not serial:
             self.sync_series_files()
@@ -403,12 +403,12 @@ class Manager:
         Remake the title cards associated with the given list of rating keys.
         These keys are used to identify their corresponding episodes within
         Plex.
-        
+
         Args:
             rating_keys: List of Plex rating keys corresponding to Episodes to
                 update the cards of.
         """
-        
+
         # Exit if Plex is not enabled
         if not self.preferences.use_plex:
             log.error(f'Tautulli integration requires Plex')

@@ -41,7 +41,7 @@ class StylizedSummary(BaseSummary):
     def __create_montage(self) -> Path:
         """
         Create a montage of input images.
-        
+
         Returns:
             Path to the created image.
         """
@@ -66,7 +66,7 @@ class StylizedSummary(BaseSummary):
         Resize this associated show's logo to fit into at least a 350 pixel
         high space. If the resulting logo is wider than the given width, it is
         scaled.
-        
+
         Returns:
             Path to the resized logo.
         """
@@ -98,7 +98,7 @@ class StylizedSummary(BaseSummary):
         # Select images for montaging
         if not self._select_images(12) or len(self.inputs) == 0:
             return None
-        
+
         # Create montage
         montage = self.__create_montage()
 
@@ -117,7 +117,7 @@ class StylizedSummary(BaseSummary):
             created_by = self._CREATED_BY_PATH
         else:
             created_by = self._create_created_by(self.created_by)
-            
+
         command = ' '.join([
             f'convert "{montage.resolve()}"',
             # Create reflection of montage

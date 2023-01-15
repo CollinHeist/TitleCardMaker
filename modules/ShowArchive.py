@@ -42,7 +42,7 @@ class ShowArchive:
         """
         Constructs a new instance of this class. Creates a list of all
         applicable Show objects for later us.
-        
+
         Args:
             archive_directory: The base directory where this show should
                 generate its archive.
@@ -123,10 +123,10 @@ class ShowArchive:
         Get an arbitrary function for this object. This returns a wrapped
         version of the given function that calls that function on all Show
         objects within this Archive.
-        
+
         Args:
             show_function: The function to wrap.
-        
+
         Returns:
             Wrapped callable that is the indicated function called on each Show
             object within this Archive.
@@ -151,7 +151,7 @@ class ShowArchive:
             # If summary already exists, skip
             if summary.output.exists() or not summary.logo.exists():
                 continue
-            
+
             # Create summary image
             summary.create()
 

@@ -27,14 +27,14 @@ class SeasonPosterSet(YamlReader):
         'font_size', '__source_directory', '__logo', 'has_posters',
         '__media_directory'
     )
-    
+
 
     def __init__(self, episode_map: 'EpisodeMap', source_directory: Path,
                  media_directory: Path, poster_config: dict=None) -> None:
         """
         Construct a new instance of the set. This parses all YAML attributes,
         and looks for input poster images within the given source directory.
-        
+
         Args:
             episode_map: EpisodeMap containing season titles.
             source_directory: Base source directory to look for the logo and
@@ -62,7 +62,7 @@ class SeasonPosterSet(YamlReader):
         self.__source_directory = source_directory
         self.__logo = source_directory / 'logo.png'
         self.__media_directory = media_directory
-        
+
         # If posters aren't enabled, skip rest of parsing
         if media_directory is None or not poster_config.get('create', True):
             return None
@@ -117,7 +117,7 @@ class SeasonPosterSet(YamlReader):
         """
         Create SeasonPoster objects for all available season poster images,
         using the given config.
-        
+
         Args:
             season_config: The YAML config for this PosterSet.
             episode_map: EpisodeMap object containing custom defined season
@@ -192,7 +192,7 @@ class SeasonPosterSet(YamlReader):
             Path to this set's poster for the given season. None if that poster
             does not exist.
         """
-        
+
         # Return poster file if given season has poster that exists
         if ((poster := self.posters.get(season_number)) is not None
             and poster.destination.exists()):

@@ -51,7 +51,7 @@ class FrameTitleCard(BaseCardType):
         'vertical_shift', 'interline_spacing', 'kerning', 'episode_text_color',
         'episode_text_position',
     )
-    
+
     def __init__(self, source: Path, output_file: Path, title: str, 
                  season_text: str, episode_text: str, hide_season: bool,
                  font: str, font_size: float, title_color: str,
@@ -65,7 +65,7 @@ class FrameTitleCard(BaseCardType):
                  **unused) -> None:
         """
         Construct a new instance.
-        
+
         Args:
             source: Source image for this card.
             output_file: Output filepath for this card.
@@ -87,7 +87,7 @@ class FrameTitleCard(BaseCardType):
                 relative to the title text.
             unused: Unused arguments.
         """
-        
+
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale)
 
@@ -190,7 +190,7 @@ class FrameTitleCard(BaseCardType):
         width = self.get_text_dimensions(title_only_command,
                                          width='max', height='sum')['width']
         offset = 3200/2 + width/2 + 25
-        
+
         # Add index text to left or right
         if self.episode_text_position in ('left', 'right'):
             gravity = 'east' if self.episode_text_position == 'left' else 'west'            
@@ -248,10 +248,10 @@ class FrameTitleCard(BaseCardType):
         """
         Determines whether the given arguments represent a custom font for this
         card. This CardType only uses custom font cases.
-        
+
         Args:
             font: The Font being evaluated.
-        
+
         Returns:
             True if a custom font is indicated, False otherwise.
         """
@@ -271,17 +271,17 @@ class FrameTitleCard(BaseCardType):
         """
         Determines whether the given attributes constitute custom or generic
         season titles.
-        
+
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
             episode_text_format: The episode text format in use.
-        
+
         Returns:
             True if custom season titles are indicated, False otherwise.
         """
 
         standard_etf = FrameTitleCard.EPISODE_TEXT_FORMAT.upper()
-        
+
         return (custom_episode_map or
                 episode_text_format.upper() != standard_etf)
 
@@ -314,5 +314,5 @@ class FrameTitleCard(BaseCardType):
             # Write to output file
             f'"{self.output_file.resolve()}"',
         ])
-        
+
         self.image_magick.run(command)

@@ -63,10 +63,10 @@ class StyleSet:
         """
         Standardize the given style string so that "unique blur", "blur unique"
         evaluate to the same style.
-        
+
         Args:
             style: Style string (from YAML) being standardized.
-            
+
         Returns:
             Standardized value. This is lowercase with spaces removed, and
             sorted alphabetically.

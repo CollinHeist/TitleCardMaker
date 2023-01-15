@@ -42,7 +42,7 @@ class LogHandler(StreamHandler):
         self.__just_logged.append(record.msg)
         if len(self.__just_logged) > 5:
             self.__just_logged.pop(0)
-            
+
 
 class LogFormatterColor(Formatter):
     """Custom Formatter for logging integration, uses color"""

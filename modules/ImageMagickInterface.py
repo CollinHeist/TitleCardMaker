@@ -36,7 +36,7 @@ class ImageMagickInterface:
         """
         Construct a new instance. If container is falsey, then commands will not
         use a docker container.
-        
+
        Args:
             container: Optional docker container name/ID to sending ImageMagick
                 commands to.
@@ -44,7 +44,7 @@ class ImageMagickInterface:
             timeout: How many seconds to wait for a command to execute. Defaults
                 to COMMAND_TIMEOUT_SECONDS.
         """
-        
+
         # Definitions of this interface, i.e. whether to use docker and how
         self.container = container
         self.use_docker = bool(container)
@@ -77,10 +77,10 @@ class ImageMagickInterface:
         """
         Escape the necessary characters within the given string so that they
         can be sent to ImageMagick.
-        
+
         Args:
             string: The string to escape.
-        
+
         Returns:
             Input string with all necessary characters escaped. This assumes
             that text will be wrapped in "", and so only escapes " and `
@@ -110,14 +110,14 @@ class ImageMagickInterface:
         Returns:
             Tuple of the STDOUT and STDERR of the executed command.
         """
-        
+
         # If a docker image ID is specified, execute the command in that container
         # otherwise, execute on the host machine (no docker wrapper)
         if self.use_docker:
             command = f'docker exec -t {self.container} {self.prefix}{command}'
         else:
             command = f'{self.prefix}{command}'
-            
+
         # Split command into list of strings for Popen
         cmd = command_split(command)
 
@@ -132,17 +132,17 @@ class ImageMagickInterface:
         except FileNotFoundError as e:
             log.error(f'Command error "{e}"')
             log.debug(command)
-            
+
         # Add command to history and return results
         self.__history.append((command, stdout, stderr))
-        
+
         return stdout, stderr
 
 
     def run_get_output(self, command: str) -> str:
         """
         Wrapper for run(), but return the byte-decoded stdout.
-        
+
         Args:
             command: The command (as string) being executed.
 
@@ -151,7 +151,7 @@ class ImageMagickInterface:
         """
 
         output = self.run(command)
-        
+
         try:
             return b''.join(output).decode()
         except UnicodeDecodeError:
@@ -161,7 +161,7 @@ class ImageMagickInterface:
     def delete_intermediate_images(self, *paths: tuple) -> None:
         """
         Delete all the provided intermediate files.
-        
+
         Args:
             paths: Any number of files to delete. Must be Path objects.
         """

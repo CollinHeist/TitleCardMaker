@@ -9,7 +9,7 @@ class CutoutTitleCard(BaseCardType):
     /u/Phendrena's Willow title card set. These cards feature a solid color
     overlay with the episode text cutout to reveal the source image.
     """
-    
+
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = Path(__file__).parent / 'ref' / 'cutout'
     OLIVIER_REF_DIRECTORY = Path(__file__).parent / 'ref' / 'olivier'
@@ -129,7 +129,7 @@ class CutoutTitleCard(BaseCardType):
             top, bottom = words[:len(words)//2], words[len(words)//2:]
             top, bottom = ' '.join(top), ' '.join(bottom)
             return f'{top}\n{words}'
-        
+
         # Split about dash (likely a 10-100 number)
         return '\n'.join(episode_text.split('-'))
 
@@ -139,10 +139,10 @@ class CutoutTitleCard(BaseCardType):
         """
         Determine whether the given font characteristics constitute a default or
         custom font.
-        
+
         Args:
             font: The Font being evaluated.
-        
+
         Returns:
             True if a custom font is indicated, False otherwise.
         """
@@ -161,11 +161,11 @@ class CutoutTitleCard(BaseCardType):
         """
         Determine whether the given attributes constitute custom or generic
         season titles.
-        
+
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
             episode_text_format: The episode text format in use.
-        
+
         Returns:
             True if custom season titles are indicated, False otherwise.
         """

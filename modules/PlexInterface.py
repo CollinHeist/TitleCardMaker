@@ -41,7 +41,7 @@ class PlexInterface:
                  filesize_limit: int=10485760) -> None:
         """
         Constructs a new instance of a Plex Interface.
-        
+
         Args:
             database_directory: Base Path to read/write any databases from.
             url: URL of plex server.
@@ -73,7 +73,7 @@ class PlexInterface:
         # Store integration/filesize limit
         self.integrate_with_pmm_overlays = integrate_with_pmm_overlays
         self.filesize_limit = filesize_limit
-        
+
         # Create/read loaded card database
         self.__db = TinyDB(database_directory / self.LOADED_DB)
         self.__posters = TinyDB(database_directory / self.LOADED_POSTERS_DB)
@@ -123,7 +123,7 @@ class PlexInterface:
                         episode: 'Episode'=None) -> 'QueryInstance':
         """
         Get the tinydb query condition for the given entry.
-        
+
         Args:
             library_name: Library name containing the series to get the details
                 of.
@@ -154,7 +154,7 @@ class PlexInterface:
         """
         Get the loaded details of the given Episode from the given list of
         loaded series details.
-        
+
         Args:
             loaded_series: Filtered List from the loaded database to search.
             episode: The Episode to get the details of.
@@ -163,7 +163,7 @@ class PlexInterface:
             Loaded details for the specified episode. None if an episode of that
             index DNE in the given list.
         """
-        
+
         for entry in loaded_series:
             if (entry['season'] == episode.episode_info.season_number and
                 entry['episode'] == episode.episode_info.episode_number):
@@ -178,12 +178,12 @@ class PlexInterface:
         Filter the given episode map and remove all Episode objects without
         created cards, or whose card's filesizes matches that of the already
         uploaded card.
-            
+
         Args:
             library_name: Name of the library containing this series.
             series_info: SeriesInfo object for these episodes.
             episode_map: Dictionary of Episode objects to filter.
-        
+
         Returns:
             Filtered episode map. Episodes without existing cards, or whose
             existing card filesizes' match those already loaded are removed.
@@ -216,7 +216,7 @@ class PlexInterface:
                 filtered[key] = episode
 
         return filtered
-    
+
 
     @retry(stop=stop_after_attempt(5),
            wait=wait_fixed(3)+wait_exponential(min=1, max=32),
@@ -224,7 +224,7 @@ class PlexInterface:
     def __get_library(self, library_name: str) -> 'Library':
         """
         Get the Library object under the given name.
-        
+
         Args:
             library_name: The name of the library to get.
 
@@ -248,10 +248,10 @@ class PlexInterface:
         Get the Series object from within the given Library associated with the
         given SeriesInfo. This tries to match by TVDb ID, TMDb ID, name, and
         finally full name.
-        
+
         Args:
             library: The Library object to search for within Plex.
-        
+
         Returns:
             The Series associated with this SeriesInfo object.
         """
@@ -282,7 +282,7 @@ class PlexInterface:
             return library.get(series_info.full_name)
         except NotFound:
             pass
-        
+
         # Try by name and match the year
         try:
             if (ser := library.get(series_info.name)).year == series_info.year:
@@ -294,7 +294,7 @@ class PlexInterface:
                 log.warning(f'Series "{series_info}" was not found under '
                             f'library "{library.title}" in Plex')
                 self.__warned.add(key)
-            
+
             return None
 
 
@@ -328,7 +328,7 @@ class PlexInterface:
             all_libraries[library.title] = library.locations
 
         return all_libraries
-    
+
 
     @catch_and_log('Error getting all series', default=[])
     def get_all_series(self, filter_libraries: list[str]=[]
@@ -385,19 +385,19 @@ class PlexInterface:
                 all_series.append((series_info,show.locations[0],library.title))
 
         return all_series
-    
-    
+
+
     @catch_and_log('Error getting all episodes', default=[])
     def get_all_episodes(self, library_name: str,
                          series_info: SeriesInfo) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that have 
         already aired are returned.
-        
+
         Args:
             library_name: The name of the library containing the series.
             series_info: Series to get the episodes of.
-        
+
         Returns:
             List of EpisodeInfo objects for this series.
         """
@@ -462,12 +462,12 @@ class PlexInterface:
     def has_series(self, library_name: str, series_info: 'SeriesInfo') -> bool:
         """
         Determine whether the given series is present within Plex.
-        
+
         Args:
             library_name: The name of the library potentially containing the
                 series.
             series_info: The series to update.
-        
+
         Returns:
             True if the series is present within Plex.
         """
@@ -489,7 +489,7 @@ class PlexInterface:
         corresponding episodes within Plex, and the spoil status of the object.
         If a loaded card needs its spoiler status changed, the card is deleted
         and the loaded map is forced to reload that card.
-        
+
         Args:
             library_name: The name of the library containing the series to update
             series_info: The series to update.
@@ -522,7 +522,7 @@ class PlexInterface:
 
             # Set Episode watched/spoil statuses
             episode.update_statuses(plex_episode.isWatched, style_set)
-            
+
             # Get loaded card characteristics for this episode
             details = self.__get_loaded_episode(loaded_series, episode)
             loaded = (details is not None)
@@ -548,7 +548,7 @@ class PlexInterface:
         Set all the episode ID's for the given list of EpisodeInfo objects. This
         sets the Sonarr and TVDb ID's for each episode. As a byproduct, this
         also updates the series ID's for the SeriesInfo object
-        
+
         Args:
             library_name: Name of the library the series is under.
             series_info: SeriesInfo for the entry.
@@ -575,7 +575,7 @@ class PlexInterface:
                     season=info.season_number,
                     episode=info.episode_number,
                 )
-                
+
                 # Set the ID's for this object
                 for guid in plex_episode.guids:
                     if 'tvdb://' in guid.id:
@@ -594,12 +594,12 @@ class PlexInterface:
         """
         Get the source image (i.e. the URL to the existing thumbnail) for the
         given episode within Plex.
-        
+
         Args:
             library_name: Name of the library the series is under.
             series_info: The series to get the thumbnail of.
             episode_info: The episode to get the thumbnail of.
-        
+
         Returns:
             URL to the thumbnail of the given Episode. None if the episode DNE.
         """
@@ -633,7 +633,7 @@ class PlexInterface:
     def __retry_upload(self, plex_object: 'Episode', filepath: Path) -> None:
         """
         Upload the given poster to the given Episode, retrying if it fails.
-        
+
         Args:
             plex_object: The plexapi object to upload the file to.
             filepath: Filepath to the poster to upload.
@@ -685,7 +685,7 @@ class PlexInterface:
         Set the title cards for the given series. This only updates episodes
         that have title cards, and those episodes whose card filesizes are
         different than what has been set previously.
-        
+
         Args:
             library_name: Name of the library containing the series to update.
             series_info: The series to update.
@@ -709,7 +709,7 @@ class PlexInterface:
         # If the given series cannot be found in this library, exit
         if not (series := self.__get_series(library, series_info)):
             return None
-        
+
         # Go through each episode within Plex, set title cards
         error_count, loaded_count = 0, 0
         for pl_episode in (pbar := tqdm(series.episodes(), **TQDM_KWARGS)):
@@ -834,10 +834,10 @@ class PlexInterface:
                                                             EpisodeInfo, str]]:
         """
         Get all details for the episode indicated by the given Plex rating key.
-        
+
         Args:
             rating_key: Rating key used to fetch the item within Plex.
-        
+
         Returns:
             List of tuples of the SeriesInfo, EpisodeInfo, and the library name
             corresponding to the given rating key. If the object associated with
@@ -849,7 +849,7 @@ class PlexInterface:
         try:
             # Get the episode for this key
             entry = self.__server.fetchItem(rating_key)
-            
+
             # New show, return all episodes in series
             if entry.type == 'show':
                 assert entry.year is not None
@@ -902,7 +902,7 @@ class PlexInterface:
         """
         Remove all records for the given library and series from the loaded
         database.
-        
+
         Args:
             library_name: The name of the library containing the series whose
                 records are being removed.

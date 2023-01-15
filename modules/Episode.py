@@ -18,7 +18,7 @@ class Episode:
         'downloadable_source', 'extra_characteristics', 'given_keys', 'watched',
         'blur', 'grayscale', 'spoil_type', 
     )
-    
+
 
     def __init__(self, episode_info: 'EpisodeInfo', card_class: 'CardType',
                  base_source: Path, destination: Path, given_keys: set,
@@ -37,7 +37,7 @@ class Episode:
             extras: Additional characteristics to pass to the creation of the
                 TitleCard from this Episode.
         """
-        
+
         # Set object attributes
         self.episode_info = episode_info
         self.card_class = card_class
@@ -90,15 +90,15 @@ class Episode:
 
         return self.episode_info.characteristics | self.extra_characteristics
 
-    
+
     def key_is_specified(self, key: str) -> bool:
         """
         Return whether the given key was present in the initialization for this
         Episode, i.e. whether the key can be added to the datafile.
-        
+
         Args:
             key: The key being checked.
-        
+
         Returns:
             Whether the given key was specified in the initialization of this
             Episode.
@@ -111,7 +111,7 @@ class Episode:
         """
         Update the statuses of this Episode. In particular the watched status
         and un/watched styles.
-        
+
         Args:
             watched: New watched status for this Episode.
             style_set: StyleSet object to assign spoil type with.
@@ -126,7 +126,7 @@ class Episode:
         """
         Update the source image for this Episode, as well as the downloadable
         flag for the source.
-        
+
         Args:
             new_source: New source file. If source the path is taken as-is; if
                 string, then the file is looked for within this Episode's base

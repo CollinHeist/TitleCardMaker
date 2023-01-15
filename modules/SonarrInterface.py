@@ -37,7 +37,7 @@ class SonarrInterface(WebInterface):
 
         # Initialize parent WebInterface 
         super().__init__('Sonarr', verify_ssl)
-        
+
         # Get global MediaInfoSet object
         self.info_set = global_objects.info_set
 
@@ -64,13 +64,13 @@ class SonarrInterface(WebInterface):
         except Exception as e:
             log.critical(f'Cannot connect to Sonarr - returned error: "{e}"')
             exit(1)
-        
+
         # Create blank dictionary of titles -> ID's
         self.__series_ids = {}
 
         # Parse all Sonarr series
         self.__map_all_ids()
-        
+
 
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
@@ -91,7 +91,7 @@ class SonarrInterface(WebInterface):
         url = f'{self.url}series'
         params = self.__standard_params
         all_series = self._get(url, params)
-        
+
         # Reset series dictionary
         self.__series_ids = {}
 
@@ -211,7 +211,7 @@ class SonarrInterface(WebInterface):
                 sonarr_id=show.get('id'),
                 tvdb_id=show.get('tvdbId'),
             )
-            
+
             # Add to returned list
             series.append((series_info, show['path']))
 
@@ -248,10 +248,10 @@ class SonarrInterface(WebInterface):
         """
         Gets all episode info for the given series. Only episodes that have 
         already aired are returned.
-        
+
         Args:
             series_info: SeriesInfo for the entry.
-        
+
         Returns:
             List of EpisodeInfo objects for the given series.
         """
@@ -295,7 +295,7 @@ class SonarrInterface(WebInterface):
             if episode.get('tvdbId') == 0:
                 episode['tvdbId'] = None
                 has_bad_ids = True
-            
+
             # Create EpisodeInfo object for this entry
             episode_info = self.info_set.get_episode_info(
                 series_info,
@@ -326,7 +326,7 @@ class SonarrInterface(WebInterface):
         """
         Set all the episode ID's for the given list of EpisodeInfo objects. This
         sets the TVDb ID for each episode.
-        
+
         Args:
             series_info: SeriesInfo for the entry.
             infos: List of EpisodeInfo objects to update. Not used.

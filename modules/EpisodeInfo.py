@@ -77,7 +77,7 @@ class EpisodeInfo:
     airdate: 'datetime'=None
     key: str = field(init=False, repr=False)
     word_set: WordSet = field(init=False, repr=False)
-    
+
 
     def __post_init__(self):
         """Called after __init__, sets types of indices, assigns key field"""
@@ -123,10 +123,10 @@ class EpisodeInfo:
         Get the key for the episode corresponding to given number of episodes
         after this one. For example. if this object is S01E05, adding 5 would 
         return '1-10'.
-        
+
         Args:
             count: The number of episodes to increment the index by.
-        
+
         Returns:
             The key for count many episodes after this one.
         """
@@ -165,10 +165,10 @@ class EpisodeInfo:
     def has_id(self, id_: str) -> bool:
         """
         Determine whether this object has defined the given ID.
-        
+
         Args:
             id_: ID being checked
-        
+
         Returns:
             True if the given ID is defined (i.e. not None) for this object.
             False otherwise.
@@ -180,10 +180,10 @@ class EpisodeInfo:
     def has_ids(self, *ids: tuple[str]) -> bool:
         """
         Determine whether this object has defined all the given ID's.
-        
+
         Args:
             ids: Any ID's being checked for.
-        
+
         Returns:
             True if all the given ID's are defined (i.e. not None) for this
             object. False otherwise.
@@ -252,7 +252,7 @@ class EpisodeInfo:
     def set_tvdb_id(self, tvdb_id: int) -> None:
         """
         Sets the TVDb ID for this object.
-        
+
         Args:
             tmdb_id: The TVDb ID to set.
         """
@@ -264,7 +264,7 @@ class EpisodeInfo:
     def set_imdb_id(self, imdb_id: str) -> None:
         """
         Sets the IMDb ID for this object.
-        
+
         Args:
             imdb_id: The IMDb ID to set.
         """
@@ -272,11 +272,11 @@ class EpisodeInfo:
         if self.imdb_id is None and imdb_id is not None:
             self.imdb_id = imdb_id
 
-    
+
     def set_tmdb_id(self, tmdb_id: int) -> None:
         """
         Sets the TMDb ID for this object.
-        
+
         Args:
             tmdb_id: The TMDb ID to set.
         """
@@ -291,7 +291,7 @@ class EpisodeInfo:
         """
         Update the queried attributes of this object to reflect the given
         arguments. Only updates from False -> True.
-        
+
         Args:
             queried_plex: Whether this EpisodeInfo has been queried on Plex.
             queried_sonarr: Whether this EpisodeInfo has been queried on Sonarr.

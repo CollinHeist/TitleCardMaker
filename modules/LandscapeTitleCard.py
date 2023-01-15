@@ -226,7 +226,7 @@ class LandscapeTitleCard(BaseCardType):
         dimensions = self.get_text_dimensions(text_command,
                                               width='max', height='sum')
         width, height = dimensions['width'], dimensions['height']
-        
+
         # Get start coordinates of the bounding box
         x_start, x_end = 3200/2 - width/2, 3200/2 + width/2
         y_start, y_end = 1800/2 - height/2, 1800/2 + height/2
@@ -303,16 +303,16 @@ class LandscapeTitleCard(BaseCardType):
             if 'box_adjustments' in extras:
                 extras['box_adjustments'] = '0 0 0 0'
 
-    
+
     @staticmethod
     def is_custom_font(font: 'Font') -> bool:
         """
         Determine whether the given font characteristics constitute a default
         or custom font.
-        
+
         Args:
             font: The Font being evaluated.
-        
+
         Returns:
             True if the given font is custom, False otherwise.
         """
@@ -330,11 +330,11 @@ class LandscapeTitleCard(BaseCardType):
         """
         Determine whether the given attributes constitute custom or generic
         season titles.
-        
+
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
             episode_text_format: The episode text format in use.
-        
+
         Returns:
             False, as season titles aren't used.
         """
@@ -347,7 +347,7 @@ class LandscapeTitleCard(BaseCardType):
         Make the necessary ImageMagick and system calls to create this object's
         defined title card.
         """
-        
+
         # If title is 0-length, just stylize
         if len(self.title.strip()) == 0:
             self.__add_no_title()
@@ -362,7 +362,7 @@ class LandscapeTitleCard(BaseCardType):
         bounding_box = self.get_bounding_box_coordinates(
             font_size, interline_spacing, kerning
         )
- 
+
         # Generate command to create card
         command = ' '.join([
             f'convert "{self.source.resolve()}"',
@@ -396,5 +396,5 @@ class LandscapeTitleCard(BaseCardType):
             *self.add_bounding_box_command(bounding_box),
             f'"{self.output_file.resolve()}"',
         ])
-        
+
         self.image_magick.run(command)

@@ -92,7 +92,7 @@ class ShowRecordKeeper:
         # If the object defines a custom hash property/attribute, use that
         elif hasattr(record, 'custom_hash'):
             record = record.custom_hash
-        
+
         # Hash this recrd (as a UTF-8 encoded string)
         hash_obj.update(str(record).encode('utf-8'))
 
@@ -146,12 +146,12 @@ class ShowRecordKeeper:
             (where('series') == show.series_info.full_name) &
             (where('directory') == str(show.media_directory.resolve()))
         )
-        
+
         # If this show has an existing hash, check for equality
         if self.records.contains(condition):
             existing_hash = self.records.get(condition)['hash']
             new_hash = self.__get_show_hash(show)
-            
+
             return existing_hash != new_hash
 
         # No existing hash
@@ -165,13 +165,13 @@ class ShowRecordKeeper:
         Args:
             show: Show object being evaluated.
         """
-        
+
         # Condition to get the hash of this show
         condition = (
             (where('series') == show.series_info.full_name) &
             (where('directory') == str(show.media_directory.resolve()))
         )
-        
+
         # Either insert or update hash of this show
         self.records.upsert({
             'series': show.series_info.full_name,

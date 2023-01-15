@@ -196,7 +196,7 @@ class ImageMaker(ABC):
             image: Path to the image being converted.
             destination: Path to the destination image location.
             min_dimension: Minimum dimension of converted image.
-        
+
         Returns:
             Path to the converted file.
         """

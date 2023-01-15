@@ -35,7 +35,7 @@ class RemoteCardType:
         specified location and loads it as a class in the global modules, under
         the interpreted class name. If the given remote specification is a file
         that exists, that file is loaded.
-        
+
         Args:
             database_directory: Base Path to read/write any databases from.
             remote: URL to remote card to inject. Should omit repo base. Should
@@ -87,13 +87,13 @@ class RemoteCardType:
 
             # Get class from module namespace
             self.card_class = module.__dict__[class_name]
-            
+
             # Validate that each RemoteFile of this class loaded correctly
             for attribute_name in dir(self.card_class):
                 attribute = getattr(self.card_class, attribute_name)
                 if isinstance(attribute, RemoteFile):
                     self.valid &= attribute.valid
-            
+
             # Add this url to the loaded database
             try:
                 self.loaded.insert({'remote': url})

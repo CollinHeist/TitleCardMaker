@@ -24,7 +24,7 @@ class Profile:
         """
         Construct a new instance of a Profile. All given arguments will be
         applied through this Profile (and whether it's generic/custom).
-        
+
         Args:
             font: The Font for this profile.
             hide_seasons: Whether to hide season text.
@@ -66,7 +66,7 @@ class Profile:
         Args:
             card_class: Implementation of CardType whose valid subprofiles are
                 requested. 
-        
+
         Returns:
             The profiles that can be created as subprofiles from this object.
         """
@@ -76,7 +76,7 @@ class Profile:
             custom_episode_map=self.__episode_map.is_custom,
             episode_text_format=self.episode_text_format,
         )
-        
+
         # Determine whether this profile uses a custom font
         has_custom_font = card_class.is_custom_font(self.font)
 
@@ -87,7 +87,7 @@ class Profile:
                 seasons = 'hidden'
             elif has_custom_season_titles:
                 seasons = 'custom'
-                
+
             return [{
                 'seasons': seasons,
                 'font': 'custom' if has_custom_font else 'generic'
@@ -97,7 +97,7 @@ class Profile:
         valid_profiles = [{'seasons': 'generic', 'font': 'generic'}]
         if has_custom_font:
             valid_profiles.append({'seasons': 'generic', 'font': 'custom'})
-            
+
         if has_custom_season_titles:
             valid_profiles.append({'seasons': 'custom', 'font': 'generic'})
             if has_custom_font:
@@ -115,7 +115,7 @@ class Profile:
         """
         Convert this profile to the provided profile attributes. This modifies
         what characteristics are presented by the object.
-        
+
         Args:
             seasons: String of how to modify seasons. Must be one of 'custom',
                 'generic', or 'hidden'.
@@ -155,10 +155,10 @@ class Profile:
         """
         Gets the season text for the given season number, after applying this
         profile's rules about season text.
-        
+
         Args:
             episode_info: Episode info to get the season text of.
-        
+
         Returns:
             The season text for the given entry as defined by this profile.
         """
@@ -181,10 +181,10 @@ class Profile:
         """
         Gets the episode text for the given episode info, as defined by this
         profile.
-        
+
         Args:
             episode_info: Episode info to get the episode text of.
-        
+
         Returns:
             The episode text defined by this profile.
         """
@@ -240,10 +240,10 @@ class Profile:
         'Longer Title'
         >>> self.__remove_episode_text_format('Chapter Eighty Eight Example 2')
         'Example 2'
-        
+
         Args:
             episode_text:The title text to process.
-        
+
         Returns:
             The episode text with all text that matches the format specified in
             this profile's episode text format REMOVED. If there is no matching
@@ -326,11 +326,11 @@ class Profile:
         For example, if the episode format string was 'Chapter {episode_number}'
         and the given `title_text` was 'Chapter 1: Pilot', then the returned
         text (excluding any replacements or case mappings) would be 'Pilot'.
-        
+
         Args:
             title_text:  The title text to convert.
             manually_specified: Whether the given title was manually specified.
-        
+
         Returns:
             The processed text.
         """
@@ -347,10 +347,10 @@ class Profile:
             cased_title = title_text
         else:
             cased_title = self.font.case(title_text)
-        
+
         # Apply font replacements
         replaced_title = cased_title
         for old, new in self.font.replacements.items():
             replaced_title = replaced_title.replace(old, new)
-        
+
         return replaced_title
