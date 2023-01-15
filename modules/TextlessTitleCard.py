@@ -36,19 +36,18 @@ class TextlessTitleCard(BaseCardType):
     __slots__ = ('source_file', 'output_file')
 
 
-    def __init__(self, source: Path, output_file: Path, blur: bool=False,
-                 grayscale: bool=False, **kwargs) -> None:
+    def __init__(self, source: Path, output_file: Path,
+                 blur: bool=False,
+                 grayscale: bool=False, **unused) -> None:
         """
-        Initialize the TitleCardMaker object. This primarily just stores
-        instance variables for later use in `create()`. If the provided font
-        does not have a character in the title text, a space is used instead.
+        Construct a new instance of this card.
 
         Args:
             source: Source image.
             output_file: Output file.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
-            kwargs: Unused arguments.
+            unused: Unused arguments.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface

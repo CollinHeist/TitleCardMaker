@@ -2,6 +2,10 @@ from copy import deepcopy
 from re import compile as re_compile
 from typing import Any
 
+from modules.Debug import log
+from modules.EpisodeInfo import WordSet
+import modules.global_objects as global_objects
+
 class MultiEpisode:
     """
     This class describes a MultiEpisode, which is a 'type' (practically a 
@@ -10,12 +14,13 @@ class MultiEpisode:
     (sequentially) episode info and source.
     """
 
-    """Regex to match/modify ETF strings for multi episodes"""
+    """Regex to match ETF strings for multi episodes"""
     ETF_REGEX = re_compile(r'^(.*?)(\s*){(episode|abs)_number(.*?)}(.*)')
 
     __slots__ = (
         'season_number', 'episode_start', 'episode_end', 'abs_start', 'abs_end',
-        '_first_episode', 'episode_info', 'destination', 'episode_range'
+        '_first_episode', 'episode_info', 'destination', 'episode_range',
+        'word_set',
     )
 
 
@@ -25,7 +30,7 @@ class MultiEpisode:
         list of Episode objects, and has the given (modified) Title.
         
         Args:
-            episodes: List of Episode objects this MultiEpisode describes.
+            episodes: List of Episode objects this MultiEpisode encompasses.
             title: The modified title that describes these multiple episodes.
         """
         
@@ -64,6 +69,24 @@ class MultiEpisode:
                    
         # Set object attributes from first episode
         self.episode_info = deepcopy(self._first_episode.episode_info)
+
+        # Create modified WordSet with words for the start/ends of this range
+        self.word_set = WordSet()
+        for label, number in (
+            ('episode_start', self.episode_start),
+            ('episode_end', self.episode_end),
+            ('abs_start', self.abs_start),
+            ('abs_end', self.abs_end)):
+            self.word_set.add_numeral(label, number)
+
+        # Add translated word variations for each globally enabled language
+        for lang in global_objects.pp.supported_language_codes:
+            for label, number in (
+                ('episode_start', self.episode_start),
+                ('episode_end', self.episode_end),
+                ('abs_start', self.abs_start),
+                ('abs_end', self.abs_end)):
+                self.word_set.add_numeral(label, number, lang)
 
         # Override title, set blank destination
         self.episode_info.title = title
@@ -123,17 +146,18 @@ class MultiEpisode:
 
         Returns:
             Dictionary of characteristics that define this object. Keys are the
-            start/end indices of the range, and the extra characteristics of the
-            first episode.
+            start/end indices of the range (in numeric and written forms), and
+            the extra characteristics of the first episode.
         """
         
-        return {
+        return self._first_episode.characteristics | {
             'season_number': self.season_number,
             'episode_start': self.episode_start,
             'episode_end': self.episode_end,
             'abs_start': self.abs_start,
             'abs_end': self.abs_end,
-        } | self._first_episode.extra_characteristics
+            **self.word_set,
+        }
 
     
     @staticmethod

@@ -22,6 +22,9 @@ class ImageMagickInterface:
     """How long to wait before terminating a command as timed out"""
     COMMAND_TIMEOUT_SECONDS = 240
 
+    """Characters that must be escaped in commands"""
+    __REQUIRED_ESCAPE_CHARACTERS = ('"', '`', '%')
+
     """Substrings that must be present in --version output"""
     __REQUIRED_VERSION_SUBSTRINGS = ('Version','Copyright','License','Features')
 
@@ -84,11 +87,14 @@ class ImageMagickInterface:
             characters.
         """
 
-        # Handle possible None strings
+        # Handle possible bad (None) strings
         if string is None:
             return None
 
-        return string.replace('"', r'\"').replace('`', r'\`')
+        for char in ImageMagickInterface.__REQUIRED_ESCAPE_CHARACTERS:
+            string = string.replace(char, f'\{char}')
+
+        return string
 
 
     def run(self, command: str) -> tuple[bytes, bytes]:

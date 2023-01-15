@@ -19,7 +19,7 @@ class Title:
     """
 
     """Characters that should be used for priority splitting between lines"""
-    SPLIT_CHARACTERS = (':', ',', ')', ']', '?', '!', '-', '.', '/')
+    SPLIT_CHARACTERS = (':', ',', ')', ']', '?', '!', '-', '.', '/', '|')
 
     """Regex for identifying partless titles for MultiEpisodes"""
     PARTLESS_REGEX = (

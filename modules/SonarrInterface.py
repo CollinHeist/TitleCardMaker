@@ -68,9 +68,6 @@ class SonarrInterface(WebInterface):
         # Create blank dictionary of titles -> ID's
         self.__series_ids = {}
 
-        # List of missing series that have already been warned 
-        self.__warned = []
-
         # Parse all Sonarr series
         self.__map_all_ids()
         
@@ -113,24 +110,6 @@ class SonarrInterface(WebInterface):
             for alt_title in series['alternateTitles']:
                 alt_si = SeriesInfo(alt_title['title'], series['year'])
                 self.__series_ids[alt_si.full_match_name] = data
-
-
-    def __warn_missing_series(self, series_info: SeriesInfo) -> None:
-        """
-        Warn a given series is missing from Sonarr, but only if it hasn't
-        already been warned.
-        
-        Args:
-            series_info: The SeriesInfo being warned.
-        """
-
-        # If this series has already been warned, return
-        if series_info.full_name in self.__warned:
-            return None
-
-        # Series hasn't been warned - warn and add to list
-        log.warning(f'Series "{series_info}" not found in Sonarr')
-        self.__warned.append(series_info.full_name)
 
 
     def has_series(self, series_info: SeriesInfo) -> bool:
@@ -257,7 +236,7 @@ class SonarrInterface(WebInterface):
         elif (ids := self.__series_ids.get(series_info.full_match_name)):
             pass
         else:
-            self.__warn_missing_series(series_info)
+            log.warning(f'Series "{series_info}" not found in Sonarr')
             return None
 
         # Set ID's for this series
@@ -279,7 +258,7 @@ class SonarrInterface(WebInterface):
 
         # If no ID was returned, error and return an empty list
         if series_info.sonarr_id is None:
-            self.__warn_missing_series(series_info)
+            log.warning(f'Series "{series_info}" not found in Sonarr')
             return []
 
         # Construct GET arguments
@@ -291,13 +270,14 @@ class SonarrInterface(WebInterface):
         all_episode_info = []
 
         # Go through each episode and get its season/episode number, and title
+        has_bad_ids = False
         for episode in all_episodes:
             # Get airdate of this episode
+            air_datetime = None
             if (ep_airdate := episode.get('airDateUtc')) is not None:
                 # If episode hasn't aired, skip
                 air_datetime=datetime.strptime(ep_airdate,self.__AIRDATE_FORMAT)
-                if (not episode['hasFile']
-                    and air_datetime > datetime.now() + timedelta(hours=2)):
+                if not episode['hasFile']and air_datetime > datetime.now():
                     continue
 
                 # Skip temporary placeholder names if aired in the last 48 hours
@@ -310,6 +290,11 @@ class SonarrInterface(WebInterface):
             # Skip permanent placeholder names
             if self.__ALWAYS_IGNORE_REGEX.match(episode['title']):
                 continue
+
+            # If the episode's TVDb ID is 0, then set to None to avoid mismatch
+            if episode.get('tvdbId') == 0:
+                episode['tvdbId'] = None
+                has_bad_ids = True
             
             # Create EpisodeInfo object for this entry
             episode_info = self.info_set.get_episode_info(
@@ -321,11 +306,17 @@ class SonarrInterface(WebInterface):
                 tvdb_id=episode.get('tvdbId'),
                 title_match=True,
                 queried_sonarr=True,
+                airdate=air_datetime,
             )
 
             # Add to episode list
             if episode_info is not None:
                 all_episode_info.append(episode_info)
+
+        # If any episodes had TVDb ID's of 0, then warn user to refresh series
+        if has_bad_ids:
+            log.warning(f'Series "{series_info}" has no TVDb episode ID data - '
+                        f'Refresh & Scan in Sonarr')
 
         return all_episode_info
 

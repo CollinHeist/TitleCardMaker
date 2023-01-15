@@ -16,8 +16,10 @@ class EpisodeMap:
     """Regex to match season/episode number from index range text"""
     INDEX_RANGE_REGEX = re_compile('s(\d+)e(\d+)', IGNORECASE)
 
-    __slots__ = ('valid', 'is_custom', '__index_by', '__titles', '__sources',
-                 '__applies')
+    __slots__ = (
+        'valid', 'is_custom', '__index_by', '__titles', '__sources',
+        '__applies', 'unique_season_titles',
+    )
 
     
     def __init__(self, seasons: dict=None,
@@ -33,15 +35,14 @@ class EpisodeMap:
                 initialize with.
         """
         
-        # Assume object is valid until invalidated, and generic until customized
+        # Generic object attributes
         self.valid = True
         self.is_custom = False
-        
-        # Default indexing is by season number
         self.__index_by = 'season'
-        
-        # If no custom seasons/episode ranges, generate defaults
         self.__titles, self.__sources, self.__applies = {}, {}, {}
+        self.unique_season_titles = set()
+
+        # If no custom specification, nothing else to parse
         if not seasons and not episode_ranges:
             return None
         
@@ -76,6 +77,9 @@ class EpisodeMap:
         elif episode_ranges and len(episode_ranges) > 0:
             self.__index_by = 'episode'
             self.__parse_absolute_episode_ranges(episode_ranges)
+
+        # Determine unique set of specified season titles
+        self.unique_season_titles = set(val for _, val in self.__titles.items())
 
 
     def __repr__(self) -> str:

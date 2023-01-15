@@ -43,25 +43,36 @@ class LogoTitleCard(BaseCardType):
     """Paths to intermediate files that are deleted after the card is created"""
     __RESIZED_LOGO = BaseCardType.TEMP_DIR / 'resized_logo.png'
 
+    """Source path for the gradient image overlayed over all title cards"""
+    __GRADIENT_IMAGE = REF_DIRECTORY / 'GRADIENT.png'
+
     __slots__ = (
         'source_file', 'output_file', 'title', 'season_text', 'episode_text',
         'font', 'font_size', 'title_color', 'hide_season', 'separator', 'blur',
-        'vertical_shift',  'interline_spacing', 'kerning', 'stroke_width', 'logo',
-        'background',
+        'vertical_shift',  'interline_spacing', 'kerning', 'stroke_width',
+        'logo', 'omit_gradient', 'background', 'stroke_color',
     )
                  
 
-    def __init__(self, *, output_file: Path, title: str, hide_season: bool,
+    def __init__(self, output_file: Path, title: str, hide_season: bool,
                  season_text: str, episode_text: str, title_color: str,
-                 font: str, font_size: float, vertical_shift: int=0,
-                 kerning: float=1.0, interline_spacing: int=0,
-                 stroke_width: float=1.0, blur: bool=False,
-                 grayscale: bool=False, season_number: int=1,
-                 episode_number: int=1, separator: str='•', logo: str=None,
-                 background: str='#000000',
-                 **kwargs) -> None:
+                 font: str, font_size: float,
+                 vertical_shift: int=0,
+                 kerning: float=1.0,
+                 interline_spacing: int=0,
+                 stroke_width: float=1.0,
+                 blur: bool=False,
+                 grayscale: bool=False,
+                 season_number: int=1,
+                 episode_number: int=1,
+                 logo: str=None,
+                 separator: str='•', 
+                 background: str='black',
+                 stroke_color: str='black',
+                 omit_gradient: bool=True,
+                 **unused) -> None:
         """
-        Initialize the CardType object.
+        Construct a new instance of this card.
 
         Args:
             output_file: Output file.
@@ -74,20 +85,21 @@ class LogoTitleCard(BaseCardType):
             title_color: Color to use for the episode title.
             hide_season: Whether to omit the season text (and joining character)
                 from the title card completely.
-            season_number: Season number of the episode associated with this
-                card.
-            episode_number: Episode number of the episode associated with this
-                card.
-            separator: Character to use to separate season and episode text.
+            season_number: Season number for logo-file formatting.
+            episode_number: Episode number for logo-file formatting.
             vertical_shift: Pixels to adjust title vertical shift by.
             interline_spacing: Pixels to adjust title interline spacing by.
             kerning: Scalar to apply to kerning of the title text.
             stroke_width: Scalar to apply to black stroke of the title text.
-            logo: Filepath (or file format) to the logo file.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
-            background: Backround color to use for this card.
-            kwargs: Unused arguments.
+            logo: (Extra) Filepath (or file format) to the logo file.
+            separator: (Extra) Character to use to separate season and episode
+                text.
+            background: (Extra) Backround color.
+            omit_gradient: (Extra) Whether to omit the gradient overlay.
+            stroke_color: (Extra) Color to use for the back-stroke color.
+            unused: Unused arguments.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface
@@ -123,10 +135,11 @@ class LogoTitleCard(BaseCardType):
         self.kerning = kerning
         self.stroke_width = stroke_width
 
-        # Miscellaneous attributes
-        self.blur = blur
+        # Optional extras
+        self.omit_gradient = omit_gradient
         self.background = background
         self.separator = separator
+        self.stroke_color = stroke_color
 
 
     def resize_logo(self) -> Path:
@@ -286,6 +299,14 @@ class LogoTitleCard(BaseCardType):
         kerning = -1.25 * self.kerning
         stroke_width = 3.0 * self.stroke_width
 
+        # Sub-command to optionally add gradient
+        gradient_command = []
+        if not self.omit_gradient:
+            gradient_command = [
+                f'"{self.__GRADIENT_IMAGE.resolve()}"',
+                f'-composite',
+            ]
+
         command = ' '.join([
             f'convert',
             f'-set colorspace sRGB',
@@ -297,6 +318,8 @@ class LogoTitleCard(BaseCardType):
             f'-gravity north',
             f'-geometry "+0+{offset}"',
             f'-composite',
+            # Optionally overlay logo
+            *gradient_command,
             # Resize and optionally blur source image
             *self.resize_and_style,
             # Global title text options
@@ -306,9 +329,9 @@ class LogoTitleCard(BaseCardType):
             f'-interword-spacing 50',
             f'-interline-spacing {interline_spacing}',
             f'-pointsize {font_size}',
-            # Black stroke behind title text
-            f'-fill black',
-            f'-stroke black',
+            # Stroke behind title text
+            f'-fill "{self.stroke_color}"',
+            f'-stroke "{self.stroke_color}"',
             f'-strokewidth {stroke_width}',
             f'-annotate +0+{vertical_shift} "{self.title}"',
             # Title text

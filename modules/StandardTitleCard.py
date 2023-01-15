@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
@@ -45,18 +46,24 @@ class StandardTitleCard(BaseCardType):
         'source_file', 'output_file', 'title', 'season_text', 'episode_text',
         'font', 'font_size', 'title_color', 'hide_season', 'separator',
         'vertical_shift', 'interline_spacing', 'kerning', 'stroke_width',
-        'omit_gradient',
+        'omit_gradient', 'stroke_color',
     )
 
     def __init__(self, source: Path, output_file: Path, title: str,
                  season_text: str, episode_text: str, font: str,
                  font_size: float, title_color: str, hide_season: bool,
-                 vertical_shift: int=0, interline_spacing: int=0,
-                 kerning: float=1.0, stroke_width: float=1.0,
-                 blur: bool=False, grayscale: bool=False, separator: str='•',
-                 omit_gradient: bool=False, **kwargs) -> None:
+                 vertical_shift: int=0,
+                 interline_spacing: int=0,
+                 kerning: float=1.0,
+                 stroke_width: float=1.0,
+                 blur: bool=False,
+                 grayscale: bool=False,
+                 separator: str='•',
+                 stroke_color: str='black',
+                 omit_gradient: bool=False,
+                 **unused) -> None:
         """
-        Initialize this CardType object.
+        Construct a new instance of this card.
 
         Args:
             source: Source image to base the card on.
@@ -68,14 +75,17 @@ class StandardTitleCard(BaseCardType):
             font_size: Scalar to apply to title font size.
             title_color: Color to use for title text.
             hide_season: Whether to ignore season_text.
-            separator: Character to use to separate season and episode text.
-            blur: Whether to blur the source image.
-            grayscale: Whether to make the source image grayscale.
             vertical_shift: Pixel count to adjust the title vertical offset by.
             interline_spacing: Pixel count to adjust title interline spacing by.
             kerning: Scalar to apply to kerning of the title text.
             stroke_width: Scalar to apply to black stroke of the title text.
-            kwargs: Unused arguments.
+            blur: Whether to blur the source image.
+            grayscale: Whether to make the source image grayscale.
+            separator: (Extra) Character to use to separate season and episode
+                text.
+            omit_gradient: (Extra) Whether to omit the gradient overlay.
+            stroke_color: (Extra) Color to use for the back-stroke color.
+            unused: Unused arguments.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface
@@ -94,14 +104,15 @@ class StandardTitleCard(BaseCardType):
         self.font_size = font_size
         self.title_color = title_color
         self.hide_season = hide_season
-        self.separator = separator
         self.vertical_shift = vertical_shift
         self.interline_spacing = interline_spacing
         self.kerning = kerning
         self.stroke_width = stroke_width
 
         # Optional extras
+        self.separator = separator
         self.omit_gradient = omit_gradient
+        self.stroke_color = stroke_color
 
 
     @property
@@ -170,6 +181,49 @@ class StandardTitleCard(BaseCardType):
             ]
 
 
+    @property
+    def black_title_command(self) -> list[str]:
+        """
+        Subcommand for adding the black stroke behind the title text.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        # Stroke disabled, return empty command
+        if self.stroke_width == 0:
+            return []
+
+        vertical_shift = 245 + self.vertical_shift
+        stroke_width = 3.0 * self.stroke_width
+
+        return [
+            f'-fill "{self.stroke_color}"',
+            f'-stroke "{self.stroke_color}"',
+            f'-strokewidth {stroke_width}',
+            f'-annotate +0+{vertical_shift} "{self.title}"',
+        ]
+
+
+    @staticmethod
+    def modify_extras(extras: dict[str, Any], custom_font: bool,
+                      custom_season_titles: bool) -> None:
+        """
+        Modify the given extras based on whether font or season titles are
+        custom.
+
+        Args:
+            extras: Dictionary to modify.
+            custom_font: Whether the font are custom.
+            custom_season_titles: Whether the season titles are custom.
+        """
+
+        # Generic font, reset custom episode text color
+        if not custom_font:
+            if 'stroke_color' in extras:
+                extras['stroke_color'] = 'black'
+
+
     @staticmethod
     def is_custom_font(font: 'Font') -> bool:
         """
@@ -224,7 +278,6 @@ class StandardTitleCard(BaseCardType):
         font_size = 157.41 * self.font_size
         interline_spacing = -22 + self.interline_spacing
         kerning = -1.25 * self.kerning
-        stroke_width = 3.0 * self.stroke_width
 
         # Sub-command to optionally add gradient
         gradient_command = []
@@ -248,10 +301,7 @@ class StandardTitleCard(BaseCardType):
             f'-interline-spacing {interline_spacing}',
             f'-pointsize {font_size}',
             # Black stroke behind title text
-            f'-fill black',
-            f'-stroke black',
-            f'-strokewidth {stroke_width}',
-            f'-annotate +0+{vertical_shift} "{self.title}"',
+            *self.black_title_command,
             # Title text
             f'-fill "{self.title_color}"',
             f'-annotate +0+{vertical_shift} "{self.title}"',

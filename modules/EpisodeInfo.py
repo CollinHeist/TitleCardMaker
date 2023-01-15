@@ -74,6 +74,7 @@ class EpisodeInfo:
     queried_plex: bool=False
     queried_sonarr: bool=False
     queried_tmdb: bool=False
+    airdate: 'datetime'=None
     key: str = field(init=False, repr=False)
     word_set: WordSet = field(init=False, repr=False)
     
@@ -225,6 +226,7 @@ class EpisodeInfo:
             'season_number': self.season_number,
             'episode_number': self.episode_number,
             'abs_number': self.abs_number,
+            'airdate': self.airdate,
             **self.word_set,
         }
 

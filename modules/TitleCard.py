@@ -8,6 +8,7 @@ import modules.global_objects as global_objects
 
 # Built-in CardType classes
 from modules.AnimeTitleCard import AnimeTitleCard
+from modules.CutoutTitleCard import CutoutTitleCard
 from modules.FrameTitleCard import FrameTitleCard
 from modules.LandscapeTitleCard import LandscapeTitleCard
 from modules.LogoTitleCard import LogoTitleCard
@@ -41,6 +42,7 @@ class TitleCard:
     DEFAULT_CARD_TYPE = 'standard'
     CARD_TYPES = {
         'anime': AnimeTitleCard,
+        'cutout': CutoutTitleCard,
         'frame': FrameTitleCard,
         'generic': StandardTitleCard,
         'gundam': PosterTitleCard,
@@ -48,6 +50,7 @@ class TitleCard:
         'landscape': LandscapeTitleCard,
         'logo': LogoTitleCard,
         'olivier': OlivierTitleCard,
+        'phendrena': CutoutTitleCard,
         'photo': FrameTitleCard,
         'polymath': StandardTitleCard,
         'poster': PosterTitleCard,
@@ -57,19 +60,6 @@ class TitleCard:
         'standard': StandardTitleCard,
         'star wars': StarWarsTitleCard,
         'textless': TextlessTitleCard,
-    }
-
-    """Mapping of illegal filename characters and their replacements"""
-    __ILLEGAL_FILE_CHARACTERS = {
-        '?': '!',
-        '<': '',
-        '>': '',
-        ':':' -',
-        '"': '',
-        '|': '',
-        '*': '-',
-        '/': '+',
-        '\\': '+'
     }
 
     __slots__ = ('episode', 'profile', 'converted_title', 'maker', 'file')
@@ -100,20 +90,20 @@ class TitleCard:
         )   
         
         # Initialize this episode's CardType instance
-        self.maker = self.episode.card_class(
-            source=episode.source,
-            output_file=episode.destination,
-            title=self.converted_title,
-            season_text=profile.get_season_text(self.episode.episode_info),
-            episode_text=profile.get_episode_text(self.episode),
-            hide_season=profile.hide_season_title,
-            blur=episode.blur,
-            watched=episode.watched,
-            grayscale=episode.grayscale,
-            **profile.font.get_attributes(),
-            **extra_characteristics,
-            **self.episode.episode_info.indices,
-        )
+        args = {
+            'source': episode.source,
+            'output_file': episode.destination,
+            'title': self.converted_title,
+            'season_text': profile.get_season_text(self.episode.episode_info),
+            'episode_text': profile.get_episode_text(self.episode),
+            'hide_season': profile.hide_season_title,
+            'blur': episode.blur,
+            'watched': episode.watched,
+            'grayscale': episode.grayscale,
+        } | profile.font.get_attributes() \
+          | self.episode.episode_info.indices \
+          | extra_characteristics
+        self.maker = self.episode.card_class(**args)
         
         # File associated with this card is the episode's destination
         self.file = episode.destination
@@ -122,7 +112,7 @@ class TitleCard:
     @staticmethod
     def get_output_filename(format_string: str, series_info: 'SeriesInfo', 
                             episode_info: 'EpisodeInfo',
-                            media_directory: 'Path') -> 'Path':
+                            media_directory: Path) -> Path:
         """
         Get the output filename for a title card described by the given values.
         
@@ -165,7 +155,7 @@ class TitleCard:
     @staticmethod
     def get_multi_output_filename(format_string: str, series_info: 'SeriesInfo',
                                   multi_episode: 'MultiEpisode',
-                                  media_directory: 'Path') -> 'Path':
+                                  media_directory: Path) -> Path:
         """
         Get the output filename for a title card described by the given values,
         and that represents a range of Episodes (not just one).

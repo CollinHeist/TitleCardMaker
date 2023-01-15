@@ -384,6 +384,7 @@ class TMDbInterface(WebInterface):
                     episode.episode_number,
                     tvdb_id=episode.tvdb_id if episode.tvdb_id != 0 else None,
                     imdb_id=None if episode.imdb_id is None else episode.imdb_id,
+                    airdate=episode.air_date,
                     title_match=True,
                     queried_tmdb=True,
                 )
@@ -402,10 +403,12 @@ class TMDbInterface(WebInterface):
         following priority:
 
           1. Episode TVDb ID
-          2. Episode IMDb ID
-          3. Series TMDb ID and season+episode index with title match
-          4. Series TMDb ID and season+absolute episode index with title match
-          5. Series TMDb ID and title match on any episode
+          2. Episode IMDb ID (as episode)
+          3. Episode IMDb ID (as movie)
+          4. Episode title as movie (if no series TMDb ID is present)
+          5. Series TMDb ID and season+episode index with title match
+          6. Series TMDb ID and season+absolute episode index with title match
+          7. Series TMDb ID and title match on any episode
         
         Args:
             series_info: The series information.
@@ -443,9 +446,31 @@ class TMDbInterface(WebInterface):
             except (NotFound, IndexError, TMDbException):
                 pass
 
-        # If series TMDb ID is not present, episode cannot be found
+        # Search for movie with this episode title
+        def _find_episode_as_movie(episode_info):
+            try:
+                # Search for movies with this title
+                results = self.api.movie_search(episode_info.title.full_title)
+                (movie := results[0]).reload()
+
+                # Verify this movie matches TMDb ID or the exact episode title
+                id_match = (episode_info.has_id('tmdb_id')
+                            and episode_info.tmdb_id == movie.id)
+                does_title_match = episode_info.title.matches(
+                    movie.title,*(alt.title for alt in movie.alternative_titles)
+                )
+                assert id_match or does_title_match
+
+                # Actual match, return "movie"
+                log.info(f'Matched {episode_info} of "{series_info}" to TMDb '
+                         f'Movie {movie}')
+                return movie
+            except (NotFound, IndexError, AssertionError, TMDbException):
+                return None
+
+        # If series TMDb ID is not present, try as movie, no other attempts
         if not series_info.has_id('tmdb_id'):
-            return None
+            return _find_episode_as_movie(episode_info)
 
         # Verify series ID is valid
         try:
@@ -492,7 +517,7 @@ class TMDbInterface(WebInterface):
         
         # If title match is disabled, cannot identify
         if not title_match:
-            return None
+            return _find_episode_as_movie(episode_info)
 
         # Try every episode
         for season in series.seasons:
@@ -504,7 +529,7 @@ class TMDbInterface(WebInterface):
                     episode.reload()
                     return episode
 
-        return None
+        return _find_episode_as_movie(episode_info)
 
 
     @catch_and_log('Error setting episode IDs')
@@ -526,7 +551,7 @@ class TMDbInterface(WebInterface):
                                *, is_source_image: bool=True,
                                skip_localized: bool=False) -> dict:
         """
-        Determines the best image, returning it's contents from within the
+        Determine the best image and return it's contents from within the
         database return JSON.
         
         Args:
@@ -736,6 +761,10 @@ class TMDbInterface(WebInterface):
         best = series.logos[0]
         valid_image = False
         for logo in series.logos:
+            # Skip non-English logos
+            if logo.iso_639_1 != 'en':
+                continue
+
             # SVG images are always the best
             if logo.url.endswith('.svg'):
                 return logo.url
@@ -780,11 +809,12 @@ class TMDbInterface(WebInterface):
             self.__update_blacklist(series_info, None, 'backdrop')
             return None
 
-        # Blacklist if tthere are no backdrops
+        # Blacklist if there are no backdrops
         if len(series.backdrops) == 0:
             self.__update_blacklist(series_info, None, 'backdrop')
             return None
 
+        # Find and return best image
         best_image = self.__determine_best_image(
             series.backdrops,
             is_source_image=True,

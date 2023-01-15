@@ -532,7 +532,7 @@ class SeriesYamlWriter:
             if (key := series_info.full_name) in series_yaml:
                 this_entry['name'] = series_info.name
                 this_entry['year'] = series_info.year
-                key = f'{series_info.name} [imdb:{series_info.imdb_id}]'
+                key = f'{series_info.full_name} [imdb:{series_info.imdb_id}]'
 
             # Add media directory if path doesn't match default
             if Path(series_path).name != series_info.legal_path:

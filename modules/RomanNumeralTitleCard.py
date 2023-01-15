@@ -226,12 +226,14 @@ class RomanNumeralTitleCard(BaseCardType):
 
     def __init__(self, output_file: Path, title: str, episode_text: str,
                  season_text: str, hide_season: bool, title_color: str,
-                 episode_number: int=1, blur: bool=False, grayscale: bool=False,
+                 episode_number: int=1,
+                 blur: bool=False,
+                 grayscale: bool=False,
                  background: str=BACKGROUND_COLOR, 
                  roman_numeral_color: str=ROMAN_NUMERAL_TEXT_COLOR,
-                 **kwargs) -> None:
+                 **unused) -> None:
         """
-        Construct a new instance.
+        Construct a new instance of this card.
         
         Args:
             output_file: Output file.
@@ -239,11 +241,11 @@ class RomanNumeralTitleCard(BaseCardType):
             episode_text: The episode text to parse the roman numeral from.
             episode_number: Episode number for the roman numerals.
             title_color: Color to use for the episode title.
-            background: Color for the background.
-            roman_numeral_color: Color for the roman numerals.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
-            kwargs: Unused arguments.
+            background: (Extra) Color for the background.
+            roman_numeral_color: (Extra) Color for the roman numerals.
+            unused: Unused arguments.
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface

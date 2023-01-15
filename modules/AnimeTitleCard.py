@@ -47,18 +47,28 @@ class AnimeTitleCard(BaseCardType):
         'source_file', 'output_file', 'title', 'kanji', 'use_kanji',
         'require_kanji', 'kanji_vertical_shift', 'season_text', 'episode_text',
         'hide_season', 'separator', 'font', 'font_size', 'font_color',
-        'vertical_shift', 'interline_spacing', 'kerning'
+        'vertical_shift', 'interline_spacing', 'kerning', 'stroke_width',
+        'omit_gradient', 'stroke_color',
     )
     
     def __init__(self, source: Path, output_file: Path, title: str, 
-                 season_text: str, episode_text: str, font: str,font_size:float,
-                 title_color: str, hide_season: bool, vertical_shift: int=0,
-                 interline_spacing: int=0, kerning: float=1.0, kanji: str=None,
-                 require_kanji: bool=False, kanji_vertical_shift: float=0,
-                 separator: str='·', blur: bool=False, grayscale: bool=False,
-                 **kwargs)->None:
+                 season_text: str, episode_text: str, font: str,
+                 font_size: float, title_color: str, hide_season: bool,
+                 vertical_shift: int=0,
+                 interline_spacing: int=0,
+                 kerning: float=1.0,
+                 stroke_width: float=1.0,
+                 blur: bool=False,
+                 grayscale: bool=False,
+                 kanji: str=None,
+                 separator: str='·',
+                 omit_gradient: bool=False,
+                 require_kanji: bool=False,
+                 kanji_vertical_shift: float=0,
+                 stroke_color: str='black',
+                 **unused) -> None:
         """
-        Construct a new instance.
+        Construct a new instance of this card.
         
         Args:
             source: Source image for this card.
@@ -69,17 +79,21 @@ class AnimeTitleCard(BaseCardType):
             font: Font name or path (as string) to use for episode title.
             font_size: Scalar to apply to the title font size.
             title_color: Color to use for title text.
-            hide_season: Whether to hide the season text on this card
-            vertical_shift: Vertical shift to apply to the title and kanji
-                text.
+            hide_season: Whether to hide the season text.
+            vertical_shift: Vertical shift to apply to the title and kanji text.
             interline_spacing: Offset to interline spacing of the title text
-            kanji: Kanji text to place above the episode title on this card.
-            require_kanji: Whether to require kanji for this card.
-            kanji_vertical_shift: Vertical shift to apply to just kanji text.
-            separator: Character to use to separate season and episode text.
+            kerning: Scalar to apply to kerning of the title text.
+            stroke_width: Scalar to apply to black stroke of the title text.
+            kanji: (Extra) Kanji text to place above the episode title.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
-            kwargs: Unused arguments.
+            separator: (Extra) Character to use to separate season and episode
+                text.
+            omit_gradient: (Extra) Whether to omit the gradient overlay.
+            require_kanji: (Extra) Whether to require kanji for this card.
+            kanji_vertical_shift: (Extra) Vertical shift to apply to kanji text.
+            stroke_color: (Extra) Color to use for the back-stroke color.
+            unused: Unused arguments.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface
@@ -90,6 +104,7 @@ class AnimeTitleCard(BaseCardType):
         self.output_file = output_file
 
         # Escape title, season, and episode text
+        self.hide_season = hide_season
         self.title = self.image_magick.escape_chars(title)
         self.season_text = self.image_magick.escape_chars(season_text.upper())
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
@@ -107,10 +122,12 @@ class AnimeTitleCard(BaseCardType):
         self.vertical_shift = vertical_shift
         self.interline_spacing = interline_spacing
         self.kerning = kerning
+        self.stroke_width = stroke_width
 
-        # Miscellaneous attributes
-        self.hide_season = hide_season
+        # Optional extras
         self.separator = separator
+        self.omit_gradient = omit_gradient
+        self.stroke_color = stroke_color
 
 
     @property
@@ -145,10 +162,16 @@ class AnimeTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
+        # No stroke, return empty command
+        if self.stroke_width == 0:
+            return []
+
+        stroke_width = 5 * self.stroke_width
+
         return [
-            f'-fill black',
-            f'-stroke black',
-            f'-strokewidth 5',
+            f'-fill "{self.stroke_color}"',
+            f'-stroke "{self.stroke_color}"',
+            f'-strokewidth {stroke_width}',
         ]
 
 
@@ -378,6 +401,14 @@ class AnimeTitleCard(BaseCardType):
                       f'"{self.output_file.name}"')
             return None
 
+        # Sub-command to optionally add gradient
+        gradient_command = []
+        if not self.omit_gradient:
+            gradient_command = [
+                f'"{self.__GRADIENT_IMAGE.resolve()}"',
+                f'-composite',
+            ]
+
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
             # Resize and optionally blur source image
@@ -385,8 +416,7 @@ class AnimeTitleCard(BaseCardType):
             # Increase contrast of source image
             f'-modulate 100,125',
             # Overlay gradient
-            f'"{self.__GRADIENT_IMAGE.resolve()}"',
-            f'-composite',
+            *gradient_command,
             # Add title or title+kanji
             *self.title_command,
             # Add season or season+episode text

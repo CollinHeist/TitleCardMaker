@@ -46,17 +46,19 @@ class PosterTitleCard(BaseCardType):
     """Path to the reference star image to overlay on all source images"""
     __GRADIENT_OVERLAY = REF_DIRECTORY / 'stars-overlay.png'
 
-    __slots__ = (
-        'source_file', 'output_file', 'logo', 'title', 'episode_text',
-    )
+    __slots__ = ('source_file', 'output_file', 'logo', 'title', 'episode_text')
 
     
     def __init__(self, source: Path, output_file: Path, title: str,
-                 episode_text: str, season_number: int=1, episode_number: int=1,
-                 blur: bool=False, grayscale: bool=False, logo: str=None,
-                 **kwargs) -> None:
+                 episode_text: str,
+                 season_number: int=1,
+                 episode_number: int=1,
+                 blur: bool=False,
+                 grayscale: bool=False,
+                 logo: str=None,
+                 **unused) -> None:
         """
-        Initialize the CardType object.
+        Construct a new instance of this card.
         
         Args:
             source: Source image for this card.
@@ -70,8 +72,7 @@ class PosterTitleCard(BaseCardType):
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
             logo: Filepath (or file format) to the logo file.
-            kwargs: Unused arguments to permit generalized function calls for
-                any CardType.
+            unused: Unused arguments.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface

@@ -1,8 +1,5 @@
 from pathlib import Path
-from re import match
 from typing import Any
-
-from num2words import num2words
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
@@ -30,7 +27,7 @@ class OlivierTitleCard(BaseCardType):
     FONT_REPLACEMENTS = {}
 
     """Characteristics of the episode text"""
-    EPISODE_TEXT_FORMAT = 'EPISODE {episode_number}'
+    EPISODE_TEXT_FORMAT = 'EPISODE {episode_number_cardinal}'
     EPISODE_TEXT_COLOR = 'white'
     EPISODE_PREFIX_FONT = SW_REF_DIRECTORY / 'HelveticaNeue.ttc'
     EPISODE_NUMBER_FONT = SW_REF_DIRECTORY / 'HelveticaNeue-Bold.ttf'
@@ -45,20 +42,23 @@ class OlivierTitleCard(BaseCardType):
         'source_file', 'output_file', 'title', 'hide_episode_text', 
         'episode_prefix', 'episode_text', 'font', 'title_color',
         'episode_text_color', 'font_size', 'stroke_width', 'kerning',
-        'vertical_shift', 'interline_spacing', 'blur'
+        'vertical_shift', 'interline_spacing', 'blur', 'stroke_color',
     )
     
     def __init__(self, source: Path, output_file: Path, title: str,
-                 episode_text: str, font: str, font_size:float,
-                 title_color: str, stroke_width: float=1.0,
-                 vertical_shift: int=0, interline_spacing: int=0,
-                 kerning: float=1.0, episode_text_color: str=EPISODE_TEXT_COLOR,
-                 blur: bool=False, grayscale: bool=False,
-                 **kwargs) -> None:
+                 episode_text: str, font: str, font_size: float,
+                 title_color: str,
+                 stroke_width: float=1.0,
+                 vertical_shift: int=0,
+                 interline_spacing: int=0,
+                 kerning: float=1.0,
+                 blur: bool=False,
+                 grayscale: bool=False,
+                 episode_text_color: str=EPISODE_TEXT_COLOR,
+                 stroke_color: str='black',
+                 **unused) -> None:
         """
-        Initialize this TitleCard object. This primarily just stores instance
-        variables for later use in `create()`. It also determines the episode
-        prefix text.
+        Construct a new instance of this card.
 
         Args:
             source: Source image to base the card on.
@@ -72,10 +72,11 @@ class OlivierTitleCard(BaseCardType):
             vertical_shift: Pixel count to adjust the title vertical offset by.
             interline_spacing: Pixel count to adjust title interline spacing by.
             kerning: Scalar to apply to kerning of the title text.
-            episode_text_color: Color to use for the episode text.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
-            kwargs: Unused arguments.
+            episode_text_color: (Extra) Color to use for the episode text.
+            stroke_color: (Extra) Color to use for the back-stroke color.
+            unused: Unused arguments.
         """
         
         # Initialize the parent class - this sets up an ImageMagickInterface
@@ -88,29 +89,29 @@ class OlivierTitleCard(BaseCardType):
         # Store attributes of the text
         self.title = self.image_magick.escape_chars(title)
         self.hide_episode_text = len(episode_text) == 0
-        self.episode_prefix = None
         
-        # Determine episode prefix
-        # Modify episode text to remove "Episode"-like text, replace numbers
-        if (not self.hide_episode_text
-            and (groups := match(r'^(.*?)\s*(\d+)\s*$',
-                                 episode_text)) is not None):
-            pre, number = groups.groups()
-            self.episode_prefix = pre.upper()
-            episode_text = num2words(int(number)).upper()
+        # Determine episode prefix, modify text to remove prefix
+        self.episode_prefix = None
+        if not self.hide_episode_text and ' ' in episode_text:
+            prefix, number = episode_text.split(' ', 1)
+            self.episode_prefix = prefix.upper()
+            episode_text = number
         else:
-            episode_text = episode_text.upper()
-        self.episode_text = self.image_magick.escape_chars(episode_text)
+            episode_text = episode_text
+        self.episode_text = self.image_magick.escape_chars(episode_text.upper())
 
         # Font customizations
         self.font = font
         self.title_color = title_color
-        self.episode_text_color = episode_text_color
         self.font_size = font_size
         self.stroke_width = stroke_width
         self.vertical_shift = vertical_shift
         self.interline_spacing = interline_spacing
         self.kerning = kerning
+
+        # Optional extras
+        self.episode_text_color = episode_text_color
+        self.stroke_color = stroke_color
 
 
     @property
@@ -123,7 +124,7 @@ class OlivierTitleCard(BaseCardType):
         """
 
         font_size = 124 * self.font_size
-        stroke_width = 6.0 * self.stroke_width
+        stroke_width = 8.0 * self.stroke_width
         kerning = 0.5 * self.kerning
         interline_spacing = -20 + self.interline_spacing
         vertical_shift = 785 + self.vertical_shift
@@ -134,8 +135,8 @@ class OlivierTitleCard(BaseCardType):
             f'-pointsize {font_size}',
             f'-kerning {kerning}',
             f'-interline-spacing {interline_spacing}',
-            f'-fill black',
-            f'-stroke black',
+            f'-fill "{self.stroke_color}"',
+            f'-stroke "{self.stroke_color}"',
             f'-strokewidth {stroke_width}',
             f'-annotate +320+{vertical_shift} "{self.title}" \)',
             f'\( -fill "{self.title_color}"',
@@ -154,22 +155,23 @@ class OlivierTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
+        # No episode prefix/text, return empty command
         if self.episode_prefix is None or self.hide_episode_text:
             return []
 
         return [
             f'-gravity west',
             f'-font "{self.EPISODE_PREFIX_FONT.resolve()}"',
-            f'-pointsize 53',
+            f'-pointsize 60',
             f'-kerning 19',
             f'-fill black',
             f'-stroke black',
-            f'-strokewidth 4',
-            f'-annotate +325-140 "{self.episode_prefix}"',
+            f'-strokewidth 5',
+            f'-annotate +325-150 "{self.episode_prefix}"',
             f'-fill "{self.episode_text_color}"',
             f'-stroke "{self.episode_text_color}"',
             f'-strokewidth 0',
-            f'-annotate +325-140 "{self.episode_prefix}"',
+            f'-annotate +325-150 "{self.episode_prefix}"',
         ]
 
 
@@ -182,11 +184,12 @@ class OlivierTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
+        # No episode text, return empty command
         if self.hide_episode_text:
             return []
 
         # Get variable horizontal offset based of episode prefix
-        text_offset = {'EPISODE': 400, 'CHAPTER': 400, 'PART': 250}
+        text_offset = {'EPISODE': 425, 'CHAPTER': 425, 'PART': 275}
         if self.episode_prefix is None:
             offset = 0
         elif self.episode_prefix in text_offset.keys():
@@ -198,16 +201,16 @@ class OlivierTitleCard(BaseCardType):
         return [
             f'-gravity west',
             f'-font "{self.EPISODE_NUMBER_FONT.resolve()}"',
-            f'-pointsize 53',
+            f'-pointsize 60',
             f'-kerning 19',
             f'-fill black',
             f'-stroke black',
-            f'-strokewidth 5',
-            f'-annotate +{325+offset}-140 "{self.episode_text}"',
+            f'-strokewidth 7',
+            f'-annotate +{325+offset}-150 "{self.episode_text}"',
             f'-fill "{self.episode_text_color}"',
             f'-stroke "{self.episode_text_color}"',
             f'-strokewidth 1',
-            f'-annotate +{325+offset}-140 "{self.episode_text}"',
+            f'-annotate +{325+offset}-150 "{self.episode_text}"',
         ]
 
 
@@ -215,7 +218,7 @@ class OlivierTitleCard(BaseCardType):
     def modify_extras(extras: dict[str, Any], custom_font: bool,
                       custom_season_titles: bool) -> None:
         """
-        Modify the given extras base on whether font or season titles are
+        Modify the given extras based on whether font or season titles are
         custom.
 
         Args:
@@ -224,11 +227,13 @@ class OlivierTitleCard(BaseCardType):
             custom_season_titles: Whether the season titles are custom.
         """
 
-        # Generic font, reset custom episode text color
+        # Generic font, reset custom episode text color and stroke color
         if not custom_font:
             if 'episode_text_color' in extras:
                 extras['episode_text_color'] =\
                     OlivierTitleCard.EPISODE_TEXT_COLOR
+            if 'stroke_color' in extras:
+                extras['stroke_color'] = 'black'
 
 
     @staticmethod

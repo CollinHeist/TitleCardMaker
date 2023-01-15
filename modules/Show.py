@@ -439,7 +439,7 @@ class Show(YamlReader):
             return None
 
         # Inner function to filter episodes
-        def filter_ep(episode: Episode) -> bool:
+        def include_episode(episode: Episode) -> bool:
             # Exclude if special and not syncing specials
             if not self.sync_specials and episode.season_number == 0:
                 return False
@@ -452,11 +452,10 @@ class Show(YamlReader):
                     return True
                 return False
             
-            # New episode, include
             return True
         
         # Apply filter formula to list of Episodes from data source
-        new_episodes = tuple(filter(filter_ep, all_episodes))
+        new_episodes = tuple(filter(include_episode, all_episodes))
         if len(new_episodes) == 0:
             return None
         
@@ -659,7 +658,7 @@ class Show(YamlReader):
             # Default source if the effective style is art
             if self.style_set.effective_style_is_art(episode.watched):
                 download_backdrop = True
-                episode.update_source(self.backdrop, downloadable=True)
+                episode.update_source(self.backdrop, downloadable=False)
 
             # Override source if applies to all, or unwatched if ep is unwatched
             if (applies_to == 'all' or 
@@ -695,6 +694,17 @@ class Show(YamlReader):
         # Don't download sources if this card type doesn't use unique images
         if not self.card_class.USES_UNIQUE_SOURCES:
             return None
+
+        # Query TMDb for the backdrop if one does not exist and is needed
+        if (download_backdrop and self.tmdb_interface
+            and not self.backdrop.exists()):
+            url = self.tmdb_interface.get_series_backdrop(
+                self.series_info,
+                skip_localized_images=self.tmdb_skip_localized_images
+            )
+            if url:
+                self.tmdb_interface.download_image(url, self.backdrop)
+                log.debug(f'Downloaded backdrop for {self} from tmdb')
 
         # Whether to always check TMDb or Plex
         always_check_tmdb = self.tmdb_interface and self.preferences.check_tmdb
@@ -756,14 +766,6 @@ class Show(YamlReader):
                         log.debug(f'Downloaded {episode.source.name} for {self}'
                                   f' from {source_interface}')
                     break
-        
-        # Query TMDb for the backdrop if one does not exist and is needed
-        if (download_backdrop and self.tmdb_interface
-            and not self.backdrop.exists()):
-            # Download background art 
-            if (url := self.tmdb_interface.get_series_backdrop(self.series_info,
-                skip_localized_images=self.tmdb_skip_localized_images)):
-                self.tmdb_interface.download_image(url, self.backdrop)
 
 
     def find_multipart_episodes(self) -> None:

@@ -4,6 +4,7 @@ from re import IGNORECASE, compile as re_compile
 
 from plexapi.exceptions import PlexApiException
 from plexapi.server import PlexServer, NotFound, Unauthorized
+from requests.exceptions import ReadTimeout, ConnectionError
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 from tinydb import TinyDB, where
 from tqdm import tqdm
@@ -104,9 +105,16 @@ class PlexInterface:
                 except PlexApiException as e:
                     log_func(message)
                     log.debug(f'PlexApiException from {function.__name__}'
-                              f'({args}, {kwargs})')
-                    log.debug(f'Exception[{e}]')
+                              f'({args}, {kwargs}) -> Error[{e}]')
                     return default
+                except (ReadTimeout, ConnectionError) as e:
+                    log_func('Plex API has timed out - database might be busy')
+                    log.debug(f'ReadTimeout from {function.__name__}'
+                              f'({args}, {kwargs}) -> Error[{e}]')
+                    raise e
+                except Exception as e:
+                    log.info(e)
+                    raise e
             return inner
         return decorator
 
@@ -211,7 +219,8 @@ class PlexInterface:
     
 
     @retry(stop=stop_after_attempt(5),
-           wait=wait_fixed(3)+wait_exponential(min=1, max=32))
+           wait=wait_fixed(3)+wait_exponential(min=1, max=32),
+           reraise=True)
     def __get_library(self, library_name: str) -> 'Library':
         """
         Get the Library object under the given name.
@@ -231,7 +240,8 @@ class PlexInterface:
 
 
     @retry(stop=stop_after_attempt(5),
-           wait=wait_fixed(3)+wait_exponential(min=1, max=32))
+           wait=wait_fixed(3)+wait_exponential(min=1, max=32),
+           reraise=True)
     def __get_series(self, library: 'Library',
                      series_info: SeriesInfo) -> 'Show':
         """
@@ -437,6 +447,7 @@ class PlexInterface:
                 plex_episode.parentIndex,
                 plex_episode.index,
                 **ids,
+                airdate=airdate,
                 title_match=True,
                 queried_plex=True,
             )
@@ -485,7 +496,7 @@ class PlexInterface:
             episode_map: Dictionary of episode keys to Episode objects to modify
             style_set: StyleSet object to update the status of Episodes with.
         """
-        
+
         # If no episodes, or unwatched setting is ignored, exit
         if len(episode_map) == 0:
             return None
@@ -508,7 +519,7 @@ class PlexInterface:
             ep_key = f'{plex_episode.parentIndex}-{plex_episode.index}'
             if not (episode := episode_map.get(ep_key)):
                 continue
-            
+
             # Set Episode watched/spoil statuses
             episode.update_statuses(plex_episode.isWatched, style_set)
             
@@ -516,11 +527,11 @@ class PlexInterface:
             details = self.__get_loaded_episode(loaded_series, episode)
             loaded = (details is not None)
             spoiler_status = details['spoiler'] if loaded else None
-            
+
             # Delete and reset card if current spoiler type doesnt match
             delete_and_reset = ((episode.spoil_type != spoiler_status)
                                 and bool(spoiler_status))
-            
+
             # Delete card, reset size in loaded map to force reload
             if delete_and_reset and loaded:
                 episode.delete_card(reason='updating style')
@@ -617,7 +628,8 @@ class PlexInterface:
 
     @retry(stop=stop_after_attempt(5),
            wait=wait_fixed(3)+wait_exponential(min=1, max=32),
-           before_sleep=lambda _:log.warning('Cannot upload image, retrying..'))
+           before_sleep=lambda _:log.warning('Cannot upload image, retrying..'),
+           reraise=True)
     def __retry_upload(self, plex_object: 'Episode', filepath: Path) -> None:
         """
         Upload the given poster to the given Episode, retrying if it fails.
@@ -718,7 +730,7 @@ class PlexInterface:
             # Shrink image if necessary, skip if cannot be compressed
             if (card := self.__compress_image(episode.destination)) is None:
                 continue
-            
+
             # Upload card to Plex, optionally remove Overlay label
             try:
                 self.__retry_upload(pl_episode, card.resolve())
@@ -731,7 +743,7 @@ class PlexInterface:
                 continue
             else:
                 loaded_count += 1
-            
+
             # Update/add loaded map with this entry
             self.__db.upsert({
                 'library': library_name,
@@ -741,7 +753,7 @@ class PlexInterface:
                 'filesize': episode.destination.stat().st_size,
                 'spoiler': episode.spoil_type,
             }, self.__get_condition(library_name, series_info, episode))
-                
+
         # Log load operations to user
         if loaded_count > 0:
             log.info(f'Loaded {loaded_count} cards for "{series_info}"')
@@ -786,7 +798,7 @@ class PlexInterface:
                 (where('season') == season.index)
             )
             details = self.__posters.get(condition)
-            
+
             # Skip if this exact poster has been loaded 
             if (details is not None
                 and details['filesize'] == poster.stat().st_size):
