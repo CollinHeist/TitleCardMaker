@@ -1,8 +1,5 @@
 from pathlib import Path
-from re import match
 from typing import Any
-
-from num2words import num2words
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
@@ -30,7 +27,7 @@ class OlivierTitleCard(BaseCardType):
     FONT_REPLACEMENTS = {}
 
     """Characteristics of the episode text"""
-    EPISODE_TEXT_FORMAT = 'EPISODE {episode_number}'
+    EPISODE_TEXT_FORMAT = 'EPISODE {episode_number_cardinal}'
     EPISODE_TEXT_COLOR = 'white'
     EPISODE_PREFIX_FONT = SW_REF_DIRECTORY / 'HelveticaNeue.ttc'
     EPISODE_NUMBER_FONT = SW_REF_DIRECTORY / 'HelveticaNeue-Bold.ttf'
@@ -92,19 +89,16 @@ class OlivierTitleCard(BaseCardType):
         # Store attributes of the text
         self.title = self.image_magick.escape_chars(title)
         self.hide_episode_text = len(episode_text) == 0
-        self.episode_prefix = None
         
-        # Determine episode prefix
-        # Modify episode text to remove "Episode"-like text, replace numbers
-        if (not self.hide_episode_text
-            and (groups := match(r'^(.*?)\s*(\d+)\s*$',
-                                 episode_text)) is not None):
-            pre, number = groups.groups()
-            self.episode_prefix = pre.upper()
-            episode_text = num2words(int(number)).upper()
+        # Determine episode prefix, modify text to remove prefix
+        self.episode_prefix = None
+        if not self.hide_episode_text and ' ' in episode_text:
+            prefix, number = episode_text.split(' ', 1)
+            self.episode_prefix = prefix.upper()
+            episode_text = number
         else:
-            episode_text = episode_text.upper()
-        self.episode_text = self.image_magick.escape_chars(episode_text)
+            episode_text = episode_text
+        self.episode_text = self.image_magick.escape_chars(episode_text.upper())
 
         # Font customizations
         self.font = font
