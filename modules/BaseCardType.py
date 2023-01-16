@@ -38,7 +38,9 @@ class BaseCardType(ImageMaker):
     USES_UNIQUE_SOURCES = True
 
     """Standard size for all title cards"""
-    TITLE_CARD_SIZE = '3200x1800'
+    WIDTH = 3200
+    HEIGHT = 1800
+    TITLE_CARD_SIZE = f'{WIDTH}x{HEIGHT}'
 
     """Standard blur effect to apply to spoiler-free images"""
     BLUR_PROFILE = '0x60'
