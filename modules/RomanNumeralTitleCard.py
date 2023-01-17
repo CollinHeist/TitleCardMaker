@@ -462,25 +462,24 @@ class RomanNumeralTitleCard(BaseCardType):
             )
 
         # Get width of whole line
-        total_width = self.get_text_dimensions(
-            numeral_command, width='sum', height='max'
-        )['width']
+        total_width, _ = self.get_text_dimensions(numeral_command,
+                                                  width='sum', height='max')
 
         # Get width of line to the left of the selected numeral
         left_width = 0
         if len(left_text) > 0:
-            left_width = self.get_text_dimensions(
+            left_width, _ = self.get_text_dimensions(
                 self.create_roman_numeral_command(left_text),
                 width='sum', height='max'
-            )['width']
+            )
 
         # Get width of line to the right of the selected numeral
         right_width = 0
         if len(right_text) > 0:
-            right_width = self.get_text_dimensions(
+            right_width, _ = self.get_text_dimensions(
                 self.create_roman_numeral_command(right_text),
                 width='sum', height='max'
-            )['width']
+            )
 
         # Determine necesary offset by position within the line
         on_right = left_width > right_width
@@ -514,14 +513,13 @@ class RomanNumeralTitleCard(BaseCardType):
             return None
 
         # Get boundaries of title text
-        title_dims = self.get_text_dimensions(
-            self.title_text_command, width='width', height='sum'
-        )
+        width, height = self.get_text_dimensions(self.title_text_command,
+                                                 width='width', height='sum')
         box0 = {
-            'start_x': -title_dims['width']/2 + 3200/2,
-            'start_y': -title_dims['height']/2 + 1800/2,
-            'end_x': title_dims['width']/2 + 3200/2,
-            'end_y': title_dims['height']/2 + 1800/2,
+            'start_x': -width/2  + 3200/2,
+            'start_y': -height/2 + 1800/2,
+            'end_x':    width/2  + 3200/2,
+            'end_y':    height/2 + 1800/2,
         }
 
         # Inner function to randomize position and determine if overlapping
@@ -540,7 +538,7 @@ class RomanNumeralTitleCard(BaseCardType):
             self.rotation, self.offset = rotation, offset
 
             # Get dimensions of season text
-            season_dims = self.get_text_dimensions(
+            season_width, season_height = self.get_text_dimensions(
                 self.create_season_text_command(rotation, offset),
                 width='max', height='max'
             )
@@ -552,8 +550,7 @@ class RomanNumeralTitleCard(BaseCardType):
                 pass
             # If rotated 90 degrees, then swap width/height of text
             elif rotation in ('90x90', '-90x-90'):
-                season_dims['width'], season_dims['height'] = \
-                    season_dims['height'], season_dims['width']
+                season_width, season_height = season_height, season_width
             # If rotated, but not at 90 degrees, then add margin based on max
             # dimension - this is equivalent to expanding the bounds of the text
             # box by the maximum possible error in the dimensions of the text
@@ -562,15 +559,15 @@ class RomanNumeralTitleCard(BaseCardType):
                 # between width/height; in which case the width would be off by
                 # the height/2 (in either direction), and the height off by
                 # width/2 (in either direction)
-                max_error = abs(season_dims['width'] - season_dims['height'])
+                max_error = abs(season_width - season_height)
                 margin = max_error / 2
 
             # Get boundaries of season text
             box1 = {
-                'start_x': offset.x - season_dims['width']/2 + 3200/2 - margin,
-                'start_y': offset.y - season_dims['height']/2 + 1800/2 - margin,
-                'end_x': offset.x + season_dims['width']/2 + 3200/2 + margin,
-                'end_y': offset.y + season_dims['height']/2 + 1800/2 + margin,
+                'start_x': offset.x - season_width/2  + 3200/2 - margin,
+                'start_y': offset.y - season_height/2 + 1800/2 - margin,
+                'end_x': offset.x   + season_width/2  + 3200/2 + margin,
+                'end_y': offset.y   + season_height/2 + 1800/2 + margin,
             }
 
             # If outside the bounds of the image, return invalid

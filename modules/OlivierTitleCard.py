@@ -42,7 +42,7 @@ class OlivierTitleCard(BaseCardType):
         'source_file', 'output_file', 'title', 'hide_episode_text', 
         'episode_prefix', 'episode_text', 'font', 'title_color',
         'episode_text_color', 'font_size', 'stroke_width', 'kerning',
-        'vertical_shift', 'interline_spacing', 'blur', 'stroke_color',
+        'vertical_shift', 'interline_spacing', 'stroke_color',
     )
 
     def __init__(self, source: Path, output_file: Path, title: str,

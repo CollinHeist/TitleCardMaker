@@ -223,9 +223,8 @@ class LandscapeTitleCard(BaseCardType):
         ]
 
         # Get dimensions of text - since text is stacked, do max/sum operations
-        dimensions = self.get_text_dimensions(text_command,
-                                              width='max', height='sum')
-        width, height = dimensions['width'], dimensions['height']
+        width, height = self.get_text_dimensions(text_command,
+                                                 width='max', height='sum')
 
         # Get start coordinates of the bounding box
         x_start, x_end = 3200/2 - width/2, 3200/2 + width/2

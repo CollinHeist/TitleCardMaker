@@ -187,8 +187,8 @@ class FrameTitleCard(BaseCardType):
 
         # If adding season and/or episode text and title..
         # Get width of title text for positioning 
-        width = self.get_text_dimensions(title_only_command,
-                                         width='max', height='sum')['width']
+        width, _ = self.get_text_dimensions(title_only_command,
+                                            width='max', height='sum')
         offset = 3200/2 + width/2 + 25
 
         # Add index text to left or right

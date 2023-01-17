@@ -103,14 +103,13 @@ class StylizedSummary(BaseSummary):
         montage = self.__create_montage()
 
         # Get dimensions of montage
-        dimensions = self.get_image_dimensions(montage)
-        width, height = dimensions['width'], dimensions['height']
+        width, height = self.get_image_dimensions(montage)
 
         # Resize logo
         resized_logo = self.__resize_logo(width)
 
         # Get dimension of logo
-        logo_height = self.get_image_dimensions(resized_logo)['height']
+        _, logo_height = self.get_image_dimensions(resized_logo)
 
         # Get/create created by tag
         if self.created_by is None:

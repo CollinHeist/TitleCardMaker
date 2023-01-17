@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections import namedtuple
 from pathlib import Path
 from re import findall, match
 from typing import Literal
@@ -6,6 +7,8 @@ from typing import Literal
 from modules.Debug import log
 from modules.ImageMagickInterface import ImageMagickInterface
 import modules.global_objects as global_objects
+
+Dimensions = namedtuple('Dimensions', ('width', 'height'))
 
 class ImageMaker(ABC):
     """
@@ -54,7 +57,7 @@ class ImageMaker(ABC):
         )
 
 
-    def get_image_dimensions(self, image: Path) -> dict[str: int]:
+    def get_image_dimensions(self, image: Path) -> Dimensions:
         """
         Get the dimensions of the given image.
 
@@ -68,7 +71,7 @@ class ImageMaker(ABC):
 
         # Return dimenions of zero if image DNE
         if not image.exists():
-            return {'width': 0, 'height': 0}
+            return Dimensions(0, 0)
 
         # Get the dimensions
         command = ' '.join([
@@ -81,16 +84,17 @@ class ImageMaker(ABC):
 
         # Get width/height from output
         try:
-            width, height = map(int, match(r'^(\d+)\s+(\d+)$', output).groups())
-            return {'width': width, 'height': height}
+            return Dimensions(
+                *map(int, match(r'^(\d+)\s+(\d+)$', output).groups())
+            )
         except Exception as e:
             log.debug(f'Cannot identify dimensions of {image.resolve()}')
-            return {'width': 0, 'height': 0}
+            return Dimensions(0, 0)
 
 
     def get_text_dimensions(self, text_command: list[str], *,
                             width: Literal['sum', 'max'],
-                            height: Literal['sum', 'max']) -> dict[str, int]:
+                            height: Literal['sum', 'max']) -> Dimensions:
         """
         Get the dimensions of the text produced by the given text command. For
         'width' and 'height' arguments, if 'max' then the maximum value of the
@@ -111,7 +115,7 @@ class ImageMaker(ABC):
             height: How to process the height of the produced text(s).
 
         Returns:
-            Dictionary of dimensions whose keys are 'width' and 'height'.
+            Dimensions namedtuple.
         """
 
         text_command = ' '.join([
@@ -132,13 +136,13 @@ class ImageMaker(ABC):
             sum_ = lambda v: sum(v)//(2 if ' label:"' in text_command else 1)
 
             # Process according to given methods
-            return {
-                'width':  sum_(widths)  if width  == 'sum' else max(widths),
-                'height': sum_(heights) if height == 'sum' else max(heights),
-            }
+            return Dimensions(
+                sum_(widths)  if width  == 'sum' else max(widths),
+                sum_(heights) if height == 'sum' else max(heights),
+            )
         except ValueError as e:
             log.debug(f'Cannot identify text dimensions - {e}')
-            return {'width': 0, 'height': 0}
+            return Dimensions(0, 0)
 
 
     @staticmethod

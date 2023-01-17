@@ -175,12 +175,12 @@ class StandardSummary(BaseSummary):
             Path to the created images.
         """
 
-        logo_height = self.get_image_dimensions(logo)['height']
+        _, height = self.get_image_dimensions(logo)
 
         command = ' '.join([
             f'composite',
             f'-gravity north',
-            f'-geometry +0+{150+(500-logo_height)//2}',
+            f'-geometry +0+{150+(500-height)//2}',
             f'"{logo.resolve()}"',
             f'"{montage.resolve()}"',
             f'"{self.__LOGO_AND_HEADER_PATH.resolve()}"'
@@ -247,8 +247,7 @@ class StandardSummary(BaseSummary):
         self.image_magick.run(command)
 
         # Get dimensions of transparent montage to fit background
-        dimensions = self.get_image_dimensions(self.__TRANSPARENT_MONTAGE)
-        width, height = dimensions['width'], dimensions['height']
+        width, height = self.get_image_dimensions(self.__TRANSPARENT_MONTAGE)
 
         # Add background behind transparent montage
         command = ' '.join([
