@@ -47,6 +47,15 @@ class SeriesInfo:
         return self.full_name
 
 
+    @property
+    def characteristics(self) -> dict[str, str]:
+        
+        return {
+            'series_name': self.name,
+            'series_year': self.year,
+        }
+
+
     def update_name(self, name: str) -> None:
         """
         Update all names for this series.

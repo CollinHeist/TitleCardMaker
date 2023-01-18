@@ -207,6 +207,7 @@ class Profile:
         if isinstance(episode, MultiEpisode):
             try:
                 return episode.modify_format_string(format_string).format(
+                    **self.__series_info.characteristics,
                     **episode.characteristics,
                 )
             except Exception as e:
@@ -216,7 +217,10 @@ class Profile:
 
         # Standard Episode object
         try:
-            return format_string.format(**episode.characteristics)
+            return format_string.format(
+                **self.__series_info.characteristics,
+                **episode.characteristics
+            )
         except Exception as e:
             log.error(f'Cannot format episode text "{format_string}" for '
                       f'{episode} ({e})')
