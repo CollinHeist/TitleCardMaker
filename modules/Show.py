@@ -136,6 +136,7 @@ class Show(YamlReader):
 
         # Create the profile
         self.profile = Profile(
+            self.series_info,
             self.font,
             self.hide_seasons,
             self.__episode_map,
@@ -827,50 +828,6 @@ class Show(YamlReader):
         # Add all MultiEpisode objects to this show's episode dictionary
         for mp in multiparts:
             self.episodes[f'0{mp.season_number}-{mp.episode_start}'] = mp
-
-
-    def remake_card(self, episode_info: 'EpisodeInfo') -> None:
-        """
-        Remake the card associated with the given EpisodeInfo, updating the
-        metadata within Plex.
-        
-        Args:
-            episode_info: EpisodeInfo corresponding to the Episode being
-                updated. Matched by key.
-        """
-
-        # If no episode of the given index (key) exists, nothing to remake, exit
-        if (episode := self.episodes.get(episode_info.key)) is None:
-            log.error(f'Episode {episode_info} not found in datafile')
-            return None
-
-        # Select proper source for this episode
-        self.select_source_images(select_only=episode)
-
-        # Exit if this card needs a source and it DNE
-        if self.card_class.USES_UNIQUE_SOURCES and not episode.source.exists():
-            log.error(f'Cannot remake card {episode.destination.resolve()} - no'
-                      f'source image')
-            return None
-
-        # If card wasn't deleted, means watch status didn't change, exit
-        if episode.destination.exists():
-            log.debug(f'Not remaking card {episode.destination.resolve()}')
-            return None
-
-        # Create this card
-        TitleCard(
-            episode,
-            self.profile,
-            self.card_class.TITLE_CHARACTERISTICS,
-            **self.extras,
-            **episode.extra_characteristics,
-        ).create()
-
-        # Update Plex
-        self.plex_interface.set_title_cards_for_series(
-            self.library_name, self.series_info, {episode_info.key: episode}
-        )
 
 
     def create_missing_title_cards(self) ->None:
