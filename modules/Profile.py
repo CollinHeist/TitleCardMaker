@@ -15,17 +15,19 @@ class Profile:
     SEASON_TITLE_REGEX = r'^{season_title}\s*(?::|-|,)?\s+(.+)'
 
     __slots__ = (
-        'font', 'hide_season_title', '__episode_map', 'episode_text_format',
-        '__use_custom_seasons', '__use_custom_font'
+        '__series_info', 'font', 'hide_season_title', '__episode_map',
+        'episode_text_format', '__use_custom_seasons', '__use_custom_font',
     )
 
-    def __init__(self, font: 'Font', hide_seasons: bool,
-                 episode_map: 'EpisodeMap', episode_text_format: str) -> None:
+    def __init__(self, series_info: 'SeriesInfo', font: 'Font',
+                 hide_seasons: bool, episode_map: 'EpisodeMap',
+                 episode_text_format: str) -> None:
         """
         Construct a new instance of a Profile. All given arguments will be
         applied through this Profile (and whether it's generic/custom).
 
         Args:
+            series_info: SeriesInfo associated with this profile.
             font: The Font for this profile.
             hide_seasons: Whether to hide season text.
             episode_map: EpisodeMap for the series.
@@ -33,6 +35,7 @@ class Profile:
         """
 
         # Store this profiles arguments as attributes
+        self.__series_info = series_info
         self.font = font
         self.hide_season_title = hide_seasons
         self.__episode_map = episode_map

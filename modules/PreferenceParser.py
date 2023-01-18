@@ -872,7 +872,7 @@ class PreferenceParser(YamlReader):
 
                 # Apply template and merge libraries+font maps
                 show_yaml = self.__finalize_show_yaml(
-                    show_name,
+                    file_yaml['series'][show_name].get('name', show_name),
                     file_yaml['series'][show_name],
                     templates,
                     library_map,
