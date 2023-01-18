@@ -18,6 +18,7 @@ from modules.RomanNumeralTitleCard import RomanNumeralTitleCard
 from modules.StandardTitleCard import StandardTitleCard
 from modules.StarWarsTitleCard import StarWarsTitleCard
 from modules.TextlessTitleCard import TextlessTitleCard
+from modules.TintedGlassTitleCard import TintedGlassTitleCard
 
 class TitleCard:
     """
@@ -57,9 +58,11 @@ class TitleCard:
         'reality tv': LogoTitleCard,
         'roman': RomanNumeralTitleCard,
         'roman numeral': RomanNumeralTitleCard,
+        'sherlock': TintedGlassTitleCard, 
         'standard': StandardTitleCard,
         'star wars': StarWarsTitleCard,
         'textless': TextlessTitleCard,
+        'tinted glass': TintedGlassTitleCard,
     }
 
     __slots__ = ('episode', 'profile', 'converted_title', 'maker', 'file')
