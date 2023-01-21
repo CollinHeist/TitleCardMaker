@@ -1,8 +1,10 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
+
+SeriesExtra = Optional
 
 class StandardTitleCard(BaseCardType):
     """
@@ -50,17 +52,18 @@ class StandardTitleCard(BaseCardType):
     )
 
     def __init__(self, source: Path, output_file: Path, title: str,
-                 season_text: str, episode_text: str, font: str,
-                 font_size: float, title_color: str, hide_season: bool,
-                 vertical_shift: int=0,
+                 season_text: str, episode_text: str, hide_season: bool,
+                 font: str, title_color: str,
+                 font_size: float=1.0,
                  interline_spacing: int=0,
                  kerning: float=1.0,
                  stroke_width: float=1.0,
+                 vertical_shift: int=0,
                  blur: bool=False,
                  grayscale: bool=False,
-                 separator: str='•',
-                 stroke_color: str='black',
-                 omit_gradient: bool=False,
+                 separator: Optional[str]='•',
+                 stroke_color: Optional[str]='black',
+                 omit_gradient: Optional[bool]=False,
                  **unused) -> None:
         """
         Construct a new instance of this card.
@@ -81,10 +84,9 @@ class StandardTitleCard(BaseCardType):
             stroke_width: Scalar to apply to black stroke of the title text.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
-            separator: (Extra) Character to use to separate season and episode
-                text.
-            omit_gradient: (Extra) Whether to omit the gradient overlay.
-            stroke_color: (Extra) Color to use for the back-stroke color.
+            separator: Character to use to separate season and episode text.
+            omit_gradient: Whether to omit the gradient overlay.
+            stroke_color: Color to use for the back-stroke color.
             unused: Unused arguments.
         """
 

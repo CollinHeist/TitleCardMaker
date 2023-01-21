@@ -1,7 +1,10 @@
 from pathlib import Path
+from typing import Optional
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
+
+SeriesExtra = Optional
 
 class CutoutTitleCard(BaseCardType):
     """
@@ -55,8 +58,8 @@ class CutoutTitleCard(BaseCardType):
                  kerning: float=1.0,
                  blur: bool=False,
                  grayscale: bool=False,
-                 overlay_color: str='black',
-                 blur_edges: bool=False,
+                 overlay_color: SeriesExtra[str]='black',
+                 blur_edges: SeriesExtra[bool]=False,
                  **unused) -> None:
         """
         Construct a new instance of this card.
@@ -77,8 +80,8 @@ class CutoutTitleCard(BaseCardType):
             stroke_width: Scalar to apply to black stroke of the title text.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
-            overlay_color: (Extra) Color to use for the solid overlay.
-            blur_edges: (Extra) Whether to blur edges of the number overlay.
+            overlay_color: Color to use for the solid overlay.
+            blur_edges: Whether to blur edges of the number overlay.
             unused: Unused arguments.
         """
 

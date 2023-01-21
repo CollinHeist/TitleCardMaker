@@ -69,7 +69,7 @@ class TintedGlassTitleCard(BaseCardType):
                  grayscale: bool=False,
                  episode_text_color: SeriesExtra[str]=EPISODE_TEXT_COLOR,
                  episode_text_position: SeriesExtra[Position]='center',
-                 **unused) ->None:
+                 **unused) -> None:
         """
         Initialize this TitleCard object.
 

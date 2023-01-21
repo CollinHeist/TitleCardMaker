@@ -38,7 +38,8 @@ class TextlessTitleCard(BaseCardType):
 
     def __init__(self, source: Path, output_file: Path,
                  blur: bool=False,
-                 grayscale: bool=False, **unused) -> None:
+                 grayscale: bool=False,
+                 **unused) -> None:
         """
         Construct a new instance of this card.
 

@@ -1,12 +1,14 @@
 from collections import namedtuple
 from pathlib import Path
-from typing import Any, Literal, Union
+from typing import Any, Literal, Optional, Union
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 
+SeriesExtra = Optional
+DarkenOption = SeriesExtra[Union[Literal['all', 'box'], bool]]
+
 BoxCoordinates = namedtuple('BoxCoordinates', ('x0', 'y0', 'x1', 'y1'))
-DarkenOption = Union[Literal['all', 'box'], bool]
 
 class LandscapeTitleCard(BaseCardType):
     """
@@ -59,17 +61,17 @@ class LandscapeTitleCard(BaseCardType):
         'add_bounding_box', 'box_adjustments'
     )
 
-
     def __init__(self, source: Path, output_file: Path, title: str, font: str,
-                 font_size: float, title_color: str,
+                 title_color: str,
+                 font_size: float=1.0,
                  interline_spacing: int=0,
                  kerning: float=1.0,
                  blur: bool=False,
                  grayscale: bool=False,
                  vertical_shift: float=0,
                  darken: DarkenOption=False,
-                 add_bounding_box: bool=False,
-                 box_adjustments: str=None,
+                 add_bounding_box: SeriesExtra[bool]=False,
+                 box_adjustments: SeriesExtra[str]=None,
                  **unused) ->None:
         """
         Initialize this TitleCard object. This primarily just stores instance
@@ -80,20 +82,20 @@ class LandscapeTitleCard(BaseCardType):
             output_file: Output file where to create the card.
             title: Title text to add to created card.
             font: Font name or path (as string) to use for episode title.
-            font_size: Scalar to apply to title font size.
-            title_color: Color to use for title text.
+            title_color: Color to use for title text.            
             interline_spacing: Pixel count to adjust title interline spacing by.
             kerning: Scalar to apply to kerning of the title text.
+            font_size: Scalar to apply to title font size.
+            vertical_shift: Vertical shift to apply to the title text.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
-            vertical_shift: Vertical shift to apply to the title text.
-            darken: (Extra) Whether to darken the image (if not blurred).
-            add_bounding_box: (Extra) Whether to add a bounding box around the
-                title text.
-            box_adjustments: (Extra) How to adjust the bounds of the bounding
-                box. Given as a string of pixels in clockwise order relative to
-                the center. For example, "10 10 10 10" will expand the box by 10
-                pixels in each direction.
+            darken: Whether to darken the image (if not blurred).
+            add_bounding_box: Whether to add a bounding box around the title
+                text.
+            box_adjustments: How to adjust the bounds of the bounding box. Given
+                as a string of pixels in clockwise order relative to the center.
+                For example, "10 10 10 10" will expand the box by 10 pixels in
+                each direction.
             unused: Unused arguments.
         """
 

@@ -1,10 +1,13 @@
 from pathlib import Path
 from re import match
+from typing import Optional
 
 from num2words import num2words
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
+
+SeriesExtra = Optional
 
 class StarWarsTitleCard(BaseCardType):
     """
@@ -51,7 +54,9 @@ class StarWarsTitleCard(BaseCardType):
     )
 
     def __init__(self, source: Path, output_file: Path, title: str,
-                 episode_text: str, blur: bool=False, grayscale: bool=False,
+                 episode_text: str,
+                 blur: bool=False,
+                 grayscale: bool=False,
                  **kwargs) -> None:
         """
         Initialize the CardType object.

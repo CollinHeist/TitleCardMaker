@@ -1,8 +1,10 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
+
+SeriesExtra = Optional
 
 class AnimeTitleCard(BaseCardType):
     """
@@ -52,20 +54,21 @@ class AnimeTitleCard(BaseCardType):
     )
 
     def __init__(self, source: Path, output_file: Path, title: str, 
-                 season_text: str, episode_text: str, font: str,
-                 font_size: float, title_color: str, hide_season: bool,
-                 vertical_shift: int=0,
+                 season_text: str, episode_text: str, hide_season: bool,
+                 font: str, title_color: str,
+                 font_size: float=1.0,
                  interline_spacing: int=0,
                  kerning: float=1.0,
                  stroke_width: float=1.0,
+                 vertical_shift: int=0,
                  blur: bool=False,
                  grayscale: bool=False,
-                 kanji: str=None,
-                 separator: str='·',
-                 omit_gradient: bool=False,
-                 require_kanji: bool=False,
-                 kanji_vertical_shift: float=0,
-                 stroke_color: str='black',
+                 kanji: SeriesExtra[str]=None,
+                 separator: SeriesExtra[str]='·',
+                 omit_gradient: SeriesExtra[bool]=False,
+                 require_kanji: SeriesExtra[bool]=False,
+                 kanji_vertical_shift: SeriesExtra[float]=0,
+                 stroke_color: SeriesExtra[str]='black',
                  **unused) -> None:
         """
         Construct a new instance of this card.
@@ -84,15 +87,14 @@ class AnimeTitleCard(BaseCardType):
             interline_spacing: Offset to interline spacing of the title text
             kerning: Scalar to apply to kerning of the title text.
             stroke_width: Scalar to apply to black stroke of the title text.
-            kanji: (Extra) Kanji text to place above the episode title.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
-            separator: (Extra) Character to use to separate season and episode
-                text.
-            omit_gradient: (Extra) Whether to omit the gradient overlay.
-            require_kanji: (Extra) Whether to require kanji for this card.
-            kanji_vertical_shift: (Extra) Vertical shift to apply to kanji text.
-            stroke_color: (Extra) Color to use for the back-stroke color.
+            kanji: Kanji text to place above the episode title.
+            separator: Character to use to separate season and episode text.
+            omit_gradient: Whether to omit the gradient overlay.
+            require_kanji: Whether to require kanji for this card.
+            kanji_vertical_shift: Vertical shift to apply to kanji text.
+            stroke_color: Color to use for the back-stroke color.
             unused: Unused arguments.
         """
 

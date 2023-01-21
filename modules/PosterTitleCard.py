@@ -1,8 +1,10 @@
 from pathlib import Path
-from re import match
+from typing import Optional
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
+
+SeriesExtra = Optional
 
 class PosterTitleCard(BaseCardType):
     """
@@ -51,11 +53,11 @@ class PosterTitleCard(BaseCardType):
 
     def __init__(self, source: Path, output_file: Path, title: str,
                  episode_text: str,
-                 season_number: int=1,
-                 episode_number: int=1,
                  blur: bool=False,
                  grayscale: bool=False,
-                 logo: str=None,
+                 season_number: int=1,
+                 episode_number: int=1,
+                 logo: SeriesExtra[str]=None,
                  **unused) -> None:
         """
         Construct a new instance of this card.

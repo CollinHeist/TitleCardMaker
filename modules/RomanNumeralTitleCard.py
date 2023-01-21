@@ -2,10 +2,12 @@ from collections import namedtuple
 from pathlib import Path
 from random import choice
 from re import compile as re_compile
-from typing import Any
+from typing import Any, Optional
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
+
+SeriesExtra = Optional
 
 Position = namedtuple('Position', ('location', 'offset', 'rotation'))
 
@@ -224,13 +226,13 @@ class RomanNumeralTitleCard(BaseCardType):
         '__roman_text_scalar', '__roman_numeral_lines', 'rotation', 'offset',
     )
 
-    def __init__(self, output_file: Path, title: str, episode_text: str,
-                 season_text: str, hide_season: bool, title_color: str,
+    def __init__(self, output_file: Path, title: str, season_text: str, 
+                 episode_text: str, hide_season: bool, title_color: str,
                  episode_number: int=1,
                  blur: bool=False,
                  grayscale: bool=False,
-                 background: str=BACKGROUND_COLOR, 
-                 roman_numeral_color: str=ROMAN_NUMERAL_TEXT_COLOR,
+                 background: SeriesExtra[str]=BACKGROUND_COLOR, 
+                 roman_numeral_color: SeriesExtra[str]=ROMAN_NUMERAL_TEXT_COLOR,
                  **unused) -> None:
         """
         Construct a new instance of this card.
@@ -243,8 +245,8 @@ class RomanNumeralTitleCard(BaseCardType):
             title_color: Color to use for the episode title.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
-            background: (Extra) Color for the background.
-            roman_numeral_color: (Extra) Color for the roman numerals.
+            background: Color for the background.
+            roman_numeral_color: Color for the roman numerals.
             unused: Unused arguments.
         """
 
