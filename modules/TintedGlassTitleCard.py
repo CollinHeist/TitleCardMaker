@@ -149,7 +149,8 @@ class TintedGlassTitleCard(BaseCardType):
                 self.valid = False
 
 
-    def blur_rectangle_command(self, coordinates: BoxCoordinates) -> list[str]:
+    def blur_rectangle_command(self, coordinates: BoxCoordinates,
+                               rounding_radius: int) -> list[str]:
         """
         Get the commands necessary to blur and darken a rectangle encompassing
         the given coordinates.
@@ -157,12 +158,15 @@ class TintedGlassTitleCard(BaseCardType):
         Args:
             coordinates: BoxCoordinates that defines the bounds of the rectangle
                 to blur/darken.
+            rounding_radius: Pixel radius to use for the round edges of the
+                rectangle.
 
         Returns:
             List of ImageMagick commands necessary to blur/darken the rectangle.
         """
 
         x0, y0, x1, y1 = coordinates
+        draw_coords = f'{x0},{y0} {x1},{y1} {rounding_radius},{rounding_radius}'
 
         return [
             # Blur rectangle in the given bounds
@@ -170,7 +174,7 @@ class TintedGlassTitleCard(BaseCardType):
             f'-fill white',
             f'-colorize 100',
             f'-fill black',
-            f'-draw "roundrectangle {x0},{y0} {x1},{y1} 20,20"',
+            f'-draw "roundrectangle {draw_coords}"',
             f'-alpha off',
             f'-write mpr:mask',
             f'+delete \)',
@@ -179,7 +183,7 @@ class TintedGlassTitleCard(BaseCardType):
             f'+mask',
             # Darken area behind title text
             f'-fill "{self.DARKEN_COLOR}"',
-            f'-draw "roundrectangle {x0},{y0} {x1},{y1} 20,20"',
+            f'-draw "roundrectangle {draw_coords}"',
         ]
 
 
@@ -306,7 +310,7 @@ class TintedGlassTitleCard(BaseCardType):
         coordinates = BoxCoordinates(x_start, y_start, x_end, y_end)
 
         return [
-            *self.blur_rectangle_command(coordinates),
+            *self.blur_rectangle_command(coordinates, rounding_radius=20),
             *command,
         ]
 
@@ -390,7 +394,7 @@ class TintedGlassTitleCard(BaseCardType):
             # Resize and apply any style modifiers
             *self.resize_and_style,
             # Blur area behind title text
-            *self.blur_rectangle_command(title_box_coordinates),
+            *self.blur_rectangle_command(title_box_coordinates, 40),
             # Add title text
             *self.add_title_text_command,
             # Add episode text
