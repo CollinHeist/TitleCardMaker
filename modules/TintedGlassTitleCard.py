@@ -35,7 +35,6 @@ class TintedGlassTitleCard(BaseCardType):
 
     """Default episode text format for this class"""
     EPISODE_TEXT_FORMAT = '{series_name} | S{season_number} E{episode_number}'
-    # EPISODE_TEXT_FORMAT = 'S{season_number} E{episode_number}'
     EPISODE_TEXT_COLOR = 'rgb(247, 209, 148)'
     EPISODE_TEXT_FONT = SW_REF_DIRECTORY / 'HelveticaNeue-Bold.ttf'
 
@@ -231,9 +230,10 @@ class TintedGlassTitleCard(BaseCardType):
         x_start, x_end = self.WIDTH/2 - width/2, self.WIDTH/2 + width/2
         y_start, y_end = self.HEIGHT - 300 - height, self.HEIGHT - 300
 
-        # Additional x offset necessary for padding
+        # Additional offsets necessary for equal padding
         x_start -= 50
         x_end += 50
+        y_start += 12
 
         # Shift y coordinates by vertical shift
         y_start += self.vertical_shift
@@ -301,11 +301,10 @@ class TintedGlassTitleCard(BaseCardType):
             x_start, x_end = title_coordinates.x1 - width, title_coordinates.x1
             x_start -= 30 + 20
 
-        # x_start, x_end = self.WIDTH/2 - width/2, self.WIDTH/2 + width/2
         y_start, y_end = self.HEIGHT - 150 - height, self.HEIGHT - 150
 
-        # Additional y offset necessary for padding
-        y_start, y_end = y_start - 10, y_end + 10
+        # Additional y offset necessary for equal padding
+        y_start, y_end = y_start - 7, y_end + 10
 
         coordinates = BoxCoordinates(x_start, y_start, x_end, y_end)
 
