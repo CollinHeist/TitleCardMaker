@@ -6,9 +6,10 @@ from modules.CleanPath import CleanPath
 from modules.Debug import log
 import modules.global_objects as global_objects
 
-# Built-in CardType classes
+# Built-in BaseCardType classes
 from modules.AnimeTitleCard import AnimeTitleCard
 from modules.CutoutTitleCard import CutoutTitleCard
+from modules.FadeTitleCard import FadeTitleCard
 from modules.FrameTitleCard import FrameTitleCard
 from modules.LandscapeTitleCard import LandscapeTitleCard
 from modules.LogoTitleCard import LogoTitleCard
@@ -44,6 +45,7 @@ class TitleCard:
     CARD_TYPES = {
         'anime': AnimeTitleCard,
         'cutout': CutoutTitleCard,
+        'fade': FadeTitleCard,
         'frame': FrameTitleCard,
         'generic': StandardTitleCard,
         'gundam': PosterTitleCard,
@@ -63,6 +65,7 @@ class TitleCard:
         'star wars': StarWarsTitleCard,
         'textless': TextlessTitleCard,
         'tinted glass': TintedGlassTitleCard,
+        '4x3': FadeTitleCard,
     }
 
     __slots__ = ('episode', 'profile', 'converted_title', 'maker', 'file')
