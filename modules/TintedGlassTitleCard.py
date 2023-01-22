@@ -1,6 +1,6 @@
 from collections import namedtuple
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
@@ -11,7 +11,10 @@ Position = Literal['left', 'center', 'right']
 
 class TintedGlassTitleCard(BaseCardType):
     """
-    
+    This class describes a type of CardType that produces title cards featuring
+    a darkened and blurred rounded rectangle surrounding the title and index
+    text. This card is inspired by Reddit user /u/RaceDebriefF1's Lucky! (2022)
+    title cards.
     """
 
     """Directory where all reference files used by this card are stored"""
@@ -54,21 +57,22 @@ class TintedGlassTitleCard(BaseCardType):
     __slots__ = (
         'source', 'output_file', 'title', '__line_count', 'season_text',
         'episode_text',  'hide_season', 'font', 'font_size', 'title_color',
-        'interline_spacing', 'kerning', 'stroke_width', 'vertical_shift',
-        'episode_text_color', 'episode_text_position',
+        'interline_spacing', 'kerning', 'vertical_shift',
+        'episode_text_color', 'episode_text_position', 'box_adjustments',
     )
 
     def __init__(self, source: Path, output_file: Path, title: str,
-                 season_text: str, episode_text: str, font: str,
-                 font_size: float, title_color: str, hide_season: bool,
-                 vertical_shift: int=0,
+                 season_text: str, episode_text: str, hide_season: bool,
+                 font: str, title_color: str, 
+                 font_size: float=1.0, 
                  interline_spacing: int=0,
                  kerning: float=1.0,
-                 stroke_width: float=1.0,
+                 vertical_shift: int=0,
                  blur: bool=False,
                  grayscale: bool=False,
                  episode_text_color: SeriesExtra[str]=EPISODE_TEXT_COLOR,
                  episode_text_position: SeriesExtra[Position]='center',
+                 box_adjustments: SeriesExtra[str]=None,
                  **unused) -> None:
         """
         Initialize this TitleCard object.
@@ -77,14 +81,22 @@ class TintedGlassTitleCard(BaseCardType):
             source: Source image to base the card on.
             output_file: Output file where to create the card.
             title: Title text to add to created card.
+            season_text: The season text for this card.
+            episode_text: Episode text to add to created card.
+            hide_season: Whether to hide the season text.
+            
             font: Font name or path (as string) to use for episode title.
-            font_size: Scalar to apply to title font size.
             title_color: Color to use for title text.
+            font_size: Scalar to apply to title font size.
             interline_spacing: Pixel count to adjust title interline spacing by.
             kerning: Scalar to apply to kerning of the title text.
+            vertical_shift: Vertical shift to apply to the title text.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
-            vertical_shift: Vertical shift to apply to the title text.
+            box_adjustments: How to adjust the bounds of the bounding box. Given
+                as a string of pixels in clockwise order relative to the center.
+                For example, "10 10 10 10" will expand the box by 10 pixels in
+                each direction.
             unused: Unused arguments.
         """
 
@@ -106,7 +118,6 @@ class TintedGlassTitleCard(BaseCardType):
         self.title_color = title_color
         self.interline_spacing = interline_spacing
         self.kerning = kerning
-        self.stroke_width = stroke_width
         self.vertical_shift = vertical_shift
 
         # Store extras
@@ -120,6 +131,22 @@ class TintedGlassTitleCard(BaseCardType):
             self.valid = False
         else:
             self.episode_text_position = position
+
+        # Parse box adjustments
+        self.box_adjustments = (0, 0, 0, 0)
+        if box_adjustments:
+            # Verify adjustments are properly provided
+            try:
+                adjustments = box_adjustments.split(' ')
+                self.box_adjustments = tuple(map(float, adjustments))
+                error = ('must provide numeric adjustments for all sides like '
+                         '"top right bottom left", e.g. "20 0 40 0"')
+                assert len(self.box_adjustments) == 4, error
+            # Invalid adjustments, log and mark invalid
+            except Exception as e:
+                log.error(f'Invalid box adjustments "{box_adjustments}" - {e}')
+                self.box_adjustments = (0, 0, 0, 0)
+                self.valid = False
 
 
     def blur_rectangle_command(self, coordinates: BoxCoordinates) -> list[str]:
@@ -211,6 +238,12 @@ class TintedGlassTitleCard(BaseCardType):
         # Adjust upper bounds of box if title is multi-line
         y_start += (65 * (self.__line_count-1)) if self.__line_count > 1 else 0
 
+        # Adjust bounds by any manual box adjustments
+        x_start -= self.box_adjustments[3]
+        x_end += self.box_adjustments[1]
+        y_start -= self.box_adjustments[0]
+        y_end +=self.box_adjustments[2]
+
         return BoxCoordinates(x_start, y_start, x_end, y_end)
 
 
@@ -279,6 +312,25 @@ class TintedGlassTitleCard(BaseCardType):
 
 
     @staticmethod
+    def modify_extras(extras: dict[str, Any], custom_font: bool,
+                      custom_season_titles: bool) -> None:
+        """
+        Modify the given extras base on whether font or season titles are
+        custom.
+
+        Args:
+            extras: Dictionary to modify.
+            custom_font: Whether the font are custom.
+            custom_season_titles: Whether the season titles are custom.
+        """
+
+        # Generic font, reset box adjustments
+        if not custom_font:
+            if 'box_adjustments' in extras:
+                del extras['box_adjustments']
+
+
+    @staticmethod
     def is_custom_font(font: 'Font') -> bool:
         """
         Determine whether the given font characteristics constitute a default
@@ -292,12 +344,11 @@ class TintedGlassTitleCard(BaseCardType):
         """
 
         return ((font.color != TintedGlassTitleCard.TITLE_COLOR)
-            or (font.file != TintedGlassTitleCard.TITLE_FONT)
-            or (font.interline_spacing != 0)
-            or (font.kerning != 1.0)
-            or (font.size != 1.0)
-            or (font.stroke_width != 1.0)
-            or (font.vertical_shift != 0))
+            or  (font.file != TintedGlassTitleCard.TITLE_FONT)
+            or  (font.interline_spacing != 0)
+            or  (font.kerning != 1.0)
+            or  (font.size != 1.0)
+            or  (font.vertical_shift != 0))
 
 
     @staticmethod

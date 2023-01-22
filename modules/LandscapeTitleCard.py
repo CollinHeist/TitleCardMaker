@@ -233,15 +233,15 @@ class LandscapeTitleCard(BaseCardType):
         y_start, y_end = 1800/2 - height/2, 1800/2 + height/2
         y_end -= 35     # Additional offset necessary for things to work out
 
+        # Shift y coordinates by vertical shift
+        y_start += self.vertical_shift
+        y_end += self.vertical_shift
+
         # Adjust corodinates by spacing and manual adjustments
         x_start -= self.BOUNDING_BOX_SPACING + self.box_adjustments[3]
         x_end += self.BOUNDING_BOX_SPACING + self.box_adjustments[1]
         y_start -= self.BOUNDING_BOX_SPACING  + self.box_adjustments[0]
         y_end += self.BOUNDING_BOX_SPACING + self.box_adjustments[2]
-
-        # Shift y coordinates by vertical shift
-        y_start += self.vertical_shift
-        y_end += self.vertical_shift
 
         return BoxCoordinates(x_start, y_start, x_end, y_end)
 
