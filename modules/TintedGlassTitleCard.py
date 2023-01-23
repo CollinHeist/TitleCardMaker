@@ -39,7 +39,7 @@ class TintedGlassTitleCard(BaseCardType):
     EPISODE_TEXT_FONT = SW_REF_DIRECTORY / 'HelveticaNeue-Bold.ttf'
 
     """Whether this CardType uses season titles for archival purposes"""
-    USES_SEASON_TITLE = True
+    USES_SEASON_TITLE = False
 
     """Whether this CardType uses unique source images"""
     USES_UNIQUE_SOURCES = True
@@ -327,10 +327,13 @@ class TintedGlassTitleCard(BaseCardType):
             custom_season_titles: Whether the season titles are custom.
         """
 
-        # Generic font, reset box adjustments
+        # Generic font, reset box adjustments and episode text color
         if not custom_font:
             if 'box_adjustments' in extras:
                 del extras['box_adjustments']
+
+            if 'episode_text_color' in extras:
+                del extras['episode_text_color']
 
 
     @staticmethod

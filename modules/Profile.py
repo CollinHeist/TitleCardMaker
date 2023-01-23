@@ -145,7 +145,7 @@ class Profile:
         Convert the given extras according to this profile's rules.
 
         Args:
-            card_type: BaseCardType class to call `modify_extras` on.
+            card_type: BaseCardType class to call modify_extras on.
             extras: Dictionary of extras to convert/modify.
         """
 
