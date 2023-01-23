@@ -73,10 +73,10 @@ class YamlReader:
             try:
                 # Attempt type conversion
                 return type_(value)
-            except Exception:
+            except Exception as e:
                 # Type conversion failed, log, set invalid, return None
                 attrib_string = '", "'.join(attributes)
-                self.__log(f'Value of "{attrib_string}" is invalid')
+                self.__log(f'Value of "{attrib_string}" is invalid - {e}')
                 self.valid = False
 
                 return default
