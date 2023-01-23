@@ -109,7 +109,12 @@ class TitleCard:
         } | profile.font.get_attributes() \
           | self.episode.episode_info.indices \
           | extra_characteristics
-        self.maker = self.episode.card_class(**args)
+
+        try:
+            self.maker = self.episode.card_class(**args)
+        except Exception as e:
+            log.exception(f'Cannot initialize Card for {self.episode} - {e}', e)
+            self.maker = None
 
         # File associated with this card is the episode's destination
         self.file = episode.destination
@@ -260,19 +265,23 @@ class TitleCard:
             True if a title card was created, False otherwise.
         """
 
-        # If the card already exists, exit
-        if self.file.exists():
+        # If card is invalid, exit
+        if self.maker is None or not self.maker.valid:
             return False
 
-        # If card is invalid, exit
-        if not self.maker.valid:
+        # If the card already exists, exit
+        if self.file.exists():
             return False
 
         # Create parent folders if necessary for this card
         self.file.parent.mkdir(parents=True, exist_ok=True)
 
         # Create card
-        self.maker.create()
+        try:
+            self.maker.create()
+        except Exception as e:
+            log.exception(f'Error encountered while creating card for '
+                          f'{self.episode} - {e}', e)
 
         # Return whether card creation was successful or not
         if self.file.exists():

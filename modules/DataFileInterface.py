@@ -128,10 +128,10 @@ class DataFileInterface:
                 # Ensure Title can be created
                 try:
                     title_obj = Title(title, original_title=original_title)
-                except Exception:
-                    log.error(f'Title for S{season_number:02}E'
-                              f'{episode_number:02} of the {self.series_info} '
-                              f'datafile is invalid')
+                except Exception as e:
+                    log.exception(f'Title for S{season_number:02}E'
+                                  f'{episode_number:02} of the '
+                                  f'{self.series_info} datafile is invalid', e)
                     continue
 
                 # Construct EpisodeInfo object for this entry

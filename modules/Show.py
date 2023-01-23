@@ -72,7 +72,7 @@ class Show(YamlReader):
         self.series_info = SeriesInfo(name, 0)
         try:
             self.series_info = SeriesInfo(name, self._get('year', type_=int))
-        except ValueError:
+        except Exception:
             log.error(f'Series "{name}" is missing the required "year"')
             self.valid = False
             return None
