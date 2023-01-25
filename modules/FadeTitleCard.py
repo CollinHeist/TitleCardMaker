@@ -56,6 +56,8 @@ class FadeTitleCard(BaseCardType):
                  kerning: float=1.0,
                  font_size: float=1.0,
                  vertical_shift: int=0,
+                 season_number: int=1,
+                 episode_number: int=1,
                  blur: bool=False,
                  grayscale: bool=False,
                  logo: SeriesExtra[str]=None,
@@ -78,6 +80,8 @@ class FadeTitleCard(BaseCardType):
             kerning: Scalar to apply to kerning of the title text.
             font_size: Scalar to apply to title font size.
             vertical_shift: Pixel count to adjust the title vertical offset by.
+            season_number: Season number for logo-file formatting.
+            episode_number: Episode number for logo-file formatting.
             logo:  Filepath (or file format) to the logo file.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
@@ -98,16 +102,20 @@ class FadeTitleCard(BaseCardType):
             self.logo = None
         else:
             try:
-                if Path(logo).exists():
-                    self.logo = Path(logo)
-                elif (source.parent / Path(logo).name).exists():
-                    self.logo = source.parent / Path(logo).name
+                # Format logo filename with indices
+                logo = Path(str(logo).format(season_number=season_number,
+                                             episode_number=episode_number))
+                # Logo file explicitly exists
+                if logo.exists():
+                    self.logo = logo
+                # Logo filename exists alongside source image (in source dir)
+                elif (source.parent / logo.name).exists():
+                    self.logo = source.parent / logo.name
                 else:
                     log.warning(f'Logo file "{logo}" does not exist')
                     self.valid = False
             except Exception as e:
-                log.warning(f'Logo file "{logo}" is invalid')
-                log.debug(f'Exception[{e}]')
+                log.exception(f'Logo file "{logo}" is invalid', e)
                 self.valid = False
 
         # Store attributes of the text
