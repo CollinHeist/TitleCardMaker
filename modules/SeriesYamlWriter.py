@@ -47,8 +47,7 @@ class SeriesYamlWriter:
             self.volume_map = {std(source): std(tcm) 
                                for source, tcm in volume_map.items()}
         except Exception as e:
-            log.error(f'Invalid "volumes" - must all be valid paths')
-            log.debug(f'Error[{e}]')
+            log.exception(f'Invalid "volumes" - must all be valid paths', e)
             self.valid = False
 
         # Validate/store sync mode
@@ -381,7 +380,7 @@ class SeriesYamlWriter:
         # Generate YAML to write
         series_yaml = {}
         for series_info, sonarr_path in all_series:
-            # Convert Sonarr path to TCM path
+            # Convert Sonarr path to TCM path, keep original for library detection
             original_path = sonarr_path
             sonarr_path = self.__convert_path(sonarr_path, media=True)
 
