@@ -106,10 +106,28 @@ class DataFileInterface:
 
         # Iterate through each season
         for season, season_data in yaml.items():
-            season_number = int(season.rsplit(' ', 1)[-1])
+            # Skip season if number cannot be parsed
+            try:
+                season_number = int(season.rsplit(' ', 1)[-1])
+            except Exception:
+                log.error(f'Season {season} of the {self.series_info} datafile '
+                          f'is invalid - must be like "Season 1"')
+                continue
 
             # Iterate through each episode of this season
             for episode_number, episode_data in season_data.items():
+                # Ensure indices are integers
+                abs_number = episode_data.get('abs_number')
+                try:
+                    episode_number = int(episode_number)
+                    if abs_number is not None:
+                        abs_number = int(abs_number)
+                except ValueError:
+                    log.exception(f'Episode data for S{season_number:02} is '
+                                  f'invalid - episode and absolute number must '
+                                  f'be integers')
+                    continue
+
                 # If title is missing (or no subkeys at all..) error
                 if (not isinstance(episode_data, dict)
                     or ('title' not in episode_data and
@@ -140,7 +158,7 @@ class DataFileInterface:
                     title_obj,
                     season_number,
                     episode_number,
-                    episode_data.pop('abs_number', None),
+                    abs_number,
                     imdb_id=episode_data.pop('imdb_id', None),
                     tmdb_id=episode_data.pop('tmdb_id', None),
                     tvdb_id=episode_data.pop('tvdb_id', None),
