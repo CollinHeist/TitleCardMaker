@@ -1,4 +1,4 @@
-from logging import Formatter, getLogger, StreamHandler
+from logging import Logger, Formatter, getLogger, setLoggerClass, StreamHandler
 from logging.handlers import TimedRotatingFileHandler
 from logging import NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL
 
@@ -18,10 +18,16 @@ TQDM_KWARGS = {
 LOG_FILE = Path(__file__).parent.parent / 'logs' / 'maker.log'
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
+# Logger class that overrides exception calls to log message as error, and then
+# traceback as debug level of the exception only
+class BetterExceptionLogger(Logger):
+    def exception(self, msg: object, excpt: Exception, *args, **kwargs) -> None:
+        super().error(msg, *args, **kwargs)
+        super().debug(excpt, exc_info=True)
+setLoggerClass(BetterExceptionLogger)
 
+# StreamHandler to integrate log messages with TQDM
 class LogHandler(StreamHandler):
-    """Handler subclass to integrate logging messages with TQDM"""
-
     def __init__(self, level=NOTSET):
         super().__init__(level)
         self.__just_logged = []
@@ -42,11 +48,20 @@ class LogHandler(StreamHandler):
         self.__just_logged.append(record.msg)
         if len(self.__just_logged) > 5:
             self.__just_logged.pop(0)
-            
 
+
+# Formatter classes to handle exceptions
+class ErrorFormatterColor(Formatter):
+    def formatException(self, ei) -> str:
+        return f'\x1b[1;30m[TRACEBACK] {super().formatException(ei)}\x1b[0m'
+
+class ErrorFormatterNoColor(Formatter):
+    def formatException(self, ei) -> str:
+        return f'[TRACEBACK] {super().formatException(ei)}'
+
+# Formatter class containing ErrorFormatterColor objects instantiated with
+# different format strings for various colors depending on the log level
 class LogFormatterColor(Formatter):
-    """Custom Formatter for logging integration, uses color"""
-
     """Color codes"""
     GRAY =     '\x1b[1;30m'
     CYAN =     '\033[96m'
@@ -58,38 +73,21 @@ class LogFormatterColor(Formatter):
     format_layout = '[%(levelname)s] %(message)s'
 
     LEVEL_FORMATS = {
-        DEBUG: f'{GRAY}{format_layout}{RESET}',
-        INFO: f'{CYAN}{format_layout}{RESET}',
-        WARNING: f'{YELLOW}{format_layout}{RESET}',
-        ERROR: f'{RED}{format_layout}{RESET}',
-        CRITICAL: f'{BOLD_RED}{format_layout}{RESET}',
+        DEBUG:    ErrorFormatterColor(f'{GRAY}{format_layout}{RESET}'),
+        INFO:     ErrorFormatterColor(f'{CYAN}{format_layout}{RESET}'),
+        WARNING:  ErrorFormatterColor(f'{YELLOW}{format_layout}{RESET}'),
+        ERROR:    ErrorFormatterColor(f'{RED}{format_layout}{RESET}'),
+        CRITICAL: ErrorFormatterColor(f'{BOLD_RED}{format_layout}{RESET}'),
     }
 
     def format(self, record):
-        format_string = self.LEVEL_FORMATS[record.levelno]
-        formatter_obj = Formatter(format_string)
-
-        return formatter_obj.format(record)
-
+        return self.LEVEL_FORMATS[record.levelno].format(record)
 
 class LogFormatterNoColor(Formatter):
-    """Custom Formatter for logging integration, does not use color"""
-
-    format_layout = '[%(levelname)s] %(message)s'
-
-    LEVEL_FORMATS = {
-        DEBUG: f'{format_layout}',
-        INFO: f'{format_layout}',
-        WARNING: f'{format_layout}',
-        ERROR: f'{format_layout}',
-        CRITICAL: f'{format_layout}',
-    }
+    FORMATTER = ErrorFormatterNoColor('[%(levelname)s] %(message)s')
 
     def format(self, record):
-        format_string = self.LEVEL_FORMATS[record.levelno]
-        formatter_obj = Formatter(format_string)
-
-        return formatter_obj.format(record)
+        return self.FORMATTER.format(record)
 
 # Create global logger
 log = getLogger('TitleCardMaker')
@@ -103,11 +101,11 @@ log.addHandler(handler)
 
 # Add rotating file handler to the logger
 file_handler = TimedRotatingFileHandler(
-    filename=LOG_FILE, when='H', interval=6, backupCount=8
+    filename=LOG_FILE, when='midnight', backupCount=7,
 )
-file_handler.setFormatter(Formatter(
+file_handler.setFormatter(ErrorFormatterNoColor(
     '[%(levelname)s] [%(asctime)s] %(message)s',
-    '%y-%m-%d %H:%M:%S'
+    '%m-%d-%y %H:%M:%S'
 ))
 file_handler.setLevel(DEBUG)
 log.addHandler(file_handler)
@@ -115,13 +113,18 @@ log.addHandler(file_handler)
 def apply_no_color_formatter() -> None:
     """
     Modify the global logger object by replacing the colored Handler with an
-    instance of the LogFormatterNoColor Handler class.
+    instance of the LogFormatterNoColor Handler class. Also set the log level
+    to that of the removed handler
     """
 
-    # Create colorless Formatter
+    # Get existing handler's log level, then delete
+    log_level = log.handlers[0].level
+    log.removeHandler(log.handlers[0])
+
+    # Create colorless Handler with Colorless Formatter
     handler = LogHandler()
     handler.setFormatter(LogFormatterNoColor())
+    handler.setLevel(log_level)
 
-    # Delete existing Handler, add new one
-    log.removeHandler(log.handlers[0])
+    # Add colorless handler in place of deleted one
     log.addHandler(handler)

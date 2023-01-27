@@ -33,7 +33,7 @@ class RemoteFile:
         """
         Construct a new RemoteFile object. This downloads the file for the given
         user and file into the temporary directory of the Maker.
-        
+
         Args:
             username: Username containing the file.
             filename: Filename of the file within the user's folder to download.
@@ -45,7 +45,7 @@ class RemoteFile:
         # Get database of loaded assets
         database_directory = global_objects.pp.database_directory
         self.loaded = TinyDB(database_directory / self.LOADED_FILE)
-        
+
         # Remote font will be stored at github/username/filename
         self.remote_source = f'{self.BASE_URL}/{username}/{filename}'
 
@@ -58,7 +58,7 @@ class RemoteFile:
         # If file has already been loaded this run, skip
         if self.loaded.get(where('remote') == self.remote_source) is not None:
             return None
-            
+
         # Download the remote file for local use
         try:
             self.download()
@@ -92,7 +92,7 @@ class RemoteFile:
     def resolve(self) -> Path:
         """
         Get the absolute path of the locally downloaded file.
-        
+
         Returns:
             Path to the locally downloaded file.
         """
@@ -128,7 +128,7 @@ class RemoteFile:
 
         # Verify content is valid
         assert content.ok, 'File does not exist'
-        
+
         # Write content to file
         with self.local_file.open('wb') as file_handle:
             file_handle.write(content.content)

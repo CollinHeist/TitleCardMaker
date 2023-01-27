@@ -48,7 +48,7 @@ class MediaInfoSet:
         Get the SeriesInfo object indicated by the given attributes. This looks
         for an existing object mapped under any of the given details; if none
         exists, a new SeriesInfo object is created with the given details.
-        
+
         Args:
             name: The name of the series. Optional if the associated object
                 already exists.
@@ -58,7 +58,7 @@ class MediaInfoSet:
             sonarr_id: Optional Sonarr ID.
             tmdb_id: Optional TMDb ID.
             tvdb_id: Optional TVDb ID.
-        
+
         Returns:
             The SeriesInfo object indicated by the given attributes.
         """
@@ -115,7 +115,7 @@ class MediaInfoSet:
         """
         Set the IMDb ID of the given EpisodeInfo object. This also updates
         the IMDb ID map of this info set.
-        
+
         Args:
             episode_info: The EpisodeInfo to set the ID of.
             imdb_id: The IMDb ID.
@@ -133,7 +133,7 @@ class MediaInfoSet:
         """
         Set the TVDb ID of the given EpisodeInfo object. This also updates
         the TVDb ID map of this info set.
-        
+
         Args:
             episode_info: The EpisodeInfo to set the ID of.
             tvdb_id: The TVDb ID.
@@ -151,7 +151,7 @@ class MediaInfoSet:
         """
         Set the TMDb ID of the given EpisodeInfo object. This also updates
         the TMDb ID map of this info set.
-        
+
         Args:
             episode_info: The EpisodeInfo to set the ID of.
             tmdb_id: The TMDb ID.
@@ -175,7 +175,7 @@ class MediaInfoSet:
         Get the EpisodeInfo object indicated by the given attributes. This looks
         for an existing object mapped under any of the given details; if none
         exists, a new EpisodeInfo object is created with the given details.
-        
+
         Args:
             series_info: SeriesInfo object the EpisodeInfo object might be
                 indexed under.
@@ -191,7 +191,7 @@ class MediaInfoSet:
             tmdb_id: (Keyword only) Optional TMDb ID.
             airdate: (Keyword only) Optional airdate of the episode
             queried_kwargs: Any queried_{interface} keyword arguments.
-        
+
         Returns:
             The EpisodeInfo object indicated by the given attributes. None if an
             object does not exist and cannot be created due to an index conflict
@@ -257,7 +257,7 @@ class MediaInfoSet:
         """
         Update the name of the associated SeriesInfo object. This also updates
         the mapping in this object's set.
-        
+
         Args:
             series_info: The SeriesInfo object being updated.
             name:New name of the associated series.

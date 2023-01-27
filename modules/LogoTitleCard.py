@@ -1,15 +1,17 @@
 from pathlib import Path
-from re import findall
+from typing import Optional
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
+
+SeriesExtra = Optional
 
 class LogoTitleCard(BaseCardType):
     """
     This class describes a type of CardType that produces logo-centric title
     cards, primarily for the purpose of reality TV shows.
     """
-    
+
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = Path(__file__).parent / 'ref'
 
@@ -52,24 +54,24 @@ class LogoTitleCard(BaseCardType):
         'vertical_shift',  'interline_spacing', 'kerning', 'stroke_width',
         'logo', 'omit_gradient', 'background', 'stroke_color',
     )
-                 
 
-    def __init__(self, output_file: Path, title: str, hide_season: bool,
-                 season_text: str, episode_text: str, title_color: str,
-                 font: str, font_size: float,
-                 vertical_shift: int=0,
+    def __init__(self, output_file: Path, title: str,  season_text: str,
+                 episode_text: str, hide_season: bool, font: str,
+                 title_color: str,
+                 font_size: float=1.0,
                  kerning: float=1.0,
                  interline_spacing: int=0,
                  stroke_width: float=1.0,
-                 blur: bool=False,
-                 grayscale: bool=False,
+                 vertical_shift: int=0,
                  season_number: int=1,
                  episode_number: int=1,
-                 logo: str=None,
-                 separator: str='•', 
-                 background: str='black',
-                 stroke_color: str='black',
-                 omit_gradient: bool=True,
+                 blur: bool=False,
+                 grayscale: bool=False,
+                 logo: SeriesExtra[str]=None,
+                 separator: SeriesExtra[str]='•', 
+                 background: SeriesExtra[str]='black',
+                 stroke_color: SeriesExtra[str]='black',
+                 omit_gradient: SeriesExtra[bool]=True,
                  **unused) -> None:
         """
         Construct a new instance of this card.
@@ -80,28 +82,27 @@ class LogoTitleCard(BaseCardType):
             season_text: Text to use as season count text. Ignored if
                 hide_season is True.
             episode_text: Text to use as episode count text.
-            font: Font to use for the episode title.
-            font_size: Scalar to apply to the title font size.
-            title_color: Color to use for the episode title.
             hide_season: Whether to omit the season text (and joining character)
                 from the title card completely.
+            font: Font to use for the episode title.
+            title_color: Color to use for the episode title.
+            interline_spacing: Pixels to adjust title interline spacing by.
+            stroke_width: Scalar to apply to black stroke of the title text.
+            kerning: Scalar to apply to kerning of the title text.
+            font_size: Scalar to apply to the title font size.
+            vertical_shift: Pixels to adjust title vertical shift by.
             season_number: Season number for logo-file formatting.
             episode_number: Episode number for logo-file formatting.
-            vertical_shift: Pixels to adjust title vertical shift by.
-            interline_spacing: Pixels to adjust title interline spacing by.
-            kerning: Scalar to apply to kerning of the title text.
-            stroke_width: Scalar to apply to black stroke of the title text.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
-            logo: (Extra) Filepath (or file format) to the logo file.
-            separator: (Extra) Character to use to separate season and episode
-                text.
-            background: (Extra) Backround color.
-            omit_gradient: (Extra) Whether to omit the gradient overlay.
-            stroke_color: (Extra) Color to use for the back-stroke color.
+            logo: Filepath (or file format) to the logo file.
+            separator: Character to use to separate season and episode text.
+            background: Backround color.
+            omit_gradient: Whether to omit the gradient overlay.
+            stroke_color: Color to use for the back-stroke color.
             unused: Unused arguments.
         """
-        
+
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale)
 
@@ -112,7 +113,7 @@ class LogoTitleCard(BaseCardType):
                                    episode_number=episode_number)
             except Exception:
                 pass
-            
+
             # Use either original or modified logo file
             self.logo = Path(logo)
         else:
@@ -145,7 +146,7 @@ class LogoTitleCard(BaseCardType):
     def resize_logo(self) -> Path:
         """
         Resize the logo into at most a 1875x1030 bounding box.
-        
+
         Returns:
             Path to the created image.
         """
@@ -234,10 +235,10 @@ class LogoTitleCard(BaseCardType):
         """
         Determines whether the given font characteristics constitute a default
         or custom font.
-        
+
         Args:
             font: The Font being evaluated.
-        
+
         Returns:
             True if a custom font is indicated, False otherwise.
         """
@@ -258,11 +259,11 @@ class LogoTitleCard(BaseCardType):
         """
         Determines whether the given attributes constitute custom or generic
         season titles.
-        
+
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
             episode_text_format: The episode text format in use.
-        
+
         Returns:
             True if custom season titles are indicated, False otherwise.
         """
@@ -278,7 +279,7 @@ class LogoTitleCard(BaseCardType):
         Make the necessary ImageMagick and system calls to create this object's
         defined title card.
         """
-        
+
         # Skip card if logo doesn't exist
         if self.logo is None:
             log.error(f'Logo file not specified')

@@ -32,7 +32,7 @@ class BaseSummary(ImageMaker):
     __CREATED_BY_TEMPORARY_PATH = ImageMaker.TEMP_DIR / 'user_created_by.png'
 
     __slots__ = ('show', 'logo', 'created_by', 'output', 'inputs','number_rows')
-    
+
 
     @abstractmethod
     def __init__(self, show: 'Show', created_by: str=None) -> None:
@@ -75,7 +75,7 @@ class BaseSummary(ImageMaker):
         Returns:
             Whether the ShowSummary should/can be created.
         """
-        
+
         # Filter out episodes that don't have an existing title card
         available_episodes = list(filter(
             lambda e: self.show.episodes[e].destination.exists(),
@@ -122,7 +122,7 @@ class BaseSummary(ImageMaker):
         Create a custom "Created by" tag image. This image is formatted like:
         "Created by {input} with {logo} TitleCardMaker". The image is exactly 
         the correct size (i.e. fit to width of text).
-         
+
         Returns:
             Path to the created image.
         """
@@ -154,5 +154,5 @@ class BaseSummary(ImageMaker):
         ])
 
         self.image_magick.run(command)
-        
+
         return self.__CREATED_BY_TEMPORARY_PATH

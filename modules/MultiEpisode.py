@@ -28,16 +28,16 @@ class MultiEpisode:
         """
         Constructs a new instance of a MultiEpisode that represents the given
         list of Episode objects, and has the given (modified) Title.
-        
+
         Args:
             episodes: List of Episode objects this MultiEpisode encompasses.
             title: The modified title that describes these multiple episodes.
         """
-        
+
         # Verify at least two episodes have been provided
         if len(episodes) < 2:
             raise ValueError(f'MultiEpisode requires at least 2 Episodes')
-        
+
         # Verify all episodes are from the same season
         episode_infos = tuple(map(lambda e: e.episode_info, episodes))
         if not all(episode_info.season_number == episode_infos[0].season_number
@@ -47,26 +47,26 @@ class MultiEpisode:
 
         # Get the season for this episode set
         self.season_number = episode_infos[0].season_number
-        
+
         # Get the episode range for the given episode set
         episode_numbers = tuple(map(lambda e: e.episode_number, episode_infos))
         self.episode_start = min(episode_numbers)
         self.episode_end = max(episode_numbers)
         self.episode_range = f'{self.episode_start}-{self.episode_end}'
-        
+
         # If all episode have absolute numbers, get their range
         self.abs_start, self.abs_end = None, None
         if all(e.abs_number is not None for e in episode_infos):
             abs_numbers = tuple(map(lambda e: e.abs_number, episode_infos))
             self.abs_start = min(abs_numbers)
             self.abs_end = max(abs_numbers)
-        
+
         # Get the first episde in the set
         for episode in episodes:
             if episode.episode_info.episode_number == self.episode_start:
                 self._first_episode = episode
                 break
-                   
+
         # Set object attributes from first episode
         self.episode_info = deepcopy(self._first_episode.episode_info)
 
@@ -115,7 +115,7 @@ class MultiEpisode:
     def __getattr__(self, attribute):
         """
         Get an attribute from the first episode of this object.
-        
+
         Args:
             attribute:  The attribute to get from the first Episode.
         """
@@ -126,7 +126,7 @@ class MultiEpisode:
     def __setattr__(self, attribute, value) -> None:
         """
         Set an attribute of the first episode of this object.
-        
+
         Args:
             attribute: The attribute to set on the first Episode.
             value: The value to set on the attribute.
@@ -137,8 +137,8 @@ class MultiEpisode:
             object.__setattr__(self, attribute, value)
         else:
             setattr(self._first_episode, attribute, value)
-        
-        
+
+
     @property
     def characteristics(self) -> dict[str, Any]:
         """
@@ -149,7 +149,7 @@ class MultiEpisode:
             start/end indices of the range (in numeric and written forms), and
             the extra characteristics of the first episode.
         """
-        
+
         return self._first_episode.characteristics | {
             'season_number': self.season_number,
             'episode_start': self.episode_start,
@@ -159,7 +159,7 @@ class MultiEpisode:
             **self.word_set,
         }
 
-    
+
     @staticmethod
     def modify_format_string(episode_format_string: str) -> str:
         """
@@ -172,10 +172,10 @@ class MultiEpisode:
         'EPISODES {abs_start}-{abs_end}'
         >>> modify_format_string('E{episode_number}')
         'E{episode_start}-{episode_end}'
-        
+
         Args:
             episode_format_string: The episode format string to modify.
-        
+
         Returns:
             The modified format string.
         """
@@ -200,7 +200,7 @@ class MultiEpisode:
     def set_destination(self, destination: 'Path') -> None:
         """
         Set the destination for the card associated with these Episdoes.
-        
+
         Args:
             destination: The destination for the card that is created for these
                 episodes.

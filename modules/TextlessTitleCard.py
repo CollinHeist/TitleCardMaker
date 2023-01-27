@@ -38,7 +38,8 @@ class TextlessTitleCard(BaseCardType):
 
     def __init__(self, source: Path, output_file: Path,
                  blur: bool=False,
-                 grayscale: bool=False, **unused) -> None:
+                 grayscale: bool=False,
+                 **unused) -> None:
         """
         Construct a new instance of this card.
 
@@ -49,7 +50,7 @@ class TextlessTitleCard(BaseCardType):
             grayscale: Whether to make the source image grayscale.
             unused: Unused arguments.
         """
-        
+
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale)
 
@@ -63,10 +64,10 @@ class TextlessTitleCard(BaseCardType):
         """
         Determines whether the given font characteristics constitute a default
         or custom font.
-        
+
         Args:
             font: The Font being evaluated.
-        
+
         Returns:
             False, as fonts are not customizable with this card.
         """
@@ -80,11 +81,11 @@ class TextlessTitleCard(BaseCardType):
         """
         Determines whether the given attributes constitute custom or generic
         season titles.
-        
+
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
             episode_text_format: The episode text format in use.
-        
+
         Returns:
             False, as season titles are not customizable with this card.
         """
@@ -97,7 +98,7 @@ class TextlessTitleCard(BaseCardType):
         Make the necessary ImageMagick and system calls to create this object's
         defined title card.
         """
-        
+
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
             *self.resize_and_style,

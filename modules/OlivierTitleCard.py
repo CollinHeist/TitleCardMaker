@@ -1,8 +1,10 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
+
+SeriesExtra = Optional
 
 class OlivierTitleCard(BaseCardType):
     """
@@ -42,20 +44,20 @@ class OlivierTitleCard(BaseCardType):
         'source_file', 'output_file', 'title', 'hide_episode_text', 
         'episode_prefix', 'episode_text', 'font', 'title_color',
         'episode_text_color', 'font_size', 'stroke_width', 'kerning',
-        'vertical_shift', 'interline_spacing', 'blur', 'stroke_color',
+        'vertical_shift', 'interline_spacing', 'stroke_color',
     )
-    
+
     def __init__(self, source: Path, output_file: Path, title: str,
-                 episode_text: str, font: str, font_size: float,
-                 title_color: str,
+                 episode_text: str, font: str, title_color: str,
+                 font_size: float=1.0,
                  stroke_width: float=1.0,
                  vertical_shift: int=0,
                  interline_spacing: int=0,
                  kerning: float=1.0,
                  blur: bool=False,
                  grayscale: bool=False,
-                 episode_text_color: str=EPISODE_TEXT_COLOR,
-                 stroke_color: str='black',
+                 episode_text_color: Optional[str]=EPISODE_TEXT_COLOR,
+                 stroke_color: Optional[str]='black',
                  **unused) -> None:
         """
         Construct a new instance of this card.
@@ -66,19 +68,19 @@ class OlivierTitleCard(BaseCardType):
             title: Title text to add to created card.
             episode_text: Episode text to add to created card.
             font: Font name or path (as string) to use for episode title.
-            font_size: Scalar to apply to title font size.
             title_color: Color to use for title text.
-            stroke_width: Scalar to apply to black stroke of the title text.
-            vertical_shift: Pixel count to adjust the title vertical offset by.
             interline_spacing: Pixel count to adjust title interline spacing by.
             kerning: Scalar to apply to kerning of the title text.
+            font_size: Scalar to apply to title font size.
+            stroke_width: Scalar to apply to black stroke of the title text.
+            vertical_shift: Pixel count to adjust the title vertical offset by.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
-            episode_text_color: (Extra) Color to use for the episode text.
-            stroke_color: (Extra) Color to use for the back-stroke color.
+            episode_text_color: Color to use for the episode text.
+            stroke_color: Color to use for the back-stroke color.
             unused: Unused arguments.
         """
-        
+
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale)
 
@@ -89,7 +91,7 @@ class OlivierTitleCard(BaseCardType):
         # Store attributes of the text
         self.title = self.image_magick.escape_chars(title)
         self.hide_episode_text = len(episode_text) == 0
-        
+
         # Determine episode prefix, modify text to remove prefix
         self.episode_prefix = None
         if not self.hide_episode_text and ' ' in episode_text:
@@ -118,7 +120,7 @@ class OlivierTitleCard(BaseCardType):
     def title_text_command(self) -> list[str]:
         """
         Get the ImageMagick commands to add the episode title text to an image.
-        
+
         Returns:
             List of ImageMagick commands.
         """
@@ -264,11 +266,11 @@ class OlivierTitleCard(BaseCardType):
         """
         Determine whether the given attributes constitute custom or generic
         season titles.
-        
+
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
             episode_text_format: The episode text format in use.
-        
+
         Returns:
             True if the episode map or episode text format is custom, False
             otherwise.

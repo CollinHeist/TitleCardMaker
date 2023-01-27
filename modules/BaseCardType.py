@@ -38,7 +38,9 @@ class BaseCardType(ImageMaker):
     USES_UNIQUE_SOURCES = True
 
     """Standard size for all title cards"""
-    TITLE_CARD_SIZE = '3200x1800'
+    WIDTH = 3200
+    HEIGHT = 1800
+    TITLE_CARD_SIZE = f'{WIDTH}x{HEIGHT}'
 
     """Standard blur effect to apply to spoiler-free images"""
     BLUR_PROFILE = '0x60'
@@ -103,7 +105,7 @@ class BaseCardType(ImageMaker):
             grayscale: Whether to convert the source image to grayscale.
                 Defaults to False.
         """
-        
+
         # Initialize parent ImageMaker
         super().__init__()
 
@@ -114,7 +116,7 @@ class BaseCardType(ImageMaker):
         self.blur = blur
         self.grayscale = grayscale
 
-    
+
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
@@ -139,7 +141,7 @@ class BaseCardType(ImageMaker):
         """
 
         pass
-        
+
 
     @staticmethod
     @abstractmethod
@@ -147,7 +149,7 @@ class BaseCardType(ImageMaker):
         """
         Abstract method to determine whether the given font characteristics
         indicate the use of a custom font or not.
-        
+
         Returns:
             True if a custom font is indicated, False otherwise.
         """
@@ -160,18 +162,18 @@ class BaseCardType(ImageMaker):
         """
         Abstract method to determine whether the given season characteristics
         indicate the use of a custom season title or not.
-        
+
         Returns:
             True if a custom season title is indicated, False otherwise.
         """
         raise NotImplementedError(f'All CardType objects must implement this')
 
-    
+
     @property
     def resize_and_style(self) -> list[str]:
         """
         ImageMagick commands to resize and apply any style modifiers to an image
-        
+
         Returns:
             List of ImageMagick commands.
         """

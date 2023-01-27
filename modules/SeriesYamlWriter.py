@@ -47,10 +47,9 @@ class SeriesYamlWriter:
             self.volume_map = {std(source): std(tcm) 
                                for source, tcm in volume_map.items()}
         except Exception as e:
-            log.error(f'Invalid "volumes" - must all be valid paths')
-            log.debug(f'Error[{e}]')
+            log.exception(f'Invalid "volumes" - must all be valid paths', e)
             self.valid = False
-        
+
         # Validate/store sync mode
         if (sync_mode := sync_mode.lower()) in ('append', 'match'):
             self.sync_mode = sync_mode
@@ -152,7 +151,7 @@ class SeriesYamlWriter:
                     return True, yaml_key
             # Not present at all
             return False, key
-        
+
         # Go through each exclusion in the given list
         for exclusion in exclusions:
             # Validate this exclusion is a dictionary
@@ -162,7 +161,7 @@ class SeriesYamlWriter:
 
             # Get exclusion label and value
             label, value = list(exclusion.items())[0]
-            
+
             # If this exclusion is a YAML file, read and filter each series
             if (label := label.lower()) == 'yaml':
                 # Attempt to read file, error and skip if invalid
@@ -172,7 +171,7 @@ class SeriesYamlWriter:
                 except Exception as e:
                     log.error(f'Cannot read "{value}" as exclusion file - {e}')
                     continue
-                
+
                 # Delete each file's specified series
                 for series in read_yaml.get('series', {}).keys():
                     contains, key = yaml_contains(yaml, series)
@@ -238,7 +237,7 @@ class SeriesYamlWriter:
             log.error(f'Cannot sync to file "{self.file.resolve()}"')
             log.error(f'Error occured {e}')
             return None
-        
+
         # Write if file exists but is blank
         if existing_yaml is None or len(existing_yaml) == 0:
             self.__write(yaml)
@@ -368,7 +367,7 @@ class SeriesYamlWriter:
                list(exclusion.items())[0][1] for exclusion in exclusions
             if list(exclusion.items())[0][0] == 'tag'
         ]
-        
+
         # Get list of SeriesInfo and paths from Sonarr
         all_series = sonarr_interface.get_all_series(
             required_tags, excluded_tags, monitored_only, downloaded_only,
@@ -381,7 +380,7 @@ class SeriesYamlWriter:
         # Generate YAML to write
         series_yaml = {}
         for series_info, sonarr_path in all_series:
-            # Convert Sonarr path to TCM path
+            # Convert Sonarr path to TCM path, keep original for library detection
             original_path = sonarr_path
             sonarr_path = self.__convert_path(sonarr_path, media=True)
 
@@ -423,7 +422,7 @@ class SeriesYamlWriter:
 
         # Create end-YAML as combination of series and libraries
         yaml = {'libraries': libraries_yaml, 'series': series_yaml}
-        
+
         # Apply exclusions and return yaml
         self.__apply_exclusion(yaml, exclusions)
         return yaml

@@ -6,9 +6,10 @@ from modules.CleanPath import CleanPath
 from modules.Debug import log
 import modules.global_objects as global_objects
 
-# Built-in CardType classes
+# Built-in BaseCardType classes
 from modules.AnimeTitleCard import AnimeTitleCard
 from modules.CutoutTitleCard import CutoutTitleCard
+from modules.FadeTitleCard import FadeTitleCard
 from modules.FrameTitleCard import FrameTitleCard
 from modules.LandscapeTitleCard import LandscapeTitleCard
 from modules.LogoTitleCard import LogoTitleCard
@@ -18,6 +19,7 @@ from modules.RomanNumeralTitleCard import RomanNumeralTitleCard
 from modules.StandardTitleCard import StandardTitleCard
 from modules.StarWarsTitleCard import StarWarsTitleCard
 from modules.TextlessTitleCard import TextlessTitleCard
+from modules.TintedGlassTitleCard import TintedGlassTitleCard
 
 class TitleCard:
     """
@@ -43,6 +45,7 @@ class TitleCard:
     CARD_TYPES = {
         'anime': AnimeTitleCard,
         'cutout': CutoutTitleCard,
+        'fade': FadeTitleCard,
         'frame': FrameTitleCard,
         'generic': StandardTitleCard,
         'gundam': PosterTitleCard,
@@ -57,20 +60,23 @@ class TitleCard:
         'reality tv': LogoTitleCard,
         'roman': RomanNumeralTitleCard,
         'roman numeral': RomanNumeralTitleCard,
+        'sherlock': TintedGlassTitleCard, 
         'standard': StandardTitleCard,
         'star wars': StarWarsTitleCard,
         'textless': TextlessTitleCard,
+        'tinted glass': TintedGlassTitleCard,
+        '4x3': FadeTitleCard,
     }
 
     __slots__ = ('episode', 'profile', 'converted_title', 'maker', 'file')
-    
+
 
     def __init__(self, episode: 'Episode', profile: 'Profile',
                  title_characteristics: dict[str, Any],
                  **extra_characteristics: dict[str, Any]) -> None:
         """
         Constructs a new instance of this class.
-        
+
         Args:
             episode: The episode whose TitleCard this corresponds to.
             profile: The profile to apply to the creation of this title card.
@@ -88,7 +94,7 @@ class TitleCard:
         self.converted_title = episode.episode_info.title.apply_profile(
             profile, **title_characteristics
         )   
-        
+
         # Initialize this episode's CardType instance
         args = {
             'source': episode.source,
@@ -103,35 +109,40 @@ class TitleCard:
         } | profile.font.get_attributes() \
           | self.episode.episode_info.indices \
           | extra_characteristics
-        self.maker = self.episode.card_class(**args)
-        
+
+        try:
+            self.maker = self.episode.card_class(**args)
+        except Exception as e:
+            log.exception(f'Cannot initialize Card for {self.episode} - {e}', e)
+            self.maker = None
+
         # File associated with this card is the episode's destination
         self.file = episode.destination
 
-        
+
     @staticmethod
     def get_output_filename(format_string: str, series_info: 'SeriesInfo', 
                             episode_info: 'EpisodeInfo',
                             media_directory: Path) -> Path:
         """
         Get the output filename for a title card described by the given values.
-        
+
         Args:
             format_string: Format string that specifies how to construct the
                 filename.
             series_info: SeriesInfo for this entry.
             episode_info: EpisodeInfo to get filename of.
             media_directory: Top-level media directory.
-        
+
         Returns:
             Path for the full title card destination.
         """
-        
+
         # Get the season folder for this entry's season
         season_folder = global_objects.pp.get_season_folder(
             episode_info.season_number
         )
-        
+
         # Get filename from the given format string, with illegals removed
         abs_number = episode_info.abs_number
         filename = CleanPath.sanitize_name(
@@ -145,10 +156,10 @@ class TitleCard:
                 abs_number=abs_number if abs_number is not None else 0,
             )
         )
-        
+
         # Add card extension
         filename += global_objects.pp.card_extension
-        
+
         return media_directory / season_folder / filename
 
 
@@ -159,7 +170,7 @@ class TitleCard:
         """
         Get the output filename for a title card described by the given values,
         and that represents a range of Episodes (not just one).
-        
+
         Args:
             format_string: Format string that specifies how to construct the
                 filename.
@@ -216,7 +227,7 @@ class TitleCard:
 
         # Add card extension
         filename += global_objects.pp.card_extension
-        
+
         return media_directory / season_folder / filename
 
 
@@ -224,14 +235,14 @@ class TitleCard:
     def validate_card_format_string(format_string: str) -> bool:
         """
         Return whether the given card filename format string is valid or not.
-        
+
         Args:
             format_string:  Format string being validated.
-        
+
         Returns:
             True if the given string can be formatted, False otherwise.
         """
-        
+
         try:
             # Attempt to format using all the standard keys
             format_string.format(
@@ -254,20 +265,24 @@ class TitleCard:
             True if a title card was created, False otherwise.
         """
 
+        # If card is invalid, exit
+        if self.maker is None or not self.maker.valid:
+            return False
+
         # If the card already exists, exit
         if self.file.exists():
             return False
 
-        # If card is invalid, exit
-        if not self.maker.valid:
-            return False
-
         # Create parent folders if necessary for this card
         self.file.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Create card
-        self.maker.create()
-        
+        try:
+            self.maker.create()
+        except Exception as e:
+            log.exception(f'Error encountered while creating card for '
+                          f'{self.episode} - {e}', e)
+
         # Return whether card creation was successful or not
         if self.file.exists():
             log.debug(f'Created card "{self.file.resolve()}"')
@@ -276,5 +291,5 @@ class TitleCard:
         # Card doesn't exist, log commands to debug
         log.debug(f'Could not create card "{self.file.resolve()}"')
         self.maker.image_magick.print_command_history()
-        
+
         return False

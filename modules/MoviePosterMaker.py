@@ -78,7 +78,7 @@ class MoviePosterMaker(ImageMaker):
         # If gradient is omitted, return empty command
         if self.omit_gradient:
             return []
-        
+
         return [
             f'"{self.__GRADIENT.resolve()}"',
             f'-compose Multiply',
@@ -119,7 +119,7 @@ class MoviePosterMaker(ImageMaker):
         """
 
         title_font_size = 190 * self.font_size
-        
+
         return [
             f'-pointsize {title_font_size}',
             f'-interline-spacing -44.5',
@@ -145,7 +145,7 @@ class MoviePosterMaker(ImageMaker):
             f'-kerning 0.5',
         ]
 
-    
+
     @property
     def logo_command(self) -> list[str]:
         """
@@ -224,7 +224,7 @@ class MoviePosterMaker(ImageMaker):
             log.error(f'Cannot create movie poster - "{self.logo.resolve()}" '
                       f'does not exist.')
             return None
-        
+
         # Command to create collection poster
         command = ' '.join([
             f'convert',

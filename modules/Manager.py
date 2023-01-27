@@ -19,7 +19,7 @@ class Manager:
 
     """Default execution mode for Manager.run()"""
     DEFAULT_EXECUTION_MODE = 'serial'
-    
+
     """Valid execution modes for Manager.run()"""
     VALID_EXECUTION_MODES = ('serial', 'batch')
 
@@ -43,7 +43,7 @@ class Manager:
             TautulliInterface(
                 **self.preferences.tautulli_interface_args
             ).integrate()
-            
+
         # Optionally assign PlexInterface
         self.plex_interface = None
         if self.preferences.use_plex:
@@ -116,7 +116,7 @@ class Manager:
             for writer, update_args in zip(self.preferences.plex_yaml_writers,
                                         self.preferences.plex_yaml_update_args):
                 writer.update_from_plex(self.plex_interface, **update_args)
-        
+
 
     @notify('Starting to read series YAML files..')
     def create_shows(self) -> None:
@@ -132,9 +132,9 @@ class Manager:
             if not show.valid:
                 log.warning(f'Skipping series {show}')
                 continue
-                
+
             self.shows.append(show)
-            
+
             # If archives are disabled globally, or for this show - skip 
             if not self.preferences.create_archive or not show.archive:
                 continue
@@ -283,7 +283,7 @@ class Manager:
                          desc='Creating season posters',**TQDM_KWARGS):
             show.create_season_posters()
 
-    
+
     @notify('Starting to update Plex..')
     def update_plex(self) -> None:
         """
@@ -340,11 +340,11 @@ class Manager:
         """
         Run the Manager. If serial execution is not indicated, then sync is run
         and Show/ShowArchive objects are created.
-        
+
         Args:
             serial: (Keyword only) Whether execution is serial.
         """
-        
+
         # If serial, don't update series files or create shows
         if not serial:
             self.sync_series_files()
@@ -403,28 +403,27 @@ class Manager:
         Remake the title cards associated with the given list of rating keys.
         These keys are used to identify their corresponding episodes within
         Plex.
-        
+
         Args:
             rating_keys: List of Plex rating keys corresponding to Episodes to
                 update the cards of.
         """
-        
+
         # Exit if Plex is not enabled
         if not self.preferences.use_plex:
-            log.error(f'Cannot remake card if Plex is not enabled')
+            log.error(f'Tautulli integration requires Plex')
             return None
 
         # Get details for each rating key from Plex
         entry_list = []
         for key in rating_keys:
             if len(details := self.plex_interface.get_episode_details(key)) ==0:
-                log.error(f'Cannot remake cards, no episodes found')
+                log.error(f'Rating key {key} has no associated episodes')
             else:
-                log.debug(f'{len(details)} items associated with rating key {key}')
+                log.debug(f'Rating key {key} -> {len(details)} item(s)')
                 entry_list += details
 
         # Go through every series in all series YAML files
-        found = set()
         for show in self.preferences.iterate_series_files():
             # If no more entries, exit
             if len(entry_list) == 0:
@@ -449,12 +448,10 @@ class Manager:
                 del entry_list[index]
 
         # Warn for all entries not found
-        for index, (series_info, episode_info, library_name) \
-            in enumerate(entry_list):
-            if index not in found:
-                log.warning(f'Cannot update card for "{series_info}" '
-                            f'{episode_info} within library "{library_name}" - '
-                            f'no matching YAML entry was found')
+        for series_info, episode_info, library_name in entry_list:
+            log.warning(f'Cannot update card for "{series_info}" {episode_info}'
+                        f' within library "{library_name}" - no matching YAML '
+                        f'entry was found')
 
 
     def report_missing(self, file: 'Path') -> None:

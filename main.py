@@ -142,7 +142,7 @@ if args.no_color:
     apply_no_color_formatter()
 
 # Log parsed arguments
-log.debug('Runtime arguments:')
+log.debug('Runtime arguments  :')
 max_width = max(map(len, vars(args).keys()))
 for arg, value in vars(args).items():
     log.debug(f'{arg:>{max_width}} : {value}')

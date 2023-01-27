@@ -54,7 +54,7 @@ class PreferenceParser(YamlReader):
         Constructs a new instance of this object. This reads the given file,
         errors and exits if any required options are missing, and then parses
         the preferences into object attributes.
-        
+
         Args:
             file: The file to parse for preferences.
             is_docker: Whether executing within a Docker container.
@@ -64,7 +64,7 @@ class PreferenceParser(YamlReader):
         super().__init__(log_function=log.critical)
         self.version = self.VERSION_FILE.read_text()
         self.is_docker = is_docker
-        
+
         # Store and read file
         self.file = file
         self.read_file()
@@ -83,7 +83,7 @@ class PreferenceParser(YamlReader):
                          f'attribute')
             exit(1)
         self.source_directory = CleanPath(value).sanitize()
-        
+
         # Setup default values that can be overwritten by YAML
         self.series_files = []
         self.execution_mode = Manager.DEFAULT_EXECUTION_MODE
@@ -133,7 +133,7 @@ class PreferenceParser(YamlReader):
         self.tautulli_script_timeout = TautulliInterface.DEFAULT_SCRIPT_TIMEOUT
         self.imagemagick_container = None
         self.imagemagick_timeout = ImageMagickInterface.COMMAND_TIMEOUT_SECONDS
-        
+
         # Modify object attributes based off YAML, updating validiry
         self.__parse_yaml()
         self.__parse_sync()
@@ -179,7 +179,7 @@ class PreferenceParser(YamlReader):
         Parse the YAML sync sections of this preference file. This updates the
         lists of SeriesYamlWriter objects for Plex and Sonarr.
         """
-        
+
         # Inner function to create and add SeriesYamlWriter objects (and)
         # their update args dictionaries to this object's lists
         def append_writer_and_args(sync_type, interface_id, sync, static):
@@ -412,7 +412,7 @@ class PreferenceParser(YamlReader):
         if (value := self._get('archive', 'summary', 'ignore_specials',
                                type_=bool)) is not None:
             self.summary_ignore_specials = value
-            
+
 
     def __parse_yaml_plex(self) -> None:
         """
@@ -613,7 +613,7 @@ class PreferenceParser(YamlReader):
             log.error(f'Invalid library specification for series file '
                       f'"{file.resolve()}"')
             return False
-        
+
         # Validate all given libraries
         for name, spec in library_yaml.items():
             # All libraries must be dictionaries
@@ -667,7 +667,7 @@ class PreferenceParser(YamlReader):
 
         return True
 
-    
+
     def __apply_template(self, templates: dict[str, Template],
                          series_yaml: dict[str, Any], series_name: str) -> bool:
         """
@@ -679,7 +679,7 @@ class PreferenceParser(YamlReader):
             templates: Dictionary of Template objects to potentially apply.
             series_yaml: The YAML of the series to modify.
             series_name: The name of the series being modified.
-        
+
         Returns:
             True if the given series contained all the required template
             variables for application, False if it did not.
@@ -738,11 +738,11 @@ class PreferenceParser(YamlReader):
         Returns:
             Modified YAML, None if the modification failed.
         """
-        
+
         # Apply template to series, stop if invalid
         if not self.__apply_template(templates, show_yaml, show_name):
             return None
-        
+
         # Parse library from map
         if (len(library_map) > 0
             and (library_name := show_yaml.get('library')) is not None):
@@ -760,7 +760,7 @@ class PreferenceParser(YamlReader):
                     'name': library_yaml.get('plex_name', library_name),
                     'path': CleanPath(library_yaml.get('path')).sanitize(),
                 }
-                
+
         # Parse font from map (if given font is just an identifier)
         if (len(font_map) > 0
             and (font_name := show_yaml.get('font')) is not None
@@ -776,10 +776,10 @@ class PreferenceParser(YamlReader):
             else:
                 show_yaml['font'] = {}
                 Template.recurse_priority_union(show_yaml['font'], font_yaml)
-        
+
         return show_yaml
-    
-    
+
+
     def read_file(self) -> None:
         """
         Read this associated preference file and store in `_base_yaml` attribute
@@ -872,18 +872,18 @@ class PreferenceParser(YamlReader):
 
                 # Apply template and merge libraries+font maps
                 show_yaml = self.__finalize_show_yaml(
-                    show_name,
+                    file_yaml['series'][show_name].get('name', show_name),
                     file_yaml['series'][show_name],
                     templates,
                     library_map,
                     font_map,
                 )
-                
+
                 # If returned YAML is None (invalid) skip series
                 if show_yaml is None:
                     log.error(f'Skipping "{show_name}" from "{file_}"')
                     continue
-                
+
                 yield Show(show_name, show_yaml, self.source_directory, self)
 
                 # Get all specified variations for this show
@@ -909,18 +909,18 @@ class PreferenceParser(YamlReader):
 
                     # Get priority union of variation and base series
                     Template.recurse_priority_union(variation, show_yaml)
-                    
+
                     # Remove any library-specific details
                     variation.pop('media_directory', None)
                     variation.pop('library', None)
-                    
+
                     yield Show(show_name, variation, self.source_directory,self)
 
-    
+
     @property
     def use_sonarr(self) -> bool:
         return len(self.sonarr_kwargs) > 0
-    
+
     @property
     def check_tmdb(self) -> bool:
         return 'tmdb' in self.image_source_priority
@@ -972,7 +972,7 @@ class PreferenceParser(YamlReader):
             'api_key': self.tmdb_api_key,
         }
 
-                
+
     def meets_minimum_resolution(self, width: int, height: int) -> bool:
         """
         Determine whether the given dimensions meet the minimum resolution
@@ -981,7 +981,7 @@ class PreferenceParser(YamlReader):
         Args:
             width: The width of the image.
             height: The height of the image.
-        
+
         Returns:
             True if the dimensions are suitable, False otherwise.
         """
@@ -997,10 +997,10 @@ class PreferenceParser(YamlReader):
         Get the season folder name for the given season number, padding the
         season number if indicated by the preference file, and returning an
         empty string if season folders are hidden.
-        
+
         Args:
             season_number: The season number to get the folder name of.
-        
+
         Returns:
             The season folder name. Empty string if folders are hidden,
             'Specials' for season 0, and either a zero-padded or not zero-

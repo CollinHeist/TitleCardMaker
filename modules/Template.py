@@ -15,14 +15,14 @@ class Template:
 
     """Maximum number of template application iterations"""
     MAX_TEMPLATE_DEPTH = 10
-    
+
 
     def __init__(self, name: str, template: dict[str: str]) -> None:
         """
         Construct a new Template object with the given name, and with the given
         template dictionary. Keys of the form <<{key}>> are search for through
         this template.
-        
+
         Args:
             name: The template name/identifier. For logging only.
             template: The template YAML to implement.
@@ -58,11 +58,11 @@ class Template:
         Identify the required template keys to use this template. This looks for
         all unique values like "<<{key}>>". This is a recursive function, and
         searches through all sub-dictionaries of template.
-        
+
         Args:
             template: The template dictionary to search through.
             keys: The existing keys identified, only used for recursion.
-        
+
         Returns:
             Set of keys required by the given template.
         """
@@ -94,7 +94,7 @@ class Template:
         >>> __apply_value_to_key(temp, 'year', 1234)
         >>> temp
         {'year': 1234, 'b': 'b1': False, 'b2': 'Hey 1234'}
-        
+
         Args:
             template: The dictionary to modify any instances of <<{key}>>
                 within. Modified in-place.
@@ -121,7 +121,7 @@ class Template:
                     elif isinstance(sub_value, dict):
                         self.__apply_value_to_key(template[t_key][index], key,
                                                   value)
-        
+
 
     @staticmethod
     def recurse_priority_union(base_yaml: dict,
@@ -137,7 +137,7 @@ class Template:
         >>> recurse_priority_union(base_yaml, t_yaml)
         >>> base_yaml
         {'a': 123, 'b': 234, 'c': {'c1': False, 'c2': True}}
-        
+
         Args:
             base_yaml: The base - i.e. higher priority - YAML that forms the
                 basis of the union of these dictionaries. Modified in-place.
@@ -164,7 +164,7 @@ class Template:
         Apply this Template object to the given series YAML, modifying it
         to include the templated values. This function assumes that the given
         series YAML has a template attribute, and that it applies to this object
-        
+
         Args:
             series_name: The name of the series being modified.
             series_yaml: The series YAML to modify. Must have 'template' key.
@@ -174,7 +174,7 @@ class Template:
             True if the given series contained all the required template
             variables for application, False if it did not.
         """
-        
+
         # If not all required template keys are specified, warn and exit
         given_keys = set(series_yaml['template'].keys())
         default_keys = set(self.defaults.keys())
@@ -192,15 +192,15 @@ class Template:
             # Take given template values, fill in template object
             for key, value in series_yaml['template'].items():
                 self.__apply_value_to_key(modified_template, key, value)
-            
+
             # Fill any remaining template keys with default values
             for key, value in self.defaults.items():
                 self.__apply_value_to_key(modified_template, key, value)
-            
+
             # Identify any remaining keys after application
             remaining_keys=self.__identify_template_keys(modified_template,set())
             count += 1
-            
+
         # Log and exit if failed to apply
         if count >= self.MAX_TEMPLATE_DEPTH:
             log.warning(f'Unable to apply template "{self.name}" to '

@@ -41,14 +41,14 @@ class Title:
         """
         Constructs a new instance of a Title from either a full, unsplit title,
         or a list of title lines.
-        
+
         Args:
             title: Title for this object.
             title: str if the full title (from any source), or a list if parsed
                 from YAML
             original_title: Original title for matching.
         """
-        
+
         # If given as str, then title is not manually specified
         if isinstance(title, list):
             # If title was given line-by-line, join with spaces
@@ -93,7 +93,7 @@ class Title:
         """
         Gets the partless title for this object. This removes parenthesized
         digits, and title with "part" in them.
-        
+
         Returns:
             The partless title for this object.
         """
@@ -114,14 +114,14 @@ class Title:
         Split this title's text into multiple lines. If the title cannot fit
         into the given parameters, line width might not be respected, but the
         maximum number of lines will be.
-        
+
         Args:
             max_line_width: Maximum line width to base splitting on. 
             max_line_count: The maximum line count to split the title into.
             top_heavy: Whether to split the title in a top-heavy style. This
                 means the top lines will likely be longer than the bottom ones.
                 False for bottom-heavy splitting.
-        
+
         Returns:
             List of split title text to be read top to bottom.
         """
@@ -169,7 +169,7 @@ class Title:
                             break
 
                 all_lines += [top, bottom]
-            
+
             # Strip every line, delete blank entries
             all_lines = list(filter(lambda l: len(l), map(str.strip,all_lines)))
 
@@ -209,7 +209,7 @@ class Title:
         if len(all_lines) > max_line_count:
             all_lines[-2] = f'{all_lines[-2]} {all_lines[-1]}'
             del all_lines[-1]
-            
+
         return all_lines
 
 
@@ -220,10 +220,10 @@ class Title:
         manually specified title lines, then the profile is applied to each
         line, otherwise it's applied to the full title. Then newlines are used
         to join each line
-        
+
         Args:
             profile: Profile object to convert title with.
-        
+
         Returns:
             This title with the given profile and splitting details applied.
         """
@@ -246,10 +246,10 @@ class Title:
     def get_matching_title(text: str) -> str:
         """
         Remove all non A-Z characters from the given title.
-        
+
         Args:
             text: The title to strip of special characters.
-        
+
         Returns:
             The input text with all non A-Z characters removed.
         """
@@ -260,10 +260,10 @@ class Title:
     def matches(self, *titles: tuple[str]) -> bool:
         """
         Get whether any of the given titles match this object.
-        
+
         Args:
             titles: The titles to check.
-        
+
         Returns:
             True if any of the given titles match this series, False otherwise.
         """
@@ -278,5 +278,5 @@ class Title:
         if self.__original_title is not None:
             return any(title in (self.__original_title, self.match_title)
                        for title in matching_titles)
-        
+
         return any(title == self.match_title for title in matching_titles)

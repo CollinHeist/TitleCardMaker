@@ -27,7 +27,7 @@ class Show(YamlReader):
     from the global `PreferenceParser` object, but manually specified attributes
     within the Show's YAML take precedence over the global values.
     """
-    
+
     """Filename to the backdrop for a series"""
     BACKDROP_FILENAME = 'backdrop.jpg'
 
@@ -63,20 +63,20 @@ class Show(YamlReader):
 
         # Initialize parent YamlReader object
         super().__init__(yaml_dict, log_function=log.error)
-        
+
         # Get global objects
         self.preferences = preferences
         self.info_set = global_objects.info_set
-        
+
         # Set this show's SeriesInfo object with blank year to start
         self.series_info = SeriesInfo(name, 0)
         try:
             self.series_info = SeriesInfo(name, self._get('year', type_=int))
-        except ValueError:
+        except Exception:
             log.error(f'Series "{name}" is missing the required "year"')
             self.valid = False
             return None
-            
+
         # Setup default values that may be overwritten by YAML
         self.card_filename_format = preferences.card_filename_format
         self.card_class = preferences.card_class
@@ -109,7 +109,7 @@ class Show(YamlReader):
                 self._get('unwatched_style', type_=str)
             )
         self.valid &= self.style_set.valid
-        
+
         # Construct EpisodeMap on seasons/episode ranges specification
         self.__episode_map = EpisodeMap(
             self._get('seasons', type_=dict),
@@ -122,7 +122,7 @@ class Show(YamlReader):
             self._base_yaml.get('font', {}), self.card_class, self.series_info,
         )
         self.valid &= self.font.valid
-        
+
         # Update derived (and not adjustable) attributes
         self.source_directory = source_directory / self.series_info.legal_path
         self.logo = self.source_directory / 'logo.png'
@@ -136,6 +136,7 @@ class Show(YamlReader):
 
         # Create the profile
         self.profile = Profile(
+            self.series_info,
             self.font,
             self.hide_seasons,
             self.__episode_map,
@@ -149,14 +150,14 @@ class Show(YamlReader):
             self.media_directory,
             self._get('season_posters'),
         )
-        
+
         # Attributes to be filled/modified later
         self.episodes = {}
         self.plex_interface = None
         self.sonarr_interface = None
         self.tmdb_interface = None
         self.__is_archive = False
-        
+
 
     def __str__(self) -> str:
         """Returns a string representation of the object."""
@@ -339,7 +340,7 @@ class Show(YamlReader):
                     if interface.has_series(self.series_info):
                         self.sonarr_interface = interface
                         break
-                    
+
             # If no interface determined, error
             if self.sonarr_interface is None:
                 log.warning(f'Cannot find {self} on any Sonarr servers')
@@ -368,10 +369,10 @@ class Show(YamlReader):
     def __get_destination(self, episode_info: 'EpisodeInfo') -> Path:
         """
         Get the destination filename for the given entry of a datafile.
-        
+
         Args:
             episode_info: EpisodeInfo for this episode.
-        
+
         Returns:
             Path for the full title card destination, and None if this show has
             no media directory.
@@ -380,7 +381,7 @@ class Show(YamlReader):
         # If this entry should not be written to a media directory, return 
         if not self.media_directory:
             return None
-        
+
         return TitleCard.get_output_filename(
             self.card_filename_format,
             self.series_info,
@@ -451,14 +452,14 @@ class Show(YamlReader):
                     existing_ep.delete_card(reason='updating title')
                     return True
                 return False
-            
+
             return True
-        
+
         # Apply filter formula to list of Episodes from data source
         new_episodes = tuple(filter(include_episode, all_episodes))
         if len(new_episodes) == 0:
             return None
-        
+
         # If any new episodes remain, add to datafile and create Episode object
         self.file_interface.add_many_entries(new_episodes)
         self.read_source()
@@ -518,7 +519,7 @@ class Show(YamlReader):
             'plex':   [load_plex, load_sonarr, load_tmdb],
             'tmdb':   [load_tmdb, load_plex, load_sonarr],
         }
-        
+
         # Go through each interface and load ID's from it
         for interface_function in interface_orders[self.episode_data_source]:
             interface_function(infos)
@@ -602,8 +603,7 @@ class Show(YamlReader):
 
                 # Convert temporary SVG to PNG at logo filepath
                 self.card_class.convert_svg_to_png(
-                    self.card_class.TEMPORARY_SVG_FILE,
-                    self.logo,
+                    self.card_class.TEMPORARY_SVG_FILE, self.logo,
                 )
                 log.debug(f'Converted logo for {self} from .svg to .png')
             else:
@@ -617,11 +617,11 @@ class Show(YamlReader):
         """
         Modify this series' Episode source images based on their watch statuses,
         and how that style applies to this show's un/watched styles.
-        
+
         Args:
             select_only: Optional Episode object. If provided, only this
                 episode's style is applied.
-        
+
         Returns:
             Whether a backdrop should be downloaded or not.
         """
@@ -639,7 +639,7 @@ class Show(YamlReader):
             episode_map = self.episodes
             if select_only:
                 episode_map = {select_only.episode_info.key: select_only}
-            
+
             self.plex_interface.update_watched_statuses(
                 self.library_name, self.series_info, episode_map, self.style_set
             )
@@ -650,7 +650,7 @@ class Show(YamlReader):
             # If only selecting a specific episode, skip others
             if select_only is not None and episode is not select_only:
                 continue
-            
+
             # Get the manually specified source from the episode map
             manual_source = self.__episode_map.get_source(episode.episode_info)
             applies_to = self.__episode_map.get_applies_to(episode.episode_info)
@@ -664,7 +664,7 @@ class Show(YamlReader):
             if (applies_to == 'all' or 
                 (applies_to == 'unwatched' and not episode.watched)):
                 episode.update_source(manual_source, downloadable=False)
-            
+
             # Blur if indicated by style
             if self.style_set.effective_style_is_blur(episode.watched):
                 episode.blur = True
@@ -674,15 +674,15 @@ class Show(YamlReader):
                 episode.grayscale = True
 
         return download_backdrop
-            
-            
+
+
     def select_source_images(self, select_only: Episode=None) -> None:
         """
         Modify this series' Episode source images based on their watch statuses,
         and how that style applies to this show's un/watched styles. If a
         backdrop is required, and TMDb is enabled, then one is downloaded if it
         does not exist.
-        
+
         Args:
             select_only: Optional Episode object. If provided, only this
                 episode's source is selected.
@@ -718,7 +718,7 @@ class Show(YamlReader):
             # If only selecting a specific episode, skip others
             if select_only is not None and episode is not select_only:
                 continue
-            
+
             # Skip this episode if not downloadable, or source exists
             if not episode.downloadable_source or episode.source.exists():
                 continue
@@ -820,73 +820,29 @@ class Show(YamlReader):
                         self.media_directory,
                     )
                     multi.set_destination(destination)
-                
+
                 # Add MultiEpisode to list
                 multiparts.append(multi)
                 matched.update(set(matching_episodes))
-        
+
         # Add all MultiEpisode objects to this show's episode dictionary
         for mp in multiparts:
             self.episodes[f'0{mp.season_number}-{mp.episode_start}'] = mp
 
 
-    def remake_card(self, episode_info: 'EpisodeInfo') -> None:
-        """
-        Remake the card associated with the given EpisodeInfo, updating the
-        metadata within Plex.
-        
-        Args:
-            episode_info: EpisodeInfo corresponding to the Episode being
-                updated. Matched by key.
-        """
-
-        # If no episode of the given index (key) exists, nothing to remake, exit
-        if (episode := self.episodes.get(episode_info.key)) is None:
-            log.error(f'Episode {episode_info} not found in datafile')
-            return None
-
-        # Select proper source for this episode
-        self.select_source_images(select_only=episode)
-
-        # Exit if this card needs a source and it DNE
-        if self.card_class.USES_UNIQUE_SOURCES and not episode.source.exists():
-            log.error(f'Cannot remake card {episode.destination.resolve()} - no'
-                      f'source image')
-            return None
-
-        # If card wasn't deleted, means watch status didn't change, exit
-        if episode.destination.exists():
-            log.debug(f'Not remaking card {episode.destination.resolve()}')
-            return None
-
-        # Create this card
-        TitleCard(
-            episode,
-            self.profile,
-            self.card_class.TITLE_CHARACTERISTICS,
-            **self.extras,
-            **episode.extra_characteristics,
-        ).create()
-
-        # Update Plex
-        self.plex_interface.set_title_cards_for_series(
-            self.library_name, self.series_info, {episode_info.key: episode}
-        )
-
-
     def create_missing_title_cards(self) ->None:
         """Create any missing title cards for each episode of this show."""
-        
+
         # If the media directory is unspecified, exit
         if self.media_directory is None:
-            return False
+            return None
 
         # See if these cards need to be deleted/updated for new config
         if global_objects.show_record_keeper.is_updated(self):
             log.info(f'Detected new YAML for {self} - deleting old cards')
             for episode in self.episodes.values():
                 episode.delete_card(reason='new config')
-        
+
         # Go through each episode for this show
         for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
             # Skip episodes without a destination or that already exist
@@ -920,7 +876,7 @@ class Show(YamlReader):
 
             # Source exists, create the title card
             title_card.create()
-        
+
         # Update record keeeper
         global_objects.show_record_keeper.add_config(self)
 

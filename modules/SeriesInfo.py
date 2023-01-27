@@ -30,7 +30,7 @@ class SeriesInfo:
             and (group := match(self.__FULL_NAME_REGEX,self.name)) is not None):
             self.name = group.group(1)
             self.year = int(group.group(2))
-        
+
         # If year isn't specified still, exit
         if self.year is None:
             raise ValueError(f'Year not provided')
@@ -47,10 +47,19 @@ class SeriesInfo:
         return self.full_name
 
 
+    @property
+    def characteristics(self) -> dict[str, str]:
+        
+        return {
+            'series_name': self.name,
+            'series_year': self.year,
+        }
+
+
     def update_name(self, name: str) -> None:
         """
         Update all names for this series.
-        
+
         Args:
             name: The new name of the series info.
         """
@@ -64,7 +73,7 @@ class SeriesInfo:
 
         # Set full name
         self.full_name = f'{self.name} ({self.year})'
-            
+
         # Set match names
         self.match_name = self.get_matching_title(self.name)
         self.full_match_name = self.get_matching_title(self.full_name)
@@ -76,10 +85,10 @@ class SeriesInfo:
     def has_id(self, id_: str) -> bool:
         """
         Determine whether this object has defined the given ID.
-        
+
         Args:
             id_: ID being checked
-        
+
         Returns:
             True if the given ID is defined (i.e. not None) for this object.
             False otherwise.
@@ -91,10 +100,10 @@ class SeriesInfo:
     def has_ids(self, *ids: tuple[str]) -> bool:
         """
         Determine whether this object has defined all the given ID's.
-        
+
         Args:
             ids: Any ID's being checked for.
-        
+
         Returns:
             True if all the given ID's are defined (i.e. not None) for this
             object. False otherwise.
@@ -106,11 +115,11 @@ class SeriesInfo:
     def set_sonarr_id(self, sonarr_id: 'int | None') -> None:
         """
         Set the Sonarr ID for this series.
-        
+
         Args:
             sonarr_id: The Sonarr ID used for this series.
         """
-        
+
         if self.sonarr_id is None and sonarr_id is not None:
             self.sonarr_id = int(sonarr_id)
 
@@ -118,7 +127,7 @@ class SeriesInfo:
     def set_tvdb_id(self, tvdb_id: 'int | None') -> None:
         """
         Set the TVDb ID for this series.
-        
+
         Args:
             tvdb_id: The TVDb ID for this series.
         """
@@ -130,11 +139,11 @@ class SeriesInfo:
     def set_imdb_id(self, imdb_id: 'str | None') -> None:
         """
         Set the IMDb ID for this series.
-        
+
         Args:
             imdb_id: The IMDb ID for this series.
         """
-        
+
         if self.imdb_id is None and imdb_id is not None:
             self.imdb_id = str(imdb_id)
 
@@ -142,11 +151,11 @@ class SeriesInfo:
     def set_tmdb_id(self, tmdb_id: 'int | None') -> None:
         """
         Set the TMDb ID for this series.
-        
+
         Args:
             tmdb_id: The TMDb ID for this series.
         """
-        
+
         if self.tmdb_id is None and tmdb_id is not None:
             self.tmdb_id = int(tmdb_id)
 
@@ -155,10 +164,10 @@ class SeriesInfo:
     def get_matching_title(text: str) -> str:
         """
         Remove all non A-Z characters from the given title.
-        
+
         Args:
             text: The title to strip of special characters.
-        
+
         Returns:
             The input `text` with all non A-Z characters removed.
         """
@@ -169,10 +178,10 @@ class SeriesInfo:
     def matches(self, *names: tuple[str]) -> bool:
         """
         Get whether any of the given names match this Series.
-        
+
         Args:
             names: The names to check
-        
+
         Returns:
             True if any of the given names match this series, False otherwise.
         """

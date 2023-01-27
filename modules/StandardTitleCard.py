@@ -1,8 +1,10 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
+
+SeriesExtra = Optional
 
 class StandardTitleCard(BaseCardType):
     """
@@ -11,7 +13,7 @@ class StandardTitleCard(BaseCardType):
     customization of every aspect of the card, but does not use any arbitrary
     data.
     """
-    
+
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = Path(__file__).parent / 'ref'
 
@@ -50,17 +52,18 @@ class StandardTitleCard(BaseCardType):
     )
 
     def __init__(self, source: Path, output_file: Path, title: str,
-                 season_text: str, episode_text: str, font: str,
-                 font_size: float, title_color: str, hide_season: bool,
-                 vertical_shift: int=0,
+                 season_text: str, episode_text: str, hide_season: bool,
+                 font: str, title_color: str,
+                 font_size: float=1.0,
                  interline_spacing: int=0,
                  kerning: float=1.0,
                  stroke_width: float=1.0,
+                 vertical_shift: int=0,
                  blur: bool=False,
                  grayscale: bool=False,
-                 separator: str='•',
-                 stroke_color: str='black',
-                 omit_gradient: bool=False,
+                 separator: Optional[str]='•',
+                 stroke_color: Optional[str]='black',
+                 omit_gradient: Optional[bool]=False,
                  **unused) -> None:
         """
         Construct a new instance of this card.
@@ -81,13 +84,12 @@ class StandardTitleCard(BaseCardType):
             stroke_width: Scalar to apply to black stroke of the title text.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
-            separator: (Extra) Character to use to separate season and episode
-                text.
-            omit_gradient: (Extra) Whether to omit the gradient overlay.
-            stroke_color: (Extra) Color to use for the back-stroke color.
+            separator: Character to use to separate season and episode text.
+            omit_gradient: Whether to omit the gradient overlay.
+            stroke_color: Color to use for the back-stroke color.
             unused: Unused arguments.
         """
-        
+
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale)
 
@@ -229,10 +231,10 @@ class StandardTitleCard(BaseCardType):
         """
         Determine whether the given font characteristics constitute a default or
         custom font.
-        
+
         Args:
             font: The Font being evaluated.
-        
+
         Returns:
             True if a custom font is indicated, False otherwise.
         """
@@ -252,11 +254,11 @@ class StandardTitleCard(BaseCardType):
         """
         Determine whether the given attributes constitute custom or generic
         season titles.
-        
+
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
             episode_text_format: The episode text format in use.
-        
+
         Returns:
             True if custom season titles are indicated, False otherwise.
         """

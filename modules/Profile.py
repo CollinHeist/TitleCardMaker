@@ -15,17 +15,19 @@ class Profile:
     SEASON_TITLE_REGEX = r'^{season_title}\s*(?::|-|,)?\s+(.+)'
 
     __slots__ = (
-        'font', 'hide_season_title', '__episode_map', 'episode_text_format',
-        '__use_custom_seasons', '__use_custom_font'
+        '__series_info', 'font', 'hide_season_title', '__episode_map',
+        'episode_text_format', '__use_custom_seasons', '__use_custom_font',
     )
 
-    def __init__(self, font: 'Font', hide_seasons: bool,
-                 episode_map: 'EpisodeMap', episode_text_format: str) -> None:
+    def __init__(self, series_info: 'SeriesInfo', font: 'Font',
+                 hide_seasons: bool, episode_map: 'EpisodeMap',
+                 episode_text_format: str) -> None:
         """
         Construct a new instance of a Profile. All given arguments will be
         applied through this Profile (and whether it's generic/custom).
-        
+
         Args:
+            series_info: SeriesInfo associated with this profile.
             font: The Font for this profile.
             hide_seasons: Whether to hide season text.
             episode_map: EpisodeMap for the series.
@@ -33,6 +35,7 @@ class Profile:
         """
 
         # Store this profiles arguments as attributes
+        self.__series_info = series_info
         self.font = font
         self.hide_season_title = hide_seasons
         self.__episode_map = episode_map
@@ -66,7 +69,7 @@ class Profile:
         Args:
             card_class: Implementation of CardType whose valid subprofiles are
                 requested. 
-        
+
         Returns:
             The profiles that can be created as subprofiles from this object.
         """
@@ -76,7 +79,7 @@ class Profile:
             custom_episode_map=self.__episode_map.is_custom,
             episode_text_format=self.episode_text_format,
         )
-        
+
         # Determine whether this profile uses a custom font
         has_custom_font = card_class.is_custom_font(self.font)
 
@@ -87,7 +90,7 @@ class Profile:
                 seasons = 'hidden'
             elif has_custom_season_titles:
                 seasons = 'custom'
-                
+
             return [{
                 'seasons': seasons,
                 'font': 'custom' if has_custom_font else 'generic'
@@ -97,7 +100,7 @@ class Profile:
         valid_profiles = [{'seasons': 'generic', 'font': 'generic'}]
         if has_custom_font:
             valid_profiles.append({'seasons': 'generic', 'font': 'custom'})
-            
+
         if has_custom_season_titles:
             valid_profiles.append({'seasons': 'custom', 'font': 'generic'})
             if has_custom_font:
@@ -115,7 +118,7 @@ class Profile:
         """
         Convert this profile to the provided profile attributes. This modifies
         what characteristics are presented by the object.
-        
+
         Args:
             seasons: String of how to modify seasons. Must be one of 'custom',
                 'generic', or 'hidden'.
@@ -142,7 +145,7 @@ class Profile:
         Convert the given extras according to this profile's rules.
 
         Args:
-            card_type: BaseCardType class to call `modify_extras` on.
+            card_type: BaseCardType class to call modify_extras on.
             extras: Dictionary of extras to convert/modify.
         """
 
@@ -155,10 +158,10 @@ class Profile:
         """
         Gets the season text for the given season number, after applying this
         profile's rules about season text.
-        
+
         Args:
             episode_info: Episode info to get the season text of.
-        
+
         Returns:
             The season text for the given entry as defined by this profile.
         """
@@ -181,10 +184,10 @@ class Profile:
         """
         Gets the episode text for the given episode info, as defined by this
         profile.
-        
+
         Args:
             episode_info: Episode info to get the episode text of.
-        
+
         Returns:
             The episode text defined by this profile.
         """
@@ -207,6 +210,7 @@ class Profile:
         if isinstance(episode, MultiEpisode):
             try:
                 return episode.modify_format_string(format_string).format(
+                    **self.__series_info.characteristics,
                     **episode.characteristics,
                 )
             except Exception as e:
@@ -216,7 +220,10 @@ class Profile:
 
         # Standard Episode object
         try:
-            return format_string.format(**episode.characteristics)
+            return format_string.format(
+                **self.__series_info.characteristics,
+                **episode.characteristics
+            )
         except Exception as e:
             log.error(f'Cannot format episode text "{format_string}" for '
                       f'{episode} ({e})')
@@ -240,10 +247,10 @@ class Profile:
         'Longer Title'
         >>> self.__remove_episode_text_format('Chapter Eighty Eight Example 2')
         'Example 2'
-        
+
         Args:
             episode_text:The title text to process.
-        
+
         Returns:
             The episode text with all text that matches the format specified in
             this profile's episode text format REMOVED. If there is no matching
@@ -326,11 +333,11 @@ class Profile:
         For example, if the episode format string was 'Chapter {episode_number}'
         and the given `title_text` was 'Chapter 1: Pilot', then the returned
         text (excluding any replacements or case mappings) would be 'Pilot'.
-        
+
         Args:
             title_text:  The title text to convert.
             manually_specified: Whether the given title was manually specified.
-        
+
         Returns:
             The processed text.
         """
@@ -347,10 +354,10 @@ class Profile:
             cased_title = title_text
         else:
             cased_title = self.font.case(title_text)
-        
+
         # Apply font replacements
         replaced_title = cased_title
         for old, new in self.font.replacements.items():
             replaced_title = replaced_title.replace(old, new)
-        
+
         return replaced_title

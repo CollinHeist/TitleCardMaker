@@ -71,7 +71,7 @@ class TautulliInterface(WebInterface):
         if self.script_timeout < 0:
             log.error(f'Script timeout must be >= 0 (seconds) - using 0')
             self.script_timeout = 0
-        
+
 
     def is_integrated(self) -> tuple[bool, bool]:
         """
@@ -87,7 +87,7 @@ class TautulliInterface(WebInterface):
         # Get all notifiers
         response = self._get(self.url, self.__params | {'cmd': 'get_notifiers'})
         notifiers = response['response']['data']
-        
+
         # Check each agent's name 
         watched_integrated, created_integrated = False, False
         for agent in notifiers:
@@ -134,7 +134,7 @@ class TautulliInterface(WebInterface):
         if len(new_ids - existing_ids) == 0:
             log.error(f'Failed to create new notification agent on Tautulli')
             return None
-        
+
         # Get ID of created notifier
         return list(new_ids - existing_ids)[0]
 
@@ -151,7 +151,7 @@ class TautulliInterface(WebInterface):
         if watched_integrated and created_integrated:
             log.debug('Tautulli integrated detected')
             return None
-        
+
         # Integrate watched agent if required
         if (not watched_integrated
             and (watched_id := self.__create_agent()) is not None):
@@ -194,7 +194,7 @@ class TautulliInterface(WebInterface):
             self._get(self.url, params)
             log.info(f'Creatd and configured Tautulli notification agent '
                      f'{watched_id} ("{friendly_name}")')
-            
+
         # Integrate created agent if required
         if (not created_integrated
             and (created_id := self.__create_agent()) is not None):

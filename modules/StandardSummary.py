@@ -8,7 +8,7 @@ class StandardSummary(BaseSummary):
     This class describes a show summary. The StandardSummary is a type of
     Summary object that displays (at most) a 3x3 grid of images, with a logo at
     the top.
-    
+
     This type of Summary supports different background colors and images. 
     """
 
@@ -34,7 +34,7 @@ class StandardSummary(BaseSummary):
                  created_by: str=None) -> None:
         """
         Construct a new instance of this object.
-        
+
         Args:
             show: The Show object to create the Summary for.
             background: Background color or image to use for the summary. Can
@@ -73,7 +73,7 @@ class StandardSummary(BaseSummary):
     def _create_montage(self) -> Path:
         """
         Create a (max) 3x3 montage of input images.
-        
+
         Returns:
             Path to the created image.
         """
@@ -101,10 +101,10 @@ class StandardSummary(BaseSummary):
         """
         Pad 80 pixels of blank space around the image, and add a header of text
         that says "EPISODE TITLE CARDS".
-        
+
         Args:
             montage: The montage of images to add a header to.
-        
+
         Returns:
             Path to the created image.
         """
@@ -145,7 +145,7 @@ class StandardSummary(BaseSummary):
         """
         Resize this associated show's logo to fit into at least a 500 pixel high
         space. If the resulting logo is wider than 3400 pixels, it is scaled.
-        
+
         Returns:
             Path to the resized logo.
         """
@@ -166,7 +166,7 @@ class StandardSummary(BaseSummary):
     def _add_logo(self, montage: Path, logo: Path) -> Path:
         """
         Add the logo to the top of the montage image.
-        
+
         Args:
             montage: Path to the montage image to add the logo to.
             logo: Path to the logo image to add to the montage.
@@ -175,12 +175,12 @@ class StandardSummary(BaseSummary):
             Path to the created images.
         """
 
-        logo_height = self.get_image_dimensions(logo)['height']
+        _, height = self.get_image_dimensions(logo)
 
         command = ' '.join([
             f'composite',
             f'-gravity north',
-            f'-geometry +0+{150+(500-logo_height)//2}',
+            f'-geometry +0+{150+(500-height)//2}',
             f'"{logo.resolve()}"',
             f'"{montage.resolve()}"',
             f'"{self.__LOGO_AND_HEADER_PATH.resolve()}"'
@@ -195,11 +195,11 @@ class StandardSummary(BaseSummary):
                         created_by: Path) -> Path:
         """
         Add the 'created by' image to the bottom of the montage.
-        
+
         Args:
             montage_and_logo: Path to the montage with the logo already applied.
             created_by: Path to the created by tag image.
-        
+
         Returns:
             Path to the created (output) image.
         """
@@ -247,8 +247,7 @@ class StandardSummary(BaseSummary):
         self.image_magick.run(command)
 
         # Get dimensions of transparent montage to fit background
-        dimensions = self.get_image_dimensions(self.__TRANSPARENT_MONTAGE)
-        width, height = dimensions['width'], dimensions['height']
+        width, height = self.get_image_dimensions(self.__TRANSPARENT_MONTAGE)
 
         # Add background behind transparent montage
         command = ' '.join([
@@ -280,7 +279,7 @@ class StandardSummary(BaseSummary):
         # Select images for montaging
         if not self._select_images(9) or len(self.inputs) == 0:
             return None
-            
+
         # Create montage of title cards
         montage = self._create_montage()
 
@@ -304,7 +303,7 @@ class StandardSummary(BaseSummary):
             self.__add_background_image(montage_and_logo, created_by)
         else:
             self._add_created_by(montage_and_logo, created_by)
-        
+
         # Delete temporary files
         images = [montage, montage_and_header, logo, montage_and_logo]
         if self.created_by is not None:

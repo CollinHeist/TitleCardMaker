@@ -60,7 +60,7 @@ class CleanPath(_Path_):
         """
 
         replacements = CleanPath.__ILLEGAL_FILE_CHARACTERS
-    
+
         return filename.translate(str.maketrans(replacements))
 
 

@@ -27,7 +27,7 @@ class DataFileInterface:
         Args:
             data_file: Path to the data file to interface with.
         """
-        
+
         # Store the SeriesInfo and data file
         self.series_info = series_info
         self.file = data_file
@@ -48,7 +48,7 @@ class DataFileInterface:
         """
         Read this interface's data from file. Returns an empty dictionary if the
         file does not exist, is misformatted, or if 'data' key is missing.
-        
+
         Returns:
             Contents under 'data' key of this interface's file.
         """
@@ -94,7 +94,7 @@ class DataFileInterface:
     def read(self) -> tuple[dict[str, Any], set[str]]:
         """
         Read the data file for this object, yielding each valid row.
-        
+
         Returns:
             Yields a dictionary for each entry in this datafile. The dictionary
             has a key 'episode_info' with an EpisodeInfo object, and arbitrary
@@ -106,10 +106,28 @@ class DataFileInterface:
 
         # Iterate through each season
         for season, season_data in yaml.items():
-            season_number = int(season.rsplit(' ', 1)[-1])
+            # Skip season if number cannot be parsed
+            try:
+                season_number = int(season.rsplit(' ', 1)[-1])
+            except Exception:
+                log.error(f'Season {season} of the {self.series_info} datafile '
+                          f'is invalid - must be like "Season 1"')
+                continue
 
             # Iterate through each episode of this season
             for episode_number, episode_data in season_data.items():
+                # Ensure indices are integers
+                abs_number = episode_data.get('abs_number')
+                try:
+                    episode_number = int(episode_number)
+                    if abs_number is not None:
+                        abs_number = int(abs_number)
+                except ValueError:
+                    log.exception(f'Episode data for S{season_number:02} is '
+                                  f'invalid - episode and absolute number must '
+                                  f'be integers')
+                    continue
+
                 # If title is missing (or no subkeys at all..) error
                 if (not isinstance(episode_data, dict)
                     or ('title' not in episode_data and
@@ -128,19 +146,19 @@ class DataFileInterface:
                 # Ensure Title can be created
                 try:
                     title_obj = Title(title, original_title=original_title)
-                except Exception:
-                    log.error(f'Title for S{season_number:02}E'
-                              f'{episode_number:02} of the {self.series_info} '
-                              f'datafile is invalid')
+                except Exception as e:
+                    log.exception(f'Title for S{season_number:02}E'
+                                  f'{episode_number:02} of the '
+                                  f'{self.series_info} datafile is invalid', e)
                     continue
-                
+
                 # Construct EpisodeInfo object for this entry
                 episode_info = global_objects.info_set.get_episode_info(
                     self.series_info,
                     title_obj,
                     season_number,
                     episode_number,
-                    episode_data.pop('abs_number', None),
+                    abs_number,
                     imdb_id=episode_data.pop('imdb_id', None),
                     tmdb_id=episode_data.pop('tmdb_id', None),
                     tvdb_id=episode_data.pop('tvdb_id', None),
@@ -149,7 +167,7 @@ class DataFileInterface:
                 # Add any additional, unexpected keys from the YAML
                 data = {'episode_info': episode_info}
                 data.update(episode_data)
-                
+
                 yield data, given_keys
 
 
@@ -177,7 +195,7 @@ class DataFileInterface:
                           **new_data: dict[str, Any]) -> None:
         """
         Add any generic data to the YAML entry associated with this EpisodeInfo.
-        
+
         Args:
             episode_info: Episode Info to add to YAML.
             new_data: Generic new data to write.

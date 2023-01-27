@@ -1,8 +1,10 @@
 from pathlib import Path
-from re import match
+from typing import Optional
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
+
+SeriesExtra = Optional
 
 class PosterTitleCard(BaseCardType):
     """
@@ -48,18 +50,18 @@ class PosterTitleCard(BaseCardType):
 
     __slots__ = ('source_file', 'output_file', 'logo', 'title', 'episode_text')
 
-    
+
     def __init__(self, source: Path, output_file: Path, title: str,
                  episode_text: str,
-                 season_number: int=1,
-                 episode_number: int=1,
                  blur: bool=False,
                  grayscale: bool=False,
-                 logo: str=None,
+                 season_number: int=1,
+                 episode_number: int=1,
+                 logo: SeriesExtra[str]=None,
                  **unused) -> None:
         """
         Construct a new instance of this card.
-        
+
         Args:
             source: Source image for this card.
             output_file: Output filepath for this card.
@@ -74,7 +76,7 @@ class PosterTitleCard(BaseCardType):
             logo: Filepath (or file format) to the logo file.
             unused: Unused arguments.
         """
-        
+
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale)
 
@@ -110,10 +112,10 @@ class PosterTitleCard(BaseCardType):
         """
         Determines whether the given arguments represent a custom font for this
         card. This CardType does not use custom fonts, so this is always False.
-        
+
         Args:
             font: The Font being evaluated.
-        
+
         returns:
             False, as fonts are not customizable with this card.
         """
@@ -127,12 +129,12 @@ class PosterTitleCard(BaseCardType):
         """
         Determines whether the given attributes constitute custom or generic
         season titles.
-        
+
         Args:
             episode_text_format: The episode text format in use.
             args and kwargs: Generic arguments to permit  generalized function
                 calls for any CardType.
-        
+
         Returns:
             True if custom season titles are indicated, False otherwise.
         """

@@ -1,12 +1,14 @@
 from collections import namedtuple
 from pathlib import Path
-from typing import Any, Literal, Union
+from typing import Any, Literal, Optional, Union
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 
+SeriesExtra = Optional
+DarkenOption = SeriesExtra[Union[Literal['all', 'box'], bool]]
+
 BoxCoordinates = namedtuple('BoxCoordinates', ('x0', 'y0', 'x1', 'y1'))
-DarkenOption = Union[Literal['all', 'box'], bool]
 
 class LandscapeTitleCard(BaseCardType):
     """
@@ -59,17 +61,17 @@ class LandscapeTitleCard(BaseCardType):
         'add_bounding_box', 'box_adjustments'
     )
 
-
     def __init__(self, source: Path, output_file: Path, title: str, font: str,
-                 font_size: float, title_color: str,
+                 title_color: str,
+                 font_size: float=1.0,
                  interline_spacing: int=0,
                  kerning: float=1.0,
                  blur: bool=False,
                  grayscale: bool=False,
                  vertical_shift: float=0,
                  darken: DarkenOption=False,
-                 add_bounding_box: bool=False,
-                 box_adjustments: str=None,
+                 add_bounding_box: SeriesExtra[bool]=False,
+                 box_adjustments: SeriesExtra[str]=None,
                  **unused) ->None:
         """
         Initialize this TitleCard object. This primarily just stores instance
@@ -80,20 +82,20 @@ class LandscapeTitleCard(BaseCardType):
             output_file: Output file where to create the card.
             title: Title text to add to created card.
             font: Font name or path (as string) to use for episode title.
-            font_size: Scalar to apply to title font size.
-            title_color: Color to use for title text.
+            title_color: Color to use for title text.            
             interline_spacing: Pixel count to adjust title interline spacing by.
             kerning: Scalar to apply to kerning of the title text.
+            font_size: Scalar to apply to title font size.
+            vertical_shift: Vertical shift to apply to the title text.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
-            vertical_shift: Vertical shift to apply to the title text.
-            darken: (Extra) Whether to darken the image (if not blurred).
-            add_bounding_box: (Extra) Whether to add a bounding box around the
-                title text.
-            box_adjustments: (Extra) How to adjust the bounds of the bounding
-                box. Given as a string of pixels in clockwise order relative to
-                the center. For example, "10 10 10 10" will expand the box by 10
-                pixels in each direction.
+            darken: Whether to darken the image (if not blurred).
+            add_bounding_box: Whether to add a bounding box around the title
+                text.
+            box_adjustments: How to adjust the bounds of the bounding box. Given
+                as a string of pixels in clockwise order relative to the center.
+                For example, "10 10 10 10" will expand the box by 10 pixels in
+                each direction.
             unused: Unused arguments.
         """
 
@@ -223,24 +225,23 @@ class LandscapeTitleCard(BaseCardType):
         ]
 
         # Get dimensions of text - since text is stacked, do max/sum operations
-        dimensions = self.get_text_dimensions(text_command,
-                                              width='max', height='sum')
-        width, height = dimensions['width'], dimensions['height']
-        
+        width, height = self.get_text_dimensions(text_command,
+                                                 width='max', height='sum')
+
         # Get start coordinates of the bounding box
         x_start, x_end = 3200/2 - width/2, 3200/2 + width/2
         y_start, y_end = 1800/2 - height/2, 1800/2 + height/2
         y_end -= 35     # Additional offset necessary for things to work out
+
+        # Shift y coordinates by vertical shift
+        y_start += self.vertical_shift
+        y_end += self.vertical_shift
 
         # Adjust corodinates by spacing and manual adjustments
         x_start -= self.BOUNDING_BOX_SPACING + self.box_adjustments[3]
         x_end += self.BOUNDING_BOX_SPACING + self.box_adjustments[1]
         y_start -= self.BOUNDING_BOX_SPACING  + self.box_adjustments[0]
         y_end += self.BOUNDING_BOX_SPACING + self.box_adjustments[2]
-
-        # Shift y coordinates by vertical shift
-        y_start += self.vertical_shift
-        y_end += self.vertical_shift
 
         return BoxCoordinates(x_start, y_start, x_end, y_end)
 
@@ -303,16 +304,16 @@ class LandscapeTitleCard(BaseCardType):
             if 'box_adjustments' in extras:
                 extras['box_adjustments'] = '0 0 0 0'
 
-    
+
     @staticmethod
     def is_custom_font(font: 'Font') -> bool:
         """
         Determine whether the given font characteristics constitute a default
         or custom font.
-        
+
         Args:
             font: The Font being evaluated.
-        
+
         Returns:
             True if the given font is custom, False otherwise.
         """
@@ -330,11 +331,11 @@ class LandscapeTitleCard(BaseCardType):
         """
         Determine whether the given attributes constitute custom or generic
         season titles.
-        
+
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
             episode_text_format: The episode text format in use.
-        
+
         Returns:
             False, as season titles aren't used.
         """
@@ -347,7 +348,7 @@ class LandscapeTitleCard(BaseCardType):
         Make the necessary ImageMagick and system calls to create this object's
         defined title card.
         """
-        
+
         # If title is 0-length, just stylize
         if len(self.title.strip()) == 0:
             self.__add_no_title()
@@ -362,7 +363,7 @@ class LandscapeTitleCard(BaseCardType):
         bounding_box = self.get_bounding_box_coordinates(
             font_size, interline_spacing, kerning
         )
- 
+
         # Generate command to create card
         command = ' '.join([
             f'convert "{self.source.resolve()}"',
@@ -396,5 +397,5 @@ class LandscapeTitleCard(BaseCardType):
             *self.add_bounding_box_command(bounding_box),
             f'"{self.output_file.resolve()}"',
         ])
-        
+
         self.image_magick.run(command)

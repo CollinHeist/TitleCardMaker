@@ -2,10 +2,12 @@ from collections import namedtuple
 from pathlib import Path
 from random import choice
 from re import compile as re_compile
-from typing import Any
+from typing import Any, Optional
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
+
+SeriesExtra = Optional
 
 Position = namedtuple('Position', ('location', 'offset', 'rotation'))
 
@@ -69,10 +71,10 @@ class Offset:
         Args:
             other: Offset to adjust this object by.
         """
-        
+
         self.x += other.x
         self.y += other.y
-        
+
         return self
 
     def __mul__(self, scalar: float) -> 'Offset':
@@ -97,10 +99,10 @@ class Offset:
         Args:
             scalar: Scalar multiple to adjust this object by.
         """
-        
+
         self.x *= scalar
         self.y *= scalar
-        
+
         return self
 
 """
@@ -224,17 +226,17 @@ class RomanNumeralTitleCard(BaseCardType):
         '__roman_text_scalar', '__roman_numeral_lines', 'rotation', 'offset',
     )
 
-    def __init__(self, output_file: Path, title: str, episode_text: str,
-                 season_text: str, hide_season: bool, title_color: str,
+    def __init__(self, output_file: Path, title: str, season_text: str, 
+                 episode_text: str, hide_season: bool, title_color: str,
                  episode_number: int=1,
                  blur: bool=False,
                  grayscale: bool=False,
-                 background: str=BACKGROUND_COLOR, 
-                 roman_numeral_color: str=ROMAN_NUMERAL_TEXT_COLOR,
+                 background: SeriesExtra[str]=BACKGROUND_COLOR, 
+                 roman_numeral_color: SeriesExtra[str]=ROMAN_NUMERAL_TEXT_COLOR,
                  **unused) -> None:
         """
         Construct a new instance of this card.
-        
+
         Args:
             output_file: Output file.
             title: Episode title.
@@ -243,8 +245,8 @@ class RomanNumeralTitleCard(BaseCardType):
             title_color: Color to use for the episode title.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
-            background: (Extra) Color for the background.
-            roman_numeral_color: (Extra) Color for the roman numerals.
+            background: Color for the background.
+            roman_numeral_color: Color for the roman numerals.
             unused: Unused arguments.
         """
 
@@ -269,13 +271,13 @@ class RomanNumeralTitleCard(BaseCardType):
 
         # Rotation and offset attributes to be determined later
         self.rotation, self.offset = None, None
-        
+
 
     def __assign_roman_numeral(self, number: int) -> None:
         """
         Convert the given number to a roman numeral, update the scalar and text
         attributes of this object.
-        
+
         Args:
             number: The number to become the roman numeral.
         """
@@ -291,7 +293,7 @@ class RomanNumeralTitleCard(BaseCardType):
         c_text = ['', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM']
         x_text = ['', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC']
         i_text = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX']
-      
+
         # Get each places' roman numeral
         thousands = m_text[number // 1000]
         hundreds = c_text[(number % 1000) // 100]
@@ -319,7 +321,7 @@ class RomanNumeralTitleCard(BaseCardType):
         """
         Assign the roman text scalar for this text based on the widest line of
         the given roman numeral text.
-        
+
         Args:
             roman_text: List of strings, where each entry is a new line in the
                 roman numeral string.
@@ -343,7 +345,7 @@ class RomanNumeralTitleCard(BaseCardType):
         else:
             self.__roman_text_scalar = 1.0
 
-   
+
     def create_roman_numeral_command(self, roman_numeral: str) -> list[str]:
         """
         Subcommand to add roman numerals to the image.
@@ -433,7 +435,7 @@ class RomanNumeralTitleCard(BaseCardType):
         if self.roman_numeral[random_index] == '\n': random_index -= 1
         random_letter = self.roman_numeral[random_index]
         random_position = choice(POSITIONS[random_letter])
-        
+
         # Offset of season text - center of roman numerals is +0-30
         offset = Offset('+0-30')
 
@@ -462,25 +464,24 @@ class RomanNumeralTitleCard(BaseCardType):
             )
 
         # Get width of whole line
-        total_width = self.get_text_dimensions(
-            numeral_command, width='sum', height='max'
-        )['width']
+        total_width, _ = self.get_text_dimensions(numeral_command,
+                                                  width='sum', height='max')
 
         # Get width of line to the left of the selected numeral
         left_width = 0
         if len(left_text) > 0:
-            left_width = self.get_text_dimensions(
+            left_width, _ = self.get_text_dimensions(
                 self.create_roman_numeral_command(left_text),
                 width='sum', height='max'
-            )['width']
+            )
 
         # Get width of line to the right of the selected numeral
         right_width = 0
         if len(right_text) > 0:
-            right_width = self.get_text_dimensions(
+            right_width, _ = self.get_text_dimensions(
                 self.create_roman_numeral_command(right_text),
                 width='sum', height='max'
-            )['width']
+            )
 
         # Determine necesary offset by position within the line
         on_right = left_width > right_width
@@ -514,14 +515,13 @@ class RomanNumeralTitleCard(BaseCardType):
             return None
 
         # Get boundaries of title text
-        title_dims = self.get_text_dimensions(
-            self.title_text_command, width='width', height='sum'
-        )
+        width, height = self.get_text_dimensions(self.title_text_command,
+                                                 width='width', height='sum')
         box0 = {
-            'start_x': -title_dims['width']/2 + 3200/2,
-            'start_y': -title_dims['height']/2 + 1800/2,
-            'end_x': title_dims['width']/2 + 3200/2,
-            'end_y': title_dims['height']/2 + 1800/2,
+            'start_x': -width/2  + 3200/2,
+            'start_y': -height/2 + 1800/2,
+            'end_x':    width/2  + 3200/2,
+            'end_y':    height/2 + 1800/2,
         }
 
         # Inner function to randomize position and determine if overlapping
@@ -538,13 +538,13 @@ class RomanNumeralTitleCard(BaseCardType):
             # Select random position and get it's associated offset
             rotation, offset = self.randomize_season_text_position()
             self.rotation, self.offset = rotation, offset
-            
+
             # Get dimensions of season text
-            season_dims = self.get_text_dimensions(
+            season_width, season_height = self.get_text_dimensions(
                 self.create_season_text_command(rotation, offset),
                 width='max', height='max'
             )
-            
+
             # Modify dimensions or add margin based on rotation of text
             margin = 0
             # If not rotated, no margin necessary
@@ -552,8 +552,7 @@ class RomanNumeralTitleCard(BaseCardType):
                 pass
             # If rotated 90 degrees, then swap width/height of text
             elif rotation in ('90x90', '-90x-90'):
-                season_dims['width'], season_dims['height'] = \
-                    season_dims['height'], season_dims['width']
+                season_width, season_height = season_height, season_width
             # If rotated, but not at 90 degrees, then add margin based on max
             # dimension - this is equivalent to expanding the bounds of the text
             # box by the maximum possible error in the dimensions of the text
@@ -562,15 +561,15 @@ class RomanNumeralTitleCard(BaseCardType):
                 # between width/height; in which case the width would be off by
                 # the height/2 (in either direction), and the height off by
                 # width/2 (in either direction)
-                max_error = abs(season_dims['width'] - season_dims['height'])
+                max_error = abs(season_width - season_height)
                 margin = max_error / 2
 
             # Get boundaries of season text
             box1 = {
-                'start_x': offset.x - season_dims['width']/2 + 3200/2 - margin,
-                'start_y': offset.y - season_dims['height']/2 + 1800/2 - margin,
-                'end_x': offset.x + season_dims['width']/2 + 3200/2 + margin,
-                'end_y': offset.y + season_dims['height']/2 + 1800/2 + margin,
+                'start_x': offset.x - season_width/2  + 3200/2 - margin,
+                'start_y': offset.y - season_height/2 + 1800/2 - margin,
+                'end_x': offset.x   + season_width/2  + 3200/2 + margin,
+                'end_y': offset.y   + season_height/2 + 1800/2 + margin,
             }
 
             # If outside the bounds of the image, return invalid
@@ -590,7 +589,7 @@ class RomanNumeralTitleCard(BaseCardType):
         attempts_left = self.SEASON_TEXT_PLACEMENT_ATTEMPS
         while (attempts_left := attempts_left-1) > 0 and select_position(): pass
 
-    
+
     @staticmethod
     def modify_extras(extras: dict[str, Any], custom_font: bool,
                       custom_season_titles: bool) -> None:
@@ -618,10 +617,10 @@ class RomanNumeralTitleCard(BaseCardType):
         """
         Determine whether the given font characteristics constitute a default
         or custom font.
-        
+
         Args:
             font: The Font being evaluated.
-        
+
         Returns:
             False, as custom fonts aren't used.
         """
@@ -635,11 +634,11 @@ class RomanNumeralTitleCard(BaseCardType):
         """
         Determine whether the given attributes constitute custom or generic
         season titles.
-        
+
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
             episode_text_format: The episode text format in use.
-        
+
         Returns:
             True if the episode map or episode text format is custom, False
             otherwise.
@@ -675,5 +674,5 @@ class RomanNumeralTitleCard(BaseCardType):
             *self.title_text_command,
             f'"{self.output_file.resolve()}"',
         ])
-        
+
         self.image_magick.run(command)
