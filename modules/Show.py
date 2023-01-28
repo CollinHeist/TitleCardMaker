@@ -124,7 +124,7 @@ class Show(YamlReader):
         self.valid &= self.font.valid
 
         # Update derived (and not adjustable) attributes
-        self.source_directory = source_directory / self.series_info.legal_path
+        self.source_directory =source_directory/self.series_info.full_clean_name
         self.logo = self.source_directory / 'logo.png'
         self.backdrop = self.source_directory / self.BACKDROP_FILENAME
 
@@ -215,7 +215,7 @@ class Show(YamlReader):
         if (value := self._get('library', type_=dict)) is not None:
             self.library_name = value['name']
             self.library = value['path']
-            self.media_directory = self.library / self.series_info.legal_path
+            self.media_directory = self.library/self.series_info.full_clean_name
 
         if (value := self._get('media_directory', type_=str)) is not None:
             self.media_directory = CleanPath(value).sanitize()
