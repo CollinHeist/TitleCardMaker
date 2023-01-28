@@ -84,13 +84,13 @@ class AspectRatioFixer(ImageMaker):
             self.image_magick.run(resize_command)
 
             # Get dimensions of resized image, exit if too narrow for stretching
-            dimensions = self.get_image_dimensions(self.__RESIZED_TEMP)
-            if dimensions['width'] < 400 or dimensions['height'] < 1800:
+            width, height = self.get_image_dimensions(self.__RESIZED_TEMP)
+            if width < 400 or height < 1800:
                 log.error(f'Image too narrow for correcting with "stretch" style')
                 return None
 
             # Stretch sides to fit into 3200px wide
-            side_width = (3200 - dimensions['width'] + 100) // 2
+            side_width = (3200 - width + 100) // 2
 
             command = ' '.join([
                 f'convert',
@@ -100,10 +100,10 @@ class AspectRatioFixer(ImageMaker):
                 f'-resize "{side_width}!" \)',
                 # Crop middle section
                 f'\(  "{self.__RESIZED_TEMP.resolve()}"',
-                f'-crop "{dimensions["width"]-100}x1800+50+0" \)',
+                f'-crop "{width-100}x1800+50+0" \)',
                 # Crop right 50px and stretch
                 f'\(  "{self.__RESIZED_TEMP.resolve()}"',
-                f'-crop "50x1800+{dimensions["width"]-50}+0"',
+                f'-crop "50x1800+{width-50}+0"',
                 f'-resize "{side_width}!" \)',
                 # Append like [LEFT 50][MIDDLE][RIGHT 50] left-to-right
                 f'+append',

@@ -290,7 +290,7 @@ class LogoTitleCard(BaseCardType):
 
         # Resize logo, get resized height to determine offset
         resized_logo = self.resize_logo()
-        height = self.get_image_dimensions(resized_logo)['height']
+        _, height = self.get_image_dimensions(resized_logo)
         offset = 60 + ((1030 - height) // 2)
 
         # Font customizations
