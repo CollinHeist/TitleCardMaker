@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Optional
 
 from modules.BaseCardType import BaseCardType
+from modules.CleanPath import CleanPath
 from modules.Debug import log
 
 SeriesExtra = Optional
@@ -107,17 +108,17 @@ class LogoTitleCard(BaseCardType):
         super().__init__(blur, grayscale)
 
         # Look for logo if it's a format string
-        if isinstance(logo, str):
+        if logo is None:
+            self.logo = None
+        else:
             try:
                 logo = logo.format(season_number=season_number,
                                    episode_number=episode_number)
-            except Exception:
-                pass
-
-            # Use either original or modified logo file
-            self.logo = Path(logo)
-        else:
-            self.logo = None
+                self.logo = Path(CleanPath(logo).sanitize())
+            except Exception as e:
+                # Bad format strings will be caught during card creation
+                self.valid = False
+                log.exception(f'Invalid logo file "{logo}"', e)
 
         self.output_file = output_file
 
