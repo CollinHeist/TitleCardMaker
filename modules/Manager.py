@@ -468,10 +468,6 @@ class Manager:
             show_dict = {}
             # Go through each episode for this show, add missing source/cards
             for _, episode in show.episodes.items():
-                # Don't report special content as missing
-                if episode.episode_info.season_number == 0:
-                    continue
-
                 # Add key for this episode
                 key = str(episode)
                 show_dict[key] = {}

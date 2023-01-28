@@ -298,9 +298,6 @@ class EpisodeInfo:
             queried_tmdb: Whether this EpisodeInfo has been queried on TMDb.
         """
 
-        if not self.queried_plex and queried_plex:
-            self.queried_plex = queried_plex
-        if not self.queried_sonarr and queried_sonarr:
-            self.queried_sonarr = queried_sonarr
-        if not self.queried_tmdb and queried_tmdb:
-            self.queried_tmdb = queried_tmdb
+        if queried_plex:   self.queried_plex = queried_plex
+        if queried_sonarr: self.queried_sonarr = queried_sonarr
+        if queried_tmdb:   self.queried_tmdb = queried_tmdb
