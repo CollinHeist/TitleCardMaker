@@ -405,7 +405,7 @@ class SeriesYamlWriter:
 
             # Add media directory if path doesn't match default
             if (library is None
-                or Path(sonarr_path).name != series_info.legal_path):
+                or Path(sonarr_path).name != series_info.full_clean_name):
                 this_entry['media_directory'] = sonarr_path
 
             # Add this entry to main supposed YAML
@@ -534,7 +534,7 @@ class SeriesYamlWriter:
                 key = f'{series_info.full_name} [imdb:{series_info.imdb_id}]'
 
             # Add media directory if path doesn't match default
-            if Path(series_path).name != series_info.legal_path:
+            if Path(series_path).name != series_info.full_clean_name:
                 this_entry['media_directory'] = series_path
 
             # Add this entry to main supposed YAML

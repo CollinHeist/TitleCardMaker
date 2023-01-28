@@ -78,7 +78,7 @@ class ShowArchive:
                 profile_directory = base_show.archive_name
 
             # Get modified media directory within the archive directory
-            temp_path = archive_directory / base_show.series_info.legal_path
+            temp_path = archive_directory /base_show.series_info.full_clean_name
             new_media_directory = temp_path / profile_directory
 
             # Create modified Show object for this profile

@@ -158,15 +158,15 @@ class Template:
                     base_yaml[t_key] = t_value
 
 
-    def apply_to_series(self, series_name: str,
-                        series_yaml: dict[str: Any]) -> bool:
+    def apply_to_series(self, series_info: 'SeriesInfo',
+                        series_yaml: dict[str, Any]) -> bool:
         """
         Apply this Template object to the given series YAML, modifying it
         to include the templated values. This function assumes that the given
         series YAML has a template attribute, and that it applies to this object
 
         Args:
-            series_name: The name of the series being modified.
+            series_info: The info of the series. Used for built-in series data.
             series_yaml: The series YAML to modify. Must have 'template' key.
                 Modified in-place.
 
@@ -175,12 +175,25 @@ class Template:
             variables for application, False if it did not.
         """
 
+        # Evaluate built-in keys from series info
+        builtin_data = {}
+        if series_info is not None:
+            builtin_data = {
+                'title': series_info.name,
+                'full_title': series_info.full_name,
+                'clean_title': series_info.clean_name,
+                'year': series_info.year,
+            }
+
+        # Add builtin-data to series YAML template
+        series_yaml['template'] = builtin_data | series_yaml['template']
+        log.debug(f'{series_yaml["template"]=}')
         # If not all required template keys are specified, warn and exit
         given_keys = set(series_yaml['template'].keys())
         default_keys = set(self.defaults.keys())
         if not (given_keys | default_keys).issuperset(self.keys):
             log.warning(f'Missing "{self.name}" template data for '
-                        f'"{series_name}"')
+                        f'"{series_info}"')
             return False
 
         # Copy base template before modification

@@ -709,14 +709,13 @@ class PreferenceParser(YamlReader):
 
         # Parse title/year from the series to add as "built-in" template data
         try:
-            series_info = SeriesInfo(series_name, series_yaml.get('year', None))
-            built_in_data = {'title': series_info.name, 'year':series_info.year}
-            series_yaml['template'] = built_in_data | series_yaml['template']
-        except Exception:
-            pass
+            series_info = SeriesInfo(series_name, series_yaml.get('year'))
+        except Exception as e:
+            log.exception(f'Error identifying series info of {series_name}', e)
+            series_info = None
 
         # Apply using Template object
-        return template.apply_to_series(series_name, series_yaml)
+        return template.apply_to_series(series_info, series_yaml)
 
 
     def __finalize_show_yaml(self, show_name: str, show_yaml: dict[str, Any],
