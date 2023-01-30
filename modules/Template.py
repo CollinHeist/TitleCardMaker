@@ -187,7 +187,7 @@ class Template:
 
         # Add builtin-data to series YAML template
         series_yaml['template'] = builtin_data | series_yaml['template']
-        log.debug(f'{series_yaml["template"]=}')
+
         # If not all required template keys are specified, warn and exit
         given_keys = set(series_yaml['template'].keys())
         default_keys = set(self.defaults.keys())
@@ -216,8 +216,7 @@ class Template:
 
         # Log and exit if failed to apply
         if count >= self.MAX_TEMPLATE_DEPTH:
-            log.warning(f'Unable to apply template "{self.name}" to '
-                        f'"{series_name}"')
+            log.warning(f'Unable to apply template "{self.name}" to {series_info}')
             return False
 
         # Delete the template section from the series YAML
