@@ -35,7 +35,7 @@ class TintedGlassTitleCard(BaseCardType):
 
     """Default episode text format for this class"""
     EPISODE_TEXT_FORMAT = '{series_name} | S{season_number} E{episode_number}'
-    EPISODE_TEXT_COLOR = 'rgb(247, 209, 148)'
+    EPISODE_TEXT_COLOR = 'white'#'rgb(247, 209, 148)'
     EPISODE_TEXT_FONT = SW_REF_DIRECTORY / 'HelveticaNeue-Bold.ttf'
 
     """Whether this CardType uses season titles for archival purposes"""
