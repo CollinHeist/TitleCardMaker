@@ -143,7 +143,8 @@ class SonarrInterface(WebInterface):
 
     def get_all_series(self, required_tags: list[str]=[], 
                        excluded_tags: list[str]=[], monitored_only: bool=False,
-                       downloaded_only:bool=False)->list[tuple[SeriesInfo,str]]:
+                       downloaded_only: bool=False
+                       ) -> list[tuple[SeriesInfo, str]]:
         """
         Get all the series within Sonarr, filtered by the given parameters.
 
@@ -165,17 +166,22 @@ class SonarrInterface(WebInterface):
         # Construct GET arguments
         all_series = self._get(f'{self.url}series', self.__standard_params)
 
-        # Get filter tags if indicated
+        # Get filtering tags if indicated
         required_tag_ids, excluded_tag_ids = [], []
         if len(required_tags) > 0 or len(excluded_tags) > 0:
-            # Request all Sonarr tags
-            all_tags = self._get(f'{self.url}tag', self.__standard_params)
+            # Request all Sonarr tags, create mapping of label -> ID
+            all_tags = {
+                tag['label']: tag['id']
+                for tag in self._get(f'{self.url}tag', self.__standard_params)
+            }
 
             # Convert tag names to ID's
-            required_tag_ids = [tag['id'] for tag in all_tags
-                                if tag['label'] in required_tags]
-            excluded_tag_ids = [tag['id'] for tag in all_tags
-                                if tag['label'] in excluded_tags]
+            required_tag_ids = [all_tags.get(tag, -1) for tag in required_tags]
+            excluded_tag_ids = [all_tags.get(tag, -1) for tag in excluded_tags]
+
+            # Log tags not identified with a matching ID
+            for tag in (set(required_tags)|set(excluded_tags)) - set(all_tags):
+                log.warning(f'Tag "{tag}" not found on Sonarr')
 
         # Go through each series in Sonarr
         series = []
@@ -190,12 +196,12 @@ class SonarrInterface(WebInterface):
                 continue
 
             # Skip show if tag is in exclude list
-            if (len(excluded_tag_ids) > 0
+            if (len(excluded_tags) > 0
                 and any(tag in excluded_tag_ids for tag in show['tags'])):
                 continue
 
             # Skip show if tag isn't in filter (and filter is enabled)
-            if (len(required_tag_ids) > 0
+            if (len(required_tags) > 0
                 and not all(tag in show['tags'] for tag in required_tag_ids)):
                 continue
 
