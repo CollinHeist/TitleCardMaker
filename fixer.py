@@ -1,12 +1,10 @@
-from argparse import ArgumentParser, ArgumentTypeError, SUPPRESS
+from argparse import ArgumentParser, SUPPRESS
 from dataclasses import dataclass
 from os import environ
 from pathlib import Path
 from re import match, IGNORECASE
 
 try:
-    from yaml import dump
-
     from modules.Debug import log, LOG_FILE
     from modules.DataFileInterface import DataFileInterface
     from modules.EpisodeInfo import EpisodeInfo
@@ -249,11 +247,11 @@ if hasattr(args, 'tmdb_download_images') and pp.use_tmdb:
             start, end = map(int, arg_set[3].split('-'))
             episode_range = range(start, end+1)
         except ValueError:
-            log.error(f'Invalid episode range, specify like "START-END", i.e. '
+            log.error(f'Invalid episode range, specify like "START-END", e.g. '
                       f'2-10 for episodes 2 through 10')
             continue
 
-        tmdb_interface = TMDbInterface(pp.database_directory, pp.tmdb_api_key)
+        tmdb_interface = TMDbInterface(**pp.tmdb_interface_kwargs)
         tmdb_interface.manually_download_season(
             title=arg_set[0],
             year=int(arg_set[1]),

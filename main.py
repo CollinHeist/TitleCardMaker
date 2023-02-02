@@ -210,7 +210,6 @@ def run():
 
 # First Manager run that schedules subsequent runs and then cancels itself
 def first_run():
-    # Run, schedule subsequent runs, then remove this function from schedule
     run()
     interval, unit = args.frequency['interval'], args.frequency['unit']
     getattr(schedule.every(interval), unit).do(run)

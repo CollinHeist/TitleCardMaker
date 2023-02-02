@@ -712,6 +712,7 @@ class PreferenceParser(YamlReader):
             series_info = SeriesInfo(series_name, series_yaml.get('year'))
         except Exception as e:
             log.exception(f'Error identifying series info of {series_name}', e)
+            log.debug(f'Series YAML: {series_yaml}')
             series_info = None
 
         # Apply using Template object
