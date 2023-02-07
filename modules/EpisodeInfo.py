@@ -1,4 +1,5 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from typing import Any, Optional
 
 from num2words import num2words
 
@@ -63,45 +64,58 @@ class EpisodeInfo:
     with it.
     """
 
-    # Dataclass initialization attributes
-    title: str
-    season_number: int
-    episode_number: int
-    abs_number: int=None
-    imdb_id: str=None
-    tmdb_id: int=None
-    tvdb_id: int=None
-    queried_plex: bool=False
-    queried_sonarr: bool=False
-    queried_tmdb: bool=False
-    airdate: 'datetime'=None
-    key: str = field(init=False, repr=False)
-    word_set: WordSet = field(init=False, repr=False)
+    __slots__ = (
+        'title', 'season_number', 'episode_number', 'abs_number', 'emby_id',
+        'imdb_id', 'tmdb_id', 'tvdb_id', 'tvrage_id', 'queried_emby',
+        'queried_plex', 'queried_sonarr', 'queried_tmdb', 'airdate', 'key',
+        '__word_set',
+    )
 
 
-    def __post_init__(self):
-        """Called after __init__, sets types of indices, assigns key field"""
+    def __init__(self, title: 'str | Title', season_number: int,
+                 episode_number: int, abs_number: int=None, *,
+                 emby_id: str=None,
+                 imdb_id: str=None,
+                 tmdb_id: int=None,
+                 tvdb_id: int=None,
+                 tvrage_id: int=None,
+                 airdate: 'datetime'=None,
+                 queried_emby: bool=False,
+                 queried_plex: bool=False,
+                 queried_sonarr: bool=False,
+                 queried_tmdb: bool=False) -> None:
 
-        # Convert title to Title object if given as string
-        if isinstance(self.title, str):
-            self.title = Title(self.title)
+        # Ensure title is Title object
+        if isinstance(title, Title):
+            self.title = title
+        else:
+            self.title = Title(title)
 
-        # Convert indices to integers
-        self.season_number = int(self.season_number)
-        self.episode_number = int(self.episode_number)
-        if self.abs_number is not None:
-            self.abs_number = int(self.abs_number)
+        # Store arguments as attributes
+        self.season_number = int(season_number)
+        self.episode_number = int(episode_number)
+        self.abs_number = None if abs_number is None else int(abs_number)
+        self.emby_id = None if emby_id is None else str(emby_id)
+        self.imdb_id = None if imdb_id is None else str(imdb_id)
+        self.tmdb_id = None if tmdb_id is None else int(tmdb_id)
+        self.tvdb_id = None if tvdb_id is None else int(tvdb_id)
+        self.tvrage_id = None if tvrage_id is None else int(tvrage_id)
+        self.queried_emby = queried_emby
+        self.queried_plex = queried_plex
+        self.queried_sonarr = queried_sonarr
+        self.queried_tmdb = queried_tmdb
+        self.airdate = airdate
 
         # Create key
         self.key = f'{self.season_number}-{self.episode_number}'
 
         # Add word variations for each of this episode's indices
-        self.word_set = WordSet()
+        self.__word_set = WordSet()
         for label, number in (
             ('season_number', self.season_number),
             ('episode_number', self.episode_number),
             ('abs_number', self.abs_number)):
-            self.word_set.add_numeral(label, number)
+            self.__word_set.add_numeral(label, number)
 
         # Add translated word variations for each globally enabled language
         for lang in global_objects.pp.supported_language_codes:
@@ -109,7 +123,19 @@ class EpisodeInfo:
                 ('season_number', self.season_number),
                 ('episode_number', self.episode_number),
                 ('abs_number', self.abs_number)):
-                self.word_set.add_numeral(label, number, lang)
+                self.__word_set.add_numeral(label, number, lang)
+
+
+    def __repr__(self) -> str:
+        """Returns an unambiguous string representation of the object."""
+
+        attributes = ', '.join(f'{attr}={getattr(self, attr)}'
+                               for attr in self.__slots__
+                               if not attr.startswith('__')
+                                  and getattr(self, attr) is not None
+                                  and getattr(self, attr) is not False)
+
+        return f'<EpisodeInfo {attributes}>'
 
 
     def __str__(self) -> str:
@@ -197,8 +223,9 @@ class EpisodeInfo:
         """Whether this object has all ID's defined"""
 
         return ((self.tvdb_id is not None)
-                and (self.imdb_id is not None)
-                and (self.tmdb_id is not None))
+            and (self.imdb_id is not None)
+            and (self.tmdb_id is not None)
+        )
 
 
     @property
@@ -206,9 +233,11 @@ class EpisodeInfo:
         """This object's ID's (as a dictionary)"""
 
         return {
-            'tvdb_id': self.tvdb_id,
+            'emby_id': self.emby_id,
             'imdb_id': self.imdb_id,
-            'tmdb_id': self.tmdb_id
+            'tmdb_id': self.tmdb_id,
+            'tvdb_id': self.tvdb_id,
+            'tvrage_id': self.tvrage_id,
         }
 
 
@@ -227,7 +256,7 @@ class EpisodeInfo:
             'episode_number': self.episode_number,
             'abs_number': self.abs_number,
             'airdate': self.airdate,
-            **self.word_set,
+            **self.__word_set,
         }
 
 
@@ -249,43 +278,46 @@ class EpisodeInfo:
         return f's{self.season_number}e{self.episode_number}'
 
 
-    def set_tvdb_id(self, tvdb_id: int) -> None:
+    def __set_attr(self, attribute: str, value: Any, 
+                   type_: Optional[callable]=None) -> None:
         """
-        Sets the TVDb ID for this object.
+        Set the given attribute to the given value with the given type.
 
         Args:
-            tmdb_id: The TVDb ID to set.
+            attribute: Attribute (string) being set.
+            value: Value to set the attribute to.
+            type_: Optional callable to call on value before assignment.
         """
 
-        if self.tvdb_id is None and tvdb_id is not None:
-            self.tvdb_id = int(tvdb_id)
+        # Set attribute if current value is None and new value isn't
+        if getattr(self, attribute) is None and value is not None:
+            # If a type is defined, use that
+            if type_ is None:
+                setattr(self, attribute, value)
+            else:
+                setattr(self, attribute, type_(value))
+
+    """Functions for setting database ID's on this object"""
+    def set_emby_id  (self, id) -> None: self.__set_attr('emby_id',   id, str)
+    def set_imdb_id  (self, id) -> None: self.__set_attr('imdb_id',   id, str)
+    def set_tmdb_id  (self, id) -> None: self.__set_attr('tmdb_id',   id, int)
+    def set_tvdb_id  (self, id) -> None: self.__set_attr('tvdb_id',   id, int)
+    def set_tvrage_id(self, id) -> None: self.__set_attr('tvrage_id', id, int)
 
 
-    def set_imdb_id(self, imdb_id: str) -> None:
+    def set_airdate(self, airdate: 'datetime') -> None:
         """
-        Sets the IMDb ID for this object.
+        Set the given datetime to this object.
 
         Args:
-            imdb_id: The IMDb ID to set.
+            new_datetime: Datetime to set for this object.
         """
-
-        if self.imdb_id is None and imdb_id is not None:
-            self.imdb_id = imdb_id
-
-
-    def set_tmdb_id(self, tmdb_id: int) -> None:
-        """
-        Sets the TMDb ID for this object.
-
-        Args:
-            tmdb_id: The TMDb ID to set.
-        """
-
-        if self.tmdb_id is None and tmdb_id is not None:
-            self.tmdb_id = tmdb_id
+        
+        if self.airdate is None and airdate is not None: self.airdate = airdate
 
 
-    def update_queried_statuses(self, queried_plex: bool=False,
+    def update_queried_statuses(self, queried_emby: bool=False,
+                                queried_plex: bool=False,
                                 queried_sonarr: bool=False,
                                 queried_tmdb: bool=False) -> None:
         """
@@ -293,11 +325,13 @@ class EpisodeInfo:
         arguments. Only updates from False -> True.
 
         Args:
+            queried_emby: Whether this EpisodeInfo has been queried on Emby.
             queried_plex: Whether this EpisodeInfo has been queried on Plex.
             queried_sonarr: Whether this EpisodeInfo has been queried on Sonarr.
             queried_tmdb: Whether this EpisodeInfo has been queried on TMDb.
         """
 
+        if queried_emby:   self.queried_emby = queried_emby
         if queried_plex:   self.queried_plex = queried_plex
         if queried_sonarr: self.queried_sonarr = queried_sonarr
         if queried_tmdb:   self.queried_tmdb = queried_tmdb

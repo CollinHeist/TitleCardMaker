@@ -380,7 +380,7 @@ if hasattr(args, 'title_card'):
     # Attempt to get local card type, if not, try RemoteCardType
     pp._parse_card_type(args.card_type)
     CardClass = pp.card_class
-    RemoteFile.reset_loaded_database(pp.database_directory)
+    RemoteFile.reset_loaded_database()
 
     # Override unspecified defaults with their class specific defaults
     if args.font == Path('__default'):
