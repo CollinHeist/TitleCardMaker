@@ -1,4 +1,5 @@
 from re import compile as re_compile, IGNORECASE
+from typing import Iterable
 
 from modules.Debug import log
 
@@ -80,7 +81,7 @@ class Title:
     def __str__(self) -> str:
         """Returns a string representation of the object."""
 
-        return f'"{self.full_title}"'
+        return self.full_title
 
 
     def __repr__(self) -> str:
@@ -257,7 +258,7 @@ class Title:
         return ''.join(filter(str.isalnum, text)).lower()
 
 
-    def matches(self, *titles: tuple[str]) -> bool:
+    def matches(self, *titles: Iterable[str]) -> bool:
         """
         Get whether any of the given titles match this object.
 

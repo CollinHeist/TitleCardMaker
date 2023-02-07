@@ -68,7 +68,7 @@ class TMDbInterface(WebInterface):
         self.info_set = global_objects.info_set
 
         # Create/read blacklist database
-        self.__blacklist = TinyDB(database_directory / self.__BLACKLIST_DB)
+        self.__blacklist = PersistentDatabase(self.__BLACKLIST_DB)
 
         # Create/read series ID database
         self.__id_map = TinyDB(database_directory / self.__ID_DB)
@@ -109,9 +109,8 @@ class TMDbInterface(WebInterface):
                     return function(*args, **kwargs)
                 except TMDbException as e:
                     log_func(message)
-                    log.debug(f'TMDbException from {function.__name__}'
-                              f'({args}, {kwargs})')
-                    log.debug(f'Exception[{e}]')
+                    log.exception(f'TMDbException from {function.__name__}'
+                                  f'({args}, {kwargs})', e)
                     return default
             return inner
         return decorator
@@ -256,7 +255,7 @@ class TMDbInterface(WebInterface):
     @catch_and_log('Error setting series ID')
     def set_series_ids(self, series_info: SeriesInfo) -> None:
         """
-        Set the TMDb and TVDb ID's for the given SeriesInfo object.
+        Set all possible series ID's for the given SeriesInfo object.
 
         Args:
             series_info: SeriesInfo to update.
@@ -861,10 +860,10 @@ class TMDbInterface(WebInterface):
 
 
     @staticmethod
-    def unblacklist(database_directory: Path, series_info: SeriesInfo) -> None:
+    def unblacklist(series_info: SeriesInfo) -> None:
         """Remove all blacklist entries for the given series."""
 
-        blacklist = TinyDB(database_directory / TMDbInterface.__BLACKLIST_DB)
+        blacklist = PersistentDatabase(TMDbInterface.__BLACKLIST_DB)
         removed = blacklist.remove(where('series') == series_info.full_name)
         log.info(f'Unblacklisted {len(removed)} queries')
 

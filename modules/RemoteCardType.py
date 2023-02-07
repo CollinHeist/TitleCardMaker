@@ -7,6 +7,7 @@ from tinydb import TinyDB, where
 
 from modules.CleanPath import CleanPath
 from modules.Debug import log
+from modules.PersistentDatabase import PersistentDatabase
 from modules.RemoteFile import RemoteFile
 
 class RemoteCardType:
@@ -29,7 +30,7 @@ class RemoteCardType:
     __slots__ = ('loaded', 'card_class', 'valid')
 
 
-    def __init__(self, database_directory: Path, remote: str) -> None:
+    def __init__(self, remote: str) -> None:
         """
         Construct a new RemoteCardType. This downloads the source file at the
         specified location and loads it as a class in the global modules, under
@@ -44,7 +45,7 @@ class RemoteCardType:
         """
 
         # Get database of loaded assets/cards
-        self.loaded = TinyDB(database_directory / self.LOADED)
+        self.loaded = PersistentDatabase(self.LOADED)
 
         # Assume file is valid until invalidated
         self.valid = True

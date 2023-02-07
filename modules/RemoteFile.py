@@ -2,10 +2,10 @@ from pathlib import Path
 
 from requests import get
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
-from tinydb import TinyDB, where
+from tinydb import where
 
 from modules.Debug import log
-import modules.global_objects as global_objects
+from modules.PersistentDatabase import PersistentDatabase
 
 class RemoteFile:
     """
@@ -43,8 +43,7 @@ class RemoteFile:
         self.valid = True
 
         # Get database of loaded assets
-        database_directory = global_objects.pp.database_directory
-        self.loaded = TinyDB(database_directory / self.LOADED_FILE)
+        self.loaded = PersistentDatabase(self.LOADED_FILE)
 
         # Remote font will be stored at github/username/filename
         self.remote_source = f'{self.BASE_URL}/{username}/{filename}'
@@ -135,21 +134,7 @@ class RemoteFile:
 
 
     @staticmethod
-    def reset_loaded_database(database_directory: Path) -> None:
-        """
-        Reset (clear) this class's database of loaded remote files.
+    def reset_loaded_database() -> None:
+        """Reset (clear) this class's database of loaded remote files."""
 
-        Args:
-            database_directory: Base Path to read/write any databases from.
-        """
-
-        database_file = database_directory / RemoteFile.LOADED_FILE
-        database = TinyDB(database_file)
-
-        try:
-            # Remove all records
-            database.truncate()
-        except Exception:
-            # Misformed databases can cause read errors
-            database_file.unlink(missing_ok=True)
-            pass
+        PersistentDatabase(RemoteFile.LOADED_FILE).reset()
