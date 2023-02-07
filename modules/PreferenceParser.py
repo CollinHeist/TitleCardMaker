@@ -336,7 +336,7 @@ class PreferenceParser(YamlReader):
                 self.valid = False
 
         if (value := self._get('options', 'episode_data_source',
-                               type_=self.TYPE_LOWER_STR)) is not None:
+                               type_=self.TYPE_LOWER_STR,)) is not None:
             if value in self.VALID_EPISODE_DATA_SOURCES:
                 self.episode_data_source = value
             else:
@@ -608,18 +608,18 @@ class PreferenceParser(YamlReader):
             True if the given YAML is valid, False otherwise.
         """
 
+        err = f'in series YAML file "{file.resolve()}"'
+
         # Libraries must be a dictionary
         if not isinstance(library_yaml, dict):
-            log.error(f'Invalid library specification for series file '
-                      f'"{file.resolve()}"')
+            log.error(f'Invalid library specification {err}')
             return False
 
         # Validate all given libraries
         for name, spec in library_yaml.items():
             # All libraries must be dictionaries
             if not isinstance(spec, dict):
-                log.error(f'Library "{name}" is invalid for series file '
-                          f'"{file.resolve()}"')
+                log.error(f'Library "{name}" is invalid {err}')
                 return False
 
             # All libraries must provide paths
@@ -957,7 +957,6 @@ class PreferenceParser(YamlReader):
     @property
     def plex_interface_kwargs(self) -> dict[str, 'Path | str | bool | int']:
         return {
-            'database_directory': self.database_directory,
             'url': self.plex_url,
             'x_plex_token': self.plex_token,
             'verify_ssl': self.plex_verify_ssl,

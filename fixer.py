@@ -226,7 +226,6 @@ if hasattr(args, 'forget_cards') and pp.use_plex:
         args.forget_cards[0], series_info,
     )
 
-
 # Execute Sonarr related options
 if args.sonarr_list_ids and pp.use_sonarr:
     SonarrInterface(**pp.sonarr_kwargs[0]).list_all_series_id()
@@ -234,12 +233,11 @@ if args.sonarr_list_ids and pp.use_sonarr:
 # Execute TMDB related options
 if hasattr(args, 'unblacklist'):
     TMDbInterface.unblacklist(
-        pp.database_directory,
-        SeriesInfo(args.unblacklist[0], int(args.unblacklist[1]))
+        SeriesInfo(args.unblacklist[0], args.unblacklist[1])
     )
 
 if hasattr(args, 'delete_blacklist') and args.delete_blacklist:
-    TMDbInterface.delete_blacklist(pp.database_directory)
+    TMDbInterface.delete_blacklist(**pp.tmdb_interface_kwargs)
 
 if hasattr(args, 'tmdb_download_images') and pp.use_tmdb:
     for arg_set in args.tmdb_download_images:
