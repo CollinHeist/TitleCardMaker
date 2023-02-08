@@ -29,6 +29,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer):
     """Datetime format string for airdates reported by Emby"""
     AIRDATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f000000Z'
 
+    """Range of years to query series by"""
+    YEAR_RANGE = range(1960, datetime.now().year)
+
 
     def __init__(self, url: str, api_key: str, verify_ssl: bool=True,
                  server_id: int=0) -> None:
@@ -172,6 +175,55 @@ class EmbyInterface(EpisodeDataSource, MediaServer):
         """
 
         self.get_all_episodes(series_info)
+
+
+    def get_all_series(self, filter_libraries: list[str]=[]
+                       ) -> list[tuple[SeriesInfo, str, str]]: 
+        """
+        Get all series within Emby, as filtered by the given libraries.
+
+        Args:
+            filter_libraries: Optional list of library names to filter returned
+                list by. If provided, only series that are within a given
+                library are returned.
+
+        Returns:
+            List of tuples whose elements are the SeriesInfo of the series, the 
+            path (string) it is located, and its corresponding library name.
+        """
+        
+        # Base params for all queries
+        params = {
+            'Recursive': True,
+            'IncludeItemTypes': 'series',
+            'Fields': 'ProviderIds,Path',
+        } | self.__params
+
+        # Go through each library in this server
+        all_series = []
+        for library, library_ids in self.libraries.items():
+            # If filtering, skip unspecified libraries
+            if filter_libraries and library not in filter_libraries:
+                continue
+
+            # Go through every subfolder (the parent ID) in this library
+            for parent_id in library_ids:
+                # Have to query year by year, for SOME stupid reason...
+                for year in self.YEAR_RANGE:
+                    # Get all items (series) in this subfolder for this year
+                    response = self.session._get(
+                        f'{self.url}/Items',
+                        params=params | {'ParentId': parent_id, 'Years': year}
+                    )
+
+                    for series in response['Items']:
+                        all_series.append((
+                            SeriesInfo(series['Name'], year),
+                            series['Path'],
+                            library
+                        ))
+
+        return all_series
 
 
     def get_all_episodes(self, series_info: SeriesInfo) -> list[EpisodeInfo]:
