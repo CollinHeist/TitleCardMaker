@@ -118,7 +118,7 @@ class MediaInfoSet:
                 sonarr_id=sonarr_id, tmdb_id=tmdb_id, tvdb_id=tvdb_id,
                 tvrage_id=tvrage_id, match_titles=match_titles
             )
-            # log.debug(f'Created new {series_info!r}')
+
             self.series_info_db.insert({
                 'full_name': full_name, 'emby_id': emby_id, 'imdb_id': imdb_id,
                 'sonarr_id': sonarr_id, 'tmdb_id': tmdb_id, 'tvdb_id': tvdb_id,
@@ -181,20 +181,23 @@ class MediaInfoSet:
         """
 
         # If the ID is invalid, skip
-        if (id_ is None or id_ == 0
-            or getattr(series_info, f'{id_type}_id') is not None):
+        existing = getattr(series_info, f'{id_type}_id')
+        if id_ is None or id_ == 0 or existing is not None or existing == id_:
             return None
 
         # Update series info object with the given ID
-        attr = getattr(series_info, f'set_{id_type}_id')
-        log.debug(f'Calling SeriesInfo.{attr.__name__}({id_})')
         getattr(series_info, f'set_{id_type}_id')(id_)
 
         # Update database
-        ud = {f'{id_type}_id': id_}
-        log.debug(f'Updating {ud} of SeriesInfo database')
-        self.series_info_db.upsert(
-            {f'{id_type}_id': id_},
+        self.series_info_db.upsert({
+                'full_name': series_info.full_name,
+                'emby_id': series_info.emby_id,
+                'imdb_id': series_info.imdb_id,
+                'sonarr_id': series_info.sonarr_id,
+                'tmdb_id': series_info.tmdb_id,
+                'tvdb_id': series_info.tvdb_id,
+                'tvrage_id': series_info.tvrage_id, 
+            },
             self.__series_info_condition(
                 series_info.full_name, series_info.emby_id, series_info.imdb_id,
                 series_info.sonarr_id, series_info.tmdb_id, series_info.tvdb_id,
@@ -238,7 +241,7 @@ class MediaInfoSet:
         """
 
         new_keys = [
-            # f'title:{series_info.full_name}:{season_number}:{episode_number}'
+            f'title:{series_info.full_name}:{season_number}:{episode_number}'
         ]
         new_keys += [] if emby_id is None else [f'emby:{emby_id}']
         new_keys += [] if imdb_id is None else [f'imdb:{imdb_id}']
@@ -289,7 +292,7 @@ class MediaInfoSet:
             series_info, season_number, episode_number, emby_id, imdb_id,
             tmdb_id, tvdb_id, tvrage_id
         )
-        # index_key = update_keys[0]
+        index_key = update_keys[0]
 
         # Query by TVDb -> IMDb -> TMDb -> Emby -> TVRage -> Index+?Title
         if tvdb_id and (info := self.episode_info.get(f'tvdb:{tvdb_id}')):
@@ -302,10 +305,10 @@ class MediaInfoSet:
             pass
         elif tvrage_id and (info := self.episode_info.get(f'tvrage:{tvrage_id}')):
             pass
-        # elif ((info := self.episode_info.get(index_key))
-        #     and (not title_match
-        #          or (title_match and info.title.matches(title)))):
-        #     pass
+        elif ((info := self.episode_info.get(index_key))
+            and (not title_match
+                 or (title_match and info.title.matches(title)))):
+            pass
         # No existing EpisodeInfo, create new one
         else:
             info = EpisodeInfo(
