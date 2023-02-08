@@ -61,7 +61,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         Construct a new instance of an interface to TMDb.
 
         Args:
-            api_key: The api key to communicate with TMDb.
+            api_key: The API key to communicate with TMDb.
         """
 
         super().__init__('TMDb')
@@ -398,11 +398,12 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
           1. Episode TVDb ID
           2. Episode IMDb ID (as episode)
-          3. Episode IMDb ID (as movie)
-          4. Episode title as movie (if no series TMDb ID is present)
-          5. Series TMDb ID and season+episode index with title match
-          6. Series TMDb ID and season+absolute episode index with title match
-          7. Series TMDb ID and title match on any episode
+          3. Episode TVRage ID
+          4. Episode IMDb ID (as movie)
+          5. Episode title as movie (if no series TMDb ID is present)
+          6. Series TMDb ID and season+episode index with title match
+          7. Series TMDb ID and season+absolute episode index with title match
+          8. Series TMDb ID and title match on any episode
 
         Args:
             series_info: The series information.
@@ -429,6 +430,21 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         if episode_info.has_id('imdb_id'):
             try:
                 results = self.api.find_by_id(imdb_id=episode_info.imdb_id)
+                # Check for an episode, then check for a movie
+                if len(results.tv_episode_results) > 0:
+                    (episode := results.tv_episode_results[0]).reload()
+                elif len(results.movie_results) > 0:
+                    (episode := results.movie_results[0]).reload()
+                else:
+                    raise NotFound
+                return episode
+            except (NotFound, IndexError, TMDbException):
+                pass
+
+        # Query with TVRage ID
+        if episode_info.has_id('tvrage_id'):
+            try:
+                results = self.api.find_by_id(tvrage_id=episode_info.tvrage_id)
                 # Check for an episode, then check for a movie
                 if len(results.tv_episode_results) > 0:
                     (episode := results.tv_episode_results[0]).reload()
