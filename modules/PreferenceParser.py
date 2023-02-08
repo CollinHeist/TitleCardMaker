@@ -336,7 +336,7 @@ class PreferenceParser(YamlReader):
                 self.valid = False
 
         if (value := self._get('options', 'episode_data_source',
-                               type_=self.TYPE_LOWER_STR,)) is not None:
+                               type_=self.TYPE_LOWER_STR)) is not None:
             if value in self.VALID_EPISODE_DATA_SOURCES:
                 self.episode_data_source = value
             else:
@@ -967,7 +967,6 @@ class PreferenceParser(YamlReader):
     @property
     def tmdb_interface_kwargs(self) -> dict[str, 'Path | str']:
         return {
-            'database_directory': self.database_directory,
             'api_key': self.tmdb_api_key,
         }
 
