@@ -1,17 +1,19 @@
 from datetime import datetime, timedelta
 from pathlib import Path
-from tinydb import TinyDB, where
+from tinydb import where
 from typing import Iterable
 
 from tmdbapis import TMDbAPIs, NotFound, Unauthorized, TMDbException
 
 from modules.Debug import log
+from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo import EpisodeInfo
 import modules.global_objects as global_objects
+from modules.PersistentDatabase import PersistentDatabase
 from modules.SeriesInfo import SeriesInfo
 from modules.WebInterface import WebInterface
 
-class TMDbInterface(WebInterface):
+class TMDbInterface(EpisodeDataSource, WebInterface):
     """
     This class defines an interface to TheMovieDatabase (TMDb). Once initialized 
     with a valid API key, the primary purpose of this class is to gather images
@@ -20,6 +22,9 @@ class TMDbInterface(WebInterface):
 
     """Default for how many failed requests lead to a blacklisted entry"""
     BLACKLIST_THRESHOLD = 5
+
+    """Series ID's that can be set by TMDb"""
+    SERIES_IDS = ('imdb_id', 'tmdb_id', 'tvdb_id', 'tvrage_id')
 
     """Generic translated episode format strings for each language code"""
     GENERIC_TITLE_FORMATS = {
@@ -50,18 +55,16 @@ class TMDbInterface(WebInterface):
     """Filename for where to store blacklisted entries"""
     __BLACKLIST_DB = 'tmdb_blacklist.json'
 
-    """Filename where mappings of series full titles to TMDB ids is stored"""
-    __ID_DB = 'tmdb_ids.json'
 
-
-    def __init__(self, database_directory: Path, api_key: str) -> None:
+    def __init__(self, api_key: str) -> None:
         """
         Construct a new instance of an interface to TMDb.
 
         Args:
-            database_directory: Base Path to read/write any databases from.
             api_key: The api key to communicate with TMDb.
         """
+
+        super().__init__('TMDb')
 
         # Store global objects
         self.preferences = global_objects.pp
@@ -70,12 +73,9 @@ class TMDbInterface(WebInterface):
         # Create/read blacklist database
         self.__blacklist = PersistentDatabase(self.__BLACKLIST_DB)
 
-        # Create/read series ID database
-        self.__id_map = TinyDB(database_directory / self.__ID_DB)
-
         # Create API object, validate key
         try:
-            self.api = TMDbAPIs(api_key)
+            self.api = TMDbAPIs(api_key, self.session)
         except Unauthorized:
             log.critical(f'TMDb API key "{api_key}" is invalid')
             exit(1)
@@ -261,20 +261,8 @@ class TMDbInterface(WebInterface):
             series_info: SeriesInfo to update.
         """
 
-        # TMDb can set the TMDb, TVDb, and IMDb ID's - exit if all defined
-        if series_info.has_ids('tmdb_id', 'tvdb_id', 'imdb_id'):
-            return None
-
-        # If TVDb ID is available and is mapped, set that ID
-        if (series_info.tvdb_id and
-            (val := self.__id_map.get(where('tvdb_id') == series_info.tvdb_id))):
-            series_info.set_tmdb_id(val['tmdb_id'])
-            return None
-
-        # If already mapped, set that ID
-        if (entry := self.__id_map.get(where('name') == series_info.full_name)):
-            series_info.set_tvdb_id(entry['tmdb_id'])
-            series_info.set_tmdb_id(entry['tmdb_id'])
+        # If all possible ID's are defined
+        if series_info.has_ids(*self.SERIES_IDS):
             return None
 
         # Try and find by TMDb ID first
@@ -306,6 +294,16 @@ class TMDbInterface(WebInterface):
             except NotFound:
                 pass
 
+        # Find by TVRage ID
+        if not found and series_info.has_id('tvrage_id'):
+            try:
+                results = self.api.find_by_id(
+                    tvrage_id=series_info.tvrage_id
+                ).tv_results
+                found = len(results) > 0
+            except NotFound:
+                pass
+
         # Find by series name + year
         if not found:
             try:
@@ -316,19 +314,16 @@ class TMDbInterface(WebInterface):
             except NotFound:
                 pass
 
-        # If found, update ID's
+        # If found, update TMDb, IMDb, TVDb, and TVRage ID's
         if found:
             result = results[0]
-            # Series always have TMDb ID
-            series_info.set_tmdb_id(result.id)
-
-            # Series without IMDb ID have None in its place
-            if (imdb_id := result.imdb_id) is not None:
-                series_info.set_imdb_id(imdb_id)
-
-            # Series without TVDB ID have 0 in its place
-            if (tvdb_id := result.tvdb_id) != 0:
-                series_info.set_tvdb_id(tvdb_id)
+            self.info_set.set_tmdb_id(series_info, int(result.id))
+            if (imdb_id := result.imdb_id):
+                self.info_set.set_imdb_id(series_info, imdb_id)
+            if (tvdb_id := result.tvdb_id):
+                self.info_set.set_tvdb_id(series_info, tvdb_id)
+            if (tvrage_id := result.tvrage_id):
+                self.info_set.set_tvrage_id(series_info, tvrage_id)
         else:
             log.warning(f'Series "{series_info}" not found on TMDb')
 
@@ -827,7 +822,8 @@ class TMDbInterface(WebInterface):
         return None
 
 
-    def manually_download_season(self, title: str, year: int,season_number: int,
+    def manually_download_season(self, title: str, year: int,
+                                 season_number: int,
                                  episode_range: Iterable[int],
                                  directory: Path) -> None:
         """
@@ -835,11 +831,10 @@ class TMDbInterface(WebInterface):
         show. They will be named as s{season}e{episode}.jpg.
 
         Args:
-            api_key: The api key for sending requsts to TMDb.
             title: The title of the requested show.
             year: The year of the requested show.
             season_number: Which season to download.
-            episode_range: Iterable of episode numbers to download.
+            episode_range: Episode numbers to download images of.
             directory: The directory to place the downloaded images in.
         """
 
@@ -855,8 +850,8 @@ class TMDbInterface(WebInterface):
             # If a valid URL was returned, download it
             if image_url is not None:
                 filename = f's{season_number}e{episode_number}.jpg'
-                self.download_image(image_url, directory / filename)
-                log.debug(f'Downloaded {(directory / filename).resolve()}')
+                if self.download_image(image_url, directory / filename):
+                    log.debug(f'Downloaded {(directory / filename).resolve()}')
 
 
     @staticmethod
