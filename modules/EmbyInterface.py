@@ -10,7 +10,7 @@ from modules.MediaServer import MediaServer
 from modules.SeriesInfo import SeriesInfo
 from modules.WebInterface import WebInterface
 
-SourceImage = Union[str, None]
+SourceImage = Union[bytes, None]
 
 class EmbyInterface(EpisodeDataSource, MediaServer):
     """
@@ -45,11 +45,13 @@ class EmbyInterface(EpisodeDataSource, MediaServer):
             SystemExit: Invalid Sonarr URL/API key provided.
         """
 
+        # Intiialize parent classes
         super().__init__()
 
+        # Store attributes of this Interface
         self.session = WebInterface('Emby', verify_ssl)
         self.info_set = global_objects.info_set
-        self.url = url
+        self.url = url[:-1] if url.endswith('/') else url
         self.__params = {'api_key': api_key}
         self.server_id = server_id
 
@@ -63,6 +65,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer):
                 raise Exception(f'Unable to authenticate with server')
         except Exception as e:
             log.critical(f'Cannot connect to Emby - returned error {e}')
+            log.exception(f'Bad Emby connection', e)
             exit(1)
 
         # Get the ID's of all libraries within this server
@@ -302,5 +305,34 @@ class EmbyInterface(EpisodeDataSource, MediaServer):
             log.info(f'Loaded {loaded_count} cards for "{series_info}"')
 
 
-    def get_source_image(self) -> SourceImage:
-        raise NotImplementedError(f'All EpisodeDataSources must implement this')
+    def get_source_image(self, episode_info: EpisodeInfo) -> SourceImage:
+        """
+        Get the source image given episode within Emby.
+
+        Args:
+            series_info: The series to get the source image of.
+            episode_info: The episode to get the source image of.
+
+        Returns:
+            Bytes of the source image for the given Episode. None if the episode
+            does not exist in Emby, or no valid image was returned.
+        """
+
+        # If series has no Emby ID, cannot query episodes
+        if not episode_info.has_id('emby_id'):
+            log.warning(f'Episode {episode_info} not found in Emby')
+            return None
+
+        # Get the source image for this episode
+        emby_id = episode_info.emby_id.split('-')[1]
+        response = self.session._get(
+            f'{self.url}/Items/{emby_id}/Images/Primary',
+            params={'Quality': 100} | self.__params,
+        ).content
+
+        # Check if valid content was returned
+        if b'does not have an image of type' in response:
+            log.warning(f'Episode {episode_info} has no source images')
+            return None 
+
+        return response

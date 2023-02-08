@@ -753,25 +753,24 @@ class Show(YamlReader):
             # Go through each source interface indicated, try and get source
             for source_interface in self.preferences.image_source_priority:
                 # Query either TMDb or Plex for the source image
-                image_url = None
+                image = None
                 if source_interface == 'tmdb' and check_tmdb:
-                    image_url = self.tmdb_interface.get_source_image(
+                    image = self.tmdb_interface.get_source_image(
                         self.series_info,
                         episode.episode_info,
                         skip_localized_images=self.tmdb_skip_localized_images,
                     )
                 elif source_interface == 'plex' and check_plex:
-                    image_url = self.plex_interface.get_source_image(
+                    image = self.plex_interface.get_source_image(
                         self.library_name,
                         self.series_info,
                         episode.episode_info,
                     )
 
-                # If URL was returned by either interface, download
-                if image_url is not None:
-                    if WebInterface.download_image(image_url, episode.source):
-                        log.debug(f'Downloaded {episode.source.name} for {self}'
-                                  f' from {source_interface}')
+                # Attempt to download image, log and exit if successful
+                if image and WebInterface.download_image(image, episode.source):
+                    log.debug(f'Downloaded {episode.source.name} for {self} '
+                              f'from {source_interface}')
                     break
 
 
@@ -907,7 +906,7 @@ class Show(YamlReader):
             return None
 
         # Update Plex
-        self.plex_interface.set_title_cards_for_series(
+        self.plex_interface.set_title_cards(
             self.library_name, self.series_info, self.episodes,
         )
 

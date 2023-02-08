@@ -5,7 +5,7 @@ from tinydb import where, Query
 
 from modules.PersistentDatabase import PersistentDatabase
 
-SourceImage = Union[str, None]
+SourceImage = Union[str, bytes, None]
 
 class MediaServer(ABC):
     """

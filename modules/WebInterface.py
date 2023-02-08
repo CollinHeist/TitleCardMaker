@@ -117,12 +117,12 @@ class WebInterface:
 
 
     @staticmethod
-    def download_image(image_url: str, destination: 'Path') -> bool:
+    def download_image(image: 'str | bytes', destination: 'Path') -> bool:
         """
-        Download the provided image URL to the destination filepath.
+        Download the provided image to the destination filepath.
 
         Args:
-            image_url: URL to the image to download.
+            image: URL to the image to download, or bytes of the image to write.
             destination: Destination path to download the image to.
 
         Returns:
@@ -132,19 +132,22 @@ class WebInterface:
         # Make parent folder structure
         destination.parent.mkdir(parents=True, exist_ok=True)
 
+        # If content of image, just write directly to file
+        if isinstance(image, bytes):
+            destination.write_bytes(image)
+            return True
+
         # Attempt to download the image, if an error happens log to user
         try:
             # Get content from URL
-            error = lambda s: f'URL {image_url} returned {s} content'
-            image = get(image_url).content
+            error = lambda s: f'URL {image} returned {s} content'
+            image = get(image).content
             assert len(image) > 0, error('no')
             assert image not in WebInterface.BAD_CONTENT, error('bad')
 
-            # Write content to file
-            with destination.open('wb') as file_handle:
-                file_handle.write(image)
-
+            # Write content to file, return success
+            destination.write_bytes(image)
             return True
         except Exception as e:
-            log.error(f'Cannot download image, error: "{e}"')
+            log.exception(f'Cannot download image, returned error', e)
             return False
