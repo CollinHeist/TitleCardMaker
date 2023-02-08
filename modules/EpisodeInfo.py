@@ -71,7 +71,7 @@ class EpisodeInfo(DatabaseInfoContainer):
 
     def __init__(self, title: 'str | Title', season_number: int,
                  episode_number: int, abs_number: int=None, *,
-                 emby_id: str=None,
+                 emby_id: int=None,
                  imdb_id: str=None,
                  tmdb_id: int=None,
                  tvdb_id: int=None,
@@ -92,8 +92,8 @@ class EpisodeInfo(DatabaseInfoContainer):
         self.season_number = int(season_number)
         self.episode_number = int(episode_number)
         self.abs_number = None if abs_number is None else int(abs_number)
-        self.emby_id = None if emby_id is None else str(emby_id)
-        self.imdb_id = None if imdb_id is None else str(imdb_id)
+        self.emby_id = None if emby_id is None else int(emby_id)
+        self.imdb_id = imdb_id
         self.tmdb_id = None if tmdb_id is None else int(tmdb_id)
         self.tvdb_id = None if tvdb_id is None else int(tvdb_id)
         self.tvrage_id = None if tvrage_id is None else int(tvrage_id)
@@ -247,7 +247,7 @@ class EpisodeInfo(DatabaseInfoContainer):
 
     """Functions for setting database ID's on this object"""
     def set_emby_id(self, emby_id) -> None:
-        self._update_attribute('emby_id', emby_id, str)
+        self._update_attribute('emby_id', emby_id, int)
 
     def set_imdb_id(self, imdb_id) -> None:
         self._update_attribute('imdb_id', imdb_id, str)

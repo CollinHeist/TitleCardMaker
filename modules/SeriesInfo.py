@@ -22,7 +22,7 @@ class SeriesInfo(DatabaseInfoContainer):
 
 
     def __init__(self, name: str, year: int=None, *,
-                 emby_id: str=None,
+                 emby_id: int=None,
                  imdb_id: str=None,
                  sonarr_id: str=None,
                  tmdb_id: int=None,
@@ -54,7 +54,7 @@ class SeriesInfo(DatabaseInfoContainer):
         # Parse arguments into attributes
         self.name = name
         self.year = year
-        self.emby_id = emby_id
+        self.emby_id = None if emby_id is None else int(emby_id)
         self.imdb_id = imdb_id
         self.sonarr_id = sonarr_id
         self.tmdb_id = None if tmdb_id is None else int(tmdb_id)
@@ -132,8 +132,8 @@ class SeriesInfo(DatabaseInfoContainer):
         self.full_clean_name =  CleanPath.sanitize_name(self.full_name)
 
 
-    def set_emby_id(self, emby_id: str) -> None:
-        self._update_attribute('emby_id', emby_id, str)
+    def set_emby_id(self, emby_id: int) -> None:
+        self._update_attribute('emby_id', emby_id, int)
 
     def set_imdb_id(self, imdb_id: str) -> None:
         self._update_attribute('imdb_id', imdb_id, str)

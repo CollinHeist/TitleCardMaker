@@ -36,8 +36,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     def __init__(self, url: str, api_key: str, username: str,
                  verify_ssl: bool=True,
-                 filesize_limit: int=10485760,
-                 server_id: int=0) -> None:
+                 filesize_limit: int=10485760) -> None:
         """
         Construct a new instance of an interface to an Emby server.
 
@@ -48,7 +47,6 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             verify_ssl: Whether to verify SSL requests.
             filesize_limit: Number of bytes to limit a single file to during
                 upload.
-            server_id: Server ID of this server.
 
         Raises:
             SystemExit: Invalid Sonarr URL/API key provided.
@@ -64,7 +62,6 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         self.__params = {'api_key': api_key}
         self.username = username
         self.filesize_limit = filesize_limit
-        self.server_id = server_id
 
         # Authenticate with server
         try:
@@ -188,8 +185,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 if (result['Type'] == 'Series'
                     and series_info.matches(result['Name'])):
                     # Set Emby, IMDb, TMDb, or TVDb
-                    emby_id = f'{self.server_id}-{result["Id"]}'
-                    self.info_set.set_emby_id(series_info, emby_id)
+                    self.info_set.set_emby_id(series_info, int(result['Id']))
                     if (imdb_id := result['ProviderIds'].get('IMDB')):
                         self.info_set.set_imdb_id(series_info, imdb_id)
                     if (tmdb_id := result['ProviderIds'].get('Tmdb')):
@@ -285,9 +281,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             return []
 
         # Get all episodes for this series from Emby
-        emby_id = series_info.emby_id.split('-')[1]
         response = self.session._get(
-            f'{self.url}/Shows/{emby_id}/Episodes',
+            f'{self.url}/Shows/{series_info.emby_id}/Episodes',
             params={'Fields': 'ProviderIds'} | self.__params
         )
 
@@ -308,7 +303,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 episode['Name'],
                 episode['ParentIndexNumber'],
                 episode['IndexNumber'],
-                emby_id=f'{self.server_id}-{episode.get("Id")}',
+                emby_id=int(episode.get('Id')),
                 imdb_id=episode['ProviderIds'].get('Imdb'),
                 tmdb_id=episode['ProviderIds'].get('Tmdb'),
                 tvdb_id=episode['ProviderIds'].get('Tvdb'),
@@ -352,7 +347,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # Query for all episodes of this series
         response = self.session._get(
-            f'{self.url}/Shows/{series_info.emby_id.split("-")[1]}/Episodes',
+            f'{self.url}/Shows/{series_info.emby_id}/Episodes',
             params={'UserId': self.user_id} | self.__params
         )
 
@@ -423,7 +418,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
             # Submit POST request for image upload
             try:
-                emby_id = episode.episode_info.emby_id.split('-')[1]
+                emby_id = episode.episode_info.emby_id
                 self.session.session.post(
                     url=f'{self.url}/Items/{emby_id}/Images/Primary',
                     headers={'Content-Type': 'image/jpeg'},
