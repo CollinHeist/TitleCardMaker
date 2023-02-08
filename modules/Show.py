@@ -654,12 +654,16 @@ class Show(YamlReader):
             Whether a backdrop should be downloaded or not.
         """
 
+        # Get appropiate MediaServer interface
+        media_interface = {'emby': self.emby_interface,
+                           'plex': self.plex_interface}[self.media_server]
+
         # If this is an archive, assume all episodes are watched
         if self.__is_archive:
             [episode.update_statuses(True, self.style_set)
              for _, episode in self.episodes.items()]
-        # If no PlexInterface, assume all episodes are unwatched
-        elif self.plex_interface is None:
+        # If no MediaServer interface, assume all episodes are unwatched
+        elif media_interface is None:
             [episode.update_statuses(False, self.style_set)
              for _, episode in self.episodes.items()]
         # Update watch statuses from Plex
@@ -668,7 +672,7 @@ class Show(YamlReader):
             if select_only:
                 episode_map = {select_only.episode_info.key: select_only}
 
-            self.plex_interface.update_watched_statuses(
+            media_interface.update_watched_statuses(
                 self.library_name, self.series_info, episode_map, self.style_set
             )
 
@@ -693,11 +697,9 @@ class Show(YamlReader):
                 (applies_to == 'unwatched' and not episode.watched)):
                 episode.update_source(manual_source, downloadable=False)
 
-            # Blur if indicated by style
+            # Apply styles if indicated
             if self.style_set.effective_style_is_blur(episode.watched):
                 episode.blur = True
-
-            # Grayscale if indicated by style
             if self.style_set.effective_style_is_grayscale(episode.watched):
                 episode.grayscale = True
 
@@ -922,15 +924,19 @@ class Show(YamlReader):
         for all Episodes associated with this show.
         """
 
-        # Skip if no library specified
-        if not self.plex_interface:
+        # Get appropriate MediaServer interface
+        media_interface = {'emby': self.emby_interface,
+                           'plex': self.plex_interface}[self.media_server]
+
+        # Exit if no valid media interface
+        if not media_interface:
             return None
 
-        # Update Plex
-        self.plex_interface.set_title_cards(
+        # Set title cards and season posters in media interface
+        media_interface.set_title_cards(
             self.library_name, self.series_info, self.episodes,
         )
 
-        self.plex_interface.set_season_poster(
+        media_interface.set_season_poster(
             self.library_name, self.series_info, self.season_poster_set,
         )

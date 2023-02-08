@@ -319,6 +319,66 @@ class EmbyInterface(EpisodeDataSource, MediaServer):
         return all_episodes
 
 
+    def update_watched_statuses(self, library_name: str,
+                                series_info: SeriesInfo,
+                                episode_map: dict[str, 'Episode'],
+                                style_set: 'StyleSet') -> None:
+        """
+        Modify the Episode objects according to the watched status of the
+        corresponding episodes within Plex, and the spoil status of the object.
+        If a loaded card needs its spoiler status changed, the card is deleted
+        and the loaded map is forced to reload that card.
+
+        Args:
+            library_name: The name of the library containing the series.
+            series_info: The series to update.
+            episode_map: Dictionary of episode keys to Episode objects to modify
+            style_set: StyleSet object to update the style of the Episodes with.
+        """
+
+        # If no episodes, or series has no Emby ID, exit
+        if len(episode_map) == 0 or not series_info.has_id('emby_id'):
+            return None
+
+        # Get current loaded characteristics of the series
+        loaded_series = self.loaded_db.search(self._get_condition(library_name,
+                                                                  series_info))
+
+        # Query for all episodes of this series
+        response = self.session._get(
+            f'{self.url}/Shows/{series_info.emby_id.split("-")[1]}/Episodes',
+            params={'UserId': self.user_id} | self.__params
+        )
+
+        # Go through each episode in Emby, update Episode status/card
+        for emby_episode in response['Items']:
+            # Skip if this episode isn't in TCM
+            season_number = emby_episode['ParentIndexNumber']
+            ep_key = f'{season_number}-{emby_episode["IndexNumber"]}'
+            if not (episode := episode_map.get(ep_key)):
+                continue
+
+            # Set Episode watch/spoil statuses
+            episode.update_statuses(emby_episode['UserData']['Played'], style_set)
+
+            # Get characteristics of this Episode's loaded card
+            details = self._get_loaded_episode(loaded_series, episode)
+            loaded = (details is not None)
+            spoiler_status = details['spoiler'] if loaded else None
+
+            # Delete and reset card if current spoiler type doesn't match
+            delete_and_reset = ((episode.spoil_type != spoiler_status)
+                                and bool(spoiler_status))
+
+            # Delete card, reset size in loaded map to force reload
+            if delete_and_reset and loaded:
+                episode.delete_card(reason='updating style')
+                self.loaded_db.update(
+                    {'filesize': 0},
+                    self._get_condition(library_name, series_info, episode)
+                )
+
+
     def set_title_cards(self, library_name: str, series_info: 'SeriesInfo',
                         episode_map: dict[str, 'Episode']) -> None:
         """

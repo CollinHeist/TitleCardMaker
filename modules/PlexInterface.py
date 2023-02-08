@@ -695,9 +695,9 @@ class PlexInterface(EpisodeDataSource, MediaServer):
 
 
     @catch_and_log('Error uploading season posters')
-    def set_season_poster(self, library_name: str,
-                          series_info: SeriesInfo,
-                          season_poster_set: 'SeasonPosterSet') -> None:
+    def set_season_posters(self, library_name: str,
+                           series_info: SeriesInfo,
+                           season_poster_set: 'SeasonPosterSet') -> None:
         """
         Set the season posters from the given set within Plex.
 

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Union
+from typing import Union, Any
 
 from tinydb import where, Query
 
@@ -49,7 +49,7 @@ class MediaServer(ABC):
             episode: Optional Episode to get the series of.
 
         Returns:
-            tinydb Query condition.
+            Query condition to filter a TinyDB database for the requested entry.
         """
 
         # If no episode was given, get condition for entire series
@@ -67,8 +67,8 @@ class MediaServer(ABC):
         )
 
 
-    def _get_loaded_episode(self, loaded_series: list[dict],
-                             episode: 'Episode') -> dict:
+    def _get_loaded_episode(self, loaded_series: list[dict[str, Any]],
+                             episode: 'Episode') -> 'dict[str, Any] | None':
         """
         Get the loaded details of the given Episode from the given list of
         loaded series details.
@@ -91,7 +91,8 @@ class MediaServer(ABC):
 
 
     def _filter_loaded_cards(self, library_name: str, series_info:'SeriesInfo',
-                              episode_map: dict) -> dict:
+                             episode_map: dict[str, 'Episode']
+                             ) -> dict[str, 'Episode']:
         """
         Filter the given episode map and remove all Episode objects without
         created cards, or whose card's filesizes matches that of the already
@@ -140,7 +141,7 @@ class MediaServer(ABC):
 
     @abstractmethod
     def update_watched_statuses(self, library_name: str,
-                                series_info: SeriesInfo,
+                                series_info: 'SeriesInfo',
                                 episode_map: dict[str, 'Episode'],
                                 style_set: 'StyleSet') -> None:
         """Abstract method to update watched statuses of Episode objects."""
@@ -149,6 +150,12 @@ class MediaServer(ABC):
 
     @abstractmethod
     def set_title_cards(self) -> None:
+        """Abstract method to load title cards within this MediaServer."""
+        raise NotImplementedError('All MediaServer objects must implement this')
+
+
+    @abstractmethod
+    def set_season_posters(self) -> None:
         """Abstract method to load title cards within this MediaServer."""
         raise NotImplementedError('All MediaServer objects must implement this')
 
