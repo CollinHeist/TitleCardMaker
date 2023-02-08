@@ -71,9 +71,12 @@ class Show(YamlReader):
         # Set this show's SeriesInfo object with blank year to start
         self.series_info = SeriesInfo(name, 0)
         try:
-            self.series_info = SeriesInfo(name, self._get('year', type_=int))
-        except Exception:
-            log.error(f'Series "{name}" is missing the required "year"')
+            self.series_info = self.info_set.get_series_info(
+                self._get('name', type_=str, default=name),
+                self._get('year', type_=int)
+            )
+        except Exception as e:
+            log.exception(f'Series "{name}" is missing the required "year"', e)
             self.valid = False
             return None
 
@@ -209,9 +212,6 @@ class Show(YamlReader):
         invalid attributes.
         """
 
-        if (value := self._get('name', type_=str)) is not None:
-            self.info_set.update_series_name(self.series_info, value)
-
         if (value := self._get('library', type_=dict)) is not None:
             self.library_name = value['name']
             self.library = value['path']
@@ -226,17 +226,25 @@ class Show(YamlReader):
             else:
                 self.valid = False
 
+        if (value := self._get('emby_id', type_=int)) is not None:
+            emby_id = value if '-' in str(value) else f'0-{value}'
+            self.info_set.set_emby_id(self.series_info, emby_id)
+
         if (value := self._get('imdb_id', type_=str)) is not None:
-            self.series_info.set_imdb_id(value)
+            self.info_set.set_imdb_id(self.series_info, value)
 
         if (value := self._get('sonarr_id', type_=int)) is not None:
-            self.series_info.set_sonarr_id(value)
-
-        if (value := self._get('tvdb_id', type_=int)) is not None:
-            self.series_info.set_tvdb_id(value)
+            sonarr_id = value if '-' in str(value) else f'0-{value}'
+            self.info_set.set_sonarr_id(self.series_info, sonarr_id)
 
         if (value := self._get('tmdb_id', type_=int)) is not None:
-            self.series_info.set_tmdb_id(value)
+            self.info_set.set_tmdb_id(self.series_info, value)
+
+        if (value := self._get('tvdb_id', type_=int)) is not None:
+            self.info_set.set_tvdb_id(self.series_info, value)
+        
+        if (value := self._get('tvrage_id', type_=int)) is not None:
+            self.info_set.set_tvrage_id(self.series_info, value)
 
         if (value := self._get('card_type', type_=str)) is not None:
             self._parse_card_type(value)
@@ -537,7 +545,7 @@ class Show(YamlReader):
 
         # Go through every episode and look for translations
         modified = False
-        for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
+        for episode in (pbar := tqdm(self.episodes.values(), **TQDM_KWARGS)):
             # Get each translation for this series
             for translation in self.title_languages:
                 # If the key already exists, skip this episode
@@ -646,7 +654,7 @@ class Show(YamlReader):
 
         # Go through all episodes and select source images
         download_backdrop = False
-        for _, episode in self.episodes.items():
+        for episode in self.episodes.values():
             # If only selecting a specific episode, skip others
             if select_only is not None and episode is not select_only:
                 continue
@@ -714,7 +722,7 @@ class Show(YamlReader):
         )
 
         # For each episode, query interfaces (in priority order) for source
-        for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
+        for episode in (pbar := tqdm(self.episodes.values(), **TQDM_KWARGS)):
             # If only selecting a specific episode, skip others
             if select_only is not None and episode is not select_only:
                 continue
@@ -777,7 +785,7 @@ class Show(YamlReader):
         # Go through each episode to check if it can be made into a MultiEpisode
         matched = set()
         multiparts = []
-        for _, episode in self.episodes.items():
+        for episode in self.episodes.values():
             # If this episode has already been used in MultiEpisode, skip
             if episode in matched:
                 continue
