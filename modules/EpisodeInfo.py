@@ -1,9 +1,7 @@
-from dataclasses import dataclass
-from typing import Any, Optional
-
 from num2words import num2words
 
 from modules.Debug import log
+from modules.DatabaseInfoContainer import DatabaseInfoContainer
 import modules.global_objects as global_objects
 from modules.Title import Title
 
@@ -56,8 +54,7 @@ class WordSet(dict):
             })
 
 
-@dataclass(eq=False, order=False)
-class EpisodeInfo:
+class EpisodeInfo(DatabaseInfoContainer):
     """
     This class describes static information about an Episode, such as the
     season, episode, and absolute number, as well as the various ID's associated
@@ -188,36 +185,6 @@ class EpisodeInfo:
         return season_match and episode_match
 
 
-    def has_id(self, id_: str) -> bool:
-        """
-        Determine whether this object has defined the given ID.
-
-        Args:
-            id_: ID being checked
-
-        Returns:
-            True if the given ID is defined (i.e. not None) for this object.
-            False otherwise.
-        """
-
-        return getattr(self, id_) is not None
-
-
-    def has_ids(self, *ids: tuple[str]) -> bool:
-        """
-        Determine whether this object has defined all the given ID's.
-
-        Args:
-            ids: Any ID's being checked for.
-
-        Returns:
-            True if all the given ID's are defined (i.e. not None) for this
-            object. False otherwise.
-        """
-
-        return all(getattr(self, id_) is not None for id_ in ids)
-
-
     @property
     def has_all_ids(self) -> bool:
         """Whether this object has all ID's defined"""
@@ -278,42 +245,24 @@ class EpisodeInfo:
         return f's{self.season_number}e{self.episode_number}'
 
 
-    def __set_attr(self, attribute: str, value: Any, 
-                   type_: Optional[callable]=None) -> None:
-        """
-        Set the given attribute to the given value with the given type.
-
-        Args:
-            attribute: Attribute (string) being set.
-            value: Value to set the attribute to.
-            type_: Optional callable to call on value before assignment.
-        """
-
-        # Set attribute if current value is None and new value isn't
-        if getattr(self, attribute) is None and value is not None:
-            # If a type is defined, use that
-            if type_ is None:
-                setattr(self, attribute, value)
-            else:
-                setattr(self, attribute, type_(value))
-
     """Functions for setting database ID's on this object"""
-    def set_emby_id  (self, id) -> None: self.__set_attr('emby_id',   id, str)
-    def set_imdb_id  (self, id) -> None: self.__set_attr('imdb_id',   id, str)
-    def set_tmdb_id  (self, id) -> None: self.__set_attr('tmdb_id',   id, int)
-    def set_tvdb_id  (self, id) -> None: self.__set_attr('tvdb_id',   id, int)
-    def set_tvrage_id(self, id) -> None: self.__set_attr('tvrage_id', id, int)
+    def set_emby_id(self, emby_id) -> None:
+        self._update_attribute('emby_id', emby_id, str)
 
+    def set_imdb_id(self, imdb_id) -> None:
+        self._update_attribute('imdb_id', imdb_id, str)
+
+    def set_tmdb_id(self, tmdb_id) -> None:
+        self._update_attribute('tmdb_id', tmdb_id, int)
+
+    def set_tvdb_id(self, tvdb_id) -> None:
+        self._update_attribute('tvdb_id', tvdb_id, int)
+
+    def set_tvrage_id(self, tvrage_id) -> None:
+        self._update_attribute('tvrage_id', tvrage_id, int)
 
     def set_airdate(self, airdate: 'datetime') -> None:
-        """
-        Set the given datetime to this object.
-
-        Args:
-            new_datetime: Datetime to set for this object.
-        """
-        
-        if self.airdate is None and airdate is not None: self.airdate = airdate
+        self._update_attribute('airdate', airdate)
 
 
     def update_queried_statuses(self, queried_emby: bool=False,
