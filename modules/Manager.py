@@ -55,7 +55,8 @@ class Manager:
         self.sonarr_interfaces = []
         if self.preferences.use_sonarr:
             self.sonarr_interfaces = [
-                SonarrInterface(**kw) for kw in self.preferences.sonarr_kwargs
+                SonarrInterface(server_id=server_id, **kw)
+                for server_id, kw in enumerate(self.preferences.sonarr_kwargs)
             ]
 
         # Optionally assign TMDbInterface

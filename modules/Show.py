@@ -486,9 +486,8 @@ class Show(YamlReader):
                 'tmdb': self.tmdb_interface}[self.episode_data_source]:
             return None
 
-        # Filter episodes not needing ID's - i.e. has card, and has translation
-        def does_need_id(item) -> bool:
-            _, episode = item
+        # Filter episodes needing ID's - i.e. missing card or translation
+        def does_need_id(episode) -> bool:
             if episode.episode_info.has_all_ids or episode.destination is None:
                 return False
             if not episode.destination.exists():
@@ -500,8 +499,8 @@ class Show(YamlReader):
 
         # Apply filter of only those needing ID's, get only EpisodeInfo objects
         infos = list(
-            ep.episode_info for _, ep in
-            filter(does_need_id, self.episodes.items())
+            ep.episode_info for ep in
+            filter(does_need_id, self.episodes.values())
         )
 
         # If no episodes need ID's, exit

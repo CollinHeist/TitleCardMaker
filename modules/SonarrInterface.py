@@ -14,6 +14,9 @@ class SonarrInterface(WebInterface):
     database ID's for episodes.
     """    
 
+    """Series ID's that can be set by Sonarr"""
+    SERIES_IDS = ('imdb_id', 'sonarr_id', 'tvdb_id', 'tvrage_id')
+
     """Episode titles that indicate a placeholder and are to be ignored"""
     __TEMP_IGNORE_REGEX = re_compile(r'^(tba|tbd|episode \d+)$', IGNORECASE)
     __ALWAYS_IGNORE_REGEX = re_compile(r'^(tba|tbd)$', IGNORECASE)
@@ -22,7 +25,8 @@ class SonarrInterface(WebInterface):
     __AIRDATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 
 
-    def __init__(self, url: str, api_key: str, verify_ssl: bool=True) -> None:
+    def __init__(self, url: str, api_key: str, verify_ssl: bool=True,
+                 server_id: int=0) -> None:
         """
         Construct a new instance of an interface to Sonarr.
 
@@ -30,6 +34,7 @@ class SonarrInterface(WebInterface):
             url: The API url communicating with Sonarr.
             api_key: The API key for API requests.
             verify_ssl: Whether to verify SSL requests to Sonarr.
+            server_id: Server ID of this server.
 
         Raises:
             SystemExit: Invalid Sonarr URL/API key provided.
@@ -54,6 +59,7 @@ class SonarrInterface(WebInterface):
         # Base parameters for sending requests to Sonarr
         self.__api_key = api_key
         self.__standard_params = {'apikey': api_key}
+        self.server_id = server_id
 
         # Query system status to verify connection to Sonarr
         try:
@@ -97,19 +103,30 @@ class SonarrInterface(WebInterface):
 
         # Go through each series in Sonarr
         for series in all_series:
-            # Get this series' internal (sonarr) and TVDb ID's
-            data = {'sonarr_id': series['id'], 'tvdb_id': series['tvdbId']}
+            # Unpopulated TVRage ID's are left as 0
+            tvrage_id = None
+            if series.get('tvRageId'):
+                tvrage_id = series.get('tvRageId')
 
-            # Map the primary title to these ID's
-            si = SeriesInfo(series['title'], series['year'])
-            self.__series_ids[si.full_match_name] = data
-            self.__series_ids[f'sonarr:{series["id"]}'] = data
-            self.__series_ids[f'tvdb:{series["tvdbId"]}'] = data
+            self.info_set.get_series_info(
+                series['title'],
+                series['year'],
+                imdb_id=series.get('imdbId'),
+                sonarr_id=f'{self.server_id}-{series["id"]}',
+                tvdb_id=series.get('tvdbId'),
+                tvrage_id=tvrage_id,
+            )
 
             # Map each alternate title to these ID's
             for alt_title in series['alternateTitles']:
-                alt_si = SeriesInfo(alt_title['title'], series['year'])
-                self.__series_ids[alt_si.full_match_name] = data
+                self.info_set.get_series_info(
+                    alt_title['title'],
+                    series['year'],
+                    imdb_id=series.get('imdbId'),
+                    sonarr_id=f'{self.server_id}-{series["id"]}',
+                    tvdb_id=series.get('tvdbId'),
+                    tvrage_id=tvrage_id,
+                )
 
 
     def has_series(self, series_info: SeriesInfo) -> bool:
@@ -124,21 +141,7 @@ class SonarrInterface(WebInterface):
             name); False otherwise.
         """
 
-        # If known series ID, check under that ID and name
-        if series_info.has_id('sonarr_id'):
-            id_ = f'sonarr:{series_info.sonarr_id}'
-            return (
-                self.__series_ids.get(id_) is not None or
-                self.__series_ids.get(series_info.full_match_name) is not None
-            )
-        if series_info.has_id('tvdb_id'):
-            id_ = f'tvdb:{series_info.tvdb_id}'
-            return (
-                self.__series_ids.get(id_) is not None or
-                self.__series_ids.get(series_info.full_match_name) is not None
-            )
-
-        return self.__series_ids.get(series_info.full_match_name) is not None
+        return self.server_id == series_info.sonarr_id.split('-')[0]
 
 
     def get_all_series(self, required_tags: list[str]=[], 
@@ -209,13 +212,19 @@ class SonarrInterface(WebInterface):
             if show['year'] == 0:
                 continue
 
-            # Construct SeriesInfo object for this show
+            # Get TVRage ID (0 if not filled out)
+            tvrage_id = None
+            if show.get('tvRageId'):
+                tvrage_id = show.get('tvRageId')
+
+            # Construct SeriesInfo object for this show, do not use MediaInfoSet
             series_info = SeriesInfo(
                 show['title'],
                 show['year'],
                 imdb_id=show.get('imdbId'),
-                sonarr_id=show.get('id'),
+                sonarr_id=f'{self.server_id}-{show.get("id")}',
                 tvdb_id=show.get('tvdbId'),
+                tvrage_id=tvrage_id,
             )
 
             # Add to returned list
@@ -232,22 +241,37 @@ class SonarrInterface(WebInterface):
             series_info: SeriesInfo to update.
         """
 
-        # Match priority is Sonarr ID > TVDb ID > Series name
-        if (series_info.sonarr_id is not None and
-            (ids := self.__series_ids.get(f'sonarr:{series_info.sonarr_id}'))):
-            pass
-        elif (series_info.tvdb_id is not None and 
-            (ids := self.__series_ids.get(f'tvdb:{series_info.tvdb_id}'))):
-            pass
-        elif (ids := self.__series_ids.get(series_info.full_match_name)):
-            pass
-        else:
+        # If all possible ID's are defined, exit
+        if series_info.has_ids(*self.SERIES_IDS):
+            return None
+
+        # Query using Sonarr, then TVDb ID's (two different API endpoint)
+        series = None
+        if series_info.has_id('sonarr_id'):
+            id_ = series_info.sonarr_id.split('-')[1]
+            response = self._get(f'{self.url}series/{id_}',
+                                 self.__standard_params)
+            if 'id' in response:
+                series = response
+        elif series_info.has_id('tvdb_id'):
+            params = {'tvdbId': series_info.tvdb_id} | self.__standard_params
+            response = self._get(f'{self.url}series', params)
+            if len(response) > 0:
+                series = response[0]
+
+        # If not found, warn and exit
+        if series is None:
             log.warning(f'Series "{series_info}" not found in Sonarr')
             return None
 
-        # Set ID's for this series
-        series_info.set_sonarr_id(ids['sonarr_id'])
-        series_info.set_tvdb_id(ids['tvdb_id'])
+        # If series has been found, update ID's
+        self.info_set.set_imdb_id(series_info, series.get('imdbId'))
+        self.info_set.set_sonarr_id(
+            series_info, f'{self.server_id}-{series["id"]}'
+        )
+        self.info_set.set_tvdb_id(series_info, series.get('tvdbId'))
+        if series.get('tvRageId'):
+            self.info_set.set_tvrage_id(series_info, series.get('tvRageId'))
 
 
     def get_all_episodes(self, series_info: SeriesInfo) -> list[EpisodeInfo]:
@@ -269,7 +293,8 @@ class SonarrInterface(WebInterface):
 
         # Construct GET arguments
         url = f'{self.url}episode/'
-        params = {'apikey': self.__api_key, 'seriesId': series_info.sonarr_id}
+        params = {'apikey': self.__api_key,
+                  'seriesId': int(series_info.sonarr_id.split('-')[1])}
 
         # Query Sonarr to get JSON of all episodes for this series
         all_episodes = self._get(url, params)
