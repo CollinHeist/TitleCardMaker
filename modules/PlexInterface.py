@@ -391,13 +391,13 @@ class PlexInterface(EpisodeDataSource, MediaServer):
         and the loaded map is forced to reload that card.
 
         Args:
-            library_name: The name of the library containing the series to update
+            library_name: The name of the library containing the series.
             series_info: The series to update.
             episode_map: Dictionary of episode keys to Episode objects to modify
-            style_set: StyleSet object to update the status of Episodes with.
+            style_set: StyleSet object to update the style of the Episodes with.
         """
 
-        # If no episodes, or unwatched setting is ignored, exit
+        # If no episodes, exit
         if len(episode_map) == 0:
             return None
 
@@ -423,12 +423,12 @@ class PlexInterface(EpisodeDataSource, MediaServer):
             # Set Episode watched/spoil statuses
             episode.update_statuses(plex_episode.isWatched, style_set)
 
-            # Get loaded card characteristics for this episode
+            # Get characteristics of this Episode's loaded card
             details = self._get_loaded_episode(loaded_series, episode)
             loaded = (details is not None)
             spoiler_status = details['spoiler'] if loaded else None
 
-            # Delete and reset card if current spoiler type doesnt match
+            # Delete and reset card if current spoiler type doesn't match
             delete_and_reset = ((episode.spoil_type != spoiler_status)
                                 and bool(spoiler_status))
 

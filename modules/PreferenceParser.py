@@ -123,6 +123,7 @@ class PreferenceParser(YamlReader):
         self.use_emby = False
         self.emby_url = None
         self.emby_api_key = None
+        self.emby_username = None
         self.emby_verify_ssl = True
         self.emby_filesize_limit = self.filesize_as_bytes(
             EmbyInterface.DEFAULT_FILESIZE_LIMIT
@@ -507,12 +508,21 @@ class PreferenceParser(YamlReader):
         if not self._is_specified('emby'):
             return None
 
+        if (not self._is_specified('emby', 'url')
+            or not  self._is_specified('emby', 'api_key')
+            or not  self._is_specified('emby', 'username')):
+            log.critical(f'Must specify Emby "url", "api_key", and "username"')
+            self.valid = False
+
         if (value := self._get('emby', 'url', type_=str)) is not None:
             self.emb_url = value
             self.use_emby = True
 
         if (value := self._get('emby', 'api_key', type_=str)) is not None:
             self.emby_api_key = value
+
+        if (value := self._get('emby', 'username', type_=str)) is not None:
+            self.emby_username = value
 
         if (value := self._get('emby', 'verify_ssl', type_=bool)) is not None:
             self.emby_verify_ssl = value
@@ -1061,6 +1071,7 @@ class PreferenceParser(YamlReader):
         return {
             'url': self.plex_url,
             'api_key': self.emby_api_key,
+            'username': self.emby_username,
             'verify_ssl': self.emby_verify_ssl,
             'filesize_limit': self.emby_filesize_limit,
         }

@@ -25,6 +25,12 @@ class EpisodeDataSource(ABC):
         raise NotImplementedError(f'All EpisodeDataSources must implement this')
 
     @abstractmethod
+    def get_all_series(self, filter_libraries: list[str]=[]
+                       ) -> list[tuple[SeriesInfo, str, str]]: 
+        """Abstract method to load title cards within this MediaServer."""
+        raise NotImplementedError('All EpisodeDataSources must implement this')
+
+    @abstractmethod
     def get_all_episodes(self) -> list[EpisodeInfo]:
         """Get all the EpisodeInfo objects associated with the given series."""
         raise NotImplementedError(f'All EpisodeDataSources must implement this')

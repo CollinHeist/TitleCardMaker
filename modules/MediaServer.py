@@ -139,9 +139,11 @@ class MediaServer(ABC):
 
 
     @abstractmethod
-    def get_all_series(self, filter_libraries: list[str]=[]
-                       ) -> list[tuple['SeriesInfo', str, str]]: 
-        """Abstract method to load title cards within this MediaServer."""
+    def update_watched_statuses(self, library_name: str,
+                                series_info: SeriesInfo,
+                                episode_map: dict[str, 'Episode'],
+                                style_set: 'StyleSet') -> None:
+        """Abstract method to update watched statuses of Episode objects."""
         raise NotImplementedError('All MediaServer objects must implement this')
 
 

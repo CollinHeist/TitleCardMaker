@@ -33,14 +33,15 @@ class EmbyInterface(EpisodeDataSource, MediaServer):
     YEAR_RANGE = range(1960, datetime.now().year)
 
 
-    def __init__(self, url: str, api_key: str, verify_ssl: bool=True,
-                 server_id: int=0) -> None:
+    def __init__(self, url: str, api_key: str, username: str,
+                 verify_ssl: bool=True, server_id: int=0) -> None:
         """
         Construct a new instance of an interface to an Emby server.
 
         Args:
             url: The API url communicating with Emby.
             api_key: The API key for API requests.
+            username: Username of the Emby account to get watch statuses of.
             verify_ssl: Whether to verify SSL requests.
             server_id: Server ID of this server.
 
@@ -56,6 +57,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer):
         self.info_set = global_objects.info_set
         self.url = url[:-1] if url.endswith('/') else url
         self.__params = {'api_key': api_key}
+        self.username = username
         self.server_id = server_id
 
         # Authenticate with server
@@ -71,8 +73,41 @@ class EmbyInterface(EpisodeDataSource, MediaServer):
             log.exception(f'Bad Emby connection', e)
             exit(1)
 
+        # Get user ID
+        if (user_id := self._get_user_id(username)) is None:
+            log.critical(f'Cannot identify ID of user "{username}"')
+            exit(1)
+        else:
+            self.user_id = user_id
+
         # Get the ID's of all libraries within this server
         self.libraries = self._map_libraries()
+
+
+    def _get_user_id(self, username: str) -> 'str | None':
+        """
+        Get the User ID associated with the given username.
+
+        Args:
+            username: Username to query for.
+
+        Returns:
+            User ID hexstring associated with the given username. None if the 
+            username was not found.
+        """
+
+        # Query for list of all users on this server
+        response = self.session.get(
+            f'{self.url}/Users/Query',
+            params=self.__params,
+        )
+
+        # Go through returned list of users, returning when username matches
+        for user in response.get('Items'):
+            if user.get('Name') == username:
+                return user.get('Id')
+
+        return None
 
 
     def _map_libraries(self) -> dict[str, tuple[int]]:
@@ -245,16 +280,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer):
 
         # Get all episodes for this series from Emby
         emby_id = series_info.emby_id.split('-')[1]
-        params = {
-            'Recursive': True,
-            'ParentId': emby_id,
-            'IncludeItemTypes': 'episode',
-            'Fields': 'ProviderIds',
-        } | self.__params
-
         response = self.session._get(
             f'{self.url}/Shows/{emby_id}/Episodes',
-            params=params
+            params={'Fields': 'ProviderIds'} | self.__params
         )
 
         # Parse each returned episode into EpisodeInfo object
