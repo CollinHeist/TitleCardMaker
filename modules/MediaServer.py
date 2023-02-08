@@ -14,6 +14,10 @@ class MediaServer(ABC):
     title cards loaded into them, as well as source images retrieved from them.
     """
 
+    """Default filesize limit for all uploaded assets"""
+    DEFAULT_FILESIZE_LIMIT = '10 MB'
+    
+
     @abstractproperty
     def LOADED_DB(self) -> str:
         """
@@ -132,6 +136,13 @@ class MediaServer(ABC):
                 filtered[key] = episode
 
         return filtered
+
+
+    @abstractmethod
+    def get_all_series(self, filter_libraries: list[str]=[]
+                       ) -> list[tuple['SeriesInfo', str, str]]: 
+        """Abstract method to load title cards within this MediaServer."""
+        raise NotImplementedError('All MediaServer objects must implement this')
 
 
     @abstractmethod

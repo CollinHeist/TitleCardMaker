@@ -34,9 +34,6 @@ class PlexInterface(EpisodeDataSource, MediaServer):
     """How many failed episodes result in skipping a series"""
     SKIP_SERIES_THRESHOLD = 3
 
-    """Default filesize limit for all uploaded assets"""
-    DEFAULT_FILESIZE_LIMIT = '10 MB'
-
     """Episode titles that indicate a placeholder and are to be ignored"""
     __TEMP_IGNORE_REGEX = re_compile(r'^(tba|tbd|episode \d+)$', IGNORECASE)
 
@@ -768,10 +765,11 @@ class PlexInterface(EpisodeDataSource, MediaServer):
 
 
     @catch_and_log('Error getting episode details')
-    def get_episode_details(self, rating_key: int) -> list[tuple[SeriesInfo,
-                                                            EpisodeInfo, str]]:
+    def get_episode_details(self,
+                            rating_key: int) -> list[tuple[SeriesInfo,
+                                                           EpisodeInfo, str]]:
         """
-        Get all details for the episode indicated by the given Plex rating key.
+        Get all details for all episodes indicated by the given Plex rating key.
 
         Args:
             rating_key: Rating key used to fetch the item within Plex.
@@ -779,7 +777,7 @@ class PlexInterface(EpisodeDataSource, MediaServer):
         Returns:
             List of tuples of the SeriesInfo, EpisodeInfo, and the library name
             corresponding to the given rating key. If the object associated with
-            the rating key was a show/season, then all contained episodes are
+            the rating key is a show/season, then all contained episodes are
             detailed. An empty list is returned if the item(s) associated with
             the given key cannot be found.
         """
@@ -795,7 +793,6 @@ class PlexInterface(EpisodeDataSource, MediaServer):
                     entry.title, entry.year
                 )
 
-                # Return all episodes
                 return [
                     (series_info,
                      EpisodeInfo(ep.title, ep.parentIndex, ep.index),
@@ -811,7 +808,6 @@ class PlexInterface(EpisodeDataSource, MediaServer):
                     entry.title, entry.year
                 )
 
-                # 
                 return [
                     (series_info,
                      EpisodeInfo(ep.title, entry.index, ep.index),
@@ -825,6 +821,7 @@ class PlexInterface(EpisodeDataSource, MediaServer):
                 series_info = self.info_set.get_series_info(
                     entry.grandparentTitle, series.year
                 )
+                
                 return [(
                     series_info,
                     EpisodeInfo(entry.title, entry.parentIndex, entry.index),
