@@ -104,6 +104,8 @@ class Show(YamlReader):
             self.style_set = copy(preferences.emby_style_set)
         elif self.media_server == 'plex':
             self.style_set = copy(preferences.plex_style_set)
+        else:
+            self.style_set = StyleSet()
         self.__parse_yaml()
 
         # Update StyleSet
@@ -937,6 +939,6 @@ class Show(YamlReader):
             self.library_name, self.series_info, self.episodes,
         )
 
-        media_interface.set_season_poster(
+        media_interface.set_season_posters(
             self.library_name, self.series_info, self.season_poster_set,
         )

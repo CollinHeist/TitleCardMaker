@@ -8,11 +8,12 @@ from modules.EpisodeInfo import EpisodeInfo
 import modules.global_objects as global_objects
 from modules.MediaServer import MediaServer
 from modules.SeriesInfo import SeriesInfo
+from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
 
 SourceImage = Union[bytes, None]
 
-class EmbyInterface(EpisodeDataSource, MediaServer):
+class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
     """
     This class describes an interface to an Emby media server. This is a type
     of EpisodeDataSource (e.g. interface by which Episode data can be
@@ -34,7 +35,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer):
 
 
     def __init__(self, url: str, api_key: str, username: str,
-                 verify_ssl: bool=True, server_id: int=0) -> None:
+                 verify_ssl: bool=True,
+                 filesize_limit: int=10485760,
+                 server_id: int=0) -> None:
         """
         Construct a new instance of an interface to an Emby server.
 
@@ -43,6 +46,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer):
             api_key: The API key for API requests.
             username: Username of the Emby account to get watch statuses of.
             verify_ssl: Whether to verify SSL requests.
+            filesize_limit: Number of bytes to limit a single file to during
+                upload.
             server_id: Server ID of this server.
 
         Raises:
@@ -58,6 +63,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer):
         self.url = url[:-1] if url.endswith('/') else url
         self.__params = {'api_key': api_key}
         self.username = username
+        self.filesize_limit = filesize_limit
         self.server_id = server_id
 
         # Authenticate with server
@@ -97,7 +103,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer):
         """
 
         # Query for list of all users on this server
-        response = self.session.get(
+        response = self.session._get(
             f'{self.url}/Users/Query',
             params=self.__params,
         )
@@ -443,6 +449,21 @@ class EmbyInterface(EpisodeDataSource, MediaServer):
         # Log load operations to user
         if loaded_count > 0:
             log.info(f'Loaded {loaded_count} cards for "{series_info}"')
+
+
+    def set_season_posters(self, library_name: str,
+                           series_info: SeriesInfo,
+                           season_poster_set: 'SeasonPosterSet') -> None:
+        """
+        Set the season posters from the given set within Plex.
+
+        Args:
+            library_name: Name of the library containing the series to update.
+            series_info: The series to update.
+            season_poster_set: SeasonPosterSet with season posters to set.
+        """
+
+        pass
 
 
     def get_source_image(self, episode_info: EpisodeInfo) -> SourceImage:

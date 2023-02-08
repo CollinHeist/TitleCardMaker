@@ -17,9 +17,10 @@ from modules.ImageMaker import ImageMaker
 from modules.MediaServer import MediaServer
 from modules.PersistentDatabase import PersistentDatabase
 from modules.SeriesInfo import SeriesInfo
+from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
 
-class PlexInterface(EpisodeDataSource, MediaServer):
+class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     """This class describes an interface to Plex."""
 
     """Series ID's that can be set by TMDb"""

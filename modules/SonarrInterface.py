@@ -5,9 +5,10 @@ from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
 import modules.global_objects as global_objects
 from modules.SeriesInfo import SeriesInfo
+from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
 
-class SonarrInterface(WebInterface):
+class SonarrInterface(WebInterface, SyncInterface):
     """
     This class describes a Sonarr interface, which is a type of WebInterface.
     The primary purpose of this class is to get episode titles, as well as

@@ -515,7 +515,7 @@ class PreferenceParser(YamlReader):
             self.valid = False
 
         if (value := self._get('emby', 'url', type_=str)) is not None:
-            self.emb_url = value
+            self.emby_url = value
             self.use_emby = True
 
         if (value := self._get('emby', 'api_key', type_=str)) is not None:
@@ -1069,7 +1069,7 @@ class PreferenceParser(YamlReader):
     @property
     def emby_interface_kwargs(self) -> dict[str, 'str | bool | int']:
         return {
-            'url': self.plex_url,
+            'url': self.emby_url,
             'api_key': self.emby_api_key,
             'username': self.emby_username,
             'verify_ssl': self.emby_verify_ssl,

@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod, abstractproperty
 
 from modules.EpisodeInfo import EpisodeInfo
-from modules.SeriesInfo import SeriesInfo
 
 class EpisodeDataSource(ABC):
     """
@@ -23,12 +22,6 @@ class EpisodeDataSource(ABC):
     def set_episode_ids(self) -> None:
         """Set the episode ID's for the given EpisodeInfo objects."""
         raise NotImplementedError(f'All EpisodeDataSources must implement this')
-
-    @abstractmethod
-    def get_all_series(self, filter_libraries: list[str]=[]
-                       ) -> list[tuple[SeriesInfo, str, str]]: 
-        """Abstract method to load title cards within this MediaServer."""
-        raise NotImplementedError('All EpisodeDataSources must implement this')
 
     @abstractmethod
     def get_all_episodes(self) -> list[EpisodeInfo]:
