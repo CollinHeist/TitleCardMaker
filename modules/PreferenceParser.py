@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 from modules.CleanPath import CleanPath
 from modules.Debug import log, TQDM_KWARGS
+from modules.EmbyInterface import EmbyInterface
 from modules.Font import Font
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.ImageMaker import ImageMaker
@@ -36,7 +37,7 @@ class PreferenceParser(YamlReader):
     VALID_IMAGE_SOURCES = ('tmdb', 'plex')
 
     """Valid episode data source identifiers"""
-    VALID_EPISODE_DATA_SOURCES = ('sonarr', 'plex', 'tmdb')
+    VALID_EPISODE_DATA_SOURCES = ('emby', 'sonarr', 'plex', 'tmdb')
     DEFAULT_EPISODE_DATA_SOURCE = 'sonarr'
 
     """Default season folder format string"""
@@ -96,6 +97,7 @@ class PreferenceParser(YamlReader):
         self.season_folder_format = self.DEFAULT_SEASON_FOLDER_FORMAT
         self.sync_specials = True
         self.supported_language_codes = []
+
         self.archive_directory = None
         self.create_archive = False
         self.archive_all_variations = True
@@ -105,6 +107,7 @@ class PreferenceParser(YamlReader):
         self.summary_minimum_episode_count = 3
         self.summary_created_by = None
         self.summary_ignore_specials = False
+
         self.use_plex = False
         self.plex_url = None
         self.plex_token = 'NA'
@@ -113,16 +116,30 @@ class PreferenceParser(YamlReader):
         self.plex_filesize_limit = self.filesize_as_bytes(
             PlexInterface.DEFAULT_FILESIZE_LIMIT
         )
-        self.global_style_set = StyleSet()
+        self.plex_style_set = StyleSet()
         self.plex_yaml_writers = []
         self.plex_yaml_update_args = []
+
+        self.use_emby = False
+        self.emby_url = None
+        self.emby_api_key = None
+        self.emby_verify_ssl = True
+        self.emby_filesize_limit = self.filesize_as_bytes(
+            EmbyInterface.DEFAULT_FILESIZE_LIMIT
+        )
+        self.emby_style_set = StyleSet()
+        self.emby_yaml_writers = []
+        self.emby_yaml_update_args = []
+
         self.sonarr_kwargs = []
         self.sonarr_yaml_writers = []
+
         self.use_tmdb = False
         self.tmdb_api_key = None
         self.tmdb_retry_count = TMDbInterface.BLACKLIST_THRESHOLD
         self.tmdb_minimum_resolution = {'width': 0, 'height': 0}
         self.tmdb_skip_localized_images = False
+
         self.use_tautulli = False
         self.tautulli_url = None
         self.tautulli_api_key = None
@@ -131,8 +148,22 @@ class PreferenceParser(YamlReader):
         self.tautulli_update_script = None
         self.tautulli_agent_name = TautulliInterface.DEFAULT_AGENT_NAME
         self.tautulli_script_timeout = TautulliInterface.DEFAULT_SCRIPT_TIMEOUT
+
         self.imagemagick_container = None
         self.imagemagick_timeout = ImageMagickInterface.COMMAND_TIMEOUT_SECONDS
+
+        # Determine default media server
+        if (self._is_specified('emby') and not self._is_specified('plex')
+            and not self._is_specified('jellyfin')):
+            self.default_media_server = 'emby'
+        elif (self._is_specified('jellyfin') and not self._is_specified('emby')
+            and not self._is_specified('plex')):
+            self.default_media_server = 'jellyfin'
+        elif (self._is_specified('plex') and not self._is_specified('emby')
+            and not self._is_specified('jellyfin')):
+            self.default_media_server = 'plex'
+        else:
+            self.default_media_server = None
 
         # Modify object attributes based off YAML, updating validiry
         self.__parse_yaml()
@@ -212,7 +243,7 @@ class PreferenceParser(YamlReader):
                 update_args['exclusions'] = value
 
             # Parse args applicable only to Plex or Sonarr
-            if sync_type == 'plex':
+            if sync_type in ('plex', 'emby'):
                 if (value := sync_yaml._get('libraries', type_=list)) != None:
                     update_args['filter_libraries'] = value
             elif sync_type == 'sonarr':
@@ -234,6 +265,9 @@ class PreferenceParser(YamlReader):
             if sync_type == 'plex':
                 self.plex_yaml_writers.append(writer)
                 self.plex_yaml_update_args.append(update_args)
+            elif sync_type == 'emby':
+                self.emby_yaml_writers.append(writer)
+                self.emby_yaml_update_args.append(update_args)
             else:
                 self.sonarr_yaml_writers.append(
                     YamlWriterSet(interface_id, writer, update_args)
@@ -251,6 +285,19 @@ class PreferenceParser(YamlReader):
                     append_writer_and_args('plex', 0, sync, base_sync)
             else:
                 log.error(f'Invalid plex sync: {plex_sync}')
+
+        # Create Emby SeriesYamlWriter objects
+        if (emby_sync := self._get('emby', 'sync')) is not None:
+            # Singular sync specification
+            if isinstance(emby_sync, dict):
+                append_writer_and_args('emby', 0, emby_sync, {})
+            # List of syncs
+            elif isinstance(emby_sync, list) and len(emby_sync) > 0:
+                base_sync = emby_sync[0]
+                for sync in emby_sync:
+                    append_writer_and_args('emby', 0, sync, base_sync)
+            else:
+                log.error(f'Invalid plex sync: {emby_sync}')
 
         # Create Sonarr SeriesYamlWriter objects
         if self._is_specified('sonarr'):
@@ -444,11 +491,41 @@ class PreferenceParser(YamlReader):
             if value > self.filesize_as_bytes('10 MB'):
                 log.warning(f'Plex will reject all images larger than 10 MB')
 
-        self.global_style_set = StyleSet(
+        self.plex_style_set = StyleSet(
             self._get('plex', 'watched_style', type_=str, default='unique'),
             self._get('plex', 'unwatched_style', type_=str, default='unique'),
         )
-        self.valid &= self.global_style_set.valid
+        self.valid &= self.plex_style_set.valid
+
+
+    def __parse_yaml_emby(self) -> None:
+        """
+        Parse the 'emby' section of the raw YAML dictionary into attributes.
+        """
+
+        # Skip if section omitted
+        if not self._is_specified('emby'):
+            return None
+
+        if (value := self._get('emby', 'url', type_=str)) is not None:
+            self.emb_url = value
+            self.use_emby = True
+
+        if (value := self._get('emby', 'api_key', type_=str)) is not None:
+            self.emby_api_key = value
+
+        if (value := self._get('emby', 'verify_ssl', type_=bool)) is not None:
+            self.emby_verify_ssl = value
+
+        if (value := self._get('emby', 'filesize_limit', 
+                               type_=self.filesize_as_bytes)) is not None:
+            self.emby_filesize_limit = value
+
+        self.emby_style_set = StyleSet(
+            self._get('emby', 'watched_style', type_=str, default='unique'),
+            self._get('emby', 'unwatched_style', type_=str, default='unique'),
+        )
+        self.valid &= self.emby_style_set.valid
 
 
     def __parse_yaml_sonarr(self) -> None:
@@ -586,6 +663,7 @@ class PreferenceParser(YamlReader):
         self.__parse_yaml_options()
         self.__parse_yaml_archive()
         self.__parse_yaml_plex()
+        self.__parse_yaml_emby()
         self.__parse_yaml_sonarr()
         self.__parse_yaml_tmdb()
         self.__parse_yaml_tautulli()
@@ -624,8 +702,20 @@ class PreferenceParser(YamlReader):
 
             # All libraries must provide paths
             if spec.get('path') is None:
-                log.error(f'Library "{name}" is missing required "path" in '
-                          f'series file "{file.resolve()}"')
+                log.error(f'Library "{name}" is missing required "path" {err}')
+                return False
+
+            # Libraries must specify a media server if there is no default
+            if (self.default_media_server is None
+                and spec.get('media_server') is None):
+                log.error(f'Library "{name}" is missing required "media_server"'
+                          f' {err}')
+                return False
+
+            # Media server must be Plex or Emby
+            if (spec.get('media_server', self.default_media_server)
+                not in ('plex', 'emby')):
+                log.error(f'Library "{name}" specifies an invalid media_server')
                 return False
 
         return True
@@ -757,8 +847,10 @@ class PreferenceParser(YamlReader):
             else:
                 Template.recurse_priority_union(show_yaml, library_yaml)
                 show_yaml['library'] = {
-                    'name': library_yaml.get('plex_name', library_name),
+                    'name': library_yaml.get('library_name', library_name),
                     'path': CleanPath(library_yaml.get('path')).sanitize(),
+                    'media_server': library_yaml.get('media_server',
+                                                     self.default_media_server),
                 }
 
         # Parse font from map (if given font is just an identifier)
@@ -943,7 +1035,7 @@ class PreferenceParser(YamlReader):
         return False
 
     @property
-    def tautulli_interface_args(self) -> dict[str, 'Path | str | int']:
+    def tautulli_interface_args(self) -> dict[str, 'str | int']:
         return {
             'url': self.tautulli_url,
             'api_key': self.tautulli_api_key,
@@ -955,7 +1047,7 @@ class PreferenceParser(YamlReader):
         }
 
     @property
-    def plex_interface_kwargs(self) -> dict[str, 'Path | str | bool | int']:
+    def plex_interface_kwargs(self) -> dict[str, 'str | bool | int']:
         return {
             'url': self.plex_url,
             'x_plex_token': self.plex_token,
@@ -965,7 +1057,16 @@ class PreferenceParser(YamlReader):
         }
 
     @property
-    def tmdb_interface_kwargs(self) -> dict[str, 'Path | str']:
+    def emby_interface_kwargs(self) -> dict[str, 'str | bool | int']:
+        return {
+            'url': self.plex_url,
+            'api_key': self.emby_api_key,
+            'verify_ssl': self.emby_verify_ssl,
+            'filesize_limit': self.emby_filesize_limit,
+        }
+
+    @property
+    def tmdb_interface_kwargs(self) -> dict[str, str]:
         return {
             'api_key': self.tmdb_api_key,
         }

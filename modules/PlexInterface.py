@@ -821,7 +821,7 @@ class PlexInterface(EpisodeDataSource, MediaServer):
                 series_info = self.info_set.get_series_info(
                     entry.grandparentTitle, series.year
                 )
-                
+
                 return [(
                     series_info,
                     EpisodeInfo(entry.title, entry.parentIndex, entry.index),

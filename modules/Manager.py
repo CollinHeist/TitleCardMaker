@@ -2,6 +2,7 @@ from yaml import dump
 from tqdm import tqdm
 from typing import Iterable
 
+from modules.EmbyInterface import EmbyInterface
 from modules.Debug import log, TQDM_KWARGS
 from modules.PlexInterface import PlexInterface
 import modules.global_objects as global_objects
@@ -43,6 +44,13 @@ class Manager:
             TautulliInterface(
                 **self.preferences.tautulli_interface_args
             ).integrate()
+
+        # Optionally assign EmbyInterface
+        self.emby_interface = None
+        if self.preferences.use_emby:
+            self.emby_interface = EmbyInterface(
+                **self.preferences.emby_interface_kwargs
+            )
 
         # Optionally assign PlexInterface
         self.plex_interface = None
@@ -118,6 +126,12 @@ class Manager:
                                         self.preferences.plex_yaml_update_args):
                 writer.update_from_plex(self.plex_interface, **update_args)
 
+        if (self.preferences.use_emby
+            and len(self.preferences.emby_yaml_writers) > 0):
+            for writer, update_args in zip(self.preferences.emby_yaml_writers,
+                                        self.preferences.emby_yaml_update_args):
+                writer.update_from_emby(self.emby_interface, **update_args)
+
 
     @notify('Starting to read series YAML files..')
     def create_shows(self) -> None:
@@ -153,7 +167,10 @@ class Manager:
         for show in tqdm(self.shows + self.archives, desc='Assign interfaces',
                          **TQDM_KWARGS):
             show.assign_interfaces(
-                self.plex_interface, self.sonarr_interfaces, self.tmdb_interface
+                self.emby_interface,
+                self.plex_interface,
+                self.sonarr_interfaces,
+                self.tmdb_interface
             )
 
 
@@ -285,22 +302,22 @@ class Manager:
             show.create_season_posters()
 
 
-    @notify('Starting to update Plex..')
-    def update_plex(self) -> None:
+    @notify('Starting to update Media Servers..')
+    def update_media_server(self) -> None:
         """
-        Update Plex for all cards for every show known to this Manager. This 
-        only executes if Plex is globally enabled. For each show, this calls
-        Show.update_plex().
+        Update Plex/Emby for all cards for every show known to this Manager.
+        This  only executes if Plex/Emby are globally enabled. For each show,
+        this calls Show.update_media_server().
         """
 
-        # If Plex isn't enabled, skip
-        if not self.preferences.use_plex:
+        # If Plex and Emby aren't enabled, skip
+        if not self.preferences.use_plex and not self.preferences.use_emby:
             return None
 
         # Go through each show in the Manager, update Plex
         for show in (pbar := tqdm(self.shows, **TQDM_KWARGS)):
-            pbar.set_description(f'Updating Plex for {show}')
-            show.update_plex()
+            pbar.set_description(f'Updating Server for {show}')
+            show.update_media_server()
 
 
     @notify('Starting to update archives..')
@@ -362,7 +379,7 @@ class Manager:
         self.select_source_images()
         self.create_missing_title_cards()
         self.create_season_posters()
-        self.update_plex()
+        self.update_media_server()
         self.update_archive()
         self.create_summaries()
 
@@ -468,7 +485,7 @@ class Manager:
         for show in self.shows:
             show_dict = {}
             # Go through each episode for this show, add missing source/cards
-            for _, episode in show.episodes.items():
+            for episode in show.episodes.values():
                 # Add key for this episode
                 key = str(episode)
                 show_dict[key] = {}
