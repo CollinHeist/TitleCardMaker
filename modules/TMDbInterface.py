@@ -165,7 +165,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         entry = self.__blacklist.get(condition)
 
         # If previously indexed and next has passed, increase count and set next
-        later = (datetime.now() + timedelta(days=1)).timestamp()
+        later = (datetime.now() + timedelta(hours=12)).timestamp()
 
         # If this entry exists, check that next has passed
         if entry is not None:
@@ -359,9 +359,9 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             # Load episodes, now iterate through them
             season.reload()
             for episode in season.episodes:
-                # Skip episodes until 2 hours after airing
+                # Skip episodes until they've aired
                 if (episode.air_date is not None
-                    and episode.air_date > datetime.now() + timedelta(hours=2)):
+                    and episode.air_date > datetime.now()):
                     continue
 
                 # Create either a new EpisodeInfo or get from the MediaInfoSet
