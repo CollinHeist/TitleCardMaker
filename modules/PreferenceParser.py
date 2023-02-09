@@ -1138,7 +1138,7 @@ class PreferenceParser(YamlReader):
             exit(1)
 
 
-    def filesize_as_bytes(self, filesize: str) -> int:
+    def filesize_as_bytes(self, filesize: 'str | None') -> 'int | None':
         """
         Convert the given filesize string to its integer byte equivalent.
 
@@ -1149,6 +1149,10 @@ class PreferenceParser(YamlReader):
         Returns:
             Number of bytes indicated by the given filesize string.
         """
+
+        # If no limit was provided, return None
+        if filesize is None:
+            return None
 
         units = {'B': 1, 'KB':  2**10, 'MB':  2**20, 'GB':  2**30, 'TB':  2**40,
                   '': 1, 'KIB': 10**3, 'MIB': 10**6, 'GIB': 10**9, 'TIB':10**12}

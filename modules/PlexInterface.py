@@ -56,7 +56,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 upload.
         """
 
-        super().__init__()
+        super().__init__(filesize_limit)
 
         # Get global MediaInfoSet objects
         self.info_set = global_objects.info_set
@@ -75,12 +75,10 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             log.critical(f'Cannot connect to Plex - returned error: "{e}"')
             exit(1)
 
-        # Store integration/filesize limit
+        # Store integration
         self.integrate_with_pmm_overlays = integrate_with_pmm_overlays
-        self.filesize_limit = filesize_limit
 
         # Create/read loaded card database
-        # self.loaded_db = PersistentDatabase(self.LOADED_DB)
         self.__posters = PersistentDatabase(self.LOADED_POSTERS_DB)
 
         # List of "not found" warned series
@@ -579,41 +577,6 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         plex_object.uploadPoster(filepath=filepath)
 
 
-    def __compress_image(self, image: Path) -> 'Path | None':
-        """
-        Compress the given image until below the filesize limit.
-
-        Args:
-            image: Path to the image to compress.
-
-        Returns:
-            Path to the compressed image, or None if the image could not be
-            compressed.
-        """
-
-        # No compression necessary
-        if image.stat().st_size < self.filesize_limit:
-            return image
-
-        # Start with a quality of 90%, decrement by 5% each time
-        quality = 95
-        small_image = image
-
-        # Compress the given image until below the filesize limit
-        while small_image.stat().st_size > self.filesize_limit:
-            # Process image, exit if cannot be reduced
-            quality -= 5
-            if (small_image := ImageMaker.reduce_file_size(image,
-                                                           quality)) is None:
-                log.warning(f'Cannot reduce filesize of "{image.resolve()}" '
-                            f'below limit')
-                return None
-
-        # Compression successful, log and return intermediate image
-        log.debug(f'Compressed "{image.resolve()}" with {quality}% quality')
-        return small_image
-
-
     @catch_and_log('Error uploading title cards')
     def set_title_cards(self, library_name: str, series_info: 'SeriesInfo',
                         episode_map: dict[str, 'Episode']) -> None:
@@ -664,7 +627,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             pbar.set_description(f'Updating {pl_episode.seasonEpisode.upper()}')
 
             # Shrink image if necessary, skip if cannot be compressed
-            if (card := self.__compress_image(episode.destination)) is None:
+            if (card := self.compress_image(episode.destination)) is None:
                 continue
 
             # Upload card to Plex, optionally remove Overlay label
@@ -741,7 +704,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 continue
 
             # Shrink image if necessary
-            if (resized_poster := self.__compress_image(poster)) is None:
+            if (resized_poster := self.compress_image(poster)) is None:
                 continue
 
             # Upload this poster

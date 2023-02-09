@@ -21,6 +21,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
     loaded into).
     """
 
+    """Default no filesize limit for all uploaded assets"""
+    DEFAULT_FILESIZE_LIMIT = None
+
     """Filepath to the database of each episode's loaded card characteristics"""
     LOADED_DB = 'loaded_emby.json'
 
@@ -36,7 +39,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     def __init__(self, url: str, api_key: str, username: str,
                  verify_ssl: bool=True,
-                 filesize_limit: int=10485760) -> None:
+                 filesize_limit: int=None) -> None:
         """
         Construct a new instance of an interface to an Emby server.
 
@@ -53,7 +56,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         """
 
         # Intiialize parent classes
-        super().__init__()
+        super().__init__(filesize_limit)
 
         # Store attributes of this Interface
         self.session = WebInterface('Emby', verify_ssl)
@@ -61,7 +64,6 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         self.url = url[:-1] if url.endswith('/') else url
         self.__params = {'api_key': api_key}
         self.username = username
-        self.filesize_limit = filesize_limit
 
         # Authenticate with server
         try:
@@ -443,8 +445,12 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             if (emby_id := episode.episode_info.emby_id) is None:
                 continue
 
+            # Shrink image if necessary, skip if cannot be compressed
+            if (card := self.compress_image(episode.destination)) is None:
+                continue
+
             # Image content must be Base64-encoded
-            card_base64 = b64encode(episode.destination.read_bytes())
+            card_base64 = b64encode(card.read_bytes())
 
             # Submit POST request for image upload
             try:
@@ -457,8 +463,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 )
                 loaded_count += 1
             except Exception as e:
-                log.exception(f'Unable to upload {episode.destination.resolve()}'
-                              f' to {series_info}', e)
+                log.exception(f'Unable to upload {card.resolve()} to '
+                              f'{series_info}', e)
                 continue
 
             # Update loaded database for this episode

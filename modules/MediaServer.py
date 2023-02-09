@@ -3,6 +3,8 @@ from typing import Union, Any
 
 from tinydb import where, Query
 
+from modules.Debug import log
+from modules.ImageMaker import ImageMaker
 from modules.PersistentDatabase import PersistentDatabase
 
 SourceImage = Union[str, bytes, None]
@@ -16,7 +18,6 @@ class MediaServer(ABC):
 
     """Default filesize limit for all uploaded assets"""
     DEFAULT_FILESIZE_LIMIT = '10 MB'
-    
 
     @abstractproperty
     def LOADED_DB(self) -> str:
@@ -28,13 +29,50 @@ class MediaServer(ABC):
 
 
     @abstractmethod
-    def __init__(self) -> None:
+    def __init__(self, filesize_limit: int) -> None:
         """
         Initialize an instance of this object. This stores creates an attribute
         loaded_db that is a PersistentDatabase of the LOADED_DB file.
         """
 
         self.loaded_db = PersistentDatabase(self.LOADED_DB)
+        self.filesize_limit = filesize_limit
+
+
+    def compress_image(self, image: 'Path') -> 'Path | None':
+        """
+        Compress the given image until below the filesize limit.
+
+        Args:
+            image: Path to the image to compress.
+
+        Returns:
+            Path to the compressed image, or None if the image could not be
+            compressed.
+        """
+
+        # No compression necessary
+        if (self.filesize_limit is None
+            or image.stat().st_size < self.filesize_limit):
+            return image
+
+        # Start with a quality of 90%, decrement by 5% each time
+        quality = 95
+        small_image = image
+
+        # Compress the given image until below the filesize limit
+        while small_image.stat().st_size > self.filesize_limit:
+            # Process image, exit if cannot be reduced
+            quality -= 5
+            small_image = ImageMaker.reduce_file_size(image, quality)
+            if small_image is None:
+                log.warning(f'Cannot reduce filesize of "{image.resolve()}" '
+                            f'below limit')
+                return None
+
+        # Compression successful, log and return intermediate image
+        log.debug(f'Compressed "{image.resolve()}" with {quality}% quality')
+        return small_image
 
 
     def _get_condition(self, library_name: str, series_info: 'SeriesInfo',
