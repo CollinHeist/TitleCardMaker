@@ -214,6 +214,38 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         self.get_all_episodes(series_info)
 
 
+    def get_library_paths(self, filter_libraries: list[str]=[]
+                          ) -> dict[str, list[str]]:
+        """
+        Get all libraries and their associated base directories.
+
+        Args:
+            filer_libraries: List of library names to filter the return by.
+
+        Returns:
+            Dictionary whose keys are the library names, and whose values are
+            the list of paths to that library's base directories.
+        """
+
+        # Get all library folders 
+        libraries = self.session._get(
+            f'{self.url}/Library/SelectableMediaFolders',
+            params=self.__params
+        )
+
+        # Inner function on whether to include this library in the return
+        def include_library(emby_library) -> bool:
+            if len(filter_libraries) == 0: return True
+            return emby_library in filter_libraries
+
+        # Parse each library name into tuples of parent ID's
+        return {
+            lib['Name']: list(folder['Path'] for folder in lib['SubFolders'])
+            for lib in libraries
+            if include_library(lib['Name'])
+        }
+
+
     def get_all_series(self, filter_libraries: list[str]=[]
                        ) -> list[tuple[SeriesInfo, str, str]]: 
         """
@@ -254,11 +286,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                     )
 
                     for series in response['Items']:
-                        all_series.append((
-                            SeriesInfo(series['Name'], year),
-                            series['Path'],
-                            library
-                        ))
+                        series_info = SeriesInfo(series['Name'], year,
+                                                 emby_id=series['Id'])
+                        all_series.append((series_info, series['Path'],library))
 
         return all_series
 

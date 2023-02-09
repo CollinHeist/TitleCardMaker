@@ -606,7 +606,7 @@ class SeriesYamlWriter:
             return {}
 
         # Get dictionary of libraries and their directories from Plex
-        libraries = plex_interface.get_library_paths(filter_libraries)
+        libraries = emby_interface.get_library_paths(filter_libraries)
 
         # Create libraries YAML
         libraries_yaml = {}
@@ -651,7 +651,7 @@ class SeriesYamlWriter:
             if (key := series_info.full_name) in series_yaml:
                 this_entry['name'] = series_info.name
                 this_entry['year'] = series_info.year
-                key = f'{series_info.full_name} [tvdb:{series_info.tvdb_id}]'
+                key = f'{series_info.full_name} [emby:{series_info.emby_id}]'
 
             # Add media directory if path doesn't match default
             if Path(series_path).name != series_info.full_clean_name:

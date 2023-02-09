@@ -658,8 +658,11 @@ class Show(YamlReader):
         """
 
         # Get appropiate MediaServer interface
-        media_interface = {'emby': self.emby_interface,
-                           'plex': self.plex_interface}[self.media_server]
+        media_interface = {
+            None: None,
+            'emby': self.emby_interface,
+            'plex': self.plex_interface
+        }[self.media_server]
 
         # If this is an archive, assume all episodes are watched
         if self.__is_archive:
@@ -928,8 +931,11 @@ class Show(YamlReader):
         """
 
         # Get appropriate MediaServer interface
-        media_interface = {'emby': self.emby_interface,
-                           'plex': self.plex_interface}[self.media_server]
+        media_interface = {
+            None: None,
+            'emby': self.emby_interface,
+            'plex': self.plex_interface
+        }[self.media_server]
 
         # Exit if no valid media interface
         if not media_interface:
