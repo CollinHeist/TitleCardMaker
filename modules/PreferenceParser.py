@@ -965,6 +965,7 @@ class PreferenceParser(YamlReader):
                     templates[name] = Template(name, template)
 
             # Go through each series in this file
+            log.info(f'Reading series YAML file "{file.resolve()}"..')
             for show_name in tqdm(file_yaml['series'], desc='Reading entries',
                                   **TQDM_KWARGS):
                 # Skip if not a dictionary
