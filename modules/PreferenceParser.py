@@ -587,7 +587,11 @@ class PreferenceParser(YamlReader):
             self.use_tmdb = True
 
         if (value := self._get('tmdb', 'retry_count', type_=int)) is not None:
-            self.tmdb_retry_count = value
+            if value < 0:
+                log.critical(f'Cannot have a negative TMDb retry count')
+                self.valid = False
+            else:
+                self.tmdb_retry_count = value
 
         if (value := self._get('tmdb', 'minimum_resolution', type_=str)) !=None:
             try:
