@@ -364,10 +364,10 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         Args:
             library_name: The name of the library potentially containing the
                 series.
-            series_info: The series to update.
+            series_info: The series to being evaluated.
 
         Returns:
-            True if the series is present within Plex.
+            True if the series is present within Plex. False otherwise.
         """
 
         # If the given library cannot be found, exit

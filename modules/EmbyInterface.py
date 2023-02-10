@@ -352,6 +352,20 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return all_episodes
 
 
+    def has_series(self, series_info: 'SeriesInfo') -> bool:
+        """
+        Determine whether the given series is present within Emby.
+
+        Args:
+            series_info: The series being evaluated.
+
+        Returns:
+            True if the series is present within Emby. False otherwise.
+        """
+
+        return series_info.has_id('emby_id')
+
+
     def update_watched_statuses(self, library_name: str,
                                 series_info: SeriesInfo,
                                 episode_map: dict[str, 'Episode'],
@@ -516,9 +530,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             return None
 
         # Get the source image for this episode
-        emby_id = episode_info.emby_id.split('-')[1]
-        response = self.session._get(
-            f'{self.url}/Items/{emby_id}/Images/Primary',
+        response = self.session.session.get(
+            f'{self.url}/Items/{episode_info.emby_id}/Images/Primary',
             params={'Quality': 100} | self.__params,
         ).content
 

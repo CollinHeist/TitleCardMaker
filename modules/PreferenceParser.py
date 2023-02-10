@@ -25,7 +25,9 @@ from modules.TitleCard import TitleCard
 from modules.TMDbInterface import TMDbInterface
 from modules.YamlReader import YamlReader
 
-YamlWriterSet = namedtuple('YamlWriterSet', ('interface_id', 'writer', 'update_args'))
+YamlWriterSet = namedtuple(
+    'YamlWriterSet', ('interface_id', 'writer', 'update_args')
+)
 
 class PreferenceParser(YamlReader):
     """
@@ -34,7 +36,7 @@ class PreferenceParser(YamlReader):
     """
 
     """Valid image source identifiers"""
-    VALID_IMAGE_SOURCES = ('tmdb', 'plex')
+    VALID_IMAGE_SOURCES = ('tmdb', 'plex', 'emby')
 
     """Valid episode data source identifiers"""
     VALID_EPISODE_DATA_SOURCES = ('emby', 'sonarr', 'plex', 'tmdb')
@@ -376,12 +378,11 @@ class PreferenceParser(YamlReader):
 
         if (value := self._get('options', 'image_source_priority',
                                type_=self.TYPE_LOWER_STR)) is not None:
-            sources = tuple(value.replace(' ', '').split(','))
-            if all(_ in self.VALID_IMAGE_SOURCES for _ in sources):
-                self.image_source_priority = sources
-            else:
+            if (sources := self.parse_image_source_priority(value)) is None:
                 log.critical(f'Image source priority "{value}" is invalid')
                 self.valid = False
+            else:
+                self.image_source_priority = sources
 
         if (value := self._get('options', 'episode_data_source',
                                type_=self.TYPE_LOWER_STR)) is not None:
@@ -920,8 +921,7 @@ class PreferenceParser(YamlReader):
             try:
                 file = CleanPath(file_).sanitize()
             except Exception as e:
-                log.error(f'Invalid series file "{file_}"')
-                log.info(f'Error[{e}]')
+                log.exception(f'Invalid series file "{file_}"', e)
                 continue
 
             # Update progress bar for this file
@@ -1029,27 +1029,6 @@ class PreferenceParser(YamlReader):
         return len(self.sonarr_kwargs) > 0
 
     @property
-    def check_tmdb(self) -> bool:
-        return 'tmdb' in self.image_source_priority
-
-    @property
-    def check_plex(self) -> bool:
-        return 'plex' in self.image_source_priority
-
-    @property
-    def check_plex_before_tmdb(self) -> bool:
-        """Whether to check Plex source before TMDb"""
-
-        priorities = self.image_source_priority
-        if 'plex' in priorities:
-            if 'tmdb' in priorities:
-                return priorities.index('plex') < priorities.index('tmdb')
-
-            return True
-
-        return False
-
-    @property
     def tautulli_interface_args(self) -> dict[str, 'str | int']:
         return {
             'url': self.tautulli_url,
@@ -1086,6 +1065,28 @@ class PreferenceParser(YamlReader):
         return {
             'api_key': self.tmdb_api_key,
         }
+
+
+    def parse_image_source_priority(self, value: str) -> 'list[str] | None':
+        """
+        Parse the given image source priority value into a list of sources.
+
+        Args:
+            value: Value of "image_source_priority" YAML attribute being parsed.
+
+        Returns:
+            Sorted list of image sources. None if the given value is invalid.
+        """
+
+        if isinstance(value, str):
+            sources = tuple(value.replace(' ', '').split(','))
+            if all(_ in self.VALID_IMAGE_SOURCES for _ in sources):
+                return sources
+        elif isinstance(value, list):
+            if all(_ in self.VALID_IMAGE_SOURCES for _ in value):
+                return value
+
+        return None
 
 
     def meets_minimum_resolution(self, width: int, height: int) -> bool:

@@ -42,6 +42,7 @@ class Show(YamlReader):
         'logo', 'backdrop', 'file_interface', 'profile', 'season_poster_set',
         'episodes', 'emby_interface', 'plex_interface', 'sonarr_interface',
         'tmdb_interface', '__is_archive', 'media_server',
+        'image_source_priority',
     )
 
     def __init__(self, name: str, yaml_dict: dict, source_directory: Path,
@@ -89,6 +90,7 @@ class Show(YamlReader):
         self.library = None
         self.media_directory = None
         self.media_server = preferences.default_media_server
+        self.image_source_priority = preferences.image_source_priority
         self.archive = preferences.create_archive
         self.archive_name = None
         self.archive_all_variations = preferences.archive_all_variations
@@ -279,6 +281,14 @@ class Show(YamlReader):
             else:
                 log.error(f'Invalid episode data source "{value}" in series '
                           f'{self}')
+                self.valid = False
+
+        if (value := self._get('image_source_priority',
+                               type_=self.TYPE_LOWER_STR)) is not None:
+            if (sources := self.preferences.parse_image_source_priority(value)):
+                self.image_source_priority = sources
+            else:
+                log.error(f'Image source priority "{value}" is invalid')
                 self.valid = False
 
         if (value := self._get('refresh_titles', type_=bool)) is not None:
@@ -743,9 +753,15 @@ class Show(YamlReader):
                 log.debug(f'Downloaded backdrop for {self} from tmdb')
 
         # Whether to always check TMDb or Plex
-        always_check_tmdb = self.tmdb_interface and self.preferences.check_tmdb
-        always_check_plex = (self.plex_interface
-            and self.preferences.check_plex and
+        always_check_emby = (
+            bool(self.emby_interface) and ('emby' in self.image_source_priority)
+            and self.emby_interface.has_series(self.series_info)
+        )
+        always_check_tmdb = (bool(self.tmdb_interface)
+                             and ('tmdb' in self.image_source_priority))
+        always_check_plex = (
+            bool(self.plex_interface)
+            and ('plex' in self.image_source_priority) and
             self.plex_interface.has_series(self.library_name, self.series_info)
         )
 
@@ -762,26 +778,17 @@ class Show(YamlReader):
             # Update progress bar
             pbar.set_description(f'Selecting {episode}')
 
-            # Check TMDb if this episode isn't permanently blacklisted
-            if always_check_tmdb:
-                blacklisted = self.tmdb_interface.is_permanently_blacklisted(
-                    self.series_info,
-                    episode.episode_info,
-                )
-                check_tmdb = not blacklisted
-            else:
-                check_tmdb, blacklisted = False, not self.tmdb_sync
-
-            # Check Plex if enabled, provided, and valid relative to TMDb
-            if always_check_plex:
-                check_plex = (self.preferences.check_plex_before_tmdb
-                              or blacklisted)
-            else:
-                check_plex = False
+            check_tmdb = (
+                always_check_tmdb and not
+                self.tmdb_interface.is_permanently_blacklisted(
+                    self.series_info, episode.episode_info)
+            )
+            check_emby = always_check_emby
+            check_plex = always_check_plex
 
             # Go through each source interface indicated, try and get source
-            for source_interface in self.preferences.image_source_priority:
-                # Query either TMDb or Plex for the source image
+            for source_interface in self.image_source_priority:
+                # Query for the source image
                 image = None
                 if source_interface == 'tmdb' and check_tmdb:
                     image = self.tmdb_interface.get_source_image(
@@ -794,6 +801,10 @@ class Show(YamlReader):
                         self.library_name,
                         self.series_info,
                         episode.episode_info,
+                    )
+                elif source_interface == 'emby' and check_emby:
+                    image = self.emby_interface.get_source_image(
+                        episode.episode_info
                     )
 
                 # Attempt to download image, log and exit if successful
