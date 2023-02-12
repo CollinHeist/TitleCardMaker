@@ -1,5 +1,10 @@
+from typing import Any
+
+from tinydb import where, Query
+
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
+from modules.PersistentDatabase import PersistentDatabase
 from modules.SeriesInfo import SeriesInfo
 
 class MediaInfoSet:
@@ -8,6 +13,9 @@ class MediaInfoSet:
     objects. This object can be viewed as an interface to creating and getting
     these objects, so that database ID's can be preserved between instances of
     Show and Episode objects.
+
+    This class keeps a PersistentDatabase of Series ID's, but a volatile one of
+    EpisodeInfo objects that is created and updated in RAM at runtime.
     """
 
 
@@ -18,32 +26,66 @@ class MediaInfoSet:
         objects.
         """
 
-        # Containers for SeriesInfo objects
-        # Full Name -> SeriesInfo
-        self.series_names = {}
-        # IMDb ID -> SeriesInfo
-        self.series_imdb_ids = {}
-        # Sonarr ID -> SeriesInfo
-        self.series_sonarr_ids = {}
-        # TVDb ID -> SeriesInfo
-        self.series_tvdb_ids = {}
-        # TMDb ID -> SeriesInfo
-        self.series_tmdb_ids = {}
+        # Database of full names and database ID's
+        self.series_info_db = PersistentDatabase('series_infos.json')
 
-        # Containers for EpisodeInfo objects
-        # SeriesInfo -> index key -> EpisodeInfo
-        self.episode_indices = {}
-        # TVDb ID -> EpisodeInfo
-        self.episode_tvdb_ids = {}
-        # IMDb ID -> EpisodeInfo
-        self.episode_imdb_ids = {}
-        # TMDb ID -> EpisodeInfo
-        self.episode_tmdb_ids = {}
+        # Dictionary mapping various database keys to EpisodeInfo objects
+        self.episode_info: dict[str, EpisodeInfo] = {}
+
+
+    @staticmethod
+    def __test_id_match(db_value: Any, search_value: Any) -> bool:
+        """
+        Determine whether the given ID's match for filtering.
+
+        Args:
+            db_value: Existing value from the ID database.
+            search_value: New value to potentially store in the ID database.
+
+        Returns:
+            True if the row indicated by these ID's should be included (NOT
+            filtered out); False if the row should be excluded (filted out).
+        """
+
+        # None indicates unquerable, do not filter out
+        if db_value is None or search_value is None: return True
+        # Both values are populated, filter on equality
+        return db_value == search_value
+
+
+    def __series_info_condition(self, full_name: str, emby_id: str,
+                                imdb_id: str, sonarr_id: int, tmdb_id: int,
+                                tvdb_id: int, tvrage_id: int) -> Query:
+        """
+        Get the Query condition associated with the given SeriesInfo attributes.
+
+        Args:
+            All SeriesInfo arguments.
+
+        Returns:
+            Query that filters the SeriesInfo database for any matching series
+            indicated by the given arguments.
+        """
+
+        return (
+            (where('full_name') == full_name) &
+            Query().emby_id.test(self.__test_id_match, emby_id) &
+            Query().imdb_id.test(self.__test_id_match, imdb_id) &
+            Query().sonarr_id.test(self.__test_id_match, sonarr_id) &
+            Query().tmdb_id.test(self.__test_id_match, tmdb_id) &
+            Query().tvdb_id.test(self.__test_id_match, tvdb_id) &
+            Query().tvrage_id.test(self.__test_id_match, tvrage_id)
+        )
 
 
     def get_series_info(self, name: str=None, year: int=None, *,
-                        imdb_id: str=None, sonarr_id: int=None,
-                        tmdb_id: int=None, tvdb_id: int=None) -> SeriesInfo:
+                        emby_id: str=None,
+                        imdb_id: str=None,
+                        sonarr_id: int=None,
+                        tmdb_id: int=None,
+                        tvdb_id: int=None,
+                        tvrage_id: int=None,
+                        match_titles: bool=True) -> SeriesInfo:
         """
         Get the SeriesInfo object indicated by the given attributes. This looks
         for an existing object mapped under any of the given details; if none
@@ -63,215 +105,234 @@ class MediaInfoSet:
             The SeriesInfo object indicated by the given attributes.
         """
 
-        # Inner function to set all ID's of the given SeriesInfo object
-        def set_ids(info_obj):
-            info_obj.set_imdb_id(imdb_id)
-            info_obj.set_sonarr_id(sonarr_id)
-            info_obj.set_tmdb_id(tmdb_id)
-            info_obj.set_tvdb_id(tvdb_id)
-
-            return info_obj
-
-        # Get by name, then ID's
-        if (name is not None and year is not None
-            and (info := self.series_names.get(f'{name} ({year})'))):
-            return set_ids(info)
-        if imdb_id is not None and (info := self.series_imdb_ids.get(imdb_id)):
-            return set_ids(info)
-        if (sonarr_id is not None
-            and (info := self.series_sonarr_ids.get(sonarr_id))):
-            return set_ids(info)
-        if tmdb_id is not None and (info := self.series_tmdb_ids.get(tmdb_id)):
-            return set_ids(info)
-        if tvdb_id is not None and (info := self.series_tvdb_ids.get(tvdb_id)):
-            return set_ids(info)
-
-        # This SeriesInfo doesn't exist in the set, verify name and year present
-        series_info = SeriesInfo(
-            name,
-            year,
-            imdb_id=imdb_id,
-            sonarr_id=sonarr_id,
-            tmdb_id=tmdb_id,
-            tvdb_id=tvdb_id,
+        # Get condition to search for this series in the database
+        full_name = SeriesInfo(name, year).full_name
+        condition = self.__series_info_condition(
+            full_name, emby_id, imdb_id, sonarr_id, tmdb_id, tvdb_id, tvrage_id
         )
 
-        # Add object to sets
-        self.series_names[f'{name} ({year})'] = series_info
-        if imdb_id is not None:
-            self.series_imdb_ids[imdb_id] = series_info
-        if sonarr_id is not None:
-            self.series_sonarr_ids[sonarr_id] = series_info
-        if imdb_id is not None:
-            self.series_tmdb_ids[tmdb_id] = series_info
-        if imdb_id is not None:
-            self.series_tvdb_ids[tvdb_id] = series_info
+        # Series doesn't exist, create new info, insert into database, return
+        if not (info := self.series_info_db.search(condition)):
+            series_info = SeriesInfo(
+                name, year, emby_id=emby_id, imdb_id=imdb_id,
+                sonarr_id=sonarr_id, tmdb_id=tmdb_id, tvdb_id=tvdb_id,
+                tvrage_id=tvrage_id, match_titles=match_titles
+            )
 
-        return series_info
+            self.series_info_db.insert({
+                'full_name': full_name, 'emby_id': emby_id, 'imdb_id': imdb_id,
+                'sonarr_id': sonarr_id, 'tmdb_id': tmdb_id, 'tvdb_id': tvdb_id,
+                'tvrage_id': tvrage_id, 
+            })
+
+            return series_info
+        
+        # Info for this series already exists
+        # Check if multiple matches were returned (somehow)
+        if len(info) > 1:
+            log.warning(f'Multiple matches for existing SeriesInfo: {info}')
+        info = info[0]
+
+        # Update database only with ID's that are more accurate
+        update_data = {}
+        if info['emby_id'] is None and emby_id is not None:
+            update_data |= {'emby_id': emby_id}
+        if info['imdb_id'] is None and imdb_id is not None:
+            update_data |= {'imdb_id': imdb_id}
+        if info['sonarr_id'] is None and sonarr_id is not None:
+            update_data |= {'sonarr_id': sonarr_id}
+        if info['tmdb_id'] is None and tmdb_id is not None:
+            update_data |= {'tmdb_id': tmdb_id}
+        if info['tvdb_id'] is None and tvdb_id is not None:
+            update_data |= {'tvdb_id': tvdb_id}
+        if info['tvrage_id'] is None and tvrage_id is not None:
+            update_data |= {'tvrage_id': tvrage_id}
+            
+        # Update database, re-query for finalized data
+        if update_data:
+            log.debug(f'Updating SeriesInfo database.. {update_data=}')
+            self.series_info_db.upsert(update_data, condition)
+            info = self.series_info_db.get(condition)
+
+        # Return SeriesInfo created from finalized data
+        return SeriesInfo(
+            name, year,
+            emby_id=info['emby_id'],
+            imdb_id=info['imdb_id'],
+            sonarr_id=info['sonarr_id'],
+            tmdb_id=info['tmdb_id'],
+            tvdb_id=info['tvdb_id'],
+            tvrage_id=info['tvrage_id'],
+            match_titles=match_titles,
+        )
 
 
-    def __set_episode_imdb_id(self, episode_info: EpisodeInfo,
-                              imdb_id: str) -> None:
+    def __set_series_id(self, id_type: str, series_info: SeriesInfo,
+                        id_: Any) -> None:
         """
-        Set the IMDb ID of the given EpisodeInfo object. This also updates
-        the IMDb ID map of this info set.
+        Set the series ID within this object's database and on the given
+        SeriesInfo object.
 
         Args:
-            episode_info: The EpisodeInfo to set the ID of.
-            imdb_id: The IMDb ID.
+            id_type: Descriptive string of the ID type being set - e.g. 'emby',
+                'imdb', etc.
+            series_info: SeriesInfo object to update the ID of.
+            id_: Associated ID to store.
         """
 
-        if imdb_id is None:
+        # If the ID is invalid, skip
+        existing = getattr(series_info, f'{id_type}_id')
+        if id_ is None or id_ == 0 or existing is not None or existing == id_:
             return None
 
-        episode_info.set_imdb_id(imdb_id)
-        self.episode_imdb_ids[imdb_id] = episode_info
+        # Update series info object with the given ID
+        getattr(series_info, f'set_{id_type}_id')(id_)
+
+        # Update database
+        self.series_info_db.upsert({
+                'full_name': series_info.full_name,
+                'emby_id': series_info.emby_id,
+                'imdb_id': series_info.imdb_id,
+                'sonarr_id': series_info.sonarr_id,
+                'tmdb_id': series_info.tmdb_id,
+                'tvdb_id': series_info.tvdb_id,
+                'tvrage_id': series_info.tvrage_id, 
+            },
+            self.__series_info_condition(
+                series_info.full_name, series_info.emby_id, series_info.imdb_id,
+                series_info.sonarr_id, series_info.tmdb_id, series_info.tvdb_id,
+                series_info.tvrage_id
+            )
+        )
 
 
-    def __set_episode_tvdb_id(self, episode_info: EpisodeInfo,
-                              tvdb_id: str) -> None:
+    def set_emby_id(self, series_info: SeriesInfo, id_: str) -> None:
+        self.__set_series_id('emby', series_info, id_)
+
+    def set_imdb_id(self, series_info: SeriesInfo, id_: str) -> None:
+        self.__set_series_id('imdb', series_info, id_)
+
+    def set_sonarr_id(self, series_info: SeriesInfo, id_: str) -> None:
+        self.__set_series_id('sonarr', series_info, id_)
+
+    def set_tmdb_id(self, series_info: SeriesInfo, id_: str) -> None:
+        self.__set_series_id('tmdb', series_info, id_)
+
+    def set_tvdb_id(self, series_info: SeriesInfo, id_: str) -> None:
+        self.__set_series_id('tvdb', series_info, id_)
+
+    def set_tvrage_id(self, series_info: SeriesInfo, id_: str) -> None:
+        self.__set_series_id('tvrage', series_info, id_)
+
+
+    @staticmethod
+    def __get_episode_info_storage_keys(series_info: SeriesInfo, season_number,
+                                        episode_number, emby_id, imdb_id,
+                                        tmdb_id, tvdb_id, tvrage_id)->list[str]:
         """
-        Set the TVDb ID of the given EpisodeInfo object. This also updates
-        the TVDb ID map of this info set.
+        Get the keys to update within the EpisodeInfo map for the given data.
 
         Args:
-            episode_info: The EpisodeInfo to set the ID of.
-            tvdb_id: The TVDb ID.
+            All arguments are EpisodeInfo data.
+
+        Returns:
+            List of storage keys for the episode_info map. Only keys where the
+            associated data is non-None are returned.
         """
 
-        if tvdb_id is None:
-            return None
+        new_keys = [
+            f'title:{series_info.full_name}:{season_number}:{episode_number}'
+        ]
+        new_keys += [] if emby_id is None else [f'emby:{emby_id}']
+        new_keys += [] if imdb_id is None else [f'imdb:{imdb_id}']
+        new_keys += [] if tmdb_id is None else [f'tmdb:{tmdb_id}']
+        new_keys += [] if tvdb_id is None else [f'tvdb:{tvdb_id}']
+        new_keys += [] if tvrage_id is None else [f'tvrage:{tvrage_id}']
 
-        episode_info.set_tvdb_id(tvdb_id)
-        self.episode_tvdb_ids[tvdb_id] = episode_info
-
-
-    def __set_episode_tmdb_id(self, episode_info: EpisodeInfo,
-                              tmdb_id: str) -> None:
-        """
-        Set the TMDb ID of the given EpisodeInfo object. This also updates
-        the TMDb ID map of this info set.
-
-        Args:
-            episode_info: The EpisodeInfo to set the ID of.
-            tmdb_id: The TMDb ID.
-        """
-
-        if tmdb_id is None:
-            return None
-
-        episode_info.set_tmdb_id(tmdb_id)
-        self.episode_tmdb_ids[tmdb_id] = episode_info
+        return new_keys
 
 
-    def get_episode_info(self, series_info: SeriesInfo=None,
-                         title: 'Title'=None, season_number: int=None,
-                         episode_number: int=None,  abs_number: int=None, *,
-                         imdb_id: str=None, tvdb_id: int=None,
-                         tmdb_id:int=None, airdate: 'datetime'=None,
+    def get_episode_info(self, series_info: SeriesInfo, title: str,
+                         season_number: int, episode_number: int,
+                         abs_number: int=None, *,
+                         emby_id: str=None,
+                         imdb_id: str=None,
+                         tmdb_id: int=None,
+                         tvdb_id: int=None,
+                         tvrage_id: int=None,
+                         airdate: 'datetime'=None,
                          title_match: bool=True,
                          **queried_kwargs: dict) -> EpisodeInfo:
         """
-        Get the EpisodeInfo object indicated by the given attributes. This looks
-        for an existing object mapped under any of the given details; if none
-        exists, a new EpisodeInfo object is created with the given details.
+        Get the EpisodeInfo object indicated by the given attributes.
 
         Args:
-            series_info: SeriesInfo object the EpisodeInfo object might be
-                indexed under.
-            title: The Title of the episode. Optional if associated object
-                already exists. Optional if associated object already exists
-            season_number: Season number of the episode. Optional if associated
-                object already exists
-            episode_number: Episode number of the episode. Optional if
-                associated object already exists
+            series_info: Parent SeriesInfo object for the EpisodeInfo object.
+            title: The title of the episode.
+            season_number: Season number of the episode.
+            episode_number: Episode number of the episode.
             abs_number: Optional absolute number of the episode.
+            emby_id: (Keyword only) Optional Emby ID.
             imdb_id: (Keyword only) Optional IMDb ID.
-            tvdb_id: (Keyword only) Optional TVDb ID.
             tmdb_id: (Keyword only) Optional TMDb ID.
+            tvdb_id: (Keyword only) Optional TVDb ID.
+            tvrage_id: (Keyword only) Optional TVRage ID.
             airdate: (Keyword only) Optional airdate of the episode
             queried_kwargs: Any queried_{interface} keyword arguments.
 
         Returns:
-            The EpisodeInfo object indicated by the given attributes. None if an
-            object does not exist and cannot be created due to an index conflict
+            The EpisodeInfo object indicated by the given attributes. This
+            object is updated with any provided database ID's, the airdate, or
+            queried keywords. The object is either new (if no matching entry)
+            was found; or an updated existing object (if match was found).
         """
 
-        def set_airdate(info_obj):
-            if airdate is not None and info_obj.airdate is None:
-                info_obj.airdate = airdate
-
-        def set_ids(info_obj):
-            set_airdate(info_obj)
-            self.__set_episode_imdb_id(info_obj, imdb_id)
-            self.__set_episode_tvdb_id(info_obj, tvdb_id)
-            self.__set_episode_tmdb_id(info_obj, tmdb_id)
-            info_obj.update_queried_statuses(**queried_kwargs)
-            return info_obj
-
-        # Check under TVDb ID, then IMDb, and finally index
-        if tvdb_id is not None and (info := self.episode_tvdb_ids.get(tvdb_id)):
-            return set_ids(info)
-        if imdb_id is not None and (info := self.episode_imdb_ids.get(imdb_id)):
-            return set_ids(info)
-        if tmdb_id is not None and (info := self.episode_tmdb_ids.get(tmdb_id)):
-            return set_ids(info)
-        if (season_number is not None and episode_number is not None
-            and series_info is not None):
-            key = f'{season_number}-{episode_number}'
-            if (info := self.episode_indices.get(series_info, {}).get(key)):
-                if not title_match or (title_match and info.title.matches(title)):
-                    return set_ids(info)
-                else:
-                    if series_info.match_titles:
-                        log.debug(f'Index match on {series_info} {key}, but '
-                                  f'title mismatch - {info.title} / {title}')
-                    return EpisodeInfo(title, season_number, episode_number,
-                                       abs_number, imdb_id=imdb_id,
-                                       tvdb_id=tvdb_id, tmdb_id=tmdb_id,
-                                       airdate=airdate,
-                                       **queried_kwargs)
-
-        # This EpisodeInfo doesn't exist in the set, create new object
-        episode_info = EpisodeInfo(
-            title, season_number, episode_number, abs_number, imdb_id=imdb_id,
-            tvdb_id=tvdb_id, tmdb_id=tmdb_id, airdate=airdate, **queried_kwargs,
+        # Get keys to update the EpisodeInfo map with
+        update_keys = self.__get_episode_info_storage_keys(
+            series_info, season_number, episode_number, emby_id, imdb_id,
+            tmdb_id, tvdb_id, tvrage_id
         )
+        index_key = update_keys[0]
 
-        # Add object to indices set
-        key = f'{season_number}-{episode_number}'
-        if series_info in self.episode_indices:
-            self.episode_indices[series_info][key] = episode_info
-        else:
-            self.episode_indices[series_info] = {key: episode_info}
-
-        # Add object to ID sets
-        self.__set_episode_imdb_id(episode_info, imdb_id)
-        self.__set_episode_tvdb_id(episode_info, tvdb_id)
-        self.__set_episode_tmdb_id(episode_info, tmdb_id)
-
-        return episode_info
-
-
-    def update_series_name(self, series_info: SeriesInfo, name: str) -> None:
-        """
-        Update the name of the associated SeriesInfo object. This also updates
-        the mapping in this object's set.
-
-        Args:
-            series_info: The SeriesInfo object being updated.
-            name:New name of the associated series.
-        """
-
-        # Update name of the object itself
-        old_key = series_info.full_name
-        series_info.update_name(name)
-
-        # Add object under new key within set
-        self.series_names[f'{name} ({series_info.year})'] = series_info
-
-        # Delete old key
-        try:
-            del self.series_names[old_key]
-        except KeyError:
+        # Query by TVDb -> IMDb -> TMDb -> Emby -> TVRage -> Index+?Title
+        if tvdb_id and (info := self.episode_info.get(f'tvdb:{tvdb_id}')):
             pass
+        elif imdb_id and (info := self.episode_info.get(f'imdb:{imdb_id}')):
+            pass
+        elif tmdb_id and (info := self.episode_info.get(f'tmdb:{tmdb_id}')):
+            pass
+        elif emby_id and (info := self.episode_info.get(f'emby:{emby_id}')):
+            pass
+        elif tvrage_id and (info := self.episode_info.get(f'tvrage:{tvrage_id}')):
+            pass
+        elif ((info := self.episode_info.get(index_key))
+            and (not title_match
+                 or (title_match and info.title.matches(title)))):
+            pass
+        # No existing EpisodeInfo, create new one
+        else:
+            info = EpisodeInfo(
+                title, season_number, episode_number, abs_number,
+                emby_id=emby_id, imdb_id=imdb_id, tmdb_id=tmdb_id,
+                tvdb_id=tvdb_id, tvrage_id=tvrage_id, airdate=airdate,
+                **queried_kwargs,
+            )
+
+            # Create new entries in EpisodeInfo map
+            self.episode_info.update(dict.fromkeys(update_keys, info))
+            
+            return info
+        
+        # Update existing EpisodeInfo object
+        info.set_emby_id(emby_id)
+        info.set_imdb_id(imdb_id)
+        info.set_tmdb_id(tmdb_id)
+        info.set_tvdb_id(tvdb_id)
+        info.set_tvrage_id(tvrage_id)
+        info.set_airdate(airdate)
+        info.update_queried_statuses(**queried_kwargs)
+
+        # Update map with any keys
+        self.episode_info.update(dict.fromkeys(update_keys, info))
+
+        return info

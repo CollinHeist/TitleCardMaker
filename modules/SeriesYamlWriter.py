@@ -405,7 +405,7 @@ class SeriesYamlWriter:
 
             # Add media directory if path doesn't match default
             if (library is None
-                or Path(sonarr_path).name != series_info.legal_path):
+                or Path(sonarr_path).name != series_info.full_clean_name):
                 this_entry['media_directory'] = sonarr_path
 
             # Add this entry to main supposed YAML
@@ -500,11 +500,13 @@ class SeriesYamlWriter:
                     libraries_yaml[f'{library} - Directory {index+1}'] = {
                         'path': self.__convert_path(path, media=False),
                         'plex_name': library,
+                        'media_server': 'plex',
                     }
             # Library only has one directory, add directly
             else:
                 libraries_yaml[library] = {
-                    'path': self.__convert_path(paths[0], media=False)
+                    'path': self.__convert_path(paths[0], media=False),
+                    'media_server': 'plex',
                 }
 
         # Create series YAML
@@ -534,7 +536,7 @@ class SeriesYamlWriter:
                 key = f'{series_info.full_name} [imdb:{series_info.imdb_id}]'
 
             # Add media directory if path doesn't match default
-            if Path(series_path).name != series_info.legal_path:
+            if Path(series_path).name != series_info.full_clean_name:
                 this_entry['media_directory'] = series_path
 
             # Add this entry to main supposed YAML
@@ -576,3 +578,121 @@ class SeriesYamlWriter:
             self.__append(yaml)
 
         log.info(f'Synced {self.file.resolve()} from Plex')
+
+
+    def __get_yaml_from_emby(self, emby_interface: 'EmbyInterface',
+                             filter_libraries: list[str],
+                             exclusions: list[dict[str, str]]=[]
+                             ) -> dict[str, dict[str, str]]:
+        """
+       Get the YAML from Emby, as filtered by the given libraries.
+
+        Args:
+            emby_interface: EmbyInterface to sync from.
+            filter_libraries: List of libraries to filter the returned YAML by.
+            exclusions: List of labelled exclusions to apply to sync.
+
+        Returns:
+            Series YAML as reported by Emby. Keys are series names, and each
+            contains the YAML for that series, such as the 'name', 'year',
+            'media_directory', and 'library'.
+        """
+
+        # Get list of SeriesInfo, media paths, and library names from Plex
+        all_series = emby_interface.get_all_series(filter_libraries)
+
+        # Exit if no series were returned
+        if len(all_series) == 0:
+            return {}
+
+        # Get dictionary of libraries and their directories from Plex
+        libraries = emby_interface.get_library_paths(filter_libraries)
+
+        # Create libraries YAML
+        libraries_yaml = {}
+        for library, paths in libraries.items():
+            # If this library has multiple directories, create entry for each if
+            # no override card directory is provided
+            if len(paths) > 1 and self.card_directory is None:
+                for index, path in enumerate(paths):
+                    libraries_yaml[f'{library} - Directory {index+1}'] = {
+                        'path': self.__convert_path(path, media=False),
+                        'library_name': library,
+                        'media_server': 'emby',
+                    }
+            # Library only has one directory, add directly
+            else:
+                libraries_yaml[library] = {
+                    'path': self.__convert_path(paths[0], media=False),
+                    'media_server': 'emby',
+                }
+
+        # Create series YAML
+        series_yaml = {}
+        for series_info, plex_path, library in all_series:
+            # Convert Emby path to TCM path
+            series_path = self.__convert_path(plex_path, media=True)
+
+            # If part of a multi-directory library, use adjusted library name
+            if libraries_yaml.get(library) is None:
+                for library_key, library_yaml in libraries_yaml.items():
+                    # Find matching library 
+                    if (library_yaml.get('library_name') == library
+                        and series_path.startswith(library_yaml['path'])):
+                        library = library_key
+                        break
+
+            # Add details to eventual YAML object
+            this_entry = {'library': library}
+            if self.template is not None:
+                this_entry['template'] = self.template
+
+            # Add under key: "full name" then "name [tvdb:tvdb_id]"
+            if (key := series_info.full_name) in series_yaml:
+                this_entry['name'] = series_info.name
+                this_entry['year'] = series_info.year
+                key = f'{series_info.full_name} [emby:{series_info.emby_id}]'
+
+            # Add media directory if path doesn't match default
+            if Path(series_path).name != series_info.full_clean_name:
+                this_entry['media_directory'] = series_path
+
+            # Add this entry to main supposed YAML
+            series_yaml[key] = this_entry
+
+        # Create end-YAML as combination of series and libraries
+        yaml = {'libraries': libraries_yaml, 'series': series_yaml}
+
+         # Apply exclusions, then return yaml finalized YAML
+        self.__apply_exclusion(yaml, exclusions)
+        return yaml
+
+
+    def update_from_emby(self, emby_interface: 'PlexInterface',
+                         filter_libraries: list[str]=[],
+                         exclusions: list[dict[str, str]]=[]) -> None:
+        """
+        Update this object's file from Emby.
+
+        Args:
+            emby_interface: EmbyInterface to sync from.
+            filter_libraries: List of libraries to filter Plex sync from.
+            exclusions: List of labeled exclusions to apply to sync.
+        """
+
+        if not isinstance(filter_libraries, (list, tuple)):
+            log.critical(f'Invalid Emby library filter list')
+            exit(1)
+
+        # Get complete file YAML from Sonarr
+        yaml = self.__get_yaml_from_emby(
+            emby_interface, filter_libraries, exclusions
+        )
+
+        # Either sync of append this YAML to this object's file
+        if self.sync_mode == 'match':
+            self.__match(yaml)
+        elif self.sync_mode == 'append':
+            self.__append(yaml)
+
+        log.info(f'Synced {self.file.resolve()} from Emby')

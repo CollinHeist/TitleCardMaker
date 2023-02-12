@@ -1,11 +1,12 @@
 from pathlib import Path
 from hashlib import sha256
 
-from tinydb import TinyDB, where
+from tinydb import where
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
 import modules.global_objects as global_objects
+from modules.PersistentDatabase import PersistentDatabase
 
 class ShowRecordKeeper:
     """
@@ -44,8 +45,7 @@ class ShowRecordKeeper:
         """
 
         # Read record database
-        database = database_directory / self.RECORD_DATABASE
-        self.records = TinyDB(database)
+        self.records = PersistentDatabase(self.RECORD_DATABASE)
 
         # Read version of record database
         version = database_directory / self.DATABASE_VERSION
@@ -56,18 +56,14 @@ class ShowRecordKeeper:
 
         # Delete database if version does not match
         if self.version != global_objects.pp.version:
-            # database.unlink(missing_ok=True)
+            self.records.reset()
             log.debug(f'Deleted show record database, was version {self.version}')
 
         # Write current version to file
         version.write_text(global_objects.pp.version)
 
-        # Attempt to read length, error indicates bad database
-        try:
-            log.debug(f'Read {len(self.records)} show records')
-        except Exception:
-            log.warning(f'Show record database is corrupted - resetting')
-            database.unlink(missing_ok=True)
+        # Read and log length
+        log.info(f'Read {len(self.records)} show records')
 
 
     def __get_record_hash(self, hash_obj: 'hashalg', record) -> None:

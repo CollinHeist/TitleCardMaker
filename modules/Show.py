@@ -15,6 +15,7 @@ from modules.PlexInterface import PlexInterface
 from modules.Profile import Profile
 from modules.SeasonPosterSet import SeasonPosterSet
 from modules.SeriesInfo import SeriesInfo
+from modules.StyleSet import StyleSet
 from modules.TitleCard import TitleCard
 from modules.Title import Title
 from modules.WebInterface import WebInterface
@@ -39,8 +40,9 @@ class Show(YamlReader):
         'tmdb_sync', 'tmdb_skip_localized_images', 'style_set', 'hide_seasons',
         'title_languages', 'extras', '__episode_map', 'font','source_directory',
         'logo', 'backdrop', 'file_interface', 'profile', 'season_poster_set',
-        'episodes', 'plex_interface', 'sonarr_interface', 'tmdb_interface',
-        '__is_archive',
+        'episodes', 'emby_interface', 'plex_interface', 'sonarr_interface',
+        'tmdb_interface', '__is_archive', 'media_server',
+        'image_source_priority',
     )
 
     def __init__(self, name: str, yaml_dict: dict, source_directory: Path,
@@ -71,9 +73,12 @@ class Show(YamlReader):
         # Set this show's SeriesInfo object with blank year to start
         self.series_info = SeriesInfo(name, 0)
         try:
-            self.series_info = SeriesInfo(name, self._get('year', type_=int))
-        except Exception:
-            log.error(f'Series "{name}" is missing the required "year"')
+            self.series_info = self.info_set.get_series_info(
+                self._get('name', type_=str, default=name),
+                self._get('year', type_=int)
+            )
+        except Exception as e:
+            log.exception(f'Series "{name}" is missing the required "year"', e)
             self.valid = False
             return None
 
@@ -84,6 +89,8 @@ class Show(YamlReader):
         self.library_name = None
         self.library = None
         self.media_directory = None
+        self.media_server = preferences.default_media_server
+        self.image_source_priority = preferences.image_source_priority
         self.archive = preferences.create_archive
         self.archive_name = None
         self.archive_all_variations = preferences.archive_all_variations
@@ -93,13 +100,18 @@ class Show(YamlReader):
         self.sync_specials = preferences.sync_specials
         self.tmdb_sync = preferences.use_tmdb
         self.tmdb_skip_localized_images = preferences.tmdb_skip_localized_images
-        self.style_set = copy(preferences.global_style_set)
         self.hide_seasons = False
         self.title_languages = {}
         self.extras = {}
+        if self.media_server == 'emby':
+            self.style_set = copy(preferences.emby_style_set)
+        elif self.media_server == 'plex':
+            self.style_set = copy(preferences.plex_style_set)
+        else:
+            self.style_set = StyleSet()
         self.__parse_yaml()
 
-        # Construct StyleSet
+        # Update StyleSet
         if self._is_specified('watched_style'):
             self.style_set.update_watched_style(
                 self._get('watched_style', type_=str)
@@ -124,7 +136,7 @@ class Show(YamlReader):
         self.valid &= self.font.valid
 
         # Update derived (and not adjustable) attributes
-        self.source_directory = source_directory / self.series_info.legal_path
+        self.source_directory =source_directory/self.series_info.full_clean_name
         self.logo = self.source_directory / 'logo.png'
         self.backdrop = self.source_directory / self.BACKDROP_FILENAME
 
@@ -153,6 +165,7 @@ class Show(YamlReader):
 
         # Attributes to be filled/modified later
         self.episodes = {}
+        self.emby_interface = None
         self.plex_interface = None
         self.sonarr_interface = None
         self.tmdb_interface = None
@@ -209,13 +222,11 @@ class Show(YamlReader):
         invalid attributes.
         """
 
-        if (value := self._get('name', type_=str)) is not None:
-            self.info_set.update_series_name(self.series_info, value)
-
         if (value := self._get('library', type_=dict)) is not None:
             self.library_name = value['name']
             self.library = value['path']
-            self.media_directory = self.library / self.series_info.legal_path
+            self.media_directory = self.library/self.series_info.full_clean_name
+            self.media_server = value['media_server']
 
         if (value := self._get('media_directory', type_=str)) is not None:
             self.media_directory = CleanPath(value).sanitize()
@@ -226,17 +237,25 @@ class Show(YamlReader):
             else:
                 self.valid = False
 
+        if (value := self._get('emby_id', type_=int)) is not None:
+            emby_id = value if '-' in str(value) else f'0-{value}'
+            self.info_set.set_emby_id(self.series_info, emby_id)
+
         if (value := self._get('imdb_id', type_=str)) is not None:
-            self.series_info.set_imdb_id(value)
+            self.info_set.set_imdb_id(self.series_info, value)
 
         if (value := self._get('sonarr_id', type_=int)) is not None:
-            self.series_info.set_sonarr_id(value)
-
-        if (value := self._get('tvdb_id', type_=int)) is not None:
-            self.series_info.set_tvdb_id(value)
+            sonarr_id = value if '-' in str(value) else f'0-{value}'
+            self.info_set.set_sonarr_id(self.series_info, sonarr_id)
 
         if (value := self._get('tmdb_id', type_=int)) is not None:
-            self.series_info.set_tmdb_id(value)
+            self.info_set.set_tmdb_id(self.series_info, value)
+
+        if (value := self._get('tvdb_id', type_=int)) is not None:
+            self.info_set.set_tvdb_id(self.series_info, value)
+        
+        if (value := self._get('tvrage_id', type_=int)) is not None:
+            self.info_set.set_tvrage_id(self.series_info, value)
 
         if (value := self._get('card_type', type_=str)) is not None:
             self._parse_card_type(value)
@@ -262,6 +281,14 @@ class Show(YamlReader):
             else:
                 log.error(f'Invalid episode data source "{value}" in series '
                           f'{self}')
+                self.valid = False
+
+        if (value := self._get('image_source_priority',
+                               type_=self.TYPE_LOWER_STR)) is not None:
+            if (sources := self.preferences.parse_image_source_priority(value)):
+                self.image_source_priority = sources
+            else:
+                log.error(f'Image source priority "{value}" is invalid')
                 self.valid = False
 
         if (value := self._get('refresh_titles', type_=bool)) is not None:
@@ -303,23 +330,32 @@ class Show(YamlReader):
             self.extras = self._get('extras', type_=dict)
 
 
-    def assign_interfaces(self, plex_interface: 'PlexInterface'=None,
+    def assign_interfaces(self, emby_interface: 'EmbyInterface'=None,
+                          plex_interface: 'PlexInterface'=None,
                           sonarr_interfaces: list['SonarrInterface']=[],
                           tmdb_interface: 'TMDbInterface'=None) -> None:
         """
         Assign the given interfaces to attributes of this object for later use.
 
         Args:
-            plex_interface: Optional PlexInterface to store if required by
-                this show.
+            emby_interface: Optional EmbyInterface to store if required by this
+                show.
+            plex_interface: Optional PlexInterface to store if required by this
+                show.
             sonarr_interface: Any number of optional SonarrInterfaces to store.
                 Only the interface containing this series will be stored.
-            tmdb_interface: Optional TMDbInterface to store if required by
-                this show.
+            tmdb_interface: Optional TMDbInterface to store if required by this
+                show.
         """
 
+        # If Emby is required, and an interface was provided, assign
+        if (self.media_server == 'emby' and self.library is not None
+            and emby_interface is not None):
+            self.emby_interface = emby_interface
+
         # If Plex is required, and an interface was provided, assign
-        if self.library is not None and plex_interface is not None:
+        if (self.media_server == 'plex' and self.library is not None
+            and plex_interface is not None):
             self.plex_interface = plex_interface
 
         # If Sonarr is enabled, and any interfaces are provided, assign
@@ -353,16 +389,18 @@ class Show(YamlReader):
     def set_series_ids(self) -> None:
         """Set the series ID's for this show."""
 
-        # Sonarr can provide Sonarr and TVDb ID's
-        if (self.sonarr_interface and
-            (self.series_info.sonarr_id is None or
-             self.series_info.tvdb_id is None)):
+        if self.emby_interface:
+            self.emby_interface.set_series_ids(self.library_name,
+                                               self.series_info)
+
+        if self.plex_interface:
+            self.plex_interface.set_series_ids(self.library_name,
+                                               self.series_info)
+
+        if self.sonarr_interface:
             self.sonarr_interface.set_series_ids(self.series_info)
 
-        # TMDb can provide TMDb and TVDb ID's
-        if (self.tmdb_interface and 
-            (self.series_info.tmdb_id is None or
-             self.series_info.tvdb_id is None)):
+        if self.tmdb_interface:
             self.tmdb_interface.set_series_ids(self.series_info)
 
 
@@ -419,7 +457,9 @@ class Show(YamlReader):
         """
 
         # Get episodes from indicated data source
-        if self.episode_data_source == 'sonarr' and self.sonarr_interface:
+        if self.episode_data_source == 'emby' and self.emby_interface:
+            all_episodes =self.emby_interface.get_all_episodes(self.series_info)
+        elif self.episode_data_source == 'sonarr' and self.sonarr_interface:
             all_episodes = self.sonarr_interface.get_all_episodes(
                 self.series_info
             )
@@ -473,14 +513,11 @@ class Show(YamlReader):
         """
 
         # Exit if primary data source doesn't have an interface
-        if not {'sonarr': self.sonarr_interface,
-                'plex': self.plex_interface,
-                'tmdb': self.tmdb_interface}[self.episode_data_source]:
+        if not getattr(self, f'{self.episode_data_source}_interface'):
             return None
 
-        # Filter episodes not needing ID's - i.e. has card, and has translation
-        def does_need_id(item) -> bool:
-            _, episode = item
+        # Filter episodes needing ID's - i.e. missing card or translation
+        def episode_needs_id(episode) -> bool:
             if episode.episode_info.has_all_ids or episode.destination is None:
                 return False
             if not episode.destination.exists():
@@ -492,8 +529,8 @@ class Show(YamlReader):
 
         # Apply filter of only those needing ID's, get only EpisodeInfo objects
         infos = list(
-            ep.episode_info for _, ep in
-            filter(does_need_id, self.episodes.items())
+            ep.episode_info for ep in 
+            filter(episode_needs_id, self.episodes.values())
         )
 
         # If no episodes need ID's, exit
@@ -501,6 +538,9 @@ class Show(YamlReader):
             return None
 
         # Temporary function to load episode ID's
+        def load_emby(infos):
+            if self.emby_interface:
+                self.emby_interface.set_episode_ids(self.series_info, infos)
         def load_sonarr(infos):
             if self.sonarr_interface:
                 self.sonarr_interface.set_episode_ids(self.series_info, infos)
@@ -515,9 +555,10 @@ class Show(YamlReader):
         # Identify interface order for ID gathering based on primary episode
         # data source
         interface_orders = {
-            'sonarr': [load_sonarr, load_plex, load_tmdb],
-            'plex':   [load_plex, load_sonarr, load_tmdb],
-            'tmdb':   [load_tmdb, load_plex, load_sonarr],
+            'emby':   [load_emby, load_sonarr, load_tmdb, load_plex],
+            'sonarr': [load_sonarr, load_plex, load_emby, load_tmdb],
+            'plex':   [load_plex, load_sonarr, load_tmdb, load_plex],
+            'tmdb':   [load_tmdb, load_plex, load_sonarr, load_emby],
         }
 
         # Go through each interface and load ID's from it
@@ -537,7 +578,7 @@ class Show(YamlReader):
 
         # Go through every episode and look for translations
         modified = False
-        for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
+        for episode in (pbar := tqdm(self.episodes.values(), **TQDM_KWARGS)):
             # Get each translation for this series
             for translation in self.title_languages:
                 # If the key already exists, skip this episode
@@ -626,12 +667,19 @@ class Show(YamlReader):
             Whether a backdrop should be downloaded or not.
         """
 
+        # Get appropiate MediaServer interface
+        media_interface = {
+            None: None,
+            'emby': self.emby_interface,
+            'plex': self.plex_interface
+        }[self.media_server]
+
         # If this is an archive, assume all episodes are watched
         if self.__is_archive:
             [episode.update_statuses(True, self.style_set)
              for _, episode in self.episodes.items()]
-        # If no PlexInterface, assume all episodes are unwatched
-        elif self.plex_interface is None:
+        # If no MediaServer interface, assume all episodes are unwatched
+        elif media_interface is None:
             [episode.update_statuses(False, self.style_set)
              for _, episode in self.episodes.items()]
         # Update watch statuses from Plex
@@ -640,13 +688,13 @@ class Show(YamlReader):
             if select_only:
                 episode_map = {select_only.episode_info.key: select_only}
 
-            self.plex_interface.update_watched_statuses(
+            media_interface.update_watched_statuses(
                 self.library_name, self.series_info, episode_map, self.style_set
             )
 
         # Go through all episodes and select source images
         download_backdrop = False
-        for _, episode in self.episodes.items():
+        for episode in self.episodes.values():
             # If only selecting a specific episode, skip others
             if select_only is not None and episode is not select_only:
                 continue
@@ -665,11 +713,9 @@ class Show(YamlReader):
                 (applies_to == 'unwatched' and not episode.watched)):
                 episode.update_source(manual_source, downloadable=False)
 
-            # Blur if indicated by style
+            # Apply styles if indicated
             if self.style_set.effective_style_is_blur(episode.watched):
                 episode.blur = True
-
-            # Grayscale if indicated by style
             if self.style_set.effective_style_is_grayscale(episode.watched):
                 episode.grayscale = True
 
@@ -707,14 +753,20 @@ class Show(YamlReader):
                 log.debug(f'Downloaded backdrop for {self} from tmdb')
 
         # Whether to always check TMDb or Plex
-        always_check_tmdb = self.tmdb_interface and self.preferences.check_tmdb
-        always_check_plex = (self.plex_interface
-            and self.preferences.check_plex and
+        always_check_emby = (
+            bool(self.emby_interface) and ('emby' in self.image_source_priority)
+            and self.emby_interface.has_series(self.series_info)
+        )
+        always_check_tmdb = (bool(self.tmdb_interface)
+                             and ('tmdb' in self.image_source_priority))
+        always_check_plex = (
+            bool(self.plex_interface)
+            and ('plex' in self.image_source_priority) and
             self.plex_interface.has_series(self.library_name, self.series_info)
         )
 
         # For each episode, query interfaces (in priority order) for source
-        for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
+        for episode in (pbar := tqdm(self.episodes.values(), **TQDM_KWARGS)):
             # If only selecting a specific episode, skip others
             if select_only is not None and episode is not select_only:
                 continue
@@ -726,45 +778,39 @@ class Show(YamlReader):
             # Update progress bar
             pbar.set_description(f'Selecting {episode}')
 
-            # Check TMDb if this episode isn't permanently blacklisted
-            if always_check_tmdb:
-                blacklisted = self.tmdb_interface.is_permanently_blacklisted(
-                    self.series_info,
-                    episode.episode_info,
-                )
-                check_tmdb = not blacklisted
-            else:
-                check_tmdb, blacklisted = False, not self.tmdb_sync
-
-            # Check Plex if enabled, provided, and valid relative to TMDb
-            if always_check_plex:
-                check_plex = (self.preferences.check_plex_before_tmdb
-                              or blacklisted)
-            else:
-                check_plex = False
+            check_tmdb = (
+                always_check_tmdb and not
+                self.tmdb_interface.is_permanently_blacklisted(
+                    self.series_info, episode.episode_info)
+            )
+            check_emby = always_check_emby
+            check_plex = always_check_plex
 
             # Go through each source interface indicated, try and get source
-            for source_interface in self.preferences.image_source_priority:
-                # Query either TMDb or Plex for the source image
-                image_url = None
+            for source_interface in self.image_source_priority:
+                # Query for the source image
+                image = None
                 if source_interface == 'tmdb' and check_tmdb:
-                    image_url = self.tmdb_interface.get_source_image(
+                    image = self.tmdb_interface.get_source_image(
                         self.series_info,
                         episode.episode_info,
                         skip_localized_images=self.tmdb_skip_localized_images,
                     )
                 elif source_interface == 'plex' and check_plex:
-                    image_url = self.plex_interface.get_source_image(
+                    image = self.plex_interface.get_source_image(
                         self.library_name,
                         self.series_info,
                         episode.episode_info,
                     )
+                elif source_interface == 'emby' and check_emby:
+                    image = self.emby_interface.get_source_image(
+                        episode.episode_info
+                    )
 
-                # If URL was returned by either interface, download
-                if image_url is not None:
-                    if WebInterface.download_image(image_url, episode.source):
-                        log.debug(f'Downloaded {episode.source.name} for {self}'
-                                  f' from {source_interface}')
+                # Attempt to download image, log and exit if successful
+                if image and WebInterface.download_image(image, episode.source):
+                    log.debug(f'Downloaded {episode.source.name} for {self} '
+                              f'from {source_interface}')
                     break
 
 
@@ -777,7 +823,7 @@ class Show(YamlReader):
         # Go through each episode to check if it can be made into a MultiEpisode
         matched = set()
         multiparts = []
-        for _, episode in self.episodes.items():
+        for episode in self.episodes.values():
             # If this episode has already been used in MultiEpisode, skip
             if episode in matched:
                 continue
@@ -844,7 +890,7 @@ class Show(YamlReader):
                 episode.delete_card(reason='new config')
 
         # Go through each episode for this show
-        for _, episode in (pbar := tqdm(self.episodes.items(), **TQDM_KWARGS)):
+        for episode in (pbar := tqdm(self.episodes.values(), **TQDM_KWARGS)):
             # Skip episodes without a destination or that already exist
             if not episode.destination or episode.destination.exists():
                 continue
@@ -889,21 +935,28 @@ class Show(YamlReader):
             self.season_poster_set.create()
 
 
-    def update_plex(self) -> None:
+    def update_media_server(self) -> None:
         """
-        Update Plex with all title cards and season posters for all Episodes
-        within this Show.
+        Update this show's media server with all title cards and season posters
+        for all Episodes associated with this show.
         """
 
-        # Skip if no library specified
-        if not self.plex_interface:
+        # Get appropriate MediaServer interface
+        media_interface = {
+            None: None,
+            'emby': self.emby_interface,
+            'plex': self.plex_interface
+        }[self.media_server]
+
+        # Exit if no valid media interface
+        if not media_interface:
             return None
 
-        # Update Plex
-        self.plex_interface.set_title_cards_for_series(
+        # Set title cards and season posters in media interface
+        media_interface.set_title_cards(
             self.library_name, self.series_info, self.episodes,
         )
 
-        self.plex_interface.set_season_poster(
+        media_interface.set_season_posters(
             self.library_name, self.series_info, self.season_poster_set,
         )

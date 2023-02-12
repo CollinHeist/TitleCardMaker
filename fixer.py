@@ -1,12 +1,10 @@
-from argparse import ArgumentParser, ArgumentTypeError, SUPPRESS
+from argparse import ArgumentParser, SUPPRESS
 from dataclasses import dataclass
 from os import environ
 from pathlib import Path
 from re import match, IGNORECASE
 
 try:
-    from yaml import dump
-
     from modules.Debug import log, LOG_FILE
     from modules.DataFileInterface import DataFileInterface
     from modules.EpisodeInfo import EpisodeInfo
@@ -228,7 +226,6 @@ if hasattr(args, 'forget_cards') and pp.use_plex:
         args.forget_cards[0], series_info,
     )
 
-
 # Execute Sonarr related options
 if args.sonarr_list_ids and pp.use_sonarr:
     SonarrInterface(**pp.sonarr_kwargs[0]).list_all_series_id()
@@ -236,12 +233,11 @@ if args.sonarr_list_ids and pp.use_sonarr:
 # Execute TMDB related options
 if hasattr(args, 'unblacklist'):
     TMDbInterface.unblacklist(
-        pp.database_directory,
-        SeriesInfo(args.unblacklist[0], int(args.unblacklist[1]))
+        SeriesInfo(args.unblacklist[0], args.unblacklist[1])
     )
 
 if hasattr(args, 'delete_blacklist') and args.delete_blacklist:
-    TMDbInterface.delete_blacklist(pp.database_directory)
+    TMDbInterface.delete_blacklist(**pp.tmdb_interface_kwargs)
 
 if hasattr(args, 'tmdb_download_images') and pp.use_tmdb:
     for arg_set in args.tmdb_download_images:
@@ -249,11 +245,11 @@ if hasattr(args, 'tmdb_download_images') and pp.use_tmdb:
             start, end = map(int, arg_set[3].split('-'))
             episode_range = range(start, end+1)
         except ValueError:
-            log.error(f'Invalid episode range, specify like "START-END", i.e. '
+            log.error(f'Invalid episode range, specify like "START-END", e.g. '
                       f'2-10 for episodes 2 through 10')
             continue
 
-        tmdb_interface = TMDbInterface(pp.database_directory, pp.tmdb_api_key)
+        tmdb_interface = TMDbInterface(**pp.tmdb_interface_kwargs)
         tmdb_interface.manually_download_season(
             title=arg_set[0],
             year=int(arg_set[1]),

@@ -364,6 +364,11 @@ is_docker = environ.get(ENV_IS_DOCKER, 'false').lower() == 'true'
 arbitrary_data = {}
 if len(unknown) % 2 == 0 and len(unknown) > 1:
     arbitrary_data = {key: val for key, val in zip(unknown[::2], unknown[1::2])}
+    log.info(f'Extras Identified:')
+
+# Print unknown arguments
+for key, value in arbitrary_data.items():
+    log.info(f'  {key}: "{value}"')
 
 # Parse preference file for options that might need it
 if not (pp := PreferenceParser(args.preferences, is_docker)).valid:
@@ -375,7 +380,7 @@ if hasattr(args, 'title_card'):
     # Attempt to get local card type, if not, try RemoteCardType
     pp._parse_card_type(args.card_type)
     CardClass = pp.card_class
-    RemoteFile.reset_loaded_database(pp.database_directory)
+    RemoteFile.reset_loaded_database()
 
     # Override unspecified defaults with their class specific defaults
     if args.font == Path('__default'):

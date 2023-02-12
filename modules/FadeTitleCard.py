@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Optional
 
 from modules.BaseCardType import BaseCardType
+from modules.CleanPath import CleanPath
 from modules.Debug import log
 
 SeriesExtra = Optional
@@ -102,21 +103,23 @@ class FadeTitleCard(BaseCardType):
             self.logo = None
         else:
             try:
-                # Format logo filename with indices
-                logo = Path(str(logo).format(season_number=season_number,
-                                             episode_number=episode_number))
-                # Logo file explicitly exists
-                if logo.exists():
-                    self.logo = logo
-                # Logo filename exists alongside source image (in source dir)
-                elif (source.parent / logo.name).exists():
-                    self.logo = source.parent / logo.name
-                else:
-                    log.warning(f'Logo file "{logo}" does not exist')
-                    self.valid = False
+                logo = logo.format(season_number=season_number,
+                                   episode_number=episode_number)
+                logo = Path(CleanPath(logo).sanitize())
             except Exception as e:
-                log.exception(f'Logo file "{logo}" is invalid', e)
+                # Bad format strings will be caught during card creation
                 self.valid = False
+                log.exception(f'Invalid logo file "{logo}"', e)
+
+            # Explicitly specicifed logo 
+            if logo.exists():
+                self.logo = logo
+            # Try to find logo alongside source image
+            elif (source.parent / logo.name).exists():
+                self.logo = source.parent / logo.name
+            # Assume non-existent explicitly specified filename
+            else:
+                self.logo = logo
 
         # Store attributes of the text
         self.title = self.image_magick.escape_chars(title)

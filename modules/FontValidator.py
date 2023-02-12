@@ -1,9 +1,8 @@
-from pathlib import Path
-
 from fontTools.ttLib import TTFont
-from tinydb import TinyDB, where
+from tinydb import where
 
 from modules.Debug import log
+from modules.PersistentDatabase import PersistentDatabase
 
 class FontValidator:
     """
@@ -16,17 +15,14 @@ class FontValidator:
     CHARACTER_DATABASE = 'fvm.json'
 
 
-    def __init__(self, database_directory: Path) -> None:
+    def __init__(self) -> None:
         """
         Constructs a new instance. This reads the font validation map if it
         exists, and creates the file if it does not.
-
-        Args:
-            database_directory: Base Path to read/write any databases from.
         """
 
         # Create/read font validation database
-        self.__db = TinyDB(database_directory / self.CHARACTER_DATABASE)
+        self.__db = PersistentDatabase(self.CHARACTER_DATABASE)
 
 
     def __has_character(self, font_filepath: str, character: str) -> bool:

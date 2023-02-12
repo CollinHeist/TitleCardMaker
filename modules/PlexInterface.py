@@ -6,18 +6,25 @@ from plexapi.exceptions import PlexApiException
 from plexapi.server import PlexServer, NotFound, Unauthorized
 from requests.exceptions import ReadTimeout, ConnectionError
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
-from tinydb import TinyDB, where
+from tinydb import where
 from tqdm import tqdm
 
 from modules.Debug import log, TQDM_KWARGS
 import modules.global_objects as global_objects
+from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo import EpisodeInfo
 from modules.ImageMaker import ImageMaker
+from modules.MediaServer import MediaServer
+from modules.PersistentDatabase import PersistentDatabase
 from modules.SeriesInfo import SeriesInfo
+from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
 
-class PlexInterface:
+class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     """This class describes an interface to Plex."""
+
+    """Series ID's that can be set by TMDb"""
+    SERIES_IDS = ('imdb_id', 'tmdb_id', 'tvdb_id')
 
     """Filepath to the database of each episode's loaded card characteristics"""
     LOADED_DB = 'loaded.json'
@@ -28,14 +35,11 @@ class PlexInterface:
     """How many failed episodes result in skipping a series"""
     SKIP_SERIES_THRESHOLD = 3
 
-    """Default filesize limit for all uploaded assets"""
-    DEFAULT_FILESIZE_LIMIT = '10 MB'
-
     """Episode titles that indicate a placeholder and are to be ignored"""
     __TEMP_IGNORE_REGEX = re_compile(r'^(tba|tbd|episode \d+)$', IGNORECASE)
 
 
-    def __init__(self, database_directory: Path, url: str,
+    def __init__(self, url: str,
                  x_plex_token: str='NA', verify_ssl: bool=True,
                  integrate_with_pmm_overlays: bool=False,
                  filesize_limit: int=10485760) -> None:
@@ -43,7 +47,6 @@ class PlexInterface:
         Constructs a new instance of a Plex Interface.
 
         Args:
-            database_directory: Base Path to read/write any databases from.
             url: URL of plex server.
             x_plex_token: X-Plex Token for sending API requests to Plex.
             verify_ssl: Whether to verify SSL requests when querying Plex.
@@ -52,6 +55,8 @@ class PlexInterface:
             filesize_limit: Number of bytes to limit a single file to during
                 upload.
         """
+
+        super().__init__(filesize_limit)
 
         # Get global MediaInfoSet objects
         self.info_set = global_objects.info_set
@@ -70,27 +75,23 @@ class PlexInterface:
             log.critical(f'Cannot connect to Plex - returned error: "{e}"')
             exit(1)
 
-        # Store integration/filesize limit
+        # Store integration
         self.integrate_with_pmm_overlays = integrate_with_pmm_overlays
-        self.filesize_limit = filesize_limit
 
         # Create/read loaded card database
-        self.__db = TinyDB(database_directory / self.LOADED_DB)
-        self.__posters = TinyDB(database_directory / self.LOADED_POSTERS_DB)
+        self.__posters = PersistentDatabase(self.LOADED_POSTERS_DB)
 
         # List of "not found" warned series
         self.__warned = set()
 
 
-    def catch_and_log(message: str, log_func: callable=log.error, *,
-                      default=None) -> callable:
+    def catch_and_log(message: str, *, default=None) -> callable:
         """
         Return a decorator that logs (with the given log function) the given
         message if the decorated function raises an uncaught PlexApiException.
 
         Args:
             message: Message to log upon uncaught exception.
-            log_func: Log function to call upon uncaught exception.
             default: (Keyword only) Value to return if decorated function raises
                 an uncaught exception.
 
@@ -103,119 +104,16 @@ class PlexInterface:
                 try:
                     return function(*args, **kwargs)
                 except PlexApiException as e:
-                    log_func(message)
-                    log.debug(f'PlexApiException from {function.__name__}'
-                              f'({args}, {kwargs}) -> Error[{e}]')
+                    log.exception(message, e)
                     return default
                 except (ReadTimeout, ConnectionError) as e:
-                    log_func('Plex API has timed out - database might be busy')
-                    log.debug(f'ReadTimeout from {function.__name__}'
-                              f'({args}, {kwargs}) -> Error[{e}]')
+                    log.exception(f'Plex API has timed out, DB might be busy',e)
                     raise e
                 except Exception as e:
-                    log.info(e)
+                    log.exception(f'Uncaught exception', e)
                     raise e
             return inner
         return decorator
-
-
-    def __get_condition(self, library_name: str, series_info: 'SeriesInfo',
-                        episode: 'Episode'=None) -> 'QueryInstance':
-        """
-        Get the tinydb query condition for the given entry.
-
-        Args:
-            library_name: Library name containing the series to get the details
-                of.
-            series_info: Series to get the details of.
-            episode: Optional Episode to get the series of.
-
-        Returns:
-            tinydb Query condition.
-        """
-
-        # If no episode was given, get condition for entire series
-        if episode is None:
-            return (
-                (where('library') == library_name) &
-                (where('series') == series_info.full_name)
-            )
-
-        return (
-            (where('library') == library_name) &
-            (where('series') == series_info.full_name) &
-            (where('season') == episode.episode_info.season_number) &
-            (where('episode') == episode.episode_info.episode_number)
-        )
-
-
-    def __get_loaded_episode(self, loaded_series: [dict],
-                             episode: 'Episode') -> dict:
-        """
-        Get the loaded details of the given Episode from the given list of
-        loaded series details.
-
-        Args:
-            loaded_series: Filtered List from the loaded database to search.
-            episode: The Episode to get the details of.
-
-        Returns:
-            Loaded details for the specified episode. None if an episode of that
-            index DNE in the given list.
-        """
-
-        for entry in loaded_series:
-            if (entry['season'] == episode.episode_info.season_number and
-                entry['episode'] == episode.episode_info.episode_number):
-                return entry
-
-        return None
-
-
-    def __filter_loaded_cards(self, library_name: str, series_info:'SeriesInfo',
-                              episode_map: dict) -> dict:
-        """
-        Filter the given episode map and remove all Episode objects without
-        created cards, or whose card's filesizes matches that of the already
-        uploaded card.
-
-        Args:
-            library_name: Name of the library containing this series.
-            series_info: SeriesInfo object for these episodes.
-            episode_map: Dictionary of Episode objects to filter.
-
-        Returns:
-            Filtered episode map. Episodes without existing cards, or whose
-            existing card filesizes' match those already loaded are removed.
-        """
-
-        # Get all loaded details for this series
-        series=self.__db.search(self.__get_condition(library_name, series_info))
-
-        filtered = {}
-        for key, episode in episode_map.items():
-            # Filter out episodes without cards
-            if not episode.destination or not episode.destination.exists():
-                continue
-
-            # If no cards have been loaded, add all episodes with cards
-            if not series:
-                filtered[key] = episode
-                continue
-
-            # Get current details of this episode
-            found = False
-            if (entry := self.__get_loaded_episode(series, episode)):
-                # Episode found, check filesize
-                found = True
-                if entry['filesize'] != episode.destination.stat().st_size:
-                    filtered[key] = episode
-
-            # If this episode has never been loaded, add
-            if not found:
-                filtered[key] = episode
-
-        return filtered
 
 
     @retry(stop=stop_after_attempt(5),
@@ -466,10 +364,10 @@ class PlexInterface:
         Args:
             library_name: The name of the library potentially containing the
                 series.
-            series_info: The series to update.
+            series_info: The series to being evaluated.
 
         Returns:
-            True if the series is present within Plex.
+            True if the series is present within Plex. False otherwise.
         """
 
         # If the given library cannot be found, exit
@@ -481,7 +379,8 @@ class PlexInterface:
 
 
     @catch_and_log('Error updating watched statuses')
-    def update_watched_statuses(self, library_name: str,series_info: SeriesInfo,
+    def update_watched_statuses(self, library_name: str,
+                                series_info: SeriesInfo,
                                 episode_map: dict[str, 'Episode'],
                                 style_set: 'StyleSet') -> None:
         """
@@ -491,13 +390,13 @@ class PlexInterface:
         and the loaded map is forced to reload that card.
 
         Args:
-            library_name: The name of the library containing the series to update
+            library_name: The name of the library containing the series.
             series_info: The series to update.
             episode_map: Dictionary of episode keys to Episode objects to modify
-            style_set: StyleSet object to update the status of Episodes with.
+            style_set: StyleSet object to update the style of the Episodes with.
         """
 
-        # If no episodes, or unwatched setting is ignored, exit
+        # If no episodes, exit
         if len(episode_map) == 0:
             return None
 
@@ -510,8 +409,8 @@ class PlexInterface:
             return None
 
         # Get loaded characteristics of the series
-        loaded_series = self.__db.search(self.__get_condition(library_name,
-                                                              series_info))
+        loaded_series = self.loaded_db.search(self._get_condition(library_name,
+                                                                  series_info))
 
         # Go through each episode within Plex and update Episode spoiler status
         for plex_episode in series.episodes():
@@ -523,22 +422,57 @@ class PlexInterface:
             # Set Episode watched/spoil statuses
             episode.update_statuses(plex_episode.isWatched, style_set)
 
-            # Get loaded card characteristics for this episode
-            details = self.__get_loaded_episode(loaded_series, episode)
+            # Get characteristics of this Episode's loaded card
+            details = self._get_loaded_episode(loaded_series, episode)
             loaded = (details is not None)
             spoiler_status = details['spoiler'] if loaded else None
 
-            # Delete and reset card if current spoiler type doesnt match
+            # Delete and reset card if current spoiler type doesn't match
             delete_and_reset = ((episode.spoil_type != spoiler_status)
                                 and bool(spoiler_status))
 
             # Delete card, reset size in loaded map to force reload
             if delete_and_reset and loaded:
                 episode.delete_card(reason='updating style')
-                self.__db.update(
+                self.loaded_db.update(
                     {'filesize': 0},
-                    self.__get_condition(library_name, series_info, episode)
+                    self._get_condition(library_name, series_info, episode)
                 )
+
+
+    @catch_and_log("Error setting series ID's")
+    def set_series_ids(self, library_name: str,
+                       series_info: SeriesInfo) -> None:
+        """
+        Set all possible series ID's for the given SeriesInfo object.
+
+        Args:
+            library_name: The name of the library containing the series.
+            series_info: SeriesInfo to update.
+        """
+
+        # If all possible ID's are defined
+        if series_info.has_ids(*self.SERIES_IDS):
+            return None
+
+        # If the given library cannot be found, exit
+        if not (library := self.__get_library(library_name)):
+            return None
+
+        # If the given series cannot be found in this library, exit
+        if not (series := self.__get_series(library, series_info)):
+            return None
+
+        # Set series ID's of all provided GUIDs
+        for guid in series.guids:
+            if 'imdb://' in guid.id:
+                self.info_set.set_imdb_id(series_info, guid.id[len('imdb://'):])
+            elif 'tmdb://' in guid.id:
+                tmdb_id = int(guid.id[len('tmdb://'):])
+                self.info_set.set_tmdb_id(series_info, tmdb_id)
+            elif 'tvdb://' in guid.id:
+                tvdb_id = int(guid.id[len('tvdb://'):])
+                self.info_set.set_tvdb_id(series_info, tvdb_id)
 
 
     @catch_and_log("Error setting episode ID's")
@@ -563,9 +497,10 @@ class PlexInterface:
         if not (series := self.__get_series(library, series_info)):
             return None
 
+        # Go through each provided EpisodeInfo and update the ID's
         for info in infos:
-            # Skip if EpisodeInfo already has IMDb, and TVDb ID's
-            if info.queried_plex or info.has_ids('imdb_id', 'tvdb_id'):
+            # Skip if EpisodeInfo already has all the possible ID's
+            if info.queried_plex or info.has_ids(*self.SERIES_IDS):
                 continue
 
             # Get episode from Plex
@@ -575,30 +510,30 @@ class PlexInterface:
                     season=info.season_number,
                     episode=info.episode_number,
                 )
-
-                # Set the ID's for this object
-                for guid in plex_episode.guids:
-                    if 'tvdb://' in guid.id:
-                        info.set_tvdb_id(guid.id[len('tvdb://'):])
-                    elif 'imdb://' in guid.id:
-                        info.set_imdb_id(guid.id[len('imdb://'):])
-                    elif 'tmdb://' in guid.id:
-                        info.set_tmdb_id(guid.id[len('tmdb://'):])
             except NotFound:
                 continue
+
+            # Set the ID's for this object
+            for guid in plex_episode.guids:
+                if 'imdb://' in guid.id:
+                    info.set_imdb_id(guid.id[len('imdb://'):])
+                elif 'tmdb://' in guid.id:
+                    info.set_tmdb_id(int(guid.id[len('tmdb://'):]))
+                elif 'tvdb://' in guid.id:
+                    info.set_tvdb_id(int(guid.id[len('tvdb://'):]))
+            
 
 
     @catch_and_log('Error getting source image')
     def get_source_image(self, library_name: str, series_info: 'SeriesInfo',
                          episode_info: EpisodeInfo) -> str:
         """
-        Get the source image (i.e. the URL to the existing thumbnail) for the
-        given episode within Plex.
+        Get the source image for the given episode within Plex.
 
         Args:
             library_name: Name of the library the series is under.
-            series_info: The series to get the thumbnail of.
-            episode_info: The episode to get the thumbnail of.
+            series_info: The series to get the source image of.
+            episode_info: The episode to get the source image of.
 
         Returns:
             URL to the thumbnail of the given Episode. None if the episode DNE.
@@ -642,45 +577,9 @@ class PlexInterface:
         plex_object.uploadPoster(filepath=filepath)
 
 
-    def __compress_image(self, image: Path) -> 'Path | None':
-        """
-        Compress the given image until below the filesize limit.
-
-        Args:
-            image: Path to the image to compress.
-
-        Returns:
-            Path to the compressed image, or None if the image could not be
-            compressed.
-        """
-
-        # No compression necessary
-        if image.stat().st_size < self.filesize_limit:
-            return image
-
-        # Start with a quality of 90%, decrement by 5% each time
-        quality = 95
-        small_image = image
-
-        # Compress the given image until below the filesize limit
-        while small_image.stat().st_size > self.filesize_limit:
-            # Process image, exit if cannot be reduced
-            quality -= 5
-            if (small_image := ImageMaker.reduce_file_size(image,
-                                                           quality)) is None:
-                log.warning(f'Cannot reduce filesize of "{image.resolve()}" '
-                            f'below limit')
-                return None
-
-        # Compression successful, log and return intermediate image
-        log.debug(f'Compressed "{image.resolve()}" with {quality}% quality')
-        return small_image
-
-
     @catch_and_log('Error uploading title cards')
-    def set_title_cards_for_series(self, library_name: str, 
-                                   series_info: 'SeriesInfo',
-                                   episode_map: dict) -> None:
+    def set_title_cards(self, library_name: str, series_info: 'SeriesInfo',
+                        episode_map: dict[str, 'Episode']) -> None:
         """
         Set the title cards for the given series. This only updates episodes
         that have title cards, and those episodes whose card filesizes are
@@ -694,7 +593,7 @@ class PlexInterface:
         """
 
         # Filter episodes without cards, or whose cards have not changed
-        filtered_episodes = self.__filter_loaded_cards(
+        filtered_episodes = self._filter_loaded_cards(
             library_name, series_info, episode_map
         )
 
@@ -728,7 +627,7 @@ class PlexInterface:
             pbar.set_description(f'Updating {pl_episode.seasonEpisode.upper()}')
 
             # Shrink image if necessary, skip if cannot be compressed
-            if (card := self.__compress_image(episode.destination)) is None:
+            if (card := self.compress_image(episode.destination)) is None:
                 continue
 
             # Upload card to Plex, optionally remove Overlay label
@@ -738,21 +637,21 @@ class PlexInterface:
                     pl_episode.removeLabel(['Overlay'])
             except Exception as e:
                 error_count += 1
-                log.warning(f'Unable to upload {card.resolve()} to {series_info}')
-                log.debug(f'Exception[{e}]')
+                log.exception(f'Unable to upload {card.resolve()} to '
+                              f'{series_info}', e)
                 continue
             else:
                 loaded_count += 1
 
             # Update/add loaded map with this entry
-            self.__db.upsert({
+            self.loaded_db.upsert({
                 'library': library_name,
                 'series': series_info.full_name,
                 'season': episode.episode_info.season_number,
                 'episode': episode.episode_info.episode_number,
                 'filesize': episode.destination.stat().st_size,
                 'spoiler': episode.spoil_type,
-            }, self.__get_condition(library_name, series_info, episode))
+            }, self._get_condition(library_name, series_info, episode))
 
         # Log load operations to user
         if loaded_count > 0:
@@ -760,9 +659,9 @@ class PlexInterface:
 
 
     @catch_and_log('Error uploading season posters')
-    def set_season_poster(self, library_name: str,
-                          series_info: SeriesInfo,
-                          season_poster_set: 'SeasonPosterSet') -> None:
+    def set_season_posters(self, library_name: str,
+                           series_info: SeriesInfo,
+                           season_poster_set: 'SeasonPosterSet') -> None:
         """
         Set the season posters from the given set within Plex.
 
@@ -805,7 +704,7 @@ class PlexInterface:
                 continue
 
             # Shrink image if necessary
-            if (resized_poster := self.__compress_image(poster)) is None:
+            if (resized_poster := self.compress_image(poster)) is None:
                 continue
 
             # Upload this poster
@@ -830,10 +729,11 @@ class PlexInterface:
 
 
     @catch_and_log('Error getting episode details')
-    def get_episode_details(self, rating_key: int) -> list[tuple[SeriesInfo,
-                                                            EpisodeInfo, str]]:
+    def get_episode_details(self,
+                            rating_key: int) -> list[tuple[SeriesInfo,
+                                                           EpisodeInfo, str]]:
         """
-        Get all details for the episode indicated by the given Plex rating key.
+        Get all details for all episodes indicated by the given Plex rating key.
 
         Args:
             rating_key: Rating key used to fetch the item within Plex.
@@ -841,7 +741,7 @@ class PlexInterface:
         Returns:
             List of tuples of the SeriesInfo, EpisodeInfo, and the library name
             corresponding to the given rating key. If the object associated with
-            the rating key was a show/season, then all contained episodes are
+            the rating key is a show/season, then all contained episodes are
             detailed. An empty list is returned if the item(s) associated with
             the given key cannot be found.
         """
@@ -853,9 +753,10 @@ class PlexInterface:
             # New show, return all episodes in series
             if entry.type == 'show':
                 assert entry.year is not None
-                series_info = SeriesInfo(entry.title, entry.year)
+                series_info = self.info_set.get_series_info(
+                    entry.title, entry.year
+                )
 
-                # Return all episodes
                 return [
                     (series_info,
                      EpisodeInfo(ep.title, ep.parentIndex, ep.index),
@@ -867,9 +768,10 @@ class PlexInterface:
                 # Get series associated with this season
                 series = self.__server.fetchItem(entry.parentKey)
                 assert series.year is not None
-                series_info = SeriesInfo(series.title, series.year)
+                series_info = self.info_set.get_series_info(
+                    entry.title, entry.year
+                )
 
-                # 
                 return [
                     (series_info,
                      EpisodeInfo(ep.title, entry.index, ep.index),
@@ -880,8 +782,12 @@ class PlexInterface:
             elif entry.TYPE == 'episode':
                 series = self.__server.fetchItem(entry.grandparentKey)
                 assert series.year is not None
+                series_info = self.info_set.get_series_info(
+                    entry.grandparentTitle, series.year
+                )
+
                 return [(
-                    SeriesInfo(entry.grandparentTitle, series.year),
+                    series_info,
                     EpisodeInfo(entry.title, entry.parentIndex, entry.index),
                     entry.librarySectionTitle,
                 )]
@@ -910,10 +816,10 @@ class PlexInterface:
         """
 
         # Get condition to find records matching this library + series
-        condition = self.__get_condition(library_name, series_info)
+        condition = self._get_condition(library_name, series_info)
 
         # Delete records matching this condition
-        records = self.__db.remove(condition)
+        records = self.loaded_db.remove(condition)
 
         # Log actions to user
         log.info(f'Deleted {len(records)} records')

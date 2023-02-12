@@ -157,7 +157,7 @@ if not (pp := PreferenceParser(args.preferences, is_docker)).valid:
     log.critical(f'Preference file is invalid')
     exit(1)
 set_preference_parser(pp)
-set_font_validator(FontValidator(pp.database_directory))
+set_font_validator(FontValidator())
 set_media_info_set(MediaInfoSet())
 set_show_record_keeper(ShowRecordKeeper(pp.database_directory))
 
@@ -197,7 +197,7 @@ def run():
     read_preferences()
 
     # Reset previously loaded assets
-    RemoteFile.reset_loaded_database(pp.database_directory)
+    RemoteFile.reset_loaded_database()
     
     # Create Manager, run, and write missing report
     try:
@@ -210,7 +210,6 @@ def run():
 
 # First Manager run that schedules subsequent runs and then cancels itself
 def first_run():
-    # Run, schedule subsequent runs, then remove this function from schedule
     run()
     interval, unit = args.frequency['interval'], args.frequency['unit']
     getattr(schedule.every(interval), unit).do(run)

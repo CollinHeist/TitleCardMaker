@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Optional
 
 from modules.BaseCardType import BaseCardType
+from modules.CleanPath import CleanPath
 from modules.Debug import log
 
 SeriesExtra = Optional
@@ -84,23 +85,29 @@ class PosterTitleCard(BaseCardType):
         self.source_file = source
         self.output_file = output_file
 
-        # Look for logo if it's a format string
-        if isinstance(logo, str):
-            # Attempt to modify as if it's a format string
+        # No logo file specified
+        if logo is None:
+            self.logo = None
+        # Attempt to modify as if it's a format string
+        else:
             try:
                 logo = logo.format(season_number=season_number,
                                    episode_number=episode_number)
+                logo = Path(CleanPath(logo).sanitize())
             except Exception as e:
                 # Bad format strings will be caught during card creation
                 self.valid = False
-                log.debug(f'Invalid logo file "{logo}" - {e}')
-                pass
+                log.exception(f'Invalid logo file "{logo}"', e)
 
-            self.logo = Path(logo)
-        elif isinstance(logo, Path):
-            self.logo = logo
-        else:
-            self.logo = None
+            # Explicitly specicifed logo 
+            if logo.exists():
+                self.logo = logo
+            # Try to find logo alongside source image
+            elif (source.parent / logo.name).exists():
+                self.logo = source.parent / logo.name
+            # Assume non-existent explicitly specified filename
+            else:
+                self.logo = logo
 
         # Store text
         self.title = self.image_magick.escape_chars(title.upper())
