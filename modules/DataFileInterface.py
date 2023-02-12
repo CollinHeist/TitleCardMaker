@@ -159,11 +159,11 @@ class DataFileInterface:
                     season_number,
                     episode_number,
                     abs_number,
-                    emby_id=episode_data.pop('emby_id'),
-                    imdb_id=episode_data.pop('imdb_id'),
-                    tmdb_id=episode_data.pop('tmdb_id'),
-                    tvdb_id=episode_data.pop('tvdb_id'),
-                    tvrage_id=episode_data.pop('tvrage_id'),
+                    emby_id=episode_data.pop('emby_id', None),
+                    imdb_id=episode_data.pop('imdb_id', None),
+                    tmdb_id=episode_data.pop('tmdb_id', None),
+                    tvdb_id=episode_data.pop('tvdb_id', None),
+                    tvrage_id=episode_data.pop('tvrage_id', None),
                 )
 
                 # Add any additional, unexpected keys from the YAML
