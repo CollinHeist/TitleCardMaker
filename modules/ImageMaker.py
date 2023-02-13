@@ -33,7 +33,7 @@ class ImageMaker(ABC):
     Valid file extensions for input images - ImageMagick supports more than just
     these types, but these are the most common across all OS's.
     """
-    VALID_IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.tiff', '.gif')
+    VALID_IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp')
 
     __slots__ = ('preferences', 'image_magick')
 
