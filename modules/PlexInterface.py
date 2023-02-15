@@ -523,10 +523,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                     info.set_tvdb_id(int(guid.id[len('tvdb://'):]))
             
 
-
     @catch_and_log('Error getting source image')
     def get_source_image(self, library_name: str, series_info: 'SeriesInfo',
-                         episode_info: EpisodeInfo) -> str:
+                         episode_info: EpisodeInfo) -> 'str | None':
         """
         Get the source image for the given episode within Plex.
 
@@ -559,6 +558,22 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         except NotFound:
             # Episode DNE in Plex, return
             return None
+
+
+    @catch_and_log('Error getting library names', default=[])
+    def get_libraries(self) -> list[str]:
+        """
+        Get the names of all libraries within this server.
+
+        Returns:
+            List of library names.
+        """
+
+        return [
+            library.title
+            for library in self.__server.library.sections()
+            if library.type == 'show'
+        ]
 
 
     @retry(stop=stop_after_attempt(5),

@@ -541,3 +541,14 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             return None 
 
         return response
+
+
+    def get_libraries(self) -> list[str]:
+        """
+        Get the names of all libraries within this server.
+
+        Returns:
+            List of library names.
+        """
+
+        return list(self.libraries)
