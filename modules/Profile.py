@@ -249,13 +249,18 @@ class Profile:
         'Example 2'
 
         Args:
-            episode_text:The title text to process.
+            episode_text: The title text to process.
 
         Returns:
             The episode text with all text that matches the format specified in
             this profile's episode text format REMOVED. If there is no matching
             text, the title is returned unaltered.
         """
+
+        # Skip if no number indicator to replace
+        if ('{abs_number}' not in self.episode_text_format
+            and '{episode_number}' not in self.episode_text_format):
+            return title_text
 
         # Regex group for matching 1-9 called "one_to_9"
         one_to_9 = 'one|two|three|four|five|six|seven|eight|nine'
@@ -293,8 +298,6 @@ class Profile:
             remove_regex = format_string.replace('{abs_number}', full_regex)
         elif '{episode_number}' in format_string:
             remove_regex = format_string.replace('{episode_number}', full_regex)
-        else:
-            return title_text
 
         # Find match of above regex, if exists, delete that text
         # Perform match on the case-ified episode text
@@ -307,7 +310,6 @@ class Profile:
         # If there was a match, remove the matched text and return
         if text_to_remove:
             finalized_title = title_text.replace(text_to_remove.group(), '')
-
             # If not all text was removed, return modified title
             return title_text if len(finalized_title) == 0 else finalized_title
 
