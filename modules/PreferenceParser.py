@@ -156,6 +156,11 @@ class PreferenceParser(YamlReader):
         self.imagemagick_timeout = ImageMagickInterface.COMMAND_TIMEOUT_SECONDS
 
         # Determine default media server
+        if (not self._is_specified('emby') and not self._is_specified('plex')
+            and not self._is_specified('jellyfin')):
+            log.warning(f'No Media Servers indicated - TitleCardMaker will not '
+                        f'automatically load any cards')
+            self.default_media_server = 'plex'
         if (self._is_specified('emby') and not self._is_specified('plex')
             and not self._is_specified('jellyfin')):
             self.default_media_server = 'emby'
