@@ -313,7 +313,8 @@ class EpisodeMap:
         # Index by index
         elif self.__index_by == 'index':
             if episode_info.index in target:
-                return target[episode_info.index]
+                base_title = target[episode_info.index]
+                return base_title.format(**episode_info.characteristics)
 
             return default(episode_info=episode_info)
         # Index by absolute episode number
@@ -324,7 +325,8 @@ class EpisodeMap:
 
             # Return custom from target
             if index_number in target:
-                return target[index_number]
+                base_title = target[index_number]
+                return base_title.format(**episode_info.characteristics)
 
             # Use default if index doesn't fall into specified target
             return default(episode_info=episode_info)
