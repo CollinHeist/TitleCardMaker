@@ -39,10 +39,10 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     __TEMP_IGNORE_REGEX = re_compile(r'^(tba|tbd|episode \d+)$', IGNORECASE)
 
 
-    def __init__(self, url: str,
-                 x_plex_token: str='NA', verify_ssl: bool=True,
-                 integrate_with_pmm_overlays: bool=False,
-                 filesize_limit: int=10485760) -> None:
+    def __init__(self, url: str, x_plex_token: str='NA',
+            verify_ssl: bool=True,
+            integrate_with_pmm_overlays: bool=False,
+            filesize_limit: int=10485760) -> None:
         """
         Constructs a new instance of a Plex Interface.
 
@@ -140,8 +140,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     @retry(stop=stop_after_attempt(5),
            wait=wait_fixed(3)+wait_exponential(min=1, max=32),
            reraise=True)
-    def __get_series(self, library: 'Library',
-                     series_info: SeriesInfo) -> 'Show':
+    def __get_series(self,
+            library: 'Library',
+            series_info: SeriesInfo) -> 'Show':
         """
         Get the Series object from within the given Library associated with the
         given SeriesInfo. This tries to match by TVDb ID, TMDb ID, name, and
@@ -197,8 +198,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     @catch_and_log('Error getting library paths', default={})
-    def get_library_paths(self, filter_libraries: list[str]=[]
-                          ) -> dict[str, list[str]]:
+    def get_library_paths(self,
+            filter_libraries: list[str]=[]) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
 
@@ -240,8 +241,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 library are returned.
 
         Returns:
-            List of tuples whose elements are the SeriesInfo of the series, the 
-            path (string) it is located, and its corresponding library name.
+            List of tuples whose elements are the SeriesInfo of the
+            series, the  path (string) it is located, and its
+            corresponding library name.
         """
 
         # Go through every library in this server

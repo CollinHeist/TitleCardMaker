@@ -245,12 +245,12 @@ class PreferenceParser(YamlReader):
                 log.error(f'Cannot sync to "{file.resolve()}" - invalid sync')
                 return None
 
-            # Parse args applicable to Plex and Sonarr
+            # Parse args applicable to all interfaces
             update_args = {}
             if (value := sync_yaml._get('exclusions', type_=list)) is not None:
                 update_args['exclusions'] = value
 
-            # Parse args applicable only to Plex or Sonarr
+            # Parse args applicable only to specific interfaces
             if sync_type in ('plex', 'emby'):
                 if (value := sync_yaml._get('libraries', type_=list)) != None:
                     update_args['filter_libraries'] = value
