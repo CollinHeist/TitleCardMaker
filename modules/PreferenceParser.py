@@ -250,6 +250,8 @@ class PreferenceParser(YamlReader):
             update_args = {}
             if (value := sync_yaml._get('exclusions', type_=list)) is not None:
                 update_args['exclusions'] = value
+            if (value := sync_yaml._get('required_tags', type_=list)) is not None:
+                update_args['required_tags'] = value
 
             # Parse args applicable only to specific interfaces
             if sync_type in ('plex', 'emby'):
@@ -258,8 +260,6 @@ class PreferenceParser(YamlReader):
             elif sync_type == 'sonarr':
                 if (value := sync_yaml._get('plex_libraries', type_=dict)) != None:
                     update_args['plex_libraries'] = value
-                if (value := sync_yaml._get('required_tags', type_=list)) != None:
-                    update_args['required_tags'] = value
                 if (value := sync_yaml._get('monitored_only', type_=bool)) != None:
                     update_args['monitored_only'] = value
                 if (value := sync_yaml._get('downloaded_only', type_=bool)) != None:

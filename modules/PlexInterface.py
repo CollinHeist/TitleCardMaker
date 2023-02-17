@@ -223,22 +223,27 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 and library.title not in filter_libraries):
                 continue
 
-            # Add library's paths to the dictionary under the library name
+            # Add library's paths to the dictionary under the library
             all_libraries[library.title] = library.locations
 
         return all_libraries
 
 
     @catch_and_log('Error getting all series', default=[])
-    def get_all_series(self, filter_libraries: list[str]=[]
-                       ) -> list[tuple[SeriesInfo, str, str]]: 
+    def get_all_series(self,
+            filter_libraries: list[str]=[],
+            required_tags: list[str]=[],
+            ) -> list[tuple[SeriesInfo, str, str]]: 
         """
         Get all series within Plex, as filtered by the given libraries.
 
         Args:
-            filter_libraries: Optional list of library names to filter returned
-                list by. If provided, only series that are within a given
-                library are returned.
+            filter_libraries: Optional list of library names to filter
+                returned by. If provided, only series that are within a
+                given library are returned.
+            required_tags: Optional list of tags to filter return by. If
+                provided, only series with all the given tags are
+                returned.
 
         Returns:
             List of tuples whose elements are the SeriesInfo of the
@@ -253,13 +258,19 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             if library.type != 'show':
                 continue
 
-            # If filtering, skip unspecified libraries
+            # If filtering libraries, skip library if unspecified
             if (len(filter_libraries) > 0
                 and library.title not in filter_libraries):
                 continue
 
             # Get all Shows in this library
             for show in library.all():
+                # Skip show if tags provided and does not match
+                if required_tags:
+                    tags = [label.tag.lower() for label in show.labels]
+                    if not all(tag.lower() in tags for tag in required_tags):
+                        continue
+
                 # Skip show if it has no year
                 if show.year is None:
                     log.warning(f'Series {show.title} has no year - skipping')
@@ -278,10 +289,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                             ids[f'{id_type}_id'] = guid.id[len(prefix):]
                             break
 
-                # Create SeriesInfo object for this show
+                # Create SeriesInfo object for this show, add to return
                 series_info = SeriesInfo(show.title, show.year, **ids)
-
-                # Add to returned list
                 all_series.append((series_info,show.locations[0],library.title))
 
         return all_series
@@ -676,9 +685,10 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     @catch_and_log('Error uploading season posters')
-    def set_season_posters(self, library_name: str,
-                           series_info: SeriesInfo,
-                           season_poster_set: 'SeasonPosterSet') -> None:
+    def set_season_posters(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            season_poster_set: 'SeasonPosterSet') -> None:
         """
         Set the season posters from the given set within Plex.
 
@@ -747,8 +757,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     @catch_and_log('Error getting episode details')
     def get_episode_details(self,
-                            rating_key: int) -> list[tuple[SeriesInfo,
-                                                           EpisodeInfo, str]]:
+            rating_key: int) -> list[tuple[SeriesInfo, EpisodeInfo, str]]:
         """
         Get all details for all episodes indicated by the given Plex rating key.
 

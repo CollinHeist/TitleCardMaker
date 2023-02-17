@@ -479,27 +479,33 @@ class SeriesYamlWriter:
         log.info(f'Synced {self.file.resolve()} from Sonarr')
 
 
-    def __get_yaml_from_plex(self, plex_interface: 'PlexInterface',
-                             filter_libraries: list[str],
-                             exclusions: list[dict[str, str]]=[]
-                             ) -> dict[str, dict[str, str]]:
+    def __get_yaml_from_plex(self,
+            plex_interface: 'PlexInterface',
+            filter_libraries: list[str],
+            required_tags: list[str],
+            exclusions: list[dict[str, str]],
+            ) -> dict[str, dict[str, str]]:
         """
        Get the YAML from Plex, as filtered by the given libraries.
 
         Args:
             plex_interface: PlexInterface to sync from.
-            filter_libraries: List of libraries to filter the returned YAML by.
+            filter_libraries: List of libraries to filter the returned
+                YAML by.
+            required_tags: List of tags to filter the sync with.
             exclusions: List of labelled exclusions to apply to sync.
 
         Returns:
-            Series YAML as reported by Plex. Keys are series names, and each
-            contains the YAML for that series, such as the 'name', 'year',
-            'media_directory', and 'library'.
+            Series YAML as reported by Plex. Keys are series names, and
+            each contains the YAML for that series, such as the 'name',
+            'year', 'media_directory', and 'library'.
         """
 
-        # Get list of SeriesInfo, media paths, and library names from Plex
-        all_series = plex_interface.get_all_series(filter_libraries)
-
+        # Get list of SeriesInfo, media paths, and libraries from Plex
+        all_series = plex_interface.get_all_series(
+            filter_libraries, required_tags
+        )
+        log.warning(f'{all_series=}')
         # Exit if no series were returned
         if len(all_series) == 0:
             return {}
@@ -510,8 +516,8 @@ class SeriesYamlWriter:
         # Create libraries YAML
         libraries_yaml = {}
         for library, paths in libraries.items():
-            # If this library has multiple directories, create entry for each if
-            # no override card directory is provided
+            # If this library has multiple directories, create entry for 
+            # each if no override card directory is provided
             if len(paths) > 1 and self.card_directory is None:
                 for index, path in enumerate(paths):
                     libraries_yaml[f'{library} - Directory {index+1}'] = {
@@ -562,20 +568,23 @@ class SeriesYamlWriter:
         # Create end-YAML as combination of series and libraries
         yaml = {'libraries': libraries_yaml, 'series': series_yaml}
 
-         # Apply exclusions, then return yaml finalized YAML
+        # Apply exclusions, then return yaml finalized YAML
         self.__apply_exclusion(yaml, exclusions)
         return yaml
 
 
-    def update_from_plex(self, plex_interface: 'PlexInterface',
-                         filter_libraries: list[str]=[],
-                         exclusions: list[dict[str, str]]=[]) -> None:
+    def update_from_plex(self,
+            plex_interface: 'PlexInterface',
+            filter_libraries: list[str]=[],
+            required_tags: list[str]=[],
+            exclusions: list[dict[str, str]]=[]) -> None:
         """
         Update this object's file from Plex.
 
         Args:
             plex_interface: PlexInterface to sync from.
             filter_libraries: List of libraries to filter Plex sync from.
+            required_tags: List of tags to filter the Sonarr sync from.
             exclusions: List of labeled exclusions to apply to sync.
         """
 
@@ -585,7 +594,7 @@ class SeriesYamlWriter:
 
         # Get complete file YAML from Sonarr
         yaml = self.__get_yaml_from_plex(
-            plex_interface, filter_libraries, exclusions
+            plex_interface, filter_libraries, required_tags, exclusions
         )
 
         # Either sync of append this YAML to this object's file
@@ -597,22 +606,22 @@ class SeriesYamlWriter:
         log.info(f'Synced {self.file.resolve()} from Plex')
 
 
-    def __get_yaml_from_emby(self, emby_interface: 'EmbyInterface',
-                             filter_libraries: list[str],
-                             exclusions: list[dict[str, str]]=[]
-                             ) -> dict[str, dict[str, str]]:
+    def __get_yaml_from_emby(self,
+            emby_interface: 'EmbyInterface', filter_libraries: list[str],
+            exclusions: list[dict[str, str]]=[]) -> dict[str, dict[str, str]]:
         """
        Get the YAML from Emby, as filtered by the given libraries.
 
         Args:
             emby_interface: EmbyInterface to sync from.
-            filter_libraries: List of libraries to filter the returned YAML by.
+            filter_libraries: List of libraries to filter the returned
+                YAML by.
             exclusions: List of labelled exclusions to apply to sync.
 
         Returns:
-            Series YAML as reported by Emby. Keys are series names, and each
-            contains the YAML for that series, such as the 'name', 'year',
-            'media_directory', and 'library'.
+            Series YAML as reported by Emby. Keys are series names, and
+            each contains the YAML for that series, such as the 'name',
+            'year', 'media_directory', and 'library'.
         """
 
         # Get list of SeriesInfo, media paths, and library names from Plex
@@ -628,8 +637,8 @@ class SeriesYamlWriter:
         # Create libraries YAML
         libraries_yaml = {}
         for library, paths in libraries.items():
-            # If this library has multiple directories, create entry for each if
-            # no override card directory is provided
+            # If this library has multiple directories, create entry for 
+            # each if no override card directory is provided
             if len(paths) > 1 and self.card_directory is None:
                 for index, path in enumerate(paths):
                     libraries_yaml[f'{library} - Directory {index+1}'] = {
@@ -685,15 +694,16 @@ class SeriesYamlWriter:
         return yaml
 
 
-    def update_from_emby(self, emby_interface: 'PlexInterface',
-                         filter_libraries: list[str]=[],
-                         exclusions: list[dict[str, str]]=[]) -> None:
+    def update_from_emby(self,
+            emby_interface: 'PlexInterface', filter_libraries: list[str]=[],
+            exclusions: list[dict[str, str]]=[]) -> None:
         """
         Update this object's file from Emby.
 
         Args:
             emby_interface: EmbyInterface to sync from.
-            filter_libraries: List of libraries to filter Plex sync from.
+            filter_libraries: List of libraries to filter Plex sync
+                from.
             exclusions: List of labeled exclusions to apply to sync.
         """
 
