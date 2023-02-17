@@ -9,30 +9,34 @@ from modules.Debug import log
 
 class SeriesYamlWriter:
     """
-    This class describes a SeriesYamlWriter. This is an object that writes
-    formatted series YAML files by syncing with Sonarr or Plex.
+    This class describes a SeriesYamlWriter. This is an object that
+    writes formatted series YAML files by syncing with Emby, Plex, or
+    Sonarr.
     """
 
     """Keyword arguments for yaml.dump()"""
     __WRITE_OPTIONS = {'allow_unicode': True, 'width': 200}
 
 
-    def __init__(self, file: CleanPath, sync_mode: str='append',
-                 compact_mode: bool=True, volume_map: dict[str, str]={},
-                 template: str=None, card_directory: CleanPath=None) -> None:
+    def __init__(self,
+            file: CleanPath, sync_mode: str='append', compact_mode: bool=True,
+            volume_map: dict[str, str]={}, template: str=None,
+            card_directory: CleanPath=None) -> None:
         """
         Initialize an instance of a SeriesYamlWrite object.
 
         Args:
             file: File to read/write series YAML.
-            sync_mode: How to write to this series YAML file. Must be either
-                'append' or 'match'.
-            compact_mode: Whether to write this YAML in compact mode or not.
-            volume_map: Mapping of interface paths to corresponding TCM paths.
+            sync_mode: How to write to this series YAML file. Must be
+                either 'append' or 'match'.
+            compact_mode: Whether to write this YAML in compact mode or
+                not.
+            volume_map: Mapping of interface paths to corresponding TCM
+                paths.
             template: Template name to add to all synced series.
-            card_directory: Override directory all cards should be directed to,
-                instead of the series-specific directory reported by the sync
-                source.
+            card_directory: Override directory all cards should be
+                directed to, instead of the series-specific directory
+                reported by the sync source.
         """
 
         # Start as valid, Store base attributes
@@ -90,19 +94,19 @@ class SeriesYamlWriter:
 
     def __convert_path(self, path: str, *, media: bool) -> str:
         """
-        Convert the given path string to its TCM-equivalent by using this 
-        object's volume map and card (override) directory.
+        Convert the given path string to its TCM-equivalent by using
+        this  object's volume map and card (override) directory.
 
         Args:
             path: Path (as string) to convert.
-            media: (Keyword only) Whether the path being converted corresponds
-                to a specific piece of media.
+            media: (Keyword only) Whether the path being converted
+                corresponds to a specific piece of media.
 
         Returns:
-            Converted Path (as string). If this object was initialized with an
-            override card directory, the path (or base if media) is modified to
-            that override directory. If no conversion was applied, then the 
-            original path is returned.
+            Converted Path (as string). If this object was initialized
+            with an override card directory, the path (or base if media)
+            is modified to that override directory. If no conversion was
+            applied, then the original path is returned.
         """
 
         # An override directory has been provided
@@ -125,11 +129,12 @@ class SeriesYamlWriter:
         return standard_path
 
 
-    def __apply_exclusion(self, yaml: dict[str, dict[str, str]],
-                          exclusions: list[dict[str, str]]) -> None:
+    def __apply_exclusion(self,
+            yaml: dict[str, dict[str, str]],
+            exclusions: list[dict[str, str]]) -> None:
         """
-        Apply the given exclusions to the given YAML. This modifies the YAML
-        object in-place.
+        Apply the given exclusions to the given YAML. This modifies the
+        YAML object in-place.
 
         Args:
             yaml: YAML being modified.
@@ -186,8 +191,8 @@ class SeriesYamlWriter:
 
     def __write(self, yaml: dict[str, dict[str, str]]) -> None:
         """
-        Write the given YAML to this Writer's file. This either utilizes compact
-        or verbose style.
+        Write the given YAML to this Writer's file. This either utilizes
+        compact or verbose style.
 
         Args:
             yaml: YAML (dictionary) to write.
@@ -206,18 +211,18 @@ class SeriesYamlWriter:
             dump(yaml, file_handle, **self.__WRITE_OPTIONS)
 
 
-    def __read_existing_file(self,  yaml: dict[str, dict[str, str]]
-                             ) -> dict[str, dict[str, str]]:
+    def __read_existing_file(self, 
+            yaml: dict[str, dict[str, str]]) -> dict[str, dict[str, str]]:
         """
-        Read the existing YAML from this writer's file. If the file has no
-        existing YAML to read, then just write the given YAML.
+        Read the existing YAML from this writer's file. If the file has
+        no existing YAML to read, then just write the given YAML.
 
         Args:
             yaml: YAML (dictionary) to write.
 
         Returns:
-            Dictionary that is the existing YAML. None if there is no existing
-            YAML, or if an error occured during the read.
+            Dictionary that is the existing YAML. None if there is no
+            existing YAML, or if an error occured during the read.
         """
 
         # If the file DNE, just use write technique
@@ -338,28 +343,35 @@ class SeriesYamlWriter:
             round_trip_dump(existing_yaml, file_handle)
 
 
-    def __get_yaml_from_sonarr(self, sonarr_interface: 'SonarrInterface',
-                               plex_libraries: dict[str, str],
-                               required_tags: list[str],
-                               exclusions: list[dict[str, str]],
-                               monitored_only: bool, downloaded_only: bool
-                               ) -> dict[str: dict[str, str]]:
+    def __get_yaml_from_sonarr(self,
+            sonarr_interface: 'SonarrInterface',
+            plex_libraries: dict[str, str],
+            required_tags: list[str],
+            monitored_only: bool,
+            downloaded_only: bool,
+            series_type: str,
+            exclusions: list[dict[str, str]]
+            ) -> dict[str: dict[str, str]]:
         """
         Get the YAML from Sonarr, as filtered by the given attributes.
 
         Args:
             sonarr_interface: SonarrInterface to sync from.
-            plex_libraries: Dictionary of TCM paths to their corresponding
-                libraries.
-            required_tags: List of requried tags to filter the Sonarr sync with.
+            plex_libraries: Dictionary of TCM paths to their
+                corresponding libraries.
+            required_tags: List of requried tags to filter the Sonarr
+                sync with.
+            monitored_only: Whether to only sync monitored series from
+                Sonarr.
+            downloaded_only: Whether to only sync downloaded series from
+                Sonarr.
+            series_type: Type of series to filter sync with.
             exclusions: List of labelled exclusions to apply to sync.
-            monitored_only: Whether to only sync monitored series from Sonarr.
-            downloaded_only: Whether to only sync downloaded series from Sonarr.
 
         Returns:
-            Series YAML as reported by Sonarr. Keys are series names, and each
-            contains the YAML for that series, such as the 'name', 'year',
-            'media_directory', and 'library'.
+            Series YAML as reported by Sonarr. Keys are series names,
+            and each contains the YAML for that series, such as the
+            'name', 'year', 'media_directory', and 'library'.
         """
 
         # Get list of excluded tags
@@ -370,7 +382,8 @@ class SeriesYamlWriter:
 
         # Get list of SeriesInfo and paths from Sonarr
         all_series = sonarr_interface.get_all_series(
-            required_tags, excluded_tags, monitored_only, downloaded_only,
+            required_tags, excluded_tags, monitored_only,
+            downloaded_only, series_type,
         )
 
         # Exit if no series were returned
@@ -380,7 +393,7 @@ class SeriesYamlWriter:
         # Generate YAML to write
         series_yaml = {}
         for series_info, sonarr_path in all_series:
-            # Convert Sonarr path to TCM path, keep original for library detection
+            # Convert Sonarr path to TCM path, keep original for library
             original_path = sonarr_path
             sonarr_path = self.__convert_path(sonarr_path, media=True)
 
@@ -428,29 +441,33 @@ class SeriesYamlWriter:
         return yaml
 
 
-    def update_from_sonarr(self, sonarr_interface: 'SonarrInterface',
-                           plex_libraries: dict[str, str]={},
-                           required_tags: list[str]=[],
-                           exclusions: list[dict[str, str]]=[],
-                           monitored_only: bool=False,
-                           downloaded_only: bool=False) -> None:
+    def update_from_sonarr(self,
+            sonarr_interface: 'SonarrInterface',
+            plex_libraries: dict[str, str]={},
+            required_tags: list[str]=[],
+            monitored_only: bool=False,
+            downloaded_only: bool=False,
+            series_type: str=None,
+            exclusions: list[dict[str, str]]=[]) -> None:
         """
         Update this object's file from Sonarr.
 
         Args:
             sonarr_interface: SonarrInterface to sync from.
-            plex_libraries: Dictionary of TCM paths to their corresponding
-                libraries.
+            plex_libraries: Dictionary of TCM paths to their 
+                corresponding libraries.
             required_tags: List of tags to filter the Sonarr sync from.
             exclusions: List of labeled exclusions to apply to sync.
-            monitored_only: Whether to only sync monitored series from Sonarr.
-            downloaded_only: Whether to only sync downloaded series from Sonarr.
+            monitored_only: Whether to only sync monitored series from
+                Sonarr.
+            downloaded_only: Whether to only sync downloaded series from
+                Sonarr.
         """
 
         # Get complete file YAML from Sonarr
         yaml = self.__get_yaml_from_sonarr(
-            sonarr_interface, plex_libraries, required_tags, exclusions,
-            monitored_only, downloaded_only
+            sonarr_interface, plex_libraries, required_tags, 
+            monitored_only, downloaded_only, series_type, exclusions,
         )
 
         # Either sync of append this YAML to this object's file

@@ -13,7 +13,7 @@ class SonarrInterface(WebInterface, SyncInterface):
     This class describes a Sonarr interface, which is a type of WebInterface.
     The primary purpose of this class is to get episode titles, as well as
     database ID's for episodes.
-    """    
+    """
 
     """Series ID's that can be set by Sonarr"""
     SERIES_IDS = ('imdb_id', 'sonarr_id', 'tvdb_id', 'tvrage_id')
@@ -145,10 +145,13 @@ class SonarrInterface(WebInterface, SyncInterface):
         return self.server_id == series_info.sonarr_id.split('-')[0]
 
 
-    def get_all_series(self, required_tags: list[str]=[], 
-                       excluded_tags: list[str]=[], monitored_only: bool=False,
-                       downloaded_only: bool=False
-                       ) -> list[tuple[SeriesInfo, str]]:
+    def get_all_series(self,
+            required_tags: list[str]=[], 
+            excluded_tags: list[str]=[],
+            monitored_only: bool=False,
+            downloaded_only: bool=False,
+            series_type: Optional[str]=None,
+            ) -> list[tuple[SeriesInfo, str]]:
         """
         Get all the series within Sonarr, filtered by the given parameters.
 
@@ -161,6 +164,7 @@ class SonarrInterface(WebInterface, SyncInterface):
                 unmonitored within Sonarr.
             downloaded_only: Whether to filter return to exclude series that do
                 not have any downloaded episodes.
+            series_type: Optional series type to filter series by.
 
         Returns:
             List of tuples. Tuple contains the SeriesInfo object for the series,
@@ -207,6 +211,10 @@ class SonarrInterface(WebInterface, SyncInterface):
             # Skip show if tag isn't in filter (and filter is enabled)
             if (len(required_tags) > 0
                 and not all(tag in show['tags'] for tag in required_tag_ids)):
+                continue
+
+            # Skip if series type indicated and does not match
+            if series_type is not None and show['seriesType'] != series_type:
                 continue
 
             # Skip show if it has a year of 0
