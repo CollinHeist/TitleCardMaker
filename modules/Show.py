@@ -390,12 +390,14 @@ class Show(YamlReader):
         """Set the series ID's for this show."""
 
         if self.emby_interface:
-            self.emby_interface.set_series_ids(self.library_name,
-                                               self.series_info)
+            self.emby_interface.set_series_ids(
+                self.library_name, self.series_info
+            )
 
         if self.plex_interface:
-            self.plex_interface.set_series_ids(self.library_name,
-                                               self.series_info)
+            self.plex_interface.set_series_ids(
+                self.library_name, self.series_info
+            )
 
         if self.sonarr_interface:
             self.sonarr_interface.set_series_ids(self.series_info)

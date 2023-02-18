@@ -8,19 +8,20 @@ import modules.global_objects as global_objects
 
 class PersistentDatabase:
     """
-    This class describes some persistent storage and is a loose wrapper of a
-    TinyDB object. The purpose of this class is to handle corrupted TinyDB
-    databases without littering the code with try/except statements. Any
-    function calls on this object are called on the underlying TinyDB object and
-    any raised JSONDecodeError Exceptions are caught, the database is deleted,
-    and the function is re-executed.
+    This class describes some persistent storage and is a loose wrapper
+    of a TinyDB object. The purpose of this class is to handle corrupted
+    TinyDB databases without littering the code with try/except
+    statements. Any function calls on this object are called on the
+    underlying TinyDB object and any raised JSONDecodeError Exceptions
+    are caught, the database is deleted, and the function is
+    re-executed.
     """
 
 
     def __init__(self, filename: str) -> None:
         """
-        Initialize an instance of an object for the given TinyDB object with the
-        given filename.
+        Initialize an instance of an object for the given TinyDB object
+        with the given filename.
 
         Args:
             filename: Filename to the Database object.
@@ -43,17 +44,17 @@ class PersistentDatabase:
 
     def __getattr__(self, database_func: str) -> callable:
         """
-        Get an arbitrary function for this object. This returns a wrapped
-        version of the accessed function that catches any uncaught
-        JSONDecodeError exceptions (prompting a DB reset).
+        Get an arbitrary function for this object. This returns a
+        wrapped version of the accessed function that catches any
+        uncaught JSONDecodeError exceptions (prompting a DB reset).
 
         Args:
             database_func: The function being called.
 
         Returns:
-            Wrapped callable that is the indicated function with any uncaught
-            JSONDecodeError exceptions caught, the database reset, and then the
-            function recalled.
+            Wrapped callable that is the indicated function with any
+            uncaught JSONDecodeError exceptions caught, the database
+            reset, and then the function recalled.
         """
 
         # Define wrapper that calls given function with args, and then catches
@@ -71,13 +72,15 @@ class PersistentDatabase:
 
 
     def __len__(self) -> int:
+        """Call len() on this object's underlying TinyDB object."""
+
         return len(self.db)
 
 
     def reset(self) -> None:
         """
-        Reset this object's associated database. This deletes the file and 
-        recreates a new TinyDB.
+        Reset this object's associated database. This deletes the file
+        and  recreates a new TinyDB.
         """
 
         # Attempt to remove all records; if that fails delete and remake file

@@ -7,28 +7,31 @@ from modules.Title import Title
 
 class WordSet(dict):
     """
-    Dictionary subclass that contains keys for translated word-versions of
-    numbers.
+    Dictionary subclass that contains keys for translated word-versions
+    of numbers.
     """
 
     def add_numeral(self, label: str, number: int, lang: str=None) -> None:
         """
-        Add the cardinal and ordinal versions of the given number under the
-        given label. For example:
+        Add the cardinal and ordinal versions of the given number under
+        the given label. For example:
 
         >>> word_set = WordSet()
         >>> word_set.add_numeral('season_number', 4)
         >>> print(word_set)
-        {'season_number_cardinal': 'four', 'season_number_ordinal': 'fourth'}
+        {'season_number_cardinal': 'four',
+         'season_number_ordinal': 'fourth'}
         >>> word_set.add_numeral('abs_number', 2, 'es')
-        {'season_number_cardinal': 'four', 'season_number_ordinal': 'fourth',
-         'abs_number_cardinal_es': 'dos', 'abs_number_ordinal_es': 'segundo'}
+        {'season_number_cardinal': 'four',
+         'season_number_ordinal': 'fourth',
+         'abs_number_cardinal_es': 'dos',
+         'abs_number_ordinal_es': 'segundo'}
 
         Args:
             label: Label key to add the converted number under.
             number: Number to wordify and add into this object.
-            lang: Optional language to wordify the object into. Appended to any
-                added keys.
+            lang: Optional language to wordify the object into. Appended
+                to any added keys.
         """
 
         # If value is None, do nothing
@@ -56,9 +59,9 @@ class WordSet(dict):
 
 class EpisodeInfo(DatabaseInfoContainer):
     """
-    This class describes static information about an Episode, such as the
-    season, episode, and absolute number, as well as the various ID's associated
-    with it.
+    This class describes static information about an Episode, such as
+    the season, episode, and absolute number, as well as the various
+    ID's associated with it.
     """
 
     __slots__ = (
@@ -70,17 +73,11 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     def __init__(self, title: 'str | Title', season_number: int,
-                 episode_number: int, abs_number: int=None, *,
-                 emby_id: int=None,
-                 imdb_id: str=None,
-                 tmdb_id: int=None,
-                 tvdb_id: int=None,
-                 tvrage_id: int=None,
-                 airdate: 'datetime'=None,
-                 queried_emby: bool=False,
-                 queried_plex: bool=False,
-                 queried_sonarr: bool=False,
-                 queried_tmdb: bool=False) -> None:
+            episode_number: int, abs_number: int=None, *,
+            emby_id: int=None, imdb_id: str=None, tmdb_id: int=None,
+            tvdb_id: int=None, tvrage_id: int=None, airdate: 'datetime'=None,
+            queried_emby: bool=False, queried_plex: bool=False,
+            queried_sonarr: bool=False, queried_tmdb: bool=False) -> None:
 
         # Ensure title is Title object
         if isinstance(title, Title):
@@ -143,9 +140,9 @@ class EpisodeInfo(DatabaseInfoContainer):
 
     def __add__(self, count: int) -> str:
         """
-        Get the key for the episode corresponding to given number of episodes
-        after this one. For example. if this object is S01E05, adding 5 would 
-        return '1-10'.
+        Get the key for the episode corresponding to given number of
+        episodes after this one. For example. if this object is S01E05,
+        adding 5 would  return '1-10'.
 
         Args:
             count: The number of episodes to increment the index by.
@@ -162,15 +159,15 @@ class EpisodeInfo(DatabaseInfoContainer):
 
     def __eq__(self, other_info: 'EpisodeInfo') -> bool:
         """
-        Returns whether the given EpisodeInfo object corresponds to the same
-        entry (has the same season and episode index).
+        Returns whether the given EpisodeInfo object corresponds to the
+        same entry (has the same season and episode index).
 
         Args:
             other_info: EpisodeInfo object to compare.
 
         Returns:
-            True if the season and episode number of the two objects match, 
-            False otherwise.
+            True if the season and episode number of the two objects
+            match,  False otherwise.
         """
 
         # Verify the comparison is another EpisodeInfo object
@@ -196,7 +193,7 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     @property
-    def ids(self) -> dict:
+    def ids(self) -> dict[str, 'int | str | None']:
         """This object's ID's (as a dictionary)"""
 
         return {
@@ -214,8 +211,9 @@ class EpisodeInfo(DatabaseInfoContainer):
         Get the characteristics of this object for formatting.
 
         Returns:
-            Dictionary of characteristics that define this object. Keys are the
-            indices of the episode in numeric, cardinal, and ordinal form.
+            Dictionary of characteristics that define this object. Keys
+            are the indices of the episode in numeric, cardinal, and
+            ordinal form.
         """
 
         return {
@@ -228,7 +226,7 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     @property
-    def indices(self) -> dict:
+    def indices(self) -> dict[str, 'int | None']:
         """This object's season/episode indices (as a dictionary)"""
 
         return {
@@ -266,18 +264,17 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     def update_queried_statuses(self, queried_emby: bool=False,
-                                queried_plex: bool=False,
-                                queried_sonarr: bool=False,
-                                queried_tmdb: bool=False) -> None:
+            queried_plex: bool=False, queried_sonarr: bool=False,
+            queried_tmdb: bool=False) -> None:
         """
         Update the queried attributes of this object to reflect the given
         arguments. Only updates from False -> True.
 
         Args:
-            queried_emby: Whether this EpisodeInfo has been queried on Emby.
-            queried_plex: Whether this EpisodeInfo has been queried on Plex.
-            queried_sonarr: Whether this EpisodeInfo has been queried on Sonarr.
-            queried_tmdb: Whether this EpisodeInfo has been queried on TMDb.
+            queried_emby: Whether this object has been queried on Emby.
+            queried_plex: Whether this object has been queried on Plex.
+            queried_sonarr: Whether this object has been queried on Sonarr.
+            queried_tmdb: Whether this object has been queried on TMDb.
         """
 
         if queried_emby:   self.queried_emby = queried_emby
