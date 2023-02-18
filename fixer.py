@@ -72,7 +72,7 @@ media_server_group.add_argument(
     type=str,
     nargs=2,
     default=SUPPRESS,
-    metavar=('ARCHIVE_DIRECTORY', 'PLEX_LIBRARY'),
+    metavar=('ARCHIVE_DIRECTORY', 'LIBRARY'),
     help='Import an archive of Title Cards into Emby/Plex')
 media_server_group.add_argument(
     '--import-series', '--load-series',
@@ -93,14 +93,14 @@ media_server_group.add_argument(
     type=str,
     nargs=3,
     default=SUPPRESS,
-    metavar=('PLEX_LIBRARY', 'NAME', 'YEAR'),
+    metavar=('LIBRARY', 'NAME', 'YEAR'),
     help='Remove records of the loaded cards for the given series/library')
 media_server_group.add_argument(
     '--revert-series',
     type=str,
     nargs=3,
     default=SUPPRESS,
-    metavar=('PLEX_LIBRARY', 'NAME', 'YEAR'),
+    metavar=('LIBRARY', 'NAME', 'YEAR'),
     help='Remove the cards for the given series within Emby/Plex')
 
 # Argument group for Sonarr
