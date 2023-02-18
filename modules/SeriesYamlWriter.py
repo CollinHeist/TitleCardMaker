@@ -584,7 +584,7 @@ class SeriesYamlWriter:
         Args:
             plex_interface: PlexInterface to sync from.
             filter_libraries: List of libraries to filter Plex sync from.
-            required_tags: List of tags to filter the Sonarr sync from.
+            required_tags: List of tags to filter the sync with.
             exclusions: List of labeled exclusions to apply to sync.
         """
 
@@ -608,7 +608,8 @@ class SeriesYamlWriter:
 
     def __get_yaml_from_emby(self,
             emby_interface: 'EmbyInterface', filter_libraries: list[str],
-            exclusions: list[dict[str, str]]=[]) -> dict[str, dict[str, str]]:
+            required_tags: list[str], exclusions: list[dict[str, str]]=[],
+            ) -> dict[str, dict[str, str]]:
         """
        Get the YAML from Emby, as filtered by the given libraries.
 
@@ -616,6 +617,7 @@ class SeriesYamlWriter:
             emby_interface: EmbyInterface to sync from.
             filter_libraries: List of libraries to filter the returned
                 YAML by.
+            required_tags: List of tags to filter the sync with.
             exclusions: List of labelled exclusions to apply to sync.
 
         Returns:
@@ -625,7 +627,9 @@ class SeriesYamlWriter:
         """
 
         # Get list of SeriesInfo, media paths, and library names from Plex
-        all_series = emby_interface.get_all_series(filter_libraries)
+        all_series = emby_interface.get_all_series(
+            filter_libraries, required_tags
+        )
 
         # Exit if no series were returned
         if len(all_series) == 0:
@@ -696,7 +700,8 @@ class SeriesYamlWriter:
 
     def update_from_emby(self,
             emby_interface: 'PlexInterface', filter_libraries: list[str]=[],
-            exclusions: list[dict[str, str]]=[]) -> None:
+            required_tags: list[str]=[], exclusions: list[dict[str, str]]=[]
+            ) -> None:
         """
         Update this object's file from Emby.
 
@@ -704,6 +709,7 @@ class SeriesYamlWriter:
             emby_interface: EmbyInterface to sync from.
             filter_libraries: List of libraries to filter Plex sync
                 from.
+            required_tags: List of tags to filter the sync with.
             exclusions: List of labeled exclusions to apply to sync.
         """
 
