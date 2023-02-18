@@ -8,10 +8,10 @@ import modules.global_objects as global_objects
 
 class MultiEpisode:
     """
-    This class describes a MultiEpisode, which is a 'type' (practically a 
-    subclass) of Episode but describes a range of sequential episodes within a
-    single season for a given series. The MultiEpisode uses the first episode's
-    (sequentially) episode info and source.
+    This class describes a MultiEpisode, which is a 'type' (practically
+    a  subclass) of Episode but describes a range of sequential episodes
+    within a single season for a given series. The MultiEpisode uses the
+    first episode's (sequentially) episode info and source.
     """
 
     """Regex to match ETF strings for multi episodes"""
@@ -26,12 +26,15 @@ class MultiEpisode:
 
     def __init__(self, episodes: list['Episode'], title: 'Title') -> None:
         """
-        Constructs a new instance of a MultiEpisode that represents the given
-        list of Episode objects, and has the given (modified) Title.
+        Constructs a new instance of a MultiEpisode that represents the
+        given list of Episode objects, and has the given (modified)
+        Title.
 
         Args:
-            episodes: List of Episode objects this MultiEpisode encompasses.
-            title: The modified title that describes these multiple episodes.
+            episodes: List of Episode objects this MultiEpisode
+                encompasses.
+            title: The modified title that describes these multiple
+                episodes.
         """
 
         # Verify at least two episodes have been provided
@@ -145,9 +148,10 @@ class MultiEpisode:
         Get the characteristics of this object for formatting.
 
         Returns:
-            Dictionary of characteristics that define this object. Keys are the
-            start/end indices of the range (in numeric and written forms), and
-            the extra characteristics of the first episode.
+            Dictionary of characteristics that define this object. Keys
+            are the start/end indices of the range (in numeric and
+            written forms), and the extra characteristics of the first
+            episode.
         """
 
         return self._first_episode.characteristics | {
@@ -164,9 +168,10 @@ class MultiEpisode:
     def modify_format_string(episode_format_string: str) -> str:
         """
         Modify the given episode text format string to be suitable for a
-        MultiEpisode. This replaces {abs_number} or {episode_number} with
-        {abs_start}-{abs_end} and {episode_start}-{episode_end}, and adds an S
-        to the preceding text (if a space preceeds the identifier) For example:
+        MultiEpisode. This replaces {abs_number} or {episode_number}
+        with {abs_start}-{abs_end} and {episode_start}-{episode_end},
+        and adds an "S" to the preceding text (if a space preceeds the
+        identifier) For example:
 
         >>> modify_format_string('EPISODE {abs_number}')
         'EPISODES {abs_start}-{abs_end}'
@@ -202,8 +207,8 @@ class MultiEpisode:
         Set the destination for the card associated with these Episdoes.
 
         Args:
-            destination: The destination for the card that is created for these
-                episodes.
+            destination: The destination for the card that is created
+                for these episodes.
         """
 
         self.destination = destination

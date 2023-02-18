@@ -184,7 +184,6 @@ class MediaServer(ABC):
         """
         raise NotImplementedError('All MediaServer objects must implement this')
 
-
     @abstractmethod
     def update_watched_statuses(self, library_name: str,
                                 series_info: 'SeriesInfo',
@@ -193,21 +192,26 @@ class MediaServer(ABC):
         """Abstract method to update watched statuses of Episode objects."""
         raise NotImplementedError('All MediaServer objects must implement this')
 
-
     @abstractmethod
     def set_title_cards(self) -> None:
         """Abstract method to load title cards within this MediaServer."""
         raise NotImplementedError('All MediaServer objects must implement this')
-
 
     @abstractmethod
     def set_season_posters(self) -> None:
         """Abstract method to load title cards within this MediaServer."""
         raise NotImplementedError('All MediaServer objects must implement this')
 
-
+    @abstractmethod
     def get_source_image(self) -> SourceImage:
         """
         Abstract method to get textless source images from this MediaServer.
+        """
+        raise NotImplementedError('All MediaServer objects must implement this')
+
+    @abstractmethod
+    def get_libraries(self) -> list[str]:
+        """
+        Abstract method to get all libraries from this MediaServer.
         """
         raise NotImplementedError('All MediaServer objects must implement this')

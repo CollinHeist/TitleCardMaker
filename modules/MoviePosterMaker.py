@@ -20,9 +20,9 @@ class MoviePosterMaker(ImageMaker):
 
 
     def __init__(self, source: Path, output: Path, title: str, subtitle: str='',
-                 top_subtitle: str='', movie_index: str='', logo: Path=None,
-                 font: Path=FONT, font_color: str=FONT_COLOR,
-                 font_size: float=1.0, omit_gradient: bool=False) -> None:
+            top_subtitle: str='', movie_index: str='', logo: Path=None,
+            font: Path=FONT, font_color: str=FONT_COLOR, font_size: float=1.0,
+            omit_gradient: bool=False) -> None:
         """
         Construct a new instance of a CollectionPosterMaker.
 
@@ -31,15 +31,17 @@ class MoviePosterMaker(ImageMaker):
             output: The output path to write the poster to.
             title: String to use on the created poster.
             subtitle: String to use for smaller title text.
-            top_subtitle: String to use for smaller subtitle text that appears
-                above the title text.
-            movie_index: Optional (series) index to place behind the movie
-                title.
-            logo: Optional path to a logo file to place on top of the poster.
+            top_subtitle: String to use for smaller subtitle text that 
+                appears above the title text.
+            movie_index: Optional (series) index to place behind the
+                movie title.
+            logo: Optional path to a logo file to place on top of the
+                poster.
             font: Path to the font file of the poster's title.
             font_color: Font color of the poster text.
             font_size: Scalar for the font size of the poster's title.
-            omit_gradient: Whether to make the poster with no gradient overlay.
+            omit_gradient: Whether to make the poster with no gradient
+                overlay.
         """
 
         # Initialize parent object for the ImageMagickInterface
@@ -89,8 +91,8 @@ class MoviePosterMaker(ImageMaker):
     @property
     def index_command(self) -> list[str]:
         """
-        ImageMagick command(s) to add the underlying index text behind the
-        title text.
+        ImageMagick command(s) to add the underlying index text behind 
+        the title text.
 
         Returns:
             List of ImageMagick commands.
@@ -112,7 +114,8 @@ class MoviePosterMaker(ImageMaker):
     @property
     def title_font_attributes(self) -> list[str]:
         """
-        Imagemagick commands to define the font attributes of the title text.
+        Imagemagick commands to define the font attributes of the title
+        text.
 
         Returns:
             List of ImageMagick commands.
@@ -131,7 +134,8 @@ class MoviePosterMaker(ImageMaker):
     @property
     def subtitle_font_attributes(self) -> list[str]:
         """
-        Imagemagick commands to define the font attributes of the subtitle text.
+        Imagemagick commands to define the font attributes of the
+        subtitle text.
 
         Returns:
             List of ImageMagick commands.
@@ -194,7 +198,7 @@ class MoviePosterMaker(ImageMaker):
             # Create an image for each title
             f'\( -background transparent',
             *self.subtitle_font_attributes,
-            f'label:"{self.top_subtitle}"' if len(self.top_subtitle) > 0 else '',
+            f'label:"{self.top_subtitle}"' if len(self.top_subtitle)>0 else '',
             *self.title_font_attributes,
             f'label:"{self.title}"' if len(self.title) > 0 else '',
             *self.subtitle_font_attributes,

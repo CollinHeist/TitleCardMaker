@@ -87,15 +87,16 @@ class MediaInfoSet:
                         tvrage_id: int=None,
                         match_titles: bool=True) -> SeriesInfo:
         """
-        Get the SeriesInfo object indicated by the given attributes. This looks
-        for an existing object mapped under any of the given details; if none
-        exists, a new SeriesInfo object is created with the given details.
+        Get the SeriesInfo object indicated by the given attributes.
+        This looks for an existing object mapped under any of the given
+        details; if none exists, a new SeriesInfo object is created with
+        the given details.
 
         Args:
-            name: The name of the series. Optional if the associated object
-                already exists.
-            year: The year of the series. Optional if the associated object
-                already exists.
+            name: The name of the series. Optional if the associated 
+                object already exists.
+            year: The year of the series. Optional if the associated 
+                object already exists.
             imdb_id: Optional IMDb ID.
             sonarr_id: Optional Sonarr ID.
             tmdb_id: Optional TMDb ID.
@@ -174,8 +175,8 @@ class MediaInfoSet:
         SeriesInfo object.
 
         Args:
-            id_type: Descriptive string of the ID type being set - e.g. 'emby',
-                'imdb', etc.
+            id_type: Descriptive string of the ID type being set - e.g.
+                'emby', 'imdb', etc.
             series_info: SeriesInfo object to update the ID of.
             id_: Associated ID to store.
         """

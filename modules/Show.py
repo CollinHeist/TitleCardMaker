@@ -390,12 +390,14 @@ class Show(YamlReader):
         """Set the series ID's for this show."""
 
         if self.emby_interface:
-            self.emby_interface.set_series_ids(self.library_name,
-                                               self.series_info)
+            self.emby_interface.set_series_ids(
+                self.library_name, self.series_info
+            )
 
         if self.plex_interface:
-            self.plex_interface.set_series_ids(self.library_name,
-                                               self.series_info)
+            self.plex_interface.set_series_ids(
+                self.library_name, self.series_info
+            )
 
         if self.sonarr_interface:
             self.sonarr_interface.set_series_ids(self.series_info)
@@ -788,7 +790,6 @@ class Show(YamlReader):
 
             # Go through each source interface indicated, try and get source
             for source_interface in self.image_source_priority:
-                # Query for the source image
                 image = None
                 if source_interface == 'tmdb' and check_tmdb:
                     image = self.tmdb_interface.get_source_image(
@@ -796,6 +797,8 @@ class Show(YamlReader):
                         episode.episode_info,
                         skip_localized_images=self.tmdb_skip_localized_images,
                     )
+                    # If None was returned (e.g. temp blacklisted), exit loops
+                    if not image: break
                 elif source_interface == 'plex' and check_plex:
                     image = self.plex_interface.get_source_image(
                         self.library_name,

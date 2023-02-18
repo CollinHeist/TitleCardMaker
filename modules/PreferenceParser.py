@@ -16,6 +16,7 @@ from modules.PlexInterface import PlexInterface
 from modules.SeriesInfo import SeriesInfo
 from modules.SeriesYamlWriter import SeriesYamlWriter
 from modules.Show import Show
+from modules.SonarrInterface import SonarrInterface
 from modules.StandardSummary import StandardSummary
 from modules.StyleSet import StyleSet
 from modules.StylizedSummary import StylizedSummary
@@ -156,6 +157,11 @@ class PreferenceParser(YamlReader):
         self.imagemagick_timeout = ImageMagickInterface.COMMAND_TIMEOUT_SECONDS
 
         # Determine default media server
+        if (not self._is_specified('emby') and not self._is_specified('plex')
+            and not self._is_specified('jellyfin')):
+            log.warning(f'No Media Servers indicated - TitleCardMaker will not '
+                        f'automatically load any cards')
+            self.default_media_server = 'plex'
         if (self._is_specified('emby') and not self._is_specified('plex')
             and not self._is_specified('jellyfin')):
             self.default_media_server = 'emby'
@@ -240,24 +246,32 @@ class PreferenceParser(YamlReader):
                 log.error(f'Cannot sync to "{file.resolve()}" - invalid sync')
                 return None
 
-            # Parse args applicable to Plex and Sonarr
+            # Parse args applicable to all interfaces
             update_args = {}
             if (value := sync_yaml._get('exclusions', type_=list)) is not None:
                 update_args['exclusions'] = value
+            if (value := sync_yaml._get('required_tags', type_=list)) is not None:
+                update_args['required_tags'] = value
 
-            # Parse args applicable only to Plex or Sonarr
+            # Parse args applicable only to specific interfaces
             if sync_type in ('plex', 'emby'):
                 if (value := sync_yaml._get('libraries', type_=list)) != None:
                     update_args['filter_libraries'] = value
             elif sync_type == 'sonarr':
                 if (value := sync_yaml._get('plex_libraries', type_=dict)) != None:
                     update_args['plex_libraries'] = value
-                if (value := sync_yaml._get('required_tags', type_=list)) != None:
-                    update_args['required_tags'] = value
                 if (value := sync_yaml._get('monitored_only', type_=bool)) != None:
                     update_args['monitored_only'] = value
                 if (value := sync_yaml._get('downloaded_only', type_=bool)) != None:
                     update_args['downloaded_only'] = value
+                if (value := sync_yaml._get('series_type', type_=str)) != None:
+                    if value in SonarrInterface.VALID_SERIES_TYPES:
+                        update_args['series_type'] = value
+                    else:
+                        vals = ", ".join(SonarrInterface.VALID_SERIES_TYPES)
+                        log.error(f'Cannot filter by series_type "{value}" - '
+                                  f'must be one of {vals}')
+                        sync_yaml.valid = False
 
             # Skip if YAML was invalidated at any point
             if not sync_yaml.valid:

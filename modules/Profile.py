@@ -7,8 +7,8 @@ from modules.MultiEpisode import MultiEpisode
 class Profile:
     """
     This class describes a profile. A profile defines whether to use
-    specific aspects of a card - i.e. custom/generic font, custom/generic
-    season titles.
+    specific aspects of a card - i.e. custom/generic font,
+    custom/generic season titles.
     """
 
     """Regex (format string) to match a season title preceding title text"""
@@ -20,11 +20,12 @@ class Profile:
     )
 
     def __init__(self, series_info: 'SeriesInfo', font: 'Font',
-                 hide_seasons: bool, episode_map: 'EpisodeMap',
-                 episode_text_format: str) -> None:
+            hide_seasons: bool, episode_map: 'EpisodeMap',
+            episode_text_format: str) -> None:
         """
-        Construct a new instance of a Profile. All given arguments will be
-        applied through this Profile (and whether it's generic/custom).
+        Construct a new instance of a Profile. All given arguments will
+        be applied through this Profile (and whether it's generic or 
+        custom).
 
         Args:
             series_info: SeriesInfo associated with this profile.
@@ -67,11 +68,12 @@ class Profile:
         apply a custom font profile from there.
 
         Args:
-            card_class: Implementation of CardType whose valid subprofiles are
-                requested. 
+            card_class: Implementation of CardType whose valid
+                subprofiles are requested. 
 
         Returns:
-            The profiles that can be created as subprofiles from this object.
+            The profiles that can be created as subprofiles from this
+            object.
         """
 
         # Determine whether this profile uses custom season titles
@@ -116,13 +118,14 @@ class Profile:
 
     def convert_profile(self, seasons: str, font: str) -> None:
         """
-        Convert this profile to the provided profile attributes. This modifies
-        what characteristics are presented by the object.
+        Convert this profile to the provided profile attributes. This
+        modifies what characteristics are presented by the object.
 
         Args:
-            seasons: String of how to modify seasons. Must be one of 'custom',
-                'generic', or 'hidden'.
-            font: String of how to modify fonts. Must be 'custom' or 'generic'.
+            seasons: String of how to modify seasons. Must be one of
+                'custom', 'generic', or 'hidden'.
+            font: String of how to modify fonts. Must be 'custom' or
+                'generic'.
         """
 
         # Update this object's data
@@ -156,14 +159,15 @@ class Profile:
 
     def get_season_text(self, episode_info: 'EpisodeInfo') -> str:
         """
-        Gets the season text for the given season number, after applying this
-        profile's rules about season text.
+        Gets the season text for the given season number, after applying
+        this profile's rules about season text.
 
         Args:
             episode_info: Episode info to get the season text of.
 
         Returns:
-            The season text for the given entry as defined by this profile.
+            The season text for the given entry as defined by this
+            profile.
         """
 
         # If this profile has hidden season titles, return blank string
@@ -182,8 +186,8 @@ class Profile:
 
     def get_episode_text(self, episode: 'Episode') -> str:
         """
-        Gets the episode text for the given episode info, as defined by this
-        profile.
+        Gets the episode text for the given episode info, as defined by
+        this profile.
 
         Args:
             episode_info: Episode info to get the episode text of.
@@ -232,30 +236,37 @@ class Profile:
 
     def __remove_episode_text_format(self, title_text: str) -> str:
         """
-        Removes text that matches this profile's episode text format. This
-        replaces the {episode_number} and {abs_number} format placeholders
-        with a regex for any number. Currently, any number expressed as a digit
-        (i.e. 1, 2, ... 99999), and all numbers between 1-99 expressed as
-        ENGLISH TEXT (i.e. "one", "twenty", "ninety-nine") are removed. For
-        example, if self.episode_text_format = 'Chapter {abs_number}':
+        Removes text that matches this profile's episode text format.
+        This replaces the {episode_number} and {abs_number} format
+        placeholders with a regex for any number. Currently, any number
+        expressed as a digit (i.e. 1, 2, ... 99999), and all numbers
+        between 1-99 expressed as ENGLISH TEXT (i.e. "one", "twenty",
+        "ninety-nine") are removed. For example, if
+        self.episode_text_format = 'Chapter {abs_number}':
 
         >>> self.__remove_episode_text_format('Chapter 1: Title')
         'Title'
-        >>> self.__remove_episode_text_format('Chapter Thirty-Three, Example')
+        >>> self.__remove_episode_text_format('Chapter Thirty, Example')
         'Example'
-        >>> self.__remove_episode_text_format('Chapter 919491 - Longer Title')
-        'Longer Title'
-        >>> self.__remove_episode_text_format('Chapter Eighty Eight Example 2')
-        'Example 2'
+        >>> self.__remove_episode_text_format('Chapter 919491 - Title')
+        'Title'
+        >>> self.__remove_episode_text_format('Chapter Eighty Example')
+        'Example'
 
         Args:
-            episode_text:The title text to process.
+            episode_text: The title text to process.
 
         Returns:
-            The episode text with all text that matches the format specified in
-            this profile's episode text format REMOVED. If there is no matching
-            text, the title is returned unaltered.
+            The episode text with all text that matches the format
+            specified in this profile's episode text format REMOVED.
+            If there is no matching text, the title is returned
+            unaltered.
         """
+
+        # Skip if no number indicator to replace
+        if ('{abs_number}' not in self.episode_text_format
+            and '{episode_number}' not in self.episode_text_format):
+            return title_text
 
         # Regex group for matching 1-9 called "one_to_9"
         one_to_9 = 'one|two|three|four|five|six|seven|eight|nine'
@@ -293,8 +304,6 @@ class Profile:
             remove_regex = format_string.replace('{abs_number}', full_regex)
         elif '{episode_number}' in format_string:
             remove_regex = format_string.replace('{episode_number}', full_regex)
-        else:
-            return title_text
 
         # Find match of above regex, if exists, delete that text
         # Perform match on the case-ified episode text
@@ -307,7 +316,6 @@ class Profile:
         # If there was a match, remove the matched text and return
         if text_to_remove:
             finalized_title = title_text.replace(text_to_remove.group(), '')
-
             # If not all text was removed, return modified title
             return title_text if len(finalized_title) == 0 else finalized_title
 
@@ -325,18 +333,20 @@ class Profile:
     def convert_title(self, title_text: str,
                       manually_specified: bool=False) -> str:
         """
-        Convert the given title text through this profile's settings. This is
-        any combination of text substitutions, case functions, and optionally
-        removing text that matches the format of this profile's episode text
-        format.
+        Convert the given title text through this profile's settings.
+        This is any combination of text substitutions, case functions,
+        and optionally removing text that matches the format of this
+        profile's episode text format.
 
-        For example, if the episode format string was 'Chapter {episode_number}'
-        and the given `title_text` was 'Chapter 1: Pilot', then the returned
-        text (excluding any replacements or case mappings) would be 'Pilot'.
+        For example, if the episode format string was 'Chapter
+        {episode_number}' and the given title_text was 'Chapter 1:
+        Pilot', then the returned text (excluding any replacements or
+        case mappings) would be 'Pilot'.
 
         Args:
             title_text:  The title text to convert.
-            manually_specified: Whether the given title was manually specified.
+            manually_specified: Whether the given title was manually
+                specified.
 
         Returns:
             The processed text.

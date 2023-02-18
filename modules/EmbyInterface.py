@@ -15,10 +15,10 @@ SourceImage = Union[bytes, None]
 
 class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
     """
-    This class describes an interface to an Emby media server. This is a type
-    of EpisodeDataSource (e.g. interface by which Episode data can be
-    retrieved), as well as a MediaServer (e.g. a server in which cards can be
-    loaded into).
+    This class describes an interface to an Emby media server. This is a
+    type of EpisodeDataSource (e.g. interface by which Episode data can
+    be retrieved), as well as a MediaServer (e.g. a server in which
+    cards can be loaded into).
     """
 
     """Default no filesize limit for all uploaded assets"""
@@ -38,18 +38,19 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     def __init__(self, url: str, api_key: str, username: str,
-                 verify_ssl: bool=True,
-                 filesize_limit: int=None) -> None:
+            verify_ssl: bool=True,
+            filesize_limit: int=None) -> None:
         """
         Construct a new instance of an interface to an Emby server.
 
         Args:
             url: The API url communicating with Emby.
             api_key: The API key for API requests.
-            username: Username of the Emby account to get watch statuses of.
+            username: Username of the Emby account to get watch statuses
+                of.
             verify_ssl: Whether to verify SSL requests.
-            filesize_limit: Number of bytes to limit a single file to during
-                upload.
+            filesize_limit: Number of bytes to limit a single file to
+                during upload.
 
         Raises:
             SystemExit: Invalid Sonarr URL/API key provided.
@@ -97,8 +98,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             username: Username to query for.
 
         Returns:
-            User ID hexstring associated with the given username. None if the 
-            username was not found.
+            User ID hexstring associated with the given username. None
+            if the  username was not found.
         """
 
         # Query for list of all users on this server
@@ -120,8 +121,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         Map the libraries on this interface's Emby server.
 
         Returns:
-            Dictionary whose keys are the names of the libraries, and whose
-            values are tuples of the folder ID's for those libraries.
+            Dictionary whose keys are the names of the libraries, and
+            whose values are tuples of the folder ID's for those
+            libraries.
         """
 
         # Get all library folders 
@@ -132,7 +134,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # Parse each library name into tuples of parent ID's
         return {
-            lib['Name']: tuple(int(folder['Id']) for folder in lib['SubFolders'])
+            lib['Name']:tuple(int(folder['Id']) for folder in lib['SubFolders'])
             for lib in libraries
         }
 
@@ -204,7 +206,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     def set_episode_ids(self, series_info: SeriesInfo,
-                        infos: list[EpisodeInfo]) -> None:
+            infos: list[EpisodeInfo]) -> None:
         """
         Set the Episode ID's for the given EpisodeInfo objects.
 
@@ -217,12 +219,12 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     def get_library_paths(self, filter_libraries: list[str]=[]
-                          ) -> dict[str, list[str]]:
+            ) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
 
         Args:
-            filer_libraries: List of library names to filter the return by.
+            filer_libraries: List of library names to filter the return.
 
         Returns:
             Dictionary whose keys are the library names, and whose values are
@@ -248,19 +250,23 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         }
 
 
-    def get_all_series(self, filter_libraries: list[str]=[]
-                       ) -> list[tuple[SeriesInfo, str, str]]: 
+    def get_all_series(self, filter_libraries: list[str]=[],
+            required_tags: list[str]=[]) -> list[tuple[SeriesInfo, str, str]]: 
         """
         Get all series within Emby, as filtered by the given libraries.
 
         Args:
-            filter_libraries: Optional list of library names to filter returned
-                list by. If provided, only series that are within a given
-                library are returned.
+            filter_libraries: Optional list of library names to filter
+                returned list by. If provided, only series that are
+                within a given library are returned.
+            required_tags: Optional list of tags to filter return by. If
+                provided, only series with all the given tags are
+                returned.
 
         Returns:
-            List of tuples whose elements are the SeriesInfo of the series, the 
-            path (string) it is located, and its corresponding library name.
+            List of tuples whose elements are the SeriesInfo of the
+            series, the  path (string) it is located, and its
+            corresponding library name.
         """
         
         # Base params for all queries
@@ -269,6 +275,10 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             'IncludeItemTypes': 'series',
             'Fields': 'ProviderIds,Path',
         } | self.__params
+
+        # Also filter by tags if any were provided
+        if len(required_tags) > 0:
+            params |= {'Tags': '|'.join(required_tags)}
 
         # Go through each library in this server
         all_series = []
@@ -297,8 +307,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     def get_all_episodes(self, series_info: SeriesInfo) -> list[EpisodeInfo]:
         """
-        Gets all episode info for the given series. Only episodes that have 
-        already aired are returned.
+        Gets all episode info for the given series. Only episodes that
+        have  already aired are returned.
 
         Args:
             series_info: Series to get the episodes of.
@@ -367,20 +377,22 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     def update_watched_statuses(self, library_name: str,
-                                series_info: SeriesInfo,
-                                episode_map: dict[str, 'Episode'],
-                                style_set: 'StyleSet') -> None:
+            series_info: SeriesInfo, episode_map: dict[str, 'Episode'],
+            style_set: 'StyleSet') -> None:
         """
-        Modify the Episode objects according to the watched status of the
-        corresponding episodes within Plex, and the spoil status of the object.
-        If a loaded card needs its spoiler status changed, the card is deleted
-        and the loaded map is forced to reload that card.
+        Modify the Episode objects according to the watched status of
+        the corresponding episodes within Plex, and the spoil status of
+        the object. If a loaded card needs its spoiler status changed,
+        the card is deleted and the loaded map is updated to reload that
+        card.
 
         Args:
             library_name: The name of the library containing the series.
             series_info: The series to update.
-            episode_map: Dictionary of episode keys to Episode objects to modify
-            style_set: StyleSet object to update the style of the Episodes with.
+            episode_map: Dictionary of episode keys to Episode objects
+                to modify.
+            style_set: StyleSet object to update the style of the
+                Episodes with.
         """
 
         # If no episodes, or series has no Emby ID, exit
@@ -427,16 +439,16 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     def set_title_cards(self, library_name: str, series_info: 'SeriesInfo',
-                        episode_map: dict[str, 'Episode']) -> None:
+            episode_map: dict[str, 'Episode']) -> None:
         """
-        Set the title cards for the given series. This only updates episodes
-        that have title cards, and those episodes whose card filesizes are
-        different than what has been set previously.
+        Set the title cards for the given series. This only updates
+        episodes that have title cards, and those episodes whose card
+        filesizes are different than what has been set previously.
 
         Args:
             series_info: The series to update.
-            episode_map: Dictionary of episode keys to Episode objects to update
-                the cards of.
+            episode_map: Dictionary of episode keys to Episode objects
+                to update the cards of.
         """
 
         # If series has no Emby ID, cannot set title cards
@@ -496,16 +508,17 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             log.info(f'Loaded {loaded_count} cards for "{series_info}"')
 
 
-    def set_season_posters(self, library_name: str,
-                           series_info: SeriesInfo,
-                           season_poster_set: 'SeasonPosterSet') -> None:
+    def set_season_posters(self, library_name: str, series_info: SeriesInfo,
+            season_poster_set: 'SeasonPosterSet') -> None:
         """
         Set the season posters from the given set within Plex.
 
         Args:
-            library_name: Name of the library containing the series to update.
+            library_name: Name of the library containing the series to
+                update.
             series_info: The series to update.
-            season_poster_set: SeasonPosterSet with season posters to set.
+            season_poster_set: SeasonPosterSet with season posters to
+                set.
         """
 
         pass
@@ -520,8 +533,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             episode_info: The episode to get the source image of.
 
         Returns:
-            Bytes of the source image for the given Episode. None if the episode
-            does not exist in Emby, or no valid image was returned.
+            Bytes of the source image for the given Episode. None if the
+            episode does not exist in Emby, or no valid image was
+            returned.
         """
 
         # If series has no Emby ID, cannot query episodes
@@ -541,3 +555,14 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             return None 
 
         return response
+
+
+    def get_libraries(self) -> list[str]:
+        """
+        Get the names of all libraries within this server.
+
+        Returns:
+            List of library names.
+        """
+
+        return list(self.libraries)

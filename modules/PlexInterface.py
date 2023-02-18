@@ -39,10 +39,10 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     __TEMP_IGNORE_REGEX = re_compile(r'^(tba|tbd|episode \d+)$', IGNORECASE)
 
 
-    def __init__(self, url: str,
-                 x_plex_token: str='NA', verify_ssl: bool=True,
-                 integrate_with_pmm_overlays: bool=False,
-                 filesize_limit: int=10485760) -> None:
+    def __init__(self, url: str, x_plex_token: str='NA',
+            verify_ssl: bool=True,
+            integrate_with_pmm_overlays: bool=False,
+            filesize_limit: int=10485760) -> None:
         """
         Constructs a new instance of a Plex Interface.
 
@@ -141,7 +141,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
            wait=wait_fixed(3)+wait_exponential(min=1, max=32),
            reraise=True)
     def __get_series(self, library: 'Library',
-                     series_info: SeriesInfo) -> 'Show':
+            series_info: SeriesInfo) -> 'Show':
         """
         Get the Series object from within the given Library associated with the
         given SeriesInfo. This tries to match by TVDb ID, TMDb ID, name, and
@@ -149,6 +149,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         Args:
             library: The Library object to search for within Plex.
+            series_info: Series to get the episodes of.
 
         Returns:
             The Series associated with this SeriesInfo object.
@@ -197,8 +198,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     @catch_and_log('Error getting library paths', default={})
-    def get_library_paths(self, filter_libraries: list[str]=[]
-                          ) -> dict[str, list[str]]:
+    def get_library_paths(self,filter_libraries: list[str]=[]
+            ) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
 
@@ -222,26 +223,32 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 and library.title not in filter_libraries):
                 continue
 
-            # Add library's paths to the dictionary under the library name
+            # Add library's paths to the dictionary under the library
             all_libraries[library.title] = library.locations
 
         return all_libraries
 
 
     @catch_and_log('Error getting all series', default=[])
-    def get_all_series(self, filter_libraries: list[str]=[]
-                       ) -> list[tuple[SeriesInfo, str, str]]: 
+    def get_all_series(self,
+            filter_libraries: list[str]=[],
+            required_tags: list[str]=[],
+            ) -> list[tuple[SeriesInfo, str, str]]: 
         """
         Get all series within Plex, as filtered by the given libraries.
 
         Args:
-            filter_libraries: Optional list of library names to filter returned
-                list by. If provided, only series that are within a given
-                library are returned.
+            filter_libraries: Optional list of library names to filter
+                returned by. If provided, only series that are within a
+                given library are returned.
+            required_tags: Optional list of tags to filter return by. If
+                provided, only series with all the given tags are
+                returned.
 
         Returns:
-            List of tuples whose elements are the SeriesInfo of the series, the 
-            path (string) it is located, and its corresponding library name.
+            List of tuples whose elements are the SeriesInfo of the
+            series, the  path (string) it is located, and its
+            corresponding library name.
         """
 
         # Go through every library in this server
@@ -251,13 +258,19 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             if library.type != 'show':
                 continue
 
-            # If filtering, skip unspecified libraries
+            # If filtering libraries, skip library if unspecified
             if (len(filter_libraries) > 0
                 and library.title not in filter_libraries):
                 continue
 
             # Get all Shows in this library
             for show in library.all():
+                # Skip show if tags provided and does not match
+                if required_tags:
+                    tags = [label.tag.lower() for label in show.labels]
+                    if not all(tag.lower() in tags for tag in required_tags):
+                        continue
+
                 # Skip show if it has no year
                 if show.year is None:
                     log.warning(f'Series {show.title} has no year - skipping')
@@ -276,10 +289,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                             ids[f'{id_type}_id'] = guid.id[len(prefix):]
                             break
 
-                # Create SeriesInfo object for this show
+                # Create SeriesInfo object for this show, add to return
                 series_info = SeriesInfo(show.title, show.year, **ids)
-
-                # Add to returned list
                 all_series.append((series_info,show.locations[0],library.title))
 
         return all_series
@@ -523,10 +534,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                     info.set_tvdb_id(int(guid.id[len('tvdb://'):]))
             
 
-
     @catch_and_log('Error getting source image')
     def get_source_image(self, library_name: str, series_info: 'SeriesInfo',
-                         episode_info: EpisodeInfo) -> str:
+                         episode_info: EpisodeInfo) -> 'str | None':
         """
         Get the source image for the given episode within Plex.
 
@@ -561,6 +571,22 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             return None
 
 
+    @catch_and_log('Error getting library names', default=[])
+    def get_libraries(self) -> list[str]:
+        """
+        Get the names of all libraries within this server.
+
+        Returns:
+            List of library names.
+        """
+
+        return [
+            library.title
+            for library in self.__server.library.sections()
+            if library.type == 'show'
+        ]
+
+
     @retry(stop=stop_after_attempt(5),
            wait=wait_fixed(3)+wait_exponential(min=1, max=32),
            before_sleep=lambda _:log.warning('Cannot upload image, retrying..'),
@@ -579,7 +605,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     @catch_and_log('Error uploading title cards')
     def set_title_cards(self, library_name: str, series_info: 'SeriesInfo',
-                        episode_map: dict[str, 'Episode']) -> None:
+            episode_map: dict[str, 'Episode']) -> None:
         """
         Set the title cards for the given series. This only updates episodes
         that have title cards, and those episodes whose card filesizes are
@@ -659,9 +685,10 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     @catch_and_log('Error uploading season posters')
-    def set_season_posters(self, library_name: str,
-                           series_info: SeriesInfo,
-                           season_poster_set: 'SeasonPosterSet') -> None:
+    def set_season_posters(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            season_poster_set: 'SeasonPosterSet') -> None:
         """
         Set the season posters from the given set within Plex.
 
@@ -730,8 +757,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     @catch_and_log('Error getting episode details')
     def get_episode_details(self,
-                            rating_key: int) -> list[tuple[SeriesInfo,
-                                                           EpisodeInfo, str]]:
+            rating_key: int) -> list[tuple[SeriesInfo, EpisodeInfo, str]]:
         """
         Get all details for all episodes indicated by the given Plex rating key.
 

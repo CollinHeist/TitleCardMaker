@@ -9,8 +9,8 @@ SeriesExtra = Optional
 
 class PosterTitleCard(BaseCardType):
     """
-    This class describes a type of CardType that produces title cards in the
-    style of the Gundam series of cards produced by Reddit user
+    This class describes a type of CardType that produces title cards in
+    the style of the Gundam series of cards produced by Reddit user
     /u/battleoflight.
     """
 
@@ -53,13 +53,13 @@ class PosterTitleCard(BaseCardType):
 
 
     def __init__(self, source: Path, output_file: Path, title: str,
-                 episode_text: str,
-                 blur: bool=False,
-                 grayscale: bool=False,
-                 season_number: int=1,
-                 episode_number: int=1,
-                 logo: SeriesExtra[str]=None,
-                 **unused) -> None:
+            episode_text: str,
+            blur: bool=False,
+            grayscale: bool=False,
+            season_number: int=1,
+            episode_number: int=1,
+            logo: SeriesExtra[str]=None,
+            **unused) -> None:
         """
         Construct a new instance of this card.
 
@@ -68,10 +68,10 @@ class PosterTitleCard(BaseCardType):
             output_file: Output filepath for this card.
             title: The title for this card.
             episode_text: The episode text for this card.
-            season_number: Season number of the episode associated with this
-                card.
-            episode_number: Episode number of the episode associated with this
-                card.
+            season_number: Season number of the episode associated with
+                this card.
+            episode_number: Episode number of the episode associated
+                with this card.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
             logo: Filepath (or file format) to the logo file.
@@ -117,8 +117,9 @@ class PosterTitleCard(BaseCardType):
     @staticmethod
     def is_custom_font(font: 'Font') -> bool:
         """
-        Determines whether the given arguments represent a custom font for this
-        card. This CardType does not use custom fonts, so this is always False.
+        Determines whether the given arguments represent a custom font
+        for this card. This CardType does not use custom fonts, so this
+        is always False.
 
         Args:
             font: The Font being evaluated.
@@ -134,13 +135,13 @@ class PosterTitleCard(BaseCardType):
     def is_custom_season_titles(episode_text_format: str,
                                 *args, **kwargs) -> bool:
         """
-        Determines whether the given attributes constitute custom or generic
-        season titles.
+        Determines whether the given attributes constitute custom or
+        generic season titles.
 
         Args:
             episode_text_format: The episode text format in use.
-            args and kwargs: Generic arguments to permit  generalized function
-                calls for any CardType.
+            args and kwargs: Generic arguments to permit  generalized
+                function calls for any CardType.
 
         Returns:
             True if custom season titles are indicated, False otherwise.

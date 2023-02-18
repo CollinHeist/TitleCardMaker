@@ -463,13 +463,25 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
                 results = self.api.movie_search(episode_info.title.full_title)
                 (movie := results[0]).reload()
 
-                # Verify this movie matches TMDb ID or the exact episode title
+                # Check for TMDb ID match
                 id_match = (episode_info.has_id('tmdb_id')
                             and episode_info.tmdb_id == movie.id)
-                does_title_match = episode_info.title.matches(
+
+                # Check for title match
+                title_match = episode_info.title.matches(
                     movie.title,*(alt.title for alt in movie.alternative_titles)
                 )
-                assert id_match or does_title_match
+
+                # Verify release date match +/- 1 day
+                release_date = movie.release_date
+                release_date_match = (
+                    episode_info.airdate is not None
+                    and release_date is not None
+                    and episode_info.airdate - timedelta(days=1) <= release_date
+                    and episode_info.airdate + timedelta(days=1) >= release_date
+                )
+
+                assert id_match or (title_match and release_date_match)
 
                 # Actual match, return "movie"
                 log.info(f'Matched {episode_info} of "{series_info}" to TMDb '

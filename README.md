@@ -5,7 +5,7 @@
 [![Discord](https://img.shields.io/discord/955533113734357125?logo=discord&logoColor=white)](https://discord.gg/bJ3bHtw8wH)
 [![Support](https://img.shields.io/badge/-Support_Development-9cf?color=informational)](https://github.com/sponsors/CollinHeist)
 
-An automated title card maker for Plex.
+An automated title card maker for the Plex and Emby media players. All user documentation is available on the [Wiki](https://github.com/CollinHeist/TitleCardMaker/wiki).
 
 ## Table of Contents
 - [Description](#description)
@@ -25,6 +25,8 @@ TitleCardMaker can be automated such that everything can be pulled without manua
 All configuration/automation of the TitleCardMaker is done via YAML files, and the actual image creation is done using the open-source and free image library called [ImageMagick](https://imagemagick.org/).
 
 ## Getting Started
+> The [Wiki](https://github.com/CollinHeist/TitleCardMaker/wiki) has very extensive documentation on every feature and customization available in TitleCardMaker. I __highly__ recommend looking here as the first step when troubleshooting or customizing your setup.
+
 Read the [Getting Started](https://github.com/CollinHeist/TitleCardMaker/wiki) page on the Wiki for the traditional install, or the [Getting Started on Docker](https://github.com/CollinHeist/TitleCardMaker/wiki/Docker-Tutorial) page to install using Docker.
 
 If you're using Unraid, there is a template available for easy setup - just search `titlecardmaker` on the Unraid Community Apps store.

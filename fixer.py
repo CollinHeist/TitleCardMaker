@@ -7,6 +7,7 @@ from re import match, IGNORECASE
 try:
     from modules.Debug import log, LOG_FILE
     from modules.DataFileInterface import DataFileInterface
+    from modules.EmbyInterface import EmbyInterface
     from modules.EpisodeInfo import EpisodeInfo
     from modules.ImageMaker import ImageMaker
     from modules.PlexInterface import PlexInterface
@@ -36,6 +37,13 @@ parser.add_argument(
     help=f'File to read global preferences from. Environment variable '
          f'{ENV_PREFERENCE_FILE}. Defaults to '
          f'"{DEFAULT_PREFERENCE_FILE.resolve()}"')
+parser.add_argument(
+    '-ms', '--media-server',
+    type=lambda s: str(s).lower(),
+    default='plex',
+    choices=('emby', 'plex'),
+    metavar='SERVER',
+    help='Which media server to perform Media Server arguments on')
 
 # Argument group for Miscellaneous functions
 misc_group = parser.add_argument_group('Miscellaneous')
@@ -58,35 +66,42 @@ misc_group.add_argument(
     help='Print the last log file')
 
 # Argument group for Plex
-plex_group = parser.add_argument_group('Plex')
-plex_group.add_argument(
+media_server_group = parser.add_argument_group('Media Server')
+media_server_group.add_argument(
     '--import-cards', '--import-archive', '--load-archive',
     type=str,
     nargs=2,
     default=SUPPRESS,
-    metavar=('ARCHIVE_DIRECTORY', 'PLEX_LIBRARY'),
-    help='Import an archive of Title Cards into Plex')
-plex_group.add_argument(
+    metavar=('ARCHIVE_DIRECTORY', 'LIBRARY'),
+    help='Import an archive of Title Cards into Emby/Plex')
+media_server_group.add_argument(
     '--import-series', '--load-series',
     type=str,
     nargs='+',
     default=SUPPRESS,
     metavar=('NAME', 'YEAR'),
     help='Override/set the name of the series imported with --import-archive')
-plex_group.add_argument(
+media_server_group.add_argument(
     '--import-extension', '--import-ext',
     type=str,
     choices=ImageMaker.VALID_IMAGE_EXTENSIONS,
     default='.jpg',
     metavar='.EXT',
     help='Extension of images to look for alongside --import-cards')
-plex_group.add_argument(
+media_server_group.add_argument(
     '--forget-cards', '--forget-loaded-cards',
     type=str,
     nargs=3,
     default=SUPPRESS,
-    metavar=('PLEX_LIBRARY', 'NAME', 'YEAR'),
+    metavar=('LIBRARY', 'NAME', 'YEAR'),
     help='Remove records of the loaded cards for the given series/library')
+media_server_group.add_argument(
+    '--revert-series',
+    type=str,
+    nargs=3,
+    default=SUPPRESS,
+    metavar=('LIBRARY', 'NAME', 'YEAR'),
+    help='Remove the cards for the given series within Emby/Plex')
 
 # Argument group for Sonarr
 sonarr_group = parser.add_argument_group('Sonarr')
@@ -168,8 +183,9 @@ if hasattr(args, 'print_log') and args.print_log:
             print(file_handle.read())
 
 
-# Execute Plex options
-if hasattr(args, 'import_cards') and pp.use_plex:
+# Execute Emby/Plex options
+if (hasattr(args, 'import_cards')
+    or hasattr(args, 'revert_series')) and (pp.use_plex or pp.use_emby):
     # Temporary classes
     @dataclass
     class Episode:
@@ -177,31 +193,40 @@ if hasattr(args, 'import_cards') and pp.use_plex:
         episode_info: EpisodeInfo
         spoil_type: str
         
-    # Create PlexInterface
-    plex_interface = PlexInterface(**pp.plex_interface_kwargs)
+    # Create Emby/PlexInterface
+    if args.media_server == 'plex':
+        media_interface = PlexInterface(**pp.plex_interface_kwargs)
+    else:
+        media_interface = EmbyInterface(**pp.emby_interface_kwargs)
 
     # Get series/name + year from archive directory if unspecified
-    archive = Path(args.import_cards[0])
-    if hasattr(args, 'import_series'):
-        series_info = SeriesInfo(*args.import_series)
-    else:
-        if (groups := match(r'^(.*)\s+\((\d{4})\)$', archive.parent.name)):
-            series_info = SeriesInfo(*groups.groups())
+    if hasattr(args, 'import_cards'):
+        archive = Path(args.import_cards[0])
+        library = args.import_cards[1]
+        if hasattr(args, 'import_series'):
+            series_info = SeriesInfo(*args.import_series)
         else:
-            log.critical(f'Cannot identify series name/year; specify with '
-                         f'--import-series')
-            exit(1)
+            if (groups := match(r'^(.*)\s+\((\d{4})\)$', archive.parent.name)):
+                series_info = SeriesInfo(*groups.groups())
+            else:
+                log.critical(f'Cannot identify series name/year; specify with '
+                            f'--import-series')
+                exit(1)
+    else:
+        series_info = SeriesInfo(args.revert_series[1], args.revert_series[2])
+        archive = pp.source_directory / series_info.full_clean_name
+        library = args.revert_series[0]
 
     # Forget cards associated with this series
-    plex_interface.remove_records(args.import_cards[1], series_info)
+    media_interface.remove_records(library, series_info)
             
     # Get all images from import archive
     ext = args.import_extension
     if len(all_images := list(archive.glob(f'**/*{ext}'))) == 0:
         log.warning(f'No images to import')
         exit(1)
-    
-    # For each image, fill out episode map to load into Plex
+
+    # For each image, fill out episode map to load into Emby/Plex
     episode_map = {}
     for image in all_images:
         if (groups := match(r'.*s(\d+).*e(\d+)', image.name, IGNORECASE)):
@@ -209,22 +234,28 @@ if hasattr(args, 'import_cards') and pp.use_plex:
         else:
             log.warning(f'Cannot identify index of {image.resolve()}, skipping')
             continue
-            
+
         # Import image into library
         ep = Episode(image, EpisodeInfo('', season, episode), 'spoiled')
         episode_map[f'{season}-{episode}'] = ep
-        
-    # Load images into Plex
-    plex_interface.set_title_cards_for_series(
-    	args.import_cards[1], series_info, episode_map
-    )
 
-if hasattr(args, 'forget_cards') and pp.use_plex:
-    # Create PlexInterface and remove records for indicated series+library
+    # Load images into Emby/Plex
+    media_interface.set_title_cards(library, series_info,episode_map)
+
+if hasattr(args, 'forget_cards') and (pp.use_plex or pp.use_emby):
+    # Create interface and remove records for indicated series+library
     series_info = SeriesInfo(args.forget_cards[1], args.forget_cards[2])
-    PlexInterface(**pp.plex_interface_kwargs).remove_records(
-        args.forget_cards[0], series_info,
-    )
+
+    # Create Emby/PlexInterface
+    if args.media_server == 'emby':
+        EmbyInterface(**pp.emby_interface_kwargs).remove_records(
+            args.forget_cards[0], series_info,
+        )
+    else:
+        PlexInterface(**pp.plex_interface_kwargs).remove_records(
+            args.forget_cards[0], series_info,
+        )
+
 
 # Execute Sonarr related options
 if args.sonarr_list_ids and pp.use_sonarr:
