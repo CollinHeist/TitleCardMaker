@@ -140,8 +140,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     @retry(stop=stop_after_attempt(5),
            wait=wait_fixed(3)+wait_exponential(min=1, max=32),
            reraise=True)
-    def __get_series(self,
-            library: 'Library',
+    def __get_series(self, library: 'Library',
             series_info: SeriesInfo) -> 'Show':
         """
         Get the Series object from within the given Library associated with the
@@ -150,6 +149,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         Args:
             library: The Library object to search for within Plex.
+            series_info: Series to get the episodes of.
 
         Returns:
             The Series associated with this SeriesInfo object.
@@ -198,8 +198,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     @catch_and_log('Error getting library paths', default={})
-    def get_library_paths(self,
-            filter_libraries: list[str]=[]) -> dict[str, list[str]]:
+    def get_library_paths(self,filter_libraries: list[str]=[]
+            ) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
 
@@ -605,7 +605,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     @catch_and_log('Error uploading title cards')
     def set_title_cards(self, library_name: str, series_info: 'SeriesInfo',
-                        episode_map: dict[str, 'Episode']) -> None:
+            episode_map: dict[str, 'Episode']) -> None:
         """
         Set the title cards for the given series. This only updates episodes
         that have title cards, and those episodes whose card filesizes are
