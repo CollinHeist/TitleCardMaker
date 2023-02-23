@@ -116,7 +116,6 @@ class LogoTitleCard(BaseCardType):
                                    episode_number=episode_number)
                 self.logo = Path(CleanPath(logo).sanitize())
             except Exception as e:
-                # Bad format strings will be caught during card creation
                 self.valid = False
                 log.exception(f'Invalid logo file "{logo}"', e)
 

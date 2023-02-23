@@ -52,19 +52,19 @@ class StandardTitleCard(BaseCardType):
     )
 
     def __init__(self, source: Path, output_file: Path, title: str,
-                 season_text: str, episode_text: str, hide_season: bool,
-                 font: str, title_color: str,
-                 font_size: float=1.0,
-                 interline_spacing: int=0,
-                 kerning: float=1.0,
-                 stroke_width: float=1.0,
-                 vertical_shift: int=0,
-                 blur: bool=False,
-                 grayscale: bool=False,
-                 separator: Optional[str]='•',
-                 stroke_color: Optional[str]='black',
-                 omit_gradient: Optional[bool]=False,
-                 **unused) -> None:
+            season_text: str, episode_text: str, hide_season: bool,
+            font: str, title_color: str,
+            font_size: float=1.0,
+            interline_spacing: int=0,
+            kerning: float=1.0,
+            stroke_width: float=1.0,
+            vertical_shift: int=0,
+            blur: bool=False,
+            grayscale: bool=False,
+            separator: Optional[str]='•',
+            stroke_color: Optional[str]='black',
+            omit_gradient: Optional[bool]=False,
+            **unused) -> None:
         """
         Construct a new instance of this card.
 

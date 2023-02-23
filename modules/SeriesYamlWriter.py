@@ -178,7 +178,12 @@ class SeriesYamlWriter:
                     continue
 
                 # Delete each file's specified series
-                for series in read_yaml.get('series', {}).keys():
+                all_series = read_yaml.get('series', {})
+                if not isinstance(all_series, dict):
+                    log.error(f'Exclusion YAML file "{value}" is invalid')
+                    continue
+
+                for series in all_series.keys():
                     contains, key = yaml_contains(yaml, series)
                     if contains:
                         del yaml['series'][key]
