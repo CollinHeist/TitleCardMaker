@@ -11,6 +11,7 @@ source/
 README.md
 LICENSE
 Dockerfile
+Dockerfile-alpine
 ._*
 *.yml
 *.yaml
