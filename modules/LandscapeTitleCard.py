@@ -62,17 +62,17 @@ class LandscapeTitleCard(BaseCardType):
     )
 
     def __init__(self, source: Path, output_file: Path, title: str, font: str,
-                 title_color: str,
-                 font_size: float=1.0,
-                 interline_spacing: int=0,
-                 kerning: float=1.0,
-                 blur: bool=False,
-                 grayscale: bool=False,
-                 vertical_shift: float=0,
-                 darken: DarkenOption=False,
-                 add_bounding_box: SeriesExtra[bool]=False,
-                 box_adjustments: SeriesExtra[str]=None,
-                 **unused) ->None:
+            title_color: str,
+            font_size: float=1.0,
+            interline_spacing: int=0,
+            kerning: float=1.0,
+            blur: bool=False,
+            grayscale: bool=False,
+            vertical_shift: float=0,
+            darken: DarkenOption=False,
+            add_bounding_box: SeriesExtra[bool]=False,
+            box_adjustments: SeriesExtra[str]=None,
+            **unused) ->None:
         """
         Initialize this TitleCard object. This primarily just stores instance
         variables for later use in `create()`.

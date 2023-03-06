@@ -54,10 +54,10 @@ class StarWarsTitleCard(BaseCardType):
     )
 
     def __init__(self, source: Path, output_file: Path, title: str,
-                 episode_text: str,
-                 blur: bool=False,
-                 grayscale: bool=False,
-                 **kwargs) -> None:
+            episode_text: str,
+            blur: bool=False,
+            grayscale: bool=False,
+            **unused) -> None:
         """
         Initialize the CardType object.
 

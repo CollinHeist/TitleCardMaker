@@ -61,18 +61,18 @@ class TintedGlassTitleCard(BaseCardType):
     )
 
     def __init__(self, source: Path, output_file: Path, title: str,
-                 season_text: str, episode_text: str, hide_season: bool,
-                 font: str, title_color: str, 
-                 font_size: float=1.0, 
-                 interline_spacing: int=0,
-                 kerning: float=1.0,
-                 vertical_shift: int=0,
-                 blur: bool=False,
-                 grayscale: bool=False,
-                 episode_text_color: SeriesExtra[str]=EPISODE_TEXT_COLOR,
-                 episode_text_position: SeriesExtra[Position]='center',
-                 box_adjustments: SeriesExtra[str]=None,
-                 **unused) -> None:
+            season_text: str, episode_text: str, hide_season: bool,
+            font: str, title_color: str, 
+            font_size: float=1.0, 
+            interline_spacing: int=0,
+            kerning: float=1.0,
+            vertical_shift: int=0,
+            blur: bool=False,
+            grayscale: bool=False,
+            episode_text_color: SeriesExtra[str]=EPISODE_TEXT_COLOR,
+            episode_text_position: SeriesExtra[Position]='center',
+            box_adjustments: SeriesExtra[str]=None,
+            **unused) -> None:
         """
         Initialize this TitleCard object.
 
@@ -201,7 +201,6 @@ class TintedGlassTitleCard(BaseCardType):
         interline_spacing = -50 + self.interline_spacing
         vertical_shift = 300 + self.vertical_shift
 
-        # Text-relevant commands
         return [
             f'-gravity south',
             f'-font "{self.font}"',

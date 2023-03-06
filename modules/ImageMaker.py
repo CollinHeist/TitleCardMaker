@@ -93,8 +93,8 @@ class ImageMaker(ABC):
 
 
     def get_text_dimensions(self, text_command: list[str], *,
-                            width: Literal['sum', 'max'],
-                            height: Literal['sum', 'max']) -> Dimensions:
+            width: Literal['sum', 'max'],
+            height: Literal['sum', 'max']) -> Dimensions:
         """
         Get the dimensions of the text produced by the given text command. For
         'width' and 'height' arguments, if 'max' then the maximum value of the
@@ -192,7 +192,7 @@ class ImageMaker(ABC):
 
     @staticmethod
     def convert_svg_to_png(image: Path, destination: Path,
-                           min_dimension: int=2500) -> Path:
+            min_dimension: int=2500) -> Path:
         """
         Convert the given SVG image to PNG format.
 

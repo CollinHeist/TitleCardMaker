@@ -839,9 +839,8 @@ class PreferenceParser(YamlReader):
 
 
     def __finalize_show_yaml(self, show_name: str, show_yaml: dict[str, Any],
-                             templates: list[Template],
-                             library_map: dict[str, Any],
-                             font_map: dict[str, Any]) -> 'dict | None':
+            templates: list[Template], library_map: dict[str, Any],
+            font_map: dict[str, Any]) -> 'dict | None':
         """
         Apply the indicated template, and merge the specified library/font to
         the given show YAML.

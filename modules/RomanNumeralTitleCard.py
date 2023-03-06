@@ -21,7 +21,7 @@ class Offset:
     OFFSET_REGEX = re_compile(r'([-+]\d+.?\d*)([-+]\d+.?\d*)')
 
     def __init__(self, offset_str: str=None, *,
-                 x: float=None, y: float=None) -> None:
+            x: float=None, y: float=None) -> None:
         """
         Initialize an Offset object with the given ImageMagick offset string.
         For example, Offset('+20-10') indicates a 20 pixel positive X offset,
@@ -227,13 +227,13 @@ class RomanNumeralTitleCard(BaseCardType):
     )
 
     def __init__(self, output_file: Path, title: str, season_text: str, 
-                 episode_text: str, hide_season: bool, title_color: str,
-                 episode_number: int=1,
-                 blur: bool=False,
-                 grayscale: bool=False,
-                 background: SeriesExtra[str]=BACKGROUND_COLOR, 
-                 roman_numeral_color: SeriesExtra[str]=ROMAN_NUMERAL_TEXT_COLOR,
-                 **unused) -> None:
+            episode_text: str, hide_season: bool, title_color: str,
+            episode_number: int=1,
+            blur: bool=False,
+            grayscale: bool=False,
+            background: SeriesExtra[str]=BACKGROUND_COLOR, 
+            roman_numeral_color: SeriesExtra[str]=ROMAN_NUMERAL_TEXT_COLOR,
+            **unused) -> None:
         """
         Construct a new instance of this card.
 
