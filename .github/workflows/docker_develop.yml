@@ -5,6 +5,7 @@ on:
     branches: [ develop ]
   pull_request:
     branches: [ develop ]
+  workflow_dispatch:
 
 jobs:
 
@@ -42,6 +43,16 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/titlecardmaker:develop
       
+      - name: Build and push alpine
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          context: ./docker/imagick
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: false
+          tags: imagemagick-builder:latest
+    
       - name: Build and push alpine
         id: docker_build
         uses: docker/build-push-action@v2

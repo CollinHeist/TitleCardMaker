@@ -7,7 +7,7 @@ COPY Pipfile Pipfile.lock ./
 RUN pip3 install --no-cache-dir --upgrade pipenv; \
     pipenv requirements > requirements.txt
 
-FROM python:3.9-alpine as builder
+FROM python:3.9-alpine as pip-builder
 
 # Copy requirements.txt from pipenv
 COPY --from=pipenv /requirements.txt requirements.txt
@@ -25,12 +25,16 @@ LABEL maintainer="CollinHeist" \
 WORKDIR /maker
 COPY . /maker
 
-# Copy python packages from builder
-COPY --from=builder /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
+# Copy python packages from pip-builder
+COPY --from=pip-builder /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
 
 # Script environment variables
 ENV TCM_PREFERENCES=/config/preferences.yml \
     TCM_IS_DOCKER=TRUE
+
+# install imagemagick from imagemagick-builder
+COPY --from=imagemagick-builder /home/abuild/packages/home /packages
+RUN apk add --allow-untrusted --no-cache /packages/*/*.apk && rm -rf /packages
 
 # Delete setup files
 # Replace gosu with su-exec
@@ -39,10 +43,10 @@ ENV TCM_PREFERENCES=/config/preferences.yml \
 # Override default ImageMagick policy XML file
 RUN rm Pipfile Pipfile.lock; \
     sed -i 's/gosu/su-exec/g' start.sh; \
-    apk add --no-cache su-exec imagemagick shadow; \
+    apk add --no-cache su-exec shadow; \
     groupadd -g 314 titlecardmaker; \
     useradd -u 314 -g 314 titlecardmaker; \
-    cp modules/ref/policy.xml /etc/ImageMagick-7/policy.xml
+    cp modules/ref/policy.xml /etc/ImageMagick-6/policy.xml
 
 # Entrypoint
 CMD ["python3", "main.py", "--run", "--no-color"]

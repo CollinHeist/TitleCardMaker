@@ -1,0 +1,28 @@
+Fix the following error:
+
+ERROR: imagemagick6-dev*: usr/lib/pkgconfig/ImageMagick++-6.Q16.pc: pkgconf version 6.9.12-31 is invalid
+
+See also https://github.com/ImageMagick/ImageMagick6/commit/442c4b225e78787b1b4c59af06343531eaa363fc
+
+--- a/Magick++/lib/ImageMagick++.pc.in
++++ b/Magick++/lib/ImageMagick++.pc.in
+@@ -7,7 +7,7 @@
+  
+ Name: ImageMagick++
+ Description: Magick++ - C++ API for ImageMagick (ABI @MAGICK_ABI_SUFFIX@)
+-Version: @PACKAGE_VERSION@
++Version: @PACKAGE_BASE_VERSION@
+ Requires: MagickWand-@MAGICK_MAJOR_VERSION@.@MAGICK_ABI_SUFFIX@ 
+ Libs: -L${libdir} -l${libname}
+ Libs.private: -L${libdir} -l${libname} @MAGICK_LIBS@ @MATH_LIBS@
+--- a/wand/Wand.pc.in
++++ b/wand/Wand.pc.in
+@@ -8,7 +8,7 @@
+ Name: MagickWand
+ Description: MagickCore - C API for ImageMagick (ABI @MAGICK_ABI_SUFFIX@)
+ URL: https://github.com/ImageMagick/ImageMagick6
+-Version: @PACKAGE_VERSION@
++Version: @PACKAGE_BASE_VERSION@
+ Requires: MagickCore
+ Cflags: -I${includearchdir} -I${includedir} @MAGICK_PCFLAGS@
+ Libs: -L${libdir} -l${libname}
