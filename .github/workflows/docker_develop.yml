@@ -38,20 +38,3 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/titlecardmaker:develop
-      
-      - name: Build imagemagick
-        uses: docker/build-push-action@v4
-        with:
-          context: ./docker/imagick
-          platforms: linux/amd64,linux/arm64
-          push: false
-          tags: imagemagick-builder:latest
-    
-      - name: Build and push alpine
-        uses: docker/build-push-action@v4
-        with:
-          context: ./
-          file: ./Dockerfile-alpine
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/titlecardmaker:develop-alpine
