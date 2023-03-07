@@ -40,8 +40,8 @@ class Show(YamlReader):
         'tmdb_sync', 'tmdb_skip_localized_images', 'style_set', 'hide_seasons',
         'title_languages', 'extras', '__episode_map', 'font','source_directory',
         'logo', 'backdrop', 'file_interface', 'profile', 'season_poster_set',
-        'episodes', 'emby_interface', 'plex_interface', 'sonarr_interface',
-        'tmdb_interface', '__is_archive', 'media_server',
+        'episodes', 'emby_interface', 'jellyfin_interface', 'plex_interface',
+        'sonarr_interface', 'tmdb_interface', '__is_archive', 'media_server',
         'image_source_priority',
     )
 
@@ -166,6 +166,7 @@ class Show(YamlReader):
         # Attributes to be filled/modified later
         self.episodes = {}
         self.emby_interface = None
+        self.jellyfin_interface = None
         self.plex_interface = None
         self.sonarr_interface = None
         self.tmdb_interface = None
@@ -243,6 +244,9 @@ class Show(YamlReader):
 
         if (value := self._get('imdb_id', type_=str)) is not None:
             self.info_set.set_imdb_id(self.series_info, value)
+
+        if (value := self._get('jellyfin_id', type_=str)) is not None:
+            self.info_set.set_jellyfin_id(self,series_info, value)
 
         if (value := self._get('sonarr_id', type_=int)) is not None:
             sonarr_id = value if '-' in str(value) else f'0-{value}'
@@ -330,28 +334,38 @@ class Show(YamlReader):
             self.extras = self._get('extras', type_=dict)
 
 
-    def assign_interfaces(self, emby_interface: 'EmbyInterface'=None,
-                          plex_interface: 'PlexInterface'=None,
-                          sonarr_interfaces: list['SonarrInterface']=[],
-                          tmdb_interface: 'TMDbInterface'=None) -> None:
+    def assign_interfaces(self, emby_interface: 'EmbyInterface' = None,
+            jellyfin_interface: 'JellyfinInterface' = None,
+            plex_interface: 'PlexInterface' = None,
+            sonarr_interfaces: list['SonarrInterface'] = [],
+            tmdb_interface: 'TMDbInterface' = None) -> None:
         """
-        Assign the given interfaces to attributes of this object for later use.
+        Assign the given interfaces to attributes of this object for
+        later use.
 
         Args:
-            emby_interface: Optional EmbyInterface to store if required by this
-                show.
-            plex_interface: Optional PlexInterface to store if required by this
-                show.
-            sonarr_interface: Any number of optional SonarrInterfaces to store.
-                Only the interface containing this series will be stored.
-            tmdb_interface: Optional TMDbInterface to store if required by this
-                show.
+            emby_interface: Optional EmbyInterface to store if required
+                by this show.
+            jellyfin_interface: Optional JellyfinInterface to store if
+                required by this show.
+            plex_interface: Optional PlexInterface to store if required
+                by this show.
+            sonarr_interface: Any number of optional SonarrInterfaces to
+                store if required. Only the interface containing this
+                series will be stored.
+            tmdb_interface: Optional TMDbInterface to store if required
+                by this show.
         """
 
         # If Emby is required, and an interface was provided, assign
         if (self.media_server == 'emby' and self.library is not None
             and emby_interface is not None):
             self.emby_interface = emby_interface
+
+        # If Jellyfin is required, and an interface was provided, assign
+        if (self.media_server == 'jellyfin' and self.library is not None
+            and jellyfin_interface is not None):
+            self.jellyfin_interface = jellyfin_interface
 
         # If Plex is required, and an interface was provided, assign
         if (self.media_server == 'plex' and self.library is not None
@@ -391,6 +405,11 @@ class Show(YamlReader):
 
         if self.emby_interface:
             self.emby_interface.set_series_ids(
+                self.library_name, self.series_info
+            )
+
+        if self.jellyfin_interface:
+            self.jellyfin_interface.set_series_ids(
                 self.library_name, self.series_info
             )
 
@@ -461,13 +480,17 @@ class Show(YamlReader):
         # Get episodes from indicated data source
         if self.episode_data_source == 'emby' and self.emby_interface:
             all_episodes =self.emby_interface.get_all_episodes(self.series_info)
-        elif self.episode_data_source == 'sonarr' and self.sonarr_interface:
-            all_episodes = self.sonarr_interface.get_all_episodes(
+        elif self.episode_data_source == 'jellyfin' and self.jellyfin_interface:
+            all_episodes = self.jellyfin_interface.get_all_episodes(
                 self.series_info
             )
         elif self.episode_data_source == 'plex' and self.plex_interface:
             all_episodes = self.plex_interface.get_all_episodes(
                 self.library_name, self.series_info
+            )
+        elif self.episode_data_source == 'sonarr' and self.sonarr_interface:
+            all_episodes = self.sonarr_interface.get_all_episodes(
+                self.series_info
             )
         elif self.episode_data_source == 'tmdb' and self.tmdb_interface:
             all_episodes =self.tmdb_interface.get_all_episodes(self.series_info)
@@ -543,13 +566,16 @@ class Show(YamlReader):
         def load_emby(infos):
             if self.emby_interface:
                 self.emby_interface.set_episode_ids(self.series_info, infos)
-        def load_sonarr(infos):
-            if self.sonarr_interface:
-                self.sonarr_interface.set_episode_ids(self.series_info, infos)
+        def load_jellyfin(infos):
+            if self.jellyfin_interface:
+                self.jellyfin_interface.set_episode_ids(self.series_info, infos)
         def load_plex(infos):
             if self.plex_interface:
                 self.plex_interface.set_episode_ids(self.library_name,
                                                     self.series_info, infos)
+        def load_sonarr(infos):
+            if self.sonarr_interface:
+                self.sonarr_interface.set_episode_ids(self.series_info, infos)
         def load_tmdb(infos):
             if self.tmdb_interface:
                 self.tmdb_interface.set_episode_ids(self.series_info, infos)
@@ -557,10 +583,11 @@ class Show(YamlReader):
         # Identify interface order for ID gathering based on primary episode
         # data source
         interface_orders = {
-            'emby':   [load_emby, load_sonarr, load_tmdb, load_plex],
-            'sonarr': [load_sonarr, load_plex, load_emby, load_tmdb],
-            'plex':   [load_plex, load_sonarr, load_tmdb, load_plex],
-            'tmdb':   [load_tmdb, load_plex, load_sonarr, load_emby],
+            'emby':     [load_emby, load_sonarr, load_tmdb, load_plex, load_jellyfin],
+            'jellyfin': [load_jellyfin, load_sonarr, load_tmdb, load_plex, load_jellyfin],
+            'sonarr':   [load_sonarr, load_plex, load_emby, load_jellyfin, load_tmdb],
+            'plex':     [load_plex, load_sonarr, load_tmdb, load_emby, load_jellyfin],
+            'tmdb':     [load_tmdb, load_sonarr, load_plex, load_emby, load_jellyfin],
         }
 
         # Go through each interface and load ID's from it
@@ -658,8 +685,9 @@ class Show(YamlReader):
 
     def __apply_styles(self, select_only: Episode=None) -> bool:
         """
-        Modify this series' Episode source images based on their watch statuses,
-        and how that style applies to this show's un/watched styles.
+        Modify this series' Episode source images based on their watch
+        statuses, and how that style applies to this show's un/watched
+        styles.
 
         Args:
             select_only: Optional Episode object. If provided, only this
@@ -673,6 +701,7 @@ class Show(YamlReader):
         media_interface = {
             None: None,
             'emby': self.emby_interface,
+            'jellyfin': self.jellyfin_interface,
             'plex': self.plex_interface
         }[self.media_server]
 
@@ -726,10 +755,10 @@ class Show(YamlReader):
 
     def select_source_images(self, select_only: Episode=None) -> None:
         """
-        Modify this series' Episode source images based on their watch statuses,
-        and how that style applies to this show's un/watched styles. If a
-        backdrop is required, and TMDb is enabled, then one is downloaded if it
-        does not exist.
+        Modify this series' Episode source images based on their watch
+        statuses, and how that style applies to this show's un/watched
+        styles. If a backdrop is required, and TMDb is enabled, then one
+        is downloaded if it does not exist.
 
         Args:
             select_only: Optional Episode object. If provided, only this
@@ -754,18 +783,23 @@ class Show(YamlReader):
                 self.tmdb_interface.download_image(url, self.backdrop)
                 log.debug(f'Downloaded backdrop for {self} from tmdb')
 
-        # Whether to always check TMDb or Plex
+        # Whether to always check each interface
         always_check_emby = (
-            bool(self.emby_interface) and ('emby' in self.image_source_priority)
-            and self.emby_interface.has_series(self.series_info)
-        )
-        always_check_tmdb = (bool(self.tmdb_interface)
-                             and ('tmdb' in self.image_source_priority))
+            bool(self.emby_interface)
+            and ('emby' in self.image_source_priority)
+            and self.emby_interface.has_series(self.series_info))
+        always_check_jellyfin = (
+            bool(self.jellyfin_interface)
+            and ('jellyfin' in self.image_source_priority)
+            and self.jellyfin_interface.has_series(self.series_info))
+        always_check_tmdb = (
+            bool(self.tmdb_interface)
+            and ('tmdb' in self.image_source_priority))
         always_check_plex = (
             bool(self.plex_interface)
-            and ('plex' in self.image_source_priority) and
-            self.plex_interface.has_series(self.library_name, self.series_info)
-        )
+            and ('plex' in self.image_source_priority) 
+            and self.plex_interface.has_series(self.library_name,
+                                               self.series_info))
 
         # For each episode, query interfaces (in priority order) for source
         for episode in (pbar := tqdm(self.episodes.values(), **TQDM_KWARGS)):
@@ -780,18 +814,35 @@ class Show(YamlReader):
             # Update progress bar
             pbar.set_description(f'Selecting {episode}')
 
+            # Whether to check this interface for this episode
+            check_emby = always_check_emby
+            check_jellyfin = always_check_jellyfin
+            check_plex = always_check_plex
             check_tmdb = (
                 always_check_tmdb and not
                 self.tmdb_interface.is_permanently_blacklisted(
-                    self.series_info, episode.episode_info)
+                    self.series_info, episode.episode_info
+                )
             )
-            check_emby = always_check_emby
-            check_plex = always_check_plex
-
+            
             # Go through each source interface indicated, try and get source
             for source_interface in self.image_source_priority:
                 image = None
-                if source_interface == 'tmdb' and check_tmdb:
+                if source_interface == 'emby' and check_emby:
+                    image = self.emby_interface.get_source_image(
+                        episode.episode_info
+                    )
+                elif source_interface == 'jellyfin' and check_jellyfin:
+                    image = self.jellyfin_interface.get_source_image(
+                        episode.episode_info
+                    )
+                elif source_interface == 'plex' and check_plex:
+                    image = self.plex_interface.get_source_image(
+                        self.library_name,
+                        self.series_info,
+                        episode.episode_info,
+                    )
+                elif source_interface == 'tmdb' and check_tmdb:
                     image = self.tmdb_interface.get_source_image(
                         self.series_info,
                         episode.episode_info,
@@ -799,16 +850,6 @@ class Show(YamlReader):
                     )
                     # If None was returned (e.g. temp blacklisted), exit loops
                     if not image: break
-                elif source_interface == 'plex' and check_plex:
-                    image = self.plex_interface.get_source_image(
-                        self.library_name,
-                        self.series_info,
-                        episode.episode_info,
-                    )
-                elif source_interface == 'emby' and check_emby:
-                    image = self.emby_interface.get_source_image(
-                        episode.episode_info
-                    )
 
                 # Attempt to download image, log and exit if successful
                 if image and WebInterface.download_image(image, episode.source):
@@ -819,8 +860,8 @@ class Show(YamlReader):
 
     def find_multipart_episodes(self) -> None:
         """
-        Find and create all the multipart episodes for this series. This adds
-        MultiEpisode objects to this Show's episodes dictionary.
+        Find and create all the multipart episodes for this series. This
+        adds MultiEpisode objects to this Show's episodes dictionary.
         """
 
         # Go through each episode to check if it can be made into a MultiEpisode
@@ -880,7 +921,7 @@ class Show(YamlReader):
 
 
     def create_missing_title_cards(self) ->None:
-        """Create any missing title cards for each episode of this show."""
+        """Create any missing title cards for each episode."""
 
         # If the media directory is unspecified, exit
         if self.media_directory is None:
@@ -940,14 +981,15 @@ class Show(YamlReader):
 
     def update_media_server(self) -> None:
         """
-        Update this show's media server with all title cards and season posters
-        for all Episodes associated with this show.
+        Update this show's media server with all title cards and season
+        posters for all Episodes associated with this show.
         """
 
         # Get appropriate MediaServer interface
         media_interface = {
             None: None,
             'emby': self.emby_interface,
+            'jellyfin': self.jellyfin_interface,
             'plex': self.plex_interface
         }[self.media_server]
 

@@ -1,5 +1,5 @@
 from re import match, compile as re_compile
-from typing import ClassVar
+from typing import Optional
 
 from modules.CleanPath import CleanPath
 from modules.DatabaseInfoContainer import DatabaseInfoContainer
@@ -7,28 +7,29 @@ from modules.Debug import log
 
 class SeriesInfo(DatabaseInfoContainer):
     """
-    This class encapsulates static information that is tied to a single Series.
+    This class encapsulates static information that is tied to a single
+    Series.
     """
 
     """Regex to match name + year from given full name"""
-    __FULL_NAME_REGEX: ClassVar['Pattern'] =re_compile(r'^(.*?)\s+\((\d{4})\)$')
-
+    __FULL_NAME_REGEX = re_compile(r'^(.*?)\s+\((\d{4})\)$')
 
     __slots__ = (
-        'name', 'year', 'emby_id', 'imdb_id', 'sonarr_id', 'tmdb_id', 'tvdb_id',
-        'tvrage_id', 'match_titles', 'full_name', 'match_name',
-        'full_match_name', 'clean_name', 'full_clean_name',
+        'name', 'year', 'emby_id', 'imdb_id', 'jellyfin_id', 'sonarr_id',
+        'tmdb_id', 'tvdb_id', 'tvrage_id', 'match_titles', 'full_name',
+        'match_name', 'full_match_name', 'clean_name', 'full_clean_name',
     )
 
 
-    def __init__(self, name: str, year: int=None, *,
-                 emby_id: int=None,
-                 imdb_id: str=None,
-                 sonarr_id: str=None,
-                 tmdb_id: int=None,
-                 tvdb_id: int=None,
-                 tvrage_id: int=None,
-                 match_titles: bool=True) -> None:
+    def __init__(self, name: str, year: Optional[int]=None, *,
+            emby_id: Optional[int]=None,
+            imdb_id: Optional[str]=None,
+            jellyfin_id: Optional[str]=None,
+            sonarr_id: Optional[str]=None,
+            tmdb_id: Optional[int]=None,
+            tvdb_id: Optional[int]=None,
+            tvrage_id: Optional[int]=None,
+            match_titles: Optional[bool]=True) -> None:
         """
         Create a SeriesInfo object that defines a series described by all of 
         these attributes.
@@ -40,6 +41,7 @@ class SeriesInfo(DatabaseInfoContainer):
                 the name.
             emby_id: Emby ID of the series.
             imdb_id: IMDb ID of the series.
+            jellyfin_id: Jellyfin ID of the series.
             sonarr_id: Sonarr ID of the series.
             tmdb_id: TMDb ID of the series.
             tvdb_id: TVDb ID of the series.
@@ -56,6 +58,7 @@ class SeriesInfo(DatabaseInfoContainer):
         self.year = year
         self.emby_id = None if emby_id is None else int(emby_id)
         self.imdb_id = imdb_id
+        self.jellyfin_id = jellyfin_id
         self.sonarr_id = sonarr_id
         self.tmdb_id = None if tmdb_id is None else int(tmdb_id)
         self.tvdb_id = None if tvdb_id is None else int(tvdb_id)
@@ -82,6 +85,7 @@ class SeriesInfo(DatabaseInfoContainer):
         ret = f'<SeriesInfo name={self.name}, year={self.year}'
         ret += f', emby_id={self.emby_id}' if self.emby_id else ''
         ret += f', imdb_id={self.imdb_id}' if self.imdb_id else ''
+        ret += f', jellyfin_id={self.jellyfin_id}' if self.jellyfin_id else ''
         ret += f', sonarr_id={self.sonarr_id}' if self.sonarr_id else ''
         ret += f', tmdb_id={self.tmdb_id}' if self.tmdb_id else ''
         ret += f', tvdb_id={self.tvdb_id}' if self.tvdb_id else ''
@@ -137,6 +141,9 @@ class SeriesInfo(DatabaseInfoContainer):
 
     def set_imdb_id(self, imdb_id: str) -> None:
         self._update_attribute('imdb_id', imdb_id, str)
+
+    def set_jellyfin_id(self, jellyfin_id: str) -> None:
+        self._update_attribute('jellyfin_id', jellyfin_id, str)
 
     def set_sonarr_id(self, sonarr_id: str) -> None:
         self._update_attribute('sonarr_id', sonarr_id, str)

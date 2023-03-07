@@ -4,6 +4,7 @@ from typing import Iterable
 
 from modules.EmbyInterface import EmbyInterface
 from modules.Debug import log, TQDM_KWARGS
+from modules.JellyfinInterface import JellyfinInterface
 from modules.PlexInterface import PlexInterface
 import modules.global_objects as global_objects
 from modules.ShowArchive import ShowArchive
@@ -52,6 +53,13 @@ class Manager:
                 **self.preferences.emby_interface_kwargs
             )
 
+         # Optionally assign JellyfinInterface
+        self.jellyfin_interface = None
+        if self.preferences.use_jellyfin:
+            self.jellyfin_interface = JellyfinInterface(
+                **self.preferences.jellyfin_interface_kwargs
+            )
+
         # Optionally assign PlexInterface
         self.plex_interface = None
         if self.preferences.use_plex:
@@ -81,9 +89,9 @@ class Manager:
 
     def notify(message: str) -> callable:
         """
-        Return a decorator that notifies the given message when the decorated
-        function starts executing. Only notify if the global execution mode is
-        batch. Logging is done in info level.
+        Return a decorator that notifies the given message when the
+        decorated function starts executing. Only notify if the global
+        execution mode is batch. Logging is done in info level.
 
         Args:
             message: Message to log.
@@ -103,21 +111,31 @@ class Manager:
 
 
     def sync_series_files(self) -> None:
-        """Update the series YAML files for either Sonarr or Plex."""
+        """Sync series YAML files from Emby/Jellyfin/Sonarr/Plex."""
 
-        # If neither Sonarr or Plex are enabled, skip
-        if not self.preferences.use_sonarr and not self.preferences.use_plex:
+        # If no sync-able interfaces are enabled, skip
+        if (not self.preferences.use_emby
+            and not self.preferences.use_jellyfin
+            and not self.preferences.use_sonarr
+            and not self.preferences.use_plex):
             return None
 
         # Always notify the user
         log.info('Starting to sync to series YAML files..')
 
-        if (self.preferences.use_sonarr
-            and len(self.preferences.sonarr_yaml_writers) > 0):
-            for interface_id, writer, args in self.preferences.sonarr_yaml_writers:
-                writer.update_from_sonarr(
-                    self.sonarr_interfaces[interface_id],
-                    **args
+        if (self.preferences.use_emby
+            and len(self.preferences.emby_yaml_writers) > 0):
+            for writer, update_args in zip(self.preferences.emby_yaml_writers,
+                                        self.preferences.emby_yaml_update_args):
+                writer.update_from_emby(self.emby_interface, **update_args)
+
+        if (self.preferences.use_jellyfin
+            and len(self.preferences.jellyfin_yaml_writers) > 0):
+            for writer, update_args in zip(
+                    self.preferences.jellyfin_yaml_writers,
+                    self.preferences.jellyfin_yaml_update_args):
+                writer.update_from_jellyfin(
+                    self.jellyfin_interface, **update_args
                 )
 
         if (self.preferences.use_plex
@@ -126,19 +144,20 @@ class Manager:
                                         self.preferences.plex_yaml_update_args):
                 writer.update_from_plex(self.plex_interface, **update_args)
 
-        if (self.preferences.use_emby
-            and len(self.preferences.emby_yaml_writers) > 0):
-            for writer, update_args in zip(self.preferences.emby_yaml_writers,
-                                        self.preferences.emby_yaml_update_args):
-                writer.update_from_emby(self.emby_interface, **update_args)
+        if (self.preferences.use_sonarr
+            and len(self.preferences.sonarr_yaml_writers) > 0):
+            for interface_id, writer, args in self.preferences.sonarr_yaml_writers:
+                writer.update_from_sonarr(
+                    self.sonarr_interfaces[interface_id], **args
+                )
 
 
     @notify('Starting to read series YAML files..')
     def create_shows(self) -> None:
         """
-        Create Show and ShowArchive objects for each series YAML files known to
-        the global PreferenceParser. This updates the Manager's show and
-        archives lists.
+        Create Show and ShowArchive objects for each series YAML files
+        known to the global PreferenceParser. This updates the Manager's
+        show and archives lists.
         """
 
         # Go through each Series YAML file
@@ -164,10 +183,11 @@ class Manager:
         """Assign all interfaces to each Show known to this Manager"""
 
         # Assign interfaces for each show
-        for show in tqdm(self.shows + self.archives, desc='Assign interfaces',
+        for show in tqdm(self.shows + self.archives,desc='Assigning interfaces',
                          **TQDM_KWARGS):
             show.assign_interfaces(
                 self.emby_interface,
+                self.jellyfin_interface,
                 self.plex_interface,
                 self.sonarr_interfaces,
                 self.tmdb_interface
@@ -192,8 +212,9 @@ class Manager:
     @notify('Starting to read source files..')
     def read_show_source(self) -> None:
         """
-        Reads all source files known to this manager. This reads Episode objects
-        for all Show and ShowArchives, and also looks for multipart episodes.
+        Reads all source files known to this manager. This reads Episode
+        objects for all Show and ShowArchives, and also looks for
+        multipart episodes.
         """
 
         # Read source files for Show objects
@@ -221,7 +242,7 @@ class Manager:
 
     @notify("Starting to set episode ID's..")
     def set_episode_ids(self) -> None:
-        """Set all episode ID's for all shows known to this manager."""
+        """Set all episode ID's for all shows."""
 
         # If Sonarr, Plex, and TMDb are disabled, exit
         if (not self.preferences.use_sonarr and not self.preferences.use_tmdb
@@ -250,7 +271,7 @@ class Manager:
 
     @notify('Starting to download logos..')
     def download_logos(self) -> None:
-        """Download logo files for all shows known to this manager."""
+        """Download logo files for all shows."""
 
         # If the TMDbInterface isn't enabled, skip
         if not self.preferences.use_tmdb:
@@ -264,10 +285,7 @@ class Manager:
 
     @notify('Starting to select source images..')
     def select_source_images(self) -> None:
-        """
-        Select and download the source images for every show known to this
-        manager. For each show, this called Show.select_source_images().
-        """
+        """Select and download the source images for all shows."""
 
         # If Plex and TMDb aren't enabled, skip
         if not self.preferences.use_plex and not self.preferences.use_tmdb:
@@ -281,10 +299,7 @@ class Manager:
 
     @notify('Starting to create missing title cards..')
     def create_missing_title_cards(self) -> None:
-        """
-        Creates all missing title cards for every show known to this Manager.
-        For each show, this calls Show.create_missing_title_cards().
-        """
+        """Creates all missing title cards for all shows."""
 
         # Go through every show in the Manager, create cards
         for show in (pbar := tqdm(self.shows, **TQDM_KWARGS)):
@@ -294,7 +309,7 @@ class Manager:
 
     @notify('Starting to create season posters..')
     def create_season_posters(self) -> None:
-        """Create season posters for all shows known to this Manager."""
+        """Create season posters for all shows."""
 
         # For each show in the Manager, create its posters
         for show in tqdm(self.shows + self.archives,
@@ -305,13 +320,14 @@ class Manager:
     @notify('Starting to update Media Servers..')
     def update_media_server(self) -> None:
         """
-        Update Plex/Emby for all cards for every show known to this Manager.
-        This  only executes if Plex/Emby are globally enabled. For each show,
-        this calls Show.update_media_server().
+        Update Plex/Emby for all cards for all shows. This only executes
+        if Emby/Jellyfin/Plex are globally enabled.
         """
 
         # If Plex and Emby aren't enabled, skip
-        if not self.preferences.use_plex and not self.preferences.use_emby:
+        if (not self.preferences.use_emby
+            and not self.preferences.use_jellyfin
+            and not self.preferences.use_plex):
             return None
 
         # Go through each show in the Manager, update Plex
@@ -322,9 +338,7 @@ class Manager:
 
     @notify('Starting to update archives..')
     def update_archive(self) -> None:
-        """
-        Update the title card archives for every show known to the manager.
-        """
+        """Update the title card archives for every show."""
 
         # If archives are globally disabled, skip
         if not self.preferences.create_archive:
@@ -339,8 +353,8 @@ class Manager:
     @notify('Starting to create summaries..')
     def create_summaries(self) -> None:
         """
-        Creates summaries for every ShowArchive known to this manager. This
-        calls ShowArchive.create_summary() if summaries are globally enabled.
+        Creates summaries for every ShowArchive. This only executes if
+        archives and summaries are globally enabled.
         """
 
         # If summaries aren't enabled, skip
@@ -356,8 +370,8 @@ class Manager:
 
     def __run(self, *, serial: bool=False) -> None:
         """
-        Run the Manager. If serial execution is not indicated, then sync is run
-        and Show/ShowArchive objects are created.
+        Run the Manager. If serial execution is not indicated, then sync
+        is run and Show/ShowArchive objects are created.
 
         Args:
             serial: (Keyword only) Whether execution is serial.
@@ -418,13 +432,13 @@ class Manager:
 
     def remake_cards(self, rating_keys: Iterable[int]) -> None:
         """
-        Remake the title cards associated with the given list of rating keys.
-        These keys are used to identify their corresponding episodes within
-        Plex.
+        Remake the title cards associated with the given list of rating
+        keys. These keys are used to identify their corresponding
+        episodes within Plex.
 
         Args:
-            rating_keys: List of Plex rating keys corresponding to Episodes to
-                update the cards of.
+            rating_keys: List of Plex rating keys corresponding to
+                Episodes to update the cards of.
         """
 
         # Exit if Plex is not enabled
@@ -473,7 +487,7 @@ class Manager:
 
 
     def report_missing(self, file: 'Path') -> None:
-        """Report all missing assets for Shows known to the Manager."""
+        """Report all missing assets for all shows."""
 
         # Serial mode won't have an accurate show list
         if self.preferences.execution_mode == 'serial':

@@ -54,8 +54,8 @@ class MediaInfoSet:
 
 
     def __series_info_condition(self, full_name: str, emby_id: str,
-                                imdb_id: str, sonarr_id: int, tmdb_id: int,
-                                tvdb_id: int, tvrage_id: int) -> Query:
+            imdb_id: str, jellyfin_id: str, sonarr_id: int, tmdb_id: int,
+            tvdb_id: int, tvrage_id: int) -> Query:
         """
         Get the Query condition associated with the given SeriesInfo attributes.
 
@@ -71,6 +71,7 @@ class MediaInfoSet:
             (where('full_name') == full_name) &
             Query().emby_id.test(self.__test_id_match, emby_id) &
             Query().imdb_id.test(self.__test_id_match, imdb_id) &
+            Query().jellyfin_id.test(self.__test_id_match, jellyfin_id) &
             Query().sonarr_id.test(self.__test_id_match, sonarr_id) &
             Query().tmdb_id.test(self.__test_id_match, tmdb_id) &
             Query().tvdb_id.test(self.__test_id_match, tvdb_id) &
@@ -79,13 +80,14 @@ class MediaInfoSet:
 
 
     def get_series_info(self, name: str=None, year: int=None, *,
-                        emby_id: str=None,
-                        imdb_id: str=None,
-                        sonarr_id: int=None,
-                        tmdb_id: int=None,
-                        tvdb_id: int=None,
-                        tvrage_id: int=None,
-                        match_titles: bool=True) -> SeriesInfo:
+            emby_id: str=None,
+            imdb_id: str=None,
+            jellyfin_id: str=None,
+            sonarr_id: int=None,
+            tmdb_id: int=None,
+            tvdb_id: int=None,
+            tvrage_id: int=None,
+            match_titles: bool=True) -> SeriesInfo:
         """
         Get the SeriesInfo object indicated by the given attributes.
         This looks for an existing object mapped under any of the given
@@ -97,10 +99,7 @@ class MediaInfoSet:
                 object already exists.
             year: The year of the series. Optional if the associated 
                 object already exists.
-            imdb_id: Optional IMDb ID.
-            sonarr_id: Optional Sonarr ID.
-            tmdb_id: Optional TMDb ID.
-            tvdb_id: Optional TVDb ID.
+            *_id: Optional database ID's.
 
         Returns:
             The SeriesInfo object indicated by the given attributes.
@@ -109,21 +108,22 @@ class MediaInfoSet:
         # Get condition to search for this series in the database
         full_name = SeriesInfo(name, year).full_name
         condition = self.__series_info_condition(
-            full_name, emby_id, imdb_id, sonarr_id, tmdb_id, tvdb_id, tvrage_id
+            full_name, emby_id, imdb_id, jellyfin_id, sonarr_id, tmdb_id,
+            tvdb_id, tvrage_id
         )
 
         # Series doesn't exist, create new info, insert into database, return
         if not (info := self.series_info_db.search(condition)):
             series_info = SeriesInfo(
                 name, year, emby_id=emby_id, imdb_id=imdb_id,
-                sonarr_id=sonarr_id, tmdb_id=tmdb_id, tvdb_id=tvdb_id,
-                tvrage_id=tvrage_id, match_titles=match_titles
+                jellyfin_id=jellyfin_id, sonarr_id=sonarr_id, tmdb_id=tmdb_id,
+                tvdb_id=tvdb_id, tvrage_id=tvrage_id, match_titles=match_titles
             )
 
             self.series_info_db.insert({
                 'full_name': full_name, 'emby_id': emby_id, 'imdb_id': imdb_id,
-                'sonarr_id': sonarr_id, 'tmdb_id': tmdb_id, 'tvdb_id': tvdb_id,
-                'tvrage_id': tvrage_id, 
+                'jellyfin_id': jellyfin_id, 'sonarr_id': sonarr_id,
+                'tmdb_id': tmdb_id, 'tvdb_id': tvdb_id, 'tvrage_id': tvrage_id, 
             })
 
             return series_info
@@ -140,6 +140,8 @@ class MediaInfoSet:
             update_data |= {'emby_id': emby_id}
         if info['imdb_id'] is None and imdb_id is not None:
             update_data |= {'imdb_id': imdb_id}
+        if info['jellyfin_id'] is None and jellyfin_id is not None:
+            update_data |= {'jellyfin_id': jellyfin_id}
         if info['sonarr_id'] is None and sonarr_id is not None:
             update_data |= {'sonarr_id': sonarr_id}
         if info['tmdb_id'] is None and tmdb_id is not None:
@@ -160,6 +162,7 @@ class MediaInfoSet:
             name, year,
             emby_id=info['emby_id'],
             imdb_id=info['imdb_id'],
+            jellyfin_id=info['jellyfin_id'],
             sonarr_id=info['sonarr_id'],
             tmdb_id=info['tmdb_id'],
             tvdb_id=info['tvdb_id'],
@@ -169,7 +172,7 @@ class MediaInfoSet:
 
 
     def __set_series_id(self, id_type: str, series_info: SeriesInfo,
-                        id_: Any) -> None:
+            id_: Any) -> None:
         """
         Set the series ID within this object's database and on the given
         SeriesInfo object.
@@ -194,6 +197,7 @@ class MediaInfoSet:
                 'full_name': series_info.full_name,
                 'emby_id': series_info.emby_id,
                 'imdb_id': series_info.imdb_id,
+                'jellyfin_id': series_info.jellyfin_id,
                 'sonarr_id': series_info.sonarr_id,
                 'tmdb_id': series_info.tmdb_id,
                 'tvdb_id': series_info.tvdb_id,
@@ -201,8 +205,8 @@ class MediaInfoSet:
             },
             self.__series_info_condition(
                 series_info.full_name, series_info.emby_id, series_info.imdb_id,
-                series_info.sonarr_id, series_info.tmdb_id, series_info.tvdb_id,
-                series_info.tvrage_id
+                series_info.jellyfin_id, series_info.sonarr_id,
+                series_info.tmdb_id, series_info.tvdb_id, series_info.tvrage_id
             )
         )
 
@@ -212,6 +216,9 @@ class MediaInfoSet:
 
     def set_imdb_id(self, series_info: SeriesInfo, id_: str) -> None:
         self.__set_series_id('imdb', series_info, id_)
+
+    def set_jellyfin_id(self, series_info: SeriesInfo, id_: str) -> None:
+        self.__set_series_id('jellyfin', series_info, id_)
 
     def set_sonarr_id(self, series_info: SeriesInfo, id_: str) -> None:
         self.__set_series_id('sonarr', series_info, id_)
@@ -228,8 +235,8 @@ class MediaInfoSet:
 
     @staticmethod
     def __get_episode_info_storage_keys(series_info: SeriesInfo, season_number,
-                                        episode_number, emby_id, imdb_id,
-                                        tmdb_id, tvdb_id, tvrage_id)->list[str]:
+            episode_number, emby_id, imdb_id, jellyfin_id, tmdb_id, tvdb_id,
+            tvrage_id) -> list[str]:
         """
         Get the keys to update within the EpisodeInfo map for the given data.
 
@@ -254,16 +261,11 @@ class MediaInfoSet:
 
 
     def get_episode_info(self, series_info: SeriesInfo, title: str,
-                         season_number: int, episode_number: int,
-                         abs_number: int=None, *,
-                         emby_id: str=None,
-                         imdb_id: str=None,
-                         tmdb_id: int=None,
-                         tvdb_id: int=None,
-                         tvrage_id: int=None,
-                         airdate: 'datetime'=None,
-                         title_match: bool=True,
-                         **queried_kwargs: dict) -> EpisodeInfo:
+            season_number: int, episode_number: int, abs_number: int=None, *,
+            emby_id: str=None, imdb_id: str=None, jellyfin_id: str=None,
+            tmdb_id: int=None, tvdb_id: int=None, tvrage_id: int=None,
+            airdate: 'datetime'=None, title_match: bool=True,
+            **queried_kwargs: dict) -> EpisodeInfo:
         """
         Get the EpisodeInfo object indicated by the given attributes.
 
@@ -275,6 +277,7 @@ class MediaInfoSet:
             abs_number: Optional absolute number of the episode.
             emby_id: (Keyword only) Optional Emby ID.
             imdb_id: (Keyword only) Optional IMDb ID.
+            jellyfin_id: (Keyword only) Optional Jellyfin ID.
             tmdb_id: (Keyword only) Optional TMDb ID.
             tvdb_id: (Keyword only) Optional TVDb ID.
             tvrage_id: (Keyword only) Optional TVRage ID.
@@ -291,7 +294,7 @@ class MediaInfoSet:
         # Get keys to update the EpisodeInfo map with
         update_keys = self.__get_episode_info_storage_keys(
             series_info, season_number, episode_number, emby_id, imdb_id,
-            tmdb_id, tvdb_id, tvrage_id
+            jellyfin_id, tmdb_id, tvdb_id, tvrage_id
         )
         index_key = update_keys[0]
 
@@ -299,6 +302,8 @@ class MediaInfoSet:
         if tvdb_id and (info := self.episode_info.get(f'tvdb:{tvdb_id}')):
             pass
         elif imdb_id and (info := self.episode_info.get(f'imdb:{imdb_id}')):
+            pass
+        elif jellyfin_id and (info := self.episode_info.get(f'jellyfin:{jellyfin_id}')):
             pass
         elif tmdb_id and (info := self.episode_info.get(f'tmdb:{tmdb_id}')):
             pass
@@ -314,9 +319,9 @@ class MediaInfoSet:
         else:
             info = EpisodeInfo(
                 title, season_number, episode_number, abs_number,
-                emby_id=emby_id, imdb_id=imdb_id, tmdb_id=tmdb_id,
-                tvdb_id=tvdb_id, tvrage_id=tvrage_id, airdate=airdate,
-                **queried_kwargs,
+                emby_id=emby_id, imdb_id=imdb_id, jellyfin_id=jellyfin_id,
+                tmdb_id=tmdb_id, tvdb_id=tvdb_id, tvrage_id=tvrage_id,
+                airdate=airdate, **queried_kwargs,
             )
 
             # Create new entries in EpisodeInfo map
@@ -327,6 +332,7 @@ class MediaInfoSet:
         # Update existing EpisodeInfo object
         info.set_emby_id(emby_id)
         info.set_imdb_id(imdb_id)
+        info.set_jellyfin_id(jellyfin_id)
         info.set_tmdb_id(tmdb_id)
         info.set_tvdb_id(tvdb_id)
         info.set_tvrage_id(tvrage_id)
@@ -335,5 +341,4 @@ class MediaInfoSet:
 
         # Update map with any keys
         self.episode_info.update(dict.fromkeys(update_keys, info))
-
         return info
