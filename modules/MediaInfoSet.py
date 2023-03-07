@@ -253,6 +253,7 @@ class MediaInfoSet:
         ]
         new_keys += [] if emby_id is None else [f'emby:{emby_id}']
         new_keys += [] if imdb_id is None else [f'imdb:{imdb_id}']
+        new_keys += [] if jellyfin_id is None else [f'jellyfin:{jellyfin_id}']
         new_keys += [] if tmdb_id is None else [f'tmdb:{tmdb_id}']
         new_keys += [] if tvdb_id is None else [f'tvdb:{tvdb_id}']
         new_keys += [] if tvrage_id is None else [f'tvrage:{tvrage_id}']
@@ -326,7 +327,6 @@ class MediaInfoSet:
 
             # Create new entries in EpisodeInfo map
             self.episode_info.update(dict.fromkeys(update_keys, info))
-            
             return info
         
         # Update existing EpisodeInfo object

@@ -11,6 +11,7 @@ from modules.EmbyInterface import EmbyInterface
 from modules.Font import Font
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.ImageMaker import ImageMaker
+from modules.JellyfinInterface import JellyfinInterface
 from modules.Manager import Manager
 from modules.PlexInterface import PlexInterface
 from modules.SeriesInfo import SeriesInfo
