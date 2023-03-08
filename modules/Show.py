@@ -23,10 +23,11 @@ from modules.YamlReader import YamlReader
 
 class Show(YamlReader):
     """
-    This class describes a show. A Show encapsulates the names and preferences
-    with a complete series of episodes. Each object inherits many preferences 
-    from the global `PreferenceParser` object, but manually specified attributes
-    within the Show's YAML take precedence over the global values.
+    This class describes a show. A Show encapsulates the names and
+    preferences with a complete series of episodes. Each object inherits
+    many preferences  from the global `PreferenceParser` object, but
+    manually specified attributes within the Show's YAML take priority
+    over the global values.
     """
 
     """Filename to the backdrop for a series"""
@@ -49,16 +50,16 @@ class Show(YamlReader):
                  preferences: 'PreferenceParser') -> None:
         """
         Constructs a new instance of a Show object from the given YAML
-        dictionary, library map, and referencing the base source directory. If
-        the initialization fails to produce a 'valid' show object, the `valid`
-        attribute is set to False.
+        dictionary, library map, and referencing the base source
+        directory. If the initialization fails to produce a 'valid' show
+        object, the valid attribute is set to False.
 
         Args:
             name: The name/title of the series.
-            yaml_dict: YAML dictionary of the associated series as found in the
-                series YAML file.
-            source_directory: Base source directory this show should search for
-                and place source images in.
+            yaml_dict: YAML dictionary of the associated series as found
+                in the series YAML file.
+            source_directory: Base source directory this show should
+                search for and place source images in.
             preferences: PreferenceParser object this object's default
                 attributes are derived from.
         """
@@ -190,12 +191,12 @@ class Show(YamlReader):
         Recreate this Show object as an archive.
 
         Args:
-            media_directory: Media directory the returned Show object will
-                utilize.
+            media_directory: Media directory the returned Show object
+                will utilize.
 
         Returns:
-            A newly constructed Show object with a modified 'media_directory'
-            and 'watched_style' attributes.
+            A newly constructed Show object with a modified
+            'media_directory' and 'watched_style' attributes.
         """
 
         # Modify base yaml to have overritten media_directory
@@ -219,8 +220,8 @@ class Show(YamlReader):
 
     def __parse_yaml(self):
         """
-        Parse the Show's YAML and update this object's attributes. Error on any
-        invalid attributes.
+        Parse the Show's YAML and update this object's attributes. Error
+        on any invalid attributes.
         """
 
         if (value := self._get('library', type_=dict)) is not None:
@@ -433,8 +434,8 @@ class Show(YamlReader):
             episode_info: EpisodeInfo for this episode.
 
         Returns:
-            Path for the full title card destination, and None if this show has
-            no media directory.
+            Path for the full title card destination, and None if this
+            show has no media directory.
         """
 
         # If this entry should not be written to a media directory, return 
@@ -451,8 +452,8 @@ class Show(YamlReader):
 
     def read_source(self) -> None:
         """
-        Read the source file for this show, adding the associated Episode
-        objects to this show's episodes dictionary.
+        Read the source file for this show, adding the associated
+        Episode objects to this show's episodes dictionary.
         """
 
         # Reset episodes dictionary
@@ -472,9 +473,9 @@ class Show(YamlReader):
 
     def add_new_episodes(self) -> None:
         """
-        Query the provided interfaces, checking for any new episodes exist in
-        that interface. All new entries are added to this object's datafile,
-        and an Episode object is created.
+        Query the provided interfaces, checking for any new episodes
+        exist in that interface. All new entries are added to this
+        object's datafile, and an Episode object is created.
         """
 
         # Get episodes from indicated data source
@@ -532,9 +533,9 @@ class Show(YamlReader):
 
     def set_episode_ids(self) -> None:
         """
-        Set episode ID's for all Episodes within this Show, using the given
-        interfaces. Only episodes whose card is not present or still need
-        translations are updated.
+        Set episode ID's for all Episodes within this Show, using the
+        given interfaces. Only episodes whose card is not present or
+        still need translations are updated.
         """
 
         # Exit if primary data source doesn't have an interface
@@ -597,8 +598,9 @@ class Show(YamlReader):
 
     def add_translations(self) -> None:
         """
-        Add translated episode titles to the Episodes of this series. This 
-        show's source file is re-read if any translations are added.
+        Add translated episode titles to the Episodes of this series.
+        This  show's source file is re-read if any translations are
+        added.
         """
 
         # If no translations were specified, or TMDb syncing isn't enabled, skip
@@ -650,8 +652,8 @@ class Show(YamlReader):
 
     def download_logo(self) -> None:
         """
-        Download the logo for this series from TMDb. Any SVG logos are converted
-        to PNG.
+        Download the logo for this series from TMDb. Any SVG logos are
+        converted to PNG.
         """
 
         # If not syncing to TMDb, or logo already exists, exit

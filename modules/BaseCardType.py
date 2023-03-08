@@ -6,17 +6,21 @@ from titlecase import titlecase
 from modules.Debug import log
 from modules.ImageMaker import ImageMaker
 
+ImageMagickCommands = list[str]
+
 class BaseCardType(ImageMaker):
     """
-    This class describes an abstract card type. A BaseCardType is a subclass of
-    ImageMaker, because all CardTypes are designed to create title cards. This
-    class outlines the requirements for creating a custom type of title card.
+    This class describes an abstract card type. A BaseCardType is a
+    subclass of ImageMaker, because all CardTypes are designed to create
+    title cards. This class outlines the requirements for creating a
+    custom type of title card.
 
-    All implementations of BaseCardType must implement this class's abstract
-    properties and methods in order to work with the TitleCardMaker. However,
-    not all CardTypes need to use every argument of these methods. For example,
-    the StandardTitleCard utilizes most all customizations for a title card,
-    while a StarWarsTitleCard hardly uses anything.
+    All implementations of BaseCardType must implement this class's
+    abstract properties and methods in order to work with the
+    TitleCardMaker. However, not all CardTypes need to use every
+    argument of these methods. For example, the StandardTitleCard
+    utilizes most all customizations for a title card, while a
+    StarWarsTitleCard hardly uses anything.
     """
 
     """Default case string for all title text"""
@@ -49,9 +53,9 @@ class BaseCardType(ImageMaker):
     @abstractmethod
     def TITLE_CHARACTERISTICS(self) -> dict:
         """
-        Characteristics of title splitting for this card type. Must have keys
-        for max_line_width, max_line_count, and top_heavy. See `Title` class
-        for details.
+        Characteristics of title splitting for this card type. Must have
+        keys for max_line_width, max_line_count, and top_heavy. See
+        `Title` class for details.
         """
         raise NotImplementedError(f'All CardType objects must implement this')
 
@@ -65,8 +69,8 @@ class BaseCardType(ImageMaker):
     @abstractmethod
     def TITLE_FONT(self) -> str:
         """
-        Standard font (full path or ImageMagick recognized font name) to use for
-        the episode title text
+        Standard font (full path or ImageMagick recognized font name) to
+        use for the episode title text.
         """
         raise NotImplementedError(f'All CardType objects must implement this')
 
@@ -85,7 +89,7 @@ class BaseCardType(ImageMaker):
     @property
     @abstractmethod
     def USES_SEASON_TITLE(self) -> bool:
-        """Whether this class uses season titles for the purpose of archives"""
+        """Whether this class uses season titles for archives"""
         raise NotImplementedError(f'All CardType objects must implement this')
 
 
@@ -96,9 +100,9 @@ class BaseCardType(ImageMaker):
     @abstractmethod
     def __init__(self, blur: bool=False, grayscale: bool=False) -> None:
         """
-        Construct a new CardType. Must call super().__init__() to initialize the
-        parent ImageMaker class (for PreferenceParser and ImageMagickInterface
-        objects).
+        Construct a new CardType. Must call super().__init__() to
+        initialize the parent ImageMaker class (for PreferenceParser and
+        ImageMagickInterface objects).
 
         Args:
             blur: Whether to blur the source image. Defaults to False.
@@ -129,10 +133,11 @@ class BaseCardType(ImageMaker):
 
     @staticmethod
     def modify_extras(extras: dict[str, Any], custom_font: bool,
-                      custom_season_titles: bool) -> None:
+            custom_season_titles: bool) -> None:
         """
-        Modify the given extras base on whether font or season titles are
-        custom. The default behavior is to not modify the extras at all.
+        Modify the given extras base on whether font or season titles
+        are custom. The default behavior is to not modify the extras at
+        all.
 
         Args:
             extras: Dictionary to modify.
@@ -147,8 +152,8 @@ class BaseCardType(ImageMaker):
     @abstractmethod
     def is_custom_font() -> bool:
         """
-        Abstract method to determine whether the given font characteristics
-        indicate the use of a custom font or not.
+        Abstract method to determine whether the given font
+        characteristics indicate the use of a custom font or not.
 
         Returns:
             True if a custom font is indicated, False otherwise.
@@ -160,8 +165,8 @@ class BaseCardType(ImageMaker):
     @abstractmethod
     def is_custom_season_titles() -> bool:
         """
-        Abstract method to determine whether the given season characteristics
-        indicate the use of a custom season title or not.
+        Abstract method to determine whether the given season
+        characteristics indicate the use of a custom season title or not.
 
         Returns:
             True if a custom season title is indicated, False otherwise.
@@ -170,9 +175,10 @@ class BaseCardType(ImageMaker):
 
 
     @property
-    def resize_and_style(self) -> list[str]:
+    def resize_and_style(self) -> ImageMagickCommands:
         """
-        ImageMagick commands to resize and apply any style modifiers to an image
+        ImageMagick commands to resize and apply any style modifiers to
+        an image.
 
         Returns:
             List of ImageMagick commands.
@@ -199,7 +205,7 @@ class BaseCardType(ImageMaker):
 
 
     @property
-    def style(self) -> list[str]:
+    def style(self) -> ImageMagickCommands:
         """
         ImageMagick commands to apply any style modifiers to an image.
 
@@ -224,7 +230,8 @@ class BaseCardType(ImageMaker):
     @abstractmethod
     def create(self) -> None:
         """
-        Abstract method to create the title card outlined by the CardType. All
-        implementations of this method should delete any intermediate files.
+        Abstract method to create the title card outlined by the
+        CardType. All implementations of this method should delete any
+        intermediate files.
         """
         raise NotImplementedError(f'All CardType objects must implement this')

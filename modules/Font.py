@@ -7,9 +7,9 @@ from modules.YamlReader import YamlReader
 
 class Font(YamlReader):
     """
-    This class describes a font and all of its configurable attributes. Notably,
-    it's color, size, file, replacements, case function, vertical offset, 
-    interline spacing, kerning, and stroke width.
+    This class describes a font and all of its configurable attributes.
+    Notably, it's color, size, file, replacements, case function,
+    vertical offset,  interline spacing, kerning, and stroke width.
     """
 
     """Valid YAML attributes to customize a font"""
@@ -30,7 +30,7 @@ class Font(YamlReader):
 
 
     def __init__(self, yaml: dict, card_class: 'CardType',
-                 series_info: 'SeriesInfo') -> None:
+            series_info: 'SeriesInfo') -> None:
         """
         Construct a new instance of a Font.
 
@@ -76,13 +76,14 @@ class Font(YamlReader):
 
     def __error(self, attribute: str, value: str, description: str=None) ->None:
         """
-        Print an error message for the given attribute of the given value. Also
-        sets the valid attribute of this object to False.
+        Print an error message for the given attribute of the given
+        value. Also sets the valid attribute of this object to False.
 
         Args:
             attribute: Font attribute that is incorrect.
             value: Value of attribute that is incorrect.
-            description: Optional description for why the given value is wrong.
+            description: Optional description for why the given value is
+                wrong.
         """
 
         description_tag = f' - {description}' if description else ''
@@ -196,9 +197,9 @@ class Font(YamlReader):
         Return a dictionary of attributes for this font to be unpacked.
 
         Returns:
-            Dictionary of attributes whose keys are 'title_color', 'font_size',
-            'font', 'vertical_shift', 'interline_spacing', 'kerning', and
-            'stroke_width'.
+            Dictionary of attributes whose keys are 'title_color',
+            'font_size', 'font', 'vertical_shift', 'interline_spacing',
+            'kerning', and 'stroke_width'.
         """
 
         return {
@@ -214,18 +215,19 @@ class Font(YamlReader):
 
     def validate_title(self, title: str) -> tuple[str, bool]:
         """
-        Return whether all the characters of the given title are valid for this
-        font. This uses this object's FontValidator object.
+        Return whether all the characters of the given title are valid
+        for this font. This uses this object's FontValidator object.
 
         Args:
             title: The title (string) being validated.
 
         Returns:
-            Tuple of the modified title, and whether the title is now valid.
-            The title is only modified if missing deletion is enabled (and
-            applied); validity is True if all the characters of the given title
-            are contained within this font, or if validation is not enabled and
-            is False otherwise.
+            Tuple of the modified title, and whether the title is now
+            valid. The title is only modified if missing deletion is
+            enabled (and applied); validity is True if all the
+            characters of the given title are contained within this
+            font, or if validation is not enabled and is False
+            otherwise.
         """
 
         # Validate title against this font

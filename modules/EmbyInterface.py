@@ -227,8 +227,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             filer_libraries: List of library names to filter the return.
 
         Returns:
-            Dictionary whose keys are the library names, and whose values are
-            the list of paths to that library's base directories.
+            Dictionary whose keys are the library names, and whose
+            values are the list of paths to that library's base
+            directories.
         """
 
         # Get all library folders 

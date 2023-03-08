@@ -1,14 +1,14 @@
 from re import compile as re_compile, IGNORECASE
-from typing import Iterable
+from typing import Iterable, Union
 
 from modules.Debug import log
 
 class Title:
     """
-    This class describes a title. A Title can either be initialized with a full
-    title without any formatting done to it, and then split by this class into
-    multiple lines with `split()`; or it can be initialized with those lines
-    directly. For example:
+    This class describes a title. A Title can either be initialized with
+    a full title without any formatting done to it, and then split by
+    this class into multiple lines with `split()`; or it can be
+    initialized with those lines directly. For example:
 
     >>> t = Title("The One Where Rachel's Sister Babysits")
     >>> t.split(25, 2, False)
@@ -19,7 +19,7 @@ class Title:
      "Sister Babysits"]
     """
 
-    """Characters that should be used for priority splitting between lines"""
+    """Characters that should be used for priority line splitting"""
     SPLIT_CHARACTERS = (':', ',', ')', ']', '?', '!', '-', '.', '/', '|')
 
     """Regex for identifying partless titles for MultiEpisodes"""
@@ -38,15 +38,15 @@ class Title:
                  'title_yaml', 'match_title', '__original_title')
 
 
-    def __init__(self, title, *, original_title: str=None) -> None:
+    def __init__(self, title: Union[str, list[str]], *, original_title: str=None) -> None:
         """
-        Constructs a new instance of a Title from either a full, unsplit title,
-        or a list of title lines.
+        Constructs a new instance of a Title from either a full, unsplit
+        title, or a list of title lines.
 
         Args:
             title: Title for this object.
-            title: str if the full title (from any source), or a list if parsed
-                from YAML
+            title: str if the full title (from any source), or a list if
+                parsed from YAML.
             original_title: Original title for matching.
         """
 
@@ -92,8 +92,8 @@ class Title:
 
     def get_partless_title(self) -> str:
         """
-        Gets the partless title for this object. This removes parenthesized
-        digits, and title with "part" in them.
+        Gets the partless title for this object. This removes
+        parenthesized digits, and title with "part" in them.
 
         Returns:
             The partless title for this object.
@@ -112,16 +112,17 @@ class Title:
     def split(self, max_line_width: int, max_line_count: int,
               top_heavy: bool) -> list:
         """
-        Split this title's text into multiple lines. If the title cannot fit
-        into the given parameters, line width might not be respected, but the
-        maximum number of lines will be.
+        Split this title's text into multiple lines. If the title cannot
+        fit into the given parameters, line width might not be
+        respected, but the maximum number of lines will be.
 
         Args:
             max_line_width: Maximum line width to base splitting on. 
-            max_line_count: The maximum line count to split the title into.
-            top_heavy: Whether to split the title in a top-heavy style. This
-                means the top lines will likely be longer than the bottom ones.
-                False for bottom-heavy splitting.
+            max_line_count: The maximum line count to split the title
+                into.
+            top_heavy: Whether to split the title in a top-heavy style.
+                This means the top lines will likely be longer than the
+                bottom ones. False for bottom-heavy splitting.
 
         Returns:
             List of split title text to be read top to bottom.
@@ -217,16 +218,17 @@ class Title:
     def apply_profile(self, profile: 'Profile',
                       **title_characteristics: dict) -> str:
         """
-        Apply the given profile to this title. If this object was created with
-        manually specified title lines, then the profile is applied to each
-        line, otherwise it's applied to the full title. Then newlines are used
-        to join each line
+        Apply the given profile to this title. If this object was
+        created with manually specified title lines, then the profile is
+        applied to each line, otherwise it's applied to the full title.
+        Then newlines are used to join each line
 
         Args:
             profile: Profile object to convert title with.
 
         Returns:
-            This title with the given profile and splitting details applied.
+            This title with the given profile and splitting details
+            applied.
         """
 
         # If manually specified, apply the profile to each line, skip splitting
@@ -266,7 +268,8 @@ class Title:
             titles: The titles to check.
 
         Returns:
-            True if any of the given titles match this series, False otherwise.
+            True if any of the given titles match this series, False
+            otherwise.
         """
 
         def _get_title(title):

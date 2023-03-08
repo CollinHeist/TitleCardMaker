@@ -5,9 +5,9 @@ from modules.ImageMaker import ImageMaker
 
 class GenreMaker(ImageMaker):
     """
-    This class defines a type of maker that creates genre cards. These are
-    posters that have text (the genre) at the bottom of their image, and are
-    outlined by a white border (in this implementation).
+    This class defines a type of maker that creates genre cards. These
+    are posters that have text (the genre) at the bottom of their image,
+    and are outlined by a white border (in this implementation).
     """
 
     """Directory where all reference files used by this maker are stored"""
@@ -21,8 +21,9 @@ class GenreMaker(ImageMaker):
 
 
     def __init__(self, source: Path, genre: str, output: Path,
-                 font_size: float=1.0, borderless: bool=False,
-                 omit_gradient: bool=False) -> None:
+            font_size: float = 1.0,
+            borderless: bool = False,
+            omit_gradient: bool = False) -> None:
         """
         Construct a new instance of this object.
 
@@ -49,8 +50,9 @@ class GenreMaker(ImageMaker):
 
     def create(self) -> None:
         """
-        Create the genre card. This WILL overwrite the existing file if it 
-        already exists. Errors and returns if the source image does not exist.
+        Create the genre card. This WILL overwrite the existing file if
+        it  already exists. Errors and returns if the source image does
+        not exist.
         """
 
         # If the source file doesn't exist, exit
@@ -74,16 +76,20 @@ class GenreMaker(ImageMaker):
 
         # Command to create genre poster
         command = ' '.join([
-            f'convert "{self.source.resolve()}"',       # Resize source image
+            # Resize source image
+            f'convert "{self.source.resolve()}"',
             f'-background transparent',
             f'-resize "946x1446^"',
             f'-gravity center',
             f'-extent "946x1446"',
-            *gradient_command,                          # Optionally add gradient
-            f'-gravity center',                         # Add border
+            # Optionally add gradient
+            *gradient_command,
+            # Add border
+            f'-gravity center',
             f'-bordercolor white',
             f'-border 27x27' if not self.borderless else f'',
-            f'-font "{self.FONT.resolve()}"',           # Add genre text
+            # Add genre text
+            f'-font "{self.FONT.resolve()}"',
             f'-fill white',
             f'-pointsize {self.font_size * 159.0}',
             f'-kerning 2.25',

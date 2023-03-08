@@ -4,7 +4,9 @@ from modules.Debug import log
 from modules.ImageMaker import ImageMaker
 
 class CollectionPosterMaker(ImageMaker):
-    """This class defines a type of maker that creates collection posters."""
+    """
+    This class defines a type of maker that creates collection posters.
+    """
 
     """Directory where all reference files used by this maker are stored"""
     REF_DIRECTORY = Path(__file__).parent / 'ref' / 'collection'
@@ -19,9 +21,9 @@ class CollectionPosterMaker(ImageMaker):
 
 
     def __init__(self, source: Path, output: Path, title: str, font: Path=FONT,
-                 font_color: str=FONT_COLOR, font_size: float=1.0,
-                 omit_collection: bool=False, borderless: bool=False,
-                 omit_gradient: bool=False) -> None:
+            font_color: str=FONT_COLOR, font_size: float=1.0,
+            omit_collection: bool=False, borderless: bool=False,
+            omit_gradient: bool=False) -> None:
         """
         Construct a new instance of a CollectionPosterMaker.
 
@@ -32,9 +34,11 @@ class CollectionPosterMaker(ImageMaker):
             font: Path to the font file of the poster's title.
             font_color: Font color of the poster text.
             font_size: Scalar for the font size of the poster's title.
-            omit_collection: Whether to omit "COLLECTION" from the poster.
+            omit_collection: Whether to omit "COLLECTION" from the
+                poster.
             borderless:  Whether to make the poster borderless.
-            omit_gradient: Whether to make the poster with no gradient overlay.
+            omit_gradient: Whether to make the poster with no gradient
+                overlay.
         """
 
         # Initialize parent object for the ImageMagickInterface
@@ -59,8 +63,9 @@ class CollectionPosterMaker(ImageMaker):
 
     def create(self) -> None:
         """
-        Create this object's poster. This WILL overwrite the existing file if it 
-        already exists. Errors and returns if the source image does not exist.
+        Create this object's poster. This WILL overwrite the existing
+        file if it  already exists. Errors and returns if the source
+        image does not exist.
         """
 
         # If the source file doesn't exist, exit
@@ -82,26 +87,32 @@ class CollectionPosterMaker(ImageMaker):
         # Command to create collection poster
         command = ' '.join([
             f'convert',
-            f'"{self.source.resolve()}"',               # Resize source
+            # Resize source
+            f'"{self.source.resolve()}"',
             f'-background transparent',
             f'-resize "946x1446^"',
             f'-gravity center',
             f'-extent "946x1446"',
-            *gradient_command,                          # Optionally add gradient
-            f'-gravity center',                         # Add border
+            # Optionally add gradient
+            *gradient_command,
+            # Add border
+            f'-gravity center',
             f'-bordercolor white',
             f'-border 27x27' if not self.borderless else f'',
-            f'-font "{self.font.resolve()}"',           # Add collection title
+            # Add collection title
+            f'-font "{self.font.resolve()}"',
             f'-interline-spacing -40',
             f'-fill "{self.font_color}"',
             f'-gravity south',
             f'-pointsize {125.0 * self.font_size}',
             f'-kerning 2.25',
             f'-annotate +0+200 "{self.collection}"',
-            f'-pointsize 35',                           # Add "COLLECTION" text
+             # Add "COLLECTION" text
+            f'-pointsize 35',
             f'-kerning 15',
             f'-font "{self.__COLLECTION_FONT.resolve()}"',
             f'' if self.omit_collection else f'-annotate +0+150 "COLLECTION"',
+            # Write output file
             f'"{self.output.resolve()}"'
         ])
 

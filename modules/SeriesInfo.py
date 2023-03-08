@@ -31,14 +31,14 @@ class SeriesInfo(DatabaseInfoContainer):
             tvrage_id: Optional[int]=None,
             match_titles: Optional[bool]=True) -> None:
         """
-        Create a SeriesInfo object that defines a series described by all of 
-        these attributes.
+        Create a SeriesInfo object that defines a series described by
+        all of  these attributes.
 
         Args:
-            name: Name of the series. Can be just the name, or a full name of
-                the series and year like "name (year)".
-            year: Year of the series. Can be omitted if a year is provided from
-                the name.
+            name: Name of the series. Can be just the name, or a full
+                name of the series and year like "name (year)".
+            year: Year of the series. Can be omitted if a year is
+                provided from the name.
             emby_id: Emby ID of the series.
             imdb_id: IMDb ID of the series.
             jellyfin_id: Jellyfin ID of the series.
@@ -46,8 +46,8 @@ class SeriesInfo(DatabaseInfoContainer):
             tmdb_id: TMDb ID of the series.
             tvdb_id: TVDb ID of the series.
             tvrage_id: TVRage ID of the series.
-            match_titles: Whether to match titles when comparing episodes for
-                this series.
+            match_titles: Whether to match titles when comparing
+                episodes for this series.
 
         Raises:
             ValueError: If no year is provided.
@@ -181,7 +181,8 @@ class SeriesInfo(DatabaseInfoContainer):
             names: The names to check
 
         Returns:
-            True if any of the given names match this series, False otherwise.
+            True if any of the given names match this series, False
+            otherwise.
         """
 
         matching_names = map(self.get_matching_title, names)
