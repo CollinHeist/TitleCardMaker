@@ -8,13 +8,47 @@ SeriesExtra = Optional
 
 class AnimeTitleCard(BaseCardType):
     """
-    This class describes a type of CardType that produces title cards in the
-    anime-styled cards designed by reddit user /u/Recker_Man. These cards don't
-    support custom fonts, but does support optional kanji text.
+    This class describes a type of CardType that produces title cards in
+    the anime-styled cards designed by reddit user /u/Recker_Man. These
+    cards don't support custom fonts, but does support optional kanji
+    text.
     """
 
+    """API Parameters"""
+    API_DETAILS = {
+        'name': 'Anime',
+        'example': '/assets/cards/anime.jpg',
+        'creators': ['/u/Recker_Man', 'CollinHeist'],
+        'source': 'local',
+        'supports_custom_fonts': True,
+        'supports_custom_seasons': True,
+        'supported_extras': [
+            {'name': 'Kanji Text',
+             'identifier': 'kanji',
+             'description': 'Japanese text to place above title text'},
+            {'name': 'Require Kanji Text',
+             'identifier': 'require_kanji',
+             'description': 'Whether to require kanji text to be provided for the card to be created'},
+            {'name': 'Kanji Vertical Shift',
+             'identifier': 'kanji_vertical_shift',
+             'description': 'Additional vertical offset to apply only to the kanji text'},
+            {'name': 'Separator Character',
+             'identifier': 'separator',
+             'description': 'Character to separate season and episode text'},
+            {'name': 'Stroke Text Color',
+             'identifier': 'stroke_color',
+             'description': 'Custom color to use for the stroke on the title text'},
+            {'name': 'Gradient Omission',
+             'identifier': 'omit_gradient',
+             'description': 'Whether to omit the gradient overlay from the card'},
+        ], 'description': [
+            'Title card with all text aligned in the lower left of the image',
+            'Although it is referred to as the "anime" card style, there is nothing preventing you from using it for any series.',
+        ],
+    }
+
     """Directory where all reference files used by this card are stored"""
-    REF_DIRECTORY = Path(__file__).parent / 'ref' / 'anime'
+    REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'anime'
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
@@ -54,22 +88,22 @@ class AnimeTitleCard(BaseCardType):
     )
 
     def __init__(self, source: Path, output_file: Path, title: str, 
-                 season_text: str, episode_text: str, hide_season: bool,
-                 font: str, title_color: str,
-                 font_size: float=1.0,
-                 interline_spacing: int=0,
-                 kerning: float=1.0,
-                 stroke_width: float=1.0,
-                 vertical_shift: int=0,
-                 blur: bool=False,
-                 grayscale: bool=False,
-                 kanji: SeriesExtra[str]=None,
-                 separator: SeriesExtra[str]='·',
-                 omit_gradient: SeriesExtra[bool]=False,
-                 require_kanji: SeriesExtra[bool]=False,
-                 kanji_vertical_shift: SeriesExtra[float]=0,
-                 stroke_color: SeriesExtra[str]='black',
-                 **unused) -> None:
+            season_text: str, episode_text: str, hide_season: bool,
+            font: str, title_color: str,
+            font_size: float=1.0,
+            interline_spacing: int=0,
+            kerning: float=1.0,
+            stroke_width: float=1.0,
+            vertical_shift: int=0,
+            blur: bool=False,
+            grayscale: bool=False,
+            kanji: SeriesExtra[str]=None,
+            separator: SeriesExtra[str]='·',
+            omit_gradient: SeriesExtra[bool]=False,
+            require_kanji: SeriesExtra[bool]=False,
+            kanji_vertical_shift: SeriesExtra[float]=0,
+            stroke_color: SeriesExtra[str]='black',
+            **unused) -> None:
         """
         Construct a new instance of this card.
 
@@ -403,27 +437,4 @@ class AnimeTitleCard(BaseCardType):
                       f'"{self.output_file.name}"')
             return None
 
-        # Sub-command to optionally add gradient
-        gradient_command = []
-        if not self.omit_gradient:
-            gradient_command = [
-                f'"{self.__GRADIENT_IMAGE.resolve()}"',
-                f'-composite',
-            ]
-
-        command = ' '.join([
-            f'convert "{self.source_file.resolve()}"',
-            # Resize and optionally blur source image
-            *self.resize_and_style,
-            # Increase contrast of source image
-            f'-modulate 100,125',
-            # Overlay gradient
-            *gradient_command,
-            # Add title or title+kanji
-            *self.title_command,
-            # Add season or season+episode text
-            *self.index_command,
-            f'"{self.output_file.resolve()}"',
-        ])
-
-        self.image_magick.run(command)
+        # Sub-command to optionally add

@@ -7,19 +7,19 @@ from modules.Debug import log
 import modules.global_objects as global_objects
 
 # Built-in BaseCardType classes
-from modules.AnimeTitleCard import AnimeTitleCard
-from modules.CutoutTitleCard import CutoutTitleCard
-from modules.FadeTitleCard import FadeTitleCard
-from modules.FrameTitleCard import FrameTitleCard
-from modules.LandscapeTitleCard import LandscapeTitleCard
-from modules.LogoTitleCard import LogoTitleCard
-from modules.OlivierTitleCard import OlivierTitleCard
-from modules.PosterTitleCard import PosterTitleCard
-from modules.RomanNumeralTitleCard import RomanNumeralTitleCard
-from modules.StandardTitleCard import StandardTitleCard
-from modules.StarWarsTitleCard import StarWarsTitleCard
-from modules.TextlessTitleCard import TextlessTitleCard
-from modules.TintedGlassTitleCard import TintedGlassTitleCard
+from modules.cards.AnimeTitleCard import AnimeTitleCard
+from modules.cards.CutoutTitleCard import CutoutTitleCard
+from modules.cards.FadeTitleCard import FadeTitleCard
+from modules.cards.FrameTitleCard import FrameTitleCard
+from modules.cards.LandscapeTitleCard import LandscapeTitleCard
+from modules.cards.LogoTitleCard import LogoTitleCard
+from modules.cards.OlivierTitleCard import OlivierTitleCard
+from modules.cards.PosterTitleCard import PosterTitleCard
+from modules.cards.RomanNumeralTitleCard import RomanNumeralTitleCard
+from modules.cards.StandardTitleCard import StandardTitleCard
+from modules.cards.StarWarsTitleCard import StarWarsTitleCard
+from modules.cards.TextlessTitleCard import TextlessTitleCard
+from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
 
 class TitleCard:
     """

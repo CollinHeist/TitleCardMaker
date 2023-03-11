@@ -12,16 +12,39 @@ BoxCoordinates = namedtuple('BoxCoordinates', ('x0', 'y0', 'x1', 'y1'))
 
 class LandscapeTitleCard(BaseCardType):
     """
-    This class defines a type of CardType that produces title-centric cards that
-    do not feature any index text (i.e. season or episode text). The title is
-    prominently featured in the center of the image, and is intended for 
-    landscape-centric images (hence the name) such as Planet Earth - as it
-    well likely cover faces in a "typical" image. A bounding box around the
-    title can be added/adjusted via extras.
+    This class defines a type of CardType that produces title-centric
+    cards that do not feature any index text (i.e. season or episode
+    text). The title is prominently featured in the center of the image,
+    and is intended for landscape-centric images (hence the name) such
+    as Planet Earth - as it well likely cover faces in a "typical"
+    image. A bounding box around the title can be added/adjusted via
+    extras.
     """
 
+    """API Parameters"""
+    API_DETAILS = {
+        'name': 'Landscape',
+        'example': '/assets/cards/landscape.jpg',
+        'creators': ['CollinHeist'],
+        'source': 'local',
+        'supports_custom_fonts': True,
+        'supports_custom_seasons': False,
+        'supported_extras': [
+            {'name': 'Bounding Box',
+             'identifier': 'add_bounding_box',
+             'description': 'Whether to add a bounding box around the title text'},
+            {'name': 'Bounding Box Adjustments',
+             'identifier': 'box_adjustments',
+             'description': 'Manual adjustments to the bounds of the bounding box'},
+        ], 'description': [
+            'Title-centric title cards that do not feature anything except a title.',
+            'These cards are intended for landscape-centric images as the centered title can cover faces.',
+            'A bounding box around the title text can be added and adjusted via extras.',
+        ],
+    }
+
     """Directory where all reference files used by this card are stored"""
-    REF_DIRECTORY = Path(__file__).parent / 'ref' / 'landscape'
+    REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'landscape'
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {

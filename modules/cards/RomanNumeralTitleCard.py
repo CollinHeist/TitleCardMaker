@@ -174,8 +174,30 @@ class RomanNumeralTitleCard(BaseCardType):
     the roman numerals. 
     """
 
+    """API Parameters"""
+    API_DETAILS = {
+        'name': 'Roman Numeral',
+        'example': '/assets/cards/roman.jpg',
+        'creators': ['CollinHeist'],
+        'source': 'local',
+        'supports_custom_fonts': False,
+        'supports_custom_seasons': True,
+        'supported_extras': [
+            {'name': 'Background Color',
+             'identifier': 'background',
+             'description': 'Background color to utilize for the card'},
+            {'name': 'Roman Numeral Color',
+             'identifier': 'roman_numeral_color',
+             'description': 'Color to utilize for the roman numerals'},
+        ], 'description': [
+            'Imageless title cards featuring large roman numerals indicating the episode number just behind the title.',
+            'This style of title card is based off the official Devilman Crybaby title cards.',
+            'Season text, if enabled, is placed at deterministic locations around the roman numerals.',
+        ],
+    }
+
     """Directory where all reference files used by this card are stored"""
-    REF_DIRECTORY = Path(__file__).parent / 'ref' / 'roman'
+    REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'roman'
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {

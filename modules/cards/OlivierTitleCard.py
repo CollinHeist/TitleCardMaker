@@ -12,9 +12,30 @@ class OlivierTitleCard(BaseCardType):
     style of those designed by Reddit user /u/Olivier_286.
     """
 
+    """API Parameters"""
+    API_DETAILS = {
+        'name': 'Olivier',
+        'example': '/assets/cards/olivier.jpg',
+        'creators': ['/u/Olivier_286', 'CollinHeist'],
+        'source': 'local',
+        'supports_custom_fonts': True,
+        'supports_custom_seasons': True,
+        'supported_extras': [
+            {'name': 'Episode Text Color',
+             'identifier': 'episode_text_color',
+             'description': 'Color to utilize for the episode text'},
+            {'name': 'Stroke Text Color',
+             'identifier': 'stroke_color',
+             'description': 'Custom color to use for the stroke on the title text'},
+        ], 'description': [
+            'Title card with left-aligned title and episode text.',
+            'This card is structurally very similar to the StarWarsTitleCard, except it allows for custom fonts and does not feature the star gradient overlay.',
+        ],
+    }
+
     """Directory where all reference files used by this card are stored"""
-    REF_DIRECTORY = Path(__file__).parent / 'ref' / 'olivier'
-    SW_REF_DIRECTORY = Path(__file__).parent / 'ref' / 'star_wars'
+    REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'olivier'
+    SW_REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'star_wars'
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
@@ -48,17 +69,17 @@ class OlivierTitleCard(BaseCardType):
     )
 
     def __init__(self, source: Path, output_file: Path, title: str,
-                 episode_text: str, font: str, title_color: str,
-                 font_size: float=1.0,
-                 stroke_width: float=1.0,
-                 vertical_shift: int=0,
-                 interline_spacing: int=0,
-                 kerning: float=1.0,
-                 blur: bool=False,
-                 grayscale: bool=False,
-                 episode_text_color: Optional[str]=EPISODE_TEXT_COLOR,
-                 stroke_color: Optional[str]='black',
-                 **unused) -> None:
+            episode_text: str, font: str, title_color: str,
+            font_size: float=1.0,
+            stroke_width: float=1.0,
+            vertical_shift: int=0,
+            interline_spacing: int=0,
+            kerning: float=1.0,
+            blur: bool=False,
+            grayscale: bool=False,
+            episode_text_color: SeriesExtra[str]=EPISODE_TEXT_COLOR,
+            stroke_color: SeriesExtra[str]='black',
+            **unused) -> None:
         """
         Construct a new instance of this card.
 
