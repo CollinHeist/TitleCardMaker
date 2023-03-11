@@ -10,12 +10,13 @@ on:
         required: true
       DOCKER_HUB_ACCESS_TOKEN:
         required: true
+      GH_TOKEN:
+        required: true
 
 jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-
       - name: Check Out Repo
         uses: actions/checkout@v3
 
