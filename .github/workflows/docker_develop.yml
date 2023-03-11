@@ -6,7 +6,7 @@ on:
 
 jobs:
   docker-develop:
-    uses: ./.github/workflows/docker-build.yml
+    uses: ./.github/workflows/docker_build.yml
     with:
       tag: develop
     secrets:
