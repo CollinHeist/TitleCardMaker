@@ -77,7 +77,7 @@ class SonarrInterface(WebInterface, SyncInterface):
 
         # Parse all Sonarr series
         self.__series_data = {}
-        self.__map_all_series_data()
+        # self.__map_all_series_data()
 
 
     def __repr__(self) -> str:
@@ -401,6 +401,18 @@ class SonarrInterface(WebInterface, SyncInterface):
 
         # Get all Sonarr-created EpisodeInfo objects
         self.get_all_episodes(series_info)
+
+
+    def get_all_tags(self) -> list[dict[str, 'str | int']]:
+        """
+        Get all tags present in Sonarr.
+
+        Returns:
+            List of tag dictionary objects with the keys "id" and
+            "label" for each tag.
+        """
+
+        return self._get(f'{self.url}tag', self.__standard_params)
 
 
     def list_all_series_id(self) -> None:
