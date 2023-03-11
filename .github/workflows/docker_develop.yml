@@ -6,7 +6,7 @@ on:
 
 jobs:
   docker-develop:
-    uses: CollinHeist/TitleCardMaker/.github/workflows/docker_build.yml
+    uses: ./.github/workflows/docker-build.yml
     with:
       tag: develop
     secrets:

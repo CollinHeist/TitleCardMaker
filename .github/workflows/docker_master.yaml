@@ -6,7 +6,7 @@ on:
 
 jobs:
   docker-master:
-    uses: CollinHeist/TitleCardMaker/.github/workflows/docker_build.yml
+    uses: ./.github/workflows/docker-build.yml
     with:
       tag: master
     secrets:
