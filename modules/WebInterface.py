@@ -15,7 +15,7 @@ class WebInterface:
     """
 
     """Maximum time allowed for a single request"""
-    REQUEST_TIMEOUT = 5
+    REQUEST_TIMEOUT = 10
 
     """How many requests to cache"""
     CACHE_LENGTH = 10
@@ -69,8 +69,8 @@ class WebInterface:
         return f'<WebInterface to {self.name}>'
 
 
-    @retry(stop=stop_after_attempt(3),
-           wait=wait_fixed(3),#+wait_exponential(min=1, max=32),
+    @retry(stop=stop_after_attempt(5),
+           wait=wait_fixed(5)+wait_exponential(min=1, max=16),
            before_sleep=lambda _:log.warning('Failed to submit GET request, retrying..'))
     def __retry_get(self, url: str, params: dict[str, Any]) -> dict[str, Any]:
         """

@@ -77,7 +77,7 @@ class SonarrInterface(WebInterface, SyncInterface):
 
         # Parse all Sonarr series
         self.__series_data = {}
-        # self.__map_all_series_data()
+        self.__map_all_series_data()
 
 
     def __repr__(self) -> str:
