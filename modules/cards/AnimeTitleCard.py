@@ -437,4 +437,27 @@ class AnimeTitleCard(BaseCardType):
                       f'"{self.output_file.name}"')
             return None
 
-        # Sub-command to optionally add
+        # Sub-command to optionally add gradient
+        gradient_command = []
+        if not self.omit_gradient:
+            gradient_command = [
+                f'"{self.__GRADIENT_IMAGE.resolve()}"',
+                f'-composite',
+            ]
+
+        command = ' '.join([
+            f'convert "{self.source_file.resolve()}"',
+            # Resize and optionally blur source image
+            *self.resize_and_style,
+            # Increase contrast of source image
+            f'-modulate 100,125',
+            # Overlay gradient
+            *gradient_command,
+            # Add title or title+kanji
+            *self.title_command,
+            # Add season or season+episode text
+            *self.index_command,
+            f'"{self.output_file.resolve()}"',
+        ])
+
+        self.image_magick.run(command)
