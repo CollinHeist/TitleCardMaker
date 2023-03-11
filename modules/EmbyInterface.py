@@ -139,6 +139,22 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         }
 
 
+    def get_usernames(self) -> list[str]:
+        """
+        Get all the usernames for this interface's Emby server.
+
+        Returns:
+            List of usernames.
+        """
+
+        users = self.session._get(
+            f'{self.url}/Users',
+            params=self.__params
+        )
+
+        return [user['Name'] for user in users]
+
+
     def set_series_ids(self, library_name: str, series_info: SeriesInfo) ->None:
         """
         Set the series ID's for the given SeriesInfo object.

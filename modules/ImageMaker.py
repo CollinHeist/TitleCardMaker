@@ -20,6 +20,9 @@ class ImageMaker(ABC):
     image is created are completely customizable.
     """
 
+    """Base reference directory for local assets"""
+    BASE_REF_DIRECTORY = Path(__file__).parent / 'ref'
+
     """Directory for all temporary images created during image creation"""
     TEMP_DIR = Path(__file__).parent / '.objects'
 

@@ -51,7 +51,7 @@ class BaseCardType(ImageMaker):
 
     @property
     @abstractmethod
-    def TITLE_CHARACTERISTICS(self) -> dict:
+    def TITLE_CHARACTERISTICS(self) -> dict[str, 'int | bool']:
         """
         Characteristics of title splitting for this card type. Must have
         keys for max_line_width, max_line_count, and top_heavy. See
