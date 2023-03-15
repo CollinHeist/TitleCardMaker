@@ -45,15 +45,12 @@ class ImageMaker(ABC):
     @abstractmethod
     def __init__(self) -> None:
         """
-        Initializes a new instance. This gives all subclasses access to an
-        `ImageMagickInterface` object that uses the docker ID found within
-        preferences, as well as a preference object.
+        Initializes a new instance. This gives all subclasses access to
+        an ImageMagickInterface via the image_magick attribute.
         """
 
-        # Store global PreferenceParse object
-        self.preferences = global_objects.pp
-
         # All ImageMakers have an instance of an ImageMagickInterface
+        self.preferences = global_objects.pp
         self.image_magick = ImageMagickInterface(
             self.preferences.imagemagick_container,
             self.preferences.use_magick_prefix,
@@ -69,8 +66,7 @@ class ImageMaker(ABC):
             image: Path to the image to get the dimensions of.
 
         Returns:
-            Dictionary of the image dimensions whose keys are 'width' and
-            'height'.
+            Namedtuple of dimensions.
         """
 
         # Return dimenions of zero if image DNE

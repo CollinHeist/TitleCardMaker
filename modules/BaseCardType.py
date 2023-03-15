@@ -98,7 +98,7 @@ class BaseCardType(ImageMaker):
 
 
     @abstractmethod
-    def __init__(self, blur: bool=False, grayscale: bool=False) -> None:
+    def __init__(self, blur: bool = False, grayscale: bool = False) -> None:
         """
         Construct a new CardType. Must call super().__init__() to
         initialize the parent ImageMaker class (for PreferenceParser and

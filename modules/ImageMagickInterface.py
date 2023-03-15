@@ -62,7 +62,7 @@ class ImageMagickInterface:
         self.__history = []
 
 
-    def verify_interface(self) -> bool:
+    def validate_interface(self) -> bool:
         """
         Verify this interface has a valid connection to ImageMagick.
 
