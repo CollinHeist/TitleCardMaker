@@ -212,16 +212,18 @@ class PreferenceParser(YamlReader):
 
     def __determine_imagemagick_prefix(self) -> None:
         """
-        Determine whether to use the "magick " prefix for ImageMagick commands.
-        If a prefix cannot be determined, a critical message is logged and the
-        program exits with an error.
+        Determine whether to use the "magick " prefix for ImageMagick
+        commands. If a prefix cannot be determined, a critical message
+        is logged and this object's validity is set to False.
         """
 
         # Try variations of the font list command with/out the "magick " prefix
         for prefix, use_magick in zip(('', 'magick '), (False, True)):
             # Create ImageMagickInterface and verify validity
-            if ImageMagickInterface(self.imagemagick_container, use_magick,
-                                    self.imagemagick_timeout).verify_interface():
+            interface = ImageMagickInterface(
+                self.imagemagick_container, use_magick, self.imagemagick_timeout
+            )
+            if interface.validate_interface():
                 self.use_magick_prefix = use_magick
                 log.debug(f'Using "{prefix}" ImageMagick command prefix')
                 return None

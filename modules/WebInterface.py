@@ -15,7 +15,7 @@ class WebInterface:
     """
 
     """Maximum time allowed for a single request"""
-    REQUEST_TIMEOUT = 10
+    REQUEST_TIMEOUT = 15
 
     """How many requests to cache"""
     CACHE_LENGTH = 10
