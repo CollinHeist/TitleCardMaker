@@ -1,3 +1,4 @@
+from pathlib import Path
 from shlex import split as command_split
 from subprocess import Popen, PIPE, TimeoutExpired
 
@@ -31,8 +32,10 @@ class ImageMagickInterface:
     __slots__ = ('container', 'use_docker', 'prefix', 'timeout', '__history')
 
 
-    def __init__(self, container: str=None, use_magick_prefix: bool=False,
-                 timeout: int=COMMAND_TIMEOUT_SECONDS) -> None:
+    def __init__(self,
+            container: str=None,
+            use_magick_prefix: bool=False,
+            timeout: int=COMMAND_TIMEOUT_SECONDS) -> None:
         """
         Construct a new instance. If container is falsey, then commands will not
         use a docker container.
@@ -59,7 +62,7 @@ class ImageMagickInterface:
         self.__history = []
 
 
-    def verify_interface(self) -> bool:
+    def validate_interface(self) -> bool:
         """
         Verify this interface has a valid connection to ImageMagick.
 
@@ -87,7 +90,6 @@ class ImageMagickInterface:
             characters.
         """
 
-        # Handle possible bad (None) strings
         if string is None:
             return None
 
@@ -130,7 +132,7 @@ class ImageMagickInterface:
             log.error(f'ImageMagick command timed out')
             log.debug(command)
         except FileNotFoundError as e:
-            log.error(f'Command error "{e}"')
+            log.exception(f'Command error', e)
             log.debug(command)
 
         # Add command to history and return results
@@ -158,7 +160,7 @@ class ImageMagickInterface:
             return b''.join(output).decode('iso8859')
 
 
-    def delete_intermediate_images(self, *paths: tuple) -> None:
+    def delete_intermediate_images(self, *paths: tuple[Path]) -> None:
         """
         Delete all the provided intermediate files.
 

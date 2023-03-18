@@ -544,6 +544,7 @@ if hasattr(args, 'show_summary'):
         log.info(f'Created "{summary.output.resolve()}"')
     else:
         log.warning(f'Failed to create "{summary.output.resolve()}"')
+        summary.image_magick.print_command_history()
 
 # Create season posters
 if hasattr(args, 'season_poster'):

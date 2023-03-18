@@ -11,15 +11,39 @@ Position = Literal['left', 'center', 'right']
 
 class TintedGlassTitleCard(BaseCardType):
     """
-    This class describes a type of CardType that produces title cards featuring
-    a darkened and blurred rounded rectangle surrounding the title and index
-    text. This card is inspired by Reddit user /u/RaceDebriefF1's Lucky! (2022)
-    title cards.
+    This class describes a type of CardType that produces title cards
+    featuring a darkened and blurred rounded rectangle surrounding the
+    title and index text. This card is inspired by Reddit user
+    /u/RaceDebriefF1's Lucky! (2022) title cards.
     """
 
+    """API Parameters"""
+    API_DETAILS = {
+        'name': 'Tinted Glass',
+        'example': '/assets/cards/tinted glass.jpg',
+        'creators': ['/u/RaceDebriefF1', 'CollinHeist'],
+        'source': 'local',
+        'supports_custom_fonts': True,
+        'supports_custom_seasons': True,
+        'supported_extras': [
+            {'name': 'Episode Text Color',
+             'identifier': 'episode_text_color',
+             'description': 'Color to utilize for the episode text'},
+            {'name': 'Episode Text Position',
+             'identifier': 'episode_text_position',
+             'description': 'Position of the episode text relative to the title text'},
+            {'name': 'Episode Text Position',
+             'identifier': 'box_adjustments',
+             'description': 'Manual adjustments to the bounds of the bounding box'},
+        ], 'description': [
+            'Card type featuring a darkened and blurred rounded rectangle surrounding the title and episode text.',
+            'By default, these cards also feature the name of the series in the episode text.',
+        ],
+    }
+
     """Directory where all reference files used by this card are stored"""
-    REF_DIRECTORY = Path(__file__).parent / 'ref' / 'darkened'
-    SW_REF_DIRECTORY = Path(__file__).parent / 'ref' / 'star_wars'
+    REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'darkened'
+    SW_REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'star_wars'
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
@@ -61,18 +85,18 @@ class TintedGlassTitleCard(BaseCardType):
     )
 
     def __init__(self, source: Path, output_file: Path, title: str,
-                 season_text: str, episode_text: str, hide_season: bool,
-                 font: str, title_color: str, 
-                 font_size: float=1.0, 
-                 interline_spacing: int=0,
-                 kerning: float=1.0,
-                 vertical_shift: int=0,
-                 blur: bool=False,
-                 grayscale: bool=False,
-                 episode_text_color: SeriesExtra[str]=EPISODE_TEXT_COLOR,
-                 episode_text_position: SeriesExtra[Position]='center',
-                 box_adjustments: SeriesExtra[str]=None,
-                 **unused) -> None:
+            season_text: str, episode_text: str, hide_season: bool,
+            font: str, title_color: str, 
+            font_size: float=1.0, 
+            interline_spacing: int=0,
+            kerning: float=1.0,
+            vertical_shift: int=0,
+            blur: bool=False,
+            grayscale: bool=False,
+            episode_text_color: SeriesExtra[str]=EPISODE_TEXT_COLOR,
+            episode_text_position: SeriesExtra[Position]='center',
+            box_adjustments: SeriesExtra[str]=None,
+            **unused) -> None:
         """
         Initialize this TitleCard object.
 
@@ -201,7 +225,6 @@ class TintedGlassTitleCard(BaseCardType):
         interline_spacing = -50 + self.interline_spacing
         vertical_shift = 300 + self.vertical_shift
 
-        # Text-relevant commands
         return [
             f'-gravity south',
             f'-font "{self.font}"',
@@ -400,7 +423,7 @@ class TintedGlassTitleCard(BaseCardType):
             # Add title text
             *self.add_title_text_command,
             # Add episode text
-            *self.add_episode_text_command(title_box_coordinates),
+            # *self.add_episode_text_command(title_box_coordinates),
             f'"{self.output_file.resolve()}"',
         ])
 

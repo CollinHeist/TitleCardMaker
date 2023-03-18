@@ -8,15 +8,37 @@ SeriesExtra = Optional
 
 class CutoutTitleCard(BaseCardType):
     """
-    This class describes a type of CardType that is very loosely based off of
-    /u/Phendrena's Willow title card set. These cards feature a solid color
-    overlay with the episode text cutout to reveal the source image.
+    This class describes a type of CardType that is very loosely based
+    off of /u/Phendrena's Willow title card set. These cards feature a
+    solid color overlay with the episode text cutout to reveal the
+    source image.
     """
 
+    """API Parameters"""
+    API_DETAILS = {
+        'name': 'Cutout',
+        'example': '/assets/cards/cutout.jpg',
+        'creators': ['/u/Phendrena', 'CollinHeist'],
+        'source': 'local',
+        'supports_custom_fonts': True,
+        'supports_custom_seasons': False,
+        'supported_extras': [
+            {'name': 'Overlay Color',
+             'identifier': 'overlay_color',
+             'description': 'Color of the solid overlay to cut text out of'},
+            {'name': 'Edge Blurring',
+             'identifier': 'blur_edges',
+             'description': 'Whether to blur the edges of the number cutout'},
+        ], 'description': [
+            'Title cards featuring a solid color overlay overlaying the source image.',
+            'Written episode text cuts out the overlay to reveal the underlying source image.',
+        ],
+    }
+
     """Directory where all reference files used by this card are stored"""
-    REF_DIRECTORY = Path(__file__).parent / 'ref' / 'cutout'
-    OLIVIER_REF_DIRECTORY = Path(__file__).parent / 'ref' / 'olivier'
-    SW_REF_DIRECTORY =  Path(__file__).parent / 'ref' / 'star_wars'
+    REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'cutout'
+    OLIVIER_REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'olivier'
+    SW_REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'star_wars'
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
@@ -51,16 +73,16 @@ class CutoutTitleCard(BaseCardType):
     )
 
     def __init__(self, source: Path, output_file: Path, title: str,
-                 episode_text: str, font: str, font_size: float,
-                 title_color: str,
-                 vertical_shift: int=0,
-                 interline_spacing: int=0,
-                 kerning: float=1.0,
-                 blur: bool=False,
-                 grayscale: bool=False,
-                 overlay_color: SeriesExtra[str]='black',
-                 blur_edges: SeriesExtra[bool]=False,
-                 **unused) -> None:
+            episode_text: str, font: str, font_size: float,
+            title_color: str,
+            vertical_shift: int=0,
+            interline_spacing: int=0,
+            kerning: float=1.0,
+            blur: bool=False,
+            grayscale: bool=False,
+            overlay_color: SeriesExtra[str]='black',
+            blur_edges: SeriesExtra[bool]=False,
+            **unused) -> None:
         """
         Construct a new instance of this card.
 
@@ -74,10 +96,13 @@ class CutoutTitleCard(BaseCardType):
             font_size: Scalar to apply to title font size.
             title_color: Color to use for title text.
             hide_season: Whether to ignore season_text.
-            vertical_shift: Pixel count to adjust the title vertical offset by.
-            interline_spacing: Pixel count to adjust title interline spacing by.
+            vertical_shift: Pixel count to adjust the title vertical
+                offset by.
+            interline_spacing: Pixel count to adjust title interline
+                spacing by.
             kerning: Scalar to apply to kerning of the title text.
-            stroke_width: Scalar to apply to black stroke of the title text.
+            stroke_width: Scalar to apply to black stroke of the title
+                text.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
             overlay_color: Color to use for the solid overlay.
@@ -113,7 +138,8 @@ class CutoutTitleCard(BaseCardType):
 
     def _format_episode_text(self, episode_text: str) -> str:
         """
-        Format the given episode text into the appropriate multi-line string.
+        Format the given episode text into the appropriate multi-line
+        string.
 
         Args:
             episode_text: Episode text to format.
@@ -140,8 +166,8 @@ class CutoutTitleCard(BaseCardType):
     @staticmethod
     def is_custom_font(font: 'Font') -> bool:
         """
-        Determine whether the given font characteristics constitute a default or
-        custom font.
+        Determine whether the given font characteristics constitute a
+        default or custom font.
 
         Args:
             font: The Font being evaluated.
@@ -162,8 +188,8 @@ class CutoutTitleCard(BaseCardType):
     def is_custom_season_titles(custom_episode_map: bool, 
                                 episode_text_format: str) -> bool:
         """
-        Determine whether the given attributes constitute custom or generic
-        season titles.
+        Determine whether the given attributes constitute custom or
+        generic season titles.
 
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
@@ -180,8 +206,8 @@ class CutoutTitleCard(BaseCardType):
 
     def create(self) -> None:
         """
-        Make the necessary ImageMagick and system calls to create this object's
-        defined title card.
+        Make the necessary ImageMagick and system calls to create this
+        object's defined title card.
         """
 
         command = ' '.join([

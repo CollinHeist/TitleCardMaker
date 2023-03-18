@@ -6,11 +6,12 @@ from modules.Debug import log
 
 class Template:
     """
-    This class describes a template. A Template is a fallback YAML object that
-    can be "filled in" with values, or just outright contain them. Variable data
-    is encoded in the form <<{key}>>. When applied to some series YAML
-    dictionary, the template'd YAML is applied to the series, unless both have
-    instances of the data, in which the series data takes priority.
+    This class describes a template. A Template is a fallback YAML
+    object that can be "filled in" with values, or just outright contain
+    them. Variable data is encoded in the form <<{key}>>. When applied
+    to some series YAML dictionary, the template'd YAML is applied to
+    the series, unless both have instances of the data, in which the
+    series data takes priority.
     """
 
     """Maximum number of template application iterations"""
@@ -19,9 +20,9 @@ class Template:
 
     def __init__(self, name: str, template: dict[str: str]) -> None:
         """
-        Construct a new Template object with the given name, and with the given
-        template dictionary. Keys of the form <<{key}>> are search for through
-        this template.
+        Construct a new Template object with the given name, and with
+        the given template dictionary. Keys of the form <<{key}>> are
+        search for through this template.
 
         Args:
             name: The template name/identifier. For logging only.
@@ -55,9 +56,10 @@ class Template:
 
     def __identify_template_keys(self, template: dict, keys: set) -> set:
         """
-        Identify the required template keys to use this template. This looks for
-        all unique values like "<<{key}>>". This is a recursive function, and
-        searches through all sub-dictionaries of template.
+        Identify the required template keys to use this template. This
+        looks for all unique values like "<<{key}>>". This is a
+        recursive function, and searches through all sub-dictionaries of
+        template.
 
         Args:
             template: The template dictionary to search through.
@@ -85,19 +87,21 @@ class Template:
 
     def __apply_value_to_key(self, template: dict, key: str, value: Any) -> None:
         """
-        Apply the given value to all instances of the given key in the template.
-        This looks for <<{key}>>, and puts value in place. This function is
-        recursive, so if any values of template are dictionaries, those are
-        applied as well. For example:
+        Apply the given value to all instances of the given key in the
+        template. This looks for <<{key}>>, and puts value in place.
+        This function is recursive, so if any values of template are
+        dictionaries, those are applied as well. For example:
 
-        >>> temp = {'year': <<year>>, 'b': {'b1': False, 'b2': 'Hey <<year>>'}}
+        >>> temp = {'year': <<year>>,
+                    'b': {'b1': False,
+                          'b2': 'Hey <<year>>'}}
         >>> __apply_value_to_key(temp, 'year', 1234)
         >>> temp
-        {'year': 1234, 'b': 'b1': False, 'b2': 'Hey 1234'}
+        {'year': 1234, 'b': {'b1': False, 'b2': 'Hey 1234'}}
 
         Args:
-            template: The dictionary to modify any instances of <<{key}>>
-                within. Modified in-place.
+            template: The dictionary to modify any instances of 
+                <<{key}>> within. Modified in-place.
             key: The key to search/replace for.
             value: The value to replace the key with.
         """
@@ -125,12 +129,13 @@ class Template:
 
     @staticmethod
     def recurse_priority_union(base_yaml: dict,
-                               template_yaml: dict) -> None:
+            template_yaml: dict) -> None:
         """
-        Construct the union of the two dictionaries, with all key/values of
-        template_yaml being ADDED to the first, priority dictionary IF that
-        specific key is not already present. This is a recurisve function that
-        applies to any arbitrary set of nested dictionaries. For example:
+        Construct the union of the two dictionaries, with all key/values
+        of template_yaml being ADDED to the first, priority dictionary
+        IF that specific key is not already present. This is a recurisve
+        function that applies to any arbitrary set of nested
+        dictionaries. For example:
 
         >>> base_yaml = {'a': 123, 'c': {'c1': False}}
         >>> t_yaml = {'a': 999, 'b': 234, 'c': {'c2': True}}
@@ -139,8 +144,9 @@ class Template:
         {'a': 123, 'b': 234, 'c': {'c1': False, 'c2': True}}
 
         Args:
-            base_yaml: The base - i.e. higher priority - YAML that forms the
-                basis of the union of these dictionaries. Modified in-place.
+            base_yaml: The base - i.e. higher priority - YAML that forms
+                the basis of the union of these dictionaries. Modified
+                in-place.
             template_yaml: The templated - i.e. lower priority - YAML.
         """
 
@@ -159,16 +165,18 @@ class Template:
 
 
     def apply_to_series(self, series_info: 'SeriesInfo',
-                        series_yaml: dict[str, Any]) -> bool:
+            series_yaml: dict[str, Any]) -> bool:
         """
-        Apply this Template object to the given series YAML, modifying it
-        to include the templated values. This function assumes that the given
-        series YAML has a template attribute, and that it applies to this object
+        Apply this Template object to the given series YAML, modifying
+        it to include the templated values. This function assumes that
+        the given series YAML has a template attribute, and that it
+        applies to this object
 
         Args:
-            series_info: The info of the series. Used for built-in series data.
-            series_yaml: The series YAML to modify. Must have 'template' key.
-                Modified in-place.
+            series_info: The info of the series. Used for built-in
+                series data.
+            series_yaml: The series YAML to modify. Must have 'template'
+                key. Modified in-place.
 
         Returns:
             True if the given series contained all the required template

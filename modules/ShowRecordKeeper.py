@@ -10,16 +10,16 @@ from modules.PersistentDatabase import PersistentDatabase
 
 class ShowRecordKeeper:
     """
-    This class describes a show record keeper. A ShowRecordKeeper maintains a
-    database of hashes of Show objects for comparison. Specific attributes of
-    the Show objects are hashed such that changes to a Show object's underlying
-    YAML between runs will be identified and result in a different hash. This
-    can/should be used to detect when to delete and remake cards upon changes
-    to the YAML.
+    This class describes a show record keeper. A ShowRecordKeeper
+    maintains a database of hashes of Show objects for comparison.
+    Specific attributes of the Show objects are hashed such that changes
+    to a Show object's underlying YAML between runs will be identified
+    and result in a different hash. This can/should be used to detect
+    when to delete and remake cards upon changes to the YAML.
 
-    Hashes are stored by the series' full name and associated media directory,
-    so changes to the media directory will result in a NEW hash, not a changed
-    one. 
+    Hashes are stored by the series' full name and associated media
+    directory, so changes to the media directory will result in a NEW
+    hash, not a changed one. 
     """
 
     """Attributes of a Show object that should affect a shows record"""
@@ -37,11 +37,12 @@ class ShowRecordKeeper:
 
     def __init__(self, database_directory: Path) -> None:
         """
-        Construct a new instance. This reads the record database file if it
-        exists, and creates if it does not.
+        Construct a new instance. This reads the record database file if
+        it exists, and creates if it does not.
 
         Args:
-            database_directory: Base Path to read/write any databases from.
+            database_directory: Base Path to read/write any databases
+                from.
         """
 
         # Read record database
@@ -72,14 +73,15 @@ class ShowRecordKeeper:
 
         Args:
             hash_obj: Initialized hash object to update with the record.
-            record: Value to get the hash of. If this object is a subclass of
-                the CardType abstract class, then the class name is hashed. If
-                this object defines a custom_hash attribute, that value is
-                hashed. Otherwise the UTF-8 encoded string of this object is
-                hashed.
+            record: Value to get the hash of. If this object is a
+                subclass of the CardType abstract class, then the class
+                name is hashed. If this object defines a custom_hash
+                attribute, that value is hashed. Otherwise the UTF-8
+                encoded string of this object is hashed.
 
         Returns:
-            Nothing, the hash is applied to the given hash algorithm object.
+            Nothing, the hash is applied to the given hash algorithm
+            object.
         """
 
         # For CardType classes use their class name as the hash value
@@ -95,8 +97,9 @@ class ShowRecordKeeper:
 
     def __get_show_hash(self, show: 'Show') -> int:
         """
-        Get the hash of the given config. This hash is deterministic, and is
-        based only on attributes of the config that visually affect a card.
+        Get the hash of the given config. This hash is deterministic,
+        and is based only on attributes of the config that visually
+        affect a card.
 
         Args:
             show: Show object to hash.
@@ -127,14 +130,16 @@ class ShowRecordKeeper:
 
     def is_updated(self, show: 'Show') -> bool:
         """
-        Determine whether the given show is an update on the recorded config.
+        Determine whether the given show is an update on the recorded
+        config.
 
         Args:
             show: Show object being evaluated.
 
         Returns:
-            True if the given show is different from the recorded show. False if
-            the show is identical OR if there is no existing record.
+            True if the given show is different from the recorded show.
+            False if the show is identical OR if there is no existing
+            record.
         """
 
         # Condition to get the hash of this show

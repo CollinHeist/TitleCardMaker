@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 from modules.Debug import log
 from modules.ImageMaker import ImageMaker
@@ -19,10 +20,15 @@ class MoviePosterMaker(ImageMaker):
     __GRADIENT = REF_DIRECTORY / 'gradient.png'
 
 
-    def __init__(self, source: Path, output: Path, title: str, subtitle: str='',
-            top_subtitle: str='', movie_index: str='', logo: Path=None,
-            font: Path=FONT, font_color: str=FONT_COLOR, font_size: float=1.0,
-            omit_gradient: bool=False) -> None:
+    def __init__(self, source: Path, output: Path, title: str,
+            subtitle: str = '',
+            top_subtitle: str = '',
+            movie_index: str = '',
+            logo: Optional[Path] = None,
+            font: Path = FONT,
+            font_color: str = FONT_COLOR,
+            font_size: float = 1.0,
+            omit_gradient: bool = False) -> None:
         """
         Construct a new instance of a CollectionPosterMaker.
 
@@ -215,8 +221,9 @@ class MoviePosterMaker(ImageMaker):
 
     def create(self) -> None:
         """
-        Create this object's poster. This WILL overwrite the existing file if it 
-        already exists. Errors and returns if the source image does not exist.
+        Create this object's poster. This WILL overwrite the existing
+        file if it  already exists. Errors and returns if the source
+        image does not exist.
         """
 
         # If the source file doesn't exist, exit

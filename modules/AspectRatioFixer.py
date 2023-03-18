@@ -1,17 +1,19 @@
 from pathlib import Path
+from typing import Literal
 
 from modules.Debug import log
 from modules.ImageMaker import ImageMaker
 
 class AspectRatioFixer(ImageMaker):
     """
-    This class describes a type of ImageMaker that corrects the aspect ratio of
-    source images (usually 4x3) to the TitleCard aspect ratio of 16x9.
+    This class describes a type of ImageMaker that corrects the aspect
+    ratio of source images (usually 4x3) to the TitleCard aspect ratio
+    of 16x9.
     """
 
     """Valid styles for the fixer"""
-    DEFAULT_STYLE = 'copy'
     VALID_STYLES = ('copy', 'stretch')
+    DEFAULT_STYLE = 'copy'
 
     """Temporary intermediate files"""
     __RESIZED_TEMP = ImageMaker.TEMP_DIR / 'ar_temp.png'
@@ -20,15 +22,16 @@ class AspectRatioFixer(ImageMaker):
 
 
     def __init__(self, source: Path, destination: Path,
-                 style: str=DEFAULT_STYLE) -> None:
+            style: Literal['copy', 'stretch'] = DEFAULT_STYLE) -> None:
         """
-        Initialize this object. This stores attributes, and initialzies the 
-        parent ImageMaker object.
+        Initialize this object. This stores attributes, and initialzies
+        the  parent ImageMaker object.
 
         Args:
             source: Path to the source image to use.
-            destination: Path to the desination file to write the image at.
-            style: Aspect ratio correction style. Must be one of VALID_STYLES.
+            destination: Path to the desination file to write the image
+                at.
+            style: Aspect ratio correction style.
 
         Raises:
             AssertionError: If 'style' is invalid.
@@ -47,7 +50,8 @@ class AspectRatioFixer(ImageMaker):
 
     def create(self) -> None:
         """
-        Create the aspect-ratio-corrected image for this object's source file.
+        Create the aspect-ratio-corrected image for this object's source
+        file.
         """
 
         # If source DNE, exit

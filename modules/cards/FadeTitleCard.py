@@ -9,14 +9,34 @@ SeriesExtra = Optional
 
 class FadeTitleCard(BaseCardType):
     """
-    This class describes a type of CardType that produces title cards featuring
-    a fade overlay showcasing a source image in 4:3 aspect ratio. The base idea
-    for this card comes from Yozora.
+    This class describes a type of CardType that produces title cards
+    featuring a fade overlay showcasing a source image in 4:3 aspect
+    ratio. The base idea for this card comes from Yozora.
     """
 
+    """API Parameters"""
+    API_DETAILS = {
+        'name': 'Fade',
+        'example': '/assets/cards/fade.jpg',
+        'creators': ['Yozora', 'CollinHeist'],
+        'source': 'local',
+        'supports_custom_fonts': True,
+        'supports_custom_seasons': True,
+        'supported_extras': [
+            {'name': 'Logo File',
+             'identifier': 'logo',
+             'description': 'Logo file to place on the left of the card'},
+            {'name': 'Episode Text Color',
+             'identifier': 'episode_text_color',
+             'description': 'Color to use for the episode text'},
+        ], 'description': [
+            'Modification of the Standard style that is intended to be used for 4:3 aspect-ratio source images.',
+        ],
+    }
+
     """Directory where all reference files used by this card are stored"""
-    REF_DIRECTORY = Path(__file__).parent / 'ref' / 'fade'
-    FONT_REF_DIRECTORY = Path(__file__).parent / 'ref'
+    REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'fade'
+    FONT_REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
@@ -51,20 +71,20 @@ class FadeTitleCard(BaseCardType):
     )
 
     def __init__(self, source: Path, output_file: Path, title: str,
-                 season_text: str, episode_text: str, hide_season: bool,
-                 font: str, title_color: str, 
-                 interline_spacing: int=0,
-                 kerning: float=1.0,
-                 font_size: float=1.0,
-                 vertical_shift: int=0,
-                 season_number: int=1,
-                 episode_number: int=1,
-                 blur: bool=False,
-                 grayscale: bool=False,
-                 logo: SeriesExtra[str]=None,
-                 episode_text_color: SeriesExtra[str]=EPISODE_TEXT_COLOR,
-                 separator: SeriesExtra[str]='•',
-                 **unused) -> None:
+            season_text: str, episode_text: str, hide_season: bool,
+            font: str, title_color: str, 
+            interline_spacing: int=0,
+            kerning: float=1.0,
+            font_size: float=1.0,
+            vertical_shift: int=0,
+            season_number: int=1,
+            episode_number: int=1,
+            blur: bool=False,
+            grayscale: bool=False,
+            logo: SeriesExtra[str]=None,
+            episode_text_color: SeriesExtra[str]=EPISODE_TEXT_COLOR,
+            separator: SeriesExtra[str]='•',
+            **unused) -> None:
         """
         Construct a new instance of this card.
 

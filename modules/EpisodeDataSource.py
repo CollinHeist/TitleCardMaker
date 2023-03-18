@@ -4,8 +4,8 @@ from modules.EpisodeInfo import EpisodeInfo
 
 class EpisodeDataSource(ABC):
     """
-    This class describes an abstract episode data source. Classes of this type
-    define sources of episode data.
+    This class describes an abstract episode data source. Classes of
+    this type define sources of episode data.
     """
 
     @abstractproperty

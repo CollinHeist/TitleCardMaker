@@ -793,7 +793,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             elif entry.type == 'season':
                 # Get series associated with this season
                 series = self.__server.fetchItem(entry.parentKey)
-                assert series.year is not None
+                if series.year is None:
+                    raise ValueError
+
                 series_info = self.info_set.get_series_info(
                     entry.title, entry.year
                 )
@@ -823,8 +825,10 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             return []
         except NotFound:
             log.error(f'No item with rating key {rating_key} exists')
-        except AssertionError:
+        except ValueError:
             log.warning(f'Item with rating key {rating_key} has no year')
+        except Exception as e:
+            log.error(f'Rating key {rating_key} has some error')
 
         # Error occurred, return empty list
         return []

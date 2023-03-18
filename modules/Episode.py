@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Union
 
 from modules.CleanPath import CleanPath
 from modules.Debug import log
@@ -8,9 +8,9 @@ from modules.TitleCard import TitleCard
 
 class Episode:
     """
-    This class defines an episode of a series that has a corresponding Title
-    Card. An Episode encapsulates some EpisodeInfo, as well as attributes that
-    map that info to a source and destination file.
+    This class defines an episode of a series that has a corresponding
+    Title Card. An Episode encapsulates some EpisodeInfo, as well as
+    attributes that map that info to a source and destination file.
     """
 
     __slots__ = (
@@ -21,21 +21,21 @@ class Episode:
 
 
     def __init__(self, episode_info: 'EpisodeInfo', card_class: 'CardType',
-                 base_source: Path, destination: Path, given_keys: set,
-                 **extras: dict[str, Any]) -> None:
+            base_source: Path, destination: Path, given_keys: set[str],
+            **extras: dict[str, Any]) -> None:
         """
         Construct a new instance of an Episode.
 
         Args:
             episode_info: Episode info for this episode.
-            base_source: The base source directory to look for source images
-                within.
-            destination: The destination for the title card associated with this
-                Episode.
-            given_keys: Set of keys present in the initialization of this
-                Episode.
-            extras: Additional characteristics to pass to the creation of the
-                TitleCard from this Episode.
+            base_source: The base source directory to look for source
+                images within.
+            destination: The destination for the title card associated
+                with this Episode.
+            given_keys: Set of keys present in the initialization of
+                this Episode.
+            extras: Additional characteristics to pass to the creation
+                of the TitleCard from this Episode.
         """
 
         # Set object attributes
@@ -83,9 +83,9 @@ class Episode:
         Get the characteristics of this object for formatting.
 
         Returns:
-            Dictionary of characteristics that define this object. Keys are the
-            start/end indices of the range, and the extra characteristics of the
-            first episode.
+            Dictionary of characteristics that define this object. Keys
+            are the start/end indices of the range, and the extra
+            characteristics of the first episode.
         """
 
         return self.episode_info.characteristics | self.extra_characteristics
@@ -93,15 +93,16 @@ class Episode:
 
     def key_is_specified(self, key: str) -> bool:
         """
-        Return whether the given key was present in the initialization for this
-        Episode, i.e. whether the key can be added to the datafile.
+        Return whether the given key was present in the initialization
+        for this Episode, i.e. whether the key can be added to the
+        datafile.
 
         Args:
             key: The key being checked.
 
         Returns:
-            Whether the given key was specified in the initialization of this
-            Episode.
+            Whether the given key was specified in the initialization of
+            this Episode.
         """
 
         return key in self.given_keys
@@ -109,8 +110,8 @@ class Episode:
 
     def update_statuses(self, watched: bool, style_set: 'StyleSet') -> None:
         """
-        Update the statuses of this Episode. In particular the watched status
-        and un/watched styles.
+        Update the statuses of this Episode. In particular the watched
+        status and un/watched styles.
 
         Args:
             watched: New watched status for this Episode.
@@ -121,19 +122,20 @@ class Episode:
         self.spoil_type = style_set.effective_spoil_type(watched)
 
 
-    def update_source(self, new_source: 'Path | str | None', *,
-                      downloadable: bool) -> bool:
+    def update_source(self, new_source: Union[Path, str, None], *,
+            downloadable: bool) -> bool:
         """
-        Update the source image for this Episode, as well as the downloadable
-        flag for the source.
+        Update the source image for this Episode, as well as the
+        downloadable flag for the source.
 
         Args:
-            new_source: New source file. If source the path is taken as-is; if
-                string, then the file is looked for within this Episode's base
-                source directory - if that file DNE then it's taken as a Path
-                and converted; if None, nothing happens.
-            downloadable: (Keyword only) Whether the new source is downloadable
-                or not.
+            new_source: New source file. If source the path is taken
+                as-is; if string, then the file is looked for within
+                this Episode's base source directory - if that file DNE
+                then it's taken as a Path and converted; if None,
+                nothing happens.
+            downloadable: (Keyword only) Whether the new source is
+                downloadable or not.
 
         Returns:
             True if a new non-None source was provided, False otherwise.
@@ -157,13 +159,13 @@ class Episode:
         return True
 
 
-    def delete_card(self, *, reason: str=None) -> bool:
+    def delete_card(self, *, reason: Optional[str]=None) -> bool:
         """
         Delete the title card for this Episode.
 
         Args:
-            reason: (Keyword only) Optional string to log why the card is being
-                deleted.
+            reason: (Keyword only) Optional string to log why the card
+                is being deleted.
 
         Returns:
             True if card was deleted, False otherwise.
