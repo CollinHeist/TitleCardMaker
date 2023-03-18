@@ -25,6 +25,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Login to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GH_TOKEN }}
 
       - name: Set up QEMU for ARM emulation
         uses: docker/setup-qemu-action@v2
@@ -39,4 +45,4 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64 # edit this if you want to build more architectures
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/titlecardmaker:${{ inputs.tag }}
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/titlecardmaker:${{ inputs.tag }},ghcr.io/${{ github.repository_owner }}/titlecardmaker:${{ inputs.tag }}
