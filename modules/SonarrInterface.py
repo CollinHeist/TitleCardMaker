@@ -15,6 +15,9 @@ class SonarrInterface(WebInterface, SyncInterface):
     WebInterface and SyncInterface object.
     """
 
+    """Use a longer request timeout for Sonarr to handle slow databases"""
+    REQUEST_TIMEOUT = 30
+
     """Series ID's that can be set by Sonarr"""
     SERIES_IDS = ('imdb_id', 'sonarr_id', 'tvdb_id', 'tvrage_id')
 
@@ -44,7 +47,7 @@ class SonarrInterface(WebInterface, SyncInterface):
             SystemExit: Invalid Sonarr URL/API key provided.
         """
 
-        # Initialize parent WebInterface 
+        # Initialize parent WebInterface
         super().__init__('Sonarr', verify_ssl)
 
         # Get global MediaInfoSet object
