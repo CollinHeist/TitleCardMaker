@@ -1,0 +1,73 @@
+:root {
+  --background-color-light: #f5f7fa;
+  --background-color-dark: #2a2a2a;
+  --sidebar-color-light: #1b1c1d;
+
+  --font-color: black;
+  --font-color-disabled: LightGray;
+
+  --theme-light-color: rgba(152, 152, 152, 0.3);
+}
+
+body {
+  background-color: var(--background-color-light);
+}
+
+/* Style for the header on all pages */
+#page-header {
+  height: 70px;
+  background-color: var(--sidebar-color-light);
+  position: sticky;
+  top: 0px; /* Align to top of the page */
+  z-index: 99; /* Position above all elements */
+  display: flex;
+  align-items: center;
+}
+#header-search {
+  position: absolute;
+  left: 125px;
+}
+
+/* Format for the search results */
+.search.content {
+  display: inline-block;
+  vertical-align: middle;
+  /* Cut off any long series name */
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+}
+.search.content > img {
+  height: 50px;
+  width: 35px;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+.search.result {
+  padding: 7px !important;
+}
+
+/* Support button alignment */
+#support-button {
+  position: absolute;
+  right: 25px; /* 45px */
+}
+
+/* Style for the main content on all pages */
+#main-content {
+  /* Appropriate margin around sides and sidebar */
+  margin: 15px 25px 15px 135px;
+  /* Add scrollbar to internal to the main content, i.e. exclude header
+  overflow-y: auto;
+  height: 100vh; */
+}
+
+html.ios {
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+html.ios,
+html.ios body {
+  height: initial !important;
+}

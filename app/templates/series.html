@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/assets/logo128.png">
+  <link rel="shortcut icon" href="/assets/logo128.png"> 
+  <link rel="apple-touch-icon" href="/assets/logo128.png">
+  <title>{{series.name}} - TitleCardMaker</title>
+
+  <!-- Formantic UI -->
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.js"></script>
+  
+  <!-- Global styles -->
+  <link rel="stylesheet" type="text/css" href="/templates/style.css">
+  <style>
+    /* Override card width for poster */
+    .ui.card {
+      width: auto;
+    }
+    
+    /* Inine fields need to flex and align content in the middle of their div */
+    .inline.field {
+      display: flex;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    /* Set width of text input fields to 300px */
+    .inline.field >* input[type="text"] {
+      width: 300px !important;
+    }
+
+    .config-label {
+      flex: 0 0 150px;
+      display: flex;
+      margin-right: 10px;
+      justify-content: flex-end;
+      text-align: right;
+      font-weight: bold;
+      color: var(--font-color);
+    }
+
+    /* Add top padding above the delete button for each episode */
+    .negative.button {
+      margin-top: 5px;
+    }
+
+    /* Fix width of new episode modal */
+    #new-episode-modal {
+      width: 500px !important;
+    }
+
+    #new-episode-form > div.field > label {
+      flex: 0 0 125px;
+      display: flex;
+      margin-right: 10px;
+      justify-content: flex-end;
+      text-align: right;
+    }
+
+    .disabled.config-label {
+      color: var(--font-color-disabled);
+      font-weight: lighter;
+    }
+
+    div.dropdown {
+      min-width: 500px;
+    }
+  </style>
+
+  <!-- Templates -->
+  <template id="season-template">
+    <div class="title">
+      <i class="dropdown menu"></i>
+      <!-- Season index here -->
+    </div>
+    <div class="content">
+      <div class="accordion hidden">
+        <!-- Episode template elements here -->
+      </div>
+    </div>
+  </template>
+  
+  <template id="episode-template">
+    <div class="title">
+      <i class="dropdown menu"></i>
+      <!-- Episode index here -->
+    </div>
+    <div class="content">
+      <form class="ui episode form">
+        <!-- Input fields -->
+        <div class="field">
+          <label>Title</label>
+          <input type="text" name="title" placeholder="{TITLE}">
+        </div>
+        <div class="field">
+          <label>Source File</label>
+          <input type="text" name="source_file" placeholder="{SOURCE FILE}">
+        </div>
+        <div class="field">
+          <label>Destination</label>
+          <input type="text" name="destination" placeholder="{DESTINATION}">
+        </div>
+        <!-- Save and delete button -->
+        <button class="ui primary animated submit button" type="submit">
+          <div class="visible content">Save</div>
+          <div class="hidden content">
+            <i class="right arrow icon"></i>
+          </div>
+        </button>
+      </form>
+      
+      <button class="ui animated negative button">
+        <div class="visible content">Delete</div>
+        <div class="hidden content">
+          <i class="right arrow icon"></i>
+        </div>
+      </button>
+    </div>
+  </template>
+
+  <!-- Scripts to load available options -->
+  <script>
+    // Get all available episode data sources
+    async function getEpisodeDataSources() {
+      const sources = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
+      $('#episode-data-source').dropdown({
+        values: sources.map(({name, selected}) => {
+          return {name: name, value: name,
+                  selected: name == '{{series.episode_data_source}}'};
+        })
+      })
+    }
+
+    // Get all available and selected image sources for this series
+    // async function getImageSources() {
+    //   const sources = await fetch('/api/series/{{series.id}}/image-source-priority').then(resp => resp.json());
+    //   // Sort objects by their priority; -1 being unselected
+    //   const sortedSources = sources.sort((a, b) => {
+    //     return (a.priority > b.priority) && b.priority >= 0;
+    //   });
+    //   $('#image-source-priority').dropdown({
+    //     values: sortedSources.map(({name, selected}) => {
+    //       return {name: name, value: name, selected: selected};
+    //     })
+    //   });
+    // }
+
+    // Get all available libraries for Emby and Plex
+    async function getLibraries() {
+      let plexLibraries = await fetch('/api/available/libraries/plex').then(resp => resp.json());
+      $('#plex-library').dropdown({
+        values: plexLibraries.map(name => {
+          return {name: name, value: name, selected: name === '{{series.plex_library_name}}'};
+        })
+      });
+
+      let embyLibraries = await fetch('/api/available/libraries/emby').then(resp => resp.json());
+      $('#emby-library').dropdown({
+        values: embyLibraries.map(name => {
+          return {name: name, value: name, selected: name === '{{series.emby_library_name}}'};
+        })
+      });
+    }
+  
+    // Get all episodes available for this series
+    async function getEpisodeData() {
+      // Get episode data element
+      let episodeDataDiv = document.getElementById('episode-data');
+      if (episodeDataDiv == null) return;
+
+      // Get all episodes via API
+      let episodeData = await fetch('/api/series/{{series.id}}/episodes').then(resp => resp.json());
+      if (episodeData === null) return;  
+
+      // Reset existing episode data content
+      episodeDataDiv.innerHTML = '';
+
+      // Get templates to use
+      const seasonTemplate = document.querySelector('#season-template');
+      const episodeTemplate = document.querySelector('#episode-template');
+
+      episodeData.forEach(episode => {
+        let {id, season_number, episode_number, absolute_number, title,
+             source_file, destination} = episode;
+
+        // Get or create the div for this season
+        var seasonElement = document.getElementById(`episode-data-season${season_number}`)
+        if (seasonElement === null) {
+          // Clone season template, add to episode data
+          seasonElement = seasonTemplate.content.cloneNode(true);
+          seasonElement.querySelector('.content').id = `episode-data-season${season_number}`;
+          const seasonTitle = (season_number === 0) ? 'Specials' : `Season ${season_number}`;
+          seasonDiv = seasonElement.querySelector('.accordion');
+          seasonElement.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${seasonTitle}`;
+          episodeDataDiv.appendChild(seasonElement);
+        }
+
+        // Create new element for this episode
+        const episodeElement = episodeTemplate.content.cloneNode(true);
+        const episodeTitle = (absolute_number === null)
+          ? `Episode ${episode_number}`
+          : `Episode ${episode_number} (${absolute_number})`;
+        episodeElement.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${episodeTitle}`;
+        episodeElement.querySelector('input[name="title"]').placeholder = title;
+        episodeElement.querySelector('input[name="title"]').value = title;
+        episodeElement.querySelector('input[name="source_file"]').placeholder = source_file;
+        episodeElement.querySelector('input[name="source_file"]').value = source_file;
+        episodeElement.querySelector('input[name="destination"]').placeholder = destination;
+        episodeElement.querySelector('input[name="destination"]').value = destination;
+
+        // Add episode element to the season div
+        seasonDiv.appendChild(episodeElement);
+
+        // Update this episode's form submission to submit an API request
+        let allForms = seasonDiv.querySelectorAll('.form');
+        allForms[allForms.length-1].onsubmit = (event) => {
+          event.preventDefault();
+          $.ajax({
+            type: 'PATCH',
+            url: `/api/series/{{series.id}}/episode/${id}`,
+            data: JSON.stringify(Object.fromEntries(new FormData(event.target))),
+            headers: {'Content-Type': 'application/json'},
+            success: function(response) {
+              $.toast({
+                class: 'blue info',
+                title: 'Updated Episode Configuration',
+              });
+            }, error: function(response) {
+              $.toast({
+                class: 'error',
+                title: 'Error Updating Episode',
+                message: response
+              });
+            },
+          });
+        }
+        // Update this episode's delete button to submit API request
+        let deleteButtons = seasonDiv.querySelectorAll('.negative.button');
+        deleteButtons[deleteButtons.length-1].onclick = (event) => {
+          $.ajax({
+            type: 'DELETE',
+            url: `/api/series/{{series.id}}/episode/${id}`,
+            success: function(response) {
+              $.toast({class: 'blue info', title: 'Deleted Episode'});
+              getEpisodeData();
+            }, error: function(response) {
+              $.toast({
+                class: 'error',
+                title: 'Error Deleting Episode',
+                message: response.responseJSON.message,
+              });
+            },
+          });
+        };
+      });
+    }
+
+    async function initAll() {
+      getEpisodeDataSources();
+      // getImageSources();
+      getLibraries();
+      getEpisodeData();
+    }
+
+    async function refreshEpisodeData() {
+      $.ajax({
+        type: 'POST',
+        url: '/api/series/{{series.id}}/refresh',
+        success: function(response) {
+          $.toast({class: 'blue info', title: `Refreshed Episode Data`});
+          getEpisodeData();
+        }, error: function(response) {
+          $.toast({class: 'error', title: 'Error Refreshing Data'});
+        }
+      });
+    }
+
+    async function createMissingCards() {
+      $.ajax({
+        type: 'POST',
+        url: '/api/series/{{series.id}}/create-cards',
+        success: function(response) {
+          $.toast({class: 'blue info', title: `Created Missing Cards`});
+          getEpisodeData();
+        }, error: function(response) {
+          $.toast({class: 'error', title: 'Error Creating Cards'});
+        }
+      });
+    }
+
+    async function deleteSeries(deleteCards) {
+      // Delete cards if indicated
+      if (deleteCards) {
+        $.ajax({
+          type: 'DELETE',
+          url: '/api/cards/series/{{series.id}}',
+          success: () => {
+            window.location.href = '/';
+          }, error: (response) => {
+            $.toast({
+              class: 'error',
+              title: 'Error Deleting Series',
+              message: response.responseJSON.detail,
+            });
+          },
+        });
+      }
+
+      // Delete series, redirect to home page
+      $.ajax({
+        type: 'DELETE',
+        url: '/api/series/{{series.id}}',
+        success: () => {
+          window.location.href = '/';
+        }, error: (response) => {
+          $.toast({
+            class: 'error',
+            title: 'Error Deleting Series',
+            message: response.responseJSON.detail,
+          });
+        },
+      });
+    }
+  </script>
+</head>
+
+<body onload="initAll()">
+  <div class="pusher">
+    <!-- Static header and sidebar loaded by external script -->
+    <div id="page-header"></div>
+    <div id="nav-menu"></div>
+
+    <!-- Actual page content -->
+    <div id="main-content" class="article">
+      <div class="ui grid">
+        <!-- Poster and label -->
+        <div class="four wide column" style="min-width: 150px;">
+          <div class="ui raised card">
+            <!-- Series poster -->
+            <div id="poster" class="blurring dimmable image">
+              <div class="ui dimmer">
+                <div class="content">
+                  <div class="center">
+                    <div class="ui inverted button">Edit Poster</div>
+                  </div>
+                </div>
+              </div>
+              <img id="poster-image" src="{{series.poster_url}}" alt="Poster for {{series.name}}">
+            </div>
+            <!-- Series info (name, year, etc.) -->
+            <div class="content">
+              <div class="header">{{series.name}}</div>
+              <div class="meta">
+                <span class="date">{{series.year}}</span>
+              </div>
+            </div>
+            <div class="extra content">
+              <i class="image outline icon"></i>
+              30 / 36 Cards
+            </div>
+          </div>
+          <!-- Series action bottons -->
+          <div id="action-buttons">
+            <div class="ui vertical labeled icon inverted fluid buttons">
+              <button id="refresh" class="ui button" onclick="refreshEpisodeData()">
+                <i class="sync icon"></i>
+                Refresh Episode Data
+              </button>
+              <button id="create-cards" class="ui button" onclick="createMissingCards()">
+                <i class="images outline icon"></i>
+                Create Missing Cards
+              </button>
+              {% if series.emby_library_name %}
+              <button id="load-emby" class="ui button">
+              {% else %}
+              <button id="load-emby" class="ui disabled button">
+              {% endif %}
+                <i class="server icon"></i>
+                Reload Emby
+              </button>
+              {% if series.jellyfin_library_name %}
+              <button id="load-jellyfin" class="ui button">
+              {% else %}
+              <button id="load-jellyfin" class="ui disabled button">
+              {% endif %}
+                <i class="server icon"></i>
+                Reload Jellyfin
+              </button>
+              {% if series.plex_library_name %}
+              <button id="load-plex" class="ui button">
+              {% else %}
+              <button id="load-plex" class="ui disabled button">
+              {% endif %}
+                <i class="server icon"></i>
+                Reload Plex
+              </button>
+              <button id="delete-series" class="ui negative button">
+                <i class="trash alternate outline icon"></i>
+                Delete Series
+              </button>
+            </div>
+          </div>
+          
+        </div>
+
+        <!-- Data Tabs -->
+        <div class="twelve wide column">
+          <div class="ui top attached tabular menu">
+            <a class="item active" data-tab="configuration">Configuration</a>
+            <a class="item" data-tab="card-config">Card Configuration</a>
+            <a class="item" data-tab="episode-data">Episode Data</a>
+            <a class="item" data-tab="files">Files</a>
+            <a class="item" data-tab="database-ids">External ID's</a>
+          </div>
+          
+          <!-- Configuration tab -->
+          <div id="series-tabs" class="ui bottom attached tab segment" data-tab="configuration">
+            <!-- Advanced Setting Toggle -->
+            <!-- <div class="inline field">
+              <button id="advanced-toggle-button" class="mini ui compact labeled icon button">
+                <i id="advanced-toggle-icon" class="eye slash icon"></i>
+                Show Advanced Settings
+              </button>
+            </div> -->
+
+            <form id="series-config" class="ui compact form">
+              <!-- Episode Data Source Dropdown Menu -->
+              <div class="inline advanced field">
+                <label class="config-label">Episode Data Source</label>
+                <div id="episode-data-source" class="ui compact selection dropdown">
+                  <input id="episode-data-source-input" type="hidden" name="episode_data_source" value="{{series.episode_data_source}}">
+                  <i class="dropdown icon"></i>
+                  <!-- Default (current) value -->
+                  <div class="default text">{{series.episode_data_source}}</div>
+                  <div id="episode-data-source-choices" class="menu">
+                    <!-- Added asynchronously -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Image Source Priority -->
+              <!-- <div class="inline advanced field">
+                <label class="config-label">Image Source Priority</label>
+                <div id="image-source-priority" class="ui clearable multiple selection dropdown">
+                  <input id="image-source-priority-input" type="hidden" name="image_source_priority">
+                  <i class="dropdown icon"></i>
+                  <div class="default text">Image Sources</div>
+                  <div class="menu">
+                  </div>
+                </div>
+              </div> -->
+
+              <!-- Emby Library -->            
+              {% if 'Emby' in preferences.enabled_media_servers %}
+              <div class="inline field">
+                <label class="config-label">Emby Library</label>
+                <div id="emby-library" class="ui compact selection dropdown">
+                  <!-- Default (current) value -->
+                  <input id="emby-library-input" type="hidden" name="emby_library" value="{{series.emby_library_name}}">
+                  <div class="default text">{{series.emby_library_name}}</div>
+                  <i class="dropdown icon"></i>
+                  <div id="emby-library-choices" class="menu">
+                    <div class="item" data-value="None">None</div>
+                    <!-- Child divs added by JS asynchronous request -->
+                  </div>
+                </div>
+              {% else %}
+              <div class="disabled inline advanced field">
+                <label id="series-config-emby-library-label" class="disabled config-label">Emby Library</label>
+                <div id="series-config-emby-library" class="ui compact disabled selection dropdown"></div>
+              {% endif %}
+              </div>
+
+              <!-- Jellyfin Library -->            
+              {% if 'Jellyfin' in preferences.enabled_media_servers %}
+              <div class="inline field">
+                <label class="config-label">Jellyfin Library</label>
+                <div id="jellyfin-library" class="ui compact selection dropdown">
+                  <!-- Default (current) value -->
+                  <input id="jellyfin-library-input" type="hidden" name="jellyfin_library" value="{{series.jellyfin_library_name}}">
+                  <div class="default text">{{series.jellyfin_library_name}}</div>
+                  <i class="dropdown icon"></i>
+                  <div id="jellyfin-library-choices" class="menu">
+                    <div class="item" data-value="None">None</div>
+                    <!-- Child divs added by JS asynchronous request -->
+                  </div>
+                </div>
+              {% else %}
+              <div class="disabled inline advanced field">
+                <label id="series-config-jellyfin-library-label" class="disabled config-label">Jellyfin Library</label>
+                <div id="series-config-jellyfin-library" class="ui compact disabled selection dropdown"></div>
+              {% endif %}
+              </div>
+
+              <!-- Plex Library -->
+              {% if 'Plex' in preferences.enabled_media_servers %}
+              <div class="inline field">
+                <label class="config-label">Plex Library</label>
+                <div id="plex-library" class="ui compact selection dropdown">
+                  <!-- Default (current) value -->
+                  <input id="plex-library-input" type="hidden" name="plex_library" value="{{series.plex_library_name}}">
+                  <div class="default text">{{series.plex_library_name}}</div>
+                  <i class="dropdown icon"></i>
+                  <div id="plex-library-choices" class="menu">
+                    <div class="item" data-value="None">None</div>
+                    <!-- Child divs added by JS asynchronous request -->
+                  </div>
+                </div>
+              {% else %}
+              <div class="disabled inline advanced field">
+                <label class="disabled config-label">Plex Library</label>
+                <div id="plex-library" class="ui compact disabled selection dropdown"></div>
+              {% endif %}
+              </div>
+
+              <!-- Card Directory -->
+              <div id="series-config-card-directory" class="inline field">
+                <label id="series-config-card-directory-label" class="config-label">Card Directory</label>
+                <div class="ui right icon input">
+                  <input id="series-config-card-directory-input" type="text" value="{{series.directory}}" name="card_directory">
+                  <i class="folder icon"></i>
+                </div>
+              </div>
+
+              <!-- Filename Format -->
+              <div id="series-config-filename-format" class="inline advanced field">
+                <label id="series-config-filename-format-label" class="config-label">Filename Format</label>
+                <div class="ui action input">
+                  <input id="series-config-filename-format-input" type="text" value="{{series.filename_format}}" name="filename_format">
+                  <button id="filename-format-help-button" class="ui blue icon button" type="button">
+                    <i class="question icon"></i>
+                  </button>
+                </div>
+                <!-- Helper Modal -->
+                <!-- <div id="filename-format-help-modal" class="ui modal">
+                  <div class="header">File Name Formatting</div>
+                  <div class="content"> 
+                    <div id="filename-format-help-modal-series-name" class="ui labeled button">
+                      <div class="ui button">{name}</div>
+                      <a class="ui basic label">{{series.name}}</a>
+                    </div>
+                    <div class="ui labeled button" tabindex="1">
+                      <div class="ui button">{year}</div>
+                      <a class="ui basic label">{{series.year}}</a>
+                    </div>
+                    <div class="ui labeled button" tabindex="2">
+                      <div class="ui button">{full_name}</div>
+                      <a class="ui basic label">{{series.full_name}}</a>
+                    </div>
+                  </div>
+
+                  <div class="actions">
+                    <div class="fluid ui action input">
+                      <input id="series-config-filename-format-modal" type="text" value="{{series.filename_format}}" name="filename_format">
+                      <div id="filename-format-help-close-button" class="ui blue close button">Save</div>
+                    </div>
+                  </div>
+                </div> -->
+              </div>
+
+              <!-- Submit changes button -->
+              <button id="submit-changes" class="ui animated primary button" type="submit">
+                <div class="visible content">Save Changes</div>
+                <div class="hidden content">
+                  <i class="right arrow icon"></i>
+                </div>
+              </button>
+            </form>
+          </div>
+
+          <!-- Card Configuration -->
+          <div class="ui bottom attached tab segment active" data-tab="card-config">
+            <!-- Card preview toggle -->
+            <div id="card-preview-checkbox" class="ui checkbox">
+              <input type="checkbox" name="example">
+              <label>Live Card Preview</label>
+            </div>
+            <div class="ui divider"></div>
+
+            <div class="ui grid">
+              <!-- Card config  -->
+              <div class="eight wide column">
+                <form id="card-config" class="ui compact form">
+                  
+                </form>
+              </div>
+
+              <!-- Card preview -->
+              <div class="eight wide column">
+                <div class="ui card">
+                  <div class="content">
+                    <div class="ui placeholder">
+                      <div class="rectangular image"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Episode Data Tab -->
+          <div class="ui bottom attached tab segment" data-tab="episode-data">
+            <!-- Add Episode button -->
+            <button id="new-episode" class="ui primary tertiary button">
+              Add New Episode
+            </button>
+
+            <div id="episode-data" class="ui styled fluid accordion">
+              <!-- Episode subdata is added by asynchronous function -->
+            </div>
+          </div>
+
+          <!-- Files Tab -->
+          <div class="ui bottom attached tab segment" data-tab="files">
+            File Stuff
+          </div>
+
+          <!-- Database Tab -->
+          <div class="ui bottom attached tab segment" data-tab="database-ids">
+            File Stuff
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit poster modal -->
+    <div id="edit-poster-modal" class="ui mini modal">
+      <i class="close icon"></i>
+      <div class="header">Edit Poster</div>
+      <div class="content">
+        <form id="edit-poster-form" class="ui form">
+          <!-- URL -->
+          <div class="input field">
+            <label>URL</label>
+            <input id="poster-url-input" type="text" name="poster_url"></input>
+          </div>
+
+          <!-- OR divider between URL/upload -->
+          <div class="ui horizontal divider">Or</div>
+
+          <!-- File upload -->
+          <div class="file clearable input field">
+            <label>Upload File</label>
+            <input id="poster-upload-input" type="file" name="poster_file">
+          </div>
+        </form>
+      </div>
+      <div class="actions">
+        <button id="submit-poster-button" class="ui positive button" type="submit" form="edit-poster-form">Update</button>
+      </div>
+    </div>
+
+    <!-- Delete series Modal -->
+    <div id="delete-series-modal" class="ui basic modal">
+      <div class="ui icon header">
+        <i class="trash icon"></i>
+        Delete "{{series.name}}"?
+      </div>
+      <div class="center aligned content">
+        <p>This action cannot be undone.</p>
+      </div>
+      <div class="center aligned actions">
+        <div class="ui green ok basic inverted button">
+          <i class="remove icon"></i>
+          No
+        </div>
+        <div class="ui red cancel basic inverted button" onclick="deleteSeries(false)">
+          <i class="trash alternate outline icon"></i>
+          Yes
+        </div>
+        <div class="ui red ok inverted button" onclick="deleteSeries(true)">
+          <i class="images outline icon"></i>
+          Yes, and Delete Cards
+        </div>
+      </div>
+    </div>
+
+    <!-- Add episode modal -->
+    <div id="new-episode-modal" class="ui modal">
+      <i class="close icon"></i>
+      <div class="header">Add Episode</div>
+      <div class="content">
+        <form id="new-episode-form" class="ui form">
+          <div class="input inline field">
+            <label>Season Number</label>
+            <div class="ui input" style="width: 85px">
+              <input type="number" min="0" name="season_number">
+            </div>
+          </div>
+
+          <div class="input inline field">
+            <label>Episode Number</label>
+            <div class="ui input" style="width: 85px">
+              <input type="number" min="1" name="episode_number">
+            </div>
+          </div>
+
+          <div class="input inline field">
+            <label>Absolute Number</label>
+            <div class="ui input" style="width: 85px">
+              <input type="number" min="1" name="absolute_number">
+            </div>
+          </div>
+
+          <div class="input inline field">
+            <label>Title</label>
+            <div class="ui  input" style="width: 100%">
+              <input type="text" name="title" minlength="1">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="actions">
+        <button id="new-episode-button" class="ui positive button" type="submit" form="new-episode-form">Add</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Current values
+    let currentImageSourcePriority = '';
+
+    // Enable all dropdowns, menus, and accordians
+    $('.dropdown').dropdown();
+    $('.menu .item').tab();
+    $('#series-tabs .menu .item').tab('change tab', 'configuration');
+    $('.ui.accordion').accordion();
+
+    // Enable IOS hover on the series poster
+    $('#poster').dimmer({
+      on: 'ontouchstart' in document.documentElement ? 'click' : 'hover'
+    });
+
+    // Hide advanced options by default
+    // $('div.advanced').toggle();
+
+    // Add advanced toggle to button
+    // $('#advanced-toggle-button').on('click', function() {
+    //   $('div.advanced').toggle();
+    //   if ($('div.advanced').is(':visible')) {
+    //     $('#advanced-toggle-icon').removeClass('slash');
+    //   } else {
+    //     $('#advanced-toggle-icon').addClass('slash');
+    //   }
+    // });
+
+    // Make clearable dropdowns.. clearable
+    $('.ui.clearable.dropdown').dropdown({
+      'clearable': true,
+      'placeholder': 'None',
+    });
+
+    // Enable edit poster modal, attach to the edit poster div
+    $('#edit-poster-modal')
+      .modal('attach events', '#poster', 'show')  // Show modal on add buton press
+      .modal('setting', 'transition', 'fade up')  // Fade up modal on reveal
+      .modal('setting', 'closable', false)        // Don't allow closing by clicking outside modal
+      .modal({
+        blurring: true,                           // Blur background when shown
+        onHidden: function($element) {            // Reset input on close
+          $('#poster-upload-input')[0].value = '';
+          $('#poster-url-input')[0].value = '';
+        }}
+      );
+
+    // Delete series modal
+    $('#delete-series-modal').modal('attach events', '#delete-series');
+
+    // Configure new episode modal
+    $('#new-episode-modal')
+      .modal('attach events', '#new-episode', 'show') // Show modal on add buton press
+      .modal('setting', 'transition', 'fade up')      // Fade up modal on reveal
+      .modal('setting', 'closable', false)            // Don't allow closing by clicking outside modal
+      .modal({
+        blurring: true,                               // Blur background when shown
+        onHidden: function($element) {                // Reset input on close
+          $('#poster-upload-input')[0].value = '';
+          $('#poster-url-input')[0].value = '';
+        }}
+      );
+
+    // On edit poster modal submission, submit API request
+    $('#edit-poster-form').on('submit', (event) => {
+      event.preventDefault();
+
+      // Submit API request to add series
+      $('#submit-poster-button').toggleClass('loading', true);
+      $.ajax({
+        type: 'POST',
+        url: '/api/series/{{series.id}}/poster',
+        data: new FormData(event.target),
+        cache: false,
+        contentType: false,
+        processData: false,
+        success: (response) => {
+          $.toast({
+            class: 'blue info',
+            title: `Added series`,
+            message: response,
+          });
+          // Reload image
+          $('#poster-image')[0].src = `${response}?${new Date().getTime()}`;
+        }, error: (response) => {
+          $.toast({
+            class: 'error',
+            title: 'Error Updating Poster',
+            message: response.responseJSON.detail,
+          });
+        }, complete: () => {
+          setTimeout(() => $('#submit-poster-button').toggleClass('loading', false), 750);
+        },
+      });
+    });
+
+    // Submit the updated series config
+    $('#series-config').on('submit', (event) => {
+      event.preventDefault();
+      $('#submit-changes').toggleClass('loading', true);
+
+      $.ajax({
+        type: 'PATCH',
+        url: '/api/series/{{series.id}}',
+        data: JSON.stringify(Object.fromEntries(new FormData(event.target))),
+        headers: {'Content-Type': 'application/json'},
+        success: (response) => {
+          $('#submit-changes').toggleClass('loading', false);
+          $.toast({
+            class: 'blue info',
+            title: 'Updated Configuration Values',
+          });
+        }, error: (response) => {
+          setTimeout(() => {
+            $('#submit-changes').toggleClass('loading', false);
+          }, 2000);
+        }
+      });
+    });
+
+    // Create a new episode
+    $('#new-episode-form').on('submit', (event) => {
+      event.preventDefault();
+      $.ajax({
+        type: 'POST',
+        url: '/api/series/{{series.id}}/episode',
+        data: JSON.stringify(Object.fromEntries(new FormData(event.target))),
+        headers: {'Content-Type': 'application/json'},
+        success: (response) => {
+          const {season_number, episode_number} = response;
+          $.toast({
+            class: 'blue info',
+            title: `Created Season ${season_number} Episode ${episode_number}`,
+            showDuration: 5000,
+          });
+          getEpisodeData();
+        }, error: (response) => {
+          $.toast({
+            class: 'error',
+            title: 'Error Creating New Episode',
+          });
+        }
+      });
+    });
+  
+  </script>
+  <script src="/templates/loadStaticContent.js"></script>
+</body>
+
+</html>

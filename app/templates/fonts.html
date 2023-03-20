@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/assets/logo128.png">
+  <link rel="shortcut icon" href="/assets/logo128.png"> 
+  <link rel="apple-touch-icon" href="/assets/logo128.png">
+  <title>Settings - TitleCardMaker</title>
+
+  <!-- Formantic UI -->
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.js"></script>
+  
+  <!-- Global styles -->
+  <link rel="stylesheet" type="text/css" href="/templates/style.css"/>
+  <style>
+    /* Align the label and text to the right */
+    .right.aligned.field {
+      text-align: right;
+    }
+    .right.aligned.field > input {
+      text-align: right;
+    }
+
+    /* Limit image preview dimensions */
+    img {
+      max-width: 100%;
+    }
+  </style>
+
+  <template id="font-template">
+    <div class="ui styled fluid accordion">
+      <div class="title">
+        <i class="dropdown icon"></i>
+        {name}
+      </div>
+      <div class="ui content">
+        <div class="ui two column very relaxed stackable grid">
+          <div class="eight wide column">
+            <form data-value="font-form" class="ui form">
+              <div class="field">
+                <label>Name</label>
+                <input name="name" type="text" placeholder="Font #{id}" minlength="1">
+              </div>
+
+              <div class="field">
+                <label data-value="file">File</label>
+                <div class="ui file input">
+                  <input name="font_file" type="file">
+                </div>
+              </div>
+
+              <div class="two fields">
+                <div class="field">
+                  <label>Title Color <a href="https://imagemagick.org/script/color.php" target="_blank"><i class="external alternate small icon"></i></a></label>
+                  <input name="color" type="text" placeholder="Default">
+                </div>
+
+                <div class="field">
+                  <label>Text Case</label>
+                  <div class="ui clearable selection dropdown">
+                    <input name="case" type="hidden">
+                    <div class="default text">Default</div>
+                    <i class="dropdown icon"></i>
+                    <div class="menu">
+                      <div class="item" value="blank">Blank</div>
+                      <div class="item" value="lower">Lowercase</div>
+                      <div class="item" value="source">Source</div>
+                      <div class="item" value="title">Title</div>
+                      <div class="item" value="upper">Uppercase</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="three fields">
+                <div class="field">
+                  <label>Size</label>
+                  <div class="ui right labeled input">
+                    <input name="size" type="text" placeholder="100">
+                    <div class="ui basic label">%</div>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Kerning</label>
+                  <div class="ui right labeled input">
+                    <input name="kerning" type="text" placeholder="100">
+                    <div class="ui basic label">%</div>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Stroke Width</label>
+                  <div class="ui right labeled input">
+                    <input name="stroke_width" type="text" placeholder="100">
+                    <div class="ui basic label">%</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="two fields">
+                <div class="field">
+                  <label>Interline Spacing</label>
+                  <input name="interline_spacing" type="number" placeholder="0">
+                </div>
+
+                <div class="field">
+                  <label>Vertical Shift</label>
+                  <input name="vertical_shift" type="number" placeholder="0">
+                </div>
+              </div>
+
+              <div class="two fields">
+                <div class="ui checkbox field">
+                  <input name="validate" type="checkbox">
+                  <label>Validate Characters</label>
+                </div>
+
+                <div class="ui checkbox field">
+                  <input name="delete_missing" type="checkbox">
+                  <label>Delete Missing Characters</label>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Character Replacements</label>
+                <div class="fields">
+                  <div data-value="in-replacements" class="four wide right aligned field">
+                    <label>Text to Replace</label>
+                    <!-- <input name="replacement_in" type="text"> -->
+                  </div>
+                  <div data-value="out-replacements" class="four wide field">
+                    <label>Replacement Text</label>
+                    <!-- <input name="replacement_out" type="text"> -->
+                  </div>
+                </div>
+              </div>
+              <!-- Add replacement button -->
+              <div class="field">
+                <div data-value="addReplacement" class="circular ui icon mini button">
+                  <i class="plus square outline icon"></i>
+                  Add Replacement
+                </div>
+              </div>
+
+              <!-- Buttons -->
+              <button class="ui primary animated button" type="submit">
+                <div class="visible content">Save Changes</div>
+                <div class="hidden content">
+                  <i class="right arrow icon"></i>
+                </div>
+              </button>
+              <button class="ui negative animated button">
+                <div class="visible content">Delete</div>
+                <div class="hidden content">
+                  <i class="trash icon"></i>
+                </div>
+              </button>
+            </form>
+          </div>
+
+          <div class="eight wide column">
+            <form data-value="preview-form" class="ui form">
+              <div class="two fields">
+                <div class="eight wide field">
+                  <label>Preview Card Type</label>
+                  <div class="ui clearable selection card-type dropdown">
+                    <input name="card_type" type="hidden">
+                    <div class="default text">None</div>
+                    <i class="dropdown icon"></i>
+                    <div class="menu">
+                      <!-- Added asynchronously -->
+                    </div>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Preview Title</label>
+                  <input name="title" type="text" placeholder="Example Title" value="Example Title">
+                </div>
+              </div>
+            </form>
+            <div class="ui fluid raised card">
+              <div class="content">
+                <img alt="Preview Title Card" src="/assets/blank.png">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    // Function to create a new empty font
+    async function addFont() {
+      const form = new FormData();
+      form.append('name', 'Custom Font');
+      $.ajax({
+        type: 'POST',
+        url: '/api/fonts/new',
+        data: form,
+        processData: false,
+        contentType: false,
+        success: (response) => {
+          $.toast({
+            class: 'blue info',
+            title: `Created Font #${response.id}`,
+          });
+          getAllFonts();
+        },
+        error: (response) => {
+          $.toast({
+            class: 'error',
+            title: 'Error Creating Font',
+          });
+        }, complete: () => {}
+      });
+    }
+
+    function reloadPreview(fontForm, form1, cardElement, imageElement) {
+      let form = new FormData(fontForm);
+      for (let [name, value] of [...form.entries()]) {
+        if (name === 'size' || name === 'kerning' || name === 'stroke_width') {
+          form.set(name, value/100.0);
+        }
+      }
+      for (let pair of (new FormData(form1).entries())) {
+        form.append(pair[0], pair[1]);
+      }
+      cardElement.className = 'ui fluid loading raised card';
+      $.ajax({
+        type: 'POST',
+        url: '/api/cards/preview',
+        data: form,
+        processData: false,
+        contentType: false,
+        success: (response) => {
+          console.log(response);
+          imageElement.src = `${response}?${new Date().getTime()}`;
+        },
+        error: (response) => {
+          $.toast({
+            class: 'error',
+            title: 'Error Creating Preview Card',
+            message: response,
+          });
+        }, complete: () => {cardElement.className = 'ui fluid raised card'; }
+      });
+    }
+
+    // Function to get all fonts and add their elements to the page
+    async function getAllFonts() {
+      const fonts = await fetch('/api/fonts/all').then(resp => resp.json());
+      const fontElements = fonts.map((fontObj) => {
+        const template = document.querySelector('#font-template').content.cloneNode(true);
+        template.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${fontObj.name}`;
+        const name = template.querySelector('input[name="name"]');
+        name.placeholder = fontObj.name; name.value = fontObj.name;
+        const file = template.querySelector('label[data-value="file"]');
+        file.innerText = fontObj.file_path === null ? 'Font' : `Font (${fontObj.file_path})`;
+        if (fontObj.color !== null) {
+          const color = template.querySelector('input[name="color"]');
+          color.placeholder = fontObj.color; color.value = fontObj.color;
+        }
+        if (fontObj.title_case !== null) {
+          template.querySelector('input[name="case"]').value = fontObj.title_case;
+        }
+        const size = template.querySelector('input[name="size"]');
+        size.placeholder = fontObj.size*100; size.value = fontObj.size*100;
+        const kerning = template.querySelector('input[name="kerning"]');
+        kerning.placeholder = fontObj.kerning*100; kerning.value = fontObj.kerning*100;
+        const stokeWidth = template.querySelector('input[name="stroke_width"]');
+        stokeWidth.placeholder = fontObj.stroke_width*100; stokeWidth.value = fontObj.stroke_width*100;
+        const interlineSpacing = template.querySelector('input[name="interline_spacing"]');
+        interlineSpacing.placeholder = fontObj.interline_spacing; interlineSpacing.value = fontObj.interline_spacing;
+        const verticalShift = template.querySelector('input[name="vertical_shift"]');
+        verticalShift.placeholder = fontObj.vertical_shift; verticalShift.value = fontObj.vertical_shift;
+        if (fontObj.validate_characters) {
+          template.querySelector('input[name="validate"]').checked = true;
+        }
+        if (fontObj.delete_missing) {
+          template.querySelector('input[name="delete_missing"]').checked = true;
+        }
+        const inElement = template.querySelector('.field[data-value="in-replacements"]');
+        const outElement = template.querySelector('.field[data-value="out-replacements"]');
+        if (fontObj.replacements) {
+          Object.entries(fontObj.replacements).forEach(([in_, out_]) => {
+            const newInput = document.createElement('input');
+            newInput.name = 'replacement_in'; newInput.type='text';
+            newInput.placeholder = in_; newInput.value = in_;
+            inElement.appendChild(newInput);
+            const newOutput = document.createElement('input');
+            newOutput.name = 'replacement_out'; newOutput.type='text';
+            newOutput.placeholder = out_; newOutput.value = out_;
+            outElement.appendChild(newOutput);
+          });
+        }
+        // Add new input fields on click of addReplacement button
+        template.querySelector('.button[data-value="addReplacement"]').onclick = () => {
+          const blankInput = document.createElement('input');
+          blankInput.name = 'replacement_in'; blankInput.type='text';
+          inElement.appendChild(blankInput);
+          const blankOutput = document.createElement('input');
+          blankOutput.name = 'replacement_out'; blankOutput.type='text';
+          outElement.appendChild(blankOutput);
+        };
+
+        // Set submit form event to submit PATCH API request
+        template.querySelector('form[data-value="font-form"]').onsubmit = (event) => {
+          event.preventDefault();
+          const form = new FormData(event.target);
+          for (let [name, value] of [...form.entries()]) {
+            if (name === 'size' || name === 'kerning' || name === 'stroke_width') {
+              form.set(name, value/100.0);
+            }
+          }
+
+          $.ajax({
+            type: 'PATCH',
+            url: `/api/fonts/${fontObj.id}`,
+            data: form,
+            processData: false,
+            contentType: false,
+            success: (response) => {
+              $.toast({
+                class: 'blue info',
+                title: `Updated Font "${response.name}"`,
+              });
+            },
+            error: (response) => {
+              $.toast({
+                class: 'error',
+                title: 'Error Updating Font',
+              });
+            }, complete: () => {}
+          });
+        };
+
+        // Set delete button to submit DELETE API request
+        template.querySelector('.negative.button').onclick = (event) => {
+          event.preventDefault();
+          $('.ui.accordion').accordion('close');
+          $.ajax({
+            type: 'DELETE',
+            url: `/api/fonts/${fontObj.id}`,
+            success: () => {
+              $.toast({
+                class: 'blue info',
+                title: `Deleted Font "${fontObj.name}"`,
+              });
+              getAllFonts();
+            },
+            error: (response) => {
+              $.toast({
+                class: 'error',
+                title: 'Error Deleting Font',
+                message: response.responseJSON.detail,
+              });
+            }, complete: () => {}
+          });
+        };
+
+        // Add on change event to reload card preview
+        const previewCard = template.querySelector('.ui.card');
+        const previewImage = template.querySelector('img');
+        const fontForm = template.querySelector('form[data-value="font-form"]');
+        const previewForm =  template.querySelector('form[data-value="preview-form"]');
+        fontForm.onchange = () => reloadPreview(fontForm, previewForm, previewCard, previewImage);
+        previewForm.onchange = () => reloadPreview(fontForm, previewForm, previewCard, previewImage);
+
+        return template;
+      });
+      // Put new font elements on the page
+      const fontsElement = document.getElementById('fonts');
+      fontsElement.replaceChildren(...fontElements);
+
+      // Enable accordion/dropdown/checkbox elements
+      $('.ui.accordion').accordion();
+      $('.ui.dropdown').dropdown();
+      $('.ui.checkbox').checkbox();
+
+      // Fill in card type dropdowns
+      getCardTypeOptions();
+    }
+  
+    // Function to add dropdown card types
+    async function getCardTypeOptions() {
+      const types = await fetch('/api/available/card-types').then(resp => resp.json());
+      $('.ui.card-type.dropdown').dropdown({
+        values: types.map(({name}) => {
+          return {name: name, value: name.toLowerCase(), selected: false};
+        })
+      })
+    }
+  </script>
+</head>
+
+<body onload="getAllFonts();">
+  <div class="pusher">
+    <!-- Static header and sidebar loaded by external script -->
+    <div id="page-header"></div>
+    <div id="nav-menu"></div>
+
+    <!-- Actual page content -->
+    <div id="main-content" class="article">
+      <!-- Page title -->
+      <h1 class="ui header">Fonts</h1>
+
+      <!-- Add a new font -->
+      <button class="ui primary tertiary button" onclick="addFont()">Create New Font</button>
+
+      <div id="fonts">
+        <!-- Elements added asynchronously -->
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    
+  </script>
+
+  <!-- Load Sidebar -->
+  <script src="/templates/loadStaticContent.js"></script>
+</body>
+
+</html>

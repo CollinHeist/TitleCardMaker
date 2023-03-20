@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/assets/logo128.png">
+  <link rel="shortcut icon" href="/assets/logo128.png"> 
+  <link rel="apple-touch-icon" href="/assets/logo128.png">
+  <title>Settings - TitleCardMaker</title>
+
+  <!-- Formantic UI -->
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.js"></script>
+  
+  <!-- Global styles -->
+  <link rel="stylesheet" type="text/css" href="/templates/style.css"/>
+  <style>
+    /* For library path inputs, align the library name/label to the right */
+    .library.field,
+    .library.field > input {
+      text-align: right;
+    }
+
+    /* Blur private input fields when not selected or hovered */
+    input.private:not(:hover,:focus) {
+      color: transparent !important;
+      text-shadow: 0 0 8px rgba(0,0,0,0.5);
+      
+    }
+
+    /* input:focus {
+      border: 1.5px solid rgb(0, 128, 255) !important;
+    } */
+  </style>
+
+  <template id="sync-volume">
+    <div class="two wide library field">
+      <label>Library</label>
+      <input type="text" placeholder="Library Name">
+    </div>
+    <div class="four wide field">
+      <label>Path</label>
+      <input type="text" placeholder="Library Path">
+    </div>
+  </template>
+
+  <script>
+    // Function to grab list of usernames from Emby
+    async function getEmbyUsernames() {
+      const usernames = await fetch('/api/available/usernames/emby').then(resp => resp.json());
+      const select = document.getElementById('emby-username-select');
+      const usernameElements = usernames.map(username => {
+        let option = document.createElement('option');
+        option.value = username;
+        option.innerText = username;
+        return option;
+      });
+      // Replace existing children
+      select.replaceChildren(select.firstChild, ...usernameElements);
+    }
+
+    // Function to grab list of usernames from Jellyfin
+    async function getJellyfinUsernames() {
+      const usernames = await fetch('/api/available/usernames/jellyfin').then(resp => resp.json());
+      const select = document.getElementById('jellyfin-username-select');
+      const usernameElements = usernames.map(username => {
+        let option = document.createElement('option');
+        option.value = username;
+        option.innerText = username;
+        return option;
+      });
+      // Replace existing children
+      select.replaceChildren(select.firstChild, ...usernameElements);
+    }
+
+    // Function to get the Sonarr library mappings
+    async function getSonarrLibraries() {
+      const libraries = await fetch('/api/settings/sonarr-libraries').then(resp => resp.json());
+      libraries.forEach(({name, path}) => {
+        // Append library inputs
+        const libName = document.createElement('input');
+        libName.type = 'text'; libName.placeholder = 'Library Name';
+        libName.name = 'sonarr_library_name'; libName.value = name;
+        $('#sonarr-libraries-library-names').append(libName);
+        // Append library paths
+        const libPath = document.createElement('input');
+        libPath.type = 'text'; libPath.placeholder = 'Library Path';
+        libPath.name = 'sonarr_library_path'; libPath.value = path;
+        $('#sonarr-libraries-library-paths').append(libPath);
+      });
+    }
+
+    async function initAll() {
+      getEmbyUsernames();
+      getJellyfinUsernames();
+      getSonarrLibraries();
+    }
+  </script>
+  
+</head>
+
+<body onload="initAll();">
+  <div class="pusher">
+    <!-- Static header and sidebar loaded by external script -->
+    <div id="page-header"></div>
+    <div id="nav-menu"></div>
+
+    <!-- Actual page content -->
+    <div id="main-content" class="article">
+      <!-- Page title -->
+      <h1 class="ui header">Connections</h1>
+
+      <!-- Media Servers (Emby/Plex) -->
+      <div class="ui equal width divided stackable grid">
+        <!-- Emby Connections -->
+        <div class="column">
+          <h3 class="ui dividing header">Emby Media Server</h3>
+          <div id="emby-connections">
+            <form id="emby-settings" class="ui fluid form">
+              <!-- Enable button -->
+              {% if preferences.use_emby %}
+              <div id="enable-emby" class="ui left aligned checked checkbox field">
+                <input id="enable-emby-checkbox" type="checkbox" checked="">
+              {% else %}
+              <div id="enable-emby" class="ui left aligned checkbox field">
+                <input id="enable-emby-checkbox" type="checkbox" >
+              {% endif %}
+                <label for="enable-emby-checkbox">Enable Emby</label>
+              </div>
+
+              <!-- Input fields -->
+              <div id="emby-url" class="ui disabled required field" title="Host URL to communicate with Emby">
+                <label>URL</label>
+                <input name="emby_url" type="text"placeholder="{{preferences.emby_url}}" value="{{preferences.emby_url}}">
+              </div>
+
+              <div id="emby-api-key" class="ui disabled required field" title="API key to authenticate communication with Emby">
+                <label>API Key</label>
+                <input name="emby_api_key" type="text" class="private" placeholder="{{preferences.emby_api_key}}" value="{{preferences.emby_api_key}}">
+              </div>
+
+              <div id="emby-username" class="ui disabled required field" title="Username of the Emby user to query watch statuses from">
+                <label>Username</label>
+                <select id="emby-username-select" class="ui fluid search clearable dropdown" name="emby_username">
+                  <option value=""></option>
+                  <!-- Options added via asynchronous requests -->
+                </select>
+              </div>
+
+              <div id="emby-use-ssl" class="ui left aligned disabled checkbox field" title="Connect with HTTPS instead of HTTP">
+                {% if preferences.emby_use_ssl %}
+                <input id="emby-use-ssl-checkbox" type="checkbox" name="emby_use_ssl" checked="">
+                {% else %}
+                <input id="emby-use-ssl-checkbox" type="checkbox" name="emby_use_ssl">
+                {% endif %}
+                <label for="emby-use-ssl-checkbox">Use SSL</label>
+              </div>
+
+              <div id="emby-filesize-limit" class="ui disabled field" title="Maximum file size of assets to upload to Emby">
+                <label>Filesize Limit</label>
+                <div class="ui fields">
+                  <div class="three wide field">
+                    <input type="number" name="emby_filesize_limit_number" min="0" placeholder="{{preferences.emby_filesize_limit}}" value="{{preferences.emby_filesize_limit}}">
+                  </div>
+                  <div class="three wide field">
+                    <select class="ui fluid search dropdown" name="emby_filesize_limit_unit">
+                      <option value="B">Bytes</option>
+                      <option value="KB">Kilobytes</option>
+                      <option value="MB">Megabytes</option>
+                      <!-- <option value="GB">Gigabytes</option> -->
+                      <!-- <option value="TB">Terabytes</option> -->
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class=field>
+                <button id="submit-emby" class="ui primary animated button" type="submit">
+                  <div class="visible content">Save Changes</div>
+                  <div class="hidden content">
+                    <i class="right arrow icon"></i>
+                  </div>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Jellyfin Connections -->
+        <div class="column">
+          <h3 class="ui dividing header">Jellyfin Media Server</h3>
+          <div id="jellyfin-connections">
+            <form id="jellyfin-settings" class="ui fluid form">
+              <!-- Enable button -->
+              {% if preferences.use_jellyfin %}
+              <div id="enable-jellyfin" class="ui left aligned checked checkbox field">
+                <input id="enable-jellyfin-checkbox" type="checkbox" checked="">
+              {% else %}
+              <div id="enable-jellyfin" class="ui left aligned checkbox field">
+                <input id="enable-jellyfin-checkbox" type="checkbox" >
+              {% endif %}
+                <label for="enable-jellyfin-checkbox">Enable Jellyfin</label>
+              </div>
+
+              <!-- Input fields -->
+              <div id="jellyfin-url" class="ui disabled required field" title="Host URL to communicate with Jellyfin">
+                <label>URL</label>
+                <input name="jellyfin_url" type="text"placeholder="{{preferences.jellyfin_url}}" value="{{preferences.jellyfin_url}}">
+              </div>
+
+              <div id="jellyfin-api-key" class="ui disabled required field" title="API key to authenticate communication with Jellyfin">
+                <label>API Key</label>
+                <input name="jellyfin_api_key" type="text" class="private" placeholder="{{preferences.jellyfin_api_key}}" value="{{preferences.jellyfin_api_key}}">
+              </div>
+
+              <div id="jellyfin-username" class="ui disabled required field" title="Username of the Jellyfin user to query watch statuses from">
+                <label>Username</label>
+                <select id="jellyfin-username-select" class="ui fluid search clearable dropdown" name="jellyfin_username">
+                  <option value=""></option>
+                  <!-- Options added via asynchronous requests -->
+                </select>
+              </div>
+
+              <div id="jellyfin-use-ssl" class="ui left aligned disabled checkbox field" title="Connect with HTTPS instead of HTTP">
+                {% if preferences.emby_use_ssl %}
+                <input id="jellyfin-use-ssl-checkbox" type="checkbox" name="jellyfin_use_ssl" checked="">
+                {% else %}
+                <input id="jellyfin-use-ssl-checkbox" type="checkbox" name="jellyfin_use_ssl">
+                {% endif %}
+                <label for="emby-use-ssl-checkbox">Use SSL</label>
+              </div>
+
+              <div id="jellyfin-filesize-limit" class="ui disabled field" title="Maximum file size of assets to upload to Jellyfin">
+                <label>Filesize Limit</label>
+                <div class="ui fields">
+                  <div class="three wide field">
+                    <input type="number" name="jellyfin_filesize_limit_number" min="0" placeholder="{{preferences.jellyfin_filesize_limit}}" value="{{preferences.jellyfin_filesize_limit}}">
+                  </div>
+                  <div class="three wide field">
+                    <select class="ui fluid search dropdown" name="jellyfin_filesize_limit_unit">
+                      <option value="B">Bytes</option>
+                      <option value="KB">Kilobytes</option>
+                      <option value="MB">Megabytes</option>
+                      <!-- <option value="GB">Gigabytes</option> -->
+                      <!-- <option value="TB">Terabytes</option> -->
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class=field>
+                <button id="submit-jellyfin" class="ui primary animated button" type="submit">
+                  <div class="visible content">Save Changes</div>
+                  <div class="hidden content">
+                    <i class="right arrow icon"></i>
+                  </div>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Plex Connections -->
+        <div class="column">
+          <h3 class="ui dividing header">Plex Media Server</h3>
+          <div id="plex-connections">
+            <form id="plex-settings" class="ui fluid form">
+              <!-- Enable button -->
+              <div id="enable-plex" class="ui left aligned checkbox field">
+                {% if preferences.use_plex %}
+                <input id="enable-plex-checkbox" type="checkbox" checked="">
+                {% else %}
+                <input id="enable-plex-checkbox" type="checkbox">
+                {% endif %}
+                <label>Enable Plex</label>
+              </div>
+
+              <!-- Input fields -->
+              <div id="plex-url" class="ui disabled required field" title="Host URL to communicate with Plex">
+                <label>URL</label>
+                <input name="url" type="text" placeholder="{{preferences.plex_url}}" value="{{preferences.plex_url}}">
+              </div>
+              
+              <div id="plex-token" class="ui disabled field" title="Token to authenticate communication with Plex">
+                <label>Token <a href="https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/" target="_blank"><i class="external alternate small icon"></i></a></label>
+                <input name="token" type="text" class="private" placeholder="{{preferences.plex_token}}" value="{{preferences.plex_token}}">
+              </div>
+
+              {% if preferences.plex_use_ssl %}
+              <div id="plex-use-ssl" class="ui left aligned disabled checked checkbox field" title="Connect with HTTPS instead of HTTP">
+                <input name="use_ssl" id="plex-use-ssl-checkbox" type="checkbox" checked="">
+              {% else %}
+              <div id="plex-use-ssl" class="ui left aligned disabled checkbox field" title="Connect with HTTPS instead of HTTP">                  
+                <input name="use_ssl" id="plex-use-ssl-checkbox" type="checkbox">
+              {% endif %}
+                <label>Use SSL</label>
+              </div>
+              <br>
+
+              {% if preferences.plex_integrate_with_pmm %}
+              <div id="plex-integrate-pmm" class="ui left aligned disabled checked checkbox field" title="Whether to reset PMM overlays when applying title cards">
+                <input name="integrate_pmm" type="checkbox" checked="">
+              {% else %}
+              <div id="plex-integrate-pmm" class="ui left aligned disabled checkbox field" title="Whether to reset PMM overlays when applying title cards">
+                <input name="integrate_pmm"type="checkbox">
+              {% endif %}
+                <label>Integrate with Plex Meta Manager</label>
+              </div>
+
+              <div id="plex-filesize-limit" class="ui disabled field" title="Maximum file size of assets to upload to Plex">
+                <label>Filesize Limit</label>
+                <div class="ui fields">
+                  <div class="three wide field">
+                    <input name="filesize_limit_number" id="plex-filesize-limit-input-number" type="number" min="1" placeholder="{{preferences.plex_filesize_limit}}" value="{{preferences.plex_filesize_limit}}">
+                  </div>
+                  <div class="three wide field">
+                    <select name="filesize_limit_unit" id="plex-filesize-limit-input-unit" class="ui fluid search dropdown">
+                      <option value="B">Bytes</option>
+                      <option value="KB">Kilobytes</option>
+                      <option value="MB">Megabytes</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <!-- Filesize warning -->
+              {% if (preferences.plex_filesize_limit or 0) > 10485760 %}
+              <div id="plex-filesize-warning" class="ui visible warning message">
+              {% else %}
+              <div id="plex-filesize-warning" class="ui warning message">
+              {% endif %}
+                <i class="exclamation triangle icon"></i>
+                <b>Warning</b> Plex will reject images larger than <code>10 MB</code>
+              </div>
+
+              <div class=field>
+                <button id="submit-plex" class="ui primary animated button" type="submit">
+                  <div class="visible content">Save Changes</div>
+                  <div class="hidden content">
+                    <i class="right arrow icon"></i>
+                  </div>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sonarr Connections -->
+      <h3 class="ui dividing header">Sonarr</h3>
+      <div id="sonarr-connections">
+        <form id="sonarr-settings" class="ui fluid form">
+          <!-- Enable button -->
+          <div id="enable-sonarr" class="ui left aligned checkbox field">
+            {% if preferences.use_sonarr %}
+            <input id="enable-sonarr-checkbox" type="checkbox" name="enable_sonarr" checked="">
+            {% else %}
+            <input id="enable-sonarr-checkbox" type="checkbox" name="enable_sonarr">
+            {% endif %}
+            <label>Enable Sonarr</label>
+          </div>
+
+          <!-- Input fields -->
+          <div id="sonarr-url" class="ui disabled required field" title="Host URL to communicate with Sonarr">
+            <label>URL</label>
+            <input type="text" name="sonarr_url" placeholder="{{preferences.sonarr_url}}" value="{{preferences.sonarr_url}}">
+          </div>
+
+          <div id="sonarr-api-key" class="ui disabled required field" title="API Key to authenticate communication with Sonarr">
+            <label>API Key <a href="https://github.com/CollinHeist/TitleCardMaker/wiki/Sonarr-Attributes#sonarr-api-key" target="_blank"><i class="external alternate small icon"></i></a></label>
+            <input name="sonarr_api_key" type="text" class="private" placeholder="{{preferences.sonarr_api_key}}" value="{{preferences.sonarr_api_key}}">
+          </div>
+
+          {% if preferences.sonarr_use_ssl %}
+          <div id="sonarr-use-ssl" class="ui left aligned disabled checked checkbox field" title="Connect with HTTPS instead of HTTP">
+            <input name="sonarr_use_ssl" id="sonarr-use-ssl-checkbox" type="checkbox" checked="">
+          {% else %}
+          <div id="sonarr-use-ssl" class="ui left aligned disabled checkbox field" title="Connect with HTTPS instead of HTTP">                  
+            <input name="sonarr_use_ssl" id="sonarr-use-ssl-checkbox" type="checkbox">
+            {% endif %}
+            <label>Use SSL</label>
+          </div>
+          <br>
+
+          <div id="sonarr-libraries" class="ui disabled field">
+            <label>Library Paths</label>
+            <span><i>Only required if <a href="/sync">syncing</a> from Sonarr</i></span>
+            <div class="fields">
+              <div id="sonarr-libraries-library-names" class="two wide library field">
+                <label>Library</label> 
+                <!-- Added asynchronously -->
+                <!-- <input type="text" placeholder="Library Name" name="sonarr_library_name"> -->
+              </div>
+              <div id="sonarr-libraries-library-paths" class="four wide field">
+                <label>Path</label>
+                <!-- Added asynchronously -->
+                <!-- <input type="text" placeholder="Library Path" name="sonarr_library_path"> -->
+              </div>
+            </div>
+            <div class="circular ui icon mini button" onclick="addSonarrLibrary()">
+              <i class="plus square outline icon"></i>
+              Add Library
+            </div>
+          </div>
+
+          <div class=field>
+            <button id="submit-sonarr" class="ui primary animated button" type="submit">
+              <div class="visible content">Save Changes</div>
+              <div class="hidden content">
+                <i class="right arrow icon"></i>
+              </div>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- TMDb Connections -->
+      <h3 class="ui dividing header">TheMovieDatabase</h3>
+      <div id="tmdb-connections">
+        <form id="tmdb-settings" class="ui fluid form">
+          <!-- Enable button -->
+          <div id="enable-tmdb" class="ui left aligned checkbox field">
+            {% if preferences.use_tmdb %}
+            <input id="enable-tmdb-checkbox" type="checkbox" name="enable_tmdb" checked="">
+            {% else %}
+            <input id="enable-tmdb-checkbox" type="checkbox" name="enable_tmdb">
+            {% endif %}
+            <label>Enable TMDb</label>
+          </div>
+
+          <!-- Input fields -->
+          <div id="tmdb-api-key" class="ui disabled required field" title="API Key to authenticate communication with TMDb">
+            <label>API Key <a href="https://developers.themoviedb.org/3/getting-started/introduction" target="_blank"><i class="external alternate small icon"></i></a></label>
+            <input name="tmdb_api_key"type="text" class="private" placeholder="{{preferences.tmdb_api_key}}" value="{{preferences.tmdb_api_key}}">
+          </div>
+
+          <div id="tmdb-minimum-resolution" class="two fields">
+            <div class="two wide field" title="Minimum required width of images to gather from TMDb">
+              <label>Minimum Width</label>
+              <input name="tmdb_minimum_width" type="number" placeholder="{{preferences.tmdb_minimum_width}}" value="{{preferences.tmdb_minimum_width}}">
+            </div>
+            <div class="two wide field" title="Minimum required height of images to gather from TMDb">
+              <label>Minimum Height</label>
+              <input name="tmdb_minimum_height" type="number" placeholder="{{preferences.tmdb_minimum_height}}" value="{{preferences.tmdb_minimum_height}}">
+            </div>
+          </div>
+
+          <div id="tmdb-skip-localized" class="ui left aligned checkbox field" title="Whether to skip images with language codes">
+            {% if preferences.tmdb_skip_localized %}
+            <input name="tmdb_skip_localized" type="checkbox" checked="">
+            {% else %}
+            <input name="tmdb_skip_localized" type="checkbox" >
+            {% endif %}
+            <label>Ignore Localized Images</label>
+          </div>
+
+          <div class=field>
+            <button id="submit-tmdb" class="ui primary animated button" type="submit">
+              <div class="visible content">Save Changes</div>
+              <div class="hidden content">
+                <i class="right arrow icon"></i>
+              </div>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Enable dropdowns, checkboxes
+    $('.ui.dropdown').dropdown();
+
+    // Fields to enable/disable on button presses
+    const toggleFields = [
+      {title: 'Emby',
+       toggleAPI: '/api/connection/emby',
+       buttonId: '#enable-emby',
+       fields: ['#emby-url', '#emby-api-key', '#emby-username', '#emby-use-ssl', '#emby-watched-style', '#emby-unwatched-style', '#emby-filesize-limit', '#submit-emby']},
+      {title: 'Jellyfin',
+       toggleAPI: '/api/connection/jellyfin',
+       buttonId: '#enable-jellyfin',
+       fields: ['#jellyfin-url', '#jellyfin-api-key', '#jellyfin-username', '#jellyfin-use-ssl', '#emby-watched-style', '#jellyfin-unwatched-style', '#jellyfin-filesize-limit', '#submit-jellyfin']},
+      {title: 'Plex',
+       toggleAPI: '/api/connection/plex',
+       buttonId: '#enable-plex',
+       fields: ['#plex-url', '#plex-token', '#plex-use-ssl', '#plex-watched-style', '#plex-unwatched-style', '#plex-filesize-limit', '#plex-integrate-pmm']},
+      {title: 'Sonarr',
+       toggleAPI: '/api/connection/sonarr',
+       buttonId: '#enable-sonarr',
+       fields: ['#sonarr-url', '#sonarr-api-key', '#sonarr-use-ssl', '#sonarr-libraries']},
+      {title: 'TMDb',
+       toggleAPI: '/api/connection/tmdb',
+       buttonId: '#enable-tmdb',
+       fields: ['#tmdb-api-key', '#tmdb-minimum-resolution', '#tmdb-skip-localized']},
+    ];
+    toggleFields.forEach(({title, buttonId, fields, toggleAPI}) => {
+      $(buttonId).checkbox({
+        onChecked: function() {
+          fields.forEach(fieldId => $(fieldId).toggleClass('disabled', false));
+          $.ajax({
+            type: 'PUT',
+            url: `${toggleAPI}/enable`,
+            success: function(response) {
+              $.toast({
+                class: 'center aligned blue info',
+                title: `Enabled Connection to ${title}`,
+                // showDuration: 3000,
+              });
+            }, error: function(response) {
+              $.toast({
+                class: 'center aligned error',
+                title: `Error Enabling Connection to ${title}`,
+                message: response.responseJSON.message,
+              });
+            }, complete: function() {}
+          });
+        }, onUnchecked: function() {
+          fields.forEach(fieldId => $(fieldId).toggleClass('disabled', true));
+          $.ajax({
+            type: 'PUT',
+            url: `${toggleAPI}/disable`,
+            success: function(response) {
+              $.toast({
+                class: 'center aligned warning',
+                title: `Disabled Connection to ${title}`,
+              });
+            }, error: function(response) {
+              $.toast({
+                class: 'center aligned error',
+                title: `Error Disabling Connection to ${title}`,
+                message: response.responseJSON.message,
+              });
+            }, complete: function() {}
+          });
+        },
+      })
+    });
+
+    // Initialize enabled/disabled states of form fields
+    toggleFields.forEach(({buttonId, fields}) => {
+      fields.forEach(fieldId => $(fieldId).toggleClass('disabled', !$(buttonId)[0].classList.contains('checked')));
+    });
+    
+    // Show filesize warning in Plex if >10 MB
+    $('#plex-filesize-limit').on('change', function(event) {
+      let number = $('#plex-filesize-limit-input-number').val();
+      let unit = $('#plex-filesize-limit-input-unit').val();
+      let unitValues = {
+        'B': 1, 'KB':  2**10, 'MB':  2**20, 'GB':  2**30, 'TB':  2**40
+      };
+      let current = unitValues[unit] * number,
+          limit   = 10 * unitValues['MB'];
+      console.log(current);
+      $('#plex-filesize-warning').toggleClass('visible', current > limit);
+    })
+
+    // Add new library path
+    function addSonarrLibrary() {
+      // Add library name input
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text'; nameInput.placeholder = 'Library Name';
+      nameInput.name = 'sonarr_library_name';
+      $('#sonarr-libraries-library-names').append(nameInput);
+      // Add library path input
+      const pathInput = document.createElement('input');
+      pathInput.type = 'text'; pathInput.placeholder = 'Library Path';
+      pathInput.name = 'sonarr_library_path';
+      $('#sonarr-libraries-library-paths').append(pathInput);
+    }
+
+    // Connection submit button handling
+    const connections = [
+      {connection: 'emby', title: 'Emby', formId: '#emby-settings', submitButtonId: '#submit-emby', successCallback: getEmbyUsernames},
+      {connection: 'jellyfin', title: 'Jellyfin', formId: '#jellyfin-settings', submitButtonId: '#submit-jellyfin', successCallback: getJellyfinUsernames},
+      {connection: 'plex', title: 'Plex', formId: '#plex-settings', submitButtonId: '#submit-plex'},
+      {connection: 'sonarr', title: 'Sonarr', formId: '#sonarr-settings', submitButtonId: '#submit-sonarr'},
+      {connection: 'tmdb', title: 'TMDb', formId: '#tmdb-settings', submitButtonId: '#submit-tmdb'},
+    ]
+    connections.forEach(({connection, title, formId, submitButtonId, successCallback}) => {
+      $(formId).on('submit', function(event) {
+        // Prevent default event form handler
+        event.preventDefault();
+
+        // Change button to loading while submitting request
+        $(submitButtonId).toggleClass('disabled loading', true);
+
+        // Submit API request
+        $.ajax({
+          type: 'PATCH',
+          url: `/api/connection/${connection}`,
+          data: new FormData(event.target),
+          processData: false,
+          contentType: false,
+          success: function(response) {
+            if (successCallback !== undefined ) { successCallback(); }
+            $.toast({
+              class: 'center aligned blue info',
+              title: `Updated Connection to ${title}`,
+            });
+          }, error: function(response) {
+            $.toast({
+              class: 'center aligned error',
+              title: `Invalid ${title} Connection`,
+              message: response.responseJSON.message,
+            });
+          }, complete: function() {
+            setTimeout(() => $(submitButtonId).toggleClass('disabled loading', false), 1000)
+          }
+        });
+      });
+    });
+  </script>
+
+  <!-- Load Sidebar -->
+  <script src="/templates/loadStaticContent.js"></script>
+</body>
+
+</html>

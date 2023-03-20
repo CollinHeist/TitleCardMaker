@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/assets/logo128.png">
+  <link rel="shortcut icon" href="/assets/logo128.png"> 
+  <link rel="apple-touch-icon" href="/assets/logo128.png">
+  <title>Import - TitleCardMaker</title>
+
+  <!-- Formantic UI -->
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.js"></script>
+  
+  <!-- Global styles -->
+  <link rel="stylesheet" type="text/css" href="/templates/style.css"/>
+  <style>
+    .card {
+      max-width: 1000px;
+    }
+    img {
+      max-width: 1000px;
+      position: relative;
+      display: inline-block;
+    }
+    .overlay {
+      display: none;
+    }
+    .card:hover .overlay {
+      width: 100%;
+      height: 100%;
+      background: rgba(12, 12, 12, 0.5);
+      position: absolute;
+      top: 50px;
+      left: 50px;
+      display:inline-block;
+      -webkit-box-sizing:border-box;
+      -moz-box-sizing:border-box;
+      box-sizing:border-box;
+    }
+
+    :root {
+      --clr-neon: hsl(215, 55%, 61%);
+      --clr-bg: rgb(24, 24, 24)
+    }
+    body {
+      background-color: var(--clr-bg);
+    }
+    #main-content {
+      min-height: 80vh;
+      display: grid;
+      place-items: center;
+      background: var(--clr-bg);
+      color: var(--clr-neon);
+    }
+
+    .neon-button {
+      font-size: 4rem;
+
+      display: inline-block;
+      cursor: pointer;
+      text-decoration: none;
+      color: var(--clr-neon);
+      border: var(--clr-neon) 0.125em solid;
+      padding: 0.5em;
+      border-radius: 0.25em;
+
+      text-shadow: 0 0 0.125em hsl(0 0% 100% / 0.3), 0 0 0.45em currentColor;
+
+      box-shadow: inset 0 0 0.5em 0 var(--clr-neon), 0 0 0.5em 0 var(--clr-neon);
+
+      position: relative;
+    }
+
+    .neon-button::before {
+      pointer-events: none;
+      content: "";
+      position: absolute;
+      background: var(--clr-neon);
+      top: 120%;
+      left: 0;
+      width: 100%;
+      height: 100%;
+
+      transform: perspective(1em) rotateX(40deg) scale(1, 0.35);
+      filter: blur(1em);
+      opacity: 0.7;
+    }
+
+    /* .neon-button::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      box-shadow: 0 0 2em 0.5em var(--clr-neon);
+      opacity: 0;
+      background-color: var(--clr-neon);
+      z-index: -1;
+      transition: opacity 100ms linear;
+    } */
+
+    .neon-button:hover,
+    .neon-button:focus {
+      /* color: var(--clr-bg); */
+      color: hsl(215, 65%, 71%);
+      border:hsl(215, 65%, 71%) 0.125em solid;
+      box-shadow: inset 0 0 0.5em 0 hsl(215, 65%, 71%), 0 0 0.5em 0 hsl(215, 65%, 71%);
+      background: rgba(12, 12, 12, 0.75)
+      /* animation: pulse 2.5s infinite;  */
+    }
+
+    .neon-button:hover::before {
+      background: hsl(215, 65%, 71%);
+    }
+  </style>
+  
+</head>
+
+<body>
+  <div class="pusher">
+    <!-- Static header and sidebar loaded by external script -->
+    <div id="page-header"></div>
+    <div id="nav-menu"></div>
+
+    <!-- Actual page content -->
+    <div id="main-content" class="article">
+      <!-- <div class="ui card">
+        <img src="/assets/cards/anime.jpg">
+        <div class="overlay">
+          Overlay Content
+        </div>
+      </div> -->
+
+      <div class="neon-button" contentEditable="true">
+        <i class="spinner loading icon"></i>
+        TitleCardMaker
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    
+  </script>
+
+  <!-- Load Sidebar -->
+  <script src="/templates/loadStaticContent.js"></script>
+</body>
+
+</html>

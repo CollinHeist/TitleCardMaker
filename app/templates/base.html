@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/assets/logo128.png">
+  <link rel="shortcut icon" href="/assets/logo128.png"> 
+  <link rel="apple-touch-icon" href="/assets/logo128.png">
+  <title>TitleCardMaker</title>
+
+  <!-- Formantic UI -->
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" type="text/css" href="/templates/style.css">
+  <style>
+    .series-name {
+      text-align: center;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ui.cards > .card {
+      min-width: 100px;
+      max-width: 10%;
+    }
+
+    /* Scale card on hover */
+    /* .ui.cards > .card:hover {
+      transform: scale(1.05);
+    } */
+
+    /* Pulse cards on hover - alternate */
+    .ui.cards > .card:hover {
+      animation: pulse 0.75s 1; 
+    }
+    @keyframes pulse {
+      0%, 
+      100% {
+        animation-timing-function: ease-in;
+      }
+      50% {
+        transform: scale(1.03);
+      }
+    }
+
+    /* Pulse the add series button on hover */
+    #add-series:hover {
+      animation: pulse 2s infinite;
+    }
+
+    #toolbar {
+      position: fixed;
+      z-index: 11; /* Z index of the blur shadow overlay on posters is 10 */
+      height: 50px;
+      /* margin-bottom: 25px; */
+      line-height: 50px; /* Center text vertically inside the div */
+      /* Start the toolbar on the right side of the screen, move left */
+      transition: left 0.5s ease-in-out;
+      left: calc(100% - 425px); /* 445px */
+      display: inline-block;
+    }
+    /* When the toolbar is in the moved state, offset left from the sidebar only */
+    #toolbar.moved {
+      left: 135px;
+    }
+
+    /* Add drop shadow to all children of the toolbar */
+    #toolbar > * {
+      box-shadow: 0 2px 4px 0 rgba(34,36,38,.3),0 2px 10px 0 rgba(34,36,38,.40);
+    }
+
+    /* Rotate toolbar icons when pressed */
+    #toolbar >* i.icon {
+      transform: rotate(0deg);
+			transition: transform 0.5s ease-in-out;
+    }
+    #toolbar >* i.icon.rotate {
+      transform: rotate(180deg);
+    }
+
+    #statistics {
+      display: inline-block; /* Ensure sidebar starts on the right of the statistics */
+    }
+  </style>
+
+  <!-- Scripts -->
+  <script>
+    // Get all series and load their cards into HTML
+    async function getAllSeries() {
+      const allSeries = await fetch('/api/series/all').then(resp => resp.json());
+      const template = document.querySelector('#series-template');
+      const all = allSeries.map(series => {
+        const clone = template.content.cloneNode(true);
+        const topDiv = clone.querySelector('div');
+        topDiv.setAttribute('data-series-id', series.id);
+        topDiv.setAttribute('data-series-name', series.name);
+        topDiv.setAttribute('data-series-year', series.year);
+        // const clone = template.content.cloneNode(true);
+        clone.querySelector('img').src = series.poster_url;
+        const as = clone.querySelectorAll('a');
+        as[0].href = `/series/${series.id}`;
+        as[1].href = `/series/${series.id}`;
+        const title = clone.querySelector('.series-name');
+        title.setAttribute('title', `${series.name} (${series.year})`);
+        title.innerText = series.name;
+
+        return clone;
+      });
+      // const seriesList = document.getElementById('series-list');
+      document.getElementById('series-list').replaceChildren(...all);
+
+      $('.ui.cards .image').dimmer({
+        on: 'ontouchstart' in document.documentElement ? 'click' : 'hover'
+      });
+    }
+
+    // Get all statistics and load them into HTML
+    async function getAllStatistics() {
+      const statistics = await fetch('/api/statistics').then(resp => resp.json());
+      const statisticsElement = document.getElementById('statistics');
+      const template = document.querySelector('#statistic-template');
+      statistics.forEach(({value_text, unit, description}) => {
+        const clone = template.content.cloneNode(true);
+        const statDiv = clone.querySelector('.statistic');
+        statDiv.title = description;
+        const valueDiv = clone.querySelector('.value');
+        valueDiv.innerText = value_text;
+        const labelDiv = clone.querySelector('.label');
+        labelDiv.innerText = unit;
+        statisticsElement.appendChild(clone);
+      });
+    }
+
+    // Get libraries and update dropdown in add series modal
+    async function getLibraries() {
+      // Only make API request if the library element is loaded/present
+      if (document.getElementById('#emby-library') !== undefined) {
+        const embyLibraries = await fetch('/api/available/libraries/emby').then(resp => resp.json());
+        const values = 
+        $('#emby-library').dropdown({
+          values: embyLibraries.map(name => {
+            return {name: name, value: name};
+          }),
+        });
+      }
+
+      if (document.getElementById('#jellyfin-library') !== undefined) {
+        const jellyfinLibraries = await fetch('/api/available/libraries/jellyfin').then(resp => resp.json());
+        const values = 
+        $('#jellyfin-library').dropdown({
+          values: jellyfinLibraries.map(name => {
+            return {name: name, value: name};
+          }),
+        });
+      }
+
+      if (document.getElementById('#plex-library') !== undefined) {
+        const plexLibraries = await fetch('/api/available/libraries/plex').then(resp => resp.json());
+        $('#plex-library').dropdown({
+          values: plexLibraries.map(name => {
+            return {name: name, value: name};
+          }),
+        });
+      }
+    }
+
+    // Get all templates and add to new series modal
+    async function getTemplates() {
+      if (document.getElementById('#templates') !== undefined) {
+        const templates = await fetch('/api/templates/all').then(resp => resp.json());
+        $('#templates').dropdown({
+          values: templates.map(({id, name}) => {
+            return {name: name, value: id};
+          }),
+        });
+      }
+    }
+
+    async function initAll() {
+      getAllStatistics();
+      getLibraries();
+      getTemplates();
+    }
+  </script>
+
+  <!-- Templates -->
+  <template id="series-template">
+    <div class="ui raised card">
+      <div class="blurring dimmable image">
+        <div class="ui dimmer">
+          <div class="content">
+            <div class="center">
+              <a>
+                <div class="ui inverted button">View</div>
+              </a>
+            </div>
+          </div>
+        </div>
+        <!-- <div class="ui blue mini ribbon label">Template</div> -->
+        <img>
+      </div>
+      <div class="content">
+        <a>
+          <div class="series-name ui tiny header"></div>
+        </a>
+      </div>
+    </div>
+  </template>
+
+  <template id="statistic-template">
+    <div class="ui statistic">
+      <div class="value">VALUE</div>
+      <div class="label">LABEL</div>
+    </div>
+  </template>
+</head>
+
+<body onload="initAll();">
+  <div class="pusher">
+    <!-- Static header and sidebar loaded by external script -->
+    <div id="page-header"></div>
+    <div id="nav-menu"></div>
+
+    <!-- Actual page content -->
+    <div id="main-content" class="article">
+      <div id="statistics" class="ui small statistics">
+        <!-- Statistics added on page load by async request -->
+      </div>
+
+      <!-- Toolbar for force syncing and sorting series -->
+      <div id="toolbar">
+        <!-- Button to add a new series -->
+        <div id="add-series" class="ui compact blue inverted menu" title="Add a new series" style="margin-right: 10px;">
+          <a class="blue item">
+            <i class="plus icon"></i>
+            New Series
+          </a>
+        </div>
+
+        <!-- Sort series bar -->
+        <div class="ui compact blue inverted menu" title="Re-sync all series">
+          <a class="disabled item">
+            <i class="loading sync icon"></i>
+            Sync All
+          </a>
+          <a class="item" title="Sort titles by ID" onclick="sortSeries(this, 'id')">
+            <i id="sort-by-id" class="sort icon"></i>
+          </a>
+          <a class="item" title="Sort titles alphabetically" onclick="sortSeries(this, 'title')">
+            <i id="sort-by-az" class="sort alphabet down icon"></i>
+          </a>
+          <!-- <a class="item" title="Sort titles by number of cards" onclick="sortSeries(this, 'cards')">
+            <i id="sort-by-cards" class="sort amount down icon"></i>
+          </a> -->
+          <a class="item" title="Sort titles by release year" onclick="sortSeries(this, 'year')">
+            <i id="sort-by-year" class="sort numeric down icon"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Actual series content, added asynchronously -->
+      <div id="series-list" class="ui special cards main-content"></div>
+    </div>
+
+    <!-- Add series modal -->
+    <div id="add-series-modal" class="ui mini modal">
+      <i class="close icon"></i>
+      <div class="header">Add New Series</div>
+      <div class="content">
+        <form id="new-series-form" class="ui form">
+          <!-- Series name/year -->
+          <div class="ui grid">
+            <div class="ten wide required field">
+              <label>Series Title</label>
+              <input type="text" name="name">
+            </div>
+            <div class="six wide required field">
+              <label>Year</label>
+              <input type="number" name="year" min="1900" placeholder="2023">
+            </div>
+          </div>
+
+          <!-- Template -->
+          <div class="compact field">
+            <label>Template</label>
+            <div id="templates" class="ui selection clearable dropdown">
+              <input name="template_id" type="hidden">
+              <i class="dropdown icon"></i>
+              <div class="default text">None</div>
+              <div class="menu"><!-- Added asynchronously --></div>
+            </div>
+          </div>
+
+          <!-- Libraries -->
+          {% if preferences.enabled_media_servers %}
+          <div class="ui equal width grid">
+            {% if 'Emby' in preferences.enabled_media_servers %}
+            <div class="column field">
+              <label>Emby Library</label>
+              <div id="emby-library" class="ui clearable selection dropdown">
+                <input name="emby_library_name" type="hidden">
+                <i class="dropdown icon"></i>
+                <div class="default text">None</div>
+                <div class="menu"><!-- Added asynchronously --></div>
+              </div>
+            </div>
+            {% endif %}
+            {% if 'Jellyfin' in preferences.enabled_media_servers %}
+            <div class="column field">
+              <label>Jellyfin Library</label>
+              <div id="jellyfin-library" class="ui clearable selection dropdown">
+                <input name="jellyfin_library_name" type="hidden">
+                <i class="dropdown icon"></i>
+                <div class="default text">None</div>
+                <div class="menu"><!-- Added asynchronously --></div>
+              </div>
+            </div>
+            {% endif %}
+            {% if 'Plex' in preferences.enabled_media_servers %}
+            <div class="column field">
+              <label>Plex Library</label>
+              <div id="plex-library" class="ui clearable selection dropdown">
+                <input name="plex_library_name" type="hidden">
+                <i class="dropdown icon"></i>
+                <div class="default text">None</div>
+                <div class="menu"><!-- Added asynchronously --></div>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          <!-- Error message shown on form validation -->
+          <div class="ui error message"></div>
+        </form>
+      </div>
+      <div class="center aligned actions">
+        <button id="new-series-button" class="ui green right labeled icon button" type="submit" form="new-series-form">
+          Add
+          <i class="plus icon"></i>
+        </button>
+      </div>
+    </div>
+    
+  </div>
+
+  <script>
+    $('.ui.modal')
+      .modal({blurring: true})                        // Blur background when shown
+      .modal('attach events', '#add-series', 'show')  // Show modal on add buton press
+      .modal('setting', 'transition', 'fade up')      // Fade up modal on reveal
+
+    // Dim series posters on hover
+    $('.ui.cards .image').dimmer({
+      on: 'ontouchstart' in document.documentElement ? 'click' : 'hover'
+    });
+
+    // Validate new series form
+    $('#new-series-form')
+      .form({fields: {
+        name: {identifier: 'name', rules: [{type: 'minLength[1]', prompt: 'Series title is required'}]},
+        year: {identifier: 'year', rules: [{type: 'integer[1900..2050]', prompt: 'Enter a valid year'}]},
+      }});
+      
+    // Handle form submission
+    $('#new-series-form').on('submit', (event) => {
+      // Prevent default event form handler
+      event.preventDefault();
+
+      // Change button to loading while submitting request
+      $('#new-series-button').toggleClass('loading', true);
+
+      // Get form data, remove blanks
+      let form = new FormData(event.target);
+      console.log(form);
+      for (const [key, value] of [...form.entries()]) {
+        if (value === '') { form.delete(key); }
+      }
+
+      // Submit API request to add series
+      $.ajax({
+        type: 'POST',
+        url: '/api/series/new',
+        data: form,
+        processData: false,
+        contentType: false,
+        success: (response) => {
+          getAllSeries();
+          $.toast({
+            class: 'blue info',
+            title: `Added series "${response.name}"`,
+            showDuration: 'auto',
+          });
+          // Refresh episode data for the newly added series
+          $.ajax({
+            type: 'POST',
+            url: `/api/series/${response.id}/refresh`,
+            success: () => {
+              $.toast({
+                class: 'blue info',
+                title: `Refreshed episode data for "${response.name}"`,
+                showDuration: 'auto',
+              });
+            }, error: (response2) => {
+              $.toast({
+                class: 'error',
+                title: `Error refreshing episode data for "${response.name}"`,
+                message: response2.responseJSON.message,
+                showDuration: 'auto',
+              })
+            }
+          });
+        }, error: (response) => {
+          $.toast({
+            class: 'error',
+            title: `Error Adding series`,
+            message: response,
+            showDuration: 'auto',
+          });
+        }, complete: () => {
+          setTimeout(() => $('#new-series-button').toggleClass('loading', false), 750);
+        },
+      });
+    });
+
+    // While scrolling, move the toolbar div if scrolled >50px
+    window.addEventListener('scroll', () => {
+      // Check if the page has been scrolled 50 pixels or more
+			if (window.pageYOffset >= 50) {
+				document.querySelector('#toolbar').classList.add('moved');
+			} else {
+				document.querySelector('#toolbar').classList.remove('moved');
+			}
+    });
+
+    // Sort series different ways
+    let sortStates = {
+      'id': {state: 0, allStates: [{icon: 'sort icon', sortState: 'id-desc'}, {icon: 'sort icon', sortState: 'id-asc'}]},
+      'title': {state: 0, allStates: [{icon: 'sort alphabet down icon', sortState: 'a-z'}, {icon: 'sort alphabet down alternate icon', sortState: 'z-a'}]},
+      // 'cards': {state: 0, allStates: [{icon: 'sort alphabet down icon', sortState: 'a-z'}, {icon: 'sort alphabet down alternate icon', sortState: 'z-a'}]},
+      'year': {state: 0, allStates: [{icon: 'sort numeric down icon', sortState: 'year-asc'}, {icon: 'sort numeric down alternate icon', sortState: 'year-desc'}]},
+    }
+
+    function sortSeries(elem, by) {
+      // Get all card elements
+      let divList = $(".card");
+      let {state, allStates} = sortStates[by];
+      let {sortState} = allStates[state];
+
+      divList.sort((a, b) => {
+        switch (sortState) {
+          case 'id-asc': return $(a).data('series-id')-$(b).data('series-id');
+          case 'id-desc': return $(b).data('series-id')-$(a).data('series-id');
+          case 'a-z': return $(a).data('series-name').toString().localeCompare($(b).data('series-name').toString());
+          case 'z-a': return $(b).data('series-name').toString().localeCompare($(a).data('series-name').toString());
+          case 'year-asc': return $(a).data('series-year')-$(b).data('series-year');
+          case 'year-desc': return $(b).data('series-year')-$(a).data('series-year');
+          default: return 0;
+        }
+      });
+      // Return newly sorted list
+      $("#series-list").append(divList);
+
+      // Rotate icon
+      document.getElementById(elem.firstElementChild.id).classList.toggle('rotate');
+
+      // Wait for rotation to finish, then change icon state
+      setTimeout(() => {
+        sortStates[by].state = (sortStates[by].state + 1) % 2;
+        let {icon} = sortStates[by].allStates[sortStates[by].state];
+        elem.firstElementChild.className = icon;
+			}, 500); // Timeout set to match the transition duration
+    }
+
+    allSeries = getAllSeries();
+  </script>
+  <script src="/templates/loadStaticContent.js"></script>
+</body>
+
+</html>

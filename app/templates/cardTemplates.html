@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/assets/logo128.png">
+  <link rel="shortcut icon" href="/assets/logo128.png"> 
+  <link rel="apple-touch-icon" href="/assets/logo128.png">
+  <title>Templates - TitleCardMaker</title>
+
+  <!-- Formantic UI -->
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.js"></script>
+  
+  <!-- Global styles -->
+  <link rel="stylesheet" type="text/css" href="/templates/style.css"/>
+  <style>
+    .ui.dropdown >* .header {
+      color: crimson !important;
+    }
+
+    .right.aligned.field,
+    .right.aligned.field > input {
+      text-align: right;
+    }
+  </style>
+
+  <template id="template">
+    <div class="ui styled fluid accordion">
+      <div class="title">
+        <i class="dropdown icon"></i>
+        TEMPLATE NAME
+      </div>
+      <div class="content">
+        <div class="ui grid">
+          <!-- Template Settings -->
+          <div class="eight wide column">
+            <form class="ui form">
+              <div class="field">
+                <label>Template Name</label>
+                <input name="name" type="text" minlength="1">
+              </div>
+
+              <h4 class="ui horizontal middle aligned divider header">Card Settings</h4>
+
+              <div class="field">
+                <label>Card Type</label>
+                <div data-value="card-types" class="ui long compact selection clearable dropdown">
+                  <input name="card_type" type="hidden">
+                  <i class="dropdown icon"></i>
+                  <div class="default text">Global Default</div>
+                  <div class="down menu">
+                    <!-- Options added asynchronously -->
+                  </div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Font</label>
+                <div data-value="font-dropdown" class="ui very long compact clearable selection dropdown">
+                  <input name="font_id" type="hidden">
+                  <i class="dropdown icon"></i>
+                  <div class="default text">Card Default</div>
+                  <div class="menu">
+                    <!-- Elements added asynchrously -->
+                  </div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Unwatched Episode Style</label>
+                <div data-value="unwatched-style" class="ui compact selection clearable dropdown">
+                  <input name="unwatched_style" type="hidden">
+                  <i class="dropdown icon"></i>
+                  <div class="default text">Global Default</div>
+                  <div class="menu">
+                    <!-- Added asynchronously -->
+                  </div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Watched Episode Style</label>
+                <div data-value="watched-style" class="ui long compact selection clearable dropdown">
+                  <span class="default text">Server Default</span>
+                  <input name="watched_style" type="hidden">
+                  <i class="dropdown icon"></i>
+                  <div class="menu">
+                    <!-- Added asynchronously -->
+                  </div>
+                </div>
+              </div>
+
+              <h4 class="ui horizontal middle aligned divider header">Season and Episode Text</h4>
+
+              <div data-value="hide-seasons" class="ui right aligned checkbox field">
+                <input name="hide_seasons" type="checkbox" class="hidden">
+                <label>Hide Season Titles</label>
+              </div>
+
+              <div data-value="season-titles" class="ui field">
+                <label>Season Titles</label>
+                <div class="two fields">
+                  <div data-value="season-title-range" class="three wide right aligned field">
+                    <label>Range</label>
+                    <!-- <input name="season_title_range" data-value="season-titles" type="text"> -->
+                  </div>
+                  <div data-value="season-title-value" class="eight wide field">
+                    <label>Title</label>
+                    <!-- <input name="season_title_value" type="text"> -->
+                  </div>
+                </div>
+                <div data-value="add-title" class="circular ui icon mini button">
+                  <i class="plus square outline icon"></i>
+                  Add Title
+                </div>
+              </div>
+
+              <div data-value="hide-episode-text" class="ui right aligned checkbox field">
+                <input name="hide_episode_text" type="checkbox" class="hidden">
+                <label>Hide Episode Text</label>
+              </div>
+
+              <div data-value="episode-text-format" class="field">
+                <label>Episode Text Format</label>
+                <input name="episode_text_format" type="text" placeholder="Card Default">
+              </div>
+
+              <h4 class="ui horizontal middle aligned divider header">Non-Card Settings</h4>
+
+              <div class="ui right aligned checkbox field">
+                <input name="skip_localized_images" type="checkbox">
+                <label>Ignore Localized Images</label>
+              </div>
+
+              <div class="field">
+                <label>Episode Data Source</label>
+                <div class="ui compact selection clearable dropdown" data-value="episode-data-source">
+                  <input name="episode_data_source" type="hidden">
+                  <i class="dropdown icon"></i>
+                  <div class="default text">Global Default</div>
+                  <div class="menu">
+                    <!-- Added asynchronously -->
+                  </div>
+                </div>
+              </div>
+
+              <div class="ui right aligned checkbox field">
+                <input name="sync_specials" type="checkbox">
+                <label>Sync Specials</label>
+              </div>
+
+              <!-- <div class="field">
+                <label>Image Source Priority</label>
+                <div class="ui compact multiple selection dropdown" data-value="image-source-priority">
+                  <input name="image_source_priority"type="hidden">
+                  <i class="dropdown icon"></i>
+                  <div class="default text">Global Default</div>
+                  <div id="image-source-priority-choices" class="menu">
+                    
+                  </div>
+                </div>
+              </div> -->
+
+              <h4 class="ui horizontal middle aligned divider header">Extras</h4>
+
+              <div class="ui field">
+                <div class="two fields">
+                  <div data-value="extra-key" class="four wide right aligned field">
+                    <label>Key</label>
+                    <!-- <input name="extra_key" type="text"> -->
+                  </div>
+                  <div data-value="extra-value" class="four wide field">
+                    <label>Value</label>
+                    <!-- <input name="extra_value" type="text"> -->
+                  </div>
+                </div>
+                <div data-value="add-extra" class="circular ui icon mini button">
+                  <i class="plus square outline icon"></i>
+                  Add Extra
+                </div>
+              </div>
+
+              <!-- Buttons -->
+              <button button-type="submit" class="ui primary animated button" type="submit">
+                <div class="visible content">Save Changes</div>
+                <div class="hidden content">
+                  <i class="right arrow icon"></i>
+                </div>
+              </button>
+              <button button-type="delete" class="ui negative animated button">
+                <div class="visible content">Delete</div>
+                <div class="hidden content">
+                  <i class="trash icon"></i>
+                </div>
+              </button>
+            </form>
+          </div>
+
+          <!-- Preview Cards -->
+          <div class="four wide column">
+            <h3>Watched Content</h3>
+            <div class="ui card">
+              <div class="content">
+                <div class="ui placeholder">
+                  <div class="rectangular image"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="four wide column">
+            <h3>Unwatched Content</h3>
+            <div class="ui card">
+              <div class="content">
+                <div class="ui placeholder">
+                  <div class="rectangular image"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    async function getAllTemplates() {
+      const allCardTypes = await fetch('/api/available/card-types').then(resp => resp.json());
+      const allFonts = await fetch('/api/fonts/all').then(resp => resp.json());
+      const allStyles = await fetch('/api/available/styles').then(resp => resp.json());
+      const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
+      const allEpisodeDataSources = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
+      const elements = allTemplates.map(templateObj => {
+        // Clone template
+        const base = document.querySelector('#template').content.cloneNode(true);
+        base.querySelector('.accordion').id = `template-id${templateObj.id}`;
+        // Set accordion title and title input
+        base.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${templateObj.name}`;
+        const nameElem = base.querySelector('input[name="name"]');
+        nameElem.placeholder = templateObj.name; nameElem.value = templateObj.name;
+        // Card type set later
+        // Font set later
+        // Unwatched and Watched style set later
+        // Hide season checkbox
+        if (templateObj.hide_seasons) {
+          base.querySelector('input[name="hide_seasons"]').setAttribute('checked', '');
+          base.querySelector('.field[data-value="season-titles"]').className = 'ui disabled field';
+        }
+        // Season titles
+        if (Object.entries(templateObj.season_titles).length > 0) {
+          const rangeDiv = base.querySelector('.field[data-value="season-title-range"]');
+          const valueDiv = base.querySelector('.field[data-value="season-title-value"]');
+          for (const [range, value] of Object.entries(templateObj.season_titles)) {
+            const rangeElem = document.createElement('input');
+            rangeElem.name = 'season_title_range'; rangeElem.setAttribute('data-value', 'season-titles');
+            rangeElem.type = 'text'; rangeElem.value = range;
+            rangeDiv.appendChild(rangeElem);
+            const valueElem = document.createElement('input');
+            valueElem.name = 'season_title_value'; valueElem.type = 'text'; valueElem.value = value;
+            valueDiv.appendChild(valueElem);
+          }
+        }
+        if (templateObj.hide_episode_text) {
+          base.querySelector('input[name="hide_episode_text"]').setAttribute('checked', '');
+          base.querySelector('.field[data-value="episode-text-format"]').className = 'ui disabled field';
+        }
+        // Episode text format
+        base.querySelector('input[name="episode_text_format"]').value = templateObj.episode_text_format;
+        // Ignore localized
+        if (templateObj.skip_localized_images) {
+          base.querySelector('input[name="skip_localized_images"]').setAttribute('checked', '');
+        }
+        // Episode data source set later
+        // Image source priority set later
+        // Extra labels
+        if (Object.entries(templateObj.extras).length > 0) {
+          const labelDiv = base.querySelector('.field[data-value="extra-key"]');
+          const inputDiv = base.querySelector('.field[data-value="extra-value"]');
+          for (const [key, value] of Object.entries(templateObj.extras)) {
+            const label = document.createElement('input');
+            label.name = 'extra_key'; label.type = 'text'; label.value = key;
+            labelDiv.appendChild(label);
+            const valueElem = document.createElement('input');
+            valueElem.name = 'extra_value'; valueElem.type = 'text'; valueElem.value = value;
+            inputDiv.appendChild(valueElem)
+          };
+        }
+        return base;
+      });
+      const templatesElem = document.getElementById('templates');
+      templatesElem.replaceChildren(...elements);
+      $('.ui.accordion').accordion();
+      $('.ui.checkbox').checkbox();
+
+      // Fill in fancy values
+      allTemplates.forEach(templateObj => {
+        // Card type
+        $(`#template-id${templateObj.id} >* .dropdown[data-value="card-types"]`).dropdown({
+          values: allCardTypes.map(({name}) => {
+            return {name: name, value: name, selected: name === templateObj.card_type};
+          }), placeholder: 'Global Default',
+        });
+        // Font
+        $(`#template-id${templateObj.id} >* .dropdown[data-value="font-dropdown"]`).dropdown({
+          values: allFonts.map(({id, name}) => {
+            return {name: name, value: id, selected: id === templateObj.font_id};
+          }), placeholder: 'Card Default',
+        });
+        // Unwatched style
+        $(`#template-id${templateObj.id} >* .dropdown[data-value="unwatched-style"]`).dropdown({
+          values: [
+            {name: 'Art Variations', type: 'header'},
+            ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
+              return {name: name, value: value, selected: value === templateObj.unwatched_style};
+            }),
+            {name: 'Unique Variations', type: 'header'},
+            ...allStyles.filter(({style_type}) => style_type === 'unique').map(({name, value}) => {
+              return {name: name, value: value, selected: value === templateObj.unwatched_style};
+            }),
+          ], placeholder: 'Global Default',
+        });
+        // Watched style
+        $(`#template-id${templateObj.id} >* .dropdown[data-value="watched-style"]`).dropdown({
+          values: [
+            {name: 'Art Variations', type: 'header'},
+            ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
+              return {name: name, value: value, selected: value === templateObj.watched_style};
+            }),
+            {name: 'Unique Variations', type: 'header'},
+            ...allStyles.filter(({style_type}) => style_type === 'unique').map(({name, value}) => {
+              return {name: name, value: value, selected: value === templateObj.watched_style};
+            }),
+          ], placeholder: 'Global Default',
+        });
+        // Attach disabled toggle to hide season button
+        $(`#template-id${templateObj.id} >* .checkbox[data-value="hide-seasons"]`).checkbox({
+          onChecked: () => {
+            $(`#template-id${templateObj.id} >* .field[data-value="season-titles"]`).toggleClass('disabled', true);
+          }, onUnchecked: () => {
+            $(`#template-id${templateObj.id} >* .field[data-value="season-titles"]`).toggleClass('disabled', false);
+          },
+        });
+        // Add new fields to add title button
+        $(`#template-id${templateObj.id} >* .button[data-value="add-title"]`).on('click', () => {
+          const newRange = document.createElement('input');
+          newRange.name = 'season_title_range'; newRange.type = 'text';
+          newRange.setAttribute('data-value', 'season-titles');
+          const newTitle = document.createElement('input');
+          newTitle.name = 'season_title_value'; newTitle.type = 'text';
+          $(`#template-id${templateObj.id} >* .field[data-value="season-title-range"]`).append(newRange);
+          $(`#template-id${templateObj.id} >* .field[data-value="season-title-value"]`).append(newTitle);
+          $('input[data-value="season-titles"]').popup({
+            popup: '#season-title-popup',
+            position: 'right center',
+          });
+        });
+        // Attach disabled toggle to hide episode text button
+        $(`#template-id${templateObj.id} >* .checkbox[data-value="hide-episode-text"]`).checkbox({
+          onChecked: () => {
+            $(`#template-id${templateObj.id} >* .field[data-value="episode-text-format"]`).toggleClass('disabled', true);
+          }, onUnchecked: () => {
+            $(`#template-id${templateObj.id} >* .field[data-value="episode-text-format"]`).toggleClass('disabled', false);
+          },
+        });
+        // Episode data source
+        $(`#template-id${templateObj.id} >* .dropdown[data-value="episode-data-source"]`).dropdown({
+          values: allEpisodeDataSources.map(({name, value}) => {
+            return {name: name, value: value, selected: value === templateObj.episode_data_source};
+          }), placeholder: 'Global Default',
+        });
+        // Add new fields with add extra button
+        $(`#template-id${templateObj.id} >* .button[data-value="add-extra"]`).on('click', () => {
+          const newKey = document.createElement('input');
+          newKey.name = 'extra_key'; newKey.type = 'text';
+          const newValue = document.createElement('input');
+          newValue.name = 'extra_value'; newValue.type = 'text';
+          $(`#template-id${templateObj.id} >* .field[data-value="extra-key"]`).append(newKey);
+          $(`#template-id${templateObj.id} >* .field[data-value="extra-value"]`).append(newValue);
+        });
+        // Submit update via API
+        $(`#template-id${templateObj.id} >* form`).on('submit', (event) => {
+          event.preventDefault();
+          // const form = new FormData(event.target);
+          // for (let [name, value] of [...form.entries()]) {
+          //   // if (name === 'size' || name === 'kerning' || name === 'stroke_width') {
+          //   //   form.set(name, value/100.0);
+          //   // }
+          // }
+
+          $.ajax({
+            type: 'PATCH',
+            url: `/api/templates/${templateObj.id}`,
+            data: new FormData(event.target),
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: function(response) {
+              $.toast({
+                class: 'blue info',
+                title: `Updated Template "${templateObj.name}"`,
+              });
+
+            }, error: function(response) {
+              $.toast({
+                class: 'error',
+                title: 'Error Updating Template',
+                message: response.responseJSON.detail,
+              });
+            }
+          });
+        });
+        // Delete via API
+        $(`#template-id${templateObj.id} >* button[button-type="delete"]`).on('click', (event) => {
+          event.preventDefault();
+          $(`#template-id${templateObj.id} >* button[button-type="delete"]`).addClass('loading', true);
+          $.ajax({
+            type: 'DELETE',
+            url: `/api/templates/${templateObj.id}`,
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: function(response) {
+              $.toast({
+                class: 'blue info',
+                title: `Deleted Template "${templateObj.name}"`,
+              });
+              getAllTemplates();
+            }, error: function(response) {
+              $.toast({
+                class: 'error',
+                title: 'Error Deleting Template',
+                message: response.responseJSON.detail,
+              });
+            }
+          });
+        });
+      });
+
+
+      // Enable accordion/dropdown/checkbox elements
+      $('.ui.accordion').accordion();
+      $('input[data-value="season-titles"]').popup({
+        popup: '#season-title-popup',
+        position: 'right center',
+      });
+    }
+
+    async function initAll() {
+      // getFontOptions();
+      // getEpisodeDataSources();
+      // getImageSourcePriority();
+      // getCardTypes();
+      getAllTemplates();
+    }
+  </script>
+  
+</head>
+
+<body onload="initAll();">
+  <div class="pusher">
+    <!-- Static header and sidebar loaded by external script -->
+    <div id="page-header"></div>
+    <div id="nav-menu"></div>
+
+    <!-- Actual page content -->
+    <div id="main-content" class="article">
+      <!-- Page title -->
+      <h1 class="ui header">Templates</h1>
+
+      <button id="new-template" class="ui primary tertiary button">Create a New Template</button>
+
+      <div id="templates">
+        <!-- Elements added asynchronously -->
+      </div>
+
+      <div id="season-title-popup" class="ui fluid popup right">
+        <div class="ui list content">
+          <div class="item">
+            A number indicates an entire season - e.g. <span class="ui red text">1</span> for <span class="ui red text">season 1</span>.
+          </div>
+          <div class="item">
+            A season and episode range indicates a portion of a season - e.g. <span class="ui blue text">s1e2-s1e5</span> for <span class="ui blue text">season 1, episodes 2-5</span>.
+          </div>
+          <div class="item">
+            A numerical episode range indicates a range of absolute episode numbers - e.g. <span class="ui green text">5-10</span> for (absolute) <span class="ui green text">episodes 5-10</span>.
+          </div>
+        </div>
+      </div>
+        
+    </div>
+
+  </div>
+
+  <script>
+    // Create new (blank) template on button click
+    $('#new-template').on('click', () => {
+      let form = new FormData();
+      form.append('name', 'Custom Template')
+      $.ajax({
+        type: 'POST',
+        url: '/api/templates/new',
+        data: form,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+          $.toast({
+            class: 'blue info',
+            title: `Created Template #${response.id}`,
+          });
+          getAllTemplates();
+        }, error: function(response) {
+          $.toast({
+            class: 'error',
+            title: 'Error Creating Template',
+            message: response.responseJSON.detail,
+          });
+        }
+      });
+    })
+    
+  </script>
+
+  <!-- Load Sidebar -->
+  <script src="/templates/loadStaticContent.js"></script>
+</body>
+
+</html>

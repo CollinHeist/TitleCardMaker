@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/assets/logo128.png">
+  <link rel="shortcut icon" href="/assets/logo128.png"> 
+  <link rel="apple-touch-icon" href="/assets/logo128.png">
+  <title>Syncs - TitleCardMaker</title>
+
+  <!-- Formantic UI -->
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.js"></script>
+  
+  <!-- Global styles -->
+  <link rel="stylesheet" type="text/css" href="/templates/style.css"/>
+  <style>
+    /* Override width of all sync cards */
+    .ui.card {
+      max-width: 200px !important;
+    }
+
+    /* Custom add card */
+    .ui.add.card {
+      width: 200px;
+    }
+
+    .sync.modal {
+      width: 500px !important;
+    }
+
+    i.sync.icon:hover {
+      color: #2185d0;
+      size: 110%;
+    }
+  </style>
+
+  <template id="sync-card-template">
+    <div class="ui card">
+      <div class="content">
+        <i class="right floated trash alternate outline like icon" title="Delete this sync"></i>
+        <i class="right floated sync icon" title="Sync Immediately"></i>
+        <div class="header">{TEMPLATE NAME}</div>
+        <div class="meta">
+          <div class="sync-meta">Sync ID {TEMPLATE ID}</div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    async function getEmbyLibraries() {
+      const libraries = await fetch('/api/available/libraries/emby').then(resp => resp.json());
+      const values = libraries.map(name => {
+        return {name: name, value: name, selected: false}
+      });
+      $('#emby-required-library').dropdown({
+        placeholder: 'None',
+        values: values
+      });
+      $('#emby-excluded-library').dropdown({
+        placeholder: 'None',
+        values: values
+      });
+    }
+
+    async function getPlexLibraries() {
+      const libraries = await fetch('/api/available/libraries/plex').then(resp => resp.json());
+      const values = libraries.map(name => {
+        return {name: name, value: name, selected: false}
+      });
+      $('#plex-required-library').dropdown({
+        placeholder: 'None',
+        values: values
+      });
+      $('#plex-excluded-library').dropdown({
+        placeholder: 'None',
+        values: values
+      });
+    }
+
+    async function getTemplates() {
+      const templates = await fetch('/api/templates/all').then(resp => resp.json());
+      $('.dropdown[dropdown-type="template"]').dropdown({
+        placeholder: 'None',
+        clearable: true,
+        values: templates.map(({id, name}) => {
+          return {name: name, value: id};
+        }),
+      });
+    }
+
+    // Function to add tags to all tag dropdowns
+    async function getSonarrTags() {
+      // Add tag options to add tag dropdowns
+      const tags = await fetch('/api/available/tags/sonarr').then(resp => resp.json());
+      $('.ui.dropdown[dropdown-type="sonarr-tags"]').dropdown({
+        placeholder: 'None',
+        allowAdditions: true,
+        values: tags.map(({id, label}) => {
+          return {name: label, value: label, selected: false};
+        }),
+      })
+    }
+
+    async function getAllSyncs() {
+      const syncElements = [
+        {source: 'emby', elementID: 'emby-syncs'},
+        {source: 'plex', elementID: 'plex-syncs'},
+        {source: 'sonarr', elementID: 'sonarr-syncs'},
+      ];
+      const embyLibraries = await fetch('/api/available/libraries/emby').then(resp => resp.json());
+      const plexLibraries = await fetch('/api/available/libraries/plex').then(resp => resp.json());
+
+      syncElements.forEach(async ({source, elementID}) => {
+        const syncs = await fetch(`/api/sync/${source}/all`).then(resp => resp.json());
+        const syncElement = document.getElementById(elementID);
+        const templateElement = document.querySelector('#sync-card-template');
+        const newChildren = syncs.map(({id, name, template, required_tags,
+            excluded_tags, required_libraries, excluded_libraries,
+            downloaded_only, monitored_only}) => {
+
+          // Clone the card template, adjust header and meta text
+          const clone = templateElement.content.cloneNode(true);
+          const card = clone.querySelector('.card');
+          card.id = `card-sync${id}`;
+          clone.querySelector('.header').innerText = name;
+          clone.querySelector('.sync-meta').innerText = `Sync ID ${id}`;
+
+          // Disable card if interface is disabled
+          if ((source === 'emby' && !{{ preferences.use_emby|tojson }}) ||
+              (source === 'plex' && !{{ preferences.use_plex|tojson }}) ||
+              (source === 'sonarr' && !{{ preferences.use_sonarr|tojson }})) {
+            card.className = 'ui disabled card';
+          }
+
+          // Add delete API request to the delete icon
+          clone.querySelector('i.trash').onclick = () => {
+            // Put card into loading state
+            $(`#card-sync${id}`)[0].className = 'ui red double loading card'
+            $.ajax({
+              type: 'DELETE',
+              url: `/api/sync/delete/${id}`,
+              success: (response) => {
+                $.toast({
+                  class: 'blue info',
+                  title: `Deleted Sync "${name}"`,
+                });
+                getAllSyncs();
+              },
+              error: (response) => {
+                $.toast({
+                  class: 'error',
+                  title: 'Error Deleting Sync',
+                });
+              }, complete: () => {}
+            });
+          }
+
+          // Add sync API request to sync icon
+          clone.querySelector('i.sync').onclick = () => {
+            // Add loading indicator, create toast
+            $(`#card-sync${id} >* i.sync`).toggleClass('loading blue', true);
+            $.toast({
+              class: 'blue info',
+              title: `Started Syncing "${name}"`,
+            });
+            // Submit API request, show toast of results
+            $.ajax({
+              type: 'POST',
+              url: `/api/sync/${id}`,
+              success: (response) => {
+                let message = '';
+                for (let {id, name} of response) {
+                  message += `<a class="item" href="/series/${id}">${name}</a>`;
+                }
+                $.toast({
+                  title: `Synced ${response.length} Series`,
+                  message: `<ul class="ui ordered animated list">${message}</ul>`,
+                  displayTime: 0,
+                  showProgress: 'bottom',
+                  classProgress: 'black',
+                });
+              },
+              error: (response) => {
+                $.toast({
+                  class: 'error',
+                  title: 'Error encountered while Syncing',
+                  message: response.responseJSON.message,
+                });
+              }, complete: () => {
+                $(`#card-sync${id} >* i.sync`).toggleClass('loading blue', false);
+              }
+            });
+          }
+
+          return clone;
+        });
+        syncElement.replaceChildren(syncElement.firstElementChild, ...newChildren);
+      });
+    }
+
+    async function initAll() {
+      getAllSyncs();
+      getEmbyLibraries();
+      getPlexLibraries();
+      getTemplates();
+      getSonarrTags();
+    }
+  </script>
+  
+</head>
+
+<body onload="initAll();">
+  <div class="pusher">
+    <!-- Static header and sidebar loaded by external script -->
+    <div id="page-header"></div>
+    <div id="nav-menu"></div>
+
+    <!-- Actual page content -->
+    <div id="main-content" class="article">
+      <div class="ui grid">
+        <div id="sync" class="sixteen wide column">
+          <h1 class="ui header">Syncs</h1>
+          <span>A <i>sync</i> defines how to automatically add series to <span class="ui blue text">TitleCardMaker</span>.</span>
+
+          <!-- Emby -->
+          <h3 class="ui horizontal divider left aligned header">Emby</h3>
+          <div id="emby-syncs" class="ui raised cards">
+            <div class="ui add card">
+              <div class="center aligned content">
+                {% if preferences.use_emby %}
+                <div id="add-emby-sync" class="ui blue button">
+                {% else %}
+                <div id="add-emby-sync" class="ui blue disabled button">
+                {% endif %}
+                  <i class="plus icon"></i>
+                  Add Sync
+                </div>
+              </div>
+            </div>
+            <!-- Other sync cards added asynchronously -->
+          </div>
+
+          <!-- Jellyfin -->
+          <h3 class="ui horizontal divider left aligned header">Jellyfin</h3>
+          <div id="jellyfin-syncs" class="ui raised cards">
+            <div class="ui add card">
+              <div class="center aligned content">
+                {% if preferences.use_jellyfin %}
+                <div id="add-jellyfin-sync" class="ui blue button">
+                {% else %}
+                <div id="add-jellyfin-sync" class="ui blue disabled button">
+                {% endif %}
+                  <i class="plus icon"></i>
+                  Add Sync
+                </div>
+              </div>
+            </div>
+            <!-- Other sync cards added asynchronously -->
+          </div>
+
+          <!-- Plex -->
+          <h3 class="ui horizontal divider left aligned header">Plex</h3>
+          <div id="plex-syncs" class="ui raised cards">
+            <div class="ui add card">
+              <div class="center aligned content">
+                {% if preferences.use_plex %}
+                <div id="add-plex-sync" class="ui blue button">
+                {% else %}
+                <div id="add-plex-sync" class="ui blue disabled button">
+                {% endif %}
+                  <i class="plus icon"></i>
+                  Add Sync
+                </div>
+              </div>
+            </div>
+            <!-- Other sync cards added asynchronously -->
+          </div>
+
+          <!-- Sonarr -->
+          <h3 class="ui horizontal divider left aligned header">Sonarr</h3>
+          <div id="sonarr-syncs" class="ui raised cards">
+            <div class="ui add card">
+              <div class="center aligned content">
+                {% if preferences.use_sonarr %}
+                <div id="add-sonarr-sync" class="ui blue button">
+                {% else %}
+                <div id="add-sonarr-sync" class="ui blue disabled button">
+                {% endif %}
+                  <i class="plus icon"></i>
+                  Add Sync
+                </div>
+              </div>
+            </div>
+            <!-- Other sync cards added asynchronously -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Emby -->
+    <div id="add-emby-sync-modal" class="ui mini sync modal">
+      <i class="close icon"></i>
+      <div class="header">New Emby Sync</div>
+      <div class="content">
+        <form id="emby-sync-form" class="ui form">
+          <div class="required field">
+            <label>Sync Name</label>
+            <input name="name" type="text" minlength="1">
+          </div>
+
+          <div class="field">
+            <label>Template to Apply</label>
+            <div dropdown-type="template" class="ui selection clearable dropdown">
+              <input name="template_id" type="hidden">
+              <i class="dropdown icon"></i>
+              <div class="default text">None</div>
+              <div class="menu"><!-- Added asynchronously --></div>
+            </div>
+          </div>
+
+          <h4 class="ui horizontal divider header" title="Filter which series are synced">
+            <i class="filter icon"></i>
+            Filters
+          </h4>
+
+          <div class="field" title="Tags required for the series to be synced">
+            <label>Tags</label>
+            <div dropdown-type="server-tags" class="ui multiple search selection dropdown additions">
+              <input name="required_tags" type="hidden">
+              <div class="default text">None</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Libraries</label>
+            <div id="emby-required-library" class="ui clearable multiple selection dropdown" data-value="reqlib">
+              <input name="required_libraries" type="hidden">
+              <i class="dropdown icon"></i>
+              <div class="default text">Libraries</div>
+              <div class="menu"><!-- Added asynchronously --></div>
+            </div>
+          </div>
+
+          <h4 class="ui horizontal divider header" title="Elements to Exclude from this sync">
+            <i class="times circle outline icon"></i>
+            Exclusions
+          </h4>
+
+          <div class="field" title="Tags to exclude from this sync">
+            <label>Tags</label>
+            <div dropdown-type="server-tags" class="ui multiple search selection dropdown additions">
+              <input name="excluded_tags" type="hidden">
+              <div class="default text">None</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Libraries</label>
+            <div id="emby-excluded-library" class="ui clearable multiple selection dropdown">
+              <input type="hidden" name="excluded_libraries">
+              <i class="dropdown icon"></i>
+              <div class="default text">Libraries</div>
+              <div class="menu"><!-- Added asynchronously --></div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="center aligned actions">
+        <button class="ui animated green button" form="emby-sync-form">
+          <div class="visible content" data-value="primary-button">Create</div>
+          <div class="hidden content">
+            <i class="right arrow icon"></i>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Jellyfin -->
+    <div id="add-jellyfin-sync-modal" class="ui mini sync modal">
+      <i class="close icon"></i>
+      <div class="header">New Jellyfin Sync</div>
+      <div class="content">
+        <form id="jellyfin-sync-form" class="ui form">
+          <div class="required field">
+            <label>Sync Name</label>
+            <input name="name" type="text" minlength="1">
+          </div>
+
+          <div class="field">
+            <label>Template to Apply</label>
+            <div dropdown-type="template" class="ui selection clearable dropdown">
+              <input name="template_id" type="hidden">
+              <i class="dropdown icon"></i>
+              <div class="default text">None</div>
+              <div class="menu"><!-- Added asynchronously --></div>
+            </div>
+          </div>
+
+          <h4 class="ui horizontal divider header" title="Filter which series are synced">
+            <i class="filter icon"></i>
+            Filters
+          </h4>
+
+          <div class="field" title="Tags required for the series to be synced">
+            <label>Tags</label>
+            <div dropdown-type="server-tags" class="ui multiple search selection dropdown additions">
+              <input name="required_tags" type="hidden">
+              <div class="default text">None</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Libraries</label>
+            <div id="jellyfin-required-library" class="ui clearable multiple selection dropdown">
+              <input type="hidden" name="required_libraries">
+              <i class="dropdown icon"></i>
+              <div class="default text">Libraries</div>
+              <div class="menu"><!-- Added asynchronously --></div>
+            </div>
+          </div>
+
+          <h4 class="ui horizontal divider header" title="Elements to Exclude from this sync">
+            <i class="times circle outline icon"></i>
+            Exclusions
+          </h4>
+
+          <div class="field" title="Tags to exclude from this sync">
+            <label>Tags</label>
+            <div dropdown-type="server-tags" class="ui multiple search selection dropdown additions">
+              <input name="excluded_tags" type="hidden">
+              <div class="default text">None</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Libraries</label>
+            <div id="jellyfin-excluded-library" class="ui clearable multiple selection dropdown">
+              <input type="hidden" name="excluded_libraries">
+              <i class="dropdown icon"></i>
+              <div class="default text">Libraries</div>
+              <div class="menu"><!-- Added asynchronously --></div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="center aligned actions">
+        <button class="ui animated green button" form="jellyfin-sync-form">
+          <div class="visible content" data-value="primary-button">Create</div>
+          <div class="hidden content">
+            <i class="right arrow icon"></i>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Plex -->
+    <div id="add-plex-sync-modal" class="ui mini sync modal">
+      <i class="close icon"></i>
+      <div class="header">New Plex Sync</div>
+      <div class="content">
+        <form id="plex-sync-form" class="ui form">
+          <div class="required field">
+            <label>Sync Name</label>
+            <input name="name" type="text" minlength="1">
+          </div>
+
+          <div class="field">
+            <label>Template to Apply</label>
+            <div dropdown-type="template" class="ui selection clearable dropdown">
+              <input name="template_id" type="hidden">
+              <i class="dropdown icon"></i>
+              <div class="default text">None</div>
+              <div class="menu"><!-- Added asynchronously --></div>
+            </div>
+          </div>
+
+          <h4 class="ui horizontal divider header" title="Filter which series are synced">
+            <i class="filter icon"></i>
+            Filters
+          </h4>
+
+          <div class="field" title="Tags required for the series to be synced">
+            <label>Tags</label>
+            <div dropdown-type="server-tags" class="ui multiple search selection dropdown additions">
+              <input name="required_tags" type="hidden">
+              <div class="default text">None</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Libraries</label>
+            <div id="plex-required-library" class="ui clearable multiple selection dropdown" data-value="reqlib">
+              <input type="hidden" name="required_libraries">
+              <i class="dropdown icon"></i>
+              <div class="default text">Libraries</div>
+              <div class="menu"><!-- Added asynchronously --></div>
+            </div>
+          </div>
+
+          <h4 class="ui horizontal divider header" title="Elements to Exclude from this sync">
+            <i class="times circle outline icon"></i>
+            Exclusions
+          </h4>
+
+          <div class="field" title="Tags to exclude from this sync">
+            <label>Tags</label>
+            <div dropdown-type="server-tags" class="ui multiple search selection dropdown additions">
+              <input name="excluded_tags" type="hidden">
+              <div class="default text">None</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Libraries</label>
+            <div id="plex-excluded-library" class="ui clearable multiple selection dropdown">
+              <input type="hidden" name="excluded_libraries" tabindex="5">
+              <i class="dropdown icon"></i>
+              <div class="default text">Libraries</div>
+              <div class="menu"><!-- Added asynchronously --></div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="center aligned actions">
+        <button class="ui animated green button" form="plex-sync-form">
+          <div class="visible content" data-value="primary-button">Create</div>
+          <div class="hidden content">
+            <i class="right arrow icon"></i>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Sonarr -->
+    <div id="add-sonarr-sync-modal" class="ui small sync modal">
+      <i class="close icon"></i>
+      <div class="header">New Sonarr Sync</div>
+      <div class="content">
+        <form id="sonarr-sync-form" class="ui form">
+          <div class="required field">
+            <label>Sync Name</label>
+            <input name="name" type="text" minlength="1">
+          </div>
+
+          <div class="field">
+            <label>Template to Apply</label>
+            <div dropdown-type="template" class="ui selection clearable dropdown">
+              <input name="template_id" type="hidden">
+              <i class="dropdown icon"></i>
+              <div class="default text">None</div>
+              <div class="menu">
+                <!-- Added asynchronously -->
+              </div>
+            </div>
+          </div>
+
+          <h4 class="ui horizontal divider header" title="Filter which series are synced">
+            <i class="filter icon"></i>
+            Filters
+          </h4>
+
+          <div class="field" title="Tags required for the series to be synced">
+            <label>Tags</label>
+            <div dropdown-type="sonarr-tags" class="ui fluid multiple search selection dropdown additions">
+              <input name="required_tags" type="hidden">
+              <i class="dropdown icon"></i>
+              <div class="default text">None</div>
+              <div class="menu"><!-- Added asynchronously --></div>
+            </div>
+          </div>
+
+          <div class="field" title="Only include series of the specified type">
+            <label>Series Type</label>
+            <div dropdown-type="series-type" class="ui selection clearable dropdown">
+              <input name="required_series_type" type="hidden">
+              <i class="dropdown icon"></i>
+              <div class="default text">None</div>
+              <div class="menu">
+                <div class="item" data-value="anime">Anime</div>
+                <div class="item" data-value="daily">Daily</div>
+                <div class="item" data-value="standard">Standard</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="two fields">
+            <div class="ui checkbox field" title="Whether to only include series that have at least one downloaded episode">
+              <input name="downloaded_only" type="checkbox">
+              <label>Downloaded Only</label>
+            </div>
+  
+            <div class="ui checkbox field" title="Whether to only include series that are 'Monitored' in Sonarr">
+              <input name="monitored_only" type="checkbox">
+              <label>Monitored Only</label>
+            </div>
+          </div>
+
+          <h4 class="ui horizontal divider header" title="Elements to Exclude from this sync">
+            <i class="times circle outline icon"></i>
+            Exclusions
+          </h4>
+
+          <div class="field" title="Tags to exclude from this sync">
+            <label>Tags</label>
+            <div dropdown-type="sonarr-tags" class="ui fluid multiple search selection dropdown">
+              <input name="excluded_tags" type="hidden">
+              <i class="dropdown icon"></i>
+              <div class="default text">None</div>
+              <div class="menu"><!-- Added asynchronously --></div>
+            </div>
+          </div>
+
+          <div class="field" title="Exclude series of the specified type">
+            <label>Series Type</label>
+            <div dropdown-type="series-type" class="ui selection clearable dropdown">
+              <input name="excluded_series_type" type="hidden">
+              <i class="dropdown icon"></i>
+              <div class="default text">None</div>
+              <div class="menu">
+                <div class="item" data-value="anime">Anime</div>
+                <div class="item" data-value="daily">Daily</div>
+                <div class="item" data-value="standard">Standard</div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="center aligned actions" data-value="action-buttons">
+        <button class="ui animated green button" form="sonarr-sync-form">
+          <div class="visible content" data-value="primary-button">Create</div>
+          <div class="hidden content">
+            <i class="right arrow icon"></i>
+          </div>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Enable elements
+    // $('.dropdown').dropdown();
+    // $('.clearable.dropdown').dropdown({clearable: true});
+    $('.checkbox').checkbox();
+    $('.ui.dropdown[dropdown-type="series-type"]').dropdown({
+      clearable: true,
+      default: 'None',
+    });
+    $('.ui.dropdown[dropdown-type="server-tags"]').dropdown({allowAdditions: true});
+    // $('.ui.dropdown.additions').dropdown({allowAdditions: true});
+
+    // Attach button clicks to modal hiding
+    $('#add-emby-sync-modal').modal('attach events', '#add-emby-sync', 'show');
+    $('#add-jellyfin-sync-modal').modal('attach events', '#add-jellyfin-sync', 'show');
+    $('#add-plex-sync-modal').modal('attach events', '#add-plex-sync', 'show');
+    $('#add-sonarr-sync-modal').modal('attach events', '#add-sonarr-sync', 'show');
+
+    // Submit API request to create a new sync, do so for each source
+    const syncData = [
+      {interface: 'emby', formID: 'emby-sync-form', modalID: 'add-emby-sync-modal'},
+      {interface: 'jellyfin', formID: 'jellyfin-sync-form', modalID: 'add-jellyfin-sync-modal'},
+      {interface: 'plex', formID: 'plex-sync-form', modalID: 'add-plex-sync-modal'},
+      {interface: 'sonarr', formID: 'sonarr-sync-form', modalID: 'add-sonarr-sync-modal'},
+    ];
+    syncData.forEach(({interface, formID, modalID}) => {
+      $(`#${formID}`).on('submit', (event) => {
+        event.preventDefault();
+        let form = new FormData(event.target);
+        for (let [name, value] of [...form.entries()]) {
+          if (value === '') { form.delete(name); }
+        }
+        // Submit API request to add this sync
+        $.ajax({
+          type: 'POST',
+          url: `/api/sync/${interface}/new`,
+          data: form,
+          processData: false,
+          contentType: false,
+          success: (response) => {
+            $.toast({
+              class: 'blue info',
+              title: `Created Sync "${response.name}"`,
+            });
+            getAllSyncs();
+            $(`#${modalID}`).modal('hide');
+          }, error: (response) => {
+            $.toast({
+              class: 'error',
+              title: 'Error Creating Sync',
+              message: 'Ensure the sync name is valid',
+            });
+          }, complete: () => {}
+        });
+      });
+    });
+  </script>
+
+  <!-- Load Sidebar -->
+  <script src="/templates/loadStaticContent.js"></script>
+</body>
+
+</html>
