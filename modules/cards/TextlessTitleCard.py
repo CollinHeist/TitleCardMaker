@@ -5,9 +5,25 @@ from modules.Debug import log
 
 class TextlessTitleCard(BaseCardType):
     """
-    This class describes a type of CardType that does not modify the source
-    image in anyway, only optionally blurring it. No text of any kind is added.
+    This class describes a type of CardType that does not modify the
+    source image in anyway, only optionally blurring it. No text of any
+    kind is added.
     """
+
+    """API Parameters"""
+    API_DETAILS = {
+        'name': 'Textless',
+        'example': '/assets/cards/textless.jpg',
+        'creators': ['CollinHeist'],
+        'source': 'local',
+        'supports_custom_fonts': False,
+        'supports_custom_seasons': False,
+        'supported_extras': [
+        ], 'description': [
+            'A "card type" completely devoid of all title, season, and episode text.',
+            'This card is intended to allow users to have TCM manage non-TCM-created cards, as well as apply style modifiers to source images',
+        ],
+    }
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
@@ -37,9 +53,9 @@ class TextlessTitleCard(BaseCardType):
 
 
     def __init__(self, source: Path, output_file: Path,
-                 blur: bool=False,
-                 grayscale: bool=False,
-                 **unused) -> None:
+            blur: bool = False,
+            grayscale: bool = False,
+            **unused) -> None:
         """
         Construct a new instance of this card.
 
@@ -62,8 +78,8 @@ class TextlessTitleCard(BaseCardType):
     @staticmethod
     def is_custom_font(font: 'Font') -> bool:
         """
-        Determines whether the given font characteristics constitute a default
-        or custom font.
+        Determines whether the given font characteristics constitute a
+        default or custom font.
 
         Args:
             font: The Font being evaluated.
@@ -79,8 +95,8 @@ class TextlessTitleCard(BaseCardType):
     def is_custom_season_titles(custom_episode_map: bool, 
                                 episode_text_format: str) -> bool:
         """
-        Determines whether the given attributes constitute custom or generic
-        season titles.
+        Determines whether the given attributes constitute custom or
+        generic season titles.
 
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
@@ -95,8 +111,8 @@ class TextlessTitleCard(BaseCardType):
 
     def create(self) -> None:
         """
-        Make the necessary ImageMagick and system calls to create this object's
-        defined title card.
+        Make the necessary ImageMagick and system calls to create this
+        object's defined title card.
         """
 
         command = ' '.join([

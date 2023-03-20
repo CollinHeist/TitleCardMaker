@@ -41,7 +41,7 @@ parser.add_argument(
     '-ms', '--media-server',
     type=lambda s: str(s).lower(),
     default='plex',
-    choices=('emby', 'plex'),
+    choices=('emby', 'jellyfin', 'plex'),
     metavar='SERVER',
     help='Which media server to perform Media Server arguments on')
 

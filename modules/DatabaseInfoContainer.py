@@ -11,7 +11,7 @@ class DatabaseInfoContainer(ABC):
     """
 
     def _update_attribute(self, attribute: str, value: Any, 
-                          type_: Optional[callable]=None) -> None:
+            type_: Optional[callable] = None) -> None:
         """
         Set the given attribute to the given value with the given type.
 

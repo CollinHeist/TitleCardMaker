@@ -9,13 +9,34 @@ Position = SeriesExtra[Literal['left', 'surround', 'right']]
 
 class FrameTitleCard(BaseCardType):
     """
-    This class describes a type of CardType that produces title cards in a
-    frame or polaroid layout. This is inspired from the official Adventure Time
-    title cards from Season 8. 
+    This class describes a type of CardType that produces title cards in
+    a frame or polaroid layout. This is inspired from the official
+    Adventure Time title cards from Season 8. 
     """
 
+    """API Parameters"""
+    API_DETAILS = {
+        'name': 'Frame',
+        'example': '/assets/cards/frame.jpg',
+        'creators': ['CollinHeist'],
+        'source': 'local',
+        'supports_custom_fonts': True,
+        'supports_custom_seasons': True,
+        'supported_extras': [
+            {'name': 'Episode Text Position',
+             'identifier': 'episode_text_position',
+             'description': 'Position of the episode text relative to the title text'},
+            {'name': 'Episode Text Color',
+             'identifier': 'episode_text_color',
+             'description': 'Color to use for the episode text'},
+        ], 'description': [
+            'Title card styled to look like a Polaroid photo.',
+            'Inspired by the official Adventure Time Season 8 title cards.'
+        ],
+    }
+
     """Directory where all reference files used by this card are stored"""
-    REF_DIRECTORY = Path(__file__).parent / 'ref' / 'frame'
+    REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'frame'
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
@@ -54,17 +75,17 @@ class FrameTitleCard(BaseCardType):
     )
 
     def __init__(self, source: Path, output_file: Path, title: str, 
-                 season_text: str, episode_text: str, hide_season: bool,
-                 font: str, title_color: str,
-                 font_size: float=1.0,
-                 vertical_shift: int=0,
-                 interline_spacing: int=0,
-                 kerning: float=1.0,
-                 blur: bool=False,
-                 grayscale: bool=False,
-                 episode_text_color: SeriesExtra[str]=EPISODE_TEXT_COLOR,
-                 episode_text_position: Position='surround',
-                 **unused) -> None:
+            season_text: str, episode_text: str, hide_season: bool,
+            font: str, title_color: str,
+            font_size: float=1.0,
+            vertical_shift: int=0,
+            interline_spacing: int=0,
+            kerning: float=1.0,
+            blur: bool=False,
+            grayscale: bool=False,
+            episode_text_color: SeriesExtra[str]=EPISODE_TEXT_COLOR,
+            episode_text_position: Position='surround',
+            **unused) -> None:
         """
         Construct a new instance.
 
@@ -165,8 +186,8 @@ class FrameTitleCard(BaseCardType):
     @property
     def text_command(self) -> list[str]:
         """
-        Subcommand for adding all text. This includes the title, season, and
-        episode text.
+        Subcommand for adding all text. This includes the title, season,
+        and episode text.
 
         Returns:
             List of ImageMagick commands.
@@ -269,8 +290,8 @@ class FrameTitleCard(BaseCardType):
     def is_custom_season_titles(custom_episode_map: bool, 
                                 episode_text_format: str) -> bool:
         """
-        Determines whether the given attributes constitute custom or generic
-        season titles.
+        Determines whether the given attributes constitute custom or
+        generic season titles.
 
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
@@ -288,8 +309,8 @@ class FrameTitleCard(BaseCardType):
 
     def create(self) -> None:
         """
-        Make the necessary ImageMagick and system calls to create this object's
-        defined title card.
+        Make the necessary ImageMagick and system calls to create this
+        object's defined title card.
         """
 
         command = ' '.join([

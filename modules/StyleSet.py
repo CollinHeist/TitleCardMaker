@@ -29,8 +29,8 @@ class StyleSet:
 
     def __init__(self, watched: str='unique', unwatched: str='unique') -> None:
         """
-        Initialize this object with the given watched/unwatched styles. Also
-        updates the validity of this object.
+        Initialize this object with the given watched/unwatched styles.
+        Also updates the validity of this object.
 
         Args:
             watched: Watched style. Defaults to 'unique'.
@@ -61,15 +61,15 @@ class StyleSet:
     @staticmethod
     def __standardize(style: str) -> str:
         """
-        Standardize the given style string so that "unique blur", "blur unique"
-        evaluate to the same style.
+        Standardize the given style string so that "unique blur", "blur
+        unique" evaluate to the same style.
 
         Args:
             style: Style string (from YAML) being standardized.
 
         Returns:
-            Standardized value. This is lowercase with spaces removed, and
-            sorted alphabetically.
+            Standardized value. This is lowercase with spaces removed,
+            and sorted alphabetically.
         """
 
         return ' '.join(sorted(str(style).lower().strip().split(' ')))
@@ -127,6 +127,6 @@ class StyleSet:
         return 'unqiue' == (self.watched if watch_status else self.unwatched)
 
     def effective_spoil_type(self, watch_status: bool) -> str:
-        return self.SPOIL_TYPE_STYLE_MAP[self.watched
-                                         if watch_status else
-                                         self.unwatched]
+        return self.SPOIL_TYPE_STYLE_MAP[
+            self.watched if watch_status else self.unwatched
+        ]

@@ -9,9 +9,9 @@ from modules.Title import Title
 
 class DataFileInterface:
     """
-    This class is used to interface with a show's data file. And can be used for
-    reading from and writing to the files for the purpose of adding new or
-    reading existing episode data.
+    This class is used to interface with a show's data file. And can be
+    used for reading from and writing to the files for the purpose of
+    adding new or reading existing episode data.
     """
 
     """Default name for a data file of episode information"""
@@ -20,9 +20,9 @@ class DataFileInterface:
 
     def __init__(self, series_info: 'SeriesInfo', data_file: Path) -> None:
         """
-        Constructs a new instance of the interface for the specified data file.
-        This also creates the parent directories for the data file if they do
-        not exist.
+        Constructs a new instance of the interface for the specified
+        data file. This also creates the parent directories for the data
+        file if they do not exist.
 
         Args:
             data_file: Path to the data file to interface with.
@@ -46,8 +46,9 @@ class DataFileInterface:
 
     def __read_data(self) -> dict[str, dict[float, dict]]:
         """
-        Read this interface's data from file. Returns an empty dictionary if the
-        file does not exist, is misformatted, or if 'data' key is missing.
+        Read this interface's data from file. Returns an empty
+        dictionary if the file does not exist, is misformatted, or if
+        'data' key is missing.
 
         Returns:
             Contents under 'data' key of this interface's file.
@@ -79,8 +80,8 @@ class DataFileInterface:
 
     def __write_data(self, yaml: dict[str, Any]) -> None:
         """
-        Write the given YAML data to this interface's file. This puts all data
-        under the 'data' key.
+        Write the given YAML data to this interface's file. This puts
+        all data under the 'data' key.
 
         Args:
             yaml: YAML dictionary to write to file.
@@ -96,9 +97,10 @@ class DataFileInterface:
         Read the data file for this object, yielding each valid row.
 
         Returns:
-            Yields a dictionary for each entry in this datafile. The dictionary
-            has a key 'episode_info' with an EpisodeInfo object, and arbitrary
-            keys for all other data found within the entry's YAML.
+            Yields a dictionary for each entry in this datafile. The
+            dictionary has a key 'episode_info' with an EpisodeInfo
+            object, and arbitrary keys for all other data found within
+            the entry's YAML.
         """
 
         # Read yaml, returns {} if empty/DNE
@@ -181,8 +183,8 @@ class DataFileInterface:
             episode_info: EpisodeInfo to get the entry of.
 
         Returns:
-            Dictionary to write under episode number key of the given info.
-            Possible keys are 'title', and 'abs_number'.
+            Dictionary to write under episode number key of the given
+            info. Possible keys are 'title', and 'abs_number'.
         """
 
         entry = {'title': episode_info.title.title_yaml}
@@ -196,7 +198,8 @@ class DataFileInterface:
     def add_data_to_entry(self, episode_info: EpisodeInfo,
                           **new_data: dict[str, Any]) -> None:
         """
-        Add any generic data to the YAML entry associated with this EpisodeInfo.
+        Add any generic data to the YAML entry associated with this
+        EpisodeInfo.
 
         Args:
             episode_info: Episode Info to add to YAML.

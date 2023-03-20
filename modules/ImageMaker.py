@@ -12,13 +12,16 @@ Dimensions = namedtuple('Dimensions', ('width', 'height'))
 
 class ImageMaker(ABC):
     """
-    Abstract class that outlines the necessary attributes for any class that
-    creates images.
+    Abstract class that outlines the necessary attributes for any class
+    that creates images.
 
-    All instances of this class must implement `create()` as the main callable
-    function to produce an image. The specifics of how that image is created are
-    completely customizable.
+    All instances of this class must implement `create()` as the main
+    callable function to produce an image. The specifics of how that
+    image is created are completely customizable.
     """
+
+    """Base reference directory for local assets"""
+    BASE_REF_DIRECTORY = Path(__file__).parent / 'ref'
 
     """Directory for all temporary images created during image creation"""
     TEMP_DIR = Path(__file__).parent / '.objects'
@@ -30,8 +33,9 @@ class ImageMaker(ABC):
     TEMPORARY_COMPRESS_FILE = TEMP_DIR / 'temp_compress.jpg'
 
     """
-    Valid file extensions for input images - ImageMagick supports more than just
-    these types, but these are the most common across all OS's.
+    Valid file extensions for input images - ImageMagick supports more
+    than just these types, but these are the most common across all
+    OS's.
     """
     VALID_IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp')
 
@@ -41,15 +45,12 @@ class ImageMaker(ABC):
     @abstractmethod
     def __init__(self) -> None:
         """
-        Initializes a new instance. This gives all subclasses access to an
-        `ImageMagickInterface` object that uses the docker ID found within
-        preferences, as well as a preference object.
+        Initializes a new instance. This gives all subclasses access to
+        an ImageMagickInterface via the image_magick attribute.
         """
 
-        # Store global PreferenceParse object
-        self.preferences = global_objects.pp
-
         # All ImageMakers have an instance of an ImageMagickInterface
+        self.preferences = global_objects.pp
         self.image_magick = ImageMagickInterface(
             self.preferences.imagemagick_container,
             self.preferences.use_magick_prefix,
@@ -65,8 +66,7 @@ class ImageMaker(ABC):
             image: Path to the image to get the dimensions of.
 
         Returns:
-            Dictionary of the image dimensions whose keys are 'width' and
-            'height'.
+            Namedtuple of dimensions.
         """
 
         # Return dimenions of zero if image DNE
@@ -93,24 +93,26 @@ class ImageMaker(ABC):
 
 
     def get_text_dimensions(self, text_command: list[str], *,
-                            width: Literal['sum', 'max'],
-                            height: Literal['sum', 'max']) -> Dimensions:
+            width: Literal['sum', 'max'],
+            height: Literal['sum', 'max']) -> Dimensions:
         """
-        Get the dimensions of the text produced by the given text command. For
-        'width' and 'height' arguments, if 'max' then the maximum value of the
-        text is utilized, while 'sum' will add each value. For example, if the
-        given text command produces text like:
+        Get the dimensions of the text produced by the given text
+        command. For 'width' and 'height' arguments, if 'max' then the
+        maximum value of the text is utilized, while 'sum' will add each
+        value. For example, if the given text command produces text like:
 
             Top Line Text
             Bottom Text
 
-        Specifying width='sum', will add the widths of the two lines (not very
-        meaningful), width='max' will return the maximum width of the two lines.
-        Specifying height='sum' will return the total height of the text, and
-        height='max' will return the tallest single line of text.
+        Specifying width='sum', will add the widths of the two lines
+        (not very meaningful), width='max' will return the maximum width
+        of the two lines. Specifying height='sum' will return the total
+        height of the text, and height='max' will return the tallest
+        single line of text.
 
         Args:
-            text_command: ImageMagick commands to produce text(s) to measure.
+            text_command: ImageMagick commands that produce text(s) to
+                measure.
             width: How to process the width of the produced text(s).
             height: How to process the height of the produced text(s).
 
@@ -152,8 +154,8 @@ class ImageMaker(ABC):
 
         Args:
             image: Path to the image to reduce the file size of.
-            quality: Quality of the reduction. 100 being no reduction, 0 being
-                complete reduction. Passed to ImageMagick -quality.
+            quality: Quality of the reduction. 100 being no reduction, 0
+                being complete reduction. Passed to ImageMagick -quality.
 
         Returns:
             Path to the created image.
@@ -192,7 +194,7 @@ class ImageMaker(ABC):
 
     @staticmethod
     def convert_svg_to_png(image: Path, destination: Path,
-                           min_dimension: int=2500) -> Path:
+            min_dimension: int=2500) -> Path:
         """
         Convert the given SVG image to PNG format.
 
@@ -234,8 +236,9 @@ class ImageMaker(ABC):
     @abstractmethod
     def create(self) -> None:
         """
-        Abstract method for the creation of the image outlined by this maker.
-        This method should delete any intermediate files, and should make
-        ImageMagick calls through the parent class' ImageMagickInterface object.
+        Abstract method for the creation of the image outlined by this
+        maker. This method should delete any intermediate files, and
+        should make ImageMagick calls through the parent class'
+        ImageMagickInterface object.
         """
         raise NotImplementedError(f'All ImageMaker objects must implement this')

@@ -5,7 +5,7 @@
 [![Discord](https://img.shields.io/discord/955533113734357125?logo=discord&logoColor=white)](https://discord.gg/bJ3bHtw8wH)
 [![Support](https://img.shields.io/badge/-Support_Development-9cf?color=informational)](https://github.com/sponsors/CollinHeist)
 
-An automated title card maker for the Plex and Emby media players. All user documentation is available on the [Wiki](https://github.com/CollinHeist/TitleCardMaker/wiki).
+An automated title card maker for the Plex, Jellyfin, and Emby media servers. All user documentation is available on the [Wiki](https://github.com/CollinHeist/TitleCardMaker/wiki).
 
 ## Table of Contents
 - [Description](#description)
@@ -16,9 +16,9 @@ An automated title card maker for the Plex and Emby media players. All user docu
 - [Support](#support)
 
 ## Description
-`TitleCardMaker` is a program and [Docker container](https://hub.docker.com/r/collinheist/titlecardmaker) written in Python that automates the creation of customized title cards (which are image previews of an episode of TV) for use in personal media services like [Plex](https://www.plex.tv/), [Emby](https://emby.media/), or [Jellyfin](https://jellyfin.org/).
+`TitleCardMaker` is a program and [Docker container](https://hub.docker.com/r/collinheist/titlecardmaker) written in Python that automates the creation of customized title cards (which are image previews of an episode of TV) for use in personal media server services like [Plex](https://www.plex.tv/), [Jellyfin](https://jellyfin.org/), or [Emby](https://emby.media/).
 
-TitleCardMaker can be automated such that everything can be pulled without manual intervention. All your series can be read from [Sonarr](https://sonarr.tv/) or Plex; episode data can be pulled from Sonarr, Plex or [TheMovieDatabase](https://www.themoviedb.org/); images from TheMovieDatabase or Plex; and TitleCardMaker can even utilize an episode's watch status within Plex to create "spoiler free" versions of title cards automatically, as shown below:
+TitleCardMaker can be automated such that everything can be pulled without manual intervention. All your series can be read from your media server or Sonarr; episode data can be pulled from Sonarr, your media server, or [TheMovieDatabase](https://www.themoviedb.org/); images from TheMovieDatabase, or your media server; and TitleCardMaker can even utilize an episode's watch status to create "spoiler free" versions of title cards automatically, as shown below:
 
 <img alt="card unblurring process" src="https://user-images.githubusercontent.com/17693271/185819730-a2c55a3a-63cc-4f0e-8061-891edd8d64d0.gif"/>
   

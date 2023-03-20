@@ -1,26 +1,55 @@
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 from modules.BaseCardType import BaseCardType
+from modules.CleanPath import CleanPath
 from modules.Debug import log
 
 SeriesExtra = Optional
 
-class StandardTitleCard(BaseCardType):
+class LogoTitleCard(BaseCardType):
     """
-    This class describes a type of CardType that produces the 'generic' title
-    cards based on Reddit user /u/UniversalPolymath. This card supports 
-    customization of every aspect of the card, but does not use any arbitrary
-    data.
+    This class describes a type of CardType that produces logo-centric
+    title cards, primarily for the purpose of reality TV shows.
     """
 
+    """API Parameters"""
+    API_DETAILS = {
+        'name': 'Logo',
+        'example': '/assets/cards/logo.jpg',
+        'creators': ['CollinHeist'],
+        'source': 'local',
+        'supports_custom_fonts': True,
+        'supports_custom_seasons': True,
+        'supported_extras': [
+            {'name': 'Logo File',
+             'identifier': 'logo',
+             'description': 'Logo file to place in the center of the title card'},
+            {'name': 'Separator Character',
+             'identifier': 'separator',
+             'description': 'Character to separate season and episode text'},
+            {'name': 'Background Color',
+             'identifier': 'background',
+             'description': 'Background color to utilize'},
+            {'name': 'Stroke Text Color',
+             'identifier': 'stroke_color',
+             'description': 'Custom color to use for the stroke on the title text'},
+            {'name': 'Gradient Omission',
+             'identifier': 'omit_gradient',
+             'description': 'Whether to omit the gradient overlay from the card'},
+        ], 'description': [
+            'Image-less variation of the Standard title card featuring a logo and solid background instead of a source image.',
+            'This card is intended to be used for very "spoilery" series, such as Reality TV shows.',
+        ],
+    }
+
     """Directory where all reference files used by this card are stored"""
-    REF_DIRECTORY = Path(__file__).parent / 'ref'
+    REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
         'max_line_width': 32,   # Character count to begin splitting titles
-        'max_line_count': 3,    # Maximum number of lines a title can take up
+        'max_line_count': 2,    # Maximum number of lines a title can take up
         'top_heavy': False,     # This class uses bottom heavy titling
     }
 
@@ -28,63 +57,78 @@ class StandardTitleCard(BaseCardType):
     TITLE_FONT = str((REF_DIRECTORY / 'Sequel-Neue.otf').resolve())
     TITLE_COLOR = '#EBEBEB'
     FONT_REPLACEMENTS = {'[': '(', ']': ')', '(': '[', ')': ']', '―': '-',
-                         '…': '...', '“': '"'}
+                         '…': '...'}
 
     """Whether this CardType uses season titles for archival purposes"""
     USES_SEASON_TITLE = True
 
+    """Whether this CardType uses unique source images"""
+    USES_UNIQUE_SOURCES = False
+
     """Standard class has standard archive name"""
-    ARCHIVE_NAME = 'standard'
+    ARCHIVE_NAME = 'Logo Style'
 
     """Default fonts and color for series count text"""
     SEASON_COUNT_FONT = REF_DIRECTORY / 'Proxima Nova Semibold.otf'
     EPISODE_COUNT_FONT = REF_DIRECTORY / 'Proxima Nova Regular.otf'
     SERIES_COUNT_TEXT_COLOR = '#CFCFCF'
 
+    """Paths to intermediate files that are deleted after the card is created"""
+    __RESIZED_LOGO = BaseCardType.TEMP_DIR / 'resized_logo.png'
+
     """Source path for the gradient image overlayed over all title cards"""
     __GRADIENT_IMAGE = REF_DIRECTORY / 'GRADIENT.png'
 
     __slots__ = (
         'source_file', 'output_file', 'title', 'season_text', 'episode_text',
-        'font', 'font_size', 'title_color', 'hide_season', 'separator',
-        'vertical_shift', 'interline_spacing', 'kerning', 'stroke_width',
-        'omit_gradient', 'stroke_color',
+        'font', 'font_size', 'title_color', 'hide_season', 'separator', 'blur',
+        'vertical_shift',  'interline_spacing', 'kerning', 'stroke_width',
+        'logo', 'omit_gradient', 'background', 'stroke_color',
     )
 
-    def __init__(self, source: Path, output_file: Path, title: str,
-                 season_text: str, episode_text: str, hide_season: bool,
-                 font: str, title_color: str,
-                 font_size: float=1.0,
-                 interline_spacing: int=0,
-                 kerning: float=1.0,
-                 stroke_width: float=1.0,
-                 vertical_shift: int=0,
-                 blur: bool=False,
-                 grayscale: bool=False,
-                 separator: Optional[str]='•',
-                 stroke_color: Optional[str]='black',
-                 omit_gradient: Optional[bool]=False,
-                 **unused) -> None:
+    def __init__(self, output_file: Path, title: str,  season_text: str,
+            episode_text: str, hide_season: bool, font: str,
+            title_color: str,
+            font_size: float=1.0,
+            kerning: float=1.0,
+            interline_spacing: int=0,
+            stroke_width: float=1.0,
+            vertical_shift: int=0,
+            season_number: int=1,
+            episode_number: int=1,
+            blur: bool=False,
+            grayscale: bool=False,
+            logo: SeriesExtra[str]=None,
+            separator: SeriesExtra[str]='•', 
+            background: SeriesExtra[str]='black',
+            stroke_color: SeriesExtra[str]='black',
+            omit_gradient: SeriesExtra[bool]=True,
+            **unused) -> None:
         """
         Construct a new instance of this card.
 
         Args:
-            source: Source image to base the card on.
-            output_file: Output file where to create the card.
-            title: Title text to add to created card.
-            season_text: Season text to add to created card.
-            episode_text: Episode text to add to created card.
-            font: Font name or path (as string) to use for episode title.
-            font_size: Scalar to apply to title font size.
-            title_color: Color to use for title text.
-            hide_season: Whether to ignore season_text.
-            vertical_shift: Pixel count to adjust the title vertical offset by.
-            interline_spacing: Pixel count to adjust title interline spacing by.
+            output_file: Output file.
+            title: Episode title.
+            season_text: Text to use as season count text. Ignored if
+                hide_season is True.
+            episode_text: Text to use as episode count text.
+            hide_season: Whether to omit the season text (and joining
+                character) from the title card completely.
+            font: Font to use for the episode title.
+            title_color: Color to use for the episode title.
+            interline_spacing: Pixels to adjust title interline spacing.
+            stroke_width: Scalar to apply to stroke of title text.
             kerning: Scalar to apply to kerning of the title text.
-            stroke_width: Scalar to apply to black stroke of the title text.
+            font_size: Scalar to apply to the title font size.
+            vertical_shift: Pixels to adjust title vertical shift by.
+            season_number: Season number for logo-file formatting.
+            episode_number: Episode number for logo-file formatting.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
-            separator: Character to use to separate season and episode text.
+            logo: Filepath (or file format) to the logo file.
+            separator: Character to use to separate season/episode text.
+            background: Backround color.
             omit_gradient: Whether to omit the gradient overlay.
             stroke_color: Color to use for the back-stroke color.
             unused: Unused arguments.
@@ -93,7 +137,18 @@ class StandardTitleCard(BaseCardType):
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale)
 
-        self.source_file = source
+        # Look for logo if it's a format string
+        if logo is None:
+            self.logo = None
+        else:
+            try:
+                logo = logo.format(season_number=season_number,
+                                   episode_number=episode_number)
+                self.logo = Path(CleanPath(logo).sanitize())
+            except Exception as e:
+                self.valid = False
+                log.exception(f'Invalid logo file "{logo}"', e)
+
         self.output_file = output_file
 
         # Ensure characters that need to be escaped are
@@ -101,7 +156,7 @@ class StandardTitleCard(BaseCardType):
         self.season_text = self.image_magick.escape_chars(season_text.upper())
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
 
-        # Font/card customizations
+        # Font attributes
         self.font = font
         self.font_size = font_size
         self.title_color = title_color
@@ -112,9 +167,31 @@ class StandardTitleCard(BaseCardType):
         self.stroke_width = stroke_width
 
         # Optional extras
-        self.separator = separator
         self.omit_gradient = omit_gradient
+        self.background = background
+        self.separator = separator
         self.stroke_color = stroke_color
+
+
+    def resize_logo(self) -> Path:
+        """
+        Resize the logo into at most a 1875x1030 bounding box.
+
+        Returns:
+            Path to the created image.
+        """
+
+        command = ' '.join([
+            f'convert',
+            f'"{self.logo.resolve()}"',
+            f'-resize x1030',
+            f'-resize 1875x1030\>',
+            f'"{self.__RESIZED_LOGO.resolve()}"',
+        ])
+
+        self.image_magick.run(command)
+
+        return self.__RESIZED_LOGO
 
 
     @property
@@ -183,54 +260,11 @@ class StandardTitleCard(BaseCardType):
             ]
 
 
-    @property
-    def black_title_command(self) -> list[str]:
-        """
-        Subcommand for adding the black stroke behind the title text.
-
-        Returns:
-            List of ImageMagick commands.
-        """
-
-        # Stroke disabled, return empty command
-        if self.stroke_width == 0:
-            return []
-
-        vertical_shift = 245 + self.vertical_shift
-        stroke_width = 3.0 * self.stroke_width
-
-        return [
-            f'-fill "{self.stroke_color}"',
-            f'-stroke "{self.stroke_color}"',
-            f'-strokewidth {stroke_width}',
-            f'-annotate +0+{vertical_shift} "{self.title}"',
-        ]
-
-
-    @staticmethod
-    def modify_extras(extras: dict[str, Any], custom_font: bool,
-                      custom_season_titles: bool) -> None:
-        """
-        Modify the given extras based on whether font or season titles are
-        custom.
-
-        Args:
-            extras: Dictionary to modify.
-            custom_font: Whether the font are custom.
-            custom_season_titles: Whether the season titles are custom.
-        """
-
-        # Generic font, reset custom episode text color
-        if not custom_font:
-            if 'stroke_color' in extras:
-                extras['stroke_color'] = 'black'
-
-
     @staticmethod
     def is_custom_font(font: 'Font') -> bool:
         """
-        Determine whether the given font characteristics constitute a default or
-        custom font.
+        Determines whether the given font characteristics constitute a default
+        or custom font.
 
         Args:
             font: The Font being evaluated.
@@ -239,9 +273,10 @@ class StandardTitleCard(BaseCardType):
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.file != StandardTitleCard.TITLE_FONT)
+        return ((font.file != LogoTitleCard.TITLE_FONT)
             or (font.size != 1.0)
-            or (font.color != StandardTitleCard.TITLE_COLOR)
+            or (font.color != LogoTitleCard.TITLE_COLOR)
+            or (font.replacements != LogoTitleCard.FONT_REPLACEMENTS)
             or (font.vertical_shift != 0)
             or (font.interline_spacing != 0)
             or (font.kerning != 1.0)
@@ -252,8 +287,8 @@ class StandardTitleCard(BaseCardType):
     def is_custom_season_titles(custom_episode_map: bool, 
                                 episode_text_format: str) -> bool:
         """
-        Determine whether the given attributes constitute custom or generic
-        season titles.
+        Determines whether the given attributes constitute custom or
+        generic season titles.
 
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
@@ -263,7 +298,7 @@ class StandardTitleCard(BaseCardType):
             True if custom season titles are indicated, False otherwise.
         """
 
-        standard_etf = StandardTitleCard.EPISODE_TEXT_FORMAT.upper()
+        standard_etf = LogoTitleCard.EPISODE_TEXT_FORMAT.upper()
 
         return (custom_episode_map or
                 episode_text_format.upper() != standard_etf)
@@ -271,15 +306,29 @@ class StandardTitleCard(BaseCardType):
 
     def create(self) -> None:
         """
-        Make the necessary ImageMagick and system calls to create this object's
-        defined title card.
+        Make the necessary ImageMagick and system calls to create this
+        object's defined title card.
         """
+
+        # Skip card if logo doesn't exist
+        if self.logo is None:
+            log.error(f'Logo file not specified')
+            return None
+        elif not self.logo.exists():
+            log.error(f'Logo file "{self.logo.resolve()}" does not exist')
+            return None
+
+        # Resize logo, get resized height to determine offset
+        resized_logo = self.resize_logo()
+        _, height = self.get_image_dimensions(resized_logo)
+        offset = 60 + ((1030 - height) // 2)
 
         # Font customizations
         vertical_shift = 245 + self.vertical_shift
         font_size = 157.41 * self.font_size
         interline_spacing = -22 + self.interline_spacing
         kerning = -1.25 * self.kerning
+        stroke_width = 3.0 * self.stroke_width
 
         # Sub-command to optionally add gradient
         gradient_command = []
@@ -290,11 +339,20 @@ class StandardTitleCard(BaseCardType):
             ]
 
         command = ' '.join([
-            f'convert "{self.source_file.resolve()}"',
+            f'convert',
+            f'-set colorspace sRGB',
+            # Crate canvas of static background color
+            f'-size "{self.TITLE_CARD_SIZE}"',
+            f'xc:"{self.background}"',
+            # Overlay resized logo
+            f'"{resized_logo.resolve()}"',
+            f'-gravity north',
+            f'-geometry "+0+{offset}"',
+            f'-composite',
+            # Optionally overlay logo
+            *gradient_command,
             # Resize and optionally blur source image
             *self.resize_and_style,
-            # Overlay gradient
-            *gradient_command,
             # Global title text options
             f'-gravity south',
             f'-font "{self.font}"',                     
@@ -302,8 +360,11 @@ class StandardTitleCard(BaseCardType):
             f'-interword-spacing 50',
             f'-interline-spacing {interline_spacing}',
             f'-pointsize {font_size}',
-            # Black stroke behind title text
-            *self.black_title_command,
+            # Stroke behind title text
+            f'-fill "{self.stroke_color}"',
+            f'-stroke "{self.stroke_color}"',
+            f'-strokewidth {stroke_width}',
+            f'-annotate +0+{vertical_shift} "{self.title}"',
             # Title text
             f'-fill "{self.title_color}"',
             f'-annotate +0+{vertical_shift} "{self.title}"',
@@ -313,3 +374,6 @@ class StandardTitleCard(BaseCardType):
         ])
 
         self.image_magick.run(command)
+
+        # Delete resized logo
+        self.image_magick.delete_intermediate_images(resized_logo)

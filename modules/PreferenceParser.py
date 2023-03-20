@@ -1,6 +1,6 @@
 from collections import namedtuple
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, Union
 
 from num2words import CONVERTER_CLASSES as SUPPORTED_LANGUAGE_CODES
 from tqdm import tqdm
@@ -11,6 +11,7 @@ from modules.EmbyInterface import EmbyInterface
 from modules.Font import Font
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.ImageMaker import ImageMaker
+from modules.JellyfinInterface import JellyfinInterface
 from modules.Manager import Manager
 from modules.PlexInterface import PlexInterface
 from modules.SeriesInfo import SeriesInfo
@@ -37,10 +38,10 @@ class PreferenceParser(YamlReader):
     """
 
     """Valid image source identifiers"""
-    VALID_IMAGE_SOURCES = ('tmdb', 'plex', 'emby')
+    VALID_IMAGE_SOURCES = ('emby', 'jellyfin', 'plex', 'tmdb')
 
     """Valid episode data source identifiers"""
-    VALID_EPISODE_DATA_SOURCES = ('emby', 'sonarr', 'plex', 'tmdb')
+    VALID_EPISODE_DATA_SOURCES = ('emby', 'jellyfin', 'sonarr', 'plex', 'tmdb')
     DEFAULT_EPISODE_DATA_SOURCE = 'sonarr'
 
     """Default season folder format string"""
@@ -55,9 +56,9 @@ class PreferenceParser(YamlReader):
 
     def __init__(self, file: Path, is_docker: bool=False) -> None:
         """
-        Constructs a new instance of this object. This reads the given file,
-        errors and exits if any required options are missing, and then parses
-        the preferences into object attributes.
+        Constructs a new instance of this object. This reads the given
+        file, errors and exits if any required options are missing, and
+        then parses the preferences into object attributes.
 
         Args:
             file: The file to parse for preferences.
@@ -111,18 +112,6 @@ class PreferenceParser(YamlReader):
         self.summary_created_by = None
         self.summary_ignore_specials = False
 
-        self.use_plex = False
-        self.plex_url = None
-        self.plex_token = 'NA'
-        self.plex_verify_ssl = True
-        self.integrate_with_pmm_overlays = False
-        self.plex_filesize_limit = self.filesize_as_bytes(
-            PlexInterface.DEFAULT_FILESIZE_LIMIT
-        )
-        self.plex_style_set = StyleSet()
-        self.plex_yaml_writers = []
-        self.plex_yaml_update_args = []
-
         self.use_emby = False
         self.emby_url = None
         self.emby_api_key = None
@@ -134,6 +123,30 @@ class PreferenceParser(YamlReader):
         self.emby_style_set = StyleSet()
         self.emby_yaml_writers = []
         self.emby_yaml_update_args = []
+
+        self.use_jellyfin = False
+        self.jellyfin_url = None
+        self.jellyfin_api_key = None
+        self.jellyfin_username = None
+        self.jellyfin_verify_ssl = True
+        self.jellyfin_filesize_limit = self.filesize_as_bytes(
+            JellyfinInterface.DEFAULT_FILESIZE_LIMIT
+        )
+        self.jellyfin_style_set = StyleSet()
+        self.jellyfin_yaml_writers = []
+        self.jellyfin_yaml_update_args = []
+
+        self.use_plex = False
+        self.plex_url = None
+        self.plex_token = 'NA'
+        self.plex_verify_ssl = True
+        self.integrate_with_pmm_overlays = False
+        self.plex_filesize_limit = self.filesize_as_bytes(
+            PlexInterface.DEFAULT_FILESIZE_LIMIT
+        )
+        self.plex_style_set = StyleSet()
+        self.plex_yaml_writers = []
+        self.plex_yaml_update_args = []
 
         self.sonarr_kwargs = []
         self.sonarr_yaml_writers = []
@@ -157,18 +170,22 @@ class PreferenceParser(YamlReader):
         self.imagemagick_timeout = ImageMagickInterface.COMMAND_TIMEOUT_SECONDS
 
         # Determine default media server
-        if (not self._is_specified('emby') and not self._is_specified('plex')
+        if (not self._is_specified('emby')
+            and not self._is_specified('plex')
             and not self._is_specified('jellyfin')):
             log.warning(f'No Media Servers indicated - TitleCardMaker will not '
                         f'automatically load any cards')
             self.default_media_server = 'plex'
-        if (self._is_specified('emby') and not self._is_specified('plex')
+        if (self._is_specified('emby')
+            and not self._is_specified('plex')
             and not self._is_specified('jellyfin')):
             self.default_media_server = 'emby'
-        elif (self._is_specified('jellyfin') and not self._is_specified('emby')
+        elif (self._is_specified('jellyfin')
+            and not self._is_specified('emby')
             and not self._is_specified('plex')):
             self.default_media_server = 'jellyfin'
-        elif (self._is_specified('plex') and not self._is_specified('emby')
+        elif (self._is_specified('plex')
+            and not self._is_specified('emby')
             and not self._is_specified('jellyfin')):
             self.default_media_server = 'plex'
         else:
@@ -195,16 +212,18 @@ class PreferenceParser(YamlReader):
 
     def __determine_imagemagick_prefix(self) -> None:
         """
-        Determine whether to use the "magick " prefix for ImageMagick commands.
-        If a prefix cannot be determined, a critical message is logged and the
-        program exits with an error.
+        Determine whether to use the "magick " prefix for ImageMagick
+        commands. If a prefix cannot be determined, a critical message
+        is logged and this object's validity is set to False.
         """
 
         # Try variations of the font list command with/out the "magick " prefix
         for prefix, use_magick in zip(('', 'magick '), (False, True)):
             # Create ImageMagickInterface and verify validity
-            if ImageMagickInterface(self.imagemagick_container, use_magick,
-                                    self.imagemagick_timeout).verify_interface():
+            interface = ImageMagickInterface(
+                self.imagemagick_container, use_magick, self.imagemagick_timeout
+            )
+            if interface.validate_interface():
                 self.use_magick_prefix = use_magick
                 log.debug(f'Using "{prefix}" ImageMagick command prefix')
                 return None
@@ -216,8 +235,9 @@ class PreferenceParser(YamlReader):
 
     def __parse_sync(self) -> None:
         """
-        Parse the YAML sync sections of this preference file. This updates the
-        lists of SeriesYamlWriter objects for Plex and Sonarr.
+        Parse the YAML sync sections of this preference file. This
+        updates the lists of SeriesYamlWriter objects for each
+        applicable interface.
         """
 
         # Inner function to create and add SeriesYamlWriter objects (and)
@@ -254,7 +274,7 @@ class PreferenceParser(YamlReader):
                 update_args['required_tags'] = value
 
             # Parse args applicable only to specific interfaces
-            if sync_type in ('plex', 'emby'):
+            if sync_type in ('emby', 'jellyfin', 'plex'):
                 if (value := sync_yaml._get('libraries', type_=list)) != None:
                     update_args['filter_libraries'] = value
             elif sync_type == 'sonarr':
@@ -279,29 +299,19 @@ class PreferenceParser(YamlReader):
                 return None
 
             # Add to either Plex or Sonarr lists
-            if sync_type == 'plex':
-                self.plex_yaml_writers.append(writer)
-                self.plex_yaml_update_args.append(update_args)
-            elif sync_type == 'emby':
+            if sync_type == 'emby':
                 self.emby_yaml_writers.append(writer)
                 self.emby_yaml_update_args.append(update_args)
+            elif sync_type == 'jellyfin':
+                self.jellyfin_yaml_writers.append(writer)
+                self.jellyfin_yaml_update_args.append(update_args)
+            elif sync_type == 'plex':
+                self.plex_yaml_writers.append(writer)
+                self.plex_yaml_update_args.append(update_args)
             else:
                 self.sonarr_yaml_writers.append(
                     YamlWriterSet(interface_id, writer, update_args)
                 )
-
-        # Create Plex SeriesYamlWriter objects
-        if (plex_sync := self._get('plex', 'sync')) is not None:
-            # Singular sync specification
-            if isinstance(plex_sync, dict):
-                append_writer_and_args('plex', 0, plex_sync, {})
-            # List of syncs
-            elif isinstance(plex_sync, list) and len(plex_sync) > 0:
-                base_sync = plex_sync[0]
-                for sync in plex_sync:
-                    append_writer_and_args('plex', 0, sync, base_sync)
-            else:
-                log.error(f'Invalid plex sync: {plex_sync}')
 
         # Create Emby SeriesYamlWriter objects
         if (emby_sync := self._get('emby', 'sync')) is not None:
@@ -314,7 +324,33 @@ class PreferenceParser(YamlReader):
                 for sync in emby_sync:
                     append_writer_and_args('emby', 0, sync, base_sync)
             else:
-                log.error(f'Invalid plex sync: {emby_sync}')
+                log.error(f'Invalid Emby sync: {emby_sync}')
+
+        # Create Jellyfin SeriesYamlWriter objects
+        if (jellyfin_sync := self._get('jellyfin', 'sync')) is not None:
+            # Singular sync specification
+            if isinstance(jellyfin_sync, dict):
+                append_writer_and_args('jellyfin', 0, jellyfin_sync, {})
+            # List of syncs
+            elif isinstance(jellyfin_sync, list) and len(jellyfin_sync) > 0:
+                base_sync = jellyfin_sync[0]
+                for sync in jellyfin_sync:
+                    append_writer_and_args('jellyfin', 0, sync, base_sync)
+            else:
+                log.error(f'Invalid Jellyfin sync: {jellyfin_sync}')
+
+        # Create Plex SeriesYamlWriter objects
+        if (plex_sync := self._get('plex', 'sync')) is not None:
+            # Singular sync specification
+            if isinstance(plex_sync, dict):
+                append_writer_and_args('plex', 0, plex_sync, {})
+            # List of syncs
+            elif isinstance(plex_sync, list) and len(plex_sync) > 0:
+                base_sync = plex_sync[0]
+                for sync in plex_sync:
+                    append_writer_and_args('plex', 0, sync, base_sync)
+            else:
+                log.error(f'Invalid Plex sync: {plex_sync}')
 
         # Create Sonarr SeriesYamlWriter objects
         if self._is_specified('sonarr'):
@@ -330,7 +366,7 @@ class PreferenceParser(YamlReader):
                     for sync in sonarr_sync:
                         append_writer_and_args('sonarr', 0, sync, base_sync)
                 else:
-                    log.error(f'Invalid sonarr sync: {plex_sync}')
+                    log.error(f'Invalid Sonarr sync: {plex_sync}')
             # Multiple sonarr interfaces, check for sync on each
             elif isinstance(self._get('sonarr'), list):
                 for interface_id, server in enumerate(self._get('sonarr')):
@@ -429,7 +465,8 @@ class PreferenceParser(YamlReader):
 
     def __parse_yaml_archive(self) -> None:
         """
-        Parse the 'archive' section of the raw YAML dictionary into attributes.
+        Parse the 'archive' section of the raw YAML dictionary into
+        attributes.
         """
 
         # Skip if section omitted
@@ -477,46 +514,10 @@ class PreferenceParser(YamlReader):
             self.summary_ignore_specials = value
 
 
-    def __parse_yaml_plex(self) -> None:
-        """
-        Parse the 'plex' section of the raw YAML dictionary into attributes.
-        """
-
-        # Skip if section omitted
-        if not self._is_specified('plex'):
-            return None
-
-        if (value := self._get('plex', 'url', type_=str)) is not None:
-            self.plex_url = value
-            self.use_plex = True
-
-        if (value := self._get('plex', 'token', type_=str)) is not None:
-            self.plex_token = value
-
-        if (value := self._get('plex', 'verify_ssl', type_=bool)) is not None:
-            self.plex_verify_ssl = value
-
-        if (value := self._get('plex', 'integrate_with_pmm_overlays',
-                               type_=bool)) is not None:
-            self.integrate_with_pmm_overlays = value
-
-        if (value := self._get('plex', 'filesize_limit', 
-                               type_=self.filesize_as_bytes)) is not None:
-            self.plex_filesize_limit = value
-
-            if value > self.filesize_as_bytes('10 MB'):
-                log.warning(f'Plex will reject all images larger than 10 MB')
-
-        self.plex_style_set = StyleSet(
-            self._get('plex', 'watched_style', type_=str, default='unique'),
-            self._get('plex', 'unwatched_style', type_=str, default='unique'),
-        )
-        self.valid &= self.plex_style_set.valid
-
-
     def __parse_yaml_emby(self) -> None:
         """
-        Parse the 'emby' section of the raw YAML dictionary into attributes.
+        Parse the 'emby' section of the raw YAML dictionary into
+        attributes.
         """
 
         # Skip if section omitted
@@ -551,6 +552,85 @@ class PreferenceParser(YamlReader):
             self._get('emby', 'unwatched_style', type_=str, default='unique'),
         )
         self.valid &= self.emby_style_set.valid
+
+
+    def __parse_yaml_jellyfin(self) -> None:
+        """
+        Parse the 'jellyfin' section of the raw YAML dictionary into
+        attributes.
+        """
+
+        # Skip if section omitted
+        if not self._is_specified('jellyfin'):
+            return None
+
+        if (not self._is_specified('jellyfin', 'url')
+            or not  self._is_specified('jellyfin', 'api_key')
+            or not  self._is_specified('jellyfin', 'username')):
+            log.critical(f'Must specify Jellyfin "url", "api_key", and '
+                         f'"username"')
+            self.valid = False
+
+        if (value := self._get('jellyfin', 'url', type_=str)) is not None:
+            self.jellyfin_url = value
+            self.use_jellyfin = True
+
+        if (value := self._get('jellyfin', 'api_key', type_=str)) is not None:
+            self.jellyfin_api_key = value
+
+        if (value := self._get('jellyfin', 'username', type_=str)) is not None:
+            self.jellyfin_username = value
+
+        if (value := self._get('jellyfin', 'verify_ssl', type_=bool)) is not None:
+            self.jellyfin_verify_ssl = value
+
+        if (value := self._get('jellyfin', 'filesize_limit', 
+                               type_=self.filesize_as_bytes)) is not None:
+            self.jellyfin_filesize_limit = value
+
+        self.jellyfin_style_set = StyleSet(
+            self._get('jellyfin', 'watched_style', type_=str, default='unique'),
+            self._get('jellyfin', 'unwatched_style', type_=str, default='unique'),
+        )
+        self.valid &= self.jellyfin_style_set.valid
+
+
+    def __parse_yaml_plex(self) -> None:
+        """
+        Parse the 'plex' section of the raw YAML dictionary into
+        attributes.
+        """
+
+        # Skip if section omitted
+        if not self._is_specified('plex'):
+            return None
+
+        if (value := self._get('plex', 'url', type_=str)) is not None:
+            self.plex_url = value
+            self.use_plex = True
+
+        if (value := self._get('plex', 'token', type_=str)) is not None:
+            self.plex_token = value
+
+        if (value := self._get('plex', 'verify_ssl', type_=bool)) is not None:
+            self.plex_verify_ssl = value
+
+        if (value := self._get('plex', 'integrate_with_pmm_overlays',
+                               type_=bool)) is not None:
+            self.integrate_with_pmm_overlays = value
+
+        if (value := self._get('plex', 'filesize_limit', 
+                               type_=self.filesize_as_bytes)) is not None:
+            self.plex_filesize_limit = value
+
+            if value > self.filesize_as_bytes('10 MB'):
+                log.warning(f'Plex will reject all images larger than 10 MB')
+
+        self.plex_style_set = StyleSet(
+            self._get('plex', 'watched_style', type_=str, default='unique'),
+            self._get('plex', 'unwatched_style', type_=str, default='unique'),
+        )
+        self.valid &= self.plex_style_set.valid
 
 
     def __parse_yaml_sonarr(self) -> None:
@@ -691,8 +771,9 @@ class PreferenceParser(YamlReader):
         # Parse each section
         self.__parse_yaml_options()
         self.__parse_yaml_archive()
-        self.__parse_yaml_plex()
         self.__parse_yaml_emby()
+        self.__parse_yaml_jellyfin()
+        self.__parse_yaml_plex()
         self.__parse_yaml_sonarr()
         self.__parse_yaml_tmdb()
         self.__parse_yaml_tautulli()
@@ -703,7 +784,7 @@ class PreferenceParser(YamlReader):
 
 
     def __validate_libraries(self, library_yaml: dict[str, str],
-                             file: Path) -> bool:
+            file: Path) -> bool:
         """
         Validate the given libraries YAML.
 
@@ -743,7 +824,7 @@ class PreferenceParser(YamlReader):
 
             # Media server must be Plex or Emby
             if (spec.get('media_server', self.default_media_server)
-                not in ('plex', 'emby')):
+                not in ('emby', 'jellyfin', 'plex')):
                 log.error(f'Library "{name}" specifies an invalid media_server')
                 return False
 
@@ -751,7 +832,7 @@ class PreferenceParser(YamlReader):
 
 
     def __validate_fonts(self, font_yaml: dict[str, 'str | float'],
-                         file: Path) -> bool:
+            file: Path) -> bool:
         """
         Validate the given font YAML.
 
@@ -788,7 +869,7 @@ class PreferenceParser(YamlReader):
 
 
     def __apply_template(self, templates: dict[str, Template],
-                         series_yaml: dict[str, Any], series_name: str) -> bool:
+            series_yaml: dict[str, Any], series_name: str) -> bool:
         """
         Apply the correct Template object (if indicated) to the given series
         YAML. This effectively "fill out" the indicated template, and updates
@@ -839,9 +920,8 @@ class PreferenceParser(YamlReader):
 
 
     def __finalize_show_yaml(self, show_name: str, show_yaml: dict[str, Any],
-                             templates: list[Template],
-                             library_map: dict[str, Any],
-                             font_map: dict[str, Any]) -> 'dict | None':
+            templates: list[Template], library_map: dict[str, Any],
+            font_map: dict[str, Any]) -> 'dict | None':
         """
         Apply the indicated template, and merge the specified library/font to
         the given show YAML.
@@ -920,13 +1000,13 @@ class PreferenceParser(YamlReader):
 
     def iterate_series_files(self) -> Iterable[Show]:
         """
-        Iterate through all series file listed in the preferences. For each
-        series encountered in each file, yield a Show object. Files that do not
-        exist or have invalid YAML are skipped.
+        Iterate through all series file listed in the preferences. For
+        each series encountered in each file, yield a Show object. Files
+        that do not exist or have invalid YAML are skipped.
 
         Returns:
-            An iterable of Show objects created by the entry listed in all the
-            known (valid) series files. 
+            An iterable of Show objects created by the entry listed in
+            all the known (valid) series files. 
         """
 
         # Reach each file in the list of series YAML files
@@ -1043,7 +1123,7 @@ class PreferenceParser(YamlReader):
         return len(self.sonarr_kwargs) > 0
 
     @property
-    def tautulli_interface_args(self) -> dict[str, 'str | int']:
+    def tautulli_interface_args(self) -> dict[str, Union[str, int]]:
         return {
             'url': self.tautulli_url,
             'api_key': self.tautulli_api_key,
@@ -1055,17 +1135,7 @@ class PreferenceParser(YamlReader):
         }
 
     @property
-    def plex_interface_kwargs(self) -> dict[str, 'str | bool | int']:
-        return {
-            'url': self.plex_url,
-            'x_plex_token': self.plex_token,
-            'verify_ssl': self.plex_verify_ssl,
-            'integrate_with_pmm_overlays': self.integrate_with_pmm_overlays,
-            'filesize_limit': self.plex_filesize_limit,
-        }
-
-    @property
-    def emby_interface_kwargs(self) -> dict[str, 'str | bool | int']:
+    def emby_interface_kwargs(self) -> dict[str, Union[str, bool, int]]:
         return {
             'url': self.emby_url,
             'api_key': self.emby_api_key,
@@ -1075,21 +1145,44 @@ class PreferenceParser(YamlReader):
         }
 
     @property
+    def jellyfin_interface_kwargs(self) -> dict[str, Union[str, bool, int]]:
+        return {
+            'url': self.jellyfin_url,
+            'api_key': self.jellyfin_api_key,
+            'username': self.jellyfin_username,
+            'verify_ssl': self.jellyfin_verify_ssl,
+            'filesize_limit': self.jellyfin_filesize_limit,
+        }
+
+    @property
+    def plex_interface_kwargs(self) -> dict[str, Union[str, bool, int]]:
+        return {
+            'url': self.plex_url,
+            'x_plex_token': self.plex_token,
+            'verify_ssl': self.plex_verify_ssl,
+            'integrate_with_pmm_overlays': self.integrate_with_pmm_overlays,
+            'filesize_limit': self.plex_filesize_limit,
+        }
+
+    @property
     def tmdb_interface_kwargs(self) -> dict[str, str]:
         return {
             'api_key': self.tmdb_api_key,
         }
 
 
-    def parse_image_source_priority(self, value: str) -> 'list[str] | None':
+    def parse_image_source_priority(self, value: str) -> Union[list[str], None]:
         """
-        Parse the given image source priority value into a list of sources.
+        Parse the given image source priority value into a list of
+        sources.
 
         Args:
-            value: Value of "image_source_priority" YAML attribute being parsed.
+            value: Value of "image_source_priority" YAML attribute being
+                parsed.
 
         Returns:
-            Sorted list of image sources. None if the given value is invalid.
+            Sorted list of image sources. None if the given value is
+            invalid.
         """
 
         if isinstance(value, str):
@@ -1105,8 +1198,8 @@ class PreferenceParser(YamlReader):
 
     def meets_minimum_resolution(self, width: int, height: int) -> bool:
         """
-        Determine whether the given dimensions meet the minimum resolution
-        requirements indicated in the preference file.
+        Determine whether the given dimensions meet the minimum
+        resolution requirements indicated in the preference file.
 
         Args:
             width: The width of the image.
@@ -1124,17 +1217,17 @@ class PreferenceParser(YamlReader):
 
     def get_season_folder(self, season_number: int) -> str:
         """
-        Get the season folder name for the given season number, padding the
-        season number if indicated by the preference file, and returning an
-        empty string if season folders are hidden.
+        Get the season folder name for the given season number, padding
+        the season number if indicated by the preference file, and
+        returning an empty string if season folders are hidden.
 
         Args:
             season_number: The season number to get the folder name of.
 
         Returns:
             The season folder name. Empty string if folders are hidden,
-            'Specials' for season 0, and either a zero-padded or not zero-
-            padded version of "Season {x}" otherwise.
+            'Specials' for season 0, and either a zero-padded or not
+            zero- padded version of "Season {x}" otherwise.
 
         Raises:
             SystemExit if the season folder formatting fails.

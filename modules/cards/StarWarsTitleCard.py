@@ -11,12 +11,29 @@ SeriesExtra = Optional
 
 class StarWarsTitleCard(BaseCardType):
     """
-    This class describes a type of ImageMaker that produces title cards in the
-    theme of Star Wars cards as designed by reddit user /u/Olivier_286.
+    This class describes a type of ImageMaker that produces title cards
+    in the theme of Star Wars cards as designed by reddit user
+    /u/Olivier_286.
     """
 
+    """API Parameters"""
+    API_DETAILS = {
+        'name': 'Star Wars',
+        'example': '/assets/cards/star wars.jpg',
+        'creators': ['/u/Olivier_286', 'CollinHeist'],
+        'source': 'local',
+        'supports_custom_fonts': False,
+        'supports_custom_seasons': False,
+        'supported_extras': [
+        ], 'description': [
+            'Title cards intended for Star Wars (or more generically Space-themed) shows.',
+            'Similar to the Olivier title card, these cards feature left-aligned title and episode text',
+            'A star-filled gradient overlay is applied to the source image.',
+        ],
+    }
+
     """Directory where all reference files used by this card are stored"""
-    REF_DIRECTORY = Path(__file__).parent / 'ref' / 'star_wars'
+    REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'star_wars'
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
@@ -54,10 +71,10 @@ class StarWarsTitleCard(BaseCardType):
     )
 
     def __init__(self, source: Path, output_file: Path, title: str,
-                 episode_text: str,
-                 blur: bool=False,
-                 grayscale: bool=False,
-                 **kwargs) -> None:
+            episode_text: str,
+            blur: bool=False,
+            grayscale: bool=False,
+            **unused) -> None:
         """
         Initialize the CardType object.
 

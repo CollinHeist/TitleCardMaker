@@ -138,7 +138,7 @@ class StylizedSummary(BaseSummary):
             f'-geometry +0+400',
             f'-composite',
             # Overlay created by image
-            f'\( {created_by.resolve()}',
+            f'\( "{created_by.resolve()}"',
             f'-resize x75',
             # Create reflection of created by image
             f'\( +clone',

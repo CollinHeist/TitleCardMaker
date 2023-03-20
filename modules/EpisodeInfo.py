@@ -1,3 +1,5 @@
+from typing import Optional
+
 from num2words import num2words
 
 from modules.Debug import log
@@ -66,18 +68,31 @@ class EpisodeInfo(DatabaseInfoContainer):
 
     __slots__ = (
         'title', 'season_number', 'episode_number', 'abs_number', 'emby_id',
-        'imdb_id', 'tmdb_id', 'tvdb_id', 'tvrage_id', 'queried_emby',
-        'queried_plex', 'queried_sonarr', 'queried_tmdb', 'airdate', 'key',
-        '__word_set',
+        'imdb_id', 'jellyfin_id', 'tmdb_id', 'tvdb_id', 'tvrage_id',
+        'queried_emby', 'queried_jellyfin', 'queried_plex', 'queried_sonarr',
+        'queried_tmdb', 'airdate', 'key', '__word_set',
     )
 
 
     def __init__(self, title: 'str | Title', season_number: int,
-            episode_number: int, abs_number: int=None, *,
-            emby_id: int=None, imdb_id: str=None, tmdb_id: int=None,
-            tvdb_id: int=None, tvrage_id: int=None, airdate: 'datetime'=None,
-            queried_emby: bool=False, queried_plex: bool=False,
-            queried_sonarr: bool=False, queried_tmdb: bool=False) -> None:
+            episode_number: int,
+            abs_number: Optional[int] = None, *,
+            emby_id: Optional[int] = None,
+            imdb_id: Optional[str] = None,
+            jellyfin_id: Optional[str] = None,
+            tmdb_id: Optional[int] = None,
+            tvdb_id: Optional[int] = None,
+            tvrage_id: Optional[int] = None,
+            airdate: Optional['datetime'] = None,
+            queried_emby: bool = False,
+            queried_jellyfin: bool = False,
+            queried_plex: bool = False,
+            queried_sonarr: bool = False,
+            queried_tmdb: bool = False) -> None:
+        """
+        Initialize this object with the given title, indices, database
+        ID's, airdate, and queried statuses.
+        """
 
         # Ensure title is Title object
         if isinstance(title, Title):
@@ -91,10 +106,12 @@ class EpisodeInfo(DatabaseInfoContainer):
         self.abs_number = None if abs_number is None else int(abs_number)
         self.emby_id = None if emby_id is None else int(emby_id)
         self.imdb_id = imdb_id
+        self.jellyfin_id = jellyfin_id
         self.tmdb_id = None if tmdb_id is None else int(tmdb_id)
         self.tvdb_id = None if tvdb_id is None else int(tvdb_id)
         self.tvrage_id = None if tvrage_id is None else int(tvrage_id)
         self.queried_emby = queried_emby
+        self.queried_jellyfin = queried_jellyfin
         self.queried_plex = queried_plex
         self.queried_sonarr = queried_sonarr
         self.queried_tmdb = queried_tmdb
@@ -124,10 +141,10 @@ class EpisodeInfo(DatabaseInfoContainer):
         """Returns an unambiguous string representation of the object."""
 
         attributes = ', '.join(f'{attr}={getattr(self, attr)}'
-                               for attr in self.__slots__
-                               if not attr.startswith('__')
-                                  and getattr(self, attr) is not None
-                                  and getattr(self, attr) is not False)
+            for attr in self.__slots__
+            if not attr.startswith('__')
+                and getattr(self, attr) is not None
+                and getattr(self, attr) is not False)
 
         return f'<EpisodeInfo {attributes}>'
 
@@ -152,7 +169,9 @@ class EpisodeInfo(DatabaseInfoContainer):
         """
 
         if not isinstance(count, int):
-            raise TypeError(f'Can only add integers to EpisodeInfo objects')
+            raise TypeError(
+                f'Can only add integers to EpisodeInfo objects'
+            )
 
         return f'{self.season_number}-{self.episode_number+count}'
 
@@ -172,8 +191,9 @@ class EpisodeInfo(DatabaseInfoContainer):
 
         # Verify the comparison is another EpisodeInfo object
         if not isinstance(other_info, EpisodeInfo):
-            raise TypeError(f'Can only compare equality between EpisodeInfo'
-                            f' objects')
+            raise TypeError(
+                f'Can only compare equality between EpisodeInfo objects'
+            )
 
         # Equality is determined by season and episode number only
         season_match = (self.season_number == other_info.season_number)
@@ -199,6 +219,7 @@ class EpisodeInfo(DatabaseInfoContainer):
         return {
             'emby_id': self.emby_id,
             'imdb_id': self.imdb_id,
+            'jellyfin_id': self.jellyfin_id,
             'tmdb_id': self.tmdb_id,
             'tvdb_id': self.tvdb_id,
             'tvrage_id': self.tvrage_id,
@@ -250,6 +271,9 @@ class EpisodeInfo(DatabaseInfoContainer):
     def set_imdb_id(self, imdb_id) -> None:
         self._update_attribute('imdb_id', imdb_id, str)
 
+    def set_jellyfin_id(self, jellyfin_id) -> None:
+        self._update_attribute('jellyfin_id', jellyfin_id, str)
+
     def set_tmdb_id(self, tmdb_id) -> None:
         self._update_attribute('tmdb_id', tmdb_id, int)
 
@@ -263,21 +287,28 @@ class EpisodeInfo(DatabaseInfoContainer):
         self._update_attribute('airdate', airdate)
 
 
-    def update_queried_statuses(self, queried_emby: bool=False,
-            queried_plex: bool=False, queried_sonarr: bool=False,
+    def update_queried_statuses(self,
+            queried_emby: bool=False,
+            queried_jellyfin: bool=False,
+            queried_plex: bool=False,
+            queried_sonarr: bool=False,
             queried_tmdb: bool=False) -> None:
         """
-        Update the queried attributes of this object to reflect the given
-        arguments. Only updates from False -> True.
+        Update the queried attributes of this object to reflect the
+        given arguments. Only updates an attribute from False to True.
 
         Args:
             queried_emby: Whether this object has been queried on Emby.
+            queried_emby: Whether this object has been queried on
+                Jellyfin.
             queried_plex: Whether this object has been queried on Plex.
-            queried_sonarr: Whether this object has been queried on Sonarr.
+            queried_sonarr: Whether this object has been queried on
+                Sonarr.
             queried_tmdb: Whether this object has been queried on TMDb.
         """
 
-        if queried_emby:   self.queried_emby = queried_emby
-        if queried_plex:   self.queried_plex = queried_plex
-        if queried_sonarr: self.queried_sonarr = queried_sonarr
-        if queried_tmdb:   self.queried_tmdb = queried_tmdb
+        if queried_emby:     self.queried_emby = True
+        if queried_jellyfin: self.queried_jellyfin = True
+        if queried_plex:     self.queried_plex = True
+        if queried_sonarr:   self.queried_sonarr = True
+        if queried_tmdb:     self.queried_tmdb = True

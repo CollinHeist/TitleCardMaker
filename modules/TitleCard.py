@@ -7,28 +7,28 @@ from modules.Debug import log
 import modules.global_objects as global_objects
 
 # Built-in BaseCardType classes
-from modules.AnimeTitleCard import AnimeTitleCard
-from modules.CutoutTitleCard import CutoutTitleCard
-from modules.FadeTitleCard import FadeTitleCard
-from modules.FrameTitleCard import FrameTitleCard
-from modules.LandscapeTitleCard import LandscapeTitleCard
-from modules.LogoTitleCard import LogoTitleCard
-from modules.OlivierTitleCard import OlivierTitleCard
-from modules.PosterTitleCard import PosterTitleCard
-from modules.RomanNumeralTitleCard import RomanNumeralTitleCard
-from modules.StandardTitleCard import StandardTitleCard
-from modules.StarWarsTitleCard import StarWarsTitleCard
-from modules.TextlessTitleCard import TextlessTitleCard
-from modules.TintedGlassTitleCard import TintedGlassTitleCard
+from modules.cards.AnimeTitleCard import AnimeTitleCard
+from modules.cards.CutoutTitleCard import CutoutTitleCard
+from modules.cards.FadeTitleCard import FadeTitleCard
+from modules.cards.FrameTitleCard import FrameTitleCard
+from modules.cards.LandscapeTitleCard import LandscapeTitleCard
+from modules.cards.LogoTitleCard import LogoTitleCard
+from modules.cards.OlivierTitleCard import OlivierTitleCard
+from modules.cards.PosterTitleCard import PosterTitleCard
+from modules.cards.RomanNumeralTitleCard import RomanNumeralTitleCard
+from modules.cards.StandardTitleCard import StandardTitleCard
+from modules.cards.StarWarsTitleCard import StarWarsTitleCard
+from modules.cards.TextlessTitleCard import TextlessTitleCard
+from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
 
 class TitleCard:
     """
-    This class describes a title card. This class is responsible for applying a
-    given profile to the Episode details and initializing a CardType with those
-    attributes.
+    This class describes a title card. This class is responsible for
+    applying a given profile to the Episode details and initializing a
+    CardType with those attributes.
 
-    It also contains the mapping of card type identifier strings to their
-    respective CardType classes.
+    It also contains the mapping of card type identifier strings to
+    their respective CardType classes.
     """
 
     """Extension of the input source image"""
@@ -72,18 +72,20 @@ class TitleCard:
 
 
     def __init__(self, episode: 'Episode', profile: 'Profile',
-                 title_characteristics: dict[str, Any],
-                 **extra_characteristics: dict[str, Any]) -> None:
+            title_characteristics: dict[str, Any],
+            **extra_characteristics: dict[str, Any]) -> None:
         """
         Constructs a new instance of this class.
 
         Args:
             episode: The episode whose TitleCard this corresponds to.
-            profile: The profile to apply to the creation of this title card.
-            title_characteristics: Dictionary of characteristics from the
-                CardType class for this Episode to pass to Title.apply_profile()
-            extra_characteristics: Any extra keyword arguments to pass directly
-                to the creation of the CardType object.
+            profile: The profile to apply to the creation of this title
+                card.
+            title_characteristics: Dictionary of characteristics from
+                the CardType class for this Episode to pass to
+                Title.apply_profile()
+            extra_characteristics: Any extra keyword arguments to pass
+                directly to the creation of the CardType object.
         """
 
         # Store this card's associated episode and profile
@@ -122,14 +124,14 @@ class TitleCard:
 
     @staticmethod
     def get_output_filename(format_string: str, series_info: 'SeriesInfo', 
-                            episode_info: 'EpisodeInfo',
-                            media_directory: Path) -> Path:
+            episode_info: 'EpisodeInfo', media_directory: Path) -> Path:
         """
-        Get the output filename for a title card described by the given values.
+        Get the output filename for a title card described by the given
+        values.
 
         Args:
-            format_string: Format string that specifies how to construct the
-                filename.
+            format_string: Format string that specifies how to construct
+                the filename.
             series_info: SeriesInfo for this entry.
             episode_info: EpisodeInfo to get filename of.
             media_directory: Top-level media directory.
@@ -165,15 +167,14 @@ class TitleCard:
 
     @staticmethod
     def get_multi_output_filename(format_string: str, series_info: 'SeriesInfo',
-                                  multi_episode: 'MultiEpisode',
-                                  media_directory: Path) -> Path:
+            multi_episode: 'MultiEpisode', media_directory: Path) -> Path:
         """
-        Get the output filename for a title card described by the given values,
-        and that represents a range of Episodes (not just one).
+        Get the output filename for a title card described by the given
+        values, and that represents a range of Episodes (not just one).
 
         Args:
-            format_string: Format string that specifies how to construct the
-                filename.
+            format_string: Format string that specifies how to construct
+                the filename.
             series_info: Series info for this entry.
             multi_episode: MultiEpisode object to get filename of.
             media_directory: Top-level media directory.
@@ -234,7 +235,8 @@ class TitleCard:
     @staticmethod
     def validate_card_format_string(format_string: str) -> bool:
         """
-        Return whether the given card filename format string is valid or not.
+        Return whether the given card filename format string is valid or
+        not.
 
         Args:
             format_string:  Format string being validated.
@@ -258,8 +260,8 @@ class TitleCard:
 
     def create(self) -> bool:
         """
-        Create this title card. If the card already exists, a new one is not 
-        created. Return whether a card was created.
+        Create this title card. If the card already exists, a new one is
+        not  created. Return whether a card was created.
 
         Returns:
             True if a title card was created, False otherwise.

@@ -1,6 +1,6 @@
 from re import IGNORECASE, compile as re_compile
 from requests import get, Session
-from typing import Any
+from typing import Any, Union
 import urllib3
 
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
@@ -9,10 +9,13 @@ from modules.Debug import log
 
 class WebInterface:
     """
-    This class defines a WebInterface, which is a type of interface that makes
-    requests using some persistent session and returns JSON results. This object
-    caches requests/results for better performance.
+    This class defines a WebInterface, which is a type of interface that
+    makes requests using some persistent session and returns JSON
+    results. This object caches requests/results for better performance.
     """
+
+    """Maximum time allowed for a single request"""
+    REQUEST_TIMEOUT = 15
 
     """How many requests to cache"""
     CACHE_LENGTH = 10
@@ -28,15 +31,18 @@ class WebInterface:
 
 
     def __init__(self, name: str, verify_ssl: bool=True, *,
-                 cache: bool=True) -> None:
+            cache: bool=True) -> None:
         """
-        Construct a new instance of a WebInterface. This creates creates cached
-        request and results lists, and establishes a session for future use.
+        Construct a new instance of a WebInterface. This creates creates
+        cached request and results lists, and establishes a session for
+        future use.
 
         Args:
-            name: Name (for logging) of this Interface.
-            verify_ssl: Whether to verify SSL requests with this Interface.
-            cache: (Keyword only) Whether to cache requests with this interface.
+            name: Name (for logging) of this interface.
+            verify_ssl: Whether to verify SSL requests with this
+                interface.
+            cache: (Keyword only) Whether to cache requests with this
+                interface.
         """
 
         # Store name of this interface
@@ -63,9 +69,10 @@ class WebInterface:
         return f'<WebInterface to {self.name}>'
 
 
-    @retry(stop=stop_after_attempt(10),
-           wait=wait_fixed(3)+wait_exponential(min=1, max=32))
-    def __retry_get(self, url: str, params: dict[str: Any]) -> dict[str: Any]:
+    @retry(stop=stop_after_attempt(5),
+           wait=wait_fixed(5)+wait_exponential(min=1, max=16),
+           before_sleep=lambda _:log.warning('Failed to submit GET request, retrying..'))
+    def __retry_get(self, url: str, params: dict[str, Any]) -> dict[str, Any]:
         """
         Retry the given GET request until successful (or really fails).
 
@@ -77,14 +84,19 @@ class WebInterface:
             Dict made from the JSON return of the specified GET request.
         """
 
-        return self.session.get(url=url, params=params).json()
+        return self.session.get(
+            url=url,
+            params=params,
+            timeout=self.REQUEST_TIMEOUT
+        ).json()
 
 
-    def _get(self, url: str, params: dict) -> dict:
+    def _get(self, url: str, params: dict[str, Any]) -> dict[str, Any]:
         """
-        Wrapper for getting the JSON return of the specified GET request. If the
-        provided URL and parameters are identical to the previous request, then
-        a cached result is returned instead (if enabled).
+        Wrapper for getting the JSON return of the specified GET
+        request. If the provided URL and parameters are identical to the
+        previous request, then a cached result is returned instead (if
+        enabled).
 
         Args:
             url: URL to pass to GET.
@@ -118,12 +130,13 @@ class WebInterface:
 
 
     @staticmethod
-    def download_image(image: 'str | bytes', destination: 'Path') -> bool:
+    def download_image(image: Union[str, bytes], destination: 'Path') -> bool:
         """
         Download the provided image to the destination filepath.
 
         Args:
-            image: URL to the image to download, or bytes of the image to write.
+            image: URL to the image to download, or bytes of the image
+                to write.
             destination: Destination path to download the image to.
 
         Returns:
