@@ -1,5 +1,5 @@
 from re import match, compile as re_compile
-from typing import Optional
+from typing import Optional, Union
 
 from modules.CleanPath import CleanPath
 from modules.DatabaseInfoContainer import DatabaseInfoContainer
@@ -106,6 +106,19 @@ class SeriesInfo(DatabaseInfoContainer):
         return {
             'series_name': self.name,
             'series_year': self.year,
+        }
+
+    
+    @property
+    def ids(self) -> dict[str, Union[str, int]]:
+        return {
+            'emby_id': self.emby_id,
+            'imdb_id': self.imdb_id,
+            'jellyfin_id': self.jellyfin_id,
+            'sonarr_id': self.sonarr_id,
+            'tmdb_id': self.tmdb_id,
+            'tvdb_id': self.tvdb_id,
+            'tvrage_id': self.tvrage_id,
         }
 
 
