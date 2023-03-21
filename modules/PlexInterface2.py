@@ -233,11 +233,13 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     @catch_and_log('Error getting all series', default=[])
     def get_all_series(self,
-            filter_libraries: list[str]=[],
-            required_tags: list[str]=[],
-            ) -> list[tuple[SeriesInfo, str, str]]: 
+            required_libraries: list[str] = [],
+            excluded_libraries: list[str] = [],
+            required_tags: list[str] = [], 
+            excluded_tags: list[str] = [],
+            ) -> list[tuple[SeriesInfo, str]]: 
         """
-        Get all series within Plex, as filtered by the given libraries.
+        Get all series within Plex, as filtered by the given arguments.
 
         Args:
             filter_libraries: Optional list of library names to filter
@@ -249,8 +251,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         Returns:
             List of tuples whose elements are the SeriesInfo of the
-            series, the  path (string) it is located, and its
-            corresponding library name.
+            series, and its corresponding library name.
         """
 
         # Go through every library in this server
@@ -261,16 +262,21 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 continue
 
             # If filtering libraries, skip library if unspecified
-            if (len(filter_libraries) > 0
-                and library.title not in filter_libraries):
+            if required_libraries and library.title not in required_libraries:
+                continue
+            if excluded_libraries and library.title in excluded_libraries:
                 continue
 
             # Get all Shows in this library
             for show in library.all():
                 # Skip show if tags provided and does not match
-                if required_tags:
+                if required_tags or excluded_tags:
                     tags = [label.tag.lower() for label in show.labels]
-                    if not all(tag.lower() in tags for tag in required_tags):
+                    if (required_tags
+                        and not all(t.lower() in tags for t in required_tags)):
+                        continue
+                    if (excluded_tags
+                        and not all(t.lower() in tags for t in excluded_tags)):
                         continue
 
                 # Skip show if it has no year
@@ -279,9 +285,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                     continue
 
                 # Skip show if it has no locations.. somehow..
-                if len(show.locations) == 0:
-                    log.warning(f'Series {show.title} has no files - skipping')
-                    continue
+                # if len(show.locations) == 0:
+                #     log.warning(f'Series {show.title} has no files - skipping')
+                #     continue
 
                 # Get all ID's for this series
                 ids = {}
@@ -293,7 +299,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
                 # Create SeriesInfo object for this show, add to return
                 series_info = SeriesInfo(show.title, show.year, **ids)
-                all_series.append((series_info,show.locations[0],library.title))
+                all_series.append((series_info, library.title))
 
         return all_series
 
