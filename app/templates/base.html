@@ -363,22 +363,29 @@
 
     // Validate new series form
     $('#new-series-form')
-      .form({fields: {
-        name: {identifier: 'name', rules: [{type: 'minLength[1]', prompt: 'Series title is required'}]},
-        year: {identifier: 'year', rules: [{type: 'integer[1900..2050]', prompt: 'Enter a valid year'}]},
-      }});
+      .form({
+        on: 'blur',
+        fields: {
+          name: {
+            identifier: 'name',
+            rules: [{type: 'minLength[1]', prompt: 'Series title is required'}]
+          }, year: {
+            identifier: 'year',
+            rules: [{type: 'integer[1900..2050]', prompt: 'Valid year is required'}]
+          },
+        }
+      });
       
     // Handle form submission
     $('#new-series-form').on('submit', (event) => {
       // Prevent default event form handler
       event.preventDefault();
-
+      if (!$('#new-series-form').form('is valid')) { return; }
       // Change button to loading while submitting request
       $('#new-series-button').toggleClass('loading', true);
 
       // Get form data, remove blanks
       let form = new FormData(event.target);
-      console.log(form);
       for (const [key, value] of [...form.entries()]) {
         if (value === '') { form.delete(key); }
       }
@@ -387,9 +394,11 @@
       $.ajax({
         type: 'POST',
         url: '/api/series/new',
-        data: form,
-        processData: false,
-        contentType: false,
+        data: JSON.stringify(Object.fromEntries(form.entries())),
+        contentType: "application/json",
+        // data: form,
+        // processData: false,
+        // contentType: false,
         success: (response) => {
           getAllSeries();
           $.toast({
