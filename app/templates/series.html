@@ -23,18 +23,25 @@
     }
     
     /* Inine fields need to flex and align content in the middle of their div */
-    .inline.field {
+    #new-episode-form .inline.field {
       display: flex;
       align-items: center;
       margin-bottom: 4px;
     }
-
-    /* Set width of text input fields to 300px */
-    .inline.field >* input[type="text"] {
-      width: 300px !important;
+    #new-episode-form .number.input {
+      width: 85px;
+    }
+    #new-episode-form .text.input {
+      width: 100%;
+      overflow-wrap: break-word;
     }
 
-    .config-label {
+    /* Set width of text input fields to 300px */
+    /* .inline.field >* input[type="text"] {
+      width: 300px !important;
+    } */
+
+    /* .config-label {
       flex: 0 0 150px;
       display: flex;
       margin-right: 10px;
@@ -42,10 +49,10 @@
       text-align: right;
       font-weight: bold;
       color: var(--font-color);
-    }
+    } */
 
     /* Add top padding above the delete button for each episode */
-    .negative.button {
+    .tab[data-tab="episode-data"] .negative.button {
       margin-top: 5px;
     }
 
@@ -54,7 +61,7 @@
       width: 500px !important;
     }
 
-    #new-episode-form > div.field > label {
+    #new-episode-form label {
       flex: 0 0 125px;
       display: flex;
       margin-right: 10px;
@@ -62,14 +69,14 @@
       text-align: right;
     }
 
-    .disabled.config-label {
+    /* .disabled.config-label {
       color: var(--font-color-disabled);
       font-weight: lighter;
     }
 
     div.dropdown {
       min-width: 500px;
-    }
+    } */
   </style>
 
   <!-- Templates -->
@@ -136,20 +143,6 @@
       })
     }
 
-    // Get all available and selected image sources for this series
-    // async function getImageSources() {
-    //   const sources = await fetch('/api/series/{{series.id}}/image-source-priority').then(resp => resp.json());
-    //   // Sort objects by their priority; -1 being unselected
-    //   const sortedSources = sources.sort((a, b) => {
-    //     return (a.priority > b.priority) && b.priority >= 0;
-    //   });
-    //   $('#image-source-priority').dropdown({
-    //     values: sortedSources.map(({name, selected}) => {
-    //       return {name: name, value: name, selected: selected};
-    //     })
-    //   });
-    // }
-
     // Get all available libraries for Emby and Plex
     async function getLibraries() {
       let plexLibraries = await fetch('/api/available/libraries/plex').then(resp => resp.json());
@@ -189,16 +182,18 @@
              source_file, destination} = episode;
 
         // Get or create the div for this season
-        var seasonElement = document.getElementById(`episode-data-season${season_number}`)
+        let seasonElement = document.getElementById(`episode-data-season${season_number}`);
         if (seasonElement === null) {
           // Clone season template, add to episode data
           seasonElement = seasonTemplate.content.cloneNode(true);
           seasonElement.querySelector('.content').id = `episode-data-season${season_number}`;
           const seasonTitle = (season_number === 0) ? 'Specials' : `Season ${season_number}`;
-          seasonDiv = seasonElement.querySelector('.accordion');
+          // seasonDiv = seasonElement.querySelector('.accordion');
           seasonElement.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${seasonTitle}`;
           episodeDataDiv.appendChild(seasonElement);
         }
+        const seasonDiv = document.getElementById(`episode-data-season${season_number}`).querySelector('.accordion');
+        // console.log(seasonElement)
 
         // Create new element for this episode
         const episodeElement = episodeTemplate.content.cloneNode(true);
@@ -295,12 +290,13 @@
 
     async function deleteSeries(deleteCards) {
       // Delete cards if indicated
+      let redirect = false;
       if (deleteCards) {
         $.ajax({
           type: 'DELETE',
           url: '/api/cards/series/{{series.id}}',
-          success: () => {
-            window.location.href = '/';
+          success: () => { 
+            redirect = true;
           }, error: (response) => {
             $.toast({
               class: 'error',
@@ -316,7 +312,7 @@
         type: 'DELETE',
         url: '/api/series/{{series.id}}',
         success: () => {
-          window.location.href = '/';
+          redirect = true;
         }, error: (response) => {
           $.toast({
             class: 'error',
@@ -325,6 +321,8 @@
           });
         },
       });
+
+      if (redirect) { window.location.href = '/'; }
     }
   </script>
 </head>
@@ -375,30 +373,41 @@
                 <i class="images outline icon"></i>
                 Create Missing Cards
               </button>
-              {% if series.emby_library_name %}
+              {% if preferences.use_emby and series.emby_library_name %}
               <button id="load-emby" class="ui button">
-              {% else %}
-              <button id="load-emby" class="ui disabled button">
-              {% endif %}
                 <i class="server icon"></i>
                 Reload Emby
               </button>
-              {% if series.jellyfin_library_name %}
-              <button id="load-jellyfin" class="ui button">
-              {% else %}
-              <button id="load-jellyfin" class="ui disabled button">
+              {% elif (preferences.use_emby and not series.emby_library_name) or (not preferences.use_emby and series.emby_library_name) %}
+              <button id="load-emby" class="ui disabled button">
+                <i class="server icon"></i>
+                Reload Emby
+              </button>
               {% endif %}
+                
+              {% if preferences.use_jellyfin and series.jellyfin_library_name %}
+              <button id="load-jellyfin" class="ui button">
+                <i class="server icon"></i>
+                Reload Emby
+              </button>
+              {% elif (preferences.use_jellyfin and not series.jellyfin_library_name) or (not preferences.use_jellyfin and series.jellyfin_library_name) %}
+              <button id="load-jellyfin" class="ui disabled button">
                 <i class="server icon"></i>
                 Reload Jellyfin
               </button>
-              {% if series.plex_library_name %}
-              <button id="load-plex" class="ui button">
-              {% else %}
-              <button id="load-plex" class="ui disabled button">
               {% endif %}
+
+              {% if preferences.use_plex and series.plex_library_name %}
+              <button id="load-plex" class="ui button">
                 <i class="server icon"></i>
                 Reload Plex
               </button>
+              {% elif (preferences.use_plex and not series.plex_library_name) or (not preferences.use_plex and series.plex_library_name) %}
+              <button id="load-plex" class="ui disabled button">
+                <i class="server icon"></i>
+                Reload Plex
+              </button>
+              {% endif %}
               <button id="delete-series" class="ui negative button">
                 <i class="trash alternate outline icon"></i>
                 Delete Series
@@ -415,22 +424,14 @@
             <a class="item" data-tab="card-config">Card Configuration</a>
             <a class="item" data-tab="episode-data">Episode Data</a>
             <a class="item" data-tab="files">Files</a>
-            <a class="item" data-tab="database-ids">External ID's</a>
+            <a class="item" data-tab="database-ids">Database ID's</a>
           </div>
           
           <!-- Configuration tab -->
           <div id="series-tabs" class="ui bottom attached tab segment" data-tab="configuration">
-            <!-- Advanced Setting Toggle -->
-            <!-- <div class="inline field">
-              <button id="advanced-toggle-button" class="mini ui compact labeled icon button">
-                <i id="advanced-toggle-icon" class="eye slash icon"></i>
-                Show Advanced Settings
-              </button>
-            </div> -->
-
             <form id="series-config" class="ui compact form">
               <!-- Episode Data Source Dropdown Menu -->
-              <div class="inline advanced field">
+              <div class="field">
                 <label class="config-label">Episode Data Source</label>
                 <div id="episode-data-source" class="ui compact selection dropdown">
                   <input id="episode-data-source-input" type="hidden" name="episode_data_source" value="{{series.episode_data_source}}">
@@ -443,21 +444,9 @@
                 </div>
               </div>
 
-              <!-- Image Source Priority -->
-              <!-- <div class="inline advanced field">
-                <label class="config-label">Image Source Priority</label>
-                <div id="image-source-priority" class="ui clearable multiple selection dropdown">
-                  <input id="image-source-priority-input" type="hidden" name="image_source_priority">
-                  <i class="dropdown icon"></i>
-                  <div class="default text">Image Sources</div>
-                  <div class="menu">
-                  </div>
-                </div>
-              </div> -->
-
-              <!-- Emby Library -->            
-              {% if 'Emby' in preferences.enabled_media_servers %}
-              <div class="inline field">
+              <!-- Emby Library -->
+              {% if preferences.use_emby %}
+              <div class="field">
                 <label class="config-label">Emby Library</label>
                 <div id="emby-library" class="ui compact selection dropdown">
                   <!-- Default (current) value -->
@@ -469,16 +458,12 @@
                     <!-- Child divs added by JS asynchronous request -->
                   </div>
                 </div>
-              {% else %}
-              <div class="disabled inline advanced field">
-                <label id="series-config-emby-library-label" class="disabled config-label">Emby Library</label>
-                <div id="series-config-emby-library" class="ui compact disabled selection dropdown"></div>
-              {% endif %}
               </div>
+              {% endif %}
 
               <!-- Jellyfin Library -->            
-              {% if 'Jellyfin' in preferences.enabled_media_servers %}
-              <div class="inline field">
+              {% if preferences.use_jellyfin %}
+              <div class="field">
                 <label class="config-label">Jellyfin Library</label>
                 <div id="jellyfin-library" class="ui compact selection dropdown">
                   <!-- Default (current) value -->
@@ -490,16 +475,12 @@
                     <!-- Child divs added by JS asynchronous request -->
                   </div>
                 </div>
-              {% else %}
-              <div class="disabled inline advanced field">
-                <label id="series-config-jellyfin-library-label" class="disabled config-label">Jellyfin Library</label>
-                <div id="series-config-jellyfin-library" class="ui compact disabled selection dropdown"></div>
-              {% endif %}
               </div>
+              {% endif %}
 
               <!-- Plex Library -->
-              {% if 'Plex' in preferences.enabled_media_servers %}
-              <div class="inline field">
+              {% if preferences.use_plex %}
+              <div class="field">
                 <label class="config-label">Plex Library</label>
                 <div id="plex-library" class="ui compact selection dropdown">
                   <!-- Default (current) value -->
@@ -511,61 +492,27 @@
                     <!-- Child divs added by JS asynchronous request -->
                   </div>
                 </div>
-              {% else %}
-              <div class="disabled inline advanced field">
-                <label class="disabled config-label">Plex Library</label>
-                <div id="plex-library" class="ui compact disabled selection dropdown"></div>
-              {% endif %}
               </div>
+              {% endif %}
 
               <!-- Card Directory -->
-              <div id="series-config-card-directory" class="inline field">
+              <div id="series-config-card-directory" class="field">
                 <label id="series-config-card-directory-label" class="config-label">Card Directory</label>
-                <div class="ui right icon input">
+                <div class="ui left icon input">
                   <input id="series-config-card-directory-input" type="text" value="{{series.directory}}" name="card_directory">
                   <i class="folder icon"></i>
                 </div>
               </div>
 
               <!-- Filename Format -->
-              <div id="series-config-filename-format" class="inline advanced field">
+              <div id="series-config-filename-format" class="field">
                 <label id="series-config-filename-format-label" class="config-label">Filename Format</label>
-                <div class="ui action input">
-                  <input id="series-config-filename-format-input" type="text" value="{{series.filename_format}}" name="filename_format">
-                  <button id="filename-format-help-button" class="ui blue icon button" type="button">
-                    <i class="question icon"></i>
-                  </button>
-                </div>
-                <!-- Helper Modal -->
-                <!-- <div id="filename-format-help-modal" class="ui modal">
-                  <div class="header">File Name Formatting</div>
-                  <div class="content"> 
-                    <div id="filename-format-help-modal-series-name" class="ui labeled button">
-                      <div class="ui button">{name}</div>
-                      <a class="ui basic label">{{series.name}}</a>
-                    </div>
-                    <div class="ui labeled button" tabindex="1">
-                      <div class="ui button">{year}</div>
-                      <a class="ui basic label">{{series.year}}</a>
-                    </div>
-                    <div class="ui labeled button" tabindex="2">
-                      <div class="ui button">{full_name}</div>
-                      <a class="ui basic label">{{series.full_name}}</a>
-                    </div>
-                  </div>
-
-                  <div class="actions">
-                    <div class="fluid ui action input">
-                      <input id="series-config-filename-format-modal" type="text" value="{{series.filename_format}}" name="filename_format">
-                      <div id="filename-format-help-close-button" class="ui blue close button">Save</div>
-                    </div>
-                  </div>
-                </div> -->
+                <input name="filename_format" type="text" placeholder="{{series.filename_format}}" value="{{series.filename_format}}">
               </div>
 
               <!-- Submit changes button -->
               <button id="submit-changes" class="ui animated primary button" type="submit">
-                <div class="visible content">Save Changes</div>
+                <div class="visible content">Save</div>
                 <div class="hidden content">
                   <i class="right arrow icon"></i>
                 </div>
@@ -609,6 +556,10 @@
             <button id="new-episode" class="ui primary tertiary button">
               Add New Episode
             </button>
+            <!-- Delete episodes -->
+            <button id="delete-episodes" class="ui red tertiary button">
+              Delete All Episodes
+            </button>
 
             <div id="episode-data" class="ui styled fluid accordion">
               <!-- Episode subdata is added by asynchronous function -->
@@ -617,12 +568,81 @@
 
           <!-- Files Tab -->
           <div class="ui bottom attached tab segment" data-tab="files">
-            File Stuff
+            
           </div>
 
-          <!-- Database Tab -->
+          <!-- Database ID's Tab -->
           <div class="ui bottom attached tab segment" data-tab="database-ids">
-            File Stuff
+            <form id="series-ids" class="ui compact form">
+              {% if preferences.use_emby %}
+              <div id-type="Emby ID" class="field">
+                <label>Emby</label>
+                {% if series.emby_id %}
+                <input name="emby_id" type="text" placeholder="{{series.emby_id}}" value="{{series.emby_id}}">
+                {% else %}
+                <input name="emby_id" type="text" placeholder="N/A">
+                {% endif %}
+              </div>
+              {% endif %}
+
+              {% if preferences.use_jellyfin %}
+              <div id-type="Jellyfin" class="field">
+                <label>Jellyfin</label>
+                {% if series.jellyfin_id %}
+                <input name="jellyfin_id" type="text" placeholder="{{series.jellyfin_id}}" value="{{series.jellyfin_id}}">
+                {% else %}
+                <input name="jellyfin_id" type="text" placeholder="None">
+                {% endif %}
+              </div>
+              {% endif %}
+
+              {% if preferences.use_sonarr %}
+              <div id-type="Sonarr" class="field">
+                <label>Sonarr</label>
+                {% if series.sonarr_id %}
+                <input name="sonarr_id" type="text" placeholder="{{series.sonarr_id}}" value="{{series.sonarr_id}}">
+                {% else %}
+                <input name="sonarr_id" type="text" placeholder="None">
+                {% endif %}
+              </div>
+              {% endif %}
+
+              <div id-type="TMDb" class="field">
+                {% if series.tmdb_id %}
+                <label>TMDb <a href="https://www.themoviedb.org/tv/{{series.tmdb_id}}" target="_blank"><i class="external alternate small icon"></i></a></label>
+                <input name="tmdb_id" type="text" placeholder="{{series.tmdb_id}}" value="{{series.tmdb_id}}">
+                {% else %}
+                <label>TMDb</label>
+                <input name="tmdb_id" type="text" placeholder="None">
+                {% endif %}
+              </div>
+
+              <div id-type="TVDb" class="field">
+                {% if series.tvdb_id %}
+                <label>TVDb <a href="https://thetvdb.com/search?query={{series.tvdb_id}}" target="_blank"><i class="external alternate small icon"></i></a></label>
+                <input name="tvdb_id" type="text" placeholder="{{series.tvdb_id}}" value="{{series.tvdb_id}}">
+                {% else %}
+                <label>TVDb</label>
+                <input name="tvdb_id" type="text" placeholder="None">
+                {% endif %}
+              </div>
+
+              <div id-type="TVRage" class="field">
+                <label>TVRage</label>
+                {% if series.tvdb_id %}
+                <input name="tvrage_id" type="text" placeholder="{{series.tvrage_id}}" value="{{series.tvrage_id}}">
+                {% else %}
+                <input name="tvrage_id" type="text" placeholder="None">
+                {% endif %}
+              </div>
+
+              <button class="ui animated primary button" type="submit" form="series-ids">
+                <div class="visible content">Save</div>
+                <div class="hidden content">
+                  <i class="right arrow icon"></i>
+                </div>
+              </button>
+            </form>
           </div>
         </div>
       </div>
@@ -688,31 +708,32 @@
         <form id="new-episode-form" class="ui form">
           <div class="input inline field">
             <label>Season Number</label>
-            <div class="ui input" style="width: 85px">
+            <div class="ui number input">
               <input type="number" min="0" name="season_number">
             </div>
           </div>
 
           <div class="input inline field">
             <label>Episode Number</label>
-            <div class="ui input" style="width: 85px">
+            <div class="ui number input">
               <input type="number" min="1" name="episode_number">
             </div>
           </div>
 
           <div class="input inline field">
             <label>Absolute Number</label>
-            <div class="ui input" style="width: 85px">
+            <div class="ui number input">
               <input type="number" min="1" name="absolute_number">
             </div>
           </div>
 
           <div class="input inline field">
             <label>Title</label>
-            <div class="ui  input" style="width: 100%">
-              <input type="text" name="title" minlength="1">
+            <div class="ui text input">
+              <textarea name="title" minlength="1" rows="2" wrap="soft"></textarea>
             </div>
           </div>
+          <div class="ui error message"></div>
         </form>
       </div>
       <div class="actions">
@@ -723,9 +744,6 @@
   </div>
 
   <script>
-    // Current values
-    let currentImageSourcePriority = '';
-
     // Enable all dropdowns, menus, and accordians
     $('.dropdown').dropdown();
     $('.menu .item').tab();
@@ -736,19 +754,6 @@
     $('#poster').dimmer({
       on: 'ontouchstart' in document.documentElement ? 'click' : 'hover'
     });
-
-    // Hide advanced options by default
-    // $('div.advanced').toggle();
-
-    // Add advanced toggle to button
-    // $('#advanced-toggle-button').on('click', function() {
-    //   $('div.advanced').toggle();
-    //   if ($('div.advanced').is(':visible')) {
-    //     $('#advanced-toggle-icon').removeClass('slash');
-    //   } else {
-    //     $('#advanced-toggle-icon').addClass('slash');
-    //   }
-    // });
 
     // Make clearable dropdowns.. clearable
     $('.ui.clearable.dropdown').dropdown({
@@ -778,7 +783,9 @@
       .modal('setting', 'transition', 'fade up')      // Fade up modal on reveal
       .modal('setting', 'closable', false)            // Don't allow closing by clicking outside modal
       .modal({
-        blurring: true,                               // Blur background when shown
+        onApprove: () => {                            // Don't close if form is invalid
+          return $('#new-episode-form').form('is valid');
+        }, blurring: true,                            // Blur background when shown
         onHidden: function($element) {                // Reset input on close
           $('#poster-upload-input')[0].value = '';
           $('#poster-url-input')[0].value = '';
@@ -843,8 +850,18 @@
     });
 
     // Create a new episode
+    $('#new-episode-form').form({
+      on: 'blur',
+      fields: {
+        season_number: ['empty'],
+        episode_number: ['empty'],
+        title: ['empty', 'minLength[1]'],
+      },
+    });
     $('#new-episode-form').on('submit', (event) => {
+      // Prevent page reload, do not submit if form is invalid
       event.preventDefault();
+      if (!$('#new-episode-form').form('is valid')) {return;}
       $.ajax({
         type: 'POST',
         url: '/api/series/{{series.id}}/episode',
