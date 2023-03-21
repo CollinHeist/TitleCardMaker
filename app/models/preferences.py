@@ -1,6 +1,7 @@
 from collections import namedtuple
 from os import environ
 from pathlib import Path
+from typing import Union
 
 from pickle import dump
 
@@ -164,3 +165,23 @@ class Preferences:
             'GB':  2**30, 'Gigabytes': 2**30,
             'TB':  2**40, 'Terabytes': 2**40,
         }[unit]
+
+
+    def determine_sonarr_library(self, directory: str) -> Union[str, None]:
+        """
+        Determine the library of the series in the given directory. This
+        uses this object's sonarr_libraries attribute.
+
+        Args:
+            directory: Directory whose library is being determined.
+
+        Returns:
+            Name of the directory's matching library. None if no library
+            can be determined.
+        """
+
+        for library, path in self.sonarr_libraries.items():
+            if directory.startswith(path):
+                return library
+
+        return None
