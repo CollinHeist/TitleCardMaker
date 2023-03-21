@@ -25,6 +25,15 @@
     .right.aligned.field > input {
       text-align: right;
     }
+
+    /* Ensure preview card images don't overflow their div */
+    img {
+      max-width: 100%;
+    }
+    /* Make sure card loader is below the search bar */
+    .ui.loading.card::before {
+      z-index: 98;
+    }
   </style>
 
   <template id="template">
@@ -200,23 +209,18 @@
           </div>
 
           <!-- Preview Cards -->
-          <div class="four wide column">
-            <h3>Watched Content</h3>
-            <div class="ui card">
+          <div class="eight wide column">
+            <h3>Unwatched Content</h3>
+            <div content-type="unwatched" class="ui fluid card">
               <div class="content">
-                <div class="ui placeholder">
-                  <div class="rectangular image"></div>
-                </div>
+                <img content-type="unwatched" alt="Preview Unwatched Title Card" src="/assets/blank.png">
               </div>
             </div>
-          </div>
-          <div class="four wide column">
-            <h3>Unwatched Content</h3>
-            <div class="ui card">
+
+            <h3>Watched Content</h3>
+            <div content-type="watched" class="ui fluid card">
               <div class="content">
-                <div class="ui placeholder">
-                  <div class="rectangular image"></div>
-                </div>
+                <img content-type="watched" alt="Preview Watched Title Card" src="/assets/blank.png">
               </div>
             </div>
           </div>
@@ -226,6 +230,32 @@
   </template>
 
   <script>
+    async function reloadPreview(watchStatus, formElement, cardElement, imgElement) {
+      let form = new FormData(formElement);
+      if (form.get(`${watchStatus}_style`).includes('blur')) { form.set('blur', true); }
+      if (form.get(`${watchStatus}_style`).includes('grayscale')) { form.set('grayscale', true); }
+      form.set('style', form.get(`${watchStatus}_style`));
+      
+      cardElement.className = 'ui fluid loading raised card';
+      $.ajax({
+        type: 'POST',
+        url: '/api/cards/preview',
+        data: form,
+        processData: false,
+        contentType: false,
+        success: (response) => {
+          imgElement.src = `${response}?${new Date().getTime()}`;
+        },
+        error: (response) => {
+          $.toast({
+            class: 'error',
+            title: 'Error Creating Preview Card',
+            message: response,
+          });
+        }, complete: () => {cardElement.className = 'ui fluid raised card'; }
+      });
+    }
+
     async function getAllTemplates() {
       const allCardTypes = await fetch('/api/available/card-types').then(resp => resp.json());
       const allFonts = await fetch('/api/fonts/all').then(resp => resp.json());
@@ -285,7 +315,13 @@
             const valueElem = document.createElement('input');
             valueElem.name = 'extra_value'; valueElem.type = 'text'; valueElem.value = value;
             inputDiv.appendChild(valueElem)
-          };
+          }
+        }
+        // Update card preview(s)
+        const form = base.querySelector('form')
+        form.onchange = () => {
+          reloadPreview('unwatched', form, document.querySelector('.card[content-type="unwatched"]'), document.querySelector('img[content-type="unwatched"]'));
+          reloadPreview('watched', form,document.querySelector('.card[content-type="watched"]'),  document.querySelector('img[content-type="watched"]'));
         }
         return base;
       });
@@ -299,7 +335,7 @@
         // Card type
         $(`#template-id${templateObj.id} >* .dropdown[data-value="card-types"]`).dropdown({
           values: allCardTypes.map(({name}) => {
-            return {name: name, value: name, selected: name === templateObj.card_type};
+            return {name: name, value: name.toLowerCase(), selected: name === templateObj.card_type};
           }), placeholder: 'Global Default',
         });
         // Font
@@ -437,7 +473,6 @@
           });
         });
       });
-
 
       // Enable accordion/dropdown/checkbox elements
       $('.ui.accordion').accordion();
