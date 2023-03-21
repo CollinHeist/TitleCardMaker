@@ -3,7 +3,7 @@ from pathlib import Path
 from json import dumps, loads
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
-from sqlalchemy.ext.mutable import MutableList
+from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy import PickleType
 
 from app.database.session import Base
@@ -30,7 +30,7 @@ class Series(Base):
     plex_library_name = Column(String, default=None)
     filename_format = Column(String, default='{full_name} - S{season:02}E{episode:02}')
     episode_data_source = Column(String, default='Sonarr')
-    image_source_priority = Column(MutableList.as_mutable(PickleType), default=['TMDb', 'Plex', 'Emby'])
+    # image_source_priority = Column(MutableList.as_mutable(PickleType), default=['TMDb', 'Plex', 'Emby'])
     sync_specials = Column(Boolean, default=False)
     skip_localized_images = Column(Boolean, default=False)
     translations = Column(MutableList.as_mutable(PickleType), default=[])
@@ -51,12 +51,12 @@ class Series(Base):
     directory = Column(String, default=default_directory)
     card_type = Column(String, default='standard')
     hide_seasons = Column(Boolean, default=False)
-    season_titles = Column(MutableList.as_mutable(PickleType), default=[])
+    season_titles = Column(MutableDict.as_mutable(PickleType), default={})
     hide_episode_text = Column(Boolean, default=False)
-    episode_text_format = Column(String, default='Episode {episode_number}')
+    episode_text_format = Column(String, default=None)
     unwatched_style = Column(String, default='unique')
     watched_style = Column(String, default='unique')
-    extras = Column(MutableList.as_mutable(PickleType), default=[])
+    extras = Column(MutableDict.as_mutable(PickleType), default={})
 
     @hybrid_property
     def full_name(self) -> str:
