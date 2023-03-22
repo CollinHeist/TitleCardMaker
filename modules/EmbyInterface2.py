@@ -273,8 +273,11 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         }
 
 
-    def get_all_series(self, filter_libraries: list[str]=[],
-            required_tags: list[str]=[]) -> list[tuple[SeriesInfo, str, str]]: 
+    def get_all_series(self,
+            required_libraries: list[str] = [],
+            excluded_libraries: list[str] = [],
+            required_tags: list[str] = [], 
+            excluded_tags: list[str] = []) -> list[tuple[SeriesInfo, str]]: 
         """
         Get all series within Emby, as filtered by the given libraries.
 
@@ -287,8 +290,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 returned.
 
         Returns:
-            List of tuples whose elements are the SeriesInfo of the
-            series, the  path (string) it is located, and its
+            List of tuples whose elements are the SeriesInfo and its
             corresponding library name.
         """
         
@@ -302,12 +304,13 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         # Also filter by tags if any were provided
         if len(required_tags) > 0:
             params |= {'Tags': '|'.join(required_tags)}
-
+# TODO Filter by exclusion tags. No explicit query param for this
         # Go through each library in this server
         all_series = []
         for library, library_ids in self.libraries.items():
-            # If filtering, skip unspecified libraries
-            if filter_libraries and library not in filter_libraries:
+            # Filter by library
+            if (required_libraries and library not in filter_libraries
+                or excluded_libraries and library in excluded_libraries):
                 continue
 
             # Go through every subfolder (the parent ID) in this library
@@ -321,9 +324,11 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                     )
 
                     for series in response['Items']:
-                        series_info = SeriesInfo(series['Name'], year,
-                                                 emby_id=series['Id'])
-                        all_series.append((series_info, series['Path'],library))
+                        series_info = SeriesInfo(
+                            series['Name'], year, emby_id=series['Id'],
+# TODO add other series ID's
+                        )
+                        all_series.append((series_info, library))
 
         return all_series
 
