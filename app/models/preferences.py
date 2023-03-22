@@ -44,8 +44,8 @@ class Preferences:
         self.supported_language_codes = []
 
         self.default_card_type = 'Standard'
-        self.default_watched_style = 'Unique'
-        self.default_unwatched_style = 'Unique'
+        self.default_watched_style = 'unique'
+        self.default_unwatched_style = 'unique'
 
         self.use_emby = False
         self.emby_url = 'http://192.168.0.11:8096/emby' #''

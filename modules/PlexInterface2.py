@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
 
+from fastapi import HTTPException
 from plexapi.exceptions import PlexApiException
 from plexapi.server import PlexServer, NotFound, Unauthorized
 from requests.exceptions import ReadTimeout, ConnectionError
@@ -10,9 +11,8 @@ from tinydb import where
 from tqdm import tqdm
 
 from modules.Debug import log, TQDM_KWARGS
-import modules.global_objects as global_objects
 from modules.EpisodeDataSource import EpisodeDataSource
-from modules.EpisodeInfo import EpisodeInfo
+from modules.EpisodeInfo2 import EpisodeInfo
 from modules.ImageMaker import ImageMaker
 from modules.MediaServer import MediaServer
 from modules.PersistentDatabase import PersistentDatabase
@@ -42,8 +42,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def __init__(self, url: str, x_plex_token: str='NA',
             verify_ssl: bool=True,
             integrate_with_pmm_overlays: bool=False,
-            filesize_limit: int=10485760, *,
-            preferences=None) -> None:
+            filesize_limit: int=10485760) -> None:
         """
         Constructs a new instance of a Plex Interface.
 
@@ -69,10 +68,16 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             self.__server = PlexServer(url, x_plex_token, self.__session)
         except Unauthorized:
             log.critical(f'Invalid Plex Token "{x_plex_token}"')
-            # exit(1)
+            raise HTTPException(
+                status_code=401,
+                detail=f'Invalid Plex Token',
+            )
         except Exception as e:
             log.critical(f'Cannot connect to Plex - returned error: "{e}"')
-            # exit(1)
+            raise HTTPException(
+                status_code=400,
+                detail=f'Cannot connect to Plex - {e}',
+            )
 
         # Store integration
         self.integrate_with_pmm_overlays = integrate_with_pmm_overlays
@@ -306,7 +311,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     @catch_and_log('Error getting all episodes', default=[])
     def get_all_episodes(self, library_name: str,
-                         series_info: SeriesInfo) -> list[EpisodeInfo]:
+            series_info: SeriesInfo) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that have 
         already aired are returned.
@@ -357,15 +362,13 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 elif 'tmdb://' in guid.id:
                     ids['tmdb_id'] = guid.id[len('tmdb://'):]
 
-            # Create either a new EpisodeInfo or get from the MediaInfoSet
-            episode_info = self.info_set.get_episode_info(
-                series_info,
+            # Create a new EpisodeInfo
+            episode_info = EpisodeInfo(
                 plex_episode.title,
                 plex_episode.parentIndex,
                 plex_episode.index,
                 **ids,
                 airdate=airdate,
-                title_match=True,
                 queried_plex=True,
             )
 
