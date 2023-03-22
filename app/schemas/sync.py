@@ -1,32 +1,81 @@
+from pydantic import Field
 from typing import Literal, Optional
 
 from app.schemas.base import Base
 
 SonarrSeriesType = Literal['anime', 'daily', 'standard']
-SyncSource = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr']
+Interface = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr']
 
-class Sync(Base):
-    id: int
-    name: str
-    interface: SyncSource
-    template_id: Optional[int]
-    required_tags: list[str]
-    required_libraries: list[str]
-    excluded_tags: list[str]
-    excluded_libraries: list[str]
-    downloaded_only: bool
-    monitored_only: bool
-    required_series_type: Optional[str]
-    excluded_series_type: Optional[str]
 
-class EmbySync(Sync):
-    interface: SyncSource = 'Emby'
+class NewBaseSync(Base):
+    name: str = Field(..., min_length=1, title='Sync name')
+    template_id: Optional[int] = Field(
+        default=None,
+        title='Template ID',
+        description='ID of the template to apply to all synced series',
+    )
+    required_tags: list[str] = Field(
+        default=[],
+        description='List of tags required for this sync',
+    )
+    excluded_tags: list[str] = Field(
+        default=[],
+        description='List of tags to exclude from this sync',
+    )
 
-class JellyfinSync(Sync):
-    interface: SyncSource = 'Jellyfin'
+class NewMediaServerSync(NewBaseSync):
+    required_libraries: list[str] = Field(
+        default=[],
+        description='List of libraries required for this sync',
+    )
+    excluded_libraries: list[str] = Field(
+        default=[],
+        description='List of libraries to exclude from this sync',
+    )
 
-class PlexSync(Sync):
-    interface: SyncSource = 'Plex'
+class NewEmbySync(NewMediaServerSync):
+    interface = 'Emby'
 
-class SonarrSync(Sync):
-    interface: SyncSource = 'Sonarr'
+class NewJellyfinSync(NewMediaServerSync):
+    interface = 'Jellyfin'
+
+class NewPlexSync(NewMediaServerSync):
+    interface = 'Plex'
+
+class NewSonarrSync(NewBaseSync):
+    interface = 'Sonarr'
+    downloaded_only: bool = Field(
+        default=False,
+        description='Whether to only sync downloaded series',
+    )
+    monitored_only: bool = Field(
+        default=False,
+        description='Whether to only sync monitored series',
+    )
+    required_series_type: Optional[SonarrSeriesType] = Field(
+        default=None,
+        description='Series type to include in this sync',
+    )
+    excluded_series_type: Optional[SonarrSeriesType] = Field(
+        default=None,
+        description='Series type to exclude from this sync',
+    )
+
+class ExistingBaseSync(NewBaseSync):
+    id: int = Field(..., title='Sync ID')
+    interface: Interface = Field(..., title='Sync interface')
+
+class EmbySync(ExistingBaseSync, NewMediaServerSync):
+    interface: Interface = 'Emby'
+
+class JellyfinSync(ExistingBaseSync, NewMediaServerSync):
+    interface: Interface = 'Jellyfin'
+
+class PlexSync(ExistingBaseSync, NewMediaServerSync):
+    interface: Interface = 'Plex'
+
+class SonarrSync(ExistingBaseSync, NewSonarrSync):
+    interface: Interface = 'Sonarr'
+
+class Sync(ExistingBaseSync, NewSonarrSync):
+    ...
