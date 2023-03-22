@@ -505,15 +505,15 @@
             url: `${toggleAPI}/enable`,
             success: function(response) {
               $.toast({
-                class: 'center aligned blue info',
+                class: 'blue info',
                 title: `Enabled Connection to ${title}`,
-                // showDuration: 3000,
               });
             }, error: function(response) {
               $.toast({
-                class: 'center aligned error',
+                class: 'error',
                 title: `Error Enabling Connection to ${title}`,
-                message: response.responseJSON.message,
+                message: response.responseJSON.detail,
+                displayTime: 0,
               });
             }, complete: function() {}
           });
@@ -524,14 +524,15 @@
             url: `${toggleAPI}/disable`,
             success: function(response) {
               $.toast({
-                class: 'center aligned warning',
+                class: 'warning',
                 title: `Disabled Connection to ${title}`,
               });
             }, error: function(response) {
               $.toast({
-                class: 'center aligned error',
+                class: 'error',
                 title: `Error Disabling Connection to ${title}`,
-                message: response.responseJSON.message,
+                message: response.responseJSON.detail,
+                displayTime: 0,
               });
             }, complete: function() {}
           });
@@ -597,14 +598,15 @@
           success: function(response) {
             if (successCallback !== undefined ) { successCallback(); }
             $.toast({
-              class: 'center aligned blue info',
+              class: 'blue info',
               title: `Updated Connection to ${title}`,
             });
           }, error: function(response) {
             $.toast({
-              class: 'center aligned error',
+              class: 'error',
               title: `Invalid ${title} Connection`,
-              message: response.responseJSON.message,
+              message: response.responseJSON.detail,
+              displayTime: 0,
             });
           }, complete: function() {
             setTimeout(() => $(submitButtonId).toggleClass('disabled loading', false), 1000)
