@@ -270,7 +270,11 @@
           $.toast({class: 'blue info', title: `Refreshed Episode Data`});
           getEpisodeData();
         }, error: function(response) {
-          $.toast({class: 'error', title: 'Error Refreshing Data'});
+          $.toast({
+            class: 'error',
+            title: 'Error Refreshing Data',
+            message: response.responseJSON.detail,
+          });
         }
       });
     }
@@ -289,30 +293,27 @@
     }
 
     async function deleteSeries(deleteCards) {
-      // Delete cards if indicated
-      let redirect = false;
-      if (deleteCards) {
-        $.ajax({
-          type: 'DELETE',
-          url: '/api/cards/series/{{series.id}}',
-          success: () => { 
-            redirect = true;
-          }, error: (response) => {
-            $.toast({
-              class: 'error',
-              title: 'Error Deleting Series',
-              message: response.responseJSON.detail,
-            });
-          },
-        });
-      }
-
-      // Delete series, redirect to home page
       $.ajax({
         type: 'DELETE',
-        url: '/api/series/{{series.id}}',
-        success: () => {
-          redirect = true;
+        url: '/api/cards/series/{{series.id}}',
+        success: () => { 
+          // Series deleted successfully, delete cards if indicated
+          if (deleteCards) {
+            $.ajax({
+              type: 'DELETE',
+              url: '/api/series/{{series.id}}',
+              success: () => {
+                window.location.href = '/';
+              }, error: (response) => {
+                $.toast({
+                  class: 'error',
+                  title: 'Error Deleting Series',
+                  message: response.responseJSON.detail,
+                });
+              },
+            });
+          }
+          else { window.location.href = '/'; }
         }, error: (response) => {
           $.toast({
             class: 'error',
@@ -321,8 +322,6 @@
           });
         },
       });
-
-      if (redirect) { window.location.href = '/'; }
     }
   </script>
 </head>
@@ -445,12 +444,12 @@
               </div>
 
               <!-- Emby Library -->
-              {% if preferences.use_emby %}
+              {% if preferences.use_emby or series.emby_library_name %}
               <div class="field">
                 <label class="config-label">Emby Library</label>
                 <div id="emby-library" class="ui compact selection dropdown">
                   <!-- Default (current) value -->
-                  <input id="emby-library-input" type="hidden" name="emby_library" value="{{series.emby_library_name}}">
+                  <input name="emby_library_name" id="emby-library-input" type="hidden"value="{{series.emby_library_name}}">
                   <div class="default text">{{series.emby_library_name}}</div>
                   <i class="dropdown icon"></i>
                   <div id="emby-library-choices" class="menu">
@@ -462,12 +461,12 @@
               {% endif %}
 
               <!-- Jellyfin Library -->            
-              {% if preferences.use_jellyfin %}
+              {% if preferences.use_jellyfin or series.jellyfin_library_name %}
               <div class="field">
                 <label class="config-label">Jellyfin Library</label>
                 <div id="jellyfin-library" class="ui compact selection dropdown">
                   <!-- Default (current) value -->
-                  <input id="jellyfin-library-input" type="hidden" name="jellyfin_library" value="{{series.jellyfin_library_name}}">
+                  <input name="jellyfin_library_name" id="jellyfin-library-input" type="hidden" value="{{series.jellyfin_library_name}}">
                   <div class="default text">{{series.jellyfin_library_name}}</div>
                   <i class="dropdown icon"></i>
                   <div id="jellyfin-library-choices" class="menu">
@@ -479,12 +478,12 @@
               {% endif %}
 
               <!-- Plex Library -->
-              {% if preferences.use_plex %}
+              {% if preferences.use_plex or series.plex_library_name %}
               <div class="field">
                 <label class="config-label">Plex Library</label>
                 <div id="plex-library" class="ui compact selection dropdown">
                   <!-- Default (current) value -->
-                  <input id="plex-library-input" type="hidden" name="plex_library" value="{{series.plex_library_name}}">
+                  <input name="plex_library_name" id="plex-library-input" type="hidden" value="{{series.plex_library_name}}">
                   <div class="default text">{{series.plex_library_name}}</div>
                   <i class="dropdown icon"></i>
                   <div id="plex-library-choices" class="menu">
@@ -499,7 +498,7 @@
               <div id="series-config-card-directory" class="field">
                 <label id="series-config-card-directory-label" class="config-label">Card Directory</label>
                 <div class="ui left icon input">
-                  <input id="series-config-card-directory-input" type="text" value="{{series.directory}}" name="card_directory">
+                  <input name="card_directory"id="series-config-card-directory-input" type="text" value="{{series.directory}}">
                   <i class="folder icon"></i>
                 </div>
               </div>
@@ -629,7 +628,7 @@
 
               <div id-type="TVRage" class="field">
                 <label>TVRage</label>
-                {% if series.tvdb_id %}
+                {% if series.tvrage_id %}
                 <input name="tvrage_id" type="text" placeholder="{{series.tvrage_id}}" value="{{series.tvrage_id}}">
                 {% else %}
                 <input name="tvrage_id" type="text" placeholder="None">
@@ -795,8 +794,6 @@
     // On edit poster modal submission, submit API request
     $('#edit-poster-form').on('submit', (event) => {
       event.preventDefault();
-
-      // Submit API request to add series
       $('#submit-poster-button').toggleClass('loading', true);
       $.ajax({
         type: 'POST',
@@ -829,11 +826,16 @@
     $('#series-config').on('submit', (event) => {
       event.preventDefault();
       $('#submit-changes').toggleClass('loading', true);
+      // Submit API request to edit series
+      let form = new FormData(event.target);
+      for (const [key, value] of [...form.entries()]) {
+        if (value === '') { form.delete(key); }
+      }
 
       $.ajax({
         type: 'PATCH',
         url: '/api/series/{{series.id}}',
-        data: JSON.stringify(Object.fromEntries(new FormData(event.target))),
+        data: JSON.stringify(Object.fromEntries(form)),
         headers: {'Content-Type': 'application/json'},
         success: (response) => {
           $('#submit-changes').toggleClass('loading', false);
