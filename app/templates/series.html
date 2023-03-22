@@ -36,21 +36,6 @@
       overflow-wrap: break-word;
     }
 
-    /* Set width of text input fields to 300px */
-    /* .inline.field >* input[type="text"] {
-      width: 300px !important;
-    } */
-
-    /* .config-label {
-      flex: 0 0 150px;
-      display: flex;
-      margin-right: 10px;
-      justify-content: flex-end;
-      text-align: right;
-      font-weight: bold;
-      color: var(--font-color);
-    } */
-
     /* Add top padding above the delete button for each episode */
     .tab[data-tab="episode-data"] .negative.button {
       margin-top: 5px;
@@ -60,7 +45,7 @@
     #new-episode-modal {
       width: 500px !important;
     }
-
+    /* Use right-aligned inline labels */
     #new-episode-form label {
       flex: 0 0 125px;
       display: flex;
@@ -68,15 +53,6 @@
       justify-content: flex-end;
       text-align: right;
     }
-
-    /* .disabled.config-label {
-      color: var(--font-color-disabled);
-      font-weight: lighter;
-    }
-
-    div.dropdown {
-      min-width: 500px;
-    } */
   </style>
 
   <!-- Templates -->
@@ -257,7 +233,6 @@
 
     async function initAll() {
       getEpisodeDataSources();
-      // getImageSources();
       getLibraries();
       getEpisodeData();
     }
@@ -274,6 +249,7 @@
             class: 'error',
             title: 'Error Refreshing Data',
             message: response.responseJSON.detail,
+            displayTime: 0,
           });
         }
       });
@@ -283,11 +259,16 @@
       $.ajax({
         type: 'POST',
         url: '/api/series/{{series.id}}/create-cards',
-        success: function(response) {
-          $.toast({class: 'blue info', title: `Created Missing Cards`});
+        success: (response) => {
+          $.toast({class: 'blue info', title: `Created title cards`});
           getEpisodeData();
-        }, error: function(response) {
-          $.toast({class: 'error', title: 'Error Creating Cards'});
+        }, error: (response) => {
+          $.toast({
+            class: 'error',
+            title: 'Error creating title cards',
+            message: response.responseJSON.detail,
+            displayTime: 0,
+          });
         }
       });
     }

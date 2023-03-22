@@ -672,17 +672,22 @@
     syncData.forEach(({interface, formID, modalID}) => {
       $(`#${formID}`).on('submit', (event) => {
         event.preventDefault();
+        // Turn form into object, turning multi selects into arrays
         let form = new FormData(event.target);
+        let dataObj = {};
         for (let [name, value] of [...form.entries()]) {
-          if (value === '') { form.delete(name); }
+          if (name.includes('_tags') || name.includes('_libraries')) {
+            dataObj[name] = value.split(',');
+          } else if (value !== '') {
+            dataObj[name] = value;
+          }
         }
         // Submit API request to add this sync
         $.ajax({
           type: 'POST',
           url: `/api/sync/${interface}/new`,
-          data: form,
-          processData: false,
-          contentType: false,
+          data: JSON.stringify(dataObj),
+          contentType: "application/json",
           success: (response) => {
             $.toast({
               class: 'blue info',
@@ -694,7 +699,7 @@
             $.toast({
               class: 'error',
               title: 'Error Creating Sync',
-              message: 'Ensure the sync name is valid',
+              message: response.responseJSON.detail,
             });
           }, complete: () => {}
         });
