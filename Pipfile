@@ -17,6 +17,12 @@ tinydb = "==4.7.0"
 schedule = "==1.1.0"
 tmdbapis = "==1.1.0"
 "ruamel.yaml" = "*"
+uvicorn = "*"
+fastapi = "*"
+sqlalchemy = "*"
+python-multipart = "*"
+jinja2 = "*"
+pydantic = "*"
 
 [dev-packages]
 
