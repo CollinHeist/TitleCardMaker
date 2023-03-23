@@ -193,14 +193,12 @@
   <script>
     // Function to create a new empty font
     async function addFont() {
-      const form = new FormData();
-      form.append('name', 'Custom Font');
+      const data = {name: 'Custom Font'};
       $.ajax({
         type: 'POST',
         url: '/api/fonts/new',
-        data: form,
-        processData: false,
-        contentType: false,
+        data: JSON.stringify(data),
+        contentType: 'application/json',
         success: (response) => {
           $.toast({
             class: 'blue info',
@@ -217,14 +215,14 @@
       });
     }
 
-    function reloadPreview(fontForm, form1, cardElement, imageElement) {
+    function reloadPreview(fontForm, previewForm, cardElement, imageElement) {
       let form = new FormData(fontForm);
       for (let [name, value] of [...form.entries()]) {
         if (name === 'size' || name === 'kerning' || name === 'stroke_width') {
           form.set(name, value/100.0);
         }
       }
-      for (let pair of (new FormData(form1).entries())) {
+      for (let pair of (new FormData(previewForm).entries())) {
         form.append(pair[0], pair[1]);
       }
       cardElement.className = 'ui fluid loading raised card';
@@ -235,14 +233,13 @@
         processData: false,
         contentType: false,
         success: (response) => {
-          console.log(response);
           imageElement.src = `${response}?${new Date().getTime()}`;
         },
         error: (response) => {
           $.toast({
             class: 'error',
             title: 'Error Creating Preview Card',
-            message: response,
+            message: response.responseJSON.detail,
           });
         }, complete: () => {cardElement.className = 'ui fluid raised card'; }
       });
@@ -309,28 +306,63 @@
         template.querySelector('form[data-value="font-form"]').onsubmit = (event) => {
           event.preventDefault();
           const form = new FormData(event.target);
+          let replacements = {in: [], out: []};
           for (let [name, value] of [...form.entries()]) {
             if (name === 'size' || name === 'kerning' || name === 'stroke_width') {
               form.set(name, value/100.0);
+            } else if (name === 'replacements_in') {
+              replacements.in.append(value); 
+            } else if (name === 'replacements_out') {
+              replacements.out.append(value); 
             }
           }
-
+          // let replacementsObj = {};
+          // for (let [repl, index] of replacements.in.entries()) {
+          //   replacementsObj[replacements.in[index]] = replacements.out[index];
+          // }
+          // form.append('replacements', JSON.stringify(replacementsObj));
+          // console.log(form);
           $.ajax({
             type: 'PATCH',
             url: `/api/fonts/${fontObj.id}`,
-            data: form,
-            processData: false,
-            contentType: false,
+            data: JSON.stringify(Object.fromEntries(form.entries())),
+            contentType: 'application/json',
             success: (response) => {
               $.toast({
                 class: 'blue info',
                 title: `Updated Font "${response.name}"`,
               });
-            },
-            error: (response) => {
+            }, error: (response) => {
               $.toast({
                 class: 'error',
                 title: 'Error Updating Font',
+                message: response.responseJSON.detail,
+                displayTime: 0,
+              });
+            }, complete: () => {}
+          });
+
+          // Submit separate API request to upload font file
+          if (form.get('font_file').size === 0) { return; }
+          let fileForm = new FormData();
+          fileForm.append('file', form.get('font_file'));
+          $.ajax({
+            type: 'PUT',
+            url: `/api/fonts/${fontObj.id}/file`,
+            data: fileForm,
+            processData: false,
+            contentType: false,
+            success: (response) => {
+              $.toast({
+                class: 'blue info',
+                title: `Uploaded Font File`,
+              });
+            }, error: (response) => {
+              $.toast({
+                class: 'error',
+                title: 'Error Uploading Font File',
+                message: response.responseJSON.detail,
+                displayTime: 0,
               });
             }, complete: () => {}
           });
@@ -339,22 +371,38 @@
         // Set delete button to submit DELETE API request
         template.querySelector('.negative.button').onclick = (event) => {
           event.preventDefault();
-          $('.ui.accordion').accordion('close');
+          // Delete font file first
           $.ajax({
             type: 'DELETE',
-            url: `/api/fonts/${fontObj.id}`,
+            url: `/api/fonts/${fontObj.id}/file`,
             success: () => {
-              $.toast({
-                class: 'blue info',
-                title: `Deleted Font "${fontObj.name}"`,
+              // Delete font object
+              $.ajax({
+                type: 'DELETE',
+                url: `/api/fonts/${fontObj.id}`,
+                success: () => {
+                  $.toast({
+                    class: 'blue info',
+                    title: `Deleted Font "${fontObj.name}"`,
+                  });
+                  $('.ui.accordion').accordion('close');
+                  getAllFonts();
+                }, error: (response) => {
+                  $.toast({
+                    class: 'error',
+                    title: 'Error Deleting Font',
+                    message: response.responseJSON.detail,
+                    displayTime: 0,
+                  });
+                },
               });
-              getAllFonts();
             },
             error: (response) => {
               $.toast({
                 class: 'error',
-                title: 'Error Deleting Font',
+                title: 'Error Deleting Font File',
                 message: response.responseJSON.detail,
+                displayTime: 0,
               });
             }, complete: () => {}
           });
@@ -388,7 +436,11 @@
       const types = await fetch('/api/available/card-types').then(resp => resp.json());
       $('.ui.card-type.dropdown').dropdown({
         values: types.map(({name}) => {
-          return {name: name, value: name.toLowerCase(), selected: false};
+          return {
+            name: name,
+            value: name.toLowerCase(),
+            selected: name === "{{preferences.default_card_type}}",
+          };
         })
       })
     }
