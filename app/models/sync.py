@@ -11,8 +11,8 @@ class Sync(Base):
     __tablename__ = 'sync'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String)
-    interface = Column(String)
+    name = Column(String, nullable=False)
+    interface = Column(String, nullable=False)
 
     template_id = Column(Integer, ForeignKey('template.id'))
 
