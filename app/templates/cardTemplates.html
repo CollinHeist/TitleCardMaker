@@ -531,21 +531,23 @@
   <script>
     // Create new (blank) template on button click
     $('#new-template').on('click', () => {
-      let form = new FormData();
-      form.append('name', 'Custom Template')
+      // let form = new FormData();
+      // form.append('name', 'Custom Template');
       $.ajax({
         type: 'POST',
         url: '/api/templates/new',
-        data: form,
-        processData: false,
-        contentType: false,
-        success: function(response) {
+        data: JSON.stringify({name: 'Blank Template'}),
+        contentType: "application/json",
+        // data: form,
+        // processData: false,
+        // contentType: false,
+        success: (response) => {
           $.toast({
             class: 'blue info',
             title: `Created Template #${response.id}`,
           });
           getAllTemplates();
-        }, error: function(response) {
+        }, error: (response) => {
           $.toast({
             class: 'error',
             title: 'Error Creating Template',
