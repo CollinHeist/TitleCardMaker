@@ -1,5 +1,6 @@
-from pydantic import Field
 from typing import Literal, Optional
+
+from pydantic import Field
 
 from app.schemas.base import Base
 
@@ -79,3 +80,15 @@ class SonarrSync(ExistingBaseSync, NewSonarrSync):
 
 class Sync(ExistingBaseSync, NewSonarrSync):
     ...
+
+class UpdateSync(Base):
+    name: Optional[str] = Field(default=None, min_length=1)
+    template_id: Optional[int] = Field(default=None)
+    required_tags: Optional[list[str]] = Field(default=None)
+    excluded_tags: Optional[list[str]] = Field(default=None)
+    required_libraries: Optional[list[str]] = Field(default=None)
+    excluded_libraries: Optional[list[str]] = Field(default=None)
+    downloaded_only: Optional[bool] = Field(default=None)
+    monitored_only: Optional[bool] = Field(default=None)
+    required_series_type: Optional[SonarrSeriesType] = Field(default=None)
+    excluded_series_type: Optional[SonarrSeriesType] = Field(default=None)
