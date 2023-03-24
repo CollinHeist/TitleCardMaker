@@ -47,7 +47,7 @@ $(document).ready(function() {
       $('#search-bar').search({
         apiSettings: {
           url: '/api/series/search?query={query}&max_results=8',
-        }, 
+        },
       });
     })
     .fail(($xhr, errorMsg) => $content.text(`Error: ${errorMsg}`));
@@ -62,11 +62,18 @@ $(document).ready(function() {
 
   // Search results should show a poster preview
   $.fn.search.settings.templates = {
-    standard: function(response) {
+    standard: (response) => {
       let elements = response.results.map(({id, name, poster_url}) => {
         return `<a class="search result" href="/series/${id}"><div class="search content"><img src="${poster_url}">${name}</div></a>`;
       });
       return elements.join('');
-    }
+    }, message: (message, type) => {
+      if (message === 'Your search returned no results') {
+        return '<div class="search result">No Series found..</div>';
+      } else {
+        return `<div class="search result">${message}</div>`;
+      }
+     },
   }
+  // $('.ui').toggleClass('inverted', true);
 })
