@@ -44,6 +44,7 @@ RUN set -eux; \
     groupadd -g 314 titlecardmaker; \
     useradd -u 314 -g 314 titlecardmaker; \
     apt-get update; \
+    apt-get install -y librsvg2-bin; \
     apt-get install -y --no-install-recommends gosu imagemagick; \
     rm -rf /var/lib/apt/lists/*; \
     cp modules/ref/policy.xml /etc/ImageMagick-6/policy.xml
