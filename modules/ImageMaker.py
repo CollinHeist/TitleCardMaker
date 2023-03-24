@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from collections import namedtuple
 from pathlib import Path
 from re import findall, match
-from typing import Literal
+from typing import Literal, Union
 
 from modules.Debug import log
 from modules.ImageMagickInterface import ImageMagickInterface
@@ -194,17 +194,17 @@ class ImageMaker(ABC):
 
     @staticmethod
     def convert_svg_to_png(image: Path, destination: Path,
-            min_dimension: int=2500) -> Path:
+            min_dimension: int = 2500) -> Union[Path, None]:
         """
         Convert the given SVG image to PNG format.
 
         Args:
-            image: Path to the image being converted.
-            destination: Path to the destination image location.
+            image: Path to the SVG image being converted.
+            destination: Path to the output image.
             min_dimension: Minimum dimension of converted image.
 
         Returns:
-            Path to the converted file.
+            Path to the converted file. None if the conversion failed.
         """
 
         # If the temp file doesn't exist, return
@@ -230,7 +230,12 @@ class ImageMaker(ABC):
 
         image_magick_interface.run(command)
 
-        return destination
+        # Print command history if conversion failed
+        if destination.exists():
+            return destination
+        else:
+            image_magick_interface.print_command_history()
+            return None
 
 
     @abstractmethod
