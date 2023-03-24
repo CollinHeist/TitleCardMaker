@@ -29,6 +29,10 @@
     img {
       max-width: 100%;
     }
+    /* Make sure card loader is below the search bar and dropdown */
+    .ui.loading.card::before {
+      z-index: 10;
+    }
   </style>
 
   <template id="font-template">
@@ -175,7 +179,7 @@
                 </div>
                 <div class="field">
                   <label>Preview Title</label>
-                  <input name="title" type="text" placeholder="Example Title" value="Example Title">
+                  <input name="title_text" type="text" placeholder="Example Title" value="Example Title">
                 </div>
               </div>
             </form>
@@ -183,6 +187,10 @@
               <div class="content">
                 <img alt="Preview Title Card" src="/assets/blank.png">
               </div>
+            </div>
+            <div class="ui bottom attached info message" contenteditable="true">
+              <i class="exclamation icon"></i>
+              A custom font file must be <b>uploaded</b> and <b>submitted</b> in order to appear in the live preview.
             </div>
           </div>
         </div>
@@ -216,23 +224,33 @@
     }
 
     function reloadPreview(fontForm, previewForm, cardElement, imageElement) {
-      let form = new FormData(fontForm);
-      for (let [name, value] of [...form.entries()]) {
-        if (name === 'size' || name === 'kerning' || name === 'stroke_width') {
-          form.set(name, value/100.0);
-        }
-      }
-      for (let pair of (new FormData(previewForm).entries())) {
-        form.append(pair[0], pair[1]);
-      }
+      // Create PreviewCard object for API request
+      const fontFormObj = new FormData(fontForm);
+      const previewFormObj = new FormData(previewForm);
+      const previewCardObj = {
+        card_type: previewFormObj.get('card_type'),
+        title_text: previewFormObj.get('title_text'),
+        season_text: 'Season 1',
+        episode_text: 'Episode 1',
+        custom_font: {
+          color: fontFormObj.get('color'),
+          size: fontFormObj.get('size') / 100.0,
+          kerning: fontFormObj.get('kerning') / 100.0,
+          stroke_width: fontFormObj.get('stroke_width') / 100.0,
+          interline_spacing: fontFormObj.get('interline_spacing'),
+          vertical_shift: fontFormObj.get('vertical_shift'),
+        },
+      };
+
+      // Submit API request
       cardElement.className = 'ui fluid loading raised card';
       $.ajax({
         type: 'POST',
         url: '/api/cards/preview',
-        data: form,
-        processData: false,
-        contentType: false,
+        data: JSON.stringify(previewCardObj),
+        contentType: 'application/json',
         success: (response) => {
+          // Update source, use current time to force reload
           imageElement.src = `${response}?${new Date().getTime()}`;
         },
         error: (response) => {
@@ -316,12 +334,7 @@
               replacements.out.append(value); 
             }
           }
-          // let replacementsObj = {};
-          // for (let [repl, index] of replacements.in.entries()) {
-          //   replacementsObj[replacements.in[index]] = replacements.out[index];
-          // }
-          // form.append('replacements', JSON.stringify(replacementsObj));
-          // console.log(form);
+          
           $.ajax({
             type: 'PATCH',
             url: `/api/fonts/${fontObj.id}`,

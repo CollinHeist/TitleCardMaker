@@ -2,6 +2,7 @@ from fastapi import APIRouter, UploadFile
 from fastapi.responses import FileResponse
 
 from app.routers.connection import connection_router
+from app.routers.fonts import font_router
 from app.routers.series import series_router
 from app.routers.statistics import statistics_router
 from app.routers.sync import sync_router
