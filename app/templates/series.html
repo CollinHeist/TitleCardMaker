@@ -238,6 +238,7 @@
     }
 
     async function refreshEpisodeData() {
+      $('#refresh > i').toggleClass('loading', true);
       $.ajax({
         type: 'POST',
         url: '/api/series/{{series.id}}/refresh',
@@ -251,6 +252,8 @@
             message: response.responseJSON.detail,
             displayTime: 0,
           });
+        }, complete: () => {
+          $('#refresh > i').toggleClass('loading', false);
         }
       });
     }
@@ -344,51 +347,51 @@
           </div>
           <!-- Series action bottons -->
           <div id="action-buttons">
-            <div class="ui vertical labeled icon inverted fluid buttons">
-              <button id="refresh" class="ui button" onclick="refreshEpisodeData()">
+            <div class="ui vertical labeled icon fluid buttons">
+              <button id="refresh" class="ui labeled icon button" onclick="refreshEpisodeData()">
                 <i class="sync icon"></i>
                 Refresh Episode Data
               </button>
-              <button id="create-cards" class="ui button" onclick="createMissingCards()">
+              <button id="create-cards" class="ui labeled icon button" onclick="createMissingCards()">
                 <i class="images outline icon"></i>
                 Create Missing Cards
               </button>
               {% if preferences.use_emby and series.emby_library_name %}
-              <button id="load-emby" class="ui button">
+              <button id="load-emby" class="ui labeled icon button">
                 <i class="server icon"></i>
                 Reload Emby
               </button>
               {% elif (preferences.use_emby and not series.emby_library_name) or (not preferences.use_emby and series.emby_library_name) %}
-              <button id="load-emby" class="ui disabled button">
+              <button id="load-emby" class="ui disabled labeled icon button">
                 <i class="server icon"></i>
                 Reload Emby
               </button>
               {% endif %}
                 
               {% if preferences.use_jellyfin and series.jellyfin_library_name %}
-              <button id="load-jellyfin" class="ui button">
+              <button id="load-jellyfin" class="ui labeled icon button">
                 <i class="server icon"></i>
                 Reload Emby
               </button>
               {% elif (preferences.use_jellyfin and not series.jellyfin_library_name) or (not preferences.use_jellyfin and series.jellyfin_library_name) %}
-              <button id="load-jellyfin" class="ui disabled button">
+              <button id="load-jellyfin" class="ui disabled labeled icon button">
                 <i class="server icon"></i>
                 Reload Jellyfin
               </button>
               {% endif %}
 
               {% if preferences.use_plex and series.plex_library_name %}
-              <button id="load-plex" class="ui button">
+              <button id="load-plex" class="ui labeled icon button">
                 <i class="server icon"></i>
                 Reload Plex
               </button>
               {% elif (preferences.use_plex and not series.plex_library_name) or (not preferences.use_plex and series.plex_library_name) %}
-              <button id="load-plex" class="ui disabled button">
+              <button id="load-plex" class="ui disabled labeled icon button">
                 <i class="server icon"></i>
                 Reload Plex
               </button>
               {% endif %}
-              <button id="delete-series" class="ui negative button">
+              <button id="delete-series" class="ui labeled icon negative button">
                 <i class="trash alternate outline icon"></i>
                 Delete Series
               </button>
