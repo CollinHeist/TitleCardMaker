@@ -674,15 +674,19 @@ class Show(YamlReader):
                     return None
 
                 # Convert temporary SVG to PNG at logo filepath
-                self.card_class.convert_svg_to_png(
+                logo = self.card_class.convert_svg_to_png(
                     self.card_class.TEMPORARY_SVG_FILE, self.logo,
                 )
-                log.debug(f'Converted logo for {self} from .svg to .png')
+                if logo is None:
+                    log.warning(f'SVG to PNG conversion failed for {self}')
+                else:
+                    log.debug(f'Converted logo for {self} from .svg to .png')
             else:
                 self.tmdb_interface.download_image(url, self.logo)
 
             # Log to user
-            log.debug(f'Downloaded logo for {self}')
+            if self.logo.exists():
+                log.debug(f'Downloaded logo for {self}')
 
 
     def __apply_styles(self, select_only: Episode=None) -> bool:

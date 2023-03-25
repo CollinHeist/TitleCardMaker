@@ -851,9 +851,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
 
     def manually_download_season(self, title: str, year: int,
-                                 season_number: int,
-                                 episode_range: Iterable[int],
-                                 directory: Path) -> None:
+            season_number: int, episode_range: Iterable[int],
+            directory: Path) -> None:
         """
         Download episodes 1-episode_count of the requested season for the given
         show. They will be named as s{season}e{episode}.jpg.

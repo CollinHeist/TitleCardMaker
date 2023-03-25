@@ -423,7 +423,7 @@ class TintedGlassTitleCard(BaseCardType):
             # Add title text
             *self.add_title_text_command,
             # Add episode text
-            # *self.add_episode_text_command(title_box_coordinates),
+            self.add_episode_text_command(title_box_coordinates),
             f'"{self.output_file.resolve()}"',
         ])
 
