@@ -1,7 +1,7 @@
 from typing import Literal, Optional, Union
 
 from fastapi import UploadFile
-from pydantic import Field
+from pydantic import Field, validator
 
 from app.schemas.base import Base, UNSPECIFIED
 
@@ -56,6 +56,10 @@ class NewFont(BaseFont):
         title='Characters to substitute',
     )
 
+    @validator('replacements_in', 'replacements_out', pre=True)
+    def validate_list(cls, v):
+        return [v] if isinstance(v, str) else v
+
 class UpdateFont(NewFont):
     name: Optional[str] = Field(default=None, min_length=1)
     color: Optional[str] = Field(default=None)
@@ -69,6 +73,10 @@ class UpdateFont(NewFont):
     delete_missing: Optional[bool] = Field(default=None)
     replacements_in: Optional[list[str]] = Field(default=UNSPECIFIED)
     replacements_out: Optional[list[str]] = Field(default=UNSPECIFIED)
+
+    @validator('replacements_in', 'replacements_out', pre=True)
+    def validate_list(cls, v):
+        return [v] if isinstance(v, str) else v
 
 class ExistingBaseFont(BaseFont):
     id: int = Field(..., title='Font ID')

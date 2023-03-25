@@ -396,9 +396,6 @@
         url: '/api/series/new',
         data: JSON.stringify(Object.fromEntries(form.entries())),
         contentType: "application/json",
-        // data: form,
-        // processData: false,
-        // contentType: false,
         success: (response) => {
           getAllSeries();
           $.toast({
@@ -409,7 +406,7 @@
           // Refresh episode data for the newly added series
           $.ajax({
             type: 'POST',
-            url: `/api/series/${response.id}/refresh`,
+            url: `/api/episodes/${response.id}/refresh`,
             success: () => {
               $.toast({
                 class: 'blue info',

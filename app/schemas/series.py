@@ -1,7 +1,7 @@
 from typing import Literal, Optional, Union
 from pathlib import Path
 
-from pydantic import conint, Field
+from pydantic import conint, Field, validator
 
 from app.schemas.base import Base, UNSPECIFIED
 from app.schemas.preferences import EpisodeDataSource, ImageSourceToggle, Style
@@ -30,7 +30,7 @@ class BaseConfig(Base):
         title='Title card type',
         description='Type of title cards to create',
     )
-    hide_seasons: Optional[bool] = Field(default=False)
+    hide_season_text: Optional[bool] = Field(default=False)
     hide_episode_text: Optional[bool] = Field(default=None)
     unwatched_style: Optional[Style] = Field(
         default=None,
@@ -94,11 +94,19 @@ class NewSeries(BaseSeries):
     extra_keys: Optional[list[str]] = Field(default=[])
     extra_values: Optional[list[str]] = Field(default=[])
 
+    @validator('season_title_ranges', 'season_title_values', 'extra_keys', 'extra_values', pre=True)
+    def validate_list(cls, v):
+        return [v] if isinstance(v, str) else v
+
 class NewTemplate(BaseTemplate):
     season_title_ranges: Optional[list[str]] = Field(default=None)
     season_title_values: Optional[list[str]] = Field(default=None)
     extra_keys: Optional[list[str]] = Field(default=None)
     extra_values: Optional[list[str]] = Field(default=None)
+
+    @validator('season_title_ranges', 'season_title_values', 'extra_keys', 'extra_values', pre=True)
+    def validate_list(cls, v):
+        return [v] if isinstance(v, str) else v
 
 class UpdateBase(Base):
     font_id: Optional[int] = Field(default=UNSPECIFIED)
@@ -108,7 +116,7 @@ class UpdateBase(Base):
     episode_data_source: Optional[EpisodeDataSource] = Field(default=UNSPECIFIED)
     translations: Optional[dict[str, str]] = Field(default=UNSPECIFIED)
     card_type: Optional[str] = Field(default=UNSPECIFIED)
-    hide_seasons: Optional[bool] = Field(default=UNSPECIFIED)
+    hide_season_text: Optional[bool] = Field(default=UNSPECIFIED)
     season_title_ranges: Optional[list[str]] = Field(default=UNSPECIFIED)
     season_title_values: Optional[list[str]] = Field(default=UNSPECIFIED)
     hide_episode_text: Optional[bool] = Field(default=UNSPECIFIED)
@@ -117,6 +125,14 @@ class UpdateBase(Base):
     episode_text_format: Optional[str] = Field(default=UNSPECIFIED)
     extra_keys: Optional[list[str]] = Field(default=UNSPECIFIED)
     extra_values: Optional[list[str]] = Field(default=UNSPECIFIED)
+
+    @validator('*', pre=True)
+    def validate_arguments(cls, v):
+        return None if v == '' else v
+
+    @validator('season_title_ranges', 'season_title_values', 'extra_keys', 'extra_values', pre=True)
+    def validate_list(cls, v):
+        return [v] if isinstance(v, str) else v
 
 class UpdateSeries(UpdateBase):
     name: Optional[str] = Field(default=UNSPECIFIED, min_length=1)

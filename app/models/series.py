@@ -50,7 +50,7 @@ class Series(Base):
     template_id = Column(Integer, ForeignKey('template.id'))
     directory = Column(String, default=default_directory)
     card_type = Column(String, default='standard')
-    hide_seasons = Column(Boolean, default=False)
+    hide_season_text = Column(Boolean, default=False)
     season_titles = Column(MutableDict.as_mutable(PickleType), default={})
     hide_episode_text = Column(Boolean, default=False)
     episode_text_format = Column(String, default=None)

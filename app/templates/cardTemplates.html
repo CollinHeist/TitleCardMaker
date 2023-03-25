@@ -105,7 +105,7 @@
               <h4 class="ui horizontal middle aligned divider header">Season and Episode Text</h4>
 
               <div data-value="hide-seasons" class="ui right aligned checkbox field">
-                <input name="hide_seasons" type="checkbox" class="hidden">
+                <input name="hide_season_text" type="checkbox" class="hidden">
                 <label>Hide Season Titles</label>
               </div>
 
@@ -114,11 +114,11 @@
                 <div class="two fields">
                   <div data-value="season-title-range" class="three wide right aligned field">
                     <label>Range</label>
-                    <!-- <input name="season_title_range" data-value="season-titles" type="text"> -->
+                    <!-- <input name="season_title_ranges" data-value="season-titles" type="text"> -->
                   </div>
                   <div data-value="season-title-value" class="eight wide field">
                     <label>Title</label>
-                    <!-- <input name="season_title_value" type="text"> -->
+                    <!-- <input name="season_title_values" type="text"> -->
                   </div>
                 </div>
                 <div data-value="add-title" class="circular ui icon mini button">
@@ -179,11 +179,11 @@
                 <div class="two fields">
                   <div data-value="extra-key" class="four wide right aligned field">
                     <label>Key</label>
-                    <!-- <input name="extra_key" type="text"> -->
+                    <!-- <input name="extra_keys" type="text"> -->
                   </div>
                   <div data-value="extra-value" class="four wide field">
                     <label>Value</label>
-                    <!-- <input name="extra_value" type="text"> -->
+                    <!-- <input name="extra_values" type="text"> -->
                   </div>
                 </div>
                 <div data-value="add-extra" class="circular ui icon mini button">
@@ -232,17 +232,42 @@
   <script>
     async function reloadPreview(watchStatus, formElement, cardElement, imgElement) {
       let form = new FormData(formElement);
-      if (form.get(`${watchStatus}_style`).includes('blur')) { form.set('blur', true); }
-      if (form.get(`${watchStatus}_style`).includes('grayscale')) { form.set('grayscale', true); }
-      form.set('style', form.get(`${watchStatus}_style`));
+      if (watchStatus === 'watched' && form.get(`watched_style`) === '') {
+        form.set('style', '{{preferences.default_watched_style}}');
+      } else if (watchStatus === 'unwatched' && form.get('unwatched_style') === '') {
+        form.set('style', '{{preferences.default_unwatched_style}}');
+      } else if (form.get(`${watchStatus}_style`).includes('blur')) {
+        form.set('blur', true);
+      } else if (form.get(`${watchStatus}_style`).includes('grayscale')) {
+        form.set('grayscale', true);
+      }
       
-      cardElement.className = 'ui fluid loading raised card';
+      for (let [name, value] of [...form.entries()]) {
+        if (value === '') { form.delete(name); }
+        // if (name === 'size' || name === 'kerning' || name === 'stroke_width') {
+        //   form.set(name, value/100.0);
+        // }
+      }
+      // if (form.get(`${watchStatus}_style`).includes('blur')) { form.set('blur', true); }
+      // if (form.get(`${watchStatus}_style`).includes('grayscale')) { form.set('grayscale', true); }
+      // form.set('style', form.get(`${watchStatus}_style`));
+
+      const previewCard = {
+        card_type: "{{preferences.default_card_type.lower()}}",
+        // hide_season_text: form.get('hide_season_text'),
+        // blur: form.get(`${watchStatus}_style`).includes('blur'),
+        // grayscale: form.get(`${watchStatus}_style`).includes('grayscale'),
+        style: form.get(`${watchStatus}_style`),
+        // font_id: form.get('font_id'),
+        ...Object.fromEntries(form.entries()),
+      };
+      console.log(previewCard);
+      cardElement.classList.add('loading');
       $.ajax({
         type: 'POST',
         url: '/api/cards/preview',
-        data: form,
-        processData: false,
-        contentType: false,
+        data: JSON.stringify(previewCard),
+        contentType: 'application/json',
         success: (response) => {
           imgElement.src = `${response}?${new Date().getTime()}`;
         },
@@ -252,7 +277,10 @@
             title: 'Error Creating Preview Card',
             message: response,
           });
-        }, complete: () => {cardElement.className = 'ui fluid raised card'; }
+        }, complete: () => {
+          cardElement.classList.remove('loading');
+          // cardElement.className = 'ui fluid raised card';
+        }
       });
     }
 
@@ -274,8 +302,8 @@
         // Font set later
         // Unwatched and Watched style set later
         // Hide season checkbox
-        if (templateObj.hide_seasons) {
-          base.querySelector('input[name="hide_seasons"]').setAttribute('checked', '');
+        if (templateObj.hide_season_text) {
+          base.querySelector('input[name="hide_season_text"]').setAttribute('checked', '');
           base.querySelector('.field[data-value="season-titles"]').className = 'ui disabled field';
         }
         // Season titles
@@ -284,11 +312,11 @@
           const valueDiv = base.querySelector('.field[data-value="season-title-value"]');
           for (const [range, value] of Object.entries(templateObj.season_titles)) {
             const rangeElem = document.createElement('input');
-            rangeElem.name = 'season_title_range'; rangeElem.setAttribute('data-value', 'season-titles');
+            rangeElem.name = 'season_title_ranges'; rangeElem.setAttribute('data-value', 'season-titles');
             rangeElem.type = 'text'; rangeElem.value = range;
             rangeDiv.appendChild(rangeElem);
             const valueElem = document.createElement('input');
-            valueElem.name = 'season_title_value'; valueElem.type = 'text'; valueElem.value = value;
+            valueElem.name = 'season_title_values'; valueElem.type = 'text'; valueElem.value = value;
             valueDiv.appendChild(valueElem);
           }
         }
@@ -310,10 +338,10 @@
           const inputDiv = base.querySelector('.field[data-value="extra-value"]');
           for (const [key, value] of Object.entries(templateObj.extras)) {
             const label = document.createElement('input');
-            label.name = 'extra_key'; label.type = 'text'; label.value = key;
+            label.name = 'extra_keys'; label.type = 'text'; label.value = key;
             labelDiv.appendChild(label);
             const valueElem = document.createElement('input');
-            valueElem.name = 'extra_value'; valueElem.type = 'text'; valueElem.value = value;
+            valueElem.name = 'extra_values'; valueElem.type = 'text'; valueElem.value = value;
             inputDiv.appendChild(valueElem)
           }
         }
@@ -335,7 +363,11 @@
         // Card type
         $(`#template-id${templateObj.id} >* .dropdown[data-value="card-types"]`).dropdown({
           values: allCardTypes.map(({name}) => {
-            return {name: name, value: name.toLowerCase(), selected: name === templateObj.card_type};
+            return {
+              name:     name,
+              value:    name.toLowerCase(),
+              selected: name.toLowerCase() === templateObj.card_type
+            };
           }), placeholder: 'Global Default',
         });
         // Font
@@ -381,10 +413,10 @@
         // Add new fields to add title button
         $(`#template-id${templateObj.id} >* .button[data-value="add-title"]`).on('click', () => {
           const newRange = document.createElement('input');
-          newRange.name = 'season_title_range'; newRange.type = 'text';
+          newRange.name = 'season_title_ranges'; newRange.type = 'text';
           newRange.setAttribute('data-value', 'season-titles');
           const newTitle = document.createElement('input');
-          newTitle.name = 'season_title_value'; newTitle.type = 'text';
+          newTitle.name = 'season_title_values'; newTitle.type = 'text';
           $(`#template-id${templateObj.id} >* .field[data-value="season-title-range"]`).append(newRange);
           $(`#template-id${templateObj.id} >* .field[data-value="season-title-value"]`).append(newTitle);
           $('input[data-value="season-titles"]').popup({
@@ -409,42 +441,33 @@
         // Add new fields with add extra button
         $(`#template-id${templateObj.id} >* .button[data-value="add-extra"]`).on('click', () => {
           const newKey = document.createElement('input');
-          newKey.name = 'extra_key'; newKey.type = 'text';
+          newKey.name = 'extra_keys'; newKey.type = 'text';
           const newValue = document.createElement('input');
-          newValue.name = 'extra_value'; newValue.type = 'text';
+          newValue.name = 'extra_values'; newValue.type = 'text';
           $(`#template-id${templateObj.id} >* .field[data-value="extra-key"]`).append(newKey);
           $(`#template-id${templateObj.id} >* .field[data-value="extra-value"]`).append(newValue);
         });
         // Submit update via API
         $(`#template-id${templateObj.id} >* form`).on('submit', (event) => {
           event.preventDefault();
-          // const form = new FormData(event.target);
-          // for (let [name, value] of [...form.entries()]) {
-          //   // if (name === 'size' || name === 'kerning' || name === 'stroke_width') {
-          //   //   form.set(name, value/100.0);
-          //   // }
-          // }
-
+          let form = new FormData(event.target);
           $.ajax({
             type: 'PATCH',
             url: `/api/templates/${templateObj.id}`,
-            data: new FormData(event.target),
-            cache: false,
-            contentType: false,
-            processData: false,
-            success: function(response) {
+            data: JSON.stringify(Object.fromEntries(form.entries())),
+            contentType: 'application/json',
+            success: (response) => {
               $.toast({
                 class: 'blue info',
                 title: `Updated Template "${templateObj.name}"`,
               });
-
-            }, error: function(response) {
+            }, error: (response) => {
               $.toast({
                 class: 'error',
                 title: 'Error Updating Template',
                 message: response.responseJSON.detail,
               });
-            }
+            }, complete: () => {}
           });
         });
         // Delete via API
@@ -483,10 +506,6 @@
     }
 
     async function initAll() {
-      // getFontOptions();
-      // getEpisodeDataSources();
-      // getImageSourcePriority();
-      // getCardTypes();
       getAllTemplates();
     }
   </script>
@@ -531,16 +550,11 @@
   <script>
     // Create new (blank) template on button click
     $('#new-template').on('click', () => {
-      // let form = new FormData();
-      // form.append('name', 'Custom Template');
       $.ajax({
         type: 'POST',
         url: '/api/templates/new',
         data: JSON.stringify({name: 'Blank Template'}),
-        contentType: "application/json",
-        // data: form,
-        // processData: false,
-        // contentType: false,
+        contentType: 'application/json',
         success: (response) => {
           $.toast({
             class: 'blue info',

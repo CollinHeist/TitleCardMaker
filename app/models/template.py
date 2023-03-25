@@ -23,7 +23,7 @@ class Template(Base):
 
     font_id = Column(Integer, ForeignKey('font.id'))
     card_type = Column(String, default=None)
-    hide_seasons = Column(Boolean, default=None)
+    hide_season_text = Column(Boolean, default=None)
     season_titles = Column(MutableDict.as_mutable(PickleType), default={})
     hide_episode_text = Column(Boolean, default=None)
     episode_text_format = Column(String, default=None)

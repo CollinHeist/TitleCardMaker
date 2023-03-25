@@ -133,11 +133,11 @@
                 <div class="fields">
                   <div data-value="in-replacements" class="four wide right aligned field">
                     <label>Text to Replace</label>
-                    <!-- <input name="replacement_in" type="text"> -->
+                    <!-- <input name="replacements_in" type="text"> -->
                   </div>
                   <div data-value="out-replacements" class="four wide field">
                     <label>Replacement Text</label>
-                    <!-- <input name="replacement_out" type="text"> -->
+                    <!-- <input name="replacements_out" type="text"> -->
                   </div>
                 </div>
               </div>
@@ -162,6 +162,7 @@
                   <i class="trash icon"></i>
                 </div>
               </button>
+              <div class="ui error message"></div>
             </form>
           </div>
 
@@ -200,7 +201,7 @@
 
   <script>
     // Function to create a new empty font
-    async function addFont() {
+    function addFont() {
       const data = {name: 'Custom Font'};
       $.ajax({
         type: 'POST',
@@ -227,6 +228,8 @@
       // Create PreviewCard object for API request
       const fontFormObj = new FormData(fontForm);
       const previewFormObj = new FormData(previewForm);
+      // Don't bother if no preview card type is selected
+      if (previewFormObj.get('card_type') === '') { return; }
       const previewCardObj = {
         card_type: previewFormObj.get('card_type'),
         title_text: previewFormObj.get('title_text'),
@@ -301,11 +304,11 @@
         if (fontObj.replacements) {
           Object.entries(fontObj.replacements).forEach(([in_, out_]) => {
             const newInput = document.createElement('input');
-            newInput.name = 'replacement_in'; newInput.type='text';
+            newInput.name = 'replacements_in'; newInput.type='text';
             newInput.placeholder = in_; newInput.value = in_;
             inElement.appendChild(newInput);
             const newOutput = document.createElement('input');
-            newOutput.name = 'replacement_out'; newOutput.type='text';
+            newOutput.name = 'replacements_out'; newOutput.type='text';
             newOutput.placeholder = out_; newOutput.value = out_;
             outElement.appendChild(newOutput);
           });
@@ -313,28 +316,25 @@
         // Add new input fields on click of addReplacement button
         template.querySelector('.button[data-value="addReplacement"]').onclick = () => {
           const blankInput = document.createElement('input');
-          blankInput.name = 'replacement_in'; blankInput.type='text';
+          blankInput.name = 'replacements_in'; blankInput.type='text';
           inElement.appendChild(blankInput);
           const blankOutput = document.createElement('input');
-          blankOutput.name = 'replacement_out'; blankOutput.type='text';
+          blankOutput.name = 'replacements_out'; blankOutput.type='text';
           outElement.appendChild(blankOutput);
         };
 
         // Set submit form event to submit PATCH API request
+        template.querySelector('form[data-value="font-form"]').id = `font-id${fontObj.id}`;
         template.querySelector('form[data-value="font-form"]').onsubmit = (event) => {
           event.preventDefault();
+          // Validate form, if invalid, exit
+          if (!$(`#font-id${fontObj.id}`).form('is valid')) { return; }
           const form = new FormData(event.target);
-          let replacements = {in: [], out: []};
           for (let [name, value] of [...form.entries()]) {
             if (name === 'size' || name === 'kerning' || name === 'stroke_width') {
               form.set(name, value/100.0);
-            } else if (name === 'replacements_in') {
-              replacements.in.append(value); 
-            } else if (name === 'replacements_out') {
-              replacements.out.append(value); 
             }
           }
-          
           $.ajax({
             type: 'PATCH',
             url: `/api/fonts/${fontObj.id}`,
@@ -439,6 +439,19 @@
       $('.ui.accordion').accordion();
       $('.ui.dropdown').dropdown();
       $('.ui.checkbox').checkbox();
+      // Apply form validations
+      $('.form').form({
+        on: 'blur',
+        fields: {
+          name: {
+            identifier: 'name',
+            rules: [{type: 'minLength[1]', prompt: 'Font name is required'}]
+          }, size: {
+            identifier: 'size',
+            rules: [{type: 'integer[1..]', prompt: 'Size must be greater than 1%'}]
+          },
+        },
+      });
 
       // Fill in card type dropdowns
       getCardTypeOptions();

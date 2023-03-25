@@ -7,7 +7,7 @@ from tmdbapis import TMDbAPIs, NotFound, Unauthorized, TMDbException
 
 from modules.Debug import log
 from modules.EpisodeDataSource import EpisodeDataSource
-from modules.EpisodeInfo import EpisodeInfo
+from modules.EpisodeInfo2 import EpisodeInfo
 import modules.global_objects as global_objects
 from modules.PersistentDatabase import PersistentDatabase
 from modules.SeriesInfo import SeriesInfo
@@ -68,7 +68,6 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
         # Store global objects
         self.preferences = preferences
-        # self.info_set = global_objects.info_set
 
         # Create/read blacklist database
         self.__blacklist = PersistentDatabase(self.__BLACKLIST_DB)
@@ -319,16 +318,12 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         if found:
             result = results[0]
             series_info.set_tmdb_id(int(result.id))
-            # self.info_set.set_tmdb_id(series_info, int(result.id))
             if (imdb_id := result.imdb_id):
                 series_info.set_imdb_id(imdb_id)
-                # self.info_set.set_imdb_id(series_info, imdb_id)
             if (tvdb_id := result.tvdb_id):
                 series_info.set_tvdb_id(tvdb_id)
-                # self.info_set.set_tvdb_id(series_info, tvdb_id)
             if (tvrage_id := result.tvrage_id):
                 series_info.set_tvrage_id(tvrage_id)
-                # self.info_set.set_tvrage_id(series_info, tvrage_id)
         else:
             log.warning(f'Series "{series_info}" not found on TMDb')
 
@@ -376,15 +371,13 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
                     log.error(f'TMDb error - skipping {episode}')
                     continue
 
-                episode_info = self.info_set.get_episode_info(
-                    series_info,
+                episode_info = EpisodeInfo(
                     episode.name,
                     season.season_number,
                     episode.episode_number,
                     tvdb_id=episode.tvdb_id if episode.tvdb_id != 0 else None,
                     imdb_id=None if episode.imdb_id is None else episode.imdb_id,
                     airdate=episode.air_date,
-                    title_match=True,
                     queried_tmdb=True,
                 )
 

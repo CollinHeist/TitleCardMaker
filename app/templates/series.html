@@ -82,11 +82,11 @@
         </div>
         <div class="field">
           <label>Source File</label>
-          <input type="text" name="source_file" placeholder="{SOURCE FILE}">
+          <input type="text" name="source_path" placeholder="{SOURCE PATH}">
         </div>
         <div class="field">
           <label>Destination</label>
-          <input type="text" name="destination" placeholder="{DESTINATION}">
+          <input type="text" name="card_path" placeholder="{CARD PATH}">
         </div>
         <!-- Save and delete button -->
         <button class="ui primary animated submit button" type="submit">
@@ -143,7 +143,7 @@
       if (episodeDataDiv == null) return;
 
       // Get all episodes via API
-      let episodeData = await fetch('/api/series/{{series.id}}/episodes').then(resp => resp.json());
+      let episodeData = await fetch('/api/episodes/{{series.id}}/all').then(resp => resp.json());
       if (episodeData === null) return;  
 
       // Reset existing episode data content
@@ -155,7 +155,7 @@
 
       episodeData.forEach(episode => {
         let {id, season_number, episode_number, absolute_number, title,
-             source_file, destination} = episode;
+             source_path, card_path} = episode;
 
         // Get or create the div for this season
         let seasonElement = document.getElementById(`episode-data-season${season_number}`);
@@ -179,10 +179,10 @@
         episodeElement.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${episodeTitle}`;
         episodeElement.querySelector('input[name="title"]').placeholder = title;
         episodeElement.querySelector('input[name="title"]').value = title;
-        episodeElement.querySelector('input[name="source_file"]').placeholder = source_file;
-        episodeElement.querySelector('input[name="source_file"]').value = source_file;
-        episodeElement.querySelector('input[name="destination"]').placeholder = destination;
-        episodeElement.querySelector('input[name="destination"]').value = destination;
+        episodeElement.querySelector('input[name="source_path"]').placeholder = source_path;
+        episodeElement.querySelector('input[name="source_path"]').value = source_path;
+        episodeElement.querySelector('input[name="card_path"]').placeholder = card_path;
+        episodeElement.querySelector('input[name="card_path"]').value = card_path;
 
         // Add episode element to the season div
         seasonDiv.appendChild(episodeElement);
@@ -241,7 +241,7 @@
       $('#refresh > i').toggleClass('loading', true);
       $.ajax({
         type: 'POST',
-        url: '/api/series/{{series.id}}/refresh',
+        url: '/api/episodes/{{series.id}}/refresh',
         success: function(response) {
           $.toast({class: 'blue info', title: `Refreshed Episode Data`});
           getEpisodeData();
@@ -847,24 +847,31 @@
     $('#new-episode-form').on('submit', (event) => {
       // Prevent page reload, do not submit if form is invalid
       event.preventDefault();
-      if (!$('#new-episode-form').form('is valid')) {return;}
+      if (!$('#new-episode-form').form('is valid')) { return; }
+      // Prep form
+      let form = new FormData(event.target);
+      for (const [key, value] of [...form.entries()]) {
+        if (value === '') { form.delete(key); }
+      }
+
       $.ajax({
         type: 'POST',
-        url: '/api/series/{{series.id}}/episode',
-        data: JSON.stringify(Object.fromEntries(new FormData(event.target))),
-        headers: {'Content-Type': 'application/json'},
+        url: '/api/episodes/{{series.id}}/new',
+        data: JSON.stringify(Object.fromEntries(form)),
+        contentType: 'application/json',
         success: (response) => {
           const {season_number, episode_number} = response;
           $.toast({
             class: 'blue info',
             title: `Created Season ${season_number} Episode ${episode_number}`,
-            showDuration: 5000,
           });
           getEpisodeData();
         }, error: (response) => {
           $.toast({
             class: 'error',
             title: 'Error Creating New Episode',
+            message: response.responseJSON.detail,
+            showDuration: 0,
           });
         }
       });

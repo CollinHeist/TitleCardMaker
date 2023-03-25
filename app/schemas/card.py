@@ -1,6 +1,6 @@
 from typing import Literal, Optional
 
-from pydantic import Field
+from pydantic import Field, validator
 
 from app.schemas.base import Base
 from app.schemas.font import Font, PreviewFont
@@ -78,13 +78,22 @@ class UpdateTitleCard(BaseTitleCard):
     extra_keys: Optional[list[str]] = Field(default=None)
     extra_values: Optional[list[str]] = Field(default=None)
 
+    @validator('extra_keys', 'extra_values', pre=True)
+    def validate_list(cls, v):
+        return [v] if isinstance(v, str) else v
+
 class TitleCard(BaseTitleCard):
     extras: dict[str, str]
     filesize: int
 
 class PreviewTitleCard(BaseTitleCard):
+    title_text: Optional[str] = Field(default='Example Title')
     style: Optional[Style] = Field(default='unique')
     custom_font: Optional[PreviewFont] = Field(default=None)
     font_id: Optional[int] = Field(default=None)
     extra_keys: Optional[list[str]] = Field(default=None)
     extra_values: Optional[list[str]] = Field(default=None)
+
+    @validator('extra_keys', 'extra_values', pre=True)
+    def validate_list(cls, v):
+        return [v] if isinstance(v, str) else v

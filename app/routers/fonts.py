@@ -150,7 +150,7 @@ def delete_font_file(
 
 
 @font_router.patch('/{font_id}', status_code=200)
-def edit_font(
+def update_font(
         font_id: int,
         update_font: UpdateFont = Body(...),
         db = Depends(get_database)) -> Font:

@@ -2,11 +2,11 @@ from sqlalchemy import Boolean, Column, Integer, String, ForeignKey
 
 from app.database.session import Base
 
-def default_source_file(context) -> str:
+def default_source(context) -> str:
     params = context.get_current_parameters()
     return f's{params["season_number"]}e{params["episode_number"]}.jpg'
 
-def default_destination(context) -> str:
+def default_card(context) -> str:
     params = context.get_current_parameters()
     return f'card-s{params["season_number"]}e{params["episode_number"]}.jpg'
 
@@ -23,13 +23,13 @@ class Episode(Base):
     title = Column(String)
     match_title = Column(Boolean, default=False)
 
-    source_file = Column(String, default=default_source_file)
-    destination = Column(String, default=default_destination)
+    source_path = Column(String, default=default_source)
+    card_path = Column(String, default=default_card)
 
     emby_id = Column(Integer, default=None)
     imdb_id = Column(String, default=None)
     jellyfin_id = Column(String, default=None)
-    sonarr_id = Column(String, default=None)
+    # sonarr_id = Column(String, default=None)
     tmdb_id = Column(Integer, default=None)
     tvdb_id = Column(Integer, default=None)
     tvrage_id = Column(Integer, default=None)
