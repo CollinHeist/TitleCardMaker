@@ -83,6 +83,7 @@ class UpdateTitleCard(BaseTitleCard):
         return [v] if isinstance(v, str) else v
 
 class TitleCard(BaseTitleCard):
+    episode_id: Optional[int]
     extras: dict[str, str]
     filesize: int
 

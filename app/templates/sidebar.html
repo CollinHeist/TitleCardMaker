@@ -1,33 +1,145 @@
 <div class="ui left visible compact vertical inverted sidebar labeled icon menu">
-  <a id="sidebar-series" class="item" href="/">
+  <a id="sidebar-series" class="glow-effect item" href="/" data-glow-animation="true">
     <img alt="Title Card Maker Logo" src="/assets/logo128.png" style="margin: auto; max-width: 43px; max-height: 43px;">
   </a>
-  <a id="sidebar-series" class="item" href="/">
+  <a id="sidebar-series" class="glow-effect item" href="/" data-glow-animation="true">
     <i class="tv icon"></i>
     Series
+    <svg class="glow-container">
+      <rect pathLength="30" stroke-linecap="round" class="glow-blur"></rect>
+      <rect pathLength="30" stroke-linecap="round" class="glow-line"></rect>
+    </svg>
   </a>
-  <a id="sidebar-templates" class="item" href="/card-templates">
+  <a id="sidebar-templates" class="glow-effect item" href="/card-templates" data-glow-animation="true">
     <i class="clone outline icon"></i>
     Templates
+    <svg class="glow-container">
+      <rect pathLength="30" stroke-linecap="round" class="glow-blur"></rect>
+      <rect pathLength="30" stroke-linecap="round" class="glow-line"></rect>
+    </svg>
   </a>
-  <a id="sidebar-templates" class="item" href="/fonts">
+  <a id="sidebar-fonts" class="glow-effect item" href="/fonts" data-glow-animation="true">
     <i class="font icon"></i>
     Fonts
+    <svg class="glow-container">
+      <rect pathLength="30" stroke-linecap="round" class="glow-blur"></rect>
+      <rect pathLength="30" stroke-linecap="round" class="glow-line"></rect>
+    </svg>
   </a>
-  <a id="sidebar-sync" class="item" href="/sync">
+  <a id="sidebar-sync" class="glow-effect item" href="/sync" data-glow-animation="true">
     <i class="sync icon"></i>
     Sync
+    <svg class="glow-container">
+      <rect pathLength="30" stroke-linecap="round" class="glow-blur"></rect>
+      <rect pathLength="30" stroke-linecap="round" class="glow-line"></rect>
+    </svg>
   </a>
-  <a id="sidebar-connections" class="item" href="/connections">
+  <a id="sidebar-connections" class="glow-effect item" href="/connections" data-glow-animation="true">
     <i class="broadcast tower icon"></i>
     Connections
+    <svg class="glow-container">
+      <rect pathLength="30" stroke-linecap="round" class="glow-blur"></rect>
+      <rect pathLength="30" stroke-linecap="round" class="glow-line"></rect>
+    </svg>
   </a>
-  <a id="sidebar-settings" class="item" href="/settings">
+  <a id="sidebar-settings" class="glow-effect item" href="/settings" data-glow-animation="true">
     <i class="cogs icon"></i>
     Settings
+    <svg class="glow-container">
+      <rect pathLength="30" stroke-linecap="round" class="glow-blur"></rect>
+      <rect pathLength="30" stroke-linecap="round" class="glow-line"></rect>
+    </svg>
   </a>
-  <a id="sidebar-import" class="item" href="/import">
+  <a id="sidebar-import" class="glow-effect item" href="/import" data-glow-animation="true">
     <i class="file code icon"></i>
     Import YAML
+    <svg class="glow-container">
+      <rect pathLength="30" stroke-linecap="round" class="glow-blur"></rect>
+      <rect pathLength="30" stroke-linecap="round" class="glow-line"></rect>
+    </svg>
   </a>
 </div>
+
+<style>
+  .glow-effect {
+    /* --glow-line-color: #fff; */
+    --glow-line-color: var(--tcm-blue-color);
+    --glow-line-thickness: 2px;
+    --glow-line-length: 20px;
+    /* --glow-blur-color: #fff; */
+    --glow-blur-color: var(--tcm-blue-color);
+    --glow-blur-size: 5px;
+    --glow-offset: 0px;
+    --animation-speed: 1200ms;
+    /* do not change, used for calculations */
+    --container-offset: 100px;
+    position: relative;
+  }
+
+  .glow-container {
+    pointer-events: none;
+    position: absolute;
+    inset: calc(var(--container-offset) / -2);
+    width: calc(100% + var(--container-offset));
+    height: calc(100% + var(--container-offset));
+    opacity: 0;
+    /* outline: 3px solid blue; */
+  }
+
+  .glow-blur,
+  .glow-line {
+    width: calc(100% - var(--container-offset) + var(--glow-offset));
+    height: calc(100% - var(--container-offset) + var(--glow-offset));
+    x: calc((var(--container-offset) / 2) + calc(var(--glow-offset) / -2));
+    y: calc((var(--container-offset) / 2) + calc(var(--glow-offset) / -2));
+    /* rx: 1.25rem; */
+    fill: transparent;
+    stroke: black;
+    stroke-width: 5px;
+    stroke-dasharray: var(--glow-line-length) calc(50px - var(--glow-line-length));
+  }
+
+  .glow-effect:is(:hover, :focus) :is(.glow-line, .glow-blur) {
+    stroke-dashoffset: -80px;
+    transition: stroke-dashoffset var(--animation-speed) ease-in;
+  }
+
+  .glow-line {
+    stroke: var(--glow-line-color);
+    stroke-width: var(--glow-line-thickness);
+  }
+
+  .glow-blur {
+    filter: blur(var(--glow-blur-size));
+    stroke: var(--glow-blur-color);
+    stroke-width: var(--glow-blur-size);
+  }
+
+  .glow-effect:is(:hover, :focus) .glow-container {
+    animation: glow-visibility ease-in-out var(--animation-speed);
+  }
+
+  @keyframes glow-visibility {
+    0%,
+    100% {
+      opacity: 0;
+    }
+    25%,
+    75% {
+      opacity: 1;
+    }
+  }
+
+  .glow-effect[data-glow-animation="false"] {
+    --glow-line-length: 50px;
+  }
+  .glow-effect[data-glow-offset="true"] {
+    --glow-offset: 10px;
+  }
+
+  .glow-effect[data-glow-animation="grow"]:is(:hover, :focus) .glow-container {
+    scale: 1.3;
+    transition: scale var(--animation-speed) linear;
+  }
+
+</style>

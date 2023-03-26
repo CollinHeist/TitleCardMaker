@@ -1,9 +1,8 @@
 from pathlib import Path
 from requests import get
-from typing import Annotated, Literal, Optional, Union
+from typing import Annotated, Any, Literal, Optional, Union
 
-from fastapi import APIRouter, Body, Depends, Form, HTTPException, Query, \
-    Response, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, Query, Response, UploadFile
 from starlette.responses import RedirectResponse
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -15,12 +14,35 @@ from app.dependencies import get_database, get_preferences, get_emby_interface,\
     get_jellyfin_interface, get_plex_interface, get_sonarr_interface, \
     get_tmdb_interface
 import app.models as models
+from app.schemas.base import UNSPECIFIED
 from app.schemas.preferences import EpisodeDataSource, MediaServer,\
     MediaServerToggle
 from app.schemas.series import (
-    CreateSeries, Series, SortedImageSourceToggle, UpdateSeries
+    NewSeries, Series, SortedImageSourceToggle, UpdateSeries
 )
 from app.schemas.episode import Episode
+
+
+def join_lists(keys: list[Any], vals: list[Any], desc: str,
+        default: Any = None) -> Union[dict[str, Any], None]:
+
+    is_null = lambda v: (v is None) or (v == UNSPECIFIED)
+
+    if is_null(keys) ^ is_null(vals):
+        raise HTTPException(
+            status_code=400,
+            detail=f'Provide same number of {desc}',
+        )
+    elif not is_null(keys) and not is_null(vals):
+        if len(keys) != len(vals):
+            raise HTTPException(
+                status_code=400,
+                detail=f'Provide same number of {desc}',
+            )
+        else:
+            return {key: val for key, val in zip(keys, vals) if len(key) > 0}
+
+    return UNSPECIFIED if keys == UNSPECIFIED else default
 
 
 def set_series_database_ids(
@@ -75,7 +97,11 @@ def download_series_poster(
         series: Series,
         db: 'Database',
         preferences: 'Preferences',
-        tmdb_interface: 'TMDbInterface') -> str:
+        tmdb_interface: 'TMDbInterface') -> None:
+
+    # Exit if no TMDbInterface
+    if tmdb_interface is None:
+        return None
 
     # If series poster exists and is not a placeholder, return that
     path = Path(series.poster_path)
@@ -90,22 +116,21 @@ def download_series_poster(
         tvrage_id=series.tvrage_id,
     )
 
-    if tmdb_interface is not None:
-        poster_url = tmdb_interface.get_series_poster(series_info)
-        if poster_url is None:
-            log.debug(f'TMDb returned no valid posters')
-        else:
-            path = preferences.asset_directory / 'posters' / f'{series.id}.jpg'
-            try:
-                path.write_bytes(get(poster_url).content)
-                series.poster_path = str(path)
-                series.poster_url = f'/assets/posters/{series.id}.jpg'
-                db.commit()
-                log.debug(f'Downloaded poster') 
-            except Exception as e:
-                log.error(f'Error downloading poster', e)
+    poster_url = tmdb_interface.get_series_poster(series_info)
+    if poster_url is None:
+        log.debug(f'TMDb returned no valid posters')
+    else:
+        path = preferences.asset_directory / 'posters' / f'{series.id}.jpg'
+        try:
+            path.write_bytes(get(poster_url).content)
+            series.poster_path = str(path)
+            series.poster_url = f'/assets/posters/{series.id}.jpg'
+            db.commit()
+            log.debug(f'Downloaded poster') 
+        except Exception as e:
+            log.error(f'Error downloading poster', e)
 
-    return series.poster_url
+    return None
 
 
 series_router = APIRouter(
@@ -158,8 +183,8 @@ async def get_series_poster(
     pass
 
 
-@series_router.patch('/{series_id}/poster')
-async def update_series_poster(
+@series_router.post('/{series_id}/poster')
+async def set_series_poster(
         series_id: int,
         db: Session = Depends(get_database)) -> str:
     

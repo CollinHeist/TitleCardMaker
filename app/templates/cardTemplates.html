@@ -79,11 +79,11 @@
               </div>
 
               <div class="field">
-                <label>Unwatched Episode Style</label>
-                <div data-value="unwatched-style" class="ui compact selection clearable dropdown">
-                  <input name="unwatched_style" type="hidden">
+                <label>Watched Episode Style</label>
+                <div data-value="watched-style" class="ui long compact selection clearable dropdown">
+                  <span class="default text">Server Default</span>
+                  <input name="watched_style" type="hidden">
                   <i class="dropdown icon"></i>
-                  <div class="default text">Global Default</div>
                   <div class="menu">
                     <!-- Added asynchronously -->
                   </div>
@@ -91,11 +91,11 @@
               </div>
 
               <div class="field">
-                <label>Watched Episode Style</label>
-                <div data-value="watched-style" class="ui long compact selection clearable dropdown">
-                  <span class="default text">Server Default</span>
-                  <input name="watched_style" type="hidden">
+                <label>Unwatched Episode Style</label>
+                <div data-value="unwatched-style" class="ui compact selection clearable dropdown">
+                  <input name="unwatched_style" type="hidden">
                   <i class="dropdown icon"></i>
+                  <div class="default text">Global Default</div>
                   <div class="menu">
                     <!-- Added asynchronously -->
                   </div>
@@ -161,18 +161,6 @@
                 <label>Sync Specials</label>
               </div>
 
-              <!-- <div class="field">
-                <label>Image Source Priority</label>
-                <div class="ui compact multiple selection dropdown" data-value="image-source-priority">
-                  <input name="image_source_priority"type="hidden">
-                  <i class="dropdown icon"></i>
-                  <div class="default text">Global Default</div>
-                  <div id="image-source-priority-choices" class="menu">
-                    
-                  </div>
-                </div>
-              </div> -->
-
               <h4 class="ui horizontal middle aligned divider header">Extras</h4>
 
               <div class="ui field">
@@ -210,17 +198,17 @@
 
           <!-- Preview Cards -->
           <div class="eight wide column">
-            <h3>Unwatched Content</h3>
-            <div content-type="unwatched" class="ui fluid card">
-              <div class="content">
-                <img content-type="unwatched" alt="Preview Unwatched Title Card" src="/assets/blank.png">
-              </div>
-            </div>
-
             <h3>Watched Content</h3>
             <div content-type="watched" class="ui fluid card">
               <div class="content">
                 <img content-type="watched" alt="Preview Watched Title Card" src="/assets/blank.png">
+              </div>
+            </div>
+
+            <h3>Unwatched Content</h3>
+            <div content-type="unwatched" class="ui fluid card">
+              <div class="content">
+                <img content-type="unwatched" alt="Preview Unwatched Title Card" src="/assets/blank.png">
               </div>
             </div>
           </div>
@@ -348,8 +336,8 @@
         // Update card preview(s)
         const form = base.querySelector('form')
         form.onchange = () => {
-          reloadPreview('unwatched', form, document.querySelector('.card[content-type="unwatched"]'), document.querySelector('img[content-type="unwatched"]'));
           reloadPreview('watched', form,document.querySelector('.card[content-type="watched"]'),  document.querySelector('img[content-type="watched"]'));
+          reloadPreview('unwatched', form, document.querySelector('.card[content-type="unwatched"]'), document.querySelector('img[content-type="unwatched"]'));
         }
         return base;
       });
@@ -376,19 +364,6 @@
             return {name: name, value: id, selected: id === templateObj.font_id};
           }), placeholder: 'Card Default',
         });
-        // Unwatched style
-        $(`#template-id${templateObj.id} >* .dropdown[data-value="unwatched-style"]`).dropdown({
-          values: [
-            {name: 'Art Variations', type: 'header'},
-            ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
-              return {name: name, value: value, selected: value === templateObj.unwatched_style};
-            }),
-            {name: 'Unique Variations', type: 'header'},
-            ...allStyles.filter(({style_type}) => style_type === 'unique').map(({name, value}) => {
-              return {name: name, value: value, selected: value === templateObj.unwatched_style};
-            }),
-          ], placeholder: 'Global Default',
-        });
         // Watched style
         $(`#template-id${templateObj.id} >* .dropdown[data-value="watched-style"]`).dropdown({
           values: [
@@ -399,6 +374,19 @@
             {name: 'Unique Variations', type: 'header'},
             ...allStyles.filter(({style_type}) => style_type === 'unique').map(({name, value}) => {
               return {name: name, value: value, selected: value === templateObj.watched_style};
+            }),
+          ], placeholder: 'Global Default',
+        });
+        // Unwatched style
+        $(`#template-id${templateObj.id} >* .dropdown[data-value="unwatched-style"]`).dropdown({
+          values: [
+            {name: 'Art Variations', type: 'header'},
+            ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
+              return {name: name, value: value, selected: value === templateObj.unwatched_style};
+            }),
+            {name: 'Unique Variations', type: 'header'},
+            ...allStyles.filter(({style_type}) => style_type === 'unique').map(({name, value}) => {
+              return {name: name, value: value, selected: value === templateObj.unwatched_style};
             }),
           ], placeholder: 'Global Default',
         });
@@ -451,10 +439,17 @@
         $(`#template-id${templateObj.id} >* form`).on('submit', (event) => {
           event.preventDefault();
           let form = new FormData(event.target);
+          let listData = {extra_keys: [], extra_values: []};
+          for (const [key, value] of [...form.entries()]) {
+            if (key === 'extra_keys') { listData.extra_keys.push(value); }
+            if (key === 'extra_values') { listData.extra_values.push(value); }
+            // if (value === '') { form.delete(key); }
+          }
+          
           $.ajax({
             type: 'PATCH',
             url: `/api/templates/${templateObj.id}`,
-            data: JSON.stringify(Object.fromEntries(form.entries())),
+            data: JSON.stringify({...Object.fromEntries(form.entries()), ...listData}),
             contentType: 'application/json',
             success: (response) => {
               $.toast({

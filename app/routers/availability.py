@@ -19,9 +19,8 @@ availablility_router = APIRouter(
     tags=['Availibility'],
 )
 
-@availablility_router.get('/card-types',
-                          response_model=list[CardType])
-def get_available_card_types(
+@availablility_router.get('/card-types', tags=['Title Cards'])
+def get_all_available_card_types(
         preferences=Depends(get_preferences)) -> list[CardType]:
 
     ...
@@ -29,14 +28,17 @@ def get_available_card_types(
     return LocalCards
 
 
-@availablility_router.get('/card-types/local')
+@availablility_router.get('/card-types/local', tags=['Title Cards'])
 def get_local_card_types(
         preferences=Depends(get_preferences)) -> list[LocalCardType]:
+    """
+    Get all locally defined card types.
+    """
     
     return LocalCards
 
 
-@availablility_router.get('/card-types/remote')
+@availablility_router.get('/card-types/remote', tags=['Title Cards'])
 def get_remote_card_types(
         preferences=Depends(get_preferences)) -> list[RemoteCardType]:
     
@@ -69,11 +71,11 @@ def get_image_source_priority(
     ]
 
 
-@availablility_router.get('/media-servers')
-def get_available_media_servers(
-        preferences=Depends(get_preferences)) -> list[MediaServer]:
+# @availablility_router.get('/media-servers')
+# def get_available_media_servers(
+#         preferences=Depends(get_preferences)) -> list[MediaServer]:
     
-    return preferences.enabled_media_servers
+#     return preferences.enabled_media_servers
 
 
 @availablility_router.get('/libraries/{media_server}')
@@ -83,6 +85,11 @@ def get_server_libraries(
         emby_interface = Depends(get_emby_interface),
         jellyfin_interface = Depends(get_jellyfin_interface),
         plex_interface = Depends(get_plex_interface)) -> list[str]:
+    """
+    Get all available TV library names on the given media server.
+
+    - media_server: Which media server to get the library names of.
+    """
     
     if media_server == 'emby':
         if preferences.use_emby:
@@ -107,6 +114,10 @@ def get_server_libraries(
 def get_emby_usernames(
         preferences=Depends(get_preferences),
         emby_interface = Depends(get_emby_interface)) -> list[str]:
+    """
+    Get all the public usernames in Emby. Returns an empty list if
+    Emby is disabled.
+    """
 
     if preferences.use_emby and emby_interface:
         return emby_interface.get_usernames()
@@ -118,6 +129,10 @@ def get_emby_usernames(
 def get_jellyfin_usernames(
         preferences = Depends(get_preferences),
         jellyfin_interface = Depends(get_jellyfin_interface)) -> list[str]:
+    """
+    Get all the public usernames in Jellyfin. Returns an empty list if
+    Jellyfin is disabled.
+    """
 
     if preferences.use_jellyfin and jellyfin_interface:
         return jellyfin_interface.get_usernames()
@@ -131,10 +146,6 @@ def get_sonarr_tags(
         sonarr_interface = Depends(get_sonarr_interface)) -> list[Tag]:
     """
     Get all tags defined in Sonarr.
-
-    Returns:
-        List of Tag objects. If Sonarr is disabled, then an empty list
-        is returned.
     """
 
     if preferences.use_sonarr and sonarr_interface:
@@ -145,19 +156,21 @@ def get_sonarr_tags(
 
 @availablility_router.get('/fonts', tags=['Fonts'])
 def get_available_fonts(db=Depends(get_database)) -> list[str]:
+    """
+    Get the names of all the available Fonts.
+    """
 
-    return [
-        font.name
-        for font in db.query(models.font.Font).all()
-    ]
+    return [font.name for font in db.query(models.font.Font).all()]
 
 
 @availablility_router.get('/templates', tags=['Templates'])
 def get_available_templates(db=Depends(get_database)) -> list[str]:
+    """
+    Get the names of all the available Templates.
+    """
 
     return [
-        template.name
-        for template in db.query(models.template.Template).all()
+        template.name for template in db.query(models.template.Template).all()
     ]
 
 

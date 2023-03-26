@@ -227,6 +227,22 @@ class BaseCardType(ImageMaker):
             f'-set colorspace sRGB' if self.grayscale else '',
         ]
 
+    
+    @property
+    def resize_output(self) -> ImageMagickCommands:
+        """
+        ImageMagick commands to resize the card to the global card
+        dimensions.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        return [
+            f'-resize "{self.preferences.card_dimensions}"',
+            f'-extent "{self.preferences.card_dimensions}"',
+        ]
+
 
     @abstractmethod
     def create(self) -> None:

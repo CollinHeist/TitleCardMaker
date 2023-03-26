@@ -224,7 +224,7 @@
       });
     }
 
-    function reloadPreview(fontForm, previewForm, cardElement, imageElement) {
+    function reloadPreview(fontId, fontForm, previewForm, cardElement, imageElement) {
       const fontFormObj = new FormData(fontForm);
       const previewFormObj = new FormData(previewForm);
       // Don't bother if no preview card type is selected
@@ -241,7 +241,7 @@
           stroke_width: fontFormObj.get('stroke_width') / 100.0,
           interline_spacing: fontFormObj.get('interline_spacing'),
           vertical_shift: fontFormObj.get('vertical_shift'),
-        },
+        }, font_id: fontId,
       };
 
       // Submit API request
@@ -328,16 +328,19 @@
           event.preventDefault();
           // Validate form, if invalid, exit
           if (!$(`#font-id${fontObj.id}`).form('is valid')) { return; }
-          const form = new FormData(event.target);
-          for (let [name, value] of [...form.entries()]) {
-            if (name === 'size' || name === 'kerning' || name === 'stroke_width') {
-              form.set(name, value/100.0);
+          let form = new FormData(event.target);
+          let listData = {replacements_in: [], replacements_out: []};
+          for (let [key, value] of [...form.entries()]) {
+            if (key === 'size' || key === 'kerning' || key === 'stroke_width') {
+              form.set(key, value/100.0);
             }
+            if (key === 'replacements_in') { listData.replacements_in.push(value); }
+            if (key === 'replacements_out') { listData.replacements_out.push(value); }
           }
           $.ajax({
             type: 'PATCH',
             url: `/api/fonts/${fontObj.id}`,
-            data: JSON.stringify(Object.fromEntries(form.entries())),
+            data: JSON.stringify({...Object.fromEntries(form.entries()), ...listData}),
             contentType: 'application/json',
             success: (response) => {
               $.toast({
@@ -425,8 +428,8 @@
         const previewImage = template.querySelector('img');
         const fontForm = template.querySelector('form[data-value="font-form"]');
         const previewForm =  template.querySelector('form[data-value="preview-form"]');
-        fontForm.onchange = () => reloadPreview(fontForm, previewForm, previewCard, previewImage);
-        previewForm.onchange = () => reloadPreview(fontForm, previewForm, previewCard, previewImage);
+        fontForm.onchange = () => reloadPreview(fontObj.id, fontForm, previewForm, previewCard, previewImage);
+        previewForm.onchange = () => reloadPreview(fontObj.id, fontForm, previewForm, previewCard, previewImage);
 
         return template;
       });
