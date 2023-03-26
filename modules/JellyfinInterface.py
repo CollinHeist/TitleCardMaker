@@ -1,6 +1,6 @@
 from base64 import b64encode
 from datetime import datetime
-from typing import Union
+from typing import Optional, Union
 
 from modules.Debug import log
 from modules.EpisodeDataSource import EpisodeDataSource
@@ -34,9 +34,10 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
     AIRDATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f000000Z'
 
 
-    def __init__(self, url: str, api_key: str, username: str,
+    def __init__(self, url: str, api_key: str,
+            username: Optional[str] = None,
             verify_ssl: bool=True,
-            filesize_limit: int=None) -> None:
+            filesize_limit: Optional[int] = None) -> None:
         """
         Construct a new instance of an interface to a Jellyfin server.
 
@@ -69,17 +70,17 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 f'{self.url}/System/Info',
                 params=self.__params
             )
+
             if not set(response).issuperset({'ServerName', 'Version', 'Id'}):
                 raise Exception(f'Unable to authenticate with server')
         except Exception as e:
             log.critical(f'Cannot connect to Jellyfin - returned error {e}')
             log.exception(f'Bad Jellyfin connection', e)
-            exit(1)
 
-        # Get user ID
-        if (user_id := self._get_user_id(username)) is None:
+        # Get user ID if indicated
+        if (username is not None
+            and (user_id := self._get_user_id(username)) is None):
             log.critical(f'Cannot identify ID of user "{username}"')
-            exit(1)
         else:
             self.user_id = user_id
 
@@ -136,6 +137,20 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             for library in libraries['Items']
             if library['CollectionType'] == 'tvshows'
         }
+
+
+    def get_usernames(self) -> list[str]:
+        """
+        Get all the usernames for this interface's Jellyfin server.
+
+        Returns:
+            List of usernames.
+        """
+
+        return [
+            user.get('Name') for user in
+            self.session._get(f'{self.url}/Users', params=self.__params)
+        ]
 
 
     def set_series_ids(self, library_name: str, series_info: SeriesInfo) ->None:

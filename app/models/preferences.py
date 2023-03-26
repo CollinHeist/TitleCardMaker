@@ -1,7 +1,7 @@
 from collections import namedtuple
 from os import environ
 from pathlib import Path
-from typing import Union
+from typing import Any, Union
 
 from pickle import dump
 
@@ -52,21 +52,24 @@ class Preferences:
         self.emby_api_key = 'e25b06a1aee34fc0949c35d74f379d03' #''
         self.emby_username = 'CollinHeist' #''
         self.emby_use_ssl = False
-        self.emby_filesize_limit = None
+        self.emby_filesize_limit_number = None
+        self.emby_filesize_limit_unit = None
 
         self.use_jellyfin = False
         self.jellyfin_url = ''
         self.jellyfin_api_key = ''
         self.jellyfin_username = ''
         self.jellyfin_use_ssl = False
-        self.jellyfin_filesize_limit = None
+        self.jellyfin_filesize_limit_number = None
+        self.jellyfin_filesize_limit_unit = None
 
         self.use_plex = True #False
         self.plex_url = 'http://192.168.0.29:32400/' #''
         self.plex_token = 'pzfzWxW-ygxzJJc-t_Pw' #''
         self.plex_use_ssl = False
         self.plex_integrate_with_pmm = False
-        self.plex_filesize_limit = None
+        self.plex_filesize_limit_number = 10
+        self.plex_filesize_limit_unit = 'MB'
 
         self.use_sonarr = True #False
         self.sonarr_url = 'http://192.168.0.29:8989/api/v3/' #''
@@ -90,6 +93,7 @@ class Preferences:
 
     def __setattr__(self, name, value) -> None:
         self.__dict__[name] = value
+        log.debug(f'preferences.__dict__[{name}] = {value}')
         self._rewrite_preferences()
 
 
@@ -130,6 +134,73 @@ class Preferences:
 
 
     @property
+    def emby_filesize_limit(self) -> int:
+        return self.get_filesize(
+            self.emby_filesize_limit_number,
+            self.emby_filesize_limit_unit,
+        )
+
+    @property
+    def jellyfin_filesize_limit(self) -> int:
+        return self.get_filesize(
+            self.jellyfin_filesize_limit_number,
+            self.jellyfin_filesize_limit_unit,
+        )
+
+    @property
+    def plex_filesize_limit(self) -> int:
+        return self.get_filesize(
+            self.plex_filesize_limit_number,
+            self.plex_filesize_limit_unit,
+        )
+
+
+    @property
+    def emby_arguments(self) -> dict[str, Any]:
+        return {
+            'url': self.emby_url,
+            'api_key': self.emby_api_key,
+            'username': self.emby_username,
+            'verify_ssl': self.emby_use_ssl,
+            'filesize_limit': self.emby_filesize_limit,
+        }
+
+    @property
+    def jellyfin_arguments(self) -> dict[str, Any]:
+        return {
+            'url': self.jellyfin_url,
+            'api_key': self.jellyfin_api_key,
+            'username': self.jellyfin_username,
+            'verify_ssl': self.jellyfin_use_ssl,
+            'filesize_limit': self.jellyfin_filesize_limit,
+        }
+
+    @property
+    def plex_arguments(self) -> dict[str, Any]:
+        return {
+            'url': self.plex_url,
+            'token': self.plex_token,
+            'verify_ssl': self.plex_use_ssl,
+            'integrate_with_pmm': self.plex_integrate_with_pmm,
+            'filesize_limit': self.plex_filesize_limit,
+        }
+
+    @property
+    def sonarr_arguments(self) -> dict[str, Any]:
+        return {
+            'url': self.sonarr_url,
+            'api_key': self.sonarr_api_key,
+            'verify_ssl': self.sonarr_use_ssl,
+        }
+
+    @property
+    def tmdb_arguments(self) -> dict[str, Any]:
+        return {
+            'api_key': self.tmdb_api_key,
+        }
+
+
+    @property
     def valid_image_sources(self) -> list[str]:
         return set(
             (['Emby'] if self.use_emby else [])
@@ -157,7 +228,11 @@ class Preferences:
 
 
     @staticmethod
-    def get_filesize(value: int, unit: str) -> int:
+    def get_filesize(value: int, unit: str) -> Union[int, None]:
+        # If either value is None, return that
+        if value is None or unit is None:
+            return None
+
         return value * {
             'B': 1, 'Bytes': 1,
             'KB':  2**10, 'Kilobytes': 2**10,

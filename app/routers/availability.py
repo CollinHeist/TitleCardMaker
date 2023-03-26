@@ -11,6 +11,7 @@ from app.schemas.preferences import EpisodeDataSourceToggle, ImageSourceToggle,\
     MediaServer, StyleOption
 from app.schemas.sonarr import Tag
 from modules.cards.available import LocalCards
+from modules.Debug import log
 
 # Create sub router for all /connection API requests
 availablility_router = APIRouter(
@@ -115,7 +116,7 @@ def get_emby_usernames(
 
 @availablility_router.get('/usernames/jellyfin', tags=['Jellyfin'])
 def get_jellyfin_usernames(
-        preferences=Depends(get_preferences),
+        preferences = Depends(get_preferences),
         jellyfin_interface = Depends(get_jellyfin_interface)) -> list[str]:
 
     if preferences.use_jellyfin and jellyfin_interface:

@@ -39,20 +39,21 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     __TEMP_IGNORE_REGEX = re_compile(r'^(tba|tbd|episode \d+)$', IGNORECASE)
 
 
-    def __init__(self, url: str, x_plex_token: str='NA',
-            verify_ssl: bool=True,
-            integrate_with_pmm_overlays: bool=False,
-            filesize_limit: int=10485760) -> None:
+    def __init__(self, url: str,
+            token: str = 'NA',
+            verify_ssl: bool = True,
+            integrate_with_pmm: bool = False,
+            filesize_limit: int = 10485760) -> None:
         """
         Constructs a new instance of a Plex Interface.
 
         Args:
             url: URL of plex server.
-            x_plex_token: X-Plex Token for sending API requests to Plex.
+            token: X-Plex Token for sending API requests to Plex.
             verify_ssl: Whether to verify SSL requests when querying
                 Plex.
-            integrate_with_pmm_overlays: Whether to integrate with PMM
-                overlays in image uploading.
+            integrate_with_pmm: Whether to integrate with PMM in image
+                uploading.
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
         """
@@ -64,10 +65,10 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # Create PlexServer object with these arguments
         try:
-            self.__token = x_plex_token
-            self.__server = PlexServer(url, x_plex_token, self.__session)
+            self.__token = token
+            self.__server = PlexServer(url, token, self.__session)
         except Unauthorized:
-            log.critical(f'Invalid Plex Token "{x_plex_token}"')
+            log.critical(f'Invalid Plex Token "{token}"')
             raise HTTPException(
                 status_code=401,
                 detail=f'Invalid Plex Token',
@@ -80,7 +81,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             )
 
         # Store integration
-        self.integrate_with_pmm_overlays = integrate_with_pmm_overlays
+        self.integrate_with_pmm = integrate_with_pmm
 
         # Create/read loaded card database
         self.__posters = PersistentDatabase(self.LOADED_POSTERS_DB)
@@ -668,7 +669,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             # Upload card to Plex, optionally remove Overlay label
             try:
                 self.__retry_upload(pl_episode, card.resolve())
-                if self.integrate_with_pmm_overlays:
+                if self.integrate_with_pmm:
                     pl_episode.removeLabel(['Overlay'])
             except Exception as e:
                 error_count += 1

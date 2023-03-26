@@ -1,7 +1,9 @@
 from pathlib import Path
-from typing import Literal, Union
+from typing import Literal, Optional, Union
 
-from app.schemas.base import Base
+from pydantic import Field, validator
+
+from app.schemas.base import Base, UNSPECIFIED
 
 CardExtension = Literal['.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp']
 FilesizeUnit = Literal[
@@ -79,3 +81,76 @@ class Preferences(Base):
 
     use_tmdb: bool
     tmdb_api_key: str
+
+class PreferencesBase(Base):
+    ...
+
+class EmbyConnection(Base):
+    use_emby: bool
+    emby_url: str
+    emby_api_key: str
+    emby_username: str
+    emby_filesize_limit: Union[int, None]
+
+class JellyfinConnection(Base):
+    use_jellyfin: bool
+    jellyfin_url: str
+    jellyfin_api_key: str
+    jellyfin_username: str
+    jellyfin_filesize_limit: Union[int, None]
+
+class PlexConnection(Base):
+    use_plex: bool
+    plex_url: str
+    plex_token: str
+    plex_integrate_with_pmm: bool
+    plex_filesize_limit: Union[int, None]
+
+class SonarrConnection(Base):
+    use_sonarr: bool
+    sonarr_url: str
+    sonarr_api_key: str
+    sonarr_libraries: dict
+
+class TMDbConnection(Base):
+    use_tmdb: bool
+    tmdb_api_key: str
+    tmdb_minimum_width: int
+    tmdb_minimum_height: int
+    tmdb_skip_localized: bool
+
+class UpdateBase(Base):
+    url: Optional[str] = Field(default=UNSPECIFIED)
+
+class UpdateMediaServerBase(UpdateBase):
+    use_ssl: Optional[bool] = Field(default=False)
+    filesize_limit_number: Optional[int] = Field(gt=0, default=UNSPECIFIED)
+    filesize_limit_unit: Optional[FilesizeUnit] = Field(default=UNSPECIFIED)
+
+class UpdateEmby(UpdateMediaServerBase):
+    api_key: Optional[str] = Field(default=UNSPECIFIED)
+    username: Optional[str] = Field(default=UNSPECIFIED)
+
+class UpdateJellyfin(UpdateMediaServerBase):
+    api_key: Optional[str] = Field(default=UNSPECIFIED)
+    username: Optional[str] = Field(default=UNSPECIFIED)
+
+class UpdatePlex(UpdateMediaServerBase):
+    token: Optional[str] = Field(default=UNSPECIFIED)
+    integrate_with_pmm: Optional[bool] = Field(default=UNSPECIFIED)
+
+class UpdateSonarr(UpdateBase):
+    api_key: Optional[str] = Field(default=UNSPECIFIED)
+    use_ssl: Optional[bool] = Field(default=False)
+    library_names: Optional[list[str]] = Field(default=UNSPECIFIED)
+    library_paths: Optional[list[str]] = Field(default=UNSPECIFIED)
+
+    @validator('library_names', 'library_paths', pre=True)
+    def validate_list(cls, v):
+        return [v] if isinstance(v, str) else v
+
+class UpdateTMDb(Base):
+    api_key: Optional[str] = Field(default=UNSPECIFIED)
+    minimum_width: Optional[int] = Field(default=UNSPECIFIED)
+    minimum_height: Optional[int] = Field(default=UNSPECIFIED)
+    skip_localized: Optional[bool] = Field(default=UNSPECIFIED)

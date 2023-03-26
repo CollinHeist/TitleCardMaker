@@ -29,13 +29,7 @@ else:
 EmbyInterfaceLocal = None
 if PreferencesLocal.use_emby:
     try:
-        EmbyInterfaceLocal = EmbyInterface(
-            PreferencesLocal.emby_url,
-            PreferencesLocal.emby_api_key,
-            PreferencesLocal.emby_username,
-            PreferencesLocal.emby_use_ssl,
-            PreferencesLocal.emby_filesize_limit,
-        )
+        EmbyInterfaceLocal = EmbyInterface(**PreferencesLocal.emby_arguments)
     except Exception as e:
         ...
 
@@ -43,11 +37,7 @@ JellyfinInterfaceLocal = None
 if PreferencesLocal.use_jellyfin:
     try:
         JellyfinInterfaceLocal = JellyfinInterface(
-            PreferencesLocal.jellyfin_url,
-            PreferencesLocal.jellyfin_api_key,
-            PreferencesLocal.jellyfin_username,
-            PreferencesLocal.jellyfin_use_ssl,
-            PreferencesLocal.jellyfin_filesize_limit,
+            **PreferencesLocal.jellyfin_arguments
         )
     except Exception as e:
         ...
@@ -55,26 +45,14 @@ if PreferencesLocal.use_jellyfin:
 PlexInterfaceLocal = None
 if PreferencesLocal.use_plex:
     try:
-        PlexInterfaceLocal = PlexInterface(
-            PreferencesLocal.plex_url,
-            PreferencesLocal.plex_token,
-            PreferencesLocal.plex_use_ssl, 
-            PreferencesLocal.plex_integrate_with_pmm,
-            PreferencesLocal.plex_filesize_limit,
-        )
+        PlexInterfaceLocal = PlexInterface(**PreferencesLocal.plex_arguments)
     except Exception:
         ...
 
 SonarrInterfaceLocal = None
 if PreferencesLocal.use_sonarr:
-    SonarrInterfaceLocal = SonarrInterface(
-        PreferencesLocal.sonarr_url,
-        PreferencesLocal.sonarr_api_key,
-        PreferencesLocal.plex_use_ssl,
-    )
+    SonarrInterfaceLocal = SonarrInterface(**PreferencesLocal.sonarr_arguments)
 
 TMDbInterfaceLocal = None
 if PreferencesLocal.use_tmdb:
-    TMDbInterfaceLocal = TMDbInterface(
-        PreferencesLocal.tmdb_api_key,
-    )
+    TMDbInterfaceLocal = TMDbInterface(**PreferencesLocal.tmdb_arguments)

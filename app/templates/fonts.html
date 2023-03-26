@@ -189,7 +189,7 @@
                 <img alt="Preview Title Card" src="/assets/blank.png">
               </div>
             </div>
-            <div class="ui bottom attached info message" contenteditable="true">
+            <div class="ui bottom attached info message">
               <i class="exclamation icon"></i>
               A custom font file must be <b>uploaded</b> and <b>submitted</b> in order to appear in the live preview.
             </div>
@@ -439,7 +439,7 @@
       $('.ui.dropdown').dropdown();
       $('.ui.checkbox').checkbox();
       // Apply form validations
-      $('.form').form({
+      $('.form[data-value="font-form"]').form({
         on: 'blur',
         fields: {
           name: {
