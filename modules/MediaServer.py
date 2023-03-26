@@ -41,7 +41,7 @@ class MediaServer(ABC):
         self.filesize_limit = filesize_limit
 
 
-    def compress_image(self, image: 'Path') -> Union[Path, None]:
+    def compress_image(self, image: 'Path') -> Union['Path', None]:
         """
         Compress the given image until below the filesize limit.
 
@@ -181,7 +181,7 @@ class MediaServer(ABC):
         return filtered
 
 
-    def remove_records(self, library_name: str, series_info: SeriesInfo) ->None:
+    def remove_records(self, library_name: str, series_info: 'SeriesInfo') ->None:
         """
         Remove all records for the given library and series from the
         loaded database.
