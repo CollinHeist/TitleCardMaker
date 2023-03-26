@@ -538,7 +538,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 set.
         """
 
-        pass
+        ...
 
 
     def get_source_image(self, episode_info: EpisodeInfo) -> SourceImage:

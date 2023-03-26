@@ -7,8 +7,8 @@ class SyncInterface(ABC):
     can be synced (e.g. series can be grabbed) from.
     """
 
-    def get_library_paths(self, filter_libraries: list[str]=[]
-                          ) -> dict[str, list[str]]:
+    def get_library_paths(self,
+            filter_libraries: list[str]=[]) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
 
