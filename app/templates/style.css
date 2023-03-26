@@ -5,10 +5,30 @@
 
   --theme-light-color: rgba(152, 152, 152, 0.3);
   --tcm-blue-color: rgb(99,145,210);
+
+  /* Same as fomantic ui red */
+  --support-button-color: #db2828;
 }
 
 body {
   background-color: var(--background-color-light);
+}
+
+/* Keep header as fixed (non-scrollable) content */
+body > .pusher {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+}
+#main-content {
+  flex: 1;
+  overflow: auto;
+  overflow-x: hidden;
+}
+
+/* Don't put any scrollbars in the sidebar */
+#nav-menu > .sidebar {
+  overflow: hidden;
 }
 
 /* Style for the header on all pages */
@@ -46,19 +66,27 @@ body {
   padding: 7px !important;
 }
 
-/* Support button alignment */
+/* Support button */
 #support-button {
+  /* 25px from right of screen */
   position: absolute;
-  right: 25px; /* 45px */
+  right: 25px;
+  /* Add glow effect */
+  /* color: var(--support-button-color); */
+  border-radius: 0.25em;
+  box-shadow: 0 0 1.1em 0 var(--support-button-color);
 }
+/* Don't leave any additional margin */
+#support-button .button {
+  margin: 0;
+}
+
 
 /* Style for the main content on all pages */
 #main-content {
   /* Appropriate margin around sides and sidebar */
-  margin: 15px 25px 15px 135px;
-  /* Add scrollbar to internal to the main content, i.e. exclude header
-  overflow-y: auto;
-  height: 100vh; */
+  /* margin: 15px 25px 15px 135px; */
+  padding: 15px 15px 15px 135px;
 }
 
 html.ios {
@@ -68,4 +96,27 @@ html.ios {
 html.ios,
 html.ios body {
   height: initial !important;
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+  width: 0.5em;
+}
+::-webkit-scrollbar-track {
+  background: rgba(12, 12, 12, 0.2);
+  border-radius: 100vw;
+  margin-block: 0.5em;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--tcm-blue-color);
+  border-radius: 100vw;
+  border: 0.25em solid var(--tcm-blue-color);
+}
+
+/* Firefox support */
+@supports (scrollbar-color: red blue) {
+  * {
+    scrollbar-color: var(--tcm-blue-color) rgba(12,12,12, 0.2);
+    /* scrollbar-width: thin; */ /* Use auto */
+  }
 }
