@@ -103,6 +103,14 @@ media_server_group.add_argument(
     default=SUPPRESS,
     metavar=('LIBRARY', 'NAME', 'YEAR'),
     help='Remove the cards for the given series within Emby/Jellyfin/Plex')
+media_server_group.add_argument(
+    '--id', '--series-id',
+    type=str,
+    nargs=2,
+    default=[],
+    action='append',
+    metavar=('ID_TYPE', 'ID'),
+    help='Specify database IDs of a series for importing/reloading cards')
 
 # Argument group for Sonarr
 sonarr_group = parser.add_argument_group('Sonarr')
@@ -184,9 +192,9 @@ if hasattr(args, 'print_log') and args.print_log:
             print(file_handle.read())
 
 
-# Execute Emby/Jellyfin/Plex options
-if (hasattr(args, 'import_cards')
-    or hasattr(args, 'revert_series')) and any((pp.use_emby, pp.use_jellyfin, pp.use_plex)):
+# Execute Media Server options
+if ((hasattr(args, 'import_cards') or hasattr(args, 'revert_series'))
+    and any((pp.use_emby, pp.use_jellyfin, pp.use_plex))):
     # Temporary classes
     @dataclass
     class Episode:
@@ -220,6 +228,14 @@ if (hasattr(args, 'import_cards')
         archive = pp.source_directory / series_info.full_clean_name
         library = args.revert_series[0]
 
+    # Get series ID's if provided
+    if args.id:
+        for id_type, id_ in args.id:
+            try:
+                getattr(series_info, f'set_{id_type}_id')(id_)
+            except Exception as e:
+                log.error(f'Unrecognized ID type "{id_type}" - {e}')
+
     # Forget cards associated with this series
     media_interface.remove_records(library, series_info)
             
@@ -229,7 +245,7 @@ if (hasattr(args, 'import_cards')
         log.warning(f'No images to import')
         exit(1)
 
-    # For each image, fill out episode map to load into Emby/Plex
+    # For each image, fill out episode map to load into server
     episode_map = {}
     for image in all_images:
         if (groups := match(r'.*s(\d+).*e(\d+)', image.name, IGNORECASE)):
@@ -242,8 +258,8 @@ if (hasattr(args, 'import_cards')
         ep = Episode(image, EpisodeInfo('', season, episode), 'spoiled')
         episode_map[f'{season}-{episode}'] = ep
 
-    # Load images into Emby/Plex
-    media_interface.set_title_cards(library, series_info,episode_map)
+    # Load images into server
+    media_interface.set_title_cards(library, series_info, episode_map)
 
 # Create interface and remove records for indicated series+library
 if (hasattr(args, 'forget_cards')
