@@ -832,24 +832,3 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # Error occurred, return empty list
         return []
-
-
-    def remove_records(self, library_name: str, series_info: SeriesInfo) ->None:
-        """
-        Remove all records for the given library and series from the loaded
-        database.
-
-        Args:
-            library_name: The name of the library containing the series whose
-                records are being removed.
-            series_info: SeriesInfo whose records are being removed.
-        """
-
-        # Get condition to find records matching this library + series
-        condition = self._get_condition(library_name, series_info)
-
-        # Delete records matching this condition
-        records = self.loaded_db.remove(condition)
-
-        # Log actions to user
-        log.info(f'Deleted {len(records)} records')

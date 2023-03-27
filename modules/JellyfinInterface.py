@@ -295,12 +295,15 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 params=params | {'ParentId': library_id}
             )
             for series in response['Items']:
+                # Skip series without airdate/year
+                if series.get('PremiereDate', None) is None:
+                    log.debug(f'Series {series["Name"]} has no premiere date')
+                    continue
+                
                 series_info = SeriesInfo(
                     series['Name'], 
-                    datetime.strptime(
-                        series['PremiereDate'],
-                        self.AIRDATE_FORMAT
-                    ).year,
+                    datetime.strptime(series['PremiereDate'],
+                                      self.AIRDATE_FORMAT).year,
                     jellyfin_id=series['Id'],
                 )
                 all_series.append((series_info, series['Path'], library))
