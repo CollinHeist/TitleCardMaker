@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Integer, String, ForeignKey
+from sqlalchemy import Boolean, Column, Float, Integer, String, ForeignKey
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy import PickleType
 
@@ -15,7 +15,6 @@ class Card(Base):
     card_file_path = Column(String, nullable=False)
 
     card_type = Column(String, nullable=False)
-
     title_text = Column(String, nullable=False)
     season_text = Column(String, nullable=False)
     hide_season_text = Column(Boolean, nullable=False)
@@ -30,7 +29,7 @@ class Card(Base):
     font_stroke_width = Column(Float, nullable=False)
     font_interline_spacing = Column(Integer, nullable=False)
     font_vertical_shift = Column(Integer, nullable=False)
-
+    
     blur = Column(Boolean, nullable=False)
     grayscale = Column(Boolean, nullable=False)
 

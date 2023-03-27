@@ -116,16 +116,9 @@
                 </div>
               </div>
 
-              <div class="two fields">
-                <div class="ui checkbox field">
-                  <input name="validate" type="checkbox">
-                  <label>Validate Characters</label>
-                </div>
-
-                <div class="ui checkbox field">
-                  <input name="delete_missing" type="checkbox">
-                  <label>Delete Missing Characters</label>
-                </div>
+              <div class="ui checkbox field">
+                <input name="delete_missing" type="checkbox">
+                <label>Delete Missing Characters</label>
               </div>
 
               <div class="field">
@@ -292,9 +285,6 @@
         interlineSpacing.placeholder = fontObj.interline_spacing; interlineSpacing.value = fontObj.interline_spacing;
         const verticalShift = template.querySelector('input[name="vertical_shift"]');
         verticalShift.placeholder = fontObj.vertical_shift; verticalShift.value = fontObj.vertical_shift;
-        if (fontObj.validate_characters) {
-          template.querySelector('input[name="validate"]').checked = true;
-        }
         if (fontObj.delete_missing) {
           template.querySelector('input[name="delete_missing"]').checked = true;
         }
@@ -457,6 +447,9 @@
 
       // Fill in card type dropdowns
       getCardTypeOptions();
+
+      // Refresh theme for any newly added HTML
+      refreshTheme();
     }
   
     // Function to add dropdown card types

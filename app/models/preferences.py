@@ -37,7 +37,6 @@ class Preferences:
         self.episode_data_source = self.DEFAULT_EPISODE_DATA_SOURCE
         self.valid_image_extensions = self.VALID_IMAGE_EXTENSIONS
 
-        self.validate_fonts = True
         self.specials_folder_format = 'Specials'
         self.season_folder_format = 'Season {season}'
         self.sync_specials = True

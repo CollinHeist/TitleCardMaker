@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from json import dumps, loads
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy import PickleType
@@ -30,10 +30,9 @@ class Series(Base):
     plex_library_name = Column(String, default=None)
     filename_format = Column(String, default='{full_name} - S{season:02}E{episode:02}')
     episode_data_source = Column(String, default='Sonarr')
-    # image_source_priority = Column(MutableList.as_mutable(PickleType), default=['TMDb', 'Plex', 'Emby'])
     sync_specials = Column(Boolean, default=False)
     skip_localized_images = Column(Boolean, default=False)
-    translations = Column(MutableList.as_mutable(PickleType), default=[])
+    translations = Column(MutableList.as_mutable(PickleType), default=None)
     match_titles = Column(Boolean, default=True)
 
     # Database arguments
@@ -45,18 +44,29 @@ class Series(Base):
     tvdb_id = Column(Integer, default=None)
     tvrage_id = Column(Integer, default=None)
 
-    # Optional CARD argument
+    # Font arguments
     font_id = Column(Integer, ForeignKey('font.id'))
+    font_color = Column(String, default=None)
+    font_title_case = Column(String, default=None)
+    font_size = Column(Float, default=None)
+    font_kerning = Column(Float, default=None)
+    font_stroke_width = Column(Float, default=None)
+    font_interline_spacing = Column(Integer, default=None)
+    font_vertical_shift = Column(Integer, default=None)
+    font_delete_missing = Column(Boolean, default=None)
+    font_replacements = Column(MutableDict.as_mutable(PickleType), default=None)
+
+    # Card arguments
     template_id = Column(Integer, ForeignKey('template.id'))
     directory = Column(String, default=default_directory)
     card_type = Column(String, default='standard')
     hide_season_text = Column(Boolean, default=False)
-    season_titles = Column(MutableDict.as_mutable(PickleType), default={})
+    season_titles = Column(MutableDict.as_mutable(PickleType), default=None)
     hide_episode_text = Column(Boolean, default=False)
     episode_text_format = Column(String, default=None)
     unwatched_style = Column(String, default='unique')
     watched_style = Column(String, default='unique')
-    extras = Column(MutableDict.as_mutable(PickleType), default={})
+    extras = Column(MutableDict.as_mutable(PickleType), default=None)
 
     @hybrid_property
     def full_name(self) -> str:

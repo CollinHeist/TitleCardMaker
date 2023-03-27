@@ -232,9 +232,10 @@ def delete_font(
         db = Depends(get_database)) -> None:
     """
     Delete the Font with the given ID. This also deletes the font's
-    font file if it exists.
+    font file if it exists, as well as removing any references to this
+    font on any associated Template, Series, or Episode entries.
 
-    - font_id: ID of the Fync to delete
+    - font_id: ID of the Font to delete.
     """
 
     query = db.query(models.font.Font).filter_by(id=font_id)

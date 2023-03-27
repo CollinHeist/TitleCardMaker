@@ -22,4 +22,4 @@ class Font(Base):
     vertical_shift = Column(Integer, default=0)
     validate_characters = Column(Boolean, default=None)
     delete_missing = Column(Boolean, default=True)
-    replacements = Column(MutableDict.as_mutable(PickleType), default={})
+    replacements = Column(MutableDict.as_mutable(PickleType), default=None)

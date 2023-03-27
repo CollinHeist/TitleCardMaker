@@ -24,24 +24,33 @@
 </div>
 
 <script>
+  function refreshTheme() {
+    const inverted = (window.localStorage.getItem('site-theme') === 'dark');
+    $('#main-content .ui').toggleClass('inverted', inverted);
+    $('.modal, .modal .ui, .accordion, .accordion .ui').toggleClass('inverted', inverted);
+  }
+
   function toggleTheme() {
     const currentIcons = $('#theme-toggle i');
     // Toggle inverted class modifier, update button sun <-> moon, and set background color
     // Light -> Dark
     if (currentIcons[0].classList.contains('sun')) {
-      $('#main-content .ui').toggleClass('inverted', true);
+      // $('#main-content .ui').toggleClass('inverted', true);
+      // $('.modal, .modal .ui').toggleClass('inverted', true);
       currentIcons[0].className = 'moon outline icon';
       currentIcons[1].className = 'sun outline icon';
       $('body')[0].style.setProperty('background-color', 'var(--background-color-dark)');
       window.localStorage.setItem('site-theme', 'dark');
     // Dark -> light
     } else {
-      $('#main-content .ui').toggleClass('inverted', false);
+      // $('#main-content .ui').toggleClass('inverted', false);
+      // $('.modal, .modal .ui').toggleClass('inverted', false);
       currentIcons[1].className = 'moon outline icon';
       currentIcons[0].className = 'sun outline icon';
       $('body')[0].style.setProperty('background-color', 'var(--background-color-light)');
       window.localStorage.setItem('site-theme', 'light');
     }
+    refreshTheme();
   }
 
   // Default theme is LIGHT, so if dark is indicated, toggle

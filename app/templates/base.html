@@ -118,6 +118,9 @@
       $('.ui.cards .image').dimmer({
         on: 'ontouchstart' in document.documentElement ? 'click' : 'hover'
       });
+
+      // Refresh theme for any newly added HTML
+      refreshTheme();
     }
 
     // Get all statistics and load them into HTML
