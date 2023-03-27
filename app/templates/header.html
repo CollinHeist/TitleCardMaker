@@ -8,10 +8,43 @@
   </div>
 </div>
 
+<div id="theme-toggle">
+  <div class="ui inverted primary blue animated button" onclick="toggleTheme()">
+    <div class="visible content"><i class="sun outline icon"></i></div>
+    <div class="hidden content"><i class="moon outline icon"></i></div>
+  </div>
+</div>
+
 <div id="support-button">
   <a href="https://github.com/sponsors/CollinHeist" target="_blank">
     <div class="ui red button">
-      <i class="heart icon"></i> Support?
+      <i class="heart icon"></i> Support
     </div>
   </a>
 </div>
+
+<script>
+  function toggleTheme() {
+    const currentIcons = $('#theme-toggle i');
+    // Toggle inverted class modifier, update button sun <-> moon, and set background color
+    // Light -> Dark
+    if (currentIcons[0].classList.contains('sun')) {
+      $('#main-content .ui').toggleClass('inverted', true);
+      currentIcons[0].className = 'moon outline icon';
+      currentIcons[1].className = 'sun outline icon';
+      $('body')[0].style.setProperty('background-color', 'var(--background-color-dark)');
+      window.localStorage.setItem('site-theme', 'dark');
+    // Dark -> light
+    } else {
+      $('#main-content .ui').toggleClass('inverted', false);
+      currentIcons[1].className = 'moon outline icon';
+      currentIcons[0].className = 'sun outline icon';
+      $('body')[0].style.setProperty('background-color', 'var(--background-color-light)');
+      window.localStorage.setItem('site-theme', 'light');
+    }
+  }
+
+  // Default theme is LIGHT, so if dark is indicated, toggle
+  let theme = window.localStorage.getItem('site-theme');
+  if (theme === 'dark') { toggleTheme(); }
+</script>

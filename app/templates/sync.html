@@ -108,6 +108,7 @@
     async function getAllSyncs() {
       const syncElements = [
         {source: 'emby', elementID: 'emby-syncs'},
+        {source: 'jellyfin', elementID: 'jellyfin-syncs'},
         {source: 'plex', elementID: 'plex-syncs'},
         {source: 'sonarr', elementID: 'sonarr-syncs'},
       ];
@@ -224,7 +225,9 @@
       <div class="ui grid">
         <div id="sync" class="sixteen wide column">
           <h1 class="ui header">Syncs</h1>
-          <span>A <i>sync</i> defines how to automatically add series to <span class="ui blue text">TitleCardMaker</span>.</span>
+          <div class="ui segment">
+            <span>A <i>sync</i> defines how to automatically add series to <span class="ui blue text">TitleCardMaker</span>.</span>
+          </div>
 
           <!-- Emby -->
           <h3 class="ui horizontal divider left aligned header">Emby</h3>
@@ -677,7 +680,9 @@
         let dataObj = {};
         for (let [name, value] of [...form.entries()]) {
           if (name.includes('_tags') || name.includes('_libraries')) {
-            dataObj[name] = value.split(',');
+            if (value !== '') {
+              dataObj[name] = value.split(',');
+            }
           } else if (value !== '') {
             dataObj[name] = value;
           }

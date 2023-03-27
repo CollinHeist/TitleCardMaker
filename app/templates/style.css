@@ -81,6 +81,11 @@ body > .pusher {
   margin: 0;
 }
 
+/* Theme toggle button */
+#theme-toggle {
+  position: absolute;
+  right: 150px;
+}
 
 /* Style for the main content on all pages */
 #main-content {
