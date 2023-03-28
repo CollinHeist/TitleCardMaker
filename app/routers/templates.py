@@ -45,34 +45,14 @@ def create_template(
         db = Depends(get_database)) -> Template:
 
     # Validate font ID if provided
-    if new_template.font_id is not None:
+    if getattr(new_template, 'font_id', None) is not None:
         if db.query(models.font.Font).filter_by(id=font_id).first() is None:
             raise HTTPException(
                 status_code=404,
                 detail=f'Font {font_id} not found',
             )
 
-    # Validate season titles
-    season_titles = join_lists(
-        new_template.season_title_ranges,
-        new_template.season_title_values,
-        'season title ranges and values'
-    )
-
-    # Validate extras
-    extras = join_lists(
-        new_template.extra_keys,
-        new_template.extra_values,
-        'extra keys and values'
-    )
-
-    # Create dictionary, remove unnecessary keys
-    template_dict = new_template.dict()
-    for key in ('season_title_ranges', 'season_title_values', 'extra_keys',
-                'extra_values'):
-        template_dict.pop(key, None)
-
-    template = models.template.Template(**template_dict)
+    template = models.template.Template(**new_template.dict())
     db.add(template)
     db.commit()
 
@@ -90,6 +70,11 @@ async def get_all_templates(
 async def get_template(
         template_id: int,
         db = Depends(get_database)) -> Template:
+    """
+    Get the Template with the given ID.
+
+    - template_id: ID of the Template.
+    """
 
     template = db.query(models.template.Template)\
         .filter_by(id=template_id).first()
@@ -107,7 +92,7 @@ async def update_template(
         template_id: int,
         update_template: UpdateTemplate = Body(...),
         db = Depends(get_database)) -> Template:
-
+    log.critical(f'{update_template.dict()=}')
     # Get the template being modified, raise 404 if DNE
     template = db.query(models.template.Template)\
         .filter_by(id=template_id).first()
@@ -118,7 +103,7 @@ async def update_template(
         )
 
     # If a font ID was specified, verify it exists
-    if update_template.font_id not in (None, UNSPECIFIED):
+    if getattr(update_template, 'font_id', None) is not None:
         font = db.query(models.font.Font)\
             .filter_by(id=update_template.font_id).first()
         if font is None:
@@ -127,36 +112,12 @@ async def update_template(
                 detail=f'Font {font_id} not found',
             )
 
-    # Validate season titles and extras
-    season_titles = join_lists(
-        update_template.season_title_ranges,update_template.season_title_values,
-        'season title ranges and names',
-    )
-    extras = join_lists(
-        update_template.extra_keys, update_template.extra_values,
-        'extra keys and values',
-    )
-
-    # Update if specified and new
-    changed = False
-    if season_titles != UNSPECIFIED and template.season_titles != season_titles:
-        log.error(f'SETTING template.season_titles={season_titles}')
-        template.season_titles = season_titles
-        changed = True
-    if extras != UNSPECIFIED and template.extras != extras:
-        log.error(f'SETTING template.extras={extras}')
-        template.extras = extras
-        changed = True
-    
     # Update each attribute of the object
+    changed = False
     for attr, value in update_template.dict().items():
-        # Skip intermediate keys 
-        if attr in ('season_title_ranges', 'season_title_values',
-                    'extra_keys', 'extra_values'):
-            continue
         if value != UNSPECIFIED and getattr(template, attr) != value:
             setattr(template, attr, value)
-            log.error(f'SETTING template.{attr}={getattr(template, attr)}')
+            log.debug(f'SETTING template[{template_id}].{attr} = {value}')
             changed = True
 
     # If any values were changed, commit to database
@@ -170,13 +131,28 @@ async def update_template(
 async def delete_template(
         template_id: int,
         db = Depends(get_database)) -> None:
+    """
+    Delete the given template. This also deletes the reference to this
+    template on any associated Series of Episode entries.
 
+    - template_id: ID of the template to delete.
+    """
+
+    # Query for template, raise 404 if DNE
     query = db.query(models.template.Template).filter_by(id=template_id)
     if query.first() is None:
         raise HTTPException(
             status_code=404,
             detail=f'Template {template_id} not found',
         )
+
+    # Delete template reference from any series or episode
+    for series in db.query(models.series.Series)\
+        .filter_by(template_id=template_id).all():
+        series.template_id = None
+    for episode in db.query(models.episode.Episode)\
+        .filter_by(template_id=template_id).all():
+        episode.template_id = None
 
     query.delete()
     db.commit()
