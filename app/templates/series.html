@@ -82,11 +82,11 @@
         </div>
         <div class="field">
           <label>Source File</label>
-          <input type="text" name="source_path" placeholder="{SOURCE PATH}">
+          <input type="text" name="source_file_path" placeholder="{SOURCE PATH}">
         </div>
         <div class="field">
           <label>Destination</label>
-          <input type="text" name="card_path" placeholder="{CARD PATH}">
+          <input type="text" name="card_file_path" placeholder="{CARD PATH}">
         </div>
         <!-- Save and delete button -->
         <button class="ui primary animated submit button" type="submit">
@@ -155,7 +155,7 @@
 
       episodeData.forEach(episode => {
         let {id, season_number, episode_number, absolute_number, title,
-             source_path, card_path} = episode;
+             source_file_path, card_file_path} = episode;
 
         // Get or create the div for this season
         let seasonElement = document.getElementById(`episode-data-season${season_number}`);
@@ -179,10 +179,10 @@
         episodeElement.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${episodeTitle}`;
         episodeElement.querySelector('input[name="title"]').placeholder = title;
         episodeElement.querySelector('input[name="title"]').value = title;
-        episodeElement.querySelector('input[name="source_path"]').placeholder = source_path;
-        episodeElement.querySelector('input[name="source_path"]').value = source_path;
-        episodeElement.querySelector('input[name="card_path"]').placeholder = card_path;
-        episodeElement.querySelector('input[name="card_path"]').value = card_path;
+        episodeElement.querySelector('input[name="source_file_path"]').placeholder = source_file_path;
+        episodeElement.querySelector('input[name="source_file_path"]').value = source_file_path;
+        episodeElement.querySelector('input[name="card_file_path"]').placeholder = card_file_path;
+        episodeElement.querySelector('input[name="card_file_path"]').value = card_file_path;
 
         // Add episode element to the season div
         seasonDiv.appendChild(episodeElement);
@@ -229,6 +229,9 @@
           });
         };
       });
+
+      // Refresh theme for any newly added HTML
+      refreshTheme();
     }
 
     async function initAll() {

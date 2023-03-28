@@ -50,7 +50,6 @@ class Preferences(Base):
     episode_data_source: EpisodeDataSource
     valid_episode_data_sources: list[EpisodeDataSource]
     valid_image_extensions: list[str]
-    validate_fonts: bool
     specials_folder_format: str
     season_folder_format: str
     sync_specials: bool

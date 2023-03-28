@@ -84,21 +84,17 @@
                   <span class="default text">Server Default</span>
                   <input name="watched_style" type="hidden">
                   <i class="dropdown icon"></i>
-                  <div class="menu">
-                    <!-- Added asynchronously -->
-                  </div>
+                  <div class="menu"><!-- Added asynchronously --></div>
                 </div>
               </div>
 
               <div class="field">
                 <label>Unwatched Episode Style</label>
-                <div data-value="unwatched-style" class="ui compact selection clearable dropdown">
+                <div data-value="unwatched-style" class="ui long compact selection clearable dropdown">
+                  <span class="default text">Server Default</span>
                   <input name="unwatched_style" type="hidden">
                   <i class="dropdown icon"></i>
-                  <div class="default text">Global Default</div>
-                  <div class="menu">
-                    <!-- Added asynchronously -->
-                  </div>
+                  <div class="menu"><!-- Added asynchronously --></div>
                 </div>
               </div>
 
@@ -135,6 +131,10 @@
               <div data-value="episode-text-format" class="field">
                 <label>Episode Text Format</label>
                 <input name="episode_text_format" type="text" placeholder="Card Default">
+              </div>
+
+              <div class="ui visible warning message">
+                Custom season titles and episode text are not reflected in live preview.
               </div>
 
               <h4 class="ui horizontal middle aligned divider header">Non-Card Settings</h4>
@@ -193,6 +193,7 @@
                   <i class="trash icon"></i>
                 </div>
               </button>
+              <div class="'ui error message"></div>
             </form>
           </div>
 
@@ -220,6 +221,7 @@
   <script>
     async function reloadPreview(watchStatus, formElement, cardElement, imgElement) {
       let form = new FormData(formElement);
+      let listData = {extra_keys: [], extra_values: []};
       if (watchStatus === 'watched' && form.get(`watched_style`) === '') {
         form.set('style', '{{preferences.default_watched_style}}');
       } else if (watchStatus === 'unwatched' && form.get('unwatched_style') === '') {
@@ -230,26 +232,19 @@
         form.set('grayscale', true);
       }
       
-      for (let [name, value] of [...form.entries()]) {
-        if (value === '') { form.delete(name); }
-        // if (name === 'size' || name === 'kerning' || name === 'stroke_width') {
-        //   form.set(name, value/100.0);
-        // }
+      for (let [key, value] of [...form.entries()]) {
+        if (key === 'extra_keys') { listData.extra_keys.push(value); }
+        if (key === 'extra_values') { listData.extra_values.push(value); }
+        if (value === '') { form.delete(key); }
       }
-      // if (form.get(`${watchStatus}_style`).includes('blur')) { form.set('blur', true); }
-      // if (form.get(`${watchStatus}_style`).includes('grayscale')) { form.set('grayscale', true); }
-      // form.set('style', form.get(`${watchStatus}_style`));
 
       const previewCard = {
         card_type: "{{preferences.default_card_type.lower()}}",
-        // hide_season_text: form.get('hide_season_text'),
-        // blur: form.get(`${watchStatus}_style`).includes('blur'),
-        // grayscale: form.get(`${watchStatus}_style`).includes('grayscale'),
         style: form.get(`${watchStatus}_style`),
-        // font_id: form.get('font_id'),
         ...Object.fromEntries(form.entries()),
+        extra_keys: listData.extra_keys,
+        extra_values: listData.extra_values,
       };
-      console.log(previewCard);
       cardElement.classList.add('loading');
       $.ajax({
         type: 'POST',
@@ -267,7 +262,6 @@
           });
         }, complete: () => {
           cardElement.classList.remove('loading');
-          // cardElement.className = 'ui fluid raised card';
         }
       });
     }
@@ -439,13 +433,12 @@
         $(`#template-id${templateObj.id} >* form`).on('submit', (event) => {
           event.preventDefault();
           let form = new FormData(event.target);
-          let listData = {extra_keys: [], extra_values: []};
+          let listData = {extra_keys: [], extra_values: [], season_title_ranges: [], season_title_values: []};
           for (const [key, value] of [...form.entries()]) {
-            if (key === 'extra_keys') { listData.extra_keys.push(value); }
-            if (key === 'extra_values') { listData.extra_values.push(value); }
-            // if (value === '') { form.delete(key); }
+            if (Object.keys(listData).includes(key)) { listData[key].push(value); }
+            if (value === '') { form.delete(key); }
           }
-          
+
           $.ajax({
             type: 'PATCH',
             url: `/api/templates/${templateObj.id}`,

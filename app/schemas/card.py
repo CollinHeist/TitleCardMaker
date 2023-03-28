@@ -1,9 +1,9 @@
 from typing import Literal, Optional
 
-from pydantic import Field, validator
+from pydantic import Field, validator, root_validator
 
-from app.schemas.base import Base
-from app.schemas.font import Font, PreviewFont
+from app.schemas.base import Base, validate_argument_lists_to_dict
+# from app.schemas.font import NewUnnamedEpisodeFont, PreviewFont
 from app.schemas.preferences import Style
 
 LocalCards = Literal[
@@ -47,13 +47,13 @@ Models for title cards.
 class BaseTitleCard(Base):
     card_type: str = Field(..., title='Card type identifier')
     # font: Font # this would be existing Font from the db, e.g. ID + attributes
-    title_text: Optional[str] = Field(default='')
-    season_text: Optional[str] = Field(default='')
+    title_text: Optional[str] = Field(...)
+    season_text: Optional[str] = Field(...)
     hide_season_text: Optional[bool] = Field(
         default=False,
         description='Whether to omit the season text from this card',
     )
-    episode_text: Optional[str] = Field(default='')
+    episode_text: Optional[str] = Field(...)
     hide_episode_text: Optional[bool] = Field(
         default=False,
         description='Whether to omit the episode text from this card',
@@ -71,6 +71,8 @@ class BaseTitleCard(Base):
     absolute_number: Optional[int] = Field(default=1)
 
 class NewTitleCard(BaseTitleCard):
+    # font: Optional[NewUnnamedEpisodeFont] = Field(default=None)
+    font_id: Optional[int] = Field(default=None)
     extra_keys: Optional[list[str]] = Field(default=None)
     extra_values: Optional[list[str]] = Field(default=None)
 
@@ -84,17 +86,55 @@ class UpdateTitleCard(BaseTitleCard):
 
 class TitleCard(BaseTitleCard):
     episode_id: Optional[int]
+    source_file_path: str
+    card_file_path: str
+    font_file_path: str
+    font_color: str
+    font_title_case: str
+    font_size: float
+    font_kerning: float
+    font_stroke_width: float
+    font_interline_spacing: int
+    font_vertical_shift: int
     extras: dict[str, str]
     filesize: int
 
 class PreviewTitleCard(BaseTitleCard):
-    title_text: Optional[str] = Field(default='Example Title')
-    style: Optional[Style] = Field(default='unique')
-    custom_font: Optional[PreviewFont] = Field(default=None)
+    title_text: str = Field(default='Example Title')
+    season_text: str = Field(default='Season 1')
+    episode_text: str = Field(default='Episode 1')
+    style: Style = Field(default='unique')
+    font_color: Optional[str] = Field(default=None)
+    font_size: Optional[float] = Field(default=None)
+    font_kerning: Optional[float] = Field(default=None)
+    font_stroke_width: Optional[float] = Field(default=None)
+    font_interline_spacing: Optional[int] = Field(default=None)
+    font_vertical_shift: Optional[int] = Field(default=None)
     font_id: Optional[int] = Field(default=None)
     extra_keys: Optional[list[str]] = Field(default=None)
     extra_values: Optional[list[str]] = Field(default=None)
 
+    @validator('*', pre=True)
+    def validate_arguments(cls, v):
+        return None if v == '' else v
+
+    @root_validator
+    def delete_unspecified_args(cls, values):
+        delete_keys = [key for key, value in values.items() if value == None]
+        for key in delete_keys:
+            del values[key]
+
+        return values
+
     @validator('extra_keys', 'extra_values', pre=True)
     def validate_list(cls, v):
         return [v] if isinstance(v, str) else v
+
+    @root_validator
+    def validate_paired_lists(cls, values):
+        # Extras
+        return validate_argument_lists_to_dict(
+            values, 'extras',
+            'extra_keys', 'extra_values',
+            output_key='extras',
+        )

@@ -227,14 +227,13 @@
         title_text: previewFormObj.get('title_text'),
         season_text: 'Season 1',
         episode_text: 'Episode 1',
-        custom_font: {
-          color: fontFormObj.get('color'),
-          size: fontFormObj.get('size') / 100.0,
-          kerning: fontFormObj.get('kerning') / 100.0,
-          stroke_width: fontFormObj.get('stroke_width') / 100.0,
-          interline_spacing: fontFormObj.get('interline_spacing'),
-          vertical_shift: fontFormObj.get('vertical_shift'),
-        }, font_id: fontId,
+        font_id: fontId,
+        font_color: fontFormObj.get('color'),
+        font_size: fontFormObj.get('size') / 100.0,
+        font_kerning: fontFormObj.get('kerning') / 100.0,
+        font_stroke_width: fontFormObj.get('stroke_width') / 100.0,
+        font_interline_spacing: fontFormObj.get('interline_spacing'),
+        font_vertical_shift: fontFormObj.get('vertical_shift'),
       };
 
       // Submit API request
