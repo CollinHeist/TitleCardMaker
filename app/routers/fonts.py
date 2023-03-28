@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.dependencies import get_database
 from app.dependencies import get_preferences
 from app.schemas.base import UNSPECIFIED
-from app.schemas.font import Font, NewFont, UpdateFont
+from app.schemas.font import NamedFont, NewNamedFont, UpdateNamedFont
 import app.models as models
 from modules.Debug import log
 
@@ -42,27 +42,16 @@ def join_lists(keys: list[Any], vals: list[Any], desc: str,
 
 @font_router.post('/new', status_code=201)
 def create_font(
-        new_font: NewFont = Body(...),
-        db = Depends(get_database)) -> Font:
+        new_font: NewNamedFont = Body(...),
+        db = Depends(get_database)) -> NamedFont:
     """
     Create a new Font.
 
     - new_font: Font definition to create.
     """
-
-    # Join replacements inputs/outputs
-    replacements = join_lists(
-        new_font.replacements_in, new_font.replacements_out,
-        'character replacements', default={},
-    )
-
-    # Get dictionary, remove replacements in/outs
-    font_dict = new_font.dict()
-    for remove_key in ('replacements_in', 'replacements_out'):
-        font_dict.pop(remove_key, None)
-
+    log.critical(f'{new_font.dict()=}')
     # Add to database
-    font = models.font.Font(replacements=replacements, **font_dict)
+    font = models.font.Font(**new_font.dict())
     db.add(font)
     db.commit()
 
@@ -74,7 +63,7 @@ async def add_font_file(
         font_id: int,
         file: UploadFile,
         db = Depends(get_database),
-        preferences = Depends(get_preferences)) -> Font:
+        preferences = Depends(get_preferences)) -> NamedFont:
     """
     Add a custom font file to the specified Font.
 
@@ -111,7 +100,7 @@ async def add_font_file(
 @font_router.delete('/{font_id}/file', status_code=200)
 def delete_font_file(
         font_id: int,
-        db = Depends(get_database)) -> Font:
+        db = Depends(get_database)) -> NamedFont:
     """
     Delete the font file associated with the given Font.
 
@@ -152,15 +141,15 @@ def delete_font_file(
 @font_router.patch('/{font_id}', status_code=200)
 def update_font(
         font_id: int,
-        update_font: UpdateFont = Body(...),
-        db = Depends(get_database)) -> Font:
+        update_font: UpdateNamedFont = Body(...),
+        db = Depends(get_database)) -> NamedFont:
     """
     Update the Font with the given ID. Only provided fields are updated.
 
     - font_id: ID of the Font to update.
     - update_font: UpdateFont containing fields to update.
     """
-
+    log.critical(f'{update_font.dict()=}')
     # Get existing font object, raise 404 if DNE
     font = db.query(models.font.Font).filter_by(id=font_id).first()
     if font is None:
@@ -169,25 +158,13 @@ def update_font(
             detail=f'Font {font_id} not found',
         )
 
-    # Update object
-    changed = False
-
-    # Update replacements
-    replacements = join_lists(
-        update_font.replacements_in, update_font.replacements_out,
-        'character replacements'
-    )
-    if replacements != UNSPECIFIED and font.replacements != replacements:
-        font.replacements = replacements
-        changed = True
-
     # Update other attributes
+    changed = False
     for attribute, value in update_font.dict().items():
-        if attribute in ('replacements_in', 'replacements_out'):
-            continue
-        if value is not None and getattr(font, attribute) != value:
+        if getattr(font, attribute) != value:
             setattr(font, attribute, value)
             changed = True
+            log.debug(f'SETTING font[{font_id}].{attribute} = {value}')
 
     # If object was changed, update DB
     if changed:
@@ -198,7 +175,7 @@ def update_font(
 
 @font_router.get('/all', status_code=200)
 def get_all_fonts(
-        db = Depends(get_database)) -> list[Font]:
+        db = Depends(get_database)) -> list[NamedFont]:
     """
     Get all defined Fonts.
     """
@@ -209,7 +186,7 @@ def get_all_fonts(
 @font_router.get('/{font_id}', status_code=200)
 def get_font_by_id(
         font_id: int,
-        db = Depends(get_database)) -> Font:
+        db = Depends(get_database)) -> NamedFont:
     """
     Get the Font with the given ID.
 
@@ -256,6 +233,17 @@ def delete_font(
                     status_code=500,
                     detail=f'Error deleting font file - {e}',
                 )
+    
+    # Delete font reference from any template, series, or episode
+    for template in db.query(models.template.Template)\
+        .filter_by(font_id=font_id).all():
+        template.font_id = None
+    for series in db.query(models.series.Series)\
+        .filter_by(font_id=font_id).all():
+        series.font_id = None
+    for episode in db.query(models.episode.Episode)\
+        .filter_by(font_id=font_id).all():
+        episode.font_id = None
         
     query.delete()
     db.commit()
