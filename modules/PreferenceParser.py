@@ -366,7 +366,7 @@ class PreferenceParser(YamlReader):
                     for sync in sonarr_sync:
                         append_writer_and_args('sonarr', 0, sync, base_sync)
                 else:
-                    log.error(f'Invalid Sonarr sync: {plex_sync}')
+                    log.error(f'Invalid Sonarr sync: {sonarr_sync}')
             # Multiple sonarr interfaces, check for sync on each
             elif isinstance(self._get('sonarr'), list):
                 for interface_id, server in enumerate(self._get('sonarr')):
