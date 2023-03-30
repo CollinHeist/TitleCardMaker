@@ -50,7 +50,26 @@ def add_new_episode(
     return episode
 
 
-# /api/episodes/{episode_id}
+@episodes_router.get('/{episode_id}', status_code=200)
+def get_episode_by_id(
+        episode_id: int,
+        db = Depends(get_database)) -> Episode:
+    """
+    Get the Episode with the given ID.
+
+    - episode_id: ID of the Episode to retrieve.
+    """
+
+    episode = db.query(models.episode.Episode).filter_by(id=episode_id).first()
+    if episode is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f'Episode {font_id} not found',
+        )
+
+    return episode
+
+
 @episodes_router.delete('/{episode_id}', status_code=204)
 def delete_episode(
         episode_id: int,
@@ -69,17 +88,22 @@ def delete_episode(
             detail=f'Episode {episode_id} not found',
         )
 
-    # Delete files?
+    # TODO Delete card files
     ...
 
+    # Delete any associated card entries
+    card_query = db.query(models.card.Card).filter_by(episode_id=episode_id)
+    log.debug(f'Deleted {card_query.count()} assocated cards')
+    card_query.delete()
+
     # Delete episode
+    log.debug(f'Deleted Episode {episode_id}')
     db.query(models.episode.Episode).filter_by(id=episode_id).delete()
     db.commit()
 
     return None
 
 
-# /api/episodes/{series_id}/refresh
 @episodes_router.post('/{series_id}/refresh', status_code=201)
 def refresh_episode_data(
         series_id: int,
@@ -94,7 +118,7 @@ def refresh_episode_data(
     """
     Refresh the episode data associated with the given series. This
     queries the series' episode data source for any new episodes, and
-    returns any in a list.
+    returns all the series episodes.
 
     - series_id: Series whose episode data to refresh.
     """
@@ -107,6 +131,29 @@ def refresh_episode_data(
             detail=f'Series {series_id} not found',
         )
 
+    # Query for template if indicated
+    template_dict = {}
+    if series.template_id is not None:  
+        template = db.query(models.template.Template)\
+            .filter_by(id=series.template_id)
+        if template is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f'Series Template {template_id} not found',
+            )
+        template_dict = template.__dict__
+
+    # Get highest priority options
+    series_options = {}
+    priority_merge_v2(
+        series_options,
+        preferences.__dict__,
+        template_dict,
+        series.__dict__,
+    )
+    episode_data_source = series_options['episode_data_source']
+    sync_specials = series_options['sync_specials']
+
     # Raise 409 if cannot communicate with the series episode data source
     interface = {
         'Emby': emby_interface,
@@ -114,11 +161,11 @@ def refresh_episode_data(
         'Plex': plex_interface,
         'Sonarr': sonarr_interface,
         'TMDb': tmdb_interface,
-    }[series.episode_data_source]
+    }[episode_data_source]
     if interface is None:
         raise HTTPException(
             status_code=409,
-            detail=f'Unable to communicate with {series.episode_data_source}'
+            detail=f'Unable to communicate with {episode_data_source}'
         )
 
     # Create SeriesInfo for this object to use in querying
@@ -129,15 +176,13 @@ def refresh_episode_data(
         tvdb_id=series.tvdb_id, tvrage_id=series.tvrage_id,
     )
 
-    if series.episode_data_source == 'Emby':
-        all_episodes = emby_interface.get_all_episodes(
-            series#, preferences=preferences,
-        )
-    elif series.episode_data_source == 'Jellyfin':
+    if episode_data_source == 'Emby':
+        all_episodes = emby_interface.get_all_episodes(series)
+    elif episode_data_source == 'Jellyfin':
         all_episodes = jellyfin_interface.get_all_episodes(
             series_info, preferences=preferences
         )
-    elif series.episode_data_source == 'Plex':
+    elif episode_data_source == 'Plex':
         # Raise 409 if source is Plex but series has no library
         if series.plex_library_name is None: 
             raise HTTPException(
@@ -145,20 +190,20 @@ def refresh_episode_data(
                 detail=f'Series does not have an associated library'
             )
         all_episodes = plex_interface.get_all_episodes(
-            series.plex_library_name, series_info,#preferences=preferences,
+            series.plex_library_name, series_info,
         )
-    elif series.episode_data_source == 'Sonarr':
+    elif episode_data_source == 'Sonarr':
         all_episodes = sonarr_interface.get_all_episodes(
             series_info, preferences=preferences
         )
-    elif series.episode_data_source == 'TMDb':
+    elif episode_data_source == 'TMDb':
         all_episodes = tmdb_interface.get_all_episodes(series_info)
 
     # Filter episodes
     changed = False
     for episode in all_episodes:
         # Skip specials if indicated
-        if not series.sync_specials and episode.season_number == 0:
+        if not sync_specials and episode.season_number == 0:
             log.debug(f'Skipping {episode} - not syncing specials')
             continue
 
@@ -193,9 +238,6 @@ def refresh_episode_data(
     # Commit to database if changed
     if changed:
         db.commit()
-
-    # Add header for the URI to the created resource
-    response.headers['Location'] = f'/series/{series_id}/episodes'
     
     return db.query(models.episode.Episode).filter_by(series_id=series_id).all()
 

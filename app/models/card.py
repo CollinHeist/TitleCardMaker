@@ -13,6 +13,7 @@ class Card(Base):
 
     source_file_path = Column(String, nullable=False)
     card_file_path = Column(String, nullable=False)
+    filesize = Column(Integer)
 
     card_type = Column(String, nullable=False)
     title_text = Column(String, nullable=False)
@@ -33,10 +34,8 @@ class Card(Base):
     blur = Column(Boolean, nullable=False)
     grayscale = Column(Boolean, nullable=False)
 
-    season_number = Column(Integer)
-    episode_number = Column(Integer)
-    absolute_number = Column(Integer)
+    extras = Column(MutableDict.as_mutable(PickleType), default={}, nullable=False)
 
-    extras = Column(MutableDict.as_mutable(PickleType), default={})
-
-    filesize = Column(Integer)
+    season_number = Column(Integer, default=0, nullable=False)
+    episode_number = Column(Integer, default=0, nullable=False)
+    absolute_number = Column(Integer, default=0)

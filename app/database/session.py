@@ -19,6 +19,7 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+# Attempt to read an existing preferences file
 if (file := Path('/mnt/user/Media/TitleCardMaker/app/prefs.json')).exists():
     from pickle import load 
     with file.open('rb') as fh:
@@ -46,13 +47,21 @@ PlexInterfaceLocal = None
 if PreferencesLocal.use_plex:
     try:
         PlexInterfaceLocal = PlexInterface(**PreferencesLocal.plex_arguments)
-    except Exception:
+    except Exception as e:
         ...
 
 SonarrInterfaceLocal = None
 if PreferencesLocal.use_sonarr:
-    SonarrInterfaceLocal = SonarrInterface(**PreferencesLocal.sonarr_arguments)
+    try:
+        SonarrInterfaceLocal = SonarrInterface(
+            **PreferencesLocal.sonarr_arguments
+        )
+    except Exception as e:
+        ...
 
 TMDbInterfaceLocal = None
 if PreferencesLocal.use_tmdb:
-    TMDbInterfaceLocal = TMDbInterface(**PreferencesLocal.tmdb_arguments)
+    try:
+        TMDbInterfaceLocal = TMDbInterface(**PreferencesLocal.tmdb_arguments)
+    except Exception as e:
+        ...

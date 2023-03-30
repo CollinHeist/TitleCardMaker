@@ -20,6 +20,7 @@ SupportedConnection = Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb']
 # Create sub router for all /connection API requests
 connection_router = APIRouter(
     prefix='/connection',
+    tags=['Connections'],
 )
 
 @connection_router.get('/{connection}')
