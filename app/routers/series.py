@@ -143,7 +143,7 @@ series_router = APIRouter(
 def get_all_series(
         db = Depends(get_database)) -> list[Series]:
     """
-    Get all defines Series.
+    Get all defined Series.
     """
     
     return db.query(models.series.Series).all()
@@ -225,6 +225,7 @@ def delete_series(
     series_poster = Path(series.poster_path)
     if series_poster.name != 'placeholder.jpg' and series_poster.exists():
         ...
+        # TODO delete thumbail
         Path(series.poster_path).unlink(missing_ok=True)
 
     # Delete series and episodes from database
@@ -240,7 +241,7 @@ def search_series(
         name: Optional[str] = None,
         template_id: Optional[int] = None,
         font_id: Optional[int] = None,
-        max_results: Optional[int] = None,
+        max_results: Optional[int] = 50,
         db = Depends(get_database)):
     """
     Query all defined defined series by the given parameters. This
@@ -276,6 +277,11 @@ def search_series(
 def get_series_config(
         series_id: int,
         db = Depends(get_database)) -> Series:
+    """
+    Get the config for the given Series.
+
+    - series_id: ID of the series to get the config of.
+    """
     
     # Query for this series, raise 404 if DNE
     series = db.query(models.series.Series).filter_by(id=series_id).first()
@@ -328,6 +334,7 @@ def update_series(
     changed = False
     for attr, value in update_series.dict().items():
         if value != UNSPECIFIED and getattr(series, attr) != value:
+            log.debug(f'Series[{series_id}].{attr} = {value}')
             setattr(series, attr, value)
             changed = True
 
@@ -402,6 +409,13 @@ async def set_series_poster(
         poster_file: Optional[UploadFile] = None,
         db = Depends(get_database),
         preferences = Depends(get_preferences)) -> str:
+    """
+    Set the poster for the given series.
+
+    - series_id: ID of the series whose poster is being updated.
+    - poster_url: URL to the new poster.
+    - poster_file: New poster file.
+    """
 
     # Query for this series, raise 404 if DNE
     series = db.query(models.series.Series).filter_by(id=series_id).first()
