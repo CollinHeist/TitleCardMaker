@@ -21,6 +21,7 @@ class Episode(Base):
 
     source_file_path = Column(String, default=default_source)
     card_file_path = Column(String, default=default_card)
+    watched = Column(Boolean, default=None)
 
     season_number = Column(Integer, nullable=False)
     episode_number = Column(Integer, nullable=False)
@@ -28,6 +29,13 @@ class Episode(Base):
 
     title = Column(String, nullable=False)
     match_title = Column(Boolean, default=None)
+
+    hide_season_text = Column(Boolean, default=None)
+    season_text = Column(String, default=None)
+    hide_episode_text = Column(Boolean, default=None)
+    episode_text = Column(String, default=None)
+    unwatched_style = Column(String, default=None)
+    watched_style = Column(String, default=None)
 
     font_id = Column(Integer, ForeignKey('font.id'))
     font_color = Column(String, default=None)
@@ -44,3 +52,5 @@ class Episode(Base):
     tmdb_id = Column(Integer, default=None)
     tvdb_id = Column(Integer, default=None)
     tvrage_id = Column(Integer, default=None)
+
+    extras = Column(MutableDict.as_mutable(PickleType), default=None)

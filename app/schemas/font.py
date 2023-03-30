@@ -14,7 +14,7 @@ class BaseFont(Base):
     color: Optional[str] = Field(default=None, title='Font color')
     title_case: Optional[TitleCase] = Field(
         default=None,
-        title='Name of the case function to apply to the title text',
+        description='Name of the case function to apply to the title text',
     )
     size: float = Field(
         default=1.0,
