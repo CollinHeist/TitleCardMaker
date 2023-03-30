@@ -7,6 +7,7 @@ from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy import PickleType
 
 from app.database.session import Base
+from modules.CleanPath import CleanPath
 
 BASE_PATH = Path('/mnt/user/Media/TitleCardMaker/')
 
@@ -28,10 +29,10 @@ class Series(Base):
     emby_library_name = Column(String, default=None)
     jellyfin_library_name = Column(String, default=None)
     plex_library_name = Column(String, default=None)
-    filename_format = Column(String, default='{full_name} - S{season:02}E{episode:02}')
-    episode_data_source = Column(String, default='Sonarr')
-    sync_specials = Column(Boolean, default=False)
-    skip_localized_images = Column(Boolean, default=False)
+    filename_format = Column(String, default=None)
+    episode_data_source = Column(String, default=None)
+    sync_specials = Column(Boolean, default=None)
+    skip_localized_images = Column(Boolean, default=None)
     translations = Column(MutableList.as_mutable(PickleType), default=None)
     match_titles = Column(Boolean, default=True)
 
@@ -59,15 +60,19 @@ class Series(Base):
     # Card arguments
     template_id = Column(Integer, ForeignKey('template.id'))
     directory = Column(String, default=default_directory)
-    card_type = Column(String, default='standard')
-    hide_season_text = Column(Boolean, default=False)
+    card_type = Column(String, default=None)
+    hide_season_text = Column(Boolean, default=None)
     season_titles = Column(MutableDict.as_mutable(PickleType), default=None)
-    hide_episode_text = Column(Boolean, default=False)
+    hide_episode_text = Column(Boolean, default=None)
     episode_text_format = Column(String, default=None)
-    unwatched_style = Column(String, default='unique')
-    watched_style = Column(String, default='unique')
+    unwatched_style = Column(String, default=None)
+    watched_style = Column(String, default=None)
     extras = Column(MutableDict.as_mutable(PickleType), default=None)
 
     @hybrid_property
     def full_name(self) -> str:
         return f'{self.name} ({self.year})'
+
+    @hybrid_property
+    def path_safe_name(self) -> str:
+        return CleanPath.sanitize_name(self.full_name)
