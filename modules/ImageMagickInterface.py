@@ -1,6 +1,7 @@
 from pathlib import Path
 from shlex import split as command_split
 from subprocess import Popen, PIPE, TimeoutExpired
+from typing import Optional
 
 from modules.Debug import log
 
@@ -33,9 +34,9 @@ class ImageMagickInterface:
 
 
     def __init__(self,
-            container: str=None,
-            use_magick_prefix: bool=False,
-            timeout: int=COMMAND_TIMEOUT_SECONDS) -> None:
+            container: Optional[str] = None,
+            use_magick_prefix: bool = False,
+            timeout: int = COMMAND_TIMEOUT_SECONDS) -> None:
         """
         Construct a new instance. If container is falsey, then commands will not
         use a docker container.

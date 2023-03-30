@@ -477,22 +477,12 @@
       event.preventDefault();
       $('#save-changes').toggleClass('loading', true);
 
-      // Get form data, remove blanks
-      // let form = new FormData(event.target);
-      // const isp =  form.get('image_source_priority').split(',');
-      // form.delete('image_source_priority');
-      // form.set('image_source_priority', isp);
-      // console.log(isp);
-
       $.ajax({
         type: 'POST',
         url: '/api/settings/update',
-        // data: JSON.stringify(Object.fromEntries(new FormData(event.target))),
-        // data: form,
         data: new FormData(event.target),
         processData: false,
         contentType: false,
-        // headers: {'Content-Type': 'application/json'},
         success: function(response) { 
           $.toast({
             class: 'blue info',
