@@ -29,6 +29,7 @@ class Episode(Base):
 
     title = Column(String, nullable=False)
     match_title = Column(Boolean, default=None)
+    auto_split_title = Column(Boolean, default=True, nullable=False)
 
     hide_season_text = Column(Boolean, default=None)
     season_text = Column(String, default=None)

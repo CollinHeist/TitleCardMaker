@@ -11,6 +11,7 @@ from app.dependencies import get_database, get_preferences, get_emby_interface,\
     get_jellyfin_interface, get_plex_interface, get_sonarr_interface, \
     get_tmdb_interface
 import app.models as models
+from app.routers.cards import priority_merge_v2
 from app.schemas.base import UNSPECIFIED
 from app.schemas.episode import Episode, NewEpisode, UpdateEpisode
 

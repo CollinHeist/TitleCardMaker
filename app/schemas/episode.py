@@ -28,6 +28,8 @@ class NewEpisode(Base):
 
     title: str = Field(...)
     match_title: Optional[bool] = Field(default=None)
+    auto_split_title: bool = Field(default=True)
+
     hide_season_text: Optional[bool]
     season_text: Optional[str]
     hide_episode_text: Optional[bool]
@@ -70,6 +72,8 @@ class UpdateEpisode(Base):
 
     title: str = Field(default=UNSPECIFIED)
     match_title: Optional[bool] = Field(default=UNSPECIFIED)
+    auto_split_title: bool = Field(default=UNSPECIFIED)
+
     hide_season_text: Optional[bool] = Field(default=UNSPECIFIED)
     season_text: Optional[str] = Field(default=UNSPECIFIED)
     hide_episode_text: Optional[bool] = Field(default=UNSPECIFIED)
@@ -137,6 +141,8 @@ class Episode(Base):
 
     title: str
     match_title: Optional[bool]
+    auto_split_title: bool
+
     hide_season_text: Optional[bool]
     season_text: Optional[str]
     hide_episode_text: Optional[bool]
