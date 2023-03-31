@@ -1,8 +1,10 @@
 from typing import Generator
 
-from app.database.session import SessionLocal, PreferencesLocal, \
-    EmbyInterfaceLocal, JellyfinInterfaceLocal, PlexInterfaceLocal, \
-    SonarrInterfaceLocal, TMDbInterfaceLocal
+from app.database.session import (
+    EmbyInterfaceLocal, JellyfinInterfaceLocal, PreferencesLocal,
+    PlexInterfaceLocal, Scheduler, SessionLocal, SonarrInterfaceLocal,
+    TMDbInterfaceLocal
+)
 
 def get_database() -> Generator:
     db = SessionLocal()
@@ -28,3 +30,6 @@ def get_sonarr_interface() -> 'SonarrInterface':
 
 def get_tmdb_interface() -> 'TMDbInterface':
     return TMDbInterfaceLocal
+
+def get_scheduler() -> 'BackgroundScheduler':
+    return Scheduler

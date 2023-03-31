@@ -1,5 +1,8 @@
 from pathlib import Path
 
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+from apscheduler.executors.pool import ThreadPoolExecutor
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -11,21 +14,32 @@ from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
+# SQL Database
 SQLALCHEMY_DATABASE_URL = 'sqlite:///./db.sqlite'
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    SQLALCHEMY_DATABASE_URL, connect_args={'check_same_thread': False}
 )
-
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Attempt to read an existing preferences file
+# Scheduler
+Scheduler = BackgroundScheduler(
+    jobstores={'default': SQLAlchemyJobStore(url=SQLALCHEMY_DATABASE_URL)},
+    executors={'default': ThreadPoolExecutor(20)},
+    job_defaults={'coalesce': True},
+)
+Scheduler.start()
+
+# Preference file/object
+
 if (file := Path('/mnt/user/Media/TitleCardMaker/app/prefs.json')).exists():
     from pickle import load 
     with file.open('rb') as fh:
         PreferencesLocal = load(fh)
 else:
     PreferencesLocal = Preferences()
+
+# Interfaces
 
 EmbyInterfaceLocal = None
 if PreferencesLocal.use_emby:

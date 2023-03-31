@@ -23,6 +23,7 @@ sqlalchemy = "*"
 python-multipart = "*"
 jinja2 = "*"
 pydantic = "*"
+apscheduler = "*"
 
 [dev-packages]
 
