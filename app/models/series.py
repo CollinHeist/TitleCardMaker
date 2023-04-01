@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 from json import dumps, loads
 from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String
@@ -7,13 +8,10 @@ from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy import PickleType
 
 from app.database.session import Base
+from app.dependencies import get_preferences
 from modules.CleanPath import CleanPath
 
-BASE_PATH = Path('/mnt/user/Media/TitleCardMaker/')
-
-def default_directory(context) -> str:
-    params = context.get_current_parameters()
-    return str(BASE_PATH / 'cards' / f'{params["name"]} ({params["year"]})')
+ASSET_DIRECTORY = Path(__file__).parent.parent / 'assets'
 
 class Series(Base):
     __tablename__ = 'series'
@@ -22,7 +20,7 @@ class Series(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
     year = Column(Integer)
-    poster_path = Column(String, default=str(BASE_PATH / 'app' / 'assets' / 'placeholder.jpg'))
+    poster_path = Column(String, default=str(ASSET_DIRECTORY/'placeholder.jpg'))
     poster_url = Column(String, default='/assets/placeholder.jpg')
 
     # Optional SERIES arguments
@@ -59,7 +57,7 @@ class Series(Base):
 
     # Card arguments
     template_id = Column(Integer, ForeignKey('template.id'))
-    directory = Column(String, default=default_directory)
+    directory = Column(String, default=None)
     card_type = Column(String, default=None)
     hide_season_text = Column(Boolean, default=None)
     season_titles = Column(MutableDict.as_mutable(PickleType), default=None)

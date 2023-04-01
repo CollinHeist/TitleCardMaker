@@ -382,7 +382,7 @@ class Template(BaseTemplate):
 class Series(BaseSeries):
     id: int
     full_name: str
-    poster_path: str
+    poster_path: Optional[str]
     poster_url: str
     font_color: Optional[str]
     font_title_case: Optional[TitleCase]
