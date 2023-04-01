@@ -70,7 +70,7 @@
       let localTypes = [],
           remoteTypes = [];
       allTypes.forEach(({name, source}) => {
-        let selected = name === '{{preferences.default_card_type}}';
+        let selected = name.toLowerCase() === '{{preferences.default_card_type}}';
         if (source === 'local') {
           localTypes.push({name: name, value: name, selected: selected});
         } else {

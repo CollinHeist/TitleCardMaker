@@ -16,6 +16,8 @@ Plex = EpisodeDataSource('plex', 'Plex')
 Sonarr = EpisodeDataSource('sonarr', 'Sonarr')
 TMDb = EpisodeDataSource('tmdb', 'TMDb')
 
+TCM_ROOT = Path(__file__).parent.parent.parent
+
 class Preferences:
 
     DEFAULT_CARD_FILENAME_FORMAT = ('{full_name} S{season_number:02}'
@@ -28,8 +30,8 @@ class Preferences:
 
     def __init__(self) -> None:
         self.asset_directory = Path(__file__).parent.parent / 'assets'
-        self.card_directory = Path(__file__).parent / 'cards'
-        self.source_directory = Path(__file__).parent / 'source'
+        self.card_directory = TCM_ROOT / 'cards'
+        self.source_directory = TCM_ROOT / 'source'
 
         self.card_filename_format = self.DEFAULT_CARD_FILENAME_FORMAT
         self.card_extension = self.DEFAULT_CARD_EXTENSION
@@ -38,11 +40,10 @@ class Preferences:
         self.valid_image_extensions = self.VALID_IMAGE_EXTENSIONS
 
         self.specials_folder_format = 'Specials'
-        self.season_folder_format = 'Season {season}'
+        self.season_folder_format = 'Season {season_number}'
         self.sync_specials = True
-        self.supported_language_codes = []
 
-        self.default_card_type = 'Standard'
+        self.default_card_type = 'standard'
         self.default_watched_style = 'unique'
         self.default_unwatched_style = 'unique'
 
