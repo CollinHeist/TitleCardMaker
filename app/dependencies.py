@@ -13,6 +13,9 @@ def get_database() -> Generator:
     finally:
         db.close()
 
+def get_scheduler() -> 'BackgroundScheduler':
+    return Scheduler
+
 def get_preferences() -> 'Preferences':
     return PreferencesLocal
 
@@ -30,6 +33,3 @@ def get_sonarr_interface() -> 'SonarrInterface':
 
 def get_tmdb_interface() -> 'TMDbInterface':
     return TMDbInterfaceLocal
-
-def get_scheduler() -> 'BackgroundScheduler':
-    return Scheduler

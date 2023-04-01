@@ -14,11 +14,11 @@ from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
-# SQL Database
 SQLALCHEMY_DATABASE_URL = 'sqlite:///./db.sqlite'
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={'check_same_thread': False}
 )
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -31,7 +31,6 @@ Scheduler = BackgroundScheduler(
 Scheduler.start()
 
 # Preference file/object
-
 if (file := Path('/mnt/user/Media/TitleCardMaker/app/prefs.json')).exists():
     from pickle import load 
     with file.open('rb') as fh:
@@ -39,8 +38,8 @@ if (file := Path('/mnt/user/Media/TitleCardMaker/app/prefs.json')).exists():
 else:
     PreferencesLocal = Preferences()
 
-# Interfaces
 
+# Initialize various interfaces
 EmbyInterfaceLocal = None
 if PreferencesLocal.use_emby:
     try:

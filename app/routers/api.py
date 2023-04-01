@@ -6,6 +6,7 @@ from app.routers.cards import card_router
 from app.routers.connection import connection_router
 from app.routers.episodes import episodes_router
 from app.routers.fonts import font_router
+from app.routers.schedule import schedule_router
 from app.routers.series import series_router
 from app.routers.settings import settings_router
 from app.routers.statistics import statistics_router
@@ -23,6 +24,7 @@ api_router.include_router(card_router)
 api_router.include_router(connection_router)
 api_router.include_router(episodes_router)
 api_router.include_router(font_router)
+api_router.include_router(schedule_router)
 api_router.include_router(series_router)
 api_router.include_router(settings_router)
 api_router.include_router(statistics_router)

@@ -5,8 +5,18 @@ from fastapi import APIRouter, Body, Depends, Form, HTTPException
 from app.dependencies import get_database, get_scheduler, get_preferences
 import app.models as models
 from app.schemas.base import Base, UNSPECIFIED
+from app.schemas.schedule import ScheduledTask
 
 from modules.Debug import log
+
+def fake_refresh_episode_data():
+    ...
+
+def fake_sync_interfaces():
+    ...
+
+def fake_create_title_cards():
+    ...
 
 # Job ID's for scheduled tasks
 JOB_REFRESH_EPISODE_DATA: str = 'refresh episode data'
@@ -14,15 +24,15 @@ JOB_SYNC_INTERFACES: str = 'sync interfaces'
 JOB_CREATE_TITLE_CARDS: str = 'create title cards'
 JOBS = [
     {'id': JOB_REFRESH_EPISODE_DATA,
-     'function': ...,  # TODO populate with actual function call
+     'function': fake_refresh_episode_data,  # TODO populate with actual function call
      'interval': 60 * 60 * 6,  # 6 hours
     },
     {'id': JOB_SYNC_INTERFACES,
-     'function': ...,
+     'function': fake_sync_interfaces,
      'interval': 60 * 60 * 6, # 6 hours
     },
     {'id': JOB_CREATE_TITLE_CARDS,
-     'function': ...,
+     'function': fake_create_title_cards,
      'interval': 60 * 60 * 6, # 6 hours
     },
 ]
@@ -47,4 +57,12 @@ def initialize_scheduler() -> None:
             )
 initialize_scheduler()
 
-...
+@schedule_router.get('/scheduled')
+def get_scheduled_tasks(
+        schedule = Depends(get_scheduler)) -> list[ScheduledTask]:
+    
+    return [{
+        'id': str(job.id),
+        'frequency': str(job.trigger),
+        'next_run': str(job.next_run_time),
+    } for job in schedule.get_jobs()]

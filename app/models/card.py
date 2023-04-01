@@ -11,8 +11,8 @@ class Card(Base):
     series_id = Column(Integer, ForeignKey('series.id'))
     episode_id = Column(Integer, ForeignKey('episode.id'))
 
-    source_file_path = Column(String, nullable=False)
-    card_file_path = Column(String, nullable=False)
+    source_file = Column(String, nullable=False)
+    card_file = Column(String, nullable=False)
     filesize = Column(Integer)
 
     card_type = Column(String, nullable=False)
@@ -22,7 +22,7 @@ class Card(Base):
     episode_text = Column(String, nullable=False)
     hide_episode_text = Column(Boolean, nullable=False)
 
-    font_file_path = Column(String, nullable=False)
+    font_file = Column(String, nullable=False)
     font_color = Column(String, nullable=False)
     font_title_case = Column(String, nullable=False)
     font_size = Column(Float, nullable=False)
