@@ -205,6 +205,9 @@ class SonarrInterface(WebInterface, SyncInterface):
             and the Path to the series' media as reported by Sonarr.
         """
 
+        # Temporarily override request timeout to 240s (4 min)
+        self.REQUEST_TIMEOUT = 240
+
         # Construct GET arguments
         all_series = self._get(f'{self.url}series', self.__standard_params)
 
@@ -272,6 +275,9 @@ class SonarrInterface(WebInterface, SyncInterface):
 
             # Add to returned list
             series.append((series_info, show['path']))
+
+        # Reset request timeout
+        self.REQUEST_TIMEOUT = 30
 
         return series
 

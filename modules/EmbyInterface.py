@@ -285,7 +285,10 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             series, the  path (string) it is located, and its
             corresponding library name.
         """
-        
+
+        # Temporarily override request timeout to 240s (4 min)
+        self.REQUEST_TIMEOUT = 240
+
         # Base params for all queries
         params = {
             'Recursive': True,
@@ -318,6 +321,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                         series_info = SeriesInfo(series['Name'], year,
                                                  emby_id=series['Id'])
                         all_series.append((series_info, series['Path'],library))
+
+        # Reset request timeout
+        self.REQUEST_TIMEOUT = 30
 
         return all_series
 

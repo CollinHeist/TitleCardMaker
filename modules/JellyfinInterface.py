@@ -272,6 +272,9 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             corresponding library name.
         """
 
+        # Temporarily override request timeout to 240s (4 min)
+        self.REQUEST_TIMEOUT = 240
+
         # Base params for all queries
         params = {
             'recursive': True,
@@ -307,6 +310,9 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                     jellyfin_id=series['Id'],
                 )
                 all_series.append((series_info, series['Path'], library))
+
+        # Reset request timeout
+        self.REQUEST_TIMEOUT = 30
 
         return all_series
 

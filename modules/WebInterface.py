@@ -14,7 +14,7 @@ class WebInterface:
     results. This object caches requests/results for better performance.
     """
 
-    """Maximum time allowed for a single request"""
+    """Maximum time allowed for a single GET request"""
     REQUEST_TIMEOUT = 15
 
     """How many requests to cache"""

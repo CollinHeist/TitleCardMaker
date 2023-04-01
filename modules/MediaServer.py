@@ -17,6 +17,9 @@ class MediaServer(ABC):
     source images retrieved from them.
     """
 
+    """Maximum time allowed for a single GET request"""
+    REQUEST_TIMEOUT = 30
+
     """Default filesize limit for all uploaded assets"""
     DEFAULT_FILESIZE_LIMIT = '10 MB'
 
