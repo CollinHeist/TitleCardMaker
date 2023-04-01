@@ -12,7 +12,7 @@ class Font(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
-    file_path = Column(String, default=None)
+    file = Column(String, default=None)
     color = Column(String, default=None)
     title_case = Column(String, default=None)
     size = Column(Float, default=1.0)

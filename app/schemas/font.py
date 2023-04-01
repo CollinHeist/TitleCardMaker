@@ -11,7 +11,7 @@ TitleCase = Literal['blank', 'lower', 'source', 'title', 'upper']
 Base classes
 """
 class BaseFont(Base):
-    color: Optional[str] = Field(default=None, title='Font color')
+    color: Optional[str] = Field(default=None, min_length=1, title='Font color')
     title_case: Optional[TitleCase] = Field(
         default=None,
         description='Name of the case function to apply to the title text',
@@ -38,23 +38,6 @@ class BaseFont(Base):
         title='Vertical shift (pixels)',
     )
 
-class BaseUpdateFont(Base):
-    color: Optional[str] = Field(default=UNSPECIFIED)
-    title_case: Optional[TitleCase] = Field(default=UNSPECIFIED)
-    size: float = Field(default=UNSPECIFIED, gt=0.0)
-    kerning: float = Field(default=UNSPECIFIED)
-    stroke_width: float = Field(default=UNSPECIFIED)
-    interline_spacing: int = Field(default=UNSPECIFIED)
-    vertical_shift: int = Field(default=UNSPECIFIED)
-
-    @root_validator
-    def delete_unspecified_args(cls, values):
-        delete_keys = [key for key, value in values.items() if value == UNSPECIFIED]
-        for key in delete_keys:
-            del values[key]
-
-        return values
-
 class BaseNamedFont(BaseFont):
     name: str = Field(..., min_length=1, title='Font name')
     delete_missing: bool = Field(
@@ -75,6 +58,10 @@ class NewNamedFont(BaseNamedFont):
         default=[],
         title='Characters to substitute',
     )
+
+    @validator('*', pre=True)
+    def validate_arguments(cls, v):
+        return None if v == '' else v
 
     @validator('replacements_in', 'replacements_out', pre=True)
     def validate_list(cls, v):
@@ -99,15 +86,34 @@ class PreviewFont(Base):
 """
 Update classes
 """
-class UpdateNamedFont(BaseUpdateFont):
+class UpdateNamedFont(Base):
     name: str = Field(default=UNSPECIFIED, min_length=1)
+    color: Optional[str] = Field(default=UNSPECIFIED, min_length=1)
+    title_case: Optional[TitleCase] = Field(default=UNSPECIFIED)
+    size: float = Field(default=UNSPECIFIED, gt=0.0)
+    kerning: float = Field(default=UNSPECIFIED)
+    stroke_width: float = Field(default=UNSPECIFIED)
+    interline_spacing: int = Field(default=UNSPECIFIED)
+    vertical_shift: int = Field(default=UNSPECIFIED)
     delete_missing: bool = Field(default=UNSPECIFIED)
     replacements_in: list[str] = Field(default=UNSPECIFIED)
     replacements_out: list[str] = Field(default=UNSPECIFIED)
 
+    @validator('*', pre=True)
+    def validate_arguments(cls, v):
+        return None if v == '' else v
+
     @validator('replacements_in', 'replacements_out', pre=True)
     def validate_list(cls, v):
         return [v] if isinstance(v, str) else v
+
+    @root_validator
+    def delete_unspecified_args(cls, values):
+        delete_keys = [key for key, value in values.items() if value == UNSPECIFIED]
+        for key in delete_keys:
+            del values[key]
+
+        return values
 
     @root_validator
     def validate_paired_lists(cls, values):
@@ -126,5 +132,5 @@ class SeriesFont(BaseFont):
 
 class NamedFont(BaseNamedFont):
     id: int
-    file_path: Optional[str] 
+    file: Optional[str] 
     replacements: dict[str, str]

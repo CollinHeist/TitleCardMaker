@@ -91,7 +91,7 @@ async def add_font_file(
     file_path = font_directory / str(font.id) / file.filename
     file_path.parent.mkdir(exist_ok=True, parents=True)
     file_path.write_bytes(file_content)
-    font.file_path = str(file_path)
+    font.file = str(file_path)
     db.commit()
 
     return font
@@ -116,23 +116,23 @@ def delete_font_file(
         )
 
     # Font has no file, return unmodified
-    if font.file_path is None:
+    if font.file is None:
         return font
 
     # If file exists, delete
-    if Path(font.file_path).exists():
+    if Path(font.file).exists():
         # Raise exception if unable to delete file
         try:
-            Path(font.file_path).unlink()
+            Path(font.file).unlink()
         except Exception as e:
-            log.exception(f'Error deleting {font.file_path}', e)
+            log.exception(f'Error deleting {font.file}', e)
             raise HTTPException(
                 status_code=500,
                 detail=f'Error deleting font file - {e}',
             )
 
     # Reset file path, update database
-    font.file_path = None
+    font.file = None
     db.commit()
 
     return font
@@ -223,7 +223,7 @@ def delete_font(
         )
 
     # If font file is specified (and exists), delete
-    if (path := query.first().file_path) is not None:
+    if (path := query.first().file) is not None:
         if (file := Path(path)).exists():
             try:
                 file.unlink()
