@@ -293,6 +293,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             List of tuples whose elements are the SeriesInfo and its
             corresponding library name.
         """
+
+        # Temporarily override request timeout to 240s (4 min)
+        self.REQUEST_TIMEOUT = 240
         
         # Base params for all queries
         params = {
@@ -329,6 +332,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 # TODO add other series ID's
                         )
                         all_series.append((series_info, library))
+
+        # Reset request timeout
+        self.REQUEST_TIMEOUT = 30
 
         return all_series
 

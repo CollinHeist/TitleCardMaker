@@ -3,14 +3,8 @@ from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy import PickleType
 
 from app.database.session import Base
-
-def default_source(context) -> str:
-    params = context.get_current_parameters()
-    return f's{params["season_number"]}e{params["episode_number"]}.jpg'
-
-def default_card(context) -> str:
-    params = context.get_current_parameters()
-    return f'card-s{params["season_number"]}e{params["episode_number"]}.jpg'
+from app.dependencies import get_preferences
+from modules.CleanPath import CleanPath
 
 class Episode(Base):
     __tablename__ = 'episode'
@@ -19,8 +13,8 @@ class Episode(Base):
     series_id = Column(Integer, ForeignKey('series.id'))
     template_id = Column(Integer, ForeignKey('template.id'))
 
-    source_file_path = Column(String, default=default_source)
-    card_file_path = Column(String, default=default_card)
+    source_file = Column(String, default=None)
+    card_file = Column(String, default=None)
     watched = Column(Boolean, default=None)
 
     season_number = Column(Integer, nullable=False)

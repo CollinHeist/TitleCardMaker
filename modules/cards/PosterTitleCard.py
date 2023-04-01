@@ -70,13 +70,17 @@ class PosterTitleCard(BaseCardType):
     __slots__ = ('source_file', 'output_file', 'logo', 'title', 'episode_text')
 
 
-    def __init__(self, source: Path, output_file: Path, title: str,
+    def __init__(self,
+            source_file: Path,
+            card_file: Path,
+            title: str,
             episode_text: str,
-            blur: bool=False,
-            grayscale: bool=False,
-            season_number: int=1,
-            episode_number: int=1,
-            logo: SeriesExtra[str]=None,
+            blur: bool = False,
+            grayscale: bool = False,
+            season_number: int = 1,
+            episode_number: int = 1,
+            logo: SeriesExtra[str] = None,
+            preferences: 'Preferences' = None,
             **unused) -> None:
         """
         Construct a new instance of this card.
@@ -97,11 +101,11 @@ class PosterTitleCard(BaseCardType):
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__(blur, grayscale)
+        super().__init__(blur, grayscale, preferences=preferences)
 
         # Store source and output file
-        self.source_file = source
-        self.output_file = output_file
+        self.source_file = source_file
+        self.output_file = card_file
 
         # No logo file specified
         if logo is None:

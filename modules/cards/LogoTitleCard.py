@@ -56,8 +56,9 @@ class LogoTitleCard(BaseCardType):
     """Characteristics of the default title font"""
     TITLE_FONT = str((REF_DIRECTORY / 'Sequel-Neue.otf').resolve())
     TITLE_COLOR = '#EBEBEB'
-    FONT_REPLACEMENTS = {'[': '(', ']': ')', '(': '[', ')': ']', '―': '-',
-                         '…': '...'}
+    FONT_REPLACEMENTS = {
+        '[': '(', ']': ')', '(': '[', ')': ']', '―': '-', '…': '...'
+    }
 
     """Whether this CardType uses season titles for archival purposes"""
     USES_SEASON_TITLE = True
@@ -86,23 +87,29 @@ class LogoTitleCard(BaseCardType):
         'logo', 'omit_gradient', 'background', 'stroke_color',
     )
 
-    def __init__(self, output_file: Path, title: str,  season_text: str,
-            episode_text: str, hide_season: bool, font: str,
-            title_color: str,
-            font_size: float=1.0,
-            kerning: float=1.0,
-            interline_spacing: int=0,
-            stroke_width: float=1.0,
-            vertical_shift: int=0,
-            season_number: int=1,
-            episode_number: int=1,
-            blur: bool=False,
-            grayscale: bool=False,
-            logo: SeriesExtra[str]=None,
-            separator: SeriesExtra[str]='•', 
-            background: SeriesExtra[str]='black',
-            stroke_color: SeriesExtra[str]='black',
-            omit_gradient: SeriesExtra[bool]=True,
+    def __init__(self,
+            card_file: Path,
+            title: str,
+            season_text: str,
+            episode_text: str,
+            hide_season_text: bool = False,
+            font_file: str = TITLE_FONT,
+            font_color: str = TITLE_COLOR,
+            font_size: float = 1.0,
+            font_kerning: float = 1.0,
+            font_interline_spacing: int = 0,
+            font_stroke_width: float = 1.0,
+            font_vertical_shift: int = 0,
+            season_number: int = 1,
+            episode_number: int = 1,
+            blur: bool = False,
+            grayscale: bool = False,
+            logo: SeriesExtra[str] = None,
+            separator: SeriesExtra[str] = '•', 
+            background: SeriesExtra[str] = 'black',
+            stroke_color: SeriesExtra[str] = 'black',
+            omit_gradient: SeriesExtra[bool] = True,
+            preferences: 'Preferences' = None,
             **unused) -> None:
         """
         Construct a new instance of this card.
@@ -135,7 +142,7 @@ class LogoTitleCard(BaseCardType):
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__(blur, grayscale)
+        super().__init__(blur, grayscale, preferences=preferences)
 
         # Look for logo if it's a format string
         if logo is None:
@@ -149,22 +156,22 @@ class LogoTitleCard(BaseCardType):
                 self.valid = False
                 log.exception(f'Invalid logo file "{logo}"', e)
 
-        self.output_file = output_file
+        self.output_file = card_file
 
         # Ensure characters that need to be escaped are
         self.title = self.image_magick.escape_chars(title)
         self.season_text = self.image_magick.escape_chars(season_text.upper())
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
+        self.hide_season = hide_season_text
 
         # Font attributes
-        self.font = font
+        self.font = font_file
         self.font_size = font_size
-        self.title_color = title_color
-        self.hide_season = hide_season
-        self.vertical_shift = vertical_shift
-        self.interline_spacing = interline_spacing
-        self.kerning = kerning
-        self.stroke_width = stroke_width
+        self.title_color = font_color
+        self.vertical_shift = font_vertical_shift
+        self.interline_spacing = font_interline_spacing
+        self.kerning = font_kerning
+        self.stroke_width = font_stroke_width
 
         # Optional extras
         self.omit_gradient = omit_gradient

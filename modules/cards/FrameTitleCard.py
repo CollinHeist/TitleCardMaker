@@ -74,24 +74,31 @@ class FrameTitleCard(BaseCardType):
         'episode_text_position',
     )
 
-    def __init__(self, source: Path, output_file: Path, title: str, 
-            season_text: str, episode_text: str, hide_season: bool,
-            font: str, title_color: str,
-            font_size: float=1.0,
-            vertical_shift: int=0,
-            interline_spacing: int=0,
-            kerning: float=1.0,
-            blur: bool=False,
-            grayscale: bool=False,
-            episode_text_color: SeriesExtra[str]=EPISODE_TEXT_COLOR,
-            episode_text_position: Position='surround',
+    def __init__(self,
+            source_file: Path,
+            card_file: Path,
+            title: str, 
+            season_text: str,
+            episode_text: str,
+            hide_season_text: bool = False,
+            font_file: str = TITLE_FONT,
+            font_color: str = TITLE_COLOR,
+            font_size: float = 1.0,
+            font_vertical_shift: int = 0,
+            font_interline_spacing: int = 0,
+            font_kerning: float = 1.0,
+            blur: bool = False,
+            grayscale: bool = False,
+            episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
+            episode_text_position: Position = 'surround',
+            preferences: 'Preferences' = None,
             **unused) -> None:
         """
         Construct a new instance.
 
         Args:
-            source: Source image for this card.
-            output_file: Output filepath for this card.
+            source_file: Source image for this card.
+            card_file: Output filepath for this card.
             title: The title for this card.
             season_text: The season text for this card.
             episode_text: The episode text for this card.
@@ -110,11 +117,11 @@ class FrameTitleCard(BaseCardType):
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__(blur, grayscale)
+        super().__init__(blur, grayscale, preferences=preferences)
 
         # Store source and output file
-        self.source_file = source
-        self.output_file = output_file
+        self.source_file = source_file
+        self.output_file = card_file
 
         # Escape title, season, and episode text
         prep = lambda s: s.upper().strip()
@@ -122,16 +129,16 @@ class FrameTitleCard(BaseCardType):
         self.season_text = self.image_magick.escape_chars(prep(season_text))
         self.episode_text = self.image_magick.escape_chars(prep(episode_text))
 
-        self.hide_season = hide_season or len(self.season_text) == 0
+        self.hide_season = hide_season_text or len(self.season_text) == 0
         self.hide_episode = len(self.episode_text) == 0
 
         # Font customizations
-        self.font = font
+        self.font = font_file
         self.font_size = font_size
-        self.font_color = title_color
-        self.vertical_shift = vertical_shift
-        self.interline_spacing = interline_spacing
-        self.kerning = kerning
+        self.font_color = font_color
+        self.vertical_shift = font_vertical_shift
+        self.interline_spacing = font_interline_spacing
+        self.kerning = font_kerning
 
         # Verify/store extras
         self.episode_text_color = episode_text_color
@@ -337,3 +344,4 @@ class FrameTitleCard(BaseCardType):
         ])
 
         self.image_magick.run(command)
+        self.image_magick.print_command_history()

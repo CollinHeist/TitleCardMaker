@@ -52,9 +52,12 @@ class TextlessTitleCard(BaseCardType):
     __slots__ = ('source_file', 'output_file')
 
 
-    def __init__(self, source: Path, output_file: Path,
+    def __init__(self,
+            source_file: Path,
+            card_file: Path,
             blur: bool = False,
             grayscale: bool = False,
+            preferences: 'Preferences' = None,
             **unused) -> None:
         """
         Construct a new instance of this card.
@@ -68,11 +71,11 @@ class TextlessTitleCard(BaseCardType):
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__(blur, grayscale)
+        super().__init__(blur, grayscale, preferences=preferences)
 
         # Store input/output files
-        self.source_file = source
-        self.output_file = output_file
+        self.source_file = source_file
+        self.output_file = card_file
 
 
     @staticmethod

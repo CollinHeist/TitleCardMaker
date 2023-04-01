@@ -68,17 +68,24 @@ class OlivierTitleCard(BaseCardType):
         'vertical_shift', 'interline_spacing', 'stroke_color',
     )
 
-    def __init__(self, source: Path, output_file: Path, title: str,
-            episode_text: str, font: str, title_color: str,
-            font_size: float=1.0,
-            stroke_width: float=1.0,
-            vertical_shift: int=0,
-            interline_spacing: int=0,
-            kerning: float=1.0,
-            blur: bool=False,
-            grayscale: bool=False,
-            episode_text_color: SeriesExtra[str]=EPISODE_TEXT_COLOR,
-            stroke_color: SeriesExtra[str]='black',
+    def __init__(self,
+            source_file: Path,
+            card_file: Path,
+            title: str,
+            episode_text: str,
+            hide_episode_text: bool = False,
+            font_file: str = TITLE_FONT,
+            font_color: str = TITLE_COLOR,
+            font_size: float = 1.0,
+            font_stroke_width: float = 1.0,
+            font_vertical_shift: int = 0,
+            font_interline_spacing: int = 0,
+            font_kerning: float = 1.0,
+            blur: bool = False,
+            grayscale: bool = False,
+            episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
+            stroke_color: SeriesExtra[str] = 'black',
+            preferences: 'Preferences' = None,
             **unused) -> None:
         """
         Construct a new instance of this card.
@@ -103,15 +110,15 @@ class OlivierTitleCard(BaseCardType):
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__(blur, grayscale)
+        super().__init__(blur, grayscale, preferences=preferences)
 
         # Store source and output file
-        self.source_file = source
-        self.output_file = output_file
+        self.source_file = source_file
+        self.output_file = card_file
 
         # Store attributes of the text
         self.title = self.image_magick.escape_chars(title)
-        self.hide_episode_text = len(episode_text) == 0
+        self.hide_episode_text = hide_episode_text or len(episode_text) == 0
 
         # Determine episode prefix, modify text to remove prefix
         self.episode_prefix = None
@@ -124,13 +131,13 @@ class OlivierTitleCard(BaseCardType):
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
 
         # Font customizations
-        self.font = font
-        self.title_color = title_color
+        self.font = font_file
+        self.title_color = font_color
         self.font_size = font_size
-        self.stroke_width = stroke_width
-        self.vertical_shift = vertical_shift
-        self.interline_spacing = interline_spacing
-        self.kerning = kerning
+        self.stroke_width = font_stroke_width
+        self.vertical_shift = font_vertical_shift
+        self.interline_spacing = font_interline_spacing
+        self.kerning = font_kerning
 
         # Optional extras
         self.episode_text_color = episode_text_color

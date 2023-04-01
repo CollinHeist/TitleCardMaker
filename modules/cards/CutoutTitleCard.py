@@ -72,16 +72,22 @@ class CutoutTitleCard(BaseCardType):
         'kerning', 'overlay_color', 'blur_edges',
     )
 
-    def __init__(self, source: Path, output_file: Path, title: str,
-            episode_text: str, font: str, font_size: float,
-            title_color: str,
-            vertical_shift: int=0,
-            interline_spacing: int=0,
-            kerning: float=1.0,
-            blur: bool=False,
-            grayscale: bool=False,
-            overlay_color: SeriesExtra[str]='black',
-            blur_edges: SeriesExtra[bool]=False,
+    def __init__(self,
+            source_file: Path,
+            card_file: Path,
+            title: str,
+            episode_text: str,
+            font: str = TITLE_FONT,
+            font_size: float = 1.0,
+            font_color: str = TITLE_COLOR,
+            font_vertical_shift: int = 0,
+            font_interline_spacing: int = 0,
+            font_kerning: float = 1.0,
+            blur: bool = False,
+            grayscale: bool = False,
+            overlay_color: SeriesExtra[str] = 'black',
+            blur_edges: SeriesExtra[bool] = False,
+            preferences: 'Preferences' = None,
             **unused) -> None:
         """
         Construct a new instance of this card.
@@ -111,10 +117,10 @@ class CutoutTitleCard(BaseCardType):
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__(blur, grayscale)
+        super().__init__(blur, grayscale, preferences=preferences)
 
-        self.source_file = source
-        self.output_file = output_file
+        self.source_file = source_file
+        self.output_file = card_file
 
         # Ensure characters that need to be escaped are
         # Format episode text to split into 1/2 lines depending on word count
@@ -126,10 +132,10 @@ class CutoutTitleCard(BaseCardType):
         # Font/card customizations
         self.font = font
         self.font_size = font_size
-        self.title_color = title_color
-        self.vertical_shift = vertical_shift
-        self.interline_spacing = interline_spacing
-        self.kerning = kerning
+        self.title_color = font_color
+        self.vertical_shift = font_vertical_shift
+        self.interline_spacing = font_interline_spacing
+        self.kerning = font_kerning
 
         # Optional extras
         self.overlay_color = overlay_color

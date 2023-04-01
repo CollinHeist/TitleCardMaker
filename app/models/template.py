@@ -2,7 +2,7 @@ from pathlib import Path
 
 from json import dumps, loads
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
-from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy import PickleType
 

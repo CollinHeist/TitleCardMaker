@@ -84,17 +84,22 @@ class LandscapeTitleCard(BaseCardType):
         'add_bounding_box', 'box_adjustments'
     )
 
-    def __init__(self, source: Path, output_file: Path, title: str, font: str,
-            title_color: str,
-            font_size: float=1.0,
-            interline_spacing: int=0,
-            kerning: float=1.0,
-            blur: bool=False,
-            grayscale: bool=False,
-            vertical_shift: float=0,
-            darken: DarkenOption=False,
-            add_bounding_box: SeriesExtra[bool]=False,
-            box_adjustments: SeriesExtra[str]=None,
+    def __init__(self,
+            source_file: Path,
+            card_file: Path,
+            title: str,
+            font_file: str = TITLE_FONT,
+            font_color: str = TITLE_COLOR,
+            font_size: float = 1.0,
+            font_interline_spacing: int = 0,
+            font_kerning: float = 1.0,
+            font_vertical_shift: float = 0,
+            blur: bool = False,
+            grayscale: bool = False,
+            darken: DarkenOption = False,
+            add_bounding_box: SeriesExtra[bool] = False,
+            box_adjustments: SeriesExtra[str] = None,
+            preferences: 'Preferences' = None,
             **unused) ->None:
         """
         Initialize this TitleCard object. This primarily just stores instance
@@ -123,18 +128,19 @@ class LandscapeTitleCard(BaseCardType):
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__(blur, grayscale)
+        super().__init__(blur, grayscale, preferences=preferences)
 
         # Store object attributes
-        self.source = source
-        self.output_file = output_file
+        self.source = source_file
+        self.output_file = card_file
         self.title = self.image_magick.escape_chars(title)
-        self.font = font
+        # self.font = font
+        self.font = font_file
         self.font_size = font_size
-        self.title_color = title_color
-        self.interline_spacing = interline_spacing
-        self.kerning = kerning
-        self.vertical_shift = vertical_shift
+        self.title_color = font_color
+        self.interline_spacing = font_interline_spacing
+        self.kerning = font_kerning
+        self.vertical_shift = font_vertical_shift
 
         # Store extras
         self.add_bounding_box = add_bounding_box

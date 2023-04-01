@@ -260,6 +260,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             series, and its corresponding library name.
         """
 
+        # Temporarily override request timeout to 240s (4 min)
+        self.REQUEST_TIMEOUT = 240
+
         # Go through every library in this server
         all_series = []
         for library in self.__server.library.sections():
@@ -306,6 +309,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 # Create SeriesInfo object for this show, add to return
                 series_info = SeriesInfo(show.title, show.year, **ids)
                 all_series.append((series_info, library.title))
+
+        # Reset request timeout
+        self.REQUEST_TIMEOUT = 30
 
         return all_series
 

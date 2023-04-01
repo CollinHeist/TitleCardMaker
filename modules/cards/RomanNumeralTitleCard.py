@@ -249,13 +249,19 @@ class RomanNumeralTitleCard(BaseCardType):
         '__roman_text_scalar', '__roman_numeral_lines', 'rotation', 'offset',
     )
 
-    def __init__(self, output_file: Path, title: str, season_text: str, 
-            episode_text: str, hide_season: bool, title_color: str,
-            episode_number: int=1,
-            blur: bool=False,
-            grayscale: bool=False,
-            background: SeriesExtra[str]=BACKGROUND_COLOR, 
-            roman_numeral_color: SeriesExtra[str]=ROMAN_NUMERAL_TEXT_COLOR,
+    def __init__(self,
+            card_file: Path,
+            title: str,
+            season_text: str, 
+            episode_text: str,
+            hide_season_text: bool = False,
+            font_color: str = TITLE_COLOR,
+            episode_number: int = 1,
+            blur: bool = False,
+            grayscale: bool = False,
+            background: SeriesExtra[str] = BACKGROUND_COLOR, 
+            roman_numeral_color: SeriesExtra[str] = ROMAN_NUMERAL_TEXT_COLOR,
+            preferences: 'Preferences' = None,
             **unused) -> None:
         """
         Construct a new instance of this card.
@@ -275,12 +281,12 @@ class RomanNumeralTitleCard(BaseCardType):
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__(blur, grayscale)
+        super().__init__(blur, grayscale, preferences=preferences)
 
         # Store object attributes
-        self.output_file = output_file
+        self.output_file = card_file
         self.title = self.image_magick.escape_chars(title)
-        self.title_color = title_color
+        self.title_color = font_color
         self.background = background
         self.roman_numeral_color = roman_numeral_color
 
@@ -291,7 +297,7 @@ class RomanNumeralTitleCard(BaseCardType):
 
         # Select roman numeral for season text
         self.season_text = season_text.strip().upper()
-        self.hide_season = hide_season or (len(self.season_text) == 0)
+        self.hide_season = hide_season_text or len(self.season_text) == 0
 
         # Rotation and offset attributes to be determined later
         self.rotation, self.offset = None, None

@@ -103,12 +103,13 @@ class TitleCard:
 
         # Initialize this episode's CardType instance
         args = {
-            'source': episode.source,
-            'output_file': episode.destination,
+            'source_file': episode.source,
+            'card_file': episode.destination,
             'title': self.converted_title,
+            'hide_season_text': profile.hide_season_title,
             'season_text': profile.get_season_text(self.episode.episode_info),
+            'hide_episode_text': False,
             'episode_text': profile.get_episode_text(self.episode),
-            'hide_season': profile.hide_season_title,
             'blur': episode.blur,
             'watched': episode.watched,
             'grayscale': episode.grayscale,

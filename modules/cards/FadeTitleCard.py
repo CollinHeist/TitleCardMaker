@@ -70,20 +70,27 @@ class FadeTitleCard(BaseCardType):
         'vertical_shift', 'logo', 'episode_text_color',
     )
 
-    def __init__(self, source: Path, output_file: Path, title: str,
-            season_text: str, episode_text: str, hide_season: bool,
-            font: str, title_color: str, 
-            interline_spacing: int=0,
-            kerning: float=1.0,
-            font_size: float=1.0,
-            vertical_shift: int=0,
-            season_number: int=1,
-            episode_number: int=1,
-            blur: bool=False,
-            grayscale: bool=False,
-            logo: SeriesExtra[str]=None,
-            episode_text_color: SeriesExtra[str]=EPISODE_TEXT_COLOR,
-            separator: SeriesExtra[str]='•',
+    def __init__(self,
+            source_file: Path,
+            card_file: Path,
+            title: str,
+            season_text: str,
+            episode_text: str,
+            hide_season_text: bool = False,
+            font: str = TITLE_FONT,
+            font_color: str = TITLE_COLOR, 
+            font_interline_spacing: int = 0,
+            font_kerning: float = 1.0,
+            font_size: float = 1.0,
+            font_vertical_shift: int = 0,
+            season_number: int = 1,
+            episode_number: int = 1,
+            blur: bool = False,
+            grayscale: bool = False,
+            logo: SeriesExtra[str] = None,
+            episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
+            separator: SeriesExtra[str] = '•',
+            preferences: 'Preferences' = None,
             **unused) -> None:
         """
         Construct a new instance of this card.
@@ -112,19 +119,20 @@ class FadeTitleCard(BaseCardType):
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__(blur, grayscale)
+        super().__init__(blur, grayscale, preferences=preferences)
 
         # Store source and output file
-        self.source_file = source
-        self.output_file = output_file
+        self.source_file = source_file
+        self.output_file = card_file
         
         # Find logo file if indicated
         if logo is None:
             self.logo = None
         else:
             try:
-                logo = logo.format(season_number=season_number,
-                                   episode_number=episode_number)
+                logo = logo.format(
+                    season_number=season_number, episode_number=episode_number
+                )
                 logo = Path(CleanPath(logo).sanitize())
             except Exception as e:
                 # Bad format strings will be caught during card creation
@@ -143,7 +151,7 @@ class FadeTitleCard(BaseCardType):
 
         # Store attributes of the text
         self.title = self.image_magick.escape_chars(title)
-        if hide_season:
+        if hide_season_text:
             self.index_text=self.image_magick.escape_chars(episode_text.upper())
         else:
             index_text = f'{season_text} {separator} {episode_text}'.upper()
@@ -152,10 +160,10 @@ class FadeTitleCard(BaseCardType):
         # Font customizations
         self.font = font
         self.font_size = font_size
-        self.interline_spacing = interline_spacing
-        self.kerning = kerning
-        self.title_color = title_color
-        self.vertical_shift = vertical_shift
+        self.interline_spacing = font_interline_spacing
+        self.kerning = font_kerning
+        self.title_color = font_color
+        self.vertical_shift = font_vertical_shift
 
         # Extras
         self.episode_text_color = episode_text_color

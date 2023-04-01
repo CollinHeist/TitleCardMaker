@@ -88,19 +88,19 @@ class AnimeTitleCard(BaseCardType):
     )
 
     def __init__(self, *,
-            source: Path,
-            output_file: Path,
-            title: str, 
+            source_file: Path,
+            card_file: Path,
+            title: str,
             season_text: str,
             episode_text: str,
-            hide_season: bool = False,
+            hide_season_text: bool = False,
             font: str = TITLE_FONT,
-            title_color: str = TITLE_COLOR,
+            font__color: str = TITLE_COLOR,
             font_size: float = 1.0,
-            interline_spacing: int = 0,
-            kerning: float = 1.0,
-            stroke_width: float = 1.0,
-            vertical_shift: int = 0,
+            font_interline_spacing: int = 0,
+            font_kerning: float = 1.0,
+            font_stroke_width: float = 1.0,
+            font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
             kanji: SeriesExtra[str] = None,
@@ -109,6 +109,7 @@ class AnimeTitleCard(BaseCardType):
             require_kanji: SeriesExtra[bool] = False,
             kanji_vertical_shift: SeriesExtra[float] = 0,
             stroke_color: SeriesExtra[str] = 'black',
+            preferences: 'Preferences' = None,
             **unused) -> None:
         """
         Construct a new instance of this card.
@@ -139,14 +140,14 @@ class AnimeTitleCard(BaseCardType):
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__(blur, grayscale)
+        super().__init__(blur, grayscale, preferences=preferences)
 
         # Store source and output file
-        self.source_file = source
-        self.output_file = output_file
+        self.source_file = source_file
+        self.output_file = card_file
 
         # Escape title, season, and episode text
-        self.hide_season = hide_season
+        self.hide_season = hide_season_text
         self.title = self.image_magick.escape_chars(title)
         self.season_text = self.image_magick.escape_chars(season_text.upper())
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
@@ -160,11 +161,11 @@ class AnimeTitleCard(BaseCardType):
         # Font customizations
         self.font = font
         self.font_size = font_size
-        self.font_color = title_color
-        self.vertical_shift = vertical_shift
-        self.interline_spacing = interline_spacing
-        self.kerning = kerning
-        self.stroke_width = stroke_width
+        self.font_color = font_color
+        self.vertical_shift = font_vertical_shift
+        self.interline_spacing = font_interline_spacing
+        self.kerning = font_kerning
+        self.stroke_width = font_stroke_width
 
         # Optional extras
         self.separator = separator
@@ -467,3 +468,4 @@ class AnimeTitleCard(BaseCardType):
         ])
 
         self.image_magick.run(command)
+        self.image_magick.print_command_history()

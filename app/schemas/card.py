@@ -86,9 +86,9 @@ class UpdateTitleCard(BaseTitleCard):
 
 class TitleCard(BaseTitleCard):
     episode_id: Optional[int]
-    source_file_path: str
-    card_file_path: str
-    font_file_path: str
+    source_file: str
+    card_file: str
+    font_file: str
     font_color: str
     font_title_case: str
     font_size: float

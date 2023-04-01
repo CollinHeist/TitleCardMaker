@@ -70,10 +70,15 @@ class StarWarsTitleCard(BaseCardType):
         'episode_prefix', 'episode_text', 'blur'
     )
 
-    def __init__(self, source: Path, output_file: Path, title: str,
+    def __init__(self,
+            source_file: Path,
+            card_file: Path,
+            title: str,
             episode_text: str,
-            blur: bool=False,
-            grayscale: bool=False,
+            hide_episode_text: bool = False,
+            blur: bool = False,
+            grayscale: bool = False,
+            preferences: 'Preferences' = None,
             **unused) -> None:
         """
         Initialize the CardType object.
@@ -89,18 +94,18 @@ class StarWarsTitleCard(BaseCardType):
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__(blur, grayscale)
+        super().__init__(blur, grayscale, preferences=preferences)
 
         # Store source and output file
-        self.source_file = source
-        self.output_file = output_file
+        self.source_file = source_file
+        self.output_file = card_file
 
         # Store episode title
         self.title = self.image_magick.escape_chars(title.upper())
 
         # Modify episode text to remove "Episode"-like text, replace numbers
         # with text, strip spaces, and convert to uppercase
-        self.hide_episode_text = len(episode_text) == 0
+        self.hide_episode_text = hide_episode_text or len(episode_text) == 0
         if self.hide_episode_text:
             self.episode_prefix = None
             self.episode_text = self.image_magick.escape_chars(episode_text)

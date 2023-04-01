@@ -75,19 +75,26 @@ class StandardTitleCard(BaseCardType):
         'omit_gradient', 'stroke_color',
     )
 
-    def __init__(self, source: Path, output_file: Path, title: str,
-            season_text: str, episode_text: str, hide_season: bool,
-            font: str, title_color: str,
-            font_size: float=1.0,
-            interline_spacing: int=0,
-            kerning: float=1.0,
-            stroke_width: float=1.0,
-            vertical_shift: int=0,
-            blur: bool=False,
-            grayscale: bool=False,
-            separator: Optional[str]='•',
-            stroke_color: Optional[str]='black',
-            omit_gradient: Optional[bool]=False,
+    def __init__(self,
+            source_file: Path,
+            card_file: Path,
+            title: str,
+            season_text: str,
+            episode_text: str,
+            hide_season_text: bool = False,
+            font_file: str = TITLE_FONT,
+            font_color: str = TITLE_COLOR,
+            font_size: float = 1.0,
+            font_interline_spacing: int = 0,
+            font_kerning: float = 1.0,
+            font_stroke_width: float = 1.0,
+            font_vertical_shift: int = 0,
+            blur: bool = False,
+            grayscale: bool = False,
+            separator: SeriesExtra[str] = '•',
+            stroke_color: SeriesExtra[str] = 'black',
+            omit_gradient: SeriesExtra[bool] = False,
+            preferences: 'Preferences' = None,
             **unused) -> None:
         """
         Construct a new instance of this card.
@@ -115,10 +122,10 @@ class StandardTitleCard(BaseCardType):
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__(blur, grayscale)
+        super().__init__(blur, grayscale, preferences=preferences)
 
-        self.source_file = source
-        self.output_file = output_file
+        self.source_file = source_file
+        self.output_file = card_file
 
         # Ensure characters that need to be escaped are
         self.title = self.image_magick.escape_chars(title)
@@ -126,14 +133,14 @@ class StandardTitleCard(BaseCardType):
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
 
         # Font/card customizations
-        self.font = font
+        self.font = font_file
         self.font_size = font_size
-        self.title_color = title_color
-        self.hide_season = hide_season
-        self.vertical_shift = vertical_shift
-        self.interline_spacing = interline_spacing
-        self.kerning = kerning
-        self.stroke_width = stroke_width
+        self.title_color = font_color
+        self.hide_season = hide_season_text
+        self.vertical_shift = font_vertical_shift
+        self.interline_spacing = font_interline_spacing
+        self.kerning = font_kerning
+        self.stroke_width = font_stroke_width
 
         # Optional extras
         self.separator = separator
