@@ -18,8 +18,8 @@ class NewEpisode(Base):
     template_id: Optional[int] = Field(default=None, description='ID of the Template for this Episode')
     font_id: Optional[int] = Field(default=None, description='ID of the Font of this Episode')
 
-    source_file_path: str = Field(description='Path to the source image for this episode card')
-    card_file_path: str = Field(description='Path to the card for this episode')
+    source_file_path: Optional[str] = Field(description='Path to the source image for this episode card')
+    card_file_path: Optional[str] = Field(description='Path to the card for this episode')
     watched: Optional[bool] = Field(default=None, description='Whether this episode has been watched')
 
     season_number: int = Field(default=1)
@@ -62,8 +62,8 @@ class UpdateEpisode(Base):
     template_id: Optional[int] = Field(default=UNSPECIFIED)
     font_id: Optional[int] = Field(default=UNSPECIFIED)
 
-    source_file_path: str = Field(default=UNSPECIFIED)
-    card_file_path: str = Field(default=UNSPECIFIED)
+    source_file_path: Optional[str] = Field(default=UNSPECIFIED)
+    card_file_path: Optional[str] = Field(default=UNSPECIFIED)
     watched: Optional[bool] = Field(default=UNSPECIFIED)
 
     season_number: int = Field(default=UNSPECIFIED)
@@ -131,8 +131,8 @@ class Episode(Base):
     template_id: Optional[int]
     font_id: Optional[int]
 
-    source_file_path: str
-    card_file_path: str
+    source_file_path: Optional[str]
+    card_file_path: Optional[str]
     watched: Optional[bool]
 
     season_number: int

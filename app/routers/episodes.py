@@ -249,7 +249,7 @@ def update_episode_config(
         episode_id: int,
         update_episode: UpdateEpisode = Body(...),
         db = Depends(get_database)) -> Episode:
-
+    log.critical(f'{update_episode.dict()=}')
     # Get this episode, raise 404 if DNE
     episode = db.query(models.episode.Episode).filter_by(id=episode_id).first()
     if episode is None:
@@ -258,9 +258,31 @@ def update_episode_config(
             detail=f'Episode {episode_id} not found',
         )
     
-    # Update object and database
-    ...
-    db.commit()
+    # If any reference ID's were indicated, verify referenced object exists
+    checks = [
+        {'attr': 'series_id', 'model': models.series.Series, 'name': 'Series'},
+        {'attr': 'template_id', 'model': models.template.Template, 'name': 'Template'},
+        {'attr': 'font_id', 'model': models.font.Font, 'name': 'Font'},
+    ]
+    for to_check in checks:
+        if (id_ := getattr(update_episode, to_check['attr'], None)) is not None:
+            if (db.query(to_check['model']).filter_by(id=id_).first()) is None:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f'{to_check["name"]} {id_} not found',
+                )
+
+    # Update each attribute of the object
+    changed = False
+    for attr, value in update_episode.dict().items():
+        if value != UNSPECIFIED and getattr(episode, attr) != value:
+            log.debug(f'Episode[{episode_id}].{attr} = {value}')
+            setattr(episode, attr, value)
+            changed = True
+
+    # If any values were changed, commit to database
+    if changed:
+        db.commit()
 
     return episode
     
