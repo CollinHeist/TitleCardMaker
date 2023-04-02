@@ -1,3 +1,5 @@
+from typing import Any
+
 from sqlalchemy import Boolean, Column, Integer, Float, String, ForeignKey
 
 from json import dumps, loads
@@ -23,3 +25,11 @@ class Font(Base):
     validate_characters = Column(Boolean, default=None)
     delete_missing = Column(Boolean, default=True)
     replacements = Column(MutableDict.as_mutable(PickleType), default=None)
+
+    @hybrid_property
+    def card_properties(self) -> dict[str, Any]:
+        return {
+            f'font_{key}': value
+            for key, value in self.__dict__.items()
+            if not key.startswith('_')
+        }

@@ -133,12 +133,9 @@
       const template = document.querySelector('#statistic-template');
       statistics.forEach(({value_text, unit, description}) => {
         const clone = template.content.cloneNode(true);
-        const statDiv = clone.querySelector('.statistic');
-        statDiv.title = description;
-        const valueDiv = clone.querySelector('.value');
-        valueDiv.innerText = value_text;
-        const labelDiv = clone.querySelector('.label');
-        labelDiv.innerText = unit;
+        clone.querySelector('.statistic').title = description;
+        clone.querySelector('.value').innerText = value_text;
+        clone.querySelector('.label').innerText = unit;
         statisticsElement.appendChild(clone);
       });
     }

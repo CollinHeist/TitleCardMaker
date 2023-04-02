@@ -74,7 +74,7 @@ class FrameTitleCard(BaseCardType):
         'episode_text_position',
     )
 
-    def __init__(self,
+    def __init__(self, *,
             source_file: Path,
             card_file: Path,
             title: str, 
@@ -344,4 +344,3 @@ class FrameTitleCard(BaseCardType):
         ])
 
         self.image_magick.run(command)
-        self.image_magick.print_command_history()

@@ -94,8 +94,8 @@ class AnimeTitleCard(BaseCardType):
             season_text: str,
             episode_text: str,
             hide_season_text: bool = False,
-            font: str = TITLE_FONT,
-            font__color: str = TITLE_COLOR,
+            font_file: str = TITLE_FONT,
+            font_color: str = TITLE_COLOR,
             font_size: float = 1.0,
             font_interline_spacing: int = 0,
             font_kerning: float = 1.0,
@@ -159,7 +159,7 @@ class AnimeTitleCard(BaseCardType):
         self.kanji_vertical_shift = float(kanji_vertical_shift)
 
         # Font customizations
-        self.font = font
+        self.font = font_file
         self.font_size = font_size
         self.font_color = font_color
         self.vertical_shift = font_vertical_shift
@@ -468,4 +468,3 @@ class AnimeTitleCard(BaseCardType):
         ])
 
         self.image_magick.run(command)
-        self.image_magick.print_command_history()

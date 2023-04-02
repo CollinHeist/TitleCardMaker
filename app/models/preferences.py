@@ -1,7 +1,7 @@
 from collections import namedtuple
 from os import environ
 from pathlib import Path
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 from pickle import dump
 
@@ -69,7 +69,7 @@ class Preferences:
         self.plex_use_ssl = False
         self.plex_integrate_with_pmm = False
         self.plex_filesize_limit_number = 10
-        self.plex_filesize_limit_unit = 'MB'
+        self.plex_filesize_limit_unit = 'Megabytes'
 
         self.use_sonarr = True #False
         self.sonarr_url = 'http://192.168.0.29:8989/api/v3/' #''
@@ -240,6 +240,33 @@ class Preferences:
             'GB':  2**30, 'Gigabytes': 2**30,
             'TB':  2**40, 'Terabytes': 2**40,
         }[unit]
+
+
+    @staticmethod
+    def format_filesize(value: Optional[int]) -> tuple[str, str]:
+        if value is None or value == 0:
+            return '0', 'Bytes'
+
+        for ref_value, unit in (
+                (2**40, 'Terabytes'),
+                (2**30, 'Gigabytes'),
+                (2**20, 'Megabytes'),
+                (2**10, 'Kilobytes'),
+                (1, 'Bytes')):
+            if value > ref_value:
+                return f'{value/ref_value:,.1f}', unit
+
+        return '0', 'Bytes'
+
+
+    @property
+    def card_properties(self) -> dict[str, Any]:
+        return {
+            'card_type': self.default_card_type,
+            'watched_style': self.default_watched_style,
+            'unwatched_style': self.default_unwatched_style,
+            'filename_format': self.card_filename_format,
+        }
 
 
     def determine_sonarr_library(self, directory: str) -> Union[str, None]:

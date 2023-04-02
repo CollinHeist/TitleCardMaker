@@ -108,6 +108,14 @@
 
   <!-- Scripts to load available options -->
   <script>
+    // Get series statistics
+    async function getStatistics() {
+      const statistics = await fetch('/api/statistics/series/{{series.id}}').then(resp => resp.json());
+      const cardStat = statistics[0],
+            episodeStat = statistics[1];
+      $('#card-count')[0].innerHTML = `<i class="image outline icon"></i>${cardStat.value} / ${episodeStat.value} Cards`;
+    }
+
     // Get all available episode data sources
     async function getEpisodeDataSources() {
       const sources = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
@@ -116,7 +124,7 @@
           return {name: name, value: name,
                   selected: name == '{{series.episode_data_source}}'};
         })
-      })
+      });
     }
 
     // Get all available libraries for Emby and Plex
@@ -235,6 +243,7 @@
     }
 
     async function initAll() {
+      getStatistics();
       getEpisodeDataSources();
       getLibraries();
       getEpisodeData();
@@ -248,6 +257,7 @@
         success: function(response) {
           $.toast({class: 'blue info', title: `Refreshed Episode Data`});
           getEpisodeData();
+          getStatistics();
         }, error: function(response) {
           $.toast({
             class: 'error',
@@ -343,9 +353,8 @@
                 <span class="date">{{series.year}}</span>
               </div>
             </div>
-            <div class="extra content">
-              <i class="image outline icon"></i>
-              30 / 36 Cards
+            <div id="card-count" class="extra content">
+              <!-- Added asynchronously -->
             </div>
           </div>
           <!-- Series action bottons -->

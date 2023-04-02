@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_database, get_preferences
@@ -12,17 +13,27 @@ statistics_router = APIRouter(
 
 @statistics_router.get('/', status_code=200)
 def get_all_statistics(
-        db = Depends(get_database)) -> list[Statistic]:
+        db = Depends(get_database),
+        preferences = Depends(get_preferences)) -> list[Statistic]:
     
     series_count = db.query(models.series.Series).count()
     episode_count = db.query(models.episode.Episode).count()
     card_count = db.query(models.card.Card).count()
 
+    # Get/format total asset size
+    asset_size = db.query(models.card.Card)\
+        .with_entities(func.sum(models.card.Card.filesize)).scalar()
+    asset_size = 0 if asset_size is None else asset_size
+
     return [
         CardCount(value=card_count, value_text=f'{card_count:,}'),
         SeriesCount(value=series_count, value_text=f'{series_count:,}'),
         EpisodeCount(value=episode_count, value_text=f'{episode_count:,}'),
-        AssetSize(value=102.4231, value_text='85.42', unit='Gigabytes'),
+        AssetSize(
+            value=asset_size,
+            value_text=preferences.format_filesize(asset_size)[0],
+            unit=preferences.format_filesize(asset_size)[1],
+        ),
     ]
 
 
@@ -37,17 +48,24 @@ def get_series_count(
 @statistics_router.get('/series/{series_id}', status_code=200)
 def get_series_statistics(
         series_id: int,
-        db = Depends(get_database)) -> list[Statistic]:
+        db = Depends(get_database),
+        preferences = Depends(get_preferences)) -> list[Statistic]:
     
     episode_count = db.query(models.episode.Episode)\
-        .filter_by(series_id=series_id)\
-        .count()
+        .filter_by(series_id=series_id).count()
     card_count = db.query(models.card.Card)\
+        .filter_by(series_id=series_id).count()
+    asset_size = db.query(models.card.Card)\
         .filter_by(series_id=series_id)\
-        .count()
+        .with_entities(func.sum(models.card.Card.filesize)).scalar()
+    asset_size = 0 if asset_size is None else asset_size
     
     return [
         CardCount(value=card_count, value_text=f'{card_count:,}'),
         EpisodeCount(value=episode_count, value_text=f'{episode_count:,}'),
-        AssetSize(value=102.4231, value_text='102.42', unit='Gigabytes')
+        AssetSize(
+            value=asset_size,
+            value_text=preferences.format_filesize(asset_size)[0],
+            unit=preferences.format_filesize(asset_size)[1],
+        ),
     ]

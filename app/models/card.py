@@ -24,7 +24,6 @@ class Card(Base):
 
     font_file = Column(String, nullable=False)
     font_color = Column(String, nullable=False)
-    font_title_case = Column(String, nullable=False)
     font_size = Column(Float, nullable=False)
     font_kerning = Column(Float, nullable=False)
     font_stroke_width = Column(Float, nullable=False)

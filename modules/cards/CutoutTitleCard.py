@@ -77,7 +77,7 @@ class CutoutTitleCard(BaseCardType):
             card_file: Path,
             title: str,
             episode_text: str,
-            font: str = TITLE_FONT,
+            font_file: str = TITLE_FONT,
             font_size: float = 1.0,
             font_color: str = TITLE_COLOR,
             font_vertical_shift: int = 0,
@@ -130,7 +130,7 @@ class CutoutTitleCard(BaseCardType):
         )
 
         # Font/card customizations
-        self.font = font
+        self.font = font_file
         self.font_size = font_size
         self.title_color = font_color
         self.vertical_shift = font_vertical_shift

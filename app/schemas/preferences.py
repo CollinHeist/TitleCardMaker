@@ -1,14 +1,13 @@
 from pathlib import Path
 from typing import Literal, Optional, Union
 
-from pydantic import Field, validator
+from pydantic import Field, validator, root_validator
 
-from app.schemas.base import Base, UNSPECIFIED
+from app.schemas.base import Base, UNSPECIFIED, validate_argument_lists_to_dict
 
 CardExtension = Literal['.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp']
 FilesizeUnit = Literal[
     'Bytes', 'Kilobytes', 'Megabytes', 'Gigabytes', 'Terabytes',
-    'B', 'KB', 'MB', 'GB', 'TB',
 ]
 
 Style = Literal[
@@ -64,14 +63,14 @@ class Preferences(Base):
     emby_api_key: str
     emby_use_ssl: bool
     emby_username: str
-    emby_filesize_limit: Union[int, None]
+    emby_filesize_limit: Optional[int]
 
     use_plex: bool
     plex_url: str
     plex_token: str
     plex_use_ssl: bool
     plex_integrate_with_pmm: bool
-    plex_filesize_limit: Union[int, None]
+    plex_filesize_limit: Optional[int]
 
     use_sonarr: bool
     sonarr_url: str
@@ -88,22 +87,22 @@ class EmbyConnection(Base):
     use_emby: bool
     emby_url: str
     emby_api_key: str
-    emby_username: str
-    emby_filesize_limit: Union[int, None]
+    emby_username: str = Field(min_length=1)
+    emby_filesize_limit: Optional[int]
 
 class JellyfinConnection(Base):
     use_jellyfin: bool
     jellyfin_url: str
     jellyfin_api_key: str
-    jellyfin_username: str
-    jellyfin_filesize_limit: Union[int, None]
+    jellyfin_username: str = Field(min_length=1)
+    jellyfin_filesize_limit: Optional[int]
 
 class PlexConnection(Base):
     use_plex: bool
     plex_url: str
     plex_token: str
     plex_integrate_with_pmm: bool
-    plex_filesize_limit: Union[int, None]
+    plex_filesize_limit: Optional[int]
 
 class SonarrConnection(Base):
     use_sonarr: bool
@@ -119,37 +118,45 @@ class TMDbConnection(Base):
     tmdb_skip_localized: bool
 
 class UpdateBase(Base):
-    url: Optional[str] = Field(default=UNSPECIFIED)
+    url: str = Field(default=UNSPECIFIED)
 
 class UpdateMediaServerBase(UpdateBase):
-    use_ssl: Optional[bool] = Field(default=False)
-    filesize_limit_number: Optional[int] = Field(gt=0, default=UNSPECIFIED)
-    filesize_limit_unit: Optional[FilesizeUnit] = Field(default=UNSPECIFIED)
+    use_ssl: bool = Field(default=UNSPECIFIED)
+    filesize_limit_number: int = Field(gt=0, default=UNSPECIFIED)
+    filesize_limit_unit: FilesizeUnit = Field(default=UNSPECIFIED)
 
 class UpdateEmby(UpdateMediaServerBase):
-    api_key: Optional[str] = Field(default=UNSPECIFIED)
-    username: Optional[str] = Field(default=UNSPECIFIED)
+    api_key: str = Field(default=UNSPECIFIED)
+    username: str = Field(default=UNSPECIFIED, min_length=1)
 
 class UpdateJellyfin(UpdateMediaServerBase):
-    api_key: Optional[str] = Field(default=UNSPECIFIED)
-    username: Optional[str] = Field(default=UNSPECIFIED)
+    api_key: str = Field(default=UNSPECIFIED)
+    username: str = Field(default=UNSPECIFIED, min_length=1)
 
 class UpdatePlex(UpdateMediaServerBase):
-    token: Optional[str] = Field(default=UNSPECIFIED)
+    token: str = Field(default=UNSPECIFIED)
     integrate_with_pmm: Optional[bool] = Field(default=UNSPECIFIED)
 
 class UpdateSonarr(UpdateBase):
-    api_key: Optional[str] = Field(default=UNSPECIFIED)
-    use_ssl: Optional[bool] = Field(default=False)
-    library_names: Optional[list[str]] = Field(default=UNSPECIFIED)
-    library_paths: Optional[list[str]] = Field(default=UNSPECIFIED)
+    api_key: str = Field(default=UNSPECIFIED)
+    use_ssl: bool = Field(default=UNSPECIFIED)
+    library_names: list[str] = Field(default=UNSPECIFIED)
+    library_paths: list[str] = Field(default=UNSPECIFIED)
 
     @validator('library_names', 'library_paths', pre=True)
     def validate_list(cls, v):
         return [v] if isinstance(v, str) else v
 
+    @root_validator
+    def validate_paired_lists(cls, values):
+        return validate_argument_lists_to_dict(
+            values, 'library names and paths',
+            'library_names', 'library_paths',
+            output_key='libraries'
+        )
+
 class UpdateTMDb(Base):
     api_key: Optional[str] = Field(default=UNSPECIFIED)
-    minimum_width: Optional[int] = Field(default=UNSPECIFIED)
-    minimum_height: Optional[int] = Field(default=UNSPECIFIED)
+    minimum_width: Optional[int] = Field(default=UNSPECIFIED, ge=0)
+    minimum_height: Optional[int] = Field(default=UNSPECIFIED, ge=0)
     skip_localized: Optional[bool] = Field(default=UNSPECIFIED)
