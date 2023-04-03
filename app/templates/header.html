@@ -1,3 +1,7 @@
+<div id="tcm-logo" class="ui inverted basic button" onclick="$('#nav-menu .sidebar').css('width', '100px !important');">
+  <img alt="Title Card Maker Logo" src="/assets/logo128.png" style="margin: auto; max-width: 43px; max-height: 43px;">
+</div>
+
 <div id="header-search" class="ui transparent input">
   <div id="search-bar" class="ui search">
     <div class="ui icon input">
@@ -35,16 +39,12 @@
     // Toggle inverted class modifier, update button sun <-> moon, and set background color
     // Light -> Dark
     if (currentIcons[0].classList.contains('sun')) {
-      // $('#main-content .ui').toggleClass('inverted', true);
-      // $('.modal, .modal .ui').toggleClass('inverted', true);
       currentIcons[0].className = 'moon outline icon';
       currentIcons[1].className = 'sun outline icon';
       $('body')[0].style.setProperty('background-color', 'var(--background-color-dark)');
       window.localStorage.setItem('site-theme', 'dark');
     // Dark -> light
     } else {
-      // $('#main-content .ui').toggleClass('inverted', false);
-      // $('.modal, .modal .ui').toggleClass('inverted', false);
       currentIcons[1].className = 'moon outline icon';
       currentIcons[0].className = 'sun outline icon';
       $('body')[0].style.setProperty('background-color', 'var(--background-color-light)');

@@ -289,16 +289,18 @@
                     {% endfor %}
                   </div>
                 </div>
-                <!-- Filesize warning for uncompressed images -->
-                <div id="card-extension-warning" class="ui warning message">
-                  <i class="exclamation triangle icon"></i>
-                  <b>Warning</b> Uncompressed images will significantly increase the file size of title cards.
-                </div>
-                <div class="field">
-                  <label>Filename Format</label>
-                  <input type="text" name="filename_format" placeholder="{{preferences.card_filename_format}}" value="{{preferences.card_filename_format}}">
-                </div>
               </div>
+              <!-- Filesize warning for uncompressed images -->
+              <div id="card-extension-warning" class="ui compact floating warning message">
+                <i class="exclamation triangle icon"></i>
+                <b>Warning</b> Uncompressed images will significantly increase the file size of title cards.
+              </div>
+
+              <div class="field">
+                <label>Filename Format</label>
+                <input type="text" name="filename_format" placeholder="{{preferences.card_filename_format}}" value="{{preferences.card_filename_format}}">
+              </div>
+              
               <div class="field">
                 <div class="two fields">
                   <div class="field">

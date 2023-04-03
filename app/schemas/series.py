@@ -13,6 +13,9 @@ SeasonTitleRange = constr(regex=r'^(\d+-\d+)|(\d+)|(s\d+e\d+-s\d+e\d+)$')
 class SortedImageSourceToggle(ImageSourceToggle):
     priority: int
 
+
+#TODO Add validation for filename format string
+
 """
 Base classes
 """
@@ -255,7 +258,6 @@ class UpdateTemplate(BaseUpdate):
 
     @validator('*', pre=True)
     def validate_arguments(cls, v):
-        print(f'validate_arguments {v} == "" {v == ""}')
         return None if v == '' else v
 
     @validator('season_title_ranges', 'season_title_values',

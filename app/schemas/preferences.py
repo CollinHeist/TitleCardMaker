@@ -135,7 +135,7 @@ class UpdateJellyfin(UpdateMediaServerBase):
 
 class UpdatePlex(UpdateMediaServerBase):
     token: str = Field(default=UNSPECIFIED)
-    integrate_with_pmm: Optional[bool] = Field(default=UNSPECIFIED)
+    integrate_with_pmm: bool = Field(default=UNSPECIFIED)
 
 class UpdateSonarr(UpdateBase):
     api_key: str = Field(default=UNSPECIFIED)
@@ -145,7 +145,8 @@ class UpdateSonarr(UpdateBase):
 
     @validator('library_names', 'library_paths', pre=True)
     def validate_list(cls, v):
-        return [v] if isinstance(v, str) else v
+        # Filter out empty strings - all arguments can accept empty lists
+        return [val for val in ([v] if isinstance(v, str) else v) if val != '']
 
     @root_validator
     def validate_paired_lists(cls, values):
@@ -156,7 +157,7 @@ class UpdateSonarr(UpdateBase):
         )
 
 class UpdateTMDb(Base):
-    api_key: Optional[str] = Field(default=UNSPECIFIED)
-    minimum_width: Optional[int] = Field(default=UNSPECIFIED, ge=0)
-    minimum_height: Optional[int] = Field(default=UNSPECIFIED, ge=0)
-    skip_localized: Optional[bool] = Field(default=UNSPECIFIED)
+    api_key: str = Field(default=UNSPECIFIED)
+    minimum_width: int = Field(default=UNSPECIFIED, ge=0)
+    minimum_height: int = Field(default=UNSPECIFIED, ge=0)
+    skip_localized: bool = Field(default=UNSPECIFIED)

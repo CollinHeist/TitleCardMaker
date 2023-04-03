@@ -176,26 +176,13 @@ def update_sonarr_connection(
     - update_sonarr: Sonarr connection details to modify.
     """
 
-    # Validate and join library names/paths
-    sonarr_libraries = join_lists(
-        update_sonarr.library_names, update_sonarr.library_paths,
-        'library names and paths', default=UNSPECIFIED,
-    )
-
     # Update attributes
     changed = False
     for attribute, value in update_sonarr.dict().items():
-        # Exclude library names/paths
-        if attribute in ('library_names', 'library_paths'): continue
         if (value != UNSPECIFIED
             and value != getattr(preferences, f'sonarr_{attribute}')):
             setattr(preferences, f'sonarr_{attribute}', value)
             changed = True
-
-    # Update libraries if indicated
-    if (sonarr_libraries != UNSPECIFIED
-        and preferences.sonarr_libraries != sonarr_libraries):
-        preferences.sonarr_libraries = sonarr_libraries
 
     # Remake SonarrInterface if changed
     if preferences.use_sonarr and changed:

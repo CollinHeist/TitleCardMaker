@@ -26,6 +26,19 @@ body > .pusher {
   overflow-x: hidden;
 }
 
+/* Center logo horizontally */
+#tcm-logo {
+  width: 115px;
+}
+
+/* Remove outline from logo */
+#tcm-logo img {
+  max-height: 50px;
+}
+#tcm-logo, #tcm-logo:hover {
+  box-shadow: none;
+}
+
 /* Don't put any scrollbars in the sidebar */
 #nav-menu > .sidebar {
   overflow: hidden;
@@ -44,6 +57,11 @@ body > .pusher {
 #header-search {
   position: absolute;
   left: 125px;
+}
+
+/* Position sidebar below header */
+#nav-menu .sidebar {
+  top: 70px;
 }
 
 /* Format for the search results */
@@ -123,5 +141,36 @@ html.ios body {
   * {
     scrollbar-color: var(--tcm-blue-color) rgba(12,12,12, 0.2);
     /* scrollbar-width: thin; */ /* Use auto */
+  }
+}
+
+/* Mobile formatting */
+@media (max-width: 768px) {
+  /* Use small nav bar */
+  #nav-menu > .menu {
+    /* width: 50px !important; */
+  }
+
+  /* Hide icons */
+  #nav-menu i {
+    display: none;
+  }
+
+  /* Use reduced  */
+  #main-content {
+    padding-left: 15px;
+  }
+
+  #nav-menu .item {
+    padding: 0.5em 0.1em;
+  }
+
+  #nav-menu .sidebar {
+    top: 70px;
+     /* Hide sidebar by default */
+    /* width: 0px !important; */
+  }
+  #page-header:hover + #nav-menu {
+    width: 100px;
   }
 }

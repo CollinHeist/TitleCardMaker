@@ -119,10 +119,15 @@
     // Get all available episode data sources
     async function getEpisodeDataSources() {
       const sources = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
+      const placeholder = '{{series.episode_data_source}}' === 'None' ? 'Global Default' : '{{series.episode_data_source}}';
       $('#episode-data-source').dropdown({
+        placeholder: placeholder,
         values: sources.map(({name, selected}) => {
-          return {name: name, value: name,
-                  selected: name == '{{series.episode_data_source}}'};
+          return {
+            name: name,
+            value: name,
+            selected: name == '{{series.episode_data_source}}',
+          };
         })
       });
     }

@@ -23,7 +23,8 @@ class Series(Base):
     poster_path = Column(String, default=str(ASSET_DIRECTORY/'placeholder.jpg'))
     poster_url = Column(String, default='/assets/placeholder.jpg')
 
-    # Optional SERIES arguments
+    # Series config arguments
+    directory = Column(String, default=None)
     emby_library_name = Column(String, default=None)
     jellyfin_library_name = Column(String, default=None)
     plex_library_name = Column(String, default=None)
@@ -57,7 +58,6 @@ class Series(Base):
 
     # Card arguments
     template_id = Column(Integer, ForeignKey('template.id'))
-    directory = Column(String, default=None)
     card_type = Column(String, default=None)
     hide_season_text = Column(Boolean, default=None)
     season_titles = Column(MutableDict.as_mutable(PickleType), default=None)
