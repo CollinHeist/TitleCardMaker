@@ -8,6 +8,7 @@ from app.dependencies import get_database, get_preferences, get_emby_interface,\
     get_jellyfin_interface, get_plex_interface, get_sonarr_interface, \
     get_tmdb_interface
 from app.routers.series import set_series_database_ids, download_series_poster
+from app.routers.templates import get_template
 from app.schemas.sync import (
     EmbySync, JellyfinSync, PlexSync, SonarrSeriesType, SonarrSync, Sync, Interface,
     NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync, UpdateSync,
@@ -21,31 +22,6 @@ sync_router = APIRouter(
     tags=['Sync']
 )
 
-def verify_template_exists(db, template_id: int) -> None:
-    """
-    Verify the template with the given ID exists.
-
-    Args:
-        db: SQLAlchemy database to query.
-        template_id: ID of the template to search for.
-
-    Raises:
-        HTTPException (404) if the specified template does not exist.
-    """
-    if template_id is None:
-        return None
-    
-    template = db.query(models.template.Template)\
-        .filter_by(id=template_id)\
-        .first()
-    if template is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Template {template_id} not found',
-        )
-
-    return None
-
 
 def add_sync(db, new_sync) -> Sync:
     """
@@ -57,12 +33,49 @@ def add_sync(db, new_sync) -> Sync:
     """
 
     # Verify template exists (if specified), raise 404 if DNE
-    verify_template_exists(db, new_sync.template_id)
+    get_template(db, new_sync.template_id, raise_exc=True)
 
     # Create DB entry from Pydantic model, add to database
     sync = models.sync.Sync(**new_sync.dict())
     db.add(sync)
     db.commit()
+
+    return sync
+
+
+def get_sync(db, sync_id, *, raise_exc=True) -> Union[Sync, None]:
+    """
+    Get the Sync with the given ID from the given Database.
+
+    Args:
+        db: SQL Database to query for the given Sync.
+        sync_id: ID of the Sync to query for.
+        raise_exc: Whether to raise 404 if the given Sync does not 
+            exist. If False, then only an error message is logged.
+
+    Returns:
+        Sync with the given ID. If one cannot be found and raise_exc
+        is False, then None is returned.
+
+    Raises:
+        HTTPException with a 404 status code if the Sync cannot be
+        found and raise_exc is True.
+    """
+
+    # No ID given, return None
+    if sync_id is None:
+        return None
+
+    sync = db.query(models.sync.Sync).filter_by(id=sync_id).first()
+    if sync is None:
+        if raise_exc:
+            raise HTTPException(
+                status_code=404,
+                detail=f'Sync {sync_id} not found',
+            )
+        else:
+            log.error(f'Sync {sync_id} not found')
+            return None
 
     return sync
 
@@ -131,16 +144,11 @@ def edit_sync(
     - update_sync: UpdateSync containing fields to update.
     """
 
-    # Get existing sync
-    sync = db.query(models.sync.Sync).filter_by(id=sync_id).first()
-    if sync is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Sync {sync_id} not found',
-        )
+    # Get existing Sync, raise 404 if DNE
+    sync = get_sync(db, sync_id, raise_exc=True)
 
-    # Verify template exists (if specified), raise 404 if DNE
-    verify_template_exists(update_sync.template_id)
+    # Verify Template exists (if specified), raise 404 if DNE
+    get_template(db, getattr(update_sync, 'template_id', None), raise_exc=True)
 
     # Update object
     changed = False
@@ -166,13 +174,8 @@ def delete_sync(
     - sync_id: ID of the Sync to delete
     """
 
-    query = db.query(models.sync.Sync).filter_by(id=sync_id)
-    if query.first() is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Sync {sync_id} not found',
-        )
-    query.delete()
+    sync = get_sync(db, sync_id, raise_exc=True)
+    db.delete(sync)
     db.commit()
 
     return None
@@ -238,11 +241,7 @@ def get_sync_by_id(
     - sync_id: ID of the Sync to retrieve.
     """
 
-    sync = db.query(models.sync.Sync).filter_by(id=sync_id).first()
-    if sync is None:
-        raise HTTPException(status_code=404, detail=f'Sync {sync_id} not found')
-
-    return sync
+    return get_sync(db, sync_id, raise_exc=True)
 
 
 @sync_router.post('/{sync_id}', status_code=201)
@@ -264,13 +263,8 @@ def sync(
     - sync_id: ID of the sync to run.
     """
 
-    # Get the sync with this ID, raise 404 if DNE
-    sync = db.query(models.sync.Sync).filter_by(id=sync_id).first()
-    if sync is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Sync {sync_id} not found',
-        )
+    # Get existing Sync, raise 404 if DNE
+    sync = get_sync(db, sync_id, raise_exc=True)
 
     # If specified interface is disabled, raise 409
     interface = {

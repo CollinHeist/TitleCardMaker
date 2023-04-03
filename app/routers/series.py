@@ -14,6 +14,8 @@ from app.dependencies import get_database, get_preferences, get_emby_interface,\
     get_jellyfin_interface, get_plex_interface, get_sonarr_interface, \
     get_tmdb_interface
 import app.models as models
+from app.routers.fonts import get_font
+from app.routers.templates import get_template
 from app.schemas.base import UNSPECIFIED
 from app.schemas.preferences import EpisodeDataSource, MediaServer,\
     MediaServerToggle
@@ -168,20 +170,9 @@ def add_new_series(
     """
     log.critical(f'{new_series.dict()=}')
     # If a template or font was indicated, verify they exist
-    if getattr(new_series, 'template_id', None) is not None:
-        if (db.query(models.template.Template)\
-            .filter_by(id=new_series.template_id).first()) is None:
-            raise HTTPException(
-                status_code=404,
-                detail=f'Template {new_series.template_id} not found',
-            )
+    get_template(db, getattr(new_series, 'template_id', None), raise_exc=True)
     if getattr(new_series, 'font_id', None) is not None:
-        if (db.query(models.font.Font)\
-            .filter_by(id=new_series.font_id).first()) is None:
-            raise HTTPException(
-                status_code=404,
-                detail=f'Font {new_series.font_id} not found',
-            )
+        get_font(db, new_series.font_id, raise_exc=True)
 
     # Add to database
     series = models.series.Series(**new_series.dict())
@@ -315,20 +306,9 @@ def update_series(
         )
 
     # If a template or font were indicated, verify they exist
-    if getattr(update_series, 'template_id', None) is not None:
-        if (db.query(models.template.Template)\
-            .filter_by(id=update_series.template_id).first() is None):
-            raise HTTPException(
-                status_code=404,
-                detail=f'Template {update_series.template_id} not found',
-            )
+    get_template(db, getattr(update_series, 'template_id', None),raise_exc=True)
     if getattr(update_series, 'font_id', None) is not None:
-        if (db.query(models.font.Font)\
-            .filter_by(id=update_series.font_id).first() is None):
-            raise HTTPException(
-                status_code=404,
-                detail=f'Font {update_series.font_id} not found',
-            )
+        get_font(db, new_series.font_id, raise_exc=True)
 
     # Update each attribute of the object
     changed = False

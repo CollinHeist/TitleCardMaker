@@ -74,3 +74,33 @@ class Series(Base):
     @hybrid_property
     def path_safe_name(self) -> str:
         return CleanPath.sanitize_name(self.full_name)
+
+    @hybrid_property
+    def card_properties(self) -> dict[str, Any]:
+        return {
+            'series_id': self.id,
+            'series_name': self.name,
+            'series_full_name': self.full_name,
+            'year': self.year,
+            'filename_format': self.filename_format,
+            'font_id': self.font_id,
+            'font_color': self.font_color,
+            'font_title_case': self.font_title_case,
+            'font_size': self.font_size,
+            'font_kerning': self.font_kerning,
+            'font_stroke_width': self.font_stroke_width,
+            'font_interline_spacing': self.font_interline_spacing,
+            'font_vertical_shift': self.font_vertical_shift,
+            'font_delete_missing': self.font_delete_missing,
+            'font_replacements': self.font_replacements,
+            'template_id': self.template_id,
+            'directory': self.directory,
+            'card_type': self.card_type,
+            'hide_season_text': self.hide_season_text,
+            'season_titles': self.season_titles,
+            'hide_episode_text': self.hide_episode_text,
+            'episode_text_format': self.episode_text_format,
+            'unwatched_style': self.unwatched_style,
+            'watched_style': self.watched_style,
+            'extras': self.extras,
+        }

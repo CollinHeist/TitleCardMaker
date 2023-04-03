@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 from json import dumps, loads
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
@@ -30,3 +31,20 @@ class Template(Base):
     unwatched_style = Column(String, default=None)
     watched_style = Column(String, default=None)
     extras = Column(MutableDict.as_mutable(PickleType), default={})
+
+    @hybrid_property
+    def card_properties(self) -> dict[str, Any]:
+        return {
+            'template_id': self.id,
+            'template_name': self.name,
+            'filename_format': self.filename_format,
+            'font_id': self.font_id,
+            'card_type': self.card_type,
+            'hide_season_text': self.hide_season_text,
+            'season_titles': self.season_titles,
+            'hide_episode_text': self.hide_episode_text,
+            'episode_text_format': self.episode_text_format,
+            'unwatched_style': self.unwatched_style,
+            'watched_style': self.watched_style,
+            'extras': self.extras,
+        }

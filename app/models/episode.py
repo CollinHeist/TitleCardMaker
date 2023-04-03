@@ -1,4 +1,7 @@
+from typing import Any
+
 from sqlalchemy import Boolean, Column, Integer, Float, ForeignKey, String
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy import PickleType
 
@@ -49,3 +52,34 @@ class Episode(Base):
     tvrage_id = Column(Integer, default=None)
 
     extras = Column(MutableDict.as_mutable(PickleType), default=None)
+
+    @hybrid_property
+    def card_properties(self) -> dict[str, Any]:
+        return {
+            'episode_id': self.id,
+            'template_id': self.template_id,
+            'source_file': self.source_file,
+            'card_file': self.card_file,
+            'watched': self.watched,
+            'season_number': self.season_number,
+            'episode_number': self.episode_number,
+            'absolute_number': self.absolute_number,
+            'title': self.title,
+            'match_title': self.match_title,
+            'auto_split_title': self.auto_split_title,
+            'hide_season_text': self.hide_season_text,
+            'season_text': self.season_text,
+            'hide_episode_text': self.hide_episode_text,
+            'episode_text': self.episode_text,
+            'unwatched_style': self.unwatched_style,
+            'watched_style': self.watched_style,
+            'font_id': self.font_id,
+            'font_color': self.font_color,
+            'font_title_case': self.font_title_case,
+            'font_size': self.font_size,
+            'font_kerning': self.font_kerning,
+            'font_stroke_width': self.font_stroke_width,
+            'font_interline_spacing': self.font_interline_spacing,
+            'font_vertical_shift': self.font_vertical_shift,
+            'extras': self.extras,
+        }

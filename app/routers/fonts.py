@@ -40,6 +40,39 @@ def join_lists(keys: list[Any], vals: list[Any], desc: str,
     return UNSPECIFIED if keys == UNSPECIFIED else default
 
 
+def get_font(db, font_id, *, raise_exc=True) -> Union[NamedFont, None]:
+    """
+    Get the Font with the given ID from the given Database.
+
+    Args:
+        db: SQL Database to query for the given Font.
+        font_id: ID of the Font to query for.
+        raise_exc: Whether to raise 404 if the given Font does not 
+            exist. If False, then only an error message is logged.
+
+    Returns:
+        Font with the given ID. If one cannot be found and raise_exc is
+        False, then None is returned.
+
+    Raises:
+        HTTPException with a 404 status code if the Font cannot be
+        found and raise_exc is True.
+    """
+
+    font = db.query(models.font.Font).filter_by(id=font_id).first()
+    if font is None:
+        if raise_exc:
+            raise HTTPException(
+                status_code=404,
+                detail=f'Font {font_id} not found',
+            )
+        else:
+            log.error(f'Font {font_id} not found')
+            return None
+
+    return font
+
+
 @font_router.post('/new', status_code=201)
 def create_font(
         new_font: NewNamedFont = Body(...),
@@ -49,7 +82,7 @@ def create_font(
 
     - new_font: Font definition to create.
     """
-    log.critical(f'{new_font.dict()=}')
+
     # Add to database
     font = models.font.Font(**new_font.dict())
     db.add(font)
@@ -71,12 +104,8 @@ async def add_font_file(
     - file: Font file to attach to the specified font.
     """
 
-    font = db.query(models.font.Font).filter_by(id=font_id).first()
-    if font is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Font {font_id} not found',
-        )
+    # Get existing font object, raise 404 if DNE
+    font = get_font(db, font_id, raise_exc=True)
 
     # Download file, raise 400 if contentless
     file_content = await file.read()
@@ -86,11 +115,13 @@ async def add_font_file(
             detail=f'Font file has no content',
         )
 
-    # Write to file, update path in database.
+    # Write to file
     font_directory = preferences.asset_directory / 'fonts'
     file_path = font_directory / str(font.id) / file.filename
     file_path.parent.mkdir(exist_ok=True, parents=True)
     file_path.write_bytes(file_content)
+
+    # Update object and database
     font.file = str(file_path)
     db.commit()
 
@@ -108,12 +139,7 @@ def delete_font_file(
     """
 
     # Get existing font object, raise 404 if DNE
-    font = db.query(models.font.Font).filter_by(id=font_id).first()
-    if font is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Font {font_id} not found',
-        )
+    font = get_font(db, font_id, raise_exc=True)
 
     # Font has no file, return unmodified
     if font.file is None:
@@ -151,12 +177,7 @@ def update_font(
     """
     log.critical(f'{update_font.dict()=}')
     # Get existing font object, raise 404 if DNE
-    font = db.query(models.font.Font).filter_by(id=font_id).first()
-    if font is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Font {font_id} not found',
-        )
+    font = get_font(db, font_id, raise_exc=True)
 
     # Update other attributes
     changed = False
@@ -193,14 +214,7 @@ def get_font_by_id(
     - font_id: ID of the Font to retrieve.
     """
 
-    font = db.query(models.font.Font).filter_by(id=font_id).first()
-    if font is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Font {font_id} not found',
-        )
-
-    return font
+    return get_font(db, font_id, raise_exc=True)
 
 
 @font_router.delete('/{font_id}', status_code=204)
@@ -236,13 +250,13 @@ def delete_font(
     
     # Delete font reference from any template, series, or episode
     for template in db.query(models.template.Template)\
-        .filter_by(font_id=font_id).all():
+            .filter_by(font_id=font_id).all():
         template.font_id = None
     for series in db.query(models.series.Series)\
-        .filter_by(font_id=font_id).all():
+            .filter_by(font_id=font_id).all():
         series.font_id = None
     for episode in db.query(models.episode.Episode)\
-        .filter_by(font_id=font_id).all():
+            .filter_by(font_id=font_id).all():
         episode.font_id = None
         
     query.delete()

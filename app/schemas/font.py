@@ -7,6 +7,14 @@ from app.schemas.base import Base, UNSPECIFIED, validate_argument_lists_to_dict
 
 TitleCase = Literal['blank', 'lower', 'source', 'title', 'upper']
 
+DefaultFont = {
+    'font_interline_spacing': 0,
+    'font_kerning': 1.0,
+    'font_size': 1.0,
+    'font_stroke_width': 1.0,
+    'font_vertical_shift': 0,
+}
+
 """
 Base classes
 """
