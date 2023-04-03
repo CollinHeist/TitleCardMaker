@@ -16,7 +16,7 @@ from modules.Debug import log
 # Create sub router for all /connection API requests
 availablility_router = APIRouter(
     prefix='/available',
-    tags=['availability'],
+    tags=['Availability'],
 )
 
 @availablility_router.get('/card-types', tags=['Title Cards'])

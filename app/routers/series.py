@@ -25,6 +25,39 @@ from app.schemas.series import (
 from app.schemas.episode import Episode
 
 
+def get_series(db, series_id, *, raise_exc=True) -> Union[Series, None]:
+    """
+    Get the Series with the given ID from the given Database.
+
+    Args:
+        db: SQL Database to query for the given Series.
+        series_id: ID of the Series to query for.
+        raise_exc: Whether to raise 404 if the given Series does not 
+            exist. If False, then only an error message is logged.
+
+    Returns:
+        Series with the given ID. If one cannot be found and raise_exc
+        is False, then None is returned.
+
+    Raises:
+        HTTPException with a 404 status code if the Series cannot be
+        found and raise_exc is True.
+    """
+
+    series = db.query(models.series.Series).filter_by(id=series_id).first()
+    if series is None:
+        if raise_exc:
+            raise HTTPException(
+                status_code=404,
+                detail=f'Series {series_id} not found',
+            )
+        else:
+            log.error(f'Series {font_id} not found')
+            return None
+
+    return series
+
+
 def join_lists(keys: list[Any], vals: list[Any], desc: str,
         default: Any = None) -> Union[dict[str, Any], None]:
 
@@ -205,12 +238,7 @@ def delete_series(
     """
 
     # Find series with this ID, raise 404 if DNE
-    series = db.query(models.series.Series).filter_by(id=series_id).first()
-    if series is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Series {series_id} not found',
-        )
+    series = get_series(db, series_id, raise_exc=True)
 
     # Delete poster if not the placeholder
     series_poster = Path(series.poster_path)
@@ -273,16 +301,8 @@ def get_series_config(
 
     - series_id: ID of the series to get the config of.
     """
-    
-    # Query for this series, raise 404 if DNE
-    series = db.query(models.series.Series).filter_by(id=series_id).first()
-    if series is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Series {series_id} not found',
-        )
 
-    return series
+    return get_series(db, series_id, raise_exc=True)
 
 
 @series_router.patch('/{series_id}')
@@ -331,15 +351,10 @@ def load_title_cards(
         media_server: MediaServer,
         db = Depends(get_database)) -> None:
 
-    # Query for this series, raise 404 if DNE
-    series = db.query(models.series.Series).filter_by(id=series_id).first()
-    if series is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Series {series_id} not found',
-        )
+    # Find series with this ID, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
 
-    ...
+    #TODO actually load cards - probably move to /cards/ router
 
 
 @series_router.post('/{series_id}/reload/{media_server}', status_code=201)
@@ -348,15 +363,10 @@ def reload_title_cards(
         media_server: MediaServer,
         db = Depends(get_database)) -> None:
 
-    # Query for this series, raise 404 if DNE
-    series = db.query(models.series.Series).filter_by(id=series_id).first()
-    if series is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Series {series_id} not found',
-        )
+    # Find series with this ID, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
 
-    ...
+    #TODO reload cards and move to /cards/ router
 
 
 @series_router.get('/{series_id}/poster', status_code=200)
@@ -371,13 +381,8 @@ def get_series_poster(
     - series_id: Series being queried.
     """
 
-    # Query for this series, raise 404 if DNE
-    series = db.query(models.series.Series).filter_by(id=series_id).first()
-    if series is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Series {series_id} not found',
-        )
+    # Find series with this ID, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
 
     return download_series_poster(series, db, preferences, tmdb_interface)
 
@@ -397,13 +402,8 @@ async def set_series_poster(
     - poster_file: New poster file.
     """
 
-    # Query for this series, raise 404 if DNE
-    series = db.query(models.series.Series).filter_by(id=series_id).first()
-    if series is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Series {series_id} not found',
-        )
+    # Find series with this ID, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
 
     # Get poster contents
     uploaded_file = await poster_file.read()

@@ -110,7 +110,7 @@ def get_all_templates(
 
 
 @template_router.get('/{template_id}', status_code=200)
-def get_template(
+def get_template_by_id(
         template_id: int,
         db = Depends(get_database)) -> Template:
     """

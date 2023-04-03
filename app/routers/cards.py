@@ -8,6 +8,7 @@ from app.dependencies import get_database
 from app.dependencies import get_preferences
 import app.models as models
 from app.routers.fonts import get_font
+from app.routers.series import get_series
 from app.schemas.font import DefaultFont
 from app.schemas.card import TitleCard, NewTitleCard, PreviewTitleCard
 from modules.CleanPath import CleanPath
@@ -111,12 +112,7 @@ def create_preview_card(
 
     # Query for font if an ID was given, update font with those attributes
     if getattr(card, 'font_id', None) is not None:
-        font_obj = db.query(models.font.Font).filter_by(id=card.font_id).first()
-        if font_obj is None:
-            raise HTTPException(
-                status_code=404,
-                detail=f'font ID {card.font_id} not found',
-            )
+        get_font(db, card.font_id, raise_exc=True)
         for attr in ('file', 'color', 'title_case', 'size', 'kerning', 
                      'stroke_width', 'interline_spacing', 'vertical_shift'):
             if getattr(font_obj, attr) is not None:
@@ -179,13 +175,8 @@ def create_cards_for_series(
         preferences = Depends(get_preferences),
         db = Depends(get_database)) -> None:
 
-    # Get this series
-    series = db.query(models.series.Series).filter_by(id=series_id).first()
-    if series is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Series {series_id} not found',
-        )
+    # Get this series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
 
     # Get all episodes
     episodes = db.query(models.episode.Episode).filter_by(series_id=series_id).all()
@@ -339,6 +330,8 @@ def create_cards_for_series(
         # Existing card doesn't match, delete and remake
         elif any(getattr(existing_card, attr) != getattr(card, attr)
                  for attr in existing_card.comparison_properties.keys()):
+            log.debug(f'Detected change to TitleCard[{existing_card.id}], '
+                      f'recreating')
             card_settings['card_file'].unlink(missing_ok=True)
             db.delete(existing_card)
             tasks.add_task(create_card, db, preferences, card_settings)

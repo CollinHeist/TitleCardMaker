@@ -70,6 +70,7 @@ class BaseSeries(BaseConfig):
         title='Template ID',
         description='ID of the Template applied to this series',
     )
+    match_titles: bool = Field(default=True)
     
     hide_season_text: Optional[bool] = Field(default=None)
     hide_episode_text: Optional[bool] = Field(default=None)
@@ -299,6 +300,7 @@ class UpdateSeries(BaseUpdate):
     skip_localized_images: Optional[bool] = Field(default=UNSPECIFIED)
     filename_format: Optional[str] = Field(default=UNSPECIFIED)
     episode_data_source: Optional[EpisodeDataSource] = Field(default=UNSPECIFIED)
+    match_titles: bool = Field(default=UNSPECIFIED)
     translations: Optional[dict[str, str]] = Field(default=UNSPECIFIED)
     card_type: Optional[str] = Field(default=UNSPECIFIED)
     hide_season_text: Optional[bool] = Field(default=UNSPECIFIED)

@@ -149,7 +149,7 @@
       });
     }
   
-    // Get all episodes available for this series
+    // Get all episodes (query for new ones)
     async function getEpisodeData() {
       // Get episode data element
       let episodeDataDiv = document.getElementById('episode-data');
@@ -247,11 +247,68 @@
       refreshTheme();
     }
 
+    // Initialize series specific dropdowns
+    async function initializeDropdowns() {
+      // Templates
+      const templates = await fetch('/api/templates/all').then(resp => resp.json());
+      $('.dropdown[data-value="templates"]').dropdown({
+        values: templates.map(({id, name}) => {
+          return {name: name, value: id, selected: id === '{{series.template_id}}'};
+        })
+      });
+      // Card types
+      const cardTypes = await fetch('/api/available/card-types').then(resp => resp.json());
+      $('.dropdown[data-value="card-types"]').dropdown({
+        values: cardTypes.map(({name}) => {
+          return {
+            name:     name,
+            value:    name.toLowerCase(),
+            selected: name.toLowerCase() === '{{series.card_type}}',
+          };
+        })//, placeholder: 'Global Default',
+      });
+      // Styles
+      const allStyles = await fetch('/api/available/styles').then(resp => resp.json());
+      $(`.dropdown[data-value="watched-style"]`).dropdown({
+        values: [
+          {name: 'Art Variations', type: 'header'},
+          ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
+            return {name: name, value: value, selected: value === '{{series.watched_style}}'};
+          }),
+          {name: 'Unique Variations', type: 'header'},
+          ...allStyles.filter(({style_type}) => style_type === 'unique').map(({name, value}) => {
+            return {name: name, value: value, selected: value === '{{series.watched_style}}'};
+          }),
+        ]//, placeholder: 'Global Default',
+      });
+      // Unwatched style
+      $(`.dropdown[data-value="unwatched-style"]`).dropdown({
+        values: [
+          {name: 'Art Variations', type: 'header'},
+          ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
+            return {name: name, value: value, selected: value === '{{series.unwatched_style}}'};
+          }),
+          {name: 'Unique Variations', type: 'header'},
+          ...allStyles.filter(({style_type}) => style_type === 'unique').map(({name, value}) => {
+            return {name: name, value: value, selected: value === '{{series.unwatched_style}}'};
+          }),
+        ]//, placeholder: 'Global Default',
+      });
+      // Fonts
+      const fonts = await fetch('/api/fonts/all').then(resp => resp.json());
+      $('.dropdown[data-value="fonts"]').dropdown({
+        values: fonts.map(({id, name}) => {
+          return {name: name, value: id, selected: id === '{{series.font_id}}'};
+        })
+      });
+    }
+
     async function initAll() {
       getStatistics();
       getEpisodeDataSources();
       getLibraries();
       getEpisodeData();
+      initializeDropdowns();
     }
 
     async function refreshEpisodeData() {
@@ -336,7 +393,7 @@
 
     <!-- Actual page content -->
     <div id="main-content" class="article">
-      <div class="ui grid">
+      <div class="ui stackable grid">
         <!-- Poster and label -->
         <div class="four wide column" style="min-width: 150px;">
           <div class="ui raised card">
@@ -430,16 +487,53 @@
           <!-- Configuration tab -->
           <div id="series-tabs" class="ui bottom attached tab segment" data-tab="configuration">
             <form id="series-config" class="ui compact form">
-              <!-- Episode Data Source Dropdown Menu -->
+              <!-- Episode Data Source -->
               <div class="field">
-                <label class="config-label">Episode Data Source</label>
-                <div id="episode-data-source" class="ui compact selection dropdown">
-                  <input id="episode-data-source-input" type="hidden" name="episode_data_source" value="{{series.episode_data_source}}">
+                <label>Episode Data Source</label>
+                <div id="episode-data-source" class="ui compact selection clearable dropdown" data-tooltip="Where to get episode data from" data-position="right center">
+                  <input name="episode_data_source" type="hidden">
                   <i class="dropdown icon"></i>
                   <!-- Default (current) value -->
-                  <div class="default text">{{series.episode_data_source}}</div>
-                  <div id="episode-data-source-choices" class="menu">
+                  <div class="default text"></div>
+                  <div class="menu">
                     <!-- Added asynchronously -->
+                  </div>
+                </div>
+              </div>
+
+              <div class="ui right aligned checkbox field" data-tooltip="Require episode titles to exactly match their episode data source" data-position="right center">
+                {% if series.match_titles %}
+                <input name="match_titles" type="checkbox" checked="">
+                {% else %}
+                <input name="match_titles" type="checkbox">
+                {% endif %}
+                <label>Match Titles</label>
+              </div>
+
+              <!-- Special Syncing -->
+              <div class="ui field">
+                <label>Sync Specials</label>
+                <div class="ui compact selection clearable dropdown" data-tooltip="Whether to create cards for episodes of Season 0" data-position="right center">
+                  <input name="sync_specials" type="hidden">
+                  <i class="dropdown icon"></i>
+                  <div class="default text">Default</div>
+                  <div class="menu">
+                    <div class="item">True</div>
+                    <div class="item">False</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Localized Image Skipping -->
+              <div class="field">
+                <label>Ignore Localized Images</label>
+                <div class="ui compact selection clearable dropdown" data-tooltip="Whether to skip images with langauges (on TMDb)" data-position="right center">
+                  <input name="skip_localized_images" type="hidden">
+                  <i class="dropdown icon"></i>
+                  <div class="default text">Default</div>
+                  <div class="menu">
+                    <div class="item">True</div>
+                    <div class="item">False</div>
                   </div>
                 </div>
               </div>
@@ -447,14 +541,13 @@
               <!-- Emby Library -->
               {% if preferences.use_emby or series.emby_library_name %}
               <div class="field">
-                <label class="config-label">Emby Library</label>
-                <div id="emby-library" class="ui compact selection dropdown">
+                <label>Emby Library</label>
+                <div id="emby-library" class="ui compact selection clearable dropdown">
                   <!-- Default (current) value -->
-                  <input name="emby_library_name" id="emby-library-input" type="hidden"value="{{series.emby_library_name}}">
-                  <div class="default text">{{series.emby_library_name}}</div>
+                  <input name="emby_library_name" id="emby-library-input" type="hidden">
+                  <div class="default text">None</div>
                   <i class="dropdown icon"></i>
-                  <div id="emby-library-choices" class="menu">
-                    <div class="item" data-value="None">None</div>
+                  <div class="menu">
                     <!-- Child divs added by JS asynchronous request -->
                   </div>
                 </div>
@@ -464,14 +557,14 @@
               <!-- Jellyfin Library -->            
               {% if preferences.use_jellyfin or series.jellyfin_library_name %}
               <div class="field">
-                <label class="config-label">Jellyfin Library</label>
-                <div id="jellyfin-library" class="ui compact selection dropdown">
+                <label>Jellyfin Library</label>
+                <div id="jellyfin-library" class="ui compact selection clearable dropdown">
                   <!-- Default (current) value -->
-                  <input name="jellyfin_library_name" id="jellyfin-library-input" type="hidden" value="{{series.jellyfin_library_name}}">
-                  <div class="default text">{{series.jellyfin_library_name}}</div>
+                  <input name="jellyfin_library_name" id="jellyfin-library-input" type="hidden">
+                  <div class="default text">None</div>
                   <i class="dropdown icon"></i>
                   <div id="jellyfin-library-choices" class="menu">
-                    <div class="item" data-value="None">None</div>
+                    <!-- <div class="item" data-value="None">None</div> -->
                     <!-- Child divs added by JS asynchronous request -->
                   </div>
                 </div>
@@ -480,15 +573,15 @@
 
               <!-- Plex Library -->
               {% if preferences.use_plex or series.plex_library_name %}
-              <div class="field">
-                <label class="config-label">Plex Library</label>
-                <div id="plex-library" class="ui compact selection dropdown">
+              <div class="ui field">
+                <label>Plex Library</label>
+                <div id="plex-library" class="ui compact selection clearable dropdown">
                   <!-- Default (current) value -->
-                  <input name="plex_library_name" id="plex-library-input" type="hidden" value="{{series.plex_library_name}}">
-                  <div class="default text">{{series.plex_library_name}}</div>
+                  <input name="plex_library_name" id="plex-library-input" type="hidden">
+                  <div class="default text">None</div>
                   <i class="dropdown icon"></i>
-                  <div id="plex-library-choices" class="menu">
-                    <div class="item" data-value="None">None</div>
+                  <div class="menu">
+                    <!-- <div class="item" data-value="None">None</div> -->
                     <!-- Child divs added by JS asynchronous request -->
                   </div>
                 </div>
@@ -496,18 +589,26 @@
               {% endif %}
 
               <!-- Card Directory -->
-              <div id="series-config-card-directory" class="field">
-                <label id="series-config-card-directory-label" class="config-label">Card Directory</label>
-                <div class="ui left icon input">
-                  <input name="card_directory"id="series-config-card-directory-input" type="text" value="{{series.directory}}">
+              <div class="ui field">
+                <label>Card Directory</label>
+                <div class="ui left icon input" data-tooltip="Where to store title cards" data-position="top center">
+                  {% if series.directory is none %}
+                  <input name="card_directory" type="text" placeholder="{{preferences.card_directory}}{{series.path_safe_name}}/">
+                  {% else %}
+                  <input name="card_directory" type="text" value="{{series.directory}}">
+                  {% endif %}
                   <i class="folder icon"></i>
                 </div>
               </div>
 
               <!-- Filename Format -->
-              <div id="series-config-filename-format" class="field">
-                <label id="series-config-filename-format-label" class="config-label">Filename Format</label>
-                <input name="filename_format" type="text" placeholder="{{series.filename_format}}" value="{{series.filename_format}}">
+              <div class="ui field" data-tooltip="Format of the title card file names" data-position="top center">
+                <label>Filename Format</label>
+                {% if series.filename_format is none %}
+                <input name="filename_format" type="text" placeholder="Global Default">
+                {% else %}
+                <input name="filename_format" type="text" placeholder="{{series.filename_format}}">
+                {% endif %}
               </div>
 
               <!-- Submit changes button -->
@@ -529,11 +630,234 @@
             </div>
             <div class="ui divider"></div>
 
-            <div class="ui grid">
+            <div class="ui stackable grid">
               <!-- Card config  -->
               <div class="eight wide column">
+                <div class="ui visible floating info message">
+                  <i class="info circle icon"></i>
+                  Options are listed in increasing priority
+                </div>
+
                 <form id="card-config" class="ui compact form">
-                  
+                  <div class="field">
+                    <label>Template</label>
+                    <div data-value="templates" class="ui very long compact clearable selection dropdown">
+                      <input name="template_id" type="hidden">
+                      <i class="dropdown icon"></i>
+                      <div class="default text">None</div>
+                      <div class="menu"><!-- Added asynchrously --></div>
+                    </div>
+                  </div>
+
+                  <div class="ui divider"></div>
+
+                  <div class="field">
+                    <label>Card Type</label>
+                    <div data-value="card-types" class="ui long compact selection clearable dropdown">
+                      <input name="card_type" type="hidden">
+                      <i class="dropdown icon"></i>
+                      <div class="default text">Default</div>
+                      <div class="menu"><!-- Added asynchrously --></div>
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <label>Watched Episode Style</label>
+                    <div data-value="watched-style" class="ui long compact selection clearable dropdown">
+                      <span class="default text">Default</span>
+                      <input name="watched_style" type="hidden">
+                      <i class="dropdown icon"></i>
+                      <div class="menu"><!-- Added asynchronously --></div>
+                    </div>
+                  </div>
+    
+                  <div class="field">
+                    <label>Unwatched Episode Style</label>
+                    <div data-value="unwatched-style" class="ui long compact selection clearable dropdown">
+                      <span class="default text">Default</span>
+                      <input name="unwatched_style" type="hidden">
+                      <i class="dropdown icon"></i>
+                      <div class="menu"><!-- Added asynchronously --></div>
+                    </div>
+                  </div>
+
+                  <!-- <h4 class="ui horizontal divider header">Fonts</h4> -->
+
+                  <div class="field">
+                    <label>Font</label>
+                    <div data-value="fonts" class="ui very long compact clearable selection dropdown" data-tooltip="Font to apply to this series (overrides any Template Font)" data-position="right center">
+                      <input name="font_id" type="hidden">
+                      <i class="dropdown icon"></i>
+                      <div class="default text">Default</div>
+                      <div class="menu"><!-- Added asynchrously --></div>
+                    </div>
+                  </div>
+
+                  <div class="ui divider"></div>
+
+                  <div class="two fields">
+                    <div class="field">
+                      <label>Color <a href="https://imagemagick.org/script/color.php#color_names" target="_blank"><i class="external alternate small icon"></i></a></label>
+                      {% if series.font_color is none %}
+                      <input name="font_color" type="text" placeholder="Default">
+                      {% else %}
+                      <input name="font_color" type="text" placeholder="Default" value="{{series.font_color}}">
+                      {% endif %}
+                    </div>
+    
+                    <div class="field">
+                      <label>Text Case</label>
+                      <div class="ui clearable selection dropdown">
+                        <input name="font_title_case" type="hidden">
+                        <div class="default text">Default</div>
+                        <i class="dropdown icon"></i>
+                        <div class="menu">
+                          {% if series.font_title_case == 'blank' %}
+                          <div class="item" value="blank" selected="">Blank</div>
+                          {% else %}
+                          <div class="item" value="blank">Blank</div>
+                          {% endif %}
+                          <div class="item" value="lower">Lowercase</div>
+                          <div class="item" value="source">Source</div>
+                          <div class="item" value="title">Title</div>
+                          <div class="item" value="upper">Uppercase</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="three fields">
+                    <div class="field">
+                      <label>Size</label>
+                      <div class="ui right labeled input">
+                        {% if series.font_size is none %}
+                        <input name="font_size" type="number" placeholder="Default">
+                        {% else %}
+                        <input name="font_size" type="number" placeholder="Default" value="{{series.font_size}}">
+                        {% endif %}
+                        <div class="ui basic label">%</div>
+                      </div>
+                    </div>
+                    <div class="field">
+                      <label>Kerning</label>
+                      <div class="ui right labeled input">
+                        {% if series.font_kerning is none %}
+                        <input name="font_kerning" type="number" placeholder="Default">
+                        {% else %}
+                        <input name="font_kerning" type="number" placeholder="Default" value="{{series.font_kerning}}">
+                        {% endif %}
+                        <div class="ui basic label">%</div>
+                      </div>
+                    </div>
+                    <div class="field">
+                      <label>Stroke Width</label>
+                      <div class="ui right labeled input">
+                        {% if series.font_kerning is none %}
+                        <input name="font_stroke_width" type="number" placeholder="Default">
+                        {% else %}
+                        <input name="font_stroke_width" type="number" placeholder="Default" value="{{series.font_stroke_width}}">
+                        {% endif %}
+                        <div class="ui basic label">%</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="two fields">
+                    <div class="field">
+                      <label>Interline Spacing</label>
+                      {% if series.font_kerning is none %}
+                      <input name="font_interline_spacing" type="number" placeholder="Default">
+                      {% else %}
+                      <input name="font_interline_spacing" type="number" placeholder="Default" value="{{series.font_interline_spacing}}">
+                      {% endif %}
+                    </div>
+    
+                    <div class="field">
+                      <label>Vertical Shift</label>
+                      {% if series.font_kerning is none %}
+                      <input name="font_vertical_shift" type="number" placeholder="Default">
+                      {% else %}
+                      <input name="font_vertical_shift" type="number" placeholder="Default" value="{{series.font_vertical_shift}}">
+                      {% endif %}
+                    </div>
+                  </div>
+
+                  <div class="ui field">
+                    <label>Delete Missing</label>
+                    <div class="ui compact selection clearable dropdown" data-tooltip="Whether to delete missing characters" data-position="right center">
+                      <input name="font_delete_missing" type="hidden">
+                      <i class="dropdown icon"></i>
+                      <div class="default text">Default</div>
+                      <div class="menu">
+                        <div class="item">True</div>
+                        <div class="item">False</div>
+                      </div>
+                    </div>
+                  </div>
+    
+                  <div class="field">
+                    <label>Character Replacements</label>
+                    <div class="fields">
+                      <div data-value="in-replacements" class="four wide right aligned field">
+                        <label>Text to Replace</label>
+                        <!-- <input name="replacements_in" type="text"> -->
+                      </div>
+                      <div data-value="out-replacements" class="four wide field">
+                        <label>Replacement Text</label>
+                        <!-- <input name="replacements_out" type="text"> -->
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Add replacement button -->
+                  <div class="field">
+                    <div data-value="addReplacement" class="circular ui icon mini button">
+                      <i class="plus square outline icon"></i>
+                      Add Replacement
+                    </div>
+                  </div>
+
+                  <div class="ui divider"></div>
+
+                  <div class="ui field">
+                    <label>Hide Season Titles</label>
+                    <div class="ui compact selection clearable dropdown" data-tooltip="Omit season text" data-position="right center">
+                      <input name="hide_season_text" type="hidden">
+                      <i class="dropdown icon"></i>
+                      <div class="default text">Default</div>
+                      <div class="menu">
+                        <div class="item">True</div>
+                        <div class="item">False</div>
+                      </div>
+                    </div>
+                  </div>
+    
+                  <div data-value="season-titles" class="ui field">
+                    <label>Season Titles</label>
+                    <div class="two fields">
+                      <div data-value="season-title-range" class="three wide right aligned field">
+                        <label>Range</label>
+                        <!-- <input name="season_title_ranges" data-value="season-titles" type="text"> -->
+                      </div>
+                      <div data-value="season-title-value" class="eight wide field">
+                        <label>Title</label>
+                        <!-- <input name="season_title_values" type="text"> -->
+                      </div>
+                    </div>
+                    <div data-value="add-title" class="circular ui icon mini button">
+                      <i class="plus square outline icon"></i>
+                      Add Title
+                    </div>
+                  </div>
+    
+                  <div data-value="hide-episode-text" class="ui right aligned checkbox field">
+                    <input name="hide_episode_text" type="checkbox" class="hidden">
+                    <label>Hide Episode Text</label>
+                  </div>
+    
+                  <div data-value="episode-text-format" class="field">
+                    <label>Episode Text Format</label>
+                    <input name="episode_text_format" type="text" placeholder="Card Default">
+                  </div>
                 </form>
               </div>
 
@@ -740,16 +1064,16 @@
         <button id="new-episode-button" class="ui positive button" type="submit" form="new-episode-form">Add</button>
       </div>
     </div>
-
   </div>
 
   <script>
     // Enable all dropdowns, menus, and accordians
     $('.dropdown').dropdown();
+    // $('.ui.checkbox').checkbox();
     $('.menu .item').tab();
     $('#series-tabs .menu .item').tab('change tab', 'configuration');
     $('.ui.accordion').accordion();
-
+    $('.ui.checkbox').checkbox();
     // Enable IOS hover on the series poster
     $('#poster').dimmer({
       on: 'ontouchstart' in document.documentElement ? 'click' : 'hover'
@@ -829,9 +1153,13 @@
       $('#submit-changes').toggleClass('loading', true);
       // Submit API request to edit series
       let form = new FormData(event.target);
-      for (const [key, value] of [...form.entries()]) {
-        if (value === '') { form.delete(key); }
-      }
+      // for (const [key, value] of [...form.entries()]) {
+      //   if (value === '') { form.delete(key); }
+      // }
+      // Add checkbox status as true/false
+      $.each($("#series-config").find("input[type=checkbox]"), (key, val) => {
+        form.append($(val).attr('name'), $(this).is(':checked'))
+      });
 
       $.ajax({
         type: 'PATCH',
@@ -893,7 +1221,6 @@
         }
       });
     });
-  
   </script>
   <script src="/templates/loadStaticContent.js"></script>
 </body>
