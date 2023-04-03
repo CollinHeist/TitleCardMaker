@@ -158,7 +158,7 @@ html.ios body {
 
   /* Use reduced  */
   #main-content {
-    padding-left: 15px;
+    padding-left: 95px;
   }
 
   #nav-menu .item {
@@ -169,8 +169,5 @@ html.ios body {
     top: 70px;
      /* Hide sidebar by default */
     /* width: 0px !important; */
-  }
-  #page-header:hover + #nav-menu {
-    width: 100px;
   }
 }
