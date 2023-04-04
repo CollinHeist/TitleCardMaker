@@ -105,6 +105,27 @@ def delete_episode(
     return None
 
 
+@episodes_router.delete('/series/{series_id}', status_code=200, tags=['Series'])
+def delete_all_series_episodes(
+        series_id: int,
+        db = Depends(get_database)) -> list[int]:
+    """
+    Delete all Episodes for the Series with the given ID.
+
+    - series_id: ID of the Series to delete the Episodes of.
+    """
+
+    # Get list of episode ID's to delete
+    query = db.query(models.episode.Episode).filter_by(series_id=series_id)
+    deleted = [episode.id for episode in query.all()]
+
+    # Delete all associated Episodes
+    query.delete()
+    db.commit()
+
+    return deleted
+
+
 @episodes_router.post('/{series_id}/refresh', status_code=201)
 def refresh_episode_data(
         series_id: int,

@@ -4,11 +4,12 @@ from typing import Any, Literal, Optional, Union
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, File, Form, HTTPException, UploadFile, Query
 from sqlalchemy.orm import Session
 
-from app.dependencies import get_database
-from app.dependencies import get_preferences
+from app.database.session import SessionLocal
+from app.dependencies import get_database, get_preferences, get_scheduler
 import app.models as models
 from app.routers.fonts import get_font
 from app.routers.series import get_series
+from app.routers.templates import get_template
 from app.schemas.font import DefaultFont
 from app.schemas.card import TitleCard, NewTitleCard, PreviewTitleCard
 from modules.CleanPath import CleanPath
@@ -52,10 +53,11 @@ def create_card(db, preferences, card_settings):
     )
 
     # Create card
-    card_maker.create() 
+    card_maker.create()
 
     # If file exists, card was created successfully - add to database
     if card_settings['card_file'].exists():
+        # Create new card entry
         card = models.card.Card(
             **NewTitleCard(
                 **card_settings,
@@ -69,6 +71,7 @@ def create_card(db, preferences, card_settings):
     else:
         log.warning(f'Card creation failed')
         card_maker.image_magick.print_command_history()
+
 
 # Create sub router for all /connection API requests
 card_router = APIRouter(
@@ -173,7 +176,8 @@ def create_cards_for_series(
         tasks: BackgroundTasks,
         series_id: int,
         preferences = Depends(get_preferences),
-        db = Depends(get_database)) -> None:
+        # scheduler = Depends(get_scheduler),
+        db = Depends(get_database),) -> None:
 
     # Get this series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
@@ -326,7 +330,8 @@ def create_cards_for_series(
 
         # No existing card, add task to create and add to database
         if existing_card is None:
-            tasks.add_task(create_card, db, preferences, card_settings)
+            pass
+            # tasks.add_task(create_card, db, preferences, card_settings)
         # Existing card doesn't match, delete and remake
         elif any(getattr(existing_card, attr) != getattr(card, attr)
                  for attr in existing_card.comparison_properties.keys()):
@@ -334,7 +339,16 @@ def create_cards_for_series(
                       f'recreating')
             card_settings['card_file'].unlink(missing_ok=True)
             db.delete(existing_card)
-            tasks.add_task(create_card, db, preferences, card_settings)
+            # tasks.add_task(create_card, db, preferences, card_settings)
+        tasks.add_task(create_card, db, preferences, card_settings)
+        # scheduler.add_job(
+        #     create_card,
+        #     args=(preferences, card_settings),
+        #     jobstore='cards',
+        #     id=f'card_episode[{episode.id}]',
+        #     max_instances=10,
+        # )
+        # scheduler.print_jobs()
 
     return None
 

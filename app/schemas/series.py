@@ -4,7 +4,7 @@ from pathlib import Path
 from pydantic import constr, Field, root_validator, validator
 
 from app.schemas.base import Base, UNSPECIFIED, validate_argument_lists_to_dict
-from app.schemas.font import TitleCase#, UpdateSeriesFont
+from app.schemas.font import TitleCase
 from app.schemas.preferences import EpisodeDataSource, ImageSourceToggle, Style
 
 # Match absolute ranges (1-10), season numbers (1), episode ranges (s1e1-s1e10)

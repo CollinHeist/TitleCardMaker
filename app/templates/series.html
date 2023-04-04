@@ -116,22 +116,6 @@
       $('#card-count')[0].innerHTML = `<i class="image outline icon"></i>${cardStat.value} / ${episodeStat.value} Cards`;
     }
 
-    // Get all available episode data sources
-    async function getEpisodeDataSources() {
-      const sources = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
-      const placeholder = '{{series.episode_data_source}}' === 'None' ? 'Global Default' : '{{series.episode_data_source}}';
-      $('#episode-data-source').dropdown({
-        placeholder: placeholder,
-        values: sources.map(({name, selected}) => {
-          return {
-            name: name,
-            value: name,
-            selected: name == '{{series.episode_data_source}}',
-          };
-        })
-      });
-    }
-
     // Get all available libraries for Emby and Plex
     async function getLibraries() {
       let plexLibraries = await fetch('/api/available/libraries/plex').then(resp => resp.json());
@@ -248,7 +232,30 @@
     }
 
     // Initialize series specific dropdowns
-    async function initializeDropdowns() {
+    async function initalizeSeriesConfig() {
+      // Episode data sources
+      const sources = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
+      const placeholder = '{{series.episode_data_source}}' === 'None' ? 'Global Default' : '{{series.episode_data_source}}';
+      $('#episode-data-source').dropdown({
+        placeholder: placeholder,
+        values: sources.map(({name, selected}) => {
+          return {name: name, value: name, selected: name == '{{series.episode_data_source}}'};
+        })
+      });
+      // Special syncing
+      $('#series-config-form .dropdown[data-value="sync_specials"]').dropdown({
+        values: [
+          {name: 'True', value: 'True', selected: '{{series.sync_specials}}' === 'True'},
+          {name: 'False', value: 'False', selected: '{{series.sync_specials}}' === 'False'},
+        ],
+      });
+      // Skip localized images
+      $('#series-config-form .dropdown[data-value="skip_localized_images"]').dropdown({
+        values: [
+          {name: 'True', value: 'True', selected: '{{series.skip_localized_images}}' === 'True'},
+          {name: 'False', value: 'False', selected: '{{series.skip_localized_images}}' === 'False'},
+        ],
+      });
       // Templates
       const templates = await fetch('/api/templates/all').then(resp => resp.json());
       $('.dropdown[data-value="templates"]').dropdown({
@@ -301,14 +308,23 @@
           return {name: name, value: id, selected: id === '{{series.font_id}}'};
         })
       });
+      // Font card case
+      $('#card-config-form .dropdown[data-value="font_title_case"]').dropdown({
+        values: [
+          {name: 'Blank', value: 'blank', selected: '{{series.font_title_case}}' === 'blank'},
+          {name: 'Lowercase', value: 'lower', selected: '{{series.font_title_case}}' === 'lower'},
+          {name: 'Source', value: 'source', selected: '{{series.font_title_case}}' === 'source'},
+          {name: 'Titlecase', value: 'title', selected: '{{series.font_title_case}}' === 'title'},
+          {name: 'Uppercase', value: 'upper', selected: '{{series.font_title_case}}' === 'upper'},
+        ],
+      });
     }
 
     async function initAll() {
       getStatistics();
-      getEpisodeDataSources();
       getLibraries();
       getEpisodeData();
-      initializeDropdowns();
+      initalizeSeriesConfig();
     }
 
     async function refreshEpisodeData() {
@@ -336,10 +352,14 @@
     async function createMissingCards() {
       $.ajax({
         type: 'POST',
-        url: '/api/series/{{series.id}}/create-cards',
+        url: '/api/cards/series/{{series.id}}',
         success: (response) => {
-          $.toast({class: 'blue info', title: `Created title cards`});
+          $.toast({
+            class: 'blue info',
+            title: 'Initiated title card creation',
+          });
           getEpisodeData();
+          getStatistics();
         }, error: (response) => {
           $.toast({
             class: 'error',
@@ -380,6 +400,28 @@
             message: response.responseJSON.detail,
           });
         },
+      });
+    }
+  
+    async function deleteAllEpisodes() {
+      $.ajax({
+        type: 'DELETE',
+        url: '/api/episodes/series/{{series.id}}',
+        success: (response) => {
+          $.toast({
+            class: 'blue info',
+            title: `Deleted ${response.length} Episodes`,
+          });
+          getEpisodeData();
+          getStatistics();
+        }, error: (response) => {
+          $.toast({
+            class: 'error',
+            title: 'Error Deleting Episodes',
+            message: response.responseJSON.detail,
+            displayTime: 0,
+          });
+        }, complete: () => {}
       });
     }
   </script>
@@ -486,7 +528,7 @@
           
           <!-- Configuration tab -->
           <div id="series-tabs" class="ui bottom attached tab segment" data-tab="configuration">
-            <form id="series-config" class="ui compact form">
+            <form id="series-config-form" class="ui compact form">
               <!-- Episode Data Source -->
               <div class="field">
                 <label>Episode Data Source</label>
@@ -501,7 +543,7 @@
                 </div>
               </div>
 
-              <div class="ui right aligned checkbox field" data-tooltip="Require episode titles to exactly match their episode data source" data-position="right center">
+              <div class="ui right aligned checkbox field" data-tooltip="Require episode titles to exactly match the episode data source" data-position="right center">
                 {% if series.match_titles %}
                 <input name="match_titles" type="checkbox" checked="">
                 {% else %}
@@ -513,28 +555,22 @@
               <!-- Special Syncing -->
               <div class="ui field">
                 <label>Sync Specials</label>
-                <div class="ui compact selection clearable dropdown" data-tooltip="Whether to create cards for episodes of Season 0" data-position="right center">
+                <div data-value="sync_specials" class="ui compact selection clearable dropdown" data-tooltip="Whether to create cards for episodes of Season 0" data-position="right center">
                   <input name="sync_specials" type="hidden">
                   <i class="dropdown icon"></i>
                   <div class="default text">Default</div>
-                  <div class="menu">
-                    <div class="item">True</div>
-                    <div class="item">False</div>
-                  </div>
+                  <div class="menu"><!-- Added asynchronously --></div>
                 </div>
               </div>
 
               <!-- Localized Image Skipping -->
               <div class="field">
                 <label>Ignore Localized Images</label>
-                <div class="ui compact selection clearable dropdown" data-tooltip="Whether to skip images with langauges (on TMDb)" data-position="right center">
+                <div data-value="skip_localized_images" class="ui compact selection clearable dropdown" data-tooltip="Whether to skip images with langauges (on TMDb)" data-position="right center">
                   <input name="skip_localized_images" type="hidden">
                   <i class="dropdown icon"></i>
                   <div class="default text">Default</div>
-                  <div class="menu">
-                    <div class="item">True</div>
-                    <div class="item">False</div>
-                  </div>
+                  <div class="menu"><!-- Added asynchronously --></div>
                 </div>
               </div>
 
@@ -638,7 +674,7 @@
                   Options are listed in increasing priority
                 </div>
 
-                <form id="card-config" class="ui compact form">
+                <form id="card-config-form" class="ui compact form">
                   <div class="field">
                     <label>Template</label>
                     <div data-value="templates" class="ui very long compact clearable selection dropdown">
@@ -651,49 +687,51 @@
 
                   <div class="ui divider"></div>
 
-                  <div class="field">
-                    <label>Card Type</label>
-                    <div data-value="card-types" class="ui long compact selection clearable dropdown">
-                      <input name="card_type" type="hidden">
-                      <i class="dropdown icon"></i>
-                      <div class="default text">Default</div>
-                      <div class="menu"><!-- Added asynchrously --></div>
+                  <div class="ui two fields">
+                    <div class="field">
+                      <label>Card Type</label>
+                      <div data-value="card-types" class="ui long selection clearable dropdown">
+                        <input name="card_type" type="hidden">
+                        <i class="dropdown icon"></i>
+                        <div class="default text">Default</div>
+                        <div class="menu"><!-- Added asynchrously --></div>
+                      </div>
+                    </div>
+
+                    <div class="field">
+                      <label>Font</label>
+                      <div data-value="fonts" class="ui very long clearable selection dropdown" data-tooltip="Font to apply to this series (overrides any Template Font)" data-position="right center">
+                        <input name="font_id" type="hidden">
+                        <i class="dropdown icon"></i>
+                        <div class="default text">Default</div>
+                        <div class="menu"><!-- Added asynchrously --></div>
+                      </div>
                     </div>
                   </div>
 
-                  <div class="field">
-                    <label>Watched Episode Style</label>
-                    <div data-value="watched-style" class="ui long compact selection clearable dropdown">
-                      <span class="default text">Default</span>
-                      <input name="watched_style" type="hidden">
-                      <i class="dropdown icon"></i>
-                      <div class="menu"><!-- Added asynchronously --></div>
+                  <div class="ui two fields">
+                    <div class="field">
+                      <label>Watched Episode Style</label>
+                      <div data-value="watched-style" class="ui long selection clearable dropdown">
+                        <span class="default text">Default</span>
+                        <input name="watched_style" type="hidden">
+                        <i class="dropdown icon"></i>
+                        <div class="menu"><!-- Added asynchronously --></div>
+                      </div>
                     </div>
-                  </div>
-    
-                  <div class="field">
-                    <label>Unwatched Episode Style</label>
-                    <div data-value="unwatched-style" class="ui long compact selection clearable dropdown">
-                      <span class="default text">Default</span>
-                      <input name="unwatched_style" type="hidden">
-                      <i class="dropdown icon"></i>
-                      <div class="menu"><!-- Added asynchronously --></div>
-                    </div>
-                  </div>
-
-                  <!-- <h4 class="ui horizontal divider header">Fonts</h4> -->
-
-                  <div class="field">
-                    <label>Font</label>
-                    <div data-value="fonts" class="ui very long compact clearable selection dropdown" data-tooltip="Font to apply to this series (overrides any Template Font)" data-position="right center">
-                      <input name="font_id" type="hidden">
-                      <i class="dropdown icon"></i>
-                      <div class="default text">Default</div>
-                      <div class="menu"><!-- Added asynchrously --></div>
+      
+                    <div class="field">
+                      <label>Unwatched Episode Style</label>
+                      <div data-value="unwatched-style" class="ui long selection clearable dropdown">
+                        <span class="default text">Default</span>
+                        <input name="unwatched_style" type="hidden">
+                        <i class="dropdown icon"></i>
+                        <div class="menu"><!-- Added asynchronously --></div>
+                      </div>
                     </div>
                   </div>
 
-                  <div class="ui divider"></div>
+                  <h4 class="ui horizontal middle aligned divider header">Font Overrides</h4>
 
                   <div class="two fields">
                     <div class="field">
@@ -707,16 +745,12 @@
     
                     <div class="field">
                       <label>Text Case</label>
-                      <div class="ui clearable selection dropdown">
+                      <div data-value="font_title_case" class="ui clearable selection dropdown">
                         <input name="font_title_case" type="hidden">
                         <div class="default text">Default</div>
                         <i class="dropdown icon"></i>
                         <div class="menu">
-                          {% if series.font_title_case == 'blank' %}
-                          <div class="item" value="blank" selected="">Blank</div>
-                          {% else %}
                           <div class="item" value="blank">Blank</div>
-                          {% endif %}
                           <div class="item" value="lower">Lowercase</div>
                           <div class="item" value="source">Source</div>
                           <div class="item" value="title">Title</div>
@@ -816,7 +850,7 @@
                     </div>
                   </div>
 
-                  <div class="ui divider"></div>
+                  <h4 class="ui horizontal middle aligned divider header">Season and Episode Text</h4>
 
                   <div class="ui field">
                     <label>Hide Season Titles</label>
@@ -848,15 +882,42 @@
                       Add Title
                     </div>
                   </div>
-    
-                  <div data-value="hide-episode-text" class="ui right aligned checkbox field">
-                    <input name="hide_episode_text" type="checkbox" class="hidden">
-                    <label>Hide Episode Text</label>
+
+                  <div class="ui field">
+                    <label>Delete Missing</label>
+                    <div class="ui compact selection clearable dropdown" data-tooltip="Whether to hide episode text" data-position="right center">
+                      <input name="hide_episode_text" type="hidden">
+                      <i class="dropdown icon"></i>
+                      <div class="default text">Default</div>
+                      <div class="menu">
+                        <div class="item">True</div>
+                        <div class="item">False</div>
+                      </div>
+                    </div>
                   </div>
     
                   <div data-value="episode-text-format" class="field">
                     <label>Episode Text Format</label>
                     <input name="episode_text_format" type="text" placeholder="Card Default">
+                  </div>
+
+                  <h4 class="ui horizontal middle aligned divider header">Extras</h4>
+
+                  <div class="ui field">
+                    <div class="two fields">
+                      <div data-value="extra-key" class="four wide right aligned field">
+                        <label>Key</label>
+                        <!-- <input name="extra_keys" type="text"> -->
+                      </div>
+                      <div data-value="extra-value" class="four wide field">
+                        <label>Value</label>
+                        <!-- <input name="extra_values" type="text"> -->
+                      </div>
+                    </div>
+                    <div data-value="add-extra" class="circular ui icon mini button">
+                      <i class="plus square outline icon"></i>
+                      Add Extra
+                    </div>
                   </div>
                 </form>
               </div>
@@ -881,7 +942,7 @@
               Add New Episode
             </button>
             <!-- Delete episodes -->
-            <button id="delete-episodes" class="ui red tertiary button">
+            <button id="delete-episodes" class="ui red tertiary button" onclick="deleteAllEpisodes();">
               Delete All Episodes
             </button>
 
@@ -1148,7 +1209,7 @@
     });
 
     // Submit the updated series config
-    $('#series-config').on('submit', (event) => {
+    $('#series-config-form').on('submit', (event) => {
       event.preventDefault();
       $('#submit-changes').toggleClass('loading', true);
       // Submit API request to edit series
