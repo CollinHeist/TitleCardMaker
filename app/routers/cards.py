@@ -45,6 +45,7 @@ def priority_merge_v2(merge_base: dict[str, Any],
 
 def create_card(db, preferences, card_settings):
     # Initialize class of the card type being created
+    log.debug(f'Creating card')
     CardClass = TitleCardCreator.CARD_TYPES[card_settings.get('card_type')]
     card_maker = CardClass(
         **card_settings,
@@ -171,19 +172,20 @@ def get_title_card(
     return card
 
 
-@card_router.post('/series/{series_id}', status_code=201, tags=['Series'])
+@card_router.post('/series/{series_id}', status_code=200, tags=['Series'])
 def create_cards_for_series(
         tasks: BackgroundTasks,
         series_id: int,
         preferences = Depends(get_preferences),
         # scheduler = Depends(get_scheduler),
-        db = Depends(get_database),) -> None:
+        db = Depends(get_database),) -> dict[str, int]:
 
     # Get this series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
     # Get all episodes
     episodes = db.query(models.episode.Episode).filter_by(series_id=series_id).all()
+    stats = {'deleted': 0, 'invalid': 0, 'creating': 0}
     for episode in episodes:
         # Get EpisodeInfo for this episode
         episode_info = EpisodeInfo(
@@ -204,23 +206,27 @@ def create_cards_for_series(
         # Episode has custom font
         if episode.font_id is not None:
             if (font := get_font(db, episode.font_id, raise_exc=False)) is None:
+                stats['invalid'] += 1
                 continue
             episode_font_dict = font.card_properties
         # Episode template has custom font
         elif episode_template_dict.get('font_id', None) is not None:
             if (font := get_font(db, episode_template_dict['font_id'],
                                  raise_exc=False)) is None:
+                stats['invalid'] += 1
                 continue
             episode_font_dict = font.card_properties
         # Series has custom font
         elif series.font_id is not None:
             if (font := get_font(db, series.font_id, raise_exc=False)) is None:
+                stats['invalid'] += 1
                 continue
             series_font_dict = font.card_properties
         # Series template has custom font
         elif series_template_dict.get('font_id', None) is not None:
             if (font := get_font(db, series_template_dict['font_id'],
                                  raise_exc=False)) is None:
+                stats['invalid'] += 1
                 continue
             series_font_dict = font.card_properties
 
@@ -232,6 +238,8 @@ def create_cards_for_series(
         card_settings = {}
         priority_merge_v2(
             card_settings,
+            # TODO use card-specific hiding enables
+            {'hide_season_text': False, 'hide_episode_text': False},
             DefaultFont,
             preferences.card_properties, # Global preferences are the lowest priority
             series_template_dict,        # Series template
@@ -300,6 +308,7 @@ def create_cards_for_series(
             series_directory = Path(card_settings.get('directory'))
 
         # If an explicit card file was indicated, use it vs. default
+        # TODO get season folder format from preferences object directly
         if card_settings.get('card_file', None) is None:
             card_settings['card_file'] = series_directory \
                 / preferences.season_folder_format.format(**episode_info.indices) \
@@ -330,8 +339,7 @@ def create_cards_for_series(
 
         # No existing card, add task to create and add to database
         if existing_card is None:
-            pass
-            # tasks.add_task(create_card, db, preferences, card_settings)
+            tasks.add_task(create_card, db, preferences, card_settings)
         # Existing card doesn't match, delete and remake
         elif any(getattr(existing_card, attr) != getattr(card, attr)
                  for attr in existing_card.comparison_properties.keys()):
@@ -339,18 +347,14 @@ def create_cards_for_series(
                       f'recreating')
             card_settings['card_file'].unlink(missing_ok=True)
             db.delete(existing_card)
-            # tasks.add_task(create_card, db, preferences, card_settings)
-        tasks.add_task(create_card, db, preferences, card_settings)
-        # scheduler.add_job(
-        #     create_card,
-        #     args=(preferences, card_settings),
-        #     jobstore='cards',
-        #     id=f'card_episode[{episode.id}]',
-        #     max_instances=10,
-        # )
-        # scheduler.print_jobs()
+            stats['deleted'] += 1
+            stats['creating'] += 1
+            tasks.add_task(create_card, db, preferences, card_settings)
+        # Existing card does match, skip
+        else:
+            continue
 
-    return None
+    return stats
 
 
 @card_router.get('/series/{series_id}', status_code=200, tags=['Series'])

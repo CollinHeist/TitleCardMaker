@@ -256,9 +256,9 @@
           {name: 'False', value: 'False', selected: '{{series.skip_localized_images}}' === 'False'},
         ],
       });
-      // Templates
+      // Template
       const templates = await fetch('/api/templates/all').then(resp => resp.json());
-      $('.dropdown[data-value="templates"]').dropdown({
+      $('#card-config-form .dropdown[data-value="template_id"]').dropdown({
         values: templates.map(({id, name}) => {
           return {name: name, value: id, selected: id === '{{series.template_id}}'};
         })
@@ -276,7 +276,7 @@
       });
       // Styles
       const allStyles = await fetch('/api/available/styles').then(resp => resp.json());
-      $(`.dropdown[data-value="watched-style"]`).dropdown({
+      $('#card-config-form .dropdown[data-value="watched-style"]').dropdown({
         values: [
           {name: 'Art Variations', type: 'header'},
           ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
@@ -286,10 +286,10 @@
           ...allStyles.filter(({style_type}) => style_type === 'unique').map(({name, value}) => {
             return {name: name, value: value, selected: value === '{{series.watched_style}}'};
           }),
-        ]//, placeholder: 'Global Default',
+        ],
       });
       // Unwatched style
-      $(`.dropdown[data-value="unwatched-style"]`).dropdown({
+      $('#card-config-form .dropdown[data-value="unwatched-style"]').dropdown({
         values: [
           {name: 'Art Variations', type: 'header'},
           ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
@@ -303,7 +303,7 @@
       });
       // Fonts
       const fonts = await fetch('/api/fonts/all').then(resp => resp.json());
-      $('.dropdown[data-value="fonts"]').dropdown({
+      $('#card-config-form .dropdown[data-value="fonts"]').dropdown({
         values: fonts.map(({id, name}) => {
           return {name: name, value: id, selected: id === '{{series.font_id}}'};
         })
@@ -318,6 +318,43 @@
           {name: 'Uppercase', value: 'upper', selected: '{{series.font_title_case}}' === 'upper'},
         ],
       });
+      // Hide season text
+      $('#card-config-form .dropdown[data-value="hide_season_text"]').dropdown({
+        values: [
+          {name: 'True', value: 'True', selected: '{{series.hide_season_text}}' === 'True'},
+          {name: 'False', value: 'False', selected: '{{series.hide_season_text}}' === 'False'},
+        ],
+      });
+      // Hide episode text
+      $('#card-config-form .dropdown[data-value="hide_episode_text"]').dropdown({
+        values: [
+          {name: 'True', value: 'True', selected: '{{series.hide_episode_text}}' === 'True'},
+          {name: 'False', value: 'False', selected: '{{series.hide_episode_text}}' === 'False'},
+        ],
+      });
+      // Add season title on button press
+      $('#card-config-form .button[data-value="addTitle"]').on('click', () => {
+          const newRange = document.createElement('input');
+          newRange.name = 'season_title_ranges'; newRange.type = 'text';
+          newRange.setAttribute('data-value', 'season-titles');
+          const newTitle = document.createElement('input');
+          newTitle.name = 'season_title_values'; newTitle.type = 'text';
+          $('#card-config-form .field[data-value="season-title-range"]').append(newRange);
+          $('#card-config-form .field[data-value="season-title-value"]').append(newTitle);
+          $('input[data-value="season-titles"]').popup({
+            popup: '#season-title-popup',
+            position: 'right center',
+          });
+        });
+      // Add extra on button press
+      $('#card-config-form .button[data-value="addExtra"]').on('click', () => {
+          const newKey = document.createElement('input');
+          newKey.name = 'extra_keys'; newKey.type = 'text';
+          const newValue = document.createElement('input');
+          newValue.name = 'extra_values'; newValue.type = 'text';
+          $('#card-config-form .field[data-value="extra-key"]').append(newKey);
+          $('#card-config-form .field[data-value="extra-value"]').append(newValue);
+        });
     }
 
     async function initAll() {
@@ -325,6 +362,8 @@
       getLibraries();
       getEpisodeData();
       initalizeSeriesConfig();
+      // Schedule recurring statistics query
+      setInterval(getStatistics, 15000);
     }
 
     async function refreshEpisodeData() {
@@ -349,14 +388,16 @@
       });
     }
 
-    async function createMissingCards() {
+    async function createTitleCards() {
       $.ajax({
         type: 'POST',
         url: '/api/cards/series/{{series.id}}',
         success: (response) => {
+          const {deleted, invalid, creating} = response;
           $.toast({
             class: 'blue info',
-            title: 'Initiated title card creation',
+            title: 'Started Title Card Creation',
+            message: `<ul class="ui list"><li>Deleted ${deleted} cards</li><li>${invalid} invalid cards</li><li>Creating ${creating} cards</li></ul>`,
           });
           getEpisodeData();
           getStatistics();
@@ -468,9 +509,9 @@
                 <i class="sync icon"></i>
                 Refresh Episode Data
               </button>
-              <button id="create-cards" class="ui labeled icon button" onclick="createMissingCards()">
+              <button id="create-cards" class="ui labeled icon button" onclick="createTitleCards()">
                 <i class="images outline icon"></i>
-                Create Missing Cards
+                Create Title Cards
               </button>
               {% if preferences.use_emby and series.emby_library_name %}
               <button id="load-emby" class="ui labeled icon button">
@@ -518,7 +559,7 @@
 
         <!-- Data Tabs -->
         <div class="twelve wide column">
-          <div class="ui top attached tabular menu">
+          <div class="ui top attached stackable tabular menu">
             <a class="item active" data-tab="configuration">Configuration</a>
             <a class="item" data-tab="card-config">Card Configuration</a>
             <a class="item" data-tab="episode-data">Episode Data</a>
@@ -659,25 +700,19 @@
 
           <!-- Card Configuration -->
           <div class="ui bottom attached tab segment active" data-tab="card-config">
-            <!-- Card preview toggle -->
-            <div id="card-preview-checkbox" class="ui checkbox">
-              <input type="checkbox" name="example">
-              <label>Live Card Preview</label>
-            </div>
-            <div class="ui divider"></div>
-
             <div class="ui stackable grid">
               <!-- Card config  -->
-              <div class="eight wide column">
+              <div class="sixteen wide column">
                 <div class="ui visible floating info message">
                   <i class="info circle icon"></i>
                   Options are listed in increasing priority
                 </div>
 
                 <form id="card-config-form" class="ui compact form">
+                  <!-- Template ID -->
                   <div class="field">
                     <label>Template</label>
-                    <div data-value="templates" class="ui very long compact clearable selection dropdown">
+                    <div data-value="template_id" class="ui very long compact clearable selection dropdown">
                       <input name="template_id" type="hidden">
                       <i class="dropdown icon"></i>
                       <div class="default text">None</div>
@@ -687,6 +722,7 @@
 
                   <div class="ui divider"></div>
 
+                  <!-- Card type and font -->
                   <div class="ui two fields">
                     <div class="field">
                       <label>Card Type</label>
@@ -700,7 +736,7 @@
 
                     <div class="field">
                       <label>Font</label>
-                      <div data-value="fonts" class="ui very long clearable selection dropdown" data-tooltip="Font to apply to this series (overrides any Template Font)" data-position="right center">
+                      <div data-value="fonts" class="ui very long clearable selection dropdown" data-tooltip="Font to apply to this series (overrides any Template Font)">
                         <input name="font_id" type="hidden">
                         <i class="dropdown icon"></i>
                         <div class="default text">Default</div>
@@ -709,6 +745,7 @@
                     </div>
                   </div>
 
+                  <!-- Styles -->
                   <div class="ui two fields">
                     <div class="field">
                       <label>Watched Episode Style</label>
@@ -733,6 +770,7 @@
 
                   <h4 class="ui horizontal middle aligned divider header">Font Overrides</h4>
 
+                  <!-- Font color and case -->
                   <div class="two fields">
                     <div class="field">
                       <label>Color <a href="https://imagemagick.org/script/color.php#color_names" target="_blank"><i class="external alternate small icon"></i></a></label>
@@ -760,6 +798,7 @@
                     </div>
                   </div>
 
+                  <!-- Font size, kerning, and stroke width -->
                   <div class="three fields">
                     <div class="field">
                       <label>Size</label>
@@ -767,7 +806,7 @@
                         {% if series.font_size is none %}
                         <input name="font_size" type="number" placeholder="Default">
                         {% else %}
-                        <input name="font_size" type="number" placeholder="Default" value="{{series.font_size}}">
+                        <input name="font_size" type="number" placeholder="Default" value="{{series.font_size*100}}">
                         {% endif %}
                         <div class="ui basic label">%</div>
                       </div>
@@ -778,7 +817,7 @@
                         {% if series.font_kerning is none %}
                         <input name="font_kerning" type="number" placeholder="Default">
                         {% else %}
-                        <input name="font_kerning" type="number" placeholder="Default" value="{{series.font_kerning}}">
+                        <input name="font_kerning" type="number" placeholder="Default" value="{{series.font_kerning*100}}">
                         {% endif %}
                         <div class="ui basic label">%</div>
                       </div>
@@ -789,13 +828,14 @@
                         {% if series.font_kerning is none %}
                         <input name="font_stroke_width" type="number" placeholder="Default">
                         {% else %}
-                        <input name="font_stroke_width" type="number" placeholder="Default" value="{{series.font_stroke_width}}">
+                        <input name="font_stroke_width" type="number" placeholder="Default" value="{{series.font_stroke_width*100}}">
                         {% endif %}
                         <div class="ui basic label">%</div>
                       </div>
                     </div>
                   </div>
 
+                  <!-- Font interlnie spacing, vertical shift -->
                   <div class="two fields">
                     <div class="field">
                       <label>Interline Spacing</label>
@@ -815,43 +855,10 @@
                       {% endif %}
                     </div>
                   </div>
-
-                  <div class="ui field">
-                    <label>Delete Missing</label>
-                    <div class="ui compact selection clearable dropdown" data-tooltip="Whether to delete missing characters" data-position="right center">
-                      <input name="font_delete_missing" type="hidden">
-                      <i class="dropdown icon"></i>
-                      <div class="default text">Default</div>
-                      <div class="menu">
-                        <div class="item">True</div>
-                        <div class="item">False</div>
-                      </div>
-                    </div>
-                  </div>
     
-                  <div class="field">
-                    <label>Character Replacements</label>
-                    <div class="fields">
-                      <div data-value="in-replacements" class="four wide right aligned field">
-                        <label>Text to Replace</label>
-                        <!-- <input name="replacements_in" type="text"> -->
-                      </div>
-                      <div data-value="out-replacements" class="four wide field">
-                        <label>Replacement Text</label>
-                        <!-- <input name="replacements_out" type="text"> -->
-                      </div>
-                    </div>
-                  </div>
-                  <!-- Add replacement button -->
-                  <div class="field">
-                    <div data-value="addReplacement" class="circular ui icon mini button">
-                      <i class="plus square outline icon"></i>
-                      Add Replacement
-                    </div>
-                  </div>
-
                   <h4 class="ui horizontal middle aligned divider header">Season and Episode Text</h4>
 
+                  <!-- Hide season text -->
                   <div class="ui field">
                     <label>Hide Season Titles</label>
                     <div class="ui compact selection clearable dropdown" data-tooltip="Omit season text" data-position="right center">
@@ -865,26 +872,36 @@
                     </div>
                   </div>
     
+                  <!-- Season titles -->
                   <div data-value="season-titles" class="ui field">
                     <label>Season Titles</label>
                     <div class="two fields">
                       <div data-value="season-title-range" class="three wide right aligned field">
                         <label>Range</label>
-                        <!-- <input name="season_title_ranges" data-value="season-titles" type="text"> -->
+                        {% if series.season_titles is not none %}
+                        {% for title_range, _ in series.season_titles.items() %}
+                        <input name="season_title_ranges" data-value="season-titles" type="text" value="{{title_range}}">
+                        {% endfor %}
+                        {% endif %}
                       </div>
                       <div data-value="season-title-value" class="eight wide field">
                         <label>Title</label>
-                        <!-- <input name="season_title_values" type="text"> -->
+                        {% if series.season_titles is not none %}
+                        {% for _, title_value in series.season_titles.items() %}
+                        <input name="season_title_values" type="text" type="text" value="{{title_value}}">
+                        {% endfor %}
+                        {% endif %}
                       </div>
                     </div>
-                    <div data-value="add-title" class="circular ui icon mini button">
+                    <div data-value="addTitle" class="circular ui icon mini button">
                       <i class="plus square outline icon"></i>
                       Add Title
                     </div>
                   </div>
 
+                  <!-- Hide episode text -->
                   <div class="ui field">
-                    <label>Delete Missing</label>
+                    <label>Hide Episode Text</label>
                     <div class="ui compact selection clearable dropdown" data-tooltip="Whether to hide episode text" data-position="right center">
                       <input name="hide_episode_text" type="hidden">
                       <i class="dropdown icon"></i>
@@ -896,41 +913,48 @@
                     </div>
                   </div>
     
-                  <div data-value="episode-text-format" class="field">
+                  <!-- Episode text format -->
+                  <div class="field">
                     <label>Episode Text Format</label>
                     <input name="episode_text_format" type="text" placeholder="Card Default">
                   </div>
 
                   <h4 class="ui horizontal middle aligned divider header">Extras</h4>
 
+                  <!-- Extras -->
                   <div class="ui field">
                     <div class="two fields">
                       <div data-value="extra-key" class="four wide right aligned field">
                         <label>Key</label>
-                        <!-- <input name="extra_keys" type="text"> -->
+                        {% if series.extras is not none %}
+                        {% for extra_key, _ in series.extras.items() %}
+                        <input name="extra_keys" type="text" value="{{extra_key}}">
+                        {% endfor %}
+                        {% endif %}
                       </div>
                       <div data-value="extra-value" class="four wide field">
                         <label>Value</label>
-                        <!-- <input name="extra_values" type="text"> -->
+                        {% if series.extras is not none %}
+                        {% for _, extra_value in series.extras.items() %}
+                        <input name="extra_values" type="text" value="{{extra_value}}">
+                        {% endfor %}
+                        {% endif %}
                       </div>
                     </div>
-                    <div data-value="add-extra" class="circular ui icon mini button">
+                    <div data-value="addExtra" class="circular ui icon mini button">
                       <i class="plus square outline icon"></i>
                       Add Extra
                     </div>
                   </div>
-                </form>
-              </div>
 
-              <!-- Card preview -->
-              <div class="eight wide column">
-                <div class="ui card">
-                  <div class="content">
-                    <div class="ui placeholder">
-                      <div class="rectangular image"></div>
+                  <!-- Submit changes button -->
+                  <button id="submit-changes" class="ui animated primary button" type="submit">
+                    <div class="visible content">Save</div>
+                    <div class="hidden content">
+                      <i class="right arrow icon"></i>
                     </div>
-                  </div>
-                </div>
+                  </button>
+                </form>
               </div>
             </div>
           </div>
@@ -1125,14 +1149,28 @@
         <button id="new-episode-button" class="ui positive button" type="submit" form="new-episode-form">Add</button>
       </div>
     </div>
+
+    <!-- Season title helper popup -->
+    <div id="season-title-popup" class="ui fluid popup right">
+      <div class="ui list content">
+        <div class="item">
+          A number indicates an entire season - e.g. <span class="ui red text">1</span> for <span class="ui red text">season 1</span>.
+        </div>
+        <div class="item">
+          A season and episode range indicates a portion of a season - e.g. <span class="ui blue text">s1e2-s1e5</span> for <span class="ui blue text">season 1, episodes 2-5</span>.
+        </div>
+        <div class="item">
+          A numerical episode range indicates a range of absolute episode numbers - e.g. <span class="ui green text">5-10</span> for (absolute) <span class="ui green text">episodes 5-10</span>.
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
     // Enable all dropdowns, menus, and accordians
     $('.dropdown').dropdown();
     // $('.ui.checkbox').checkbox();
-    $('.menu .item').tab();
-    $('#series-tabs .menu .item').tab('change tab', 'configuration');
+    $('.menu .item').tab()
     $('.ui.accordion').accordion();
     $('.ui.checkbox').checkbox();
     // Enable IOS hover on the series poster
@@ -1140,10 +1178,16 @@
       on: 'ontouchstart' in document.documentElement ? 'click' : 'hover'
     });
 
-    // Make clearable dropdowns.. clearable
+    // Make clearable dropdowns clearable
     $('.ui.clearable.dropdown').dropdown({
       'clearable': true,
       'placeholder': 'None',
+    });
+
+    // Show season title helper popup
+    $('input[data-value="season-titles"]').popup({
+      popup: '#season-title-popup',
+      position: 'right center',
     });
 
     // Enable edit poster modal, attach to the edit poster div
@@ -1209,23 +1253,28 @@
     });
 
     // Submit the updated series config
-    $('#series-config-form').on('submit', (event) => {
+    $('#series-config-form, #card-config-form').on('submit', (event) => {
       event.preventDefault();
       $('#submit-changes').toggleClass('loading', true);
       // Submit API request to edit series
       let form = new FormData(event.target);
-      // for (const [key, value] of [...form.entries()]) {
-      //   if (value === '') { form.delete(key); }
-      // }
+      let listData = {extra_keys: [], extra_values: [], season_title_ranges: [], season_title_values: []};
+      for (const [key, value] of [...form.entries()]) {
+        if (Object.keys(listData).includes(key)) { listData[key].push(value); }
+        // Handle percentage values
+        if (value != '' && ['font_size', 'font_kerning', 'font_stroke_width'].includes(key)) {
+          form.set(key, value/100.0);
+        }
+      }
       // Add checkbox status as true/false
-      $.each($("#series-config").find("input[type=checkbox]"), (key, val) => {
-        form.append($(val).attr('name'), $(this).is(':checked'))
+      $.each($("#series-config-form, #card-config-form").find('input[type=checkbox]'), (key, val) => {
+        form.append($(val).attr('name'), $(val).is(':checked'))
       });
 
       $.ajax({
         type: 'PATCH',
         url: '/api/series/{{series.id}}',
-        data: JSON.stringify(Object.fromEntries(form)),
+        data: JSON.stringify({...Object.fromEntries(form.entries()), ...listData}),
         headers: {'Content-Type': 'application/json'},
         success: (response) => {
           $('#submit-changes').toggleClass('loading', false);
