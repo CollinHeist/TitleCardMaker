@@ -106,6 +106,8 @@ class Show(YamlReader):
         self.extras = {}
         if self.media_server == 'emby':
             self.style_set = copy(preferences.emby_style_set)
+        elif self.media_server == 'jellyfin':
+            self.style_set = copy(preferences.jellyfin_style_set)
         elif self.media_server == 'plex':
             self.style_set = copy(preferences.plex_style_set)
         else:
