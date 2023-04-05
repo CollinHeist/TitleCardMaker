@@ -74,7 +74,33 @@ def create_card(db, preferences, card_settings):
         card_maker.image_magick.print_command_history()
 
 
-# Create sub router for all /connection API requests
+def delete_cards(db, query) -> list[str]:
+    """
+    Delete all Title Card files for the given query.
+
+    Args:
+        db: Database to commit the query deletion to.
+        query: SQL query whose return will be parsed for deletion.
+
+    Returns:
+        List of file names of the deleted cards.
+    """
+
+    # Delete all associated cards
+    deleted = []
+    for card in query.all():
+        if (card_file := Path(card.card_file)).exists():
+            card_file.unlink()
+            deleted.append(str(card_file))
+
+    # Delete from database,
+    query.delete()
+    db.commit()
+
+    return deleted
+
+
+# Create sub router for all /cards API requests
 card_router = APIRouter(
     prefix='/cards',
     tags=['Title Cards'],
@@ -339,6 +365,7 @@ def create_cards_for_series(
 
         # No existing card, add task to create and add to database
         if existing_card is None:
+            stats['creating'] += 1
             tasks.add_task(create_card, db, preferences, card_settings)
         # Existing card doesn't match, delete and remake
         elif any(getattr(existing_card, attr) != getattr(card, attr)
@@ -378,24 +405,41 @@ def delete_series_title_cards(
     Delete all TitleCards for the given Series. Return a list of the
     deleted files.
 
-    - series_id: ID of the series whose TitleCards to delete.
+    - series_id: ID of the Series whose TitleCards to delete.
     """
 
-    # Get all cards for this series
     query = db.query(models.card.Card).filter_by(series_id=series_id)
+    return delete_cards(db, query)
 
-    # Delete all associated cards
-    deleted = []
-    for card in query.all():
-        if (card_file := Path(card.card_file)).exists():
-            card_file.unlink()
-            deleted.append(str(card_file))
 
-    # Delete from database,
-    query.delete()
-    db.commit()
+@card_router.delete('/episode/{episode_id}', status_code=200, tags=['Episodes'])
+def delete_episode_title_cards(
+        series_id: int,
+        db = Depends(get_database)) -> list[str]:
+    """
+    Delete all TitleCards for the given Episode. Return a list of the
+    deleted files.
 
-    return deleted
+    - episode_id: ID of the Episode whose TitleCards to delete.
+    """
+
+    query = db.query(models.card.Card).filter_by(episode_id=episode_id)
+    return delete_cards(db, query)
+
+
+@card_router.delete('/card/{card_id}', status_code=200)
+def delete_title_card(
+        card_id: int,
+        db = Depends(get_database)) -> list[str]:
+    """
+    Delete the TitleCard with the given ID. Return a list of the
+    deleted file(s).
+
+    - card_id: ID of the TitleCard to delete.
+    """
+
+    query = db.query(models.card.Card).filter_by(id=card_id)
+    return delete_cards(db, query)
 
 
 @card_router.post('/episode/{episode_id}', tags=['Episodes'])
