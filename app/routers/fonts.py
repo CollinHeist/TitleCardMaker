@@ -59,6 +59,9 @@ def get_font(db, font_id, *, raise_exc=True) -> Union[NamedFont, None]:
         found and raise_exc is True.
     """
 
+    if font_id is None:
+        return None
+
     font = db.query(models.font.Font).filter_by(id=font_id).first()
     if font is None:
         if raise_exc:

@@ -53,8 +53,6 @@ class Series(Base):
     font_stroke_width = Column(Float, default=None)
     font_interline_spacing = Column(Integer, default=None)
     font_vertical_shift = Column(Integer, default=None)
-    font_delete_missing = Column(Boolean, default=None)
-    font_replacements = Column(MutableDict.as_mutable(PickleType), default=None)
 
     # Card arguments
     template_id = Column(Integer, ForeignKey('template.id'))
@@ -91,8 +89,6 @@ class Series(Base):
             'font_stroke_width': self.font_stroke_width,
             'font_interline_spacing': self.font_interline_spacing,
             'font_vertical_shift': self.font_vertical_shift,
-            'font_delete_missing': self.font_delete_missing,
-            'font_replacements': self.font_replacements,
             'template_id': self.template_id,
             'directory': self.directory,
             'card_type': self.card_type,

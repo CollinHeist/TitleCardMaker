@@ -327,8 +327,7 @@ def update_series(
 
     # If a template or font were indicated, verify they exist
     get_template(db, getattr(update_series, 'template_id', None),raise_exc=True)
-    if getattr(update_series, 'font_id', None) is not None:
-        get_font(db, new_series.font_id, raise_exc=True)
+    get_font(db, getattr(update_series, 'font_id', None), raise_exc=True)
 
     # Update each attribute of the object
     changed = False

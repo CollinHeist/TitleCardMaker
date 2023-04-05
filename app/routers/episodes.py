@@ -270,6 +270,13 @@ def update_episode_config(
         episode_id: int,
         update_episode: UpdateEpisode = Body(...),
         db = Depends(get_database)) -> Episode:
+    """
+    Update the Epiode with the given ID. Only provided fields are 
+    updated.
+
+    - episode_id: ID of the Episode to update.
+    - update_episode: UpdateEpisode containing fields to update.
+    """
     log.critical(f'{update_episode.dict()=}')
     # Get this episode, raise 404 if DNE
     episode = db.query(models.episode.Episode).filter_by(id=episode_id).first()
@@ -280,18 +287,9 @@ def update_episode_config(
         )
     
     # If any reference ID's were indicated, verify referenced object exists
-    checks = [
-        {'attr': 'series_id', 'model': models.series.Series, 'name': 'Series'},
-        {'attr': 'template_id', 'model': models.template.Template, 'name': 'Template'},
-        {'attr': 'font_id', 'model': models.font.Font, 'name': 'Font'},
-    ]
-    for to_check in checks:
-        if (id_ := getattr(update_episode, to_check['attr'], None)) is not None:
-            if (db.query(to_check['model']).filter_by(id=id_).first()) is None:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f'{to_check["name"]} {id_} not found',
-                )
+    get_series(db, getattr(update_episode, 'series_id', None), raise_exc=True)
+    get_template(db, getattr(update_episode, 'template_id', None), raise_exc=True)
+    get_font(db, getattr(update_episode, 'font_id', None), raise_exc=True)
 
     # Update each attribute of the object
     changed = False
@@ -339,7 +337,7 @@ def get_all_series_episodes(
 def get_all_episodes(
         db = Depends(get_database)) -> list[Episode]:
     """
-    Get all defines Episodes.
+    Get all defined Episodes.
     """
 
     return db.query(models.episode.Episode).all()

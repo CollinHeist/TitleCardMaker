@@ -36,11 +36,6 @@
     #title-card-preview >* .supported.feature > i {
       color: rgb(1, 174, 1); /* Supported feature icons are colored green */
     }
-
-    /* Color the header text in the title card type dropdown */
-    .dropdown >* .header {
-      color: crimson !important;
-    }
   </style>
 
   <script>
@@ -70,7 +65,7 @@
       let localTypes = [],
           remoteTypes = [];
       allTypes.forEach(({name, source}) => {
-        let selected = name.toLowerCase() === '{{preferences.default_card_type}}';
+        const selected = name.toLowerCase() === '{{preferences.default_card_type.lower()}}';
         if (source === 'local') {
           localTypes.push({name: name, value: name, selected: selected});
         } else {
@@ -178,7 +173,7 @@
                     <label>Default Card Type</label>
                     <div id="default-card-type" class="ui long compact selection dropdown">
                       <span class="text"></span>
-                      <input name="default_card_type" id="default-card-type-input" type="hidden" value="{{preferences.default_card_type}}">
+                      <input name="default_card_type" id="default-card-type-input" type="hidden" value="{{preferences.default_card_type.lower()}}">
                       <i class="dropdown icon"></i>
                       
                       <div class="down menu">

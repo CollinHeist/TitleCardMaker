@@ -84,6 +84,24 @@ body > .pusher {
   padding: 7px !important;
 }
 
+/* Format right aligned fields and inputs */
+.right.aligned.field,
+.right.aligned.field input {
+  text-align: right;
+}
+/* Adjacent input fields need additional top margin */
+input ~ input {
+  margin-top: 4px !important;
+}
+
+/* Dropdown headers are red */
+.ui.dropdown >* .header {
+  color: crimson !important;
+}
+.ui.dropdown .header::after {
+  background-color: green;
+}
+
 /* Support button */
 #support-button {
   /* 25px from right of screen */

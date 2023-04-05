@@ -86,7 +86,6 @@ class BaseSeries(BaseConfig):
     font_stroke_width: Optional[float] = Field(default=None)
     font_interline_spacing: Optional[int] = Field(default=None)
     font_vertical_shift: Optional[int] = Field(default=None)
-    font_delete_missing: Optional[bool] = Field(default=None)
 
     emby_library_name: Optional[str] = Field(
         default=None,
@@ -201,15 +200,12 @@ class NewTemplate(BaseTemplate):
         )
 
 class NewSeries(BaseSeries):
-    font_replacements_in: Optional[list[str]] = Field(default=None)
-    font_replacements_out: Optional[list[str]] = Field(default=None)
     season_title_ranges: Optional[list[SeasonTitleRange]] = Field(default=None)
     season_title_values: Optional[list[str]] = Field(default=None)
     extra_keys: Optional[list[str]] = Field(default=None)
     extra_values: Optional[list[Any]] = Field(default=None)
 
-    @validator('font_replacements_in', 'font_replacements_out',
-               'season_title_ranges', 'season_title_values',
+    @validator('season_title_ranges', 'season_title_values',
                'extra_keys', 'extra_values', pre=True)
     def validate_list(cls, v):
         return [v] if isinstance(v, str) else v
@@ -223,16 +219,10 @@ class NewSeries(BaseSeries):
             output_key='season_titles'
         )
         # Extras
-        values = validate_argument_lists_to_dict(
+        return validate_argument_lists_to_dict(
             values, 'extras',
             'extra_keys', 'extra_values',
             output_key='extras',
-        )
-        # Character replacements
-        return validate_argument_lists_to_dict(
-            values, 'character replacements',
-            'font_replacements_in', 'font_replacements_out',
-            output_key='font_replacements'
         )
 
 """
@@ -320,9 +310,6 @@ class UpdateSeries(BaseUpdate):
     font_stroke_width: Optional[float] = Field(default=UNSPECIFIED)
     font_interline_spacing: Optional[int] = Field(default=UNSPECIFIED)
     font_vertical_shift: Optional[int] = Field(default=UNSPECIFIED)
-    font_replacements_in: Optional[list[str]] = Field(default=UNSPECIFIED)
-    font_replacements_out: Optional[list[str]] = Field(default=UNSPECIFIED)
-    font_delete_missing: Optional[bool] = Field(default=UNSPECIFIED)
 
     emby_library_name: Optional[str] = Field(default=UNSPECIFIED)
     jellyfin_library_name: Optional[str] = Field(default=UNSPECIFIED)
@@ -348,8 +335,7 @@ class UpdateSeries(BaseUpdate):
 
         return values
 
-    @validator('font_replacements_in', 'font_replacements_out',
-               'season_title_ranges', 'season_title_values',
+    @validator('season_title_ranges', 'season_title_values',
                'extra_keys', 'extra_values', pre=True)
     def validate_list(cls, v):
         return [v] if isinstance(v, str) else v
@@ -363,16 +349,10 @@ class UpdateSeries(BaseUpdate):
             output_key='season_titles'
         )
         # Extras
-        values = validate_argument_lists_to_dict(
+        return validate_argument_lists_to_dict(
             values, 'extras',
             'extra_keys', 'extra_values',
             output_key='extras',
-        )
-        # Character replacements
-        return validate_argument_lists_to_dict(
-            values, 'character replacements',
-            'font_replacements_in', 'font_replacements_out',
-            output_key='font_replacements'
         )
 
 """
@@ -395,7 +375,5 @@ class Series(BaseSeries):
     font_stroke_width: Optional[float]
     font_interline_spacing: Optional[int]
     font_vertical_shift: Optional[int]
-    font_replacements: Optional[dict[str, str]]
-    font_delete_missing: Optional[bool]
     season_titles: Optional[dict[str, str]]
     extras: Optional[dict[str, Any]]
