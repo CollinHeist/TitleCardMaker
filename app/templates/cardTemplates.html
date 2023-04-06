@@ -319,10 +319,14 @@
           }
         }
         // Update card preview(s)
-        const form = base.querySelector('form')
+        const form = base.querySelector('form');
+        const watchedCard = base.querySelector('.card[content-type="watched"]'),
+            unwatchedCard = base.querySelector('.card[content-type="unwatched"]');
+        const watchedImg = base.querySelector('img[content-type="watched"]'),
+            unwatchedImg = base.querySelector('img[content-type="unwatched"]');
         form.onchange = () => {
-          reloadPreview('watched', form,document.querySelector('.card[content-type="watched"]'),  document.querySelector('img[content-type="watched"]'));
-          reloadPreview('unwatched', form, document.querySelector('.card[content-type="unwatched"]'), document.querySelector('img[content-type="unwatched"]'));
+          reloadPreview('watched', form, watchedCard, watchedImg);
+          reloadPreview('unwatched', form, unwatchedCard, unwatchedImg);
         }
         return base;
       });
