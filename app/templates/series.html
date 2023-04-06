@@ -113,7 +113,7 @@
       const statistics = await fetch('/api/statistics/series/{{series.id}}').then(resp => resp.json());
       const cardStat = statistics[0],
             episodeStat = statistics[1];
-      $('#card-count')[0].innerHTML = `<i class="image outline icon"></i>${cardStat.value} / ${episodeStat.value} Cards`;
+      $('#card-count')[0].innerHTML = `<i class="image outline icon"></i><span class="ui blue text">${cardStat.value} Cards</span> / <span class="ui red text">${episodeStat.value} Episodes</span>`;
     }
 
     // Get all available libraries for Emby and Plex
@@ -212,7 +212,7 @@
         deleteButtons[deleteButtons.length-1].onclick = (event) => {
           $.ajax({
             type: 'DELETE',
-            url: `/api/series/{{series.id}}/episode/${id}`,
+            url: `/api/episodes/${id}`,
             success: function(response) {
               $.toast({class: 'blue info', title: 'Deleted Episode'});
               getEpisodeData();
@@ -363,7 +363,7 @@
       getEpisodeData();
       initalizeSeriesConfig();
       // Schedule recurring statistics query
-      setInterval(getStatistics, 15000);
+      setInterval(getStatistics, 30000); // Refresh stats every 30s
     }
 
     async function refreshEpisodeData() {
@@ -371,11 +371,11 @@
       $.ajax({
         type: 'POST',
         url: '/api/episodes/{{series.id}}/refresh',
-        success: function(response) {
+        success: (response) => {
           $.toast({class: 'blue info', title: `Refreshed Episode Data`});
           getEpisodeData();
           getStatistics();
-        }, error: function(response) {
+        }, error: (response) => {
           $.toast({
             class: 'error',
             title: 'Error Refreshing Data',
@@ -409,6 +409,24 @@
             displayTime: 0,
           });
         }
+      });
+    }
+
+    async function loadCards(mediaServer, reload) {
+      $.ajax({
+        type: 'POST',
+        url:`/api/series/{{series.id}}/${reload ? 'reload' : 'load'}/${mediaServer}`,
+        success: (response) => {
+          $.toast({class: 'blue info', title: 'Loaded Title Cards'});
+          getStatistics();
+        }, error: (response) => {
+          $.toast({
+            class: 'error',
+            title: 'Error Loading Title Cards',
+            message: response.responseJSON.detail,
+            displayTime: 0,
+          });
+        }, complete: () => {}
       });
     }
 
@@ -505,7 +523,7 @@
           <!-- Series action bottons -->
           <div id="action-buttons">
             <div class="ui vertical labeled icon fluid buttons">
-              <button id="refresh" class="ui labeled icon button" onclick="refreshEpisodeData()">
+              <button id="refresh" class="ui labeled icon button" onclick="refreshEpisodeData()" data-tooltip="Look for new, and update any existing episodes">
                 <i class="sync icon"></i>
                 Refresh Episode Data
               </button>
@@ -513,41 +531,63 @@
                 <i class="images outline icon"></i>
                 Create Title Cards
               </button>
+            </div>
+            <div class="ui divider"></div>
+            <div class="ui vertical labeled icon fluid buttons">
               {% if preferences.use_emby and series.emby_library_name %}
-              <button id="load-emby" class="ui labeled icon button">
+              <button class="ui labeled icon button" onclick="loadCards('Emby');">
                 <i class="server icon"></i>
-                Reload Emby
+                Load Cards into Emby
+              </button>
+              <button class="ui labeled icon button" onclick="loadCards('Emby', true);">
+                <i class="server icon"></i>
+                Force Reload Cards into Emby
               </button>
               {% elif (preferences.use_emby and not series.emby_library_name) or (not preferences.use_emby and series.emby_library_name) %}
-              <button id="load-emby" class="ui disabled labeled icon button">
+              <button class="ui disabled labeled icon button">
                 <i class="server icon"></i>
                 Reload Emby
               </button>
               {% endif %}
                 
               {% if preferences.use_jellyfin and series.jellyfin_library_name %}
-              <button id="load-jellyfin" class="ui labeled icon button">
+              <button class="ui labeled icon button" onclick="loadCards('Jellyfin');">
                 <i class="server icon"></i>
-                Reload Emby
+                Load Cards into Jellyfin
+              </button>
+              <button class="ui labeled icon button" onclick="loadCards('Jellyfin', true);">
+                <i class="server icon"></i>
+                Force Reload Cards into Jellyfin
               </button>
               {% elif (preferences.use_jellyfin and not series.jellyfin_library_name) or (not preferences.use_jellyfin and series.jellyfin_library_name) %}
-              <button id="load-jellyfin" class="ui disabled labeled icon button">
+              <button class="ui disabled labeled icon button">
                 <i class="server icon"></i>
-                Reload Jellyfin
+                Load Cards into Jellyfin
               </button>
               {% endif %}
 
               {% if preferences.use_plex and series.plex_library_name %}
-              <button id="load-plex" class="ui labeled icon button">
+              <button class="ui labeled icon button" onclick="loadCards('Plex');">
                 <i class="server icon"></i>
-                Reload Plex
+                Load Cards into Plex
+              </button>
+              <button class="ui labeled icon button" onclick="loadCards('Plex', true);">
+                <i class="server icon"></i>
+                Force Reload Cards into Plex
               </button>
               {% elif (preferences.use_plex and not series.plex_library_name) or (not preferences.use_plex and series.plex_library_name) %}
-              <button id="load-plex" class="ui disabled labeled icon button">
+              <button class="ui disabled labeled icon button">
                 <i class="server icon"></i>
-                Reload Plex
+                Load Cards into Plex
               </button>
               {% endif %}
+            </div>
+            <div class="ui divider"></div>
+            <div class="ui vertical labeled icon fluid buttons">
+              <button id="delete-cards" class="ui labeled icon negative button">
+                <i class="images outline icon"></i>
+                Delete Title Cards
+              </button>
               <button id="delete-series" class="ui labeled icon negative button">
                 <i class="trash alternate outline icon"></i>
                 Delete Series
