@@ -9,7 +9,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 from app.models.preferences import Preferences
 from modules.EmbyInterface2 import EmbyInterface
-from modules.JellyfinInterface import JellyfinInterface
+from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
