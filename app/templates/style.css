@@ -11,7 +11,8 @@
 }
 
 body {
-  background-color: var(--background-color-light);
+  /* background-color: var(--background-color-light); */
+  background-image: linear-gradient(to bottom right, var(--background-color-light), #d9d9d9);
 }
 
 /* Keep header as fixed (non-scrollable) content */
