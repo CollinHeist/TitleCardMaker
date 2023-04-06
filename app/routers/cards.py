@@ -5,7 +5,10 @@ from fastapi import APIRouter, BackgroundTasks, Body, Depends, File, Form, HTTPE
 from sqlalchemy.orm import Session
 
 from app.database.session import SessionLocal
-from app.dependencies import get_database, get_preferences, get_scheduler
+from app.dependencies import (
+    get_database, get_emby_interface, get_jellyfin_interface, get_preferences,
+    get_plex_interface, get_scheduler
+)
 import app.models as models
 from app.routers.fonts import get_font
 from app.routers.series import get_series
@@ -210,15 +213,35 @@ def create_cards_for_series(
     # Get this series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    # Get all episodes
-    episodes = db.query(models.episode.Episode).filter_by(series_id=series_id).all()
+    # Get all episodes for this series
+    episodes = db.query(models.episode.Episode)\
+        .filter_by(series_id=series_id).all()
+
+    # Set watch statuses of the episodes
+    if series.emby_library_name is not None:
+        if emby_interface is None:
+            log.warning(f'Cannot query watch statuses - no Emby connection')
+        else:
+            emby_interface.update_watched_statuses(
+                series.emby_library_name, series.as_series_info, episodes,
+            )
+    elif series.jellyfin_library_name is not None:
+        if jellyfin_interface is None:
+            log.warning(f'Cannot query watch statuses - no Jellyfin connection')
+        else:
+            jellyfin_interface.update_watched_statuses(
+                series.jellyfin_library_name, series.as_series_info, episodes,
+            )
+    elif series.plex_library_name is not None:
+        if plex_interface is None:
+            log.warning(f'Cannot query watch statuses - no Plex connection')
+        else:
+            plex_interface.update_watched_statuses(
+                series.plex_library_name, series.as_series_info, episodes,
+            ) 
+
     stats = {'deleted': 0, 'invalid': 0, 'creating': 0}
     for episode in episodes:
-        # Get EpisodeInfo for this episode
-        episode_info = EpisodeInfo(
-            episode.title, episode.season_number, episode.episode_number,
-        )
-
         # Get effective template for this episode
         series_template_dict, episode_template_dict = {}, {}
         if episode.template_id is not None:
@@ -309,8 +332,13 @@ def create_cards_for_series(
             style = card_settings[f'{prefix}_style']
             card_settings['blur'] = 'blur' in style
             card_settings['grayscale'] = 'grayscale' in style
+        # Indeterminate watch status, set styles if both styles match
+        elif card_settings['watched_style'] == card_settings['unwatched_style']:
+            style = card_settings['watched_style']
+            card_settings['blur'] = 'blur' in style
+            card_settings['grayscale'] = 'grayscale' in style
+        # Indeterminate watch status, cannot determine styles
         else:
-            # TODO Evalute whether default should be false if watched status is undetermined
             card_settings['blur'] = False
             card_settings['grayscale'] = False 
         
@@ -333,6 +361,9 @@ def create_cards_for_series(
                 / series.path_safe_name
         else:
             series_directory = Path(card_settings.get('directory'))
+
+        # Get EpisodeInfo for this episode
+        episode_info = episode.as_episode_info
 
         # If an explicit card file was indicated, use it vs. default
         # TODO get season folder format from preferences object directly
