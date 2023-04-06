@@ -8,6 +8,7 @@ from sqlalchemy import PickleType
 from app.database.session import Base
 from app.dependencies import get_preferences
 from modules.CleanPath import CleanPath
+from modules.EpisodeInfo2 import EpisodeInfo
 
 class Episode(Base):
     __tablename__ = 'episode'
@@ -82,4 +83,21 @@ class Episode(Base):
             'font_interline_spacing': self.font_interline_spacing,
             'font_vertical_shift': self.font_vertical_shift,
             'extras': self.extras,
-        }
+        } 
+
+
+    @hybrid_property
+    def as_episode_info(self) -> EpisodeInfo:
+        return EpisodeInfo(
+            title=self.title,
+            season_number=self.season_number,
+            episode_number=self.episode_number,
+            absolute_number=self.absolute_number,
+            emby_id=self.emby_id,
+            imdb_id=self.imdb_id,
+            jellyfin_id=self.jellyfin_id,
+            tmdb_id=self.tmdb_id,
+            tvdb_id=self.tvdb_id,
+            tvrage_id=self.tvrage_id,
+            # airdate=self.airdate,
+        )

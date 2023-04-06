@@ -10,6 +10,7 @@ from sqlalchemy import PickleType
 from app.database.session import Base
 from app.dependencies import get_preferences
 from modules.CleanPath import CleanPath
+from modules.SeriesInfo import SeriesInfo
 
 ASSET_DIRECTORY = Path(__file__).parent.parent / 'assets'
 
@@ -100,3 +101,17 @@ class Series(Base):
             'watched_style': self.watched_style,
             'extras': self.extras,
         }
+
+    @hybrid_property
+    def as_series_info(self) -> SeriesInfo:
+        return SeriesInfo(
+            name=self.name,
+            year=self.year,
+            emby_id=self.emby_id,
+            imdb_id=self.imdb_id,
+            jellyfin_id=self.jellyfin_id,
+            sonarr_id=self.sonarr_id,
+            tmdb_id=self.tmdb_id,
+            tvdb_id=self.tvdb_id,
+            tvrage_id=self.tvrage_id,
+        )
