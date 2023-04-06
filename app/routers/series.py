@@ -2,7 +2,9 @@ from pathlib import Path
 from requests import get
 from typing import Annotated, Any, Literal, Optional, Union
 
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, Query, Response, UploadFile
+from fastapi import (
+    APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, UploadFile
+)
 from starlette.responses import RedirectResponse
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -10,18 +12,16 @@ from sqlalchemy.orm import Session
 from modules.Debug import log
 from modules.SeriesInfo import SeriesInfo
 
-from app.dependencies import get_database, get_preferences, get_emby_interface,\
-    get_jellyfin_interface, get_plex_interface, get_sonarr_interface, \
-    get_tmdb_interface
+from app.dependencies import (
+    get_database, get_preferences, get_emby_interface, get_jellyfin_interface,
+    get_plex_interface, get_sonarr_interface, get_tmdb_interface
+)
 import app.models as models
 from app.routers.fonts import get_font
 from app.routers.templates import get_template
 from app.schemas.base import UNSPECIFIED
-from app.schemas.preferences import EpisodeDataSource, MediaServer,\
-    MediaServerToggle
-from app.schemas.series import (
-    NewSeries, Series, SortedImageSourceToggle, UpdateSeries
-)
+from app.schemas.preferences import MediaServer
+from app.schemas.series import NewSeries, Series, UpdateSeries
 from app.schemas.episode import Episode
 
 
@@ -37,12 +37,16 @@ def get_series(db, series_id, *, raise_exc=True) -> Union[Series, None]:
 
     Returns:
         Series with the given ID. If one cannot be found and raise_exc
-        is False, then None is returned.
+        is False, or if the given ID is None, then None is returned.
 
     Raises:
         HTTPException with a 404 status code if the Series cannot be
         found and raise_exc is True.
     """
+
+    # No series ID provided, return immediately
+    if series_id is None:
+        return None
 
     series = db.query(models.series.Series).filter_by(id=series_id).first()
     if series is None:
@@ -168,13 +172,99 @@ def download_series_poster(
     return None
 
 
+def load_title_cards(
+        series_id: int,
+        media_server: MediaServer,
+        db: 'Database',
+        emby_interface: 'EmbyInterface',
+        jellyfin_interface: 'JellyfinInterface',
+        plex_interface: 'PlexInterface',
+        force_reload: bool):
+
+    # Find series with this ID, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Get associated library for the indicated media server
+    library = getattr(series, f'{media_server.lower()}_library_name', None)
+    interface = {
+        'Emby': emby_interface,
+        'Jellyfin': jellyfin_interface,
+        'Plex': plex_interface,
+    }.get(media_server, None)
+
+    # Raise 409 if no library, or the server's interface is invalid
+    if library is None:
+        raise HTTPException(
+            status_code=409,
+            detail=f'Series {series_id} has no {media_server} Library',
+        )
+    elif interface is None:
+        raise HTTPException(
+            status_code=409,
+            detail=f'Unable to communicate with {media_server}',
+        )
+
+    # Get all episodes associated with this series
+    all_episodes = db.query(models.episode.Episode)\
+        .filter_by(series_id=series_id).all()
+    
+    # Get list of episodes to reload
+    episodes_to_load = []
+    for episode in all_episodes:
+        # Only load if episode has a Card
+        card = db.query(models.card.Card)\
+            .filter_by(episode_id=episode.id).first()
+        if card is None:
+            log.debug(f'Not loading {episode} - no associated card')
+            continue
+
+        # Look for a previously loaded asset
+        loaded = db.query(models.loaded.Loaded)\
+            .filter_by(episode_id=episode.id).first()
+
+        # No previously loaded card for this episode, load
+        if loaded is None:
+            episodes_to_load.append((episode, card))
+        # There is a previously loaded card, delete loaded entry, reload
+        elif force_reload or (loaded.filesize != card.filesize):
+            db.delete(loaded)
+            episodes_to_load.append((episode, card))
+        # Episode does not need to be (re)loaded
+        else:
+            # TODO update logging to be more verbose
+            log.debug(f'Not loading {episode} - card has not changed') 
+
+    # Load into indicated interface
+    loaded = interface.load_title_cards(
+        library, series.as_series_info, episodes_to_load
+    )
+
+    # Update database with loaded entries
+    for loaded_episode, loaded_card in loaded:
+        db.add(
+            models.loaded.Loaded(
+                media_server=media_server,
+                series_id=series_id,
+                episode_id=loaded_episode.id,
+                card_id=loaded_card.id,
+                filesize=loaded_card.filesize,
+            )
+        )
+
+    # If any cards were (re)loaded, commit updates to database
+    if loaded:
+        db.commit()
+
+    return None
+
+
 series_router = APIRouter(
     prefix='/series',
     tags=['Series'],
 )
 
 
-@series_router.get('/all')
+@series_router.get('/all', status_code=200)
 def get_all_series(
         db = Depends(get_database)) -> list[Series]:
     """
@@ -255,7 +345,7 @@ def delete_series(
     return None
 
 
-@series_router.get('/search')
+@series_router.get('/search', status_code=200)
 def search_series(
         name: Optional[str] = None,
         template_id: Optional[int] = None,
@@ -305,7 +395,7 @@ def get_series_config(
     return get_series(db, series_id, raise_exc=True)
 
 
-@series_router.patch('/{series_id}')
+@series_router.patch('/{series_id}', status_code=200)
 def update_series(
         series_id: int,
         update_series: UpdateSeries = Body(...),
@@ -345,27 +435,50 @@ def update_series(
 
 
 @series_router.post('/{series_id}/load/{media_server}', status_code=201)
-def load_title_cards(
+def load_title_cards_into_media_server(
         series_id: int,
         media_server: MediaServer,
-        db = Depends(get_database)) -> None:
+        db = Depends(get_database),
+        emby_interface = Depends(get_emby_interface),
+        jellyfin_interface = Depends(get_jellyfin_interface),
+        plex_interface = Depends(get_plex_interface)) -> None:
+    """
+    Load all of the given Series' unloaded Title Cards into the given
+    Media Server. This only loads Cards that have not previously been
+    loaded, or whose previously loaded cards have been changed.
 
-    # Find series with this ID, raise 404 if DNE
-    series = get_series(db, series_id, raise_exc=True)
+    - series_id: ID of the Series whose Cards are being loaded.
+    - media_server: Which Media Server to load cards into. Must have an
+    active, valid Interface connection.
+    """
 
-    #TODO actually load cards - probably move to /cards/ router
+    return load_title_cards(
+        series_id, media_server, db, emby_interface, jellyfin_interface,
+        plex_interface, force_reload=False
+    )
 
 
 @series_router.post('/{series_id}/reload/{media_server}', status_code=201)
-def reload_title_cards(
+def reload_title_cards_into_media_server(
         series_id: int,
         media_server: MediaServer,
-        db = Depends(get_database)) -> None:
+        db = Depends(get_database),
+        emby_interface = Depends(get_emby_interface),
+        jellyfin_interface = Depends(get_jellyfin_interface),
+        plex_interface = Depends(get_plex_interface)) -> None:
+    """
+    Reload all of the given Series' Title Cards into the given Media
+    Server. This loads all Cards, even those that have not changed.
 
-    # Find series with this ID, raise 404 if DNE
-    series = get_series(db, series_id, raise_exc=True)
+    - series_id: ID of the Series whose Cards are being loaded.
+    - media_server: Which Media Server to load cards into. Must have an
+    active, valid Interface connection.
+    """
 
-    #TODO reload cards and move to /cards/ router
+    return load_title_cards(
+        series_id, media_server, db, emby_interface, jellyfin_interface,
+        plex_interface, force_reload=True
+    )
 
 
 @series_router.get('/{series_id}/poster', status_code=200)
@@ -386,7 +499,7 @@ def get_series_poster(
     return download_series_poster(series, db, preferences, tmdb_interface)
 
 
-@series_router.post('/{series_id}/poster')
+@series_router.post('/{series_id}/poster', status_code=201)
 async def set_series_poster(
         series_id: int,
         poster_url: Optional[str] = Form(default=None),

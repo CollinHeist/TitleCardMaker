@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod, abstractproperty
 from typing import Any, Union
+from pathlib import Path
 
 from tinydb import where, Query
 
@@ -44,7 +45,7 @@ class MediaServer(ABC):
         self.filesize_limit = filesize_limit
 
 
-    def compress_image(self, image: 'Path') -> Union['Path', None]:
+    def compress_image(self, image: Path) -> Union[Path, None]:
         """
         Compress the given image until below the filesize limit.
 
@@ -55,6 +56,9 @@ class MediaServer(ABC):
             Path to the compressed image, or None if the image could not
             be compressed.
         """
+
+        # Ensure image is Path object
+        image = Path(image)
 
         # No compression necessary
         if (self.filesize_limit is None

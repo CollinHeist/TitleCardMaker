@@ -107,7 +107,7 @@ card_router = APIRouter(
 )
 
 
-@card_router.post('/preview')
+@card_router.post('/preview', status_code=201)
 def create_preview_card(
         card: PreviewTitleCard = Body(...),
         db = Depends(get_database),
@@ -142,11 +142,11 @@ def create_preview_card(
 
     # Query for font if an ID was given, update font with those attributes
     if getattr(card, 'font_id', None) is not None:
-        get_font(db, card.font_id, raise_exc=True)
+        font_object = get_font(db, card.font_id, raise_exc=True)
         for attr in ('file', 'color', 'title_case', 'size', 'kerning', 
                      'stroke_width', 'interline_spacing', 'vertical_shift'):
-            if getattr(font_obj, attr) is not None:
-                font[attr] = getattr(font_obj, attr)
+            if getattr(font_object, attr) is not None:
+                font[attr] = getattr(font_object, attr)
 
     # Use manually specified font attributes if given
     for attr, value in card.dict().items():
@@ -160,8 +160,7 @@ def create_preview_card(
     source = preferences.asset_directory / (('art' if 'art' in card.style else 'unique') + '.jpg')
 
     # Delete card if it already exists
-    if output.exists():
-        output.unlink()
+    output.unlink(missing_ok=True)
 
     kwargs = {
         'source_file': source, 'card_file': output, 'preferences': preferences,
@@ -178,7 +177,7 @@ def create_preview_card(
     raise HTTPException(status_code=500, detail='Failed to create preview card')
 
 
-@card_router.get('/{card_id}')
+@card_router.get('/{card_id}', status_code=200)
 def get_title_card(
         card_id: int,
         db = Depends(get_database)) -> TitleCard:
@@ -203,8 +202,10 @@ def create_cards_for_series(
         tasks: BackgroundTasks,
         series_id: int,
         preferences = Depends(get_preferences),
-        # scheduler = Depends(get_scheduler),
-        db = Depends(get_database),) -> dict[str, int]:
+        db = Depends(get_database),
+        emby_interface = Depends(get_emby_interface),
+        jellyfin_interface = Depends(get_jellyfin_interface),
+        plex_interface = Depends(get_plex_interface)) -> dict[str, int]:
 
     # Get this series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
@@ -442,7 +443,7 @@ def delete_title_card(
     return delete_cards(db, query)
 
 
-@card_router.post('/episode/{episode_id}', tags=['Episodes'])
+@card_router.post('/episode/{episode_id}', status_code=201, tags=['Episodes'])
 def create_card_for_episode(
         episode_id: int,
         db = Depends(get_database)) -> int:

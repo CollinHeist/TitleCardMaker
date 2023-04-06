@@ -1,12 +1,11 @@
 from base64 import b64encode
 from datetime import datetime
-from typing import Union
-
-from fastapi import HTTPException
+from typing import Optional, Union
 
 from modules.Debug import log
 from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo2 import EpisodeInfo
+import modules.global_objects as global_objects
 from modules.MediaServer import MediaServer
 from modules.SeriesInfo import SeriesInfo
 from modules.SyncInterface import SyncInterface
@@ -14,11 +13,11 @@ from modules.WebInterface import WebInterface
 
 SourceImage = Union[bytes, None]
 
-class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
+class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
     """
-    This class describes an interface to an Emby media server. This is a
-    type of EpisodeDataSource (e.g. interface by which Episode data can
-    be retrieved), as well as a MediaServer (e.g. a server in which
+    This class describes an interface to a Jellyfin media server. This
+    is a type of EpisodeDataSource (e.g. interface by which Episode data
+    can be retrieved), as well as a MediaServer (e.g. a server in which
     cards can be loaded into).
     """
 
@@ -26,42 +25,40 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
     DEFAULT_FILESIZE_LIMIT = None
 
     """Filepath to the database of each episode's loaded card characteristics"""
-    LOADED_DB = 'loaded_emby.json'
+    LOADED_DB = 'loaded_jellyfin.json'
 
-    """Series ID's that can be set by Emby"""
-    SERIES_IDS = ('emby_id', 'imdb_id', 'tmdb_id', 'tvdb_id')
+    """Series ID's that can be set by Jellyfin"""
+    SERIES_IDS = ('imdb_id', 'jellyfin_id', 'tmdb_id', 'tvdb_id')
 
-    """Datetime format string for airdates reported by Emby"""
+    """Datetime format string for airdates reported by Jellyfin"""
     AIRDATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f000000Z'
 
-    """Range of years to query series by"""
-    YEAR_RANGE = range(1960, datetime.now().year)
 
-
-    def __init__(self, url: str, api_key: str, username: str,
-            verify_ssl: bool=True,
-            filesize_limit: int=None) -> None:
+    def __init__(self,
+            url: str,
+            api_key: str,
+            username: Optional[str] = None,
+            verify_ssl: bool = True,
+            filesize_limit: Optional[int] = None) -> None:
         """
-        Construct a new instance of an interface to an Emby server.
+        Construct a new instance of an interface to a Jellyfin server.
 
         Args:
-            url: The API url communicating with Emby.
+            url: The API url communicating with Jellyfin.
             api_key: The API key for API requests.
-            username: Username of the Emby account to get watch statuses
-                of.
+            username: Username of the Jellyfin account to get watch
+                statuses of.
             verify_ssl: Whether to verify SSL requests.
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
-
-        Raises:
-            SystemExit: Invalid URL/API key provided.
         """
 
         # Intiialize parent classes
         super().__init__(filesize_limit)
 
         # Store attributes of this Interface
-        self.session = WebInterface('Emby', verify_ssl)
+        self.session = WebInterface('Jellyfin', verify_ssl)
+        self.info_set = global_objects.info_set
         self.url = url[:-1] if url.endswith('/') else url
         self.__params = {'api_key': api_key}
         self.username = username
@@ -72,23 +69,17 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 f'{self.url}/System/Info',
                 params=self.__params
             )
+
             if not set(response).issuperset({'ServerName', 'Version', 'Id'}):
                 raise Exception(f'Unable to authenticate with server')
         except Exception as e:
-            log.critical(f'Cannot connect to Emby - returned error {e}')
-            log.exception(f'Bad Emby connection', e)
-            raise HTTPException(
-                status_code=400,
-                detail=f'Cannot connect to Emby - {e}',
-            )
+            log.critical(f'Cannot connect to Jellyfin - returned error {e}')
+            log.exception(f'Bad Jellyfin connection', e)
 
-        # Get user ID
-        if (user_id := self._get_user_id(username)) is None:
+        # Get user ID if indicated
+        if (username is not None
+            and (user_id := self._get_user_id(username)) is None):
             log.critical(f'Cannot identify ID of user "{username}"')
-            raise HTTPException(
-                status_code=400,
-                detail=f'Cannot identify ID of user "{username}"',
-            )
         else:
             self.user_id = user_id
 
@@ -96,7 +87,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         self.libraries = self._map_libraries()
 
 
-    def _get_user_id(self, username: str) -> Union[str, None]:
+    def _get_user_id(self, username: str) -> 'str | None':
         """
         Get the User ID associated with the given username.
 
@@ -110,55 +101,55 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # Query for list of all users on this server
         response = self.session._get(
-            f'{self.url}/Users/Query',
+            f'{self.url}/Users',
             params=self.__params,
         )
 
-        # Go through returned list of users, returning when username matches
-        for user in response.get('Items'):
+        # Go through returned list of users, returning on username match
+        for user in response:
             if user.get('Name') == username:
                 return user.get('Id')
 
         return None
 
 
-    def _map_libraries(self) -> dict[str, tuple[int]]:
+    def _map_libraries(self) -> dict[str, int]:
         """
-        Map the libraries on this interface's Emby server.
+        Map the libraries on this interface's server.
 
         Returns:
             Dictionary whose keys are the names of the libraries, and
-            whose values are tuples of the folder ID's for those
-            libraries.
+            whose values are that library's ID.
         """
 
-        # Get all library folders 
+        # Get all libraries in this server
         libraries = self.session._get(
-            f'{self.url}/Library/SelectableMediaFolders',
-            params=self.__params
+            f'{self.url}/Items',
+            params={
+                'recursive': True,
+                'includeItemTypes': 'CollectionFolder'
+            } | self.__params,
         )
 
-        # Parse each library name into tuples of parent ID's
         return {
-            lib['Name']:tuple(int(folder['Id']) for folder in lib['SubFolders'])
-            for lib in libraries
+            library['Name']: library['Id']
+            for library in libraries['Items']
+            if library['CollectionType'] == 'tvshows'
         }
 
 
     def get_usernames(self) -> list[str]:
         """
-        Get all the usernames for this interface's Emby server.
+        Get all the usernames for this interface's Jellyfin server.
 
         Returns:
             List of usernames.
         """
 
-        users = self.session._get(
-            f'{self.url}/Users',
-            params=self.__params
-        )
-
-        return [user['Name'] for user in users]
+        return [
+            user.get('Name') for user in
+            self.session._get(f'{self.url}/Users', params=self.__params)
+        ]
 
 
     def set_series_ids(self, library_name: str, series_info: SeriesInfo) ->None:
@@ -175,55 +166,42 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             return None
 
         # If library not mapped, error and exit
-        if (library_ids := self.libraries.get(library_name)) is None:
-            log.error(f'Library "{library_name}" not found in Emby')
+        if (library_id := self.libraries.get(library_name)) is None:
+            log.error(f'Library "{library_name}" not found in Jellyfin')
             return None
-
-        # Generate provider ID query string
-        ids = []
-        if series_info.has_id('imdb_id'): ids += [f'imdb.{series_info.imdb_id}']
-        if series_info.has_id('tmdb_id'): ids += [f'tmdb.{series_info.tmdb_id}']
-        if series_info.has_id('tvdb_id'): ids += [f'tvdb.{series_info.tvdb_id}']
-        provider_id_str = ','.join(ids)
 
         # Base params for all requests
         params = {
-            'Recursive': True,
-            'Years': series_info.year,
-            'IncludeItemTypes': 'series',
-            'SearchTerm': series_info.name,
-            'Fields': 'ProviderIds',
-        } | self.__params \
-          |({'AnyProviderIdEquals': provider_id_str} if provider_id_str else {})
+            'recursive': True,
+            'years': series_info.year,
+            'includeItemTypes': 'Series',
+            'searchTerm': series_info.name,
+            'fields': 'ProviderIds',
+            'parentId': library_id,
+        } | self.__params
 
-        # Look for this series in each library subfolder
-        for parent_id in library_ids:
-            response = self.session._get(
-                f'{self.url}/Items',
-                params=params | {'ParentId': parent_id}
-            )
+        # Look for this series in this library
+        response = self.session._get(f'{self.url}/Items', params=params)
 
-            # If no responses, skip
-            if response['TotalRecordCount'] == 0: continue
-
+        # If no responses, skip
+        if response['TotalRecordCount'] > 0:
             # Go through all items and match name and type, setting database IDs
             for result in response['Items']:
                 if (result['Type'] == 'Series'
                     and series_info.matches(result['Name'])):
-                    # Set Emby, IMDb, TMDb, or TVDb
-                    series_info.set_emby_id(int(result['Id']))
-                    if (imdb_id := result['ProviderIds'].get('IMDB')):
-                        series_info.set_imdb_id(imdb_id)
+                    self.info_set.set_jellyfin_id(series_info, result['Id'])
+                    if (imdb_id := result['ProviderIds'].get('Imdb')):
+                        self.info_set.set_imdb_id(series_info, imdb_id)
                     if (tmdb_id := result['ProviderIds'].get('Tmdb')):
-                        series_info.set_tmdb_id(int(tmdb_id))
+                        self.info_set.set_tmdb_id(series_info, int(tmdb_id))
                     if (tvdb_id := result['ProviderIds'].get('Tvdb')):
-                        series_info.set_tvdb_id(int(tvdb_id))
+                        self.info_set.set_tvdb_id(series_info, int(tvdb_id))
                         
                     return None
 
         # Not found on server
         log.warning(f'Series "{series_info}" was not found under library '
-                    f'"{library_name}" in Emby')
+                    f'"{library_name}" in Jellyfin')
         return None 
 
 
@@ -240,46 +218,44 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         self.get_all_episodes(series_info)
 
 
-    def get_library_paths(self,
-            filter_libraries: list[str]=[]) -> dict[str, list[str]]:
+    def get_library_paths(self, filter_libraries: list[str]=[]
+            ) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
 
         Args:
-            filer_libraries: List of library names to filter the return.
+            filter_libraries: List of library names to filter the return.
 
         Returns:
-            Dictionary whose keys are the library names, and whose
-            values are the list of paths to that library's base
-            directories.
+            Dictionary whose keys are the library names, and whose values are
+            the list of paths to that library's base directories.
         """
 
         # Get all library folders 
         libraries = self.session._get(
-            f'{self.url}/Library/SelectableMediaFolders',
+            f'{self.url}/Library/VirtualFolders',
             params=self.__params
         )
 
         # Inner function on whether to include this library in the return
-        def include_library(emby_library) -> bool:
+        def include_library(library_name) -> bool:
             if len(filter_libraries) == 0: return True
-            return emby_library in filter_libraries
+            return library_name in filter_libraries
 
-        # Parse each library name into tuples of parent ID's
         return {
-            lib['Name']: list(folder['Path'] for folder in lib['SubFolders'])
+            lib['Name']: [location for location in lib['Locations']]
             for lib in libraries
-            if include_library(lib['Name'])
+            if (lib['CollectionType'] == 'tvshows'
+                and include_library(lib['Name']))
         }
 
 
-    def get_all_series(self,
-            required_libraries: list[str] = [],
-            excluded_libraries: list[str] = [],
-            required_tags: list[str] = [], 
-            excluded_tags: list[str] = []) -> list[tuple[SeriesInfo, str]]: 
+    def get_all_series(self, filter_libraries: list[str]=[],
+            required_tags: list[str]=[]
+            ) -> list[tuple[SeriesInfo, str, str]]: 
         """
-        Get all series within Emby, as filtered by the given libraries.
+        Get all series within Jellyfin, as filtered by the given
+        libraries and tags.
 
         Args:
             filter_libraries: Optional list of library names to filter
@@ -290,48 +266,49 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 returned.
 
         Returns:
-            List of tuples whose elements are the SeriesInfo and its
+            List of tuples whose elements are the SeriesInfo of the
+            series, the  path (string) it is located, and its
             corresponding library name.
         """
 
         # Temporarily override request timeout to 240s (4 min)
         self.REQUEST_TIMEOUT = 240
-        
+
         # Base params for all queries
         params = {
-            'Recursive': True,
-            'IncludeItemTypes': 'series',
-            'Fields': 'ProviderIds,Path',
+            'recursive': True,
+            'includeItemTypes': 'Series',
+            'fields': 'ProviderIds,Path',
         } | self.__params
 
         # Also filter by tags if any were provided
         if len(required_tags) > 0:
-            params |= {'Tags': '|'.join(required_tags)}
-# TODO Filter by exclusion tags. No explicit query param for this
-        # Go through each library in this server
+            params |= {'tags': '|'.join(required_tags)}
+
+        # Get all series library at a time
         all_series = []
-        for library, library_ids in self.libraries.items():
-            # Filter by library
-            if (required_libraries and library not in filter_libraries
-                or excluded_libraries and library in excluded_libraries):
+        for library, library_id in self.libraries.items():
+            # If filtering by library, skip if not specified
+            if filter_libraries and library not in filter_libraries:
                 continue
 
-            # Go through every subfolder (the parent ID) in this library
-            for parent_id in library_ids:
-                # Have to query year by year, for SOME stupid reason...
-                for year in self.YEAR_RANGE:
-                    # Get all items (series) in this subfolder for this year
-                    response = self.session._get(
-                        f'{self.url}/Items',
-                        params=params | {'ParentId': parent_id, 'Years': year}
-                    )
-
-                    for series in response['Items']:
-                        series_info = SeriesInfo(
-                            series['Name'], year, emby_id=series['Id'],
-# TODO add other series ID's
-                        )
-                        all_series.append((series_info, library))
+            response = self.session._get(
+                f'{self.url}/Items',
+                params=params | {'ParentId': library_id}
+            )
+            for series in response['Items']:
+                # Skip series without airdate/year
+                if series.get('PremiereDate', None) is None:
+                    log.debug(f'Series {series["Name"]} has no premiere date')
+                    continue
+                
+                series_info = SeriesInfo(
+                    series['Name'], 
+                    datetime.strptime(series['PremiereDate'],
+                                      self.AIRDATE_FORMAT).year,
+                    jellyfin_id=series['Id'],
+                )
+                all_series.append((series_info, series['Path'], library))
 
         # Reset request timeout
         self.REQUEST_TIMEOUT = 30
@@ -351,14 +328,14 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             List of EpisodeInfo objects for this series.
         """
 
-        # If series has no Emby ID, cannot query episodes
-        if not series_info.has_id('emby_id'):
-            log.warning(f'Series not found in Emby {series_info!r}')
+        # If series has no Jellyfin ID, cannot query episodes
+        if not series_info.has_id('jellyfin_id'):
+            log.warning(f'Series not found in Jellyfin {series_info!r}')
             return []
 
         # Get all episodes for this series
         response = self.session._get(
-            f'{self.url}/Shows/{series_info.emby_id}/Episodes',
+            f'{self.url}/Shows/{series_info.jellyfin_id}/Episodes',
             params={'Fields': 'ProviderIds'} | self.__params
         )
 
@@ -366,25 +343,28 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         all_episodes = []
         for episode in response['Items']:
             # Parse airdate for this episode
-            airdate=None
-            try:
-                airdate = datetime.strptime(episode['PremiereDate'],
-                                            self.AIRDATE_FORMAT)
-            except Exception as e:
-                log.exception(f'Cannot parse airdate', e)
-                log.debug(f'Episode data: {episode}')
+            airdate = None
+            if 'PremiereDate' in episode:
+                try:
+                    airdate = datetime.strptime(episode['PremiereDate'],
+                                                self.AIRDATE_FORMAT)
+                except Exception as e:
+                    log.exception(f'Cannot parse airdate', e)
+                    log.debug(f'Episode data: {episode}')
 
-            episode_info = EpisodeInfo(
+            episode_info = self.info_set.get_episode_info(
+                series_info,
                 episode['Name'],
                 episode['ParentIndexNumber'],
                 episode['IndexNumber'],
-                emby_id=int(episode.get('Id')),
+                jellyfin_id=episode.get('Id'),
                 imdb_id=episode['ProviderIds'].get('Imdb'),
                 tmdb_id=episode['ProviderIds'].get('Tmdb'),
                 tvdb_id=episode['ProviderIds'].get('Tvdb'),
                 tvrage_id=episode['ProviderIds'].get('TvRage'),
                 airdate=airdate,
-                queried_emby=True,
+                title_match=True,
+                queried_jellyfin=True,
             )
 
             # Add to list
@@ -394,18 +374,19 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return all_episodes
 
 
-    def has_series(self, series_info: 'SeriesInfo') -> bool:
+    def has_series(self, series_info: SeriesInfo) -> bool:
         """
-        Determine whether the given series is present within Emby.
+        Determine whether the given series is present within Jellyfin.
 
         Args:
             series_info: The series being evaluated.
 
         Returns:
-            True if the series is present within Emby. False otherwise.
+            True if the series is present within Jellyfin. False
+            otherwise.
         """
 
-        return series_info.has_id('emby_id')
+        return series_info.has_id('jellyfin_id')
 
 
     def update_watched_statuses(self,
@@ -414,7 +395,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             episodes: list['Episode']) -> None:
         """
         Modify the Episodes' watched attribute according to the watched
-        status of the corresponding episodes within Emby.
+        status of the corresponding episodes within Jellyfin.
 
         Args:
             library_name: The name of the library containing the series.
@@ -422,22 +403,22 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             episodes: List of Episode objects to update.
         """
 
-        # If no episodes, or series has no Emby ID, exit
-        if len(episodes) == 0 or not series_info.has_id('emby_id'):
+        # If no episodes, or series has no ID, exit
+        if len(episodes) == 0 or not series_info.has_id('jellyfin_id'):
             return None
 
         # Query for all episodes of this series
         response = self.session._get(
-            f'{self.url}/Shows/{series_info.emby_id}/Episodes',
+            f'{self.url}/Shows/{series_info.jellyfin_id}/Episodes',
             params={'UserId': self.user_id} | self.__params
         )
 
-        # Go through each episode in Emby, update Episode status/card
-        for emby_episode in response['Items']:
+        # Go through each episode in Jellyfin, update Episode status/card
+        for jellyfin_episode in response['Items']:
             for episode in episodes:
-                if (emby_episode['ParentIndexNumber'] == episode.season_number
-                    and emby_episode["IndexNumber"] == episode.episode_number):
-                    episode.watched = emby_episode['UserData']['Played']
+                if (jellyfin_episode['ParentIndexNumber'] == episode.season_number
+                    and jellyfin_episode["IndexNumber"] == episode.episode_number):
+                    episode.watched = jellyfin_episode['UserData']['Played']
                     break
 
         return None
@@ -458,15 +439,15 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 corresponding Card objects to load.
         """
 
-        # If series has no Emby ID, or no episodes, exit
-        if not series_info.has_id('emby_id') or len(episode_and_cards) == 0:
+        # If series has no Jellyfin ID, or no episodes, exit
+        if not series_info.has_id('jellyfin_id') or len(episode_and_cards) == 0:
             return None
 
         # Load each episode and card
         loaded = []
         for episode, card in episode_and_cards.values():
-            # Skip episodes without Emby ID's (e.g. not in Emby)
-            if (emby_id := episode.emby_id) is None:
+            # Skip episodes without ID's (e.g. not in Jellyfin)
+            if (jellyfin_id := episode.jellyfin_id) is None:
                 continue
 
             # Shrink image if necessary, skip if cannot be compressed
@@ -477,14 +458,14 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             card_base64 = b64encode(image.read_bytes())
             try:
                 self.session.session.post(
-                    url=f'{self.url}/Items/{emby_id}/Images/Primary',
+                    url=f'{self.url}/Items/{jellyfin_id}/Images/Primary',
                     headers={'Content-Type': 'image/jpeg'},
                     params=self.__params,
                     data=card_base64,
                 )
                 loaded.append((episode, card))
             except Exception as e:
-                log.exception(f'Unable to upload {image.resolve()} to '
+                log.exception(f'Unable to upload {card.resolve()} to '
                               f'{series_info}', e)
                 continue
 
@@ -498,7 +479,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def set_season_posters(self, library_name: str, series_info: SeriesInfo,
             season_poster_set: 'SeasonPosterSet') -> None:
         """
-        Set the season posters from the given set within Emby.
+        Set the season posters from the given set within Plex.
 
         Args:
             library_name: Name of the library containing the series to
@@ -508,12 +489,12 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 set.
         """
 
-        ...
+        pass
 
 
     def get_source_image(self, episode_info: EpisodeInfo) -> SourceImage:
         """
-        Get the source image given episode within Emby.
+        Get the source image given episode within Jellyfin.
 
         Args:
             series_info: The series to get the source image of.
@@ -521,18 +502,18 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         Returns:
             Bytes of the source image for the given Episode. None if the
-            episode does not exist in Emby, or no valid image was
+            episode does not exist in Jellyfin, or no valid image was
             returned.
         """
 
-        # If series has no Emby ID, cannot query episodes
-        if not episode_info.has_id('emby_id'):
-            log.warning(f'Episode {episode_info} not found in Emby')
+        # If series has no Jellyfin ID, cannot query episodes
+        if not episode_info.has_id('jellyfin_id'):
+            log.warning(f'Episode {episode_info} not found in Jellyfin')
             return None
 
         # Get the source image for this episode
         response = self.session.session.get(
-            f'{self.url}/Items/{episode_info.emby_id}/Images/Primary',
+            f'{self.url}/Items/{episode_info.jellyfin_id}/Images/Primary',
             params={'Quality': 100} | self.__params,
         ).content
 

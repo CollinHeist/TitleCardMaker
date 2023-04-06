@@ -1,10 +1,9 @@
-from typing import Optional
+from typing import Optional, Union
 
 from num2words import num2words
 
 from modules.Debug import log
 from modules.DatabaseInfoContainer import DatabaseInfoContainer
-# import modules.global_objects as global_objects
 from modules.Title import Title
 
 class WordSet(dict):
@@ -68,13 +67,14 @@ class EpisodeInfo(DatabaseInfoContainer):
 
     __slots__ = (
         'title', 'season_number', 'episode_number', 'absolute_number', 'emby_id',
-        'imdb_id', 'jellyfin_id', 'tmdb_id', 'tvdb_id', 'tvrage_id',
-        'queried_emby', 'queried_jellyfin', 'queried_plex', 'queried_sonarr',
-        'queried_tmdb', 'airdate', 'key', '__word_set',
+        'imdb_id', 'jellyfin_id', 'tmdb_id', 'tvdb_id', 'tvrage_id', 'airdate',
+        'key', '__word_set',
     )
 
 
-    def __init__(self, title: 'str | Title', season_number: int,
+    def __init__(self,
+            title: Union[str, Title],
+            season_number: int,
             episode_number: int,
             absolute_number: Optional[int] = None, *,
             emby_id: Optional[int] = None,
@@ -84,11 +84,6 @@ class EpisodeInfo(DatabaseInfoContainer):
             tvdb_id: Optional[int] = None,
             tvrage_id: Optional[int] = None,
             airdate: Optional['datetime'] = None,
-            queried_emby: bool = False,
-            queried_jellyfin: bool = False,
-            queried_plex: bool = False,
-            queried_sonarr: bool = False,
-            queried_tmdb: bool = False,
             preferences: 'PreferenceParser' = None) -> None:
         """
         Initialize this object with the given title, indices, database
@@ -111,11 +106,6 @@ class EpisodeInfo(DatabaseInfoContainer):
         self.tmdb_id = None if tmdb_id is None else int(tmdb_id)
         self.tvdb_id = None if tvdb_id is None else int(tvdb_id)
         self.tvrage_id = None if tvrage_id is None else int(tvrage_id)
-        self.queried_emby = queried_emby
-        self.queried_jellyfin = queried_jellyfin
-        self.queried_plex = queried_plex
-        self.queried_sonarr = queried_sonarr
-        self.queried_tmdb = queried_tmdb
         self.airdate = airdate
 
         # Create key
@@ -287,30 +277,3 @@ class EpisodeInfo(DatabaseInfoContainer):
 
     def set_airdate(self, airdate: 'datetime') -> None:
         self._update_attribute('airdate', airdate)
-
-
-    def update_queried_statuses(self,
-            queried_emby: bool=False,
-            queried_jellyfin: bool=False,
-            queried_plex: bool=False,
-            queried_sonarr: bool=False,
-            queried_tmdb: bool=False) -> None:
-        """
-        Update the queried attributes of this object to reflect the
-        given arguments. Only updates an attribute from False to True.
-
-        Args:
-            queried_emby: Whether this object has been queried on Emby.
-            queried_emby: Whether this object has been queried on
-                Jellyfin.
-            queried_plex: Whether this object has been queried on Plex.
-            queried_sonarr: Whether this object has been queried on
-                Sonarr.
-            queried_tmdb: Whether this object has been queried on TMDb.
-        """
-
-        if queried_emby:     self.queried_emby = True
-        if queried_jellyfin: self.queried_jellyfin = True
-        if queried_plex:     self.queried_plex = True
-        if queried_sonarr:   self.queried_sonarr = True
-        if queried_tmdb:     self.queried_tmdb = True

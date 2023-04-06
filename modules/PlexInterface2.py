@@ -83,9 +83,6 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         # Store integration
         self.integrate_with_pmm = integrate_with_pmm
 
-        # Create/read loaded card database
-        self.__posters = PersistentDatabase(self.LOADED_POSTERS_DB)
-
         # List of "not found" warned series
         self.__warned = set()
 
@@ -408,66 +405,43 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     @catch_and_log('Error updating watched statuses')
-    def update_watched_statuses(self, library_name: str,
-                                series_info: SeriesInfo,
-                                episode_map: dict[str, 'Episode'],
-                                style_set: 'StyleSet') -> None:
+    def update_watched_statuses(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episodes: list['Episode']) -> None:
         """
-        Modify the Episode objects according to the watched status of the
-        corresponding episodes within Plex, and the spoil status of the object.
-        If a loaded card needs its spoiler status changed, the card is deleted
-        and the loaded map is forced to reload that card.
+        Modify the Episodes' watched attribute according to the watched
+        status of the corresponding episodes within Plex. 
 
         Args:
-            library_name: The name of the library containing the series.
-            series_info: The series to update.
-            episode_map: Dictionary of episode keys to Episode objects to modify
-            style_set: StyleSet object to update the style of the Episodes with.
+            library_name: The name of the library containing the Series.
+            series_info: The Series to update.
+            episodes: List of Episode objects to update.
         """
 
         # If no episodes, exit
-        if len(episode_map) == 0:
+        if len(episodes) == 0:
             return None
 
         # If the given library cannot be found, exit
         if not (library := self.__get_library(library_name)):
+            log.warning(f'Cannot find library "{library_name}" of {series_info}')
             return None
 
         # If the given series cannot be found in this library, exit
         if not (series := self.__get_series(library, series_info)):
+            log.warning(f'Cannot find {series_info} in library "{library}"')
             return None
-
-        # Get loaded characteristics of the series
-        loaded_series = self.loaded_db.search(self._get_condition(library_name,
-                                                                  series_info))
 
         # Go through each episode within Plex and update Episode spoiler status
         for plex_episode in series.episodes():
-            # If this Plex episode doesn't have Episode object(?) skip
-            ep_key = f'{plex_episode.parentIndex}-{plex_episode.index}'
-            if not (episode := episode_map.get(ep_key)):
-                continue
+            for episode in episodes:
+                if (plex_episode.parentIndex == episode.season_number
+                    and plex_episode.index == episode.episode_number):
+                    episode.watched = plex_episode.isWatched
+                    break
 
-            # Set Episode watched/spoil statuses
-            episode.update_statuses(plex_episode.isWatched, style_set)
-
-            # Get characteristics of this Episode's loaded card
-            details = self._get_loaded_episode(loaded_series, episode)
-            loaded = (details is not None)
-            spoiler_status = details['spoiler'] if loaded else None
-
-            # Delete and reset card if current spoiler type doesn't match
-            delete_and_reset = ((episode.spoil_type != spoiler_status)
-                                and bool(spoiler_status))
-
-            # Delete card, reset size in loaded map to force reload
-            if delete_and_reset and loaded:
-                episode.delete_card(reason='updating style')
-                self.loaded_db.update(
-                    {'filesize': 0},
-                    self._get_condition(library_name, series_info, episode)
-                )
-
+        return None
 
     @catch_and_log("Error setting series ID's")
     def set_series_ids(self, library_name: str,
@@ -620,84 +594,75 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     @catch_and_log('Error uploading title cards')
-    def set_title_cards(self, library_name: str, series_info: 'SeriesInfo',
-            episode_map: dict[str, 'Episode']) -> None:
+    def load_title_cards(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_and_cards: list[tuple['Episode', 'Card']],
+            ) -> list[tuple['Episode', 'Card']]:
         """
-        Set the title cards for the given series. This only updates episodes
-        that have title cards, and those episodes whose card filesizes are
-        different than what has been set previously.
+        Load the title cards for the given Series and Episodes.
 
         Args:
-            library_name: Name of the library containing the series to update.
-            series_info: The series to update.
-            episode_map: Dictionary of episode keys to Episode objects to update
-                the cards of.
+            library_name: Name of the library containing the series.
+            series_info: SeriesInfo whose cards are being loaded.
+            episode_and_cards: List of tuple of Episode and their
+                corresponding Card objects to load.
         """
 
-        # Filter episodes without cards, or whose cards have not changed
-        filtered_episodes = self._filter_loaded_cards(
-            library_name, series_info, episode_map
-        )
-
-        # If no episodes remain, exit
-        if len(filtered_episodes) == 0:
-            return None
+        # No episodes to load, exit
+        if len(episode_and_cards) == 0:
+            log.debug(f'No episodes to load for {series_info}')
+            return []
 
         # If the given library cannot be found, exit
         if not (library := self.__get_library(library_name)):
-            return None
+            return []
 
         # If the given series cannot be found in this library, exit
         if not (series := self.__get_series(library, series_info)):
-            return None
+            return []
 
         # Go through each episode within Plex, set title cards
-        error_count, loaded_count = 0, 0
-        for pl_episode in (pbar := tqdm(series.episodes(), **TQDM_KWARGS)):
+        loaded, error_count = [], 0
+        for plex_episode in series.episodes():
             # If error count is too high, skip this series
             if error_count >= self.SKIP_SERIES_THRESHOLD:
                 log.error(f'Failed to upload {error_count} episodes, skipping '
                           f'"{series_info}"')
                 break
 
-            # Skip episodes that aren't in list of cards to update
-            ep_key = f'{pl_episode.parentIndex}-{pl_episode.index}'
-            if not (episode := filtered_episodes.get(ep_key)):
+            # Skip episode if no associated episode was provided
+            found = False
+            for episode, card in episode_and_cards:
+                if (episode.season_number == plex_episode.parentIndex
+                    and episode.episode_number == plex_episode.index):
+                    found = True
+                    break
+            if not found:
                 continue
 
-            # Update progress bar
-            pbar.set_description(f'Updating {pl_episode.seasonEpisode.upper()}')
-
             # Shrink image if necessary, skip if cannot be compressed
-            if (card := self.compress_image(episode.destination)) is None:
+            if (image := self.compress_image(card.card_file)) is None:
                 continue
 
             # Upload card to Plex, optionally remove Overlay label
             try:
-                self.__retry_upload(pl_episode, card.resolve())
+                self.__retry_upload(plex_episode, image.resolve())
                 if self.integrate_with_pmm:
-                    pl_episode.removeLabel(['Overlay'])
+                    plex_episode.removeLabel(['Overlay'])
             except Exception as e:
                 error_count += 1
-                log.exception(f'Unable to upload {card.resolve()} to '
+                log.exception(f'Unable to upload {image.resolve()} to '
                               f'{series_info}', e)
                 continue
             else:
-                loaded_count += 1
-
-            # Update/add loaded map with this entry
-            self.loaded_db.upsert({
-                'library': library_name,
-                'series': series_info.full_name,
-                'season': episode.episode_info.season_number,
-                'episode': episode.episode_info.episode_number,
-                'filesize': episode.destination.stat().st_size,
-                'spoiler': episode.spoil_type,
-            }, self._get_condition(library_name, series_info, episode))
+                loaded.append((episode, card))
 
         # Log load operations to user
-        if loaded_count > 0:
-            log.info(f'Loaded {loaded_count} cards for "{series_info}"')
+        if loaded:
+            log.info(f'Loaded {len(loaded)} cards for "{series_info}"')
+
+        return loaded
 
 
     @catch_and_log('Error uploading season posters')
@@ -846,24 +811,3 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # Error occurred, return empty list
         return []
-
-
-    def remove_records(self, library_name: str, series_info: SeriesInfo) ->None:
-        """
-        Remove all records for the given library and series from the loaded
-        database.
-
-        Args:
-            library_name: The name of the library containing the series whose
-                records are being removed.
-            series_info: SeriesInfo whose records are being removed.
-        """
-
-        # Get condition to find records matching this library + series
-        condition = self._get_condition(library_name, series_info)
-
-        # Delete records matching this condition
-        records = self.loaded_db.remove(condition)
-
-        # Log actions to user
-        log.info(f'Deleted {len(records)} records')
