@@ -67,7 +67,7 @@
       allTypes.forEach(({name, source}) => {
         const selected = name.toLowerCase() === '{{preferences.default_card_type.lower()}}';
         if (source === 'local') {
-          localTypes.push({name: name, value: name, selected: selected});
+          localTypes.push({name: name, value: name.toLowerCase(), selected: selected});
         } else {
           remoteTypes.push({name: name, value: name, selected: selected});
         }

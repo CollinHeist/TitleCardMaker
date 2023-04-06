@@ -19,12 +19,21 @@
   <style>
     /* Override width of all sync cards */
     .ui.card {
-      max-width: 200px !important;
+      max-width: 250px !important;
     }
 
     /* Custom add card */
-    .ui.add.card {
-      width: 200px;
+    .add.card {
+      display: inline-block !important;
+      /* padding: 0; */
+      position: absolute;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+    .add.card > .content {
+      top: 50%;
+      position: relative;
+      transform: translateY(-50%);
     }
 
     .sync.modal {
@@ -40,8 +49,8 @@
   <template id="sync-card-template">
     <div class="ui card">
       <div class="content">
-        <i class="right floated trash alternate outline like icon" title="Delete this sync"></i>
-        <i class="right floated sync icon" title="Sync Immediately"></i>
+        <i class="ui right floated trash alternate outline like icon" title="Delete this sync"></i>
+        <i class="ui right floated sync icon" title="Sync Immediately"></i>
         <div class="header">{TEMPLATE NAME}</div>
         <div class="meta">
           <div class="sync-meta">Sync ID {TEMPLATE ID}</div>
@@ -200,7 +209,18 @@
           return clone;
         });
         syncElement.replaceChildren(syncElement.firstElementChild, ...newChildren);
+        refreshTheme();
       });
+    }
+
+    async function getScheduledTasks() {
+      const scheduled = await fetch('/api/schedule/scheduled').then(resp => resp.json());
+      for (const {id, frequency, next_run} of scheduled) {
+        if (id === 'sync interfaces') {
+          const newTime = new Date(next_run);
+          $('#next-sync')[0].innerHTML = `<span>Next sync will run at <span class="ui blue text">${newTime.toLocaleString()}</span></span>`;
+        }
+      }
     }
 
     async function initAll() {
@@ -209,6 +229,7 @@
       getPlexLibraries();
       getTemplates();
       getSonarrTags();
+      getScheduledTasks();
     }
   </script>
   
@@ -225,8 +246,10 @@
       <div class="ui grid">
         <div id="sync" class="sixteen wide column">
           <h1 class="ui header">Syncs</h1>
-          <div class="ui segment">
-            <span>A <i>sync</i> defines how to automatically add series to <span class="ui blue text">TitleCardMaker</span>.</span>
+          <div class="ui compact raised segments">
+            <div id="next-sync" class="ui segment">
+              <span>Next sync is scheduled in <span class="ui blue text">6 hours</span></span>
+            </div>
           </div>
 
           <!-- Emby -->
@@ -649,15 +672,12 @@
 
   <script>
     // Enable elements
-    // $('.dropdown').dropdown();
-    // $('.clearable.dropdown').dropdown({clearable: true});
     $('.checkbox').checkbox();
     $('.ui.dropdown[dropdown-type="series-type"]').dropdown({
       clearable: true,
       default: 'None',
     });
     $('.ui.dropdown[dropdown-type="server-tags"]').dropdown({allowAdditions: true});
-    // $('.ui.dropdown.additions').dropdown({allowAdditions: true});
 
     // Attach button clicks to modal hiding
     $('#add-emby-sync-modal').modal('attach events', '#add-emby-sync', 'show');

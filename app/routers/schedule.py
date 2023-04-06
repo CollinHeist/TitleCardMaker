@@ -60,9 +60,9 @@ initialize_scheduler()
 @schedule_router.get('/scheduled')
 def get_scheduled_tasks(
         scheduler = Depends(get_scheduler)) -> list[ScheduledTask]:
-    
+
     return [{
         'id': str(job.id),
-        'frequency': str(job.trigger),
+        'frequency': job.trigger.interval.seconds,
         'next_run': str(job.next_run_time),
     } for job in scheduler.get_jobs()]

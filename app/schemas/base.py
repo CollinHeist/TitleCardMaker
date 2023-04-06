@@ -43,7 +43,7 @@ def validate_argument_lists_to_dict(
     else:
         # Filter out unspecified values
         list0 = [in_ for in_ in list0 if in_ not in (UNSPECIFIED, '')]
-        list1 = [out_ for out_ in list1 if out_ != UNSPECIFIED]
+        list1 = [out_ for out_ in list1 if out_ not in (UNSPECIFIED, '')]
         # Verify lists are equal lengths
         if (isinstance(list0, list) and isinstance(list1, list)
             and len(list0) != len(list1)):

@@ -5,5 +5,5 @@ from app.schemas.base import Base
 class ScheduledTask(Base):
     id: str
     # description: str
-    frequency: str
+    frequency: int
     next_run: str

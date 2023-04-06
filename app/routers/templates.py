@@ -89,8 +89,7 @@ def create_template(
     """
 
     # Validate font ID if provided
-    if getattr(new_template, 'font_id', None) is not None:
-        get_font(db, new_template.font_id, raise_exc=True)
+    get_font(db, getattr(new_template, 'font_id', None), raise_exc=True)
 
     template = models.template.Template(**new_template.dict())
     db.add(template)
@@ -183,7 +182,7 @@ def delete_template(
         sync.template_id = None
 
     # Delete Template, update database
-    query.delete()
+    db.delete(template)
     db.commit()
 
     return None

@@ -267,8 +267,7 @@ def refresh_episode_data(
     return db.query(models.episode.Episode).filter_by(series_id=series_id).all()
 
 
-# /api/episodes/{episode_id}
-@episodes_router.patch('/{episode_id}')
+@episodes_router.patch('/{episode_id}', status_code=200)
 def update_episode_config(
         episode_id: int,
         update_episode: UpdateEpisode = Body(...),
@@ -309,7 +308,7 @@ def update_episode_config(
     return episode
     
 
-@episodes_router.get('/{series_id}/all', status_code=200)
+@episodes_router.get('/{series_id}/all', status_code=200, tags=['Series'])
 def get_all_series_episodes(
         series_id: int,
         order_by: Literal['index', 'absolute'] = 'index', 

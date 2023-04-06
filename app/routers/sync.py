@@ -16,12 +16,6 @@ from app.schemas.sync import (
 from app.schemas.series import Series
 import app.models as models
 
-# Create sub router for all /sync API requests
-sync_router = APIRouter(
-    prefix='/sync',
-    tags=['Sync']
-)
-
 
 def add_sync(db, new_sync) -> Sync:
     """
@@ -78,6 +72,15 @@ def get_sync(db, sync_id, *, raise_exc=True) -> Union[Sync, None]:
             return None
 
     return sync
+
+
+
+
+# Create sub router for all /sync API requests
+sync_router = APIRouter(
+    prefix='/sync',
+    tags=['Sync']
+)
 
 
 @sync_router.post('/emby/new', tags=['Emby'], status_code=201)
@@ -254,8 +257,7 @@ def sync(
         jellyfin_interface = Depends(get_jellyfin_interface),
         plex_interface = Depends(get_plex_interface),
         sonarr_interface = Depends(get_sonarr_interface),
-        tmdb_interface = Depends(get_tmdb_interface),
-        ) -> list[Series]:
+        tmdb_interface = Depends(get_tmdb_interface)) -> list[Series]:
     """
     Run the given Sync by querying the assigned interface, adding any
     new series to the database. Return a list of any new Series.
@@ -291,7 +293,7 @@ def sync(
         )
         for series_info, library in all_series:
             # Look for an existing series with this name+year or Emby ID
-# TODO maybe query by other database ID's?
+            # TODO maybe query by other database ID's?
             existing = db.query(models.series.Series)\
                 .filter(or_(
                     and_(
@@ -319,7 +321,7 @@ def sync(
         )
         for series_info, library in all_series:
             # Look for an existing series with this name+year or Jellyfin ID
-# TODO maybe query by other database ID's?
+            # TODO maybe query by other database ID's?
             existing = db.query(models.series.Series)\
                 .filter(or_(
                     and_(
