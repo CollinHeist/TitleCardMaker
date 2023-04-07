@@ -2,6 +2,7 @@ from pathlib import Path
 from re import match, sub, IGNORECASE
 from typing import Any
 
+from modules.BaseCardType import BaseCardType
 from modules.CleanPath import CleanPath
 from modules.Debug import log
 import modules.global_objects as global_objects
@@ -39,6 +40,9 @@ class TitleCard:
 
     """Default filename format for all title cards"""
     DEFAULT_FILENAME_FORMAT = '{full_name} - S{season:02}E{episode:02}'
+
+    """Default card dimensions"""
+    DEFAULT_CARD_DIMENSIONS = BaseCardType.TITLE_CARD_SIZE
 
     """Mapping of card type identifiers to CardType classes"""
     DEFAULT_CARD_TYPE = 'standard'

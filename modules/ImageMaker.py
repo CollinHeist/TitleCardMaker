@@ -43,14 +43,18 @@ class ImageMaker(ABC):
 
 
     @abstractmethod
-    def __init__(self) -> None:
+    def __init__(self, *, preferences: 'Preferences' = None) -> None:
         """
         Initializes a new instance. This gives all subclasses access to
         an ImageMagickInterface via the image_magick attribute.
         """
 
+        if preferences is None:
+            self.preferences = global_objects.pp
+        else:
+            self.preferences = preferences
+
         # All ImageMakers have an instance of an ImageMagickInterface
-        self.preferences = global_objects.pp
         self.image_magick = ImageMagickInterface(
             self.preferences.imagemagick_container,
             self.preferences.use_magick_prefix,

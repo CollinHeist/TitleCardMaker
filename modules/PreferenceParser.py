@@ -95,7 +95,8 @@ class PreferenceParser(YamlReader):
         self._parse_card_type(TitleCard.DEFAULT_CARD_TYPE) # Sets self.card_type
         self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
         self.card_extension = TitleCard.DEFAULT_CARD_EXTENSION
-        self.image_source_priority = ('tmdb', 'plex')
+        self.card_dimensions = TitleCard.DEFAULT_CARD_DIMENSIONS
+        self.image_source_priority = ('tmdb', 'plex', 'emby', 'jellyfin')
         self.episode_data_source = self.DEFAULT_EPISODE_DATA_SOURCE
         self.validate_fonts = True
         self.season_folder_format = self.DEFAULT_SEASON_FOLDER_FORMAT
@@ -418,6 +419,23 @@ class PreferenceParser(YamlReader):
                 self.card_extension = extension
             else:
                 log.critical(f'Card extension "{extension}" is invalid')
+                self.valid = False
+
+        if (value := self._get('options', 'card_dimensions', type_=str)) !=None:
+            try:
+                width, height = map(int, value.lower().split('x'))
+                assert width > 0 and height > 0
+                if not ((16/9-0.1) <= width / height <= (16/9+0.1)):
+                    log.warning(f'Card dimensions aspect ratio is not 16:9')
+                if width < 200 or height < 200:
+                    log.warning(f'Card dimensions are very small')
+                self.card_dimensions = value
+            except ValueError:
+                log.critical(f'Invalid card dimensions - specify as WIDTHxHEIGHT')
+                self.valid = False
+            except AssertionError:
+                log.critical(f'Invalid card dimensions - both dimensions must '
+                             f'be larger than 0px')
                 self.valid = False
 
         if (value := self._get('options', 'filename_format', type_=str)) !=None:

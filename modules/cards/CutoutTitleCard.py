@@ -245,6 +245,7 @@ class CutoutTitleCard(BaseCardType):
             f'-font "{self.font}"',
             f'-annotate +0+{100+self.vertical_shift} "{self.title}"',
             # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 

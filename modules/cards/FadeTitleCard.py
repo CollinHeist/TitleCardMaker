@@ -123,8 +123,9 @@ class FadeTitleCard(BaseCardType):
             self.logo = None
         else:
             try:
-                logo = logo.format(season_number=season_number,
-                                   episode_number=episode_number)
+                logo = logo.format(
+                    season_number=season_number, episode_number=episode_number
+                )
                 logo = Path(CleanPath(logo).sanitize())
             except Exception as e:
                 # Bad format strings will be caught during card creation
@@ -304,6 +305,8 @@ class FadeTitleCard(BaseCardType):
             # Add title and index text
             *self.add_title_text,
             *self.add_index_text,
+            # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 

@@ -1,5 +1,5 @@
 from re import compile as re_compile, IGNORECASE
-from typing import Iterable, Union
+from typing import Any, Iterable, Optional, Union
 
 from modules.Debug import log
 
@@ -34,11 +34,15 @@ class Title:
         re_compile(r'^(.*?)\s+[IVXLCDM]+\s*$', IGNORECASE),
     )
 
-    __slots__ = ('full_title', '__title_lines', '__manually_specified',
-                 'title_yaml', 'match_title', '__original_title')
+    __slots__ = (
+        'full_title', '__title_lines', '__manually_specified', 'title_yaml',
+        'match_title', '__original_title'
+    )
 
 
-    def __init__(self, title: Union[str, list[str]], *, original_title: str=None) -> None:
+    def __init__(self,
+            title: Union[str, list[str]], *,
+            original_title: Optional[str] = None) -> None:
         """
         Constructs a new instance of a Title from either a full, unsplit
         title, or a list of title lines.
@@ -109,8 +113,10 @@ class Title:
         return self.full_title
 
 
-    def split(self, max_line_width: int, max_line_count: int,
-              top_heavy: bool) -> list:
+    def split(self,
+            max_line_width: int,
+            max_line_count: int,
+            top_heavy: bool) -> list[str]:
         """
         Split this title's text into multiple lines. If the title cannot
         fit into the given parameters, line width might not be
@@ -215,8 +221,9 @@ class Title:
         return all_lines
 
 
-    def apply_profile(self, profile: 'Profile',
-                      **title_characteristics: dict) -> str:
+    def apply_profile(self,
+            profile: 'Profile',
+            **title_characteristics: dict[str, Any]) -> str:
         """
         Apply the given profile to this title. If this object was
         created with manually specified title lines, then the profile is
@@ -260,7 +267,7 @@ class Title:
         return ''.join(filter(str.isalnum, text)).lower()
 
 
-    def matches(self, *titles: Iterable[str]) -> bool:
+    def matches(self, *titles: tuple[str]) -> bool:
         """
         Get whether any of the given titles match this object.
 

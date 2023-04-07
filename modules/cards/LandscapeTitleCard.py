@@ -418,6 +418,8 @@ class LandscapeTitleCard(BaseCardType):
             f'-composite',
             # Optionally add bounding box
             *self.add_bounding_box_command(bounding_box),
+            # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 

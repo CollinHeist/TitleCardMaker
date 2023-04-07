@@ -224,6 +224,8 @@ class PosterTitleCard(BaseCardType):
             f'-pointsize 165',
             f'-interline-spacing -40', 
             f'-annotate +649+{title_offset} "{self.title}"',
+            # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 

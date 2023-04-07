@@ -333,6 +333,8 @@ class StandardTitleCard(BaseCardType):
             f'-annotate +0+{vertical_shift} "{self.title}"',
             # Add episode or season+episode "image"
             *self.index_command,
+            # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 

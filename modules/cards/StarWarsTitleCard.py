@@ -252,6 +252,8 @@ class StarWarsTitleCard(BaseCardType):
         command = ' '.join([
             f'convert "{gradient_source.resolve()}"',
             *self.__add_title_text(),
+            # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 
@@ -276,6 +278,8 @@ class StarWarsTitleCard(BaseCardType):
             *self.__add_title_text(),
             *self.__add_episode_prefix(),
             *self.__add_episode_number_text(),
+            # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 

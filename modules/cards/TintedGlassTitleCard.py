@@ -424,6 +424,8 @@ class TintedGlassTitleCard(BaseCardType):
             *self.add_title_text_command,
             # Add episode text
             *self.add_episode_text_command(title_box_coordinates),
+            # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 

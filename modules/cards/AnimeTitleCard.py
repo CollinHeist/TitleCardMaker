@@ -463,6 +463,8 @@ class AnimeTitleCard(BaseCardType):
             *self.title_command,
             # Add season or season+episode text
             *self.index_command,
+            # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 

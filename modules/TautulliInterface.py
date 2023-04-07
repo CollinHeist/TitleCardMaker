@@ -1,5 +1,6 @@
 from json import dumps
 from pathlib import Path
+from typing import Optional
 
 from modules.Debug import log
 import modules.global_objects as global_objects
@@ -19,10 +20,14 @@ class TautulliInterface(WebInterface):
     AGENT_ID = 15
 
 
-    def __init__(self, url: str, api_key: str, verify_ssl: bool,
-                 update_script: Path, agent_name: str=DEFAULT_AGENT_NAME,
-                 script_timeout: int=DEFAULT_SCRIPT_TIMEOUT,
-                 username: str=None) -> None:
+    def __init__(self,
+            url: str,
+            api_key: str,
+            verify_ssl: bool,
+            update_script: Path,
+            agent_name: str = DEFAULT_AGENT_NAME,
+            script_timeout: int = DEFAULT_SCRIPT_TIMEOUT,
+            username: Optional[str] = None) -> None:
         """
         Construct a new instance of an interface to Sonarr.
 

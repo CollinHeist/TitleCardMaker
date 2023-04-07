@@ -311,6 +311,8 @@ class OlivierTitleCard(BaseCardType):
             *self.title_text_command,
             *self.episode_prefix_command,
             *self.episode_number_text_command,
+            # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 

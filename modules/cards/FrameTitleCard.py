@@ -332,7 +332,8 @@ class FrameTitleCard(BaseCardType):
             f'-composite',
             # Add all index/title text
             *self.text_command,
-            # Write to output file
+            # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 
