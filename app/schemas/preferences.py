@@ -1,12 +1,14 @@
 from pathlib import Path
 from typing import Literal, Optional, Union
 
-from pydantic import Field, validator, root_validator
+from pydantic import Field, root_validator, validator
 
 from app.schemas.base import Base, UNSPECIFIED, validate_argument_lists_to_dict
 
 CardExtension = Literal['.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp']
 FilesizeUnit = Literal[
+    'b', 'kb', 'mb', 'gb', 'tb', 'B', 'KB', 'MB', 'GB', 'TB'
+    'bytes', 'kilobytes', 'megabytes', 'gigabytes', 'terabytes',
     'Bytes', 'Kilobytes', 'Megabytes', 'Gigabytes', 'Terabytes',
 ]
 
@@ -124,6 +126,22 @@ class UpdateMediaServerBase(UpdateBase):
     use_ssl: bool = Field(default=UNSPECIFIED)
     filesize_limit_number: int = Field(gt=0, default=UNSPECIFIED)
     filesize_limit_unit: FilesizeUnit = Field(default=UNSPECIFIED)
+
+    @validator('filesize_limit_unit', pre=False)
+    def validate_list(cls, v): 
+        if isinstance(v, str):
+            return {
+                'b':         'Bytes',
+                'bytes':     'Bytes',
+                'kb':        'Kilobytes',
+                'kilobytes': 'Kilobytes',
+                'mb':        'Megabytes',
+                'megabytes': 'Megabytes',
+                'gb':        'Gigabytes',
+                'gigabytes': 'Gigabytes',
+                'tb':        'Terabytes',
+                'terabytes': 'Terabytes',
+            }[v.lower()]
 
 class UpdateEmby(UpdateMediaServerBase):
     api_key: str = Field(default=UNSPECIFIED)

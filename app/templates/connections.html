@@ -112,251 +112,242 @@
       <!-- Page title -->
       <h1 class="ui header">Connections</h1>
 
-      <!-- Media Servers (Emby/Plex) -->
-      <!-- <div class="ui equal width divided stackable grid"> -->
-        <!-- Emby Connections -->
-        <!-- <div class="column"> -->
-          <h3 class="ui dividing header">Emby Media Server</h3>
-          <div id="emby-connections">
-            <form id="emby-settings" class="ui fluid form">
-              <!-- Enable button -->
-              {% if preferences.use_emby %}
-              <div id="enable-emby" class="ui left aligned checked checkbox field">
-                <input id="enable-emby-checkbox" type="checkbox" checked="">
-              {% else %}
-              <div id="enable-emby" class="ui left aligned checkbox field">
-                <input id="enable-emby-checkbox" type="checkbox" >
-              {% endif %}
-                <label for="enable-emby-checkbox">Enable Emby</label>
-              </div>
+      <!-- Emby Connections -->
+      <h3 class="ui dividing header">Emby Media Server</h3>
+      <div id="emby-connections">
+        <form id="emby-settings" class="ui fluid form">
+          <!-- Enable button -->
+          {% if preferences.use_emby %}
+          <div id="enable-emby" class="ui left aligned checked checkbox field">
+            <input id="enable-emby-checkbox" type="checkbox" checked="">
+          {% else %}
+          <div id="enable-emby" class="ui left aligned checkbox field">
+            <input id="enable-emby-checkbox" type="checkbox" >
+          {% endif %}
+            <label for="enable-emby-checkbox">Enable Emby</label>
+          </div>
 
-              <!-- Input fields -->
-              <div id="emby-url" class="ui disabled required eight wide field" title="Host URL to communicate with Emby">
-                <label>URL</label>
-                <input name="url" type="text"placeholder="{{preferences.emby_url}}" value="{{preferences.emby_url}}">
-              </div>
+          <!-- Input fields -->
+          <div id="emby-url" class="ui disabled required eight wide field" title="Host URL to communicate with Emby">
+            <label>URL</label>
+            <input name="url" type="text"placeholder="{{preferences.emby_url}}" value="{{preferences.emby_url}}">
+          </div>
 
-              <div id="emby-api-key" class="ui disabled required eight wide field" title="API key to authenticate communication with Emby">
-                <label>API Key</label>
-                <input name="api_key" type="text" class="private" placeholder="{{preferences.emby_api_key}}" value="{{preferences.emby_api_key}}">
-              </div>
+          <div id="emby-api-key" class="ui disabled required eight wide field" title="API key to authenticate communication with Emby">
+            <label>API Key</label>
+            <input name="api_key" type="text" class="private" placeholder="{{preferences.emby_api_key}}" value="{{preferences.emby_api_key}}">
+          </div>
 
-              <div id="emby-username" class="ui disabled required field" title="Username of the Emby user to query watch statuses from">
-                <label>Username</label>
-                <select name="username" id="emby-username-select" class="ui compact search clearable dropdown">
-                  <option value=""></option>
-                  <!-- Options added via asynchronous requests -->
-                </select>
-              </div>
+          <div id="emby-username" class="ui disabled required field" title="Username of the Emby user to query watch statuses from">
+            <label>Username</label>
+            <select name="username" id="emby-username-select" class="ui compact search clearable dropdown">
+              <option value=""></option>
+              <!-- Options added via asynchronous requests -->
+            </select>
+          </div>
 
-              <div id="emby-use-ssl" class="ui left aligned disabled checkbox field" title="Connect with HTTPS instead of HTTP">
-                {% if preferences.emby_use_ssl %}
-                <input name="use_ssl" id="emby-use-ssl-checkbox" type="checkbox" checked="">
-                {% else %}
-                <input name="use_ssl" id="emby-use-ssl-checkbox" type="checkbox">
-                {% endif %}
-                <label for="emby-use-ssl-checkbox">Use SSL</label>
-              </div>
+          <div id="emby-use-ssl" class="ui left aligned disabled checkbox field" title="Connect with HTTPS instead of HTTP">
+            {% if preferences.emby_use_ssl %}
+            <input name="use_ssl" id="emby-use-ssl-checkbox" type="checkbox" checked="">
+            {% else %}
+            <input name="use_ssl" id="emby-use-ssl-checkbox" type="checkbox">
+            {% endif %}
+            <label for="emby-use-ssl-checkbox">Use SSL</label>
+          </div>
 
-              <div id="emby-filesize-limit" class="ui disabled field" title="Maximum file size of assets to upload to Emby">
-                <label>Filesize Limit</label>
-                <div class="ui fields">
-                  <div class="two wide field">
-                    <input name="filesize_limit_number" type="number" min="0" placeholder="{{preferences.emby_filesize_limit_number}}" value="{{preferences.emby_filesize_limit_number}}">
-                  </div>
-                  <div class="three wide field">
-                    <div class="ui selection dropdown">
-                      <input name="filesize_limit_unit" type="hidden">
-                      <i class="dropdown icon"></i>
-                      <div class="default text">{{preferences.emby_filesize_limit_unit}}</div>
-                      <div class="scrollhint menu">
-                        <div class="item" data-value="B">Bytes</div>
-                        <div class="item" data-value="KB">Kilobytes</div>
-                        <div class="item" data-value="MB">Megabytes</div>
-                      </div>
-                    </div>
+          <div id="emby-filesize-limit" class="ui disabled field" title="Maximum file size of assets to upload to Emby">
+            <label>Filesize Limit</label>
+            <div class="ui fields">
+              <div class="two wide field">
+                <input name="filesize_limit_number" type="number" min="0" placeholder="{{preferences.emby_filesize_limit_number}}" value="{{preferences.emby_filesize_limit_number}}">
+              </div>
+              <div class="three wide field">
+                <div class="ui selection dropdown">
+                  <input name="filesize_limit_unit" type="hidden">
+                  <i class="dropdown icon"></i>
+                  <div class="default text">{{preferences.emby_filesize_limit_unit}}</div>
+                  <div class="scrollhint menu">
+                    <div class="item">Bytes</div>
+                    <div class="item">Kilobytes</div>
+                    <div class="item">Megabytes</div>
                   </div>
                 </div>
               </div>
-
-              <div class=field>
-                <button id="submit-emby" class="ui primary animated button" type="submit">
-                  <div class="visible content">Save Changes</div>
-                  <div class="hidden content">
-                    <i class="right arrow icon"></i>
-                  </div>
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
-        <!-- </div> -->
 
-        <!-- Jellyfin Connections -->
-        <!-- <div class="column"> -->
-          <h3 class="ui dividing header">Jellyfin Media Server</h3>
-          <div id="jellyfin-connections">
-            <form id="jellyfin-settings" class="ui fluid form">
-              <!-- Enable button -->
-              {% if preferences.use_jellyfin %}
-              <div id="enable-jellyfin" class="ui left aligned checked checkbox field">
-                <input id="enable-jellyfin-checkbox" type="checkbox" checked="">
-              {% else %}
-              <div id="enable-jellyfin" class="ui left aligned checkbox field">
-                <input id="enable-jellyfin-checkbox" type="checkbox" >
-              {% endif %}
-                <label for="enable-jellyfin-checkbox">Enable Jellyfin</label>
+          <div class=field>
+            <button id="submit-emby" class="ui primary animated button" type="submit">
+              <div class="visible content">Save Changes</div>
+              <div class="hidden content">
+                <i class="right arrow icon"></i>
               </div>
+            </button>
+          </div>
+        </form>
+      </div>
 
-              <!-- Input fields -->
-              <div id="jellyfin-url" class="ui disabled required eight wide field" title="Host URL to communicate with Jellyfin">
-                <label>URL</label>
-                <input name="url" type="text"placeholder="{{preferences.jellyfin_url}}" value="{{preferences.jellyfin_url}}">
+      <!-- Jellyfin Connections -->
+      <h3 class="ui dividing header">Jellyfin Media Server</h3>
+      <div id="jellyfin-connections">
+        <form id="jellyfin-settings" class="ui fluid form">
+          <!-- Enable button -->
+          {% if preferences.use_jellyfin %}
+          <div id="enable-jellyfin" class="ui left aligned checked checkbox field">
+            <input id="enable-jellyfin-checkbox" type="checkbox" checked="">
+          {% else %}
+          <div id="enable-jellyfin" class="ui left aligned checkbox field">
+            <input id="enable-jellyfin-checkbox" type="checkbox" >
+          {% endif %}
+            <label for="enable-jellyfin-checkbox">Enable Jellyfin</label>
+          </div>
+
+          <!-- Input fields -->
+          <div id="jellyfin-url" class="ui disabled required eight wide field" title="Host URL to communicate with Jellyfin">
+            <label>URL</label>
+            <input name="url" type="text"placeholder="{{preferences.jellyfin_url}}" value="{{preferences.jellyfin_url}}">
+          </div>
+
+          <div id="jellyfin-api-key" class="ui disabled required eight wide field" title="API key to authenticate communication with Jellyfin">
+            <label>API Key</label>
+            <input name="api_key" type="text" class="private" placeholder="{{preferences.jellyfin_api_key}}" value="{{preferences.jellyfin_api_key}}">
+          </div>
+
+          <div id="jellyfin-username" class="ui disabled required field" title="Username of the Jellyfin user to query watch statuses from">
+            <label>Username</label>
+            <select name="username" id="jellyfin-username-select" class="ui compact search clearable dropdown">
+              <option value=""></option>
+              <!-- Options added via asynchronous requests -->
+            </select>
+          </div>
+
+          <div id="jellyfin-use-ssl" class="ui left aligned disabled checkbox field" title="Connect with HTTPS instead of HTTP">
+            {% if preferences.emby_use_ssl %}
+            <input name="use_ssl" id="jellyfin-use-ssl-checkbox" type="checkbox" checked="">
+            {% else %}
+            <input name="use_ssl" id="jellyfin-use-ssl-checkbox" type="checkbox">
+            {% endif %}
+            <label for="emby-use-ssl-checkbox">Use SSL</label>
+          </div>
+
+          <div id="jellyfin-filesize-limit" class="ui disabled field" title="Maximum file size of assets to upload to Jellyfin">
+            <label>Filesize Limit</label>
+            <div class="ui fields">
+              <div class="two wide field">
+                <input name="filesize_limit_number" type="number" min="0" placeholder="{{preferences.jellyfin_filesize_limit_number}}" value="{{preferences.jellyfin_filesize_limit_number}}">
               </div>
-
-              <div id="jellyfin-api-key" class="ui disabled required eight wide field" title="API key to authenticate communication with Jellyfin">
-                <label>API Key</label>
-                <input name="api_key" type="text" class="private" placeholder="{{preferences.jellyfin_api_key}}" value="{{preferences.jellyfin_api_key}}">
-              </div>
-
-              <div id="jellyfin-username" class="ui disabled required field" title="Username of the Jellyfin user to query watch statuses from">
-                <label>Username</label>
-                <select name="username" id="jellyfin-username-select" class="ui compact search clearable dropdown">
-                  <option value=""></option>
-                  <!-- Options added via asynchronous requests -->
-                </select>
-              </div>
-
-              <div id="jellyfin-use-ssl" class="ui left aligned disabled checkbox field" title="Connect with HTTPS instead of HTTP">
-                {% if preferences.emby_use_ssl %}
-                <input name="use_ssl" id="jellyfin-use-ssl-checkbox" type="checkbox" checked="">
-                {% else %}
-                <input name="use_ssl" id="jellyfin-use-ssl-checkbox" type="checkbox">
-                {% endif %}
-                <label for="emby-use-ssl-checkbox">Use SSL</label>
-              </div>
-
-              <div id="jellyfin-filesize-limit" class="ui disabled field" title="Maximum file size of assets to upload to Jellyfin">
-                <label>Filesize Limit</label>
-                <div class="ui fields">
-                  <div class="two wide field">
-                    <input name="filesize_limit_number" type="number" min="0" placeholder="{{preferences.jellyfin_filesize_limit_number}}" value="{{preferences.jellyfin_filesize_limit_number}}">
-                  </div>
-                  <div class="three wide field">
-                    <div class="ui selection dropdown">
-                      <input name="filesize_limit_unit" type="hidden">
-                      <i class="dropdown icon"></i>
-                      <div class="default text">{{preferences.jellyfin_filesize_limit_unit}}</div>
-                      <div class="scrollhint menu">
-                        <div class="item" data-value="B">Bytes</div>
-                        <div class="item" data-value="KB">Kilobytes</div>
-                        <div class="item" data-value="MB">Megabytes</div>
-                      </div>
-                    </div>
+              <div class="three wide field">
+                <div class="ui selection dropdown">
+                  <input name="filesize_limit_unit" type="hidden">
+                  <i class="dropdown icon"></i>
+                  <div class="default text">{{preferences.jellyfin_filesize_limit_unit}}</div>
+                  <div class="scrollhint menu">
+                    <div class="item">Bytes</div>
+                    <div class="item">Kilobytes</div>
+                    <div class="item">Megabytes</div>
                   </div>
                 </div>
               </div>
-
-              <div class=field>
-                <button id="submit-jellyfin" class="ui primary animated button" type="submit">
-                  <div class="visible content">Save Changes</div>
-                  <div class="hidden content">
-                    <i class="right arrow icon"></i>
-                  </div>
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
-        <!-- </div> -->
 
-        <!-- Plex Connections -->
-        <!-- <div class="column"> -->
-          <h3 class="ui dividing header">Plex Media Server</h3>
-          <div id="plex-connections">
-            <form id="plex-settings" class="ui fluid form">
-              <!-- Enable button -->
-              <div id="enable-plex" class="ui left aligned checkbox field">
-                {% if preferences.use_plex %}
-                <input id="enable-plex-checkbox" type="checkbox" checked="">
-                {% else %}
-                <input id="enable-plex-checkbox" type="checkbox">
-                {% endif %}
-                <label>Enable Plex</label>
+          <div class=field>
+            <button id="submit-jellyfin" class="ui primary animated button" type="submit">
+              <div class="visible content">Save Changes</div>
+              <div class="hidden content">
+                <i class="right arrow icon"></i>
               </div>
+            </button>
+          </div>
+        </form>
+      </div>
 
-              <!-- Input fields -->
-              <div id="plex-url" class="ui disabled required eight wide field" title="Host URL to communicate with Plex">
-                <label>URL</label>
-                <input name="url" type="text" placeholder="{{preferences.plex_url}}" value="{{preferences.plex_url}}">
-              </div>
-              
-              <div id="plex-token" class="ui disabled eight wide field" title="Token to authenticate communication with Plex">
-                <label>Token <a href="https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/" target="_blank"><i class="external alternate small icon"></i></a></label>
-                <input name="token" type="text" class="private" placeholder="{{preferences.plex_token}}" value="{{preferences.plex_token}}">
-              </div>
+      <!-- Plex Connections -->
+      <h3 class="ui dividing header">Plex Media Server</h3>
+      <div id="plex-connections">
+        <form id="plex-settings" class="ui fluid form">
+          <!-- Enable button -->
+          <div id="enable-plex" class="ui left aligned checkbox field">
+            {% if preferences.use_plex %}
+            <input id="enable-plex-checkbox" type="checkbox" checked="">
+            {% else %}
+            <input id="enable-plex-checkbox" type="checkbox">
+            {% endif %}
+            <label>Enable Plex</label>
+          </div>
 
-              {% if preferences.plex_use_ssl %}
-              <div id="plex-use-ssl" class="ui left aligned disabled checked checkbox field" title="Connect with HTTPS instead of HTTP">
-                <input name="use_ssl" id="plex-use-ssl-checkbox" type="checkbox" checked="">
-              {% else %}
-              <div id="plex-use-ssl" class="ui left aligned disabled checkbox field" title="Connect with HTTPS instead of HTTP">                  
-                <input name="use_ssl" id="plex-use-ssl-checkbox" type="checkbox">
-              {% endif %}
-                <label>Use SSL</label>
-              </div>
-              <br>
+          <!-- Input fields -->
+          <div id="plex-url" class="ui disabled required eight wide field" title="Host URL to communicate with Plex">
+            <label>URL</label>
+            <input name="url" type="text" placeholder="{{preferences.plex_url}}" value="{{preferences.plex_url}}">
+          </div>
+          
+          <div id="plex-token" class="ui disabled eight wide field" title="Token to authenticate communication with Plex">
+            <label>Token <a href="https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/" target="_blank"><i class="external alternate small icon"></i></a></label>
+            <input name="token" type="text" class="private" placeholder="{{preferences.plex_token}}" value="{{preferences.plex_token}}">
+          </div>
 
-              {% if preferences.plex_integrate_with_pmm %}
-              <div id="plex-integrate-pmm" class="ui left aligned disabled checked checkbox field" title="Whether to reset PMM overlays when applying title cards">
-                <input name="integrate_with_pmm" type="checkbox" checked="">
-              {% else %}
-              <div id="plex-integrate-pmm" class="ui left aligned disabled checkbox field" title="Whether to reset PMM overlays when applying title cards">
-                <input name="integrate_with_pmm"type="checkbox">
-              {% endif %}
-                <label>Integrate with Plex Meta Manager</label>
-              </div>
+          {% if preferences.plex_use_ssl %}
+          <div id="plex-use-ssl" class="ui left aligned disabled checked checkbox field" title="Connect with HTTPS instead of HTTP">
+            <input name="use_ssl" id="plex-use-ssl-checkbox" type="checkbox" checked="">
+          {% else %}
+          <div id="plex-use-ssl" class="ui left aligned disabled checkbox field" title="Connect with HTTPS instead of HTTP">                  
+            <input name="use_ssl" id="plex-use-ssl-checkbox" type="checkbox">
+          {% endif %}
+            <label>Use SSL</label>
+          </div>
+          <br>
 
-              <div id="plex-filesize-limit" class="ui disabled field" title="Maximum file size of assets to upload to Plex">
-                <label>Filesize Limit</label>
-                <div class="ui fields">
-                  <div class="two wide field">
-                    <input name="filesize_limit_number" id="plex-filesize-limit-input-number" type="number" min="1" placeholder="{{preferences.plex_filesize_limit_number}}" value="{{preferences.plex_filesize_limit_number}}">
-                  </div>
-                  <div class="three wide field">
-                    <div class="ui selection dropdown">
-                      <input name="filesize_limit_unit" type="hidden">
-                      <i class="dropdown icon"></i>
-                      <div class="default text">{{preferences.plex_filesize_limit_unit}}</div>
-                      <div class="scrollhint menu">
-                        <div class="item" data-value="B">Bytes</div>
-                        <div class="item" data-value="KB">Kilobytes</div>
-                        <div class="item" data-value="MB">Megabytes</div>
-                      </div>
-                    </div>
+          {% if preferences.plex_integrate_with_pmm %}
+          <div id="plex-integrate-pmm" class="ui left aligned disabled checked checkbox field" title="Whether to reset PMM overlays when applying title cards">
+            <input name="integrate_with_pmm" type="checkbox" checked="">
+          {% else %}
+          <div id="plex-integrate-pmm" class="ui left aligned disabled checkbox field" title="Whether to reset PMM overlays when applying title cards">
+            <input name="integrate_with_pmm"type="checkbox">
+          {% endif %}
+            <label>Integrate with Plex Meta Manager</label>
+          </div>
+
+          <div id="plex-filesize-limit" class="ui disabled field" title="Maximum file size of assets to upload to Plex">
+            <label>Filesize Limit</label>
+            <div class="ui fields">
+              <div class="two wide field">
+                <input name="filesize_limit_number" id="plex-filesize-limit-input-number" type="number" min="1" placeholder="{{preferences.plex_filesize_limit_number}}" value="{{preferences.plex_filesize_limit_number}}">
+              </div>
+              <div class="three wide field">
+                <div class="ui selection dropdown">
+                  <input name="filesize_limit_unit" type="hidden">
+                  <i class="dropdown icon"></i>
+                  <div class="default text">{{preferences.plex_filesize_limit_unit}}</div>
+                  <div class="scrollhint menu">
+                    <div class="item">Bytes</div>
+                    <div class="item">Kilobytes</div>
+                    <div class="item">Megabytes</div>
                   </div>
                 </div>
               </div>
-              <!-- Filesize warning -->
-              {% if (preferences.plex_filesize_limit or 0) > 10485760 %}
-              <div id="plex-filesize-warning" class="ui visible warning message">
-              {% else %}
-              <div id="plex-filesize-warning" class="ui warning message">
-              {% endif %}
-                <i class="exclamation triangle icon"></i>
-                <b>Warning</b> Plex will reject images larger than <code>10 MB</code>
-              </div>
-
-              <div class=field>
-                <button id="submit-plex" class="ui primary animated button" type="submit">
-                  <div class="visible content">Save Changes</div>
-                  <div class="hidden content">
-                    <i class="right arrow icon"></i>
-                  </div>
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
-        <!-- </div> -->
-      <!-- </div> -->
+          <!-- Filesize warning -->
+          {% if (preferences.plex_filesize_limit or 0) > 10485760 %}
+          <div id="plex-filesize-warning" class="ui visible warning message">
+          {% else %}
+          <div id="plex-filesize-warning" class="ui warning message">
+          {% endif %}
+            <i class="exclamation triangle icon"></i>
+            <b>Warning</b> Plex will reject images larger than <code>10 MB</code>
+          </div>
+
+          <div class=field>
+            <button id="submit-plex" class="ui primary animated button" type="submit">
+              <div class="visible content">Save Changes</div>
+              <div class="hidden content">
+                <i class="right arrow icon"></i>
+              </div>
+            </button>
+          </div>
+        </form>
+      </div>
 
       <!-- Sonarr Connections -->
       <h3 class="ui dividing header">Sonarr</h3>
@@ -479,7 +470,6 @@
         </form>
       </div>
     </div>
-
   </div>
 
   <script>

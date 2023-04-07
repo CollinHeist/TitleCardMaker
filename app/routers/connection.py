@@ -1,13 +1,20 @@
-from typing import Literal, Optional
+from typing import Literal, Optional, Union
 from urllib.parse import unquote
 
 from fastapi import APIRouter, Body, Depends, Form, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
-from app.dependencies import get_database, get_preferences, get_emby_interface, get_jellyfin_interface, get_plex_interface, get_sonarr_interface, get_tmdb_interface
+from app.dependencies import (
+    get_database, get_preferences, get_emby_interface, get_jellyfin_interface,
+    get_plex_interface, get_sonarr_interface, get_tmdb_interface
+)
 from app.routers.fonts import join_lists
 from app.schemas.base import UNSPECIFIED
-from app.schemas.preferences import EmbyConnection, FilesizeUnit, PlexConnection, Preferences, SonarrConnection, Style, TMDbConnection, UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb
+from app.schemas.preferences import (
+    EmbyConnection, JellyfinConnection, PlexConnection, Preferences,
+    SonarrConnection, TMDbConnection, UpdateEmby, UpdateJellyfin, UpdatePlex,
+    UpdateSonarr, UpdateTMDb
+)
 from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
 from modules.JellyfinInterface import JellyfinInterface
@@ -22,14 +29,6 @@ connection_router = APIRouter(
     prefix='/connection',
     tags=['Connections'],
 )
-
-@connection_router.get('/{connection}')
-def get_connection_details(
-        connection: SupportedConnection,
-        db = Depends(get_database),
-        preferences = Depends(get_preferences)) -> Preferences:
-
-    return Preferences
 
 
 @connection_router.put('/{connection}/{status}', status_code=204)
@@ -56,9 +55,37 @@ def enable_or_disable_connection(
         preferences.use_tmdb = (status == 'enable')
 
 
-@connection_router.get('/emby', status_code=200, response_model=EmbyConnection)
+@connection_router.get('/emby', status_code=200)
 def get_emby_connection_details(
         preferences = Depends(get_preferences)) -> EmbyConnection:
+
+    return preferences
+
+
+@connection_router.get('/jellyfin', status_code=200)
+def get_jellyfin_connection_details(
+        preferences = Depends(get_preferences)) -> JellyfinConnection:
+
+    return preferences
+
+
+@connection_router.get('/plex', status_code=200)
+def get_plex_connection_details(
+        preferences = Depends(get_preferences)) -> PlexConnection:
+
+    return preferences
+
+
+@connection_router.get('/sonarr', status_code=200)
+def get_sonarr_connection_details(
+        preferences = Depends(get_preferences)) -> SonarrConnection:
+
+    return preferences
+
+
+@connection_router.get('/tmdb', status_code=200)
+def get_tmdb_connection_details(
+        preferences = Depends(get_preferences)) -> TMDbConnection:
 
     return preferences
 
@@ -101,7 +128,7 @@ def update_emby_connection(
 def update_jellyfin_connection(
         update_jellyfin: UpdateJellyfin = Body(...),
         preferences = Depends(get_preferences),
-        jellyfin_interface = Depends(get_jellyfin_interface)) -> EmbyConnection:
+        jellyfin_interface = Depends(get_jellyfin_interface)) -> JellyfinConnection:
     """
     Update the connection details for Jellyfin.
 

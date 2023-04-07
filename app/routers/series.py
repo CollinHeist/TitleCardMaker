@@ -62,28 +62,6 @@ def get_series(db, series_id, *, raise_exc=True) -> Union[Series, None]:
     return series
 
 
-def join_lists(keys: list[Any], vals: list[Any], desc: str,
-        default: Any = None) -> Union[dict[str, Any], None]:
-
-    is_null = lambda v: (v is None) or (v == UNSPECIFIED)
-
-    if is_null(keys) ^ is_null(vals):
-        raise HTTPException(
-            status_code=400,
-            detail=f'Provide same number of {desc}',
-        )
-    elif not is_null(keys) and not is_null(vals):
-        if len(keys) != len(vals):
-            raise HTTPException(
-                status_code=400,
-                detail=f'Provide same number of {desc}',
-            )
-        else:
-            return {key: val for key, val in zip(keys, vals) if len(key) > 0}
-
-    return UNSPECIFIED if keys == UNSPECIFIED else default
-
-
 def set_series_database_ids(
         series: Series,
         db: 'Database',
@@ -187,7 +165,7 @@ def load_title_cards(
     # Get associated library for the indicated media server
     library = getattr(series, f'{media_server.lower()}_library_name', None)
     interface = {
-        'Emby': emby_interface,
+        'Emby': emby_interface, 
         'Jellyfin': jellyfin_interface,
         'Plex': plex_interface,
     }.get(media_server, None)
@@ -434,7 +412,7 @@ def update_series(
     return series
 
 
-@series_router.post('/{series_id}/load/{media_server}', status_code=201)
+@series_router.post('/{series_id}/load/{media_server}', status_code=201, tags=['Emby', 'Jellyfin', 'Plex'])
 def load_title_cards_into_media_server(
         series_id: int,
         media_server: MediaServer,
@@ -458,7 +436,7 @@ def load_title_cards_into_media_server(
     )
 
 
-@series_router.post('/{series_id}/reload/{media_server}', status_code=201)
+@series_router.post('/{series_id}/reload/{media_server}', status_code=201, tags=['Emby', 'Jellyfin', 'Plex'])
 def reload_title_cards_into_media_server(
         series_id: int,
         media_server: MediaServer,

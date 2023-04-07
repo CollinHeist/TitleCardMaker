@@ -234,12 +234,12 @@ class Preferences:
             return None
 
         return value * {
-            'B': 1, 'Bytes': 1,
-            'KB':  2**10, 'Kilobytes': 2**10,
-            'MB':  2**20, 'Megabytes': 2**20,
-            'GB':  2**30, 'Gigabytes': 2**30,
-            'TB':  2**40, 'Terabytes': 2**40,
-        }[unit]
+            'b':  1,         'bytes': 1,
+            'kb': 2**10, 'kilobytes': 2**10,
+            'mb': 2**20, 'megabytes': 2**20,
+            'gb': 2**30, 'gigabytes': 2**30,
+            'tb': 2**40, 'terabytes': 2**40,
+        }[unit.lower()]
 
 
     @staticmethod

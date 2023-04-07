@@ -19,7 +19,7 @@ availablility_router = APIRouter(
     tags=['Availability'],
 )
 
-@availablility_router.get('/card-types', tags=['Title Cards'])
+@availablility_router.get('/card-types', status_code=200, tags=['Title Cards'])
 def get_all_available_card_types(
         preferences=Depends(get_preferences)) -> list[CardType]:
 
@@ -28,7 +28,7 @@ def get_all_available_card_types(
     return LocalCards
 
 
-@availablility_router.get('/card-types/local', tags=['Title Cards'])
+@availablility_router.get('/card-types/local', status_code=200, tags=['Title Cards'])
 def get_local_card_types(
         preferences=Depends(get_preferences)) -> list[LocalCardType]:
     """
@@ -38,14 +38,14 @@ def get_local_card_types(
     return LocalCards
 
 
-@availablility_router.get('/card-types/remote', tags=['Title Cards'])
+@availablility_router.get('/card-types/remote', status_code=200, tags=['Title Cards'])
 def get_remote_card_types(
         preferences=Depends(get_preferences)) -> list[RemoteCardType]:
     
     ...
 
 
-@availablility_router.get('/episode-data-sources')
+@availablility_router.get('/episode-data-sources', status_code=200)
 def get_available_episode_data_sources(
         preferences=Depends(get_preferences)) -> list[EpisodeDataSourceToggle]:
     
@@ -58,7 +58,8 @@ def get_available_episode_data_sources(
 
 
 @availablility_router.get('/image-source-priority',
-                          response_model=list[ImageSourceToggle])
+        status_code=200,
+        response_model=list[ImageSourceToggle])
 def get_image_source_priority(
         preferences=Depends(get_preferences)) -> list[EpisodeDataSourceToggle]:
     
@@ -71,14 +72,7 @@ def get_image_source_priority(
     ]
 
 
-# @availablility_router.get('/media-servers')
-# def get_available_media_servers(
-#         preferences=Depends(get_preferences)) -> list[MediaServer]:
-    
-#     return preferences.enabled_media_servers
-
-
-@availablility_router.get('/libraries/{media_server}')
+@availablility_router.get('/libraries/{media_server}', status_code=200, tags=['Emby', 'Jellyfin', 'Plex'])
 def get_server_libraries(
         media_server: Literal['emby', 'jellyfin', 'plex'],
         preferences = Depends(get_preferences),
@@ -90,27 +84,27 @@ def get_server_libraries(
 
     - media_server: Which media server to get the library names of.
     """
-    
+    log.debug(f'{media_server=} {preferences.use_plex=} {plex_interface=}')
     if media_server == 'emby':
-        if preferences.use_emby:
+        if preferences.use_emby and emby_interface:
             return emby_interface.get_libraries()
         return []
     elif media_server == 'jellyfin':
-        if preferences.use_jellyfin:
+        if preferences.use_jellyfin and jellyfin_interface:
             return jellyfin_interface.get_libraries()
         return []
     elif media_server == 'plex':
-        if preferences.use_plex:
+        if preferences.use_plex and plex_interface:
             return plex_interface.get_libraries()
         return []
-    
+
     raise HTTPException(
         status_code=400,
         detail=f'Cannot get libraries for the "{media_server}" media server'
     )
 
 
-@availablility_router.get('/usernames/emby', tags=['Emby'])
+@availablility_router.get('/usernames/emby', status_code=200, tags=['Emby'])
 def get_emby_usernames(
         preferences=Depends(get_preferences),
         emby_interface = Depends(get_emby_interface)) -> list[str]:
@@ -125,7 +119,7 @@ def get_emby_usernames(
     return []
 
 
-@availablility_router.get('/usernames/jellyfin', tags=['Jellyfin'])
+@availablility_router.get('/usernames/jellyfin', status_code=200, tags=['Jellyfin'])
 def get_jellyfin_usernames(
         preferences = Depends(get_preferences),
         jellyfin_interface = Depends(get_jellyfin_interface)) -> list[str]:
@@ -140,7 +134,7 @@ def get_jellyfin_usernames(
     return []
 
 
-@availablility_router.get('/tags/sonarr', tags=['Sonarr'])
+@availablility_router.get('/tags/sonarr', status_code=200, tags=['Sonarr'])
 def get_sonarr_tags(
         preferences=Depends(get_preferences),
         sonarr_interface = Depends(get_sonarr_interface)) -> list[Tag]:
@@ -154,7 +148,7 @@ def get_sonarr_tags(
     return []
 
 
-@availablility_router.get('/fonts', tags=['Fonts'])
+@availablility_router.get('/fonts', status_code=200, tags=['Fonts'])
 def get_available_fonts(db=Depends(get_database)) -> list[str]:
     """
     Get the names of all the available Fonts.
@@ -163,7 +157,7 @@ def get_available_fonts(db=Depends(get_database)) -> list[str]:
     return [font.name for font in db.query(models.font.Font).all()]
 
 
-@availablility_router.get('/templates', tags=['Templates'])
+@availablility_router.get('/templates', status_code=200, tags=['Templates'])
 def get_available_templates(db=Depends(get_database)) -> list[str]:
     """
     Get the names of all the available Templates.
@@ -174,7 +168,7 @@ def get_available_templates(db=Depends(get_database)) -> list[str]:
     ]
 
 
-@availablility_router.get('/styles')
+@availablility_router.get('/styles', status_code=200)
 def get_available_styles() -> list[StyleOption]:
     return [
         {'name': 'Art', 'value': 'art', 'style_type': 'art'},
