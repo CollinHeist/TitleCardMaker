@@ -1,6 +1,6 @@
 from base64 import b64encode
 from datetime import datetime
-from typing import Union
+from typing import Optional, Union
 
 from fastapi import HTTPException
 
@@ -38,9 +38,12 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
     YEAR_RANGE = range(1960, datetime.now().year)
 
 
-    def __init__(self, url: str, api_key: str, username: str,
-            verify_ssl: bool=True,
-            filesize_limit: int=None) -> None:
+    def __init__(self,
+            url: str,
+            api_key: str,
+            username: str,
+            verify_ssl: bool = True,
+            filesize_limit: Optional[int] = None) -> None:
         """
         Construct a new instance of an interface to an Emby server.
 
@@ -384,7 +387,6 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 tvdb_id=episode['ProviderIds'].get('Tvdb'),
                 tvrage_id=episode['ProviderIds'].get('TvRage'),
                 airdate=airdate,
-                queried_emby=True,
             )
 
             # Add to list
@@ -495,7 +497,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return loaded
 
 
-    def set_season_posters(self, library_name: str, series_info: SeriesInfo,
+    def load_season_posters(self, library_name: str, series_info: SeriesInfo,
             season_poster_set: 'SeasonPosterSet') -> None:
         """
         Set the season posters from the given set within Emby.

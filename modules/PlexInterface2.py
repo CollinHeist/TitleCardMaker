@@ -14,7 +14,7 @@ from modules.Debug import log, TQDM_KWARGS
 from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.ImageMaker import ImageMaker
-from modules.MediaServer import MediaServer
+from modules.MediaServer2 import MediaServer
 from modules.PersistentDatabase import PersistentDatabase
 from modules.SeriesInfo import SeriesInfo
 from modules.SyncInterface import SyncInterface
@@ -26,12 +26,6 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     """Series ID's that can be set by TMDb"""
     SERIES_IDS = ('imdb_id', 'tmdb_id', 'tvdb_id')
 
-    """Filepath to the database of each episode's loaded card characteristics"""
-    LOADED_DB = 'loaded.json'
-
-    """Filepath to the database of the loaded season poster characteristics"""
-    LOADED_POSTERS_DB = 'loaded_posters.json'
-
     """How many failed episodes result in skipping a series"""
     SKIP_SERIES_THRESHOLD = 3
 
@@ -39,7 +33,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     __TEMP_IGNORE_REGEX = re_compile(r'^(tba|tbd|episode \d+)$', IGNORECASE)
 
 
-    def __init__(self, url: str,
+    def __init__(self,
+            url: str,
             token: str = 'NA',
             verify_ssl: bool = True,
             integrate_with_pmm: bool = False,
@@ -373,7 +368,6 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 plex_episode.index,
                 **ids,
                 airdate=airdate,
-                queried_plex=True,
             )
 
             # Add to list
@@ -556,8 +550,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
             return (f'{self.__server._baseurl}{plex_episode.thumb}'
                     f'?X-Plex-Token={self.__token}')
+        # Episode DNE in Plex, return
         except NotFound:
-            # Episode DNE in Plex, return
             return None
 
 
@@ -666,7 +660,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     @catch_and_log('Error uploading season posters')
-    def set_season_posters(self,
+    def load_season_posters(self,
             library_name: str,
             series_info: SeriesInfo,
             season_poster_set: 'SeasonPosterSet') -> None:
@@ -722,14 +716,6 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 continue
             else:
                 loaded_count += 1
-
-            # Update loaded database
-            self.__posters.upsert({
-                'library': library_name,
-                'series': series_info.full_name,
-                'season': season.index,
-                'filesize': poster.stat().st_size,
-            }, condition)
 
         # Log load operations to user
         if loaded_count > 0:

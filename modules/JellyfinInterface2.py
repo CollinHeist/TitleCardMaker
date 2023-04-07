@@ -58,7 +58,6 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # Store attributes of this Interface
         self.session = WebInterface('Jellyfin', verify_ssl)
-        self.info_set = global_objects.info_set
         self.url = url[:-1] if url.endswith('/') else url
         self.__params = {'api_key': api_key}
         self.username = username
@@ -189,13 +188,13 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             for result in response['Items']:
                 if (result['Type'] == 'Series'
                     and series_info.matches(result['Name'])):
-                    self.info_set.set_jellyfin_id(series_info, result['Id'])
+                    series_info.set_jellyfin_id(result['Id'])
                     if (imdb_id := result['ProviderIds'].get('Imdb')):
-                        self.info_set.set_imdb_id(series_info, imdb_id)
+                        series_info.set_imdb_id(imdb_id)
                     if (tmdb_id := result['ProviderIds'].get('Tmdb')):
-                        self.info_set.set_tmdb_id(series_info, int(tmdb_id))
+                        series_info.set_tmdb_id(int(tmdb_id))
                     if (tvdb_id := result['ProviderIds'].get('Tvdb')):
-                        self.info_set.set_tvdb_id(series_info, int(tvdb_id))
+                        series_info.set_tvdb_id(int(tvdb_id))
                         
                     return None
 
@@ -250,8 +249,9 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         }
 
 
-    def get_all_series(self, filter_libraries: list[str]=[],
-            required_tags: list[str]=[]
+    def get_all_series(self,
+            filter_libraries: list[str] = [],
+            required_tags: list[str] = []
             ) -> list[tuple[SeriesInfo, str, str]]: 
         """
         Get all series within Jellyfin, as filtered by the given
@@ -352,8 +352,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                     log.exception(f'Cannot parse airdate', e)
                     log.debug(f'Episode data: {episode}')
 
-            episode_info = self.info_set.get_episode_info(
-                series_info,
+            episode_info = EpisodeInfo(
                 episode['Name'],
                 episode['ParentIndexNumber'],
                 episode['IndexNumber'],
@@ -363,8 +362,6 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 tvdb_id=episode['ProviderIds'].get('Tvdb'),
                 tvrage_id=episode['ProviderIds'].get('TvRage'),
                 airdate=airdate,
-                title_match=True,
-                queried_jellyfin=True,
             )
 
             # Add to list
@@ -476,7 +473,9 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return loaded
 
 
-    def set_season_posters(self, library_name: str, series_info: SeriesInfo,
+    def load_season_posters(self,
+            library_name: str,
+            series_info: SeriesInfo,
             season_poster_set: 'SeasonPosterSet') -> None:
         """
         Set the season posters from the given set within Plex.

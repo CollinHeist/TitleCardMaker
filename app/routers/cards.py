@@ -18,6 +18,8 @@ from app.schemas.card import TitleCard, NewTitleCard, PreviewTitleCard
 from modules.CleanPath import CleanPath
 from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
+from modules.SeasonTitleRanges import SeasonTitleRanges
+from modules.Title import Title
 from modules.TitleCard import TitleCard as TitleCardCreator
 
 
@@ -301,9 +303,7 @@ def create_cards_for_series(
         )
 
         # Get the effective card type class
-        CardClass = TitleCardCreator.CARD_TYPES[
-            card_settings.get('card_type')
-        ]
+        CardClass = TitleCardCreator.CARD_TYPES[card_settings.get('card_type')]
 
         # Add card default font stuff
         if card_settings.get('font_file', None) is None:
@@ -313,13 +313,29 @@ def create_cards_for_series(
 
         # Determine effective title text
         if card_settings.get('auto_split_title', True):
-            # TODO split accordingly
+            title = Title(card_settings['title'])
+            card_settings['title_text'] = '\n'.join(title.split(
+                **CardClass.TITLE_CHARACTERISTICS
+            ))
+        else:
             card_settings['title_text'] = card_settings['title']
+
+        # Apply title text case function
+        case_func = CardClass.CASE_FUNCTIONS[card_settings['font_title_case']]
+        card_settings['title_text'] = case_func(card_settings['title_text'])
+        # TODO modify CardType objects to use title_text attribute instead of title
+        card_settings['title'] = card_settings['title_text'] 
+
+        # Get EpisodeInfo for this episode
+        episode_info = episode.as_episode_info
 
         # If no season text was indicated, determine
         if card_settings.get('season_text', None) is None:
             # TODO calculate using season titles
-            card_settings['season_text'] = 'Season {season_number}'.format(**card_settings)
+            ranges = SeasonTitleRanges(card_settings.get('season_titles', {}))
+            card_settings['season_text'] = ranges.get_season_text(
+                episode_info, card_settings,
+            )
         
         # If no episode text was indicated, determine
         if card_settings.get('episode_text', None) is None:
@@ -361,9 +377,6 @@ def create_cards_for_series(
                 / series.path_safe_name
         else:
             series_directory = Path(card_settings.get('directory'))
-
-        # Get EpisodeInfo for this episode
-        episode_info = episode.as_episode_info
 
         # If an explicit card file was indicated, use it vs. default
         # TODO get season folder format from preferences object directly

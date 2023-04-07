@@ -389,7 +389,6 @@ class SonarrInterface(WebInterface, SyncInterface):
                 episode.get('absoluteEpisodeNumber'),
                 tvdb_id=episode.get('tvdbId'),
                 airdate=air_datetime,
-                queried_sonarr=True,
                 preferences=preferences,
             )
 
