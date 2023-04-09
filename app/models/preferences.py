@@ -8,6 +8,7 @@ from pickle import dump
 from modules.Debug import log
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.StyleSet import StyleSet
+from modules.TitleCard import TitleCard
 
 EpisodeDataSource = namedtuple('EpisodeDataSource', ('value', 'label'))
 Emby = EpisodeDataSource('emby', 'Emby')
@@ -33,6 +34,7 @@ class Preferences:
         self.card_directory = TCM_ROOT / 'cards'
         self.source_directory = TCM_ROOT / 'source'
 
+        self.card_dimensions = TitleCard.DEFAULT_CARD_DIMENSIONS
         self.card_filename_format = self.DEFAULT_CARD_FILENAME_FORMAT
         self.card_extension = self.DEFAULT_CARD_EXTENSION
         self.image_source_priority = self.DEFAULT_IMAGE_SOURCE_PRIORITY
@@ -129,6 +131,7 @@ class Preferences:
 
     def update_values(self, **update_kwargs) -> None:
         for name, value in update_kwargs.items():
+            log.debug(f'preferences.__dict__[{name}] = {value}')
             self.__dict__[name] = value
         self._rewrite_preferences()
 

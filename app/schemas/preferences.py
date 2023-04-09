@@ -1,7 +1,8 @@
 from pathlib import Path
+from re import IGNORECASE, compile as re_compile
 from typing import Literal, Optional, Union
 
-from pydantic import Field, root_validator, validator
+from pydantic import constr, Field, root_validator, validator
 
 from app.schemas.base import Base, UNSPECIFIED, validate_argument_lists_to_dict
 
@@ -17,6 +18,11 @@ Style = Literal[
     'blur unique', 'grayscale unique', 'blur grayscale unique',
 ]
 
+Dimensions = constr(regex=r'^(\d+)x(\d+)$')
+
+"""
+Creation classes
+"""
 class NamedOption(Base):
     name: str
     value: str
@@ -27,8 +33,8 @@ class StyleOption(NamedOption):
 class ToggleOption(NamedOption):
     selected: bool
 
-class MediaServerToggle(ToggleOption):
-    ...
+# class MediaServerToggle(ToggleOption):
+#     ...
 
 class EpisodeDataSourceToggle(ToggleOption):
     ...
@@ -36,88 +42,48 @@ class EpisodeDataSourceToggle(ToggleOption):
 class ImageSourceToggle(ToggleOption):
     ...
 
-
 EpisodeDataSource = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr', 'TMDb']
 ImageSource = Literal['Emby', 'Jellyfin', 'Plex', 'TMDb']
 MediaServer = Literal['Emby', 'Jellyfin', 'Plex']
+    
+"""
+Base classes
+"""
+...
 
-class Preferences(Base):
-    card_directory: Path
-    source_directory: Path
-    card_filename_format: str
-    card_extension: str
-    image_source_priority: list[ImageSource]
-    valid_image_sources: list[ImageSource]
-    episode_data_source: EpisodeDataSource
-    valid_episode_data_sources: list[EpisodeDataSource]
-    valid_image_extensions: list[str]
-    specials_folder_format: str
-    season_folder_format: str
-    sync_specials: bool
-    # supported_language_codes = []
+"""
+Update classes
+"""
+class UpdatePreferences(Base):
+    card_directory: str = Field(default=UNSPECIFIED, min_length=1)
+    source_directory: str = Field(default=UNSPECIFIED, min_length=1)
+    card_dimensions: Dimensions = Field(default=UNSPECIFIED)
+    card_filename_format: str = Field(default=UNSPECIFIED)
+    card_extension: CardExtension = Field(default=UNSPECIFIED)
+    image_source_priority: list[ImageSource] = Field(default=UNSPECIFIED)
+    episode_data_source: EpisodeDataSource = Field(default=UNSPECIFIED)
+    specials_folder_format: str = Field(default=UNSPECIFIED)
+    season_folder_format: str = Field(default=UNSPECIFIED)
+    sync_specials: bool = Field(default=UNSPECIFIED)
+    default_card_type: str = Field(default=UNSPECIFIED, min_length=1)
+    default_watched_style: Style = Field(default=UNSPECIFIED)
+    default_unwatched_style: Style = Field(default=UNSPECIFIED)
 
-    default_card_type: str
-    default_watched_style: Style
-    default_unwatched_style: Style
+    @validator('*', pre=True)
+    def validate_arguments(cls, v):
+        return None if v == '' else v
 
-    use_emby: bool
-    emby_url: str
-    emby_api_key: str
-    emby_use_ssl: bool
-    emby_username: str
-    emby_filesize_limit: Optional[int]
+    @validator('image_source_priority', pre=True)
+    def validate_list(cls, v):
+        return [v] if isinstance(v, str) else v
 
-    use_plex: bool
-    plex_url: str
-    plex_token: str
-    plex_use_ssl: bool
-    plex_integrate_with_pmm: bool
-    plex_filesize_limit: Optional[int]
+    @root_validator
+    def delete_unspecified_args(cls, values):
+        delete_keys = [key for key, value in values.items() if value == UNSPECIFIED]
+        for key in delete_keys:
+            del values[key]
 
-    use_sonarr: bool
-    sonarr_url: str
-    sonarr_api_key: str
-    sonarr_use_ssl: bool
-
-    use_tmdb: bool
-    tmdb_api_key: str
-
-class PreferencesBase(Base):
-    ...
-
-class EmbyConnection(Base):
-    use_emby: bool
-    emby_url: str
-    emby_api_key: str
-    emby_username: str = Field(min_length=1)
-    emby_filesize_limit: Optional[int]
-
-class JellyfinConnection(Base):
-    use_jellyfin: bool
-    jellyfin_url: str
-    jellyfin_api_key: str
-    jellyfin_username: str = Field(min_length=1)
-    jellyfin_filesize_limit: Optional[int]
-
-class PlexConnection(Base):
-    use_plex: bool
-    plex_url: str
-    plex_token: str
-    plex_integrate_with_pmm: bool
-    plex_filesize_limit: Optional[int]
-
-class SonarrConnection(Base):
-    use_sonarr: bool
-    sonarr_url: str
-    sonarr_api_key: str
-    sonarr_libraries: dict
-
-class TMDbConnection(Base):
-    use_tmdb: bool
-    tmdb_api_key: str
-    tmdb_minimum_width: int
-    tmdb_minimum_height: int
-    tmdb_skip_localized: bool
+        return values
 
 class UpdateBase(Base):
     url: str = Field(default=UNSPECIFIED)
@@ -179,3 +145,60 @@ class UpdateTMDb(Base):
     minimum_width: int = Field(default=UNSPECIFIED, ge=0)
     minimum_height: int = Field(default=UNSPECIFIED, ge=0)
     skip_localized: bool = Field(default=UNSPECIFIED)
+
+"""
+Return classes
+"""
+class Preferences(Base):
+    card_directory: Path
+    source_directory: Path
+    card_dimensions: Dimensions
+    card_filename_format: str
+    card_extension: str
+    image_source_priority: list[ImageSource]
+    valid_image_sources: list[ImageSource]
+    episode_data_source: EpisodeDataSource
+    valid_episode_data_sources: list[EpisodeDataSource]
+    valid_image_extensions: list[str]
+    specials_folder_format: str
+    season_folder_format: str
+    sync_specials: bool
+    # supported_language_codes = []
+
+    default_card_type: str
+    default_watched_style: Style
+    default_unwatched_style: Style
+
+class EmbyConnection(Base):
+    use_emby: bool
+    emby_url: str
+    emby_api_key: str
+    emby_username: str = Field(min_length=1)
+    emby_filesize_limit: Optional[int]
+
+class JellyfinConnection(Base):
+    use_jellyfin: bool
+    jellyfin_url: str
+    jellyfin_api_key: str
+    jellyfin_username: str = Field(min_length=1)
+    jellyfin_filesize_limit: Optional[int]
+
+class PlexConnection(Base):
+    use_plex: bool
+    plex_url: str
+    plex_token: str
+    plex_integrate_with_pmm: bool
+    plex_filesize_limit: Optional[int]
+
+class SonarrConnection(Base):
+    use_sonarr: bool
+    sonarr_url: str
+    sonarr_api_key: str
+    sonarr_libraries: dict
+
+class TMDbConnection(Base):
+    use_tmdb: bool
+    tmdb_api_key: str
+    tmdb_minimum_width: int
+    tmdb_minimum_height: int
+    tmdb_skip_localized: bool
