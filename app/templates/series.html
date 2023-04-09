@@ -53,6 +53,23 @@
       justify-content: flex-end;
       text-align: right;
     }
+
+    /* Right align the watch status icons in episode dropdowns */
+    .watch.status.icon {
+      float: right;
+    }
+    /* Fade the indetermine watch status icon */
+    .table .question.icon, .table .ui.file.import.icon {
+      opacity: 30%;
+    }
+
+    .table >* .transparent.input > input {
+      width: auto;
+    }
+
+    .table .ui.icon:hover {
+      cursor: pointer;
+    }
   </style>
 
   <!-- Templates -->
@@ -106,6 +123,149 @@
     </div>
   </template>
 
+  <template id="episode-row">
+    <tr class="center aligned">
+      <form>
+        <td data-column="edit" class="selectable" data-tooltip="Submit changes" data-position="right center">
+          <a><i class="ui blue save outline icon"></i></a>
+        </td>
+        <td data-column="season_number">0</td>
+        <td data-column="episode_number">0</td>
+        <td data-column="absolute_number">0</td>
+        <td data-column="title" class="left aligned">
+          <div class="ui transparent input">
+            <input name="title" type="text" placeholder="">
+          </div>
+        </td>
+        <td data-column="match_title"><!-- Icon --></td>
+        <td data-column="auto_split_title"><!-- Icon --></td>
+        <td data-column="template" class="collapsing">
+          <div data-value="template_id" class="ui inline clearable dropdown">
+            <input name="template_id" type="hidden">
+            <i class="dropdown icon"></i>
+            <div class="default text">None</div>
+            <div class="menu">
+              <div class="item">Choice 1</div>
+              <div class="item">Choice 2</div>
+            </div>
+          </div>
+        </td>
+        <td data-column="font" class="collapsing">
+          <div data-value="font_id" class="ui inline clearable dropdown">
+            <input name="font_id" type="hidden">
+            <i class="dropdown icon"></i>
+            <div class="default text">None</div>
+            <div class="menu">
+              <div class="item">Choice 1</div>
+              <div class="item">Choice 2</div>
+            </div>
+          </div>
+        </td>
+        <td data-column="hide_season_text" class="collapsing"><!-- Icon --></td>
+        <td data-column="season_text" class="collapsing">
+          <div class="ui transparent input">
+            <input name="season_text" type="text" placeholder="Default">
+          </div>
+        </td>
+        <td data-column="hide_episode_text" class="collapsing"><!-- Icon --></td>
+        <td data-column="episode_text" class="collapsing">
+          <div class="ui transparent input">
+            <input name="episode_text" type="text" placeholder="Default">
+          </div>
+        </td>
+        <td data-column="unwatched_style" class="collapsing">
+          <div data-value="unwatched_style" class="ui inline clearable dropdown">
+            <input name="unwatched_style" type="hidden">
+            <i class="dropdown icon"></i>
+            <div class="default text">None</div>
+            <div class="menu">
+              <div class="item">Choice 1</div>
+              <div class="item">Choice 2</div>
+            </div>
+          </div>
+        </td>
+        <td data-column="watched_style" class="collapsing">
+          <div data-value="watched_style" class="ui inline clearable dropdown">
+            <input name="watched_style" type="hidden">
+            <i class="dropdown icon"></i>
+            <div class="default text">None</div>
+            <div class="menu">
+              <div class="item">Choice 1</div>
+              <div class="item">Choice 2</div>
+            </div>
+          </div>
+        </td>
+        <td data-column="font_color" class="collapsing">
+          <div class="ui transparent input">
+            <input name="font_color" type="text" placeholder="Default">
+          </div>
+        </td>
+        <td data-column="font_size" class="collapsing">
+          <div class="ui transparent input">
+            <input name="font_size" type="number" value="{episode.font_size}" placeholder="Default">
+          </div>
+        </td>
+        <td data-column="font_stroke_width" class="collapsing">
+          <div class="ui transparent input">
+            <input name="font_stroke_width" type="number" placeholder="Default">
+          </div>
+        </td>
+        <td data-column="font_interline_spacing" class="collapsing">
+          <div class="ui transparent input">
+            <input name="font_interline_spacing" type="number" placeholder="Default">
+          </div>
+        </td>
+        <td data-column="font_vertical_shift" class="collapsing">
+          <div class="ui transparent input">
+            <input name="font_vertical_shift" type="number" placeholder="Default">
+          </div>
+        </td>
+        <td data-column="extras" class="collapsing"></td>
+        <td data-column="source_file" class="collapsing">
+          <div class="ui transparent input">
+            <input name="source_file_path" type="text" placeholder="Default">
+          </div>
+        </td>
+        <td data-column="card_file" class="collapsing">
+          <div class="ui transparent input">
+            <input name="card_file_path" type="text" placeholder="Default">
+          </div>
+        </td>
+        <td data-column="watched" class="collapsing"><!-- Icon --></td>
+        <td data-column="emby_id" class="collapsing">
+          <div class="ui transparent input">
+            <input name="emby_id" type="text" placeholder="-">
+          </div>
+        </td>
+        <td data-column="imdb_id" class="collapsing">
+          <div class="ui transparent input">
+            <input name="imdb_id" type="text" placeholder="-">
+          </div>
+        </td>
+        <td data-column="jellyfin_id" class="collapsing">
+          <div class="ui transparent input">
+            <input name="jellyfin_id" type="text" placeholder="-">
+          </div>
+        </td>
+        <td data-column="tmdb_id" class="collapsing">
+          <div class="ui transparent input">
+            <input name="tmdb_id" type="text" placeholder="-">
+          </div>
+        </td>
+        <td data-column="tvdb_id" class="collapsing">
+          <div class="ui transparent input">
+            <input name="tvdb_id" type="text" placeholder="-">
+          </div>
+        </td>
+        <td data-column="tvrage_id" class="collapsing">
+          <div class="ui transparent input">
+            <input name="tvrage_id" type="text" placeholder="-">
+          </div>
+        </td>
+      </form>
+    </tr>
+  </template>
+
   <!-- Scripts to load available options -->
   <script>
     // Get series statistics
@@ -134,7 +294,7 @@
     }
   
     // Get all episodes (query for new ones)
-    async function getEpisodeData() {
+    async function getEpisodeDataOld() {
       // Get episode data element
       let episodeDataDiv = document.getElementById('episode-data');
       if (episodeDataDiv == null) return;
@@ -152,7 +312,7 @@
 
       episodeData.forEach(episode => {
         let {id, season_number, episode_number, absolute_number, title,
-             source_file_path, card_file_path} = episode;
+             source_file_path, card_file_path, watched} = episode;
 
         // Get or create the div for this season
         let seasonElement = document.getElementById(`episode-data-season${season_number}`);
@@ -161,19 +321,26 @@
           seasonElement = seasonTemplate.content.cloneNode(true);
           seasonElement.querySelector('.content').id = `episode-data-season${season_number}`;
           const seasonTitle = (season_number === 0) ? 'Specials' : `Season ${season_number}`;
-          // seasonDiv = seasonElement.querySelector('.accordion');
           seasonElement.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${seasonTitle}`;
           episodeDataDiv.appendChild(seasonElement);
         }
         const seasonDiv = document.getElementById(`episode-data-season${season_number}`).querySelector('.accordion');
-        // console.log(seasonElement)
 
         // Create new element for this episode
         const episodeElement = episodeTemplate.content.cloneNode(true);
+        // episodeElement.setAttribute('data', `episodeID: ${id}`);
         const episodeTitle = (absolute_number === null)
           ? `Episode ${episode_number}`
           : `Episode ${episode_number} (${absolute_number})`;
-        episodeElement.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${episodeTitle}`;
+        let watchedIcon;
+        if (watched === null) {
+          watchedIcon = '<i class="ui grey question watch status icon" title="Unknown"></i>';
+        } else if (watched === true) {
+          watchedIcon = '<i class="ui green check watch status icon" title="Watched"></i>';
+        } else {
+          watchedIcon = '<i class="ui red times circle outline watch status icon" title="Unwatched"></i>';
+        }
+        episodeElement.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${watchedIcon}${episodeTitle}`;
         episodeElement.querySelector('input[name="title"]').placeholder = title;
         episodeElement.querySelector('input[name="title"]').value = title;
         episodeElement.querySelector('input[name="source_file_path"]').placeholder = source_file_path;
@@ -225,6 +392,91 @@
             },
           });
         };
+      });
+
+      // Refresh theme for any newly added HTML
+      refreshTheme();
+    }
+
+    async function getEpisodeData() {
+      // Get the parent table
+      let episodeTable = document.getElementById('episode-data-table');
+      if (episodeTable === null) { return; }
+
+      // Get row template
+      const rowTemplate = document.querySelector('#episode-row');
+      if (rowTemplate === null) { return; }
+
+      // Get all episodes via API
+      const episodeData = await fetch('/api/episodes/{{series.id}}/all').then(resp => resp.json());
+      if (episodeData === null) return;
+
+      // Different HTML for each togglable boolean icon
+      const trueIcon = '<i class="ui green check icon"></i>';
+      const falseIcon = '<i class="ui red times circle outline icon"></i>';
+      const noneIcon = '<i class="ui gray question icon"></i>'
+      function getIcon(value) {
+        return value === null ? noneIcon : (value ? trueIcon : falseIcon);
+      }
+
+      // Create 
+      episodeData.forEach(episode => {
+        // Create new row for this episode
+        const row = rowTemplate.content.cloneNode(true);
+        // Fill in row data
+        row.querySelector('td[data-column="season_number"]').innerHTML = episode.season_number;
+        row.querySelector('td[data-column="episode_number"]').innerHTML = episode.episode_number;
+        row.querySelector('td[data-column="absolute_number"]').innerHTML = episode.absolute_number;
+        row.querySelector('input[name="title"]').value = episode.title;
+        row.querySelector('td[data-column="match_title"]').innerHTML = getIcon(episode.match_title);
+        row.querySelector('td[data-column="auto_split_title"]').innerHTML = getIcon(episode.auto_split_title);
+          // Template ID
+          // Font ID
+        row.querySelector('td[data-column="hide_season_text"]').innerHTML = getIcon(episode.hide_season_text);
+        row.querySelector('input[name="season_text"]').value = episode.season_text;
+        row.querySelector('td[data-column="hide_episode_text"]').innerHTML = getIcon(episode.hide_episode_text);
+        row.querySelector('input[name="episode_text"]').value = episode.episode_text;
+          // Unwatched style
+          // Watched style
+        row.querySelector('input[name="font_color"]').value = episode.font_color;
+        row.querySelector('input[name="font_size"]').value = episode.font_size;
+        row.querySelector('input[name="font_stroke_width"]').value = episode.font_stroke_width;
+        row.querySelector('input[name="font_interline_spacing"]').value = episode.font_interline_spacing;
+        row.querySelector('input[name="font_vertical_shift"]').value = episode.font_vertical_shift;
+          // Extras
+        row.querySelector('input[name="source_file_path"]').value = episode.source_file_path;
+        row.querySelector('input[name="card_file_path"]').value = episode.card_file_path;
+        row.querySelector('td[data-column="watched"]').innerHTML = getIcon(episode.watched);
+        row.querySelector('input[name="emby_id"]').value = episode.emby_id;
+        row.querySelector('input[name="imdb_id"]').value = episode.imdb_id;
+        row.querySelector('input[name="jellyfin_id"]').value = episode.jellyfin_id;
+        row.querySelector('input[name="tmdb_id"]').value = episode.tmdb_id;
+        row.querySelector('input[name="tvdb_id"]').value = episode.tvdb_id;
+        row.querySelector('input[name="tvrage_id"]').value = episode.tvrage_id;
+        // Append row to table
+        episodeTable.appendChild(row);
+      });
+
+      $('.table .ui.icon').on('click', (event) => {
+        if (event.target.classList.contains('check')) {
+          event.target.classList.remove('green', 'check');
+          event.target.classList.add('red', 'times', 'circle', 'outline');
+        } else {
+          event.target.classList.add('green', 'check');
+          event.target.classList.remove('red', 'times', 'circle', 'outline');
+        }
+      });
+
+      $('.table .transparent.input input').on('input', (event) => {
+        console.log(event);
+        event.target.style.width = Math.max(`${event.target.value}`.length + 1, 8) + 'ch';
+      });
+
+      $(document).ready(function () {
+        $('.table .transparent.input input').each(() => {
+          console.log($(this)); console.log( Math.max(`${$(this).val()}`.length + 1, 8) + 'ch');
+          $(this).css('width', Math.max(`${$(this).val()}`.length + 1, 8) + 'ch');
+        });
       });
 
       // Refresh theme for any newly added HTML
@@ -1010,6 +1262,55 @@
               Delete All Episodes
             </button>
 
+            <div class="ui scrolling long container">
+              <table id="episode-data-table" class="ui compact striped head stuck table">
+                <thead>
+                  <tr class="center aligned">
+                    <th class="collapsing">Save<br>Changes</th>
+                    <th class="collapsing">Season</th>
+                    <th class="collapsing">Episode</th>
+                    <th class="collapsing">Absolute</th>
+
+                    <th class="left aligned">Title</th>
+                    <th class="collapsing">Match<br>Title</th>
+                    <th class="collapsing">Auto-Split<br>Title</th>
+
+                    <th class="collapsing">Template</th>
+                    <th class="collapsing">Font</th>
+
+                    <th class="collapsing">Hide<br>Season Text</th>
+                    <th class="collapsing">Season<br>Text</th>
+
+                    <th class="collapsing">Hide<br>Episode Text</th>
+                    <th class="collapsing">Episode<br>Text</th>
+
+                    <th class="collapsing">Unwatched<br>Style</th>
+                    <th class="collapsing">Watched<br>Style</th>
+
+                    <th class="collapsing">Font<br>Color</th>
+                    <th class="collapsing">Font<br>Size (%)</th>
+                    <th class="collapsing">Font Stroke<br>Width (%)</th>
+                    <th class="collapsing">Font Interline<br>Spacing</th>
+                    <th class="collapsing">Font<br>Vertical Shift</th>
+
+                    <th class="collapsing">Extras</th>
+
+                    <th class="collapsing">Source<br>File</th>
+                    <th class="collapsing">Card<br>File</th>
+                    <th class="collapsing">Watched</th>
+
+                    <th class="collapsing">Emby<br>ID</th>
+                    <th class="collapsing">IMDb<br>ID</th>
+                    <th class="collapsing">Jellyfin<br>ID</th>
+                    <th class="collapsing">TMDb<br>ID</th>
+                    <th class="collapsing">TVDb<br>ID</th>
+                    <th class="collapsing">TVRage<br>ID</th>
+                  </tr>
+                </thead>
+                <tbody><!-- Rows added asynchronously --></tbody>
+              </table>
+            </div>
+
             <div id="episode-data" class="ui styled fluid accordion">
               <!-- Episode subdata is added by asynchronous function -->
             </div>
@@ -1208,7 +1509,7 @@
 
   <script>
     // Enable all dropdowns, menus, and accordians
-    $('.dropdown').dropdown();
+    $('.ui.dropdown').dropdown();
     // $('.ui.checkbox').checkbox();
     $('.menu .item').tab()
     $('.ui.accordion').accordion();
@@ -1296,7 +1597,7 @@
     $('#series-config-form, #card-config-form').on('submit', (event) => {
       event.preventDefault();
       $('#submit-changes').toggleClass('loading', true);
-      // Submit API request to edit series
+      // Prepare form data
       let form = new FormData(event.target);
       let listData = {extra_keys: [], extra_values: [], season_title_ranges: [], season_title_values: []};
       for (const [key, value] of [...form.entries()]) {
@@ -1305,6 +1606,10 @@
         if (value != '' && ['font_size', 'font_kerning', 'font_stroke_width'].includes(key)) {
           form.set(key, value/100.0);
         }
+      }
+      // Remove empty list values
+      for (let [key, value] of [...Object.entries(listData)]) {
+        if (value.length == 0) { delete listData[key]; }
       }
       // Add checkbox status as true/false
       $.each($("#series-config-form, #card-config-form").find('input[type=checkbox]'), (key, val) => {
@@ -1327,6 +1632,27 @@
             $('#submit-changes').toggleClass('loading', false);
           }, 2000);
         }
+      });
+    });
+
+    $('.table .ui.icon').on('click', (event) => {
+      if (event.target.classList.contains('check')) {
+        event.target.classList.remove('green', 'check');
+        event.target.classList.add('red', 'times', 'circle', 'outline');
+      } else {
+        event.target.classList.add('green', 'check');
+        event.target.classList.remove('red', 'times', 'circle', 'outline');
+      }
+    });
+
+    $('.table .transparent.input input').on('input', (event) => {
+      event.target.style.width = Math.max(`${event.target.value}`.length + 1, 8) + 'ch';
+    });
+
+    $(document).ready(function () {
+      // $('.table .transparent.input').find('input').each(() => {
+      $('.table .transparent.input input').each(() => {
+        $(this).css('width', Math.max(`${$(this).val()}`.length + 1, 8) + 'ch');
       });
     });
 
