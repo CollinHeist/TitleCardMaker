@@ -57,7 +57,6 @@ class NewEpisode(Base):
 Update classes
 """
 class UpdateEpisode(Base):
-    series_id: int = Field(default=UNSPECIFIED)
     template_id: Optional[int] = Field(default=UNSPECIFIED)
     font_id: Optional[int] = Field(default=UNSPECIFIED)
 

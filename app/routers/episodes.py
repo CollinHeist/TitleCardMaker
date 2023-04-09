@@ -68,7 +68,7 @@ def get_episode_by_id(
     if episode is None:
         raise HTTPException(
             status_code=404,
-            detail=f'Episode {font_id} not found',
+            detail=f'Episode {episode_id} not found',
         )
 
     return episode
