@@ -38,7 +38,6 @@ class NewEpisode(Base):
     watched_style: Optional[Style]
 
     font_color: Optional[str] = Field(default=None)
-    font_title_case: Optional[str] = Field(default=None)
     font_size: Optional[float] = Field(default=None)
     font_kerning: Optional[float] = Field(default=None)
     font_stroke_width: Optional[float] = Field(default=None)
@@ -82,7 +81,6 @@ class UpdateEpisode(Base):
     watched_style: Optional[Style] = Field(default=UNSPECIFIED)
 
     font_color: Optional[str] = Field(default=UNSPECIFIED)
-    font_title_case: Optional[str] = Field(default=UNSPECIFIED)
     font_size: Optional[float] = Field(default=UNSPECIFIED)
     font_kerning: Optional[float] = Field(default=UNSPECIFIED)
     font_stroke_width: Optional[float] = Field(default=UNSPECIFIED)
@@ -151,7 +149,6 @@ class Episode(Base):
     watched_style: Optional[str]
 
     font_color: Optional[str]
-    font_title_case: Optional[str]
     font_size: Optional[float]
     font_kerning: Optional[float]
     font_stroke_width: Optional[float]

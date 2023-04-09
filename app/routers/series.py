@@ -412,7 +412,8 @@ def update_series(
     return series
 
 
-@series_router.post('/{series_id}/load/{media_server}', status_code=201, tags=['Emby', 'Jellyfin', 'Plex'])
+@series_router.post('/{series_id}/load/{media_server}', status_code=201,
+        tags=['Emby', 'Jellyfin', 'Plex'])
 def load_title_cards_into_media_server(
         series_id: int,
         media_server: MediaServer,
@@ -436,7 +437,8 @@ def load_title_cards_into_media_server(
     )
 
 
-@series_router.post('/{series_id}/reload/{media_server}', status_code=201, tags=['Emby', 'Jellyfin', 'Plex'])
+@series_router.post('/{series_id}/reload/{media_server}', status_code=201,
+        tags=['Emby', 'Jellyfin', 'Plex'])
 def reload_title_cards_into_media_server(
         series_id: int,
         media_server: MediaServer,

@@ -37,8 +37,7 @@ class Episode(Base):
     watched_style = Column(String, default=None)
 
     font_id = Column(Integer, ForeignKey('font.id'))
-    font_color = Column(String, default=None)
-    font_title_case = Column(String, default=None)
+    font_color = Column(String, default=None) 
     font_size = Column(Float, default=None)
     font_kerning = Column(Float, default=None)
     font_stroke_width = Column(Float, default=None)
@@ -76,7 +75,6 @@ class Episode(Base):
             'watched_style': self.watched_style,
             'font_id': self.font_id,
             'font_color': self.font_color,
-            'font_title_case': self.font_title_case,
             'font_size': self.font_size,
             'font_kerning': self.font_kerning,
             'font_stroke_width': self.font_stroke_width,

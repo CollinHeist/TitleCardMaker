@@ -84,7 +84,7 @@ def get_server_libraries(
 
     - media_server: Which media server to get the library names of.
     """
-    log.debug(f'{media_server=} {preferences.use_plex=} {plex_interface=}')
+
     if media_server == 'emby':
         if preferences.use_emby and emby_interface:
             return emby_interface.get_libraries()
