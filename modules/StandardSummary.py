@@ -5,11 +5,12 @@ from modules.BaseSummary import BaseSummary
 
 class StandardSummary(BaseSummary):
     """
-    This class describes a show summary. The StandardSummary is a type of
-    Summary object that displays (at most) a 3x3 grid of images, with a logo at
-    the top.
+    This class describes a show summary. The StandardSummary is a type
+    of Summary object that displays (at most) a 3x3 grid of images, with
+    a logo at the top.
 
-    This type of Summary supports different background colors and images. 
+    This type of Summary supports different background colors and
+    images. 
     """
 
     """Default color for the background of the summary image"""
@@ -37,11 +38,12 @@ class StandardSummary(BaseSummary):
 
         Args:
             show: The Show object to create the Summary for.
-            background: Background color or image to use for the summary. Can
-                also be a "format string" that is "{series_background}" to use
-                the given Show object's backdrop.
-            created_by: Optional string to use in custom "Created by .." tag at
-                the botom of this Summary.
+            background: Background color or image to use for the
+                summary. Can also be a "format string" that is
+                "{series_background}" to use the given Show object's
+                backdrop.
+            created_by: Optional string to use in custom "Created by .."
+                tag at the botom of this Summary.
         """
 
         # Initialize parent Summary object
@@ -99,8 +101,8 @@ class StandardSummary(BaseSummary):
 
     def _add_header(self, montage: Path) -> Path:
         """
-        Pad 80 pixels of blank space around the image, and add a header of text
-        that says "EPISODE TITLE CARDS".
+        Pad 80 pixels of blank space around the image, and add a header
+        of text that says "EPISODE TITLE CARDS".
 
         Args:
             montage: The montage of images to add a header to.
@@ -143,8 +145,9 @@ class StandardSummary(BaseSummary):
 
     def _resize_logo(self) -> Path:
         """
-        Resize this associated show's logo to fit into at least a 500 pixel high
-        space. If the resulting logo is wider than 3400 pixels, it is scaled.
+        Resize this associated show's logo to fit into at least a 500
+        pixel high space. If the resulting logo is wider than 3400
+        pixels, it is scaled.
 
         Returns:
             Path to the resized logo.
@@ -197,7 +200,8 @@ class StandardSummary(BaseSummary):
         Add the 'created by' image to the bottom of the montage.
 
         Args:
-            montage_and_logo: Path to the montage with the logo already applied.
+            montage_and_logo: Path to the montage with the logo already
+                applied.
             created_by: Path to the created by tag image.
 
         Returns:
@@ -226,7 +230,8 @@ class StandardSummary(BaseSummary):
         Add the two images on top of the background image.
 
         Args:
-            montage_and_logo: Path to the montage with the logo already applied.
+            montage_and_logo: Path to the montage with the logo already
+                applied.
             created_by: Path to the created by tag image.
 
         Returns:
@@ -267,8 +272,8 @@ class StandardSummary(BaseSummary):
 
     def create(self) -> None:
         """
-        Create the Summary defined by this object. Image selection is done at
-        the start of this function.
+        Create the Summary defined by this object. Image selection is
+        done at the start of this function.
         """
 
         # Exit if a logo does not exist

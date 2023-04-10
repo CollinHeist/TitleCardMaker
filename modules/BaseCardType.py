@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Any
+from typing import Any, Optional
 
 from titlecase import titlecase
 
@@ -98,7 +98,10 @@ class BaseCardType(ImageMaker):
 
 
     @abstractmethod
-    def __init__(self, blur: bool = False, grayscale: bool = False) -> None:
+    def __init__(self,
+            blur: bool = False,
+            grayscale: bool = False, *,
+            preferences: Optional['Preferences'] = None) -> None:
         """
         Construct a new CardType. Must call super().__init__() to
         initialize the parent ImageMaker class (for PreferenceParser and
@@ -111,7 +114,7 @@ class BaseCardType(ImageMaker):
         """
 
         # Initialize parent ImageMaker
-        super().__init__()
+        super().__init__(preferences=preferences)
 
         # Object starts as valid
         self.valid = True
@@ -132,7 +135,9 @@ class BaseCardType(ImageMaker):
 
 
     @staticmethod
-    def modify_extras(extras: dict[str, Any], custom_font: bool,
+    def modify_extras(
+            extras: dict[str, Any],
+            custom_font: bool,
             custom_season_titles: bool) -> None:
         """
         Modify the given extras base on whether font or season titles
@@ -224,6 +229,22 @@ class BaseCardType(ImageMaker):
             f'-colorspace gray' if self.grayscale else '',
             # Reset to full colorspace
             f'-set colorspace sRGB' if self.grayscale else '',
+        ]
+
+    
+    @property
+    def resize_output(self) -> ImageMagickCommands:
+        """
+        ImageMagick commands to resize the card to the global card
+        dimensions.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        return [
+            f'-resize "{self.preferences.card_dimensions}"',
+            f'-extent "{self.preferences.card_dimensions}"',
         ]
 
 

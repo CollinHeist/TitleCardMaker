@@ -19,8 +19,11 @@ class Profile:
         'episode_text_format', '__use_custom_seasons', '__use_custom_font',
     )
 
-    def __init__(self, series_info: 'SeriesInfo', font: 'Font',
-            hide_seasons: bool, episode_map: 'EpisodeMap',
+    def __init__(self,
+            series_info: 'SeriesInfo',
+            font: 'Font',
+            hide_seasons: bool,
+            episode_map: 'EpisodeMap',
             episode_text_format: str) -> None:
         """
         Construct a new instance of a Profile. All given arguments will
@@ -60,8 +63,9 @@ class Profile:
                 f'{self.__use_custom_font}')
 
 
-    def get_valid_profiles(self, card_class: 'CardType',
-                           all_variations: bool) -> list[dict[str: str]]:
+    def get_valid_profiles(self,
+            card_class: 'CardType',
+            all_variations: bool) -> list[dict[str, str]]:
         """
         Gets the valid applicable profiles for this profile. For example,
         for a profile with only generic attributes, it's invalid to
@@ -142,8 +146,9 @@ class Profile:
             self.__episode_map.reset()
 
 
-    def convert_extras(self, card_type: 'BaseCardType',
-                       extras: dict[str, Any]) -> None:
+    def convert_extras(self,
+            card_type: 'BaseCardType',
+            extras: dict[str, Any]) -> None:
         """
         Convert the given extras according to this profile's rules.
 
@@ -330,8 +335,9 @@ class Profile:
         return title_text
 
 
-    def convert_title(self, title_text: str,
-                      manually_specified: bool=False) -> str:
+    def convert_title(self,
+            title_text: str,
+            manually_specified: bool=False) -> str:
         """
         Convert the given title text through this profile's settings.
         This is any combination of text substitutions, case functions,

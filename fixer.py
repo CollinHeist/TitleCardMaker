@@ -10,6 +10,7 @@ try:
     from modules.EmbyInterface import EmbyInterface
     from modules.EpisodeInfo import EpisodeInfo
     from modules.ImageMaker import ImageMaker
+    from modules.JellyfinInterface import JellyfinInterface
     from modules.PlexInterface import PlexInterface
     from modules.PreferenceParser import PreferenceParser
     from modules.global_objects import set_preference_parser
@@ -65,7 +66,7 @@ misc_group.add_argument(
     default=SUPPRESS,
     help='Print the last log file')
 
-# Argument group for Plex
+# Argument group for the media server
 media_server_group = parser.add_argument_group('Media Server')
 media_server_group.add_argument(
     '--import-cards', '--import-archive', '--load-archive',
@@ -73,7 +74,7 @@ media_server_group.add_argument(
     nargs=2,
     default=SUPPRESS,
     metavar=('ARCHIVE_DIRECTORY', 'LIBRARY'),
-    help='Import an archive of Title Cards into Emby/Plex')
+    help='Import an archive of Title Cards into Emby/Jellyfin/Plex')
 media_server_group.add_argument(
     '--import-series', '--load-series',
     type=str,
@@ -101,7 +102,15 @@ media_server_group.add_argument(
     nargs=3,
     default=SUPPRESS,
     metavar=('LIBRARY', 'NAME', 'YEAR'),
-    help='Remove the cards for the given series within Emby/Plex')
+    help='Remove the cards for the given series within Emby/Jellyfin/Plex')
+media_server_group.add_argument(
+    '--id', '--series-id',
+    type=str,
+    nargs=2,
+    default=[],
+    action='append',
+    metavar=('ID_TYPE', 'ID'),
+    help='Specify database IDs of a series for importing/reloading cards')
 
 # Argument group for Sonarr
 sonarr_group = parser.add_argument_group('Sonarr')
@@ -183,9 +192,9 @@ if hasattr(args, 'print_log') and args.print_log:
             print(file_handle.read())
 
 
-# Execute Emby/Plex options
-if (hasattr(args, 'import_cards')
-    or hasattr(args, 'revert_series')) and (pp.use_plex or pp.use_emby):
+# Execute Media Server options
+if ((hasattr(args, 'import_cards') or hasattr(args, 'revert_series'))
+    and any((pp.use_emby, pp.use_jellyfin, pp.use_plex))):
     # Temporary classes
     @dataclass
     class Episode:
@@ -193,11 +202,13 @@ if (hasattr(args, 'import_cards')
         episode_info: EpisodeInfo
         spoil_type: str
         
-    # Create Emby/PlexInterface
-    if args.media_server == 'plex':
-        media_interface = PlexInterface(**pp.plex_interface_kwargs)
-    else:
+    # Create MediaServer Interface
+    if args.media_server == 'emby':
         media_interface = EmbyInterface(**pp.emby_interface_kwargs)
+    elif args.media_server == 'jellyfin':
+        media_interface = JellyfinInterface(**pp.jellyfin_interface_kwargs)
+    else:
+        media_interface = PlexInterface(**pp.plex_interface_kwargs)
 
     # Get series/name + year from archive directory if unspecified
     if hasattr(args, 'import_cards'):
@@ -217,6 +228,14 @@ if (hasattr(args, 'import_cards')
         archive = pp.source_directory / series_info.full_clean_name
         library = args.revert_series[0]
 
+    # Get series ID's if provided
+    if args.id:
+        for id_type, id_ in args.id:
+            try:
+                getattr(series_info, f'set_{id_type}_id')(id_)
+            except Exception as e:
+                log.error(f'Unrecognized ID type "{id_type}" - {e}')
+
     # Forget cards associated with this series
     media_interface.remove_records(library, series_info)
             
@@ -226,7 +245,7 @@ if (hasattr(args, 'import_cards')
         log.warning(f'No images to import')
         exit(1)
 
-    # For each image, fill out episode map to load into Emby/Plex
+    # For each image, fill out episode map to load into server
     episode_map = {}
     for image in all_images:
         if (groups := match(r'.*s(\d+).*e(\d+)', image.name, IGNORECASE)):
@@ -239,16 +258,19 @@ if (hasattr(args, 'import_cards')
         ep = Episode(image, EpisodeInfo('', season, episode), 'spoiled')
         episode_map[f'{season}-{episode}'] = ep
 
-    # Load images into Emby/Plex
-    media_interface.set_title_cards(library, series_info,episode_map)
+    # Load images into server
+    media_interface.set_title_cards(library, series_info, episode_map)
 
-if hasattr(args, 'forget_cards') and (pp.use_plex or pp.use_emby):
-    # Create interface and remove records for indicated series+library
+# Create interface and remove records for indicated series+library
+if (hasattr(args, 'forget_cards')
+    and any((pp.use_emby, pp.use_jellyfin, pp.use_plex))):
     series_info = SeriesInfo(args.forget_cards[1], args.forget_cards[2])
-
-    # Create Emby/PlexInterface
     if args.media_server == 'emby':
         EmbyInterface(**pp.emby_interface_kwargs).remove_records(
+            args.forget_cards[0], series_info,
+        )
+    elif args.media_server == 'jellyfin':
+        JellyfinInterface(**pp.jellyfin_interface_kwargs).remove_records(
             args.forget_cards[0], series_info,
         )
     else:

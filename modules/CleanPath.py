@@ -5,8 +5,8 @@ from modules.Debug import log
 
 class CleanPath(_Path_):
     """
-    Subclass of Path that is more OS-agnostic and implements methods of cleaning
-    directories and filenames of bad characters. For example:
+    Subclass of Path that is more OS-agnostic and implements methods of
+    cleaning directories and filenames of bad characters. For example:
 
     >>> p = CleanPath('./some_file: 123.jpg')
     >>> print(p)
@@ -34,14 +34,15 @@ class CleanPath(_Path_):
 
     def finalize(self) -> 'CleanPath':
         """
-        Finalize this path by properly resolving if absolute or relative.
+        Finalize this path by properly resolving if absolute or
+        relative.
 
         Returns:
             This object as a fully resolved path.
 
         Raises:
-            OSError if the resolution fails (likely due to an unresolvable
-            filename).
+            OSError if the resolution fails (likely due to an
+            unresolvable filename).
         """
 
         return (CleanPath.cwd() / self).resolve()
@@ -53,7 +54,8 @@ class CleanPath(_Path_):
         Sanitize the given filename to remove any illegal characters.
 
         Args:
-            filename: Filename (string) to remove illegal characters from.
+            filename: Filename (string) to remove illegal characters
+                from.
 
         Returns:
             Sanitized filename.
@@ -73,8 +75,8 @@ class CleanPath(_Path_):
             path: Path to sanitize.
 
         Returns:
-            Sanitized path. This is a reconstructed CleanPath object with each
-            folder (or part), except the root/drive, sanitized.
+            Sanitized path. This is a reconstructed CleanPath object
+            with each folder (or part), except the root/drive, sanitized.
         """
 
         return CleanPath(
@@ -88,8 +90,8 @@ class CleanPath(_Path_):
         Sanitize all parts (except the root) of this objects path.
 
         Returns:
-            CleanPath object instantiated with sanitized names of each part of
-            this object's path.
+            CleanPath object instantiated with sanitized names of each
+            part of this object's path.
         """
 
         # Attempt to resolve immediately

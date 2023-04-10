@@ -1,4 +1,5 @@
 from pathlib import Path
+
 class TemporaryPreferenceParser:
     DEFAULT_TEMP_DIR = Path(__file__).parent / '.objects'
     def __init__(self, database_directory):

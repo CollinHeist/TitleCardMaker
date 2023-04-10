@@ -5,9 +5,10 @@ from modules.Debug import log
 
 class DatabaseInfoContainer(ABC):
     """
-    This class describes an abstract base class for all Info objects containing
-    database ID's. This provides common methods for checking whether an object
-    has a specific ID, as well as updating an ID within an objct.
+    This class describes an abstract base class for all Info objects
+    containing database ID's. This provides common methods for checking
+    whether an object has a specific ID, as well as updating an ID
+    within an objct.
     """
 
     def _update_attribute(self, attribute: str, value: Any, 
@@ -38,8 +39,8 @@ class DatabaseInfoContainer(ABC):
             id_: ID being checked
 
         Returns:
-            True if the given ID is defined (i.e. not None) for this object.
-            False otherwise.
+            True if the given ID is defined (i.e. not None) for this
+            object. False otherwise.
         """
 
         return getattr(self, id_) is not None
@@ -53,8 +54,8 @@ class DatabaseInfoContainer(ABC):
             ids: Any ID's being checked for.
 
         Returns:
-            True if all the given ID's are defined (i.e. not None) for this
-            object. False otherwise.
+            True if all the given ID's are defined (i.e. not None) for
+            this object. False otherwise.
         """
 
         return all(getattr(self, id_) is not None for id_ in ids)

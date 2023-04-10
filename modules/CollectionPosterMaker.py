@@ -20,10 +20,16 @@ class CollectionPosterMaker(ImageMaker):
     __GRADIENT = REF_DIRECTORY.parent / 'genre' / 'genre_gradient.png'
 
 
-    def __init__(self, source: Path, output: Path, title: str, font: Path=FONT,
-            font_color: str=FONT_COLOR, font_size: float=1.0,
-            omit_collection: bool=False, borderless: bool=False,
-            omit_gradient: bool=False) -> None:
+    def __init__(self,
+            source: Path,
+            output: Path, 
+            title: str,
+            font: Path = FONT,
+            font_color: str = FONT_COLOR,
+            font_size: float = 1.0,
+            omit_collection: bool = False,
+            borderless: bool = False,
+            omit_gradient: bool = False) -> None:
         """
         Construct a new instance of a CollectionPosterMaker.
 

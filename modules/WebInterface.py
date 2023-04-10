@@ -14,7 +14,7 @@ class WebInterface:
     results. This object caches requests/results for better performance.
     """
 
-    """Maximum time allowed for a single request"""
+    """Maximum time allowed for a single GET request"""
     REQUEST_TIMEOUT = 15
 
     """How many requests to cache"""
@@ -23,7 +23,7 @@ class WebInterface:
     """Regex to match URL's"""
     _URL_REGEX = re_compile(r'^((?:https?:\/\/)?.+)(?=\/)', IGNORECASE)
 
-    """404 content to ignore"""
+    """Content to ignore if returned by any GET request"""
     BAD_CONTENT = (
         b'<html><head><title>Not Found</title></head>'
         b'<body><h1>404 Not Found</h1></body></html>',
@@ -156,8 +156,10 @@ class WebInterface:
             # Get content from URL
             error = lambda s: f'URL {image} returned {s} content'
             image = get(image).content
-            assert len(image) > 0, error('no')
-            assert image not in WebInterface.BAD_CONTENT, error('bad')
+            if len(image) == 0:
+                raise Exception(f'URL {image} returned no content')
+            if image in WebInterface.BAD_CONTENT:
+                raise Exception(f'URL {image} returned bad (malformed) content')
 
             # Write content to file, return success
             destination.write_bytes(image)

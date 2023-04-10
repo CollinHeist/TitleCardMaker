@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Union, Any
+from typing import Any, Union
+from pathlib import Path
 
 from tinydb import where, Query
 
@@ -11,10 +12,14 @@ SourceImage = Union[str, bytes, None]
 
 class MediaServer(ABC):
     """
-    This class describes an abstract base class for all MediaServer classes.
-    MediaServer objects are servers like Plex, Emby, and JellyFin that can have
-    title cards loaded into them, as well as source images retrieved from them.
+    This class describes an abstract base class for all MediaServer
+    classes. MediaServer objects are servers like Plex, Emby, and
+    JellyFin that can have title cards loaded into them, as well as
+    source images retrieved from them.
     """
+
+    """Maximum time allowed for a single GET request"""
+    REQUEST_TIMEOUT = 30
 
     """Default filesize limit for all uploaded assets"""
     DEFAULT_FILESIZE_LIMIT = '10 MB'
@@ -31,15 +36,16 @@ class MediaServer(ABC):
     @abstractmethod
     def __init__(self, filesize_limit: int) -> None:
         """
-        Initialize an instance of this object. This stores creates an attribute
-        loaded_db that is a PersistentDatabase of the LOADED_DB file.
+        Initialize an instance of this object. This stores creates an
+        attribute loaded_db that is a PersistentDatabase of the
+        LOADED_DB file.
         """
 
         self.loaded_db = PersistentDatabase(self.LOADED_DB)
         self.filesize_limit = filesize_limit
 
 
-    def compress_image(self, image: 'Path') -> 'Path | None':
+    def compress_image(self, image: Path) -> Union[Path, None]:
         """
         Compress the given image until below the filesize limit.
 
@@ -47,9 +53,12 @@ class MediaServer(ABC):
             image: Path to the image to compress.
 
         Returns:
-            Path to the compressed image, or None if the image could not be
-            compressed.
+            Path to the compressed image, or None if the image could not
+            be compressed.
         """
+
+        # Ensure image is Path object
+        image = Path(image)
 
         # No compression necessary
         if (self.filesize_limit is None
@@ -76,18 +85,19 @@ class MediaServer(ABC):
 
 
     def _get_condition(self, library_name: str, series_info: 'SeriesInfo',
-                        episode: 'Episode'=None) -> Query:
+            episode: 'Episode' = None) -> Query:
         """
         Get the tinydb Query condition for the given entry.
 
         Args:
-            library_name: Library name containing the series to get the details
-                of.
+            library_name: Library name containing the series to get the
+                details of.
             series_info: Series to get the details of.
             episode: Optional Episode to get the series of.
 
         Returns:
-            Query condition to filter a TinyDB database for the requested entry.
+            Query condition to filter a TinyDB database for the
+            requested entry.
         """
 
         # If no episode was given, get condition for entire series
@@ -106,18 +116,19 @@ class MediaServer(ABC):
 
 
     def _get_loaded_episode(self, loaded_series: list[dict[str, Any]],
-                             episode: 'Episode') -> 'dict[str, Any] | None':
+            episode: 'Episode') -> Union[dict[str, Any], None]:
         """
-        Get the loaded details of the given Episode from the given list of
-        loaded series details.
+        Get the loaded details of the given Episode from the given list
+        of loaded series details.
 
         Args:
-            loaded_series: Filtered List from the loaded database to search.
+            loaded_series: Filtered List from the loaded database to
+                search.
             episode: The Episode to get the details of.
 
         Returns:
-            Loaded details for the specified episode. None if an episode of that
-            index DNE in the given list.
+            Loaded details for the specified episode. None if an episode
+            of that index DNE in the given list.
         """
 
         for entry in loaded_series:
@@ -129,12 +140,11 @@ class MediaServer(ABC):
 
 
     def _filter_loaded_cards(self, library_name: str, series_info:'SeriesInfo',
-                             episode_map: dict[str, 'Episode']
-                             ) -> dict[str, 'Episode']:
+            episode_map: dict[str, 'Episode']) -> dict[str, 'Episode']:
         """
-        Filter the given episode map and remove all Episode objects without
-        created cards, or whose card's filesizes matches that of the already
-        uploaded card.
+        Filter the given episode map and remove all Episode objects
+        without created cards, or whose card's filesizes matches that of
+        the already uploaded card.
 
         Args:
             library_name: Name of the library containing this series.
@@ -142,8 +152,9 @@ class MediaServer(ABC):
             episode_map: Dictionary of Episode objects to filter.
 
         Returns:
-            Filtered episode map. Episodes without existing cards, or whose
-            existing card filesizes' match those already loaded are removed.
+            Filtered episode map. Episodes without existing cards, or
+            whose existing card filesizes' match those already loaded
+            are removed.
         """
 
         # Get all loaded details for this series
@@ -177,18 +188,37 @@ class MediaServer(ABC):
         return filtered
 
 
+    def remove_records(self, library_name: str, series_info: 'SeriesInfo') ->None:
+        """
+        Remove all records for the given library and series from the
+        loaded database.
+
+        Args:
+            library_name: The name of the library containing the series
+                whose records are being removed.
+            series_info: SeriesInfo whose records are being removed.
+        """
+
+        # Get condition to find records matching this library + series
+        condition = self._get_condition(library_name, series_info)
+
+        # Delete records matching this condition
+        records = self.loaded_db.remove(condition)
+        log.info(f'Deleted {len(records)} records')
+
+
     @abstractmethod
     def has_series(self) -> bool:
         """
-        Determine whether the given series is present within this MediaServer.
+        Determine whether the given series is present within this
+        MediaServer.
         """
         raise NotImplementedError('All MediaServer objects must implement this')
 
     @abstractmethod
     def update_watched_statuses(self, library_name: str,
-                                series_info: 'SeriesInfo',
-                                episode_map: dict[str, 'Episode'],
-                                style_set: 'StyleSet') -> None:
+            series_info: 'SeriesInfo', episode_map: dict[str, 'Episode'],
+            style_set: 'StyleSet') -> None:
         """Abstract method to update watched statuses of Episode objects."""
         raise NotImplementedError('All MediaServer objects must implement this')
 
@@ -205,7 +235,8 @@ class MediaServer(ABC):
     @abstractmethod
     def get_source_image(self) -> SourceImage:
         """
-        Abstract method to get textless source images from this MediaServer.
+        Abstract method to get textless source images from this
+        MediaServer.
         """
         raise NotImplementedError('All MediaServer objects must implement this')
 

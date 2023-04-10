@@ -1,6 +1,6 @@
 from base64 import b64encode
 from datetime import datetime
-from typing import Union
+from typing import Optional, Union
 
 from modules.Debug import log
 from modules.EpisodeDataSource import EpisodeDataSource
@@ -34,9 +34,10 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
     AIRDATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f000000Z'
 
 
-    def __init__(self, url: str, api_key: str, username: str,
+    def __init__(self, url: str, api_key: str,
+            username: Optional[str] = None,
             verify_ssl: bool=True,
-            filesize_limit: int=None) -> None:
+            filesize_limit: Optional[int] = None) -> None:
         """
         Construct a new instance of an interface to a Jellyfin server.
 
@@ -69,6 +70,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 f'{self.url}/System/Info',
                 params=self.__params
             )
+
             if not set(response).issuperset({'ServerName', 'Version', 'Id'}):
                 raise Exception(f'Unable to authenticate with server')
         except Exception as e:
@@ -257,6 +259,9 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             corresponding library name.
         """
 
+        # Temporarily override request timeout to 240s (4 min)
+        self.REQUEST_TIMEOUT = 240
+
         # Base params for all queries
         params = {
             'recursive': True,
@@ -280,15 +285,21 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 params=params | {'ParentId': library_id}
             )
             for series in response['Items']:
+                # Skip series without airdate/year
+                if series.get('PremiereDate', None) is None:
+                    log.debug(f'Series {series["Name"]} has no premiere date')
+                    continue
+                
                 series_info = SeriesInfo(
                     series['Name'], 
-                    datetime.strptime(
-                        series['PremiereDate'],
-                        self.AIRDATE_FORMAT
-                    ).year,
+                    datetime.strptime(series['PremiereDate'],
+                                      self.AIRDATE_FORMAT).year,
                     jellyfin_id=series['Id'],
                 )
                 all_series.append((series_info, series['Path'], library))
+
+        # Reset request timeout
+        self.REQUEST_TIMEOUT = 30
 
         return all_series
 

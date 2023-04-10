@@ -4,10 +4,10 @@ from modules.Debug import log
 
 class EpisodeMap:
     """
-    This class describes an EpisodeMap. In particular a mapping of episode
-    indices to manually specified season titles or sources. This object
-    basically contains the `seasons` and `episode_ranges` attributes for a given
-    Show.
+    This class describes an EpisodeMap. In particular a mapping of
+    episode indices to manually specified season titles or sources. This
+    object basically contains the `seasons` and `episode_ranges`
+    attributes for a given Show.
     """
 
     """How to apply manual source if not explicitly stated"""
@@ -22,17 +22,19 @@ class EpisodeMap:
     )
 
 
-    def __init__(self, seasons: dict=None,
-                 episode_ranges: dict=None) -> None:
+    def __init__(self,
+            seasons: dict = None,
+            episode_ranges: dict = None) -> None:
         """
-        Construct a new instance of an EpisodeMap. This maps titles and source
-        images to episodes, and can be initialized with EITHER a season map or
-        episode range directly from series YAML; NOT both.
+        Construct a new instance of an EpisodeMap. This maps titles and
+        source images to episodes, and can be initialized with EITHER a
+        season map or episode range directly from series YAML; NOT both.
 
         Args:
-            seasons: Optional 'seasons' key from series YAML to initialize with.
-            episode_ranges: Optional 'episode_ranges' key from series YAML to
+            seasons: Optional 'seasons' key from series YAML to
                 initialize with.
+            episode_ranges: Optional 'episode_ranges' key from series
+                YAML to initialize with.
         """
 
         # Generic object attributes
@@ -96,8 +98,8 @@ class EpisodeMap:
 
     def __parse_seasons(self, seasons: dict) -> None:
         """
-        Parse the given season map, filling this object's title, source, and
-        applies dictionaries. Also update's object validity.
+        Parse the given season map, filling this object's title, source,
+        and applies dictionaries. Also update's object validity.
 
         Args:
             seasons: 'series' key from series YAML to parse.
@@ -137,11 +139,12 @@ class EpisodeMap:
 
     def __parse_index_episode_range(self, episode_ranges: dict) -> None:
         """
-        Parse the given episode range map, filling this object's title, source,
-        and applies dictionaries. Also update's object validity.
+        Parse the given episode range map, filling this object's title,
+        source, and applies dictionaries. Also update's object validity.
 
         Args:
-            episode_ranges: 'episode_ranges' key from series YAML to parse.
+            episode_ranges: 'episode_ranges' key from series YAML to
+                parse.
         """
 
         # Go through each index range of mapping
@@ -192,11 +195,12 @@ class EpisodeMap:
 
     def __parse_absolute_episode_ranges(self, episode_ranges: dict) -> None:
         """
-        Parse the given episode range map, filling this object's title, source,
-        and applies dictionaries. Also update's object validity.
+        Parse the given episode range map, filling this object's title,
+        source, and applies dictionaries. Also update's object validity.
 
         Args:
-            episode_ranges: 'episode_ranges' key from series YAML to parse.
+            episode_ranges: 'episode_ranges' key from series YAML to
+                parse.
         """
 
         # Go through each episode range of mapping
@@ -254,7 +258,8 @@ class EpisodeMap:
             'Specials' for season 0 episodes, 'Season {n}' otherwise.
 
         Raises:
-            ValueError if neither season_number nor episode_info is provided.
+            ValueError if neither season_number nor episode_info is
+            provided.
         """
 
         # Ensure at least one argument was provided
@@ -279,8 +284,8 @@ class EpisodeMap:
         return self.__titles if self.__index_by == 'season' else {}
 
 
-    def __get_value(self, episode_info: 'EpisodeInfo', which: str,
-                    default: callable):
+    def __get_value(self,
+            episode_info: 'EpisodeInfo', which: str, default: callable):
         """
         Get the value for the given Episode from the target associated with
         'which' (i.e. the season title/source/applies map).
@@ -288,13 +293,13 @@ class EpisodeMap:
         Args:
             episode_info: Episode to get the value of.
             which: Which dictionary to get the value from.
-            default: Function to call if the given Episode does not exist in the
-                indicated map. It's return is returned.
+            default: Function to call if the given Episode does not
+                exist in the indicated map. It's return is returned.
 
         Returns:
-            If the Episode exists, returns the value from the indicated map. If
-            it does not exist, returns the return of default with EpisodeInfo
-            passed.
+            If the Episode exists, returns the value from the indicated
+            map. If it does not exist, returns the return of default
+            with EpisodeInfo passed.
         """
 
         # Get target to look through

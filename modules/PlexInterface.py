@@ -251,6 +251,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             corresponding library name.
         """
 
+        # Temporarily override request timeout to 240s (4 min)
+        self.REQUEST_TIMEOUT = 240
+
         # Go through every library in this server
         all_series = []
         for library in self.__server.library.sections():
@@ -292,6 +295,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 # Create SeriesInfo object for this show, add to return
                 series_info = SeriesInfo(show.title, show.year, **ids)
                 all_series.append((series_info,show.locations[0],library.title))
+
+        # Reset request timeout
+        self.REQUEST_TIMEOUT = 30
 
         return all_series
 
@@ -832,24 +838,3 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # Error occurred, return empty list
         return []
-
-
-    def remove_records(self, library_name: str, series_info: SeriesInfo) ->None:
-        """
-        Remove all records for the given library and series from the loaded
-        database.
-
-        Args:
-            library_name: The name of the library containing the series whose
-                records are being removed.
-            series_info: SeriesInfo whose records are being removed.
-        """
-
-        # Get condition to find records matching this library + series
-        condition = self._get_condition(library_name, series_info)
-
-        # Delete records matching this condition
-        records = self.loaded_db.remove(condition)
-
-        # Log actions to user
-        log.info(f'Deleted {len(records)} records')

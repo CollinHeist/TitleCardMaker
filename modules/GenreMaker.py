@@ -20,7 +20,10 @@ class GenreMaker(ImageMaker):
     __GENRE_GRADIENT = REF_DIRECTORY / 'genre_gradient.png'
 
 
-    def __init__(self, source: Path, genre: str, output: Path,
+    def __init__(self,
+            source: Path,
+            genre: str,
+            output: Path,
             font_size: float = 1.0,
             borderless: bool = False,
             omit_gradient: bool = False) -> None:

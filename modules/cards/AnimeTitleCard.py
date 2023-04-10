@@ -123,14 +123,15 @@ class AnimeTitleCard(BaseCardType):
             font_size: Scalar to apply to the title font size.
             title_color: Color to use for title text.
             hide_season: Whether to hide the season text.
-            vertical_shift: Vertical shift to apply to the title and kanji text.
-            interline_spacing: Offset to interline spacing of the title text
+            vertical_shift: Vertical shift to apply to the title and
+                kanji text.
+            interline_spacing: Offset to interline spacing of title text
             kerning: Scalar to apply to kerning of the title text.
-            stroke_width: Scalar to apply to black stroke of the title text.
+            stroke_width: Scalar to apply to stroke.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
             kanji: Kanji text to place above the episode title.
-            separator: Character to use to separate season and episode text.
+            separator: Character to use to separate season/episode text.
             omit_gradient: Whether to omit the gradient overlay.
             require_kanji: Whether to require kanji for this card.
             kanji_vertical_shift: Vertical shift to apply to kanji text.
@@ -175,8 +176,9 @@ class AnimeTitleCard(BaseCardType):
     @property
     def __title_text_global_effects(self) -> list:
         """
-        ImageMagick commands to implement the title text's global effects.
-        Specifically the the font, kerning, fontsize, and southwest gravity.
+        ImageMagick commands to implement the title text's global
+        effects. Specifically the the font, kerning, fontsize, and
+        southwest gravity.
 
         Returns:
             List of ImageMagick commands.
@@ -220,7 +222,8 @@ class AnimeTitleCard(BaseCardType):
     @property
     def __title_text_effects(self) -> list[str]:
         """
-        ImageMagick commands to implement the title text's standard effects.
+        ImageMagick commands to implement the title text's standard
+        effects.
 
         Returns:
             List of ImageMagick commands.
@@ -236,8 +239,8 @@ class AnimeTitleCard(BaseCardType):
     @property
     def __series_count_text_global_effects(self) -> list[str]:
         """
-        ImageMagick commands for global text effects applied to all series count
-        text (season/episode count and dot).
+        ImageMagick commands for global text effects applied to all
+        series count text (season/episode count and dot).
 
         Returns:
             List of ImageMagick commands.
@@ -255,8 +258,8 @@ class AnimeTitleCard(BaseCardType):
     @property
     def __series_count_text_black_stroke(self) -> list:
         """
-        ImageMagick commands for adding the necessary black stroke effects to
-        series count text.
+        ImageMagick commands for adding the necessary black stroke
+        effects to series count text.
 
         Returns:
             List of ImageMagick commands.
@@ -373,8 +376,8 @@ class AnimeTitleCard(BaseCardType):
     def modify_extras(extras: dict[str, Any], custom_font: bool,
                       custom_season_titles: bool) -> None:
         """
-        Modify the given extras base on whether font or season titles are
-        custom.
+        Modify the given extras base on whether font or season titles
+        are custom.
 
         Args:
             extras: Dictionary to modify.
@@ -391,8 +394,8 @@ class AnimeTitleCard(BaseCardType):
     @staticmethod
     def is_custom_font(font: 'Font') -> bool:
         """
-        Determines whether the given arguments represent a custom font for this
-        card. This CardType only uses custom font cases.
+        Determines whether the given arguments represent a custom font
+        for this card.
 
         Args:
             font: The Font being evaluated.
@@ -414,8 +417,8 @@ class AnimeTitleCard(BaseCardType):
     def is_custom_season_titles(custom_episode_map: bool, 
                                 episode_text_format: str) -> bool:
         """
-        Determines whether the given attributes constitute custom or generic
-        season titles.
+        Determines whether the given attributes constitute custom or
+        generic season titles.
 
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
@@ -433,8 +436,8 @@ class AnimeTitleCard(BaseCardType):
 
     def create(self) -> None:
         """
-        Make the necessary ImageMagick and system calls to create this object's
-        defined title card.
+        Make the necessary ImageMagick and system calls to create this
+        object's defined title card.
         """
 
         # If kanji is required, and not given, error
@@ -463,6 +466,8 @@ class AnimeTitleCard(BaseCardType):
             *self.title_command,
             # Add season or season+episode text
             *self.index_command,
+            # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 

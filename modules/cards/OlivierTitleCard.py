@@ -8,8 +8,8 @@ SeriesExtra = Optional
 
 class OlivierTitleCard(BaseCardType):
     """
-    This class describes a type of ImageMaker that produces title cards in the
-    style of those designed by Reddit user /u/Olivier_286.
+    This class describes a type of ImageMaker that produces title cards
+    in the style of those designed by Reddit user /u/Olivier_286.
     """
 
     """API Parameters"""
@@ -90,11 +90,14 @@ class OlivierTitleCard(BaseCardType):
             episode_text: Episode text to add to created card.
             font: Font name or path (as string) to use for episode title.
             title_color: Color to use for title text.
-            interline_spacing: Pixel count to adjust title interline spacing by.
+            interline_spacing: Pixel count to adjust title interline
+                spacing by.
             kerning: Scalar to apply to kerning of the title text.
             font_size: Scalar to apply to title font size.
-            stroke_width: Scalar to apply to black stroke of the title text.
-            vertical_shift: Pixel count to adjust the title vertical offset by.
+            stroke_width: Scalar to apply to black stroke of the title
+                text.
+            vertical_shift: Pixel count to adjust the title vertical
+                offset by.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
             episode_text_color: Color to use for the episode text.
@@ -140,7 +143,8 @@ class OlivierTitleCard(BaseCardType):
     @property
     def title_text_command(self) -> list[str]:
         """
-        Get the ImageMagick commands to add the episode title text to an image.
+        Get the ImageMagick commands to add the episode title text to an
+        image.
 
         Returns:
             List of ImageMagick commands.
@@ -172,7 +176,8 @@ class OlivierTitleCard(BaseCardType):
     @property
     def episode_prefix_command(self) -> list[str]:
         """
-        Get the ImageMagick commands to add the episode prefix text to an image.
+        Get the ImageMagick commands to add the episode prefix text to
+        an image.
 
         Returns:
             List of ImageMagick commands.
@@ -201,7 +206,8 @@ class OlivierTitleCard(BaseCardType):
     @property
     def episode_number_text_command(self) -> list[str]:
         """
-        Get the ImageMagick commands to add the episode number text to an image.
+        Get the ImageMagick commands to add the episode number text to
+        an image.
 
         Returns:
             List of ImageMagick commands.
@@ -238,8 +244,10 @@ class OlivierTitleCard(BaseCardType):
 
 
     @staticmethod
-    def modify_extras(extras: dict[str, Any], custom_font: bool,
-                      custom_season_titles: bool) -> None:
+    def modify_extras(
+            extras: dict[str, Any],
+            custom_font: bool,
+            custom_season_titles: bool) -> None:
         """
         Modify the given extras based on whether font or season titles are
         custom.
@@ -262,8 +270,8 @@ class OlivierTitleCard(BaseCardType):
     @staticmethod
     def is_custom_font(font: 'Font') -> bool:
         """
-        Determine whether the given arguments represent a custom font for this
-        card.
+        Determine whether the given arguments represent a custom font
+        for this card.
 
         Args:
             font: The Font being evaluated.
@@ -282,19 +290,19 @@ class OlivierTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_season_titles(custom_episode_map: bool, 
-                                episode_text_format: str) -> bool:
+    def is_custom_season_titles(
+            custom_episode_map: bool, episode_text_format: str) -> bool:
         """
-        Determine whether the given attributes constitute custom or generic
-        season titles.
+        Determine whether the given attributes constitute custom or
+        generic season titles.
 
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
             episode_text_format: The episode text format in use.
 
         Returns:
-            True if the episode map or episode text format is custom, False
-            otherwise.
+            True if the episode map or episode text format is custom,
+            False otherwise.
         """
 
         standard_etf = OlivierTitleCard.EPISODE_TEXT_FORMAT.upper()
@@ -311,6 +319,8 @@ class OlivierTitleCard(BaseCardType):
             *self.title_text_command,
             *self.episode_prefix_command,
             *self.episode_number_text_command,
+            # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 

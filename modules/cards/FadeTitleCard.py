@@ -97,10 +97,12 @@ class FadeTitleCard(BaseCardType):
             hide_season: Whether to hide the season text.
             font: Font name or path (as string) to use for episode title.
             title_color: Color to use for title text.
-            interline_spacing: Pixel count to adjust title interline spacing by.
+            interline_spacing: Pixel count to adjust title interline
+                spacing by.
             kerning: Scalar to apply to kerning of the title text.
             font_size: Scalar to apply to title font size.
-            vertical_shift: Pixel count to adjust the title vertical offset by.
+            vertical_shift: Pixel count to adjust the title vertical
+                offset by.
             season_number: Season number for logo-file formatting.
             episode_number: Episode number for logo-file formatting.
             logo:  Filepath (or file format) to the logo file.
@@ -123,8 +125,9 @@ class FadeTitleCard(BaseCardType):
             self.logo = None
         else:
             try:
-                logo = logo.format(season_number=season_number,
-                                   episode_number=episode_number)
+                logo = logo.format(
+                    season_number=season_number, episode_number=episode_number
+                )
                 logo = Path(CleanPath(logo).sanitize())
             except Exception as e:
                 # Bad format strings will be caught during card creation
@@ -240,8 +243,8 @@ class FadeTitleCard(BaseCardType):
     @staticmethod
     def is_custom_font(font: 'Font') -> bool:
         """
-        Determine whether the given arguments represent a custom font for this
-        card.
+        Determine whether the given arguments represent a custom font
+        for this card.
 
         Args:
             font: The Font being evaluated.
@@ -259,19 +262,19 @@ class FadeTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_season_titles(custom_episode_map: bool, 
-                                episode_text_format: str) -> bool:
+    def is_custom_season_titles(
+            custom_episode_map: bool, episode_text_format: str) -> bool:
         """
-        Determine whether the given attributes constitute custom or generic
-        season titles.
+        Determine whether the given attributes constitute custom or
+        genericseason titles.
 
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
             episode_text_format: The episode text format in use.
 
         Returns:
-            True if the episode map or episode text format is custom, False
-            otherwise.
+            True if the episode map or episode text format is custom,
+            False otherwise.
         """
 
         standard_etf = FadeTitleCard.EPISODE_TEXT_FORMAT
@@ -304,6 +307,8 @@ class FadeTitleCard(BaseCardType):
             # Add title and index text
             *self.add_title_text,
             *self.add_index_text,
+            # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 

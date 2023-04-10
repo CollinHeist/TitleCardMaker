@@ -187,23 +187,30 @@ class SonarrInterface(WebInterface, SyncInterface):
             series_type: Optional[str]=None,
             ) -> list[tuple[SeriesInfo, str]]:
         """
-        Get all the series within Sonarr, filtered by the given parameters.
+        Get all the series within Sonarr, filtered by the given
+        parameters.
 
          Args:
-            required_tags: List of tags to filter return by. If provided, only
-                series that have all of the given tags are returned.
-            excluded_tags: List of tags to filter return by. If provided, series
-                with any of the given tags are excluded from return.
-            monitored_only: Whether to filter return to exclude series that are
-                unmonitored within Sonarr.
-            downloaded_only: Whether to filter return to exclude series that do
-                not have any downloaded episodes.
+            required_tags: List of tags to filter return by. If
+                provided, only series that have all of the given tags
+                are returned.
+            excluded_tags: List of tags to filter return by. If
+                provided, series with any of the given tags are excluded
+                from return.
+            monitored_only: Whether to filter return to exclude series
+                that are unmonitored within Sonarr.
+            downloaded_only: Whether to filter return to exclude series
+                that do not have any downloaded episodes.
             series_type: Optional series type to filter series by.
 
         Returns:
-            List of tuples. Tuple contains the SeriesInfo object for the series,
-            and the Path to the series' media as reported by Sonarr.
+            List of tuples. Tuple contains the SeriesInfo object for the
+            series, and the Path to the series' media as reported by
+            Sonarr.
         """
+
+        # Temporarily override request timeout to 240s (4 min)
+        self.REQUEST_TIMEOUT = 240
 
         # Construct GET arguments
         all_series = self._get(f'{self.url}series', self.__standard_params)
@@ -272,6 +279,9 @@ class SonarrInterface(WebInterface, SyncInterface):
 
             # Add to returned list
             series.append((series_info, show['path']))
+
+        # Reset request timeout
+        self.REQUEST_TIMEOUT = 30
 
         return series
 

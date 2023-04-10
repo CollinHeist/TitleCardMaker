@@ -1,6 +1,6 @@
 from collections import namedtuple
 from pathlib import Path
-from typing import Any, Iterable, Union
+from typing import Any, Iterable, Optional, Union
 
 from num2words import CONVERTER_CLASSES as SUPPORTED_LANGUAGE_CODES
 from tqdm import tqdm
@@ -33,8 +33,8 @@ YamlWriterSet = namedtuple(
 
 class PreferenceParser(YamlReader):
     """
-    This class describes a preference parser that reads a given preference YAML
-    file and parses it into individual attributes.
+    This class describes a preference parser that reads a given
+    preference YAML file and parses it into individual attributes.
     """
 
     """Valid image source identifiers"""
@@ -95,7 +95,8 @@ class PreferenceParser(YamlReader):
         self._parse_card_type(TitleCard.DEFAULT_CARD_TYPE) # Sets self.card_type
         self.card_filename_format = TitleCard.DEFAULT_FILENAME_FORMAT
         self.card_extension = TitleCard.DEFAULT_CARD_EXTENSION
-        self.image_source_priority = ('tmdb', 'plex')
+        self.card_dimensions = TitleCard.DEFAULT_CARD_DIMENSIONS
+        self.image_source_priority = ('tmdb', 'plex', 'emby', 'jellyfin')
         self.episode_data_source = self.DEFAULT_EPISODE_DATA_SOURCE
         self.validate_fonts = True
         self.season_folder_format = self.DEFAULT_SEASON_FOLDER_FORMAT
@@ -366,7 +367,7 @@ class PreferenceParser(YamlReader):
                     for sync in sonarr_sync:
                         append_writer_and_args('sonarr', 0, sync, base_sync)
                 else:
-                    log.error(f'Invalid Sonarr sync: {plex_sync}')
+                    log.error(f'Invalid Sonarr sync: {sonarr_sync}')
             # Multiple sonarr interfaces, check for sync on each
             elif isinstance(self._get('sonarr'), list):
                 for interface_id, server in enumerate(self._get('sonarr')):
@@ -385,7 +386,8 @@ class PreferenceParser(YamlReader):
 
     def __parse_yaml_options(self) -> None:
         """
-        Parse the 'options' section of the raw YAML dictionary into attributes.
+        Parse the 'options' section of the raw YAML dictionary into
+        attributes.
         """
 
         # Skip if sections omitted
@@ -418,6 +420,23 @@ class PreferenceParser(YamlReader):
                 self.card_extension = extension
             else:
                 log.critical(f'Card extension "{extension}" is invalid')
+                self.valid = False
+
+        if (value := self._get('options', 'card_dimensions', type_=str)) !=None:
+            try:
+                width, height = map(int, value.lower().split('x'))
+                assert width > 0 and height > 0
+                if not ((16/9-0.1) <= width / height <= (16/9+0.1)):
+                    log.warning(f'Card dimensions aspect ratio is not 16:9')
+                if width < 200 or height < 200:
+                    log.warning(f'Card dimensions are very small')
+                self.card_dimensions = value
+            except ValueError:
+                log.critical(f'Invalid card dimensions - specify as WIDTHxHEIGHT')
+                self.valid = False
+            except AssertionError:
+                log.critical(f'Invalid card dimensions - both dimensions must '
+                             f'be larger than 0px')
                 self.valid = False
 
         if (value := self._get('options', 'filename_format', type_=str)) !=None:
@@ -635,7 +654,8 @@ class PreferenceParser(YamlReader):
 
     def __parse_yaml_sonarr(self) -> None:
         """
-        Parse the 'sonarr' section of the raw YAML dictionary into attributes.
+        Parse the 'sonarr' section of the raw YAML dictionary into
+        attributes.
         """
 
         # Skip if section omitted
@@ -670,7 +690,8 @@ class PreferenceParser(YamlReader):
 
     def __parse_yaml_tmdb(self) -> None:
         """
-        Parse the 'tmdb' section of the raw YAML dictionary into attributes.
+        Parse the 'tmdb' section of the raw YAML dictionary into
+        attributes.
         """
 
         # Skip if section omitted
@@ -704,7 +725,8 @@ class PreferenceParser(YamlReader):
 
     def __parse_yaml_tautulli(self) -> None:
         """
-        Parse the 'tautulli' section of the raw YAML dictionary into attributes.
+        Parse the 'tautulli' section of the raw YAML dictionary into
+        attributes.
         """
 
         # Skip if section omitted
@@ -763,9 +785,9 @@ class PreferenceParser(YamlReader):
 
     def __parse_yaml(self) -> None:
         """
-        Parse the raw YAML dictionary into object attributes. This also errors
-        to the user if any provided values are overtly invalid (i.e. missing
-        where necessary, fails type conversion).
+        Parse the raw YAML dictionary into object attributes. This also
+        errors to the user if any provided values are overtly invalid
+        (i.e. missing where necessary, fails type conversion).
         """
 
         # Parse each section
@@ -871,12 +893,13 @@ class PreferenceParser(YamlReader):
     def __apply_template(self, templates: dict[str, Template],
             series_yaml: dict[str, Any], series_name: str) -> bool:
         """
-        Apply the correct Template object (if indicated) to the given series
-        YAML. This effectively "fill out" the indicated template, and updates
-        the series YAML directly.
+        Apply the correct Template object (if indicated) to the given
+        series YAML. This effectively "fill out" the indicated template,
+        and updates the series YAML directly.
 
         Args:
-            templates: Dictionary of Template objects to potentially apply.
+            templates: Dictionary of Template objects to potentially
+                apply.
             series_yaml: The YAML of the series to modify.
             series_name: The name of the series being modified.
 
@@ -923,14 +946,14 @@ class PreferenceParser(YamlReader):
             templates: list[Template], library_map: dict[str, Any],
             font_map: dict[str, Any]) -> 'dict | None':
         """
-        Apply the indicated template, and merge the specified library/font to
-        the given show YAML.
+        Apply the indicated template, and merge the specified
+        library/font to the given show YAML.
 
         Args:
-            show_yaml: Base show YAML with potential template/library/font
-                identifiers.
-            library_map: Library map of library names/identifiers to library
-                specifications.
+            show_yaml: Base show YAML with potential template/library/
+                font identifiers.
+            library_map: Library map of library names/identifiers to
+                library specifications.
             font_map: Font map of font names/identifiers to custom font
                 specifications.
 
@@ -983,8 +1006,8 @@ class PreferenceParser(YamlReader):
 
     def read_file(self) -> None:
         """
-        Read this associated preference file and store in `_base_yaml` attribute
-        and critically error if reading fails.
+        Read this associated preference file and store in `_base_yaml`
+        attribute and critically error if reading fails.
         """
 
         # If the file doesn't exist, error and exit
@@ -1250,7 +1273,7 @@ class PreferenceParser(YamlReader):
             exit(1)
 
 
-    def filesize_as_bytes(self, filesize: 'str | None') -> 'int | None':
+    def filesize_as_bytes(self, filesize: Optional[str]) -> Optional[int]:
         """
         Convert the given filesize string to its integer byte equivalent.
 
