@@ -54,17 +54,9 @@
       text-align: right;
     }
 
-    /* Right align the watch status icons in episode dropdowns */
-    .watch.status.icon {
-      float: right;
-    }
-    /* Fade the indetermine watch status icon */
-    .table .question.icon, .table .ui.file.import.icon {
+    /* Fade any indetermine status icons */
+    .table .question.icon {
       opacity: 30%;
-    }
-
-    .table >* .transparent.input > input {
-      width: auto;
     }
 
     /* Show the icon is clickable by changing the cursor on hover */
@@ -75,10 +67,11 @@
       text-align: center !important;
     }
 
-    /* Set default width of ID and number inputs */
+    /* Set default width of ID, number, and "short" inputs */
     .table .transparent.id.input input,
-    .table .transparent.number.input input {
-      width: 7ch;
+    .table .transparent.number.input input,
+    .table .transparent.short.input input {
+      width: 8ch;
     }
   </style>
 
@@ -95,184 +88,145 @@
     </div>
   </template>
   
-  <template id="episode-template">
-    <div class="title">
-      <i class="dropdown menu"></i>
-      <!-- Episode index here -->
-    </div>
-    <div class="content">
-      <form class="ui episode form">
-        <!-- Input fields -->
-        <div class="field">
-          <label>Title</label>
-          <input type="text" name="title" placeholder="{TITLE}">
-        </div>
-        <div class="field">
-          <label>Source File</label>
-          <input type="text" name="source_file_path" placeholder="{SOURCE PATH}">
-        </div>
-        <div class="field">
-          <label>Destination</label>
-          <input type="text" name="card_file_path" placeholder="{CARD PATH}">
-        </div>
-        <!-- Save and delete button -->
-        <button class="ui primary animated submit button" type="submit">
-          <div class="visible content">Save</div>
-          <div class="hidden content">
-            <i class="right arrow icon"></i>
-          </div>
-        </button>
-      </form>
-      
-      <button class="ui animated negative button">
-        <div class="visible content">Delete</div>
-        <div class="hidden content">
-          <i class="right arrow icon"></i>
-        </div>
-      </button>
-    </div>
-  </template>
-
   <template id="episode-row">
     <tr class="center aligned">
-      <form>
-        <td data-column="edit" class="selectable">
-          <a><i class="ui blue save outline icon"></i></a>
-        </td>
-        <td data-column="season_number" class="center aligned collapsing">0</td>
-        <td data-column="episode_number" class="center aligned collapsing">0</td>
-        <td data-column="absolute_number" class="center aligned collapsing">0</td>
-        <td data-column="title" class="left aligned">
-          <div class="ui transparent input">
-            <input name="title" type="text" placeholder="">
-          </div>
-        </td>
-        <td data-column="match_title" class="center aligned collapsing"><!-- Icon --></td>
-        <td data-column="auto_split_title" class="center aligned collapsing"><!-- Icon --></td>
-        <td data-column="template" class="center aligned collapsing">
-          <div data-value="template_id" class="ui inline clearable dropdown">
-            <input name="template_id" type="hidden">
-            <i class="dropdown icon"></i>
-            <div class="default text">Default</div>
-            <div class="menu"><!-- Submenu --></div>
-          </div>
-        </td>
-        <td data-column="font_id" class="center aligned collapsing">
-          <div data-value="font_id" class="ui inline clearable dropdown">
-            <input name="font_id" type="hidden">
-            <i class="dropdown icon"></i>
-            <div class="default text">Default</div>
-            <div class="menu"><!-- Submenu --></div>
-          </div>
-        </td>
-        <td data-column="card_type" class="center aligned collapsing">
-          <div data-value="card_type" class="ui inline clearable dropdown">
-            <input name="card_type" type="hidden">
-            <i class="dropdown icon"></i>
-            <div class="default text">Default</div>
-            <div class="menu"><!-- Submenu --></div>
-          </div>
-        </td>
-        <td data-column="hide_season_text" class="center aligned collapsing"><!-- Icon --></td>
-        <td data-column="season_text" class="collapsing">
-          <div class="ui transparent input">
-            <input name="season_text" type="text" placeholder="Default">
-          </div>
-        </td>
-        <td data-column="hide_episode_text" class="center aligned collapsing"><!-- Icon --></td>
-        <td data-column="episode_text" class="collapsing">
-          <div class="ui transparent input">
-            <input name="episode_text" type="text" placeholder="Default">
-          </div>
-        </td>
-        <td data-column="unwatched_style" class="center aligned collapsing">
-          <div data-value="unwatched_style" class="ui inline clearable dropdown">
-            <input name="unwatched_style" type="hidden">
-            <i class="dropdown icon"></i>
-            <div class="default text">Default</div>
-            <div class="menu"><!-- Submenu --></div>
-          </div>
-        </td>
-        <td data-column="watched_style" class="center aligned collapsing">
-          <div data-value="watched_style" class="ui inline clearable dropdown">
-            <input name="watched_style" type="hidden">
-            <i class="dropdown icon"></i>
-            <div class="default text">Default</div>
-            <div class="menu"><!-- Submenu --></div>
-          </div>
-        </td>
-        <td data-column="font_color" class="center aligned collapsing">
-          <div class="ui transparent short input">
-            <input name="font_color" type="text" placeholder="Default">
-          </div>
-        </td>
-        <td data-column="font_size" class="center aligned collapsing">
-          <div class="ui transparent number input">
-            <input name="font_size" value="{episode.font_size}" placeholder="Default">
-          </div>
-        </td>
-        <td data-column="font_stroke_width" class="center aligned collapsing">
-          <div class="ui transparent number input">
-            <input name="font_stroke_width" placeholder="Default">
-          </div>
-        </td>
-        <td data-column="font_interline_spacing" class="center aligned collapsing">
-          <div class="ui transparent number input">
-            <input name="font_interline_spacing" placeholder="Default">
-          </div>
-        </td>
-        <td data-column="font_vertical_shift" class="center aligned collapsing">
-          <div class="ui transparent number input">
-            <input name="font_vertical_shift" placeholder="Default">
-          </div>
-        </td>
-        <td data-column="extras" class="center aligned collapsing"></td>
-        <td data-column="source_file" class="center aligned collapsing">
-          <div class="ui transparent input">
-            <input name="source_file_path" type="text" placeholder="Default">
-          </div>
-        </td>
-        <td data-column="card_file" class="center aligned collapsing">
-          <div class="ui transparent input">
-            <input name="card_file_path" type="text" placeholder="Default">
-          </div>
-        </td>
-        <td data-column="watched" class="center aligned collapsing"><!-- Icon --></td>
-        {% if preferences.use_emby and series.emby_library_name %}
-        <td data-column="emby_id" class="center aligned collapsing">
-          <div class="ui transparent id input">
-            <input name="emby_id" type="text" placeholder="-">
-          </div>
-        </td>
-        {% endif %}
-        <td data-column="imdb_id" class="center aligned collapsing">
-          <div class="ui transparent id input">
-            <input name="imdb_id" type="text" placeholder="-">
-          </div>
-        </td>
-        {% if preferences.use_jellyfin and series.jellyfin_library_name %}
-        <td data-column="jellyfin_id" class="center aligned collapsing">
-          <div class="ui transparent id input">
-            <input name="jellyfin_id" type="text" placeholder="-">
-          </div>
-        </td>
-        {% endif %}
-        <td data-column="tmdb_id" class="center aligned collapsing">
-          <div class="ui transparent id input">
-            <input name="tmdb_id" type="text" placeholder="-">
-          </div>
-        </td>
-        <td data-column="tvdb_id" class="center aligned collapsing">
-          <div class="ui transparent id input">
-            <input name="tvdb_id" type="text" placeholder="-">
-          </div>
-        </td>
-        <td data-column="tvrage_id" class="center aligned collapsing">
-          <div class="ui transparent id input">
-            <input name="tvrage_id" type="text" placeholder="-">
-          </div>
-        </td>
-      </form>
+      
+      <td data-column="edit" class="selectable">
+        <a><i class="ui blue save outline icon"></i></a>
+      </td>
+      <td data-column="season_number" class="center aligned collapsing">0</td>
+      <td data-column="episode_number" class="center aligned collapsing">0</td>
+      <td data-column="absolute_number" class="center aligned collapsing">0</td>
+      <td data-column="title" class="left aligned">
+        <div class="ui transparent input">
+          <input name="title" type="text" placeholder="">
+        </div>
+      </td>
+      <td data-column="match_title" data-type="boolean" class="center aligned collapsing"><!-- Icon --></td>
+      <td data-column="auto_split_title" data-type="boolean" class="center aligned collapsing"><!-- Icon --></td>
+      <td data-column="template" class="center aligned collapsing">
+        <div data-value="template_id" class="ui inline clearable scrolling dropdown">
+          <input name="template_id" type="hidden">
+          <i class="dropdown icon"></i>
+          <div class="default text">Default</div>
+          <div class="menu"><!-- Submenu --></div>
+        </div>
+      </td>
+      <td data-column="font_id" class="center aligned collapsing">
+        <div data-value="font_id" class="ui inline clearable dropdown">
+          <input name="font_id" type="hidden">
+          <i class="dropdown icon"></i>
+          <div class="default text">Default</div>
+          <div class="menu"><!-- Submenu --></div>
+        </div>
+      </td>
+      <td data-column="card_type" class="center aligned collapsing">
+        <div data-value="card_type" class="ui inline clearable scrolling dropdown">
+          <input name="card_type" type="hidden">
+          <i class="dropdown icon"></i>
+          <div class="default text">Default</div>
+          <div class="menu"><!-- Submenu --></div>
+        </div>
+      </td>
+      <td data-column="hide_season_text" data-type="boolean" class="center aligned collapsing"><!-- Icon --></td>
+      <td data-column="season_text" class="center aligned collapsing">
+        <div class="ui transparent short input">
+          <input name="season_text" type="text" placeholder="Default">
+        </div>
+      </td>
+      <td data-column="hide_episode_text" data-type="boolean" class="center aligned collapsing"><!-- Icon --></td>
+      <td data-column="episode_text" class="center aligned collapsing">
+        <div class="ui transparent short input">
+          <input name="episode_text" type="text" placeholder="Default">
+        </div>
+      </td>
+      <td data-column="unwatched_style" class="center aligned collapsing">
+        <div data-value="unwatched_style" class="ui inline clearable dropdown">
+          <input name="unwatched_style" type="hidden">
+          <i class="dropdown icon"></i>
+          <div class="default text">Default</div>
+          <div class="menu"><!-- Submenu --></div>
+        </div>
+      </td>
+      <td data-column="watched_style" class="center aligned collapsing">
+        <div data-value="watched_style" class="ui inline clearable dropdown">
+          <input name="watched_style" type="hidden">
+          <i class="dropdown icon"></i>
+          <div class="default text">Default</div>
+          <div class="menu"><!-- Submenu --></div>
+        </div>
+      </td>
+      <td data-column="font_color" class="center aligned collapsing">
+        <div class="ui transparent short input">
+          <input name="font_color" type="text" placeholder="Default">
+        </div>
+      </td>
+      <td data-column="font_size" class="center aligned collapsing">
+        <div class="ui transparent number input">
+          <input name="font_size" value="{episode.font_size}" placeholder="Default">
+        </div>
+      </td>
+      <td data-column="font_stroke_width" class="center aligned collapsing">
+        <div class="ui transparent number input">
+          <input name="font_stroke_width" placeholder="Default">
+        </div>
+      </td>
+      <td data-column="font_interline_spacing" class="center aligned collapsing">
+        <div class="ui transparent number input">
+          <input name="font_interline_spacing" placeholder="Default">
+        </div>
+      </td>
+      <td data-column="font_vertical_shift" class="center aligned collapsing">
+        <div class="ui transparent number input">
+          <input name="font_vertical_shift" placeholder="Default">
+        </div>
+      </td>
+      <td data-column="extras" class="center aligned collapsing"></td>
+      <td data-column="source_file" class="center aligned collapsing">
+        <div class="ui transparent short input">
+          <input name="source_file" type="text" placeholder="Default">
+        </div>
+      </td>
+      <td data-column="card_file" class="center aligned collapsing">
+        <div class="ui transparent short input">
+          <input name="card_file" type="text" placeholder="Default">
+        </div>
+      </td>
+      <td data-column="watched" data-type="boolean" class="center aligned collapsing"><!-- Icon --></td>
+      {% if preferences.use_emby and series.emby_library_name %}
+      <td data-column="emby_id" class="center aligned collapsing">
+        <div class="ui transparent id input">
+          <input name="emby_id" type="text" placeholder="-">
+        </div>
+      </td>
+      {% endif %}
+      <td data-column="imdb_id" class="center aligned collapsing">
+        <div class="ui transparent id input">
+          <input name="imdb_id" type="text" placeholder="-">
+        </div>
+      </td>
+      {% if preferences.use_jellyfin and series.jellyfin_library_name %}
+      <td data-column="jellyfin_id" class="center aligned collapsing">
+        <div class="ui transparent id input">
+          <input name="jellyfin_id" type="text" placeholder="-">
+        </div>
+      </td>
+      {% endif %}
+      <td data-column="tmdb_id" class="center aligned collapsing">
+        <div class="ui transparent id input">
+          <input name="tmdb_id" type="text" placeholder="-">
+        </div>
+      </td>
+      <td data-column="tvdb_id" class="center aligned collapsing">
+        <div class="ui transparent id input">
+          <input name="tvdb_id" type="text" placeholder="-">
+        </div>
+      </td>
+      <td data-column="tvrage_id" class="center aligned collapsing">
+        <div class="ui transparent id input">
+          <input name="tvrage_id" type="text" placeholder="-">
+        </div>
+      </td>
     </tr>
   </template>
 
@@ -303,109 +257,53 @@
       });
     }
   
-    // Get all episodes (query for new ones)
-    async function getEpisodeDataOld() {
-      // Get episode data element
-      let episodeDataDiv = document.getElementById('episode-data');
-      if (episodeDataDiv == null) return;
-
-      // Get all episodes via API
-      let episodeData = await fetch('/api/episodes/{{series.id}}/all').then(resp => resp.json());
-      if (episodeData === null) return;  
-
-      // Reset existing episode data content
-      episodeDataDiv.innerHTML = '';
-
-      // Get templates to use
-      const seasonTemplate = document.querySelector('#season-template');
-      const episodeTemplate = document.querySelector('#episode-template');
-
-      episodeData.forEach(episode => {
-        let {id, season_number, episode_number, absolute_number, title,
-             source_file_path, card_file_path, watched} = episode;
-
-        // Get or create the div for this season
-        let seasonElement = document.getElementById(`episode-data-season${season_number}`);
-        if (seasonElement === null) {
-          // Clone season template, add to episode data
-          seasonElement = seasonTemplate.content.cloneNode(true);
-          seasonElement.querySelector('.content').id = `episode-data-season${season_number}`;
-          const seasonTitle = (season_number === 0) ? 'Specials' : `Season ${season_number}`;
-          seasonElement.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${seasonTitle}`;
-          episodeDataDiv.appendChild(seasonElement);
+    // Update the episode config for the given episode
+    async function saveEpisodeConfig(episodeId) {
+      // Get all inputs for this episode
+      const episodeInputs = $(`#episode-id${episodeId} input`);
+      // Construct updateEpisode object
+      let updateEpisode = {};
+      Object.entries(episodeInputs).forEach(([index, input]) => {
+        if (input.name !== undefined) {
+          // Handle percentage values
+          if (input.value != '' && ['font_size', 'font_kerning', 'font_stroke_width'].includes(input.name)) {
+            updateEpisode[input.name] = input.value/100.0;
+          } else {
+            updateEpisode[input.name] = input.value;
+          }
         }
-        const seasonDiv = document.getElementById(`episode-data-season${season_number}`).querySelector('.accordion');
-
-        // Create new element for this episode
-        const episodeElement = episodeTemplate.content.cloneNode(true);
-        // episodeElement.setAttribute('data', `episodeID: ${id}`);
-        const episodeTitle = (absolute_number === null)
-          ? `Episode ${episode_number}`
-          : `Episode ${episode_number} (${absolute_number})`;
-        let watchedIcon;
-        if (watched === null) {
-          watchedIcon = '<i class="ui grey question watch status icon" title="Unknown"></i>';
-        } else if (watched === true) {
-          watchedIcon = '<i class="ui green check watch status icon" title="Watched"></i>';
+      });
+      // Append boolean state icons to object as none/true/false
+      $(`#episode-id${episodeId} td[data-type="boolean"]`).each((index, value) => {
+        const iconClassList = value.firstChild.classList;
+        if (iconClassList.contains('question')) {
+          updateEpisode[value.dataset['column']] = null;
+        } else if (iconClassList.contains('check')) {
+          updateEpisode[value.dataset['column']] = true;
         } else {
-          watchedIcon = '<i class="ui red times circle outline watch status icon" title="Unwatched"></i>';
+          updateEpisode[value.dataset['column']] = false;
         }
-        episodeElement.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${watchedIcon}${episodeTitle}`;
-        episodeElement.querySelector('input[name="title"]').placeholder = title;
-        episodeElement.querySelector('input[name="title"]').value = title;
-        episodeElement.querySelector('input[name="source_file_path"]').placeholder = source_file_path;
-        episodeElement.querySelector('input[name="source_file_path"]').value = source_file_path;
-        episodeElement.querySelector('input[name="card_file_path"]').placeholder = card_file_path;
-        episodeElement.querySelector('input[name="card_file_path"]').value = card_file_path;
-
-        // Add episode element to the season div
-        seasonDiv.appendChild(episodeElement);
-
-        // Update this episode's form submission to submit an API request
-        let allForms = seasonDiv.querySelectorAll('.form');
-        allForms[allForms.length-1].onsubmit = (event) => {
-          event.preventDefault();
-          $.ajax({
-            type: 'PATCH',
-            url: `/api/series/{{series.id}}/episode/${id}`,
-            data: JSON.stringify(Object.fromEntries(new FormData(event.target))),
-            headers: {'Content-Type': 'application/json'},
-            success: function(response) {
-              $.toast({
-                class: 'blue info',
-                title: 'Updated Episode Configuration',
-              });
-            }, error: function(response) {
-              $.toast({
-                class: 'error',
-                title: 'Error Updating Episode',
-                message: response
-              });
-            },
-          });
-        }
-        // Update this episode's delete button to submit API request
-        let deleteButtons = seasonDiv.querySelectorAll('.negative.button');
-        deleteButtons[deleteButtons.length-1].onclick = (event) => {
-          $.ajax({
-            type: 'DELETE',
-            url: `/api/episodes/${id}`,
-            success: (response) => {
-              $.toast({class: 'blue info', title: 'Deleted Episode'});
-              getEpisodeData();
-            }, error: (response) => {
-              $.toast({
-                class: 'error',
-                title: 'Error Deleting Episode',
-                message: response.responseJSON.message,
-              });
-            },
-          });
-        };
       });
 
-      // Refresh theme for any newly added HTML
-      refreshTheme();
+      // Submit API request
+      $.ajax({
+        type: 'PATCH',
+        url: `/api/episodes/${episodeId}`,
+        contentType: 'application/json',
+        data: JSON.stringify(updateEpisode),
+        success: (response) => {
+          $.toast({
+            class: 'blue info',
+            title: 'Updated Episode',
+          });
+        }, error: (response) => {
+          $.toast({
+            class: 'error',
+            title: 'Error Updating Episode',
+            message: response.message,
+          })
+        }
+      });
     }
 
     async function getEpisodeData() {
@@ -419,33 +317,41 @@
 
       // Get all episodes via API
       const episodeData = await fetch('/api/episodes/{{series.id}}/all').then(resp => resp.json());
-      if (episodeData === null) return;
+      if (episodeData === null) { return; }
 
       // Different HTML for each togglable boolean icon
-      const trueIcon = '<i class="ui green check icon"></i>';
-      const falseIcon = '<i class="ui red times circle outline icon"></i>';
-      const noneIcon = '<i class="ui gray question icon"></i>'
-      function getIcon(value) {
-        return value === null ? noneIcon : (value ? trueIcon : falseIcon);
+      function getIcon(value, triState=true) {
+        const triStateClass = triState ? ' tristate' : '';
+        if (value === null) {
+          return `<i class="ui gray question${triStateClass} togglable icon"></i>`;
+        } else if (value === true) {
+          return `<i class="ui green check${triStateClass} togglable icon"></i>`;
+        } else {
+          return `<i class="ui red times circle outline${triStateClass} togglable icon"></i>`;
+        }
       }
 
       // Create 
-      episodeData.forEach(episode => {
+      const rows = episodeData.map(episode => {
         // Create new row for this episode
         const row = rowTemplate.content.cloneNode(true);
+        // Set row ID
+        row.querySelector('tr').id = `episode-id${episode.id}`;
+        // Assign function to onclick of <a> element
+        row.querySelector('td[data-column="edit"] a').onclick = () => saveEpisodeConfig(episode.id);
         // Fill in row data
         row.querySelector('td[data-column="season_number"]').innerHTML = episode.season_number;
         row.querySelector('td[data-column="episode_number"]').innerHTML = episode.episode_number;
         row.querySelector('td[data-column="absolute_number"]').innerHTML = episode.absolute_number;
         row.querySelector('input[name="title"]').value = episode.title;
-        row.querySelector('td[data-column="match_title"]').innerHTML = getIcon(episode.match_title);
-        row.querySelector('td[data-column="auto_split_title"]').innerHTML = getIcon(episode.auto_split_title);
+        row.querySelector('td[data-column="match_title"]').innerHTML = getIcon(episode.match_title, true);
+        row.querySelector('td[data-column="auto_split_title"]').innerHTML = getIcon(episode.auto_split_title, false);
           // Template ID
           // Font ID
           // Card type
-        row.querySelector('td[data-column="hide_season_text"]').innerHTML = getIcon(episode.hide_season_text);
+        row.querySelector('td[data-column="hide_season_text"]').innerHTML = getIcon(episode.hide_season_text, true);
         row.querySelector('input[name="season_text"]').value = episode.season_text;
-        row.querySelector('td[data-column="hide_episode_text"]').innerHTML = getIcon(episode.hide_episode_text);
+        row.querySelector('td[data-column="hide_episode_text"]').innerHTML = getIcon(episode.hide_episode_text, true);
         row.querySelector('input[name="episode_text"]').value = episode.episode_text;
           // Unwatched style
           // Watched style
@@ -455,9 +361,9 @@
         row.querySelector('input[name="font_interline_spacing"]').value = episode.font_interline_spacing;
         row.querySelector('input[name="font_vertical_shift"]').value = episode.font_vertical_shift;
           // Extras
-        row.querySelector('input[name="source_file_path"]').value = episode.source_file_path;
-        row.querySelector('input[name="card_file_path"]').value = episode.card_file_path;
-        row.querySelector('td[data-column="watched"]').innerHTML = getIcon(episode.watched);
+        row.querySelector('input[name="source_file"]').value = episode.source_file;
+        row.querySelector('input[name="card_file"]').value = episode.card_file;
+        row.querySelector('td[data-column="watched"]').innerHTML = getIcon(episode.watched, false);
         const embyIdInput = row.querySelector('input[name="emby_id"]');
         if (embyIdInput !== null) { embyIdInput.value = episode.emby_id; }
         row.querySelector('input[name="imdb_id"]').value = episode.imdb_id;
@@ -466,34 +372,69 @@
         row.querySelector('input[name="tmdb_id"]').value = episode.tmdb_id;
         row.querySelector('input[name="tvdb_id"]').value = episode.tvdb_id;
         row.querySelector('input[name="tvrage_id"]').value = episode.tvrage_id;
-        // Append row to table
-        episodeTable.appendChild(row);
-      });
 
-      $('.table .ui.icon').on('click', (event) => {
-        if (event.target.classList.contains('check')) {
-          event.target.classList.remove('green', 'check');
-          event.target.classList.add('red', 'times', 'circle', 'outline');
-        } else {
-          event.target.classList.add('green', 'check');
-          event.target.classList.remove('red', 'times', 'circle', 'outline');
-        }
+        return row;
       });
+      episodeTable.replaceChildren(...rows);
 
-      $('.table .transparent.input input').on('input', (event) => {
-        // console.log(event);
-        event.target.style.width = Math.max(`${event.target.value}`.length + 1, 8) + 'ch';
-      });
+      // Get all available templates, fonts, card types, and styles
+      const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
+      const allFonts = await fetch('/api/fonts/all').then(resp => resp.json());
+      const allCardTypes = await fetch('/api/available/card-types').then(resp => resp.json());
+      const allStyles = await fetch('/api/available/styles').then(resp => resp.json());
 
-      $(document).ready(function () {
-        $('.table .transparent.input input').each(() => {
-          // console.log($(this)); console.log( Math.max(`${$(this).val()}`.length + 1, 8) + 'ch');
-          $(this).css('width', Math.max(`${$(this).val()}`.length + 1, 8) + 'ch');
+      // Initialize dropdowns, assign form submit API request
+      episodeData.forEach(episode => {
+        // Templates
+        $(`#episode-id${episode.id} .dropdown[data-value="template_id"]`).dropdown({
+          values: allTemplates.map(({id, name}) => {
+            return {name: name, value: id, selected: episode.template_id === id};
+          })
+        });
+        // Fonts
+        $(`#episode-id${episode.id} .dropdown[data-value="font_id"]`).dropdown({
+          values: allFonts.map(({id, name}) => {
+            return {name: name, value: id, selected: episode.font_id === id};
+          })
+        });
+        // Card type
+        $(`#episode-id${episode.id} .dropdown[data-value="card_type"]`).dropdown({
+          values: allCardTypes.map(({id, name}) => {
+            return {
+              name:     name,
+              value:    name.toLowerCase(),
+              selected: name.toLowerCase() === episode.card_type
+            };
+          })
+        });
+        // Unwatched style
+        $(`#episode-id${episode.id} .dropdown[data-value="unwatched_style"]`).dropdown({
+          values: [
+            {name: 'Art Variations', type: 'header'},
+            ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
+              return {name: name, value: value, selected: value === episode.unwatched_style};
+            }),
+            {name: 'Unique Variations', type: 'header'},
+            ...allStyles.filter(({style_type}) => style_type === 'unique').map(({name, value}) => {
+              return {name: name, value: value, selected: value === episode.unwatched_style};
+            }),
+          ],
+        });
+        // Watched style
+        $(`#episode-id${episode.id} .dropdown[data-value="watched_style"]`).dropdown({
+          values: [
+            {name: 'Art Variations', type: 'header'},
+            ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
+              return {name: name, value: value, selected: value === episode.watched_style};
+            }),
+            {name: 'Unique Variations', type: 'header'},
+            ...allStyles.filter(({style_type}) => style_type === 'unique').map(({name, value}) => {
+              return {name: name, value: value, selected: value === episode.watched_style};
+            }),
+          ],
         });
       });
-
-      // Refresh theme for any newly added HTML
-      refreshTheme();
+      initStyles();
     }
 
     // Initialize series specific dropdowns
@@ -627,6 +568,7 @@
       getLibraries();
       getEpisodeData();
       initalizeSeriesConfig();
+      initStyles();
       // Schedule recurring statistics query
       setInterval(getStatistics, 30000); // Refresh stats every 30s
     }
@@ -1276,7 +1218,7 @@
             </button>
 
             <div class="ui scrolling long container">
-              <table id="episode-data-table" class="ui compact striped head stuck table">
+              <table class="ui compact striped head stuck table">
                 <thead>
                   <tr class="center aligned">
                     <th class="collapsing">Save<br>Changes</th>
@@ -1324,7 +1266,7 @@
                     <th class="collapsing">TVRage<br>ID</th>
                   </tr>
                 </thead>
-                <tbody><!-- Rows added asynchronously --></tbody>
+                <tbody id="episode-data-table" ><!-- Rows added asynchronously --></tbody>
               </table>
             </div>
 
@@ -1555,7 +1497,7 @@
       .modal('setting', 'closable', false)        // Don't allow closing by clicking outside modal
       .modal({
         blurring: true,                           // Blur background when shown
-        onHidden: function($element) {            // Reset input on close
+        onHidden: ($element) => {                 // Reset input on close
           $('#poster-upload-input')[0].value = '';
           $('#poster-url-input')[0].value = '';
         }}
@@ -1637,7 +1579,7 @@
         type: 'PATCH',
         url: '/api/series/{{series.id}}',
         data: JSON.stringify({...Object.fromEntries(form.entries()), ...listData}),
-        headers: {'Content-Type': 'application/json'},
+        contentType: 'application/json',
         success: (response) => {
           $('#submit-changes').toggleClass('loading', false);
           $.toast({
@@ -1652,26 +1594,35 @@
       });
     });
 
-    $('.table .ui.icon').on('click', (event) => {
-      if (event.target.classList.contains('check')) {
-        event.target.classList.remove('green', 'check');
-        event.target.classList.add('red', 'times', 'circle', 'outline');
-      } else {
-        event.target.classList.add('green', 'check');
-        event.target.classList.remove('red', 'times', 'circle', 'outline');
-      }
-    });
-
-    $('.table .transparent.input:not(.id) input').on('input', (event) => {
-      event.target.style.width = Math.max(`${event.target.value}`.length + 1, 8) + 'ch';
-    });
-
-    $(document).ready(function () {
-      // $('.table .transparent.input').find('input').each(() => {
-      $('.table .transparent.input:not(.id) input').each(() => {
-        $(this).css('width', Math.max(`${$(this).val()}`.length + 1, 8) + 'ch');
+    function initStyles() {
+      // Toggle icons on click
+      $('.table .togglable.icon').on('click', (event) => {
+        // Non-tristate icons toggle check <-> x
+        // Tristate icons toggle ? -> check -> x -> [...]
+        if (event.target.classList.contains('check')) {
+          event.target.classList.remove('green', 'check');
+          event.target.classList.add('red', 'times', 'circle', 'outline');
+        } else if (event.target.classList.contains('question')) {
+          event.target.classList.remove('gray', 'question');
+          event.target.classList.add('green', 'check');
+        } else {
+          event.target.classList.remove('red', 'times', 'circle', 'outline');
+          // Tristate x goes to ?, bistate x goes to check
+          if (event.target.classList.contains('tristate')) {
+            event.target.classList.add('gray', 'question');
+          } else {
+            event.target.classList.add('green', 'check'); 
+          }
+        }
       });
-    });
+      // Update input widths when typing
+      $('.table .transparent.input:not(.id) input').on('input', (event) => {
+        event.target.style.width = Math.max(`${event.target.value}`.length + 1, 8) + 'ch';
+      });
+
+      // Refresh theme for any newly added HTML
+      refreshTheme();
+    }
 
     // Create a new episode
     $('#new-episode-form').form({
