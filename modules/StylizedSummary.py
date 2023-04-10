@@ -5,12 +5,13 @@ from modules.BaseSummary import BaseSummary
 
 class StylizedSummary(BaseSummary):
     """
-    This class describes a type of Summary image maker. This is a more stylized
-    summary (compared to the StandardSummary) that uses a (max) 4x3 grid of
-    images, and creates a reflection of that grid. There is a logo at the top,
-    as well.
+    This class describes a type of Summary image maker. This is a more
+    stylized summary (compared to the StandardSummary) that uses a (max)
+    4x3 grid of images, and creates a reflection of that grid. There is
+    a logo at the top as well.
 
-    This type of Summary does not support any background aside from black.
+    This type of Summary does not support any background aside from
+    black.
     """
 
     """Default (and only allowed) background color for this Summary"""
@@ -28,10 +29,10 @@ class StylizedSummary(BaseSummary):
 
         Args:
             show: Show object to create the Summary for.
-            background: Background color or image to use for the summary. This
-                is ignored and 'black' is always used.
-            created_by: Optional string to use in custom "Created by .." tag at
-                the botom of this Summary. Defaults to None.
+            background: Background color or image to use for the
+                summary. This is ignored and 'black' is always used.
+            created_by: Optional string to use in custom "Created by .."
+                tag at the botom of this Summary. Defaults to None.
         """
 
         # Initialize parent BaseSummary object
@@ -63,9 +64,9 @@ class StylizedSummary(BaseSummary):
 
     def __resize_logo(self, max_width: int) -> Path:
         """
-        Resize this associated show's logo to fit into at least a 350 pixel
-        high space. If the resulting logo is wider than the given width, it is
-        scaled.
+        Resize this associated show's logo to fit into at least a 350
+        pixel high space. If the resulting logo is wider than the given
+        width, it is scaled.
 
         Returns:
             Path to the resized logo.
@@ -86,8 +87,8 @@ class StylizedSummary(BaseSummary):
 
     def create(self) -> None:
         """
-        Create the Summary defined by this object. Image selection is done at
-        the start of this function.
+        Create the Summary defined by this object. Image selection is
+        done at the start of this function.
         """
 
         # Exit if a logo does not exist

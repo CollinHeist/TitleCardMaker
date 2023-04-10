@@ -14,9 +14,9 @@ from modules.TMDbInterface import TMDbInterface
 
 class Manager:
     """
-    This class describes a title card manager. The Manager is used to control
-    title card and archive creation/management from a high level, and is meant
-    to be the main entry point of the program.
+    This class describes a title card manager. The Manager is used to
+    control title card and archive creation/management from a high
+    level, and is meant to be the main entry point of the program.
     """
 
     """Default execution mode for Manager.run()"""
@@ -33,8 +33,8 @@ class Manager:
         interfaces as indicated by that parser.
 
         Args:
-            check_tautulli: Whether to check Tautulli integration (for fast
-                start).
+            check_tautulli: Whether to check Tautulli integration (for
+                fast start).
         """
 
         # Get the global preferences

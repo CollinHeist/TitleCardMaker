@@ -9,16 +9,18 @@ from modules.PersistentDatabase import PersistentDatabase
 
 class RemoteFile:
     """
-    This class describes a RemoteFile. A RemoteFile is a file that is loaded
-    from the TCM Card Types repository, and is necessary to allow card types to
-    utilize non-standard files that can be downloaded at runtime alongside
-    CardType classes. This class has no real executable methods, and
-    upon initialization attempts to download the remote file if it DNE.
+    This class describes a RemoteFile. A RemoteFile is a file that is
+    loaded from the TCM Card Types repository, and is necessary to allow
+    card types to utilize non-standard files that can be downloaded at
+    runtime alongside CardType classes. This class has no real
+    executable methods, and upon initialization attempts to download the
+    remote file if it DNE.
     """
 
     """Base URL to look for remote content at"""
-    BASE_URL = ('https://github.com/CollinHeist/TitleCardMaker-CardTypes/'
-                'raw/master')
+    BASE_URL = (
+        'https://github.com/CollinHeist/TitleCardMaker-CardTypes/raw/master'
+    )
 
     """Temporary directory all files will be downloaded into"""
     TEMP_DIR = Path(__file__).parent / '.objects'
@@ -31,12 +33,14 @@ class RemoteFile:
 
     def __init__(self, username: str, filename: str) -> None:
         """
-        Construct a new RemoteFile object. This downloads the file for the given
-        user and file into the temporary directory of the Maker.
+        Construct a new RemoteFile object. This downloads the file for
+        the given user and file into the temporary directory of the
+        Maker.
 
         Args:
             username: Username containing the file.
-            filename: Filename of the file within the user's folder to download.
+            filename: Filename of the file within the user's folder to
+                download.
         """
 
         # Object validity to be updated
@@ -74,8 +78,8 @@ class RemoteFile:
 
     def __str__(self) -> str:
         """
-        Returns a string representation of the object. This is just the complete
-        filepath for the locally downloaded file.
+        Returns a string representation of the object. This is just the
+        complete filepath for the locally downloaded file.
         """
 
         return str(self.local_file.resolve())
@@ -114,12 +118,12 @@ class RemoteFile:
 
     def download(self):
         """
-        Download the specified remote file from the TCM CardTypes github, and
-        write it to a temporary local file.
+        Download the specified remote file from the TCM CardTypes
+        GitHub, and write it to a temporary local file.
 
         Raises:
-            AssertionError if the Response is not OK; Exception if there is some
-            uncaught error.
+            AssertionError if the Response is not OK; Exception if there
+            is some uncaught error.
         """
 
         # Download remote file

@@ -8,8 +8,9 @@ from modules.WebInterface import WebInterface
 
 class TautulliInterface(WebInterface):
     """
-    This class describes an interface to Tautulli. This interface can configure
-    notification agents within Tautulli to enable fast card updating/creation.
+    This class describes an interface to Tautulli. This interface can
+    configure notification agents within Tautulli to enable fast card
+    updating/creation.
     """
 
     """Default configurations for the notification agent(s)"""
@@ -80,13 +81,14 @@ class TautulliInterface(WebInterface):
 
     def is_integrated(self) -> tuple[bool, bool]:
         """
-        Check if this interface's Tautulli instance already has integration set
-        up.
+        Check if this interface's Tautulli instance already has
+        integration set up.
 
         Returns:
-            Tuple of booleans. First value is True if the watched agent is
-            already integrated (False otherwise); second value is True if the
-            newly added agent is already integrated (False otherwise).
+            Tuple of booleans. First value is True if the watched agent
+            is already integrated (False otherwise); second value is
+            True if the newly added agent is already integrated (False
+            otherwise).
         """
 
         # Get all notifiers
@@ -147,8 +149,8 @@ class TautulliInterface(WebInterface):
     def integrate(self) -> None:
         """
         Integrate this interface's instance of Tautulli with TCM. This
-        configures a new notification agent if a valid one does not exist or
-        cannot be identified.
+        configures a new notification agent if a valid one does not
+        exist or cannot be identified.
         """
 
         # If already integrated, skip

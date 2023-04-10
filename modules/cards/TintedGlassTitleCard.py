@@ -107,19 +107,19 @@ class TintedGlassTitleCard(BaseCardType):
             season_text: The season text for this card.
             episode_text: Episode text to add to created card.
             hide_season: Whether to hide the season text.
-            
             font: Font name or path (as string) to use for episode title.
             title_color: Color to use for title text.
             font_size: Scalar to apply to title font size.
-            interline_spacing: Pixel count to adjust title interline spacing by.
+            interline_spacing: Pixel count to adjust title interline
+                spacing by.
             kerning: Scalar to apply to kerning of the title text.
             vertical_shift: Vertical shift to apply to the title text.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
-            box_adjustments: How to adjust the bounds of the bounding box. Given
-                as a string of pixels in clockwise order relative to the center.
-                For example, "10 10 10 10" will expand the box by 10 pixels in
-                each direction.
+            box_adjustments: How to adjust the bounds of the bounding
+                box. Given as a string of pixels in clockwise order
+                relative to the center. For example, "10 10 10 10" will
+                expand the box by 10 pixels in each direction.
             unused: Unused arguments.
         """
 
@@ -172,20 +172,22 @@ class TintedGlassTitleCard(BaseCardType):
                 self.valid = False
 
 
-    def blur_rectangle_command(self, coordinates: BoxCoordinates,
-                               rounding_radius: int) -> list[str]:
+    def blur_rectangle_command(self,
+            coordinates: BoxCoordinates,
+            rounding_radius: int) -> list[str]:
         """
-        Get the commands necessary to blur and darken a rectangle encompassing
-        the given coordinates.
+        Get the commands necessary to blur and darken a rectangle
+        encompassing the given coordinates.
 
         Args:
-            coordinates: BoxCoordinates that defines the bounds of the rectangle
-                to blur/darken.
-            rounding_radius: Pixel radius to use for the round edges of the
-                rectangle.
+            coordinates: BoxCoordinates that defines the bounds of the
+                rectangle to blur/darken.
+            rounding_radius: Pixel radius to use for the round edges of
+                the rectangle.
 
         Returns:
-            List of ImageMagick commands necessary to blur/darken the rectangle.
+            List of ImageMagick commands necessary to blur/darken the
+            rectangle.
         """
 
         x0, y0, x1, y1 = coordinates
@@ -213,8 +215,8 @@ class TintedGlassTitleCard(BaseCardType):
     @property
     def add_title_text_command(self) -> list[str]:
         """
-        Get the ImageMagick commands necessary to add the title text described
-        by this card.
+        Get the ImageMagick commands necessary to add the title text
+        described by this card.
 
         Returns:
             List of ImageMagick commands.
@@ -275,7 +277,7 @@ class TintedGlassTitleCard(BaseCardType):
 
 
     def add_episode_text_command(self,
-                                 title_coordinates: BoxCoordinates) ->list[str]:
+            title_coordinates: BoxCoordinates) -> list[str]:
         """
         Get the list of ImageMagick commands to add episode text.
 
@@ -338,11 +340,13 @@ class TintedGlassTitleCard(BaseCardType):
 
 
     @staticmethod
-    def modify_extras(extras: dict[str, Any], custom_font: bool,
-                      custom_season_titles: bool) -> None:
+    def modify_extras(
+            extras: dict[str, Any],
+            custom_font: bool,
+            custom_season_titles: bool) -> None:
         """
-        Modify the given extras base on whether font or season titles are
-        custom.
+        Modify the given extras base on whether font or season titles
+        are custom.
 
         Args:
             extras: Dictionary to modify.
@@ -362,8 +366,8 @@ class TintedGlassTitleCard(BaseCardType):
     @staticmethod
     def is_custom_font(font: 'Font') -> bool:
         """
-        Determine whether the given font characteristics constitute a default
-        or custom font.
+        Determine whether the given font characteristics constitute a
+        default or custom font.
 
         Args:
             font: The Font being evaluated.
@@ -381,11 +385,11 @@ class TintedGlassTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_season_titles(custom_episode_map: bool, 
-                                episode_text_format: str) -> bool:
+    def is_custom_season_titles(
+            custom_episode_map: bool, episode_text_format: str) -> bool:
         """
-        Determine whether the given attributes constitute custom or generic
-        season titles.
+        Determine whether the given attributes constitute custom or
+        generic season titles.
 
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
@@ -406,8 +410,8 @@ class TintedGlassTitleCard(BaseCardType):
 
     def create(self):
         """
-        Make the necessary ImageMagick and system calls to create this object's
-        defined title card.
+        Make the necessary ImageMagick and system calls to create this
+        object's defined title card.
         """
 
         # Get coordinates for bounding box

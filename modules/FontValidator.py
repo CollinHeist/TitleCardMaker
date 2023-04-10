@@ -6,9 +6,9 @@ from modules.PersistentDatabase import PersistentDatabase
 
 class FontValidator:
     """
-    This class describes a font validator. A FontValidator takes font files and
-    can indicate whether that font contains all the characters for some strings
-    (titles).
+    This class describes a font validator. A FontValidator takes font
+    files and can indicate whether that font contains all the characters
+    for some strings (titles).
     """
 
     """File to the font character validation database"""
@@ -17,8 +17,8 @@ class FontValidator:
 
     def __init__(self) -> None:
         """
-        Constructs a new instance. This reads the font validation map if it
-        exists, and creates the file if it does not.
+        Constructs a new instance. This reads the font validation map if
+        it exists, and creates the file if it does not.
         """
 
         # Create/read font validation database
@@ -73,16 +73,16 @@ class FontValidator:
 
     def validate_title(self, font_filepath: str, title: str) -> bool:
         """
-        Validate the given Title, returning whether all characters are contained
-        within the given Font.
+        Validate the given Title, returning whether all characters are
+        contained within the given Font.
 
         Args:
             font_filepath: Filepath to the font being validated against
             title: The title being validated.
 
         Returns:
-            True if all characters in the title are found within the given font,
-            False otherwise.
+            True if all characters in the title are found within the
+            given font, False otherwise.
         """
 
         # Map __has_character() to all characters in the title
@@ -107,8 +107,8 @@ class FontValidator:
             font_filepath: Filepath to the font being evaluated.
 
         Returns:
-            Set of all characters present in this object's database that are
-            marked as missing for the given font.
+            Set of all characters present in this object's database that
+            are marked as missing for the given font.
         """
 
         # Get all missing entries

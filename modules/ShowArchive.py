@@ -4,12 +4,12 @@ import modules.global_objects as global_objects
 class ShowArchive:
     """
     This class describes a show archive. This is an object that contains
-    modified Show objects, each of which is used to create an update an archive
-    directory for a specific type of profile. Collectively every possible
-    profile is maintained.
+    modified Show objects, each of which is used to create an update an
+    archive directory for a specific type of profile. Collectively every
+    possible profile is maintained.
 
-    The following profiles are created depending on whether this show has custom
-    season titles, custom fonts, and hidden season titles:
+    The following profiles are created depending on whether this show
+    has custom season titles, custom fonts, and hidden season titles:
 
         Custom |        | Hidden |
         Season | Custom | Season | Output
@@ -121,15 +121,15 @@ class ShowArchive:
     def __getattr__(self, show_function) -> callable:
         """
         Get an arbitrary function for this object. This returns a wrapped
-        version of the given function that calls that function on all Show
-        objects within this Archive.
+        version of the given function that calls that function on all
+        Show objects within this Archive.
 
         Args:
             show_function: The function to wrap.
 
         Returns:
-            Wrapped callable that is the indicated function called on each Show
-            object within this Archive.
+            Wrapped callable that is the indicated function called on
+            each Show object within this Archive.
         """
 
         # Define wrapper that calls given function on all Shows of this object

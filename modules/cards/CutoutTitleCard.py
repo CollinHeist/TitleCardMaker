@@ -92,7 +92,8 @@ class CutoutTitleCard(BaseCardType):
             title: Title text to add to created card.
             season_text: Season text to add to created card.
             episode_text: Episode text to add to created card.
-            font: Font name or path (as string) to use for episode title.
+            font: Font name or path (as string) to use for episode
+                title.
             font_size: Scalar to apply to title font size.
             title_color: Color to use for title text.
             hide_season: Whether to ignore season_text.
@@ -185,8 +186,8 @@ class CutoutTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_season_titles(custom_episode_map: bool, 
-                                episode_text_format: str) -> bool:
+    def is_custom_season_titles(
+            custom_episode_map: bool, episode_text_format: str) -> bool:
         """
         Determine whether the given attributes constitute custom or
         generic season titles.
