@@ -25,7 +25,7 @@ from app.schemas.series import NewSeries, Series, UpdateSeries
 from app.schemas.episode import Episode
 
 
-def get_series(db, series_id, *, raise_exc=True) -> Union[Series, None]:
+def get_series(db, series_id, *, raise_exc=True) -> Optional[Series]:
     """
     Get the Series with the given ID from the given Database.
 
