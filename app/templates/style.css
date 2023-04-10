@@ -165,11 +165,6 @@ html.ios body {
 
 /* Mobile formatting */
 @media (max-width: 768px) {
-  /* Use small nav bar */
-  #nav-menu > .menu {
-    /* width: 50px !important; */
-  }
-
   /* Hide icons */
   #nav-menu i {
     display: none;

@@ -67,8 +67,18 @@
       width: auto;
     }
 
+    /* Show the icon is clickable by changing the cursor on hover */
     .table .ui.icon:hover {
       cursor: pointer;
+    }
+    .table td.center.aligned input {
+      text-align: center !important;
+    }
+
+    /* Set default width of ID and number inputs */
+    .table .transparent.id.input input,
+    .table .transparent.number.input input {
+      width: 7ch;
     }
   </style>
 
@@ -126,139 +136,139 @@
   <template id="episode-row">
     <tr class="center aligned">
       <form>
-        <td data-column="edit" class="selectable" data-tooltip="Submit changes" data-position="right center">
+        <td data-column="edit" class="selectable">
           <a><i class="ui blue save outline icon"></i></a>
         </td>
-        <td data-column="season_number">0</td>
-        <td data-column="episode_number">0</td>
-        <td data-column="absolute_number">0</td>
+        <td data-column="season_number" class="center aligned collapsing">0</td>
+        <td data-column="episode_number" class="center aligned collapsing">0</td>
+        <td data-column="absolute_number" class="center aligned collapsing">0</td>
         <td data-column="title" class="left aligned">
           <div class="ui transparent input">
             <input name="title" type="text" placeholder="">
           </div>
         </td>
-        <td data-column="match_title"><!-- Icon --></td>
-        <td data-column="auto_split_title"><!-- Icon --></td>
-        <td data-column="template" class="collapsing">
+        <td data-column="match_title" class="center aligned collapsing"><!-- Icon --></td>
+        <td data-column="auto_split_title" class="center aligned collapsing"><!-- Icon --></td>
+        <td data-column="template" class="center aligned collapsing">
           <div data-value="template_id" class="ui inline clearable dropdown">
             <input name="template_id" type="hidden">
             <i class="dropdown icon"></i>
-            <div class="default text">None</div>
-            <div class="menu">
-              <div class="item">Choice 1</div>
-              <div class="item">Choice 2</div>
-            </div>
+            <div class="default text">Default</div>
+            <div class="menu"><!-- Submenu --></div>
           </div>
         </td>
-        <td data-column="font" class="collapsing">
+        <td data-column="font_id" class="center aligned collapsing">
           <div data-value="font_id" class="ui inline clearable dropdown">
             <input name="font_id" type="hidden">
             <i class="dropdown icon"></i>
-            <div class="default text">None</div>
-            <div class="menu">
-              <div class="item">Choice 1</div>
-              <div class="item">Choice 2</div>
-            </div>
+            <div class="default text">Default</div>
+            <div class="menu"><!-- Submenu --></div>
           </div>
         </td>
-        <td data-column="hide_season_text" class="collapsing"><!-- Icon --></td>
+        <td data-column="card_type" class="center aligned collapsing">
+          <div data-value="card_type" class="ui inline clearable dropdown">
+            <input name="card_type" type="hidden">
+            <i class="dropdown icon"></i>
+            <div class="default text">Default</div>
+            <div class="menu"><!-- Submenu --></div>
+          </div>
+        </td>
+        <td data-column="hide_season_text" class="center aligned collapsing"><!-- Icon --></td>
         <td data-column="season_text" class="collapsing">
           <div class="ui transparent input">
             <input name="season_text" type="text" placeholder="Default">
           </div>
         </td>
-        <td data-column="hide_episode_text" class="collapsing"><!-- Icon --></td>
+        <td data-column="hide_episode_text" class="center aligned collapsing"><!-- Icon --></td>
         <td data-column="episode_text" class="collapsing">
           <div class="ui transparent input">
             <input name="episode_text" type="text" placeholder="Default">
           </div>
         </td>
-        <td data-column="unwatched_style" class="collapsing">
+        <td data-column="unwatched_style" class="center aligned collapsing">
           <div data-value="unwatched_style" class="ui inline clearable dropdown">
             <input name="unwatched_style" type="hidden">
             <i class="dropdown icon"></i>
-            <div class="default text">None</div>
-            <div class="menu">
-              <div class="item">Choice 1</div>
-              <div class="item">Choice 2</div>
-            </div>
+            <div class="default text">Default</div>
+            <div class="menu"><!-- Submenu --></div>
           </div>
         </td>
-        <td data-column="watched_style" class="collapsing">
+        <td data-column="watched_style" class="center aligned collapsing">
           <div data-value="watched_style" class="ui inline clearable dropdown">
             <input name="watched_style" type="hidden">
             <i class="dropdown icon"></i>
-            <div class="default text">None</div>
-            <div class="menu">
-              <div class="item">Choice 1</div>
-              <div class="item">Choice 2</div>
-            </div>
+            <div class="default text">Default</div>
+            <div class="menu"><!-- Submenu --></div>
           </div>
         </td>
-        <td data-column="font_color" class="collapsing">
-          <div class="ui transparent input">
+        <td data-column="font_color" class="center aligned collapsing">
+          <div class="ui transparent short input">
             <input name="font_color" type="text" placeholder="Default">
           </div>
         </td>
-        <td data-column="font_size" class="collapsing">
-          <div class="ui transparent input">
-            <input name="font_size" type="number" value="{episode.font_size}" placeholder="Default">
+        <td data-column="font_size" class="center aligned collapsing">
+          <div class="ui transparent number input">
+            <input name="font_size" value="{episode.font_size}" placeholder="Default">
           </div>
         </td>
-        <td data-column="font_stroke_width" class="collapsing">
-          <div class="ui transparent input">
-            <input name="font_stroke_width" type="number" placeholder="Default">
+        <td data-column="font_stroke_width" class="center aligned collapsing">
+          <div class="ui transparent number input">
+            <input name="font_stroke_width" placeholder="Default">
           </div>
         </td>
-        <td data-column="font_interline_spacing" class="collapsing">
-          <div class="ui transparent input">
-            <input name="font_interline_spacing" type="number" placeholder="Default">
+        <td data-column="font_interline_spacing" class="center aligned collapsing">
+          <div class="ui transparent number input">
+            <input name="font_interline_spacing" placeholder="Default">
           </div>
         </td>
-        <td data-column="font_vertical_shift" class="collapsing">
-          <div class="ui transparent input">
-            <input name="font_vertical_shift" type="number" placeholder="Default">
+        <td data-column="font_vertical_shift" class="center aligned collapsing">
+          <div class="ui transparent number input">
+            <input name="font_vertical_shift" placeholder="Default">
           </div>
         </td>
-        <td data-column="extras" class="collapsing"></td>
-        <td data-column="source_file" class="collapsing">
+        <td data-column="extras" class="center aligned collapsing"></td>
+        <td data-column="source_file" class="center aligned collapsing">
           <div class="ui transparent input">
             <input name="source_file_path" type="text" placeholder="Default">
           </div>
         </td>
-        <td data-column="card_file" class="collapsing">
+        <td data-column="card_file" class="center aligned collapsing">
           <div class="ui transparent input">
             <input name="card_file_path" type="text" placeholder="Default">
           </div>
         </td>
-        <td data-column="watched" class="collapsing"><!-- Icon --></td>
-        <td data-column="emby_id" class="collapsing">
-          <div class="ui transparent input">
+        <td data-column="watched" class="center aligned collapsing"><!-- Icon --></td>
+        {% if preferences.use_emby and series.emby_library_name %}
+        <td data-column="emby_id" class="center aligned collapsing">
+          <div class="ui transparent id input">
             <input name="emby_id" type="text" placeholder="-">
           </div>
         </td>
-        <td data-column="imdb_id" class="collapsing">
-          <div class="ui transparent input">
+        {% endif %}
+        <td data-column="imdb_id" class="center aligned collapsing">
+          <div class="ui transparent id input">
             <input name="imdb_id" type="text" placeholder="-">
           </div>
         </td>
-        <td data-column="jellyfin_id" class="collapsing">
-          <div class="ui transparent input">
+        {% if preferences.use_jellyfin and series.jellyfin_library_name %}
+        <td data-column="jellyfin_id" class="center aligned collapsing">
+          <div class="ui transparent id input">
             <input name="jellyfin_id" type="text" placeholder="-">
           </div>
         </td>
-        <td data-column="tmdb_id" class="collapsing">
-          <div class="ui transparent input">
+        {% endif %}
+        <td data-column="tmdb_id" class="center aligned collapsing">
+          <div class="ui transparent id input">
             <input name="tmdb_id" type="text" placeholder="-">
           </div>
         </td>
-        <td data-column="tvdb_id" class="collapsing">
-          <div class="ui transparent input">
+        <td data-column="tvdb_id" class="center aligned collapsing">
+          <div class="ui transparent id input">
             <input name="tvdb_id" type="text" placeholder="-">
           </div>
         </td>
-        <td data-column="tvrage_id" class="collapsing">
-          <div class="ui transparent input">
+        <td data-column="tvrage_id" class="center aligned collapsing">
+          <div class="ui transparent id input">
             <input name="tvrage_id" type="text" placeholder="-">
           </div>
         </td>
@@ -380,10 +390,10 @@
           $.ajax({
             type: 'DELETE',
             url: `/api/episodes/${id}`,
-            success: function(response) {
+            success: (response) => {
               $.toast({class: 'blue info', title: 'Deleted Episode'});
               getEpisodeData();
-            }, error: function(response) {
+            }, error: (response) => {
               $.toast({
                 class: 'error',
                 title: 'Error Deleting Episode',
@@ -432,6 +442,7 @@
         row.querySelector('td[data-column="auto_split_title"]').innerHTML = getIcon(episode.auto_split_title);
           // Template ID
           // Font ID
+          // Card type
         row.querySelector('td[data-column="hide_season_text"]').innerHTML = getIcon(episode.hide_season_text);
         row.querySelector('input[name="season_text"]').value = episode.season_text;
         row.querySelector('td[data-column="hide_episode_text"]').innerHTML = getIcon(episode.hide_episode_text);
@@ -447,9 +458,11 @@
         row.querySelector('input[name="source_file_path"]').value = episode.source_file_path;
         row.querySelector('input[name="card_file_path"]').value = episode.card_file_path;
         row.querySelector('td[data-column="watched"]').innerHTML = getIcon(episode.watched);
-        row.querySelector('input[name="emby_id"]').value = episode.emby_id;
+        const embyIdInput = row.querySelector('input[name="emby_id"]');
+        if (embyIdInput !== null) { embyIdInput.value = episode.emby_id; }
         row.querySelector('input[name="imdb_id"]').value = episode.imdb_id;
-        row.querySelector('input[name="jellyfin_id"]').value = episode.jellyfin_id;
+        const jellyfinIdInput = row.querySelector('input[name="jellyfin_id"]');
+        if (jellyfinIdInput !== null) { jellyfinIdInput.value = episode.jellyfin_id; }
         row.querySelector('input[name="tmdb_id"]').value = episode.tmdb_id;
         row.querySelector('input[name="tvdb_id"]').value = episode.tvdb_id;
         row.querySelector('input[name="tvrage_id"]').value = episode.tvrage_id;
@@ -468,13 +481,13 @@
       });
 
       $('.table .transparent.input input').on('input', (event) => {
-        console.log(event);
+        // console.log(event);
         event.target.style.width = Math.max(`${event.target.value}`.length + 1, 8) + 'ch';
       });
 
       $(document).ready(function () {
         $('.table .transparent.input input').each(() => {
-          console.log($(this)); console.log( Math.max(`${$(this).val()}`.length + 1, 8) + 'ch');
+          // console.log($(this)); console.log( Math.max(`${$(this).val()}`.length + 1, 8) + 'ch');
           $(this).css('width', Math.max(`${$(this).val()}`.length + 1, 8) + 'ch');
         });
       });
@@ -1277,6 +1290,7 @@
 
                     <th class="collapsing">Template</th>
                     <th class="collapsing">Font</th>
+                    <th class="collapsing">Card<br>Type</th>
 
                     <th class="collapsing">Hide<br>Season Text</th>
                     <th class="collapsing">Season<br>Text</th>
@@ -1298,10 +1312,13 @@
                     <th class="collapsing">Source<br>File</th>
                     <th class="collapsing">Card<br>File</th>
                     <th class="collapsing">Watched</th>
-
+                    {% if preferences.use_emby and series.emby_library_name %}
                     <th class="collapsing">Emby<br>ID</th>
+                    {% endif %}
                     <th class="collapsing">IMDb<br>ID</th>
+                    {% if preferences.use_jellyfin and series.jellyfin_library_name %}
                     <th class="collapsing">Jellyfin<br>ID</th>
+                    {% endif %}
                     <th class="collapsing">TMDb<br>ID</th>
                     <th class="collapsing">TVDb<br>ID</th>
                     <th class="collapsing">TVRage<br>ID</th>
@@ -1645,13 +1662,13 @@
       }
     });
 
-    $('.table .transparent.input input').on('input', (event) => {
+    $('.table .transparent.input:not(.id) input').on('input', (event) => {
       event.target.style.width = Math.max(`${event.target.value}`.length + 1, 8) + 'ch';
     });
 
     $(document).ready(function () {
       // $('.table .transparent.input').find('input').each(() => {
-      $('.table .transparent.input input').each(() => {
+      $('.table .transparent.input:not(.id) input').each(() => {
         $(this).css('width', Math.max(`${$(this).val()}`.length + 1, 8) + 'ch');
       });
     });
