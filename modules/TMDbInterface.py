@@ -376,6 +376,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
                     episode.name,
                     season.season_number,
                     episode.episode_number,
+                    tmdb_id=episode.id,
                     tvdb_id=episode.tvdb_id if episode.tvdb_id != 0 else None,
                     imdb_id=None if episode.imdb_id is None else episode.imdb_id,
                     airdate=episode.air_date,
