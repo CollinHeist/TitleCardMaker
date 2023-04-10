@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any, Optional
 
 from num2words import num2words
 from re import compile as re_compile
@@ -10,9 +11,9 @@ from modules.YamlReader import YamlReader
 
 class SeasonPosterSet(YamlReader):
     """
-    This class defines a set of SeasonPoster objects for a single show. This
-    class is initialized with via the season poster config, and mainly wraps the
-    SeasonPoster object directly.
+    This class defines a set of SeasonPoster objects for a single show.
+    This class is initialized with via the season poster config, and
+    mainly wraps the SeasonPoster object directly.
     """
 
     """Compiled regex to identify percentage values"""
@@ -29,18 +30,22 @@ class SeasonPosterSet(YamlReader):
     )
 
 
-    def __init__(self, episode_map: 'EpisodeMap', source_directory: Path,
-                 media_directory: Path, poster_config: dict=None) -> None:
+    def __init__(self,
+            episode_map: 'EpisodeMap',
+            source_directory: Path,
+            media_directory: Path,
+            poster_config: Optional[dict[str, Any]] = None) -> None:
         """
-        Construct a new instance of the set. This parses all YAML attributes,
-        and looks for input poster images within the given source directory.
+        Construct a new instance of the set. This parses all YAML
+        attributes, and looks for input poster images within the given
+        source directory.
 
         Args:
             episode_map: EpisodeMap containing season titles.
-            source_directory: Base source directory to look for the logo and
-                season files at.
-            media_directory: Base media directory to create season posters
-                within.
+            source_directory: Base source directory to look for the
+                logo and season files at.
+            media_directory: Base media directory to create season
+                posters within.
             poster_config: Config from the container series' YAML.
         """
 
@@ -76,8 +81,8 @@ class SeasonPosterSet(YamlReader):
 
     def __read_font(self) -> None:
         """
-        Read this object's font config for this poster set, updating attributes
-        and validity for each element.
+        Read this object's font config for this poster set, updating
+        attributes and validity for each element.
         """
 
         # Exit if no config to parse
@@ -112,16 +117,16 @@ class SeasonPosterSet(YamlReader):
                 self.valid = False
 
 
-    def __prepare_posters(self, poster_config: dict,
-                          episode_map: 'EpisodeMap') -> None:
+    def __prepare_posters(self,
+            poster_config: dict[str, Any], episode_map: 'EpisodeMap') -> None:
         """
-        Create SeasonPoster objects for all available season poster images,
-        using the given config.
+        Create SeasonPoster objects for all available season poster
+        images, using the given config.
 
         Args:
             season_config: The YAML config for this PosterSet.
-            episode_map: EpisodeMap object containing custom defined season
-                titles.
+            episode_map: EpisodeMap object containing custom defined
+                season titles.
         """
 
         # Get all manually specified titles
@@ -183,14 +188,15 @@ class SeasonPosterSet(YamlReader):
 
     def get_poster(self, season_number: int) -> 'Path | None':
         """
-        Get the path to the Poster from this set for the given season number.
+        Get the path to the Poster from this set for the given season
+        number.
 
         Args:
             season_number: Season number to get the poster of.
 
         Returns:
-            Path to this set's poster for the given season. None if that poster
-            does not exist.
+            Path to this set's poster for the given season. None if that
+            poster does not exist.
         """
 
         # Return poster file if given season has poster that exists

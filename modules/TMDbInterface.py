@@ -376,6 +376,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
                     episode.name,
                     season.season_number,
                     episode.episode_number,
+                    tmdb_id=episode.id,
                     tvdb_id=episode.tvdb_id if episode.tvdb_id != 0 else None,
                     imdb_id=None if episode.imdb_id is None else episode.imdb_id,
                     airdate=episode.air_date,
@@ -780,8 +781,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             return None
 
         # Get the best logo
-        best = series.logos[0]
-        valid_image = False
+        best = None
         for logo in series.logos:
             # Skip non-English logos
             if logo.iso_639_1 != 'en':
@@ -792,12 +792,12 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
                 return logo.url
 
             # Choose best based on pixel count
-            valid_image = True
-            if logo.width * logo.height > best.width * best.height:
+            if (best is None
+                or logo.width * logo.height > best.width * best.height):
                 best = logo
 
         # No valid image found, blacklist and exit
-        if not valid_image:
+        if best is None:
             self.__update_blacklist(series_info, None, 'logo')
             return None
 

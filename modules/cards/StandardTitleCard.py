@@ -109,13 +109,15 @@ class StandardTitleCard(BaseCardType):
             font_size: Scalar to apply to title font size.
             title_color: Color to use for title text.
             hide_season: Whether to ignore season_text.
-            vertical_shift: Pixel count to adjust the title vertical offset by.
-            interline_spacing: Pixel count to adjust title interline spacing by.
+            vertical_shift: Pixel count to adjust the title vertical
+                offset by.
+            interline_spacing: Pixel count to adjust title interline
+                spacing by.
             kerning: Scalar to apply to kerning of the title text.
-            stroke_width: Scalar to apply to black stroke of the title text.
+            stroke_width: Scalar to apply to black stroke.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
-            separator: Character to use to separate season and episode text.
+            separator: Character to use to separate season/episode text.
             omit_gradient: Whether to omit the gradient overlay.
             stroke_color: Color to use for the back-stroke color.
             unused: Unused arguments.
@@ -242,8 +244,8 @@ class StandardTitleCard(BaseCardType):
     def modify_extras(extras: dict[str, Any], custom_font: bool,
                       custom_season_titles: bool) -> None:
         """
-        Modify the given extras based on whether font or season titles are
-        custom.
+        Modify the given extras based on whether font or season titles
+        are custom.
 
         Args:
             extras: Dictionary to modify.
@@ -260,8 +262,8 @@ class StandardTitleCard(BaseCardType):
     @staticmethod
     def is_custom_font(font: 'Font') -> bool:
         """
-        Determine whether the given font characteristics constitute a default or
-        custom font.
+        Determine whether the given font characteristics constitute a
+        default or custom font.
 
         Args:
             font: The Font being evaluated.
@@ -283,8 +285,8 @@ class StandardTitleCard(BaseCardType):
     def is_custom_season_titles(custom_episode_map: bool, 
                                 episode_text_format: str) -> bool:
         """
-        Determine whether the given attributes constitute custom or generic
-        season titles.
+        Determine whether the given attributes constitute custom or
+        generic season titles.
 
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
@@ -302,8 +304,8 @@ class StandardTitleCard(BaseCardType):
 
     def create(self) -> None:
         """
-        Make the necessary ImageMagick and system calls to create this object's
-        defined title card.
+        Make the necessary ImageMagick and system calls to create this
+        object's defined title card.
         """
 
         # Font customizations
@@ -340,6 +342,8 @@ class StandardTitleCard(BaseCardType):
             f'-annotate +0+{vertical_shift} "{self.title}"',
             # Add episode or season+episode "image"
             *self.index_command,
+            # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 

@@ -8,13 +8,13 @@ from modules.ImageMaker import ImageMaker
 
 class BaseSummary(ImageMaker):
     """
-    This class describes a type of ImageMaker that specializes in creating Show
-    summaries. These are montage images that display a random selection of 
-    title cards for a given Show object in order to give a quick visual
-    indicator as to the style of the cards.
+    This class describes a type of ImageMaker that specializes in
+    creating Show summaries. These are montage images that display a
+    random selection of  title cards for a given Show object in order to
+    give a quick visual indicator as to the style of the cards.
 
-    This object cannot be instantiated directly, and only provides very few
-    methods that can/should be used by all Summary subclasses.
+    This object cannot be instantiated directly, and only provides very
+    few methods that can/should be used by all Summary subclasses.
     """
 
     """Directory where all reference files are stored"""
@@ -41,11 +41,12 @@ class BaseSummary(ImageMaker):
 
         Args:
             show: The Show object to create the Summary for.
-            background: Background color or image to use for the summary. Can
-                also be a "format string" that is "{series_background}" to use
-                the given Show object's backdrop.
-            created_by: Optional string to use in custom "Created by .." tag at
-                the botom of this Summary.
+            background: Background color or image to use for the
+                summary. Can also be a "format string" that is
+                "{series_background}" to use the given Show object's
+                backdrop.
+            created_by: Optional string to use in custom "Created by .."
+                tag at the botom of this Summary.
         """
 
         # Initialize parent ImageMaker
@@ -66,11 +67,12 @@ class BaseSummary(ImageMaker):
 
     def _select_images(self, maximum_images: int=9) -> bool:
         """
-        Select the images that are to be incorporated into the show summary.
-        This updates the object's inputs and number_rows attributes.
+        Select the images that are to be incorporated into the show
+        summary. This updates the object's inputs and number_rows
+        attributes.
 
         Args:
-            maximum_images: maximum number of images to select. Defaults to 9.
+            maximum_images: maximum number of images to select.
 
         Returns:
             Whether the ShowSummary should/can be created.
@@ -119,9 +121,9 @@ class BaseSummary(ImageMaker):
 
     def _create_created_by(self, created_by: str) -> Path:
         """
-        Create a custom "Created by" tag image. This image is formatted like:
-        "Created by {input} with {logo} TitleCardMaker". The image is exactly 
-        the correct size (i.e. fit to width of text).
+        Create a custom "Created by" tag image. This image is formatted
+        like: "Created by {input} with {logo} TitleCardMaker". The image
+        is exactly  the correct size (i.e. fit to width of text).
 
         Returns:
             Path to the created image.

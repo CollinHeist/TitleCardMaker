@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Any
+from typing import Any, Optional
 
 from titlecase import titlecase
 
@@ -98,8 +98,10 @@ class BaseCardType(ImageMaker):
 
 
     @abstractmethod
-    def __init__(self, blur: bool = False, grayscale: bool = False, *,
-                preferences: 'Preferences' = None) -> None:
+    def __init__(self,
+            blur: bool = False,
+            grayscale: bool = False, *,
+            preferences: Optional['Preferences'] = None) -> None:
         """
         Construct a new CardType. Must call super().__init__() to
         initialize the parent ImageMaker class (for PreferenceParser and
@@ -133,7 +135,9 @@ class BaseCardType(ImageMaker):
 
 
     @staticmethod
-    def modify_extras(extras: dict[str, Any], custom_font: bool,
+    def modify_extras(
+            extras: dict[str, Any],
+            custom_font: bool,
             custom_season_titles: bool) -> None:
         """
         Modify the given extras base on whether font or season titles

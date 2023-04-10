@@ -102,8 +102,7 @@ class LandscapeTitleCard(BaseCardType):
             preferences: 'Preferences' = None,
             **unused) ->None:
         """
-        Initialize this TitleCard object. This primarily just stores instance
-        variables for later use in `create()`.
+        Initialize this TitleCard object.
 
         Args:
             source: Source image to base the card on.
@@ -111,19 +110,20 @@ class LandscapeTitleCard(BaseCardType):
             title: Title text to add to created card.
             font: Font name or path (as string) to use for episode title.
             title_color: Color to use for title text.            
-            interline_spacing: Pixel count to adjust title interline spacing by.
+            interline_spacing: Pixel count to adjust title interline
+                spacing by.
             kerning: Scalar to apply to kerning of the title text.
             font_size: Scalar to apply to title font size.
             vertical_shift: Vertical shift to apply to the title text.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
             darken: Whether to darken the image (if not blurred).
-            add_bounding_box: Whether to add a bounding box around the title
-                text.
-            box_adjustments: How to adjust the bounds of the bounding box. Given
-                as a string of pixels in clockwise order relative to the center.
-                For example, "10 10 10 10" will expand the box by 10 pixels in
-                each direction.
+            add_bounding_box: Whether to add a bounding box around the
+                title text.
+            box_adjustments: How to adjust the bounds of the bounding
+                box. Given as a string of pixels in clockwise order
+                relative to the center. For example, "10 10 10 10" will
+                expand the box by 10 pixels in each direction.
             unused: Unused arguments.
         """
 
@@ -180,7 +180,8 @@ class LandscapeTitleCard(BaseCardType):
         Subcommand to darken the image if indicated.
 
         Args:
-            coordinates: Tuple of coordinates to that indicate where to darken.
+            coordinates: Tuple of coordinates to that indicate where to
+                darken.
 
         Returns:
             List of ImageMagick commands.
@@ -222,9 +223,10 @@ class LandscapeTitleCard(BaseCardType):
         self.image_magick.run(command)
 
 
-    def get_bounding_box_coordinates(self, font_size: float,
-                                     interline_spacing: float, kerning: float
-                                     ) -> BoxCoordinates:
+    def get_bounding_box_coordinates(self,
+            font_size: float,
+            interline_spacing: float,
+            kerning: float) -> BoxCoordinates:
         """
         Get the coordinates of the bounding box around the title.
 
@@ -280,7 +282,8 @@ class LandscapeTitleCard(BaseCardType):
         Subcommand to add the bounding box around the title text.
 
         Args:
-            coordinates: Tuple of coordinates to that indicate where to darken.
+            coordinates: Tuple of coordinates to that indicate where to
+                darken.
 
         Returns:
             List of ImageMagick commands.
@@ -319,8 +322,8 @@ class LandscapeTitleCard(BaseCardType):
     def modify_extras(extras: dict[str, Any], custom_font: bool,
                       custom_season_titles: bool) -> None:
         """
-        Modify the given extras base on whether font or season titles are
-        custom.
+        Modify the given extras base on whether font or season titles
+        are custom.
 
         Args:
             extras: Dictionary to modify.
@@ -337,8 +340,8 @@ class LandscapeTitleCard(BaseCardType):
     @staticmethod
     def is_custom_font(font: 'Font') -> bool:
         """
-        Determine whether the given font characteristics constitute a default
-        or custom font.
+        Determine whether the given font characteristics constitute a
+        default or custom font.
 
         Args:
             font: The Font being evaluated.
@@ -355,11 +358,11 @@ class LandscapeTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_season_titles(custom_episode_map: bool, 
-                                episode_text_format: str) -> bool:
+    def is_custom_season_titles(
+            custom_episode_map: bool, episode_text_format: str) -> bool:
         """
-        Determine whether the given attributes constitute custom or generic
-        season titles.
+        Determine whether the given attributes constitute custom or
+        generic season titles.
 
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.
@@ -374,8 +377,8 @@ class LandscapeTitleCard(BaseCardType):
 
     def create(self):
         """
-        Make the necessary ImageMagick and system calls to create this object's
-        defined title card.
+        Make the necessary ImageMagick and system calls to create this
+        object's defined title card.
         """
 
         # If title is 0-length, just stylize
@@ -424,6 +427,8 @@ class LandscapeTitleCard(BaseCardType):
             f'-composite',
             # Optionally add bounding box
             *self.add_bounding_box_command(bounding_box),
+            # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 

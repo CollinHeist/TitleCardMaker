@@ -118,10 +118,10 @@ class StarWarsTitleCard(BaseCardType):
 
     def __modify_episode_text(self, text: str) -> str:
         """
-        Modify the given episode text (such as "EPISODE 1" or "CHAPTER 1") to fit
-        the theme of this card. This removes preface text like episode, chapter,
-        or part; and converts numeric episode numbers to their text equivalent.
-        For example:
+        Modify the given episode text (such as "EPISODE 1" or
+        "CHAPTER 1") to fit the theme of this card. This removes preface
+        text like episode, chapter, or part; and converts numeric
+        episode numbers to their text equivalent. For example:
 
         >>> self.__modify_episode_text('Episode 9')
         'NINE'
@@ -133,8 +133,8 @@ class StarWarsTitleCard(BaseCardType):
 
         Returns:
             The modified episode text with preface text removed, numbers
-            replaced with words, and converted to uppercase. If numbers cannot
-            be replaced, that step is skipped.
+            replaced with words, and converted to uppercase. If numbers
+            cannot be replaced, that step is skipped.
         """
 
         # Convert to uppercase, remove space padding
@@ -205,8 +205,8 @@ class StarWarsTitleCard(BaseCardType):
 
     def __add_episode_prefix(self) -> list:
         """
-        ImageMagick commands to add the episode prefix text to an image. This is
-        either "EPISODE" or "CHAPTER".
+        ImageMagick commands to add the episode prefix text to an image.
+        This is either "EPISODE" or "CHAPTER".
 
         Returns:
             List of ImageMagick commands.
@@ -257,6 +257,8 @@ class StarWarsTitleCard(BaseCardType):
         command = ' '.join([
             f'convert "{gradient_source.resolve()}"',
             *self.__add_title_text(),
+            # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 
@@ -267,7 +269,8 @@ class StarWarsTitleCard(BaseCardType):
 
     def __add_all_text(self, gradient_source: Path) -> Path:
         """
-        Add the title, "EPISODE" prefix, and episode text to the given image.
+        Add the title, "EPISODE" prefix, and episode text to the given
+        image.
 
         Args:
             gradient_source: Source image with starry gradient overlaid.
@@ -281,6 +284,8 @@ class StarWarsTitleCard(BaseCardType):
             *self.__add_title_text(),
             *self.__add_episode_prefix(),
             *self.__add_episode_number_text(),
+            # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 
@@ -292,8 +297,8 @@ class StarWarsTitleCard(BaseCardType):
     @staticmethod
     def is_custom_font(font: 'Font') -> bool:
         """
-        Determines whether the given arguments represent a custom font for this
-        card. This CardType does not use custom fonts, so this is always False.
+        Determines whether the given arguments represent a custom font
+        for this card.
 
         Args:
             font: The Font being evaluated.
@@ -309,8 +314,8 @@ class StarWarsTitleCard(BaseCardType):
     def is_custom_season_titles(custom_episode_map: bool, 
                                 episode_text_format: str) -> bool:
         """
-        Determines whether the given attributes constitute custom or generic
-        season titles.
+        Determines whether the given attributes constitute custom or
+        generic season titles.
 
         Args:
             custom_episode_map: Whether the EpisodeMap was customized.

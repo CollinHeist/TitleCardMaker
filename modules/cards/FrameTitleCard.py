@@ -107,12 +107,14 @@ class FrameTitleCard(BaseCardType):
             title_color: Color to use for title text.
             hide_season: Whether to hide the season text on this card.
             vertical_shift: Vertical shift to apply to the title text.
-            interline_spacing: Offset to interline spacing of the title text.
+            interline_spacing: Offset to interline spacing of the title
+                text.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
-            episode_text_color: Custom color to utilize for the episode text.
-            episode_text_position: How to position the episode text relative to
-                the title text.
+            episode_text_color: Custom color to utilize for the episode
+                text.
+            episode_text_position: How to position the episode text
+                relative to the title text.
             unused: Unused arguments.
         """
 
@@ -274,8 +276,8 @@ class FrameTitleCard(BaseCardType):
     @staticmethod
     def is_custom_font(font: 'Font') -> bool:
         """
-        Determines whether the given arguments represent a custom font for this
-        card. This CardType only uses custom font cases.
+        Determines whether the given arguments represent a custom font
+        for this card. This CardType only uses custom font cases.
 
         Args:
             font: The Font being evaluated.
@@ -294,8 +296,8 @@ class FrameTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_season_titles(custom_episode_map: bool, 
-                                episode_text_format: str) -> bool:
+    def is_custom_season_titles(
+            custom_episode_map: bool, episode_text_format: str) -> bool:
         """
         Determines whether the given attributes constitute custom or
         generic season titles.
@@ -339,7 +341,8 @@ class FrameTitleCard(BaseCardType):
             f'-composite',
             # Add all index/title text
             *self.text_command,
-            # Write to output file
+            # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 

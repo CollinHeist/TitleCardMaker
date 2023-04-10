@@ -623,8 +623,10 @@ class RomanNumeralTitleCard(BaseCardType):
 
 
     @staticmethod
-    def modify_extras(extras: dict[str, Any], custom_font: bool,
-                      custom_season_titles: bool) -> None:
+    def modify_extras(
+            extras: dict[str, Any],
+            custom_font: bool,
+            custom_season_titles: bool) -> None:
         """
         Modify the given extras base on whether font or season titles
         are custom.
@@ -661,8 +663,8 @@ class RomanNumeralTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_season_titles(custom_episode_map: bool, 
-                                episode_text_format: str) -> bool:
+    def is_custom_season_titles(
+            custom_episode_map: bool, episode_text_format: str) -> bool:
         """
         Determine whether the given attributes constitute custom or
         generic season titles.
@@ -704,6 +706,8 @@ class RomanNumeralTitleCard(BaseCardType):
             *self.style,
             # Overlay title text
             *self.title_text_command,
+            # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 

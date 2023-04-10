@@ -309,9 +309,9 @@ class SeriesYamlWriter:
 
     def __match(self, yaml: dict[str, dict[str, str]]) -> None:
         """
-        Match this Writer's file to the given YAML - i.e. remove series that
-        shouldn't be present, and add series that should. Does not modify
-        anything except the series of the file.
+        Match this Writer's file to the given YAML - i.e. remove series
+        that shouldn't be present, and add series that should. Does not
+        modify anything except the series of the file.
 
         Args:
             yaml: YAML (dictionary) to write.

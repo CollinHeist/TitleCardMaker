@@ -112,9 +112,9 @@ log.addHandler(file_handler)
 
 def apply_no_color_formatter() -> None:
     """
-    Modify the global logger object by replacing the colored Handler with an
-    instance of the LogFormatterNoColor Handler class. Also set the log level
-    to that of the removed handler
+    Modify the global logger object by replacing the colored Handler
+    with an instance of the LogFormatterNoColor Handler class. Also set
+    the log level to that of the removed handler.
     """
 
     # Get existing handler's log level, then delete

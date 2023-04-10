@@ -9,21 +9,22 @@ from modules.SeriesInfo import SeriesInfo
 
 class MediaInfoSet:
     """
-    This class describes a set of media info; notably SeriesInfo and EpisodeInfo
-    objects. This object can be viewed as an interface to creating and getting
-    these objects, so that database ID's can be preserved between instances of
-    Show and Episode objects.
+    This class describes a set of media info; notably SeriesInfo and
+    EpisodeInfo objects. This object can be viewed as an interface to
+    creating and getting these objects, so that database ID's can be
+    preserved between instances of Show and Episode objects.
 
-    This class keeps a PersistentDatabase of Series ID's, but a volatile one of
-    EpisodeInfo objects that is created and updated in RAM at runtime.
+    This class keeps a PersistentDatabase of Series ID's, but a volatile
+    one of EpisodeInfo objects that is created and updated in RAM at
+    runtime.
     """
 
 
     def __init__(self) -> None:
         """
         Construct a new instance of the MediaInfoSet. This creates empty
-        dictionaries that map various identifiers (like names or ID's) to Info
-        objects.
+        dictionaries that map various identifiers (like names or ID's)
+        to Info objects.
         """
 
         # Database of full names and database ID's
@@ -40,11 +41,13 @@ class MediaInfoSet:
 
         Args:
             db_value: Existing value from the ID database.
-            search_value: New value to potentially store in the ID database.
+            search_value: New value to potentially store in the ID
+                database.
 
         Returns:
-            True if the row indicated by these ID's should be included (NOT
-            filtered out); False if the row should be excluded (filted out).
+            True if the row indicated by these ID's should be included
+            (NOT filtered out); False if the row should be excluded
+            (filtered out).
         """
 
         # None indicates unquerable, do not filter out
@@ -57,14 +60,15 @@ class MediaInfoSet:
             imdb_id: str, jellyfin_id: str, sonarr_id: int, tmdb_id: int,
             tvdb_id: int, tvrage_id: int) -> Query:
         """
-        Get the Query condition associated with the given SeriesInfo attributes.
+        Get the Query condition associated with the given SeriesInfo
+        attributes.
 
         Args:
             All SeriesInfo arguments.
 
         Returns:
-            Query that filters the SeriesInfo database for any matching series
-            indicated by the given arguments.
+            Query that filters the SeriesInfo database for any matching
+            series indicated by the given arguments.
         """
 
         return (
@@ -238,14 +242,15 @@ class MediaInfoSet:
             episode_number, emby_id, imdb_id, jellyfin_id, tmdb_id, tvdb_id,
             tvrage_id) -> list[str]:
         """
-        Get the keys to update within the EpisodeInfo map for the given data.
+        Get the keys to update within the EpisodeInfo map for the given
+        data.
 
         Args:
             All arguments are EpisodeInfo data.
 
         Returns:
-            List of storage keys for the episode_info map. Only keys where the
-            associated data is non-None are returned.
+            List of storage keys for the episode_info map. Only keys
+            where the associated data is non-None are returned.
         """
 
         new_keys = [
@@ -271,7 +276,8 @@ class MediaInfoSet:
         Get the EpisodeInfo object indicated by the given attributes.
 
         Args:
-            series_info: Parent SeriesInfo object for the EpisodeInfo object.
+            series_info: Parent SeriesInfo object for the EpisodeInfo
+                object.
             title: The title of the episode.
             season_number: Season number of the episode.
             episode_number: Episode number of the episode.
@@ -286,10 +292,11 @@ class MediaInfoSet:
             queried_kwargs: Any queried_{interface} keyword arguments.
 
         Returns:
-            The EpisodeInfo object indicated by the given attributes. This
-            object is updated with any provided database ID's, the airdate, or
-            queried keywords. The object is either new (if no matching entry)
-            was found; or an updated existing object (if match was found).
+            The EpisodeInfo object indicated by the given attributes.
+            This object is updated with any provided database ID's, the
+            airdate, or queried keywords. The object is either new (if
+            no matching entry) was found; or an updated existing object
+            (if match was found).
         """
 
         # Get keys to update the EpisodeInfo map with

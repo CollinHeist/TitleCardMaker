@@ -5,8 +5,8 @@ from modules.ImageMaker import ImageMaker
 
 class SeasonPoster(ImageMaker):
     """
-    This class describes a type of ImageMaker that creates season posters.
-    Season posters take images, add a logo and season title.
+    This class describes a type of ImageMaker that creates season
+    posters. Season posters take images, add a logo and season title.
     """
 
     """Default size of all season posters"""
@@ -28,25 +28,32 @@ class SeasonPoster(ImageMaker):
     )
 
 
-    def __init__(self, source: Path, logo: Path, destination: Path, 
-                 season_text: str, font: Path=SEASON_TEXT_FONT,
-                 font_color: str=SEASON_TEXT_COLOR, font_size: float=1.0,
-                 font_kerning: float=1.0, top_placement: bool=False,
-                 omit_gradient: bool=False) -> None:
+    def __init__(self,
+            source: Path,
+            logo: Path,
+            destination: Path, 
+            season_text: str,
+            font: Path = SEASON_TEXT_FONT,
+            font_color: str = SEASON_TEXT_COLOR,
+            font_size: float = 1.0,
+            font_kerning: float = 1.0,
+            top_placement: bool = False,
+            omit_gradient: bool = False) -> None:
         """
-        Initialize this SeasonPoster object. This stores these attributes.
+        Initialize this SeasonPoster object.
 
         Args:
             source: Path to the source image to use for the poster.
             logo: Path to the logo file to use on the poster.
-            destination: Path to the desination file to write the poster at.
+            destination: Path to the desination file to write the poster
             season_text: Season text to utilize on the poster.
             font: Path to the font file to use for the season text.
             font_color: Font color to use for the season text.
             font_size: Font size scalar to use for the season text.
             font_kerning: Font kerning scalar to use for the season text.
-            top_placement: Whether to place the logo and season text on the top
-                of the created poster (True), or the bottom (False).
+            top_placement: Whether to place the logo and season text on
+                the top of the created poster (True), or the bottom
+                (False).
             omit_gradient: Whether to omit the gradient overlay.
         """
 

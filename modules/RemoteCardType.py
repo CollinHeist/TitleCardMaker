@@ -12,14 +12,17 @@ from modules.RemoteFile import RemoteFile
 
 class RemoteCardType:
     """
-    This class defines a remote CardType. This is an encapsulation of a CardType
-    class that, rather than being defined locally, queries the Maker GitHub for
-    Python classes to dynamically inject in the modules namespace. These 
+    This class defines a remote CardType. This is an encapsulation of a
+    CardType class that, rather than being defined locally, queries the
+    Maker GitHub for Python classes to dynamically inject in the modules
+    namespace.
     """
 
     """Base URL for all remote Card Type files to download"""
-    URL_BASE = ('https://raw.githubusercontent.com/CollinHeist/'
-                'TitleCardMaker-CardTypes/master')
+    URL_BASE = (
+        'https://raw.githubusercontent.com/CollinHeist/'
+        'TitleCardMaker-CardTypes/master'
+    )
 
     """Temporary directory all card types are written to"""
     TEMP_DIR = Path(__file__).parent / '.objects'
@@ -32,16 +35,17 @@ class RemoteCardType:
 
     def __init__(self, remote: str) -> None:
         """
-        Construct a new RemoteCardType. This downloads the source file at the
-        specified location and loads it as a class in the global modules, under
-        the interpreted class name. If the given remote specification is a file
-        that exists, that file is loaded.
+        Construct a new RemoteCardType. This downloads the source file
+        at the specified location and loads it as a class in the global
+        modules, under the interpreted class name. If the given remote
+        specification is a file that exists, that file is loaded.
 
         Args:
-            database_directory: Base Path to read/write any databases from.
-            remote: URL to remote card to inject. Should omit repo base. Should
-                be specified like {username}/{class_name}. Can also be a local
-                filepath.
+            database_directory: Base Path to read/write any databases
+                from.
+            remote: URL to remote card to inject. Should omit repo base.
+                Should be specified like {username}/{class_name}. Can
+                also be a local filepath.
         """
 
         # Get database of loaded assets/cards

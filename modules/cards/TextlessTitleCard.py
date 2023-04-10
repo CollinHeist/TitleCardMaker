@@ -121,6 +121,8 @@ class TextlessTitleCard(BaseCardType):
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
             *self.resize_and_style,
+            # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 

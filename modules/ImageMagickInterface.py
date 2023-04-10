@@ -7,13 +7,13 @@ from modules.Debug import log
 
 class ImageMagickInterface:
     """
-    This class describes an interface to ImageMagick. If initialized with a
-    valid docker container (name or ID), then all given ImageMagick commands
-    will be run through that docker container.
+    This class describes an interface to ImageMagick. If initialized
+    with a valid docker container (name or ID), then all given
+    ImageMagick commands will be run through that docker container.
 
-    Note: This class does not validate the provided container corresponds to
-    a valid ImageMagick container. Commands are passed to docker so long as any
-    container name/ID is provided.
+    Note: This class does not validate the provided container
+    corresponds to a valid ImageMagick container. Commands are passed to
+    docker so long as any container name/ID is provided.
 
     An example command
 
@@ -38,15 +38,14 @@ class ImageMagickInterface:
             use_magick_prefix: bool = False,
             timeout: int = COMMAND_TIMEOUT_SECONDS) -> None:
         """
-        Construct a new instance. If container is falsey, then commands will not
-        use a docker container.
+        Construct a new instance. If container is falsey, then commands
+        will not use a docker container.
 
        Args:
-            container: Optional docker container name/ID to sending ImageMagick
-                commands to.
+            container: Optional docker container name/ID to sending
+                ImageMagick commands to.
             use_magick_prefix: Whether to use 'magick' command prefix.
-            timeout: How many seconds to wait for a command to execute. Defaults
-                to COMMAND_TIMEOUT_SECONDS.
+            timeout: How many seconds to wait for a command to execute.
         """
 
         # Definitions of this interface, i.e. whether to use docker and how
@@ -79,16 +78,15 @@ class ImageMagickInterface:
     @staticmethod
     def escape_chars(string: str) -> str:
         """
-        Escape the necessary characters within the given string so that they
-        can be sent to ImageMagick.
+        Escape the necessary characters within the given string so that
+        they can be sent to ImageMagick.
 
         Args:
             string: The string to escape.
 
         Returns:
-            Input string with all necessary characters escaped. This assumes
-            that text will be wrapped in "", and so only escapes " and `
-            characters.
+            Input string with all necessary characters escaped. This
+            assumes that text will be wrapped in "".
         """
 
         if string is None:
@@ -102,10 +100,10 @@ class ImageMagickInterface:
 
     def run(self, command: str) -> tuple[bytes, bytes]:
         """
-        Wrapper for running a given command. This uses either the host machine
-        (i.e. direct calls); or through the provided docker container (if
-        preferences has been set; i.e. wrapped through "docker exec -t {id}
-        {command}").
+        Wrapper for running a given command. This uses either the host
+        machine (i.e. direct calls); or through the provided docker
+        container (if preferences has been set; i.e. wrapped through
+        "docker exec -t {id} {command}").
 
         Args:
             command: The command (as string) to execute.

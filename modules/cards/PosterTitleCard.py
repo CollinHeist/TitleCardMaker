@@ -154,8 +154,8 @@ class PosterTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_season_titles(episode_text_format: str,
-                                *args, **kwargs) -> bool:
+    def is_custom_season_titles(
+            custom_episode_map: bool, episode_text_format: str) -> bool:
         """
         Determines whether the given attributes constitute custom or
         generic season titles.
@@ -228,6 +228,8 @@ class PosterTitleCard(BaseCardType):
             f'-pointsize 165',
             f'-interline-spacing -40', 
             f'-annotate +649+{title_offset} "{self.title}"',
+            # Create card
+            *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 
