@@ -321,7 +321,10 @@ def create_cards_for_series(
             card_settings['title_text'] = card_settings['title']
 
         # Apply title text case function
-        case_func = CardClass.CASE_FUNCTIONS[card_settings['font_title_case']]
+        if card_settings.get('font_title_case', None) is None:
+            case_func = CardClass.CASE_FUNCTIONS[CardClass.DEFAULT_FONT_CASE]
+        else:
+            case_func = CardClass.CASE_FUNCTIONS[card_settings['font_title_case']]
         card_settings['title_text'] = case_func(card_settings['title_text'])
         # TODO modify CardType objects to use title_text attribute instead of title
         card_settings['title'] = card_settings['title_text'] 
