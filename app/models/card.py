@@ -60,5 +60,7 @@ class Card(Base):
             'font_stroke_width': self.font_stroke_width,
             'font_interline_spacing': self.font_interline_spacing,
             'font_vertical_shift': self.font_vertical_shift,
+            'blur': self.blur,
+            'grayscale': self.grayscale,
             'extras': self.extras,
         }
