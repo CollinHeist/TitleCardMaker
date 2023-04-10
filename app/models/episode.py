@@ -29,8 +29,9 @@ class Episode(Base):
     match_title = Column(Boolean, default=None)
     auto_split_title = Column(Boolean, default=True, nullable=False)
 
+    card_type = Column(String, default=None)
     hide_season_text = Column(Boolean, default=None)
-    season_text = Column(String, default=None)
+    season_text = Column(String, default=None) 
     hide_episode_text = Column(Boolean, default=None)
     episode_text = Column(String, default=None)
     unwatched_style = Column(String, default=None)
@@ -43,6 +44,8 @@ class Episode(Base):
     font_stroke_width = Column(Float, default=None)
     font_interline_spacing = Column(Integer, default=None)
     font_vertical_shift = Column(Integer, default=None)
+
+    # TODO airdate
 
     emby_id = Column(Integer, default=None)
     imdb_id = Column(String, default=None)
@@ -67,6 +70,7 @@ class Episode(Base):
             'title': self.title,
             'match_title': self.match_title,
             'auto_split_title': self.auto_split_title,
+            'card_type': self.card_type,
             'hide_season_text': self.hide_season_text,
             'season_text': self.season_text,
             'hide_episode_text': self.hide_episode_text,
