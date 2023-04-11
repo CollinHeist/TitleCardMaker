@@ -18,29 +18,8 @@ template_router = APIRouter(
     tags=['Templates'],
 )
 
-def join_lists(keys: list[Any], vals: list[Any], desc: str,
-        default: Any=None) -> Union[dict[str, Any], None]:
 
-    is_null = lambda v: (v is None) or (v == UNSPECIFIED)
-
-    if is_null(keys) ^ is_null(vals):
-        raise HTTPException(
-            status_code=400,
-            detail=f'Provide same number of {desc}',
-        )
-    elif not is_null(keys) and not is_null(vals):
-        if len(keys) != len(vals):
-            raise HTTPException(
-                status_code=400,
-                detail=f'Provide same number of {desc}',
-            )
-        else:
-            return {key: val for key, val in zip(keys, vals) if len(key) > 0}
-
-    return UNSPECIFIED if keys == UNSPECIFIED else default
-
-
-def get_template(db, template_id, *, raise_exc=True) -> Union[Template, None]:
+def get_template(db, template_id, *, raise_exc=True) -> Optional[Template]:
     """
     Get the Template with the given ID from the given Database.
 
@@ -121,7 +100,7 @@ def get_template_by_id(
     return get_template(db, template_id, raise_exc=True)
 
 
-@template_router.patch('/{template_id}')
+@template_router.patch('/{template_id}', status_code=200)
 def update_template(
         template_id: int,
         update_template: UpdateTemplate = Body(...),

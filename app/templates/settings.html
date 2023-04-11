@@ -19,12 +19,17 @@
   <style>
     /* Formatting for the title card prevew */
     #title-card-preview .card {
-      width: 800px;
-      min-width: 225px;
-      max-height: 225px;
+      width: 900px; /* 800px */
+      min-width: 253px; /* 225px */
+      max-height: 253px; /* 225px */
     }
     #title-card-preview .image {
-      width: 400px;
+      width: 450px; /* 400px */
+    }
+    /* Wrap long descriptions with scrollbar */
+    #title-card-preview >* .content {
+      overflow: scroll;
+      max-height: 253px;
     }
 
     /* Mobile formatting for the title card preview */
@@ -36,17 +41,6 @@
       #title-card-preview >* .image {
         width: 100%;
       }
-    }
-
-    #title-card-preview >* .content {
-      overflow: scroll;  /* Wrap long descriptions with scrollbar */
-      max-height: 225px;
-    }
-    #title-card-preview >* .unsupported.feature > i {
-      color: rgb(255, 71, 71); /* Unsupported feature icons are colored red */
-    }
-    #title-card-preview >* .supported.feature > i {
-      color: rgb(1, 174, 1); /* Supported feature icons are colored green */
     }
   </style>
 
@@ -121,7 +115,7 @@
               <i class="folder open outline icon"></i>
               Root Folders
             </h3>
-            <div id="root-folder-settings" class="field">
+            <div class="field">
               <div class="field" title="Directory to store all title cards">
                 <label>Card Directory</label>
                 <input type="text" name="card_directory" placeholder="{{preferences.card_directory}}" value="{{preferences.card_directory}}">
@@ -162,7 +156,7 @@
                   </div>
                 </div>
               </div>
-              <div class="ui right aligned checkbox field" title="Whether to sync episodes from season 0 by default">
+              <div class="ui right aligned checkbox field" data-tooltip="Whether to sync episodes from season 0 by default">
                 {% if preferences.sync_specials %}
                 <input name="sync_specials" type="checkbox" checked="checked">
                 {% else %}
@@ -177,25 +171,17 @@
               <i class="images outline icon"></i>
               Title Cards
             </h3>
-            <div id="title-card-settings" class="field">
+            <div class="field">
               <div class="ui stackable grid">
                 <!-- Card settings -->
-                <div id="card-settings" class="four wide column">
-                  <div class="field" title="Global default card type for all series">
+                <div class="four wide column">
+                  <div class="field" data-tooltip="Global default card type for all series">
                     <label>Default Card Type</label>
                     <div id="default-card-type" class="ui long compact selection dropdown">
                       <span class="text"></span>
                       <input name="default_card_type" id="default-card-type-input" type="hidden" value="{{preferences.default_card_type.lower()}}">
                       <i class="dropdown icon"></i>
-                      
-                      <div class="down menu">
-                        <div class="header"><i class="file alternate outline icon"></i>Built-in Cards</div>
-                        <div class="divider"></div>
-                        <!-- Options added asynchronously -->
-                        <div class="header"><i class="server icon"></i>Remote Cards</div>
-                        <div class="divider"></div>
-                        <!-- Options added asynchronously -->
-                      </div>
+                      <div class="down menu"><!-- Added asynchronously --></div>
                     </div>
                   </div>
 
@@ -212,7 +198,6 @@
                         <div class="item" data-value="art blur">Blurred Art</div>
                         <div class="item" data-value="art grayscale">Grayscale Art</div>
                         <div class="item" data-value="art blur grayscale">Blurred Grayscale Art</div>
-                        
                         <div class="header">Unique Variations</div>
                         <div class="divider"></div>
                         <div class="item" data-value="unique">Unique</div>
@@ -252,11 +237,22 @@
                       <i class="question circle outline icon"></i>
                     </div>
                   </div>
+
+                  <div id="card-dimensions" class="two equal width dimension fields">
+                    <div class="field" data-tooltip="Width of output title cards">
+                      <label>Card Width</label>
+                      <input name="card_width" type="number" placeholder="{{preferences.card_width}}" value="{{preferences.card_width}}">
+                    </div>
+                    <div class="field" data-tooltip="Height of output title cards">
+                      <label>Card Height</label>
+                      <input name="card_height" type="number" placeholder="{{preferences.card_height}}" value="{{preferences.card_height}}">
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Card preview -->
                 <div id="title-card-preview" class="twelve wide column">
-                  <div class="ui items">
+                  <!-- <div class="ui items"> -->
                     <div class="ui horizontal raised card">
                       <div class="image">
                         <img alt="Preview Title Card" id="title-card-image" src="">
@@ -273,7 +269,7 @@
                         </div>
                       </div>
                     </div>
-                  </div>
+                  <!-- </div> -->
                 </div>
               </div>
             </div>
@@ -283,7 +279,7 @@
               <i class="file outline icon"></i>
               File Naming
             </h3>
-            <div id="filename-settings" class="field">
+            <div id="filename-settings">
               <div class="field">
                 <label>Card Extension</label>
                 <div id="card-extension" class="ui compact selection dropdown">
@@ -327,7 +323,7 @@
               <i class="magic icon"></i>
               ImageMagick
             </h3>
-            <div id="imagemagick-settings" class="field">
+            <div class="field">
               {% if preferences.is_docker %}
               <!-- Info for disabled ImageMagick container fields -->
               <div id="card-extension-warning" class="ui visible info message">
@@ -485,7 +481,7 @@
     });
     
     $('#settings-form')
-      // Add form validation;
+      // Add form validation
       .form({
         on: 'blur',
         inline : true,
@@ -499,6 +495,12 @@
           }, image_source_priority: {
             identifier: 'image_source_priority',
             rules: [{type: 'minCount[1]', prompt: 'Select at least one source'}]
+          }, card_width: {
+            identifier: 'card_width',
+            rules: [{type: 'integer[1..]', prompt: 'Dimension must be a positive number'}]
+          }, card_height: {
+            identifier: 'card_height',
+            rules: [{type: 'integer[1..]', prompt: 'Dimension must be a positive number'}]
           }, filename_format: {
             identifier: 'filename_format',
             rules: [{type: 'minLength[1]', prompt: 'Filename format is required'}]
@@ -560,10 +562,10 @@
           $('#title-card-creators')[0].innerText = creators.join(', ');
           $('#title-card-font-support').toggleClass('unsupported', !supports_custom_fonts);
           $('#title-card-font-support').toggleClass('supported', supports_custom_fonts);
-          $('#title-card-font-support')[0].firstChild.className = supports_custom_fonts ? 'check icon' : 'times icon';
+          $('#title-card-font-support')[0].firstChild.className = supports_custom_fonts ? 'green check icon' : 'red times icon';
           $('#title-card-season-support').toggleClass('unsupported', !supports_custom_seasons);
           $('#title-card-season-support').toggleClass('supported', supports_custom_seasons);
-          $('#title-card-season-support')[0].firstChild.className = supports_custom_seasons ? 'check icon' : 'times icon';
+          $('#title-card-season-support')[0].firstChild.className = supports_custom_seasons ? 'green check icon' : 'red times icon';
           $('#title-card-description')[0].innerHTML = '<p>' + description.join('</p><p>') + '</p>';
           break;
         }

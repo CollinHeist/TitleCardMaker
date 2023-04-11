@@ -7,7 +7,7 @@
   <link rel="icon" href="/assets/logo128.png">
   <link rel="shortcut icon" href="/assets/logo128.png"> 
   <link rel="apple-touch-icon" href="/assets/logo128.png">
-  <title>Settings - TitleCardMaker</title>
+  <title>Connections - TitleCardMaker</title>
 
   <!-- Formantic UI -->
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
@@ -434,23 +434,23 @@
           </div>
 
           <!-- Input fields -->
-          <div id="tmdb-api-key" class="ui disabled required eight wide field" title="API Key to authenticate communication with TMDb">
+          <div id="tmdb-api-key" class="ui disabled required eight wide field" data-tooltip="API Key to authenticate communication with TMDb">
             <label>API Key <a href="https://developers.themoviedb.org/3/getting-started/introduction" target="_blank"><i class="external alternate small icon"></i></a></label>
             <input name="api_key"type="text" class="private" placeholder="{{preferences.tmdb_api_key}}" value="{{preferences.tmdb_api_key}}">
           </div>
 
           <div id="tmdb-minimum-resolution" class="two fields">
-            <div class="two wide field" title="Minimum required width of images to gather from TMDb">
+            <div class="two wide field" data-tooltip="Minimum required width of images to gather from TMDb">
               <label>Minimum Width</label>
               <input name="minimum_width" type="number" placeholder="{{preferences.tmdb_minimum_width}}" value="{{preferences.tmdb_minimum_width}}">
             </div>
-            <div class="two wide field" title="Minimum required height of images to gather from TMDb">
+            <div class="two wide field" data-tooltip="Minimum required height of images to gather from TMDb">
               <label>Minimum Height</label>
               <input name="minimum_height" type="number" placeholder="{{preferences.tmdb_minimum_height}}" value="{{preferences.tmdb_minimum_height}}">
             </div>
           </div>
 
-          <div id="tmdb-skip-localized" class="ui left aligned checkbox field" title="Whether to skip images with language codes">
+          <div id="tmdb-skip-localized" class="ui left aligned checkbox field" data-tooltip="Whether to skip images with language codes">
             {% if preferences.tmdb_skip_localized %}
             <input name="skip_localized" type="checkbox" checked="">
             {% else %}

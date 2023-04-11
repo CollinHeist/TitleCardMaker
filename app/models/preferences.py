@@ -21,8 +21,9 @@ TCM_ROOT = Path(__file__).parent.parent.parent
 
 class Preferences:
 
-    DEFAULT_CARD_FILENAME_FORMAT = ('{full_name} S{season_number:02}'
-                                    'E{episode_number:02}')
+    DEFAULT_CARD_FILENAME_FORMAT = (
+        '{full_name} S{season_number:02}E{episode_number:02}'
+    )
     DEFAULT_CARD_EXTENSION = '.jpg'
     DEFAULT_IMAGE_SOURCE_PRIORITY = ['TMDb', 'Plex', 'Jellyfin', 'Emby']
     DEFAULT_EPISODE_DATA_SOURCE = 'Sonarr'
@@ -34,7 +35,8 @@ class Preferences:
         self.card_directory = TCM_ROOT / 'cards'
         self.source_directory = TCM_ROOT / 'source'
 
-        self.card_dimensions = TitleCard.DEFAULT_CARD_DIMENSIONS
+        self.card_width = TitleCard.DEFAULT_WIDTH
+        self.card_height = TitleCard.DEFAUL_HEIGHT
         self.card_filename_format = self.DEFAULT_CARD_FILENAME_FORMAT
         self.card_extension = self.DEFAULT_CARD_EXTENSION
         self.image_source_priority = self.DEFAULT_IMAGE_SOURCE_PRIORITY
@@ -134,6 +136,11 @@ class Preferences:
             log.debug(f'preferences.__dict__[{name}] = {value}')
             self.__dict__[name] = value
         self._rewrite_preferences()
+
+    
+    @property
+    def card_dimensions(self) -> str:
+        return f'{self.card_width}x{self.card_height}'
 
 
     @property

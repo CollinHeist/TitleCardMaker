@@ -8,7 +8,6 @@ from app.dependencies import (
     get_database, get_preferences, get_emby_interface, get_jellyfin_interface,
     get_plex_interface, get_sonarr_interface, get_tmdb_interface
 )
-from app.routers.fonts import join_lists
 from app.schemas.base import UNSPECIFIED
 from app.schemas.preferences import (
     EmbyConnection, JellyfinConnection, PlexConnection, Preferences,

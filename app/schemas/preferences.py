@@ -2,7 +2,7 @@ from pathlib import Path
 from re import IGNORECASE, compile as re_compile
 from typing import Literal, Optional, Union
 
-from pydantic import constr, Field, root_validator, validator
+from pydantic import Field, root_validator, validator
 
 from app.schemas.base import Base, UNSPECIFIED, validate_argument_lists_to_dict
 
@@ -17,8 +17,6 @@ Style = Literal[
     'art', 'art blur', 'art grayscale', 'art blur grayscale', 'unique',
     'blur unique', 'grayscale unique', 'blur grayscale unique',
 ]
-
-Dimensions = constr(regex=r'^(\d+)x(\d+)$')
 
 """
 Creation classes
@@ -57,7 +55,8 @@ Update classes
 class UpdatePreferences(Base):
     card_directory: str = Field(default=UNSPECIFIED, min_length=1)
     source_directory: str = Field(default=UNSPECIFIED, min_length=1)
-    card_dimensions: Dimensions = Field(default=UNSPECIFIED)
+    card_width: int = Field(default=UNSPECIFIED, min=1)
+    card_height: int = Field(default=UNSPECIFIED, min=1)
     card_filename_format: str = Field(default=UNSPECIFIED)
     card_extension: CardExtension = Field(default=UNSPECIFIED)
     image_source_priority: list[ImageSource] = Field(default=UNSPECIFIED)
@@ -152,7 +151,8 @@ Return classes
 class Preferences(Base):
     card_directory: Path
     source_directory: Path
-    card_dimensions: Dimensions
+    card_width: int
+    card_height: int
     card_filename_format: str
     card_extension: str
     image_source_priority: list[ImageSource]
