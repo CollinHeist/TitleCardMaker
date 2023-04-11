@@ -215,8 +215,8 @@
 
     async function getScheduledTasks() {
       const scheduled = await fetch('/api/schedule/scheduled').then(resp => resp.json());
-      for (const {id, frequency, next_run} of scheduled) {
-        if (id === 'sync interfaces') {
+      for (const {task_id, frequency, next_run} of scheduled) {
+        if (task_id === 'sync interfaces') {
           const newTime = new Date(next_run);
           $('#next-sync')[0].innerHTML = `<span>Next sync will run at <span class="ui blue text">${newTime.toLocaleString()}</span></span>`;
         }

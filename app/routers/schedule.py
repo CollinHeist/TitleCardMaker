@@ -5,7 +5,7 @@ from fastapi import APIRouter, Body, Depends, Form, HTTPException
 from app.dependencies import get_database, get_scheduler, get_preferences
 import app.models as models
 from app.schemas.base import Base, UNSPECIFIED
-from app.schemas.schedule import ScheduledTask
+from app.schemas.schedule import ScheduledTask, UpdateInterval
 
 from modules.Debug import log
 
@@ -57,12 +57,40 @@ def initialize_scheduler() -> None:
             )
 initialize_scheduler()
 
+
 @schedule_router.get('/scheduled')
 def get_scheduled_tasks(
         scheduler = Depends(get_scheduler)) -> list[ScheduledTask]:
 
     return [{
-        'id': str(job.id),
-        'frequency': job.trigger.interval.seconds,
+        'task_id': str(job.id),
+        'frequency': job.trigger.interval.total_seconds(),
         'next_run': str(job.next_run_time),
     } for job in scheduler.get_jobs()]
+
+
+@schedule_router.patch('update/{task_id}')
+def update_scheduled_task(
+        task_id: str,
+        update_interval: UpdateInterval,
+        scheduler = Depends(get_scheduler)) -> ScheduledTask:
+    log.critical(f'{update_interval.dict()=}')
+    # Verify job exists, raise 404 if DNE
+    if (job := scheduler.get_job(task_id)) is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f'Task {task_id} not found',
+        )
+
+    # Reschedule with modified interval
+    job = scheduler.reschedule_job(
+        task_id,
+        trigger='interval',
+        **update_interval.dict()
+    )
+    
+    return {
+        'task_id': str(job.id),
+        'frequency': job.trigger.interval.total_seconds(),
+        'next_run': str(job.next_run_time),
+    }
