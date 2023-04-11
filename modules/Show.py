@@ -407,25 +407,25 @@ class Show(YamlReader):
         """Set the series ID's for this show."""
 
         # Temporary function to set series ID's
-        def set_emby(infos):
+        def set_emby():
             if self.emby_interface:
                 self.emby_interface.set_series_ids(
                     self.library_name, self.series_info
                 )
-        def set_jellyfin(infos):
+        def set_jellyfin():
             if self.jellyfin_interface:
                 self.jellyfin_interface.set_series_ids(
                     self.library_name, self.series_info
                 )
-        def set_plex(infos):
+        def set_plex():
             if self.plex_interface:
                 self.plex_interface.set_series_ids(
                     self.library_name, self.series_info
                 )
-        def set_sonarr(infos):
+        def set_sonarr():
             if self.sonarr_interface:
                 self.sonarr_interface.set_series_ids(self.series_info)
-        def set_tmdb(infos):
+        def set_tmdb():
             if self.tmdb_interface:
                 self.tmdb_interface.set_series_ids(self.series_info)
 
@@ -441,7 +441,7 @@ class Show(YamlReader):
 
         # Go through each interface and load ID's from it
         for interface_function in interface_orders[self.episode_data_source]:
-            interface_function(infos)
+            interface_function()
 
 
     def __get_destination(self, episode_info: 'EpisodeInfo') -> Path:
