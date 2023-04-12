@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from titlecase import titlecase
 
@@ -51,7 +51,7 @@ class BaseCardType(ImageMaker):
 
     @property
     @abstractmethod
-    def TITLE_CHARACTERISTICS(self) -> dict[str, 'int | bool']:
+    def TITLE_CHARACTERISTICS(self) -> dict[str, Union[int, bool]]:
         """
         Characteristics of title splitting for this card type. Must have
         keys for max_line_width, max_line_count, and top_heavy. See
@@ -180,6 +180,49 @@ class BaseCardType(ImageMaker):
 
 
     @property
+    def resize(self) -> ImageMagickCommands:
+        """
+
+        """
+
+        return [
+            # Full sRGB colorspace on source image
+            f'-set colorspace sRGB',
+            # Ignore profile conversion warnings
+            f'+profile "*"',
+            # Background resize shouldn't fill with any color
+            f'-background transparent',
+            f'-gravity center',
+            # Fit to title card size
+            f'-resize "{self.TITLE_CARD_SIZE}^"',
+            f'-extent "{self.TITLE_CARD_SIZE}"',
+        ]
+
+
+    @property
+    def style(self) -> ImageMagickCommands:
+        """
+        ImageMagick commands to apply any style modifiers to an image.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        return [
+            # Full sRGB colorspace on source image
+            f'-set colorspace sRGB',
+            # Ignore profile conversion warnings
+            f'+profile "*"',
+            # Optionally blur
+            f'-blur {self.BLUR_PROFILE}' if self.blur else '',
+            # Optionally set gray colorspace
+            f'-colorspace gray' if self.grayscale else '',
+            # Reset to full colorspace
+            f'-set colorspace sRGB' if self.grayscale else '',
+        ]
+
+
+    @property
     def resize_and_style(self) -> ImageMagickCommands:
         """
         ImageMagick commands to resize and apply any style modifiers to
@@ -206,29 +249,6 @@ class BaseCardType(ImageMaker):
             f'-colorspace gray' if self.grayscale else '',
             # Reset to full colorspace
             f'-set colorspace sRGB',
-        ]
-
-
-    @property
-    def style(self) -> ImageMagickCommands:
-        """
-        ImageMagick commands to apply any style modifiers to an image.
-
-        Returns:
-            List of ImageMagick commands.
-        """
-
-        return [
-            # Full sRGB colorspace on source image
-            f'-set colorspace sRGB',
-            # Ignore profile conversion warnings
-            f'+profile "*"',
-            # Optionally blur
-            f'-blur {self.BLUR_PROFILE}' if self.blur else '',
-            # Optionally set gray colorspace
-            f'-colorspace gray' if self.grayscale else '',
-            # Reset to full colorspace
-            f'-set colorspace sRGB' if self.grayscale else '',
         ]
 
     
