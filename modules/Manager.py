@@ -182,8 +182,8 @@ class Manager:
     def assign_interfaces(self) -> None:
         """Assign all interfaces to each Show known to this Manager"""
 
-        # Assign interfaces for each show
-        for show in tqdm(self.shows + self.archives,desc='Assigning interfaces',
+        for show in tqdm(self.shows + self.archives,
+                         desc='Assigning interfaces',
                          **TQDM_KWARGS):
             show.assign_interfaces(
                 self.emby_interface,
@@ -198,14 +198,8 @@ class Manager:
     def set_show_ids(self) -> None:
         """Set the series ID's of each Show known to this Manager"""
 
-        # If neither Sonarr nor TMDb are enabled, skip
-        if not self.preferences.use_sonarr and not self.preferences.use_tmdb:
-            return None
-
-        # For each show in the Manager, set series IDs
         for show in tqdm(self.shows + self.archives, desc='Setting series IDs',
                          **TQDM_KWARGS):
-            # Select interfaces based on what's enabled
             show.set_series_ids()
 
 
@@ -217,7 +211,6 @@ class Manager:
         multipart episodes.
         """
 
-        # Read source files for Show objects
         for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
             pbar.set_description(f'Reading source files for {show}')
             show.read_source()
@@ -228,13 +221,6 @@ class Manager:
     def add_new_episodes(self) -> None:
         """Add any new episodes to this Manager's shows."""
 
-        # If Sonarr, Plex, and TMDb are disabled, exit
-        if (not self.preferences.use_sonarr and not self.preferences.use_tmdb
-            and not self.preferences.use_plex):
-            return None
-
-        # For each show in the Manager, look for new episodes using any of the
-        # possible interfaces
         for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
             pbar.set_description(f'Adding new episodes for {show}')
             show.add_new_episodes()
@@ -244,12 +230,6 @@ class Manager:
     def set_episode_ids(self) -> None:
         """Set all episode ID's for all shows."""
 
-        # If Sonarr, Plex, and TMDb are disabled, exit
-        if (not self.preferences.use_sonarr and not self.preferences.use_tmdb
-            and not self.preferences.use_plex):
-            return None
-
-        # For each show in the Manager, set IDs for every episode
         for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
             pbar.set_description(f'Setting episode IDs for {show}')
             show.set_episode_ids()
@@ -263,7 +243,6 @@ class Manager:
         if not self.preferences.use_tmdb:
             return None
 
-        # For each show in the Manager, add translation
         for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
             pbar.set_description(f'Adding translations for {show}')
             show.add_translations()
@@ -277,7 +256,6 @@ class Manager:
         if not self.preferences.use_tmdb:
             return None
 
-        # For each show in the Manager, download a logo
         for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
             pbar.set_description(f'Downloading logo for {show}')
             show.download_logo()
@@ -287,11 +265,6 @@ class Manager:
     def select_source_images(self) -> None:
         """Select and download the source images for all shows."""
 
-        # If Plex and TMDb aren't enabled, skip
-        if not self.preferences.use_plex and not self.preferences.use_tmdb:
-            return None
-
-        # Go through each show and download source images
         for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
             pbar.set_description(f'Selecting sources for {show}')
             show.select_source_images()
@@ -301,7 +274,6 @@ class Manager:
     def create_missing_title_cards(self) -> None:
         """Creates all missing title cards for all shows."""
 
-        # Go through every show in the Manager, create cards
         for show in (pbar := tqdm(self.shows, **TQDM_KWARGS)):
             pbar.set_description(f'Creating cards for {show}')
             show.create_missing_title_cards()
@@ -311,7 +283,6 @@ class Manager:
     def create_season_posters(self) -> None:
         """Create season posters for all shows."""
 
-        # For each show in the Manager, create its posters
         for show in tqdm(self.shows + self.archives,
                          desc='Creating season posters',**TQDM_KWARGS):
             show.create_season_posters()
@@ -324,13 +295,13 @@ class Manager:
         if Emby/Jellyfin/Plex are globally enabled.
         """
 
-        # If Plex and Emby aren't enabled, skip
+        # If no media servers aren't enabled, skip
         if (not self.preferences.use_emby
             and not self.preferences.use_jellyfin
             and not self.preferences.use_plex):
             return None
 
-        # Go through each show in the Manager, update Plex
+        # Go through each show in the Manager, update the server
         for show in (pbar := tqdm(self.shows, **TQDM_KWARGS)):
             pbar.set_description(f'Updating Server for {show}')
             show.update_media_server()
