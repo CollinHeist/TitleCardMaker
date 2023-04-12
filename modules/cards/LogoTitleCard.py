@@ -85,25 +85,34 @@ class LogoTitleCard(BaseCardType):
         'font', 'font_size', 'title_color', 'hide_season', 'separator', 'blur',
         'vertical_shift',  'interline_spacing', 'kerning', 'stroke_width',
         'logo', 'omit_gradient', 'background', 'stroke_color',
+        'use_background_image', 'blur_only_image',
     )
 
-    def __init__(self, output_file: Path, title: str,  season_text: str,
-            episode_text: str, hide_season: bool, font: str,
-            title_color: str,
-            font_size: float=1.0,
-            kerning: float=1.0,
-            interline_spacing: int=0,
-            stroke_width: float=1.0,
-            vertical_shift: int=0,
-            season_number: int=1,
-            episode_number: int=1,
-            blur: bool=False,
-            grayscale: bool=False,
-            logo: SeriesExtra[str]=None,
-            separator: SeriesExtra[str]='•', 
-            background: SeriesExtra[str]='black',
-            stroke_color: SeriesExtra[str]='black',
-            omit_gradient: SeriesExtra[bool]=True,
+    def __init__(self,
+            output_file: Path,
+            title: str,
+            season_text: str,
+            episode_text: str,
+            source: Optional[Path] = None,
+            hide_season: bool = False,
+            font: str = TITLE_FONT,
+            title_color: str = TITLE_COLOR,
+            font_size: float = 1.0,
+            kerning: float = 1.0,
+            interline_spacing: int = 0,
+            stroke_width: float = 1.0,
+            vertical_shift: int = 0,
+            season_number: int = 1,
+            episode_number: int = 1,
+            blur: bool = False,
+            grayscale: bool = False,
+            logo: SeriesExtra[str] = None,
+            background: SeriesExtra[str] = 'black',
+            separator: SeriesExtra[str] = '•', 
+            stroke_color: SeriesExtra[str] = 'black',
+            omit_gradient: SeriesExtra[bool] = True,
+            use_background_image: SeriesExtra[bool] = False,
+            blur_only_image: SeriesExtra[bool] = False,
             **unused) -> None:
         """
         Construct a new instance of this card.
@@ -128,10 +137,14 @@ class LogoTitleCard(BaseCardType):
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
             logo: Filepath (or file format) to the logo file.
-            separator: Character to use to separate season/episode text.
             background: Backround color.
-            omit_gradient: Whether to omit the gradient overlay.
+            separator: Character to use to separate season/episode text.
             stroke_color: Color to use for the back-stroke color.
+            omit_gradient: Whether to omit the gradient overlay.
+            use_background_image: Whether to use a background image
+                instead of a solid background color.
+            blur_only_image: Whether the blur attribute applies to the
+                source image _only_, or the logo as well.
             unused: Unused arguments.
         """
 
@@ -150,18 +163,27 @@ class LogoTitleCard(BaseCardType):
                 self.valid = False
                 log.exception(f'Invalid logo file "{logo}"', e)
 
+        # Get source file if indicated
+        self.use_background_image = use_background_image
+        self.blur_only_image = blur_only_image
+        self.source_file = source
+        if self.use_background_image and self.source_file is None:
+            log.error(f'Source file must be provided if using a background'
+                        f'image')
+            self.valid = False
+
         self.output_file = output_file
 
         # Ensure characters that need to be escaped are
         self.title = self.image_magick.escape_chars(title)
         self.season_text = self.image_magick.escape_chars(season_text.upper())
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
+        self.hide_season = hide_season
 
         # Font attributes
         self.font = font
         self.font_size = font_size
         self.title_color = title_color
-        self.hide_season = hide_season
         self.vertical_shift = vertical_shift
         self.interline_spacing = interline_spacing
         self.kerning = kerning
@@ -319,6 +341,11 @@ class LogoTitleCard(BaseCardType):
             log.error(f'Logo file "{self.logo.resolve()}" does not exist')
             return None
 
+        # Skip if source is indicated and does not exist
+        if self.use_background_image and not self.source_file.exists():
+            log.warning(f'Source "{self.source_file.resolve()}" does not exist')
+            return None
+
         # Resize logo, get resized height to determine offset
         resized_logo = self.resize_logo()
         _, height = self.get_image_dimensions(resized_logo)
@@ -331,6 +358,23 @@ class LogoTitleCard(BaseCardType):
         kerning = -1.25 * self.kerning
         stroke_width = 3.0 * self.stroke_width
 
+        # Sub-command to add source file or create colored background
+        if self.use_background_image:
+            blur_command = ''
+            if self.blur and self.blur_only_image:
+                blur_command = f'-blur {self.BLUR_PROFILE}'
+            background_command = [
+                f'"{self.source_file.resolve()}"',
+                *self.resize,
+                blur_command,
+            ]
+        else:
+            background_command = [
+                f'-set colorspace sRGB',
+                f'-size "{self.TITLE_CARD_SIZE}"',
+                f'xc:"{self.background}"',
+            ]
+
         # Sub-command to optionally add gradient
         gradient_command = []
         if not self.omit_gradient:
@@ -339,21 +383,29 @@ class LogoTitleCard(BaseCardType):
                 f'-composite',
             ]
 
+        # Sub-command to style the overall image if indicated
+        style_command = []
+        if self.blur_only_image and self.grayscale:
+            style_command = [
+                f'-colorspace gray',
+                f'-set colorspace sRGB',
+            ]
+        elif not self.blur_only_image:
+            style_command = self.style
+
         command = ' '.join([
             f'convert',
-            f'-set colorspace sRGB',
-            # Crate canvas of static background color
-            f'-size "{self.TITLE_CARD_SIZE}"',
-            f'xc:"{self.background}"',
+            # Add background image or color
+            *background_command,
             # Overlay resized logo
             f'"{resized_logo.resolve()}"',
             f'-gravity north',
             f'-geometry "+0+{offset}"',
             f'-composite',
-            # Optionally overlay logo
+            # Optionally overlay gradient
             *gradient_command,
-            # Resize and optionally blur source image
-            *self.resize_and_style,
+            # Apply style that is applicable to entire image
+            *style_command,
             # Global title text options
             f'-gravity south',
             f'-font "{self.font}"',                     

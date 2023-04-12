@@ -234,7 +234,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         self.get_all_episodes(series_info)
 
 
-    def get_library_paths(self, filter_libraries: list[str]=[]
+    def get_library_paths(self, filter_libraries: list[str] = []
             ) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
@@ -267,8 +267,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         }
 
 
-    def get_all_series(self, filter_libraries: list[str]=[],
-            required_tags: list[str]=[]) -> list[tuple[SeriesInfo, str, str]]: 
+    def get_all_series(self,
+            filter_libraries: list[str] = [],
+            required_tags: list[str] = []) -> list[tuple[SeriesInfo, str, str]]: 
         """
         Get all series within Emby, as filtered by the given libraries.
 

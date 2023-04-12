@@ -368,7 +368,7 @@ class Manager:
             show_archive.create_summary()
 
 
-    def __run(self, *, serial: bool=False) -> None:
+    def __run(self, *, serial: bool = False) -> None:
         """
         Run the Manager. If serial execution is not indicated, then sync
         is run and Show/ShowArchive objects are created.
