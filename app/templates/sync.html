@@ -213,12 +213,29 @@
       });
     }
 
-    async function getScheduledTasks() {
+    async function getScheduledSyncs() {
       const scheduled = await fetch('/api/schedule/scheduled').then(resp => resp.json());
       for (const {task_id, frequency, next_run} of scheduled) {
         if (task_id === 'sync interfaces') {
-          const newTime = new Date(next_run);
-          $('#next-sync')[0].innerHTML = `<span>Next sync will run at <span class="ui blue text">${newTime.toLocaleString()}</span></span>`;
+          // Get the next run
+          const nextRun = new Date(next_run);
+          const nextRunStr = nextRun.toLocaleString();
+
+          // Get current time, 
+          const now = new Date();
+          const timeDifferenceSeconds = Math.floor((nextRun - now) / 1000);
+          const timeDifferenceMinutes = Math.floor(timeDifferenceSeconds / 60);
+          const timeDifferenceHours = Math.floor(timeDifferenceMinutes / 60);
+          const timeDifferenceDays = Math.floor(timeDifferenceHours / 24);
+
+          const timeUnits = [];
+          if (timeDifferenceDays > 0) { timeUnits.push(`${timeDifferenceDays} days`); }
+          if (timeDifferenceHours % 24 > 0) { timeUnits.push(`${timeDifferenceHours%24} hours`); }
+          if (timeDifferenceMinutes % 60 > 0) { timeUnits.push(`${timeDifferenceMinutes%60} minutes`); }
+          if (timeDifferenceSeconds % 60 > 0) { timeUnits.push(`${timeDifferenceSeconds%60} seconds`); }
+          const inStr = timeUnits.slice(0, 2).join(', ');
+
+          $('#next-sync')[0].innerHTML = `<span>All Syncs will run in <span class="ui blue text">${inStr}</span>, at <span class="ui red text">${nextRunStr}</span></span>`;
         }
       }
     }
@@ -229,7 +246,9 @@
       getPlexLibraries();
       getTemplates();
       getSonarrTags();
-      getScheduledTasks();
+      getScheduledSyncs();
+      // Update next run text every minute
+      setInterval(getScheduledSyncs, 60 * 1000);
     }
   </script>
   
