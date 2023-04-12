@@ -74,6 +74,201 @@ def get_sync(db, sync_id, *, raise_exc=True) -> Union[Sync, None]:
     return sync
 
 
+def run_sync(
+        db,
+        preferences,
+        sync,
+        emby_interface,
+        jellyfin_interface,
+        plex_interface,
+        sonarr_interface,
+        tmdb_interface, *,
+        background_tasks=None) -> list[Series]:
+    """
+
+    """
+
+    # If specified interface is disabled, raise 409
+    interface = {
+        'Emby': emby_interface,
+        'Jellyfin': jellyfin_interface,
+        'Plex': plex_interface,
+        'Sonarr': sonarr_interface,
+    }[sync.interface]
+    if interface is None:
+        raise HTTPException(
+            status_code=409,
+            detail=f'Unable to communicate with {sync.interface}',
+        )
+
+    # Sync depending on the associated interface
+    added = []
+    log.debug(f'Starting to Sync[{sync.id}] from {sync.interface}')
+    if sync.interface == 'Emby':
+        # Get filtered list of series from Sonarr
+        all_series = emby_interface.get_all_series(
+            required_libraries=sync.required_libraries,
+            excluded_libraries=sync.excluded_libraries,
+            required_tags=sync.required_tags,
+            excluded_tags=sync.excluded_tags,
+        )
+        for series_info, library in all_series:
+            # Look for an existing series with this name+year or Emby ID
+            # TODO maybe query by other database ID's?
+            existing = db.query(models.series.Series)\
+                .filter(or_(
+                    and_(
+                        models.series.Series.name==series_info.name,
+                        models.series.Series.year==series_info.year
+                    ), models.series.Series.emby_id==series_info.emby_id,
+                )).first()
+            if existing is None:
+                series = models.series.Series(
+                    name=series_info.name,
+                    year=series_info.year,
+                    template_id=sync.template_id,
+                    emby_library_name=library,
+                    **series_info.ids,
+                )
+                db.add(series)
+                added.append(series)
+    elif sync.interface == 'Jellyfin':
+        # Get filtered list of series from Jellyfin
+        all_series = jellyfin_interface.get_all_series(
+            required_libraries=sync.required_libraries,
+            excluded_libraries=sync.excluded_libraries,
+            required_tags=sync.required_tags,
+            excluded_tags=sync.excluded_tags,
+        )
+        for series_info, library in all_series:
+            # Look for an existing series with this name+year or Jellyfin ID
+            # TODO maybe query by other database ID's?
+            existing = db.query(models.series.Series)\
+                .filter(or_(
+                    and_(
+                        models.series.Series.name==series_info.name,
+                        models.series.Series.year==series_info.year
+                    ), models.series.Series.jellyfin_id==series_info.jellyfin_id
+                )).first()
+            if existing is None:
+                series = models.series.Series(
+                    name=series_info.name,
+                    year=series_info.year,
+                    template_id=sync.template_id,
+                    jellyfin_library_name=library,
+                    **series_info.ids,
+                )
+                db.add(series)
+                added.append(series)
+    # Sync from Plex
+    elif sync.interface == 'Plex':
+        # Get filtered list of series from Plex
+        all_series = plex_interface.get_all_series(
+            required_libraries=sync.required_libraries,
+            excluded_libraries=sync.excluded_libraries,
+            required_tags=sync.required_tags,
+            excluded_tags=sync.excluded_tags,
+        )
+
+        for series_info, library in all_series:
+            # Look for existing series, add if DNE
+            existing = db.query(models.series.Series)\
+                .filter(
+                    models.series.Series.name==series_info.name,
+                    models.series.Series.year==series_info.year,
+                ).first() 
+
+            if existing is None:
+                series = models.series.Series(
+                    name=series_info.name,
+                    year=series_info.year,
+                    template_id=sync.template_id,
+                    plex_library_name=library,
+                    **series_info.ids,
+                )
+                db.add(series)
+                added.append(series)
+    # Sync from Sonarr
+    elif sync.interface == 'Sonarr':
+        # Get filtered list of series from Sonarr
+        all_series = sonarr_interface.get_all_series(
+            required_tags=sync.required_tags,
+            excluded_tags=sync.excluded_tags,
+            monitored_only=sync.monitored_only,
+            downloaded_only=sync.downloaded_only,
+            required_series_type=sync.required_series_type,
+            excluded_series_type=sync.excluded_series_type,
+        )
+        for series_info, directory in all_series:
+            # Look for an existing series with this name+year or Sonarr ID
+            # TODO maybe query by other database ID's?
+            existing = db.query(models.series.Series)\
+                .filter(or_(
+                    and_(
+                        models.series.Series.name==series_info.name,
+                        models.series.Series.year==series_info.year
+                    ), models.series.Series.sonarr_id==series_info.sonarr_id,
+                )).first()
+            if existing is None:
+                library = preferences.determine_sonarr_library(directory)
+                series = models.series.Series(
+                    name=series_info.name,
+                    year=series_info.year,
+                    template_id=sync.template_id,
+                    # TODO Determine which media server to assign this library to
+                    plex_library_name=library,
+                    **series_info.ids,
+                )
+                db.add(series)
+                added.append(series)
+
+    # If anything was added, update DB and return list
+    if added:
+        db.commit()
+
+    # Add background tasks to set ID's and download a poster for each series
+    for series in added:
+        log.info(f'Sync[{sync.id}] Added {series.name} ({series.year})')
+        if background_tasks is not None:
+            background_tasks.add_task(
+                set_series_database_ids,
+                series, db, series.emby_library_name,
+                series.jellyfin_library_name, series.plex_library_name,
+                emby_interface, jellyfin_interface, plex_interface,
+                sonarr_interface, tmdb_interface,
+            )
+            background_tasks.add_task(
+                download_series_poster, series, db, preferences, tmdb_interface
+            )
+        else:
+            set_series_database_ids(
+                series, db, series.emby_library_name,
+                series.jellyfin_library_name, series.plex_library_name,
+                emby_interface, jellyfin_interface, plex_interface,
+                sonarr_interface, tmdb_interface,
+            )
+            download_series_poster(series, db, preferences, tmdb_interface)
+
+    if not added:
+        log.info(f'Sync[{sync.id}] No series synced')
+
+    return added
+
+
+def sync_all():
+    try:
+        # Get the Database
+        with next(get_database()) as db:
+            # Get and run all Syncs
+            all_syncs = db.query(models.sync.Sync).all()
+            for sync in all_syncs:
+                run_sync(
+                    db, get_preferences(), sync, get_emby_interface(),
+                    get_jellyfin_interface(), get_plex_interface(),
+                    get_sonarr_interface(), get_tmdb_interface(),
+                )
+    except Exception as e:
+        log.exception(f'Failed to Sync all', e)
 
 
 # Create sub router for all /sync API requests
@@ -268,153 +463,8 @@ def sync(
     # Get existing Sync, raise 404 if DNE
     sync = get_sync(db, sync_id, raise_exc=True)
 
-    # If specified interface is disabled, raise 409
-    interface = {
-        'Emby': emby_interface,
-        'Jellyfin': jellyfin_interface,
-        'Plex': plex_interface,
-        'Sonarr': sonarr_interface,
-    }[sync.interface]
-    if interface is None:
-        raise HTTPException(
-            status_code=409,
-            detail=f'Unable to communicate with {sync.interface}',
-        )
-
-    # Sync depending on the associated interface
-    added = []
-    if sync.interface == 'Emby':
-        # Get filtered list of series from Sonarr
-        all_series = emby_interface.get_all_series(
-            required_libraries=sync.required_libraries,
-            excluded_libraries=sync.excluded_libraries,
-            required_tags=sync.required_tags,
-            excluded_tags=sync.excluded_tags,
-        )
-        for series_info, library in all_series:
-            # Look for an existing series with this name+year or Emby ID
-            # TODO maybe query by other database ID's?
-            existing = db.query(models.series.Series)\
-                .filter(or_(
-                    and_(
-                        models.series.Series.name==series_info.name,
-                        models.series.Series.year==series_info.year
-                    ), models.series.Series.emby_id==series_info.emby_id,
-                )).first()
-            if existing is None:
-                series = models.series.Series(
-                    name=series_info.name,
-                    year=series_info.year,
-                    template_id=sync.template_id,
-                    emby_library_name=library,
-                    **series_info.ids,
-                )
-                db.add(series)
-                added.append(series)
-    elif sync.interface == 'Jellyfin':
-        # Get filtered list of series from Jellyfin
-        all_series = jellyfin_interface.get_all_series(
-            required_libraries=sync.required_libraries,
-            excluded_libraries=sync.excluded_libraries,
-            required_tags=sync.required_tags,
-            excluded_tags=sync.excluded_tags,
-        )
-        for series_info, library in all_series:
-            # Look for an existing series with this name+year or Jellyfin ID
-            # TODO maybe query by other database ID's?
-            existing = db.query(models.series.Series)\
-                .filter(or_(
-                    and_(
-                        models.series.Series.name==series_info.name,
-                        models.series.Series.year==series_info.year
-                    ), models.series.Series.jellyfin_id==series_info.jellyfin_id
-                )).first()
-            if existing is None:
-                series = models.series.Series(
-                    name=series_info.name,
-                    year=series_info.year,
-                    template_id=sync.template_id,
-                    jellyfin_library_name=library,
-                    **series_info.ids,
-                )
-                db.add(series)
-                added.append(series)
-    # Sync from Plex
-    elif sync.interface == 'Plex':
-        # Get filtered list of series from Plex
-        all_series = plex_interface.get_all_series(
-            required_libraries=sync.required_libraries,
-            excluded_libraries=sync.excluded_libraries,
-            required_tags=sync.required_tags,
-            excluded_tags=sync.excluded_tags,
-        )
-
-        for series_info, library in all_series:
-            # Look for existing series, add if DNE
-            existing = db.query(models.series.Series)\
-                .filter(
-                    models.series.Series.name==series_info.name,
-                    models.series.Series.year==series_info.year,
-                ).first() 
-
-            if existing is None:
-                series = models.series.Series(
-                    name=series_info.name,
-                    year=series_info.year,
-                    template_id=sync.template_id,
-                    plex_library_name=library,
-                    **series_info.ids,
-                )
-                db.add(series)
-                added.append(series)
-    # Sync from Sonarr
-    elif sync.interface == 'Sonarr':
-        # Get filtered list of series from Sonarr
-        all_series = sonarr_interface.get_all_series(
-            required_tags=sync.required_tags,
-            excluded_tags=sync.excluded_tags,
-            monitored_only=sync.monitored_only,
-            downloaded_only=sync.downloaded_only,
-            required_series_type=sync.required_series_type,
-            excluded_series_type=sync.excluded_series_type,
-        )
-        for series_info, directory in all_series:
-            # Look for an existing series with this name+year or Sonarr ID
-# TODO maybe query by other database ID's?
-            existing = db.query(models.series.Series)\
-                .filter(or_(
-                    and_(
-                        models.series.Series.name==series_info.name,
-                        models.series.Series.year==series_info.year
-                    ), models.series.Series.sonarr_id==series_info.sonarr_id,
-                )).first()
-            if existing is None:
-                library = preferences.determine_sonarr_library(directory)
-                series = models.series.Series(
-                    name=series_info.name,
-                    year=series_info.year,
-                    template_id=sync.template_id,
-# TODO Determine which media server to assign this library to
-                    plex_library_name=library,
-                    **series_info.ids,
-                )
-                db.add(series)
-                added.append(series)
-
-    # If anything was added, update DB and return list
-    if added:
-        db.commit()
-
-    # Add background tasks to set ID's and download a poster for each series
-    for series in added:
-        background_tasks.add_task(
-            set_series_database_ids,
-            series, db, series.emby_library_name, series.jellyfin_library_name,
-            series.plex_library_name, emby_interface, jellyfin_interface,
-            plex_interface, sonarr_interface, tmdb_interface,
-        )
-        background_tasks.add_task(
-            download_series_poster, series, db, preferences, tmdb_interface
-        )
-
-    return added
+    return run_sync(
+        db, preferences, sync, emby_interface, jellyfin_interface,
+        plex_interface, sonarr_interface, tmdb_interface,
+        background_tasks=background_tasks
+    )

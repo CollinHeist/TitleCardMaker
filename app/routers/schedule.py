@@ -2,17 +2,15 @@ from typing import Any, Literal, Optional, Union
 
 from fastapi import APIRouter, Body, Depends, Form, HTTPException
 
-from app.dependencies import get_database, get_scheduler, get_preferences
+from app.dependencies import get_scheduler, get_preferences
 import app.models as models
+from app.routers.sync import sync_all
 from app.schemas.base import Base, UNSPECIFIED
 from app.schemas.schedule import ScheduledTask, UpdateInterval
 
 from modules.Debug import log
 
 def fake_refresh_episode_data():
-    ...
-
-def fake_sync_interfaces():
     ...
 
 def fake_create_title_cards():
@@ -28,7 +26,7 @@ JOBS = [
      'interval': 60 * 60 * 6,  # 6 hours
     },
     {'id': JOB_SYNC_INTERFACES,
-     'function': fake_sync_interfaces,
+     'function': sync_all,
      'interval': 60 * 60 * 6, # 6 hours
     },
     {'id': JOB_CREATE_TITLE_CARDS,
@@ -72,8 +70,16 @@ def get_scheduled_tasks(
 @schedule_router.patch('update/{task_id}')
 def update_scheduled_task(
         task_id: str,
-        update_interval: UpdateInterval,
+        update_interval: UpdateInterval = Body(...),
         scheduler = Depends(get_scheduler)) -> ScheduledTask:
+    """
+    Reschedule the given Task with a new interval.
+
+    - task_id: ID of the Task being rescheduled.
+    - update_interval: UpdateInterval whose total interval is used to
+      reschedule the given Task.
+    """
+
     log.critical(f'{update_interval.dict()=}')
     # Verify job exists, raise 404 if DNE
     if (job := scheduler.get_job(task_id)) is None:
