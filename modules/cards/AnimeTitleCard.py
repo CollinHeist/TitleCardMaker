@@ -84,7 +84,7 @@ class AnimeTitleCard(BaseCardType):
         'require_kanji', 'kanji_vertical_shift', 'season_text', 'episode_text',
         'hide_season', 'separator', 'font', 'font_size', 'font_color',
         'vertical_shift', 'interline_spacing', 'kerning', 'stroke_width',
-        'omit_gradient', 'stroke_color',
+        'omit_gradient', 'stroke_color', 'hide_episode_text',
     )
 
     def __init__(self, *,
@@ -94,6 +94,7 @@ class AnimeTitleCard(BaseCardType):
             season_text: str,
             episode_text: str,
             hide_season_text: bool = False,
+            hide_episode_text: bool = False,
             font_file: str = TITLE_FONT,
             font_color: str = TITLE_COLOR,
             font_size: float = 1.0,
@@ -149,6 +150,7 @@ class AnimeTitleCard(BaseCardType):
 
         # Escape title, season, and episode text
         self.hide_season = hide_season_text
+        self.hide_episode_text = hide_episode_text
         self.title = self.image_magick.escape_chars(title)
         self.season_text = self.image_magick.escape_chars(season_text.upper())
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
@@ -274,7 +276,7 @@ class AnimeTitleCard(BaseCardType):
 
 
     @property
-    def title_command(self) -> list[str]:
+    def title_text_command(self) -> list[str]:
         """
         Subcommand for adding title text to the source image.
 
@@ -317,7 +319,7 @@ class AnimeTitleCard(BaseCardType):
 
 
     @property
-    def index_command(self) -> list[str]:
+    def index_text_command(self) -> list[str]:
         """
         Subcommand for adding the index text to the source image.
 
@@ -325,7 +327,11 @@ class AnimeTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
-        # Add only episode text using annotate
+        # Hiding all index text, return blank commands
+        if self.hide_season and self.hide_episode_text:
+            return []
+
+        # Add only episode text
         if self.hide_season:
             return [
                 *self.__series_count_text_global_effects,
@@ -335,6 +341,18 @@ class AnimeTitleCard(BaseCardType):
                 f'-stroke "{self.SERIES_COUNT_TEXT_COLOR}"',
                 f'-strokewidth 0',
                 f'-annotate +75+90 "{self.episode_text}"',
+            ]
+        
+        # Add only season text
+        if self.hide_episode_text:
+            return [
+                *self.__series_count_text_global_effects,
+                *self.__series_count_text_black_stroke,
+                f'-annotate +75+90 "{self.season_text}"',
+                f'-fill "{self.SERIES_COUNT_TEXT_COLOR}"',
+                f'-stroke "{self.SERIES_COUNT_TEXT_COLOR}"',
+                f'-strokewidth 0',
+                f'-annotate +75+90 "{self.season_text}"',
             ]
 
         # Add season and episode text
@@ -374,8 +392,10 @@ class AnimeTitleCard(BaseCardType):
 
 
     @staticmethod
-    def modify_extras(extras: dict[str, Any], custom_font: bool,
-                      custom_season_titles: bool) -> None:
+    def modify_extras(
+            extras: dict[str, Any],
+            custom_font: bool,
+            custom_season_titles: bool) -> None:
         """
         Modify the given extras base on whether font or season titles
         are custom.
@@ -415,8 +435,8 @@ class AnimeTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_season_titles(custom_episode_map: bool, 
-                                episode_text_format: str) -> bool:
+    def is_custom_season_titles(
+            custom_episode_map: bool, episode_text_format: str) -> bool:
         """
         Determines whether the given attributes constitute custom or
         generic season titles.
@@ -431,8 +451,8 @@ class AnimeTitleCard(BaseCardType):
 
         standard_etf = AnimeTitleCard.EPISODE_TEXT_FORMAT.upper()
 
-        return (custom_episode_map or
-                episode_text_format.upper() != standard_etf)
+        return (custom_episode_map
+                or episode_text_format.upper() != standard_etf)
 
 
     def create(self) -> None:
@@ -464,9 +484,9 @@ class AnimeTitleCard(BaseCardType):
             # Overlay gradient
             *gradient_command,
             # Add title or title+kanji
-            *self.title_command,
+            *self.title_text_command,
             # Add season or season+episode text
-            *self.index_command,
+            *self.index_text_command,
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

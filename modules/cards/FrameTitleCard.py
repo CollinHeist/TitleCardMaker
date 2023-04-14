@@ -81,6 +81,7 @@ class FrameTitleCard(BaseCardType):
             season_text: str,
             episode_text: str,
             hide_season_text: bool = False,
+            hide_episode_text: bool = False,
             font_file: str = TITLE_FONT,
             font_color: str = TITLE_COLOR,
             font_size: float = 1.0,
@@ -132,7 +133,7 @@ class FrameTitleCard(BaseCardType):
         self.episode_text = self.image_magick.escape_chars(prep(episode_text))
 
         self.hide_season = hide_season_text or len(self.season_text) == 0
-        self.hide_episode = len(self.episode_text) == 0
+        self.hide_episode = hide_episode_text or len(self.episode_text) == 0
 
         # Font customizations
         self.font = font_file
