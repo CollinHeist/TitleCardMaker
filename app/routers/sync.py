@@ -232,8 +232,7 @@ def run_sync(
         if background_tasks is not None:
             background_tasks.add_task(
                 set_series_database_ids,
-                series, db, series.emby_library_name,
-                series.jellyfin_library_name, series.plex_library_name,
+                series, db,
                 emby_interface, jellyfin_interface, plex_interface,
                 sonarr_interface, tmdb_interface,
             )
@@ -242,8 +241,7 @@ def run_sync(
             )
         else:
             set_series_database_ids(
-                series, db, series.emby_library_name,
-                series.jellyfin_library_name, series.plex_library_name,
+                series, db,
                 emby_interface, jellyfin_interface, plex_interface,
                 sonarr_interface, tmdb_interface,
             )

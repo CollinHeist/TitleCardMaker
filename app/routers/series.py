@@ -65,9 +65,6 @@ def get_series(db, series_id, *, raise_exc=True) -> Optional[Series]:
 def set_series_database_ids(
         series: Series,
         db: 'Database',
-        emby_library_name: Optional[str],
-        jellyfin_library_name: Optional[str],
-        plex_library_name: Optional[str],
         emby_interface: 'EmbyInterface',
         jellyfin_interface: 'JellyfinInterface',
         plex_interface: 'PlexInterface',
@@ -75,37 +72,28 @@ def set_series_database_ids(
         tmdb_interface: 'TMDbInterface') -> Series:
 
     # Create SeriesInfo object for this entry, query all interfaces
-    series_info = SeriesInfo(
-        series.name, series.year, emby_id=series.emby_id,
-        jellyfin_id=series.jellyfin_id, sonarr_id=series.sonarr_id,
-        tmdb_id=series.tmdb_id, tvdb_id=series.tvdb_id,
-        tvrage_id=series.tvrage_id,
-    )
-    if emby_interface is not None and emby_library_name is not None:
+    series_info = series.as_series_info
+    if emby_interface and series.emby_library_name:
         emby_interface.set_series_ids(emby_library_name, series_info)
-    if jellyfin_interface is not None and jellyfin_library_name is not None:
+    if jellyfin_interface and series.jellyfin_library_name:
         jellyfin_interface.set_series_ids(jellyfin_library_name, series_info)
-    if plex_interface is not None and plex_library_name is not None:
+    if plex_interface and series.plex_library_name:
         plex_interface.set_series_ids(plex_library_name, series_info)
-    if sonarr_interface is not None:
+    if sonarr_interface:
         sonarr_interface.set_series_ids(series_info)
-    if tmdb_interface is not None:
+    if tmdb_interface:
         tmdb_interface.set_series_ids(series_info)
 
     # Update database if new ID's are available
-    if series.emby_id is None and series_info.has_id('emby_id'):
-        series.emby_id = series_info.emby_id
-    if series.jellyfin_id is None and series_info.has_id('jellyfin_id'):
-        series.jellyfin_id = series_info.jellyfin_id
-    if series.sonarr_id is None and series_info.has_id('sonarr_id'):
-        series.sonarr_id = series_info.sonarr_id
-    if series.tmdb_id is None and series_info.has_id('tmdb_id'):
-        series.tmdb_id = series_info.tmdb_id
-    if series.tvdb_id is None and series_info.has_id('tvdb_id'):
-        series.tvdb_id = series_info.tvdb_id
-    if series.tvrage_id is None and series_info.has_id('tvrage_id'):
-        series.tvrage_id = series_info.tvrage_id
-    db.commit()
+    changed = False
+    for id_type in ('emby_id', 'imdb_id', 'jellyfin_id', 'sonarr_id', 'tmdb_id',
+                    'tvdb_id', 'tvrage_id'):
+        if getattr(series, id_type) is None and series_info.has_id(id_type):
+            setattr(series, id_type, getattr(series_info, id_type))
+            changed = True
+
+    if changed:
+        db.commit()
 
     return series
 
@@ -283,9 +271,9 @@ def add_new_series(
     # Add background tasks to set ID's and download poster
     background_tasks.add_task(
         set_series_database_ids,
-        series, db, series.emby_library_name, series.jellyfin_library_name,
-        series.plex_library_name, emby_interface, jellyfin_interface,
-        plex_interface, sonarr_interface, tmdb_interface,
+        series, db,
+        emby_interface, jellyfin_interface, plex_interface, sonarr_interface,
+        tmdb_interface,
     )
     background_tasks.add_task(
         download_series_poster, series, db, preferences, tmdb_interface
