@@ -1,7 +1,8 @@
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy import Boolean, Column, DateTime, Integer, Float, ForeignKey, String
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy import PickleType
 
@@ -102,3 +103,15 @@ class Episode(Base):
             tvrage_id=self.tvrage_id,
             airdate=self.airdate,
         )
+
+
+    @hybrid_method
+    def get_source_file(self,
+            source_directory: str,
+            series_directory: str) -> Path:
+
+        if self.source_file is None:
+            filename = f's{self.season_number}e{self.episode_number}.jpg'
+            return Path(source_directory) / series_directory / filename
+
+        return Path(source_directory) / series_directory / self.source_file
