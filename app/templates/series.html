@@ -668,28 +668,13 @@
       });
     }
 
-    async function deleteSeries(deleteCards) {
+    // Function to delete this series
+    async function deleteSeries() {
       $.ajax({
         type: 'DELETE',
-        url: '/api/cards/series/{{series.id}}',
-        success: () => { 
-          // Series deleted successfully, delete cards if indicated
-          if (deleteCards) {
-            $.ajax({
-              type: 'DELETE',
-              url: '/api/series/{{series.id}}',
-              success: () => {
-                window.location.href = '/';
-              }, error: (response) => {
-                $.toast({
-                  class: 'error',
-                  title: 'Error Deleting Series',
-                  message: response.responseJSON.detail,
-                });
-              },
-            });
-          }
-          else { window.location.href = '/'; }
+        url: '/api/series/{{series.id}}',
+        success: () => {
+          window.location.href = '/';
         }, error: (response) => {
           $.toast({
             class: 'error',
@@ -700,6 +685,28 @@
       });
     }
   
+    // Function to delete all title cards for this series
+    async function deleteTitleCards() {
+      $.ajax({
+        type: 'DELETE',
+        url: '/api/cards/series/{{series.id}}',
+        success: (response) => { 
+          $.toast({
+            class: 'blue info',
+            title: `Deleted ${response.length} Cards`,
+          })
+        }, error: (response) => {
+          $.toast({
+            class: 'error',
+            title: 'Error Deleting Title Cards',
+            message: response.responseJSON.detail,
+          });
+        }, complete: () => {
+          getStatistics();
+        },
+      });
+    }
+
     async function deleteAllEpisodes() {
       $.ajax({
         type: 'DELETE',
@@ -822,7 +829,7 @@
             </div>
             <div class="ui divider"></div>
             <div class="ui vertical labeled icon fluid buttons">
-              <button id="delete-cards" class="ui labeled icon negative button">
+              <button class="ui labeled icon negative button" onclick="deleteTitleCards();">
                 <i class="images outline icon"></i>
                 Delete Title Cards
               </button>
@@ -1435,11 +1442,11 @@
           <i class="remove icon"></i>
           No
         </div>
-        <div class="ui red cancel basic inverted button" onclick="deleteSeries(false)">
+        <div class="ui red cancel basic inverted button" onclick="deleteSeries();">
           <i class="trash alternate outline icon"></i>
           Yes
         </div>
-        <div class="ui red ok inverted button" onclick="deleteSeries(true)">
+        <div class="ui red ok inverted button" onclick="deleteTitleCards(); deleteSeries();">
           <i class="images outline icon"></i>
           Yes, and Delete Cards
         </div>
