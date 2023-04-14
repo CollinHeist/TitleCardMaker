@@ -207,6 +207,9 @@ class Preferences:
     def tmdb_arguments(self) -> dict[str, Any]:
         return {
             'api_key': self.tmdb_api_key,
+            'minimum_source_width': self.tmdb_minimum_width,
+            'minimum_source_height': self.tmdb_minimum_height,
+            'blacklist_threshold': 3, # TODO add variable
         }
 
 

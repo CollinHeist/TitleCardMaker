@@ -12,12 +12,6 @@ from app.schemas.series import NewTemplate, Template, UpdateTemplate
 
 from modules.Debug import log
 
-# Create sub router for all /templates API requests
-template_router = APIRouter(
-    prefix='/templates',
-    tags=['Templates'],
-)
-
 
 def get_template(db, template_id, *, raise_exc=True) -> Optional[Template]:
     """
@@ -55,6 +49,13 @@ def get_template(db, template_id, *, raise_exc=True) -> Optional[Template]:
             return None
 
     return template
+
+
+# Create sub router for all /templates API requests
+template_router = APIRouter(
+    prefix='/templates',
+    tags=['Templates'],
+)
 
 
 @template_router.post('/new', status_code=201)
