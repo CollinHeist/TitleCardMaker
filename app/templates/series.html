@@ -96,7 +96,11 @@
       </td>
       <td data-column="season_number" class="center aligned collapsing">0</td>
       <td data-column="episode_number" class="center aligned collapsing">0</td>
-      <td data-column="absolute_number" class="center aligned collapsing">0</td>
+      <td data-column="absolute_number" class="center aligned collapsing">
+        <div class="ui transparent short input">
+          <input name="absolute_number" type="text" placeholder="-">
+        </div>
+      </td>
       <td data-column="title" class="left aligned">
         <div class="ui transparent input">
           <input name="title" type="text" placeholder="">
@@ -344,7 +348,7 @@
         row.querySelector('td[data-column="season_number"]').dataset.sortValue = episode.season_number;
         row.querySelector('td[data-column="episode_number"]').innerHTML = episode.episode_number;
         row.querySelector('td[data-column="episode_number"]').dataset.sortValue = episode.episode_number;
-        row.querySelector('td[data-column="absolute_number"]').innerHTML = episode.absolute_number;
+        row.querySelector('input[name="absolute_number"]').value = episode.absolute_number;
         row.querySelector('td[data-column="absolute_number"]').dataset.sortValue = episode.absolute_number;
         row.querySelector('input[name="title"]').value = episode.title;
         row.querySelector('td[data-column="title"]').dataset.sortValue = episode.title;
