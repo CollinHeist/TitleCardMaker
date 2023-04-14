@@ -111,11 +111,20 @@ input ~ input {
   /* Add glow effect */
   /* color: var(--support-button-color); */
   border-radius: 0.25em;
-  box-shadow: 0 0 1.1em 0 var(--support-button-color);
+  box-shadow: 0 0 1.1em 0 var(--support-button-color); /* 1.1 */
+  animation: glowPulse 6s infinite;
 }
 /* Don't leave any additional margin */
 #support-button .button {
   margin: 0;
+}
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0.3em 1px var(--support-button-color); }
+  50% { box-shadow: 0 0 1.5em 3px var(--support-button-color); }
+  /* 0% { box-shadow: 0 0 1.1em 0 var(--support-button-color); } */
+  /* 50% { box-shadow: 0 0 1.3em var(--support-button-color); } */
+  /* 70% { box-shadow: 0 0 1.1em 5px var(--support-button-color); } */
+  /* 100% { box-shadow: 0 0 1.1em 0 var(--support-button-color); } */
 }
 
 /* Theme toggle button */
