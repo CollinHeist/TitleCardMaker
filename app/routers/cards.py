@@ -48,6 +48,13 @@ def priority_merge_v2(merge_base: dict[str, Any],
                 merge_base[key] = value
 
 
+# Create sub router for all /cards API requests
+card_router = APIRouter(
+    prefix='/cards',
+    tags=['Title Cards'],
+)
+
+
 def create_card(db, preferences, card_settings):
     # Initialize class of the card type being created
     log.debug(f'Creating card')
@@ -79,13 +86,15 @@ def create_card(db, preferences, card_settings):
         card_maker.image_magick.print_command_history()
 
 
-def delete_cards(db, query) -> list[str]:
+def delete_cards(db, card_query, loaded_query) -> list[str]:
     """
     Delete all Title Card files for the given query.
 
     Args:
         db: Database to commit the query deletion to.
-        query: SQL query whose return will be parsed for deletion.
+        card_query: SQL query for Cards whose card files to delete.
+            Query contents itself are also deleted.
+        loaded_query: SQL query for loaded assets to delete.
 
     Returns:
         List of file names of the deleted cards.
@@ -93,23 +102,17 @@ def delete_cards(db, query) -> list[str]:
 
     # Delete all associated cards
     deleted = []
-    for card in query.all():
+    for card in card_query.all():
         if (card_file := Path(card.card_file)).exists():
             card_file.unlink()
             deleted.append(str(card_file))
 
-    # Delete from database,
-    query.delete()
+    # Delete from database
+    card_query.delete()
+    loaded_query.delete()
     db.commit()
 
     return deleted
-
-
-# Create sub router for all /cards API requests
-card_router = APIRouter(
-    prefix='/cards',
-    tags=['Title Cards'],
-)
 
 
 @card_router.post('/preview', status_code=201)
@@ -362,17 +365,15 @@ def create_cards_for_series(
             card_settings['grayscale'] = False 
         
         # Add source and output keys
-        # If an explicit source file was indicated, use it vs. default
-        if card_settings.get('source_file', None) is None:
-            card_settings['source_file'] = \
-                Path(preferences.source_directory) \
-                / series.path_safe_name \
-                / f's{episode.season_number}e{episode.episode_number}.jpg'
-        else:
-            card_settings['source_file'] = \
-                Path(preferences.source_directory) \
-                / series.path_safe_name \
-                / card_settings['source_file']
+        card_settings['source_file'] = episode.get_source_file(
+            preferences.source_directory, series.path_safe_name
+        )
+
+        # Exit if the source file does not exist
+        if (card_settings['source_file'].exists()
+            and CardClass.USES_UNIQUE_SOURCES):
+            log.debug(f'Episode[{episode.id}] Skipping Card, no source image')
+            continue
 
         # Get card folder
         if card_settings.get('directory', None) is None:
@@ -456,8 +457,9 @@ def delete_series_title_cards(
     - series_id: ID of the Series whose TitleCards to delete.
     """
 
-    query = db.query(models.card.Card).filter_by(series_id=series_id)
-    return delete_cards(db, query)
+    card_query = db.query(models.card.Card).filter_by(series_id=series_id)
+    loaded_query = db.query(models.loaded.Loaded).filter_by(series_id=series_id)
+    return delete_cards(db, card_query, loaded_query)
 
 
 @card_router.delete('/episode/{episode_id}', status_code=200, tags=['Episodes'])
@@ -471,8 +473,9 @@ def delete_episode_title_cards(
     - episode_id: ID of the Episode whose TitleCards to delete.
     """
 
-    query = db.query(models.card.Card).filter_by(episode_id=episode_id)
-    return delete_cards(db, query)
+    card_query = db.query(models.card.Card).filter_by(episode_id=episode_id)
+    loaded_query = db.query(models.loaded.Loaded).filter_by(episode_id=episode_id)
+    return delete_cards(db, card_query, loaded_query)
 
 
 @card_router.delete('/card/{card_id}', status_code=200)
@@ -486,8 +489,9 @@ def delete_title_card(
     - card_id: ID of the TitleCard to delete.
     """
 
-    query = db.query(models.card.Card).filter_by(id=card_id)
-    return delete_cards(db, query)
+    card_query = db.query(models.card.Card).filter_by(id=card_id)
+    loaded_query = db.query(models.loaded.Loaded).filter_by(id=card_id)
+    return delete_cards(db, card_query, loaded_query)
 
 
 @card_router.post('/episode/{episode_id}', status_code=201, tags=['Episodes'])
