@@ -178,7 +178,10 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # Try by full name
         try:
-            return library.get(series_info.full_name)
+            series = library.get(series_info.full_name)
+            if series.year == series_info.year:
+                return series
+            raise NotFound
         except NotFound:
             pass
 
