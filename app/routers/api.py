@@ -9,6 +9,7 @@ from app.routers.fonts import font_router
 from app.routers.schedule import schedule_router
 from app.routers.series import series_router
 from app.routers.settings import settings_router
+from app.routers.sources import source_router
 from app.routers.statistics import statistics_router
 from app.routers.sync import sync_router
 from app.routers.templates import template_router
@@ -28,5 +29,6 @@ api_router.include_router(schedule_router)
 api_router.include_router(series_router)
 api_router.include_router(settings_router)
 api_router.include_router(statistics_router)
+api_router.include_router(source_router)
 api_router.include_router(sync_router)
 api_router.include_router(template_router)
