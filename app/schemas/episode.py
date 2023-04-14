@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Literal, Optional, Union
 
 from pydantic import Field, root_validator, validator
@@ -45,6 +46,7 @@ class NewEpisode(Base):
     font_interline_spacing: Optional[int] = Field(default=None)
     font_vertical_shift: Optional[int] = Field(default=None)
 
+    airdate: Optional[datetime] = Field(default=None)
     emby_id: Optional[int] = Field(default=None)
     imdb_id: Optional[str] = Field(default=None)
     jellyfin_id: Optional[str] = Field(default=None)
@@ -88,6 +90,7 @@ class UpdateEpisode(Base):
     font_interline_spacing: Optional[int] = Field(default=UNSPECIFIED)
     font_vertical_shift: Optional[int] = Field(default=UNSPECIFIED)
 
+    airdate: Optional[datetime] = Field(default=UNSPECIFIED)
     emby_id: Optional[int] = Field(default=UNSPECIFIED)
     imdb_id: Optional[str] = Field(default=UNSPECIFIED)
     jellyfin_id: Optional[str] = Field(default=UNSPECIFIED)
@@ -157,6 +160,7 @@ class Episode(Base):
     font_interline_spacing: Optional[int]
     font_vertical_shift: Optional[int]
 
+    airdate: Optional[datetime]
     emby_id: Optional[int]
     imdb_id: Optional[str]
     jellyfin_id: Optional[str]

@@ -1,6 +1,6 @@
 from pathlib import Path
 from requests import get
-from typing import Literal
+from typing import Literal, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Response, UploadFile
 
@@ -18,12 +18,50 @@ from app.routers.templates import get_template
 from app.schemas.base import UNSPECIFIED
 from app.schemas.episode import Episode, NewEpisode, UpdateEpisode
 
+
+def get_episode(db, episode_id, *, raise_exc=True) -> Optional[Episode]:
+    """
+    Get the Episode with the given ID from the given Database.
+
+    Args:
+        db: SQL Database to query for the given Episode.
+        episode_id: ID of the Episode to query for.
+        raise_exc: Whether to raise 404 if the given Episode does not 
+            exist. If False, then only an error message is logged.
+
+    Returns:
+        Episode with the given ID. If one cannot be found and raise_exc
+        is False, or if the given ID is None, then None is returned.
+
+    Raises:
+        HTTPException with a 404 status code if the Episode cannot be
+        found and raise_exc is True.
+    """
+
+    # No ID provided, return immediately
+    if episode_id is None:
+        return None
+
+    episode = db.query(models.episode.Episode).filter_by(id=episode_id).first()
+    if episode is None:
+        if raise_exc:
+            raise HTTPException(
+                status_code=404,
+                detail=f'Episode {episode_id} not found',
+            )
+        else:
+            log.error(f'Episode {episode_id} not found')
+            return None
+
+    return episode
+
+
 episodes_router = APIRouter(
     prefix='/episodes',
     tags=['Episodes'],
 )
 
-# /api/episodes/{series_id}/new
+
 @episodes_router.post('/{series_id}/new', status_code=201)
 def add_new_episode(
         series_id: int,
@@ -37,11 +75,7 @@ def add_new_episode(
     """
 
     # Verify series exists
-    if db.query(models.series.Series).filter_by(id=series_id).first() is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Series {series_id} not found',
-        )
+    get_series(db, series_id, raise_exc=True)
 
     # Create new entry, add to database
     episode = models.episode.Episode(
@@ -64,14 +98,7 @@ def get_episode_by_id(
     - episode_id: ID of the Episode to retrieve.
     """
 
-    episode = db.query(models.episode.Episode).filter_by(id=episode_id).first()
-    if episode is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Episode {episode_id} not found',
-        )
-
-    return episode
+    return get_episode(db, episode_id, raise_exc=True)
 
 
 @episodes_router.delete('/{episode_id}', status_code=204)
@@ -85,12 +112,7 @@ def delete_episode(
     """
 
     # Find episode with this ID, raise 404 if DNE
-    episode = db.query(models.episode.Episode).filter_by(id=episode_id).first()
-    if episode is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Episode {episode_id} not found',
-        )
+    episode = get_episode(db, episode_id, raise_exc=True)
 
     # TODO Delete card files
     ...
@@ -248,6 +270,7 @@ def refresh_episode_data(
                 title=episode.title.full_title,
                 **episode.indices,
                 **episode.ids,
+                airdate=episode.airdate,
             )
             db.add(episode)
             changed = True
@@ -281,12 +304,7 @@ def update_episode_config(
     """
     log.critical(f'{update_episode.dict()=}')
     # Get this episode, raise 404 if DNE
-    episode = db.query(models.episode.Episode).filter_by(id=episode_id).first()
-    if episode is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Episode {episode_id} not found',
-        )
+    episode = get_episode(db, episode_id, raise_exc=True)
     
     # If any reference ID's were indicated, verify referenced object exists
     get_series(db, getattr(update_episode, 'series_id', None), raise_exc=True)

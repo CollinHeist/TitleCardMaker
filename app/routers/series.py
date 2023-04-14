@@ -56,7 +56,7 @@ def get_series(db, series_id, *, raise_exc=True) -> Optional[Series]:
                 detail=f'Series {series_id} not found',
             )
         else:
-            log.error(f'Series {font_id} not found')
+            log.error(f'Series {series_id} not found')
             return None
 
     return series

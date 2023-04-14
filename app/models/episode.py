@@ -1,6 +1,6 @@
 from typing import Any
 
-from sqlalchemy import Boolean, Column, Integer, Float, ForeignKey, String
+from sqlalchemy import Boolean, Column, DateTime, Integer, Float, ForeignKey, String
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy import PickleType
@@ -45,14 +45,13 @@ class Episode(Base):
     font_interline_spacing = Column(Integer, default=None)
     font_vertical_shift = Column(Integer, default=None)
 
-    # TODO airdate
-
     emby_id = Column(Integer, default=None)
     imdb_id = Column(String, default=None)
     jellyfin_id = Column(String, default=None)
     tmdb_id = Column(Integer, default=None)
     tvdb_id = Column(Integer, default=None)
     tvrage_id = Column(Integer, default=None)
+    airdate = Column(DateTime, default=None)
 
     extras = Column(MutableDict.as_mutable(PickleType), default=None)
 
@@ -101,5 +100,5 @@ class Episode(Base):
             tmdb_id=self.tmdb_id,
             tvdb_id=self.tvdb_id,
             tvrage_id=self.tvrage_id,
-            # airdate=self.airdate,
+            airdate=self.airdate,
         )
