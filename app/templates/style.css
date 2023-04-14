@@ -99,8 +99,10 @@ input ~ input {
 .ui.dropdown >* .header {
   color: crimson !important;
 }
-.ui.dropdown .header::after {
-  background-color: green;
+
+/* Add shadow around search input when selected */
+#search-bar input:focus {
+  box-shadow: 0 0 1.1em 0 var(--tcm-blue-color) !important;
 }
 
 /* Support button */
