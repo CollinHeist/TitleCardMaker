@@ -262,7 +262,7 @@
     }
   
     // Update the episode config for the given episode
-    async function saveEpisodeConfig(episodeId) {
+    async function saveEpisodeConfig(episodeId, batch=false) {
       // Get all inputs for this episode
       const episodeInputs = $(`#episode-id${episodeId} input`);
       // Construct updateEpisode object
@@ -296,10 +296,12 @@
         contentType: 'application/json',
         data: JSON.stringify(updateEpisode),
         success: (response) => {
-          $.toast({
-            class: 'blue info',
-            title: 'Updated Episode',
-          });
+          if (!batch) {
+            $.toast({
+              class: 'blue info',
+              title: 'Updated Episode',
+            });
+          }
         }, error: (response) => {
           $.toast({
             class: 'error',
@@ -307,6 +309,19 @@
             message: response.message,
           })
         }
+      });
+    }
+
+    async function saveAllEpisodes() {
+      let updated = 0;
+      // Save each episode config
+      $(`#episode-data-table tr`).each((index, value) => {
+        saveEpisodeConfig(1*(value.id.split('episode-id')[1]), true);
+      });
+      // Show single toast of succesful operations
+      $.toast({
+        class: 'blue info',
+        title: `Updated ${$(`#episode-data-table tr`).length} Episodes`,
       });
     }
 
@@ -1217,12 +1232,16 @@
 
           <!-- Episode Data Tab -->
           <div class="ui bottom attached tab segment" data-tab="episode-data">
-            <!-- Add Episode button -->
-            <button id="new-episode" class="ui primary tertiary button">
+            <button id="new-episode" class="ui green tertiary button">
+              <i class="plus square outline icon"></i>
               Add New Episode
             </button>
-            <!-- Delete episodes -->
-            <button id="delete-episodes" class="ui red tertiary button" onclick="deleteAllEpisodes();">
+            <button class="ui blue tertiary button" onclick="saveAllEpisodes();">
+              <i class="save outline icon"></i>
+              Save All Changes
+            </button>
+            <button class="ui red tertiary button" onclick="deleteAllEpisodes();">
+              <i class="trash alternate outline icon"></i>
               Delete All Episodes
             </button>
 
