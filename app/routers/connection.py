@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session
 
 from app.dependencies import (
     get_database, get_preferences, get_emby_interface, get_jellyfin_interface,
-    get_plex_interface, get_sonarr_interface, get_tmdb_interface
+    get_plex_interface, get_sonarr_interface, get_tmdb_interface,
+    refresh_emby_interface, refresh_jellyfin_interface, refresh_plex_interface,
+    refresh_sonarr_interface, refresh_tmdb_interface,
 )
 from app.schemas.base import UNSPECIFIED
 from app.schemas.preferences import (
@@ -15,11 +17,6 @@ from app.schemas.preferences import (
     UpdateSonarr, UpdateTMDb
 )
 from modules.Debug import log
-from modules.EmbyInterface2 import EmbyInterface
-from modules.JellyfinInterface import JellyfinInterface
-from modules.PlexInterface2 import PlexInterface
-from modules.SonarrInterface2 import SonarrInterface
-from modules.TMDbInterface2 import TMDbInterface
 
 SupportedConnection = Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb']
 
@@ -118,7 +115,7 @@ def update_emby_connection(
 
     # Remake EmbyInterface if changed
     if preferences.use_emby and changed:
-        emby_interface = EmbyInterface(**preferences.emby_arguments)
+        refresh_emby_interface()
 
     return preferences
 
@@ -152,7 +149,7 @@ def update_jellyfin_connection(
 
     # Remake JellyfinInterface if changed
     if preferences.use_jellyfin and changed:
-        jellyfin_interface = JellyfinInterface(**preferences.jellyfin_arguments)
+        refresh_jellyfin_interface()
 
     return preferences
 
@@ -186,7 +183,7 @@ def update_plex_connection(
 
     # Remake PlexInterface if changed
     if preferences.use_plex and changed:
-        plex_interface = PlexInterface(**preferences.plex_arguments)
+        refresh_plex_interface()
 
     return preferences
 
@@ -212,7 +209,7 @@ def update_sonarr_connection(
 
     # Remake SonarrInterface if changed
     if preferences.use_sonarr and changed:
-        sonarr_interface = SonarrInterface(**preferences.sonarr_arguments)
+        refresh_sonarr_interface()
 
     return preferences
 
@@ -238,6 +235,6 @@ def update_tmdb_connection(
 
     # Remake TMDbInterface if changed
     if preferences.use_tmdb and changed:
-        tmdb_interface = TMDbInterface(**preferences.tmdb_arguments)
+        refresh_tmdb_interface()
 
-    return preferences
+    return preferences 

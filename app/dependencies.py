@@ -1,10 +1,15 @@
 from typing import Generator
 
 from app.database.session import (
-    EmbyInterfaceLocal, JellyfinInterfaceLocal, PreferencesLocal,
-    PlexInterfaceLocal, Scheduler, SessionLocal, SonarrInterfaceLocal,
-    TMDbInterfaceLocal
+    EmbyInterfaceLocal, ImageMagickInterfaceLocal, JellyfinInterfaceLocal,
+    PreferencesLocal, PlexInterfaceLocal, Scheduler, SessionLocal,
+    SonarrInterfaceLocal, TMDbInterfaceLocal
 )
+from modules.EmbyInterface2 import EmbyInterface
+from modules.JellyfinInterface import JellyfinInterface
+from modules.PlexInterface2 import PlexInterface
+from modules.SonarrInterface2 import SonarrInterface
+from modules.TMDbInterface2 import TMDbInterface
 
 def get_database() -> Generator:
     db = SessionLocal()
@@ -19,17 +24,45 @@ def get_scheduler() -> 'BackgroundScheduler':
 def get_preferences() -> 'Preferences':
     return PreferencesLocal
 
-def get_emby_interface() -> 'EmbyInterface':
+def get_emby_interface() -> EmbyInterface:
     return EmbyInterfaceLocal
 
-def get_jellyfin_interface() -> 'JellyfinInterface':
+def refresh_emby_interface() -> EmbyInterface:
+    preferences = get_preferences()
+    global EmbyInterfaceLocal
+    EmbyInterfaceLocal = EmbyInterface(**preferences.emby_arguments)
+
+def get_imagemagick_interface() -> 'ImageMagickInterface':
+    return ImageMagickInterfaceLocal
+
+def get_jellyfin_interface() -> JellyfinInterface:
     return JellyfinInterfaceLocal
 
-def get_plex_interface() -> 'PlexInterface':
+def refresh_jellyfin_interface() -> JellyfinInterface:
+    preferences = get_preferences()
+    global JellyfinInterfaceLocal
+    JellyfinInterfaceLocal = JellyfinInterface(**preferences.jellyfin_arguments)
+
+def get_plex_interface() -> PlexInterface:
     return PlexInterfaceLocal
 
-def get_sonarr_interface() -> 'SonarrInterface':
+def refresh_plex_interface() -> PlexInterface:
+    preferences = get_preferences()
+    global PlexInterfaceLocal
+    PlexInterfaceLocal = PlexInterface(**preferences.plex_arguments)
+
+def get_sonarr_interface() -> SonarrInterface:
     return SonarrInterfaceLocal
 
-def get_tmdb_interface() -> 'TMDbInterface':
+def refresh_sonarr_interface() -> SonarrInterface:
+    preferences = get_preferences()
+    global SonarrInterfaceLocal
+    SonarrInterfaceLocal = SonarrInterface(**preferences.sonarr_arguments)
+
+def get_tmdb_interface() -> TMDbInterface:
     return TMDbInterfaceLocal
+
+def refresh_tmdb_interface() -> TMDbInterface:
+    preferences = get_preferences()
+    global TMDbInterfaceLocal
+    TMDbInterfaceLocal = TMDbInterface(**preferences.tmdb_arguments)
