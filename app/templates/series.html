@@ -67,11 +67,15 @@
       text-align: center !important;
     }
 
-    /* Set default width of ID, number, and "short" inputs */
+    /* Set default width of input fields */
     .table .transparent.id.input input,
     .table .transparent.number.input input,
     .table .transparent.short.input input {
       width: 8ch;
+    }
+    /* IMDB ID inputs are slightly larger */
+    .table .transparent.id.input input[name="imdb_id"] {
+      width: 10ch;
     }
   </style>
 
@@ -226,11 +230,13 @@
           <input name="tvdb_id" type="text" placeholder="-">
         </div>
       </td>
+      {% if series.year < 2017 %}
       <td data-column="tvrage_id" class="center aligned collapsing">
         <div class="ui transparent id input">
           <input name="tvrage_id" type="text" placeholder="-">
         </div>
       </td>
+      {% endif %}
     </tr>
   </template>
 
@@ -394,7 +400,8 @@
         if (jellyfinIdInput !== null) { jellyfinIdInput.value = episode.jellyfin_id; }
         row.querySelector('input[name="tmdb_id"]').value = episode.tmdb_id;
         row.querySelector('input[name="tvdb_id"]').value = episode.tvdb_id;
-        row.querySelector('input[name="tvrage_id"]').value = episode.tvrage_id;
+        const tvrageIdInput = row.querySelector('input[name="tvrage_id"]')
+        if (tvrageIdInput != null) { tvrageIdInput.value = episode.tvrage_id; }
 
         return row;
       });
@@ -1291,7 +1298,9 @@
                     {% endif %}
                     <th class="collapsing">TMDb<br>ID</th>
                     <th class="collapsing">TVDb<br>ID</th>
+                    {% if series.year < 2017 %}
                     <th class="collapsing">TVRage<br>ID</th>
+                    {% endif %}
                   </tr>
                 </thead>
                 <tbody id="episode-data-table" ><!-- Rows added asynchronously --></tbody>
@@ -1670,10 +1679,11 @@
       for (const [key, value] of [...form.entries()]) {
         if (value === '') { form.delete(key); }
       }
+      form.append('series_id', {{series.id}});
 
       $.ajax({
         type: 'POST',
-        url: '/api/episodes/{{series.id}}/new',
+        url: '/api/episodes/new',
         data: JSON.stringify(Object.fromEntries(form)),
         contentType: 'application/json',
         success: (response) => {
@@ -1683,6 +1693,7 @@
             title: `Created Season ${season_number} Episode ${episode_number}`,
           });
           getEpisodeData();
+          getStatistics();
         }, error: (response) => {
           $.toast({
             class: 'error',
