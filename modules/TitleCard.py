@@ -42,6 +42,8 @@ class TitleCard:
     DEFAULT_FILENAME_FORMAT = '{full_name} - S{season:02}E{episode:02}'
 
     """Default card dimensions"""
+    DEFAULT_WIDTH = BaseCardType.WIDTH
+    DEFAULT_HEIGHT = BaseCardType.HEIGHT
     DEFAULT_CARD_DIMENSIONS = BaseCardType.TITLE_CARD_SIZE
 
     """Mapping of card type identifiers to CardType classes"""

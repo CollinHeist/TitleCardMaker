@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 from tinydb import where
-from typing import Iterable, Union
+from typing import Any, Iterable, Optional, Union
 
+from fastapi import HTTPException
 from tmdbapis import TMDbAPIs, NotFound, Unauthorized, TMDbException
 
 from modules.Debug import log
@@ -84,7 +85,10 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             self.api = TMDbAPIs(api_key, self.session)
         except Unauthorized:
             log.critical(f'TMDb API key "{api_key}" is invalid')
-            # exit(1)
+            raise HTTPException(
+                status_code=401,
+                detail=f'Invalid API Key'
+            )
 
 
     def __repr__(self) -> str:
@@ -591,7 +595,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def __determine_best_image(self,
             images: list['tmdbapis.objs.image.Still'], *,
             is_source_image: bool = True,
-            skip_localized: bool = False) -> dict:
+            skip_localized: bool = False) -> Optional[dict[str, Any]]:
         """
         Determine the best image and return it's contents from within
         the database return JSON.

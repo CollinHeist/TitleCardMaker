@@ -68,7 +68,7 @@ class EpisodeInfo(DatabaseInfoContainer):
     __slots__ = (
         'title', 'season_number', 'episode_number', 'absolute_number', 'emby_id',
         'imdb_id', 'jellyfin_id', 'tmdb_id', 'tvdb_id', 'tvrage_id', 'airdate',
-        'key', '__word_set',
+        '__word_set',
     )
 
 
@@ -84,10 +84,10 @@ class EpisodeInfo(DatabaseInfoContainer):
             tvdb_id: Optional[int] = None,
             tvrage_id: Optional[int] = None,
             airdate: Optional['datetime'] = None,
-            preferences: 'PreferenceParser' = None) -> None:
+            preferences: 'Preferences' = None) -> None:
         """
         Initialize this object with the given title, indices, database
-        ID's, airdate, and queried statuses.
+        ID's, airdate.
         """
 
         # Ensure title is Title object
@@ -107,9 +107,6 @@ class EpisodeInfo(DatabaseInfoContainer):
         self.tvdb_id = None if tvdb_id is None else int(tvdb_id)
         self.tvrage_id = None if tvrage_id is None else int(tvrage_id)
         self.airdate = airdate
-
-        # Create key
-        self.key = f'{self.season_number}-{self.episode_number}'
 
         # Add word variations for each of this episode's indices
         self.__word_set = WordSet()
@@ -134,9 +131,8 @@ class EpisodeInfo(DatabaseInfoContainer):
 
         attributes = ', '.join(f'{attr}={getattr(self, attr)}'
             for attr in self.__slots__
-            if not attr.startswith('__')
-                and getattr(self, attr) is not None
-                and getattr(self, attr) is not False)
+            if not attr.startswith('__') and getattr(self, attr) is not None
+        )
 
         return f'<EpisodeInfo {attributes}>'
 
@@ -145,27 +141,6 @@ class EpisodeInfo(DatabaseInfoContainer):
         """Returns a string representation of the object."""
 
         return f'S{self.season_number:02}E{self.episode_number:02}'
-
-
-    def __add__(self, count: int) -> str:
-        """
-        Get the key for the episode corresponding to given number of
-        episodes after this one. For example. if this object is S01E05,
-        adding 5 would  return '1-10'.
-
-        Args:
-            count: The number of episodes to increment the index by.
-
-        Returns:
-            The key for count many episodes after this one.
-        """
-
-        if not isinstance(count, int):
-            raise TypeError(
-                f'Can only add integers to EpisodeInfo objects'
-            )
-
-        return f'{self.season_number}-{self.episode_number+count}'
 
 
     def __eq__(self, other_info: 'EpisodeInfo') -> bool:
@@ -198,10 +173,7 @@ class EpisodeInfo(DatabaseInfoContainer):
     def has_all_ids(self) -> bool:
         """Whether this object has all ID's defined"""
 
-        return ((self.tvdb_id is not None)
-            and (self.imdb_id is not None)
-            and (self.tmdb_id is not None)
-        )
+        return all(id_ is not None for id_ in self.ids.values())
 
 
     @property
@@ -247,13 +219,6 @@ class EpisodeInfo(DatabaseInfoContainer):
             'episode_number': self.episode_number,
             'absolute_number': self.absolute_number,
         }
-
-
-    @property
-    def index(self) -> str:
-        """This object's index - i.e. s{season}e{episode}"""
-
-        return f's{self.season_number}e{self.episode_number}'
 
 
     """Functions for setting database ID's on this object"""
