@@ -62,7 +62,7 @@ episodes_router = APIRouter(
 )
 
 
-@episodes_router.post('/{series_id}/new', status_code=201)
+@episodes_router.post('/new', status_code=201)
 def add_new_episode(
         series_id: int,
         new_episode: NewEpisode = Body(...),
