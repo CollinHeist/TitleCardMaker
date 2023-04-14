@@ -6,7 +6,7 @@ from app.schemas.base import Base, validate_argument_lists_to_dict
 # from app.schemas.font import NewUnnamedEpisodeFont, PreviewFont
 from app.schemas.preferences import Style
 
-LocalCards = Literal[
+LocalCardIdentifiers = Literal[
     'anime', 'cutout', 'fade', 'frame', 'generic', 'gundam', 'ishalioh',
     'landscape', 'logo', 'olivier', 'phendrena', 'photo', 'polymath', 'poster',
     'reality tv', 'roman', 'roman numeral', 'sherlock', 'standard', 'star wars',
@@ -29,12 +29,12 @@ class CardType(Base):
     creators: list[str]
     source: Literal['local', 'remote']
     supports_custom_fonts: bool
-    supports_custom_seasons: bool
+    supports_custom_seasons: bool=False
     supported_extras: list[Extra]
     description: list[str]
 
 class LocalCardType(CardType):
-    name: LocalCards
+    name: LocalCardIdentifiers
     source: str = 'local'
 
 class RemoteCardType(CardType):

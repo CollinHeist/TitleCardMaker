@@ -1,6 +1,7 @@
 from typing import Literal, Union
 
 from fastapi import APIRouter, Depends, HTTPException
+from requests import get as req_get
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_database, get_preferences, get_emby_interface,\
@@ -13,6 +14,14 @@ from app.schemas.sonarr import Tag
 from modules.cards.available import LocalCards
 from modules.Debug import log
 
+# URL for user card types
+USER_CARD_TYPE_URL = 'https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/cards.json'
+
+
+def _get_remote_cards() -> list[RemoteCardType]:
+    return [RemoteCardType(**card) for card in req_get(USER_CARD_TYPE_URL).json()]
+
+
 # Create sub router for all /connection API requests
 availablility_router = APIRouter(
     prefix='/available',
@@ -23,14 +32,11 @@ availablility_router = APIRouter(
 def get_all_available_card_types(
         preferences=Depends(get_preferences)) -> list[CardType]:
 
-    ...
-     
-    return LocalCards
+    return LocalCards + _get_remote_cards()
 
 
 @availablility_router.get('/card-types/local', status_code=200, tags=['Title Cards'])
-def get_local_card_types(
-        preferences=Depends(get_preferences)) -> list[LocalCardType]:
+def get_local_card_types() -> list[LocalCardType]:
     """
     Get all locally defined card types.
     """
@@ -42,7 +48,13 @@ def get_local_card_types(
 def get_remote_card_types(
         preferences=Depends(get_preferences)) -> list[RemoteCardType]:
     
-    ...
+    try:
+        return _get_remote_cards()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f'Error encountered while getting remote card types'
+        )
 
 
 @availablility_router.get('/episode-data-sources', status_code=200)
