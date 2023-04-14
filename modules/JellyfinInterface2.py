@@ -204,8 +204,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return None 
 
 
-    def set_episode_ids(self, series_info: SeriesInfo,
-            infos: list[EpisodeInfo]) -> None:
+    def set_episode_ids(self, series_info: SeriesInfo) -> None:
         """
         Set the Episode ID's for the given EpisodeInfo objects.
 
@@ -214,7 +213,20 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             infos: List of EpisodeInfo objects to set the ID's of.
         """
 
-        self.get_all_episodes(series_info)
+        # Get all episodes for this series
+        new_episode_infos = self.get_all_episodes(series_info)
+
+        # Match to existing info
+        for old_episode_info in episode_infos:
+            for new_episode_info in new_episode_infos:
+                if old_episode_info == new_episode_info:
+                    # For each ID of this new EpisodeInfo, update old if upgrade
+                    for id_type, id_ in new_episode_info.ids.items():
+                        if (getattr(old_episode_info, id_type) is None
+                            and id_ is not None):
+                            setattr(old_episode_info, id_type, id_)
+                            log.debug(f'Set {old_episode_info}.{id_type}={id_}')
+                    break
 
 
     def get_library_paths(self, filter_libraries: list[str]=[]

@@ -230,8 +230,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return None 
 
 
-    def set_episode_ids(self, series_info: SeriesInfo,
-            infos: list[EpisodeInfo]) -> None:
+    def set_episode_ids(self,
+            series_info: SeriesInfo,
+            episode_infos: list[EpisodeInfo]) -> None:
         """
         Set the Episode ID's for the given EpisodeInfo objects.
 
@@ -240,7 +241,20 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             infos: List of EpisodeInfo objects to set the ID's of.
         """
 
-        self.get_all_episodes(series_info)
+        # Get all episodes for this series
+        new_episode_infos = self.get_all_episodes(series_info)
+
+        # Match to existing info
+        for old_episode_info in episode_infos:
+            for new_episode_info in new_episode_infos:
+                if old_episode_info == new_episode_info:
+                    # For each ID of this new EpisodeInfo, update old if upgrade
+                    for id_type, id_ in new_episode_info.ids.items():
+                        if (getattr(old_episode_info, id_type) is None
+                            and id_ is not None):
+                            setattr(old_episode_info, id_type, id_)
+                            log.debug(f'Set {old_episode_info}.{id_type}={id_}')
+                    break
 
 
     def get_library_paths(self,
@@ -310,7 +324,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         # Also filter by tags if any were provided
         if len(required_tags) > 0:
             params |= {'Tags': '|'.join(required_tags)}
-# TODO Filter by exclusion tags. No explicit query param for this
+        # TODO Filter by exclusion tags. No explicit query param for this
         # Go through each library in this server
         all_series = []
         for library, library_ids in self.libraries.items():
@@ -332,7 +346,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                     for series in response['Items']:
                         series_info = SeriesInfo(
                             series['Name'], year, emby_id=series['Id'],
-# TODO add other series ID's
+                            # TODO add other series ID's
                         )
                         all_series.append((series_info, library))
 
@@ -369,7 +383,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         all_episodes = []
         for episode in response['Items']:
             # Parse airdate for this episode
-            airdate=None
+            airdate = None
             try:
                 airdate = datetime.strptime(episode['PremiereDate'],
                                             self.AIRDATE_FORMAT)

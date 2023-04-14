@@ -326,8 +326,9 @@ class SonarrInterface(WebInterface, SyncInterface):
         series_info.set_tvrage_id(data['tvrage_id'])
 
 
-    def get_all_episodes(self, series_info: SeriesInfo, *,
-            preferences=None) -> list[EpisodeInfo]:
+    def get_all_episodes(self,
+            series_info: SeriesInfo, *,
+            preferences = None) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that
         have  already aired are returned.
@@ -404,19 +405,32 @@ class SonarrInterface(WebInterface, SyncInterface):
         return all_episode_info
 
 
-    def set_episode_ids(self, series_info: SeriesInfo,
-            infos: list[EpisodeInfo]) -> None:
+    def set_episode_ids(self,
+            series_info: SeriesInfo,
+            episode_infos: list[EpisodeInfo]) -> None:
         """
         Set all the episode ID's for the given list of EpisodeInfo
         objects. This sets the TVDb ID for each episode.
 
         Args:
             series_info: SeriesInfo for the entry.
-            infos: List of EpisodeInfo objects to update. Not used.
+            episode_infos: List of EpisodeInfo objects to update..
         """
 
-        # Get all Sonarr-created EpisodeInfo objects
-        self.get_all_episodes(series_info)
+        # Get all episodes for this series
+        new_episode_infos = self.get_all_episodes(series_info)
+
+        # Match to existing info
+        for old_episode_info in episode_infos:
+            for new_episode_info in new_episode_infos:
+                if old_episode_info == new_episode_info:
+                    # For each ID of this new EpisodeInfo, update old if upgrade
+                    for id_type, id_ in new_episode_info.ids.items():
+                        if (getattr(old_episode_info, id_type) is None
+                            and id_ is not None):
+                            setattr(old_episode_info, id_type, id_)
+                            log.debug(f'Set {old_episode_info}.{id_type}={id_}')
+                    break
 
 
     def get_all_tags(self) -> list[dict[str, 'str | int']]:

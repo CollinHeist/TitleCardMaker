@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
+from typing import Optional
 
 from fastapi import HTTPException
 from plexapi.exceptions import PlexApiException
@@ -471,8 +472,10 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     @catch_and_log("Error setting episode ID's")
-    def set_episode_ids(self, library_name: str, series_info: SeriesInfo,
-                        infos: list[EpisodeInfo]) -> None:
+    def set_episode_ids(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_infos: list[EpisodeInfo]) -> None:
         """
         Set all the episode ID's for the given list of EpisodeInfo objects. This
         sets the Sonarr and TVDb ID's for each episode. As a byproduct, this
@@ -493,17 +496,16 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             return None
 
         # Go through each provided EpisodeInfo and update the ID's
-        for info in infos:
+        for episode_info in episode_infos:
             # Skip if EpisodeInfo already has all the possible ID's
-            if info.queried_plex or info.has_ids(*self.SERIES_IDS):
+            if episode_info.has_ids(*self.SERIES_IDS):
                 continue
 
             # Get episode from Plex
-            info.queried_plex = True
             try:
                 plex_episode = series.episode(
-                    season=info.season_number,
-                    episode=info.episode_number,
+                    season=episode_info.season_number,
+                    episode=episode_info.episode_number,
                 )
             except NotFound:
                 continue
@@ -511,16 +513,18 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             # Set the ID's for this object
             for guid in plex_episode.guids:
                 if 'imdb://' in guid.id:
-                    info.set_imdb_id(guid.id[len('imdb://'):])
+                    episode_info.set_imdb_id(guid.id[len('imdb://'):])
                 elif 'tmdb://' in guid.id:
-                    info.set_tmdb_id(int(guid.id[len('tmdb://'):]))
+                    episode_info.set_tmdb_id(int(guid.id[len('tmdb://'):]))
                 elif 'tvdb://' in guid.id:
-                    info.set_tvdb_id(int(guid.id[len('tvdb://'):]))
+                    episode_info.set_tvdb_id(int(guid.id[len('tvdb://'):]))
             
 
     @catch_and_log('Error getting source image')
-    def get_source_image(self, library_name: str, series_info: 'SeriesInfo',
-                         episode_info: EpisodeInfo) -> 'str | None':
+    def get_source_image(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_info: EpisodeInfo) -> Optional[str]:
         """
         Get the source image for the given episode within Plex.
 
@@ -530,7 +534,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             episode_info: The episode to get the source image of.
 
         Returns:
-            URL to the thumbnail of the given Episode. None if the episode DNE.
+            URL to the thumbnail of the given Episode. None if the
+            episode DNE or otherwise has no source image.
         """
 
         # If the given library cannot be found, exit
@@ -553,6 +558,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         # Episode DNE in Plex, return
         except NotFound:
             return None
+
+        return None
 
 
     @catch_and_log('Error getting library names', default=[])

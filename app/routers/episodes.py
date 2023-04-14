@@ -2,14 +2,15 @@ from pathlib import Path
 from requests import get
 from typing import Literal, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, Response, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Response, UploadFile
 
 from modules.Debug import log
 from modules.SeriesInfo import SeriesInfo
 
-from app.dependencies import get_database, get_preferences, get_emby_interface,\
-    get_jellyfin_interface, get_plex_interface, get_sonarr_interface, \
-    get_tmdb_interface
+from app.dependencies import (
+    get_database, get_preferences, get_emby_interface, get_jellyfin_interface,
+    get_plex_interface, get_sonarr_interface, get_tmdb_interface
+)
 import app.models as models
 from app.routers.cards import priority_merge_v2
 from app.routers.fonts import get_font
@@ -56,6 +57,55 @@ def get_episode(db, episode_id, *, raise_exc=True) -> Optional[Episode]:
     return episode
 
 
+def set_episode_ids(
+        db,
+        series: 'Series',
+        episode: 'Episode',
+        emby_interface: 'EmbyInterface',
+        jellyfin_interface: 'JellyfinInterface',
+        plex_interface: 'PlexInterface',
+        sonarr_interface: 'SonarrInterface',
+        tmdb_interface: 'TMDbInterface') -> Episode:
+    """
+
+    """
+
+    # Get corresponding EpisodeInfo object for this Episode
+    episode_info = episode.as_episode_info
+
+    # Set ID's from all possible interfaces
+    if emby_interface and series.emby_library_name:
+        # TODO validate
+        emby_interface.set_episode_ids(series.as_series_info, [episode_info])
+    if jellyfin_interface and series.jellyfin_library_name:
+        # TODO validate
+        jellyfin_interface.set_episode_ids(series.as_series_info, [episode_info])
+    if plex_interface and series.plex_library_name:
+        plex_interface.set_episode_ids(
+            series.plex_library_name, series.as_series_info, [episode_info]
+        )
+    if sonarr_interface:
+        sonarr_interface.set_episode_ids(series.as_series_info, [episode_info])
+    if tmdb_interface:
+        # TODO implement...
+        ...
+        # tmdb_interface.set_series_ids(series_info)
+
+    # Update database if new ID's are available
+    changed = False
+    for id_type in ('emby_id', 'imdb_id', 'jellyfin_id', 'tmdb_id', 'tvdb_id',
+                    'tvrage_id'):
+        if getattr(episode, id_type) is None and episode_info.has_id(id_type):
+            setattr(episode, id_type, getattr(episode_info, id_type))
+            log.debug(f'Episode[{episode.id}].{id_type} = {getattr(episode_info, id_type)}')
+            changed = True
+
+    if changed:
+        db.commit()
+
+    return episode
+
+
 episodes_router = APIRouter(
     prefix='/episodes',
     tags=['Episodes'],
@@ -64,9 +114,14 @@ episodes_router = APIRouter(
 
 @episodes_router.post('/new', status_code=201)
 def add_new_episode(
-        series_id: int,
+        background_tasks: BackgroundTasks,
         new_episode: NewEpisode = Body(...),
-        db = Depends(get_database)) -> Episode:
+        db = Depends(get_database),
+        emby_interface = Depends(get_emby_interface),
+        jellyfin_interface = Depends(get_jellyfin_interface),
+        plex_interface = Depends(get_plex_interface),
+        sonarr_interface = Depends(get_sonarr_interface),
+        tmdb_interface = Depends(get_tmdb_interface)) -> Episode:
     """
     Add a new episode to the given series.
 
@@ -75,15 +130,19 @@ def add_new_episode(
     """
 
     # Verify series exists
-    get_series(db, series_id, raise_exc=True)
+    series = get_series(db, new_episode.series_id, raise_exc=True)
 
     # Create new entry, add to database
-    episode = models.episode.Episode(
-        series_id=series_id,
-        **new_episode.dict()
-    )
+    episode = models.episode.Episode(**new_episode.dict())
     db.add(episode)
     db.commit()
+
+    # Add background task to add episode ID's for this Episode
+    background_tasks.add_task(
+        set_episode_ids,
+        db, series, episode,
+        emby_interface, jellyfin_interface, plex_interface, sonarr_interface, tmdb_interface
+    )
 
     return episode
 
@@ -153,6 +212,7 @@ def delete_all_series_episodes(
 
 @episodes_router.post('/{series_id}/refresh', status_code=201)
 def refresh_episode_data(
+        background_tasks: BackgroundTasks,
         series_id: int,
         response: Response,
         db = Depends(get_database),
@@ -216,18 +276,11 @@ def refresh_episode_data(
         )
 
     # Create SeriesInfo for this object to use in querying
-    series_info = SeriesInfo(
-        series.name, series.year,
-        emby_id=series.emby_id, jellyfin_id=series.jellyfin_id,
-        sonarr_id=series.sonarr_id, tmdb_id=series.tmdb_id,
-        tvdb_id=series.tvdb_id, tvrage_id=series.tvrage_id,
-    )
-
     if episode_data_source == 'Emby':
         all_episodes = emby_interface.get_all_episodes(series)
     elif episode_data_source == 'Jellyfin':
         all_episodes = jellyfin_interface.get_all_episodes(
-            series_info, preferences=preferences
+            series.as_series_info, preferences=preferences
         )
     elif episode_data_source == 'Plex':
         # Raise 409 if source is Plex but series has no library
@@ -237,14 +290,14 @@ def refresh_episode_data(
                 detail=f'Series does not have an associated library'
             )
         all_episodes = plex_interface.get_all_episodes(
-            series.plex_library_name, series_info,
+            series.plex_library_name, series.as_series_info,
         )
     elif episode_data_source == 'Sonarr':
         all_episodes = sonarr_interface.get_all_episodes(
-            series_info, preferences=preferences
+            series.as_series_info, preferences=preferences
         )
     elif episode_data_source == 'TMDb':
-        all_episodes = tmdb_interface.get_all_episodes(series_info)
+        all_episodes = tmdb_interface.get_all_episodes(series.as_series_info)
 
     # Filter episodes
     changed = False
@@ -264,7 +317,7 @@ def refresh_episode_data(
 
         # Episode does not exist, add
         if existing is None:
-            log.debug(f'Added {episode} - new episode')
+            log.debug(f'Series[{series.id}] New Episode "{episode.title.full_title}"')
             episode = models.episode.Episode(
                 series_id=series.id,
                 title=episode.title.full_title,
@@ -274,6 +327,13 @@ def refresh_episode_data(
             )
             db.add(episode)
             changed = True
+
+            # Add background task to add episode ID's for this Episode
+            background_tasks.add_task(
+                set_episode_ids,
+                db, series, episode,
+                emby_interface, jellyfin_interface, plex_interface, sonarr_interface, tmdb_interface
+            )
         # Episode exists, check for title match
         elif ((series.match_titles or existing.match_title)
             and existing.title != episode.title.full_title):
