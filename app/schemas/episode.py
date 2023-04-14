@@ -1,9 +1,12 @@
 from datetime import datetime
 from typing import Any, Literal, Optional, Union
 
-from pydantic import Field, root_validator, validator
+from pydantic import Field, PositiveFloat, root_validator, validator
 
 from app.schemas.base import Base, UNSPECIFIED, validate_argument_lists_to_dict
+from app.schemas.ids import (
+    EmbyID, IMDbID, JellyfinID, SonarrID, TMDbID, TVDbID, TVRageID
+)
 from app.schemas.preferences import Style
 
 """
@@ -40,21 +43,21 @@ class NewEpisode(Base):
     watched_style: Optional[Style]
 
     font_color: Optional[str] = Field(default=None)
-    font_size: Optional[float] = Field(default=None)
+    font_size: Optional[PositiveFloat] = Field(default=None)
     font_kerning: Optional[float] = Field(default=None)
     font_stroke_width: Optional[float] = Field(default=None)
     font_interline_spacing: Optional[int] = Field(default=None)
     font_vertical_shift: Optional[int] = Field(default=None)
 
     airdate: Optional[datetime] = Field(default=None)
-    emby_id: Optional[int] = Field(default=None)
-    imdb_id: Optional[str] = Field(default=None)
-    jellyfin_id: Optional[str] = Field(default=None)
-    tmdb_id: Optional[int] = Field(default=None)
-    tvdb_id: Optional[int] = Field(default=None)
-    tvrage_id: Optional[int] = Field(default=None)
+    emby_id: EmbyID = Field(default=None)
+    imdb_id: IMDbID = Field(default=None)
+    jellyfin_id: JellyfinID = Field(default=None)
+    tmdb_id: TMDbID = Field(default=None)
+    tvdb_id: TVDbID = Field(default=None)
+    tvrage_id: TVRageID = Field(default=None)
 
-    extras: Optional[dict[str, str]] = Field(default=None)
+    extras: Optional[dict[str, Any]] = Field(default=None)
 
 """
 Update classes
@@ -84,19 +87,19 @@ class UpdateEpisode(Base):
     watched_style: Optional[Style] = Field(default=UNSPECIFIED)
 
     font_color: Optional[str] = Field(default=UNSPECIFIED)
-    font_size: Optional[float] = Field(default=UNSPECIFIED)
+    font_size: Optional[PositiveFloat] = Field(default=UNSPECIFIED)
     font_kerning: Optional[float] = Field(default=UNSPECIFIED)
     font_stroke_width: Optional[float] = Field(default=UNSPECIFIED)
     font_interline_spacing: Optional[int] = Field(default=UNSPECIFIED)
     font_vertical_shift: Optional[int] = Field(default=UNSPECIFIED)
 
     airdate: Optional[datetime] = Field(default=UNSPECIFIED)
-    emby_id: Optional[int] = Field(default=UNSPECIFIED)
-    imdb_id: Optional[str] = Field(default=UNSPECIFIED)
-    jellyfin_id: Optional[str] = Field(default=UNSPECIFIED)
-    tmdb_id: Optional[int] = Field(default=UNSPECIFIED)
-    tvdb_id: Optional[int] = Field(default=UNSPECIFIED)
-    tvrage_id: Optional[int] = Field(default=UNSPECIFIED)
+    emby_id: EmbyID = Field(default=UNSPECIFIED)
+    imdb_id: IMDbID = Field(default=UNSPECIFIED)
+    jellyfin_id: JellyfinID = Field(default=UNSPECIFIED)
+    tmdb_id: TMDbID = Field(default=UNSPECIFIED)
+    tvdb_id: TVDbID = Field(default=UNSPECIFIED)
+    tvrage_id: TVRageID = Field(default=UNSPECIFIED)
     extra_keys: list[str] = Field(default=UNSPECIFIED)
     extra_values: list[Any] = Field(default=UNSPECIFIED)
 
@@ -154,18 +157,18 @@ class Episode(Base):
     watched_style: Optional[str]
 
     font_color: Optional[str]
-    font_size: Optional[float]
+    font_size: Optional[PositiveFloat]
     font_kerning: Optional[float]
     font_stroke_width: Optional[float]
     font_interline_spacing: Optional[int]
     font_vertical_shift: Optional[int]
 
     airdate: Optional[datetime]
-    emby_id: Optional[int]
-    imdb_id: Optional[str]
-    jellyfin_id: Optional[str]
-    tmdb_id: Optional[int]
-    tvdb_id: Optional[int]
-    tvrage_id: Optional[int]
+    emby_id: EmbyID
+    imdb_id: IMDbID
+    jellyfin_id: JellyfinID
+    tmdb_id: TMDbID
+    tvdb_id: TVDbID
+    tvrage_id: TVRageID
 
-    extras: Optional[dict[str, str]]
+    extras: Optional[dict[str, Any]]

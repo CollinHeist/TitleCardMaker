@@ -5,16 +5,15 @@ from pydantic import constr, Field, root_validator, validator
 
 from app.schemas.base import Base, UNSPECIFIED, validate_argument_lists_to_dict
 from app.schemas.font import TitleCase
-from app.schemas.preferences import EpisodeDataSource, ImageSourceToggle, Style
+from app.schemas.ids import (
+    EmbyID, IMDbID, JellyfinID, SonarrID, TMDbID, TVDbID, TVRageID
+)
+from app.schemas.preferences import EpisodeDataSource, ImageSourceToggle, Style, ImageSource
 
 # Match absolute ranges (1-10), season numbers (1), episode ranges (s1e1-s1e10)
 SeasonTitleRange = constr(regex=r'^(\d+-\d+)|(\d+)|(s\d+e\d+-s\d+e\d+)$')
 
-class SortedImageSourceToggle(ImageSourceToggle):
-    priority: int
-
-
-#TODO Add validation for filename format string
+# TODO Add validation for filename format string
 
 """
 Base classes
@@ -54,6 +53,7 @@ class BaseConfig(Base):
 
 class BaseTemplate(BaseConfig):
     name: str = Field(..., min_length=1, title='Template name')
+    image_source_priority: list[ImageSource] = Field(default=None)
     hide_season_text: bool = Field(default=False)
     hide_episode_text: bool = Field(default=False)
 
@@ -105,13 +105,13 @@ class BaseSeries(BaseConfig):
         title='Plex library name',
         description='Library within Plex with this series',
     )
-    emby_id: Optional[int] = Field(default=None, title='Emby server ID')
-    imdb_id: Optional[str] = Field(default=None, title='IMDb database ID')
-    jellyfin_id: Optional[str] = Field(default=None, title='Jellyfin server ID')
-    sonarr_id: Optional[str] = Field(default=None, title='Sonarr server ID')
-    tmdb_id: Optional[int] = Field(default=None, title='TMDb database ID')
-    tvdb_id: Optional[int] = Field(default=None, title='TVDb database ID')
-    tvrage_id: Optional[int] = Field(default=None, title='TVRage database ID')
+    emby_id: EmbyID = Field(default=None, title='Emby server ID')
+    imdb_id: IMDbID = Field(default=None, title='IMDb database ID')
+    jellyfin_id: JellyfinID = Field(default=None, title='Jellyfin server ID')
+    sonarr_id: SonarrID = Field(default=None, title='Sonarr server ID')
+    tmdb_id: TMDbID = Field(default=None, title='TMDb database ID')
+    tvdb_id: TVDbID = Field(default=None, title='TVDb database ID')
+    tvrage_id: TVRageID = Field(default=None, title='TVRage database ID')
     directory: Optional[str] = Field(
         default=None,
         title='Card directory',
@@ -235,6 +235,7 @@ class UpdateTemplate(BaseUpdate):
     skip_localized_images: Optional[bool] = Field(default=UNSPECIFIED)
     filename_format: Optional[str] = Field(default=UNSPECIFIED)
     episode_data_source: Optional[EpisodeDataSource] = Field(default=UNSPECIFIED)
+    image_source_priority: list[ImageSource] = Field(default=UNSPECIFIED)
     translations: dict[str, str] = Field(default=UNSPECIFIED)
     card_type: Optional[str] = Field(default=UNSPECIFIED)
     hide_season_text: bool = Field(default=UNSPECIFIED)
@@ -314,13 +315,14 @@ class UpdateSeries(BaseUpdate):
     emby_library_name: Optional[str] = Field(default=UNSPECIFIED)
     jellyfin_library_name: Optional[str] = Field(default=UNSPECIFIED)
     plex_library_name: Optional[str] = Field(default=UNSPECIFIED)
-    emby_id: Optional[int] = Field(default=UNSPECIFIED)
-    imdb_id: Optional[str] = Field(default=UNSPECIFIED)
-    jellyfin_id: Optional[str] = Field(default=UNSPECIFIED)
-    sonarr_id: Optional[str] = Field(default=UNSPECIFIED)
-    tmdb_id: Optional[int] = Field(default=UNSPECIFIED)
-    tvdb_id: Optional[int] = Field(default=UNSPECIFIED)
-    tvrage_id: Optional[int] = Field(default=UNSPECIFIED)
+    emby_id: EmbyID = Field(default=UNSPECIFIED)
+    imdb_id: IMDbID = Field(default=UNSPECIFIED)
+    jellyfin_id: JellyfinID = Field(default=UNSPECIFIED)
+    sonarr_id: SonarrID = Field(default=UNSPECIFIED)
+    tmdb_id: TMDbID = Field(default=UNSPECIFIED)
+    tvdb_id: TVDbID = Field(default=UNSPECIFIED)
+    tvrage_id: TVRageID = Field(default=UNSPECIFIED)
+    
     directory: Optional[str] = Field(default=UNSPECIFIED)
 
     @validator('*', pre=True)

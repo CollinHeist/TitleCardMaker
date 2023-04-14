@@ -29,7 +29,7 @@ class CardType(Base):
     creators: list[str]
     source: Literal['local', 'remote']
     supports_custom_fonts: bool
-    supports_custom_seasons: bool=False
+    supports_custom_seasons: bool
     supported_extras: list[Extra]
     description: list[str]
 
