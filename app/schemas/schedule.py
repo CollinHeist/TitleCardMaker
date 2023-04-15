@@ -1,18 +1,33 @@
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
-from pydantic import Field
+from pydantic import Field, PositiveInt
 
 from app.schemas.base import Base
 
-class UpdateInterval(Base):
-    seconds: int = Field(default=0, min=0)
-    minutes: int = Field(default=0, min=0)
-    hours: int = Field(default=0, min=0)
-    days: int = Field(default=0, min=0)
-    weeks: int = Field(default=0, min=0)
+"""
+Base classes
+"""
+class NewJob(Base):
+    id: str
+    function: Callable[..., Any]
+    seconds: int
+    description: str
 
+"""
+Update classes
+"""
+class UpdateInterval(Base):
+    seconds: PositiveInt = Field(default=0)
+    minutes: PositiveInt = Field(default=0)
+    hours: PositiveInt = Field(default=0)
+    days: PositiveInt = Field(default=0)
+    weeks: PositiveInt = Field(default=0)
+
+"""
+Return classes
+"""
 class ScheduledTask(Base):
-    task_id: str
-    # description: str
-    frequency: int
-    next_run: str
+    id: str = Field(description='Unique ID of the Task')
+    description: str = Field(description='Description of the Task')
+    frequency: int = Field(description='How often (in seconds) the Task runs')
+    next_run: str = Field(description='Next runtime for the Task')
