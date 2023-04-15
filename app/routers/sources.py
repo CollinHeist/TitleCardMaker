@@ -44,7 +44,7 @@ def download_episode_source_image(
 
     - episode_id: ID of the Episode to download a Source image of.
     - ignore_blacklist: Whether to force a download from TMDb, even if
-    the episode has been internally blacklisted. 
+    the Episode has been internally blacklisted. 
     """
 
     # Get the Episode with this ID, raise 404 if DNE
@@ -131,4 +131,44 @@ def download_episode_source_image(
         return f'/source/{series.path_safe_name}/{source_file.name}'
 
     # No image source returned a valid image, return None
+    return None
+
+
+@source_router.get('/series/{series_id}/logo')
+def download_series_logo(
+        series_id: int,
+        ignore_blacklist: bool = Query(default=False),
+        db = Depends(get_database),
+        preferences = Depends(get_preferences),
+        tmdb_interface = Depends(get_tmdb_interface)) -> Optional[str]:
+    """
+    Download a Logo for the given Series. This only queries TMDb.
+    Returns URI to the source image resource.
+
+    - series_id: ID of the Series to download a Logo for.
+    - ignore_blacklist: Whether to force a download from TMDb, even if
+    the logo has been blacklisted.
+    """
+
+    # Get series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Get logo, return if exists
+    logo_file = series.get_logo_file(preferences.source_directory)
+    if logo_file.exists():
+        log.debug(f'Series[{series_id}] Logo file exists')
+        return f'/source/{series.path_safe_name}/logo.png'
+
+    if tmdb_interface:
+        logo = tmdb_interface.get_series_logo(series.as_series_info)
+        if WebInterface.download_image(logo, logo_file):
+            log.debug(f'Series[{series_id}] Downloaded {logo_file.resolve()} from TMDb')
+            return f'/source/{series.path_safe_name}/logo.png'
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f'Unable to download logo'
+            )
+
+    # No logo returned,
     return None
