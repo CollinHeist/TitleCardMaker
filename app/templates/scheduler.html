@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/assets/logo128.png">
+  <link rel="shortcut icon" href="/assets/logo128.png"> 
+  <link rel="apple-touch-icon" href="/assets/logo128.png">
+  <title>Scheduler - TitleCardMaker</title>
+
+  <!-- Formantic UI -->
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.js"></script>
+  
+  <!-- Global styles -->
+  <link rel="stylesheet" type="text/css" href="/templates/style.css">
+  <style>
+    
+  </style>
+
+  <!-- Templates -->
+  <template id="task-template">
+    <tr>
+      <!-- <td data-column="task_id" class="right aligned"></td> -->
+      <td data-column="runTask" class="center aligned" data-tooltip="Run this Task"><i class="sync icon"></i></td>
+      <td data-column="description" class="left aligned"></td>
+      <td data-column="frequency" class="center aligned" data-tooltip="Edit and Save to Reschedule"></td>
+      <td data-column="next_run" class="left aligned"></td>
+    </tr>
+  </template>
+
+  <script>
+    function timeDiffString(next_run) {
+      const nextRun = new Date(next_run);
+      const nextRunStr = nextRun.toLocaleString();
+
+      // Get current time, 
+      const now = new Date();
+      const timeDifferenceSeconds = Math.floor((nextRun - now) / 1000);
+      const timeDifferenceMinutes = Math.floor(timeDifferenceSeconds / 60);
+      const timeDifferenceHours = Math.floor(timeDifferenceMinutes / 60);
+      const timeDifferenceDays = Math.floor(timeDifferenceHours / 24);
+
+      // Create string for next run time, only show up to two time units
+      const timeUnits = [];
+      if (timeDifferenceDays > 0) { timeUnits.push(`${timeDifferenceDays} days`); }
+      if (timeDifferenceHours % 24 > 0) { timeUnits.push(`${timeDifferenceHours%24} hours`); }
+      if (timeDifferenceMinutes % 60 > 0) { timeUnits.push(`${timeDifferenceMinutes%60} minutes`); }
+      if (timeDifferenceSeconds % 60 > 0) { timeUnits.push(`${timeDifferenceSeconds%60} seconds`); }
+      return inStr = timeUnits.slice(0, 2).join(', ');
+    }
+
+    function timeFreqString(freq) {
+      const seconds = Math.floor(freq);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+      const timeUnits = [];
+      if (days > 0) { timeUnits.push(`${days} days`); }
+      if (hours % 24 > 0) { timeUnits.push(`${hours%24} hours`); }
+      if (minutes % 60 > 0) { timeUnits.push(`${minutes%60} minutes`); }
+      if (seconds % 60 > 0) { timeUnits.push(`${seconds%60} seconds`); }
+      return timeUnits.join(', ');
+    }
+
+    async function initAll() {
+      const taskTable = document.getElementById('task-table');
+      const rowTemplate = document.getElementById('task-template');
+      if (taskTable === null || rowTemplate === null) { return; }
+
+      const allTasks = await fetch('/api/schedule/scheduled').then(resp => resp.json());
+      const rows = allTasks.map(task => {
+        const row = rowTemplate.content.cloneNode(true);
+        row.querySelector('tr').id = `task-id${task.id}`;
+        // row.querySelector('td[data-column="task_id"]').innerHTML = `<b>${task.id}</b>`;
+        row.querySelector('td[data-column="description"]').innerHTML = task.description;
+        row.querySelector('td[data-column="frequency"]').innerHTML = `<span contenteditable="true">${timeFreqString(task.frequency)}</span>`;
+        row.querySelector('td[data-column="next_run"]').innerHTML = `in ${timeDiffString(task.next_run)}`;
+
+        return row;
+      });
+      taskTable.replaceChildren(...rows);
+    }
+  </script>
+</head>
+
+<body onload="initAll()">
+  <div class="pusher">
+    <!-- Static header and sidebar loaded by external script -->
+    <div id="page-header"></div>
+    <div id="nav-menu"></div>
+
+    <!-- Actual page content -->
+    <div id="main-content" class="article">
+      <h1 class="ui header">Scheduler</h1>
+      <!-- <div class="ui stackable grid"> -->
+        <div class="ui item">
+          <table class="ui padded stackable collapsing table">
+            <thead>
+              <tr>
+                <!-- <th class="right aligned">Task ID</th> -->
+                <th></th>
+                <th class="left aligned">Task Description</th>
+                <th class="center aligned" data-tooltip="How often this Task runs">Frequency</th>
+                <th class="left aligned">Next Run</th>                
+              </tr>
+            </thead>
+            <tbody id="task-table">
+              <!-- Add asynchronously -->
+            </tbody>
+          </table>
+        </div>
+      <!-- </div> -->
+      <br>
+      <button class="ui animated blue button">
+        <div class="visible content">Save Changes</div>
+        <div class="hidden content">
+          <i class="right arrow icon"></i>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    
+  </script>
+  <script src="/templates/loadStaticContent.js"></script>
+</body>
+
+</html>
