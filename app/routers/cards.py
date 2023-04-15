@@ -57,7 +57,7 @@ card_router = APIRouter(
 
 def create_card(db, preferences, card_settings):
     # Initialize class of the card type being created
-    log.debug(f'Creating card')
+
     CardClass = TitleCardCreator.CARD_TYPES[card_settings.get('card_type')]
     card_maker = CardClass(
         **card_settings,
@@ -88,7 +88,8 @@ def create_card(db, preferences, card_settings):
 
 def delete_cards(db, card_query, loaded_query) -> list[str]:
     """
-    Delete all Title Card files for the given query.
+    Delete all Title Card files for the given card Query. Also remove
+    the two queries from the Database.
 
     Args:
         db: Database to commit the query deletion to.

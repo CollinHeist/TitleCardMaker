@@ -18,14 +18,13 @@ from app.schemas.preferences import (
 )
 from modules.Debug import log
 
-SupportedConnection = Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb']
-
 # Create sub router for all /connection API requests
 connection_router = APIRouter(
     prefix='/connection',
     tags=['Connections'],
 )
 
+SupportedConnection = Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb']
 
 @connection_router.put('/{connection}/{status}', status_code=204)
 def enable_or_disable_connection(
@@ -237,4 +236,4 @@ def update_tmdb_connection(
     if preferences.use_tmdb and changed:
         refresh_tmdb_interface()
 
-    return preferences 
+    return preferences
