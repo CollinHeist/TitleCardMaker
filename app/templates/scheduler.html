@@ -17,14 +17,16 @@
   <!-- Global styles -->
   <link rel="stylesheet" type="text/css" href="/templates/style.css">
   <style>
-    
+
   </style>
 
   <!-- Templates -->
   <template id="task-template">
     <tr>
       <!-- <td data-column="task_id" class="right aligned"></td> -->
-      <td data-column="runTask" class="center aligned" data-tooltip="Run this Task"><i class="sync icon"></i></td>
+      <td data-column="runTask" class="center aligned selectable" data-tooltip="Run this Task">
+        <a><i class="sync icon"></i></a>
+      </td>
       <td data-column="description" class="left aligned"></td>
       <td data-column="frequency" class="center aligned" data-tooltip="Edit and Save to Reschedule"></td>
       <td data-column="next_run" class="left aligned"></td>
@@ -65,6 +67,58 @@
       return timeUnits.join(', ');
     }
 
+    async function updateScheduledTasks() {
+      $('#task-table tr').each((index, row) => {
+        const taskId = row.dataset.id;
+        const frequencyText = $(`tr[data-id="${taskId}"] > td[data-column="frequency"]`)[0].innerText
+
+        const intervalRegex = /(\d+) (weeks|days|hours|minutes|seconds)/g;
+        const allMatches = [...frequencyText.matchAll(intervalRegex)];
+
+        // Create UpdateInterval object based on this frequency text
+        const updateInterval = {};
+        allMatches.forEach(([_, interval, unit]) => {
+          updateInterval[unit] = interval;
+        });
+        
+        // Submit API request to reschedule this task
+        $.ajax({
+          type: 'PATCH',
+          url: `/api/schedule/update/${taskId}`,
+          data: JSON.stringify(updateInterval),
+          contentType: 'application/json',
+          success: (response) => {
+            $.toast({class: 'blue info', title: `Rescheduled Task ${taskId}`});
+          }, error: (response) => {
+            $.toast({
+              class: 'error',
+              title: 'Error Rescheduling Task',
+              message: response.responseJSON.detail,
+              displayTime: 0,
+            });
+          }, complete: () => {}
+        });
+      });
+      initAll();
+    }
+
+    async function runTask(taskId) {
+      $.ajax({
+        type: 'POST',
+        url: `/api/schedule/${taskId}`,
+        success: (response) => {
+          $.toast({class: 'blue info', title: `Running Task ${taskId}`});
+        }, error: (response) => {
+          $.toast({
+            class: 'error',
+            title: 'Error Running Task',
+            message: response.responseJSON.detail,
+            displayTime: 0,
+          });
+        }, complete: () => {}
+      });
+    }
+
     async function initAll() {
       const taskTable = document.getElementById('task-table');
       const rowTemplate = document.getElementById('task-template');
@@ -73,8 +127,8 @@
       const allTasks = await fetch('/api/schedule/scheduled').then(resp => resp.json());
       const rows = allTasks.map(task => {
         const row = rowTemplate.content.cloneNode(true);
-        row.querySelector('tr').id = `task-id${task.id}`;
-        // row.querySelector('td[data-column="task_id"]').innerHTML = `<b>${task.id}</b>`;
+        row.querySelector('tr').dataset.id = task.id;
+        row.querySelector('td[data-column="runTask"] a').onclick = () => runTask(task.id);
         row.querySelector('td[data-column="description"]').innerHTML = task.description;
         row.querySelector('td[data-column="frequency"]').innerHTML = `<span contenteditable="true">${timeFreqString(task.frequency)}</span>`;
         row.querySelector('td[data-column="next_run"]').innerHTML = `in ${timeDiffString(task.next_run)}`;
@@ -95,26 +149,21 @@
     <!-- Actual page content -->
     <div id="main-content" class="article">
       <h1 class="ui header">Scheduler</h1>
-      <!-- <div class="ui stackable grid"> -->
-        <div class="ui item">
-          <table class="ui padded stackable collapsing table">
-            <thead>
-              <tr>
-                <!-- <th class="right aligned">Task ID</th> -->
-                <th></th>
-                <th class="left aligned">Task Description</th>
-                <th class="center aligned" data-tooltip="How often this Task runs">Frequency</th>
-                <th class="left aligned">Next Run</th>                
-              </tr>
-            </thead>
-            <tbody id="task-table">
-              <!-- Add asynchronously -->
-            </tbody>
-          </table>
-        </div>
-      <!-- </div> -->
+      <div class="ui item">
+        <table class="ui stackable collapsing table">
+          <thead>
+            <tr>
+              <th></th>
+              <th class="left aligned">Task Description</th>
+              <th class="center aligned" data-tooltip="How often this Task runs">Frequency</th>
+              <th class="left aligned">Next Run</th>                
+            </tr>
+          </thead>
+          <tbody id="task-table"><!-- Add asynchronously --></tbody>
+        </table>
+      </div>
       <br>
-      <button class="ui animated blue button">
+      <button class="ui animated blue button" onclick="updateScheduledTasks();">
         <div class="visible content">Save Changes</div>
         <div class="hidden content">
           <i class="right arrow icon"></i>

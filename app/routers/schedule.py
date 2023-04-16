@@ -11,7 +11,7 @@ from app.schemas.schedule import NewJob, ScheduledTask, UpdateInterval
 from modules.Debug import log
 
 def fake_func():
-    ...
+    log.debug(f'Running fake function')
 
 # Create sub router for all /schedule API requests
 schedule_router = APIRouter(
@@ -149,6 +149,18 @@ def reschedule_task(
             detail=f'Task {task_id} not found',
         )
 
+    # If new interval is the same as old interval, skip
+    new_interval = (
+        update_interval.seconds
+        + (update_interval.minutes * 60)
+        + (update_interval.hours * 60 * 60)
+        + (update_interval.days * 60 * 60 * 24)
+        + (update_interval.weeks * 60 * 60 * 24 * 7)
+    )
+    if new_interval == job.trigger.interval.total_seconds():
+        log.debug(f'Task[{job.id}] Not rescheduling, interval unchanged')
+        return _scheduled_task_from_job(job)
+
     # Reschedule with modified interval
     job = scheduler.reschedule_job(
         task_id,
@@ -157,3 +169,27 @@ def reschedule_task(
     )
     
     return _scheduled_task_from_job(job)
+
+
+@schedule_router.post('/{task_id}', status_code=201)
+def run_task(
+        task_id: TaskID,
+        scheduler = Depends(get_scheduler)) -> None:
+    """
+    Run the given Task immediately. This __does not__ reschedule or
+    modify the Task's next scheduled run.
+
+    - task_id: ID of the Task to run.
+    """
+
+    # Verify Task exists, raise 404 if DNE
+    if (job := BaseJobs.get(task_id, None)) is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f'Task {task_id} not found',
+        )
+
+    # Run this Task's function
+    job.function()
+
+    return None
