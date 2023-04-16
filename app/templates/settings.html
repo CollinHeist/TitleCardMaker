@@ -116,11 +116,11 @@
               Root Folders
             </h3>
             <div class="field">
-              <div class="field" title="Directory to store all title cards">
+              <div class="field" data-tooltip="Directory to store all title cards">
                 <label>Card Directory</label>
                 <input type="text" name="card_directory" placeholder="{{preferences.card_directory}}" value="{{preferences.card_directory}}">
               </div>
-              <div class="field" title="Directory to store all textless source images">
+              <div class="field" data-tooltip="Directory to store all textless source images">
                 <label>Source Directory</label>
                 <input type="text" name="source_directory" placeholder="{{preferences.source_directory}}" value="{{preferences.source_directory}}">
               </div>
@@ -134,7 +134,7 @@
             <div id="episode-data-settings" class="field">
               <div class="field">
                 <label>Episode Data Source</label>
-                <div id="episode-data-source" class="ui compact selection dropdown">
+                <div id="episode-data-source" class="ui compact selection dropdown" data-tooltip="Where to get episode data from" data-position="right center">
                   <input id="episode-data-source-input" type="hidden" name="episode_data_source" value="{{preferences.episode_data_source}}">
                   <i class="dropdown icon"></i>
                   <div class="default text">{{preferences.episode_data_source}}</div>
@@ -331,7 +331,7 @@
                 <b>Info</b> TitleCardMaker is being executed within a Docker container, no separate ImageMagick container required.
               </div>
               {% else %}
-              <div id="imagemagick-is-docker" class="ui right aligned checkbox field" title="Whether TitleCardMaker is executing within Docker">
+              <div id="imagemagick-is-docker" class="ui right aligned checkbox field" data-tooltip="Whether TitleCardMaker is executing within Docker">
                 {% if preferences.imagemagick_container %}
                 <input name="imagemagick_is_docker" type="checkbox" checked="">
                 {% else %}
@@ -375,11 +375,13 @@
           <!-- Headers -->
           <div class="eight wide column">
             <h3 class="ui header">Art Styles</h3>
-            <span class="ui red text">Art</span> styles utilize <span class="ui red text">series artwork</span> instead of episode images.
+            <span><span class="ui red text">Art</span> styles utilize <span class="ui red text">series artwork</span> instead of episode unique images.</span>
+            <span>Cards in this style will use the source image <span class="ui teal text">backdrop.jpg</span> by default.</span>
           </div>
           <div class="eight wide column">
             <h3 class="ui header">Unique Styles</h3>
-            <span class="ui blue text">Unique</span> styles utilize <span class="ui blue text">episode backdrops</span> unique to each episode.
+            <span><span class="ui blue text">Unique</span> styles utilize <span class="ui blue text">episode backdrops</span> unique to each episode.</span>
+            <span>Cards in this style will use the source image <span class="ui teal text">s{season_number}e{episode_number}.jpg</span> (e.g. <span class="ui teal text">s1e1.jpg</span>) by default.</span>
           </div>
           
           <div class="four wide column">
@@ -390,7 +392,7 @@
           </div>
           <div class="four wide column">
             <div class="ui fluid image">
-              <div class="ui teal ribbon label">Art Blur</div>
+              <div class="ui teal ribbon label">Blurred Art</div>
               <img src="/assets/styles/art blur.jpg">
             </div>
           </div>
@@ -402,19 +404,19 @@
           </div>
           <div class="four wide column">
             <div class="ui fluid image">
-              <div class="ui blue right ribbon label">Blur Unique</div>
+              <div class="ui blue right ribbon label">Blurred Unique</div>
               <img src="/assets/styles/unique blur.jpg">
             </div>
           </div>
           <div class="four wide column">
             <div class="ui fluid image">
-              <div class="ui teal ribbon label">Art Grayscale</div>
+              <div class="ui teal ribbon label">Grayscale Art</div>
               <img src="/assets/styles/art grayscale.jpg">
             </div>
           </div>
           <div class="four wide column">
             <div class="ui fluid image">
-              <div class="ui teal ribbon label">Art Blur Grayscale</div>
+              <div class="ui teal ribbon label">Blurred Grayscale Art</div>
               <img src="/assets/styles/art blur grayscale.jpg">
             </div>
           </div>
@@ -426,7 +428,7 @@
           </div>
           <div class="four wide column">
             <div class="ui fluid image">
-              <div class="ui blue right ribbon label">Blur Grayscale Unique</div>
+              <div class="ui blue right ribbon label">Blurred Grayscale Unique</div>
               <img src="/assets/styles/unique blur grayscale.jpg">
             </div>
           </div>
