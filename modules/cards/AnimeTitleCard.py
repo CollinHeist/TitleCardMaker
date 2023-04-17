@@ -10,8 +10,7 @@ class AnimeTitleCard(BaseCardType):
     """
     This class describes a type of CardType that produces title cards in
     the anime-styled cards designed by reddit user /u/Recker_Man. These
-    cards don't support custom fonts, but does support optional kanji
-    text.
+    cards support custom fonts, and optional kanji text.
     """
 
     """API Parameters"""
