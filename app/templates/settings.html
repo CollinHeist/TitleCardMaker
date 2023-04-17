@@ -261,8 +261,8 @@
                         <div id="title-card-name" class="header">CARD TYPE</div>
                         <div class="meta">
                           <span id="title-card-creators" class="author">AUTHOR(S)</span>
-                          <br><span id="title-card-font-support" class="unsupported feature"><i class="times icon"></i>Custom Fonts</span>
-                          <br><span id="title-card-season-support" class="supported feature"><i class="check icon"></i>Custom Season Titles</span>
+                          <br><span id="title-card-font-support"><i class="times icon"></i>Custom Fonts</span>
+                          <br><span id="title-card-season-support"><i class="check icon"></i>Custom Season Titles</span>
                         </div>
                         <div id="title-card-description" class="description">
                           <p>DESCRIPTION(S)</p>
@@ -562,11 +562,7 @@
           $('#title-card-image')[0].src = example; 
           $('#title-card-name')[0].innerText = name;//`${name} Title Card`;
           $('#title-card-creators')[0].innerText = creators.join(', ');
-          $('#title-card-font-support').toggleClass('unsupported', !supports_custom_fonts);
-          $('#title-card-font-support').toggleClass('supported', supports_custom_fonts);
           $('#title-card-font-support')[0].firstChild.className = supports_custom_fonts ? 'green check icon' : 'red times icon';
-          $('#title-card-season-support').toggleClass('unsupported', !supports_custom_seasons);
-          $('#title-card-season-support').toggleClass('supported', supports_custom_seasons);
           $('#title-card-season-support')[0].firstChild.className = supports_custom_seasons ? 'green check icon' : 'red times icon';
           $('#title-card-description')[0].innerHTML = '<p>' + description.join('</p><p>') + '</p>';
           break;
