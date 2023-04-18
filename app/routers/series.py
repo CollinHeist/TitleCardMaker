@@ -74,11 +74,13 @@ def set_series_database_ids(
     # Create SeriesInfo object for this entry, query all interfaces
     series_info = series.as_series_info
     if emby_interface and series.emby_library_name:
-        emby_interface.set_series_ids(emby_library_name, series_info)
+        emby_interface.set_series_ids(series.emby_library_name, series_info)
     if jellyfin_interface and series.jellyfin_library_name:
-        jellyfin_interface.set_series_ids(jellyfin_library_name, series_info)
+        jellyfin_interface.set_series_ids(
+            series.jellyfin_library_name, series_info
+        )
     if plex_interface and series.plex_library_name:
-        plex_interface.set_series_ids(plex_library_name, series_info)
+        plex_interface.set_series_ids(series.plex_library_name, series_info)
     if sonarr_interface:
         sonarr_interface.set_series_ids(series_info)
     if tmdb_interface:

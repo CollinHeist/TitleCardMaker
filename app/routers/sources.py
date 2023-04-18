@@ -2,7 +2,7 @@ from pathlib import Path
 from requests import get
 from typing import Literal, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, Response, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Response, UploadFile
 
 from modules.Debug import log
 from modules.SeriesInfo import SeriesInfo
@@ -26,32 +26,12 @@ source_router = APIRouter(
 )
 
 
-@source_router.get('/episode/{episode_id}')
-def download_episode_source_image(
-        episode_id: int,
-        ignore_blacklist: bool = Query(default=False),
-        db = Depends(get_database),
-        preferences = Depends(get_preferences),
-        emby_interface = Depends(get_emby_interface),
-        jellyfin_interface = Depends(get_jellyfin_interface),
-        plex_interface = Depends(get_plex_interface),
-        tmdb_interface = Depends(get_tmdb_interface)) -> Optional[str]:
-    """
-    Download a Source image for the given Episode. This uses the most
-    relevant image source indicated by the appropriate
-    image_source_priority attrbute. Returns URI to the source image
-    resource.
-
-    - episode_id: ID of the Episode to download a Source image of.
-    - ignore_blacklist: Whether to force a download from TMDb, even if
-    the Episode has been internally blacklisted. 
+def download_source_image(
+        db, preferences, emby_interface, jellyfin_interface, plex_interface,
+        tmdb_interface, series, episode) -> Optional[str]:
     """
 
-    # Get the Episode with this ID, raise 404 if DNE
-    episode = get_episode(db, episode_id, raise_exc=True)
-
-    # Get the Series for this Episode, raise 404 if DNE
-    series = get_series(db, episode.series_id, raise_exc=True)
+    """
 
     # If source already exists, return path to that
     source_file = episode.get_source_file(
@@ -88,11 +68,13 @@ def download_episode_source_image(
     for image_source in image_source_settings['image_source_priority']:
         log.debug(f'Episode[{episode.id}] Sourcing images from {image_source}')
         if image_source == 'Emby' and emby_interface:
-            # TODO implement
-            ...
+            source_image = emby_interface.get_source_image(
+                episode.as_episode_info
+            )
         elif image_source == 'Jellyfin' and jellyfin_interface:
-            # TODO implement
-            ...
+            source_image = jellyfin_interface.get_source_image(
+                episode.as_episode_info
+            )
         elif image_source == 'Plex' and plex_interface:
             # Verify series has a library
             if series.plex_library_name is None:
@@ -134,6 +116,123 @@ def download_episode_source_image(
     return None
 
 
+@source_router.get('/series/{series_id}')
+def download_series_source_image(
+        background_tasks: BackgroundTasks,
+        series_id: int,
+        ignore_blacklist: bool = Query(default=False),
+        db = Depends(get_database),
+        preferences = Depends(get_preferences),
+        emby_interface = Depends(get_emby_interface),
+        jellyfin_interface = Depends(get_jellyfin_interface),
+        plex_interface = Depends(get_plex_interface),
+        tmdb_interface = Depends(get_tmdb_interface)) -> None:
+    """
+    Download a Source image for all Episodes in the given Series. This
+    uses the most relevant image source indicated by the appropriate
+    image_source_priority attrbute.
+
+    - series_id: ID of the Series whose Episodes to download Source
+    images for.
+    - ignore_blacklist: Whether to force a download from TMDb, even if
+    the associated Episode has been internally blacklisted. 
+    """
+
+    # Get this series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Get all episodes for this series
+    all_episodes = db.query(models.episode.Episode)\
+        .filter_by(series_id=series_id).all()
+
+    # Add task to download source image for each episode
+    for episode in all_episodes:
+        background_tasks.add_task(
+            # Function
+            download_source_image,
+            # Arguments
+            db, preferences, emby_interface, jellyfin_interface, plex_interface,
+            tmdb_interface, series, episode
+        )
+
+    return None
+
+
+@source_router.get('/series/{series_id}/backdrop')
+def download_series_backdrop(
+        series_id: int,
+        ignore_blacklist: bool = Query(default=False),
+        db = Depends(get_database),
+        preferences = Depends(get_preferences),
+        # emby_interface = Depends(get_emby_interface),
+        # jellyfin_interface = Depends(get_jellyfin_interface),
+        # plex_interface = Depends(get_plex_interface),
+        tmdb_interface = Depends(get_tmdb_interface)) -> Optional[str]:
+    """
+
+    """
+    # TODO add ability to download art from a media server
+    # Get this series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Get backdrop, return if exists
+    backdrop_file = series.get_series_backdrop(preferences.source_directory)
+    if backdrop_file.exists():
+        log.debug(f'Series[{series_id}] Backdrop file exists')
+        return f'/source/{series.path_safe_name}/backdrop.jpg'
+
+    # Download new backdrop
+    if tmdb_interface:
+        backdrop = tmdb_interface.get_series_backdrop(
+            series.as_series_info,
+            # TODO skip localized images
+        )
+        if WebInterface.download_image(backdrop, backdrop_file):
+            log.debug(f'Series[{series_id}] Downloaded {backdrop_file.resolve()} from TMDb')
+            return f'/source/{series.path_safe_name}/backdrop.jpg'
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f'Unable to download backdrop'
+            )
+
+    # No logo returned
+    return None
+
+
+@source_router.get('/episode/{episode_id}')
+def download_episode_source_image(
+        episode_id: int,
+        ignore_blacklist: bool = Query(default=False),
+        db = Depends(get_database),
+        preferences = Depends(get_preferences),
+        emby_interface = Depends(get_emby_interface),
+        jellyfin_interface = Depends(get_jellyfin_interface),
+        plex_interface = Depends(get_plex_interface),
+        tmdb_interface = Depends(get_tmdb_interface)) -> Optional[str]:
+    """
+    Download a Source image for the given Episode. This uses the most
+    relevant image source indicated by the appropriate
+    image_source_priority attrbute. Returns URI to the source image
+    resource.
+
+    - episode_id: ID of the Episode to download a Source image of.
+    - ignore_blacklist: Whether to force a download from TMDb, even if
+    the Episode has been internally blacklisted. 
+    """
+
+    # Get the Episode with this ID, raise 404 if DNE
+    episode = get_episode(db, episode_id, raise_exc=True)
+
+    # Get the Series for this Episode, raise 404 if DNE
+    series = get_series(db, episode.series_id, raise_exc=True)
+
+    return download_source_image(
+        db, preferences, emby_interface, jellyfin_interface, plex_interface,
+        tmdb_interface, series, episode
+    )
+
+
 @source_router.get('/series/{series_id}/logo')
 def download_series_logo(
         series_id: int,
@@ -159,6 +258,7 @@ def download_series_logo(
         log.debug(f'Series[{series_id}] Logo file exists')
         return f'/source/{series.path_safe_name}/logo.png'
 
+    # Download new logo
     if tmdb_interface:
         logo = tmdb_interface.get_series_logo(series.as_series_info)
         if WebInterface.download_image(logo, logo_file):
@@ -170,5 +270,5 @@ def download_series_logo(
                 detail=f'Unable to download logo'
             )
 
-    # No logo returned,
+    # No logo returned
     return None

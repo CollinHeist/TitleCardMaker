@@ -115,3 +115,21 @@ class Series(Base):
             tvdb_id=self.tvdb_id,
             tvrage_id=self.tvrage_id,
         )
+
+
+    @hybrid_method
+    def get_logo_file(self, source_base: str) -> Path:
+        """
+
+        """
+
+        return Path(source_base) / self.path_safe_name / 'logo.png'
+
+
+    @hybrid_method
+    def get_series_backdrop(self, source_base: str) -> Path:
+        """
+
+        """
+
+        return Path(source_base) / self.path_safe_name / 'backdrop.jpg'
