@@ -51,6 +51,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         'vi': r'Episode {number}',
         'zh': r'第 {number} 集',
     }
+    LANGUAGE_CODES = tuple(GENERIC_TITLE_FORMATS.keys())
 
     """Filename for where to store blacklisted entries"""
     __BLACKLIST_DB = 'tmdb_blacklist.json'
@@ -116,8 +117,10 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         return decorator
 
 
-    def __get_condition(self, query_type: str, series_info: SeriesInfo,
-                        episode_info: EpisodeInfo=None) -> 'QueryInstance':
+    def __get_condition(self,
+            query_type: str,
+            series_info: SeriesInfo,
+            episode_info: EpisodeInfo=None) -> 'QueryInstance':
         """
         Get the tinydb query condition for the given query.
 
@@ -193,8 +196,10 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
                 }, condition)
 
 
-    def __is_blacklisted(self, series_info: SeriesInfo,
-                         episode_info: EpisodeInfo, query_type: str) -> bool:
+    def __is_blacklisted(self,
+            series_info: SeriesInfo,
+            episode_info: EpisodeInfo,
+            query_type: str) -> bool:
         """
         Determines if the specified entry is in the blacklist (e.g. should not
         bother querying TMDb.
@@ -225,9 +230,10 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         return datetime.now().timestamp() < entry['next']
 
 
-    def is_permanently_blacklisted(self, series_info: SeriesInfo,
-                                   episode_info: EpisodeInfo,
-                                   query_type: str='image') -> bool:
+    def is_permanently_blacklisted(self,
+            series_info: SeriesInfo,
+            episode_info: EpisodeInfo,
+            query_type: str='image') -> bool:
         """
         Determines if permanently blacklisted.
 
@@ -570,9 +576,10 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         return None
 
 
-    def __determine_best_image(self, images: list['tmdbapis.objs.image.Still'],
-                               *, is_source_image: bool=True,
-                               skip_localized: bool=False) -> dict:
+    def __determine_best_image(self,
+            images: list['tmdbapis.objs.image.Still'], *,
+            is_source_image: bool=True,
+            skip_localized: bool=False) -> dict:
         """
         Determine the best image and return it's contents from within the
         database return JSON.
@@ -672,8 +679,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         return None
 
 
-    def __is_generic_title(self, title: str, language_code: str,
-                           episode_info: EpisodeInfo) -> bool:
+    def __is_generic_title(self,
+            title: str, language_code: str, episode_info: EpisodeInfo) -> bool:
         """
         Determine whether the given title is a generic translation of
         "Episode (x)" for the indicated language. 
@@ -705,9 +712,10 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
 
     @catch_and_log('Error getting episode title', default=None)
-    def get_episode_title(self, series_info: SeriesInfo,
-                          episode_info: EpisodeInfo,
-                          language_code: str='en-US') -> str:
+    def get_episode_title(self,
+            series_info: SeriesInfo,
+            episode_info: EpisodeInfo,
+            language_code: str='en-US') -> str:
         """
         Get the episode title for the given entry for the given language.
 
@@ -781,20 +789,31 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             return None
 
         # Get the best logo
-        best = None
+        best, best_priority = None, 999
         for logo in series.logos:
-            # Skip non-English logos
-            if logo.iso_639_1 != 'en':
+            # Skip logos with unindicated languages
+            if (logo.iso_639_1
+                not in self.preferences.tmdb_logo_language_priority):
                 continue
 
-            # SVG images are always the best
-            if logo.url.endswith('.svg'):
-                return logo.url
+            # Get relative priority of this logo's language
+            priority = self.preferences.tmdb_logo_language_priority.index(
+                logo.iso_639_1
+            )
 
-            # Choose best based on pixel count
-            if (best is None
+            # Skip this logo if the lang priority is less than the current best
+            # highest priority is index 0, so use > for lower priority
+            if priority > best_priority:
+                continue
+
+            # SVG images take priority over
+            if logo.url.endswith('.svg'):
+                best = logo
+                best_priority = priority
+            elif (best is None
                 or logo.width * logo.height > best.width * best.height):
                 best = logo
+                best_priority = priority
 
         # No valid image found, blacklist and exit
         if best is None:
@@ -805,8 +824,9 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
 
     @catch_and_log('Error setting series backdrop', default=None)
-    def get_series_backdrop(self, series_info: SeriesInfo, *,
-                            skip_localized_images: bool=False) -> str:
+    def get_series_backdrop(self,
+            series_info: SeriesInfo, *,
+            skip_localized_images: bool=False) -> str:
         """
         Get the best backdrop for the given series.
 
@@ -850,8 +870,11 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         return None
 
 
-    def manually_download_season(self, title: str, year: int,
-            season_number: int, episode_range: Iterable[int],
+    def manually_download_season(self,
+            title: str,
+            year: int,
+            season_number: int,
+            episode_range: Iterable[int],
             directory: Path) -> None:
         """
         Download episodes 1-episode_count of the requested season for the given
