@@ -10,8 +10,7 @@ class AnimeTitleCard(BaseCardType):
     """
     This class describes a type of CardType that produces title cards in
     the anime-styled cards designed by reddit user /u/Recker_Man. These
-    cards don't support custom fonts, but does support optional kanji
-    text.
+    cards support custom fonts, and optional kanji text.
     """
 
     """API Parameters"""
@@ -28,7 +27,7 @@ class AnimeTitleCard(BaseCardType):
              'description': 'Japanese text to place above title text'},
             {'name': 'Require Kanji Text',
              'identifier': 'require_kanji',
-             'description': 'Whether to require kanji text to be provided for the card to be created'},
+             'description': 'Whether to require kanji text for the card creation'},
             {'name': 'Kanji Vertical Shift',
              'identifier': 'kanji_vertical_shift',
              'description': 'Additional vertical offset to apply only to the kanji text'},
@@ -43,7 +42,8 @@ class AnimeTitleCard(BaseCardType):
              'description': 'Whether to omit the gradient overlay from the card'},
         ], 'description': [
             'Title card with all text aligned in the lower left of the image',
-            'Although it is referred to as the "anime" card style, there is nothing preventing you from using it for any series.',
+            'Although it is referred to as the "anime" card style, there is '
+            'nothing preventing you from using it for any type of series.',
         ],
     }
 
