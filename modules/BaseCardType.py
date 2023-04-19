@@ -182,7 +182,11 @@ class BaseCardType(ImageMaker):
     @property
     def resize(self) -> ImageMagickCommands:
         """
+        ImageMagick commands to only resize an image to the output title
+        card size.
 
+        Returns:
+            List of ImageMagick commands.
         """
 
         return [

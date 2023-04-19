@@ -27,7 +27,7 @@ class AnimeTitleCard(BaseCardType):
              'description': 'Japanese text to place above title text'},
             {'name': 'Require Kanji Text',
              'identifier': 'require_kanji',
-             'description': 'Whether to require kanji text to be provided for the card to be created'},
+             'description': 'Whether to require kanji text for the card creation'},
             {'name': 'Kanji Vertical Shift',
              'identifier': 'kanji_vertical_shift',
              'description': 'Additional vertical offset to apply only to the kanji text'},
@@ -42,7 +42,8 @@ class AnimeTitleCard(BaseCardType):
              'description': 'Whether to omit the gradient overlay from the card'},
         ], 'description': [
             'Title card with all text aligned in the lower left of the image',
-            'Although it is referred to as the "anime" card style, there is nothing preventing you from using it for any series.',
+            'Although it is referred to as the "anime" card style, there is '
+            'nothing preventing you from using it for any type of series.',
         ],
     }
 
@@ -272,7 +273,7 @@ class AnimeTitleCard(BaseCardType):
 
 
     @property
-    def title_command(self) -> list[str]:
+    def title_text_command(self) -> list[str]:
         """
         Subcommand for adding title text to the source image.
 
@@ -315,7 +316,7 @@ class AnimeTitleCard(BaseCardType):
 
 
     @property
-    def index_command(self) -> list[str]:
+    def index_text_command(self) -> list[str]:
         """
         Subcommand for adding the index text to the source image.
 
@@ -372,8 +373,10 @@ class AnimeTitleCard(BaseCardType):
 
 
     @staticmethod
-    def modify_extras(extras: dict[str, Any], custom_font: bool,
-                      custom_season_titles: bool) -> None:
+    def modify_extras(
+            extras: dict[str, Any],
+            custom_font: bool,
+            custom_season_titles: bool) -> None:
         """
         Modify the given extras base on whether font or season titles
         are custom.
@@ -413,8 +416,8 @@ class AnimeTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_season_titles(custom_episode_map: bool, 
-                                episode_text_format: str) -> bool:
+    def is_custom_season_titles(
+            custom_episode_map: bool, episode_text_format: str) -> bool:
         """
         Determines whether the given attributes constitute custom or
         generic season titles.
@@ -429,8 +432,8 @@ class AnimeTitleCard(BaseCardType):
 
         standard_etf = AnimeTitleCard.EPISODE_TEXT_FORMAT.upper()
 
-        return (custom_episode_map or
-                episode_text_format.upper() != standard_etf)
+        return (custom_episode_map
+                or episode_text_format.upper() != standard_etf)
 
 
     def create(self) -> None:
@@ -462,9 +465,9 @@ class AnimeTitleCard(BaseCardType):
             # Overlay gradient
             *gradient_command,
             # Add title or title+kanji
-            *self.title_command,
+            *self.title_text_command,
             # Add season or season+episode text
-            *self.index_command,
+            *self.index_text_command,
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
