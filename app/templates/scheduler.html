@@ -47,10 +47,11 @@
 
       // Create string for next run time, only show up to two time units
       const timeUnits = [];
-      if (timeDifferenceDays > 0) { timeUnits.push(`${timeDifferenceDays} days`); }
-      if (timeDifferenceHours % 24 > 0) { timeUnits.push(`${timeDifferenceHours%24} hours`); }
-      if (timeDifferenceMinutes % 60 > 0) { timeUnits.push(`${timeDifferenceMinutes%60} minutes`); }
-      if (timeDifferenceSeconds % 60 > 0) { timeUnits.push(`${timeDifferenceSeconds%60} seconds`); }
+      if (timeDifferenceDays > 0) { timeUnits.push(`<span class="ui red text">${timeDifferenceDays}</span> days`); }
+      if (timeDifferenceHours % 24 > 0) { timeUnits.push(`<span class="ui green text">${timeDifferenceHours%24}</span> hours`); }
+      if (timeDifferenceMinutes % 60 > 0) { timeUnits.push(`<span class="ui blue text">${timeDifferenceMinutes%60}</span> minutes`); }
+      if (timeDifferenceSeconds % 60 > 0) { timeUnits.push(`<span class="ui teal text">${timeDifferenceSeconds%60}</span> seconds`); }
+      // return inStr = timeUnits.join(', ');
       return inStr = timeUnits.slice(0, 2).join(', ');
     }
 
@@ -96,6 +97,7 @@
               message: response.responseJSON.detail,
               displayTime: 0,
             });
+          }, complete: () => {initAll();}
         });
       });
     }
@@ -153,7 +155,7 @@
             <tr>
               <th></th>
               <th class="left aligned">Task Description</th>
-              <th class="center aligned" data-tooltip="How often this Task runs">Frequency</th>
+              <th class="center aligned" data-tooltip="How often to run this Task - enter times as seconds, minutes, hours, days, or weeks">Frequency</th>
               <th class="left aligned">Next Run</th>                
             </tr>
           </thead>
