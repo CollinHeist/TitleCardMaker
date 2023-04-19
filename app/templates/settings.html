@@ -149,11 +149,7 @@
                   <input id="image-source-priority-input" type="hidden" name="image_source_priority">
                   <i class="dropdown icon"></i>
                   <div class="default text">Image Sources</div>
-                  <div id="image-source-priority-choices" class="menu">
-                    {% for source in preferences.valid_image_sources %}
-                    <div class="item" data-value="{{source}}">{{source}}</div>
-                    {% endfor %}
-                  </div>
+                  <div class="menu"><!-- Added asynchronousely --></div>
                 </div>
               </div>
               <div class="ui right aligned checkbox field" data-tooltip="Whether to sync episodes from season 0 by default">
@@ -516,7 +512,7 @@
       // On form submission, submit API request to change settings
       .on('submit', (event) => {
         event.preventDefault();
-        if (!$(`#settings-form`).form('is valid')) { return; }
+        if (!$('#settings-form').form('is valid')) { return; }
         $('#save-changes').toggleClass('loading', true);
         // Prep form
         let form = new FormData(event.target);

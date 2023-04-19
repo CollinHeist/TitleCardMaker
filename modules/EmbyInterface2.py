@@ -529,10 +529,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     def get_source_image(self, episode_info: EpisodeInfo) -> SourceImage:
         """
-        Get the source image given episode within Emby.
+        Get the source image for the given episode within Emby.
 
         Args:
-            series_info: The series to get the source image of.
             episode_info: The episode to get the source image of.
 
         Returns:

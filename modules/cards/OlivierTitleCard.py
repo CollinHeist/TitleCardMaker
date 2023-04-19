@@ -256,8 +256,8 @@ class OlivierTitleCard(BaseCardType):
             custom_font: bool,
             custom_season_titles: bool) -> None:
         """
-        Modify the given extras based on whether font or season titles are
-        custom.
+        Modify the given extras based on whether font or season titles
+        are custom.
 
         Args:
             extras: Dictionary to modify.
