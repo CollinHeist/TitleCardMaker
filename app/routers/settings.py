@@ -4,8 +4,9 @@ from fastapi import APIRouter, Body, Depends, Form, HTTPException
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_preferences
-from app.schemas.preferences import EpisodeDataSourceToggle, Preferences, UpdatePreferences
+from app.schemas.preferences import EpisodeDataSourceToggle, LanguageToggle, Preferences, UpdatePreferences
 from modules.Debug import log
+from modules.TMDbInterface2 import TMDbInterface
 
 # Create sub router for all /connection API requests
 settings_router = APIRouter(
@@ -50,3 +51,25 @@ def get_image_source_priority(
             sources.append({'name': source, 'value': source, 'selected': False})
 
     return sources
+
+
+@settings_router.get('/logo-language-priority')
+def get_tmdb_logo_language_priority(
+        preferences=Depends(get_preferences)) -> list[LanguageToggle]:
+
+    languages = []
+    for language in preferences.tmdb_logo_language_priority:
+        languages.append({
+            'name': TMDbInterface.LANGUAGES[language],
+            'value': language,
+            'selected': True
+        })
+    for language in TMDbInterface.LANGUAGES:
+        if language not in preferences.tmdb_logo_language_priority:
+            languages.append({
+                'name': TMDbInterface.LANGUAGES[language],
+                'value': language,
+                'selected': False,
+            })
+
+    return languages

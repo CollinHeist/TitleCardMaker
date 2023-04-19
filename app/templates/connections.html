@@ -92,10 +92,33 @@
       });
     }
 
+    async function getLanguagePriorities() {
+      const languages = await fetch('/api/settings/logo-language-priority').then(resp => resp.json());
+      $('.dropdown[data-value="tmdb_logo_language_priority"]').dropdown({
+        values: languages,
+        clearable: true,
+      });
+    }
+
     async function initAll() {
       getEmbyUsernames();
       getJellyfinUsernames();
       getSonarrLibraries();
+      getLanguagePriorities();
+    }
+
+    // Add new library path
+    function addSonarrLibrary() {
+      // Add library name input
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text'; nameInput.placeholder = 'Library Name';
+      nameInput.name = 'library_names';
+      $('#sonarr-libraries-library-names').append(nameInput);
+      // Add library path input
+      const pathInput = document.createElement('input');
+      pathInput.type = 'text'; pathInput.placeholder = 'Library Path';
+      pathInput.name = 'library_paths';
+      $('#sonarr-libraries-library-paths').append(pathInput);
     }
   </script>
   
@@ -130,12 +153,12 @@
           <!-- Input fields -->
           <div id="emby-url" class="ui disabled required eight wide field" title="Host URL to communicate with Emby">
             <label>URL</label>
-            <input name="url" type="text"placeholder="{{preferences.emby_url}}" value="{{preferences.emby_url}}">
+            <input name="url" type="text" value="{{preferences.emby_url}}">
           </div>
 
           <div id="emby-api-key" class="ui disabled required eight wide field" title="API key to authenticate communication with Emby">
             <label>API Key</label>
-            <input name="api_key" type="text" class="private" placeholder="{{preferences.emby_api_key}}" value="{{preferences.emby_api_key}}">
+            <input name="api_key" type="text" class="private" value="{{preferences.emby_api_key}}">
           </div>
 
           <div id="emby-username" class="ui disabled required field" title="Username of the Emby user to query watch statuses from">
@@ -159,7 +182,7 @@
             <label>Filesize Limit</label>
             <div class="ui fields">
               <div class="two wide field">
-                <input name="filesize_limit_number" type="number" min="0" placeholder="{{preferences.emby_filesize_limit_number}}" value="{{preferences.emby_filesize_limit_number}}">
+                <input name="filesize_limit_number" type="number" min="0" value="{{preferences.emby_filesize_limit_number}}">
               </div>
               <div class="three wide field">
                 <div class="ui selection dropdown">
@@ -205,12 +228,12 @@
           <!-- Input fields -->
           <div id="jellyfin-url" class="ui disabled required eight wide field" title="Host URL to communicate with Jellyfin">
             <label>URL</label>
-            <input name="url" type="text"placeholder="{{preferences.jellyfin_url}}" value="{{preferences.jellyfin_url}}">
+            <input name="url" type="text" value="{{preferences.jellyfin_url}}">
           </div>
 
           <div id="jellyfin-api-key" class="ui disabled required eight wide field" title="API key to authenticate communication with Jellyfin">
             <label>API Key</label>
-            <input name="api_key" type="text" class="private" placeholder="{{preferences.jellyfin_api_key}}" value="{{preferences.jellyfin_api_key}}">
+            <input name="api_key" type="text" class="private" value="{{preferences.jellyfin_api_key}}">
           </div>
 
           <div id="jellyfin-username" class="ui disabled required field" title="Username of the Jellyfin user to query watch statuses from">
@@ -279,12 +302,12 @@
           <!-- Input fields -->
           <div id="plex-url" class="ui disabled required eight wide field" title="Host URL to communicate with Plex">
             <label>URL</label>
-            <input name="url" type="text" placeholder="{{preferences.plex_url}}" value="{{preferences.plex_url}}">
+            <input name="url" type="text" value="{{preferences.plex_url}}">
           </div>
           
           <div id="plex-token" class="ui disabled eight wide field" title="Token to authenticate communication with Plex">
             <label>Token <a href="https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/" target="_blank"><i class="external alternate small icon"></i></a></label>
-            <input name="token" type="text" class="private" placeholder="{{preferences.plex_token}}" value="{{preferences.plex_token}}">
+            <input name="token" type="text" class="private" value="{{preferences.plex_token}}">
           </div>
 
           {% if preferences.plex_use_ssl %}
@@ -312,7 +335,7 @@
             <label>Filesize Limit</label>
             <div class="ui fields">
               <div class="two wide field">
-                <input name="filesize_limit_number" id="plex-filesize-limit-input-number" type="number" min="1" placeholder="{{preferences.plex_filesize_limit_number}}" value="{{preferences.plex_filesize_limit_number}}">
+                <input name="filesize_limit_number" id="plex-filesize-limit-input-number" type="number" min="1" value="{{preferences.plex_filesize_limit_number}}">
               </div>
               <div class="three wide field">
                 <div class="ui selection dropdown">
@@ -366,12 +389,12 @@
           <!-- Input fields -->
           <div id="sonarr-url" class="ui disabled required eight wide field" title="Host URL to communicate with Sonarr">
             <label>URL</label>
-            <input type="text" name="url" placeholder="{{preferences.sonarr_url}}" value="{{preferences.sonarr_url}}">
+            <input type="text" name="url" value="{{preferences.sonarr_url}}">
           </div>
 
           <div id="sonarr-api-key" class="ui disabled required eight wide field" title="API Key to authenticate communication with Sonarr">
             <label>API Key <a href="https://github.com/CollinHeist/TitleCardMaker/wiki/Sonarr-Attributes#sonarr-api-key" target="_blank"><i class="external alternate small icon"></i></a></label>
-            <input name="api_key" type="text" class="private" placeholder="{{preferences.sonarr_api_key}}" value="{{preferences.sonarr_api_key}}">
+            <input name="api_key" type="text" class="private" value="{{preferences.sonarr_api_key}}">
           </div>
 
           {% if preferences.sonarr_use_ssl %}
@@ -442,11 +465,11 @@
           <div id="tmdb-minimum-resolution" class="two fields">
             <div class="two wide field" data-tooltip="Minimum required width of images to gather from TMDb">
               <label>Minimum Width</label>
-              <input name="minimum_width" type="number" placeholder="{{preferences.tmdb_minimum_width}}" value="{{preferences.tmdb_minimum_width}}">
+              <input name="minimum_width" type="number" value="{{preferences.tmdb_minimum_width}}">
             </div>
             <div class="two wide field" data-tooltip="Minimum required height of images to gather from TMDb">
               <label>Minimum Height</label>
-              <input name="minimum_height" type="number" placeholder="{{preferences.tmdb_minimum_height}}" value="{{preferences.tmdb_minimum_height}}">
+              <input name="minimum_height" type="number" value="{{preferences.tmdb_minimum_height}}">
             </div>
           </div>
 
@@ -457,6 +480,16 @@
             <input name="skip_localized" type="checkbox" >
             {% endif %}
             <label>Ignore Localized Images</label>
+          </div>
+
+          <div id="tmdb-logo-language-priority" class="field">
+            <label>Logo Language Priority</label>
+            <div data-value="tmdb_logo_language_priority" class="ui compact multiple selection dropdown">
+              <input name="logo_language_priority" type="hidden">
+              <i class="dropdown icon"></i>
+              <div class="default text"></div>
+              <div class="menu"><!-- Added asynchronousely --></div>
+            </div>
           </div>
 
           <div class=field>
@@ -560,19 +593,52 @@
       $('#plex-filesize-warning').toggleClass('visible', current > limit);
     })
 
-    // Add new library path
-    function addSonarrLibrary() {
-      // Add library name input
-      const nameInput = document.createElement('input');
-      nameInput.type = 'text'; nameInput.placeholder = 'Library Name';
-      nameInput.name = 'library_names';
-      $('#sonarr-libraries-library-names').append(nameInput);
-      // Add library path input
-      const pathInput = document.createElement('input');
-      pathInput.type = 'text'; pathInput.placeholder = 'Library Path';
-      pathInput.name = 'library_paths';
-      $('#sonarr-libraries-library-paths').append(pathInput);
-    }
+    // Add form validation
+    $('#emby-settings').form({
+      on: 'blur',
+      inline: true,
+      fields: {
+        url: ['url', 'empty'],
+        api_key: ['empty', 'regExp[/^[a-f0-9]+$/gi]'],
+        filesize_limit_number: ['integer[0..]'],
+      },
+    });
+    $('#jellyfin-settings').form({
+      on: 'blur',
+      inline: true,
+      fields: {
+        url: ['url', 'empty'],
+        api_key: ['empty', 'regExp[/^[a-f0-9]+$/gi]'],
+        filesize_limit_number: ['integer[0..]'],
+      },
+    });
+    $('#plex-settings').form({
+      on: 'blur',
+      inline: true,
+      fields: {
+        url: ['url', 'empty'],
+        // token: [],
+        filesize_limit_number: ['integer[0..]'],
+      },
+    });
+    $('#sonarr-settings').form({
+      on: 'blur',
+      inline: true,
+      fields: {
+        url: ['url', 'empty'],
+        api_key: ['empty', 'regExp[/^[a-f0-9]+$/gi]'],
+      },
+    });
+    $('#tmdb-settings').form({
+      on: 'blur',
+      inline: true,
+      fields: {
+        api_key: ['empty', 'regExp[/^[a-f0-9]+$/gi]'],
+        minimum_width: ['integer[0..]'],
+        minimum_height: ['integer[0..]'],
+        logo_language_priority: ['empty', 'minLength[1]'],
+      },
+    });
 
     // Connection submit button handling
     const connections = [
@@ -586,18 +652,20 @@
       $(formId).on('submit', (event) => {
         // Prevent default event form handler
         event.preventDefault();
+        if (!$(formId).form('is valid')) { return; }
 
         // Merge multiple form inputs into list values
         let form = new FormData(event.target);
         let listData = {library_names: [], library_paths: []};
         for (const [key, value] of [...form.entries()]) {
+          console.log(value);
           if (connection === 'sonarr') {
             if (key === 'library_names') { listData.library_names.push(value); }
             if (key === 'library_paths') { listData.library_paths.push(value); }
           }
           if (value === '') { form.delete(key); }
         }
-        console.log(listData)
+
         // Submit API request
         $(submitButtonId).toggleClass('disabled loading', true);
         $.ajax({

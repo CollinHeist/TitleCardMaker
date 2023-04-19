@@ -18,6 +18,11 @@ Style = Literal[
     'blur unique', 'grayscale unique', 'blur grayscale unique',
 ]
 
+LanguageCode = Literal[
+    'ar', 'cs', 'de', 'en', 'es', 'fr', 'he', 'hu', 'id', 'it', 'ja', 'ko',
+    'pl', 'pt', 'ro', 'ru', 'sk', 'th', 'tr', 'uk', 'vi', 'zh',
+]
+
 """
 Creation classes
 """
@@ -38,6 +43,9 @@ class EpisodeDataSourceToggle(ToggleOption):
     ...
 
 class ImageSourceToggle(ToggleOption):
+    ...
+
+class LanguageToggle(ToggleOption):
     ...
 
 EpisodeDataSource = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr', 'TMDb']
@@ -144,6 +152,12 @@ class UpdateTMDb(Base):
     minimum_width: int = Field(default=UNSPECIFIED, ge=0)
     minimum_height: int = Field(default=UNSPECIFIED, ge=0)
     skip_localized: bool = Field(default=UNSPECIFIED)
+    logo_language_priority: list[LanguageCode] = Field(default=UNSPECIFIED)
+
+    @validator('logo_language_priority', pre=True)
+    def validate_list(cls, v):
+        # Split comma separated language codes into list of codes
+        return list(map(lambda s: str(s).lower().strip(), v.split(',')))
 
 """
 Return classes

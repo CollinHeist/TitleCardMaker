@@ -36,7 +36,7 @@ class Preferences:
         self.source_directory = TCM_ROOT / 'source'
 
         self.card_width = TitleCard.DEFAULT_WIDTH
-        self.card_height = TitleCard.DEFAUL_HEIGHT
+        self.card_height = TitleCard.DEFAULT_HEIGHT
         self.card_filename_format = self.DEFAULT_CARD_FILENAME_FORMAT
         self.card_extension = self.DEFAULT_CARD_EXTENSION
         self.image_source_priority = self.DEFAULT_IMAGE_SOURCE_PRIORITY
@@ -86,6 +86,7 @@ class Preferences:
         self.tmdb_minimum_width = 800 #0
         self.tmdb_minimum_height = 400 #0
         self.tmdb_skip_localized = False
+        self.tmdb_logo_language_priority = ['en']
         self.supported_language_codes = []
 
         self.is_docker = environ.get('TCM_IS_DOCKER', 'false').lower() == 'true'
