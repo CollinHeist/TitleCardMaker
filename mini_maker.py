@@ -460,9 +460,10 @@ if hasattr(args, 'movie_poster'):
         top_subtitle=args.movie_top_subtitle,
         movie_index=args.movie_index,
         logo=args.movie_logo,
-        font=args.movie_font,
+        font_file=args.movie_font,
         font_color=args.movie_font_color,
         font_size=float(args.movie_font_size[:-1])/100.0,
+        borderless=args.borderless,
         omit_gradient=args.no_gradient,
     ).create()
 

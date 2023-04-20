@@ -20,14 +20,18 @@ class MoviePosterMaker(ImageMaker):
     __GRADIENT = REF_DIRECTORY / 'gradient.png'
 
 
-    def __init__(self, source: Path, output: Path, title: str,
+    def __init__(self,
+            source: Path,
+            output: Path,
+            title: str,
             subtitle: str = '',
             top_subtitle: str = '',
             movie_index: str = '',
             logo: Optional[Path] = None,
-            font: Path = FONT,
+            font_file: Path = FONT,
             font_color: str = FONT_COLOR,
             font_size: float = 1.0,
+            borderless: bool = False,
             omit_gradient: bool = False) -> None:
         """
         Construct a new instance of a CollectionPosterMaker.
@@ -43,9 +47,10 @@ class MoviePosterMaker(ImageMaker):
                 movie title.
             logo: Optional path to a logo file to place on top of the
                 poster.
-            font: Path to the font file of the poster's title.
+            font_file: Path to the font file of the poster's title.
             font_color: Font color of the poster text.
             font_size: Scalar for the font size of the poster's title.
+            borderless: Whether to omit the white frame border.
             omit_gradient: Whether to make the poster with no gradient
                 overlay.
         """
@@ -58,13 +63,14 @@ class MoviePosterMaker(ImageMaker):
         self.output = output
         self.movie_index = movie_index
         self.logo = logo
-        self.font = font
+        self.font_file = font_file
         self.font_color = font_color
         self.font_size = font_size
+        self.borderless = borderless
         self.omit_gradient = omit_gradient
 
         # Uppercase title(s) if using default font
-        if font == self.FONT:
+        if font_file == self.FONT:
             self.top_subtitle = top_subtitle.upper().strip()
             self.title = title.upper().strip()
             self.subtitle = subtitle.upper().strip()
@@ -199,7 +205,7 @@ class MoviePosterMaker(ImageMaker):
         # At least one title being added, return entire command
         return [
             ## Global font attributes
-            f'-font "{self.font.resolve()}"',
+            f'-font "{self.font_file.resolve()}"',
             f'-fill "{self.font_color}"',
             # Create an image for each title
             f'\( -background transparent',
@@ -248,16 +254,18 @@ class MoviePosterMaker(ImageMaker):
             # Optionally overlay gradient
             *self.gradient_command,
             # Add frame
-            f'-background None',
-            f'"{self.__FRAME.resolve()}"',
+            f'-background transparent',
+            f'"{self.__FRAME.resolve()}"' if not self.borderless else '',
             f'-extent 2000x3000',
-            f'-composite',
+            f'-composite' if not self.borderless else '',
             # Optionally overlay logo
             *self.logo_command,
             # Add index text
             *self.index_command,
             # Add title text
             *self.title_command,
+            # Crop to remove the empty frame space if borderless
+            f'-gravity center -crop 1892x2892+0+0' if self.borderless else '',
             f'"{self.output.resolve()}"',
         ])
 
