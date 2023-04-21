@@ -93,7 +93,7 @@ title_card_group.add_argument(
     metavar=('TITLE_LINE'),
     help="The title text for this card")
 title_card_group.add_argument(
-    '--font', '--font-file',
+    '--font-file', '--font',
     type=Path,
     default='__default',
     metavar='FONT_FILE',
@@ -111,25 +111,25 @@ title_card_group.add_argument(
     metavar='#HEX',
     help='A custom font color for this card')
 title_card_group.add_argument(
-    '--vertical-shift', '--shift',
+    '--font-vertical-shift', '--vertical-shift',
     type=float,
     default=0.0,
     metavar='PIXELS',
     help='How many pixels to vertically shift the title text')
 title_card_group.add_argument(
-    '--interline-spacing', '--spacing',
+    '--font-interline-spacing', '--interline-spacing',
     type=float,
     default=0.0,
     metavar='PIXELS',
     help='How many pixels to increase the interline spacing of the title text')
 title_card_group.add_argument(
-    '--kerning',
+    '--font-kerning', '--kerning',
     type=str,
     default='100%',
     metavar='SCALE%',
     help='Specify the font kerning scale (as percentage)')
 title_card_group.add_argument(
-    '--stroke-width', '--stroke',
+    '--font-stroke-width', '--stroke-width','
     type=str,
     default='100%',
     metavar='SCALE%',
@@ -383,8 +383,8 @@ if hasattr(args, 'title_card'):
     RemoteFile.reset_loaded_database()
 
     # Override unspecified defaults with their class specific defaults
-    if args.font == Path('__default'):
-        args.font = Path(str(CardClass.TITLE_FONT))
+    if args.font_file == Path('__default'):
+        args.font_file = Path(str(CardClass.TITLE_FONT))
     if args.font_color == '__default':
         args.font_color = CardClass.TITLE_COLOR
     
@@ -392,19 +392,20 @@ if hasattr(args, 'title_card'):
     output_file = CleanPath(args.title_card[1]).sanitize()
     output_file.unlink(missing_ok=True)
     card = CardClass(
-        episode_text=args.episode,
-        source=Path(args.title_card[0]), 
-        output_file=output_file,
+        source_file=CleanPath(args.title_card[0]).sanitize(),
+        card_file=output_file,
+        title_text='\n'.join(args.title),
         season_text=('' if not args.season else args.season),
-        title='\n'.join(args.title),
-        font=args.font.resolve(),
+        episode_text=args.episode,
+        hide_season_text=(not bool(args.season)),
+        hide_episode_text=(not bool(args.episode)),
+        font_color=args.font_color,
+        font_file=args.font_file.resolve(),
+        font_interline_spacing=args.font_interline_spacing,
+        font_kerning=float(args.font_kerning[:-1])/100.0,
         font_size=float(args.font_size[:-1])/100.0,
-        title_color=args.font_color,
-        hide_season=(not bool(args.season)),
-        vertical_shift=args.vertical_shift,
-        interline_spacing=args.interline_spacing,
-        kerning=float(args.kerning[:-1])/100.0,
-        stroke_width=float(args.stroke_width[:-1])/100.0,
+        font_stroke_width=float(args.sfont_troke_width[:-1])/100.0,
+        font_vertical_shift=args.font_vertical_shift,
         blur=args.blur,
         grayscale=args.grayscale,
         omit_gradient=args.no_gradient,

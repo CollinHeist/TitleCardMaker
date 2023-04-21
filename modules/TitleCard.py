@@ -10,6 +10,7 @@ import modules.global_objects as global_objects
 # Built-in BaseCardType classes
 from modules.cards.AnimeTitleCard import AnimeTitleCard
 from modules.cards.CutoutTitleCard import CutoutTitleCard
+from modules.cards.DividerTitleCard import DividerTitleCard
 from modules.cards.FadeTitleCard import FadeTitleCard
 from modules.cards.FrameTitleCard import FrameTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
@@ -51,6 +52,7 @@ class TitleCard:
     CARD_TYPES = {
         'anime': AnimeTitleCard,
         'cutout': CutoutTitleCard,
+        'divider': DividerTitleCard,
         'fade': FadeTitleCard,
         'frame': FrameTitleCard,
         'generic': StandardTitleCard,
