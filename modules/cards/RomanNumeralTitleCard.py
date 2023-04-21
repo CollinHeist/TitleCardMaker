@@ -4,7 +4,7 @@ from random import choice
 from re import compile as re_compile
 from typing import Any, Optional
 
-from modules.BaseCardType import BaseCardType
+from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
 SeriesExtra = Optional
@@ -244,18 +244,24 @@ class RomanNumeralTitleCard(BaseCardType):
     SEASON_TEXT_PLACEMENT_ATTEMPS = 10
 
     __slots__ = (
-        'output_file', 'title', 'season_text', 'hide_season', 'title_color',
-        'background', 'blur', 'roman_numeral_color', 'roman_numeral',
+        'output_file', 'title_text', 'season_text', 'hide_season_text',
+        'font_color', 'background', 'roman_numeral_color', 'roman_numeral',
         '__roman_text_scalar', '__roman_numeral_lines', 'rotation', 'offset',
     )
 
-    def __init__(self, output_file: Path, title: str, season_text: str, 
-            episode_text: str, hide_season: bool, title_color: str,
-            episode_number: int=1,
-            blur: bool=False,
-            grayscale: bool=False,
-            background: SeriesExtra[str]=BACKGROUND_COLOR, 
-            roman_numeral_color: SeriesExtra[str]=ROMAN_NUMERAL_TEXT_COLOR,
+    def __init__(self,
+            card_file: Path,
+            title_text: str,
+            season_text: str, 
+            episode_text: str,
+            hide_season_text: bool = False,
+            font_color: str = TITLE_COLOR,
+            episode_number: int = 1,
+            blur: bool = False,
+            grayscale: bool = False,
+            background: SeriesExtra[str] = BACKGROUND_COLOR, 
+            roman_numeral_color: SeriesExtra[str] = ROMAN_NUMERAL_TEXT_COLOR,
+            preferences: 'Preferences' = None,
             **unused) -> None:
         """
         Construct a new instance of this card.
@@ -266,7 +272,7 @@ class RomanNumeralTitleCard(BaseCardType):
             episode_text: The episode text to parse the roman numeral
                 from.
             episode_number: Episode number for the roman numerals.
-            title_color: Color to use for the episode title.
+            font_color: Color to use for the episode title.
             blur: Whether to blur the source image.
             grayscale: Whether to make the source image grayscale.
             background: Color for the background.
@@ -275,12 +281,12 @@ class RomanNumeralTitleCard(BaseCardType):
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__(blur, grayscale)
+        super().__init__(blur, grayscale, preferences=preferences)
 
         # Store object attributes
-        self.output_file = output_file
-        self.title = self.image_magick.escape_chars(title)
-        self.title_color = title_color
+        self.output_file = card_file
+        self.title_text = self.image_magick.escape_chars(title_text)
+        self.font_color = font_color
         self.background = background
         self.roman_numeral_color = roman_numeral_color
 
@@ -291,7 +297,7 @@ class RomanNumeralTitleCard(BaseCardType):
 
         # Select roman numeral for season text
         self.season_text = season_text.strip().upper()
-        self.hide_season = hide_season or (len(self.season_text) == 0)
+        self.hide_season_text = hide_season_text or len(self.season_text) == 0
 
         # Rotation and offset attributes to be determined later
         self.rotation, self.offset = None, None
@@ -370,7 +376,8 @@ class RomanNumeralTitleCard(BaseCardType):
             self.__roman_text_scalar = 1.0
 
 
-    def create_roman_numeral_command(self, roman_numeral: str) -> list[str]:
+    def create_roman_numeral_command(self,
+            roman_numeral: str) -> ImageMagickCommands:
         """
         Subcommand to add roman numerals to the image.
 
@@ -392,7 +399,8 @@ class RomanNumeralTitleCard(BaseCardType):
         ]
 
 
-    def create_season_text_command(self, rotation: str, offset: str)->list[str]:
+    def create_season_text_command(self,
+            rotation: str, offset: str) -> ImageMagickCommands:
         """
         Generate the ImageMagick commands necessary to create season
         text at the given rotation and offset.
@@ -407,12 +415,12 @@ class RomanNumeralTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
-        if self.hide_season or rotation is None or offset is None:
+        if self.hide_season_text or rotation is None or offset is None:
             return []
 
         # Override font color only if a custom background color was specified
         if self.background != self.BACKGROUND_COLOR:
-            color = self.title_color
+            color = self.font_color
         else:
             color = self.SEASON_TEXT_COLOR
 
@@ -428,7 +436,7 @@ class RomanNumeralTitleCard(BaseCardType):
 
 
     @property
-    def title_text_command(self) -> list[str]:
+    def title_text_command(self) -> ImageMagickCommands:
         """
         Subcommand to add title text to the image.
 
@@ -441,8 +449,8 @@ class RomanNumeralTitleCard(BaseCardType):
             f'-pointsize 150',
             f'-interword-spacing 40',
             f'-interline-spacing 0',
-            f'-fill "{self.title_color}"',            
-            f'-annotate +0+0 "{self.title}"',
+            f'-fill "{self.font_color}"',            
+            f'-annotate +0+0 "{self.title_text}"',
         ]
 
 
@@ -537,12 +545,13 @@ class RomanNumeralTitleCard(BaseCardType):
         """
 
         # If season titles are hidden, exit
-        if self.hide_season:
+        if self.hide_season_text:
             return None
 
         # Get boundaries of title text
-        width, height = self.get_text_dimensions(self.title_text_command,
-                                                 width='width', height='sum')
+        width, height = self.get_text_dimensions(
+            self.title_text_command, width='width', height='sum'
+        )
         box0 = {
             'start_x': -width/2  + 3200/2,
             'start_y': -height/2 + 1800/2,
