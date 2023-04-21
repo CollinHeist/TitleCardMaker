@@ -15,22 +15,26 @@ class PosterTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = {
-        'name': 'Poster',
-        'example': '/assets/cards/poster.jpg',
-        'creators': ['/u/battleoflight', 'CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': False,
-        'supports_custom_seasons': False,
-        'supported_extras': [
-            {'name': 'Logo File',
-             'identifier': 'logo',
-             'description': 'Logo file to place above the title text'},
-        ], 'description': [
-            'Title card featuring a vertical poster with a starry background, originally designed for the Gundam series.',
-            'This card is not designed for 16:9 content.',
-        ],
-    }
+    API_DETAILS = CardDescription(
+        name='Poster',
+        example='/assets/cards/poster.jpg',
+        creators=['/u/Olivier_286', 'CollinHeist'],
+        source='local',
+        supports_custom_fonts=False,
+        supports_custom_seasons=False,
+        supported_extras=[
+            Extra(
+                name='Logo File',
+                identifier='logo',
+                description='Required logo file to place in the center of the title card',
+            ),
+        ], description=[
+            'Title card featuring a vertical poster with a starry background, '
+            'originally designed for the Gundam series.',
+            'This card is designed for vertical source images, and you will '
+            'likely need to manually download and specify posters as source images',
+        ]
+    )
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'poster_card'

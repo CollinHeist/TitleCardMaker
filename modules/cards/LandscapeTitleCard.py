@@ -22,26 +22,30 @@ class LandscapeTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = {
-        'name': 'Landscape',
-        'example': '/assets/cards/landscape.jpg',
-        'creators': ['CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': True,
-        'supports_custom_seasons': False,
-        'supported_extras': [
-            {'name': 'Bounding Box',
-             'identifier': 'add_bounding_box',
-             'description': 'Whether to add a bounding box around the title text'},
-            {'name': 'Bounding Box Adjustments',
-             'identifier': 'box_adjustments',
-             'description': 'Manual adjustments to the bounds of the bounding box'},
-        ], 'description': [
-            'Title-centric title cards that do not feature anything except a title.',
-            'These cards are intended for landscape-centric images as the centered title can cover faces.',
+    API_DETAILS = CardDescription(
+        name='Landscape',
+        example='/assets/cards/landscape.jpg',
+        creators=['CollinHeist'],
+        source='local',
+        supports_custom_fonts=True,
+        supports_custom_seasons=False,
+        supported_extras=[
+            Extra(
+                name='Bounding Box Toggle',
+                identifier='add_bounding_box',
+                description='Whether to add a bounding box around the title text',
+            ), Extra(
+                name='Bounding Box Adjustments',
+                identifier='box_adjustments',
+                description='Manual adjustments to the bounds of the bounding box',
+            ),
+        ], description=[
+            'Title-centric title cards that do not feature any text except a title.',
+            'These cards are intended for landscape-centric images as the centered title can easily faces.',
             'A bounding box around the title text can be added and adjusted via extras.',
-        ],
-    }
+            'The color of the bounding box matches the font color.',
+        ]
+    )
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'landscape'

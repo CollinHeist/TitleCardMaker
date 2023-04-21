@@ -14,34 +14,50 @@ class LogoTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = {
-        'name': 'Logo',
-        'example': '/assets/cards/logo.jpg',
-        'creators': ['CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': True,
-        'supports_custom_seasons': True,
-        'supported_extras': [
-            {'name': 'Logo File',
-             'identifier': 'logo',
-             'description': 'Logo file to place in the center of the title card'},
-            {'name': 'Separator Character',
-             'identifier': 'separator',
-             'description': 'Character to separate season and episode text'},
-            {'name': 'Background Color',
-             'identifier': 'background',
-             'description': 'Background color to utilize'},
-            {'name': 'Stroke Text Color',
-             'identifier': 'stroke_color',
-             'description': 'Custom color to use for the stroke on the title text'},
-            {'name': 'Gradient Omission',
-             'identifier': 'omit_gradient',
-             'description': 'Whether to omit the gradient overlay from the card'},
-        ], 'description': [
-            'Image-less variation of the Standard title card featuring a logo and solid background instead of a source image.',
+    API_DETAILS = CardDescription(
+        name='Logo',
+        example='/assets/cards/logo.jpg',
+        creators=['CollinHeist'],
+        source='local',
+        supports_custom_fonts=True,
+        supports_custom_seasons=True,
+        supported_extras=[
+            Extra(
+                name='Logo File',
+                identifier='logo',
+                description='Required logo file to place in the center of the title card',
+            ), Extra(
+                name='Separator Character',
+                identifier='separator',
+                description='Character to separate season and episode text',
+            ), Extra(
+                name='Background Color or Image',
+                identifier='background',
+                description='Background color or image to use behind the logo',
+            ), Extra(
+                name='Stroke Text Color',
+                identifier='stroke_color',
+                description='Color to use for the text stroke',
+            ), Extra(
+                name='Gradient Omission',
+                identifier='omit_gradient',
+                description='Whether to omit the gradient overlay from the card',
+            ), Extra(
+                name='Background Image Enabling',
+                identifier='use_background_image',
+                description='Whether "background" is an image (instead of a color)',
+            ), Extra(
+                name='Blur Image Only',
+                identifier='blur_only_image',
+                description='Whether to only blur the background image - and not the logo - when blurring and using a background image',
+            ),
+        ], description=[
+            'Variation of the Standard title card featuring a central logo.',
             'This card is intended to be used for very "spoilery" series, such as Reality TV shows.',
-        ],
-    }
+            'The background of this card can either be a solid color or an image.',
+            'If a background image is desired, it is recommended to use an Art Un/Watched Style.',
+        ]
+    )
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY

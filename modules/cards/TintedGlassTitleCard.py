@@ -18,28 +18,33 @@ class TintedGlassTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = {
-        'name': 'Tinted Glass',
-        'example': '/assets/cards/tinted glass.jpg',
-        'creators': ['/u/RaceDebriefF1', 'CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': True,
-        'supports_custom_seasons': True,
-        'supported_extras': [
-            {'name': 'Episode Text Color',
-             'identifier': 'episode_text_color',
-             'description': 'Color to utilize for the episode text'},
-            {'name': 'Episode Text Position',
-             'identifier': 'episode_text_position',
-             'description': 'Position of the episode text relative to the title text'},
-            {'name': 'Episode Text Position',
-             'identifier': 'box_adjustments',
-             'description': 'Manual adjustments to the bounds of the bounding box'},
-        ], 'description': [
-            'Card type featuring a darkened and blurred rounded rectangle surrounding the title and episode text.',
+    API_DETAILS = CardDescription(
+        name='Tinted Glass',
+        example='/assets/cards/tinted glass.jpg',
+        creators=['/u/RaceDebriefF1', 'CollinHeist'],
+        source='local',
+        supports_custom_fonts=True,
+        supports_custom_seasons=True,
+        supported_extras=[
+            Extra(
+                name='Episode Text Color',
+                identifier='episode_text_color',
+                description='Color to utilize for the episode text',
+            ), Extra(
+                name='Episode Text Position',
+                identifier='episode_text_position',
+                description='Position of the episode text relative to the title text - "left", "right", or "center"',
+            ), Extra(
+                name='Bounding Box Adjustments',
+                identifier='box_adjustments',
+                description='Manual adjustments to the bounds of the title text "glass" box',
+            ),
+        ], description=[
+            'Card type featuring a darkened and blurred rounded rectangle '
+            'surrounding the title and episode text.',
             'By default, these cards also feature the name of the series in the episode text.',
-        ],
-    }
+        ]
+    )
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'darkened'

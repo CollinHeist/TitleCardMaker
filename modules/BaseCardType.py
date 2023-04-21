@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Any, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 from titlecase import titlecase
 
@@ -7,6 +7,22 @@ from modules.Debug import log
 from modules.ImageMaker import ImageMaker
 
 ImageMagickCommands = list[str]
+
+from app.schemas.base import Base
+class Extra(Base):
+    name: str
+    identifier: str
+    description: str
+
+class CardDescription(Base):
+    name: str
+    example: str
+    creators: list[str]
+    source: Literal['local', 'remote']
+    supports_custom_fonts: bool
+    supports_custom_seasons: bool
+    supported_extras: list[Extra]
+    description: list[str]
 
 class BaseCardType(ImageMaker):
     """

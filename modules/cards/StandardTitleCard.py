@@ -15,28 +15,32 @@ class StandardTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = {
-        'name': 'Standard',
-        'example': '/assets/cards/standard.jpg',
-        'creators': ['/u/UniversalPolymath', 'CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': True,
-        'supports_custom_seasons': True,
-        'supported_extras': [
-            {'name': 'Separator Character',
-             'identifier': 'separator',
-             'description': 'Character to separate season and episode text'},
-            {'name': 'Stroke Text Color',
-             'identifier': 'stroke_color',
-             'description': 'Custom color to use for the stroke on the title text'},
-            {'name': 'Gradient Omission',
-             'identifier': 'omit_gradient',
-             'description': 'Whether to omit the gradient overlay from the card'},
-        ], 'description': [
-            'The most popular and customizable title card style.',
+    API_DETAILS = CardDescription(
+        name='Standard',
+        example='/assets/cards/standard.jpg',
+        creators=['/u/UniversalPolymath', 'CollinHeist'],
+        source='local',
+        supports_custom_fonts=True,
+        supports_custom_seasons=True,
+        supported_extras=[
+            Extra(
+                name='Stroke Text Color',
+                identifier='stroke_color',
+                description='Color to use for the text stroke',
+            ), Extra(
+                name='Separator Character',
+                identifier='separator',
+                description='Character to separate season and episode text',
+            ), Extra(
+                name='Gradient Omission',
+                identifier='omit_gradient',
+                description='Whether to omit the gradient overlay from the card',
+            )
+        ], description=[
+            'The default title card style.',
             'This card features center-aligned season, episode, and title text.',
-        ],
-    }
+        ]
+    )
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY

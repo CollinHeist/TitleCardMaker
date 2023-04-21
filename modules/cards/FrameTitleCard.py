@@ -15,25 +15,29 @@ class FrameTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = {
-        'name': 'Frame',
-        'example': '/assets/cards/frame.jpg',
-        'creators': ['CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': True,
-        'supports_custom_seasons': True,
-        'supported_extras': [
-            {'name': 'Episode Text Position',
-             'identifier': 'episode_text_position',
-             'description': 'Position of the episode text relative to the title text'},
-            {'name': 'Episode Text Color',
-             'identifier': 'episode_text_color',
-             'description': 'Color to use for the episode text'},
-        ], 'description': [
+    API_DETAILS = CardDescription(
+        name='Frame',
+        example='/assets/cards/frame.jpg',
+        creators=['CollinHeist'],
+        source='local',
+        supports_custom_fonts=True,
+        supports_custom_seasons=True,
+        supported_extras=[
+            Extra(
+                name='Episode Text Position',
+                identifier='episode_text_position',
+                description='Position of the episode text relative to the title text',
+            ), Extra(
+                name='Episode Text Color',
+                identifier='episode_text_color',
+                description='Color to use for the episode text',
+            ),
+        ], description=[
             'Title card styled to look like a Polaroid photo.',
-            'Inspired by the official Adventure Time Season 8 title cards.'
-        ],
-    }
+            'The placement and color of the season and episode text can be adjusted via extras.',
+            'This style is inspired by the official Adventure Time Season 8 title cards.',
+        ]
+    )
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'frame'

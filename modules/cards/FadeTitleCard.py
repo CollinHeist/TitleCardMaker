@@ -15,24 +15,28 @@ class FadeTitleCard(BaseCardType):
     """
 
     """API Parameters"""
-    API_DETAILS = {
-        'name': 'Fade',
-        'example': '/assets/cards/fade.jpg',
-        'creators': ['Yozora', 'CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': True,
-        'supports_custom_seasons': True,
-        'supported_extras': [
-            {'name': 'Logo File',
-             'identifier': 'logo',
-             'description': 'Logo file to place on the left of the card'},
-            {'name': 'Episode Text Color',
-             'identifier': 'episode_text_color',
-             'description': 'Color to use for the episode text'},
-        ], 'description': [
+    API_DETAILS = CardDescription(
+        name='Fade',
+        example='/assets/cards/fade.jpg',
+        creators=['Yozora', 'CollinHeist'],
+        source='local',
+        supports_custom_fonts=True,
+        supports_custom_seasons=True,
+        supported_extras=[
+            Extra(
+                name='Logo File',
+                identifier='logo',
+                description='Logo file to place on the left of the card',
+            ), Extra(
+                name='Episode Text Color',
+                identifier='episode_text_color',
+                description='Color to use for the episode text',
+            ),
+        ], description=[
             'Modification of the Standard style that is intended to be used for 4:3 aspect-ratio source images.',
-        ],
-    }
+            'A logo can also be placed above the title text.',
+        ]
+    )
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'fade'
