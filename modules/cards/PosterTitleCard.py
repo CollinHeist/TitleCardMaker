@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
-from modules.BaseCardType import BaseCardType
+from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.CleanPath import CleanPath
 from modules.Debug import log
 
@@ -67,41 +67,33 @@ class PosterTitleCard(BaseCardType):
     """Path to the reference star image to overlay on all source images"""
     __GRADIENT_OVERLAY = REF_DIRECTORY / 'stars-overlay.png'
 
-    __slots__ = ('source_file', 'output_file', 'logo', 'title', 'episode_text')
+    __slots__ = (
+        'source_file', 'output_file', 'logo', 'title_text', 'episode_text'
+    )
 
 
-    def __init__(self, source: Path, output_file: Path, title: str,
+    def __init__(self,
+            source_file: Path,
+            card_file: Path,
+            title_text: str,
             episode_text: str,
-            blur: bool=False,
-            grayscale: bool=False,
-            season_number: int=1,
-            episode_number: int=1,
-            logo: SeriesExtra[str]=None,
+            blur: bool = False,
+            grayscale: bool = False,
+            season_number: int = 1,
+            episode_number: int = 1,
+            logo: SeriesExtra[str] = None,
+            preferences: 'Preferences' = None,
             **unused) -> None:
         """
         Construct a new instance of this card.
-
-        Args:
-            source: Source image for this card.
-            output_file: Output filepath for this card.
-            title: The title for this card.
-            episode_text: The episode text for this card.
-            season_number: Season number of the episode associated with
-                this card.
-            episode_number: Episode number of the episode associated
-                with this card.
-            blur: Whether to blur the source image.
-            grayscale: Whether to make the source image grayscale.
-            logo: Filepath (or file format) to the logo file.
-            unused: Unused arguments.
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__(blur, grayscale)
+        super().__init__(blur, grayscale, preferences=preferences)
 
         # Store source and output file
-        self.source_file = source
-        self.output_file = output_file
+        self.source_file = source_file
+        self.output_file = card_file
 
         # No logo file specified
         if logo is None:
@@ -128,7 +120,7 @@ class PosterTitleCard(BaseCardType):
                 self.logo = logo
 
         # Store text
-        self.title = self.image_magick.escape_chars(title.upper())
+        self.title_text = self.image_magick.escape_chars(title_text.upper())
         self.episode_text = self.image_magick.escape_chars(episode_text)
 
 
@@ -223,7 +215,7 @@ class PosterTitleCard(BaseCardType):
             f'-gravity center',                         
             f'-pointsize 165',
             f'-interline-spacing -40', 
-            f'-annotate +649+{title_offset} "{self.title}"',
+            f'-annotate +649+{title_offset} "{self.title_text}"',
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
