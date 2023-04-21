@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from modules.BaseCardType import BaseCardType
+from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
 class TextlessTitleCard(BaseCardType):
@@ -52,27 +52,23 @@ class TextlessTitleCard(BaseCardType):
     __slots__ = ('source_file', 'output_file')
 
 
-    def __init__(self, source: Path, output_file: Path,
+    def __init__(self,
+            source_file: Path,
+            card_file: Path,
             blur: bool = False,
             grayscale: bool = False,
+            preferences: 'Preferences' = None,
             **unused) -> None:
         """
         Construct a new instance of this card.
-
-        Args:
-            source: Source image.
-            output_file: Output file.
-            blur: Whether to blur the source image.
-            grayscale: Whether to make the source image grayscale.
-            unused: Unused arguments.
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__(blur, grayscale)
+        super().__init__(blur, grayscale, preferences=preferences)
 
         # Store input/output files
-        self.source_file = source
-        self.output_file = output_file
+        self.source_file = source_file
+        self.output_file = card_file
 
 
     @staticmethod
@@ -92,8 +88,8 @@ class TextlessTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_season_titles(custom_episode_map: bool, 
-                                episode_text_format: str) -> bool:
+    def is_custom_season_titles(
+            custom_episode_map: bool, episode_text_format: str) -> bool:
         """
         Determines whether the given attributes constitute custom or
         generic season titles.
