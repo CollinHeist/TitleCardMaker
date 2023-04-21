@@ -4,7 +4,7 @@ from typing import Optional
 
 from num2words import num2words
 
-from modules.BaseCardType import BaseCardType
+from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
 SeriesExtra = Optional
@@ -12,7 +12,7 @@ SeriesExtra = Optional
 class StarWarsTitleCard(BaseCardType):
     """
     This class describes a type of ImageMaker that produces title cards
-    in the theme of Star Wars cards as designed by reddit user
+    in the theme of Star Wars cards as designed by Reddit user
     /u/Olivier_286.
     """
 
@@ -66,41 +66,37 @@ class StarWarsTitleCard(BaseCardType):
     __SOURCE_WITH_STARS = BaseCardType.TEMP_DIR / 'source_gradient.png'
 
     __slots__ = (
-        'source_file', 'output_file', 'title', 'hide_episode_text', 
-        'episode_prefix', 'episode_text', 'blur'
+        'source_file', 'output_file', 'title_text',  'episode_text',
+        'hide_episode_text',  'episode_prefix',
     )
 
-    def __init__(self, source: Path, output_file: Path, title: str,
+    def __init__(self,
+            source_file: Path,
+            card_file: Path,
+            title_text: str,
             episode_text: str,
-            blur: bool=False,
-            grayscale: bool=False,
+            hide_episode_text: bool = False,
+            blur: bool = False,
+            grayscale: bool = False,
+            preferences: 'Preferences' = None,
             **unused) -> None:
         """
         Initialize the CardType object.
-
-        Args:
-            source: Source image for this card.
-            output_file: Output filepath for this card.
-            title: The title for this card.
-            episode_text: The episode text for this card.
-            blur: Whether to blur the source image.
-            grayscale: Whether to make the source image grayscale.
-            kwargs: Unused arguments.
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__(blur, grayscale)
+        super().__init__(blur, grayscale, preferences=preferences)
 
         # Store source and output file
-        self.source_file = source
-        self.output_file = output_file
+        self.source_file = source_file
+        self.output_file = card_file
 
         # Store episode title
-        self.title = self.image_magick.escape_chars(title.upper())
+        self.title_text = self.image_magick.escape_chars(title_text.upper())
 
         # Modify episode text to remove "Episode"-like text, replace numbers
         # with text, strip spaces, and convert to uppercase
-        self.hide_episode_text = len(episode_text) == 0
+        self.hide_episode_text = hide_episode_text or len(episode_text) == 0
         if self.hide_episode_text:
             self.episode_prefix = None
             self.episode_text = self.image_magick.escape_chars(episode_text)
@@ -194,11 +190,11 @@ class StarWarsTitleCard(BaseCardType):
             f'-kerning 0.5',
             f'-interline-spacing 20',
             f'-fill "{self.TITLE_COLOR}"',
-            f'-annotate +320+829 "{self.title}"',
+            f'-annotate +320+829 "{self.title_text}"',
         ]
 
 
-    def __add_episode_prefix(self) -> list:
+    def __add_episode_prefix(self) -> ImageMagickCommands:
         """
         ImageMagick commands to add the episode prefix text to an image.
         This is either "EPISODE" or "CHAPTER".
@@ -217,7 +213,7 @@ class StarWarsTitleCard(BaseCardType):
         ]
 
 
-    def __add_episode_number_text(self) -> list:
+    def __add_episode_number_text(self) -> ImageMagickCommands:
         """
         ImageMagick commands to add the episode text to an image.
 
@@ -306,8 +302,8 @@ class StarWarsTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_season_titles(custom_episode_map: bool, 
-                                episode_text_format: str) -> bool:
+    def is_custom_season_titles(
+            custom_episode_map: bool, episode_text_format: str) -> bool:
         """
         Determines whether the given attributes constitute custom or
         generic season titles.
