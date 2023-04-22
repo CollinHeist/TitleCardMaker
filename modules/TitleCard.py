@@ -21,6 +21,7 @@ from modules.cards.RomanNumeralTitleCard import RomanNumeralTitleCard
 from modules.cards.StandardTitleCard import StandardTitleCard
 from modules.cards.StarWarsTitleCard import StarWarsTitleCard
 from modules.cards.TextlessTitleCard import TextlessTitleCard
+from modules.cards.TintedFrameTitleCard import TintedFrameTitleCard
 from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
 
 class TitleCard:
@@ -51,6 +52,7 @@ class TitleCard:
     DEFAULT_CARD_TYPE = 'standard'
     CARD_TYPES = {
         'anime': AnimeTitleCard,
+        'blurred border': TintedFrameTitleCard,
         'cutout': CutoutTitleCard,
         'divider': DividerTitleCard,
         'fade': FadeTitleCard,
@@ -73,6 +75,7 @@ class TitleCard:
         'standard': StandardTitleCard,
         'star wars': StarWarsTitleCard,
         'textless': TextlessTitleCard,
+        'tinted frame': TintedFrameTitleCard,
         'tinted glass': TintedGlassTitleCard,
         '4x3': FadeTitleCard,
     }
