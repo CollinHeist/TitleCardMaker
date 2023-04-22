@@ -1,7 +1,9 @@
 from pathlib import Path
 from typing import Optional
 
-from modules.BaseCardType import BaseCardType
+from modules.BaseCardType import (
+    BaseCardType, ImageMagickCommands, Extra, CardDescription
+)
 from modules.CleanPath import CleanPath
 from modules.Debug import log
 
@@ -17,6 +19,7 @@ class PosterTitleCard(BaseCardType):
     """API Parameters"""
     API_DETAILS = CardDescription(
         name='Poster',
+        identifier='poster',
         example='/assets/cards/poster.jpg',
         creators=['/u/Olivier_286', 'CollinHeist'],
         source='local',

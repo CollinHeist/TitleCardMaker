@@ -4,7 +4,9 @@ from typing import Optional
 
 from num2words import num2words
 
-from modules.BaseCardType import BaseCardType
+from modules.BaseCardType import (
+    BaseCardType, ImageMagickCommands, Extra, CardDescription
+)
 from modules.Debug import log
 
 SeriesExtra = Optional
@@ -12,13 +14,14 @@ SeriesExtra = Optional
 class StarWarsTitleCard(BaseCardType):
     """
     This class describes a type of ImageMaker that produces title cards
-    in the theme of Star Wars cards as designed by reddit user
+    in the theme of Star Wars cards as designed by Reddit user
     /u/Olivier_286.
     """
 
     """API Parameters"""
     API_DETAILS = CardDescription(
         name='Star Wars',
+        identifier='star wars',
         example='/assets/cards/star wars.jpg',
         creators=['/u/Olivier_286', 'CollinHeist'],
         source='local',

@@ -73,6 +73,7 @@ class UpdatePreferences(Base):
     season_folder_format: str = Field(default=UNSPECIFIED)
     sync_specials: bool = Field(default=UNSPECIFIED)
     default_card_type: str = Field(default=UNSPECIFIED, min_length=1)
+    excluded_card_types: list[str] = Field(default=UNSPECIFIED)
     default_watched_style: Style = Field(default=UNSPECIFIED)
     default_unwatched_style: Style = Field(default=UNSPECIFIED)
 
@@ -80,7 +81,7 @@ class UpdatePreferences(Base):
     def validate_arguments(cls, v):
         return None if v == '' else v
 
-    @validator('image_source_priority', pre=True)
+    @validator('image_source_priority', 'excluded_card_types', pre=True)
     def validate_list(cls, v):
         return [v] if isinstance(v, str) else v
 
@@ -180,6 +181,7 @@ class Preferences(Base):
     # supported_language_codes = []
 
     default_card_type: str
+    excluded_card_types: list[str]
     default_watched_style: Style
     default_unwatched_style: Style
 

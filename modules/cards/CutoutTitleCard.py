@@ -1,7 +1,9 @@
 from pathlib import Path
 from typing import Optional
 
-from modules.BaseCardType import BaseCardType
+from modules.BaseCardType import (
+    BaseCardType, ImageMagickCommands, Extra, CardDescription
+)
 from modules.Debug import log
 
 SeriesExtra = Optional
@@ -17,6 +19,7 @@ class CutoutTitleCard(BaseCardType):
     """API Parameters"""
     API_DETAILS = CardDescription(
         name='Cutout',
+        identifier='cutout',
         example='/assets/cards/cutout.jpg',
         creators=['/u/Phendrena', 'CollinHeist'],
         source='local',

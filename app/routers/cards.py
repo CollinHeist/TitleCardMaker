@@ -23,7 +23,8 @@ from modules.Title import Title
 from modules.TitleCard import TitleCard as TitleCardCreator
 
 
-def priority_merge_v2(merge_base: dict[str, Any],
+def priority_merge_v2(
+        merge_base: dict[str, Any],
         *dicts: tuple[dict[str, Any]]) -> None:
     """
     Merges an arbitrary number of dictionaries, with the values of later

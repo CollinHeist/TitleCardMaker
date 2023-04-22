@@ -25,6 +25,7 @@ class Extra(Base):
 
 class CardType(Base):
     name: str
+    identifier: str
     example: str
     creators: list[str]
     source: Literal['local', 'remote']

@@ -1,7 +1,9 @@
 from pathlib import Path
 from typing import Literal, Optional
 
-from modules.BaseCardType import BaseCardType
+from modules.BaseCardType import (
+    BaseCardType, ImageMagickCommands, Extra, CardDescription
+)
 from modules.Debug import log
 
 SeriesExtra = Optional
@@ -17,6 +19,7 @@ class FrameTitleCard(BaseCardType):
     """API Parameters"""
     API_DETAILS = CardDescription(
         name='Frame',
+        identifier='frame',
         example='/assets/cards/frame.jpg',
         creators=['CollinHeist'],
         source='local',

@@ -48,6 +48,7 @@ class Preferences:
         self.sync_specials = True
 
         self.default_card_type = 'standard'
+        self.excluded_card_types = []
         self.default_watched_style = 'unique'
         self.default_unwatched_style = 'unique'
 

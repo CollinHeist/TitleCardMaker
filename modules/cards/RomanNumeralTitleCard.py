@@ -4,7 +4,9 @@ from random import choice
 from re import compile as re_compile
 from typing import Any, Optional
 
-from modules.BaseCardType import BaseCardType
+from modules.BaseCardType import (
+    BaseCardType, ImageMagickCommands, Extra, CardDescription
+)
 from modules.Debug import log
 
 SeriesExtra = Optional
@@ -20,8 +22,10 @@ class Offset:
     """Regex to match signed float offsets from an ImageMagick offset string"""
     OFFSET_REGEX = re_compile(r'([-+]\d+.?\d*)([-+]\d+.?\d*)')
 
-    def __init__(self, offset_str: str=None, *,
-            x: float=None, y: float=None) -> None:
+    def __init__(self,
+            offset_str: Optional[str] = None, *,
+            x: Optional[float] = None,
+            y: Optional[float] = None) -> None:
         """
         Initialize an Offset object with the given ImageMagick offset
         string. For example, Offset('+20-10') indicates a 20 pixel
@@ -177,6 +181,7 @@ class RomanNumeralTitleCard(BaseCardType):
     """API Parameters"""
     API_DETAILS = CardDescription(
         name='Roman Numeral',
+        identifier='roman numeral',
         example='/assets/cards/roman.jpg',
         creators=['CollinHeist'],
         source='local',

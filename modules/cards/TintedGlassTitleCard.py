@@ -2,7 +2,9 @@ from collections import namedtuple
 from pathlib import Path
 from typing import Any, Literal, Optional
 
-from modules.BaseCardType import BaseCardType
+from modules.BaseCardType import (
+    BaseCardType, ImageMagickCommands, Extra, CardDescription
+)
 from modules.Debug import log
 
 SeriesExtra = Optional
@@ -20,6 +22,7 @@ class TintedGlassTitleCard(BaseCardType):
     """API Parameters"""
     API_DETAILS = CardDescription(
         name='Tinted Glass',
+        identifier='tinted glass',
         example='/assets/cards/tinted glass.jpg',
         creators=['/u/RaceDebriefF1', 'CollinHeist'],
         source='local',

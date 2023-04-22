@@ -1,6 +1,8 @@
 from pathlib import Path
 
-from modules.BaseCardType import BaseCardType
+from modules.BaseCardType import (
+    BaseCardType, ImageMagickCommands, Extra, CardDescription
+)
 from modules.Debug import log
 
 class TextlessTitleCard(BaseCardType):
@@ -13,6 +15,7 @@ class TextlessTitleCard(BaseCardType):
     """API Parameters"""
     API_DETAILS = CardDescription(
         name='Textless',
+        identifier='textless',
         example='/assets/cards/textless.jpg',
         creators=['CollinHeist'],
         source='local',

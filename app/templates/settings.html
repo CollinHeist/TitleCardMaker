@@ -17,6 +17,13 @@
   <!-- Global styles -->
   <link rel="stylesheet" type="text/css" href="/templates/style.css"/>
   <style>
+    /* Excluded card types have reduced opacity, strikethrough and italic effects */
+    #excluded-card-types .menu .active.item {
+      opacity: 30%;
+      text-decoration: line-through;
+      font-style: italic;
+    }
+
     /* Formatting for the title card prevew */
     #title-card-preview .card {
       width: 900px; /* 800px */
@@ -66,29 +73,64 @@
     }
 
     // Get all available card types
-    async function getAllTitleCards() {
+    async function getAllCardTypes() {
       const allTypes = await fetch('/api/available/card-types').then(resp => resp.json());
       let localTypes = [],
           remoteTypes = [];
-      allTypes.forEach(({name, source}) => {
-        const selected = name.toLowerCase() === '{{preferences.default_card_type.lower()}}';
+      allTypes.forEach(({name, identifier, source, creators}) => {
+        const selected = identifier === '{{preferences.default_card_type}}';
+        const excluded = {{preferences.excluded_card_types|safe}}.includes(identifier);
         if (source === 'local') {
-          localTypes.push({name: name, value: name.toLowerCase(), selected: selected});
+          localTypes.push({name: name, value: identifier, selected: selected});
         } else {
-          remoteTypes.push({name: name, value: name, selected: selected});
+          remoteTypes.push({
+            name: name,
+            value: identifier,
+            selected: selected,
+            description: creators[0],
+            descriptionVertical: true,
+          });
         }
       });
       $('#default-card-type').dropdown({
         onChange: (value, text, $selectedItem) => {
           $('#title-card-image')
-            .fadeTo(250, 0.0, () => updatePreviewTitleCard(text))
+            .fadeTo(250, 0, () => updatePreviewTitleCard(value))
             .fadeTo(250, 1);
         },
+        // sortSelect: true,
         values: [
           {name: 'Built-in Cards', type: 'header'},
           ...localTypes,
           {name: 'Remote Cards', type: 'header'},
           ...remoteTypes,
+        ]
+      });
+      // Card type exclusion dropdown
+      const actualAllTypes = await fetch('/api/available/card-types?show_excluded=true').then(resp => resp.json());
+      let excludedLocalTypes = [],
+          excludedRemoteTypes = [];
+          actualAllTypes.forEach(({name, identifier, source, creators}) => {
+        const excluded = {{preferences.excluded_card_types|safe}}.includes(identifier);
+        if (source === 'local') {
+          excludedLocalTypes.push({name: name, value: identifier, selected: excluded});
+        } else {
+          excludedRemoteTypes.push({
+            name: name,
+            value: identifier,
+            selected: excluded,
+            description: creators[0],
+            descriptionVertical: true,
+          });
+        }
+      });
+      $('#excluded-card-types').dropdown({
+        useLabels: false,
+        values: [
+          {name: 'Built-in Cards', type: 'header'},
+          ...excludedLocalTypes,
+          {name: 'Remote Cards', type: 'header'},
+          ...excludedRemoteTypes,
         ]
       });
 
@@ -173,9 +215,19 @@
                 <div class="four wide column">
                   <div class="field" data-tooltip="Global default card type for all series">
                     <label>Default Card Type</label>
-                    <div id="default-card-type" class="ui long compact selection dropdown">
+                    <div id="default-card-type" class="ui long compact search selection dropdown">
                       <span class="text"></span>
-                      <input name="default_card_type" id="default-card-type-input" type="hidden" value="{{preferences.default_card_type.lower()}}">
+                      <input name="default_card_type" type="hidden" value="{{preferences.default_card_type.lower()}}">
+                      <i class="dropdown icon"></i>
+                      <div class="down menu"><!-- Added asynchronously --></div>
+                    </div>
+                  </div>
+
+                  <div class="field" data-tooltip="Card types to exclude from dropdowns">
+                    <label>Excluded Card Types</label>
+                    <div id="excluded-card-types" class="ui long compact selection multiple dropdown">
+                      <span class="text"></span>
+                      <input name="excluded_card_types" type="hidden">
                       <i class="dropdown icon"></i>
                       <div class="down menu"><!-- Added asynchronously --></div>
                     </div>
@@ -505,10 +557,6 @@
           }
         },
       })
-      // On form change, enable/disable button
-      .on('change', (event) => {
-        $('#save-changes').toggleClass('disabled', $('#settings-form').form('is valid'));
-      })
       // On form submission, submit API request to change settings
       .on('submit', (event) => {
         event.preventDefault();
@@ -517,6 +565,7 @@
         // Prep form
         let form = new FormData(event.target);
         let isp = form.get('image_source_priority');
+        const ect = form.get('excluded_card_types');
         form.delete('image_source_priority');
         for (const [key, value] of [...form.entries()]) {
           if (value === '') { form.delete(key); }
@@ -529,7 +578,11 @@
         $.ajax({
           type: 'PATCH',
           url: '/api/settings/update',
-          data: JSON.stringify({...Object.fromEntries(form), image_source_priority: isp.split(',')}),
+          data: JSON.stringify({
+            ...Object.fromEntries(form),
+            image_source_priority: isp.split(','),
+            excluded_card_types: ect.split(','),
+          }),
           contentType: 'application/json',
           success: (response) => { 
             $.toast({
@@ -567,7 +620,7 @@
     }
 
     (async () => {
-      allCards = await getAllTitleCards();
+      allCards = await getAllCardTypes();
       updatePreviewTitleCard('{{preferences.default_card_type}}');
     })()
   </script>

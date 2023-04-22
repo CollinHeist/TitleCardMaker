@@ -1,6 +1,6 @@
 from typing import Literal, Union
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from requests import get as req_get
 from sqlalchemy.orm import Session
 
@@ -19,7 +19,9 @@ USER_CARD_TYPE_URL = 'https://raw.githubusercontent.com/CollinHeist/TitleCardMak
 
 
 def _get_remote_cards() -> list[RemoteCardType]:
-    return [RemoteCardType(**card) for card in req_get(USER_CARD_TYPE_URL).json()]
+    return [
+        RemoteCardType(**card) for card in req_get(USER_CARD_TYPE_URL).json()
+    ]
 
 
 # Create sub router for all /connection API requests
@@ -30,9 +32,17 @@ availablility_router = APIRouter(
 
 @availablility_router.get('/card-types', status_code=200, tags=['Title Cards'])
 def get_all_available_card_types(
+        show_excluded: bool = Query(default=False),
         preferences=Depends(get_preferences)) -> list[CardType]:
 
-    return LocalCards + _get_remote_cards()
+    all_cards = LocalCards + _get_remote_cards()
+    if show_excluded:
+        return all_cards
+
+    return [
+        card for card in LocalCards + _get_remote_cards()
+        if card.identifier not in preferences.excluded_card_types
+    ]
 
 
 @availablility_router.get('/card-types/local', status_code=200, tags=['Title Cards'])

@@ -2,7 +2,9 @@ from collections import namedtuple
 from pathlib import Path
 from typing import Any, Literal, Optional, Union
 
-from modules.BaseCardType import BaseCardType
+from modules.BaseCardType import (
+    BaseCardType, ImageMagickCommands, Extra, CardDescription
+)
 from modules.Debug import log
 
 SeriesExtra = Optional
@@ -24,6 +26,7 @@ class LandscapeTitleCard(BaseCardType):
     """API Parameters"""
     API_DETAILS = CardDescription(
         name='Landscape',
+        identifier='landscape',
         example='/assets/cards/landscape.jpg',
         creators=['CollinHeist'],
         source='local',
