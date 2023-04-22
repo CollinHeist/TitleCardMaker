@@ -63,7 +63,7 @@ class TintedFrameTitleCard(BaseCardType):
     USES_SEASON_TITLE = True
 
     """Standard class has standard archive name"""
-    ARCHIVE_NAME = 'Blurred Box Style'
+    ARCHIVE_NAME = 'Tinted Frame Style'
 
     """How many pixels from the image edge the box is placed; and box width"""
     BOX_OFFSET = 185
@@ -73,7 +73,7 @@ class TintedFrameTitleCard(BaseCardType):
         'source_file', 'output_file', 'title_text', 'season_text',
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_file',
         'font_size', 'font_color', 'font_interline_spacing', 'font_kerning',
-        'font_vertical_shift', 'episode_text_color', 'separator', 'box_color',
+        'font_vertical_shift', 'episode_text_color', 'separator', 'frame_color',
         'logo', 'bottom_element',
     )
 
@@ -95,7 +95,7 @@ class TintedFrameTitleCard(BaseCardType):
             grayscale: bool = False,
             episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
             separator: SeriesExtra[str] = '-',
-            box_color: SeriesExtra[str] = None,
+            frame_color: SeriesExtra[str] = None,
             bottom_element: SeriesExtra[Literal['logo', 'omit', 'text']] = 'text',
             logo: SeriesExtra[str] = None,
             preferences: 'Preferences' = None,
@@ -128,7 +128,7 @@ class TintedFrameTitleCard(BaseCardType):
         # Optional extras
         self.episode_text_color = episode_text_color
         self.separator = separator
-        self.box_color = font_color if box_color is None else box_color
+        self.frame_color = font_color if frame_color is None else frame_color
 
         # If a logo was provided, convert to Path object
         if logo is None:
@@ -256,7 +256,7 @@ class TintedFrameTitleCard(BaseCardType):
 
 
     @property
-    def box_command(self) -> ImageMagickCommands:
+    def frame_command(self) -> ImageMagickCommands:
         """
         Subcommand to add the box that separates the outer (blurred)
         image and the interior (unblurred) image. This box features a
@@ -364,7 +364,7 @@ class TintedFrameTitleCard(BaseCardType):
             f'\( -size {self.TITLE_CARD_SIZE}',
             f'xc:transparent',
             # Draw all sets of rectangles
-            f'-fill "{self.box_color}"',
+            f'-fill "{self.frame_color}"',
             *top, *left, *right, *bottom,
             f'\( +clone',
             f'-shadow 80x3+4+4 \)',
@@ -415,8 +415,8 @@ class TintedFrameTitleCard(BaseCardType):
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.color != DividerTitleCard.TITLE_COLOR)
-            or (font.file != DividerTitleCard.TITLE_FONT)
+        return ((font.color != TintedFrameTitleCard.TITLE_COLOR)
+            or (font.file != TintedFrameTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
@@ -472,7 +472,7 @@ class TintedFrameTitleCard(BaseCardType):
             *self.title_text_command,
             *self.index_text_command,
             *self.logo_command,
-            *self.box_command,
+            *self.frame_command,
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
