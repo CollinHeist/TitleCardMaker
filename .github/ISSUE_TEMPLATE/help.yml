@@ -1,0 +1,56 @@
+name: Request help
+description: Ask for help regarding an issue with your setup
+title: 'HELP - '
+labels: ['question']
+assignees: 'CollinHeist'
+
+body:
+  - type: dropdown
+    id: docker
+    attributes:
+      label: Installation
+      description: Are you using Docker or Github; and which branch/tag?
+      options:
+        - Docker - master tag
+        - Docker - develop tag
+        - GitHub - master branch
+        - GitHub - develop branch
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe your Problem
+      description: A clear and concise description of your issue.
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Attach any applicable screenshots that illustrate your problem.
+  - type: textarea
+    id: preferences
+    attributes:
+      label: Preference File
+      description: >
+        Paste your Preferences file (likely preferences.yml), with your API keys and URLs omitted. 
+        This will be automatically formatted as YAML, so no need for backticks.
+      render: yaml
+    validations:
+      required: true
+  - type: textarea
+    id: seriesyaml
+    attributes:
+      label: Series YAML
+      description: >
+        Paste the YAML of the relevent series.
+        This will be automatically formatted as YAML, so no need for backticks.
+      render: yaml
+  - type: textarea
+    id: log
+    attributes:
+      label: Debug Log
+      description: Attach the relevant log file(s) from the logs/ directory.
+    validations:
+      required: true
