@@ -1,5 +1,6 @@
 from pathlib import Path
 from re import compile as re_compile
+from typing import Any, Optional
 
 from modules.Debug import log
 import modules.global_objects as global_objects
