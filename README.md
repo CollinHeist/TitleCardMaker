@@ -18,14 +18,14 @@ An automated title card maker for the Plex, Jellyfin, and Emby media servers. Al
 ## Description
 `TitleCardMaker` is a program and [Docker container](https://hub.docker.com/r/collinheist/titlecardmaker) written in Python that automates the creation of customized title cards (which are image previews of an episode of TV) for use in personal media server services like [Plex](https://www.plex.tv/), [Jellyfin](https://jellyfin.org/), or [Emby](https://emby.media/).
 
-TitleCardMaker can be automated such that everything can be pulled without manual intervention. All your series can be read from your media server or Sonarr; episode data can be pulled from Sonarr, your media server, or [TheMovieDatabase](https://www.themoviedb.org/); images from TheMovieDatabase, or your media server; and TitleCardMaker can even utilize an episode's watch status to create "spoiler free" versions of title cards automatically, as shown below:
+TitleCardMaker can be automated such that everything can be done without manual intervention. All your series can be read from your media server or Sonarr; episode data can be pulled from Sonarr, your media server, or [TheMovieDatabase](https://www.themoviedb.org/); images from TheMovieDatabase, or your media server; and TitleCardMaker can even utilize an episode's watch status to create "spoiler free" versions of title cards automatically, as shown below:
 
 <img alt="card unblurring process" src="https://user-images.githubusercontent.com/17693271/185819730-a2c55a3a-63cc-4f0e-8061-891edd8d64d0.gif"/>
   
 All configuration/automation of the TitleCardMaker is done via YAML files, and the actual image creation is done using the open-source and free image library called [ImageMagick](https://imagemagick.org/).
 
 ## Getting Started
-> The [Wiki](https://github.com/CollinHeist/TitleCardMaker/wiki) has very extensive documentation on every feature and customization available in TitleCardMaker. I __highly__ recommend looking here as the first step when troubleshooting or customizing your setup.
+> The [Wiki](https://github.com/CollinHeist/TitleCardMaker/wiki) has very extensive documentation on every feature and customization available in TitleCardMaker. I __highly__ recommend looking here as the first step when troubleshooting or customizing your setup. [The Discord](https://discord.gg/bJ3bHtw8wH) is also a great place to get detailed help.
 
 Read the [Getting Started](https://github.com/CollinHeist/TitleCardMaker/wiki) page on the Wiki for the traditional install, or the [Getting Started on Docker](https://github.com/CollinHeist/TitleCardMaker/wiki/Docker-Tutorial) page to install using Docker.
 
@@ -40,7 +40,7 @@ pipenv run python main.py --run
 
 For invocation and configuration details, read [here](https://github.com/CollinHeist/TitleCardMaker/wiki/Running-the-TitleCardMaker).
 
-> If you have trouble getting the Maker working, or have a problem, [create an issue on GitHub](https://github.com/CollinHeist/TitleCardMaker/issues/new)!
+> If you have trouble getting the Maker working, or have a problem, [create an issue on GitHub](https://github.com/CollinHeist/TitleCardMaker/issues/new), or [join the Discord](https://discord.gg/bJ3bHtw8wH) for help.
 
 ## Examples
 Below are some examples of each style of title card that can be created automatically by the TitleCardMaker:
