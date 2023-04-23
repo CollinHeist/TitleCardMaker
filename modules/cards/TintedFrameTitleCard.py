@@ -5,6 +5,8 @@ from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
 SeriesExtra = Optional
+Element = Literal['index', 'logo', 'omit', 'title']
+
 
 class Coordinate:
     __slots__ = ('x', 'y')
@@ -33,10 +35,9 @@ class Rectangle:
 class TintedFrameTitleCard(BaseCardType):
     """
     This class describes a CardType that produces title cards featuring
-    a rectangular frame with blurred content on the edges of the box,
-    and unblurred content within. The box itself is intersected by the
-    title text on top of the image; and on the bottom with a logo or
-    season/episode text.
+    a rectangular frame with blurred content on the edges of the frame,
+    and unblurred content within. The frame itself can be intersected by
+    title text, index text, or a logo at the top and bottom.
     """
 
     """Directory where all reference files used by this card are stored"""
@@ -74,7 +75,7 @@ class TintedFrameTitleCard(BaseCardType):
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_file',
         'font_size', 'font_color', 'font_interline_spacing', 'font_kerning',
         'font_vertical_shift', 'episode_text_color', 'separator', 'frame_color',
-        'logo', 'bottom_element',
+        'logo', 'top_element', 'bottom_element',
     )
 
     def __init__(self, *,
@@ -96,7 +97,8 @@ class TintedFrameTitleCard(BaseCardType):
             episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
             separator: SeriesExtra[str] = '-',
             frame_color: SeriesExtra[str] = None,
-            bottom_element: SeriesExtra[Literal['logo', 'omit', 'text']] = 'text',
+            top_element: Element = 'title',
+            bottom_element: Element = 'index',
             logo: SeriesExtra[str] = None,
             preferences: 'Preferences' = None,
             **unused) -> None:
@@ -140,20 +142,28 @@ class TintedFrameTitleCard(BaseCardType):
                 log.exception(f'Logo path is invalid', e)
                 self.valid = False
 
-        # Validate bottom element extra
-        if bottom_element not in (None, 'omit', 'text', 'logo'):
-            log.warning(f'Invalid "bottom_element" - must be "omit", "text", or'
-                        f'"logo"')
+        # Validate top and bottom element extras
+        top_element = str(top_element).strip().lower()
+        if top_element not in ('omit', 'title', 'index', 'logo'):
+            log.warning(f'Invalid "top_element" - must be "omit", "title", '
+                        f'"index", or "logo"')
+            self.valid = False
+        bottom_element = str(bottom_element).strip().lower()
+        if bottom_element not in ('omit', 'title', 'index', 'logo'):
+            log.warning(f'Invalid "bottom_element" - must be "omit", "title", '
+                        f'"index", or "logo"')
+            self.valid = False
+        if top_element != 'omit' and top_element == bottom_element:
+            log.warning(f'Top and bottom element cannot both be "{top_element}"')
             self.valid = False
 
         # If logo was indicated, verify logo was provided
+        self.top_element = top_element
         self.bottom_element = bottom_element
-        if bottom_element == 'logo':
-            if self.logo is None:
-                log.warning(f'Logo not provided')
-                self.valid = False
-            else:
-                self.bottom_element = 'logo'
+        if ((top_element == 'logo' or bottom_element == 'logo')
+            and self.logo is None):
+            log.warning(f'Logo file not provided')
+            self.valid = False
 
 
     @property
@@ -165,8 +175,16 @@ class TintedFrameTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
-        if len(self.title_text) == 0:
+        # No title text, or not being shown
+        if (len(self.title_text) == 0
+            or (self.top_element != 'title' and self.bottom_element !='title')):
             return []
+
+        # Determine vertical position based on which element the title is
+        if self.top_element == 'title':
+            vertical_shift = -700 + self.font_vertical_shift
+        else:
+            vertical_shift = 722 + self.font_vertical_shift
 
         return [
             f'-background transparent',
@@ -184,7 +202,7 @@ class TintedFrameTitleCard(BaseCardType):
             f'-layers merge',
             f'+repage \)',
             # Overlay text and shadow onto source image
-            f'-geometry +0-{700 + self.font_vertical_shift}',
+            f'-geometry +0{vertical_shift:+}',
             f'-composite',
         ]
 
@@ -198,8 +216,8 @@ class TintedFrameTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
-        # If the bottom element is not text, or all text is hidden, return
-        if (self.bottom_element != 'text'
+        # If not showing index text, or all text is hidden, return
+        if ((self.top_element != 'index' and self.bottom_element != 'index')
             or (self.hide_season_text and self.hide_episode_text)):
             return []
 
@@ -211,9 +229,16 @@ class TintedFrameTitleCard(BaseCardType):
         else:
             index_text = f'{self.season_text} {self.separator} {self.episode_text}'
 
+        # Determine vertical position based on which element this text is
+        if self.top_element == 'index':
+            vertical_shift = -708
+        else:
+            vertical_shift = 722
+
         return [
             f'-background transparent',
             f'\( -font "{self.EPISODE_TEXT_FONT}"',
+            f'+kerning +interline-spacing',
             f'-pointsize {60}',
             f'-fill "{self.episode_text_color}"',
             f'label:"{index_text}"',
@@ -226,7 +251,7 @@ class TintedFrameTitleCard(BaseCardType):
             f'+repage \)',
             # Overlay text and shadow onto source image
             f'-gravity center',
-            f'-geometry +0+722',
+            f'-geometry +0{vertical_shift:+}',
             f'-composite',
         ]
 
@@ -242,16 +267,154 @@ class TintedFrameTitleCard(BaseCardType):
         """
 
         # Logo not indicated or not available, return empty commands
-        if (self.bottom_element != 'logo'
+        if ((self.top_element != 'logo' and self.bottom_element != 'logo')
             or self.logo is None or not self.logo.exists()):
             return []
+
+        # Determine vertical position based on which element the logo is
+        vertical_shift = 700 * (-1 if self.top_element == 'logo' else +1)
 
         return [
             f'\( "{self.logo.resolve()}"',
             f'-resize x150 \)',
             f'-gravity center',
-            f'-geometry +0+700',
+            f'-geometry +0{vertical_shift:+}',
             f'-composite',
+        ]
+
+
+    @property
+    def _frame_top_commands(self) -> ImageMagickCommands:
+        """
+        Subcommand to add the top of the frame, intersected by the
+        selected element.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        # Coordinates used by multiple rectangles
+        INSET = self.BOX_OFFSET
+        BOX_WIDTH = self.BOX_WIDTH
+        TopLeft = Coordinate(INSET, INSET)
+        TopRight = Coordinate(self.WIDTH - INSET, INSET + BOX_WIDTH)
+
+        # This frame is uninterrupted, draw single rectangle
+        if (self.top_element == 'omit'
+            or (self.top_element == 'index'
+                and self.hide_season_text and self.hide_episode_text)
+            or (self.top_element == 'logo'
+                and (self.logo is None or not self.logo.exists()))
+            or (self.top_element == 'title' and len(self.title_text) == 0)):
+
+            return [
+                Rectangle(TopLeft, TopRight).draw()
+            ]
+
+        # Element is index text
+        if self.top_element == 'index':
+            element_width, _ = self.get_text_dimensions(
+                self.index_text_command, width='max', height='max',
+            )
+            margin = 25
+        # Element is logo
+        elif self.top_element == 'logo':
+            element_width, logo_height = self.get_image_dimensions(self.logo)
+            element_width /= (logo_height / 150)
+            margin = 25
+        # Element is title text
+        elif self.top_element == 'title':
+            element_width, _ = self.get_text_dimensions(
+                self.title_text_command, width='max', height='max',
+            )
+            margin = 10
+
+        # Determine bounds based on element width
+        left_box_x = (self.WIDTH / 2) - (element_width / 2) - margin
+        right_box_x = (self.WIDTH / 2) + (element_width / 2) + margin
+
+        # Create Rectangles for these two frame sections
+        top_left_rectangle = Rectangle(
+            TopLeft,
+            Coordinate(left_box_x, INSET + BOX_WIDTH)
+        )
+        top_right_rectangle = Rectangle(
+            Coordinate(right_box_x, INSET),
+            TopRight,
+        )
+
+        return [
+            top_left_rectangle.draw(),
+            top_right_rectangle.draw()
+        ]
+
+
+    @property
+    def _frame_bottom_commands(self) -> ImageMagickCommands:
+        """
+        Subcommand to add the bottom of the frame, intersected by the
+        selected element.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        # Coordinates used by multiple rectangles
+        INSET = self.BOX_OFFSET
+        BOX_WIDTH = self.BOX_WIDTH
+        BottomLeft = Coordinate(INSET + BOX_WIDTH, self.HEIGHT - INSET)
+        BottomRight = Coordinate(self.WIDTH - INSET, self.HEIGHT - INSET)
+
+        # This frame is uninterrupted, draw single rectangle
+        if (self.bottom_element == 'omit'
+            or (self.bottom_element == 'index'
+                and self.hide_season_text and self.hide_episode_text)
+            or (self.bottom_element == 'logo'
+                and (self.logo is None or not self.logo.exists()))
+            or (self.bottom_element == 'title' and len(self.title_text) == 0)):
+
+            return [
+                Rectangle(
+                    Coordinate(INSET, self.HEIGHT - INSET - BOX_WIDTH),
+                    BottomRight
+                ).draw()
+            ]
+
+        # Element is index text
+        if self.bottom_element == 'index':
+            element_width, _ = self.get_text_dimensions(
+                self.index_text_command, width='max', height='max',
+            )
+            margin = 25
+        # Element is logo
+        elif self.bottom_element == 'logo':
+            element_width, logo_height = self.get_image_dimensions(self.logo)
+            element_width /= (logo_height / 150)
+            margin = 25
+        # Element is title
+        elif self.bottom_element == 'title':
+            element_width, _ = self.get_text_dimensions(
+                self.title_text_command, width='max', height='max',
+            )
+            margin = 10
+
+        # Determine bounds based on element width
+        left_box_x = (self.WIDTH / 2) - (element_width / 2) - margin
+        right_box_x = (self.WIDTH / 2) + (element_width / 2) + margin
+
+        # Create Rectangles for these two frame sections
+        bottom_left_rectangle = Rectangle(
+            Coordinate(INSET, self.HEIGHT - INSET - BOX_WIDTH),
+            Coordinate(left_box_x, self.HEIGHT - INSET)
+        )
+        bottom_right_rectangle = Rectangle(
+            Coordinate(right_box_x, self.HEIGHT - INSET - BOX_WIDTH),
+            BottomRight,
+        )
+        
+        return [
+            bottom_left_rectangle.draw(),
+            bottom_right_rectangle.draw(),
         ]
 
 
@@ -260,104 +423,22 @@ class TintedFrameTitleCard(BaseCardType):
         """
         Subcommand to add the box that separates the outer (blurred)
         image and the interior (unblurred) image. This box features a
-        drop shadow. The top part of the box is intersected by the title
-        text (if present), and the bottom part can be intersected by the
-        index text, logo, or not at all.
+        drop shadow. The top and bottom parts of the frame are
+        optionally intersected by a index text, title text, or a logo.
 
         Returns:
             List of ImageMagick commands.
         """
 
-        INSET = self.BOX_OFFSET
-        BOX_WIDTH = self.BOX_WIDTH
-
-        # Coordinates used by multiple rectangles
-        TopLeft = Coordinate(INSET, INSET)
-        TopRight = Coordinate(self.WIDTH - INSET, INSET + BOX_WIDTH)
-        BottomLeft = Coordinate(INSET + BOX_WIDTH, self.HEIGHT - INSET)
-        BottomRight = Coordinate(self.WIDTH - INSET, self.HEIGHT - INSET)
-
-        # Determine top box draw commands
-        if len(self.title_text) == 0:
-            top_rectangle = Rectangle(TopLeft, TopRight)
-            top = [top_rectangle.draw()]
-        else:
-            title_width, _ = self.get_text_dimensions(
-                self.title_text_command, width='max', height='max',
-            )
-            left_box_x = (self.WIDTH / 2) - (title_width / 2) - 10
-            right_box_x = (self.WIDTH / 2) + (title_width / 2) + 10
-
-            top_left_rectangle = Rectangle(
-                TopLeft,
-                Coordinate(left_box_x, INSET + BOX_WIDTH)
-            )
-            top_right_rectangle = Rectangle(
-                Coordinate(right_box_x, INSET),
-                TopRight,
-            )
-
-            top = [top_left_rectangle.draw(), top_right_rectangle.draw()]
-
-        # Left and right rectangles are never intersected by content
-        left_rectangle = Rectangle(TopLeft, BottomLeft)
-        left = [left_rectangle.draw()]
-        right_rectangle = Rectangle(
-            Coordinate(self.WIDTH - INSET - BOX_WIDTH, INSET),
-            BottomRight,
-        )
-        right = [right_rectangle.draw()]
-
-        # Determine bottom box draw commands
-        # No bottom element, use singular full-width rectangle
-        if self.bottom_element == 'omit':
-            bottom_rectangle = Rectangle(
-                Coordinate(INSET, self.HEIGHT - INSET - BOX_WIDTH),
-                BottomRight
-            )
-            bottom = [bottom_rectangle.draw()]
-        # Bottom element is logo, use boxes based on resized logo width
-        elif (self.bottom_element == 'logo'
-            and self.logo is not None
-            and self.logo.exists()):
-            logo_width, logo_height = self.get_image_dimensions(self.logo)
-            logo_width /= logo_height / 150
-
-            left_box_x = (self.WIDTH / 2) - (logo_width / 2) - 25
-            right_box_x = (self.WIDTH / 2) + (logo_width / 2) + 25
-
-            bottom_left_rectangle = Rectangle(
-                Coordinate(INSET, self.HEIGHT - INSET - BOX_WIDTH),
-                Coordinate(left_box_x, self.HEIGHT - INSET),
-            )
-            bottom_right_rectangle = Rectangle(
-                Coordinate(right_box_x, self.HEIGHT - INSET - BOX_WIDTH),
+        # Determine frame draw commands
+        top = self._frame_top_commands
+        left = [Rectangle(TopLeft, BottomLeft).draw()]
+        right = [Rectangle(
+                Coordinate(self.WIDTH - INSET - BOX_WIDTH, INSET),
                 BottomRight,
-            )
-
-            bottom = [
-                bottom_left_rectangle.draw(), bottom_right_rectangle.draw()
-            ]
-        # Bottom element is index text, use boxes based on text width
-        elif self.bottom_element == 'text':
-            index_text_width, _ = self.get_text_dimensions(
-                self.index_text_command, width='max', height='max',
-            )
-            left_box_x = (self.WIDTH / 2) - (index_text_width / 2) - 25
-            right_box_x = (self.WIDTH / 2) + (index_text_width / 2) + 25
-
-            bottom_left_rectangle = Rectangle(
-                Coordinate(INSET, self.HEIGHT - INSET - BOX_WIDTH),
-                Coordinate(left_box_x, self.HEIGHT - INSET)
-            )
-            bottom_right_rectangle = Rectangle(
-                Coordinate(right_box_x, self.HEIGHT - INSET - BOX_WIDTH),
-                BottomRight,
-            )
-            
-            bottom = [
-                bottom_left_rectangle.draw(), bottom_right_rectangle.draw()
-            ]
+            ).draw()
+        ]
+        bottom = self._frame_bottom_commands
 
         return [
             # Create blank canvas
@@ -398,8 +479,8 @@ class TintedFrameTitleCard(BaseCardType):
             if 'episode_text_color' in extras:
                 extras['episode_text_color'] =\
                     TintedFrameTitleCard.EPISODE_TEXT_COLOR
-            if 'box_color' in extras:
-                extras['box_color'] = TintedFrameTitleCard.TITLE_COLOR
+            if 'frame_color' in extras:
+                extras['frame_color'] = TintedFrameTitleCard.TITLE_COLOR
 
 
     @staticmethod
