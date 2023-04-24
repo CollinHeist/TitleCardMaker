@@ -5,8 +5,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from requests import get as req_get
 from sqlalchemy.orm import Session
 
-from app.dependencies import get_database, get_preferences, get_emby_interface,\
-    get_jellyfin_interface, get_plex_interface, get_sonarr_interface
+from app.dependencies import (
+    get_database, get_preferences, get_emby_interface, get_jellyfin_interface,
+    get_plex_interface, get_sonarr_interface, get_tmdb_interface,
+)
 import app.models as models
 from app.schemas.card import CardType, LocalCardType, RemoteCardType
 from app.schemas.preferences import EpisodeDataSourceToggle, ImageSourceToggle,\

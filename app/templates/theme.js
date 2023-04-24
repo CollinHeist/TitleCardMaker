@@ -6,6 +6,7 @@ function refreshTheme() {
 
 function toggleTheme() {
   const currentIcons = $('#theme-toggle i');
+  if (currentIcons.length === 0 ) { return; }
   // Toggle inverted class modifier, update button sun <-> moon, and set background color
   // Light -> Dark
   if (currentIcons[0].classList.contains('sun')) {
@@ -28,4 +29,6 @@ function toggleTheme() {
 // Default theme is LIGHT, so if dark is indicated, toggle
 // let theme = window.localStorage.getItem('site-theme');
 // if (theme === 'dark') { toggleTheme(); }
-refreshTheme();
+$(document).ready(() => {
+  if (window.localStorage.getItem('site-theme') === 'dark') { toggleTheme(); }
+});

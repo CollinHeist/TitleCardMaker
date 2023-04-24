@@ -153,6 +153,7 @@ class UpdateTMDb(Base):
     minimum_width: int = Field(default=UNSPECIFIED, ge=0)
     minimum_height: int = Field(default=UNSPECIFIED, ge=0)
     skip_localized: bool = Field(default=UNSPECIFIED)
+    download_logos: bool = Field(default=UNSPECIFIED)
     logo_language_priority: list[LanguageCode] = Field(default=UNSPECIFIED)
 
     @validator('logo_language_priority', pre=True)
@@ -218,3 +219,5 @@ class TMDbConnection(Base):
     tmdb_minimum_width: int
     tmdb_minimum_height: int
     tmdb_skip_localized: bool
+    tmdb_download_logos: bool
+    tmdb_logo_language_priority: list[LanguageCode]

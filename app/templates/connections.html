@@ -16,6 +16,11 @@
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
   <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.js"></script>
+
+  <!-- JS Files -->
+  <script type="text/javascript" src="/templates/loadStaticContent.js"></script>
+  <script type="text/javascript" src="/templates/loadCardTypes.js"></script>
+  <script type="text/javascript" src="/templates/theme.js"></script>
   
   <!-- Global styles -->
   <link rel="stylesheet" type="text/css" href="/templates/style.css"/>
@@ -33,9 +38,10 @@
       
     }
 
-    /* input:focus {
-      border: 1.5px solid rgb(0, 128, 255) !important;
-    } */
+    /* The first (enable) checkbox needs additional margin */
+    .connection-form .checkbox:first-child {
+      margin-bottom: 1em;
+    }
   </style>
 
   <template id="sync-volume">
@@ -140,20 +146,19 @@
 
       <!-- Emby Connections -->
       <h3 class="ui dividing header">Emby Media Server</h3>
-      <div id="emby-connections">
-        <form id="emby-settings" class="ui fluid form">
-          <!-- Enable button -->
-          {% if preferences.use_emby %}
-          <div id="enable-emby" class="ui left aligned checked checkbox field">
-            <input id="enable-emby-checkbox" type="checkbox" checked="">
-          {% else %}
-          <div id="enable-emby" class="ui left aligned checkbox field">
-            <input id="enable-emby-checkbox" type="checkbox" >
-          {% endif %}
-            <label for="enable-emby-checkbox">Enable Emby</label>
-          </div>
+      <div id="emby-connection" class="connection-form">
+        <!-- Enable button -->
+        {% if preferences.use_emby %}
+        <div id="enable-emby" class="ui left aligned checked checkbox field">
+          <input id="enable-emby-checkbox" type="checkbox" checked="">
+        {% else %}
+        <div id="enable-emby" class="ui left aligned checkbox field">
+          <input id="enable-emby-checkbox" type="checkbox" >
+        {% endif %}
+          <label for="enable-emby-checkbox">Enable Emby</label>
+        </div>
 
-          <!-- Input fields -->
+        <form id="emby-settings" class="ui fluid form">
           <div id="emby-url" class="ui disabled required eight wide field" title="Host URL to communicate with Emby">
             <label>URL</label>
             <input name="url" type="text" value="{{preferences.emby_url}}">
@@ -215,20 +220,19 @@
 
       <!-- Jellyfin Connections -->
       <h3 class="ui dividing header">Jellyfin Media Server</h3>
-      <div id="jellyfin-connections">
-        <form id="jellyfin-settings" class="ui fluid form">
-          <!-- Enable button -->
-          {% if preferences.use_jellyfin %}
-          <div id="enable-jellyfin" class="ui left aligned checked checkbox field">
-            <input id="enable-jellyfin-checkbox" type="checkbox" checked="">
-          {% else %}
-          <div id="enable-jellyfin" class="ui left aligned checkbox field">
-            <input id="enable-jellyfin-checkbox" type="checkbox" >
-          {% endif %}
-            <label for="enable-jellyfin-checkbox">Enable Jellyfin</label>
-          </div>
+      <div id="jellyfin-connection" class="connection-form">
+        <!-- Enable button -->
+        {% if preferences.use_jellyfin %}
+        <div id="enable-jellyfin" class="ui left aligned checked checkbox field">
+          <input id="enable-jellyfin-checkbox" type="checkbox" checked="">
+        {% else %}
+        <div id="enable-jellyfin" class="ui left aligned checkbox field">
+          <input id="enable-jellyfin-checkbox" type="checkbox" >
+        {% endif %}
+          <label for="enable-jellyfin-checkbox">Enable Jellyfin</label>
+        </div>
 
-          <!-- Input fields -->
+        <form id="jellyfin-settings" class="ui fluid form">
           <div id="jellyfin-url" class="ui disabled required eight wide field" title="Host URL to communicate with Jellyfin">
             <label>URL</label>
             <input name="url" type="text" value="{{preferences.jellyfin_url}}">
@@ -290,19 +294,18 @@
 
       <!-- Plex Connections -->
       <h3 class="ui dividing header">Plex Media Server</h3>
-      <div id="plex-connections">
-        <form id="plex-settings" class="ui fluid form">
-          <!-- Enable button -->
-          <div id="enable-plex" class="ui left aligned checkbox field">
-            {% if preferences.use_plex %}
-            <input id="enable-plex-checkbox" type="checkbox" checked="">
-            {% else %}
-            <input id="enable-plex-checkbox" type="checkbox">
-            {% endif %}
-            <label>Enable Plex</label>
-          </div>
+      <div id="plex-connection" class="connection-form">
+        <!-- Enable button -->
+        <div id="enable-plex" class="ui left aligned checkbox field">
+          {% if preferences.use_plex %}
+          <input id="enable-plex-checkbox" type="checkbox" checked="">
+          {% else %}
+          <input id="enable-plex-checkbox" type="checkbox">
+          {% endif %}
+          <label>Enable Plex</label>
+        </div>
 
-          <!-- Input fields -->
+        <form id="plex-settings" class="ui fluid form">
           <div id="plex-url" class="ui disabled required eight wide field" title="Host URL to communicate with Plex">
             <label>URL</label>
             <input name="url" type="text" value="{{preferences.plex_url}}">
@@ -377,19 +380,18 @@
 
       <!-- Sonarr Connections -->
       <h3 class="ui dividing header">Sonarr</h3>
-      <div id="sonarr-connections">
-        <form id="sonarr-settings" class="ui fluid form">
-          <!-- Enable button -->
-          <div id="enable-sonarr" class="ui left aligned checkbox field">
-            {% if preferences.use_sonarr %}
-            <input id="enable-sonarr-checkbox" type="checkbox" name="enable_sonarr" checked="">
-            {% else %}
-            <input id="enable-sonarr-checkbox" type="checkbox" name="enable_sonarr">
-            {% endif %}
-            <label>Enable Sonarr</label>
-          </div>
+      <div id="sonarr-connection" class="connection-form">
+        <!-- Enable button -->
+        <div id="enable-sonarr" class="ui left aligned checkbox field">
+          {% if preferences.use_sonarr %}
+          <input id="enable-sonarr-checkbox" type="checkbox" name="enable_sonarr" checked="">
+          {% else %}
+          <input id="enable-sonarr-checkbox" type="checkbox" name="enable_sonarr">
+          {% endif %}
+          <label>Enable Sonarr</label>
+        </div>
 
-          <!-- Input fields -->
+        <form id="sonarr-settings" class="ui fluid form">
           <div id="sonarr-url" class="ui disabled required eight wide field" title="Host URL to communicate with Sonarr">
             <label>URL</label>
             <input type="text" name="url" value="{{preferences.sonarr_url}}">
@@ -418,7 +420,7 @@
             </div>
             <div class="fields">
               <div id="sonarr-libraries-library-names" class="two wide library field">
-                <label>Library</label> 
+                <label>Library Name</label> 
                 <!-- Added asynchronously -->
                 <!-- <input type="text" placeholder="Library Name" name="library_names"> -->
               </div>
@@ -447,18 +449,18 @@
 
       <!-- TMDb Connections -->
       <h3 class="ui dividing header">TheMovieDatabase</h3>
-      <div id="tmdb-connections">
-        <form id="tmdb-settings" class="ui fluid form">
-          <!-- Enable button -->
-          <div id="enable-tmdb" class="ui left aligned checkbox field">
-            {% if preferences.use_tmdb %}
-            <input id="enable-tmdb-checkbox" type="checkbox" name="enable_tmdb" checked="">
-            {% else %}
-            <input id="enable-tmdb-checkbox" type="checkbox" name="enable_tmdb">
-            {% endif %}
-            <label>Enable TMDb</label>
-          </div>
+      <div id="tmdb-connection" class="connection-form">
+        <!-- Enable button -->
+        <div id="enable-tmdb" class="ui left aligned checkbox field">
+          {% if preferences.use_tmdb %}
+          <input id="enable-tmdb-checkbox" type="checkbox" name="enable_tmdb" checked="">
+          {% else %}
+          <input id="enable-tmdb-checkbox" type="checkbox" name="enable_tmdb">
+          {% endif %}
+          <label>Enable TMDb</label>
+        </div>
 
+        <form id="tmdb-settings" class="ui fluid form">
           <!-- Input fields -->
           <div id="tmdb-api-key" class="ui disabled required eight wide field" data-tooltip="API Key to authenticate communication with TMDb">
             <label>API Key <a href="https://developers.themoviedb.org/3/getting-started/introduction" target="_blank"><i class="external alternate small icon"></i></a></label>
@@ -483,6 +485,16 @@
             <input name="skip_localized" type="checkbox" >
             {% endif %}
             <label>Ignore Localized Images</label>
+          </div>
+
+          <br>
+          <div id="tmdb-download-logos" class="ui left aligned checkbox field" data-tooltip="Whether to download logos automatically">
+            {% if preferences.tmdb_download_logos %}
+            <input name="download_logos" type="checkbox" checked="">
+            {% else %}
+            <input name="download_logos" type="checkbox" >
+            {% endif %}
+            <label>Download Logos</label>
           </div>
 
           <div id="tmdb-logo-language-priority" class="field">
@@ -514,31 +526,17 @@
 
     // Fields to enable/disable on button presses
     const toggleFields = [
-      {title: 'Emby',
-       toggleAPI: '/api/connection/emby',
-       buttonId: '#enable-emby',
-       fields: ['#emby-url', '#emby-api-key', '#emby-username', '#emby-use-ssl', '#emby-watched-style', '#emby-unwatched-style', '#emby-filesize-limit', '#submit-emby']},
-      {title: 'Jellyfin',
-       toggleAPI: '/api/connection/jellyfin',
-       buttonId: '#enable-jellyfin',
-       fields: ['#jellyfin-url', '#jellyfin-api-key', '#jellyfin-username', '#jellyfin-use-ssl', '#emby-watched-style', '#jellyfin-unwatched-style', '#jellyfin-filesize-limit', '#submit-jellyfin']},
-      {title: 'Plex',
-       toggleAPI: '/api/connection/plex',
-       buttonId: '#enable-plex',
-       fields: ['#plex-url', '#plex-token', '#plex-use-ssl', '#plex-watched-style', '#plex-unwatched-style', '#plex-filesize-limit', '#plex-integrate-pmm']},
-      {title: 'Sonarr',
-       toggleAPI: '/api/connection/sonarr',
-       buttonId: '#enable-sonarr',
-       fields: ['#sonarr-url', '#sonarr-api-key', '#sonarr-use-ssl', '#sonarr-libraries']},
-      {title: 'TMDb',
-       toggleAPI: '/api/connection/tmdb',
-       buttonId: '#enable-tmdb',
-       fields: ['#tmdb-api-key', '#tmdb-minimum-resolution', '#tmdb-skip-localized']},
+      {title: 'Emby',     toggleAPI: '/api/connection/emby',     buttonId: '#enable-emby'},
+      {title: 'Jellyfin', toggleAPI: '/api/connection/jellyfin', buttonId: '#enable-jellyfin'},
+      {title: 'Plex',     toggleAPI: '/api/connection/plex',     buttonId: '#enable-plex'},
+      {title: 'Sonarr',   toggleAPI: '/api/connection/sonarr',   buttonId: '#enable-sonarr'},
+      {title: 'TMDb',     toggleAPI: '/api/connection/tmdb',     buttonId: '#enable-tmdb'},
     ];
     toggleFields.forEach(({title, buttonId, fields, toggleAPI}) => {
       $(buttonId).checkbox({
         onChecked: function() {
-          fields.forEach(fieldId => $(fieldId).toggleClass('disabled', false));
+          // fields.forEach(fieldId => $(fieldId).toggleClass('disabled', false));
+          $(`#${title.toLowerCase()}-settings .field`).toggleClass('disabled', false);
           $.ajax({
             type: 'PUT',
             url: `${toggleAPI}/enable`,
@@ -557,7 +555,7 @@
             }, complete: function() {}
           });
         }, onUnchecked: function() {
-          fields.forEach(fieldId => $(fieldId).toggleClass('disabled', true));
+          $(`#${title.toLowerCase()}-settings .field`).toggleClass('disabled', true);
           $.ajax({
             type: 'PUT',
             url: `${toggleAPI}/disable`,
@@ -580,8 +578,8 @@
     });
 
     // Initialize enabled/disabled states of form fields
-    toggleFields.forEach(({buttonId, fields}) => {
-      fields.forEach(fieldId => $(fieldId).toggleClass('disabled', !$(buttonId)[0].classList.contains('checked')));
+    toggleFields.forEach(({title, buttonId}) => {
+      $(`#${title.toLowerCase()}-settings .field`).toggleClass('disabled', !$(buttonId)[0].classList.contains('checked'));
     });
     
     // Show filesize warning in Plex if >10 MB
@@ -667,6 +665,10 @@
           }
           if (value === '') { form.delete(key); }
         }
+        // Add checkbox status as true/false
+        $.each($(formId).find('input[type=checkbox]'), (key, val) => {
+          form.append($(val).attr('name'), $(val).is(':checked'))
+        });
 
         // Submit API request
         $(submitButtonId).toggleClass('disabled loading', true);
@@ -697,9 +699,6 @@
       });
     });
   </script>
-
-  <!-- Load Sidebar -->
-  <script src="/templates/loadStaticContent.js"></script>
 </body>
 
 </html>

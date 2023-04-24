@@ -120,7 +120,14 @@ class Series(Base):
     @hybrid_method
     def get_logo_file(self, source_base: str) -> Path:
         """
+        Get the logo file for this series.
 
+        Args:
+            source_base: Base source directory.
+
+        Returns:
+            Path to the logo file that corresponds to this series' under
+            the given base source directory.
         """
 
         return Path(source_base) / self.path_safe_name / 'logo.png'
@@ -129,7 +136,14 @@ class Series(Base):
     @hybrid_method
     def get_series_backdrop(self, source_base: str) -> Path:
         """
+        Get the backdrop file for this series.
 
+        Args:
+            source_base: Base source directory.
+
+        Returns:
+            Path to the backdrop file that corresponds to this series'
+            under the given base source directory.
         """
 
         return Path(source_base) / self.path_safe_name / 'backdrop.jpg'

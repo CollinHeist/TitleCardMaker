@@ -87,6 +87,7 @@ class Preferences:
         self.tmdb_minimum_width = 800 #0
         self.tmdb_minimum_height = 400 #0
         self.tmdb_skip_localized = False
+        self.tmdb_download_logos = True
         self.tmdb_logo_language_priority = ['en']
         self.supported_language_codes = []
 
