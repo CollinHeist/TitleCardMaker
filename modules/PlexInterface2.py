@@ -175,25 +175,23 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             except NotFound:
                 pass
 
-        # Try by full name
+        # Try by name
         try:
-            return library.get(series_info.full_name)
+            for series in library.search(title=series_info.name,
+                    year=series_info.year, libtype='show'):
+                if series.title in (series_info.name, series_info.full_name):
+                    return series
         except NotFound:
             pass
 
-        # Try by name and match the year
-        try:
-            if (ser := library.get(series_info.name)).year == series_info.year:
-                return ser
-            raise NotFound
-        except NotFound:
-            key = f'{library.title}-{series_info.full_name}'
-            if key not in self.__warned:
-                log.warning(f'Series "{series_info}" was not found under '
-                            f'library "{library.title}" in Plex')
-                self.__warned.add(key)
+        # Not found, return None
+        key = f'{library.title}-{series_info.full_name}'
+        if key not in self.__warned:
+            log.warning(f'Series "{series_info}" was not found under '
+                        f'library "{library.title}" in Plex')
+            self.__warned.add(key)
 
-            return None
+        return None
 
 
     @catch_and_log('Error getting library paths', default={})
@@ -285,11 +283,6 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 if show.year is None:
                     log.warning(f'Series {show.title} has no year - skipping')
                     continue
-
-                # Skip show if it has no locations.. somehow..
-                # if len(show.locations) == 0:
-                #     log.warning(f'Series {show.title} has no files - skipping')
-                #     continue
 
                 # Get all ID's for this series
                 ids = {}
