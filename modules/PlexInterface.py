@@ -143,9 +143,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def __get_series(self, library: 'Library',
             series_info: SeriesInfo) -> 'Show':
         """
-        Get the Series object from within the given Library associated with the
-        given SeriesInfo. This tries to match by TVDb ID, TMDb ID, name, and
-        finally full name.
+        Get the Series object from within the given Library associated
+        with the given SeriesInfo. This tries to match by TVDb ID,
+        TMDb ID, name, and finally name.
 
         Args:
             library: The Library object to search for within Plex.
@@ -176,30 +176,27 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             except NotFound:
                 pass
 
-        # Try by full name
+        # Try by name
         try:
-            return library.get(series_info.full_name)
+            for series in library.search(title=series_info.name,
+                    year=series_info.year, libtype='show'):
+                if series.title in (series_info.name, series_info.full_name):
+                    return series
         except NotFound:
             pass
 
-        # Try by name and match the year
-        try:
-            if (ser := library.get(series_info.name)).year == series_info.year:
-                return ser
-            raise NotFound
-        except NotFound:
-            key = f'{library.title}-{series_info.full_name}'
-            if key not in self.__warned:
-                log.warning(f'Series "{series_info}" was not found under '
-                            f'library "{library.title}" in Plex')
-                self.__warned.add(key)
+        # Not found, return None
+        key = f'{library.title}-{series_info.full_name}'
+        if key not in self.__warned:
+            log.warning(f'Series "{series_info}" was not found under '
+                        f'library "{library.title}" in Plex')
+            self.__warned.add(key)
 
-            return None
-
+        return None
 
     @catch_and_log('Error getting library paths', default={})
-    def get_library_paths(self,filter_libraries: list[str]=[]
-            ) -> dict[str, list[str]]:
+    def get_library_paths(self,
+            filter_libraries: list[str] = []) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
 
@@ -379,8 +376,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         Determine whether the given series is present within Plex.
 
         Args:
-            library_name: The name of the library potentially containing the
-                series.
+            library_name: The name of the library potentially containing
+                the series.
             series_info: The series to being evaluated.
 
         Returns:
@@ -493,8 +490,10 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     @catch_and_log("Error setting episode ID's")
-    def set_episode_ids(self, library_name: str, series_info: SeriesInfo,
-                        infos: list[EpisodeInfo]) -> None:
+    def set_episode_ids(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            infos: list[EpisodeInfo]) -> None:
         """
         Set all the episode ID's for the given list of EpisodeInfo objects. This
         sets the Sonarr and TVDb ID's for each episode. As a byproduct, this

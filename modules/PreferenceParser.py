@@ -157,6 +157,7 @@ class PreferenceParser(YamlReader):
         self.tmdb_retry_count = TMDbInterface.BLACKLIST_THRESHOLD
         self.tmdb_minimum_resolution = {'width': 0, 'height': 0}
         self.tmdb_skip_localized_images = False
+        self.tmdb_logo_language_priority = ['en']
 
         self.use_tautulli = False
         self.tautulli_url = None
@@ -721,6 +722,17 @@ class PreferenceParser(YamlReader):
         if (value := self._get('tmdb', 'skip_localized_images',
                                type_=bool)) is not None:
             self.tmdb_skip_localized_images = value
+
+        if (value := self._get('tmdb', 'logo_language_priority',
+                               type_=str)) is not None:
+            codes = list(map(lambda s: str(s).lower().strip(), value.split(',')))
+            if all(code in TMDbInterface.LANGUAGE_CODES for code in codes):
+                self.tmdb_logo_language_priority = codes
+            else:
+                opts = '"' + '", "'.join(TMDbInterface.LANGUAGE_CODES) + '"'
+                log.critical(f'Invalid TMDb logo language codes - must be comma'
+                             f'-separated list of any of the following: {opts}')
+                self.valid = False
 
 
     def __parse_yaml_tautulli(self) -> None:

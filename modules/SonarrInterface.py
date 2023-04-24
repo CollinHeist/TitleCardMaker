@@ -180,11 +180,11 @@ class SonarrInterface(WebInterface, SyncInterface):
 
 
     def get_all_series(self,
-            required_tags: list[str]=[], 
-            excluded_tags: list[str]=[],
-            monitored_only: bool=False,
-            downloaded_only: bool=False,
-            series_type: Optional[str]=None,
+            required_tags: list[str] = [], 
+            excluded_tags: list[str] = [],
+            monitored_only: bool = False,
+            downloaded_only: bool = False,
+            series_type: Optional[str] = None,
             ) -> list[tuple[SeriesInfo, str]]:
         """
         Get all the series within Sonarr, filtered by the given

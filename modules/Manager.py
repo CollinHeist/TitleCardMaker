@@ -198,10 +198,6 @@ class Manager:
     def set_show_ids(self) -> None:
         """Set the series ID's of each Show known to this Manager"""
 
-        # If neither Sonarr nor TMDb are enabled, skip
-        if not self.preferences.use_sonarr and not self.preferences.use_tmdb:
-            return None
-
         # For each show in the Manager, set series IDs
         for show in tqdm(self.shows + self.archives, desc='Setting series IDs',
                          **TQDM_KWARGS):
@@ -228,11 +224,6 @@ class Manager:
     def add_new_episodes(self) -> None:
         """Add any new episodes to this Manager's shows."""
 
-        # If Sonarr, Plex, and TMDb are disabled, exit
-        if (not self.preferences.use_sonarr and not self.preferences.use_tmdb
-            and not self.preferences.use_plex):
-            return None
-
         # For each show in the Manager, look for new episodes using any of the
         # possible interfaces
         for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
@@ -243,11 +234,6 @@ class Manager:
     @notify("Starting to set episode ID's..")
     def set_episode_ids(self) -> None:
         """Set all episode ID's for all shows."""
-
-        # If Sonarr, Plex, and TMDb are disabled, exit
-        if (not self.preferences.use_sonarr and not self.preferences.use_tmdb
-            and not self.preferences.use_plex):
-            return None
 
         # For each show in the Manager, set IDs for every episode
         for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
@@ -287,10 +273,6 @@ class Manager:
     def select_source_images(self) -> None:
         """Select and download the source images for all shows."""
 
-        # If Plex and TMDb aren't enabled, skip
-        if not self.preferences.use_plex and not self.preferences.use_tmdb:
-            return None
-
         # Go through each show and download source images
         for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
             pbar.set_description(f'Selecting sources for {show}')
@@ -324,7 +306,7 @@ class Manager:
         if Emby/Jellyfin/Plex are globally enabled.
         """
 
-        # If Plex and Emby aren't enabled, skip
+        # If no media servers are enabled, skip
         if (not self.preferences.use_emby
             and not self.preferences.use_jellyfin
             and not self.preferences.use_plex):
@@ -368,7 +350,7 @@ class Manager:
             show_archive.create_summary()
 
 
-    def __run(self, *, serial: bool=False) -> None:
+    def __run(self, *, serial: bool = False) -> None:
         """
         Run the Manager. If serial execution is not indicated, then sync
         is run and Show/ShowArchive objects are created.

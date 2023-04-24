@@ -2,7 +2,7 @@ from collections import namedtuple
 from pathlib import Path
 from typing import Any, Literal, Optional
 
-from modules.BaseCardType import BaseCardType
+from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
 SeriesExtra = Optional
@@ -78,72 +78,52 @@ class TintedGlassTitleCard(BaseCardType):
     TEXT_BLUR_PROFILE = '0x6'
 
     __slots__ = (
-        'source', 'output_file', 'title', '__line_count', 'season_text',
-        'episode_text',  'hide_season', 'font', 'font_size', 'title_color',
-        'interline_spacing', 'kerning', 'vertical_shift',
+        'source', 'output_file', 'title_text', '__line_count', 'episode_text', 
+        'hide_episode_text', 'font_file', 'font_size', 'font_color',
+        'font_interline_spacing', 'font_kerning', 'font_vertical_shift',
         'episode_text_color', 'episode_text_position', 'box_adjustments',
     )
 
-    def __init__(self, source: Path, output_file: Path, title: str,
-            season_text: str, episode_text: str, hide_season: bool,
-            font: str, title_color: str, 
-            font_size: float=1.0, 
-            interline_spacing: int=0,
-            kerning: float=1.0,
-            vertical_shift: int=0,
-            blur: bool=False,
-            grayscale: bool=False,
-            episode_text_color: SeriesExtra[str]=EPISODE_TEXT_COLOR,
-            episode_text_position: SeriesExtra[Position]='center',
-            box_adjustments: SeriesExtra[str]=None,
+    def __init__(self,
+            source_file: Path,
+            card_file: Path,
+            title_text: str,
+            episode_text: str,
+            hide_episode_text: bool = False,
+            font_color: str = TITLE_COLOR, 
+            font_file: str = TITLE_FONT,
+            font_interline_spacing: int = 0,
+            font_kerning: float = 1.0,
+            font_size: float = 1.0, 
+            font_vertical_shift: int = 0,
+            blur: bool = False,
+            grayscale: bool = False,
+            episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
+            episode_text_position: SeriesExtra[Position] = 'center',
+            box_adjustments: SeriesExtra[str] = None,
+            preferences: 'Preferences' = None,
             **unused) -> None:
-        """
-        Initialize this TitleCard object.
-
-        Args:
-            source: Source image to base the card on.
-            output_file: Output file where to create the card.
-            title: Title text to add to created card.
-            season_text: The season text for this card.
-            episode_text: Episode text to add to created card.
-            hide_season: Whether to hide the season text.
-            font: Font name or path (as string) to use for episode title.
-            title_color: Color to use for title text.
-            font_size: Scalar to apply to title font size.
-            interline_spacing: Pixel count to adjust title interline
-                spacing by.
-            kerning: Scalar to apply to kerning of the title text.
-            vertical_shift: Vertical shift to apply to the title text.
-            blur: Whether to blur the source image.
-            grayscale: Whether to make the source image grayscale.
-            box_adjustments: How to adjust the bounds of the bounding
-                box. Given as a string of pixels in clockwise order
-                relative to the center. For example, "10 10 10 10" will
-                expand the box by 10 pixels in each direction.
-            unused: Unused arguments.
-        """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__(blur, grayscale)
+        super().__init__(blur, grayscale, preferences=preferences)
 
         # Store object attributes
-        self.source = source
-        self.output_file = output_file
+        self.source = source_file
+        self.output_file = card_file
 
-        self.title = self.image_magick.escape_chars(title)
-        self.__line_count = len(title.split('\n'))
-        self.season_text = self.image_magick.escape_chars(season_text.upper())
+        self.title_text = self.image_magick.escape_chars(title_text)
+        self.__line_count = len(title_text.split('\n'))
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
-        self.hide_season = hide_season
+        self.hide_episode_text = hide_episode_text or len(episode_text) == 0
 
-        self.font = font
+        self.font_file = font_file
         self.font_size = font_size
-        self.title_color = title_color
-        self.interline_spacing = interline_spacing
-        self.kerning = kerning
-        self.vertical_shift = vertical_shift
+        self.font_color = font_color
+        self.font_interline_spacing = font_interline_spacing
+        self.font_kerning = font_kerning
+        self.font_vertical_shift = font_vertical_shift
 
-        # Store extras
+        # Store and validate extras
         self.episode_text_color = episode_text_color
 
         # Validate episode text position
@@ -174,7 +154,7 @@ class TintedGlassTitleCard(BaseCardType):
 
     def blur_rectangle_command(self,
             coordinates: BoxCoordinates,
-            rounding_radius: int) -> list[str]:
+            rounding_radius: int) -> ImageMagickCommands:
         """
         Get the commands necessary to blur and darken a rectangle
         encompassing the given coordinates.
@@ -213,7 +193,7 @@ class TintedGlassTitleCard(BaseCardType):
 
 
     @property
-    def add_title_text_command(self) -> list[str]:
+    def add_title_text_command(self) -> ImageMagickCommands:
         """
         Get the ImageMagick commands necessary to add the title text
         described by this card.
@@ -223,19 +203,19 @@ class TintedGlassTitleCard(BaseCardType):
         """
 
         font_size = 200 * self.font_size
-        kerning = -5 * self.kerning
-        interline_spacing = -50 + self.interline_spacing
-        vertical_shift = 300 + self.vertical_shift
+        kerning = -5 * self.font_kerning
+        interline_spacing = -50 + self.font_interline_spacing
+        vertical_shift = 300 + self.font_vertical_shift
 
         return [
             f'-gravity south',
-            f'-font "{self.font}"',
+            f'-font "{self.font_file}"',
             f'-pointsize {font_size}',
             f'-interline-spacing {interline_spacing}',
             f'-kerning {kerning}',
             f'-interword-spacing 40',
-            f'-fill "{self.title_color}"',
-            f'-annotate +0+{vertical_shift} "{self.title}"',
+            f'-fill "{self.font_color}"',
+            f'-annotate +0+{vertical_shift} "{self.title_text}"',
         ]
 
 
@@ -248,8 +228,9 @@ class TintedGlassTitleCard(BaseCardType):
         """
 
         # Get dimensions of text - since text is stacked, do max/sum operations
-        width, height = self.get_text_dimensions(self.add_title_text_command,
-                                                 width='max', height='sum')
+        width, height = self.get_text_dimensions(
+            self.add_title_text_command, width='max', height='sum'
+        )
 
         # Get start coordinates of the bounding box
         x_start, x_end = self.WIDTH/2 - width/2, self.WIDTH/2 + width/2
@@ -261,8 +242,8 @@ class TintedGlassTitleCard(BaseCardType):
         y_start += 12
 
         # Shift y coordinates by vertical shift
-        y_start += self.vertical_shift
-        y_end += self.vertical_shift
+        y_start += self.font_vertical_shift
+        y_end += self.font_vertical_shift
 
         # Adjust upper bounds of box if title is multi-line
         y_start += (65 * (self.__line_count-1)) if self.__line_count > 1 else 0
@@ -277,7 +258,7 @@ class TintedGlassTitleCard(BaseCardType):
 
 
     def add_episode_text_command(self,
-            title_coordinates: BoxCoordinates) -> list[str]:
+            title_coordinates: BoxCoordinates) -> ImageMagickCommands:
         """
         Get the list of ImageMagick commands to add episode text.
 
@@ -288,6 +269,10 @@ class TintedGlassTitleCard(BaseCardType):
         Returns:
             List of ImageMagik commands.
         """
+
+        # If hidden, return blank command
+        if self.hide_episode_text:
+            return []
 
         # Determine text position
         if self.episode_text_position == 'center':
@@ -310,8 +295,9 @@ class TintedGlassTitleCard(BaseCardType):
             f'-annotate {position} "{self.episode_text}"',
         ]
 
-        width, height = self.get_text_dimensions(command,
-                                                 width='max', height='max')
+        width, height = self.get_text_dimensions(
+            command, width='max', height='max'
+        )
 
         # Center positioning requires padding adjustment
         if self.episode_text_position == 'center':
@@ -381,7 +367,8 @@ class TintedGlassTitleCard(BaseCardType):
             or  (font.interline_spacing != 0)
             or  (font.kerning != 1.0)
             or  (font.size != 1.0)
-            or  (font.vertical_shift != 0))
+            or  (font.vertical_shift != 0)
+        )
 
 
     @staticmethod
@@ -404,8 +391,8 @@ class TintedGlassTitleCard(BaseCardType):
             'S{season_number} E{episode_number}'
         )
 
-        return (custom_episode_map or
-                episode_text_format not in standard_etfs)
+        return (custom_episode_map
+                or episode_text_format not in standard_etfs)
 
 
     def create(self):

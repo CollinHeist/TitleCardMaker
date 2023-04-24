@@ -406,26 +406,42 @@ class Show(YamlReader):
     def set_series_ids(self) -> None:
         """Set the series ID's for this show."""
 
-        if self.emby_interface:
-            self.emby_interface.set_series_ids(
-                self.library_name, self.series_info
-            )
+        # Temporary function to set series ID's
+        def set_emby():
+            if self.emby_interface:
+                self.emby_interface.set_series_ids(
+                    self.library_name, self.series_info
+                )
+        def set_jellyfin():
+            if self.jellyfin_interface:
+                self.jellyfin_interface.set_series_ids(
+                    self.library_name, self.series_info
+                )
+        def set_plex():
+            if self.plex_interface:
+                self.plex_interface.set_series_ids(
+                    self.library_name, self.series_info
+                )
+        def set_sonarr():
+            if self.sonarr_interface:
+                self.sonarr_interface.set_series_ids(self.series_info)
+        def set_tmdb():
+            if self.tmdb_interface:
+                self.tmdb_interface.set_series_ids(self.series_info)
 
-        if self.jellyfin_interface:
-            self.jellyfin_interface.set_series_ids(
-                self.library_name, self.series_info
-            )
+        # Identify interface order for ID gathering based on primary episode
+        # data source
+        interface_orders = {
+            'emby':     [set_emby, set_sonarr, set_tmdb, set_plex, set_jellyfin],
+            'jellyfin': [set_jellyfin, set_sonarr, set_tmdb, set_plex, set_emby],
+            'sonarr':   [set_sonarr, set_plex, set_emby, set_jellyfin, set_tmdb],
+            'plex':     [set_plex, set_sonarr, set_tmdb, set_emby, set_jellyfin],
+            'tmdb':     [set_tmdb, set_sonarr, set_plex, set_emby, set_jellyfin],
+        }
 
-        if self.plex_interface:
-            self.plex_interface.set_series_ids(
-                self.library_name, self.series_info
-            )
-
-        if self.sonarr_interface:
-            self.sonarr_interface.set_series_ids(self.series_info)
-
-        if self.tmdb_interface:
-            self.tmdb_interface.set_series_ids(self.series_info)
+        # Go through each interface and load ID's from it
+        for interface_function in interface_orders[self.episode_data_source]:
+            interface_function()
 
 
     def __get_destination(self, episode_info: 'EpisodeInfo') -> Path:
@@ -587,7 +603,7 @@ class Show(YamlReader):
         # data source
         interface_orders = {
             'emby':     [load_emby, load_sonarr, load_tmdb, load_plex, load_jellyfin],
-            'jellyfin': [load_jellyfin, load_sonarr, load_tmdb, load_plex, load_jellyfin],
+            'jellyfin': [load_jellyfin, load_sonarr, load_tmdb, load_plex, load_emby],
             'sonarr':   [load_sonarr, load_plex, load_emby, load_jellyfin, load_tmdb],
             'plex':     [load_plex, load_sonarr, load_tmdb, load_emby, load_jellyfin],
             'tmdb':     [load_tmdb, load_sonarr, load_plex, load_emby, load_jellyfin],

@@ -1,5 +1,6 @@
 from pathlib import Path
 from re import compile as re_compile
+from typing import Any, Optional
 
 from modules.Debug import log
 import modules.global_objects as global_objects
@@ -74,7 +75,10 @@ class Font(YamlReader):
                 f'|{self.interline_spacing}|{self.kerning}|{self.stroke_width}')
 
 
-    def __error(self, attribute: str, value: str, description: str=None) ->None:
+    def __error(self,
+            attribute: str,
+            value: str,
+            description: Optional[str] = None) -> None:
         """
         Print an error message for the given attribute of the given
         value. Also sets the valid attribute of this object to False.
@@ -192,7 +196,7 @@ class Font(YamlReader):
         self.stroke_width = 1.0
 
 
-    def get_attributes(self) -> dict[str: 'str | float']:
+    def get_attributes(self) -> dict[str, Any]:
         """
         Return a dictionary of attributes for this font to be unpacked.
 
@@ -203,13 +207,14 @@ class Font(YamlReader):
         """
 
         return {
-            'title_color': self.color,
-            'font_size': self.size,
+            'font_color': self.color,
             'font': self.file,
-            'vertical_shift': self.vertical_shift,
-            'interline_spacing': self.interline_spacing,
-            'kerning': self.kerning,
-            'stroke_width': self.stroke_width,
+            'font_file': self.file,
+            'font_interline_spacing': self.interline_spacing,
+            'font_kerning': self.kerning,
+            'font_size': self.size,
+            'font_stroke_width': self.stroke_width,
+            'font_vertical_shift': self.vertical_shift,
         }
 
 
