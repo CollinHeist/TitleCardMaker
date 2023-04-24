@@ -129,7 +129,7 @@ title_card_group.add_argument(
     metavar='SCALE%',
     help='Specify the font kerning scale (as percentage)')
 title_card_group.add_argument(
-    '--font-stroke-width', '--stroke-width','
+    '--font-stroke-width', '--stroke-width',
     type=str,
     default='100%',
     metavar='SCALE%',
