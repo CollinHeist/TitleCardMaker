@@ -189,8 +189,8 @@ class StarWarsTitleCard(BaseCardType):
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.color != DividerTitleCard.TITLE_COLOR)
-            or (font.file != DividerTitleCard.TITLE_FONT)
+        return ((font.color != StarWarsTitleCard.TITLE_COLOR)
+            or (font.file != StarWarsTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
             or (font.size != 1.0)
         )
