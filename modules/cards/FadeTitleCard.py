@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
-from modules.BaseCardType import BaseCardType
+from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.CleanPath import CleanPath
 from modules.Debug import log
 
@@ -65,60 +65,43 @@ class FadeTitleCard(BaseCardType):
     __OVERLAY = REF_DIRECTORY / 'gradient_fade.png'
 
     __slots__ = (
-        'source_file', 'output_file', 'title', 'index_text',  'font',
-        'font_size', 'title_color', 'interline_spacing', 'kerning',
-        'vertical_shift', 'logo', 'episode_text_color',
+        'source_file', 'output_file', 'title_text', 'index_text', 'font_file',
+        'font_size', 'font_color', 'font_interline_spacing', 'font_kerning',
+        'font_vertical_shift', 'logo', 'episode_text_color',
     )
 
-    def __init__(self, source: Path, output_file: Path, title: str,
-            season_text: str, episode_text: str, hide_season: bool,
-            font: str, title_color: str, 
-            interline_spacing: int=0,
-            kerning: float=1.0,
-            font_size: float=1.0,
-            vertical_shift: int=0,
-            season_number: int=1,
-            episode_number: int=1,
-            blur: bool=False,
-            grayscale: bool=False,
-            logo: SeriesExtra[str]=None,
-            episode_text_color: SeriesExtra[str]=EPISODE_TEXT_COLOR,
-            separator: SeriesExtra[str]='•',
+    def __init__(self,
+            source_file: Path,
+            card_file: Path,
+            title_text: str,
+            season_text: str,
+            episode_text: str,
+            hide_season_text: bool = False,
+            font_color: str = TITLE_COLOR, 
+            font_file: str = TITLE_FONT,
+            font_interline_spacing: int = 0,
+            font_kerning: float = 1.0,
+            font_size: float = 1.0,
+            font_vertical_shift: int = 0,
+            season_number: int = 1,
+            episode_number: int = 1,
+            blur: bool = False,
+            grayscale: bool = False,
+            logo: SeriesExtra[str] = None,
+            episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
+            separator: SeriesExtra[str] = '•',
+            preferences: 'Preferences' = None,
             **unused) -> None:
         """
-        Construct a new instance of this card.
-
-        Args:
-            source: Source image to base the card on.
-            output_file: Output file where to create the card.
-            title: Title text to add to created card.
-            season_text: The season text for this card.
-            episode_text: Episode text to add to created card.
-            hide_season: Whether to hide the season text.
-            font: Font name or path (as string) to use for episode title.
-            title_color: Color to use for title text.
-            interline_spacing: Pixel count to adjust title interline
-                spacing by.
-            kerning: Scalar to apply to kerning of the title text.
-            font_size: Scalar to apply to title font size.
-            vertical_shift: Pixel count to adjust the title vertical
-                offset by.
-            season_number: Season number for logo-file formatting.
-            episode_number: Episode number for logo-file formatting.
-            logo:  Filepath (or file format) to the logo file.
-            blur: Whether to blur the source image.
-            grayscale: Whether to make the source image grayscale.
-            episode_text_color: Color to use for the episode text.
-            separator: Character to use to separate season and episode text.
-            unused: Unused arguments.
+        Construct a new instance of this Card.
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__(blur, grayscale)
+        super().__init__(blur, grayscale, preferences=preferences)
 
         # Store source and output file
-        self.source_file = source
-        self.output_file = output_file
+        self.source_file = source_file
+        self.output_file = card_file
         
         # Find logo file if indicated
         if logo is None:
@@ -138,34 +121,34 @@ class FadeTitleCard(BaseCardType):
             if logo.exists():
                 self.logo = logo
             # Try to find logo alongside source image
-            elif (source.parent / logo.name).exists():
-                self.logo = source.parent / logo.name
+            elif (self.source_file.parent / logo.name).exists():
+                self.logo = self.source_file.parent / logo.name
             # Assume non-existent explicitly specified filename
             else:
                 self.logo = logo
 
         # Store attributes of the text
-        self.title = self.image_magick.escape_chars(title)
-        if hide_season:
+        self.title_text = self.image_magick.escape_chars(title_text)
+        if hide_season_text:
             self.index_text=self.image_magick.escape_chars(episode_text.upper())
         else:
             index_text = f'{season_text} {separator} {episode_text}'.upper()
             self.index_text = self.image_magick.escape_chars(index_text)
 
         # Font customizations
-        self.font = font
+        self.font_color = font_color
+        self.font_file = font_file
+        self.font_interline_spacing = font_interline_spacing
+        self.font_kerning = font_kerning
         self.font_size = font_size
-        self.interline_spacing = interline_spacing
-        self.kerning = kerning
-        self.title_color = title_color
-        self.vertical_shift = vertical_shift
+        self.font_vertical_shift = font_vertical_shift
 
         # Extras
         self.episode_text_color = episode_text_color
 
 
     @property
-    def add_logo(self) -> list[str]:
+    def add_logo(self) -> ImageMagickCommands:
         """
         Subcommand to add the logo file to the source image.
 
@@ -181,15 +164,13 @@ class FadeTitleCard(BaseCardType):
             f'\( "{self.logo.resolve()}"',
             f'-resize 900x',
             f'-resize x500\> \)',
-            # f'-gravity south',
-            # f'-geometry -1000+1200',
             f'-gravity west -geometry +100-550',
             f'-composite',
         ]
 
 
     @property
-    def add_title_text(self) -> list[str]:
+    def add_title_text(self) -> ImageMagickCommands:
         """
         Subcommand to add the title text to the source image.
 
@@ -198,27 +179,27 @@ class FadeTitleCard(BaseCardType):
         """
 
         # No title, return blank command
-        if len(self.title) == 0:
+        if len(self.title_text) == 0:
             return []
 
         size = 115 * self.font_size
-        interline_spacing = -20 + self.interline_spacing
-        kerning = 5 * self.kerning
-        vertical_shift = 800 + self.vertical_shift
+        interline_spacing = -20 + self.font_interline_spacing
+        kerning = 5 * self.font_kerning
+        vertical_shift = 800 + self.font_vertical_shift
 
         return [
             f'-gravity northwest',
-            f'-font "{self.font}"',
+            f'-font "{self.font_file}"',
             f'-pointsize {size}',
             f'-kerning {kerning}',
             f'-interline-spacing {interline_spacing}',
-            f'-fill "{self.title_color}"',
-            f'-annotate +100+{vertical_shift} "{self.title}"',
+            f'-fill "{self.font_color}"',
+            f'-annotate +100+{vertical_shift} "{self.title_text}"',
         ]
 
 
     @property
-    def add_index_text(self) -> list[str]:
+    def add_index_text(self) -> ImageMagickCommands:
         """
         Subcommand to add the index text to the source image.
 
@@ -258,7 +239,8 @@ class FadeTitleCard(BaseCardType):
             or  (font.interline_spacing != 0)
             or  (font.kerning != 1.0)
             or  (font.size != 1.0)
-            or  (font.vertical_shift != 0))
+            or  (font.vertical_shift != 0)
+        )
 
 
     @staticmethod

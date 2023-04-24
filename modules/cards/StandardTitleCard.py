@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Any, Optional
 
-from modules.BaseCardType import BaseCardType
+from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
 SeriesExtra = Optional
@@ -51,8 +51,9 @@ class StandardTitleCard(BaseCardType):
     """Characteristics of the default title font"""
     TITLE_FONT = str((REF_DIRECTORY / 'Sequel-Neue.otf').resolve())
     TITLE_COLOR = '#EBEBEB'
-    FONT_REPLACEMENTS = {'[': '(', ']': ')', '(': '[', ')': ']', '―': '-',
-                         '…': '...', '“': '"'}
+    FONT_REPLACEMENTS = {
+        '[': '(', ']': ')', '(': '[', ')': ']', '―': '-', '…': '...', '“': '"'
+    }
 
     """Whether this CardType uses season titles for archival purposes"""
     USES_SEASON_TITLE = True
@@ -69,73 +70,58 @@ class StandardTitleCard(BaseCardType):
     __GRADIENT_IMAGE = REF_DIRECTORY / 'GRADIENT.png'
 
     __slots__ = (
-        'source_file', 'output_file', 'title', 'season_text', 'episode_text',
-        'font', 'font_size', 'title_color', 'hide_season', 'separator',
-        'vertical_shift', 'interline_spacing', 'kerning', 'stroke_width',
-        'omit_gradient', 'stroke_color',
+        'source_file', 'output_file', 'title_text', 'season_text',
+        'episode_text', 'hide_season_text', 'font_color', 'font_file',
+        'font_interline_spacing', 'font_kerning', 'font_size',
+        'font_stroke_width', 'font_vertical_shift', 'omit_gradient',
+        'stroke_color', 'separator', 
     )
 
-    def __init__(self, source: Path, output_file: Path, title: str,
-            season_text: str, episode_text: str, hide_season: bool,
-            font: str, title_color: str,
-            font_size: float=1.0,
-            interline_spacing: int=0,
-            kerning: float=1.0,
-            stroke_width: float=1.0,
-            vertical_shift: int=0,
-            blur: bool=False,
-            grayscale: bool=False,
-            separator: Optional[str]='•',
-            stroke_color: Optional[str]='black',
-            omit_gradient: Optional[bool]=False,
+    def __init__(self,
+            source_file: Path,
+            card_file: Path,
+            title_text: str,
+            season_text: str,
+            episode_text: str,
+            hide_season_text: bool = False,
+            font_color: str = TITLE_COLOR,
+            font_file: str = TITLE_FONT,
+            font_interline_spacing: int = 0,
+            font_kerning: float = 1.0,
+            font_size: float = 1.0,
+            font_stroke_width: float = 1.0,
+            font_vertical_shift: int = 0,
+            blur: bool = False,
+            grayscale: bool = False,
+            separator: SeriesExtra[str] = '•',
+            stroke_color: SeriesExtra[str] = 'black',
+            omit_gradient: SeriesExtra[bool] = False,
+            preferences: 'Preferences' = None,
             **unused) -> None:
         """
         Construct a new instance of this card.
-
-        Args:
-            source: Source image to base the card on.
-            output_file: Output file where to create the card.
-            title: Title text to add to created card.
-            season_text: Season text to add to created card.
-            episode_text: Episode text to add to created card.
-            font: Font name or path (as string) to use for episode title.
-            font_size: Scalar to apply to title font size.
-            title_color: Color to use for title text.
-            hide_season: Whether to ignore season_text.
-            vertical_shift: Pixel count to adjust the title vertical
-                offset by.
-            interline_spacing: Pixel count to adjust title interline
-                spacing by.
-            kerning: Scalar to apply to kerning of the title text.
-            stroke_width: Scalar to apply to black stroke.
-            blur: Whether to blur the source image.
-            grayscale: Whether to make the source image grayscale.
-            separator: Character to use to separate season/episode text.
-            omit_gradient: Whether to omit the gradient overlay.
-            stroke_color: Color to use for the back-stroke color.
-            unused: Unused arguments.
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__(blur, grayscale)
+        super().__init__(blur, grayscale, preferences=preferences)
 
-        self.source_file = source
-        self.output_file = output_file
+        self.source_file = source_file
+        self.output_file = card_file
 
         # Ensure characters that need to be escaped are
-        self.title = self.image_magick.escape_chars(title)
+        self.title_text = self.image_magick.escape_chars(title_text)
         self.season_text = self.image_magick.escape_chars(season_text.upper())
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
+        self.hide_season_text = hide_season_text or len(season_text) == 0
 
         # Font/card customizations
-        self.font = font
+        self.font_color = font_color
+        self.font_file = font_file
+        self.font_kerning = font_kerning
+        self.font_interline_spacing = font_interline_spacing
         self.font_size = font_size
-        self.title_color = title_color
-        self.hide_season = hide_season
-        self.vertical_shift = vertical_shift
-        self.interline_spacing = interline_spacing
-        self.kerning = kerning
-        self.stroke_width = stroke_width
+        self.font_stroke_width = font_stroke_width
+        self.font_vertical_shift = font_vertical_shift
 
         # Optional extras
         self.separator = separator
@@ -153,7 +139,7 @@ class StandardTitleCard(BaseCardType):
         """
 
         # Sub-command for adding season/episode text
-        if self.hide_season:
+        if self.hide_season_text:
             return [
                 f'-kerning 5.42',       
                 f'-pointsize 67.75',
@@ -219,17 +205,17 @@ class StandardTitleCard(BaseCardType):
         """
 
         # Stroke disabled, return empty command
-        if self.stroke_width == 0:
+        if self.font_stroke_width == 0:
             return []
 
-        vertical_shift = 245 + self.vertical_shift
-        stroke_width = 3.0 * self.stroke_width
+        vertical_shift = 245 + self.font_vertical_shift
+        stroke_width = 3.0 * self.font_stroke_width
 
         return [
             f'-fill "{self.stroke_color}"',
             f'-stroke "{self.stroke_color}"',
             f'-strokewidth {stroke_width}',
-            f'-annotate +0+{vertical_shift} "{self.title}"',
+            f'-annotate +0+{vertical_shift} "{self.title_text}"',
         ]
 
 
@@ -265,18 +251,19 @@ class StandardTitleCard(BaseCardType):
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.file != StandardTitleCard.TITLE_FONT)
-            or (font.size != 1.0)
-            or (font.color != StandardTitleCard.TITLE_COLOR)
-            or (font.vertical_shift != 0)
-            or (font.interline_spacing != 0)
+        return ((font.color != StandardTitleCard.TITLE_COLOR)
+            or (font.file != StandardTitleCard.TITLE_FONT)
             or (font.kerning != 1.0)
-            or (font.stroke_width != 1.0))
+            or (font.interline_spacing != 0)
+            or (font.size != 1.0)
+            or (font.stroke_width != 1.0)
+            or (font.vertical_shift != 0)
+        )
 
 
     @staticmethod
-    def is_custom_season_titles(custom_episode_map: bool, 
-                                episode_text_format: str) -> bool:
+    def is_custom_season_titles(
+            custom_episode_map: bool, episode_text_format: str) -> bool:
         """
         Determine whether the given attributes constitute custom or
         generic season titles.
@@ -291,8 +278,8 @@ class StandardTitleCard(BaseCardType):
 
         standard_etf = StandardTitleCard.EPISODE_TEXT_FORMAT.upper()
 
-        return (custom_episode_map or
-                episode_text_format.upper() != standard_etf)
+        return (custom_episode_map
+                or episode_text_format.upper() != standard_etf)
 
 
     def create(self) -> None:
@@ -302,10 +289,10 @@ class StandardTitleCard(BaseCardType):
         """
 
         # Font customizations
-        vertical_shift = 245 + self.vertical_shift
+        vertical_shift = 245 + self.font_vertical_shift
         font_size = 157.41 * self.font_size
-        interline_spacing = -22 + self.interline_spacing
-        kerning = -1.25 * self.kerning
+        interline_spacing = -22 + self.font_interline_spacing
+        kerning = -1.25 * self.font_kerning
 
         # Sub-command to optionally add gradient
         gradient_command = []
@@ -323,7 +310,7 @@ class StandardTitleCard(BaseCardType):
             *gradient_command,
             # Global title text options
             f'-gravity south',
-            f'-font "{self.font}"',                     
+            f'-font "{self.font_file}"',                     
             f'-kerning {kerning}',
             f'-interword-spacing 50',
             f'-interline-spacing {interline_spacing}',
@@ -331,8 +318,8 @@ class StandardTitleCard(BaseCardType):
             # Black stroke behind title text
             *self.black_title_command,
             # Title text
-            f'-fill "{self.title_color}"',
-            f'-annotate +0+{vertical_shift} "{self.title}"',
+            f'-fill "{self.font_color}"',
+            f'-annotate +0+{vertical_shift} "{self.title_text}"',
             # Add episode or season+episode "image"
             *self.index_command,
             # Create card

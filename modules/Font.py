@@ -207,13 +207,14 @@ class Font(YamlReader):
         """
 
         return {
-            'title_color': self.color,
-            'font_size': self.size,
+            'font_color': self.color,
             'font': self.file,
-            'vertical_shift': self.vertical_shift,
-            'interline_spacing': self.interline_spacing,
-            'kerning': self.kerning,
-            'stroke_width': self.stroke_width,
+            'font_file': self.file,
+            'font_interline_spacing': self.interline_spacing,
+            'font_kerning': self.kerning,
+            'font_size': self.size,
+            'font_stroke_width': self.stroke_width,
+            'font_vertical_shift': self.vertical_shift,
         }
 
 

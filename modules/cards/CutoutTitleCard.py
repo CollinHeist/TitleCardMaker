@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
-from modules.BaseCardType import BaseCardType
+from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
 SeriesExtra = Optional
@@ -67,70 +67,48 @@ class CutoutTitleCard(BaseCardType):
     NUMBER_BLUR_PROFILE = '0x10'
 
     __slots__ = (
-        'source_file', 'output_file', 'title', 'episode_text', 'font',
-        'font_size', 'title_color', 'vertical_shift', 'interline_spacing',
-        'kerning', 'overlay_color', 'blur_edges',
+        'source_file', 'output_file', 'title_text', 'episode_text',
+        'font_color', 'font_file', 'font_size', 'font_vertical_shift',
+        'overlay_color', 'blur_edges',
     )
 
-    def __init__(self, source: Path, output_file: Path, title: str,
-            episode_text: str, font: str, font_size: float,
-            title_color: str,
-            vertical_shift: int=0,
-            interline_spacing: int=0,
-            kerning: float=1.0,
-            blur: bool=False,
-            grayscale: bool=False,
-            overlay_color: SeriesExtra[str]='black',
-            blur_edges: SeriesExtra[bool]=False,
+    def __init__(self,
+            source_file: Path,
+            card_file: Path,
+            title_text: str,
+            episode_text: str,
+            font_color: str = TITLE_COLOR,
+            font_file: str = TITLE_FONT,
+            font_size: float = 1.0,
+            font_vertical_shift: int = 0,
+            blur: bool = False,
+            grayscale: bool = False,
+            overlay_color: SeriesExtra[str] = 'black',
+            blur_edges: SeriesExtra[bool] = False,
+            preferences: 'Preferences' = None,
             **unused) -> None:
         """
-        Construct a new instance of this card.
-
-        Args:
-            source: Source image to base the card on.
-            output_file: Output file where to create the card.
-            title: Title text to add to created card.
-            season_text: Season text to add to created card.
-            episode_text: Episode text to add to created card.
-            font: Font name or path (as string) to use for episode
-                title.
-            font_size: Scalar to apply to title font size.
-            title_color: Color to use for title text.
-            hide_season: Whether to ignore season_text.
-            vertical_shift: Pixel count to adjust the title vertical
-                offset by.
-            interline_spacing: Pixel count to adjust title interline
-                spacing by.
-            kerning: Scalar to apply to kerning of the title text.
-            stroke_width: Scalar to apply to black stroke of the title
-                text.
-            blur: Whether to blur the source image.
-            grayscale: Whether to make the source image grayscale.
-            overlay_color: Color to use for the solid overlay.
-            blur_edges: Whether to blur edges of the number overlay.
-            unused: Unused arguments.
+        Construct a new instance of this Card.
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
-        super().__init__(blur, grayscale)
+        super().__init__(blur, grayscale, preferences=preferences)
 
-        self.source_file = source
-        self.output_file = output_file
+        self.source_file = source_file
+        self.output_file = card_file
 
         # Ensure characters that need to be escaped are
         # Format episode text to split into 1/2 lines depending on word count
-        self.title = self.image_magick.escape_chars(title)
+        self.title_text = self.image_magick.escape_chars(title_text)
         self.episode_text = self.image_magick.escape_chars(
             self._format_episode_text(episode_text).upper()
         )
 
         # Font/card customizations
-        self.font = font
+        self.font_color = font_color
+        self.font_file = font_file
         self.font_size = font_size
-        self.title_color = title_color
-        self.vertical_shift = vertical_shift
-        self.interline_spacing = interline_spacing
-        self.kerning = kerning
+        self.font_vertical_shift = font_vertical_shift
 
         # Optional extras
         self.overlay_color = overlay_color
@@ -177,12 +155,11 @@ class CutoutTitleCard(BaseCardType):
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.file != CutoutTitleCard.TITLE_FONT)
+        return ((font.color != CutoutTitleCard.TITLE_COLOR)
+            or (font.file != CutoutTitleCard.TITLE_FONT)
             or (font.size != 1.0)
-            or (font.color != CutoutTitleCard.TITLE_COLOR)
             or (font.vertical_shift != 0)
-            or (font.interline_spacing != 0)
-            or (font.kerning != 1.0))
+        )
 
 
     @staticmethod
@@ -240,11 +217,11 @@ class CutoutTitleCard(BaseCardType):
             f'-composite',
             # Add title text
             f'-gravity south',
-            f'-pointsize 50',
+            f'-pointsize {50 * self.font_size}',
             f'+interline-spacing',
-            f'-fill "{self.title_color}"',
-            f'-font "{self.font}"',
-            f'-annotate +0+{100+self.vertical_shift} "{self.title}"',
+            f'-fill "{self.font_color}"',
+            f'-font "{self.font_file}"',
+            f'-annotate +0+{100 + self.font_vertical_shift} "{self.title_text}"',
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
