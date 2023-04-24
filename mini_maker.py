@@ -404,7 +404,7 @@ if hasattr(args, 'title_card'):
         font_interline_spacing=args.font_interline_spacing,
         font_kerning=float(args.font_kerning[:-1])/100.0,
         font_size=float(args.font_size[:-1])/100.0,
-        font_stroke_width=float(args.sfont_troke_width[:-1])/100.0,
+        font_stroke_width=float(args.font_stroke_width[:-1])/100.0,
         font_vertical_shift=args.font_vertical_shift,
         blur=args.blur,
         grayscale=args.grayscale,
