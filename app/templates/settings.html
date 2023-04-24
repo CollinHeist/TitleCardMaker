@@ -4,15 +4,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="/assets/logo128.png">
-  <link rel="shortcut icon" href="/assets/logo128.png"> 
-  <link rel="apple-touch-icon" href="/assets/logo128.png">
   <title>Settings - TitleCardMaker</title>
+  
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16.png">
+  <link rel="manifest" href="/assets/favicon/site.webmanifest">
 
   <!-- Formantic UI -->
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
   <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.js"></script>
+
+  <!-- JS Files -->
+  <script type="text/javascript" src="/templates/loadStaticContent.js"></script>
+  <script type="text/javascript" src="/templates/loadCardTypes.js"></script>
   
   <!-- Global styles -->
   <link rel="stylesheet" type="text/css" href="/templates/style.css"/>
@@ -71,75 +78,56 @@
         })
       });
     }
-
-    // Get all available card types
-    async function getAllCardTypes() {
-      const allTypes = await fetch('/api/available/card-types').then(resp => resp.json());
-      let localTypes = [],
-          remoteTypes = [];
-      allTypes.forEach(({name, identifier, source, creators}) => {
-        const selected = identifier === '{{preferences.default_card_type}}';
-        const excluded = {{preferences.excluded_card_types|safe}}.includes(identifier);
-        if (source === 'local') {
-          localTypes.push({name: name, value: identifier, selected: selected});
-        } else {
-          remoteTypes.push({
-            name: name,
-            value: identifier,
-            selected: selected,
-            description: creators[0],
-            descriptionVertical: true,
-          });
-        }
-      });
-      $('#default-card-type').dropdown({
-        onChange: (value, text, $selectedItem) => {
-          $('#title-card-image')
-            .fadeTo(250, 0, () => updatePreviewTitleCard(value))
-            .fadeTo(250, 1);
-        },
-        // sortSelect: true,
-        values: [
-          {name: 'Built-in Cards', type: 'header'},
-          ...localTypes,
-          {name: 'Remote Cards', type: 'header'},
-          ...remoteTypes,
-        ]
-      });
-      // Card type exclusion dropdown
-      const actualAllTypes = await fetch('/api/available/card-types?show_excluded=true').then(resp => resp.json());
-      let excludedLocalTypes = [],
-          excludedRemoteTypes = [];
-          actualAllTypes.forEach(({name, identifier, source, creators}) => {
-        const excluded = {{preferences.excluded_card_types|safe}}.includes(identifier);
-        if (source === 'local') {
-          excludedLocalTypes.push({name: name, value: identifier, selected: excluded});
-        } else {
-          excludedRemoteTypes.push({
-            name: name,
-            value: identifier,
-            selected: excluded,
-            description: creators[0],
-            descriptionVertical: true,
-          });
-        }
-      });
-      $('#excluded-card-types').dropdown({
-        useLabels: false,
-        values: [
-          {name: 'Built-in Cards', type: 'header'},
-          ...excludedLocalTypes,
-          {name: 'Remote Cards', type: 'header'},
-          ...excludedRemoteTypes,
-        ]
-      });
-
-      return allTypes;
-    }
   </script>
 </head>
 
 <body onload="getEpisodeDataSources(); getImageSourcePriority();">
+  <script>
+    function initCardTypeDropdowns() {
+      // Load filtered types into default card type dropdown
+      const allCards = loadCardTypes({
+        element: '#excluded-card-types',
+        isSelected: (identifier) => {{preferences.excluded_card_types|safe}}.includes(identifier),
+        showExcluded: true,
+        dropdownArgs: {
+          useLabels: false,
+        }
+      });
+      // Load default card type dropdown
+      loadCardTypes({
+        element: '#default-card-type',
+        isSelected: (identifier) => identifier === '{{preferences.default_card_type}}',
+        showExcluded: false,
+        // Dropdown args
+        dropdownArgs: {
+          onChange: (value, text, $selectedItem) => {
+            $('#title-card-image')
+              .fadeTo(250, 0, () => updatePreviewTitleCard(allCards, value))
+              .fadeTo(250, 1);
+          }
+        }
+      });
+      return allCards;
+    }
+
+    // Function to update the preview title card
+    function updatePreviewTitleCard(allCards, previewCardType) {
+      for (let {name, identifier, example, creators, supports_custom_fonts,
+                supports_custom_seasons, description} of allCards) {
+        if (identifier == previewCardType) {
+          // Update all attributes of the title card element for the given card
+          $('#title-card-image')[0].src = example; 
+          $('#title-card-name')[0].innerText = name;//`${name} Title Card`;
+          $('#title-card-creators')[0].innerText = creators.join(', ');
+          $('#title-card-font-support')[0].firstChild.className = supports_custom_fonts ? 'green check icon' : 'red times icon';
+          $('#title-card-season-support')[0].firstChild.className = supports_custom_seasons ? 'green check icon' : 'red times icon';
+          $('#title-card-description')[0].innerHTML = '<p>' + description.join('</p><p>') + '</p>';
+          break;
+        }
+      }
+    }
+  </script>
+
   <div class="pusher">
     <!-- Static header and sidebar loaded by external script -->
     <div id="page-header"></div>
@@ -213,7 +201,7 @@
               <div class="ui stackable grid">
                 <!-- Card settings -->
                 <div class="four wide column">
-                  <div class="field" data-tooltip="Global default card type for all series">
+                  <div class="field" data-tooltip="Global default card type for all series" data-position="right center">
                     <label>Default Card Type</label>
                     <div id="default-card-type" class="ui long compact search selection dropdown">
                       <span class="text"></span>
@@ -223,7 +211,7 @@
                     </div>
                   </div>
 
-                  <div class="field" data-tooltip="Card types to exclude from dropdowns">
+                  <div class="field" data-tooltip="Card types to exclude from dropdowns" data-position="right center">
                     <label>Excluded Card Types</label>
                     <div id="excluded-card-types" class="ui long compact selection multiple dropdown">
                       <span class="text"></span>
@@ -601,30 +589,11 @@
         });
       });
 
-    // Submit API request for all available title cards
-    // Function to update the preview title card
-    function updatePreviewTitleCard(type) {
-      for (let {name, example, creators, supports_custom_fonts,
-                supports_custom_seasons, description} of allCards) {
-        if (name.toUpperCase() == type.toUpperCase()) {
-          // Update all attributes of the title card element for the given card
-          $('#title-card-image')[0].src = example; 
-          $('#title-card-name')[0].innerText = name;//`${name} Title Card`;
-          $('#title-card-creators')[0].innerText = creators.join(', ');
-          $('#title-card-font-support')[0].firstChild.className = supports_custom_fonts ? 'green check icon' : 'red times icon';
-          $('#title-card-season-support')[0].firstChild.className = supports_custom_seasons ? 'green check icon' : 'red times icon';
-          $('#title-card-description')[0].innerHTML = '<p>' + description.join('</p><p>') + '</p>';
-          break;
-        }
-      }
-    }
-
     (async () => {
-      allCards = await getAllCardTypes();
-      updatePreviewTitleCard('{{preferences.default_card_type}}');
+      allCards = await initCardTypeDropdowns();
+      updatePreviewTitleCard(allCards, '{{preferences.default_card_type}}');
     })()
   </script>
-  <script src="/templates/loadStaticContent.js"></script>
 </body>
 
 </html>

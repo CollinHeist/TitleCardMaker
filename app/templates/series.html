@@ -4,15 +4,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="/assets/logo128.png">
-  <link rel="shortcut icon" href="/assets/logo128.png"> 
-  <link rel="apple-touch-icon" href="/assets/logo128.png">
   <title>{{series.name}} - TitleCardMaker</title>
+
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16.png">
+  <link rel="manifest" href="/assets/favicon/site.webmanifest">
 
   <!-- Formantic UI -->
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
   <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.js"></script>
+
+  <!-- JS Files -->
+  <script type="text/javascript" src="/templates/loadStaticContent.js"></script>
+  <script type="text/javascript" src="/templates/loadCardTypes.js"></script>
+  <script type="text/javascript" src="/templates/theme.js"></script>
   
   <!-- Global styles -->
   <link rel="stylesheet" type="text/css" href="/templates/style.css">
@@ -81,8 +89,7 @@
 
   <!-- Templates -->
   <template id="episode-row">
-    <tr class="center aligned">
-      
+    <tr class="center aligned"> 
       <td data-column="edit" class="selectable">
         <a><i class="ui blue save outline icon"></i></a>
       </td>
@@ -117,7 +124,7 @@
         </div>
       </td>
       <td data-column="card_type" class="center aligned collapsing">
-        <div data-value="card_type" class="ui inline clearable scrolling dropdown">
+        <div data-value="card_type" class="ui inline clearable scrolling search dropdown">
           <input name="card_type" type="hidden">
           <i class="dropdown icon"></i>
           <div class="default text">Default</div>
@@ -319,269 +326,6 @@
       });
     }
 
-    async function getEpisodeData() {
-      // Get the parent table
-      let episodeTable = document.getElementById('episode-data-table');
-      if (episodeTable === null) { return; }
-
-      // Get row template
-      const rowTemplate = document.querySelector('#episode-row');
-      if (rowTemplate === null) { return; }
-
-      // Get all episodes via API
-      const episodeData = await fetch('/api/episodes/{{series.id}}/all').then(resp => resp.json());
-      if (episodeData === null) { return; }
-
-      // Different HTML for each togglable boolean icon
-      function getIcon(value, triState=true) {
-        const triStateClass = triState ? ' tristate' : '';
-        if (value === null) {
-          return `<i class="ui gray question${triStateClass} togglable icon"></i>`;
-        } else if (value === true) {
-          return `<i class="ui green check${triStateClass} togglable icon"></i>`;
-        } else {
-          return `<i class="ui red times circle outline${triStateClass} togglable icon"></i>`;
-        }
-      }
-
-      // Create 
-      const rows = episodeData.map(episode => {
-        // Create new row for this episode
-        const row = rowTemplate.content.cloneNode(true);
-        // Set row ID
-        row.querySelector('tr').id = `episode-id${episode.id}`;
-        // Assign function to onclick of <a> element
-        row.querySelector('td[data-column="edit"] a').onclick = () => saveEpisodeConfig(episode.id);
-        // Fill in row data
-        row.querySelector('td[data-column="season_number"]').innerHTML = episode.season_number;
-        row.querySelector('td[data-column="season_number"]').dataset.sortValue = episode.season_number;
-        row.querySelector('td[data-column="episode_number"]').innerHTML = episode.episode_number;
-        row.querySelector('td[data-column="episode_number"]').dataset.sortValue = episode.episode_number;
-        row.querySelector('input[name="absolute_number"]').value = episode.absolute_number;
-        row.querySelector('td[data-column="absolute_number"]').dataset.sortValue = episode.absolute_number;
-        row.querySelector('input[name="title"]').value = episode.title;
-        row.querySelector('td[data-column="title"]').dataset.sortValue = episode.title;
-        row.querySelector('td[data-column="match_title"]').innerHTML = getIcon(episode.match_title, true);
-        row.querySelector('td[data-column="auto_split_title"]').innerHTML = getIcon(episode.auto_split_title, false);
-          // Template ID
-          // Font ID
-          // Card type
-        row.querySelector('td[data-column="hide_season_text"]').innerHTML = getIcon(episode.hide_season_text, true);
-        row.querySelector('input[name="season_text"]').value = episode.season_text;
-        row.querySelector('td[data-column="hide_episode_text"]').innerHTML = getIcon(episode.hide_episode_text, true);
-        row.querySelector('input[name="episode_text"]').value = episode.episode_text;
-          // Unwatched style
-          // Watched style
-        row.querySelector('input[name="font_color"]').value = episode.font_color;
-        row.querySelector('input[name="font_size"]').value = episode.font_size;
-        row.querySelector('input[name="font_stroke_width"]').value = episode.font_stroke_width;
-        row.querySelector('input[name="font_interline_spacing"]').value = episode.font_interline_spacing;
-        row.querySelector('input[name="font_vertical_shift"]').value = episode.font_vertical_shift;
-          // Extras
-        row.querySelector('input[name="source_file"]').value = episode.source_file;
-        row.querySelector('input[name="card_file"]').value = episode.card_file;
-        row.querySelector('td[data-column="watched"]').innerHTML = getIcon(episode.watched, false);
-        const embyIdInput = row.querySelector('input[name="emby_id"]');
-        if (embyIdInput !== null) { embyIdInput.value = episode.emby_id; }
-        row.querySelector('input[name="imdb_id"]').value = episode.imdb_id;
-        const jellyfinIdInput = row.querySelector('input[name="jellyfin_id"]');
-        if (jellyfinIdInput !== null) { jellyfinIdInput.value = episode.jellyfin_id; }
-        row.querySelector('input[name="tmdb_id"]').value = episode.tmdb_id;
-        row.querySelector('input[name="tvdb_id"]').value = episode.tvdb_id;
-        const tvrageIdInput = row.querySelector('input[name="tvrage_id"]')
-        if (tvrageIdInput != null) { tvrageIdInput.value = episode.tvrage_id; }
-
-        return row;
-      });
-      episodeTable.replaceChildren(...rows);
-
-      // Get all available elements for initializing dropdowns
-      const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
-      const allFonts = await fetch('/api/fonts/all').then(resp => resp.json());
-      const allCardTypes = await fetch('/api/available/card-types').then(resp => resp.json());
-      const allStyles = await fetch('/api/available/styles').then(resp => resp.json());
-
-      // Initialize dropdowns, assign form submit API request
-      episodeData.forEach(episode => {
-        // Templates
-        $(`#episode-id${episode.id} .dropdown[data-value="template_id"]`).dropdown({
-          values: allTemplates.map(({id, name}) => {
-            return {name: name, value: id, selected: episode.template_id === id};
-          })
-        });
-        // Fonts
-        $(`#episode-id${episode.id} .dropdown[data-value="font_id"]`).dropdown({
-          values: allFonts.map(({id, name}) => {
-            return {name: name, value: id, selected: episode.font_id === id};
-          })
-        });
-        // Card type
-        $(`#episode-id${episode.id} .dropdown[data-value="card_type"]`).dropdown({
-          values: allCardTypes.map(({id, name}) => {
-            return {
-              name:     name,
-              value:    name.toLowerCase(),
-              selected: name.toLowerCase() === episode.card_type
-            };
-          })
-        });
-        // Unwatched style
-        $(`#episode-id${episode.id} .dropdown[data-value="unwatched_style"]`).dropdown({
-          values: [
-            {name: 'Art Variations', type: 'header'},
-            ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
-              return {name: name, value: value, selected: value === episode.unwatched_style};
-            }),
-            {name: 'Unique Variations', type: 'header'},
-            ...allStyles.filter(({style_type}) => style_type === 'unique').map(({name, value}) => {
-              return {name: name, value: value, selected: value === episode.unwatched_style};
-            }),
-          ],
-        });
-        // Watched style
-        $(`#episode-id${episode.id} .dropdown[data-value="watched_style"]`).dropdown({
-          values: [
-            {name: 'Art Variations', type: 'header'},
-            ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
-              return {name: name, value: value, selected: value === episode.watched_style};
-            }),
-            {name: 'Unique Variations', type: 'header'},
-            ...allStyles.filter(({style_type}) => style_type === 'unique').map(({name, value}) => {
-              return {name: name, value: value, selected: value === episode.watched_style};
-            }),
-          ],
-        });
-      });
-      $('.sortable.table').tablesort()
-      initStyles();
-    }
-
-    // Initialize series specific dropdowns
-    async function initalizeSeriesConfig() {
-      // Episode data sources
-      const sources = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
-      const placeholder = '{{series.episode_data_source}}' === 'None' ? 'Global Default' : '{{series.episode_data_source}}';
-      $('#episode-data-source').dropdown({
-        placeholder: placeholder,
-        values: sources.map(({name, selected}) => {
-          return {name: name, value: name, selected: name == '{{series.episode_data_source}}'};
-        })
-      });
-      // Special syncing
-      $('#series-config-form .dropdown[data-value="sync_specials"]').dropdown({
-        values: [
-          {name: 'True', value: 'True', selected: '{{series.sync_specials}}' === 'True'},
-          {name: 'False', value: 'False', selected: '{{series.sync_specials}}' === 'False'},
-        ],
-      });
-      // Skip localized images
-      $('#series-config-form .dropdown[data-value="skip_localized_images"]').dropdown({
-        values: [
-          {name: 'True', value: 'True', selected: '{{series.skip_localized_images}}' === 'True'},
-          {name: 'False', value: 'False', selected: '{{series.skip_localized_images}}' === 'False'},
-        ],
-      });
-      // Template
-      const templates = await fetch('/api/templates/all').then(resp => resp.json());
-      $('#card-config-form .dropdown[data-value="template_id"]').dropdown({
-        values: templates.map(({id, name}) => {
-          return {name: name, value: id, selected: id === '{{series.template_id}}'};
-        })
-      });
-      // Card types
-      const cardTypes = await fetch('/api/available/card-types').then(resp => resp.json());
-      $('.dropdown[data-value="card-types"]').dropdown({
-        values: cardTypes.map(({name}) => {
-          return {
-            name:     name,
-            value:    name.toLowerCase(),
-            selected: name.toLowerCase() === '{{series.card_type}}',
-          };
-        })//, placeholder: 'Global Default',
-      });
-      // Styles
-      const allStyles = await fetch('/api/available/styles').then(resp => resp.json());
-      $('#card-config-form .dropdown[data-value="watched-style"]').dropdown({
-        values: [
-          {name: 'Art Variations', type: 'header'},
-          ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
-            return {name: name, value: value, selected: value === '{{series.watched_style}}'};
-          }),
-          {name: 'Unique Variations', type: 'header'},
-          ...allStyles.filter(({style_type}) => style_type === 'unique').map(({name, value}) => {
-            return {name: name, value: value, selected: value === '{{series.watched_style}}'};
-          }),
-        ],
-      });
-      // Unwatched style
-      $('#card-config-form .dropdown[data-value="unwatched-style"]').dropdown({
-        values: [
-          {name: 'Art Variations', type: 'header'},
-          ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
-            return {name: name, value: value, selected: value === '{{series.unwatched_style}}'};
-          }),
-          {name: 'Unique Variations', type: 'header'},
-          ...allStyles.filter(({style_type}) => style_type === 'unique').map(({name, value}) => {
-            return {name: name, value: value, selected: value === '{{series.unwatched_style}}'};
-          }),
-        ]//, placeholder: 'Global Default',
-      });
-      // Fonts
-      const fonts = await fetch('/api/fonts/all').then(resp => resp.json());
-      $('#card-config-form .dropdown[data-value="fonts"]').dropdown({
-        values: fonts.map(({id, name}) => {
-          return {name: name, value: id, selected: id === '{{series.font_id}}'};
-        })
-      });
-      // Font card case
-      $('#card-config-form .dropdown[data-value="font_title_case"]').dropdown({
-        values: [
-          {name: 'Blank', value: 'blank', selected: '{{series.font_title_case}}' === 'blank'},
-          {name: 'Lowercase', value: 'lower', selected: '{{series.font_title_case}}' === 'lower'},
-          {name: 'Source', value: 'source', selected: '{{series.font_title_case}}' === 'source'},
-          {name: 'Titlecase', value: 'title', selected: '{{series.font_title_case}}' === 'title'},
-          {name: 'Uppercase', value: 'upper', selected: '{{series.font_title_case}}' === 'upper'},
-        ],
-      });
-      // Hide season text
-      $('#card-config-form .dropdown[data-value="hide_season_text"]').dropdown({
-        values: [
-          {name: 'True', value: 'True', selected: '{{series.hide_season_text}}' === 'True'},
-          {name: 'False', value: 'False', selected: '{{series.hide_season_text}}' === 'False'},
-        ],
-      });
-      // Hide episode text
-      $('#card-config-form .dropdown[data-value="hide_episode_text"]').dropdown({
-        values: [
-          {name: 'True', value: 'True', selected: '{{series.hide_episode_text}}' === 'True'},
-          {name: 'False', value: 'False', selected: '{{series.hide_episode_text}}' === 'False'},
-        ],
-      });
-      // Add season title on button press
-      $('#card-config-form .button[data-value="addTitle"]').on('click', () => {
-          const newRange = document.createElement('input');
-          newRange.name = 'season_title_ranges'; newRange.type = 'text';
-          newRange.setAttribute('data-value', 'season-titles');
-          const newTitle = document.createElement('input');
-          newTitle.name = 'season_title_values'; newTitle.type = 'text';
-          $('#card-config-form .field[data-value="season-title-range"]').append(newRange);
-          $('#card-config-form .field[data-value="season-title-value"]').append(newTitle);
-          $('input[data-value="season-titles"]').popup({
-            popup: '#season-title-popup',
-            position: 'right center',
-          });
-        });
-      // Add extra on button press
-      $('#card-config-form .button[data-value="addExtra"]').on('click', () => {
-          const newKey = document.createElement('input');
-          newKey.name = 'extra_keys'; newKey.type = 'text';
-          const newValue = document.createElement('input');
-          newValue.name = 'extra_values'; newValue.type = 'text';
-          $('#card-config-form .field[data-value="extra-key"]').append(newKey);
-          $('#card-config-form .field[data-value="extra-value"]').append(newValue);
-        });
-    }
-
     async function initAll() {
       getStatistics();
       getLibraries();
@@ -720,6 +464,269 @@
 </head>
 
 <body onload="initAll()">
+  <script>
+    // Initialize series specific dropdowns
+    async function initalizeSeriesConfig() {
+      // Episode data sources
+      const sources = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
+      const placeholder = '{{series.episode_data_source}}' === 'None' ? 'Global Default' : '{{series.episode_data_source}}';
+      $('#episode-data-source').dropdown({
+        placeholder: placeholder,
+        values: sources.map(({name, selected}) => {
+          return {name: name, value: name, selected: name == '{{series.episode_data_source}}'};
+        })
+      });
+      // Special syncing
+      $('#series-config-form .dropdown[data-value="sync_specials"]').dropdown({
+        values: [
+          {name: 'True', value: 'True', selected: '{{series.sync_specials}}' === 'True'},
+          {name: 'False', value: 'False', selected: '{{series.sync_specials}}' === 'False'},
+        ],
+      });
+      // Skip localized images
+      $('#series-config-form .dropdown[data-value="skip_localized_images"]').dropdown({
+        values: [
+          {name: 'True', value: 'True', selected: '{{series.skip_localized_images}}' === 'True'},
+          {name: 'False', value: 'False', selected: '{{series.skip_localized_images}}' === 'False'},
+        ],
+      });
+      // Template
+      const templates = await fetch('/api/templates/all').then(resp => resp.json());
+      $('#card-config-form .dropdown[data-value="template_id"]').dropdown({
+        values: templates.map(({id, name}) => {
+          return {name: name, value: id, selected: id === '{{series.template_id}}'};
+        })
+      });
+      // Card types
+      loadCardTypes({
+        element: '#card-config-form .dropdown[data-value="card-types"]',
+        isSelected: (identifier) => identifier === '{{series.card_type}}',
+        showExcluded: false,
+        // Dropdown args
+        dropdownArgs: {
+          placeholder: 'Default',
+        }
+      });
+      // Styles
+      const allStyles = await fetch('/api/available/styles').then(resp => resp.json());
+      $('#card-config-form .dropdown[data-value="watched-style"]').dropdown({
+        values: [
+          {name: 'Art Variations', type: 'header'},
+          ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
+            return {name: name, value: value, selected: value === '{{series.watched_style}}'};
+          }),
+          {name: 'Unique Variations', type: 'header'},
+          ...allStyles.filter(({style_type}) => style_type === 'unique').map(({name, value}) => {
+            return {name: name, value: value, selected: value === '{{series.watched_style}}'};
+          }),
+        ],
+      });
+      // Unwatched style
+      $('#card-config-form .dropdown[data-value="unwatched-style"]').dropdown({
+        values: [
+          {name: 'Art Variations', type: 'header'},
+          ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
+            return {name: name, value: value, selected: value === '{{series.unwatched_style}}'};
+          }),
+          {name: 'Unique Variations', type: 'header'},
+          ...allStyles.filter(({style_type}) => style_type === 'unique').map(({name, value}) => {
+            return {name: name, value: value, selected: value === '{{series.unwatched_style}}'};
+          }),
+        ]//, placeholder: 'Global Default',
+      });
+      // Fonts
+      const fonts = await fetch('/api/fonts/all').then(resp => resp.json());
+      $('#card-config-form .dropdown[data-value="fonts"]').dropdown({
+        values: fonts.map(({id, name}) => {
+          return {name: name, value: id, selected: id === '{{series.font_id}}'};
+        })
+      });
+      // Font card case
+      $('#card-config-form .dropdown[data-value="font_title_case"]').dropdown({
+        values: [
+          {name: 'Blank', value: 'blank', selected: '{{series.font_title_case}}' === 'blank'},
+          {name: 'Lowercase', value: 'lower', selected: '{{series.font_title_case}}' === 'lower'},
+          {name: 'Source', value: 'source', selected: '{{series.font_title_case}}' === 'source'},
+          {name: 'Titlecase', value: 'title', selected: '{{series.font_title_case}}' === 'title'},
+          {name: 'Uppercase', value: 'upper', selected: '{{series.font_title_case}}' === 'upper'},
+        ],
+      });
+      // Hide season text
+      $('#card-config-form .dropdown[data-value="hide_season_text"]').dropdown({
+        values: [
+          {name: 'True', value: 'True', selected: '{{series.hide_season_text}}' === 'True'},
+          {name: 'False', value: 'False', selected: '{{series.hide_season_text}}' === 'False'},
+        ],
+      });
+      // Hide episode text
+      $('#card-config-form .dropdown[data-value="hide_episode_text"]').dropdown({
+        values: [
+          {name: 'True', value: 'True', selected: '{{series.hide_episode_text}}' === 'True'},
+          {name: 'False', value: 'False', selected: '{{series.hide_episode_text}}' === 'False'},
+        ],
+      });
+      // Add season title on button press
+      $('#card-config-form .button[data-value="addTitle"]').on('click', () => {
+          const newRange = document.createElement('input');
+          newRange.name = 'season_title_ranges'; newRange.type = 'text';
+          newRange.setAttribute('data-value', 'season-titles');
+          const newTitle = document.createElement('input');
+          newTitle.name = 'season_title_values'; newTitle.type = 'text';
+          $('#card-config-form .field[data-value="season-title-range"]').append(newRange);
+          $('#card-config-form .field[data-value="season-title-value"]').append(newTitle);
+          $('input[data-value="season-titles"]').popup({
+            popup: '#season-title-popup',
+            position: 'right center',
+          });
+        });
+      // Add extra on button press
+      $('#card-config-form .button[data-value="addExtra"]').on('click', () => {
+          const newKey = document.createElement('input');
+          newKey.name = 'extra_keys'; newKey.type = 'text';
+          const newValue = document.createElement('input');
+          newValue.name = 'extra_values'; newValue.type = 'text';
+          $('#card-config-form .field[data-value="extra-key"]').append(newKey);
+          $('#card-config-form .field[data-value="extra-value"]').append(newValue);
+        });
+    }
+
+    async function getEpisodeData() {
+      // Get the parent table
+      let episodeTable = document.getElementById('episode-data-table');
+      if (episodeTable === null) { return; }
+
+      // Get row template
+      const rowTemplate = document.querySelector('#episode-row');
+      if (rowTemplate === null) { return; }
+
+      // Get all episodes via API
+      const episodeData = await fetch('/api/episodes/{{series.id}}/all').then(resp => resp.json());
+      if (episodeData === null) { return; }
+
+      // Different HTML for each togglable boolean icon
+      function getIcon(value, triState=true) {
+        const triStateClass = triState ? ' tristate' : '';
+        if (value === null) {
+          return `<i class="ui gray question${triStateClass} togglable icon"></i>`;
+        } else if (value === true) {
+          return `<i class="ui green check${triStateClass} togglable icon"></i>`;
+        } else {
+          return `<i class="ui red times circle outline${triStateClass} togglable icon"></i>`;
+        }
+      }
+
+      // Create 
+      const rows = episodeData.map(episode => {
+        // Create new row for this episode
+        const row = rowTemplate.content.cloneNode(true);
+        // Set row ID
+        row.querySelector('tr').id = `episode-id${episode.id}`;
+        // Assign function to onclick of <a> element
+        row.querySelector('td[data-column="edit"] a').onclick = () => saveEpisodeConfig(episode.id);
+        // Fill in row data
+        row.querySelector('td[data-column="season_number"]').innerHTML = episode.season_number;
+        row.querySelector('td[data-column="season_number"]').dataset.sortValue = episode.season_number;
+        row.querySelector('td[data-column="episode_number"]').innerHTML = episode.episode_number;
+        row.querySelector('td[data-column="episode_number"]').dataset.sortValue = episode.episode_number;
+        row.querySelector('input[name="absolute_number"]').value = episode.absolute_number;
+        row.querySelector('td[data-column="absolute_number"]').dataset.sortValue = episode.absolute_number;
+        row.querySelector('input[name="title"]').value = episode.title;
+        row.querySelector('td[data-column="title"]').dataset.sortValue = episode.title;
+        row.querySelector('td[data-column="match_title"]').innerHTML = getIcon(episode.match_title, true);
+        row.querySelector('td[data-column="auto_split_title"]').innerHTML = getIcon(episode.auto_split_title, false);
+          // Template ID
+          // Font ID
+          // Card type
+        row.querySelector('td[data-column="hide_season_text"]').innerHTML = getIcon(episode.hide_season_text, true);
+        row.querySelector('input[name="season_text"]').value = episode.season_text;
+        row.querySelector('td[data-column="hide_episode_text"]').innerHTML = getIcon(episode.hide_episode_text, true);
+        row.querySelector('input[name="episode_text"]').value = episode.episode_text;
+          // Unwatched style
+          // Watched style
+        row.querySelector('input[name="font_color"]').value = episode.font_color;
+        row.querySelector('input[name="font_size"]').value = episode.font_size;
+        row.querySelector('input[name="font_stroke_width"]').value = episode.font_stroke_width;
+        row.querySelector('input[name="font_interline_spacing"]').value = episode.font_interline_spacing;
+        row.querySelector('input[name="font_vertical_shift"]').value = episode.font_vertical_shift;
+          // Extras
+        row.querySelector('input[name="source_file"]').value = episode.source_file;
+        row.querySelector('input[name="card_file"]').value = episode.card_file;
+        row.querySelector('td[data-column="watched"]').innerHTML = getIcon(episode.watched, false);
+        const embyIdInput = row.querySelector('input[name="emby_id"]');
+        if (embyIdInput !== null) { embyIdInput.value = episode.emby_id; }
+        row.querySelector('input[name="imdb_id"]').value = episode.imdb_id;
+        const jellyfinIdInput = row.querySelector('input[name="jellyfin_id"]');
+        if (jellyfinIdInput !== null) { jellyfinIdInput.value = episode.jellyfin_id; }
+        row.querySelector('input[name="tmdb_id"]').value = episode.tmdb_id;
+        row.querySelector('input[name="tvdb_id"]').value = episode.tvdb_id;
+        const tvrageIdInput = row.querySelector('input[name="tvrage_id"]')
+        if (tvrageIdInput != null) { tvrageIdInput.value = episode.tvrage_id; }
+
+        return row;
+      });
+      episodeTable.replaceChildren(...rows);
+
+      // Get all available elements for initializing dropdowns
+      const allCardTypes = await getAllCardTypes(false);
+      const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
+      const allFonts = await fetch('/api/fonts/all').then(resp => resp.json());
+      const allStyles = await fetch('/api/available/styles').then(resp => resp.json());
+
+      // Initialize dropdowns, assign form submit API request
+      episodeData.forEach(episode => {
+        // Templates
+        $(`#episode-id${episode.id} .dropdown[data-value="template_id"]`).dropdown({
+          values: allTemplates.map(({id, name}) => {
+            return {name: name, value: id, selected: episode.template_id === id};
+          })
+        });
+        // Fonts
+        $(`#episode-id${episode.id} .dropdown[data-value="font_id"]`).dropdown({
+          values: allFonts.map(({id, name}) => {
+            return {name: name, value: id, selected: episode.font_id === id};
+          })
+        });
+        // Card type
+        loadCardTypes({
+          allCardTypes: allCardTypes,
+          element: `#episode-id${episode.id} .dropdown[data-value="card_type"]`,
+          isSelected: (identifier) => identifier === episode.card_type,
+          showExcluded: false,
+          // Dropdown args
+          dropdownArgs: {}
+        });
+        // Unwatched style
+        $(`#episode-id${episode.id} .dropdown[data-value="unwatched_style"]`).dropdown({
+          values: [
+            {name: 'Art Variations', type: 'header'},
+            ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
+              return {name: name, value: value, selected: value === episode.unwatched_style};
+            }),
+            {name: 'Unique Variations', type: 'header'},
+            ...allStyles.filter(({style_type}) => style_type === 'unique').map(({name, value}) => {
+              return {name: name, value: value, selected: value === episode.unwatched_style};
+            }),
+          ],
+        });
+        // Watched style
+        $(`#episode-id${episode.id} .dropdown[data-value="watched_style"]`).dropdown({
+          values: [
+            {name: 'Art Variations', type: 'header'},
+            ...allStyles.filter(({style_type}) => style_type === 'art').map(({name, value}) => {
+              return {name: name, value: value, selected: value === episode.watched_style};
+            }),
+            {name: 'Unique Variations', type: 'header'},
+            ...allStyles.filter(({style_type}) => style_type === 'unique').map(({name, value}) => {
+              return {name: name, value: value, selected: value === episode.watched_style};
+            }),
+          ],
+        });
+      });
+      $('.sortable.table').tablesort()
+      initStyles();
+    }
+  </script>
+
   <div class="pusher">
     <!-- Static header and sidebar loaded by external script -->
     <div id="page-header"></div>
@@ -985,7 +992,7 @@
                   <!-- Template ID -->
                   <div class="field">
                     <label>Template</label>
-                    <div data-value="template_id" class="ui very long compact clearable selection dropdown">
+                    <div data-value="template_id" class="ui very long compact clearable search selection dropdown">
                       <input name="template_id" type="hidden">
                       <i class="dropdown icon"></i>
                       <div class="default text">None</div>
@@ -999,7 +1006,7 @@
                   <div class="ui two fields">
                     <div class="field">
                       <label>Card Type</label>
-                      <div data-value="card-types" class="ui long selection clearable dropdown">
+                      <div data-value="card-types" class="ui long selection clearable search dropdown">
                         <input name="card_type" type="hidden">
                         <i class="dropdown icon"></i>
                         <div class="default text">Default</div>
@@ -1009,7 +1016,7 @@
 
                     <div class="field">
                       <label>Font</label>
-                      <div data-value="fonts" class="ui very long clearable selection dropdown" data-tooltip="Font to apply to this series (overrides any Template Font)">
+                      <div data-value="fonts" class="ui very long clearable selection search dropdown" data-tooltip="Font to apply to this series (overrides any Template Font)">
                         <input name="font_id" type="hidden">
                         <i class="dropdown icon"></i>
                         <div class="default text">Default</div>
@@ -1700,7 +1707,6 @@
       });
     });
   </script>
-  <script src="/templates/loadStaticContent.js"></script>
 
   <script>
     /*

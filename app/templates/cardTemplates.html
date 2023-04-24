@@ -4,16 +4,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="/assets/logo128.png">
-  <link rel="shortcut icon" href="/assets/logo128.png"> 
-  <link rel="apple-touch-icon" href="/assets/logo128.png">
   <title>Templates - TitleCardMaker</title>
+
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16.png">
+  <link rel="manifest" href="/assets/favicon/site.webmanifest">
 
   <!-- Formantic UI -->
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
   <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.js"></script>
   
+  <!-- JS Files -->
+  <script type="text/javascript" src="/templates/loadStaticContent.js"></script>
+  <script type="text/javascript" src="/templates/loadCardTypes.js"></script>
+
   <!-- Global styles -->
   <link rel="stylesheet" type="text/css" href="/templates/style.css"/>
   <style>
@@ -147,6 +154,11 @@
                 </div>
               </div>
 
+              <div class="field">
+                <label>Image Source Priority</label>
+                todo
+              </div>
+
               <div class="ui right aligned checkbox field">
                 <input name="sync_specials" type="checkbox">
                 <label>Sync Specials</label>
@@ -256,7 +268,12 @@
         }
       });
     }
+  </script>
+  
+</head>
 
+<body onload="initAll();">
+  <script>
     async function getAllTemplates() {
       const allCardTypes = await fetch('/api/available/card-types').then(resp => resp.json());
       const allFonts = await fetch('/api/fonts/all').then(resp => resp.json());
@@ -338,14 +355,12 @@
       // Fill in fancy values
       allTemplates.forEach(templateObj => {
         // Card type
-        $(`#template-id${templateObj.id} >* .dropdown[data-value="card-types"]`).dropdown({
-          values: allCardTypes.map(({name}) => {
-            return {
-              name:     name,
-              value:    name.toLowerCase(),
-              selected: name.toLowerCase() === templateObj.card_type
-            };
-          }), placeholder: 'Global Default',
+        loadCardTypes({
+          element: `#template-id${templateObj.id} >* .dropdown[data-value="card-types"]`,
+          isSelected: (identifier) => identifier === templateObj.card_type,
+          dropdownArgs: {
+            placeholder: 'Global Default',
+          }
         });
         // Font
         $(`#template-id${templateObj.id} >* .dropdown[data-value="font-dropdown"]`).dropdown({
@@ -495,10 +510,6 @@
       getAllTemplates();
     }
   </script>
-  
-</head>
-
-<body onload="initAll();">
   <div class="pusher">
     <!-- Static header and sidebar loaded by external script -->
     <div id="page-header"></div>
@@ -558,9 +569,6 @@
     })
     
   </script>
-
-  <!-- Load Sidebar -->
-  <script src="/templates/loadStaticContent.js"></script>
 </body>
 
 </html>

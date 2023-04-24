@@ -4,24 +4,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="/assets/logo128.png">
-  <link rel="shortcut icon" href="/assets/logo128.png"> 
-  <link rel="apple-touch-icon" href="/assets/logo128.png">
   <title>Fonts - TitleCardMaker</title>
+
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16.png">
+  <link rel="manifest" href="/assets/favicon/site.webmanifest">
 
   <!-- Formantic UI -->
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
   <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.js"></script>
-  
+
+  <!-- JS Files -->
+  <script type="text/javascript" src="/templates/loadStaticContent.js"></script>
+  <script type="text/javascript" src="/templates/loadCardTypes.js"></script>
+
   <!-- Global styles -->
   <link rel="stylesheet" type="text/css" href="/templates/style.css"/>
   <style>
     /* Align the label and text to the right */
-    .right.aligned.field {
-      text-align: right;
-    }
-    .right.aligned.field > input {
+    .right.aligned.field, .right.aligned.field > input {
       text-align: right;
     }
 
@@ -445,29 +449,27 @@
       });
 
       // Fill in card type dropdowns
-      getCardTypeOptions();
+      initCardTypeDropdowns();
 
       // Refresh theme for any newly added HTML
       refreshTheme();
-    }
-  
-    // Function to add dropdown card types
-    async function getCardTypeOptions() {
-      const types = await fetch('/api/available/card-types').then(resp => resp.json());
-      $('.ui.card-type.dropdown').dropdown({
-        values: types.map(({name}) => {
-          return {
-            name: name,
-            value: name.toLowerCase(),
-            selected: name === "{{preferences.default_card_type}}",
-          };
-        })
-      })
     }
   </script>
 </head>
 
 <body onload="getAllFonts();">
+  <script>
+    // Function to add dropdown card types
+    async function initCardTypeDropdowns() {
+      loadCardTypes({
+        element: '.ui.card-type.dropdown',
+        isSelected: (identifier) => identifier === '{{preferences.default_card_type}}',
+        showExcluded: false,
+        dropdownArgs: {},
+      });
+    }
+  </script>
+
   <div class="pusher">
     <!-- Static header and sidebar loaded by external script -->
     <div id="page-header"></div>
@@ -491,9 +493,6 @@
   <script>
     
   </script>
-
-  <!-- Load Sidebar -->
-  <script src="/templates/loadStaticContent.js"></script>
 </body>
 
 </html>
