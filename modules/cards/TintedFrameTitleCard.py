@@ -430,6 +430,14 @@ class TintedFrameTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
+        # Coordinates used by multiple rectangles
+        INSET = self.BOX_OFFSET
+        BOX_WIDTH = self.BOX_WIDTH
+        TopLeft = Coordinate(INSET, INSET)
+        TopRight = Coordinate(self.WIDTH - INSET, INSET + BOX_WIDTH)
+        BottomLeft = Coordinate(INSET + BOX_WIDTH, self.HEIGHT - INSET)
+        BottomRight = Coordinate(self.WIDTH - INSET, self.HEIGHT - INSET)
+
         # Determine frame draw commands
         top = self._frame_top_commands
         left = [Rectangle(TopLeft, BottomLeft).draw()]
