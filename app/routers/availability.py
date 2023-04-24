@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from typing import Literal, Union
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -18,10 +19,20 @@ from modules.Debug import log
 USER_CARD_TYPE_URL = 'https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/cards.json'
 
 
+_cache = {'content': [], 'expires': datetime.now()}
 def _get_remote_cards() -> list[RemoteCardType]:
-    return [
-        RemoteCardType(**card) for card in req_get(USER_CARD_TYPE_URL).json()
-    ]
+    # If the cached content has expired, request and update cache
+    if _cache['expires'] <= datetime.now():
+        log.debug(f'Refreshing cached RemoteCardTypes')
+        response = req_get(USER_CARD_TYPE_URL).json()
+        _cache['content'] = response
+        _cache['expires'] = datetime.now() + timedelta(minutes=5)
+    # Cache has not expired, use cached content
+    else:
+        log.debug(f'Using cached content')
+        response = _cache['content']
+
+    return [RemoteCardType(**card) for card in response]
 
 
 # Create sub router for all /connection API requests
@@ -34,6 +45,12 @@ availablility_router = APIRouter(
 def get_all_available_card_types(
         show_excluded: bool = Query(default=False),
         preferences=Depends(get_preferences)) -> list[CardType]:
+    """
+    Get a list of all available card types (local and remote).
+
+    - show_excluded: Whether to include globally excluded card types in
+    the returned list.
+    """
 
     all_cards = LocalCards + _get_remote_cards()
     if show_excluded:
@@ -86,9 +103,11 @@ def get_image_source_priority(
         preferences=Depends(get_preferences)) -> list[EpisodeDataSourceToggle]:
     
     return [
-        {'name': source,
-         'value': source,
-         'selected': (source in preferences.image_source_priority)}
+        {
+            'name': source,
+            'value': source,
+            'selected': (source in preferences.image_source_priority)
+        }
         for source in (set(preferences.image_source_priority)
                        | set(preferences.valid_image_sources))
     ]
