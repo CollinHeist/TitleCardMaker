@@ -95,11 +95,12 @@ class AnimeTitleCard(BaseCardType):
     SERIES_COUNT_TEXT_COLOR = '#CFCFCF'
 
     __slots__ = (
-        'source_file', 'output_file', 'title', 'kanji', 'use_kanji',
-        'require_kanji', 'kanji_vertical_shift', 'season_text', 'episode_text',
-        'hide_season', 'separator', 'font', 'font_size', 'font_color',
-        'vertical_shift', 'interline_spacing', 'kerning', 'stroke_width',
-        'omit_gradient', 'stroke_color', 'hide_episode_text',
+        'source_file', 'output_file', 'title_text', 'season_text',
+        'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
+        'font_file', 'font_kerning', 'font_size', 'font_stroke_width',
+        'font_interline_spacing', 'font_vertical_shift', 'omit_gradient',
+        'stroke_color', 'separator', 'kanji', 'use_kanji', 'require_kanji',
+        'kanji_vertical_shift',
     )
 
     def __init__(self, *,
@@ -329,18 +330,6 @@ class AnimeTitleCard(BaseCardType):
                 f'-stroke "{self.SERIES_COUNT_TEXT_COLOR}"',
                 f'-strokewidth 0',
                 f'-annotate +75+90 "{text}"',
-            ]
-        
-        # Add only season text
-        if self.hide_episode_text:
-            return [
-                *self.__series_count_text_global_effects,
-                *self.__series_count_text_black_stroke,
-                f'-annotate +75+90 "{self.season_text}"',
-                f'-fill "{self.SERIES_COUNT_TEXT_COLOR}"',
-                f'-stroke "{self.SERIES_COUNT_TEXT_COLOR}"',
-                f'-strokewidth 0',
-                f'-annotate +75+90 "{self.season_text}"',
             ]
 
         # Add season and episode text

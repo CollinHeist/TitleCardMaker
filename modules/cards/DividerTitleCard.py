@@ -1,7 +1,9 @@
 from pathlib import Path
 from typing import Any, Literal, Optional
 
-from modules.BaseCardType import BaseCardType, ImageMagickCommands
+from modules.BaseCardType import (
+    BaseCardType, ImageMagickCommands, Extra, CardDescription
+)
 from modules.Debug import log
 
 SeriesExtra = Optional
@@ -18,6 +20,36 @@ class DividerTitleCard(BaseCardType):
     positioning of text on the image to be adjusted. The general design
     was inspired by the title card interstitials in Overlord (season 3).
     """
+
+    """API Parameters"""
+    API_DETAILS = CardDescription(
+        name='Divider',
+        identifier='divider',
+        example='/assets/cards/divider.jpg',
+        creators=['CollinHeist'],
+        source='local',
+        supports_custom_fonts=True,
+        supports_custom_seasons=True,
+        supported_extras=[
+            Extra(
+                name='Text Stroke Color',
+                identifier='stroke_color',
+                description='Color to use for the text stroke',
+            ), Extra(
+                name='Title Text Position',
+                identifier='title_text_position',
+                description='Which side the title text should be positioned relative to the index text',
+            ), Extra(
+                name='Text Position',
+                identifier='text_position',
+                description='Where on the image the text should be positioned',
+            ),
+        ], description=[
+            'A simple title card featuring the title and index text separated by a vertical divider.',
+            'This card allows the text to be positioned at various points around the image.',
+            'Text on this image is unobtrusive, and is intended for shorter titles.',
+        ]
+    )
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'anime'

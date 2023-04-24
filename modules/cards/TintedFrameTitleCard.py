@@ -1,7 +1,9 @@
 from pathlib import Path
 from typing import Any, Literal, Optional, Union
 
-from modules.BaseCardType import BaseCardType, ImageMagickCommands
+from modules.BaseCardType import (
+    BaseCardType, ImageMagickCommands, Extra, CardDescription
+)
 from modules.Debug import log
 
 SeriesExtra = Optional
@@ -39,6 +41,50 @@ class TintedFrameTitleCard(BaseCardType):
     and unblurred content within. The frame itself can be intersected by
     title text, index text, or a logo at the top and bottom.
     """
+
+    """API Parameters"""
+    API_DETAILS = CardDescription(
+        name='Tinted Frame',
+        identifier='tinted frame',
+        example='/assets/cards/tinted frame.jpg',
+        creators=['CollinHeist'],
+        source='local',
+        supports_custom_fonts=True,
+        supports_custom_seasons=True,
+        supported_extras=[
+            Extra(
+                name='Episode Text Color',
+                identifier='episode_text_color',
+                description='Color of the season and episode text',
+            ), Extra(
+                name='Separator Character',
+                identifier='separator',
+                description='Character that separates the season and episode text',
+            ), Extra(
+                name='Frame Color',
+                identifier='frame_color',
+                description='Color of the frame edges',
+            ), Extra(
+                name='Top Element',
+                identifier='top_element',
+                description='Which element to display on the top of the frame',
+            ), Extra(
+                name='Bottom Element',
+                identifier='bottom_element',
+                description='Which element to display on the bottom of the frame',
+            ), Extra(
+                name='Logo File',
+                identifier='logo',
+                description='Logo file to place within the frame if indicated',
+            ), 
+        ], description=[
+            'Title card featuring a rectangular frame with blurred content on the'
+            ' outside of the frame, and unblurred content within.',
+            'The and all text can be recolored via extras.',
+            'The top and bottoms of the frame can also be optionally '
+            'intersected by title text, index text, and/or a logo.',
+        ]
+    )
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'tinted_frame'

@@ -28,6 +28,40 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     """Series ID's that can be set by TMDb"""
     SERIES_IDS = ('imdb_id', 'tmdb_id', 'tvdb_id', 'tvrage_id')
 
+    """Language codes"""
+    LANGUAGES = {
+        'ar': 'Arabic',
+        'bg': 'Bulgarian',
+        'ca': 'Catalan',
+        'cs': 'Czech',
+        'da': 'Danish',
+        'de': 'German',
+        'el': 'Greek',
+        'en': 'English',
+        'es': 'Spanish',
+        'fa': 'Persian',
+        'fr': 'French',
+        'he': 'Hebrew',
+        'hu': 'Hungarian',
+        'id': 'Indonesian',
+        'it': 'Italian',
+        'ja': 'Japanese',
+        'ko': 'Korean',
+        'my': 'Burmese',
+        'pl': 'Polish',
+        'pt': 'Portuguese',
+        'ro': 'Romanian',
+        'ru': 'Russian',
+        'sk': 'Slovak',
+        'sr': 'Serbian',
+        'th': 'Thai',
+        'tr': 'Turkish',
+        'uk': 'Ukrainian',
+        'vi': 'Vietnamese',
+        'zh': 'Mandarin',
+    }
+    LANGUAGE_CODES = tuple(LANGUAGES.keys())
+
     """Generic translated episode format strings for each language code"""
     GENERIC_TITLE_FORMATS = {
         'ar': r'الحلقة {number}',
@@ -736,7 +770,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def get_episode_title(self,
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
-            language_code: str='en-US') -> str:
+            language_code: str = 'en-US') -> str:
         """
         Get the episode title for the given entry for the given language.
 
@@ -810,24 +844,38 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             return None
 
         # Get the best logo
-        best = series.logos[0]
-        valid_image = False
+        best, best_priority = None, 999
         for logo in series.logos:
-            # Skip non-English logos
-            if logo.iso_639_1 != 'en':
+            # Skip logos with unindicated languages
+            if (logo.iso_639_1
+                not in self.preferences.tmdb_logo_language_priority):
                 continue
+            # Get relative priority of this logo's language
+            priority = self.preferences.tmdb_logo_language_priority.index(
+                logo.iso_639_1
+            )
 
-            # SVG images are always the best
-            if logo.url.endswith('.svg'):
-                return logo.url
-
-            # Choose best based on pixel count
-            valid_image = True
-            if logo.width * logo.height > best.width * best.height:
+            # Skip this logo if the language priority is less than the current
+            # best. Highest priority is index 0, so use > for lower priority
+            if priority > best_priority:
+                continue
+            # New logo is higher priority, use always
+            elif priority < best_priority:
                 best = logo
+                best_priority = priority
+            # Same priority, compare sizes
+            elif priority == best_priority:
+                # SVG logos are infinite size
+                if logo.url.endswith('.svg') and not best.url.endswith('.svg'):
+                    best = logo
+                    best_priority = priority
+                elif (best is None
+                    or logo.width * logo.height > best.width * best.height):
+                    best = logo
+                    best_priority = priority
 
         # No valid image found, blacklist and exit
-        if not valid_image:
+        if best is None:
             self.__update_blacklist(series_info, None, 'logo')
             return None
 

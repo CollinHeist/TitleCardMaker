@@ -119,7 +119,6 @@ class TitleCard:
             'season_text': profile.get_season_text(self.episode.episode_info),
             'episode_text': profile.get_episode_text(self.episode),
             'hide_season_text': profile.hide_season_title,
-            'hide_episode_text': False,
             'blur': episode.blur,
             'grayscale': episode.grayscale,
             'watched': episode.watched,

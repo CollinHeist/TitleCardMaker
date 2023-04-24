@@ -112,7 +112,6 @@ class OlivierTitleCard(BaseCardType):
 
         # Store attributes of the text
         self.title_text = self.image_magick.escape_chars(title_text)
-        self.hide_episode_text = hide_episode_text or len(episode_text) == 0
 
         # Determine episode prefix, modify text to remove prefix
         self.episode_prefix = None

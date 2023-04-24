@@ -76,11 +76,12 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         except Exception as e:
             log.critical(f'Cannot connect to Jellyfin - returned error {e}')
             log.exception(f'Bad Jellyfin connection', e)
+            exit(1)
 
         # Get user ID if indicated
-        if (username is not None
-            and (user_id := self._get_user_id(username)) is None):
+        if (user_id := self._get_user_id(username)) is None:
             log.critical(f'Cannot identify ID of user "{username}"')
+            exit(1)
         else:
             self.user_id = user_id
 
@@ -137,20 +138,6 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             for library in libraries['Items']
             if library['CollectionType'] == 'tvshows'
         }
-
-
-    def get_usernames(self) -> list[str]:
-        """
-        Get all the usernames for this interface's Jellyfin server.
-
-        Returns:
-            List of usernames.
-        """
-
-        return [
-            user.get('Name') for user in
-            self.session._get(f'{self.url}/Users', params=self.__params)
-        ]
 
 
     def set_series_ids(self, library_name: str, series_info: SeriesInfo) ->None:
