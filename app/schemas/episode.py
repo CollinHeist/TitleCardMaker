@@ -172,3 +172,4 @@ class Episode(Base):
     tvrage_id: TVRageID
 
     extras: Optional[dict[str, Any]]
+    translations: dict[str, str]

@@ -13,6 +13,7 @@ from app.routers.sources import source_router
 from app.routers.statistics import statistics_router
 from app.routers.sync import sync_router
 from app.routers.templates import template_router
+from app.routers.translate import translation_router
 
 # Create sub router for all API requests
 api_router = APIRouter(
@@ -32,3 +33,4 @@ api_router.include_router(statistics_router)
 api_router.include_router(source_router)
 api_router.include_router(sync_router)
 api_router.include_router(template_router)
+api_router.include_router(translation_router)

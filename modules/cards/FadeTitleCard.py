@@ -146,7 +146,7 @@ class FadeTitleCard(BaseCardType):
             index_text = season_text
         else:
             index_text = f'{season_text} {separator} {episode_text}'
-        self.index_text = self.image_magick.escape_chars(index_text
+        self.index_text = self.image_magick.escape_chars(index_text)
 
         # Font customizations
         self.font_color = font_color

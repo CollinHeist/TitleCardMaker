@@ -578,16 +578,16 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             return episode
 
         # Match by absolute number
-        if episode_info.abs_number is not None:
+        if episode_info.absolute_number is not None:
             # Try for this season
-            indices = episode_info.season_number, episode_info.abs_number
+            indices = episode_info.season_number, episode_info.absolute_number
             if (ep := _match_by_index(episode_info, *indices)) is not None:
                 ep.reload()
                 return ep
 
             # Try for all seasons
             for season in series.seasons:
-                indices = season.season_number, episode_info.abs_number
+                indices = season.season_number, episode_info.absolute_number
                 if (ep := _match_by_index(episode_info, *indices)) is not None:
                     ep.reload()
                     return ep
@@ -755,11 +755,11 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             return False
 
         # Format with this episode, return whether this matches the translation
-        if episode_info.abs_number is not None:
+        if episode_info.absolute_number is not None:
             # Check against episode and absolute number
             return title in (
                 generic.format(number=episode_info.episode_number),
-                generic.format(number=episode_info.abs_number),
+                generic.format(number=episode_info.absolute_number),
             )
 
         # Only check against episode number (no absolute)

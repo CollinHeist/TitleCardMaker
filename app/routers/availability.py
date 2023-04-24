@@ -86,6 +86,19 @@ def get_remote_card_types(
         )
 
 
+@availablility_router.get('/translations', status_code=200)
+def get_available_tmdb_translations(
+        tmdb_interface = Depends(get_tmdb_interface)):
+    """
+    Get all supported translations from TMDb.
+    """
+
+    return [
+        {'iso_639_1': code, 'language': language}
+        for code, language in tmdb_interface.LANGUAGES.items()
+    ]
+
+
 @availablility_router.get('/episode-data-sources', status_code=200)
 def get_available_episode_data_sources(
         preferences=Depends(get_preferences)) -> list[EpisodeDataSourceToggle]:

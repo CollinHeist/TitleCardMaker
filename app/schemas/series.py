@@ -8,7 +8,7 @@ from app.schemas.font import TitleCase
 from app.schemas.ids import (
     EmbyID, IMDbID, JellyfinID, SonarrID, TMDbID, TVDbID, TVRageID
 )
-from app.schemas.preferences import EpisodeDataSource, ImageSourceToggle, Style, ImageSource
+from app.schemas.preferences import EpisodeDataSource, ImageSourceToggle, Style, ImageSource, LanguageCode
 
 # Match absolute ranges (1-10), season numbers (1), episode ranges (s1e1-s1e10)
 SeasonTitleRange = constr(regex=r'^(\d+-\d+)|(\d+)|(s\d+e\d+-s\d+e\d+)$')
@@ -18,6 +18,10 @@ SeasonTitleRange = constr(regex=r'^(\d+-\d+)|(\d+)|(s\d+e\d+-s\d+e\d+)$')
 """
 Base classes
 """
+class Translation(Base):
+    language_code: LanguageCode
+    data_key: str
+
 class BaseConfig(Base):
     name: Optional[str] = Field(..., min_length=1)
     font_id: Optional[int] = Field(
@@ -33,7 +37,6 @@ class BaseConfig(Base):
     skip_localized_images: Optional[bool] = Field(default=None)
     filename_format: Optional[str] = Field(default=None)
     episode_data_source: Optional[EpisodeDataSource] = Field(default=None)
-    translations: Optional[dict[str, str]] = Field(default=None)
     card_type: Optional[str] = Field(
         default=None,
         title='Title card type',
@@ -54,6 +57,7 @@ class BaseConfig(Base):
 class BaseTemplate(BaseConfig):
     name: str = Field(..., min_length=1, title='Template name')
     image_source_priority: list[ImageSource] = Field(default=None)
+    translations: list[Translation] = Field(default=[])
     hide_season_text: bool = Field(default=False)
     hide_episode_text: bool = Field(default=False)
 
@@ -71,6 +75,7 @@ class BaseSeries(BaseConfig):
         description='ID of the Template applied to this series',
     )
     match_titles: bool = Field(default=True)
+    translations: Optional[list[Translation]] = Field(default=None)
     
     hide_season_text: Optional[bool] = Field(default=None)
     hide_episode_text: Optional[bool] = Field(default=None)
@@ -125,7 +130,7 @@ class BaseUpdate(Base):
     skip_localized_images: Optional[bool] = Field(default=UNSPECIFIED)
     filename_format: Optional[str] = Field(default=UNSPECIFIED)
     episode_data_source: Optional[EpisodeDataSource] = Field(default=UNSPECIFIED)
-    translations: Optional[dict[str, str]] = Field(default=UNSPECIFIED)
+    translations: Optional[list[Translation]] = Field(default=UNSPECIFIED)
     card_type: Optional[str] = Field(default=UNSPECIFIED)
     hide_season_text: Optional[bool] = Field(default=UNSPECIFIED)
     season_title_ranges: Optional[list[SeasonTitleRange]] = Field(default=UNSPECIFIED)
@@ -236,7 +241,7 @@ class UpdateTemplate(BaseUpdate):
     filename_format: Optional[str] = Field(default=UNSPECIFIED)
     episode_data_source: Optional[EpisodeDataSource] = Field(default=UNSPECIFIED)
     image_source_priority: list[ImageSource] = Field(default=UNSPECIFIED)
-    translations: dict[str, str] = Field(default=UNSPECIFIED)
+    translations: list[Translation] = Field(default=UNSPECIFIED)
     card_type: Optional[str] = Field(default=UNSPECIFIED)
     hide_season_text: bool = Field(default=UNSPECIFIED)
     season_title_ranges: list[SeasonTitleRange] = Field(default=UNSPECIFIED)
@@ -252,7 +257,8 @@ class UpdateTemplate(BaseUpdate):
     def validate_arguments(cls, v):
         return None if v == '' else v
 
-    @validator('season_title_ranges', 'season_title_values',
+    @validator('translations',
+               'season_title_ranges', 'season_title_values',
                'extra_keys', 'extra_values', pre=True)
     def validate_list(cls, v):
         # Filter out empty strings - all arguments can accept empty lists
@@ -292,7 +298,7 @@ class UpdateSeries(BaseUpdate):
     filename_format: Optional[str] = Field(default=UNSPECIFIED)
     episode_data_source: Optional[EpisodeDataSource] = Field(default=UNSPECIFIED)
     match_titles: bool = Field(default=UNSPECIFIED)
-    translations: Optional[dict[str, str]] = Field(default=UNSPECIFIED)
+    translations: Optional[list[Translation]] = Field(default=UNSPECIFIED)
     card_type: Optional[str] = Field(default=UNSPECIFIED)
     hide_season_text: Optional[bool] = Field(default=UNSPECIFIED)
     season_title_ranges: Optional[list[SeasonTitleRange]] = Field(default=UNSPECIFIED)
@@ -337,7 +343,8 @@ class UpdateSeries(BaseUpdate):
 
         return values
 
-    @validator('season_title_ranges', 'season_title_values',
+    @validator('translations',
+               'season_title_ranges', 'season_title_values',
                'extra_keys', 'extra_values', pre=True)
     def validate_list(cls, v):
         return [v] if isinstance(v, str) else v

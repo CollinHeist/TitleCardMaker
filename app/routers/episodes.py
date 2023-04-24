@@ -57,6 +57,12 @@ def get_episode(db, episode_id, *, raise_exc=True) -> Optional[Episode]:
     return episode
 
 
+episodes_router = APIRouter(
+    prefix='/episodes',
+    tags=['Episodes'],
+)
+
+
 def set_episode_ids(
         db,
         series: 'Series',
@@ -104,12 +110,6 @@ def set_episode_ids(
         db.commit()
 
     return episode
-
-
-episodes_router = APIRouter(
-    prefix='/episodes',
-    tags=['Episodes'],
-)
 
 
 @episodes_router.post('/new', status_code=201)
@@ -411,13 +411,3 @@ def get_all_series_episodes(
             status_code=500,
             detail=f'Cannot order by "{order_by}"',
         )
-
-
-@episodes_router.get('/all', status_code=201)
-def get_all_episodes(
-        db = Depends(get_database)) -> list[Episode]:
-    """
-    Get all defined Episodes.
-    """
-
-    return db.query(models.episode.Episode).all()

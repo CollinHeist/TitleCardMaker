@@ -55,6 +55,8 @@ class Episode(Base):
     airdate = Column(DateTime, default=None)
 
     extras = Column(MutableDict.as_mutable(PickleType), default=None)
+    translations = Column(MutableDict.as_mutable(PickleType), default={})
+
 
     @hybrid_property
     def card_properties(self) -> dict[str, Any]:
@@ -67,7 +69,7 @@ class Episode(Base):
             'season_number': self.season_number,
             'episode_number': self.episode_number,
             'absolute_number': self.absolute_number,
-            'title': self.title,
+            'title': self.translations.get('preferred_title', self.title),
             'match_title': self.match_title,
             'auto_split_title': self.auto_split_title,
             'card_type': self.card_type,
@@ -115,3 +117,11 @@ class Episode(Base):
             return Path(source_directory) / series_directory / filename
 
         return Path(source_directory) / series_directory / self.source_file
+
+
+    @hybrid_method
+    def get_extra(self, key: str) -> Any:
+        if self.extras is None:
+            return None
+
+        return self.extras.get(key, None)

@@ -4,6 +4,7 @@ from typing import Any, Literal, Optional, Union
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
+from modules.CleanPath import CleanPath
 from modules.Debug import log
 
 SeriesExtra = Optional
@@ -183,7 +184,7 @@ class TintedFrameTitleCard(BaseCardType):
             self.logo = None
         else:
             try:
-                self.logo = Path(logo)
+                self.logo = CleanPath(logo).sanitize()
             except:
                 log.exception(f'Logo path is invalid', e)
                 self.valid = False
