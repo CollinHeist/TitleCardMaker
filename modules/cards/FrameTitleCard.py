@@ -75,26 +75,26 @@ class FrameTitleCard(BaseCardType):
     __FRAME_IMAGE = REF_DIRECTORY / 'frame.png'
 
     __slots__ = (
-        'source_file', 'output_file', 'title', 'season_text', 'episode_text',
-        'hide_season', 'hide_episode', 'font', 'font_size', 'font_color',
-        'vertical_shift', 'interline_spacing', 'kerning', 'episode_text_color',
-        'episode_text_position',
+        'source_file', 'output_file', 'title_text', 'season_text',
+        'episode_text', 'hide_season', 'hide_episode', 'font_color',
+        'font_file', 'font_interline_spacing', 'font_kerning', 'font_size',
+        'font_vertical_shift', 'episode_text_color', 'episode_text_position',
     )
 
     def __init__(self, *,
             source_file: Path,
             card_file: Path,
-            title: str, 
+            title_text: str, 
             season_text: str,
             episode_text: str,
             hide_season_text: bool = False,
             hide_episode_text: bool = False,
-            font_file: str = TITLE_FONT,
             font_color: str = TITLE_COLOR,
-            font_size: float = 1.0,
-            font_vertical_shift: int = 0,
+            font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
             font_kerning: float = 1.0,
+            font_size: float = 1.0,
+            font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
             episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
@@ -102,28 +102,7 @@ class FrameTitleCard(BaseCardType):
             preferences: 'Preferences' = None,
             **unused) -> None:
         """
-        Construct a new instance.
-
-        Args:
-            source_file: Source image for this card.
-            card_file: Output filepath for this card.
-            title: The title for this card.
-            season_text: The season text for this card.
-            episode_text: The episode text for this card.
-            font: Font name or path (as string) to use for episode title.
-            font_size: Scalar to apply to the title font size.
-            title_color: Color to use for title text.
-            hide_season: Whether to hide the season text on this card.
-            vertical_shift: Vertical shift to apply to the title text.
-            interline_spacing: Offset to interline spacing of the title
-                text.
-            blur: Whether to blur the source image.
-            grayscale: Whether to make the source image grayscale.
-            episode_text_color: Custom color to utilize for the episode
-                text.
-            episode_text_position: How to position the episode text
-                relative to the title text.
-            unused: Unused arguments.
+        Construct a new instance of this Card.
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
@@ -135,20 +114,19 @@ class FrameTitleCard(BaseCardType):
 
         # Escape title, season, and episode text
         prep = lambda s: s.upper().strip()
-        self.title = self.image_magick.escape_chars(title)
+        self.title_text = self.image_magick.escape_chars(title_text)
         self.season_text = self.image_magick.escape_chars(prep(season_text))
         self.episode_text = self.image_magick.escape_chars(prep(episode_text))
-
         self.hide_season = hide_season_text or len(self.season_text) == 0
         self.hide_episode = hide_episode_text or len(self.episode_text) == 0
 
         # Font customizations
-        self.font = font_file
-        self.font_size = font_size
         self.font_color = font_color
-        self.vertical_shift = font_vertical_shift
-        self.interline_spacing = font_interline_spacing
-        self.kerning = font_kerning
+        self.font_file = font_file
+        self.font_interline_spacing = font_interline_spacing
+        self.font_kerning = font_kerning
+        self.font_size = font_size
+        self.font_vertical_shift = font_vertical_shift
 
         # Verify/store extras
         self.episode_text_color = episode_text_color
@@ -170,11 +148,11 @@ class FrameTitleCard(BaseCardType):
         """
 
         title_size = 125 * self.font_size
-        interline_spacing = -45 + self.interline_spacing
-        kerning = 5 * self.kerning
+        interline_spacing = -45 + self.font_interline_spacing
+        kerning = 5 * self.font_kerning
 
         return [
-            f'-font "{self.font}"',
+            f'-font "{self.font_file}"',
             f'-fill "{self.font_color}"',
             f'-pointsize {title_size}',
             f'-interline-spacing {interline_spacing}',
@@ -211,12 +189,12 @@ class FrameTitleCard(BaseCardType):
         """
 
         # Command to add only the title to the source image
-        vertical_shift = 675 + self.vertical_shift
+        vertical_shift = 675 + self.font_vertical_shift
         title_only_command = [
             # Set font attributes for title text
             *self._title_font_attributes,
             # Add title text
-            f'-annotate +0+{vertical_shift} "{self.title}"',
+            f'-annotate +0+{vertical_shift} "{self.title_text}"',
         ]
 
         # If no index text is being added, only add title
@@ -225,8 +203,9 @@ class FrameTitleCard(BaseCardType):
 
         # If adding season and/or episode text and title..
         # Get width of title text for positioning 
-        width, _ = self.get_text_dimensions(title_only_command,
-                                            width='max', height='sum')
+        width, _ = self.get_text_dimensions(
+            title_only_command, width='max', height='sum'
+        )
         offset = 3200/2 + width/2 + 25
 
         # Add index text to left or right
@@ -294,13 +273,14 @@ class FrameTitleCard(BaseCardType):
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.file != FrameTitleCard.TITLE_FONT)
-            or (font.size != 1.0)
-            or (font.color != FrameTitleCard.TITLE_COLOR)
-            or (font.vertical_shift != 0)
-            or (font.interline_spacing != 0)
+        return ((font.color != FrameTitleCard.TITLE_COLOR)
+            or (font.file != FrameTitleCard.TITLE_FONT)
             or (font.kerning != 1.0)
-            or (font.stroke_width != 1.0))
+            or (font.interline_spacing != 0)
+            or (font.size != 1.0)
+            or (font.stroke_width != 1.0)
+            or (font.vertical_shift != 0)
+        )
 
 
     @staticmethod
@@ -320,8 +300,8 @@ class FrameTitleCard(BaseCardType):
 
         standard_etf = FrameTitleCard.EPISODE_TEXT_FORMAT.upper()
 
-        return (custom_episode_map or
-                episode_text_format.upper() != standard_etf)
+        return (custom_episode_map
+                or episode_text_format.upper() != standard_etf)
 
 
     def create(self) -> None:

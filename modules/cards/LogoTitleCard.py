@@ -100,27 +100,28 @@ class LogoTitleCard(BaseCardType):
     __GRADIENT_IMAGE = REF_DIRECTORY / 'GRADIENT.png'
 
     __slots__ = (
-        'source_file', 'output_file', 'title', 'season_text', 'episode_text',
-        'font', 'font_size', 'title_color', 'hide_season', 'separator', 'blur',
-        'vertical_shift',  'interline_spacing', 'kerning', 'stroke_width',
-        'logo', 'omit_gradient', 'background', 'stroke_color',
-        'use_background_image', 'blur_only_image',
+        'source_file', 'output_file', 'title_text', 'season_text',
+        'episode_text', 'hide_season_text', 'font_color', 'font_file',
+        'font_kerning', 'font_interline_spacing', 'font_size',
+        'font_stroke_width',  'font_vertical_shift', 'separator', 'logo',
+        'omit_gradient', 'background', 'stroke_color', 'use_background_image',
+        'blur_only_image',
     )
 
     def __init__(self,
-            output_file: Path,
-            title: str,
+            card_file: Path,
+            title_text: str,
             season_text: str,
             episode_text: str,
-            source: Optional[Path] = None,
-            hide_season: bool = False,
-            font: str = TITLE_FONT,
-            title_color: str = TITLE_COLOR,
+            source_file: Optional[Path] = None,
+            hide_season_text: bool = False,
+            font_file: str = TITLE_FONT,
+            font_color: str = TITLE_COLOR,
             font_size: float = 1.0,
-            kerning: float = 1.0,
-            interline_spacing: int = 0,
-            stroke_width: float = 1.0,
-            vertical_shift: int = 0,
+            font_kerning: float = 1.0,
+            font_interline_spacing: int = 0,
+            font_stroke_width: float = 1.0,
+            font_vertical_shift: int = 0,
             season_number: int = 1,
             episode_number: int = 1,
             blur: bool = False,
@@ -132,39 +133,10 @@ class LogoTitleCard(BaseCardType):
             omit_gradient: SeriesExtra[bool] = True,
             use_background_image: SeriesExtra[bool] = False,
             blur_only_image: SeriesExtra[bool] = False,
+            preferences: 'Preferences' = None,
             **unused) -> None:
         """
         Construct a new instance of this card.
-
-        Args:
-            output_file: Output file.
-            title: Episode title.
-            season_text: Text to use as season count text. Ignored if
-                hide_season is True.
-            episode_text: Text to use as episode count text.
-            hide_season: Whether to omit the season text (and joining
-                character) from the title card completely.
-            font: Font to use for the episode title.
-            title_color: Color to use for the episode title.
-            interline_spacing: Pixels to adjust title interline spacing.
-            stroke_width: Scalar to apply to stroke of title text.
-            kerning: Scalar to apply to kerning of the title text.
-            font_size: Scalar to apply to the title font size.
-            vertical_shift: Pixels to adjust title vertical shift by.
-            season_number: Season number for logo-file formatting.
-            episode_number: Episode number for logo-file formatting.
-            blur: Whether to blur the source image.
-            grayscale: Whether to make the source image grayscale.
-            logo: Filepath (or file format) to the logo file.
-            background: Backround color.
-            separator: Character to use to separate season/episode text.
-            stroke_color: Color to use for the back-stroke color.
-            omit_gradient: Whether to omit the gradient overlay.
-            use_background_image: Whether to use a background image
-                instead of a solid background color.
-            blur_only_image: Whether the blur attribute applies to the
-                source image _only_, or the logo as well.
-            unused: Unused arguments.
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
@@ -185,28 +157,28 @@ class LogoTitleCard(BaseCardType):
         # Get source file if indicated
         self.use_background_image = use_background_image
         self.blur_only_image = blur_only_image
-        self.source_file = source
+        self.source_file = source_file
         if self.use_background_image and self.source_file is None:
-            log.error(f'Source file must be provided if using a background'
-                        f'image')
+            log.error(f'Source file must be provided if using a background '
+                      f'image')
             self.valid = False
 
-        self.output_file = output_file
+        self.output_file = card_file
 
         # Ensure characters that need to be escaped are
-        self.title = self.image_magick.escape_chars(title)
+        self.title_text = self.image_magick.escape_chars(title_text)
         self.season_text = self.image_magick.escape_chars(season_text.upper())
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
-        self.hide_season = hide_season
+        self.hide_season_text = hide_season_text or len(season_text) == 0
 
         # Font attributes
-        self.font = font_file
+        self.font_color = font_color
+        self.font_file = font_file
+        self.font_interline_spacing = font_interline_spacing
+        self.font_kerning = font_kerning
         self.font_size = font_size
-        self.title_color = title_color
-        self.vertical_shift = vertical_shift
-        self.interline_spacing = interline_spacing
-        self.kerning = kerning
-        self.stroke_width = stroke_width
+        self.font_stroke_width = font_stroke_width
+        self.font_vertical_shift = font_vertical_shift
 
         # Optional extras
         self.omit_gradient = omit_gradient
@@ -237,7 +209,7 @@ class LogoTitleCard(BaseCardType):
 
 
     @property
-    def index_command(self) -> list[str]:
+    def index_command(self) -> ImageMagickCommands:
         """
         Subcommand for adding the index text to the source image.
 
@@ -338,14 +310,14 @@ class LogoTitleCard(BaseCardType):
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.file != LogoTitleCard.TITLE_FONT)
-            or (font.size != 1.0)
-            or (font.color != LogoTitleCard.TITLE_COLOR)
-            or (font.replacements != LogoTitleCard.FONT_REPLACEMENTS)
-            or (font.vertical_shift != 0)
+        return ((font.color != LogoTitleCard.TITLE_COLOR)
+            or (font.file != LogoTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
             or (font.kerning != 1.0)
-            or (font.stroke_width != 1.0))
+            or (font.size != 1.0)
+            or (font.stroke_width != 1.0)
+            or (font.vertical_shift != 0)
+        )
 
 
     @staticmethod
@@ -365,8 +337,8 @@ class LogoTitleCard(BaseCardType):
 
         standard_etf = LogoTitleCard.EPISODE_TEXT_FORMAT.upper()
 
-        return (custom_episode_map or
-                episode_text_format.upper() != standard_etf)
+        return (custom_episode_map
+                or episode_text_format.upper() != standard_etf)
 
 
     def create(self) -> None:
@@ -394,11 +366,11 @@ class LogoTitleCard(BaseCardType):
         offset = 60 + ((1030 - height) // 2)
 
         # Font customizations
-        vertical_shift = 245 + self.vertical_shift
+        vertical_shift = 245 + self.font_vertical_shift
         font_size = 157.41 * self.font_size
-        interline_spacing = -22 + self.interline_spacing
-        kerning = -1.25 * self.kerning
-        stroke_width = 3.0 * self.stroke_width
+        interline_spacing = -22 + self.font_interline_spacing
+        kerning = -1.25 * self.font_kerning
+        stroke_width = 3.0 * self.font_stroke_width
 
         # Sub-command to add source file or create colored background
         if self.use_background_image:
@@ -450,7 +422,7 @@ class LogoTitleCard(BaseCardType):
             *style_command,
             # Global title text options
             f'-gravity south',
-            f'-font "{self.font}"',                     
+            f'-font "{self.font_file}"',                     
             f'-kerning {kerning}',
             f'-interword-spacing 50',
             f'-interline-spacing {interline_spacing}',
@@ -459,10 +431,10 @@ class LogoTitleCard(BaseCardType):
             f'-fill "{self.stroke_color}"',
             f'-stroke "{self.stroke_color}"',
             f'-strokewidth {stroke_width}',
-            f'-annotate +0+{vertical_shift} "{self.title}"',
+            f'-annotate +0+{vertical_shift} "{self.title_text}"',
             # Title text
-            f'-fill "{self.title_color}"',
-            f'-annotate +0+{vertical_shift} "{self.title}"',
+            f'-fill "{self.font_color}"',
+            f'-annotate +0+{vertical_shift} "{self.title_text}"',
             # Add episode or season+episode "image"
             *self.index_command,
             # Create card

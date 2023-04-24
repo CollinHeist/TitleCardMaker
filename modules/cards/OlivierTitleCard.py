@@ -73,24 +73,25 @@ class OlivierTitleCard(BaseCardType):
     ARCHIVE_NAME = 'Olivier Style'
 
     __slots__ = (
-        'source_file', 'output_file', 'title', 'hide_episode_text', 
-        'episode_prefix', 'episode_text', 'font', 'title_color',
-        'episode_text_color', 'font_size', 'stroke_width', 'kerning',
-        'vertical_shift', 'interline_spacing', 'stroke_color',
+        'source_file', 'output_file', 'title_text', 'hide_episode_text', 
+        'episode_prefix', 'episode_text', 'font_color', 'font_file', 
+        'font_interline_spacing', 'font_kerning', 'font_size',
+        'font_stroke_width',  'font_vertical_shift', 'stroke_color',
+        'episode_text_color', 
     )
 
     def __init__(self,
             source_file: Path,
             card_file: Path,
-            title: str,
+            title_text: str,
             episode_text: str,
             hide_episode_text: bool = False,
-            font_file: str = TITLE_FONT,
             font_color: str = TITLE_COLOR,
+            font_file: str = TITLE_FONT,
+            font_interline_spacing: int = 0,
             font_size: float = 1.0,
             font_stroke_width: float = 1.0,
             font_vertical_shift: int = 0,
-            font_interline_spacing: int = 0,
             font_kerning: float = 1.0,
             blur: bool = False,
             grayscale: bool = False,
@@ -100,27 +101,6 @@ class OlivierTitleCard(BaseCardType):
             **unused) -> None:
         """
         Construct a new instance of this card.
-
-        Args:
-            source: Source image to base the card on.
-            output_file: Output file where to create the card.
-            title: Title text to add to created card.
-            episode_text: Episode text to add to created card.
-            font: Font name or path (as string) to use for episode title.
-            title_color: Color to use for title text.
-            interline_spacing: Pixel count to adjust title interline
-                spacing by.
-            kerning: Scalar to apply to kerning of the title text.
-            font_size: Scalar to apply to title font size.
-            stroke_width: Scalar to apply to black stroke of the title
-                text.
-            vertical_shift: Pixel count to adjust the title vertical
-                offset by.
-            blur: Whether to blur the source image.
-            grayscale: Whether to make the source image grayscale.
-            episode_text_color: Color to use for the episode text.
-            stroke_color: Color to use for the back-stroke color.
-            unused: Unused arguments.
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
@@ -131,11 +111,12 @@ class OlivierTitleCard(BaseCardType):
         self.output_file = card_file
 
         # Store attributes of the text
-        self.title = self.image_magick.escape_chars(title)
+        self.title_text = self.image_magick.escape_chars(title_text)
         self.hide_episode_text = hide_episode_text or len(episode_text) == 0
 
         # Determine episode prefix, modify text to remove prefix
         self.episode_prefix = None
+        self.hide_episode_text = hide_episode_text or len(episode_text) == 0
         if not self.hide_episode_text and ' ' in episode_text:
             prefix, number = episode_text.split(' ', 1)
             self.episode_prefix = prefix.upper()
@@ -145,13 +126,13 @@ class OlivierTitleCard(BaseCardType):
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
 
         # Font customizations
-        self.font = font_file
-        self.title_color = font_color
+        self.font_color = font_color
+        self.font_file = font_file
+        self.font_interline_spacing = font_interline_spacing
+        self.font_kerning = font_kerning
         self.font_size = font_size
-        self.stroke_width = font_stroke_width
-        self.vertical_shift = font_vertical_shift
-        self.interline_spacing = font_interline_spacing
-        self.kerning = font_kerning
+        self.font_stroke_width = font_stroke_width
+        self.font_vertical_shift = font_vertical_shift
 
         # Optional extras
         self.episode_text_color = episode_text_color
@@ -159,7 +140,7 @@ class OlivierTitleCard(BaseCardType):
 
 
     @property
-    def title_text_command(self) -> list[str]:
+    def title_text_command(self) -> ImageMagickCommands:
         """
         Get the ImageMagick commands to add the episode title text to an
         image.
@@ -169,13 +150,13 @@ class OlivierTitleCard(BaseCardType):
         """
 
         font_size = 124 * self.font_size
-        stroke_width = 8.0 * self.stroke_width
-        kerning = 0.5 * self.kerning
-        interline_spacing = -20 + self.interline_spacing
-        vertical_shift = 785 + self.vertical_shift
+        stroke_width = 8.0 * self.font_stroke_width
+        kerning = 0.5 * self.font_kerning
+        interline_spacing = -20 + self.font_interline_spacing
+        vertical_shift = 785 + self.font_vertical_shift
 
         return [
-            f'\( -font "{self.font}"',
+            f'\( -font "{self.font_file}"',
             f'-gravity northwest',
             f'-pointsize {font_size}',
             f'-kerning {kerning}',
@@ -183,16 +164,16 @@ class OlivierTitleCard(BaseCardType):
             f'-fill "{self.stroke_color}"',
             f'-stroke "{self.stroke_color}"',
             f'-strokewidth {stroke_width}',
-            f'-annotate +320+{vertical_shift} "{self.title}" \)',
-            f'\( -fill "{self.title_color}"',
-            f'-stroke "{self.title_color}"',
+            f'-annotate +320+{vertical_shift} "{self.title_text}" \)',
+            f'\( -fill "{self.font_color}"',
+            f'-stroke "{self.font_color}"',
             f'-strokewidth 0',
-            f'-annotate +320+{vertical_shift} "{self.title}" \)',
+            f'-annotate +320+{vertical_shift} "{self.title_text}" \)',
         ]
 
 
     @property
-    def episode_prefix_command(self) -> list[str]:
+    def episode_prefix_command(self) -> ImageMagickCommands:
         """
         Get the ImageMagick commands to add the episode prefix text to
         an image.
@@ -222,7 +203,7 @@ class OlivierTitleCard(BaseCardType):
 
 
     @property
-    def episode_number_text_command(self) -> list[str]:
+    def episode_number_text_command(self) -> ImageMagickCommands:
         """
         Get the ImageMagick commands to add the episode number text to
         an image.
@@ -298,13 +279,14 @@ class OlivierTitleCard(BaseCardType):
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.file != OlivierTitleCard.TITLE_FONT)
-            or (font.size != 1.0)
-            or (font.color != OlivierTitleCard.TITLE_COLOR)
-            or (font.vertical_shift != 0)
+        return ((font.color != OlivierTitleCard.TITLE_COLOR)
+            or (font.file != OlivierTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
             or (font.kerning != 1.0)
-            or (font.stroke_width != 1.0))
+            or (font.size != 1.0)
+            or (font.stroke_width != 1.0)
+            or (font.vertical_shift != 0)
+        )
 
 
     @staticmethod

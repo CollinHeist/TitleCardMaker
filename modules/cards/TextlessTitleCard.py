@@ -66,13 +66,6 @@ class TextlessTitleCard(BaseCardType):
             **unused) -> None:
         """
         Construct a new instance of this card.
-
-        Args:
-            source: Source image.
-            output_file: Output file.
-            blur: Whether to blur the source image.
-            grayscale: Whether to make the source image grayscale.
-            unused: Unused arguments.
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
@@ -100,8 +93,8 @@ class TextlessTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_season_titles(custom_episode_map: bool, 
-                                episode_text_format: str) -> bool:
+    def is_custom_season_titles(
+            custom_episode_map: bool, episode_text_format: str) -> bool:
         """
         Determines whether the given attributes constitute custom or
         generic season titles.

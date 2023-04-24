@@ -26,6 +26,40 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     """Series ID's that can be set by TMDb"""
     SERIES_IDS = ('imdb_id', 'tmdb_id', 'tvdb_id', 'tvrage_id')
 
+    """Language codes"""
+    LANGUAGES = {
+        'ar': 'Arabic',
+        'bg': 'Bulgarian',
+        'ca': 'Catalan',
+        'cs': 'Czech',
+        'da': 'Danish',
+        'de': 'German',
+        'el': 'Greek',
+        'en': 'English',
+        'es': 'Spanish',
+        'fa': 'Persian',
+        'fr': 'French',
+        'he': 'Hebrew',
+        'hu': 'Hungarian',
+        'id': 'Indonesian',
+        'it': 'Italian',
+        'ja': 'Japanese',
+        'ko': 'Korean',
+        'my': 'Burmese',
+        'pl': 'Polish',
+        'pt': 'Portuguese',
+        'ro': 'Romanian',
+        'ru': 'Russian',
+        'sk': 'Slovak',
+        'sr': 'Serbian',
+        'th': 'Thai',
+        'tr': 'Turkish',
+        'uk': 'Ukrainian',
+        'vi': 'Vietnamese',
+        'zh': 'Mandarin',   
+    }
+    LANGUAGE_CODES = tuple(LANGUAGES.keys())
+
     """Generic translated episode format strings for each language code"""
     GENERIC_TITLE_FORMATS = {
         'ar': r'الحلقة {number}',
@@ -51,7 +85,6 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         'vi': r'Episode {number}',
         'zh': r'第 {number} 集',
     }
-    LANGUAGE_CODES = tuple(GENERIC_TITLE_FORMATS.keys())
 
     """Filename for where to store blacklisted entries"""
     __BLACKLIST_DB = 'tmdb_blacklist.json'

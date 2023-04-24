@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 
 from ruamel.yaml import YAML, round_trip_dump, comments
 from ruamel.yaml.constructor import DuplicateKeyError
@@ -18,13 +18,16 @@ class SeriesYamlWriter:
     """
 
     """Keyword arguments for yaml.dump()"""
-    __WRITE_OPTIONS = {'allow_unicode': True, 'width': 200}
+    __WRITE_OPTIONS = {'allow_unicode': True, 'width': 250}
 
 
     def __init__(self,
-            file: CleanPath, sync_mode: str='append', compact_mode: bool=True,
-            volume_map: dict[str, str]={}, template: str=None,
-            card_directory: CleanPath=None) -> None:
+            file: CleanPath,
+            sync_mode: str = 'append',
+            compact_mode: bool = True,
+            volume_map: dict[str, str] = {},
+            template: Optional[str] = None,
+            card_directory: Optional[CleanPath] = None) -> None:
         """
         Initialize an instance of a SeriesYamlWrite object.
 
@@ -133,7 +136,7 @@ class SeriesYamlWriter:
 
 
     def __apply_exclusion(self,
-            yaml: dict[str, dict[str, str]],
+            yaml: SeriesYaml,
             exclusions: list[dict[str, str]]) -> None:
         """
         Apply the given exclusions to the given YAML. This modifies the
@@ -197,7 +200,7 @@ class SeriesYamlWriter:
                     del yaml['series'][key]
 
 
-    def __write(self, yaml: dict[str, dict[str, str]]) -> None:
+    def __write(self, yaml: SeriesYaml) -> None:
         """
         Write the given YAML to this Writer's file. This either utilizes
         compact or verbose style.
@@ -219,8 +222,7 @@ class SeriesYamlWriter:
             dump(yaml, file_handle, **self.__WRITE_OPTIONS)
 
 
-    def __read_existing_file(self, 
-            yaml: dict[str, dict[str, str]]) -> dict[str, dict[str, str]]:
+    def __read_existing_file(self, yaml: SeriesYaml) -> SeriesYaml:
         """
         Read the existing YAML from this writer's file. If the file has
         no existing YAML to read, then just write the given YAML.
@@ -265,7 +267,7 @@ class SeriesYamlWriter:
         return existing_yaml
 
 
-    def __append(self, yaml: dict[str, dict[str, str]]) -> None:
+    def __append(self, yaml: SeriesYaml) -> None:
         """
         Append the given YAML to this Writer's file. This either utilizes
         compact or verbose style. Appending does not modify library or series
@@ -304,10 +306,10 @@ class SeriesYamlWriter:
 
         # Write YAML to file
         with self.file.open('w', encoding='utf-8') as file_handle:
-            round_trip_dump(existing_yaml, file_handle)
+            round_trip_dump(existing_yaml, file_handle, **self.__WRITE_OPTIONS)
 
 
-    def __match(self, yaml: dict[str, dict[str, str]]) -> None:
+    def __match(self, yaml: SeriesYaml) -> None:
         """
         Match this Writer's file to the given YAML - i.e. remove series
         that shouldn't be present, and add series that should. Does not
@@ -548,12 +550,12 @@ class SeriesYamlWriter:
 
     def update_from_sonarr(self,
             sonarr_interface: 'SonarrInterface',
-            plex_libraries: dict[str, str]={},
-            required_tags: list[str]=[],
-            monitored_only: bool=False,
-            downloaded_only: bool=False,
-            series_type: str=None,
-            exclusions: list[dict[str, str]]=[]) -> None:
+            plex_libraries: dict[str, str] = {},
+            required_tags: list[str] = [],
+            monitored_only: bool = False,
+            downloaded_only: bool = False,
+            series_type: Optional[str] = None,
+            exclusions: list[dict[str, str]] = []) -> None:
         """
         Update this object's file from Sonarr.
 
@@ -622,8 +624,7 @@ class SeriesYamlWriter:
             emby_interface: 'EmbyInterface',
             filter_libraries: list[str] = [],
             required_tags: list[str] = [],
-            exclusions: list[dict[str, str]] = []
-            ) -> None:
+            exclusions: list[dict[str, str]] = []) -> None:
         """
         Update this object's file from Emby.
 
@@ -656,8 +657,7 @@ class SeriesYamlWriter:
             jellyfin_interface: 'JellyfinInterface',
             filter_libraries: list[str] = [],
             required_tags: list[str] = [],
-            exclusions: list[dict[str, str]] = []
-            ) -> None:
+            exclusions: list[dict[str, str]] = []) -> None:
         """
         Update this object's file from Jellyfin.
 

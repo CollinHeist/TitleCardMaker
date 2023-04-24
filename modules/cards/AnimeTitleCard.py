@@ -105,16 +105,16 @@ class AnimeTitleCard(BaseCardType):
     def __init__(self, *,
             source_file: Path,
             card_file: Path,
-            title: str,
+            title_text: str,
             season_text: str,
             episode_text: str,
             hide_season_text: bool = False,
             hide_episode_text: bool = False,
-            font_file: str = TITLE_FONT,
             font_color: str = TITLE_COLOR,
-            font_size: float = 1.0,
+            font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
             font_kerning: float = 1.0,
+            font_size: float = 1.0,
             font_stroke_width: float = 1.0,
             font_vertical_shift: int = 0,
             blur: bool = False,
@@ -127,34 +127,6 @@ class AnimeTitleCard(BaseCardType):
             stroke_color: SeriesExtra[str] = 'black',
             preferences: 'Preferences' = None,
             **unused) -> None:
-        """
-        Construct a new instance of this card.
-
-        Args:
-            source: Source image for this card.
-            output_file: Output filepath for this card.
-            title: The title for this card.
-            season_text: The season text for this card.
-            episode_text: The episode text for this card.
-            font: Font name or path (as string) to use for episode title.
-            font_size: Scalar to apply to the title font size.
-            title_color: Color to use for title text.
-            hide_season: Whether to hide the season text.
-            vertical_shift: Vertical shift to apply to the title and
-                kanji text.
-            interline_spacing: Offset to interline spacing of title text
-            kerning: Scalar to apply to kerning of the title text.
-            stroke_width: Scalar to apply to stroke.
-            blur: Whether to blur the source image.
-            grayscale: Whether to make the source image grayscale.
-            kanji: Kanji text to place above the episode title.
-            separator: Character to use to separate season/episode text.
-            omit_gradient: Whether to omit the gradient overlay.
-            require_kanji: Whether to require kanji for this card.
-            kanji_vertical_shift: Vertical shift to apply to kanji text.
-            stroke_color: Color to use for the back-stroke color.
-            unused: Unused arguments.
-        """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
@@ -164,11 +136,11 @@ class AnimeTitleCard(BaseCardType):
         self.output_file = card_file
 
         # Escape title, season, and episode text
-        self.hide_season = hide_season_text
-        self.hide_episode_text = hide_episode_text
-        self.title = self.image_magick.escape_chars(title)
+        self.title_text = self.image_magick.escape_chars(title_text)
         self.season_text = self.image_magick.escape_chars(season_text.upper())
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
+        self.hide_season_text = hide_season_text or len(season_text) == 0
+        self.hide_episode_text = hide_episode_text or len(episode_text) == 0
 
         # Store kanji, set bool for whether to use it or not
         self.kanji = self.image_magick.escape_chars(kanji)
@@ -177,13 +149,13 @@ class AnimeTitleCard(BaseCardType):
         self.kanji_vertical_shift = float(kanji_vertical_shift)
 
         # Font customizations
-        self.font = font_file
-        self.font_size = font_size
         self.font_color = font_color
-        self.vertical_shift = font_vertical_shift
-        self.interline_spacing = font_interline_spacing
-        self.kerning = font_kerning
-        self.stroke_width = font_stroke_width
+        self.font_file = font_file
+        self.font_interline_spacing = font_interline_spacing
+        self.font_kerning = font_kerning
+        self.font_size = font_size
+        self.font_stroke_width = font_stroke_width
+        self.font_vertical_shift = font_vertical_shift
 
         # Optional extras
         self.separator = separator
@@ -192,7 +164,7 @@ class AnimeTitleCard(BaseCardType):
 
 
     @property
-    def __title_text_global_effects(self) -> list:
+    def __title_text_global_effects(self) -> ImageMagickCommands:
         """
         ImageMagick commands to implement the title text's global
         effects. Specifically the the font, kerning, fontsize, and
@@ -202,12 +174,12 @@ class AnimeTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
-        kerning = 2.0 * self.kerning
-        interline_spacing = -30 + self.interline_spacing
+        kerning = 2.0 * self.font_kerning
+        interline_spacing = -30 + self.font_interline_spacing
         font_size = 150 * self.font_size
 
         return [
-            f'-font "{self.font}"',
+            f'-font "{self.font_file}"',
             f'-kerning {kerning}',
             f'-interline-spacing {interline_spacing}',
             f'-pointsize {font_size}',
@@ -216,7 +188,7 @@ class AnimeTitleCard(BaseCardType):
 
 
     @property
-    def __title_text_black_stroke(self) -> list[str]:
+    def __title_text_black_stroke(self) -> ImageMagickCommands:
         """
         ImageMagick commands to implement the title text's black stroke.
 
@@ -225,10 +197,10 @@ class AnimeTitleCard(BaseCardType):
         """
 
         # No stroke, return empty command
-        if self.stroke_width == 0:
+        if self.font_stroke_width == 0:
             return []
 
-        stroke_width = 5 * self.stroke_width
+        stroke_width = 5 * self.font_stroke_width
 
         return [
             f'-fill "{self.stroke_color}"',
@@ -238,7 +210,7 @@ class AnimeTitleCard(BaseCardType):
 
 
     @property
-    def __title_text_effects(self) -> list[str]:
+    def __title_text_effects(self) -> ImageMagickCommands:
         """
         ImageMagick commands to implement the title text's standard
         effects.
@@ -255,7 +227,7 @@ class AnimeTitleCard(BaseCardType):
 
 
     @property
-    def __series_count_text_global_effects(self) -> list[str]:
+    def __series_count_text_global_effects(self) -> ImageMagickCommands:
         """
         ImageMagick commands for global text effects applied to all
         series count text (season/episode count and dot).
@@ -274,7 +246,7 @@ class AnimeTitleCard(BaseCardType):
 
 
     @property
-    def __series_count_text_black_stroke(self) -> list:
+    def __series_count_text_black_stroke(self) -> ImageMagickCommands:
         """
         ImageMagick commands for adding the necessary black stroke
         effects to series count text.
@@ -291,7 +263,7 @@ class AnimeTitleCard(BaseCardType):
 
 
     @property
-    def title_text_command(self) -> list[str]:
+    def title_text_command(self) -> ImageMagickCommands:
         """
         Subcommand for adding title text to the source image.
 
@@ -300,21 +272,21 @@ class AnimeTitleCard(BaseCardType):
         """
 
         # Base offset for the title text
-        base_offset = 175 + self.vertical_shift
+        base_offset = 175 + self.font_vertical_shift
 
         # If adding kanji, add additional annotate commands for kanji
         if self.use_kanji:
-            linecount = len(self.title.split('\n')) - 1
-            variable_offset = 200 + ((165 + self.interline_spacing) * linecount)
+            linecount = len(self.title_text.split('\n')) - 1
+            variable_offset = 200 + ((165 + self.font_interline_spacing) * linecount)
             kanji_offset = base_offset + variable_offset * self.font_size
-            kanji_offset += self.vertical_shift + self.kanji_vertical_shift
+            kanji_offset += self.font_vertical_shift + self.kanji_vertical_shift
 
             return [
                 *self.__title_text_global_effects,
                 *self.__title_text_black_stroke,
-                f'-annotate +75+{base_offset} "{self.title}"',
+                f'-annotate +75+{base_offset} "{self.title_text}"',
                 *self.__title_text_effects,
-                f'-annotate +75+{base_offset} "{self.title}"',
+                f'-annotate +75+{base_offset} "{self.title_text}"',
                 f'-font "{self.KANJI_FONT.resolve()}"',
                 *self.__title_text_black_stroke,
                 f'-pointsize {85 * self.font_size}',
@@ -327,14 +299,14 @@ class AnimeTitleCard(BaseCardType):
         return [
             *self.__title_text_global_effects,
             *self.__title_text_black_stroke,
-            f'-annotate +75+{base_offset} "{self.title}"',
+            f'-annotate +75+{base_offset} "{self.title_text}"',
             *self.__title_text_effects,
-            f'-annotate +75+{base_offset} "{self.title}"',
+            f'-annotate +75+{base_offset} "{self.title_text}"',
         ]
 
 
     @property
-    def index_text_command(self) -> list[str]:
+    def index_text_command(self) -> ImageMagickCommands:
         """
         Subcommand for adding the index text to the source image.
 
@@ -343,19 +315,20 @@ class AnimeTitleCard(BaseCardType):
         """
 
         # Hiding all index text, return blank commands
-        if self.hide_season and self.hide_episode_text:
+        if self.hide_season_text and self.hide_episode_text:
             return []
 
-        # Add only episode text
-        if self.hide_season:
+        # Add only season or episode text
+        if self.hide_season_text or self.hide_episode_text:
+            text = self.episode_text if self.hide_season_text else self.season_text
             return [
                 *self.__series_count_text_global_effects,
                 *self.__series_count_text_black_stroke,
-                f'-annotate +75+90 "{self.episode_text}"',
+                f'-annotate +75+90 "{text}"',
                 f'-fill "{self.SERIES_COUNT_TEXT_COLOR}"',
                 f'-stroke "{self.SERIES_COUNT_TEXT_COLOR}"',
                 f'-strokewidth 0',
-                f'-annotate +75+90 "{self.episode_text}"',
+                f'-annotate +75+90 "{text}"',
             ]
         
         # Add only season text
@@ -440,13 +413,14 @@ class AnimeTitleCard(BaseCardType):
             True if a custom font is indicated, False otherwise.
         """
 
-        return ((font.file != AnimeTitleCard.TITLE_FONT)
-            or (font.size != 1.0)
-            or (font.color != AnimeTitleCard.TITLE_COLOR)
-            or (font.vertical_shift != 0)
+        return ((font.color != AnimeTitleCard.TITLE_COLOR)
+            or (font.file != AnimeTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
             or (font.kerning != 1.0)
-            or (font.stroke_width != 1.0))
+            or (font.size != 1.0)
+            or (font.stroke_width != 1.0)
+            or (font.vertical_shift != 0)
+        )
 
 
     @staticmethod

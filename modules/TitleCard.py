@@ -10,6 +10,7 @@ import modules.global_objects as global_objects
 # Built-in BaseCardType classes
 from modules.cards.AnimeTitleCard import AnimeTitleCard
 from modules.cards.CutoutTitleCard import CutoutTitleCard
+from modules.cards.DividerTitleCard import DividerTitleCard
 from modules.cards.FadeTitleCard import FadeTitleCard
 from modules.cards.FrameTitleCard import FrameTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
@@ -20,6 +21,7 @@ from modules.cards.RomanNumeralTitleCard import RomanNumeralTitleCard
 from modules.cards.StandardTitleCard import StandardTitleCard
 from modules.cards.StarWarsTitleCard import StarWarsTitleCard
 from modules.cards.TextlessTitleCard import TextlessTitleCard
+from modules.cards.TintedFrameTitleCard import TintedFrameTitleCard
 from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
 
 class TitleCard:
@@ -50,11 +52,14 @@ class TitleCard:
     DEFAULT_CARD_TYPE = 'standard'
     CARD_TYPES = {
         'anime': AnimeTitleCard,
+        'blurred border': TintedFrameTitleCard,
         'cutout': CutoutTitleCard,
+        'divider': DividerTitleCard,
         'fade': FadeTitleCard,
         'frame': FrameTitleCard,
         'generic': StandardTitleCard,
         'gundam': PosterTitleCard,
+        'import': TextlessTitleCard,
         'ishalioh': OlivierTitleCard,
         'landscape': LandscapeTitleCard,
         'logo': LogoTitleCard,
@@ -70,6 +75,7 @@ class TitleCard:
         'standard': StandardTitleCard,
         'star wars': StarWarsTitleCard,
         'textless': TextlessTitleCard,
+        'tinted frame': TintedFrameTitleCard,
         'tinted glass': TintedGlassTitleCard,
         '4x3': FadeTitleCard,
     }
@@ -77,7 +83,9 @@ class TitleCard:
     __slots__ = ('episode', 'profile', 'converted_title', 'maker', 'file')
 
 
-    def __init__(self, episode: 'Episode', profile: 'Profile',
+    def __init__(self,
+            episode: 'Episode',
+            profile: 'Profile',
             title_characteristics: dict[str, Any],
             **extra_characteristics: dict[str, Any]) -> None:
         """
@@ -104,23 +112,23 @@ class TitleCard:
         )   
 
         # Initialize this episode's CardType instance
-        args = {
+        kwargs = {
             'source_file': episode.source,
             'card_file': episode.destination,
-            'title': self.converted_title,
-            'hide_season_text': profile.hide_season_title,
+            'title_text': self.converted_title,
             'season_text': profile.get_season_text(self.episode.episode_info),
-            'hide_episode_text': False,
             'episode_text': profile.get_episode_text(self.episode),
+            'hide_season_text': profile.hide_season_title,
+            'hide_episode_text': False,
             'blur': episode.blur,
-            'watched': episode.watched,
             'grayscale': episode.grayscale,
+            'watched': episode.watched,
         } | profile.font.get_attributes() \
           | self.episode.episode_info.indices \
           | extra_characteristics
 
         try:
-            self.maker = self.episode.card_class(**args)
+            self.maker = self.episode.card_class(**kwargs)
         except Exception as e:
             log.exception(f'Cannot initialize Card for {self.episode} - {e}', e)
             self.maker = None
@@ -130,8 +138,11 @@ class TitleCard:
 
 
     @staticmethod
-    def get_output_filename(format_string: str, series_info: 'SeriesInfo', 
-            episode_info: 'EpisodeInfo', media_directory: Path) -> Path:
+    def get_output_filename(
+            format_string: str,
+            series_info: 'SeriesInfo', 
+            episode_info: 'EpisodeInfo',
+            media_directory: Path) -> Path:
         """
         Get the output filename for a title card described by the given
         values.
@@ -173,8 +184,11 @@ class TitleCard:
 
 
     @staticmethod
-    def get_multi_output_filename(format_string: str, series_info: 'SeriesInfo',
-            multi_episode: 'MultiEpisode', media_directory: Path) -> Path:
+    def get_multi_output_filename(
+            format_string: str,
+            series_info: 'SeriesInfo',
+            multi_episode: 'MultiEpisode',
+            media_directory: Path) -> Path:
         """
         Get the output filename for a title card described by the given
         values, and that represents a range of Episodes (not just one).
