@@ -15,7 +15,7 @@ class Template(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
 
-    filename_format = Column(String, default=None)
+    card_filename_format = Column(String, default=None)
     episode_data_source = Column(String, default=None)
     image_source_priority = Column(MutableList.as_mutable(PickleType), default=None)
     sync_specials = Column(Boolean, default=None)
@@ -37,7 +37,7 @@ class Template(Base):
         return {
             'template_id': self.id,
             'template_name': self.name,
-            'filename_format': self.filename_format,
+            'card_filename_format': self.card_filename_format,
             'font_id': self.font_id,
             'card_type': self.card_type,
             'hide_season_text': self.hide_season_text,

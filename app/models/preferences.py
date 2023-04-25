@@ -22,7 +22,7 @@ TCM_ROOT = Path(__file__).parent.parent.parent
 class Preferences:
 
     DEFAULT_CARD_FILENAME_FORMAT = (
-        '{full_name} S{season_number:02}E{episode_number:02}'
+        '{series_full_name} S{season_number:02}E{episode_number:02}'
     )
     DEFAULT_CARD_EXTENSION = '.jpg'
     DEFAULT_IMAGE_SOURCE_PRIORITY = ['TMDb', 'Plex', 'Jellyfin', 'Emby']
@@ -281,7 +281,7 @@ class Preferences:
             'card_type': self.default_card_type,
             'watched_style': self.default_watched_style,
             'unwatched_style': self.default_unwatched_style,
-            'filename_format': self.card_filename_format,
+            'card_filename_format': self.card_filename_format,
         }
 
 

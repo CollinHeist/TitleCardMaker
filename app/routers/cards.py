@@ -62,7 +62,6 @@ def create_card(db, preferences, card_settings):
     CardClass = TitleCardCreator.CARD_TYPES[card_settings.get('card_type')]
     card_maker = CardClass(
         **card_settings,
-        **card_settings.get('extras', {}),
         preferences=preferences,
     )
 
@@ -372,9 +371,10 @@ def create_cards_for_series(
         )
 
         # Exit if the source file does not exist
-        if (card_settings['source_file'].exists()
-            and CardClass.USES_UNIQUE_SOURCES):
-            log.debug(f'Episode[{episode.id}] Skipping Card, no source image')
+        if (CardClass.USES_UNIQUE_SOURCES
+            and not card_settings['source_file'].exists()):
+            log.debug(f'Episode[{episode.id}] Skipping Card, no source image '
+                      f'("{card_settings["source_file"]}")')
             continue
 
         # Get card folder
@@ -386,14 +386,18 @@ def create_cards_for_series(
 
         # If an explicit card file was indicated, use it vs. default
         # TODO get season folder format from preferences object directly
-        if card_settings.get('card_file', None) is None:
-            card_settings['card_file'] = series_directory \
-                / preferences.season_folder_format.format(**episode_info.indices) \
-                / card_settings['filename_format'].format(**card_settings)
-        else:
-            card_settings['card_file'] = series_directory \
-                / preferences.season_folder_format.format(**episode_info.indices) \
-                / card_settings['card_file']
+        try:
+            if card_settings.get('card_file', None) is None:
+                card_settings['card_file'] = series_directory \
+                    / preferences.season_folder_format.format(**episode_info.indices) \
+                    / card_settings['card_filename_format'].format(**card_settings)
+            else:
+                card_settings['card_file'] = series_directory \
+                    / preferences.season_folder_format.format(**episode_info.indices) \
+                    / card_settings['card_file']
+        except KeyError as e:
+            log.exception(f'Cannot format filename - missing data', e)
+            continue
 
         # Add extension if needed
         card_file_name = card_settings['card_file'].name
@@ -406,13 +410,10 @@ def create_cards_for_series(
         # Create parent directories if needed
         card_settings['card_file'].parent.mkdir(parents=True, exist_ok=True)
 
-        # Create Card creator
+        # Merge settings, extras, and translations
+        card_settings = card_settings \
+            | (card_settings.get('extras', {}) | episode.translations)
         card = NewTitleCard(**card_settings)
-        card_maker = CardClass(
-            **card_settings,
-            **card_settings.get('extras', {}),
-            preferences=preferences,
-        )
 
         # No existing card, add task to create and add to database
         if existing_card is None:

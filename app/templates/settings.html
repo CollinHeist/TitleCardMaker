@@ -84,9 +84,9 @@
 
 <body onload="getEpisodeDataSources(); getImageSourcePriority();">
   <script>
-    function initCardTypeDropdowns() {
+    async function initCardTypeDropdowns() {
       // Load filtered types into default card type dropdown
-      const allCards = loadCardTypes({
+      const allCards = await loadCardTypes({
         element: '#excluded-card-types',
         isSelected: (identifier) => {{preferences.excluded_card_types|safe}}.includes(identifier),
         showExcluded: true,
@@ -338,7 +338,7 @@
 
               <div class="field">
                 <label>Filename Format</label>
-                <input type="text" name="filename_format" placeholder="{{preferences.card_filename_format}}" value="{{preferences.card_filename_format}}">
+                <input type="text" name="card_filename_format" placeholder="{{preferences.card_filename_format}}" value="{{preferences.card_filename_format}}">
               </div>
               
               <div class="field">
@@ -540,8 +540,8 @@
           }, card_height: {
             identifier: 'card_height',
             rules: [{type: 'integer[1..]', prompt: 'Dimension must be a positive number'}]
-          }, filename_format: {
-            identifier: 'filename_format',
+          }, card_filename_format: {
+            identifier: 'card_filename_format',
             rules: [{type: 'minLength[1]', prompt: 'Filename format is required'}]
           }
         },

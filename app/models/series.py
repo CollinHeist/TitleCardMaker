@@ -29,7 +29,7 @@ class Series(Base):
     emby_library_name = Column(String, default=None)
     jellyfin_library_name = Column(String, default=None)
     plex_library_name = Column(String, default=None)
-    filename_format = Column(String, default=None)
+    card_filename_format = Column(String, default=None)
     episode_data_source = Column(String, default=None)
     sync_specials = Column(Boolean, default=None)
     skip_localized_images = Column(Boolean, default=None)
@@ -81,7 +81,7 @@ class Series(Base):
             'series_name': self.name,
             'series_full_name': self.full_name,
             'year': self.year,
-            'filename_format': self.filename_format,
+            'card_filename_format': self.card_filename_format,
             'font_id': self.font_id,
             'font_color': self.font_color,
             'font_title_case': self.font_title_case,

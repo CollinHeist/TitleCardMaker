@@ -19,7 +19,7 @@ translation_router = APIRouter(
 )
 
 
-def add_episode_translations(
+def _translate_episode(
         db,
         series: 'Series',
         series_template: 'Template',
@@ -109,12 +109,12 @@ def add_series_translations(
     # Add background task to translate each Episode
     for episode in episodes:
         background_tasks.add_task(
-            add_episode_translations,
+            _translate_episode,
             db, series, series_template, episode, tmdb_interface
         )
 
 
-@translation_router.get('/episode/{episode_id}', status_code=201)
+@translation_router.post('/episode/{episode_id}', status_code=201)
 def add_episode_translations(
         background_tasks: BackgroundTasks,
         episode_id: int,
@@ -125,7 +125,6 @@ def add_episode_translations(
     Get all translations for the given Episode.
 
     - episode_id: ID of the Episode to translate.
-    # - force_refresh: Whether to 
     """
 
     # Exit if no valid interface to TMDb
@@ -144,6 +143,6 @@ def add_episode_translations(
 
     # Add background task for translating this Epiode
     background_tasks.add_task(
-        add_episode_translations,
+        _translate_episode,
         db, series, series_template, episode, tmdb_interface
     )

@@ -35,7 +35,7 @@ class BaseConfig(Base):
         description='Whether to sync specials of this series'
     )
     skip_localized_images: Optional[bool] = Field(default=None)
-    filename_format: Optional[str] = Field(default=None)
+    card_filename_format: Optional[str] = Field(default=None)
     episode_data_source: Optional[EpisodeDataSource] = Field(default=None)
     card_type: Optional[str] = Field(
         default=None,
@@ -128,7 +128,7 @@ class BaseUpdate(Base):
     font_id: Optional[int] = Field(default=UNSPECIFIED)
     sync_specials: Optional[bool] = Field(default=UNSPECIFIED)
     skip_localized_images: Optional[bool] = Field(default=UNSPECIFIED)
-    filename_format: Optional[str] = Field(default=UNSPECIFIED)
+    card_filename_format: Optional[str] = Field(default=UNSPECIFIED)
     episode_data_source: Optional[EpisodeDataSource] = Field(default=UNSPECIFIED)
     translations: Optional[list[Translation]] = Field(default=UNSPECIFIED)
     card_type: Optional[str] = Field(default=UNSPECIFIED)
@@ -238,7 +238,7 @@ class UpdateTemplate(BaseUpdate):
     font_id: Optional[int] = Field(default=UNSPECIFIED)
     sync_specials: bool = Field(default=UNSPECIFIED)
     skip_localized_images: Optional[bool] = Field(default=UNSPECIFIED)
-    filename_format: Optional[str] = Field(default=UNSPECIFIED)
+    card_filename_format: Optional[str] = Field(default=UNSPECIFIED)
     episode_data_source: Optional[EpisodeDataSource] = Field(default=UNSPECIFIED)
     image_source_priority: list[ImageSource] = Field(default=UNSPECIFIED)
     translations: list[Translation] = Field(default=UNSPECIFIED)
@@ -295,7 +295,7 @@ class UpdateSeries(BaseUpdate):
     font_id: Optional[int] = Field(default=UNSPECIFIED)
     sync_specials: Optional[bool] = Field(default=UNSPECIFIED)
     skip_localized_images: Optional[bool] = Field(default=UNSPECIFIED)
-    filename_format: Optional[str] = Field(default=UNSPECIFIED)
+    card_filename_format: Optional[str] = Field(default=UNSPECIFIED)
     episode_data_source: Optional[EpisodeDataSource] = Field(default=UNSPECIFIED)
     match_titles: bool = Field(default=UNSPECIFIED)
     translations: Optional[list[Translation]] = Field(default=UNSPECIFIED)

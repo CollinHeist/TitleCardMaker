@@ -961,10 +961,10 @@
               <!-- Filename Format -->
               <div class="ui field" data-tooltip="Format of the title card file names" data-position="top center">
                 <label>Filename Format</label>
-                {% if series.filename_format is none %}
-                <input name="filename_format" type="text" placeholder="Global Default">
+                {% if series.card_filename_format is none %}
+                <input name="card_filename_format" type="text" placeholder="Global Default">
                 {% else %}
-                <input name="filename_format" type="text" placeholder="{{series.filename_format}}">
+                <input name="card_filename_format" type="text" placeholder="{{series.card_filename_format}}">
                 {% endif %}
               </div>
 
