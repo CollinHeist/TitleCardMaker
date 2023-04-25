@@ -143,13 +143,13 @@ class EpisodeInfo(DatabaseInfoContainer):
         return f'S{self.season_number:02}E{self.episode_number:02}'
 
 
-    def __eq__(self, other_info: 'EpisodeInfo') -> bool:
+    def __eq__(self, info: 'EpisodeInfo') -> bool:
         """
         Returns whether the given EpisodeInfo object corresponds to the
         same entry (has the same season and episode index).
 
         Args:
-            other_info: EpisodeInfo object to compare.
+            info: EpisodeInfo object to compare.
 
         Returns:
             True if the season and episode number of the two objects
@@ -157,14 +157,34 @@ class EpisodeInfo(DatabaseInfoContainer):
         """
 
         # Verify the comparison is another EpisodeInfo object
-        if not isinstance(other_info, EpisodeInfo):
+        if not isinstance(info, EpisodeInfo):
             raise TypeError(
                 f'Can only compare equality between EpisodeInfo objects'
             )
 
+
+        # ID matches are immediate equality
+        for id_type, id_ in self.ids.items():
+            if id_ is not None and info.has_id(id_type):
+                return id_ == getattr(info, id_type)
+
+        # TODO temporary to see if title match is useful
+        if self.season_number == info.season_number and self.episode_number == info.episode_number:
+            if self.title.matches(info.title):
+                log.info(f'Title matches on {self}')
+            else:
+                log.warning(f'Title does not match {self}')
+
+        # Require title match
+        return (
+            self.season_number == info.season_number
+            and self.episode_number == info.episode_number
+            and self.title.matches(info.title)
+        )
+
         # Equality is determined by season and episode number only
-        season_match = (self.season_number == other_info.season_number)
-        episode_match = (self.episode_number == other_info.episode_number)
+        season_match = (self.season_number == info.season_number)
+        episode_match = (self.episode_number == info.episode_number)
 
         return season_match and episode_match
 
