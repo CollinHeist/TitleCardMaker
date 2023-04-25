@@ -26,7 +26,16 @@ def _translate_episode(
         episode: 'Episode',
         tmdb_interface: 'TMDbInterface') -> None:
     """
+    Add the given Episode's translations to the Database.
 
+    Args:
+        db: Database to query and update.
+        series: Series this Episode belongs to. Can have defined
+            translations.
+        series_template: Template of the Series that can define
+            translations.
+        episode: Episode to translate and add translations to.
+        tmdb_interface: TMDbInterface to query for translations.
     """
 
     series_info = series.as_series_info

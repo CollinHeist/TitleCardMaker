@@ -66,50 +66,50 @@ episodes_router = APIRouter(
 def set_episode_ids(
         db,
         series: 'Series',
-        episode: 'Episode',
+        episodes: list['Episode'],
         emby_interface: 'EmbyInterface',
         jellyfin_interface: 'JellyfinInterface',
         plex_interface: 'PlexInterface',
         sonarr_interface: 'SonarrInterface',
-        tmdb_interface: 'TMDbInterface') -> Episode:
+        tmdb_interface: 'TMDbInterface') -> None:
     """
 
     """
-
+    log.debug(episodes)
     # Get corresponding EpisodeInfo object for this Episode
-    episode_info = episode.as_episode_info
+    episode_infos = [episode.as_episode_info for episode in episodes]
 
     # Set ID's from all possible interfaces
     if emby_interface and series.emby_library_name:
         # TODO validate
-        emby_interface.set_episode_ids(series.as_series_info, [episode_info])
+        emby_interface.set_episode_ids(series.as_series_info, episode_infos)
     if jellyfin_interface and series.jellyfin_library_name:
         # TODO validate
-        jellyfin_interface.set_episode_ids(series.as_series_info, [episode_info])
+        jellyfin_interface.set_episode_ids(series.as_series_info, episode_infos)
     if plex_interface and series.plex_library_name:
         plex_interface.set_episode_ids(
-            series.plex_library_name, series.as_series_info, [episode_info]
+            series.plex_library_name, series.as_series_info, episode_infos
         )
     if sonarr_interface:
-        sonarr_interface.set_episode_ids(series.as_series_info, [episode_info])
+        sonarr_interface.set_episode_ids(series.as_series_info, episode_infos)
     if tmdb_interface:
-        # TODO implement...
-        ...
-        # tmdb_interface.set_series_ids(series_info)
+        tmdb_interface.set_episode_ids(series.as_series_info, episode_infos)
 
     # Update database if new ID's are available
     changed = False
-    for id_type in ('emby_id', 'imdb_id', 'jellyfin_id', 'tmdb_id', 'tvdb_id',
-                    'tvrage_id'):
-        if getattr(episode, id_type) is None and episode_info.has_id(id_type):
-            setattr(episode, id_type, getattr(episode_info, id_type))
-            log.debug(f'Episode[{episode.id}].{id_type} = {getattr(episode_info, id_type)}')
-            changed = True
+    for episode, episode_info in zip(episodes, episode_infos):
+        for id_type in episode_info.ids.keys():
+            if (getattr(episode, id_type) is None
+                and episode_info.has_id(id_type)):
+
+                setattr(episode, id_type, getattr(episode_info, id_type))
+                log.debug(f'Episode[{episode.id}].{id_type} = {getattr(episode_info, id_type)}')
+                changed = True
 
     if changed:
         db.commit()
 
-    return episode
+    return None
 
 
 @episodes_router.post('/new', status_code=201)
@@ -140,7 +140,7 @@ def add_new_episode(
     # Add background task to add episode ID's for this Episode
     background_tasks.add_task(
         set_episode_ids,
-        db, series, episode,
+        db, series, [episode],
         emby_interface, jellyfin_interface, plex_interface, sonarr_interface, tmdb_interface
     )
 
@@ -300,7 +300,7 @@ def refresh_episode_data(
         all_episodes = tmdb_interface.get_all_episodes(series.as_series_info)
 
     # Filter episodes
-    changed = False
+    changed, episodes = False, []
     for episode in all_episodes:
         # Skip specials if indicated
         if not sync_specials and episode.season_number == 0:
@@ -327,13 +327,7 @@ def refresh_episode_data(
             )
             db.add(episode)
             changed = True
-
-            # Add background task to add episode ID's for this Episode
-            background_tasks.add_task(
-                set_episode_ids,
-                db, series, episode,
-                emby_interface, jellyfin_interface, plex_interface, sonarr_interface, tmdb_interface
-            )
+            episodes.append(episode)
         # Episode exists, check for title match
         elif ((series.match_titles or existing.match_title)
             and existing.title != episode.title.full_title):
@@ -342,6 +336,13 @@ def refresh_episode_data(
             existing.title = episode.title.full_title
             log.debug(f'Updating title of {episode}')
             changed = True
+
+    # Add background task to add episode ID's for all new Episodes
+    background_tasks.add_task(
+        set_episode_ids,
+        db, series, episodes,
+        emby_interface, jellyfin_interface, plex_interface, sonarr_interface, tmdb_interface
+    )
 
     # Commit to database if changed
     if changed:
