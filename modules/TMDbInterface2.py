@@ -612,7 +612,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     @catch_and_log('Error setting episode IDs')
     def set_episode_ids(self,
             series_info: SeriesInfo,
-            infos: list[EpisodeInfo]) -> None:
+            episode_infos: list[EpisodeInfo]) -> None:
         """
         Set all the episode ID's for the given list of EpisodeInfo
         objects. For TMDb, this does nothing, as TMDb cannot provide any
@@ -623,7 +623,20 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             infos: List of EpisodeInfo objects to update.
         """
 
-        return None
+        # Get all episodes for this series
+        new_episode_infos = self.get_all_episodes(series_info)
+
+        # Match to existing info
+        for old_episode_info in episode_infos:
+            for new_episode_info in new_episode_infos:
+                if old_episode_info == new_episode_info:
+                    # For each ID of this new EpisodeInfo, update old if upgrade
+                    for id_type, id_ in new_episode_info.ids.items():
+                        if (getattr(old_episode_info, id_type) is None
+                            and id_ is not None):
+                            setattr(old_episode_info, id_type, id_)
+                            log.debug(f'[TMDb] Set {old_episode_info}.{id_type}={id_}')
+                    break
 
 
     def __determine_best_image(self,

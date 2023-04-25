@@ -429,7 +429,7 @@ class SonarrInterface(WebInterface, SyncInterface):
                         if (getattr(old_episode_info, id_type) is None
                             and id_ is not None):
                             setattr(old_episode_info, id_type, id_)
-                            log.debug(f'Set {old_episode_info}.{id_type}={id_}')
+                            log.debug(f'[Sonarr] Set {old_episode_info}.{id_type}={id_}')
                     break
 
 
