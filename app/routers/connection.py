@@ -40,14 +40,19 @@ def enable_or_disable_connection(
 
     if connection == 'emby':
         preferences.use_emby = (status == 'enable')
+        if preferences.use_emby: refresh_emby_interface()
     elif connection == 'jellyfin':
         preferences.use_jellyfin = (status == 'enable')
+        if preferences.use_emby: refresh_jellyfin_interface()
     elif connection == 'plex':
         preferences.use_plex = (status == 'enable')
+        if preferences.use_emby: refresh_plex_interface()
     elif connection == 'sonarr':
         preferences.use_sonarr = (status == 'enable')
+        if preferences.use_emby: refresh_sonarr_interface()
     elif connection == 'tmdb':
         preferences.use_tmdb = (status == 'enable')
+        if preferences.use_emby: refresh_tmdb_interface()
 
 
 @connection_router.get('/emby', status_code=200)
