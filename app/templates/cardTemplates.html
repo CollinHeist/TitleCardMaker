@@ -29,11 +29,37 @@
     img {
       max-width: 100%;
     }
+
     /* Make sure card loader is below the search bar */
     .ui.loading.card::before {
       z-index: 10;
     }
+
+    /* Add field buttons appear transparent */
+    .add-field.button {
+      background: transparent;
+    }
   </style>
+
+  <template id="translation">
+    <span class="ui text">
+      Translate
+      <div data-value="language_code" class="ui inline scrolling clearable dropdown">
+        <input name="language_code" type="hidden">
+        <div class="text">French</div>
+        <i class="dropdown icon"></i>
+        <div class="menu"><!-- Added asynchronously --></div>
+      </div>
+      titles into 
+      <div data-value="data_key" class="ui inline user-additions search clearable dropdown">
+        <input name="data_key" type="hidden">
+        <div class="text"></div>
+        <i class="dropdown icon"></i>
+        <div class="menu"><!-- Added asynchronously --></div>
+      </div>
+    </span>
+    <br>
+  </template>
 
   <template id="template">
     <div class="ui styled fluid accordion">
@@ -116,7 +142,7 @@
                     <!-- <input name="season_title_values" type="text"> -->
                   </div>
                 </div>
-                <div data-value="add-title" class="circular ui icon mini button">
+                <div data-value="add-title" class="ui circular mini icon add-field button">
                   <i class="plus square outline icon"></i>
                   Add Title
                 </div>
@@ -165,9 +191,21 @@
                 <label>Sync Specials</label>
               </div>
 
-              <h4 class="ui horizontal middle aligned divider header">Extras</h4>
+              <h4 class="ui horizontal middle aligned divider header">Miscellaneous</h4>
 
               <div class="ui field">
+                <label>Translations</label>
+                <div data-value="translations" class="ui segment">
+                  <!-- Added asynchrously -->
+                </div>
+                <div data-add-field="translation" class="ui circular mini icon add-field button">
+                  <i class="plus square outline icon"></i>
+                  Add Translation
+                </div>
+              </div>
+
+              <div class="ui field">
+                <label>Extras</label>
                 <div class="two fields">
                   <div data-value="extra-key" class="four wide right aligned field">
                     <label>Key</label>
@@ -178,7 +216,7 @@
                     <!-- <input name="extra_values" type="text"> -->
                   </div>
                 </div>
-                <div data-value="add-extra" class="circular ui icon mini button">
+                <div data-value="add-extra" class="ui circular mini icon add-field button">
                   <i class="plus square outline icon"></i>
                   Add Extra
                 </div>
@@ -281,6 +319,7 @@
       const allStyles = await fetch('/api/available/styles').then(resp => resp.json());
       const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
       const allEpisodeDataSources = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
+      const allTranslations = await fetch('/api/available/translations').then(resp => resp.json());
       const elements = allTemplates.map(templateObj => {
         // Clone template
         const base = document.querySelector('#template').content.cloneNode(true);
@@ -431,6 +470,29 @@
             return {name: name, value: value, selected: value === templateObj.episode_data_source};
           }), placeholder: 'Global Default',
         });
+        // Add new field with add translation button
+        $(`#template-id${templateObj.id} >* .button[data-add-field="translation"]`).on('click', () => {
+          const newTranslation = document.querySelector('#translation').content.cloneNode(true);
+          $(`#template-id${templateObj.id} [data-value="translations"]`).append(newTranslation);
+          // Language code dropdown
+          $(`#template-id${templateObj.id} .dropdown[data-value="language_code"]`).last().dropdown({
+            values: [
+              {name: 'Language', type: 'header'},
+              ...allTranslations.map(({language_code, language}) => {
+                return {name: language, value: language_code};
+              })
+            ],
+          });
+          // Translation data key dropdown
+          $(`#template-id${templateObj.id} .dropdown[data-value="data_key"]:last-child`).last().dropdown({
+            allowAdditions: true,
+            values: [
+              {name: 'Key', type: 'header'},
+              {name: 'Preferred title', text: 'the preferred title', value: 'preferred_title'},
+              {name: 'Kanji', text: 'kanji', value: 'kanji'},
+            ]
+          });
+        });
         // Add new fields with add extra button
         $(`#template-id${templateObj.id} >* .button[data-value="add-extra"]`).on('click', () => {
           const newKey = document.createElement('input');
@@ -440,20 +502,35 @@
           $(`#template-id${templateObj.id} >* .field[data-value="extra-key"]`).append(newKey);
           $(`#template-id${templateObj.id} >* .field[data-value="extra-value"]`).append(newValue);
         });
-        // Submit update via API
+        
+        // Update via API
         $(`#template-id${templateObj.id} >* form`).on('submit', (event) => {
           event.preventDefault();
           let form = new FormData(event.target);
-          let listData = {extra_keys: [], extra_values: [], season_title_ranges: [], season_title_values: []};
+          let listData = {
+            extra_keys: [], extra_values: [],
+            season_title_ranges: [], season_title_values: [],
+            language_code: [], data_key: [],
+          };
           for (const [key, value] of [...form.entries()]) {
             if (Object.keys(listData).includes(key)) { listData[key].push(value); }
             if (value === '') { form.delete(key); }
           }
+          let translations = [];
+          listData.language_code.forEach((val, index) => {
+            if (val !== '') {
+              translations.push({language_code: val, data_key: listData.data_key[index]});
+            }
+          })
 
           $.ajax({
             type: 'PATCH',
             url: `/api/templates/${templateObj.id}`,
-            data: JSON.stringify({...Object.fromEntries(form.entries()), ...listData}),
+            data: JSON.stringify({
+              ...Object.fromEntries(form.entries()),
+              ...listData,
+              translations: translations,
+            }),
             contentType: 'application/json',
             success: (response) => {
               $.toast({

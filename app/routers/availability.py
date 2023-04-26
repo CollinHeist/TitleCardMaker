@@ -94,7 +94,7 @@ def get_available_tmdb_translations(
     """
 
     return [
-        {'iso_639_1': code, 'language': language}
+        {'language_code': code, 'language': language}
         for code, language in tmdb_interface.LANGUAGES.items()
     ]
 

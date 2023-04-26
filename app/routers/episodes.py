@@ -328,13 +328,11 @@ def refresh_episode_data(
             db.add(episode)
             changed = True
             episodes.append(episode)
-        # Episode exists, check for title match
+        # Episode exists, if title matching and title doesn't match, update
         elif ((series.match_titles or existing.match_title)
             and existing.title != episode.title.full_title):
-            # TODO Replace card, update title, etc.
-            ...
             existing.title = episode.title.full_title
-            log.debug(f'Updating title of {episode}')
+            log.debug(f'Episode[{episode.id}] Updating title')
             changed = True
 
     # Add background task to add episode ID's for all new Episodes

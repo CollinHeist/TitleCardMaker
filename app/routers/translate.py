@@ -84,8 +84,6 @@ def _translate_episode(
         db.commit()
 
 
-# GET /translate/episode/{id}?force_refresh=bool -> search for and add all defined translations for this episode
-
 @translation_router.post('/series/{series_id}', status_code=201)
 def add_series_translations(
         background_tasks: BackgroundTasks,
