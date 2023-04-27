@@ -41,7 +41,7 @@
     }
   </style>
 
-  <template id="translation">
+  <template id="translation-template">
     <span class="ui text">
       Translate
       <div data-value="language_code" class="ui inline scrolling clearable dropdown">
@@ -362,7 +362,8 @@
         }
         // Episode data source set later
         // Image source priority set later
-        // Extra labels
+        // Translations added later
+        // Extras
         if (Object.entries(templateObj.extras).length > 0) {
           const labelDiv = base.querySelector('.field[data-value="extra-key"]');
           const inputDiv = base.querySelector('.field[data-value="extra-value"]');
@@ -387,8 +388,7 @@
         }
         return base;
       });
-      const templatesElem = document.getElementById('templates');
-      templatesElem.replaceChildren(...elements);
+      document.getElementById('templates').replaceChildren(...elements);
       $('.ui.accordion').accordion();
       $('.ui.checkbox').checkbox();
 
@@ -470,9 +470,39 @@
             return {name: name, value: value, selected: value === templateObj.episode_data_source};
           }), placeholder: 'Global Default',
         });
+        if (templateObj.translations.length > 0) {
+          const translationSegment = $(`#template-id${templateObj.id} [data-value="translations"]`);
+          for (const translation of templateObj.translations) {
+            // Create new translation entry, add to translation segment
+            const newTranslation = document.querySelector('#translation-template').content.cloneNode(true);
+            translationSegment.append(newTranslation);
+            // Initialize dropdowns
+            $(`#template-id${templateObj.id} .dropdown[data-value="language_code"]`).last().dropdown({
+              values: [
+                {name: 'Language', type: 'header'},
+                ...allTranslations.map(({language_code, language}) => {
+                  return {name: language, value: language_code, selected: translation.language_code === language_code};
+                })
+              ],
+            });
+            const extraValue = [];
+            if (translation.data_key !== 'preferred_title' && translation.data_key !== 'kanji') {
+              extraValue.push({name: translation.data_key, value: translation.data_key, selected: true});
+            }
+            $(`#template-id${templateObj.id} .dropdown[data-value="data_key"]`).last().dropdown({
+              allowAdditions: true,
+              values: [
+                {name: 'Key', type: 'header'},
+                {name: 'Preferred title', text: 'the preferred title', value: 'preferred_title', selected: translation.data_key === 'preferred_title'},
+                {name: 'Kanji', text: 'kanji', value: 'kanji', selected: translation.data_key === 'kanji'},
+                ...extraValue,
+              ]
+            });
+          }
+        }
         // Add new field with add translation button
-        $(`#template-id${templateObj.id} >* .button[data-add-field="translation"]`).on('click', () => {
-          const newTranslation = document.querySelector('#translation').content.cloneNode(true);
+        $(`#template-id${templateObj.id} .button[data-add-field="translation"]`).on('click', () => {
+          const newTranslation = document.querySelector('#translation-template').content.cloneNode(true);
           $(`#template-id${templateObj.id} [data-value="translations"]`).append(newTranslation);
           // Language code dropdown
           $(`#template-id${templateObj.id} .dropdown[data-value="language_code"]`).last().dropdown({
@@ -484,7 +514,7 @@
             ],
           });
           // Translation data key dropdown
-          $(`#template-id${templateObj.id} .dropdown[data-value="data_key"]:last-child`).last().dropdown({
+          $(`#template-id${templateObj.id} .dropdown[data-value="data_key"]`).last().dropdown({
             allowAdditions: true,
             values: [
               {name: 'Key', type: 'header'},
@@ -494,7 +524,7 @@
           });
         });
         // Add new fields with add extra button
-        $(`#template-id${templateObj.id} >* .button[data-value="add-extra"]`).on('click', () => {
+        $(`#template-id${templateObj.id} .button[data-value="add-extra"]`).on('click', () => {
           const newKey = document.createElement('input');
           newKey.name = 'extra_keys'; newKey.type = 'text';
           const newValue = document.createElement('input');

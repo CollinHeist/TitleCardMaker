@@ -95,7 +95,9 @@ def get_available_tmdb_translations(
 
     return [
         {'language_code': code, 'language': language}
-        for code, language in tmdb_interface.LANGUAGES.items()
+        for code, language in sorted(
+            tmdb_interface.LANGUAGES.items(), key=lambda kv: kv[1]
+        )
     ]
 
 
