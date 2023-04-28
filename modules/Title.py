@@ -267,7 +267,7 @@ class Title:
         return ''.join(filter(str.isalnum, text)).lower()
 
 
-    def matches(self, *titles: tuple[str]) -> bool:
+    def matches(self, *titles: tuple[Union[str, 'Title']]) -> bool:
         """
         Get whether any of the given titles match this object.
 

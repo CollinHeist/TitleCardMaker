@@ -441,7 +441,8 @@ class TintedFrameTitleCard(BaseCardType):
         # Determine frame draw commands
         top = self._frame_top_commands
         left = [Rectangle(TopLeft, BottomLeft).draw()]
-        right = [Rectangle(
+        right = [
+            Rectangle(
                 Coordinate(self.WIDTH - INSET - BOX_WIDTH, INSET),
                 BottomRight,
             ).draw()
