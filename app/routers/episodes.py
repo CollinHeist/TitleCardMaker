@@ -75,7 +75,7 @@ def set_episode_ids(
     """
 
     """
-    log.debug(episodes)
+
     # Get corresponding EpisodeInfo object for this Episode
     episode_infos = [episode.as_episode_info for episode in episodes]
 

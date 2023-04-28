@@ -108,12 +108,16 @@ def download_series_poster(
 
     # Exit if no TMDbInterface
     if tmdb_interface is None:
+        log.debug(f'Series[{series.id}] Cannot download poster, TMDb interface disabled')
         return None
 
     # If series poster exists and is not a placeholder, return that
     path = Path(series.poster_path)
     if path.exists() and path.name != 'placeholder.jpg':
-        return series.poster_url
+        series.poster_url = f'/assets/posters/{series.id}.jpg'
+        db.commit()
+        log.debug(f'Series[{series.id}] Poster already exists, using {path.resolve()}')
+        return None
 
     # Attempt to download poster
     series_info = SeriesInfo(
@@ -125,7 +129,7 @@ def download_series_poster(
 
     poster_url = tmdb_interface.get_series_poster(series_info)
     if poster_url is None:
-        log.debug(f'TMDb returned no valid posters')
+        log.debug(f'Series[{series.id}] TMDb returned no valid posters')
     else:
         path = preferences.asset_directory / 'posters' / f'{series.id}.jpg'
         try:
@@ -133,7 +137,7 @@ def download_series_poster(
             series.poster_path = str(path)
             series.poster_url = f'/assets/posters/{series.id}.jpg'
             db.commit()
-            log.debug(f'Downloaded poster') 
+            log.debug(f'Series[{series.id}] Downloaded poster {path.resolve()}')
         except Exception as e:
             log.error(f'Error downloading poster', e)
 
