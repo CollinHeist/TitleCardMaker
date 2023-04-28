@@ -11,7 +11,8 @@ from app.schemas.ids import (
 from app.schemas.preferences import EpisodeDataSource, ImageSourceToggle, Style, ImageSource, LanguageCode
 
 # Match absolute ranges (1-10), season numbers (1), episode ranges (s1e1-s1e10)
-SeasonTitleRange = constr(regex=r'^(\d+-\d+)|(\d+)|(s\d+e\d+-s\d+e\d+)$')
+SeasonTitleRange = constr(regex=r'^(\d+-\d+)|^(\d+)|^(s\d+e\d+-s\d+e\d+)$')
+DictKey = constr(regex=r'^[a-zA-Z]+[^ ]*$', min_length=1)
 
 # TODO Add validation for filename format string
 
@@ -20,7 +21,7 @@ Base classes
 """
 class Translation(Base):
     language_code: LanguageCode
-    data_key: str
+    data_key: DictKey
 
 class BaseConfig(Base):
     name: Optional[str] = Field(..., min_length=1)
@@ -139,7 +140,7 @@ class BaseUpdate(Base):
     unwatched_style: Optional[Style] = Field(default=UNSPECIFIED)
     watched_style: Optional[Style] = Field(default=UNSPECIFIED)
     episode_text_format: Optional[str] = Field(default=UNSPECIFIED)
-    extra_keys: Optional[list[str]] = Field(default=UNSPECIFIED)
+    extra_keys: Optional[list[DictKey]] = Field(default=UNSPECIFIED)
     extra_values: Optional[list[Any]] = Field(default=UNSPECIFIED)
 
     @validator('*', pre=True)
@@ -250,7 +251,7 @@ class UpdateTemplate(BaseUpdate):
     unwatched_style: Optional[Style] = Field(default=UNSPECIFIED)
     watched_style: Optional[Style] = Field(default=UNSPECIFIED)
     episode_text_format: Optional[str] = Field(default=UNSPECIFIED)
-    extra_keys: list[str] = Field(default=UNSPECIFIED)
+    extra_keys: list[DictKey] = Field(default=UNSPECIFIED)
     extra_values: list[Any] = Field(default=UNSPECIFIED)
 
     @validator('*', pre=True)
@@ -307,7 +308,7 @@ class UpdateSeries(BaseUpdate):
     unwatched_style: Optional[Style] = Field(default=UNSPECIFIED)
     watched_style: Optional[Style] = Field(default=UNSPECIFIED)
     episode_text_format: Optional[str] = Field(default=UNSPECIFIED)
-    extra_keys: Optional[list[str]] = Field(default=UNSPECIFIED)
+    extra_keys: Optional[list[DictKey]] = Field(default=UNSPECIFIED)
     extra_values: Optional[list[Any]] = Field(default=UNSPECIFIED)
 
     font_color: Optional[str] = Field(default=UNSPECIFIED)
@@ -370,7 +371,7 @@ Return classes
 class Template(BaseTemplate):
     id: int
     season_titles: Optional[dict[str, str]]
-    extras: Optional[dict[str, str]]
+    extras: Optional[dict[str, Any]]
 
 class Series(BaseSeries):
     id: int
