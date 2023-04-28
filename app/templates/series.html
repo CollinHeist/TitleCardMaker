@@ -29,6 +29,11 @@
     .ui.card {
       width: auto;
     }
+
+    /* Add field buttons appear transparent */
+    .add-field.button {
+      background: transparent;
+    }
     
     /* Inine fields need to flex and align content in the middle of their div */
     #new-episode-form .inline.field {
@@ -233,6 +238,26 @@
       </td>
       {% endif %}
     </tr>
+  </template>
+
+  <template id="translation-template">
+    <span class="ui text">
+      Translate
+      <div data-value="language_code" class="ui inline scrolling clearable dropdown">
+        <input name="language_code" type="hidden">
+        <div class="text">French</div>
+        <i class="dropdown icon"></i>
+        <div class="menu"><!-- Added asynchronously --></div>
+      </div>
+      titles into 
+      <div data-value="data_key" class="ui inline user-additions search clearable dropdown">
+        <input name="data_key" type="hidden">
+        <div class="text"></div>
+        <i class="dropdown icon"></i>
+        <div class="menu"><!-- Added asynchronously --></div>
+      </div>
+    </span>
+    <br>
   </template>
 
   <!-- Scripts to load available options -->
@@ -565,29 +590,82 @@
           {name: 'False', value: 'False', selected: '{{series.hide_episode_text}}' === 'False'},
         ],
       });
+      // Translations
+      const allTranslations = await fetch('/api/available/translations').then(resp => resp.json());
+      if ({{series.translations|safe}}.length > 0) { 
+        const translationSegment = $('#card-config-form [data-value="translations"]');
+        for (const translation of {{series.translations|safe}}) {
+          const newTranslation = document.querySelector('#translation-template').content.cloneNode(true);
+          translationSegment.append(newTranslation);
+          $(`#card-config-form .dropdown[data-value="language_code"]`).last().dropdown({
+            values: [
+              {name: 'Language', type: 'header'},
+              ...allTranslations.map(({language_code, language}) => {
+                return {name: language, value: language_code, selected: translation.language_code === language_code};
+              })
+            ],
+          });
+          let extraValue = [];
+          if (translation.data_key !== 'preferred_title' && translation.data_key !== 'kanji') {
+            extraValue.push({name: translation.data_key, value: translation.data_key, selected: true});
+          }
+          $(`#card-config-form .dropdown[data-value="data_key"]`).last().dropdown({
+            allowAdditions: true,
+            values: [
+              {name: 'Key', type: 'header'},
+              {name: 'Preferred title', text: 'the preferred title', value: 'preferred_title', selected: translation.data_key === 'preferred_title'},
+              {name: 'Kanji', text: 'kanji', value: 'kanji', selected: translation.data_key === 'kanji'},
+              ...extraValue,
+            ]
+          });
+        }
+      }
       // Add season title on button press
       $('#card-config-form .button[data-value="addTitle"]').on('click', () => {
-          const newRange = document.createElement('input');
-          newRange.name = 'season_title_ranges'; newRange.type = 'text';
-          newRange.setAttribute('data-value', 'season-titles');
-          const newTitle = document.createElement('input');
-          newTitle.name = 'season_title_values'; newTitle.type = 'text';
-          $('#card-config-form .field[data-value="season-title-range"]').append(newRange);
-          $('#card-config-form .field[data-value="season-title-value"]').append(newTitle);
-          $('input[data-value="season-titles"]').popup({
-            popup: '#season-title-popup',
-            position: 'right center',
-          });
+        const newRange = document.createElement('input');
+        newRange.name = 'season_title_ranges'; newRange.type = 'text';
+        newRange.setAttribute('data-value', 'season-titles');
+        const newTitle = document.createElement('input');
+        newTitle.name = 'season_title_values'; newTitle.type = 'text';
+        $('#card-config-form .field[data-value="season-title-range"]').append(newRange);
+        $('#card-config-form .field[data-value="season-title-value"]').append(newTitle);
+        $('input[data-value="season-titles"]').popup({
+          popup: '#season-title-popup',
+          position: 'right center',
         });
+      });
+      // Add translation on button press
+      $(`#card-config-form .button[data-add-field="translation"]`).on('click', () => {
+        const newTranslation = document.querySelector('#translation-template').content.cloneNode(true);
+        $(`#card-config-form [data-value="translations"]`).append(newTranslation);
+        // Language code dropdown
+        $(`#card-config-form .dropdown[data-value="language_code"]`).last().dropdown({
+          values: [
+            {name: 'Language', type: 'header'},
+            ...allTranslations.map(({language_code, language}) => {
+              return {name: language, value: language_code};
+            })
+          ],
+        });
+        // Data key dropdown
+        $(`#card-config-form .dropdown[data-value="data_key"]`).last().dropdown({
+          allowAdditions: true,
+          values: [
+            {name: 'Key', type: 'header'},
+            {name: 'Preferred title', text: 'the preferred title', value: 'preferred_title'},
+            {name: 'Kanji', text: 'kanji', value: 'kanji'},
+          ]
+        });
+      });
       // Add extra on button press
-      $('#card-config-form .button[data-value="addExtra"]').on('click', () => {
-          const newKey = document.createElement('input');
-          newKey.name = 'extra_keys'; newKey.type = 'text';
-          const newValue = document.createElement('input');
-          newValue.name = 'extra_values'; newValue.type = 'text';
-          $('#card-config-form .field[data-value="extra-key"]').append(newKey);
-          $('#card-config-form .field[data-value="extra-value"]').append(newValue);
-        });
+      $('#card-config-form .button[data-add-field="extra"]').on('click', () => {
+        const newKey = document.createElement('input');
+        newKey.name = 'extra_keys'; newKey.type = 'text';
+        const newValue = document.createElement('input');
+        newValue.name = 'extra_values'; newValue.type = 'text';
+        $('#card-config-form .field[data-value="extra-key"]').append(newKey);
+        $('#card-config-form .field[data-value="extra-value"]').append(newValue);
+      });
     }
 
     async function getEpisodeData() {
@@ -1141,7 +1219,7 @@
                   <!-- Hide season text -->
                   <div class="ui field">
                     <label>Hide Season Titles</label>
-                    <div class="ui compact selection clearable dropdown" data-tooltip="Omit season text" data-position="right center">
+                    <div data-value="hide_season_text" class="ui compact selection clearable dropdown" data-tooltip="Omit season text" data-position="right center">
                       <input name="hide_season_text" type="hidden">
                       <i class="dropdown icon"></i>
                       <div class="default text">Default</div>
@@ -1173,7 +1251,7 @@
                         {% endif %}
                       </div>
                     </div>
-                    <div data-value="addTitle" class="circular ui icon mini button">
+                    <div data-value="addTitle" class="ui circular mini icon add-field button">
                       <i class="plus square outline icon"></i>
                       Add Title
                     </div>
@@ -1182,7 +1260,7 @@
                   <!-- Hide episode text -->
                   <div class="ui field">
                     <label>Hide Episode Text</label>
-                    <div class="ui compact selection clearable dropdown" data-tooltip="Whether to hide episode text" data-position="right center">
+                    <div data-value="hide_episode_text" class="ui compact selection clearable dropdown" data-tooltip="Whether to hide episode text" data-position="right center">
                       <input name="hide_episode_text" type="hidden">
                       <i class="dropdown icon"></i>
                       <div class="default text">Default</div>
@@ -1199,7 +1277,19 @@
                     <input name="episode_text_format" type="text" placeholder="Card Default">
                   </div>
 
-                  <h4 class="ui horizontal middle aligned divider header">Extras</h4>
+                  <h4 class="ui horizontal middle aligned divider header">Miscellaneous</h4>
+
+                  <!-- Translations -->
+                  <div class="ui field">
+                    <label>Translations</label>
+                    <div data-value="translations" class="ui segment">
+                      <!-- Added asynchrously -->
+                    </div>
+                    <div data-add-field="translation" class="ui circular mini icon add-field button">
+                      <i class="plus square outline icon"></i>
+                      Add Translation
+                    </div>
+                  </div>
 
                   <!-- Extras -->
                   <div class="ui field">
@@ -1221,7 +1311,7 @@
                         {% endif %}
                       </div>
                     </div>
-                    <div data-value="addExtra" class="circular ui icon mini button">
+                    <div data-add-field="extra" class="ui circular mini icon add-field button">
                       <i class="plus square outline icon"></i>
                       Add Extra
                     </div>
@@ -1591,23 +1681,89 @@
       });
     });
 
+    // Add card config form validation
+    $('#card-config-form').form({
+      on: 'blur',
+      inline: true,
+      fields: {
+        font_color: {
+          optional: true,
+          rules: [{type: 'minLength[1]'}],
+        },
+        font_size: {
+          optional: true,
+          rules: [{type: 'minValue[0]'}],
+        }, //font_kerning: {
+        //   optional: true,
+        //   rules: [{type: 'number'}],
+        // }, font_stroke_width: {
+        //   optional: true,
+        //   rules: [{type: 'number'}],
+        // }, font_interline_spacing: {
+        //   optional: true,
+        //   rules: [{type: 'number'}],
+        // }, font_vertical_shift: {
+        //   optional: true,
+        //   rules: [{type: 'number'}],
+        // },
+        season_title_ranges: {
+          optional: true,
+          rules: [{type: 'regExp', value: /^(\d+-\d+)|^(\d+)|^(s\d+e\d+-s\d+e\d+)$/i}]
+        }, season_title_values: {
+          depends: 'season_title_ranges',
+          rules: [{type: 'minLength[1]'}],
+        }, language_code: {
+          optional: true,
+          rules: [{type: 'minLength[2]'}],
+        }, data_key: {
+          depends: 'language_code',
+          rules: [{type: 'regExp', value: /^[a-z]+[^ ]*$/i}],
+        }, extra_keys: {
+          optional: true,
+          rules: [{type: 'regExp', value: /^[a-z]+[^ ]*$/i}],
+        }, extra_values: {
+          depends: 'extra_keys',
+          rules: [{type: 'minLength[1]'}],
+        },
+      },
+    })
+
     // Submit the updated series config
     $('#series-config-form, #card-config-form, #series-ids-form').on('submit', (event) => {
       event.preventDefault();
+      if (!$('#series-config-form').form('is valid') || !$('#card-config-form').form('is valid')) { return; }
       $('#submit-changes').toggleClass('loading', true);
       // Prepare form data
       let form = new FormData(event.target);
-      let listData = {extra_keys: [], extra_values: [], season_title_ranges: [], season_title_values: []};
+      let listData = {
+        extra_keys: [], extra_values: [],
+        season_title_ranges: [], season_title_values: [],
+        language_code: [], data_key: [],
+      };
       for (const [key, value] of [...form.entries()]) {
-        if (Object.keys(listData).includes(key)) { listData[key].push(value); }
+        // Add list data fields to listData object
+        if (Object.keys(listData).includes(key)) {
+          if (value !== '') { listData[key].push(value);  }
+        }
         // Handle percentage values
         if (value != '' && ['font_size', 'font_kerning', 'font_stroke_width'].includes(key)) {
           form.set(key, value/100.0);
         }
       }
-      // Remove empty list values
+      // Add translations
+      if (listData.language_code.length > 0) {
+        let translations = [];
+        listData.language_code.forEach((val, index) => {
+          if (val !== '') {
+            translations.push({language_code: val, data_key: listData.data_key[index]});
+          }
+        });
+        listData.translations = translations;
+      }
+      // Remove empty list values, and remove list data keys from form
       for (let [key, value] of [...Object.entries(listData)]) {
-        if (value.length == 0) { delete listData[key]; }
+        if (value.length === 0) { delete listData[key]; }
+        form.delete(key);
       }
       // Add checkbox status as true/false
       $.each($("#series-config-form, #card-config-form, #series-ids-form").find('input[type=checkbox]'), (key, val) => {

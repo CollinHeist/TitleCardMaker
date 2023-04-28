@@ -485,7 +485,7 @@
                 })
               ],
             });
-            const extraValue = [];
+            let extraValue = [];
             if (translation.data_key !== 'preferred_title' && translation.data_key !== 'kanji') {
               extraValue.push({name: translation.data_key, value: translation.data_key, selected: true});
             }
