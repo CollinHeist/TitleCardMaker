@@ -783,7 +783,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def get_episode_title(self,
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
-            language_code: str = 'en-US') -> str:
+            language_code: str = 'en-US',
+            bypass_blacklist: bool = False) -> str:
         """
         Get the episode title for the given entry for the given language.
 
@@ -791,13 +792,15 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             series_info: SeriesInfo for the entry.
             episode_info: EpisodeInfo for the entry.
             language_code: The language code for the desired title.
+            bypass_blacklist: Whether to bypass the blacklist check.
 
         Args:
-            The episode title, None if the entry does not exist.
+            The episode title, None if it cannot be found.
         """
 
         # Don't query the database if this episode is in the blacklist
-        if self.__is_blacklisted(series_info, episode_info, 'title'):
+        if (not bypass_blacklist
+            and self.__is_blacklisted(series_info, episode_info, 'title')):
             return None
 
         # Get episode
