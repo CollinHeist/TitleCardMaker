@@ -75,9 +75,10 @@ def _translate_episode(
         translation = tmdb_interface.get_episode_title(
             series_info, episode_info, language_code
         )
-        episode.translations[data_key] = translation
-        log.debug(f'Episode[{episode.id}] Translated {episode_info} {language_code} -> "{translation}" -> {data_key}')
-        changed = True
+        if translation is not None:
+            episode.translations[data_key] = translation
+            log.debug(f'Episode[{episode.id}] Translated {episode_info} {language_code} -> "{translation}" -> {data_key}')
+            changed = True
 
     # If any translations were added, commit updates to database
     if changed: 
