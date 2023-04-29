@@ -1255,6 +1255,10 @@
                       <i class="plus square outline icon"></i>
                       Add Title
                     </div>
+                    <div class="ui circular mini icon add-field red button" onclick="deleteListValues('season_titles')">
+                      <i class="trash alternate outline icon"></i>
+                      Delete Season Titles
+                    </div>
                   </div>
 
                   <!-- Hide episode text -->
@@ -1282,12 +1286,16 @@
                   <!-- Translations -->
                   <div class="ui field">
                     <label>Translations</label>
-                    <div data-value="translations" class="ui segment">
+                    <div data-value="translations" class="ui compact segment">
                       <!-- Added asynchrously -->
                     </div>
                     <div data-add-field="translation" class="ui circular mini icon add-field button">
                       <i class="plus square outline icon"></i>
                       Add Translation
+                    </div>
+                    <div class="ui circular mini icon add-field red button" onclick="deleteListValues('translations')">
+                      <i class="trash alternate outline icon"></i>
+                      Delete Translations
                     </div>
                   </div>
 
@@ -1314,6 +1322,10 @@
                     <div data-add-field="extra" class="ui circular mini icon add-field button">
                       <i class="plus square outline icon"></i>
                       Add Extra
+                    </div>
+                    <div class="ui circular mini icon add-field red button" onclick="deleteListValues('extras')">
+                      <i class="trash alternate outline icon"></i>
+                      Delete Extras
                     </div>
                   </div>
 
@@ -1714,19 +1726,59 @@
           rules: [{type: 'minLength[1]'}],
         }, language_code: {
           optional: true,
-          rules: [{type: 'minLength[2]'}],
         }, data_key: {
+          optional: true,
           depends: 'language_code',
-          rules: [{type: 'regExp', value: /^[a-z]+[^ ]*$/i}],
+          rules: [{type: 'regExp', value: /^$|^[a-z]+[^ ]*$/i}],
         }, extra_keys: {
           optional: true,
           rules: [{type: 'regExp', value: /^[a-z]+[^ ]*$/i}],
         }, extra_values: {
+          optional: true,
           depends: 'extra_keys',
           rules: [{type: 'minLength[1]'}],
         },
       },
     })
+
+    // Delete season titles/translations/extras on button press
+    function deleteListValues(attribute) {
+      let data;
+      if (attribute === 'season_titles') {
+        data = {season_title_ranges: null, season_title_values: null};
+      } else if (attribute === 'translations') {
+        data = {translations: null};
+      } else if (attribute === 'extras') {
+        data = {extra_keys: null, extra_values: null};
+      } else { data = {}; }
+      $.ajax({
+        type: 'PATCH',
+        url: '/api/series/{{series.id}}',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        success: (response) => {
+          if (attribute === 'season_titles') {
+            $('.field[data-value="season-title-range"] input').remove();
+            $('.field[data-value="season-title-value"] input').remove();
+          } else if (attribute === 'translations') {
+            $('.field [data-value="translations"] >*').remove();
+          } else if (attribute === 'extras') {
+            $('.field[data-value="extra-key"] input').remove();
+            $('.field[data-value="extra-value"] input').remove();
+          }
+          $.toast({
+            class: 'blue info',
+            title: 'Deleted Values',
+          });
+        }, error: (response) => {
+          $.toast({
+            class: 'error',
+            title: 'Error Deleting Values',
+            detail: response.responseText,
+          });
+        }
+      })
+    }
 
     // Submit the updated series config
     $('#series-config-form, #card-config-form, #series-ids-form').on('submit', (event) => {
