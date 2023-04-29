@@ -19,8 +19,9 @@ Style = Literal[
 ]
 
 LanguageCode = Literal[
-    'ar', 'cs', 'de', 'en', 'es', 'fr', 'he', 'hu', 'id', 'it', 'ja', 'ko',
-    'pl', 'pt', 'ro', 'ru', 'sk', 'th', 'tr', 'uk', 'vi', 'zh',
+    'ar', 'bg', 'ca', 'cs', 'da', 'de', 'el', 'en', 'es', 'fa', 'fr', 'he',
+    'hu', 'id', 'it', 'ja', 'ko', 'my', 'pl', 'pt', 'ro', 'ru', 'sk', 'sr',
+    'th', 'tr', 'uk', 'vi', 'zh',
 ]
 
 """
