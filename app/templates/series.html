@@ -519,7 +519,7 @@
       const templates = await fetch('/api/templates/all').then(resp => resp.json());
       $('#card-config-form .dropdown[data-value="template_id"]').dropdown({
         values: templates.map(({id, name}) => {
-          return {name: name, value: id, selected: id === '{{series.template_id}}'};
+          return {name: name, value: id, selected: id === {{series.template_id}}};
         })
       });
       // Card types
