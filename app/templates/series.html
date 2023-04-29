@@ -1782,6 +1782,11 @@
             title: 'Updated Configuration Values',
           });
         }, error: (response) => {
+          $.toast({
+            class: 'error',
+            title: 'Error Updating Configuration',
+            detail: response.responseText,
+          });
           setTimeout(() => {
             $('#submit-changes').toggleClass('loading', false);
           }, 2000);
