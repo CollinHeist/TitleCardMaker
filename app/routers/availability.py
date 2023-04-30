@@ -16,6 +16,7 @@ from app.schemas.preferences import EpisodeDataSourceToggle, ImageSourceToggle,\
 from app.schemas.sonarr import Tag
 from modules.cards.available import LocalCards
 from modules.Debug import log
+from modules.TMDbInterface2 import TMDbInterface
 
 # URL for user card types
 USER_CARD_TYPE_URL = 'https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/cards.json'
@@ -87,8 +88,7 @@ def get_remote_card_types(
 
 
 @availablility_router.get('/translations', status_code=200)
-def get_available_tmdb_translations(
-        tmdb_interface = Depends(get_tmdb_interface)):
+def get_available_tmdb_translations():
     """
     Get all supported translations from TMDb.
     """
@@ -96,7 +96,7 @@ def get_available_tmdb_translations(
     return [
         {'language_code': code, 'language': language}
         for code, language in sorted(
-            tmdb_interface.LANGUAGES.items(), key=lambda kv: kv[1]
+            TMDbInterface.LANGUAGES.items(), key=lambda kv: kv[1]
         )
     ]
 
