@@ -58,17 +58,18 @@ def get_tmdb_logo_language_priority(
         preferences=Depends(get_preferences)) -> list[LanguageToggle]:
 
     languages = []
-    for language in preferences.tmdb_logo_language_priority:
+    for code in preferences.tmdb_logo_language_priority:
         languages.append({
-            'name': TMDbInterface.LANGUAGES[language],
-            'value': language,
+            'name': TMDbInterface.LANGUAGES[code],
+            'value': code,
             'selected': True
         })
-    for language in TMDbInterface.LANGUAGES:
-        if language not in preferences.tmdb_logo_language_priority:
+    for code, language in sorted(TMDbInterface.LANGUAGES.items(),
+                                 key=lambda kv: kv[1]):
+        if code not in preferences.tmdb_logo_language_priority:
             languages.append({
-                'name': TMDbInterface.LANGUAGES[language],
-                'value': language,
+                'name': language,
+                'value': code,
                 'selected': False,
             })
 
