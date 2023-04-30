@@ -9,6 +9,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 from app.models.preferences import Preferences
 from modules.EmbyInterface2 import EmbyInterface
+from modules.ImageMaker import ImageMaker
 from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
@@ -39,7 +40,13 @@ else:
     PreferencesLocal = Preferences()
 
 
-# Initialize various interfaces
+# Initialize all interfaces
+ImageMagickInterfaceLocal = None
+try:
+    ImageMagickInterfaceLocal = ImageMaker(preferences=PreferencesLocal)
+except Exception as e:
+    ...
+
 EmbyInterfaceLocal = None
 if PreferencesLocal.use_emby:
     try:

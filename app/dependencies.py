@@ -32,7 +32,7 @@ def refresh_emby_interface() -> EmbyInterface:
     global EmbyInterfaceLocal
     EmbyInterfaceLocal = EmbyInterface(**preferences.emby_arguments)
 
-def get_imagemagick_interface() -> 'ImageMagickInterface':
+def get_imagemagick_interface() -> 'ImageMaker':
     return ImageMagickInterfaceLocal
 
 def get_jellyfin_interface() -> JellyfinInterface:
