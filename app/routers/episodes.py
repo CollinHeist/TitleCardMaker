@@ -409,7 +409,7 @@ def refresh_episode_data(
     # Refresh episode data, use BackgroundTasks for ID assignment
     _refresh_episode_data(
         db, preferences, 
-        series_id,
+        series,
         emby_interface, jellyfin_interface, plex_interface, sonarr_interface,
         tmdb_interface,
         background_tasks,
