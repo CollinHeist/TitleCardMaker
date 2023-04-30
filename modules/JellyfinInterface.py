@@ -78,7 +78,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             log.exception(f'Bad Jellyfin connection', e)
             exit(1)
 
-        # Get user ID
+        # Get user ID if indicated
         if (user_id := self._get_user_id(username)) is None:
             log.critical(f'Cannot identify ID of user "{username}"')
             exit(1)
