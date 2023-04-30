@@ -43,17 +43,21 @@
 
       // Get current time, 
       const now = new Date();
-      const timeDifferenceSeconds = Math.floor((nextRun - now) / 1000);
-      const timeDifferenceMinutes = Math.floor(timeDifferenceSeconds / 60);
-      const timeDifferenceHours = Math.floor(timeDifferenceMinutes / 60);
-      const timeDifferenceDays = Math.floor(timeDifferenceHours / 24);
+      const diffSeconds = Math.floor((nextRun - now) / 1000);
+      const diffMinutes = Math.floor(diffSeconds / 60);
+      const diffHours = Math.floor(diffMinutes / 60);
+      const diffDays = Math.floor(diffHours / 24);
 
       // Create string for next run time, only show up to two time units
       const timeUnits = [];
-      if (timeDifferenceDays > 0) { timeUnits.push(`<span class="ui red text">${timeDifferenceDays}</span> days`); }
-      if (timeDifferenceHours % 24 > 0) { timeUnits.push(`<span class="ui green text">${timeDifferenceHours%24}</span> hours`); }
-      if (timeDifferenceMinutes % 60 > 0) { timeUnits.push(`<span class="ui blue text">${timeDifferenceMinutes%60}</span> minutes`); }
-      if (timeDifferenceSeconds % 60 > 0) { timeUnits.push(`<span class="ui teal text">${timeDifferenceSeconds%60}</span> seconds`); }
+      if (diffDays > 1) { timeUnits.push(`<span class="ui red text">${diffDays}</span> days`); }
+      else if (diffDays > 0) { timeUnits.push(`<span class="ui red text">${diffDays}</span> day`); }
+      if (diffHours % 24 > 1) { timeUnits.push(`<span class="ui green text">${diffHours%24}</span> hours`); }
+      else if (diffHours % 24 > 0) { timeUnits.push(`<span class="ui green text">${diffHours%24}</span> hour`); }
+      if (diffMinutes % 60 > 1) { timeUnits.push(`<span class="ui blue text">${diffMinutes%60}</span> minutes`); }
+      else if (diffMinutes % 60 > 0) { timeUnits.push(`<span class="ui blue text">${diffMinutes%60}</span> minute`); }
+      if (diffSeconds % 60 > 1) { timeUnits.push(`<span class="ui teal text">${diffSeconds%60}</span> seconds`); }
+      else if (diffSeconds % 60 > 0) { timeUnits.push(`<span class="ui teal text">${diffSeconds%60}</span> second`); }
       // return inStr = timeUnits.join(', ');
       return inStr = timeUnits.slice(0, 2).join(', ');
     }
@@ -64,10 +68,14 @@
       const hours = Math.floor(minutes / 60);
       const days = Math.floor(hours / 24);
       const timeUnits = [];
-      if (days > 0) { timeUnits.push(`${days} days`); }
-      if (hours % 24 > 0) { timeUnits.push(`${hours%24} hours`); }
-      if (minutes % 60 > 0) { timeUnits.push(`${minutes%60} minutes`); }
-      if (seconds % 60 > 0) { timeUnits.push(`${seconds%60} seconds`); }
+      if (days > 1) { timeUnits.push(`${days} days`); }
+      else if (days > 0) { timeUnits.push(`${days} day`); }
+      if (hours % 24 > 1) { timeUnits.push(`${hours%24} hours`); }
+      else if (hours % 24 > 0) { timeUnits.push(`${hours%24} hour`); }
+      if (minutes % 60 > 1) { timeUnits.push(`${minutes%60} minutes`); }
+      else if (minutes % 60 > 0) { timeUnits.push(`${minutes%60} minute`); }
+      if (seconds % 60 > 1) { timeUnits.push(`${seconds%60} seconds`); }
+      else if (seconds % 60 > 0) { timeUnits.push(`${seconds%60} second`); }
       return timeUnits.join(', ');
     }
 
