@@ -100,6 +100,12 @@ def set_series_database_ids(
     return series
 
 
+series_router = APIRouter(
+    prefix='/series',
+    tags=['Series'],
+)
+
+
 def download_series_poster(
         series: Series,
         db: 'Database',
@@ -113,23 +119,17 @@ def download_series_poster(
 
     # If series poster exists and is not a placeholder, return that
     path = Path(series.poster_path)
-    if path.exists() and path.name != 'placeholder.jpg':
+    if path.name != 'placeholder.jpg' and path.exists():
         series.poster_url = f'/assets/posters/{series.id}.jpg'
         db.commit()
         log.debug(f'Series[{series.id}] Poster already exists, using {path.resolve()}')
         return None
 
     # Attempt to download poster
-    series_info = SeriesInfo(
-        series.name, series.year, emby_id=series.emby_id,
-        jellyfin_id=series.jellyfin_id, sonarr_id=series.sonarr_id,
-        tmdb_id=series.tmdb_id, tvdb_id=series.tvdb_id,
-        tvrage_id=series.tvrage_id,
-    )
-
-    poster_url = tmdb_interface.get_series_poster(series_info)
-    if poster_url is None:
+    series_info = series.as_series_info
+    if (poster_url := tmdb_interface.get_series_poster(series_info)) is None:
         log.debug(f'Series[{series.id}] TMDb returned no valid posters')
+    # Poster downloaded, write file, update database
     else:
         path = preferences.asset_directory / 'posters' / f'{series.id}.jpg'
         try:
@@ -228,12 +228,6 @@ def load_title_cards(
         db.commit()
 
     return None
-
-
-series_router = APIRouter(
-    prefix='/series',
-    tags=['Series'],
-)
 
 
 @series_router.get('/all', status_code=200)
