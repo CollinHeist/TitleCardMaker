@@ -306,6 +306,11 @@ def create_cards_for_series(
             episode_font_dict,           # Episode font/template font
             episode.card_properties,     # Episode
         )
+        if 'extras' not in card_settings: card_settings['extras'] = {}
+        priority_merge_v2(
+            card_settings,
+            card_settings['extras'],
+        )
 
         # Get the effective card type class
         CardClass = TitleCardCreator.CARD_TYPES[card_settings.get('card_type')]
@@ -411,18 +416,14 @@ def create_cards_for_series(
         # Create parent directories if needed
         card_settings['card_file'].parent.mkdir(parents=True, exist_ok=True)
 
-        # Merge settings, extras, and translations
-        card_settings = card_settings \
-            | (card_settings.get('extras', {}) | episode.translations)
-        card = NewTitleCard(**card_settings)
-
         # No existing card, add task to create and add to database
+        card = NewTitleCard(**card_settings)
         if existing_card is None:
             stats['creating'] += 1
             tasks.add_task(create_card, db, preferences, card_settings)
         # Existing card doesn't match, delete and remake
-        elif any(getattr(existing_card, attr) != getattr(card, attr)
-                 for attr in existing_card.comparison_properties.keys()):
+        elif any(str(val) != str(getattr(card, attr))
+                 for attr, val in existing_card.comparison_properties.items()):
             log.debug(f'Detected change to TitleCard[{existing_card.id}], '
                       f'recreating')
             card_settings['card_file'].unlink(missing_ok=True)
