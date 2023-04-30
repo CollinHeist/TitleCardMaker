@@ -8,6 +8,7 @@ from modules.Debug import log
 
 from app.dependencies import get_database, get_preferences, get_tmdb_interface
 import app.models as models
+from app.routers.episodes import get_episode
 from app.routers.series import get_series
 from app.routers.templates import get_template
 from app.schemas.base import UNSPECIFIED
@@ -80,8 +81,10 @@ def _translate_episode(
             log.debug(f'Episode[{episode.id}] Translated {episode_info} {language_code} -> "{translation}" -> {data_key}')
             changed = True
 
-    # If any translations were added, commit updates to database
-    if changed: 
+    # If any translations were added, delete existing card, and then
+    # commit updates to database
+    if changed:
+        db.query(models.card.Card).filter_by(episode_id=episode.id).delete()
         db.commit()
 
 
