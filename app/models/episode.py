@@ -57,6 +57,11 @@ class Episode(Base):
     extras = Column(MutableDict.as_mutable(PickleType), default=None)
     translations = Column(MutableDict.as_mutable(PickleType), default={})
 
+    image_source_attempts = Column(
+        MutableDict.as_mutable(PickleType),
+        default={'Emby': 0, 'Jellyfin': 0, 'Plex': 0, 'TMDb': 0}
+    )
+
 
     @hybrid_property
     def card_properties(self) -> dict[str, Any]:
