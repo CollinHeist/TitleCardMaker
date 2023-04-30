@@ -301,6 +301,7 @@ def create_cards_for_series(
             series_template_dict,        # Series template
             series_font_dict,            # Series font/template font
             series.card_properties,      # Series
+            {'logo_file': series.get_logo_file(preferences.source_directory)},
             episode_template_dict,       # Episode template
             episode_font_dict,           # Episode font/template font
             episode.card_properties,     # Episode
