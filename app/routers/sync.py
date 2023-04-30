@@ -17,26 +17,6 @@ from app.schemas.series import Series
 import app.models as models
 
 
-def add_sync(db, new_sync) -> Sync:
-    """
-    Add the given sync to the database.
-
-    Args:
-        db: SQLAlchemy database to query.
-        new_sync: NewSync object to add to the database.
-    """
-
-    # Verify template exists (if specified), raise 404 if DNE
-    get_template(db, new_sync.template_id, raise_exc=True)
-
-    # Create DB entry from Pydantic model, add to database
-    sync = models.sync.Sync(**new_sync.dict())
-    db.add(sync)
-    db.commit()
-
-    return sync
-
-
 def get_sync(db, sync_id, *, raise_exc=True) -> Union[Sync, None]:
     """
     Get the Sync with the given ID from the given Database.
@@ -74,16 +54,59 @@ def get_sync(db, sync_id, *, raise_exc=True) -> Union[Sync, None]:
     return sync
 
 
+def sync_all():
+    try:
+        # Get the Database
+        with next(get_database()) as db:
+            # Get and run all Syncs
+            all_syncs = db.query(models.sync.Sync).all()
+            for sync in all_syncs:
+                run_sync(
+                    db, get_preferences(), sync, get_emby_interface(),
+                    get_jellyfin_interface(), get_plex_interface(),
+                    get_sonarr_interface(), get_tmdb_interface(),
+                )
+    except Exception as e:
+        log.exception(f'Failed to Sync all', e)
+
+
+# Create sub router for all /sync API requests
+sync_router = APIRouter(
+    prefix='/sync',
+    tags=['Sync']
+)
+
+
+def add_sync(db, new_sync: 'NewSync') -> Sync:
+    """
+    Add the given sync to the database.
+
+    Args:
+        db: SQLAlchemy database to query.
+        new_sync: New Sync object to add to the database.
+    """
+
+    # Verify template exists (if specified), raise 404 if DNE
+    get_template(db, new_sync.template_id, raise_exc=True)
+
+    # Create DB entry from Pydantic model, add to database
+    sync = models.sync.Sync(**new_sync.dict())
+    db.add(sync)
+    db.commit()
+
+    return sync
+
+
 def run_sync(
         db,
-        preferences,
-        sync,
-        emby_interface,
-        jellyfin_interface,
-        plex_interface,
-        sonarr_interface,
-        tmdb_interface, *,
-        background_tasks=None) -> list[Series]:
+        preferences: 'Preferences',
+        sync: 'Sync',
+        emby_interface: 'EmbyInterface',
+        jellyfin_interface: 'JellyfinInterface',
+        plex_interface: 'PlexInterface',
+        sonarr_interface: 'SonarrInterface',
+        tmdb_interface: 'TMDbInterface',
+        background_tasks: Optional[BackgroundTasks] = None) -> list[Series]:
     """
 
     """
@@ -94,7 +117,7 @@ def run_sync(
         'Jellyfin': jellyfin_interface,
         'Plex': plex_interface,
         'Sonarr': sonarr_interface,
-    }[sync.interface]
+    }.get(sync.interface, None)
     if interface is None:
         raise HTTPException(
             status_code=409,
@@ -251,29 +274,6 @@ def run_sync(
         log.info(f'Sync[{sync.id}] No series synced')
 
     return added
-
-
-def sync_all():
-    try:
-        # Get the Database
-        with next(get_database()) as db:
-            # Get and run all Syncs
-            all_syncs = db.query(models.sync.Sync).all()
-            for sync in all_syncs:
-                run_sync(
-                    db, get_preferences(), sync, get_emby_interface(),
-                    get_jellyfin_interface(), get_plex_interface(),
-                    get_sonarr_interface(), get_tmdb_interface(),
-                )
-    except Exception as e:
-        log.exception(f'Failed to Sync all', e)
-
-
-# Create sub router for all /sync API requests
-sync_router = APIRouter(
-    prefix='/sync',
-    tags=['Sync']
-)
 
 
 @sync_router.post('/emby/new', tags=['Emby'], status_code=201)

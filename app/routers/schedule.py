@@ -4,6 +4,7 @@ from fastapi import APIRouter, Body, Depends, Form, HTTPException
 
 from app.dependencies import get_scheduler, get_preferences
 import app.models as models
+from app.routers.episodes import refresh_all_episode_data
 from app.routers.sync import sync_all
 from app.schemas.base import Base, UNSPECIFIED
 from app.schemas.schedule import NewJob, ScheduledTask, UpdateInterval
@@ -36,7 +37,7 @@ BaseJobs = {
     # TODO populate with actual function calls
     JOB_REFRESH_EPISODE_DATA: NewJob(
         id=JOB_REFRESH_EPISODE_DATA,
-        function=fake_func,
+        function=refresh_all_episode_data,
         seconds=60 * 60 * 6,
         description='Look for new episodes and update all existing episodes',
     ), JOB_SYNC_INTERFACES: NewJob(

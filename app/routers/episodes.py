@@ -57,6 +57,28 @@ def get_episode(db, episode_id, *, raise_exc=True) -> Optional[Episode]:
     return episode
 
 
+def refresh_all_episode_data():
+    """
+    Schedule-able function to refresh the episode data for all Series in
+    the Database.
+    """
+
+    try:
+        # Get the Database
+        with next(get_database()) as db:
+            # Get all Series
+            all_series = db.query(models.series.Series).all()
+            for series in all_series:
+                # TODO add check for "monitored" attribute
+                _refresh_episode_data(
+                    db, get_preferences(), series, get_emby_interface(),
+                    get_jellyfin_interface(), get_plex_interface(),
+                    get_sonarr_interface(), get_tmdb_interface(),
+                )
+    except Exception as e:
+        log.exception(f'Failed to refresh all episode data', e)
+
+
 episodes_router = APIRouter(
     prefix='/episodes',
     tags=['Episodes'],
@@ -73,7 +95,14 @@ def set_episode_ids(
         sonarr_interface: 'SonarrInterface',
         tmdb_interface: 'TMDbInterface') -> None:
     """
+    Set the database ID's of the given Episodes using the given
+    Interfaces.
 
+    Args:
+        db: Database to read/update/modify.
+        series: Series of the Episodes whose ID's are being set.
+        episodes: List of Episodes to set the ID's of.
+        *_interface: Interface(s) to set ID's from.
     """
 
     # Get corresponding EpisodeInfo object for this Episode
@@ -101,11 +130,155 @@ def set_episode_ids(
         for id_type in episode_info.ids.keys():
             if (getattr(episode, id_type) is None
                 and episode_info.has_id(id_type)):
-
                 setattr(episode, id_type, getattr(episode_info, id_type))
-                log.debug(f'Episode[{episode.id}].{id_type} = {getattr(episode_info, id_type)}')
                 changed = True
 
+    if changed:
+        db.commit()
+
+    return None
+
+
+def _refresh_episode_data(
+        db,
+        preferences: 'Preferences',
+        series: 'Series',
+        emby_interface: 'EmbyInterface',
+        jellyfin_interface: 'JellyfinInterface',
+        plex_interface: 'PlexInterface',
+        sonarr_interface: 'SonarrInterface',
+        tmdb_interface: 'TMDbInterface',
+        background_tasks: Optional[BackgroundTasks] = None) -> None:
+    """
+    Refresh the episode data for the given Series. This adds any new
+    Episodes on the associated episode data source to the Database, 
+    updates the titles of any existing Episodes (if indicated), and
+    assigns the database ID's of all added/modified Episodes.
+
+    Args:
+        db: Database to read/update/modify.
+        preferences: Preferences to reference global settings.
+        series: Series whose episodes are being refreshed.
+        *_interface: Interface(s) to set ID's from.
+        background_tasks: Optional BackgroundTasks queue to add the
+            Episode ID assignment task to, if provided. If omitted then
+            the assignment is done in a blocking manner.
+
+    Raises:
+        HTTPException (404) if the Series Template DNE.
+        HTTPException (409) if the indicted episode data source cannot
+            be communicated with.
+    """
+
+    # Query for template if indicated
+    template_dict = {}
+    if series.template_id is not None:
+        template = get_template(db, series.template_id, raise_exc=True)
+        template_dict = template.__dict__
+
+    # Get highest priority options
+    series_options = {}
+    priority_merge_v2(
+        series_options,
+        preferences.__dict__,
+        template_dict,
+        series.__dict__,
+    )
+    episode_data_source = series_options['episode_data_source']
+    sync_specials = series_options['sync_specials']
+
+    # Raise 409 if cannot communicate with the series episode data source
+    interface = {
+        'Emby': emby_interface,
+        'Jellyfin': jellyfin_interface,
+        'Plex': plex_interface,
+        'Sonarr': sonarr_interface,
+        'TMDb': tmdb_interface,
+    }.get(episode_data_source, None)
+    if interface is None:
+        raise HTTPException(
+            status_code=409,
+            detail=f'Unable to communicate with {episode_data_source}'
+        )
+
+    # Create SeriesInfo for this object to use in querying
+    if episode_data_source == 'Emby':
+        all_episodes = emby_interface.get_all_episodes(series)
+    elif episode_data_source == 'Jellyfin':
+        all_episodes = jellyfin_interface.get_all_episodes(
+            series.as_series_info, preferences=preferences
+        )
+    elif episode_data_source == 'Plex':
+        # Raise 409 if source is Plex but series has no library
+        if series.plex_library_name is None: 
+            raise HTTPException(
+                status_code=409,
+                detail=f'Series does not have an associated library'
+            )
+        all_episodes = plex_interface.get_all_episodes(
+            series.plex_library_name, series.as_series_info,
+        )
+    elif episode_data_source == 'Sonarr':
+        all_episodes = sonarr_interface.get_all_episodes(
+            series.as_series_info, preferences=preferences
+        )
+    elif episode_data_source == 'TMDb':
+        all_episodes = tmdb_interface.get_all_episodes(series.as_series_info)
+
+    # Filter episodes
+    changed, episodes = False, []
+    for episode in all_episodes:
+        # Skip specials if indicated
+        if not sync_specials and episode.season_number == 0:
+            log.debug(f'Skipping {episode} - not syncing specials')
+            continue
+
+        # Check if this episode exists in the database currently
+        existing = db.query(models.episode.Episode)\
+            .filter_by(
+                series_id=series.id,
+                season_number=episode.season_number,
+                episode_number=episode.episode_number,
+            ).first() 
+
+        # Episode does not exist, add
+        if existing is None:
+            log.debug(f'Series[{series.id}] New episode "{episode.title.full_title}"')
+            episode = models.episode.Episode(
+                series_id=series.id,
+                title=episode.title.full_title,
+                **episode.indices,
+                **episode.ids,
+                airdate=episode.airdate,
+            )
+            db.add(episode)
+            changed = True
+            episodes.append(episode)
+        # Episode exists, if title matching and title doesn't match, update
+        elif ((existing.match_title
+                or (existing.match_title is None and series.match_titles))
+                and existing.title != episode.title.full_title):
+            existing.title = episode.title.full_title
+            log.debug(f'Episode[{episode.id}] Updating title')
+            changed = True
+            episodes.append(existing)
+
+    # Add episode ID's for all new Episodes as background task or directly
+    if background_tasks is None:
+        set_episode_ids(
+            db, series, episodes,
+            emby_interface, jellyfin_interface, plex_interface,
+            sonarr_interface, tmdb_interface
+        )
+    else:
+        background_tasks.add_task(
+            set_episode_ids,
+            db, series, episodes,
+            emby_interface, jellyfin_interface, plex_interface, sonarr_interface,
+            tmdb_interface
+        )
+
+    # Commit to database if changed
     if changed:
         db.commit()
 
@@ -231,121 +404,18 @@ def refresh_episode_data(
     """
 
     # Query for this series, raise 404 if DNE
-    series = db.query(models.series.Series).filter_by(id=series_id).first()
-    if series is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Series {series_id} not found',
-        )
+    series = get_series(db, series_id, raise_exc=True)
 
-    # Query for template if indicated
-    template_dict = {}
-    if series.template_id is not None:  
-        template = db.query(models.template.Template)\
-            .filter_by(id=series.template_id)
-        if template is None:
-            raise HTTPException(
-                status_code=404,
-                detail=f'Series Template {template_id} not found',
-            )
-        template_dict = template.__dict__
-
-    # Get highest priority options
-    series_options = {}
-    priority_merge_v2(
-        series_options,
-        preferences.__dict__,
-        template_dict,
-        series.__dict__,
-    )
-    episode_data_source = series_options['episode_data_source']
-    sync_specials = series_options['sync_specials']
-
-    # Raise 409 if cannot communicate with the series episode data source
-    interface = {
-        'Emby': emby_interface,
-        'Jellyfin': jellyfin_interface,
-        'Plex': plex_interface,
-        'Sonarr': sonarr_interface,
-        'TMDb': tmdb_interface,
-    }[episode_data_source]
-    if interface is None:
-        raise HTTPException(
-            status_code=409,
-            detail=f'Unable to communicate with {episode_data_source}'
-        )
-
-    # Create SeriesInfo for this object to use in querying
-    if episode_data_source == 'Emby':
-        all_episodes = emby_interface.get_all_episodes(series)
-    elif episode_data_source == 'Jellyfin':
-        all_episodes = jellyfin_interface.get_all_episodes(
-            series.as_series_info, preferences=preferences
-        )
-    elif episode_data_source == 'Plex':
-        # Raise 409 if source is Plex but series has no library
-        if series.plex_library_name is None: 
-            raise HTTPException(
-                status_code=409,
-                detail=f'Series does not have an associated library'
-            )
-        all_episodes = plex_interface.get_all_episodes(
-            series.plex_library_name, series.as_series_info,
-        )
-    elif episode_data_source == 'Sonarr':
-        all_episodes = sonarr_interface.get_all_episodes(
-            series.as_series_info, preferences=preferences
-        )
-    elif episode_data_source == 'TMDb':
-        all_episodes = tmdb_interface.get_all_episodes(series.as_series_info)
-
-    # Filter episodes
-    changed, episodes = False, []
-    for episode in all_episodes:
-        # Skip specials if indicated
-        if not sync_specials and episode.season_number == 0:
-            log.debug(f'Skipping {episode} - not syncing specials')
-            continue
-
-        # Check if this episode exists in the database currently
-        existing = db.query(models.episode.Episode)\
-            .filter_by(
-                series_id=series_id,
-                season_number=episode.season_number,
-                episode_number=episode.episode_number,
-            ).first() 
-
-        # Episode does not exist, add
-        if existing is None:
-            log.debug(f'Series[{series.id}] New Episode "{episode.title.full_title}"')
-            episode = models.episode.Episode(
-                series_id=series.id,
-                title=episode.title.full_title,
-                **episode.indices,
-                **episode.ids,
-                airdate=episode.airdate,
-            )
-            db.add(episode)
-            changed = True
-            episodes.append(episode)
-        # Episode exists, if title matching and title doesn't match, update
-        elif ((series.match_titles or existing.match_title)
-            and existing.title != episode.title.full_title):
-            existing.title = episode.title.full_title
-            log.debug(f'Episode[{episode.id}] Updating title')
-            changed = True
-
-    # Add background task to add episode ID's for all new Episodes
-    background_tasks.add_task(
-        set_episode_ids,
-        db, series, episodes,
-        emby_interface, jellyfin_interface, plex_interface, sonarr_interface, tmdb_interface
+    # Refresh episode data, use BackgroundTasks for ID assignment
+    _refresh_episode_data(
+        db, preferences, 
+        series_id,
+        emby_interface, jellyfin_interface, plex_interface, sonarr_interface,
+        tmdb_interface,
+        background_tasks,
     )
 
-    # Commit to database if changed
-    if changed:
-        db.commit()
-    
+    # Return all of this Series Episodes
     return db.query(models.episode.Episode).filter_by(series_id=series_id).all()
 
 
