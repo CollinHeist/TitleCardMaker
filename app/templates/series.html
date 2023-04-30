@@ -1371,6 +1371,7 @@
 
           <!-- Episode Data Tab -->
           <div class="ui bottom attached tab segment" data-tab="episode-data">
+            <!-- Mass table editor buttons -->
             <button id="new-episode" class="ui green tertiary button">
               <i class="plus square outline icon"></i>
               Add New Episode
@@ -1384,6 +1385,7 @@
               Delete All Episodes
             </button>
 
+            <!-- Episode data table -->
             <div class="ui scrolling long container">
               <table class="ui compact striped head stuck sortable table">
                 <thead>
@@ -1439,8 +1441,23 @@
               </table>
             </div>
 
-            <div id="episode-data" class="ui styled fluid accordion">
-              <!-- Episode subdata is added by asynchronous function -->
+            <!-- Icon descriptions -->
+            <div class="ui segment">
+              <span class="ui text"><i>Click icons to toggle between states.</i></span><br>
+              <span class="ui text">
+                <i class="ui gray question icon"></i>
+                The value is <span class="ui blue text">not set</span> and will be determined by the Series or Template.
+              </span>
+              <br>
+              <span class="ui text">
+                <i class="ui green check icon"></i>
+                The value is <span class="ui green text">true</span>, overriding any Series or Template.
+              </span>
+              <br>
+              <span class="ui text">
+                <i class="ui red times circle outline icon"></i>
+                The value is <span class="ui red text">false</span>, overriding any Series or Template.
+              </span>
             </div>
           </div>
 
