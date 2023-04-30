@@ -383,6 +383,26 @@
       });
     }
 
+    async function addTranslations() {
+      $('#add-translations > i').toggleClass('loading', true);
+      $.ajax({
+        type: 'POST',
+        url: '/api/translate/series/{{series.id}}',
+        success: (response) => {
+          $.toast({class: 'blue info', title: `Adding Translations`});
+        }, error: (response) => {
+          $.toast({
+            class: 'error',
+            title: 'Error Adding Translations',
+            message: response.responseJSON.detail,
+            displayTime: 0,
+          });
+        }, complete: () => {
+          $('#add-translations > i').toggleClass('loading', false);
+        }
+      });
+    }
+
     async function createTitleCards() {
       $.ajax({
         type: 'POST',
@@ -847,7 +867,13 @@
                 <i class="sync icon"></i>
                 Refresh Episode Data
               </button>
-              <button id="create-cards" class="ui labeled icon button" onclick="createTitleCards()">
+              {% if series.translations or series.template_id %}
+              <button id="add-translations" class="ui labeled icon button" onclick="addTranslations()" data-tooltip="Look for any missing episode translations">
+                <i class="language icon"></i>
+                Add Translations
+              </button>
+              {% endif %}
+              <button class="ui labeled icon button" onclick="createTitleCards()">
                 <i class="images outline icon"></i>
                 Create Title Cards
               </button>
