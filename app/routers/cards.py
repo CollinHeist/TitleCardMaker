@@ -606,25 +606,10 @@ def remake_card(
 
     Episode = models.episode.Episode
     for library_name, series_info, episode_info, watched_status in details:
-        # Try and find Episode
-        episode = db.query(Episode).filter(
-            or_(
-                # Find by database ID
-                or_(
-                    Episode.imdb_id==episode_info.imdb_id,
-                    Episode.tmdb_id==episode_info.tmdb_id,
-                    Episode.tvdb_id==episode_info.tvdb_id,
-                    Episode.tvrage_id==episode_info.tvrage_id,
-                ),
-                # Find by index and title
-                and_(
-                    Episode.season_number==episode_info.season_number,
-                    Episode.episode_number==episode_info.episode_number,
-                    # TODO Maybe not title match?
-                    Episode.title==episode_info.title.full_title,
-                ),
-            )
-        ).first()
+        # Find Episode
+        episode = db.query(Episode)\
+            .filter(episode_info.episode_filter_conditions(Episode))\
+            .first()
 
         # Episode does not exist
         if episode is None:

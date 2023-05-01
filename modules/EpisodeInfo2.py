@@ -292,3 +292,42 @@ class EpisodeInfo(DatabaseInfoContainer):
 
     def set_airdate(self, airdate: 'datetime') -> None:
         self._update_attribute('airdate', airdate)
+
+
+    def episode_filter_conditions(self,
+            EpisodeModel: 'sqlachemy.Model') -> 'sqlalchemy.Query':
+        """
+        Get the SQLAlchemy Query condition for this object.
+
+        Args:
+            EpisodeModel: Episode model to utilize for Query conditions.
+
+        Returns:
+            Query condition for this object. This includes an OR for any
+            (non-None) database ID matches as well as an index and title
+            match.
+        """
+
+        # Conditions to filter by database ID
+        id_conditions = []
+        if self.imdb_id is not None:
+            id_conditions.append(EpisodeModel.imdb_id==self.imdb_id)
+        if self.tmdb_id is not None:
+            id_conditions.append(EpisodeModel.tmdb_id==self.tmdb_id)
+        if self.tvdb_id is not None:
+            id_conditions.append(EpisodeModel.tvdb_id==self.tvdb_id)
+        if self.tvrage_id is not None:
+            id_conditions.append(EpisodeModel.tvrage_id==self.tvrage_id)
+
+        # Try and find Episode
+        return or_(
+            # Find by database ID
+            or_(*id_conditions),
+            # Find by index and title
+            and_(
+                EpisodeModel.season_number==self.season_number,
+                EpisodeModel.episode_number==self.episode_number,
+                # TODO Maybe not title match?
+                EpisodeModel.title==self.title.full_title,
+            ),
+        )
