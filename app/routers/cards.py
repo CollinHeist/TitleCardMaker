@@ -564,3 +564,56 @@ def get_episode_card(
     """
 
     return db.query(models.card.Card).filter_by(episode_id=episode_id).all()
+
+
+@card_router.post('/remake', tags=['Plex', 'Tautulli'], status_code=200)
+def remake_card(
+        plex_rating_key: Optional[int] = Query(default=None),
+        # TODO other query options
+        db = Depends(get_database),
+        plex_interface = Depends(get_plex_interface),
+        ) -> None:
+    """
+
+    """
+
+    # No key provided, exit
+    if plex_rating_key is None:
+        return None
+
+    # Key provided, no PlexInterface, raise 409
+    if plex_interface is None:
+        raise HTTPException(
+            status_code=409,
+            detail=f'Unable to communicate with Plex',
+        )
+
+    # Get details of this key from Plex, raise 404 if not found/invalid
+    details = plex_interface.get_episode_details(plex_rating_key)
+    if len(details) == 0:
+        # TODO maybe revise status codes based on exact error
+        raise HTTPException(
+            status_code=404,
+            detail=f'Rating key {plex_rating_key} is invalid'
+        )
+
+    Episode = models.episode.Episode
+    for series_info, episode_info, library_name in details:
+        # Try and find Episode
+        episode = db.query(Episode).filter(
+            or_(
+                Episode.imdb_id==episode_info.imdb_id,
+                Episode.tmdb_id==episode_info.tmdb_id,
+                Episode.tvdb_id==episode_info.tvdb_id,
+                Episode.tvrage_id==episode_info.tvrage_id,
+            )
+        ).first()
+
+        # Episode does not exist
+        if episode is None:
+            # TODO create new episodes?
+            ...
+        # Episode exists, update card
+        else:
+            # TODO update card
+            ...
