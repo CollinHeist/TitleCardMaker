@@ -1,6 +1,7 @@
 from typing import Optional, Union
 
 from num2words import num2words
+from sqlalchemy import and_, or_
 
 from modules.Debug import log
 from modules.DatabaseInfoContainer import DatabaseInfoContainer

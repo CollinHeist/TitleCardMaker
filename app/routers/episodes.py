@@ -12,12 +12,12 @@ from app.dependencies import (
     get_plex_interface, get_sonarr_interface, get_tmdb_interface
 )
 import app.models as models
-from app.routers.cards import priority_merge_v2
 from app.routers.fonts import get_font
 from app.routers.series import get_series
 from app.routers.templates import get_template
 from app.schemas.base import UNSPECIFIED
 from app.schemas.episode import Episode, NewEpisode, UpdateEpisode
+from modules.TieredSettings import TieredSettings
 
 
 def get_episode(db, episode_id, *, raise_exc=True) -> Optional[Episode]:
@@ -178,7 +178,7 @@ def _refresh_episode_data(
 
     # Get highest priority options
     series_options = {}
-    priority_merge_v2(
+    TieredSettings(
         series_options,
         preferences.__dict__,
         template_dict,

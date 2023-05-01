@@ -11,6 +11,7 @@ from app.dependencies import (
     get_plex_interface, get_scheduler
 )
 import app.models as models
+from app.routers.episodes import get_episode
 from app.routers.fonts import get_font
 from app.routers.series import get_series
 from app.routers.templates import get_template
@@ -20,36 +21,41 @@ from modules.CleanPath import CleanPath
 from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.SeasonTitleRanges import SeasonTitleRanges
+from modules.TieredSettings import TieredSettings
 from modules.Title import Title
 from modules.TitleCard import TitleCard as TitleCardCreator
 
 
-def priority_merge_v2(
-        merge_base: dict[str, Any],
-        *dicts: tuple[dict[str, Any]]) -> None:
+def create_all_title_cards():
     """
-    Merges an arbitrary number of dictionaries, with the values of later
-    dictionaries taking priority over earlier ones.
-
-    The highest priority non-None value is used if the key is present in
-    multiple dictionaries.
-
-    Args:
-        merge_base: Dictionary to modify in place with the result of the
-            merging.
-        dicts: Any number of dictionaries to merge.
+    Schedule-able function to re/create all Title Cards for all Series
+    and Episodes in the Database.
     """
 
-    for dict_ in dicts:
-        if dict_ is None: continue
+    try:
+        # Get the Database
+        with next(get_database()) as db:
+            # Get all Series
+            all_series = db.query(models.series.Series).all()
+            for series in all_series:
+                # Get all Episodes of this Series
+                episodes = db.query(models.episode.Episode)\
+                    .filter_by(series_id=series.id).all()
+                
+                # Set watch statuses of the episodes
+                _update_episode_watch_statuses(
+                    get_emby_interface(), get_jellyfin_interface(),
+                    get_plex_interface(),
+                    series, episodes
+                )
 
-        for key, value in dict_.items():
-            # Skip underscored keys
-            if key.startswith('_'):
-                continue
-
-            if value is not None:
-                merge_base[key] = value
+                # Create title cards for each Episode
+                for episode in episodes:
+                    _create_episode_card(
+                        db, get_preferences(), None, series, episode
+                    )
+    except Exception as e:
+        log.exception(f'Failed to create title cards', e)
 
 
 # Create sub router for all /cards API requests
@@ -86,11 +92,11 @@ def create_card(db, preferences, card_model, card_settings):
 
 
 def _create_episode_card(
-        db,
-        preferences,
-        background_tasks,
-        series,
-        episode) -> str:
+        db: 'Database',
+        preferences: 'Preferences',
+        background_tasks: Optional[BackgroundTasks],
+        series: 'Series',
+        episode: 'Episode') -> str:
     """
 
     """
@@ -135,7 +141,7 @@ def _create_episode_card(
     
     # Resolve all settings from global -> episode
     card_settings = {}
-    priority_merge_v2(
+    TieredSettings(
         card_settings,
         # TODO use card-specific hiding enables
         {'hide_season_text': False, 'hide_episode_text': False},
@@ -151,7 +157,7 @@ def _create_episode_card(
     )
     # Resolve all extras
     card_extras = {}
-    priority_merge_v2(
+    TieredSettings(
         card_extras,
         series_template_dict.get('extras', {}),
         series.card_properties.get('extras', {}),
@@ -159,9 +165,9 @@ def _create_episode_card(
         episode.card_properties.get('extras', {}),
     )
     # Override settings with extras
-    priority_merge_v2(card_settings, card_extras)
+    TieredSettings(card_settings, card_extras)
     # Merge translations into extras
-    priority_merge_v2(card_extras, episode.translations)
+    TieredSettings(card_extras, episode.translations)
     card_settings['extras'] = card_extras | episode.translations
 
     # Get the effective card type class
@@ -273,27 +279,69 @@ def _create_episode_card(
     # card = NewTitleCard(**(card_settings | card_extras))
     card = NewTitleCard(**card_settings)
     if existing_card is None:
-        background_tasks.add_task(
-            create_card, db, preferences, card, card_settings
-        )
+        if background_tasks is None:
+            create_card(db, preferences, card, card_settings)
+        else:
+            background_tasks.add_task(
+                create_card, db, preferences, card, card_settings
+            )
         return ['creating']
     # Existing card doesn't match, delete and remake
     elif any(str(val) != str(getattr(card, attr))
                 for attr, val in existing_card.comparison_properties.items()):
+        # temporary logging
         for attr, val in existing_card.comparison_properties.items():
             if str(val) != str(getattr(card, attr)):
                 log.info(f'Card.{attr} | existing={val}, new={getattr(card, attr)}')
-        log.debug(f'Detected change to TitleCard[{existing_card.id}], '
-                    f'recreating')
+        log.debug(f'Card[{existing_card.id}] Detected change - recreating')
+        # Delete existing card file, remove from database
         card_settings['card_file'].unlink(missing_ok=True)
         db.delete(existing_card)
-        background_tasks.add_task(
-            create_card, db, preferences, card, card_settings
-        )
+        if background_tasks is None:
+            create_card(db, preferences, card, card_settings)
+        else:
+            background_tasks.add_task(
+                create_card, db, preferences, card, card_settings
+            )
         return ['creating', 'deleted']
         
     # Existing card matches, do nothing
     return []
+
+
+def _update_episode_watch_statuses(
+        emby_interface: 'EmbyInterface',
+        jellyfin_interface: 'JellyfinInterface',
+        plex_interface: 'PlexInterface',
+        series: 'Series',
+        episodes: list['Episode']) -> None:
+    """
+
+    """
+
+    if series.emby_library_name is not None:
+        if emby_interface is None:
+            log.warning(f'Cannot query watch statuses - no Emby connection')
+        else:
+            emby_interface.update_watched_statuses(
+                series.emby_library_name, series.as_series_info, episodes,
+            )
+    elif series.jellyfin_library_name is not None:
+        if jellyfin_interface is None:
+            log.warning(f'Cannot query watch statuses - no Jellyfin connection')
+        else:
+            jellyfin_interface.update_watched_statuses(
+                series.jellyfin_library_name, series.as_series_info, episodes,
+            )
+    elif series.plex_library_name is not None:
+        if plex_interface is None:
+            log.warning(f'Cannot query watch statuses - no Plex connection')
+        else:
+            plex_interface.update_watched_statuses(
+                series.plex_library_name, series.as_series_info, episodes,
+            )
+
+    return None
 
 
 def delete_cards(db, card_query, loaded_query) -> list[str]:
@@ -425,6 +473,12 @@ def create_cards_for_series(
         emby_interface = Depends(get_emby_interface),
         jellyfin_interface = Depends(get_jellyfin_interface),
         plex_interface = Depends(get_plex_interface)) -> dict[str, int]:
+    """
+    Create the Title Cards for the given Series. This deletes and
+    remakes any outdated existing Cards.
+
+    - series_id: ID of the Series to create Title Cards for.
+    """
 
     # Get this series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
@@ -434,27 +488,9 @@ def create_cards_for_series(
         .filter_by(series_id=series_id).all()
 
     # Set watch statuses of the episodes
-    if series.emby_library_name is not None:
-        if emby_interface is None:
-            log.warning(f'Cannot query watch statuses - no Emby connection')
-        else:
-            emby_interface.update_watched_statuses(
-                series.emby_library_name, series.as_series_info, episodes,
-            )
-    elif series.jellyfin_library_name is not None:
-        if jellyfin_interface is None:
-            log.warning(f'Cannot query watch statuses - no Jellyfin connection')
-        else:
-            jellyfin_interface.update_watched_statuses(
-                series.jellyfin_library_name, series.as_series_info, episodes,
-            )
-    elif series.plex_library_name is not None:
-        if plex_interface is None:
-            log.warning(f'Cannot query watch statuses - no Plex connection')
-        else:
-            plex_interface.update_watched_statuses(
-                series.plex_library_name, series.as_series_info, episodes,
-            )
+    _update_episode_watch_statuses(
+        emby_interface, jellyfin_interface, plex_interface, series, episodes
+    )
 
     stats = {'deleted': 0, 'invalid': 0, 'creating': 0}
     for episode in episodes:
@@ -471,7 +507,7 @@ def create_cards_for_series(
 @card_router.get('/series/{series_id}', status_code=200, tags=['Series'])
 def get_series_cards(
         series_id: int,
-        db=Depends(get_database)) -> list[TitleCard]:
+        db = Depends(get_database)) -> list[TitleCard]:
     """
     Get all TitleCards for the given Series.
 
@@ -529,28 +565,32 @@ def delete_title_card(
     return delete_cards(db, card_query, loaded_query)
 
 
-@card_router.post('/episode/{episode_id}', status_code=201, tags=['Episodes'])
+@card_router.post('/episode/{episode_id}', status_code=200, tags=['Episodes'])
 def create_card_for_episode(
         episode_id: int,
-        db = Depends(get_database)) -> int:
+        db = Depends(get_database),
+        preferences = Depends(get_preferences),
+        emby_interface = Depends(get_emby_interface),
+        jellyfin_interface = Depends(get_jellyfin_interface),
+        plex_interface = Depends(get_plex_interface)) -> None:
+    """
+    Create the Title Cards for the given Episode. This deletes and
+    remakes the existing Title Card if it is outdated.
 
-    episode = db.query(models.episode.Episode).filter_by(id=episode_id).first()
-    if episode is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Episode {episode_id} not found',
-        )
+    - episode_id: ID of the Episode to create the Title Card for.
+    """
 
-    # Get the associated series
-    series = db.query(models.series.Series)\
-        .filter_by(id=episode.series_id).first()
-    if series is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Series {episode.series_id} not found',
-        )
+    # Find associated Episode and Series, raise 404 if DNE
+    episode = get_episode(db, episode_id, raise_exc=True)
+    series = get_series(db, episode.series_id, raise_exc=True)
 
-    ...
+    # Set watch status of the Episode
+    _update_episode_watch_statuses(
+        emby_interface, jellyfin_interface, plex_interface, series, [episode]
+    )
+
+    # Create card for this Episode
+    _create_episode_card(db, preferences, None, series, episode)
 
 
 @card_router.get('/episode/{episode_id}', tags=['Episodes'])
@@ -573,8 +613,7 @@ def remake_card(
         # TODO other query options
         preferences = Depends(get_preferences),
         db = Depends(get_database),
-        plex_interface = Depends(get_plex_interface),
-        ) -> None:
+        plex_interface = Depends(get_plex_interface)) -> None:
     """
     Remake the Title Card for the item associated with the given Plex
     Rating Key. This item can be a Show, Season, or Episode.

@@ -7,16 +7,18 @@ from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Qu
 from modules.Debug import log
 from modules.SeriesInfo import SeriesInfo
 
-from app.dependencies import get_database, get_preferences, get_emby_interface,\
-    get_imagemagick_interface, get_jellyfin_interface, get_plex_interface, \
+from app.dependencies import (
+    get_database, get_preferences, get_emby_interface,
+    get_imagemagick_interface, get_jellyfin_interface, get_plex_interface,
     get_sonarr_interface, get_tmdb_interface
+)
 import app.models as models
-from app.routers.cards import priority_merge_v2
 from app.routers.episodes import get_episode
 from app.routers.series import get_series
 from app.routers.templates import get_template
 from app.schemas.base import UNSPECIFIED
 from app.schemas.episode import Episode, NewEpisode, UpdateEpisode
+from modules.TieredSettings import TieredSettings
 from modules.WebInterface import WebInterface
 
 
@@ -54,7 +56,7 @@ def download_source_image(
 
     # Resolve all settings from global -> episode
     image_source_settings = {}
-    priority_merge_v2(
+    TieredSettings(
         image_source_settings,
         {'image_source_priority': preferences.image_source_priority,
          'skip_localized_images': preferences.tmdb_skip_localized},
@@ -240,7 +242,7 @@ def download_series_logo(
 
     # Resolve all settings
     image_source_settings = {}
-    priority_merge_v2(
+    TieredSettings(
         image_source_settings,
         {'image_source_priority': preferences.image_source_priority},
         series_template_dict,
