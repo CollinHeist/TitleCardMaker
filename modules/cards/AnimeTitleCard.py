@@ -85,7 +85,7 @@ class AnimeTitleCard(BaseCardType):
         'font_file', 'font_kerning', 'font_size', 'font_stroke_width',
         'font_interline_spacing', 'font_vertical_shift', 'omit_gradient',
         'stroke_color', 'separator', 'kanji', 'use_kanji', 'require_kanji',
-        'kanji_vertical_shift',
+        'kanji_vertical_shift', 'episode_text_color',
     )
 
     def __init__(self, *,
@@ -106,6 +106,7 @@ class AnimeTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             kanji: SeriesExtra[str] = None,
+            episode_text_color: SeriesExtra[str] = SERIES_COUNT_TEXT_COLOR,
             separator: SeriesExtra[str] = '·',
             omit_gradient: SeriesExtra[bool] = False,
             require_kanji: SeriesExtra[bool] = False,
@@ -144,6 +145,7 @@ class AnimeTitleCard(BaseCardType):
         self.font_vertical_shift = font_vertical_shift
 
         # Optional extras
+        self.episode_text_color = episode_text_color
         self.separator = separator
         self.omit_gradient = omit_gradient
         self.stroke_color = stroke_color
@@ -311,8 +313,8 @@ class AnimeTitleCard(BaseCardType):
                 *self.__series_count_text_global_effects,
                 *self.__series_count_text_black_stroke,
                 f'-annotate +75+90 "{text}"',
-                f'-fill "{self.SERIES_COUNT_TEXT_COLOR}"',
-                f'-stroke "{self.SERIES_COUNT_TEXT_COLOR}"',
+                f'-fill "{self.episode_text_color}"',
+                f'-stroke "{self.episode_text_color}"',
                 f'-strokewidth 0',
                 f'-annotate +75+90 "{text}"',
             ]
@@ -335,8 +337,8 @@ class AnimeTitleCard(BaseCardType):
             f'-composite',
             # Primary season+episode text
             *self.__series_count_text_global_effects,
-            f'-fill "{self.SERIES_COUNT_TEXT_COLOR}"',
-            f'-stroke "{self.SERIES_COUNT_TEXT_COLOR}"',
+            f'-fill "{self.episode_text_color}"',
+            f'-stroke "{self.episode_text_color}"',
             f'\( -gravity center',
             # Season text and separator uses larger stroke
             f'-strokewidth 2',
