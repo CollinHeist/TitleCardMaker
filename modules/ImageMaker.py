@@ -197,7 +197,9 @@ class ImageMaker(ABC):
 
 
     @staticmethod
-    def convert_svg_to_png(image: Path, destination: Path,
+    def convert_svg_to_png(
+            image: Path,
+            destination: Path,
             min_dimension: int = 2500) -> Union[Path, None]:
         """
         Convert the given SVG image to PNG format.

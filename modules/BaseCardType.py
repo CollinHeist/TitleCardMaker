@@ -207,6 +207,8 @@ class BaseCardType(ImageMaker):
         """
 
         return [
+            # Use 4:4:4 sampling by default
+            f'-sampling-factor 4:4:4',
             # Full sRGB colorspace on source image
             f'-set colorspace sRGB',
             # Ignore profile conversion warnings
@@ -230,6 +232,8 @@ class BaseCardType(ImageMaker):
         """
 
         return [
+            # Use 4:4:4 sampling by default
+            f'-sampling-factor 4:4:4',
             # Full sRGB colorspace on source image
             f'-set colorspace sRGB',
             # Ignore profile conversion warnings
@@ -254,6 +258,8 @@ class BaseCardType(ImageMaker):
         """
 
         return [
+            # Use 4:4:4 sampling by default
+            f'-sampling-factor 4:4:4',
             # Full sRGB colorspace on source image
             f'-set colorspace sRGB',
             # Ignore profile conversion warnings
