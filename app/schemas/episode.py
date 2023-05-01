@@ -58,6 +58,7 @@ class NewEpisode(Base):
     tvrage_id: TVRageID = Field(default=None)
 
     extras: Optional[dict[str, Any]] = Field(default=None)
+    translations: dict[str, str] = Field(default={})
 
 """
 Update classes
@@ -102,6 +103,7 @@ class UpdateEpisode(Base):
     tvrage_id: TVRageID = Field(default=UNSPECIFIED)
     extra_keys: list[str] = Field(default=UNSPECIFIED)
     extra_values: list[Any] = Field(default=UNSPECIFIED)
+    translations: dict[str, str] = Field(default=UNSPECIFIED)
 
     @validator('*', pre=True)
     def validate_arguments(cls, v):
