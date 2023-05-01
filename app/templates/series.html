@@ -773,16 +773,8 @@
           $('#episode-extras-modal .field[data-value="extra-value"]').append(newValue);
         }
       }
-      // Assign functions to add/delete extra buttons
-      $('#episode-extras-modal .button[data-add-field="extras"]').on('click', () => {
-        const newKey = document.createElement('input');
-        newKey.name = 'extra_keys'; newKey.type = 'text';
-        const newValue = document.createElement('input');
-        newValue.name = 'extra_values'; newValue.type = 'text';
-        $(`#episode-extras-modal .field[data-value="extra-key"]`).append(newKey);
-        $(`#episode-extras-modal .field[data-value="extra-value"]`).append(newValue);
-      });
-      $('#episode-extras-modal .button[data-delete-field="extras"]').on('click', () => {
+      // Assign functions to delete extra buttons
+      $('#episode-extras-modal .button[data-delete-field="extras"]').off('click').on('click', () => {
         deleteObject({
           url: `/api/episodes/${episode.id}`,
           dataObject: {extra_keys: null, extra_values: null},
@@ -793,7 +785,7 @@
       // Show modal
       $('#episode-extras-modal').modal('show');
       // Submit episode extras form
-      $('#episode-extras-form').on('submit', event => {
+      $('#episode-extras-form').off('submit').on('submit', event => {
         event.preventDefault();
         if (!$('#episode-extras-form').form('is valid')) { return; }
         const translationKeys = $('#episode-extras-modal input[name="translation_key"]');
@@ -801,9 +793,10 @@
         const data = {
           extra_keys: $('#episode-extras-modal input[name="extra_keys"]').map((ind, element) => element.value).toArray(),
           extra_values: $('#episode-extras-modal input[name="extra_values"]').map((ind, element) => element.value).toArray(),
-          translations: Object.assign(...translationKeys.map((k, i) => ({ [i.value]: translationValues[k].value }))),
         };
-        console.log(data);
+        if (translationKeys.length) { 
+          data.translations = Object.assign(...translationKeys.map((k, i) => ({ [i.value]: translationValues[k].value })));
+        }
         $.ajax({
           type: 'PATCH',
           url: `/api/episodes/${episode.id}`,
@@ -1465,6 +1458,7 @@
 
                   <!-- Extras -->
                   <div class="ui field">
+                    <label>Extras</label>
                     <div class="two fields">
                       <div data-value="extra-key" class="four wide right aligned field">
                         <label>Key</label>
@@ -1995,6 +1989,15 @@
           rules: [{type: 'regExp', value: /^[a-z]+[^ ]*$/i}],
         },
       }
+    });
+    // Add episode extra button press
+    $('#episode-extras-modal .button[data-add-field="extras"]').on('click', () => {
+      const newKey = document.createElement('input');
+      newKey.name = 'extra_keys'; newKey.type = 'text';
+      const newValue = document.createElement('input');
+      newValue.name = 'extra_values'; newValue.type = 'text';
+      $(`#episode-extras-modal .field[data-value="extra-key"]`).append(newKey);
+      $(`#episode-extras-modal .field[data-value="extra-value"]`).append(newValue);
     });
 
     // Delete season titles/translations/extras on button press
