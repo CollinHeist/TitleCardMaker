@@ -203,7 +203,9 @@ class EpisodeInfo(DatabaseInfoContainer):
         """
 
         # Create EpisodeInfo for this Episode
-        episode_info = EpisodeInfo(ep.title, ep.parentIndex, ep.index)
+        episode_info = EpisodeInfo(
+            plex_episode.title, plex_episode.parentIndex, plex_episode.index
+        )
 
         # Add any GUIDs as database ID's
         for guid in plex_episode.guids:

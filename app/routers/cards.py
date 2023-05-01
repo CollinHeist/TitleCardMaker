@@ -454,14 +454,14 @@ def create_cards_for_series(
         else:
             plex_interface.update_watched_statuses(
                 series.plex_library_name, series.as_series_info, episodes,
-            ) 
+            )
 
     stats = {'deleted': 0, 'invalid': 0, 'creating': 0}
     for episode in episodes:
+        # Create this flag, get status flags
         flags = _create_episode_card(
             db, preferences, background_tasks, series, episode
         )
-        log.critical(f'{flags=}')
         for flag in flags:
             stats[flag] += 1
 
@@ -566,15 +566,21 @@ def get_episode_card(
     return db.query(models.card.Card).filter_by(episode_id=episode_id).all()
 
 
-@card_router.post('/remake', tags=['Plex', 'Tautulli'], status_code=200)
+@card_router.post('/key', tags=['Plex', 'Tautulli'], status_code=200)
 def remake_card(
-        plex_rating_key: Optional[int] = Query(default=None),
+        background_tasks: BackgroundTasks,
+        plex_rating_key: Optional[int] = Body(default=None),
         # TODO other query options
+        preferences = Depends(get_preferences),
         db = Depends(get_database),
         plex_interface = Depends(get_plex_interface),
         ) -> None:
     """
+    Remake the Title Card for the item associated with the given Plex
+    Rating Key. This item can be a Show, Season, or Episode.
 
+    - plex_rating_key: Unique key within Plex that identifies the item
+    to remake the card of.
     """
 
     # No key provided, exit
@@ -596,16 +602,27 @@ def remake_card(
             status_code=404,
             detail=f'Rating key {plex_rating_key} is invalid'
         )
+    log.debug(f'Identified {len(details)} entries from RatingKey={plex_rating_key}')
 
     Episode = models.episode.Episode
-    for series_info, episode_info, library_name in details:
+    for library_name, series_info, episode_info, watched_status in details:
         # Try and find Episode
         episode = db.query(Episode).filter(
             or_(
-                Episode.imdb_id==episode_info.imdb_id,
-                Episode.tmdb_id==episode_info.tmdb_id,
-                Episode.tvdb_id==episode_info.tvdb_id,
-                Episode.tvrage_id==episode_info.tvrage_id,
+                # Find by database ID
+                or_(
+                    Episode.imdb_id==episode_info.imdb_id,
+                    Episode.tmdb_id==episode_info.tmdb_id,
+                    Episode.tvdb_id==episode_info.tvdb_id,
+                    Episode.tvrage_id==episode_info.tvrage_id,
+                ),
+                # Find by index and title
+                and_(
+                    Episode.season_number==episode_info.season_number,
+                    Episode.episode_number==episode_info.episode_number,
+                    # TODO Maybe not title match?
+                    Episode.title==episode_info.title.full_title,
+                ),
             )
         ).first()
 
@@ -615,5 +632,25 @@ def remake_card(
             ...
         # Episode exists, update card
         else:
-            # TODO update card
-            ...
+            # Get this Episode's associated Series
+            series = db.query(models.series.Series)\
+                .filter_by(id=episode.series_id).first()
+
+            # If this Series does not exist, raise 404
+            if series is None:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f'Episode[{episode.id}] has no associated Series',
+                )
+
+            # Update Episode watched status
+            if episode.watched != watched_status:
+                episode.watched = watched_status
+                db.commit()
+
+            # Create card
+            _create_episode_card(
+                db, preferences, background_tasks, series, episode
+            )
+
+    return None

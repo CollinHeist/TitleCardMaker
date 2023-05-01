@@ -1,3 +1,4 @@
+from collections import namedtuple
 from datetime import datetime, timedelta
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
@@ -20,6 +21,11 @@ from modules.PersistentDatabase import PersistentDatabase
 from modules.SeriesInfo import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
+
+EpisodeDetails = namedtuple(
+    'EpisodeDetails',
+    ('library_name', 'series_info', 'episode_info', 'watched_status')
+)
 
 class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     """This class describes an interface to Plex."""
@@ -723,20 +729,21 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     @catch_and_log('Error getting episode details')
-    def get_episode_details(self,
-            rating_key: int) -> list[tuple[SeriesInfo, EpisodeInfo, str]]:
+    def get_episode_details(self, rating_key: int) -> list[EpisodeDetails]:
         """
-        Get all details for all episodes indicated by the given Plex rating key.
+        Get all details for all episodes indicated by the given Plex
+        rating key.
 
         Args:
             rating_key: Rating key used to fetch the item within Plex.
 
         Returns:
-            List of tuples of the SeriesInfo, EpisodeInfo, and the library name
-            corresponding to the given rating key. If the object associated with
-            the rating key is a show/season, then all contained episodes are
-            detailed. An empty list is returned if the item(s) associated with
-            the given key cannot be found.
+            List of tuples of the library name, SeriesInfo, EpisodeInfo,
+            and the episode watch status corresponding to the given
+            rating key. If the object associated with the rating key is
+            a show/season, then all contained episodes are detailed.
+            An empty list is returned if the item(s) associated with the
+            given key cannot be found.
         """
 
         try:
@@ -748,12 +755,12 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 assert entry.year is not None
                 series_info = SeriesInfo(entry.title, entry.year)
 
-                return [
-                    (series_info,
-                     EpisodeInfo.from_plex_episode(ep),
-                     entry.librarySectionTitle)
-                    for ep in entry.episodes()
-                ]
+                return [EpisodeDetails(
+                    entry.librarySectionTitle,
+                    series_info,
+                    EpisodeInfo.from_plex_episode(ep),
+                    ep.isWatched
+                ) for ep in entry.episodes()]
             # New season, return all episodes in season
             elif entry.type == 'season':
                 # Get series associated with this season
@@ -761,28 +768,24 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 if series.year is None:
                     raise ValueError
 
-                series_info = self.info_set.get_series_info(
-                    entry.title, entry.year
-                )
-
-                return [
-                    (series_info,
-                     EpisodeInfo.from_plex_episode(ep),
-                     series.librarySectionTitle)
-                    for ep in entry.episodes()
-                ]
+                series_info = SeriesInfo(entry.title, entry.year)
+                return [EpisodeDetails(
+                    series.librarySectionTitle,
+                    series_info,
+                    EpisodeInfo.from_plex_episode(ep),
+                    ep.isWatched
+                ) for ep in entry.episodes()]
             # New episode, return just that
             elif entry.TYPE == 'episode':
                 series = self.__server.fetchItem(entry.grandparentKey)
                 assert series.year is not None
-                series_info = self.info_set.get_series_info(
-                    entry.grandparentTitle, series.year
-                )
 
-                return [(
+                series_info = SeriesInfo(entry.grandparentTitle, series.year)
+                return [EpisodeDetails(
+                    entry.librarySectionTitle,
                     series_info,
                     EpisodeInfo.from_plex_episode(entry),
-                    entry.librarySectionTitle,
+                    entry.isWatched,
                 )]
             # Movie, warn and return empty list
             elif entry.type == 'movie':
@@ -793,7 +796,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         except ValueError:
             log.warning(f'Item with rating key {rating_key} has no year')
         except Exception as e:
-            log.error(f'Rating key {rating_key} has some error')
+            log.exception(f'Rating key {rating_key} has some error', e)
 
         # Error occurred, return empty list
         return []

@@ -946,7 +946,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
 
     @catch_and_log('Error setting series poster', default=None)
-    def get_series_poster(self, series_info: SeriesInfo) -> Union[str, None]:
+    def get_series_poster(self, series_info: SeriesInfo) -> Optional[str]:
         """
         Get the best poster for the given series.
 
