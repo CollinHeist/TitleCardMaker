@@ -189,7 +189,9 @@
           <input name="font_vertical_shift" placeholder="Default">
         </div>
       </td>
-      <td data-column="extras" class="center aligned collapsing"></td>
+      <td data-column="extras" class="selectable">
+        <a><i class="ui eye outline icon"></i></a>
+      </td>
       <td data-column="source_file" class="center aligned collapsing">
         <div class="ui transparent short input">
           <input name="source_file" type="text" placeholder="Default">
@@ -237,6 +239,9 @@
         </div>
       </td>
       {% endif %}
+      <td data-column="delete" class="selectable">
+        <a><i class="ui red trash alternate outline icon"></i></a>
+      </td>
     </tr>
   </template>
 
@@ -505,6 +510,28 @@
         }, complete: () => {}
       });
     }
+
+    async function deleteEpisode(id) {
+      $.ajax({
+        type: 'DELETE',
+        url: `/api/episodes/${id}`,
+        success: (response) => {
+          $.toast({
+            class: 'blue info',
+            title: `Deleted Episode`,
+          });
+          getEpisodeData();
+          getStatistics();
+        }, error: (response) => {
+          $.toast({
+            class: 'error',
+            title: 'Error Deleting Episode',
+            message: response.responseJSON.detail,
+            displayTime: 0,
+          });
+        }, complete: () => {}
+      });
+    }
   </script>
 </head>
 
@@ -690,6 +717,115 @@
       });
     }
 
+    async function deleteObject(args) {
+      const {url, dataObject, label, deleteElements} = args;
+      $.ajax({
+        type: 'PATCH',
+        url: url,
+        data: JSON.stringify(dataObject),
+        contentType: 'application/json',
+        success: (response) => {
+          $.toast({
+            class: 'blue info',
+            title: `Deleted ${label}`,
+          });
+          $(deleteElements).remove();
+        }, error: (response) => {
+          $.toast({
+            class: 'error',
+            title: `Error Deleting ${label}`,
+            message: response.responseJSON.detail,
+            displayTime: 0,
+          });
+        }, complete: () => {}
+      });
+    }
+
+    async function editEpisodeExtras(episode) {
+      // Clear existing values
+      $('#episode-extras-modal input').remove();
+      // Add existing translations
+      for (let [data_key, value] of Object.entries(episode.translations)) {
+        const newKey = document.createElement('input');
+        newKey.name = 'translation_key'; newKey.value = data_key;
+        const newValue = document.createElement('input');
+        newValue.name = 'translation_value'; newValue.value = value;
+        $('#episode-extras-modal .field[data-value="translation-key"]').append(newKey);
+        $('#episode-extras-modal .field[data-value="translation-value"]').append(newValue);
+      }
+      // Assign functions to add/delete translation buttons
+      $('#episode-extras-modal .button[data-delete-field="translations"]').on('click', () => {
+        deleteObject({
+          url: `/api/episodes/${episode.id}`,
+          dataObject: {translations: {}},
+          label: 'Translations',
+          deleteElements: '#episode-extras-modal .field[data-value="translations"] input',
+        });
+      });
+      // Add existing extras
+      if (episode.extras !== null) {
+        for (let [key, value] of Object.entries(episode.extras)) {
+          const newKey = document.createElement('input');
+          newKey.name = 'extra_keys'; newKey.value = key;
+          const newValue = document.createElement('input');
+          newValue.name = 'extra_values'; newValue.value = value;
+          $('#episode-extras-modal .field[data-value="extra-key"]').append(newKey);
+          $('#episode-extras-modal .field[data-value="extra-value"]').append(newValue);
+        }
+      }
+      // Assign functions to add/delete extra buttons
+      $('#episode-extras-modal .button[data-add-field="extras"]').on('click', () => {
+        const newKey = document.createElement('input');
+        newKey.name = 'extra_keys'; newKey.type = 'text';
+        const newValue = document.createElement('input');
+        newValue.name = 'extra_values'; newValue.type = 'text';
+        $(`#episode-extras-modal .field[data-value="extra-key"]`).append(newKey);
+        $(`#episode-extras-modal .field[data-value="extra-value"]`).append(newValue);
+      });
+      $('#episode-extras-modal .button[data-delete-field="extras"]').on('click', () => {
+        deleteObject({
+          url: `/api/episodes/${episode.id}`,
+          dataObject: {extra_keys: null, extra_values: null},
+          label: 'Extras',
+          deleteElements: '#episode-extras-modal .field[data-value="extras"] input',
+        });
+      });
+      // Show modal
+      $('#episode-extras-modal').modal('show');
+      // Submit episode extras form
+      $('#episode-extras-form').on('submit', event => {
+        event.preventDefault();
+        if (!$('#episode-extras-form').form('is valid')) { return; }
+        const translationKeys = $('#episode-extras-modal input[name="translation_key"]');
+        const translationValues = $('#episode-extras-modal input[name="translation_value"]');
+        const data = {
+          extra_keys: $('#episode-extras-modal input[name="extra_keys"]').map((ind, element) => element.value).toArray(),
+          extra_values: $('#episode-extras-modal input[name="extra_values"]').map((ind, element) => element.value).toArray(),
+          translations: Object.assign(...translationKeys.map((k, i) => ({ [i.value]: translationValues[k].value }))),
+        };
+        console.log(data);
+        $.ajax({
+          type: 'PATCH',
+          url: `/api/episodes/${episode.id}`,
+          data: JSON.stringify(data),
+          contentType: 'application/json',
+          success: (response) => {
+            $.toast({
+              class: 'blue info',
+              title: `Updated Episode`,
+            });
+          }, error: (response) => {
+            $.toast({
+              class: 'error',
+              title: `Error Updating Episode`,
+              message: response.responseJSON.detail,
+              displayTime: 0,
+            });
+          }, complete: () => {}
+        });
+      });
+    }
+
     async function getEpisodeData() {
       // Get the parent table
       let episodeTable = document.getElementById('episode-data-table');
@@ -748,7 +884,7 @@
         row.querySelector('input[name="font_stroke_width"]').value = episode.font_stroke_width;
         row.querySelector('input[name="font_interline_spacing"]').value = episode.font_interline_spacing;
         row.querySelector('input[name="font_vertical_shift"]').value = episode.font_vertical_shift;
-          // Extras
+        row.querySelector('td[data-column="extras"] a').onclick = () => editEpisodeExtras(episode);
         row.querySelector('input[name="source_file"]').value = episode.source_file;
         row.querySelector('input[name="card_file"]').value = episode.card_file;
         row.querySelector('td[data-column="watched"]').innerHTML = getIcon(episode.watched, false);
@@ -761,7 +897,7 @@
         row.querySelector('input[name="tvdb_id"]').value = episode.tvdb_id;
         const tvrageIdInput = row.querySelector('input[name="tvrage_id"]')
         if (tvrageIdInput != null) { tvrageIdInput.value = episode.tvrage_id; }
-
+        row.querySelector('td[data-column="delete"] a').onclick = () => deleteEpisode(episode.id);
         return row;
       });
       episodeTable.replaceChildren(...rows);
@@ -1221,7 +1357,7 @@
                     </div>
                   </div>
 
-                  <!-- Font interlnie spacing, vertical shift -->
+                  <!-- Font interline spacing, vertical shift -->
                   <div class="two fields">
                     <div class="field">
                       <label>Interline Spacing</label>
@@ -1435,6 +1571,7 @@
                     {% if series.year < 2017 %}
                     <th class="collapsing">TVRage<br>ID</th>
                     {% endif %}
+                    <th class="collapsing">Delete</th>
                   </tr>
                 </thead>
                 <tbody id="episode-data-table" ><!-- Rows added asynchronously --></tbody>
@@ -1636,6 +1773,64 @@
       </div>
     </div>
 
+    <!-- Episode extras/translations modal -->
+    <div id="episode-extras-modal" class="ui small modal">
+      <i class="close icon"></i>
+      <div class="header">Episode Translations and Extras</div>
+      <div class="content">
+        <form id="episode-extras-form" class="ui form">
+          <div data-value="translations" class="ui field">
+            <label>Translations</label>
+            <div class="two fields">
+              <div data-value="translation-key" class="right aligned field">
+                <label>Key</label>
+                <!-- <input name="extra_keys" type="text"> -->
+              </div>
+              <div data-value="translation-value" class="fluid field">
+                <label>Value</label>
+                <!-- <input name="extra_values" type="text"> -->
+              </div>
+            </div>
+          </div>
+          <div data-delete-field="translations" class="ui circular mini icon add-field red button">
+            <i class="trash alternate outline icon"></i>
+            Delete Translations
+          </div>
+          <div class="ui divider"></div>
+          <div data-value="extras" class="ui field">
+            <label>Extras</label>
+            <div class="two fields">
+              <div data-value="extra-key" class="right aligned field">
+                <label>Key</label>
+                <!-- <input name="extra_keys" type="text"> -->
+              </div>
+              <div data-value="extra-value" class="fluid field">
+                <label>Value</label>
+                <!-- <input name="extra_values" type="text"> -->
+              </div>
+            </div>
+          </div>
+          <div data-add-field="extras" class="ui circular mini icon add-field button">
+            <i class="plus square outline icon"></i>
+            Add Extra
+          </div>
+          <div data-delete-field="extras" class="ui circular mini icon add-field red button">
+            <i class="trash alternate outline icon"></i>
+            Delete Extras
+          </div>
+        </form>
+      </div>
+      <div class="actions">
+        <button class="ui cancel button">Cancel</button>
+        <button form="episode-extras-form" class="ui animated primary button" type="submit">
+          <div class="visible content">Save</div>
+          <div class="hidden content">
+            <i class="right arrow icon"></i>
+          </div>
+        </button>
+      </div>
+    </div>
+
     <!-- Season title helper popup -->
     <div id="season-title-popup" class="ui fluid popup right">
       <div class="ui list content">
@@ -1784,7 +1979,23 @@
           rules: [{type: 'minLength[1]'}],
         },
       },
-    })
+    });
+
+    // Add episode extras form validation
+    $('#episode-extras-form').form({
+      on: 'blur',
+      inline: true,
+      fields: {
+        translation_key: {
+          rules: [{type: 'regExp', value: /^[a-z]+[^ ]*$/i}],
+        }, translation_value: {
+          rules: [{type: 'minLength[1]'}],
+        }, extra_keys: {
+          optional: true,
+          rules: [{type: 'regExp', value: /^[a-z]+[^ ]*$/i}],
+        },
+      }
+    });
 
     // Delete season titles/translations/extras on button press
     function deleteListValues(attribute) {
