@@ -114,11 +114,12 @@
     }
 
     async function runTask(taskId) {
+      $.toast({class: 'blue info', title: `Running Task ${taskId}`});
       $.ajax({
         type: 'POST',
         url: `/api/schedule/${taskId}`,
         success: (response) => {
-          $.toast({class: 'blue info', title: `Running Task ${taskId}`});
+          $.toast({class: 'blue info', title: `Task ${taskId} Completed`});
         }, error: (response) => {
           $.toast({
             class: 'error',
@@ -126,7 +127,10 @@
             message: response.responseJSON.detail,
             displayTime: 0,
           });
-        }, complete: () => {}
+        }, complete: () => {
+          // Turn off loading indication
+          $(`tr[data-id="${taskId}"] td[data-column="runTask"] i`).toggleClass('blue loading', false);
+        }
       });
     }
 
@@ -139,7 +143,18 @@
       const rows = allTasks.map(task => {
         const row = rowTemplate.content.cloneNode(true);
         row.querySelector('tr').dataset.id = task.id;
-        row.querySelector('td[data-column="runTask"] a').onclick = () => runTask(task.id);
+        if (task.running) {
+          // Do not make this column selectable
+          row.querySelector('td[data-column="runTask"]').className = 'center aligned';
+          // Put icon in loading state
+          row.querySelector('td[data-column="runTask"] i').className = 'blue loading sync icon';
+        } else {
+          // Task is not currently running, allow it to be run via click
+          row.querySelector('td[data-column="runTask"] a').onclick = () => {
+            $(`tr[data-id="${task.id}"] td[data-column="runTask"] i`).toggleClass('blue loading', true);
+            runTask(task.id);
+          }
+        }
         row.querySelector('td[data-column="description"]').innerHTML = task.description;
         row.querySelector('td[data-column="frequency"]').innerHTML = `<span contenteditable="true">${timeFreqString(task.frequency)}</span>`;
         row.querySelector('td[data-column="next_run"]').innerHTML = `in ${timeDiffString(task.next_run)}`;

@@ -8,10 +8,14 @@ from app.schemas.base import Base
 Base classes
 """
 class NewJob(Base):
-    id: str
+    id: str = Field(description='Unique ID of the Job')
     function: Callable[..., Any]
-    seconds: int
-    description: str
+    seconds: PositiveInt = Field(description='How often (in seconds) to run this Job')
+    description: str = Field(description='Description of the Job')
+    running: bool = Field(
+        default=False,
+        description='Whether this Job is currently running'
+    )
 
 """
 Update classes
@@ -31,3 +35,4 @@ class ScheduledTask(Base):
     description: str = Field(description='Description of the Task')
     frequency: int = Field(description='How often (in seconds) the Task runs')
     next_run: str = Field(description='Next runtime for the Task')
+    running: bool = Field(description='Whether this Task is currently running')

@@ -1,9 +1,11 @@
 from typing import Any, Literal, Optional, Union
 
+from apscheduler.events import EVENT_JOB_SUBMITTED, EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
 from fastapi import APIRouter, Body, Depends, Form, HTTPException
 
 from app.dependencies import get_scheduler, get_preferences
 import app.models as models
+from app.routers.cards import create_all_title_cards
 from app.routers.episodes import refresh_all_episode_data
 from app.routers.sync import sync_all
 from app.schemas.base import Base, UNSPECIFIED
@@ -12,7 +14,10 @@ from app.schemas.schedule import NewJob, ScheduledTask, UpdateInterval
 from modules.Debug import log
 
 def fake_func():
-    log.debug(f'Running fake function')
+    log.debug(f'Starting fake function')
+    from time import sleep
+    sleep(5)
+    log.debug(f'Ending fake function')
 
 # Create sub router for all /schedule API requests
 schedule_router = APIRouter(
@@ -52,8 +57,8 @@ BaseJobs = {
         description='Download source images for Title Cards',
     ), JOB_CREATE_TITLE_CARDS: NewJob(
         id=JOB_CREATE_TITLE_CARDS,
-        function=fake_func,
-        seconds=60 * 60 * 4,
+        function=create_all_title_cards,
+        seconds=60 * 60 * 6,
         description='Create all missing or updated Title Cards',
     ), JOB_LOAD_MEDIA_SERVERS: NewJob(
         id=JOB_LOAD_MEDIA_SERVERS,
@@ -77,6 +82,18 @@ def initialize_scheduler() -> None:
             )
 initialize_scheduler()
 
+# Add listener to update running status of jobs
+def job_started_listener(event):
+    log.debug(f'Task[{event.job_id}] Started execution')
+    BaseJobs.get(event.job_id).running = True
+
+def job_finished_listener(event):
+    log.debug(f'Task[{event.job_id}] Finished execution')
+    BaseJobs.get(event.job_id).running = False
+
+get_scheduler().add_listener(job_started_listener, EVENT_JOB_SUBMITTED)
+get_scheduler().add_listener(job_finished_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR)
+
 
 def _scheduled_task_from_job(job) -> ScheduledTask:
     """
@@ -94,6 +111,7 @@ def _scheduled_task_from_job(job) -> ScheduledTask:
         frequency=job.trigger.interval.total_seconds(),
         next_run=str(job.next_run_time),
         description=BaseJobs.get(job.id).description,
+        running=BaseJobs.get(job.id).running,
     )
 
 
