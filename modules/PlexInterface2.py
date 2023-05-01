@@ -750,7 +750,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
                 return [
                     (series_info,
-                     EpisodeInfo(ep.title, ep.parentIndex, ep.index),
+                     EpisodeInfo.from_plex_episode(ep),
                      entry.librarySectionTitle)
                     for ep in entry.episodes()
                 ]
@@ -767,7 +767,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
                 return [
                     (series_info,
-                     EpisodeInfo(ep.title, entry.index, ep.index),
+                     EpisodeInfo.from_plex_episode(ep),
                      series.librarySectionTitle)
                     for ep in entry.episodes()
                 ]
@@ -781,7 +781,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
                 return [(
                     series_info,
-                    EpisodeInfo(entry.title, entry.parentIndex, entry.index),
+                    EpisodeInfo.from_plex_episode(entry),
                     entry.librarySectionTitle,
                 )]
             # Movie, warn and return empty list

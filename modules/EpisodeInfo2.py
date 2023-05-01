@@ -189,6 +189,34 @@ class EpisodeInfo(DatabaseInfoContainer):
         return season_match and episode_match
 
 
+    @staticmethod
+    def from_plex_episode(plex_episode: 'plexapi.video.Episode') -> 'EpisodeInfo':
+        """
+        Create an EpisodeInfo object from a plexapi Episode object.
+
+        Args:
+            plex_episode: Episode to create an object from. Any
+                available GUID's are utilized.
+
+        Returns:
+            EpisodeInfo object encapsulating the given Episode.
+        """
+
+        # Create EpisodeInfo for this Episode
+        episode_info = EpisodeInfo(ep.title, ep.parentIndex, ep.index)
+
+        # Add any GUIDs as database ID's
+        for guid in plex_episode.guids:
+            if 'imdb://' in guid.id:
+                episode_info.set_imdb_id(guid.id[len('imdb://'):])
+            elif 'tmdb://' in guid.id:
+                episode_info.set_tmdb_id(int(guid.id[len('tmdb://'):]))
+            elif 'tvdb://' in guid.id:
+                episode_info.set_tvdb_id(int(guid.id[len('tvdb://'):]))
+
+        return episode_info
+
+
     @property
     def has_all_ids(self) -> bool:
         """Whether this object has all ID's defined"""
