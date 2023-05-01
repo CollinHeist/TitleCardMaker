@@ -81,10 +81,8 @@ def _translate_episode(
             log.debug(f'Episode[{episode.id}] Translated {episode_info} {language_code} -> "{translation}" -> {data_key}')
             changed = True
 
-    # If any translations were added, delete existing card, and then
-    # commit updates to database
+    # If any translations were added, commit updates to database
     if changed:
-        db.query(models.card.Card).filter_by(episode_id=episode.id).delete()
         db.commit()
 
 
