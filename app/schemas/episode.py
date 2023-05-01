@@ -101,8 +101,9 @@ class UpdateEpisode(Base):
     tmdb_id: TMDbID = Field(default=UNSPECIFIED)
     tvdb_id: TVDbID = Field(default=UNSPECIFIED)
     tvrage_id: TVRageID = Field(default=UNSPECIFIED)
-    extra_keys: list[str] = Field(default=UNSPECIFIED)
-    extra_values: list[Any] = Field(default=UNSPECIFIED)
+
+    extra_keys: Optional[list[str]] = Field(default=UNSPECIFIED)
+    extra_values: Optional[list[Any]] = Field(default=UNSPECIFIED)
     translations: dict[str, str] = Field(default=UNSPECIFIED)
 
     @validator('*', pre=True)
