@@ -1938,20 +1938,20 @@
         },
         font_size: {
           optional: true,
-          rules: [{type: 'minValue[0]'}],
-        }, //font_kerning: {
-        //   optional: true,
-        //   rules: [{type: 'number'}],
-        // }, font_stroke_width: {
-        //   optional: true,
-        //   rules: [{type: 'number'}],
-        // }, font_interline_spacing: {
-        //   optional: true,
-        //   rules: [{type: 'number'}],
-        // }, font_vertical_shift: {
-        //   optional: true,
-        //   rules: [{type: 'number'}],
-        // },
+          rules: [{type: 'number', value: 'minValue[1]'}],
+        }, font_kerning: {
+          optional: true,
+          rules: [{type: 'number'}],
+        }, font_stroke_width: {
+          optional: true,
+          rules: [{type: 'number'}],
+        }, font_interline_spacing: {
+          optional: true,
+          rules: [{type: 'number', value: 'integer'}],
+        }, font_vertical_shift: {
+          optional: true,
+          rules: [{type: 'number', value: 'integer'}],
+        },
         season_title_ranges: {
           optional: true,
           rules: [{type: 'regExp', value: /^(\d+-\d+)|^(\d+)|^(s\d+e\d+-s\d+e\d+)$/i}]
