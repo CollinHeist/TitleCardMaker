@@ -535,6 +535,36 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return response
 
 
+    def get_series_logo(self, series_info: SeriesInfo) -> SourceImage:
+        """
+        Get the logo for the given Series within Jellyfin.
+
+        Args:
+            series_info: The Series to get the logo of.
+
+        Returns:
+            Bytes of the logo for given Series. None if the Series does
+            not exist in Jellyfin, or no valid image was returned.
+        """
+
+        if not series_info.has_id('jellyfin_id'):
+            log.warning(f'Series not found in Jellyfin {series_info!r}')
+            return None
+
+        # Get the source image for this episode
+        response = self.session.session.get(
+            f'{self.url}/Items/{episode_info.jellyfin_id}/Images/Logo',
+            params={'Quality': 100} | self.__params,
+        ).content
+
+        # Check if valid content was returned
+        if b'does not have an image of type' in response:
+            log.warning(f'Episode {episode_info} has no logo')
+            return None 
+
+        return response
+
+
     def get_libraries(self) -> list[str]:
         """
         Get the names of all libraries within this server.
