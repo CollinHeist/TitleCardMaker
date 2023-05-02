@@ -11,7 +11,41 @@ import app.models as models
 from app.routers.episodes import get_episode
 from app.routers.series import get_series
 from app.routers.templates import get_template
-from app.schemas.base import UNSPECIFIED
+
+
+def translate_all_series():
+    """
+    Schedule-able function to add missing translations to all Series and
+    Episodes in the Database.
+    """
+
+    try:
+        # Get the Database
+        with next(get_database()) as db:
+            # Get all Series
+            all_series = db.query(models.series.Series).all()
+            for series in all_series:
+                # TODO skip unmonitored Series
+                # Get the Series Template
+                try:
+                    series_template = get_template(
+                        db, series.template_id, raise_exc=True
+                    )
+                except Exception as e:
+                    log.warning(f'Skipping {series.as_series_info} - missing Template')
+                    continue
+
+                # Get all Episodes of this Series
+                episodes = db.query(models.episode.Episode)\
+                    .filter_by(series_id=series.id).all()
+                
+                # Translate each Episode
+                for episode in episodes:
+                    _translate_episode(
+                        db, series, series_template,episode,get_tmdb_interface()
+                    )
+    except Exception as e:
+        log.exception(f'Failed to add translations', e)
 
 
 translation_router = APIRouter(
@@ -48,7 +82,7 @@ def _translate_episode(
     except HTTPException:
         log.warning(f'Episode[{episode.id}] Not translating {episode_info}'
                     f' - missing Template')
-        return
+        return None
 
     # Get translations for this episode, exit if no translation
     if episode_template is not None and episode_template.translations:
@@ -58,8 +92,7 @@ def _translate_episode(
     elif series_template is not None and series_template.translations:
         translations = series_template.translations
     else:
-        log.debug(f'Episode[{episode.id}] Has no translation {episode_info}')
-        return
+        return None
 
     # Look for and add each translation for this Episode
     changed = False
@@ -69,7 +102,7 @@ def _translate_episode(
 
         # Skip if this translation already exists
         if data_key in episode.translations:
-            log.debug(f'Episode[{episode.id}] Already has "{data_key}" - skipping')
+            log.debug(f'{series.as_series_info} {episode_info} Already has "{data_key}" - skipping')
             continue
 
         # Get new translation from TMDb, add to Episode
@@ -78,7 +111,7 @@ def _translate_episode(
         )
         if translation is not None:
             episode.translations[data_key] = translation
-            log.debug(f'Episode[{episode.id}] Translated {episode_info} {language_code} -> "{translation}" -> {data_key}')
+            log.debug(f'{series.as_series_info} {episode_info} Translated {episode_info} {language_code} -> "{translation}" -> {data_key}')
             changed = True
 
     # If any translations were added, commit updates to database

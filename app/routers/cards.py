@@ -402,7 +402,6 @@ def create_preview_card(
     font = {
         'color': CardClass.TITLE_COLOR,
         'title_case': CardClass.DEFAULT_FONT_CASE,
-        # 'replacements': CardClass.FONT_REPLACEMENTS,
         'file': CardClass.TITLE_FONT,
         'size': 1.0,
     }
@@ -480,14 +479,14 @@ def create_cards_for_series(
     - series_id: ID of the Series to create Title Cards for.
     """
 
-    # Get this series, raise 404 if DNE
+    # Get this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    # Get all episodes for this series
+    # Get all Episodes for this Series
     episodes = db.query(models.episode.Episode)\
         .filter_by(series_id=series_id).all()
 
-    # Set watch statuses of the episodes
+    # Set watch statuses of the Episodes
     _update_episode_watch_statuses(
         emby_interface, jellyfin_interface, plex_interface, series, episodes
     )
@@ -609,7 +608,7 @@ def get_episode_card(
 @card_router.post('/key', tags=['Plex', 'Tautulli'], status_code=200)
 def remake_card(
         background_tasks: BackgroundTasks,
-        plex_rating_key: Optional[int] = Body(default=None),
+        plex_rating_key: int = Body(...),
         # TODO other query options
         preferences = Depends(get_preferences),
         db = Depends(get_database),
@@ -621,10 +620,6 @@ def remake_card(
     - plex_rating_key: Unique key within Plex that identifies the item
     to remake the card of.
     """
-
-    # No key provided, exit
-    if plex_rating_key is None:
-        return None
 
     # Key provided, no PlexInterface, raise 409
     if plex_interface is None:

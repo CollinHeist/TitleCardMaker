@@ -1,4 +1,4 @@
-from typing import Any, Literal, Optional, Union
+from typing import Any, Callable, Literal, Optional, Union
 
 from apscheduler.events import EVENT_JOB_SUBMITTED, EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
 from fastapi import APIRouter, Body, Depends, Form, HTTPException
@@ -8,6 +8,7 @@ import app.models as models
 from app.routers.cards import create_all_title_cards
 from app.routers.episodes import refresh_all_episode_data
 from app.routers.sync import sync_all
+from app.routers.translate import translate_all_series
 from app.schemas.base import Base, UNSPECIFIED
 from app.schemas.schedule import NewJob, ScheduledTask, UpdateInterval
 
@@ -32,32 +33,66 @@ JOB_SYNC_INTERFACES: str = 'SyncInterfaces'
 JOB_DOWNLOAD_SOURCE_IMAGES: str = 'DownloadSourceImages'
 JOB_CREATE_TITLE_CARDS: str = 'CreateTitleCards'
 JOB_LOAD_MEDIA_SERVERS: str = 'LoadMediaServers'
+JOB_ADD_TRANSLATIONS: str = 'AddMissingTranslations'
 
 TaskID = Literal[
     JOB_REFRESH_EPISODE_DATA, JOB_SYNC_INTERFACES, JOB_DOWNLOAD_SOURCE_IMAGES,
-    JOB_CREATE_TITLE_CARDS, JOB_LOAD_MEDIA_SERVERS
+    JOB_CREATE_TITLE_CARDS, JOB_LOAD_MEDIA_SERVERS, JOB_ADD_TRANSLATIONS
 ]
+
+def _wrap_before(job_id):
+    BaseJobs[job_id].running = True
+    log.debug(f'Task[{job_id}] Started execution')
+
+def _wrap_after(job_id):
+    BaseJobs[job_id].running = False
+    log.debug(f'Task[{job_id}] Finished execution')
+
+def wrapped_refresh_all_episode_data():
+    _wrap_before(JOB_REFRESH_EPISODE_DATA)
+    refresh_all_episode_data()
+    _wrap_after(JOB_REFRESH_EPISODE_DATA)
+
+def wrapped_sync_all():
+    _wrap_before(JOB_SYNC_INTERFACES)
+    sync_all()
+    _wrap_after(JOB_SYNC_INTERFACES)
+
+def wrapped_download_source_images():
+    _wrap_before(JOB_DOWNLOAD_SOURCE_IMAGES)
+    fake_func()
+    _wrap_after(JOB_DOWNLOAD_SOURCE_IMAGES)
+
+def wrapped_create_all_title_cards():
+    _wrap_before(JOB_CREATE_TITLE_CARDS)
+    create_all_title_cards()
+    _wrap_after(JOB_CREATE_TITLE_CARDS)
+
+def wrapped_translate_all_series():
+    _wrap_before(JOB_ADD_TRANSLATIONS)
+    translate_all_series()
+    _wrap_after(JOB_ADD_TRANSLATIONS)
 
 BaseJobs = {
     # TODO populate with actual function calls
     JOB_REFRESH_EPISODE_DATA: NewJob(
         id=JOB_REFRESH_EPISODE_DATA,
-        function=refresh_all_episode_data,
+        function=wrapped_refresh_all_episode_data,
         seconds=60 * 60 * 6,
         description='Look for new episodes and update all existing episodes',
     ), JOB_SYNC_INTERFACES: NewJob(
         id=JOB_SYNC_INTERFACES,
-        function=sync_all,
+        function=wrapped_sync_all,
         seconds=60 * 60 * 6,
         description='Run all defined Syncs, adding any new Series',
     ), JOB_DOWNLOAD_SOURCE_IMAGES: NewJob(
         id=JOB_DOWNLOAD_SOURCE_IMAGES,
-        function=fake_func,
+        function=wrapped_download_source_images,
         seconds=60 * 60 * 4,
         description='Download source images for Title Cards',
     ), JOB_CREATE_TITLE_CARDS: NewJob(
         id=JOB_CREATE_TITLE_CARDS,
-        function=create_all_title_cards,
+        function=wrapped_create_all_title_cards,
         seconds=60 * 60 * 6,
         description='Create all missing or updated Title Cards',
     ), JOB_LOAD_MEDIA_SERVERS: NewJob(
@@ -65,8 +100,14 @@ BaseJobs = {
         function=fake_func,
         seconds=60 * 60 * 4,
         description='Load all Title Cards into Emby, Jellyfin, or Plex',
-    ),
+    ), JOB_ADD_TRANSLATIONS: NewJob(
+        id=JOB_ADD_TRANSLATIONS,
+        function=wrapped_translate_all_series,
+        seconds=60 * 60 * 4,
+        description='Search for and add all missing Episode translations',
+    )
 }
+
 
 # Initialize scheduler with starting jobs
 def initialize_scheduler() -> None:
@@ -81,18 +122,6 @@ def initialize_scheduler() -> None:
                 replace_existing=True,
             )
 initialize_scheduler()
-
-# Add listener to update running status of jobs
-def job_started_listener(event):
-    log.debug(f'Task[{event.job_id}] Started execution')
-    BaseJobs.get(event.job_id).running = True
-
-def job_finished_listener(event):
-    log.debug(f'Task[{event.job_id}] Finished execution')
-    BaseJobs.get(event.job_id).running = False
-
-get_scheduler().add_listener(job_started_listener, EVENT_JOB_SUBMITTED)
-get_scheduler().add_listener(job_finished_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR)
 
 
 def _scheduled_task_from_job(job) -> ScheduledTask:
