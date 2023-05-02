@@ -68,14 +68,10 @@
       const hours = Math.floor(minutes / 60);
       const days = Math.floor(hours / 24);
       const timeUnits = [];
-      if (days > 1) { timeUnits.push(`${days} days`); }
-      else if (days > 0) { timeUnits.push(`${days} day`); }
-      if (hours % 24 > 1) { timeUnits.push(`${hours%24} hours`); }
-      else if (hours % 24 > 0) { timeUnits.push(`${hours%24} hour`); }
-      if (minutes % 60 > 1) { timeUnits.push(`${minutes%60} minutes`); }
-      else if (minutes % 60 > 0) { timeUnits.push(`${minutes%60} minute`); }
-      if (seconds % 60 > 1) { timeUnits.push(`${seconds%60} seconds`); }
-      else if (seconds % 60 > 0) { timeUnits.push(`${seconds%60} second`); }
+      if (days > 0) { timeUnits.push(`${days} days`); }
+      if (hours % 24 > 0) { timeUnits.push(`${hours%24} hours`); }
+      if (minutes % 60 > 0) { timeUnits.push(`${minutes%60} minutes`); }
+      if (seconds % 60 > 0) { timeUnits.push(`${seconds%60} seconds`); }
       return timeUnits.join(', ');
     }
 
