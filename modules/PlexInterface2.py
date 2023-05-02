@@ -310,7 +310,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     @catch_and_log('Error getting all episodes', default=[])
     def get_all_episodes(self, library_name: str,
-            series_info: SeriesInfo) -> list[EpisodeInfo]:
+            series_info: SeriesInfo) -> list[tuple[EpisodeInfo, bool]]:
         """
         Gets all episode info for the given series. Only episodes that have 
         already aired are returned.
@@ -372,7 +372,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
             # Add to list
             if episode_info is not None:
-                all_episodes.append(episode_info)
+                all_episodes.append((episode_info, plex_episode.isWatched))
 
         return all_episodes
 

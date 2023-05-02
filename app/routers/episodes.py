@@ -228,6 +228,11 @@ def _refresh_episode_data(
     # Filter episodes
     changed, episodes = False, []
     for episode in all_episodes:
+        # If a tuple, then it's a tuple of EpisodeInfo and watched status
+        watched = None
+        if isinstance(episode, tuple):
+            episode, watched = episode
+
         # Skip specials if indicated
         if not sync_specials and episode.season_number == 0:
             log.debug(f'Skipping {episode} - not syncing specials')
@@ -249,6 +254,7 @@ def _refresh_episode_data(
                 title=episode.title.full_title,
                 **episode.indices,
                 **episode.ids,
+                watched=watched,
                 airdate=episode.airdate,
             )
             db.add(episode)
