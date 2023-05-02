@@ -28,6 +28,7 @@ Scheduler = BackgroundScheduler(
     jobstores={'default': SQLAlchemyJobStore(url=SQLALCHEMY_DATABASE_URL)},
     executors={'default': ThreadPoolExecutor(20)},
     job_defaults={'coalesce': True},
+    misfire_grace_time=60,
 )
 Scheduler.start()
 
