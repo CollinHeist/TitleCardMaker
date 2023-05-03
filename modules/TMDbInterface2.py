@@ -96,7 +96,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             api_key: str,
             minimum_source_width: int = 0,
             minimum_source_height: int = 0,
-            blacklist_threshold: int = BLACKLIST_THRESHOLD) -> None:
+            blacklist_threshold: int = BLACKLIST_THRESHOLD,
+            logo_language_priority: list[LANGUAGE_CODES] = ['en']) -> None:
         """
         Construct a new instance of an interface to TMDb.
 
@@ -110,6 +111,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         self.minimum_source_width = minimum_source_width
         self.minimum_source_height = minimum_source_height
         self.blacklist_threshold = blacklist_threshold
+        self.logo_language_priority = logo_language_priority
 
         # Create/read blacklist database
         self.__blacklist = PersistentDatabase(self.__BLACKLIST_DB)
@@ -863,13 +865,11 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         best, best_priority = None, 999
         for logo in series.logos:
             # Skip logos with unindicated languages
-            if (logo.iso_639_1
-                not in self.preferences.tmdb_logo_language_priority):
+            if logo.iso_639_1 not in self.logo_language_priority:
                 continue
+
             # Get relative priority of this logo's language
-            priority = self.preferences.tmdb_logo_language_priority.index(
-                logo.iso_639_1
-            )
+            priority = self.logo_language_priority.index(logo.iso_639_1)
 
             # Skip this logo if the language priority is less than the current
             # best. Highest priority is index 0, so use > for lower priority

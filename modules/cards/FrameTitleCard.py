@@ -38,7 +38,6 @@ class FrameTitleCard(BaseCardType):
         ], description=[
             'Title card styled to look like a Polaroid photo.',
             'The placement and color of the season and episode text can be adjusted via extras.',
-            'This style is inspired by the official Adventure Time Season 8 title cards.',
         ]
     )
 

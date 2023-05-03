@@ -221,6 +221,7 @@ class Preferences:
             'minimum_source_width': self.tmdb_minimum_width,
             'minimum_source_height': self.tmdb_minimum_height,
             'blacklist_threshold': 3, # TODO add variable
+            'logo_language_priority': self.tmdb_logo_language_priority,
         }
 
 

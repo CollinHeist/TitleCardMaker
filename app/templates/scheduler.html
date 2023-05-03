@@ -115,6 +115,7 @@
         $.toast({class: 'blue info', title: `Task ${taskId} is already running`});
         return; 
       }
+      $(`tr[data-id="${taskId}"] td[data-column="runTask"] i`).toggleClass('blue loading', true);
       $.toast({class: 'blue info', title: `Running Task ${taskId}`});
       $.ajax({
         type: 'POST',
@@ -151,10 +152,7 @@
           row.querySelector('td[data-column="runTask"] i').className = 'blue loading sync icon';
         } else {
           // Task is not currently running, allow it to be run via click
-          row.querySelector('td[data-column="runTask"] a').onclick = () => {
-            $(`tr[data-id="${task.id}"] td[data-column="runTask"] i`).toggleClass('blue loading', true);
-            runTask(task.id);
-          }
+          row.querySelector('td[data-column="runTask"] a').onclick = () => runTask(task.id);
         }
         row.querySelector('td[data-column="description"]').innerHTML = task.description;
         row.querySelector('td[data-column="frequency"]').innerHTML = `<span contenteditable="true">${timeFreqString(task.frequency)}</span>`;
