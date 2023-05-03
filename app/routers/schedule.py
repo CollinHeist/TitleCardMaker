@@ -1,15 +1,12 @@
-from typing import Any, Callable, Literal, Optional, Union
+from typing import Literal
 
-from apscheduler.events import EVENT_JOB_SUBMITTED, EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
-from fastapi import APIRouter, Body, Depends, Form, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 
 from app.dependencies import get_scheduler, get_preferences
-import app.models as models
 from app.routers.cards import create_all_title_cards
 from app.routers.episodes import refresh_all_episode_data
 from app.routers.sync import sync_all
 from app.routers.translate import translate_all_series
-from app.schemas.base import Base, UNSPECIFIED
 from app.schemas.schedule import NewJob, ScheduledTask, UpdateInterval
 
 from modules.Debug import log
@@ -40,6 +37,10 @@ TaskID = Literal[
     JOB_CREATE_TITLE_CARDS, JOB_LOAD_MEDIA_SERVERS, JOB_ADD_TRANSLATIONS
 ]
 
+"""
+Wrap all periodically called functions to set the runnin attributes when
+the job is started and finished.
+"""
 def _wrap_before(job_id):
     BaseJobs[job_id].running = True
     log.debug(f'Task[{job_id}] Started execution')
@@ -47,6 +48,21 @@ def _wrap_before(job_id):
 def _wrap_after(job_id):
     BaseJobs[job_id].running = False
     log.debug(f'Task[{job_id}] Finished execution')
+
+def wrapped_create_all_title_cards():
+    _wrap_before(JOB_CREATE_TITLE_CARDS)
+    create_all_title_cards()
+    _wrap_after(JOB_CREATE_TITLE_CARDS)
+
+def wrapped_download_source_images():
+    _wrap_before(JOB_DOWNLOAD_SOURCE_IMAGES)
+    fake_func()
+    _wrap_after(JOB_DOWNLOAD_SOURCE_IMAGES)
+
+def wrapped_load_media_servers():
+    _wrap_before(JOB_LOAD_MEDIA_SERVERS)
+    fake_func()
+    _wrap_after(JOB_LOAD_MEDIA_SERVERS)
 
 def wrapped_refresh_all_episode_data():
     _wrap_before(JOB_REFRESH_EPISODE_DATA)
@@ -58,21 +74,15 @@ def wrapped_sync_all():
     sync_all()
     _wrap_after(JOB_SYNC_INTERFACES)
 
-def wrapped_download_source_images():
-    _wrap_before(JOB_DOWNLOAD_SOURCE_IMAGES)
-    fake_func()
-    _wrap_after(JOB_DOWNLOAD_SOURCE_IMAGES)
-
-def wrapped_create_all_title_cards():
-    _wrap_before(JOB_CREATE_TITLE_CARDS)
-    create_all_title_cards()
-    _wrap_after(JOB_CREATE_TITLE_CARDS)
-
 def wrapped_translate_all_series():
     _wrap_before(JOB_ADD_TRANSLATIONS)
     translate_all_series()
     _wrap_after(JOB_ADD_TRANSLATIONS)
 
+"""
+Dictionary of Job ID's to NewJob objects that contain the default Job
+attributes for all major functions.
+"""
 BaseJobs = {
     # TODO populate with actual function calls
     JOB_REFRESH_EPISODE_DATA: NewJob(
@@ -97,7 +107,7 @@ BaseJobs = {
         description='Create all missing or updated Title Cards',
     ), JOB_LOAD_MEDIA_SERVERS: NewJob(
         id=JOB_LOAD_MEDIA_SERVERS,
-        function=fake_func,
+        function=wrapped_load_media_servers,
         seconds=60 * 60 * 4,
         description='Load all Title Cards into Emby, Jellyfin, or Plex',
     ), JOB_ADD_TRANSLATIONS: NewJob(
@@ -113,6 +123,7 @@ BaseJobs = {
 def initialize_scheduler() -> None:
     scheduler = get_scheduler()
     for job in BaseJobs.values():
+        # If Job is not already scheduled, add
         if scheduler.get_job(job.id) is None:
             scheduler.add_job(
                 job.function,

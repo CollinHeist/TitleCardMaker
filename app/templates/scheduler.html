@@ -110,6 +110,11 @@
     }
 
     async function runTask(taskId) {
+      // If task is already running, do not re-run
+      if ($(`tr[data-id="${taskId}"] td[data-column="runTask"] i`)[0].classList.contains('loading')) {
+        $.toast({class: 'blue info', title: `Task ${taskId} is already running`});
+        return; 
+      }
       $.toast({class: 'blue info', title: `Running Task ${taskId}`});
       $.ajax({
         type: 'POST',
