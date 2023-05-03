@@ -301,9 +301,9 @@ def delete_series(
     series = get_series(db, series_id, raise_exc=True)
 
     # Delete poster if not the placeholder
-    series_poster = Path(series.poster_path)
-    if series_poster.name != 'placeholder.jpg' and series_poster.exists():
-        Path(series.poster_path).unlink(missing_ok=True)
+    series_poster = Path(series.poster_file)
+    if series_poster.stem != 'placeholder' and series_poster.exists():
+        series_poster.unlink(missing_ok=True)
 
     # Delete series and episodes from database
     db.query(models.series.Series).filter_by(id=series_id).delete()

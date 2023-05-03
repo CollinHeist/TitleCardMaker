@@ -31,7 +31,6 @@ body > .pusher {
 #tcm-logo {
   width: 115px;
 }
-
 /* Remove outline from logo */
 #tcm-logo img {
   max-height: 50px;
@@ -176,20 +175,34 @@ html.ios body {
 
 /* Mobile formatting */
 @media (max-width: 768px) {
+  /* Remove fixed width on logo */
+  #tcm-logo {
+    width: unset;
+  }
+
+  /* Do not use absolute positioning, let items stack themselves */
+  #page-header > div {
+    position: unset;
+    padding-left: 0.3em;
+  }
+
+  /* Shrink search input */
+  #header-search input {
+    width: 100px;
+  }
+
   /* Hide icons */
   #nav-menu i {
     display: none;
   }
 
-  /* Use reduced  */
+  /* Use reduced padding */
   #main-content {
     padding-left: 95px;
   }
-
   #nav-menu .item {
     padding: 0.5em 0.1em;
   }
-
   #nav-menu .sidebar {
     top: 70px;
      /* Hide sidebar by default */

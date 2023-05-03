@@ -449,7 +449,6 @@ def sync(
         db = Depends(get_database),
         preferences = Depends(get_preferences),
         emby_interface = Depends(get_emby_interface),
-        imagemagick_interface = Depends(get_imagemagick_interface),
         jellyfin_interface = Depends(get_jellyfin_interface),
         plex_interface = Depends(get_plex_interface),
         sonarr_interface = Depends(get_sonarr_interface),
@@ -465,7 +464,7 @@ def sync(
     sync = get_sync(db, sync_id, raise_exc=True)
 
     return run_sync(
-        db, preferences, sync, emby_interface, imagemagick_interface,
-        jellyfin_interface, plex_interface, sonarr_interface, tmdb_interface,
+        db, preferences, sync, emby_interface, jellyfin_interface,
+        plex_interface, sonarr_interface, tmdb_interface,
         background_tasks=background_tasks
     )

@@ -77,9 +77,11 @@
       left: calc(100% - 320px); /* 445px */
       display: inline-block;
     }
-    /* When the toolbar is in the moved state, offset left from the sidebar only */
-    #toolbar.moved {
-      left: 135px;
+    /* When the toolbar is in the moved state, offset left from the sidebar if not on mobile */
+    @media (min-width: 768px) {
+      #toolbar.moved {
+        left: 135px;
+      }
     }
 
     /* Add drop shadow to all children of the toolbar */
