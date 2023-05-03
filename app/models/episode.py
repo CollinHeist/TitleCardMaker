@@ -64,6 +64,11 @@ class Episode(Base):
 
 
     @hybrid_property
+    def log_str(self) -> str:
+        return f'Episode[{self.id}] {self.as_episode_info}'
+
+
+    @hybrid_property
     def card_properties(self) -> dict[str, Any]:
         return {
             'episode_id': self.id,

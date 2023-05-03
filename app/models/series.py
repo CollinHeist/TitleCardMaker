@@ -75,6 +75,10 @@ class Series(Base):
         return CleanPath.sanitize_name(self.full_name)
 
     @hybrid_property
+    def log_str(self) -> str:
+        return f'Series[{self.id}] "{self.full_name}"'
+
+    @hybrid_property
     def card_properties(self) -> dict[str, Any]:
         return {
             'series_id': self.id,
