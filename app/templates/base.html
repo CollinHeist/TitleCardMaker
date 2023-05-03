@@ -35,7 +35,8 @@
 
     .ui.cards > .card {
       min-width: 100px;
-      max-width: 10%;
+      width: 10%;
+      max-width: 150px
     }
     .card img {
       aspect-ratio: 1 / 1.5;
@@ -73,7 +74,7 @@
       line-height: 50px; /* Center text vertically inside the div */
       /* Start the toolbar on the right side of the screen, move left */
       transition: left 0.5s ease-in-out;
-      left: calc(100% - 425px); /* 445px */
+      left: calc(100% - 320px); /* 445px */
       display: inline-block;
     }
     /* When the toolbar is in the moved state, offset left from the sidebar only */
@@ -255,11 +256,7 @@
         </div>
 
         <!-- Sort series bar -->
-        <div class="ui compact blue inverted menu" title="Re-sync all series">
-          <a class="disabled item">
-            <i class="loading sync icon"></i>
-            Sync All
-          </a>
+        <div class="ui compact blue inverted menu">
           <a class="item" title="Sort titles by ID" onclick="sortSeries(this, 'id')">
             <i id="sort-by-id" class="sort icon"></i>
           </a>
