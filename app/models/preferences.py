@@ -95,7 +95,7 @@ class Preferences:
         self.use_magick_prefix = False
         self.imagemagick_container = 'ImageMagick' #None
         self.imagemagick_timeout = 60
-        self.__determine_imagemagick_prefix()
+        self.determine_imagemagick_prefix()
 
 
     def __setattr__(self, name, value) -> None:
@@ -109,7 +109,7 @@ class Preferences:
             dump(self, fh)
 
 
-    def __determine_imagemagick_prefix(self) -> None:
+    def determine_imagemagick_prefix(self) -> None:
         """
         Determine whether to use the "magick " prefix for ImageMagick commands.
         If a prefix cannot be determined, a critical message is logged and the
@@ -176,6 +176,14 @@ class Preferences:
             'username': self.emby_username,
             'verify_ssl': self.emby_use_ssl,
             'filesize_limit': self.emby_filesize_limit,
+        }
+
+    @property
+    def imagemagick_arguments(self) -> dict[str, Any]:
+        return {
+            'container': self.imagemagick_container,
+            'use_magick_prefix': self.use_magick_prefix,
+            'timeout': self.imagemagick_timeout,
         }
 
     @property

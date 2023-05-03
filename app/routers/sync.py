@@ -101,11 +101,11 @@ def run_sync(
         db,
         preferences: 'Preferences',
         sync: 'Sync',
-        emby_interface: 'EmbyInterface',
-        jellyfin_interface: 'JellyfinInterface',
-        plex_interface: 'PlexInterface',
-        sonarr_interface: 'SonarrInterface',
-        tmdb_interface: 'TMDbInterface',
+        emby_interface: Optional['EmbyInterface'],
+        jellyfin_interface: Optional['JellyfinInterface'],
+        plex_interface: Optional['PlexInterface'],
+        sonarr_interface: Optional['SonarrInterface'],
+        tmdb_interface: Optional['TMDbInterface'],
         background_tasks: Optional[BackgroundTasks] = None) -> list[Series]:
     """
 

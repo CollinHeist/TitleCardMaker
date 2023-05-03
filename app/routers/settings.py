@@ -3,7 +3,7 @@ from typing import Any, Literal, Optional, Union
 from fastapi import APIRouter, Body, Depends, Form, HTTPException
 from sqlalchemy.orm import Session
 
-from app.dependencies import get_preferences
+from app.dependencies import get_preferences, refresh_imagemagick_interface
 from app.schemas.preferences import EpisodeDataSourceToggle, LanguageToggle, Preferences, UpdatePreferences
 from modules.Debug import log
 from modules.TMDbInterface2 import TMDbInterface
@@ -24,7 +24,10 @@ def update_global_settings(
 
     - update_preferences: UpdatePreferences containing fields to update.
     """
+
     preferences.update_values(**update_preferences.dict())
+    refresh_imagemagick_interface()
+    preferences.determine_imagemagick_prefix()
 
     return preferences
 

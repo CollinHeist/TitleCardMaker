@@ -77,6 +77,7 @@ class UpdatePreferences(Base):
     excluded_card_types: list[str] = Field(default=UNSPECIFIED)
     default_watched_style: Style = Field(default=UNSPECIFIED)
     default_unwatched_style: Style = Field(default=UNSPECIFIED)
+    imagemagick_container: str = Field(default=UNSPECIFIED, min_length=1)
 
     @validator('*', pre=True)
     def validate_arguments(cls, v):
@@ -186,6 +187,9 @@ class Preferences(Base):
     excluded_card_types: list[str]
     default_watched_style: Style
     default_unwatched_style: Style
+
+    imagemagick_container: Optional[str]
+    imagemagick_timeout: int
 
 class EmbyConnection(Base):
     use_emby: bool

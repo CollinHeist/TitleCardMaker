@@ -369,10 +369,10 @@
               </div>
               {% else %}
               <div id="imagemagick-is-docker" class="ui right aligned checkbox field" data-tooltip="Whether TitleCardMaker is executing within Docker">
-                {% if preferences.imagemagick_container %}
-                <input name="imagemagick_is_docker" type="checkbox" checked="">
-                {% else %}
+                {% if preferences.imagemagick_container is none %}
                 <input name="imagemagick_is_docker" type="checkbox">
+                {% else %}
+                <input name="imagemagick_is_docker" type="checkbox" checked="">
                 {% endif %}
                 <label>Use ImageMagick Docker Container</label>
               </div>
