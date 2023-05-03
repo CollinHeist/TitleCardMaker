@@ -22,6 +22,32 @@ from modules.TieredSettings import TieredSettings
 from modules.WebInterface import WebInterface
 
 
+def download_all_series_logos():
+    """
+    Schedule-able function to download all Logos for all Series in the
+    Database.
+    """
+
+    try:
+        # Get the Database
+        with next(get_database()) as db:
+            # Get all Series
+            all_series = db.query(models.series.Series).all()
+            for series in all_series:
+                # TODO add check for "monitored" attribute
+                try:
+                    _download_series_logo(
+                        db, get_preferences(), get_emby_interface(),
+                        get_imagemagick_interface(), get_jellyfin_interface(),
+                        get_tmdb_interface(), series,
+                    )
+                except HTTPException as e:
+                    log.info(f'{series.log_str} Skipping logo selection')
+                    continue
+    except Exception as e:
+        log.exception(f'Failed to refresh all episode data', e)
+
+
 source_router = APIRouter(
     prefix='/sources',
     tags=['Source Images'],
@@ -40,7 +66,7 @@ def download_source_image(
         preferences.source_directory, series.path_safe_name
     )
     if source_file.exists():
-        log.debug(f'Episode[{episode.id}] Source image already exists')
+        log.debug(f'{series.log_str} {episode.log_str} Source image already exists')
         return f'/source/{series.path_safe_name}/{source_file.name}'
 
     # Get effective template
@@ -68,7 +94,7 @@ def download_source_image(
 
     # Go through all image sources    
     for image_source in image_source_settings['image_source_priority']:
-        log.debug(f'Episode[{episode.id}] Sourcing images from {image_source}')
+        log.debug(f'{series.log_str} {episode.log_str} Sourcing images from {image_source}')
         if image_source == 'Emby' and emby_interface:
             source_image = emby_interface.get_source_image(
                 episode.as_episode_info
@@ -80,7 +106,7 @@ def download_source_image(
         elif image_source == 'Plex' and plex_interface:
             # Verify series has a library
             if series.plex_library_name is None:
-                log.warning(f'Series "{series.name}" has no Plex library')
+                log.warning(f'{series.log_str} Has no Plex library')
                 continue
             source_image = plex_interface.get_source_image(
                 series.plex_library_name,
@@ -95,7 +121,7 @@ def download_source_image(
                 skip_localized_images=skip_localized_images
             )
         else:
-            log.warning(f'Cannot source images from {image_source}')
+            log.warning(f'{series.log_str} {episode.log_str} Cannot source images from {image_source}')
             continue
 
         # If no source image was returned, increment attempts counter
@@ -105,7 +131,7 @@ def download_source_image(
 
         # Source image is valid, download - error if download fails
         if WebInterface.download_image(source_image, source_file):
-            log.debug(f'Episode[{episode.id}] Downloaded {source_file.resolve()} from {image_source}')
+            log.debug(f'{series.log_str} {episode.log_str} Downloaded {source_file.resolve()} from {image_source}')
             return f'/source/{series.path_safe_name}/{source_file.name}'
         else:
             raise HTTPException(
@@ -117,8 +143,105 @@ def download_source_image(
     return None
 
 
+def _download_series_logo(
+        db: 'Database',
+        preferences: 'Preferences',
+        emby_interface: 'EmbyInterface',
+        imagemagick_interface: 'ImageMagickInterface',
+        jellyfin_interface: 'JellyfinInterface',
+        tmdb_interface: 'TMDbInterface',
+        series: 'Series',):
+
+    # Get the series logo, return if already exists
+    logo_file = series.get_logo_file(preferences.source_directory)
+    if logo_file.exists():
+        log.debug(f'{series.log_str} Logo exists')
+        return f'/source/{series.path_safe_name}/logo.png'
+
+    # Get template and template dictionary
+    series_template = get_template(db, series.template_id, raise_exc=True)
+    series_template_dict = {}
+    if series_template is not None:
+        series_template_dict = series_template.__dict__
+
+    # Resolve all settings
+    image_source_settings = {}
+    TieredSettings(
+        image_source_settings,
+        {'image_source_priority': preferences.image_source_priority},
+        series_template_dict,
+        series.image_source_properties,
+    )
+
+    # Go through all image sources    
+    for image_source in image_source_settings['image_source_priority']:
+        if image_source == 'Emby' and emby_interface:
+            logo = emby_interface.get_series_logo(series.as_series_info)
+        elif image_source == 'Jellyfin' and jellyfin_interface:
+            logo = jellyfin_interface.get_series_logo(series.as_series_info)
+        elif image_source == 'TMDb' and tmdb_interface:
+            # TODO implement blacklist bypassing
+            logo = tmdb_interface.get_series_logo(series.as_series_info)
+        else:
+            continue
+
+        # If no logo was returned, skip
+        if logo is None:
+            continue
+
+        # If logo is an svg, convert
+        if logo.endswith('.svg'):
+            # If no ImageMagick, raise 409
+            if not imagemagick_interface:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f'Cannot convert SVG logo, no valid ImageMagick interface'
+                )
+
+            # Download to temporary location pre-conversion
+            success = WebInterface.download_image(
+                logo, imagemagick_interface.TEMPORARY_SVG_FILE
+            )
+
+            # Downloaded, convert svg -> png
+            if success:
+                converted_logo = imagemagick_interface.convert_svg_to_png(
+                    imagemagick_interface.TEMPORARY_SVG_FILE, logo_file,
+                )
+                # Logo conversion failed, raise 400
+                if converted_logo is None:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f'SVG logo conversion failed'
+                    )
+                else:
+                    log.debug(f'{series.log_str} Converted SVG logo ({logo}) to PNG')
+                    log.info(f'{series.log_str} Downloaded {logo_file.resolve()} from {image_source}')
+                    return f'/source/{series.path_safe_name}/{logo_file.name}'
+            else:
+            # Download failed, raise 400
+                raise HTTPException(
+                    status_code=400,
+                    detail=f'Unable to download logo'
+                )
+
+        # Logo is png and valid, download
+        if WebInterface.download_image(logo, logo_file):
+            log.info(f'{series.log_str} Downloaded {logo_file.resolve()} from {image_source}')
+            return f'/source/{series.path_safe_name}/{logo_file.name}'
+        # Download failed, raise 400
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f'Unable to download logo'
+            )
+
+    # No logo returned
+    return None
+
+
 @source_router.get('/series/{series_id}')
-def download_series_source_image(
+def download_series_source_images(
         background_tasks: BackgroundTasks,
         series_id: int,
         ignore_blacklist: bool = Query(default=False),
@@ -184,7 +307,7 @@ def download_series_backdrop(
     # Get backdrop, return if exists
     backdrop_file = series.get_series_backdrop(preferences.source_directory)
     if backdrop_file.exists():
-        log.debug(f'Series[{series_id}] Backdrop file exists')
+        log.debug(f'{series.log_str} Backdrop file exists')
         return f'/source/{series.path_safe_name}/backdrop.jpg'
 
     # Download new backdrop
@@ -194,7 +317,7 @@ def download_series_backdrop(
             # TODO skip localized images
         )
         if WebInterface.download_image(backdrop, backdrop_file):
-            log.debug(f'Series[{series_id}] Downloaded {backdrop_file.resolve()} from TMDb')
+            log.debug(f'{series.log_str} Downloaded {backdrop_file.resolve()} from TMDb')
             return f'/source/{series.path_safe_name}/backdrop.jpg'
         else:
             raise HTTPException(
@@ -229,91 +352,10 @@ def download_series_logo(
     # Get this series and associated Template, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    # Get the series logo, return if already exists
-    logo_file = series.get_logo_file(preferences.source_directory)
-    if logo_file.exists():
-        return f'/source/{series.path_safe_name}/logo.png'
-
-    # Get template and template dictionary
-    series_template = get_template(db, series.template_id, raise_exc=True)
-    series_template_dict = {}
-    if series_template is not None:
-        series_template_dict = series_template.__dict__
-
-    # Resolve all settings
-    image_source_settings = {}
-    TieredSettings(
-        image_source_settings,
-        {'image_source_priority': preferences.image_source_priority},
-        series_template_dict,
-        series.image_source_properties,
+    return _download_series_logo(
+        db, preferences, emby_interface, imagemagick_interface,
+        jellyfin_interface, tmdb_interface, series,
     )
-
-    # Go through all image sources    
-    for image_source in image_source_settings['image_source_priority']:
-        if image_source == 'Emby' and emby_interface:
-            logo = emby_interface.get_series_logo(series.as_series_info)
-        elif image_source == 'Jellyfin' and jellyfin_interface:
-            logo = jellyfin_interface.get_series_logo(series.as_series_info)
-        elif image_source == 'TMDb' and tmdb_interface:
-            # TODO implement blacklist bypassing
-            logo = tmdb_interface.get_series_logo(series.as_series_info)
-        else:
-            continue
-
-        # If no logo was returned, skip
-        if logo is None:
-            continue
-
-        # If logo is an svg, convert
-        if logo.endswith('.svg'):
-            # If no ImageMagick, raise 409
-            if not imagemagick_interface:
-                raise HTTPException(
-                    status_code=409,
-                    detail=f'Cannot convert SVG logo, no valid ImageMagick interface'
-                )
-
-            # Download to temporary location pre-conversion
-            success = WebInterface.download_image(
-                logo, imagemagick_interface.TEMPORARY_SVG_FILE
-            )
-
-            # Downloaded, convert svg -> png
-            if success:
-                converted_logo = imagemagick_interface.convert_svg_to_png(
-                    imagemagick_interface.TEMPORARY_SVG_FILE, logo_file,
-                )
-                # Logo conversion failed, raise 400
-                if converted_logo is None:
-                    raise HTTPException(
-                        status_code=400,
-                        detail=f'SVG logo conversion failed'
-                    )
-                else:
-                    log.debug(f'Series[{series_id}] Converted SVG logo ({logo}) to PNG')
-                    log.debug(f'Series[{series_id}] Downloaded {logo_file.resolve()} from {image_source}')
-                    return f'/source/{series.path_safe_name}/{logo_file.name}'
-            else:
-            # Download failed, raise 400
-                raise HTTPException(
-                    status_code=400,
-                    detail=f'Unable to download logo'
-                )
-
-        # Logo is png and valid, download
-        if WebInterface.download_image(logo, logo_file):
-            log.debug(f'Series[{series_id}] Downloaded {logo_file.resolve()} from {image_source}')
-            return f'/source/{series.path_safe_name}/{logo_file.name}'
-        # Download failed, raise 400
-        else:
-            raise HTTPException(
-                status_code=400,
-                detail=f'Unable to download logo'
-            )
-
-    # No logo returned
-    return None
 
 
 @source_router.get('/episode/{episode_id}')

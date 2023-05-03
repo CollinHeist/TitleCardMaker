@@ -5,6 +5,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 from app.dependencies import get_scheduler, get_preferences
 from app.routers.cards import create_all_title_cards
 from app.routers.episodes import refresh_all_episode_data
+from app.routers.sources import download_all_series_logos
 from app.routers.sync import sync_all
 from app.routers.translate import translate_all_series
 from app.schemas.schedule import NewJob, ScheduledTask, UpdateInterval
@@ -25,16 +26,18 @@ schedule_router = APIRouter(
 
 
 # Job ID's for scheduled tasks
+JOB_ADD_TRANSLATIONS: str = 'AddMissingTranslations'
+JOB_CREATE_TITLE_CARDS: str = 'CreateTitleCards'
+JOB_DOWNLOAD_SERIES_LOGOS: str = 'DownloadSeriesLogos'
+JOB_DOWNLOAD_SOURCE_IMAGES: str = 'DownloadSourceImages'
+JOB_LOAD_MEDIA_SERVERS: str = 'LoadMediaServers'
 JOB_REFRESH_EPISODE_DATA: str = 'RefreshEpisodeData'
 JOB_SYNC_INTERFACES: str = 'SyncInterfaces'
-JOB_DOWNLOAD_SOURCE_IMAGES: str = 'DownloadSourceImages'
-JOB_CREATE_TITLE_CARDS: str = 'CreateTitleCards'
-JOB_LOAD_MEDIA_SERVERS: str = 'LoadMediaServers'
-JOB_ADD_TRANSLATIONS: str = 'AddMissingTranslations'
 
 TaskID = Literal[
     JOB_REFRESH_EPISODE_DATA, JOB_SYNC_INTERFACES, JOB_DOWNLOAD_SOURCE_IMAGES,
-    JOB_CREATE_TITLE_CARDS, JOB_LOAD_MEDIA_SERVERS, JOB_ADD_TRANSLATIONS
+    JOB_CREATE_TITLE_CARDS, JOB_LOAD_MEDIA_SERVERS, JOB_ADD_TRANSLATIONS,
+    JOB_DOWNLOAD_SERIES_LOGOS
 ]
 
 """
@@ -53,6 +56,11 @@ def wrapped_create_all_title_cards():
     _wrap_before(JOB_CREATE_TITLE_CARDS)
     create_all_title_cards()
     _wrap_after(JOB_CREATE_TITLE_CARDS)
+
+def wrapped_download_all_series_logos():
+    _wrap_before(JOB_DOWNLOAD_SERIES_LOGOS)
+    download_all_series_logos()
+    _wrap_after(JOB_DOWNLOAD_SERIES_LOGOS)
 
 def wrapped_download_source_images():
     _wrap_before(JOB_DOWNLOAD_SOURCE_IMAGES)
@@ -115,6 +123,11 @@ BaseJobs = {
         function=wrapped_translate_all_series,
         seconds=60 * 60 * 4,
         description='Search for and add all missing Episode translations',
+    ), JOB_DOWNLOAD_SERIES_LOGOS: NewJob(
+        id=JOB_DOWNLOAD_SERIES_LOGOS,
+        function=wrapped_download_all_series_logos,
+        seconds=60 * 60 * 24,
+        description='Download Logos for all Series',
     )
 }
 
