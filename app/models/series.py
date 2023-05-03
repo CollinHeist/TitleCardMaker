@@ -21,7 +21,7 @@ class Series(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
     year = Column(Integer)
-    poster_path = Column(String, default=str(ASSET_DIRECTORY/'placeholder.jpg'))
+    poster_file = Column(String, default=str(ASSET_DIRECTORY/'placeholder.jpg'))
     poster_url = Column(String, default='/assets/placeholder.jpg')
 
     # Series config arguments

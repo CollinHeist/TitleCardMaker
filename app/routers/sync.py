@@ -4,9 +4,11 @@ from fastapi import APIRouter, BackgroundTasks, Body, Depends, Form, HTTPExcepti
 from sqlalchemy import and_, or_
 
 from modules.Debug import log
-from app.dependencies import get_database, get_preferences, get_emby_interface,\
-    get_jellyfin_interface, get_plex_interface, get_sonarr_interface, \
+from app.dependencies import (
+    get_database, get_preferences, get_emby_interface, get_imagemagick_interface,
+    get_jellyfin_interface, get_plex_interface, get_sonarr_interface,
     get_tmdb_interface
+)
 from app.routers.series import set_series_database_ids, download_series_poster
 from app.routers.templates import get_template
 from app.schemas.sync import (
@@ -260,7 +262,7 @@ def run_sync(
                 sonarr_interface, tmdb_interface,
             )
             background_tasks.add_task(
-                download_series_poster, series, db, preferences, tmdb_interface
+                download_series_poster, db, preferences, series, tmdb_interface,
             )
         else:
             set_series_database_ids(
@@ -268,7 +270,7 @@ def run_sync(
                 emby_interface, jellyfin_interface, plex_interface,
                 sonarr_interface, tmdb_interface,
             )
-            download_series_poster(series, db, preferences, tmdb_interface)
+            download_series_poster(db, preferences, series, tmdb_interface)
 
     if not added:
         log.info(f'Sync[{sync.id}] No series synced')
@@ -447,6 +449,7 @@ def sync(
         db = Depends(get_database),
         preferences = Depends(get_preferences),
         emby_interface = Depends(get_emby_interface),
+        imagemagick_interface = Depends(get_imagemagick_interface),
         jellyfin_interface = Depends(get_jellyfin_interface),
         plex_interface = Depends(get_plex_interface),
         sonarr_interface = Depends(get_sonarr_interface),
@@ -462,7 +465,7 @@ def sync(
     sync = get_sync(db, sync_id, raise_exc=True)
 
     return run_sync(
-        db, preferences, sync, emby_interface, jellyfin_interface,
-        plex_interface, sonarr_interface, tmdb_interface,
+        db, preferences, sync, emby_interface, imagemagick_interface,
+        jellyfin_interface, plex_interface, sonarr_interface, tmdb_interface,
         background_tasks=background_tasks
     )

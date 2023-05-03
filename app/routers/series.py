@@ -1,5 +1,6 @@
 from pathlib import Path
 from requests import get
+from shutil import copy as file_copy
 from typing import Annotated, Any, Literal, Optional, Union
 
 from fastapi import (
@@ -13,8 +14,9 @@ from modules.Debug import log
 from modules.SeriesInfo import SeriesInfo
 
 from app.dependencies import (
-    get_database, get_preferences, get_emby_interface, get_jellyfin_interface,
-    get_plex_interface, get_sonarr_interface, get_tmdb_interface
+    get_database, get_preferences, get_emby_interface, get_imagemagick_interface,
+    get_jellyfin_interface, get_plex_interface, get_sonarr_interface,
+    get_tmdb_interface
 )
 import app.models as models
 from app.routers.fonts import get_font
@@ -107,9 +109,9 @@ series_router = APIRouter(
 
 
 def download_series_poster(
-        series: Series,
         db: 'Database',
         preferences: 'Preferences',
+        series: Series,
         tmdb_interface: 'TMDbInterface') -> None:
 
     # Exit if no TMDbInterface
@@ -118,7 +120,7 @@ def download_series_poster(
         return None
 
     # If series poster exists and is not a placeholder, return that
-    path = Path(series.poster_path)
+    path = Path(series.poster_file)
     if path.name != 'placeholder.jpg' and path.exists():
         series.poster_url = f'/assets/posters/{series.id}.jpg'
         db.commit()
@@ -129,17 +131,19 @@ def download_series_poster(
     series_info = series.as_series_info
     if (poster_url := tmdb_interface.get_series_poster(series_info)) is None:
         log.debug(f'Series[{series.id}] TMDb returned no valid posters')
+        return None
     # Poster downloaded, write file, update database
     else:
         path = preferences.asset_directory / 'posters' / f'{series.id}.jpg'
         try:
             path.write_bytes(get(poster_url).content)
-            series.poster_path = str(path)
+            series.poster_file = str(path)
             series.poster_url = f'/assets/posters/{series.id}.jpg'
             db.commit()
             log.debug(f'Series[{series.id}] Downloaded poster {path.resolve()}')
         except Exception as e:
             log.error(f'Error downloading poster', e)
+            return None
 
     return None
 
@@ -257,7 +261,7 @@ def add_new_series(
 
     - new_series: Series definition to create.
     """
-    log.critical(f'{new_series.dict()=}')
+
     # If a template or font was indicated, verify they exist
     get_template(db, getattr(new_series, 'template_id', None), raise_exc=True)
     if getattr(new_series, 'font_id', None) is not None:
@@ -276,7 +280,7 @@ def add_new_series(
         tmdb_interface,
     )
     background_tasks.add_task(
-        download_series_poster, series, db, preferences, tmdb_interface
+        download_series_poster, db, preferences, series, tmdb_interface,
     )
 
     return series
@@ -299,8 +303,6 @@ def delete_series(
     # Delete poster if not the placeholder
     series_poster = Path(series.poster_path)
     if series_poster.name != 'placeholder.jpg' and series_poster.exists():
-        ...
-        # TODO delete thumbail
         Path(series.poster_path).unlink(missing_ok=True)
 
     # Delete series and episodes from database
@@ -464,7 +466,7 @@ def get_series_poster(
     # Find series with this ID, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    return download_series_poster(series, db, preferences, tmdb_interface)
+    return download_series_poster(db, preferences, series, tmdb_interface)
 
 
 @series_router.post('/{series_id}/poster', status_code=201)
@@ -518,11 +520,11 @@ async def set_series_poster(
 
     # Valid poster provided, download into asset directory
     poster_path = preferences.asset_directory / 'posters' / f'{series.id}.jpg'
-    series.poster_path = str(poster_path)
-    poster_path.write_bytes(poster_content)
+    series.poster_file = str(poster_path)
+    poster_file.write_bytes(poster_content)
 
     # Update poster, commit to database
-    series.poster_url = f'/assets/posters/{poster_path.name}'
+    series.poster_url = f'/assets/posters/{poster_file.name}'
     db.commit()
     
     return series.poster_url
