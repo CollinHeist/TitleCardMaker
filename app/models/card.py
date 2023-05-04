@@ -45,22 +45,34 @@ class Card(Base):
 
     @hybrid_property
     def comparison_properties(self) -> dict[str, Any]:
+        """
+        Get a dictionary of properties that should be used to compare
+        whether a Card has been changed or not.
+
+        Because comparison is done with the any() operator, the most
+        frequently changed attributes should come first, to speed up
+        comparison.
+
+        Returns:
+            Dictionary of properties to compare.
+        """
+
         return {
-            'source_file': self.source_file,
-            'card_type': self.card_type,
+            'extras': self.extras,
+            'blur': self.blur,
+            'grayscale': self.grayscale,
             'title_text': self.title_text,
             'season_text': self.season_text,
-            'hide_season_text': self.hide_season_text,
             'episode_text': self.episode_text,
+            'source_file': self.source_file,
+            'card_type': self.card_type,
+            'hide_season_text': self.hide_season_text,
             'hide_episode_text': self.hide_episode_text,
-            'font_file': self.font_file,
             'font_color': self.font_color,
+            'font_file': self.font_file,
             'font_size': self.font_size,
             'font_kerning': self.font_kerning,
             'font_stroke_width': self.font_stroke_width,
             'font_interline_spacing': self.font_interline_spacing,
             'font_vertical_shift': self.font_vertical_shift,
-            'blur': self.blur,
-            'grayscale': self.grayscale,
-            'extras': self.extras,
         }
