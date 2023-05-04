@@ -36,7 +36,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     def __init__(self, url: str, api_key: str,
             username: Optional[str] = None,
-            verify_ssl: bool=True,
+            verify_ssl: bool = True,
             filesize_limit: Optional[int] = None) -> None:
         """
         Construct a new instance of an interface to a Jellyfin server.
@@ -89,7 +89,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         self.libraries = self._map_libraries()
 
 
-    def _get_user_id(self, username: str) -> 'str | None':
+    def _get_user_id(self, username: str) -> Optional[str]:
         """
         Get the User ID associated with the given username.
 
@@ -136,7 +136,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return {
             library['Name']: library['Id']
             for library in libraries['Items']
-            if library['CollectionType'] == 'tvshows'
+            if library.get('CollectionType', None) == 'tvshows'
         }
 
 
@@ -206,8 +206,8 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         self.get_all_episodes(series_info)
 
 
-    def get_library_paths(self, filter_libraries: list[str]=[]
-            ) -> dict[str, list[str]]:
+    def get_library_paths(self,
+            filter_libraries: list[str] = []) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
 
@@ -238,9 +238,9 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         }
 
 
-    def get_all_series(self, filter_libraries: list[str]=[],
-            required_tags: list[str]=[]
-            ) -> list[tuple[SeriesInfo, str, str]]: 
+    def get_all_series(self,
+            filter_libraries: list[str] = [],
+            required_tags: list[str] = []) -> list[tuple[SeriesInfo, str, str]]: 
         """
         Get all series within Jellyfin, as filtered by the given
         libraries and tags.
@@ -362,7 +362,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return all_episodes
 
 
-    def has_series(self, series_info: 'SeriesInfo') -> bool:
+    def has_series(self, series_info: SeriesInfo) -> bool:
         """
         Determine whether the given series is present within Jellyfin.
 
@@ -443,7 +443,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 )
 
 
-    def set_title_cards(self, library_name: str, series_info: 'SeriesInfo',
+    def set_title_cards(self, library_name: str, series_info: SeriesInfo,
             episode_map: dict[str, 'Episode']) -> None:
         """
         Set the title cards for the given series. This only updates

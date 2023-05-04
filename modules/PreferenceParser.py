@@ -67,7 +67,7 @@ class PreferenceParser(YamlReader):
 
         # Initialize parent YamlReader object - errors are critical
         super().__init__(log_function=log.critical)
-        self.version = self.VERSION_FILE.read_text()
+        self.version = self.VERSION_FILE.read_text().strip()
         self.is_docker = is_docker
 
         # Store and read file

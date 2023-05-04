@@ -170,7 +170,8 @@ def check_for_update():
     except Exception:
         log.debug(f'Failed to check for new version')
     else:
-        if (available_version := response.json().get('name')) != pp.version:
+        available_version = response.json().get('name', '').strip()
+        if available_version != pp.version:
             log.info(f'New version of TitleCardMaker ({available_version}) '
                      f'available')
             if is_docker:
