@@ -227,49 +227,61 @@ def _refresh_episode_data(
 
     # Filter episodes
     changed, episodes = False, []
-    for episode in all_episodes:
+    for episode_info in all_episodes:
         # If a tuple, then it's a tuple of EpisodeInfo and watched status
         watched = None
-        if isinstance(episode, tuple):
-            episode, watched = episode
+        if isinstance(episode_info, tuple):
+            episode_info, watched = episode_info
 
         # Skip specials if indicated
-        if not sync_specials and episode.season_number == 0:
-            log.debug(f'Skipping {episode} - not syncing specials')
+        if not sync_specials and episode_info.season_number == 0:
+            log.debug(f'{series.log_str} Skipping {episode_info} - not syncing specials')
             continue
 
         # Check if this episode exists in the database currently
         existing = db.query(models.episode.Episode)\
             .filter_by(
                 series_id=series.id,
-                season_number=episode.season_number,
-                episode_number=episode.episode_number,
+                season_number=episode_info.season_number,
+                episode_number=episode_info.episode_number,
             ).first() 
 
         # Episode does not exist, add
         if existing is None:
-            log.debug(f'Series[{series.id}] New episode "{episode.title.full_title}"')
+            log.debug(f'{series.log_str} New episode "{episode_info.title.full_title}"')
             episode = models.episode.Episode(
                 series_id=series.id,
-                title=episode.title.full_title,
-                **episode.indices,
-                **episode.ids,
+                title=episode_info.title.full_title,
+                **episode_info.indices,
+                **episode_info.ids,
                 watched=watched,
-                airdate=episode.airdate,
+                airdate=episode_info.airdate,
             )
             db.add(episode)
             changed = True
             episodes.append(episode)
-        # Episode exists, if title matching and title doesn't match, update
-        elif ((existing.match_title
-                or (existing.match_title is None and series.match_titles))
-                and existing.title != episode.title.full_title):
-            existing.title = episode.title.full_title
-            log.debug(f'Episode[{episode.id}] Updating title')
-            changed = True
-            episodes.append(existing)
+        # Episode exists, check title matches and update watch status
+        else:
+            # If title matching, update if title does not match
+            do_title_match = (
+                existing.match_title
+                or (existing.match_title is None and series.match_titles)
+            )
+            add = False
+            if (do_title_match
+                and existing.title != episode_info.title.full_title):
+                existing.title = episode_info.title.full_title
+                log.debug(f'{series.log_str} {existing.log_str} Updating title')
+                changed, add = True, True
+            if watched is not None and existing.watched != watched:
+                log.debug(f'{series.log_str} {existing.log_str} Updating watched status')
+                existing.watched = watched
+                changed, add = True, True
 
-    # Add episode ID's for all new Episodes as background task or directly
+            if add:
+                episodes.append(existing)
+
+    # Set Episode ID's for all new Episodes as background task or directly
     if background_tasks is None:
         set_episode_ids(
             db, series, episodes,
