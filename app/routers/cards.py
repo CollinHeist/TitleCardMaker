@@ -13,7 +13,7 @@ from app.dependencies import (
 import app.models as models
 from app.routers.episodes import get_episode
 from app.routers.fonts import get_font
-from app.routers.series import get_series
+from app.routers.series import get_series, load_series_title_cards
 from app.routers.templates import get_template
 from app.schemas.font import DefaultFont
 from app.schemas.card import TitleCard, NewTitleCard, PreviewTitleCard
@@ -237,10 +237,10 @@ def _create_episode_card(
     # Exit if the source file does not exist
     if (CardClass.USES_UNIQUE_SOURCES
         and not card_settings['source_file'].exists()):
-        log.debug(f'Episode[{episode.id}] Skipping Card, no source image '
-                    f'("{card_settings["source_file"]}")')
+        log.debug(f'{series.log_str} {episode.log_str} Card source image '
+                    f'({card_settings["source_file"]}) is missing')
         # TODO Maybe not use invalid flag here
-        return ['invalid']
+        return ['missing_source']
 
     # Get card folder
     if card_settings.get('directory', None) is None:
@@ -287,16 +287,19 @@ def _create_episode_card(
             )
         return ['creating']
     # Existing card doesn't match, delete and remake
-    elif any(str(val) != str(getattr(card, attr))
-                for attr, val in existing_card.comparison_properties.items()):
-        # temporary logging
+    elif any(str(val) != str(getattr(card, attr)) 
+             for attr, val in existing_card.comparison_properties.items()):
+        # TODO delete temporary logging
         for attr, val in existing_card.comparison_properties.items():
             if str(val) != str(getattr(card, attr)):
                 log.info(f'Card.{attr} | existing={val}, new={getattr(card, attr)}')
-        log.debug(f'Card[{existing_card.id}] Detected change - recreating')
+        log.debug(f'{series.log_str} {episode.log_str} Card config changed - recreating')
         # Delete existing card file, remove from database
         card_settings['card_file'].unlink(missing_ok=True)
         db.delete(existing_card)
+        db.commit()
+
+        # Create new card 
         if background_tasks is None:
             create_card(db, preferences, card, card_settings)
         else:
@@ -304,6 +307,21 @@ def _create_episode_card(
                 create_card, db, preferences, card, card_settings
             )
         return ['creating', 'deleted']
+    # Existing card file doesn't exist anymore
+    elif not Path(existing_card.card_file).exists():
+        # Remove existing card from database
+        log.debug(f'{series.log_str} {episode.log_str} Card not found - recreating')
+        db.delete(existing_card)
+        db.commit()
+
+        # Create new card
+        if background_tasks is None:
+            create_card(db, preferences, card, card_settings)
+        else:
+            background_tasks.add_task(
+                create_card, db, preferences, card, card_settings
+            )
+        return ['creating']
         
     # Existing card matches, do nothing
     return []
@@ -491,7 +509,7 @@ def create_cards_for_series(
         emby_interface, jellyfin_interface, plex_interface, series, episodes
     )
 
-    stats = {'deleted': 0, 'invalid': 0, 'creating': 0}
+    stats = {'deleted': 0, 'missing_source': 0, 'invalid': 0, 'creating': 0}
     for episode in episodes:
         # Create this flag, get status flags
         flags = _create_episode_card(
@@ -606,7 +624,7 @@ def get_episode_card(
 
 
 @card_router.post('/key', tags=['Plex', 'Tautulli'], status_code=200)
-def remake_card(
+def create_cards_for_plex_key(
         background_tasks: BackgroundTasks,
         plex_rating_key: int = Body(...),
         # TODO other query options
@@ -639,6 +657,7 @@ def remake_card(
     log.debug(f'Identified {len(details)} entries from RatingKey={plex_rating_key}')
 
     Episode = models.episode.Episode
+    series_to_load = []
     for library_name, series_info, episode_info, watched_status in details:
         # Find Episode
         episode = db.query(Episode)\
@@ -671,5 +690,18 @@ def remake_card(
             _create_episode_card(
                 db, preferences, background_tasks, series, episode
             )
+
+            # Add this Series to list of Series to load
+            series_to_load.append(series)
+
+    # Load all series that require reloading
+    for series in series_to_load:
+        background_tasks.add_task(
+            # Function
+            load_series_title_cards,
+            # Args
+            series, 'Plex', db, emby_interface=None, jellyfin_interface=None,
+            plex_interface=plex_interface, force_reload=False,
+        )
 
     return None

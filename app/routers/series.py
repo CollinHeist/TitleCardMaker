@@ -102,12 +102,6 @@ def set_series_database_ids(
     return series
 
 
-series_router = APIRouter(
-    prefix='/series',
-    tags=['Series'],
-)
-
-
 def download_series_poster(
         db: 'Database',
         preferences: 'Preferences',
@@ -148,17 +142,17 @@ def download_series_poster(
     return None
 
 
-def load_title_cards(
-        series_id: int,
+def load_series_title_cards(
+        series: 'Series',
         media_server: MediaServer,
         db: 'Database',
         emby_interface: 'EmbyInterface',
         jellyfin_interface: 'JellyfinInterface',
         plex_interface: 'PlexInterface',
-        force_reload: bool):
+        force_reload: bool = False):
+    """
 
-    # Find series with this ID, raise 404 if DNE
-    series = get_series(db, series_id, raise_exc=True)
+    """
 
     # Get associated library for the indicated media server
     library = getattr(series, f'{media_server.lower()}_library_name', None)
@@ -172,7 +166,7 @@ def load_title_cards(
     if library is None:
         raise HTTPException(
             status_code=409,
-            detail=f'Series {series_id} has no {media_server} Library',
+            detail=f'Series {series.id} has no {media_server} Library',
         )
     elif interface is None:
         raise HTTPException(
@@ -182,7 +176,7 @@ def load_title_cards(
 
     # Get all episodes associated with this series
     all_episodes = db.query(models.episode.Episode)\
-        .filter_by(series_id=series_id).all()
+        .filter_by(series_id=series.id).all()
     
     # Get list of episodes to reload
     episodes_to_load = []
@@ -191,7 +185,7 @@ def load_title_cards(
         card = db.query(models.card.Card)\
             .filter_by(episode_id=episode.id).first()
         if card is None:
-            log.debug(f'Not loading {episode} - no associated card')
+            log.debug(f'{series.log_str} {episode.log_str} - no associated card')
             continue
 
         # Look for a previously loaded asset
@@ -207,8 +201,8 @@ def load_title_cards(
             episodes_to_load.append((episode, card))
         # Episode does not need to be (re)loaded
         else:
-            # TODO update logging to be more verbose
-            log.debug(f'Not loading {episode} - card has not changed') 
+            log.debug(f'{series.log_str} {episode.log_str} Not loading card - has not changed')
+            continue
 
     # Load into indicated interface
     loaded = interface.load_title_cards(
@@ -220,7 +214,7 @@ def load_title_cards(
         db.add(
             models.loaded.Loaded(
                 media_server=media_server,
-                series_id=series_id,
+                series_id=series.id,
                 episode_id=loaded_episode.id,
                 card_id=loaded_card.id,
                 filesize=loaded_card.filesize,
@@ -232,6 +226,12 @@ def load_title_cards(
         db.commit()
 
     return None
+
+
+series_router = APIRouter(
+    prefix='/series',
+    tags=['Series'],
+)
 
 
 @series_router.get('/all', status_code=200)
@@ -421,8 +421,11 @@ def load_title_cards_into_media_server(
     active, valid Interface connection.
     """
 
-    return load_title_cards(
-        series_id, media_server, db, emby_interface, jellyfin_interface,
+    # Get this Series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    return load_series_title_cards(
+        series, media_server, db, emby_interface, jellyfin_interface,
         plex_interface, force_reload=False
     )
 
@@ -445,8 +448,11 @@ def reload_title_cards_into_media_server(
     active, valid Interface connection.
     """
 
-    return load_title_cards(
-        series_id, media_server, db, emby_interface, jellyfin_interface,
+    # Get this Series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    return load_series_title_cards(
+        series, media_server, db, emby_interface, jellyfin_interface,
         plex_interface, force_reload=True
     )
 
