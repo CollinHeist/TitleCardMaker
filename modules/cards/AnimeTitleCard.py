@@ -38,6 +38,10 @@ class AnimeTitleCard(BaseCardType):
                 identifier='kanji_vertical_shift',
                 description='Additional vertical offset to apply only to kanji text',
             ), Extra(
+                name='Episode Text Color',
+                identifier='episode_text_color',
+                description='Color to utilize for the episode text',
+            ), Extra(
                 name='Separator Character',
                 identifier='separator',
                 description='Character to separate season and episode text',
