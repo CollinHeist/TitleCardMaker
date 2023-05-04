@@ -273,6 +273,11 @@ class BaseCardType(ImageMaker):
         """
 
         return [
+            f'-sampling-factor 4:4:4',
+            f'-set colorspace sRGB',
+            f'+profile "*"',
+            f'-background transparent',
+            f'-gravity center',
             f'-resize "{self.preferences.card_dimensions}"',
             f'-extent "{self.preferences.card_dimensions}"',
         ]
