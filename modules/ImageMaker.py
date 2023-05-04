@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from collections import namedtuple
 from pathlib import Path
 from re import findall, match
-from typing import Literal, Union
+from typing import Literal, Optional, Union
 
 from modules.Debug import log
 from modules.ImageMagickInterface import ImageMagickInterface
