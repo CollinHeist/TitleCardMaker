@@ -2,6 +2,7 @@ from typing import Literal, Optional, Union
 from urllib.parse import unquote
 
 from fastapi import APIRouter, Body, Depends, Form, HTTPException, Query, Request
+from requests import get
 from sqlalchemy.orm import Session
 
 from app.dependencies import (
@@ -13,10 +14,11 @@ from app.dependencies import (
 from app.schemas.base import UNSPECIFIED
 from app.schemas.preferences import (
     EmbyConnection, JellyfinConnection, PlexConnection, Preferences,
-    SonarrConnection, TMDbConnection, UpdateEmby, UpdateJellyfin, UpdatePlex,
-    UpdateSonarr, UpdateTMDb
+    SonarrConnection, TautulliConnection, TMDbConnection, UpdateEmby,
+    UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb
 )
 from modules.Debug import log
+from modules.TautulliInterface2 import TautulliInterface
 
 # Create sub router for all /connection API requests
 connection_router = APIRouter(
@@ -242,3 +244,53 @@ def update_tmdb_connection(
         refresh_tmdb_interface()
 
     return preferences
+
+
+@connection_router.post('/tautulli/check', status_code=200)
+def check_tautulli_integration(
+        request: Request,
+        tautulli_connection: TautulliConnection = Body(...)) -> bool:
+    """
+    Check whether Tautulli is integrated with TCM.
+
+    - tautulli_connection: Details of the connection to Tautull, and the
+    Notification Agent to search for integration of.
+    """
+
+    tcm_url = str(request.url).split('/tautulli/check')[0]
+
+    interface = TautulliInterface(
+        tcm_url=tcm_url,
+        tautulli_url=tautulli_connection.tautulli_url,
+        api_key=tautulli_connection.tautulli_api_key,
+        verify_ssl=tautulli_connection.tautulli_verify_ssl,
+        agent_name=tautulli_connection.tautulli_agent_name,
+    )
+
+    return interface.is_integrated()
+
+
+@connection_router.post('/tautulli/integrate', status_code=201)
+def add_tautulli_integration(
+        request: Request,
+        tautulli_connection: TautulliConnection = Body(...)) -> None:
+    """
+    Integrate Tautulli with TitleCardMaker by creating a Notification
+    Agent that triggers the /cards/key API route to quickly create
+    title cards.
+
+    - tautulli_connection: Details of the connection to Tautulli and the
+    Notification Agent to search for or create.
+    """
+
+    tcm_url = str(request.url).split('/api/connection/tautulli/integrate')[0]
+
+    interface = TautulliInterface(
+        tcm_url=tcm_url,
+        tautulli_url=tautulli_connection.tautulli_url,
+        api_key=tautulli_connection.tautulli_api_key,
+        verify_ssl=tautulli_connection.tautulli_verify_ssl,
+        agent_name=tautulli_connection.tautulli_agent_name,
+    )
+
+    interface.integrate()

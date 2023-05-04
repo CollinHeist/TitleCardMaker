@@ -58,7 +58,11 @@ MediaServer = Literal['Emby', 'Jellyfin', 'Plex']
 """
 Base classes
 """
-...
+class TautulliConnection(Base):
+    tautulli_url: str = Field(...)
+    tautulli_api_key: Hexstring = Field(..., min_length=1)
+    tautulli_verify_ssl: bool
+    tautulli_agent_name: str = Field(..., min_length=1)
 
 """
 Update classes
