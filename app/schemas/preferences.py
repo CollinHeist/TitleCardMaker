@@ -2,9 +2,11 @@ from pathlib import Path
 from re import IGNORECASE, compile as re_compile
 from typing import Literal, Optional, Union
 
-from pydantic import Field, root_validator, validator
+from pydantic import Field, PositiveInt, SecretStr, constr, root_validator, validator
 
 from app.schemas.base import Base, UNSPECIFIED, validate_argument_lists_to_dict
+
+Hexstring = constr(regex=r'^[a-f0-9]+$')
 
 CardExtension = Literal['.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp']
 FilesizeUnit = Literal[
@@ -120,19 +122,19 @@ class UpdateMediaServerBase(UpdateBase):
             }[v.lower()]
 
 class UpdateEmby(UpdateMediaServerBase):
-    api_key: str = Field(default=UNSPECIFIED)
+    api_key: Hexstring = Field(default=UNSPECIFIED)
     username: str = Field(default=UNSPECIFIED, min_length=1)
 
 class UpdateJellyfin(UpdateMediaServerBase):
-    api_key: str = Field(default=UNSPECIFIED)
+    api_key: Hexstring = Field(default=UNSPECIFIED)
     username: str = Field(default=UNSPECIFIED, min_length=1)
 
 class UpdatePlex(UpdateMediaServerBase):
-    token: str = Field(default=UNSPECIFIED)
+    token: Hexstring = Field(default=UNSPECIFIED)
     integrate_with_pmm: bool = Field(default=UNSPECIFIED)
 
 class UpdateSonarr(UpdateBase):
-    api_key: str = Field(default=UNSPECIFIED)
+    api_key: Hexstring = Field(default=UNSPECIFIED)
     use_ssl: bool = Field(default=UNSPECIFIED)
     library_names: list[str] = Field(default=UNSPECIFIED)
     library_paths: list[str] = Field(default=UNSPECIFIED)
@@ -151,9 +153,9 @@ class UpdateSonarr(UpdateBase):
         )
 
 class UpdateTMDb(Base):
-    api_key: str = Field(default=UNSPECIFIED)
-    minimum_width: int = Field(default=UNSPECIFIED, ge=0)
-    minimum_height: int = Field(default=UNSPECIFIED, ge=0)
+    api_key: Hexstring = Field(default=UNSPECIFIED)
+    minimum_width: PositiveInt = Field(default=UNSPECIFIED)
+    minimum_height: PositiveInt = Field(default=UNSPECIFIED)
     skip_localized: bool = Field(default=UNSPECIFIED)
     download_logos: bool = Field(default=UNSPECIFIED)
     logo_language_priority: list[LanguageCode] = Field(default=UNSPECIFIED)
@@ -194,35 +196,35 @@ class Preferences(Base):
 class EmbyConnection(Base):
     use_emby: bool
     emby_url: str
-    emby_api_key: str
+    emby_api_key: SecretStr #Hexstring
     emby_username: str = Field(min_length=1)
     emby_filesize_limit: Optional[int]
 
 class JellyfinConnection(Base):
     use_jellyfin: bool
     jellyfin_url: str
-    jellyfin_api_key: str
+    jellyfin_api_key: SecretStr #Hexstring
     jellyfin_username: str = Field(min_length=1)
     jellyfin_filesize_limit: Optional[int]
 
 class PlexConnection(Base):
     use_plex: bool
     plex_url: str
-    plex_token: str
+    plex_token: SecretStr
     plex_integrate_with_pmm: bool
     plex_filesize_limit: Optional[int]
 
 class SonarrConnection(Base):
     use_sonarr: bool
     sonarr_url: str
-    sonarr_api_key: str
-    sonarr_libraries: dict
+    sonarr_api_key: SecretStr #Hexstring
+    sonarr_libraries: dict[str, str]
 
 class TMDbConnection(Base):
     use_tmdb: bool
-    tmdb_api_key: str
-    tmdb_minimum_width: int
-    tmdb_minimum_height: int
+    tmdb_api_key: SecretStr #Hexstring
+    tmdb_minimum_width: PositiveInt
+    tmdb_minimum_height: PositiveInt
     tmdb_skip_localized: bool
     tmdb_download_logos: bool
     tmdb_logo_language_priority: list[LanguageCode]
