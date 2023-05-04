@@ -413,11 +413,11 @@
         type: 'POST',
         url: '/api/cards/series/{{series.id}}',
         success: (response) => {
-          const {deleted, invalid, creating} = response;
+          const {deleted, missing_source, invalid, creating} = response;
           $.toast({
             class: 'blue info',
             title: 'Started Title Card Creation',
-            message: `<ul class="ui list"><li>Deleted ${deleted} cards</li><li>${invalid} invalid cards</li><li>Creating ${creating} cards</li></ul>`,
+            message: `<ul class="ui list"><li>Creating ${creating} cards</li><li>Deleted ${deleted} cards</li><li>Missing ${missing_source} source images</li><li>${invalid} invalid cards</li></ul>`,
           });
           getEpisodeData();
           getStatistics();
