@@ -69,7 +69,11 @@ def refresh_all_episode_data():
             # Get all Series
             all_series = db.query(models.series.Series).all()
             for series in all_series:
-                # TODO add check for "monitored" attribute
+                # If Series is unmonitored, skip
+                if not series.monitored:
+                    log.debug(f'{series.log_str} is Unmonitored, skipping')
+                    continue
+
                 _refresh_episode_data(
                     db, get_preferences(), series, get_emby_interface(),
                     get_jellyfin_interface(), get_plex_interface(),

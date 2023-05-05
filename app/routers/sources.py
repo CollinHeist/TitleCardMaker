@@ -34,7 +34,11 @@ def download_all_series_logos():
             # Get all Series
             all_series = db.query(models.series.Series).all()
             for series in all_series:
-                # TODO add check for "monitored" attribute
+                # If Series is unmonitored, skip
+                if not series.monitored:
+                    log.debug(f'{series.log_str} is Unmonitored, skipping')
+                    continue
+
                 try:
                     _download_series_logo(
                         db, get_preferences(), get_emby_interface(),

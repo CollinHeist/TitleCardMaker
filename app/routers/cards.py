@@ -211,7 +211,8 @@ def _create_episode_card(
     # If no episode text was indicated, determine
     if card_settings.get('episode_text', None) is None:
         if card_settings.get('episode_text_format', None) is None:
-            CardClass.EPISODE_TEXT_FORMAT.format(**card_settings)
+            card_settings['episode_text'] =\
+                CardClass.EPISODE_TEXT_FORMAT.format(**card_settings)
         else:
             try:
                 fmt = card_settings['episode_text_format']

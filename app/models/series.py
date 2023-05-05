@@ -8,7 +8,6 @@ from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy import PickleType
 
 from app.database.session import Base
-from app.dependencies import get_preferences
 from modules.CleanPath import CleanPath
 from modules.SeriesInfo import SeriesInfo
 
@@ -19,8 +18,9 @@ class Series(Base):
 
     # Required arguments
     id = Column(Integer, primary_key=True)
-    name = Column(String)
-    year = Column(Integer)
+    name = Column(String, nullable=False)
+    year = Column(Integer, nullable=False)
+    monitored = Column(Boolean, default=True, nullable=False)
     poster_file = Column(String, default=str(ASSET_DIRECTORY/'placeholder.jpg'))
     poster_url = Column(String, default='/assets/placeholder.jpg')
 

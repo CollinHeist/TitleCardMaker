@@ -70,6 +70,7 @@ class BaseSeries(BaseConfig):
         title='Series year',
         description='Year the series first aired'
     )
+    monitored: bool
     template_id: Optional[int] = Field(
         default=None,
         title='Template ID',
@@ -126,6 +127,7 @@ class BaseSeries(BaseConfig):
 
 class BaseUpdate(Base):
     name: Optional[str] = Field(default=UNSPECIFIED, min_length=1)
+    monitored: bool = Field(default=UNSPECIFIED)
     font_id: Optional[int] = Field(default=UNSPECIFIED)
     sync_specials: Optional[bool] = Field(default=UNSPECIFIED)
     skip_localized_images: Optional[bool] = Field(default=UNSPECIFIED)

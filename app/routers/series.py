@@ -375,15 +375,10 @@ def update_series(
     - update_series: Attributes of the Series to update.
     """
     log.critical(f'{update_series.dict()=}')
-    # Query for this series, raise 404 if DNE
-    series = db.query(models.series.Series).filter_by(id=series_id).first()
-    if series is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Series {series_id} not found',
-        )
+    # Query for this Series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
 
-    # If a template or font were indicated, verify they exist
+    # If a Template or Font were indicated, verify they exist
     get_template(db, getattr(update_series, 'template_id', None),raise_exc=True)
     get_font(db, getattr(update_series, 'font_id', None), raise_exc=True)
 
@@ -399,6 +394,27 @@ def update_series(
     if changed:
         db.commit()
     
+    return series
+
+
+@series_router.post('/{series_id}/toggle-monitor', status_code=201)
+def toggle_series_monitored_status(
+        series_id: int,
+        db = Depends(get_database)) -> Series:
+    """
+    Toggle the monitored attribute of the given Series.
+
+    - series_id: ID of the Series to toggle the monitored attribute of.
+    """
+
+    # Query for this Series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Toggle monitored attribute, update Database
+    series.monitored = not series.monitored
+    log.debug(f'{series.log_str}.monitored={series.monitored}')
+    db.commit()
+
     return series
 
 

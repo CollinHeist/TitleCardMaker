@@ -272,7 +272,7 @@
       const statistics = await fetch('/api/statistics/series/{{series.id}}').then(resp => resp.json());
       const cardStat = statistics[0],
             episodeStat = statistics[1];
-      $('#card-count')[0].innerHTML = `<i class="image outline icon"></i><span class="ui blue text">${cardStat.value} Cards</span> / <span class="ui red text">${episodeStat.value} Episodes</span>`;
+      $('#card-count')[0].innerHTML = `<i class="image outline icon"></i><span class="ui text">${cardStat.value} Cards / ${episodeStat.value} Episodes</span>`;
     }
 
     // Get all available libraries for Emby and Plex
@@ -364,6 +364,32 @@
       initStyles();
       // Schedule recurring statistics query
       setInterval(getStatistics, 30000); // Refresh stats every 30s
+    }
+
+    async function toggleMonitorStatus() {
+      $.ajax({
+        type: 'POST',
+        url: '/api/series/{{series.id}}/toggle-monitor',
+        success: response => {
+          // Show toast, toggle text and icon to show new status
+          if (response.monitored) {
+            $.toast({class: 'blue info', title: 'Started Monitoring Series'});
+            $('#monitor-status span').toggleClass('red', false).toggleClass('green', true);
+            $('#monitor-status span')[0].innerHTML = '<i class="ui eye outline green icon"></i>Monitored';
+          } else {
+            $.toast({class: 'warning', title: 'Stopped Monitoring Series'});
+            $('#monitor-status span').toggleClass('red', true).toggleClass('green', false);
+            $('#monitor-status span')[0].innerHTML = '<i class="ui eye slash outline red icon"></i>Unmonitored';
+          }
+        }, error: response => {
+          $.toast({
+            class: 'error',
+            title: 'Error Changing Status',
+            message: response.responseJSON.detail,
+            displayTime: 0,
+          });
+        }, complete: () => {}
+      });
     }
 
     async function refreshEpisodeData() {
@@ -987,6 +1013,20 @@
             </div>
             <div id="card-count" class="extra content">
               <!-- Added asynchronously -->
+            </div>
+            <div id="monitor-status" class="extra content">
+              <a onclick="toggleMonitorStatus();" data-tooltip="Monitored Series are automatically updated via the Scheduler">
+                {% if series.monitored %}
+                <span class="ui left floated green text">
+                  <i class="ui eye outline green icon"></i>
+                  Monitored
+                {% else %}
+                <span class="ui left floated red text">
+                  <i class="ui eye slash outline red icon"></i>
+                  Unmonitored
+                {% endif %}
+                </span>
+              </a>
             </div>
           </div>
           <!-- Series action bottons -->
