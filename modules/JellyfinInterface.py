@@ -193,17 +193,26 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return None 
 
 
-    def set_episode_ids(self, series_info: SeriesInfo,
-            infos: list[EpisodeInfo]) -> None:
+    def set_episode_ids(self,
+            library_name: Optional[str],
+            series_info: SeriesInfo,
+            episode_infos: list[EpisodeInfo],
+            inplace: bool=False) -> None:
         """
         Set the Episode ID's for the given EpisodeInfo objects.
 
         Args:
             series_info: Series to get the episodes of.
-            infos: List of EpisodeInfo objects to set the ID's of.
+            episode_infos: List of EpisodeInfo objects to set the ID's
+                of.
+            inplace: Whether to modify episode_infos directly, or use
+                the global MediaInfoSet object.
         """
 
-        self.get_all_episodes(series_info)
+        if inplace:
+            self.get_all_episodes(series_info, infos)
+        else:
+            self.get_all_episodes(series_info)
 
 
     def get_library_paths(self,
@@ -304,13 +313,18 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return all_series
 
 
-    def get_all_episodes(self, series_info: SeriesInfo) -> list[EpisodeInfo]:
+    def get_all_episodes(self,
+            series_info: SeriesInfo,
+            episode_infos: Optional[list[EpisodeInfo]] = None,
+            ) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that
-        have  already aired are returned.
+        have already aired are returned.
 
         Args:
             series_info: Series to get the episodes of.
+            episode_infos: Optional EpisodeInfos. If provided, these are
+                updated instead of using the global MediaInfoSet object.
 
         Returns:
             List of EpisodeInfo objects for this series.
@@ -334,30 +348,47 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             airdate = None
             if 'PremiereDate' in episode:
                 try:
-                    airdate = datetime.strptime(episode['PremiereDate'],
-                                                self.AIRDATE_FORMAT)
+                    airdate = datetime.strptime(
+                        episode['PremiereDate'], self.AIRDATE_FORMAT
+                    )
                 except Exception as e:
                     log.exception(f'Cannot parse airdate', e)
                     log.debug(f'Episode data: {episode}')
+            
+            # Create new EpisodeInfo via global MediaInfoSet object
+            if episode_infos is None:
+                episode_info = self.info_set.get_episode_info(
+                    series_info,
+                    episode['Name'],
+                    episode['ParentIndexNumber'],
+                    episode['IndexNumber'],
+                    jellyfin_id=episode.get('Id'),
+                    imdb_id=episode['ProviderIds'].get('Imdb'),
+                    tmdb_id=episode['ProviderIds'].get('Tmdb'),
+                    tvdb_id=episode['ProviderIds'].get('Tvdb'),
+                    tvrage_id=episode['ProviderIds'].get('TvRage'),
+                    airdate=airdate,
+                    title_match=True,
+                    queried_jellyfin=True,
+                )
 
-            episode_info = self.info_set.get_episode_info(
-                series_info,
-                episode['Name'],
-                episode['ParentIndexNumber'],
-                episode['IndexNumber'],
-                jellyfin_id=episode.get('Id'),
-                imdb_id=episode['ProviderIds'].get('Imdb'),
-                tmdb_id=episode['ProviderIds'].get('Tmdb'),
-                tvdb_id=episode['ProviderIds'].get('Tvdb'),
-                tvrage_id=episode['ProviderIds'].get('TvRage'),
-                airdate=airdate,
-                title_match=True,
-                queried_jellyfin=True,
-            )
-
-            # Add to list
-            if episode_info is not None:
-                all_episodes.append(episode_info)
+                # Add to list
+                if episode_info is not None:
+                    all_episodes.append(episode_info)
+            # If updating existing infos, match by index
+            else:
+                tmp_ei = (episode['ParentIndexNumber'], episode['IndexNumber'])
+                for episode_info in episode_infos:
+                    # Index match, update ID's
+                    if episode_info == tmp_ei:
+                        ep_ids = episode['ProviderIds']
+                        episode_info.set_jellyfin_id(episode.get('Id'))
+                        episode_info.set_imdb_id(ep_ids.get('Imdb'))
+                        episode_info.set_tmdb_id(ep_ids.get('Tmdb'))
+                        episode_info.set_tvdb_id(ep_ids.get('Tvdb'))
+                        episode_info.set_tvrage_id(ep_ids.get('TvRage'))
+                        all_episodes.append(episode_info)
+                        break
 
         return all_episodes
 

@@ -1,6 +1,6 @@
 from base64 import b64encode
 from datetime import datetime
-from typing import Union
+from typing import Optional, Union
 
 from modules.Debug import log
 from modules.EpisodeDataSource import EpisodeDataSource
@@ -221,8 +221,11 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return None 
 
 
-    def set_episode_ids(self, series_info: SeriesInfo,
-            infos: list[EpisodeInfo]) -> None:
+    def set_episode_ids(self,
+            library_name: Optional[str],
+            series_info: SeriesInfo,
+            episode_infos: list[EpisodeInfo],
+            inplace: bool=False) -> None:
         """
         Set the Episode ID's for the given EpisodeInfo objects.
 
@@ -231,11 +234,14 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             infos: List of EpisodeInfo objects to set the ID's of.
         """
 
-        self.get_all_episodes(series_info)
+        if inplace:
+            self.get_all_episodes(series_info, episode_infos)
+        else:
+            self.get_all_episodes(series_info)
 
 
-    def get_library_paths(self, filter_libraries: list[str] = []
-            ) -> dict[str, list[str]]:
+    def get_library_paths(self,
+            filter_libraries: list[str] = []) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
 
@@ -329,13 +335,18 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return all_series
 
 
-    def get_all_episodes(self, series_info: SeriesInfo) -> list[EpisodeInfo]:
+    def get_all_episodes(self,
+            series_info: SeriesInfo,
+            episode_infos: Optional[list[EpisodeInfo]] = None
+            ) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that
-        have  already aired are returned.
+        have already aired are returned.
 
         Args:
             series_info: Series to get the episodes of.
+            episode_infos: Optional EpisodeInfos. If provided, these are
+                updated instead of using the global MediaInfoSet object.
 
         Returns:
             List of EpisodeInfo objects for this series.
@@ -364,24 +375,40 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 log.exception(f'Cannot parse airdate', e)
                 log.debug(f'Episode data: {episode}')
 
-            episode_info = self.info_set.get_episode_info(
-                series_info,
-                episode['Name'],
-                episode['ParentIndexNumber'],
-                episode['IndexNumber'],
-                emby_id=int(episode.get('Id')),
-                imdb_id=episode['ProviderIds'].get('Imdb'),
-                tmdb_id=episode['ProviderIds'].get('Tmdb'),
-                tvdb_id=episode['ProviderIds'].get('Tvdb'),
-                tvrage_id=episode['ProviderIds'].get('TvRage'),
-                airdate=airdate,
-                title_match=True,
-                queried_emby=True,
-            )
+            # Create new EpisodeInfo via global MediaInfoSet object
+            if episode_infos is None:
+                episode_info = self.info_set.get_episode_info(
+                    series_info,
+                    episode['Name'],
+                    episode['ParentIndexNumber'],
+                    episode['IndexNumber'],
+                    emby_id=int(episode.get('Id')),
+                    imdb_id=episode['ProviderIds'].get('Imdb'),
+                    tmdb_id=episode['ProviderIds'].get('Tmdb'),
+                    tvdb_id=episode['ProviderIds'].get('Tvdb'),
+                    tvrage_id=episode['ProviderIds'].get('TvRage'),
+                    airdate=airdate,
+                    title_match=True,
+                    queried_emby=True,
+                )
 
-            # Add to list
-            if episode_info is not None:
-                all_episodes.append(episode_info)
+                # Add to list
+                if episode_info is not None:
+                    all_episodes.append(episode_info)
+            # If updating existing infos, match by index
+            else:
+                tmp_ei = (episode['ParentIndexNumber'], episode['IndexNumber'])
+                for episode_info in episode_infos:
+                    # Index match, update ID's
+                    if episode_info == tmp_ei:
+                        ep_ids = episode['ProviderIds']
+                        episode_info.set_emby_id(episode.get('Id'))
+                        episode_info.set_imdb_id(ep_ids.get('Imdb'))
+                        episode_info.set_tmdb_id(ep_ids.get('Tmdb'))
+                        episode_info.set_tvdb_id(ep_ids.get('Tvdb'))
+                        episode_info.set_tvrage_id(ep_ids.get('TvRage'))
+                        all_episodes.append(episode_info)
+                        break
 
         return all_episodes
 

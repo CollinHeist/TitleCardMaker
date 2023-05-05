@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 
 from tinydb import where, Query
 
@@ -56,9 +56,9 @@ class MediaInfoSet:
         return db_value == search_value
 
 
-    def __series_info_condition(self, full_name: str, emby_id: str,
-            imdb_id: str, jellyfin_id: str, sonarr_id: int, tmdb_id: int,
-            tvdb_id: int, tvrage_id: int) -> Query:
+    def __series_info_condition(self,
+            full_name: str, emby_id: str, imdb_id: str, jellyfin_id: str,
+            sonarr_id: int, tmdb_id: int, tvdb_id: int,tvrage_id: int) -> Query:
         """
         Get the Query condition associated with the given SeriesInfo
         attributes.
@@ -83,15 +83,17 @@ class MediaInfoSet:
         )
 
 
-    def get_series_info(self, name: str=None, year: int=None, *,
-            emby_id: str=None,
-            imdb_id: str=None,
-            jellyfin_id: str=None,
-            sonarr_id: int=None,
-            tmdb_id: int=None,
-            tvdb_id: int=None,
-            tvrage_id: int=None,
-            match_titles: bool=True) -> SeriesInfo:
+    def get_series_info(self,
+            name: Optional[str] = None,
+            year: Optional[int] = None, *,
+            emby_id: Optional[str] = None,
+            imdb_id: Optional[str] = None,
+            jellyfin_id: Optional[str] = None,
+            sonarr_id: Optional[int] = None,
+            tmdb_id: Optional[int] = None,
+            tvdb_id: Optional[int] = None,
+            tvrage_id: Optional[int] = None,
+            match_titles: bool = True) -> SeriesInfo:
         """
         Get the SeriesInfo object indicated by the given attributes.
         This looks for an existing object mapped under any of the given
@@ -175,8 +177,8 @@ class MediaInfoSet:
         )
 
 
-    def __set_series_id(self, id_type: str, series_info: SeriesInfo,
-            id_: Any) -> None:
+    def __set_series_id(self,
+            id_type: str, series_info: SeriesInfo, id_: Any) -> None:
         """
         Set the series ID within this object's database and on the given
         SeriesInfo object.
@@ -238,9 +240,9 @@ class MediaInfoSet:
 
 
     @staticmethod
-    def __get_episode_info_storage_keys(series_info: SeriesInfo, season_number,
-            episode_number, emby_id, imdb_id, jellyfin_id, tmdb_id, tvdb_id,
-            tvrage_id) -> list[str]:
+    def __get_episode_info_storage_keys(
+            series_info, season_number, episode_number, emby_id, imdb_id,
+            jellyfin_id, tmdb_id, tvdb_id, tvrage_id) -> list[str]:
         """
         Get the keys to update within the EpisodeInfo map for the given
         data.
@@ -266,12 +268,21 @@ class MediaInfoSet:
         return new_keys
 
 
-    def get_episode_info(self, series_info: SeriesInfo, title: str,
-            season_number: int, episode_number: int, abs_number: int=None, *,
-            emby_id: str=None, imdb_id: str=None, jellyfin_id: str=None,
-            tmdb_id: int=None, tvdb_id: int=None, tvrage_id: int=None,
-            airdate: 'datetime'=None, title_match: bool=True,
-            **queried_kwargs: dict) -> EpisodeInfo:
+    def get_episode_info(self,
+            series_info: SeriesInfo,
+            title: str,
+            season_number: int,
+            episode_number: int,
+            abs_number: Optional[int] = None, *,
+            emby_id: Optional[str] = None,
+            imdb_id: Optional[str] = None,
+            jellyfin_id: Optional[str] = None,
+            tmdb_id: Optional[int] = None,
+            tvdb_id: Optional[int] = None,
+            tvrage_id: Optional[int] = None,
+            airdate: Optional['datetime'] = None,
+            title_match: bool = True,
+            **queried_kwargs: dict[str, bool]) -> EpisodeInfo:
         """
         Get the EpisodeInfo object indicated by the given attributes.
 
@@ -282,12 +293,7 @@ class MediaInfoSet:
             season_number: Season number of the episode.
             episode_number: Episode number of the episode.
             abs_number: Optional absolute number of the episode.
-            emby_id: (Keyword only) Optional Emby ID.
-            imdb_id: (Keyword only) Optional IMDb ID.
-            jellyfin_id: (Keyword only) Optional Jellyfin ID.
-            tmdb_id: (Keyword only) Optional TMDb ID.
-            tvdb_id: (Keyword only) Optional TVDb ID.
-            tvrage_id: (Keyword only) Optional TVRage ID.
+            *_id: (Keyword only) Database ID's.
             airdate: (Keyword only) Optional airdate of the episode
             queried_kwargs: Any queried_{interface} keyword arguments.
 

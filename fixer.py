@@ -228,13 +228,14 @@ if ((hasattr(args, 'import_cards') or hasattr(args, 'revert_series'))
         archive = pp.source_directory / series_info.full_clean_name
         library = args.revert_series[0]
 
-    # Get series ID's if provided
+    # Get series database ID's
     if args.id:
         for id_type, id_ in args.id:
             try:
                 getattr(series_info, f'set_{id_type}_id')(id_)
             except Exception as e:
                 log.error(f'Unrecognized ID type "{id_type}" - {e}')
+    media_interface.set_series_ids(library, series_info)
 
     # Forget cards associated with this series
     media_interface.remove_records(library, series_info)
@@ -246,7 +247,7 @@ if ((hasattr(args, 'import_cards') or hasattr(args, 'revert_series'))
         exit(1)
 
     # For each image, fill out episode map to load into server
-    episode_map = {}
+    episode_infos, episode_map = [], {}
     for image in all_images:
         if (groups := match(r'.*s(\d+).*e(\d+)', image.name, IGNORECASE)):
             season, episode = map(int, groups.groups())
@@ -255,8 +256,15 @@ if ((hasattr(args, 'import_cards') or hasattr(args, 'revert_series'))
             continue
 
         # Import image into library
-        ep = Episode(image, EpisodeInfo('', season, episode), 'spoiled')
+        episode_infos.append((episode_info := EpisodeInfo('', season, episode)))
+        ep = Episode(image, episode_info, 'spoiled')
         episode_map[f'{season}-{episode}'] = ep
+
+    # Set EpisodeInfo database ID's
+    media_interface.set_episode_ids(
+        library=library, series_info=series_info, episode_infos=episode_infos,
+        inplace=True
+    )
 
     # Load images into server
     media_interface.set_title_cards(library, series_info, episode_map)

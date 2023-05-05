@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 from num2words import num2words
 
@@ -176,7 +176,7 @@ class EpisodeInfo(DatabaseInfoContainer):
         return f'{self.season_number}-{self.episode_number+count}'
 
 
-    def __eq__(self, other_info: 'EpisodeInfo') -> bool:
+    def __eq__(self, other_info: Union['EpisodeInfo', tuple[int, int]]) -> bool:
         """
         Returns whether the given EpisodeInfo object corresponds to the
         same entry (has the same season and episode index).
@@ -187,19 +187,31 @@ class EpisodeInfo(DatabaseInfoContainer):
         Returns:
             True if the season and episode number of the two objects
             match,  False otherwise.
+
+        Raises:
+            TypeError if other_info is not an EpisodeInfo or two-length
+            tuple of integers.
         """
 
-        # Verify the comparison is another EpisodeInfo object
-        if not isinstance(other_info, EpisodeInfo):
-            raise TypeError(
-                f'Can only compare equality between EpisodeInfo objects'
+        # If another EpisodeInfo, compare by indices
+        if isinstance(other_info, EpisodeInfo):
+            return (
+                self.season_number == other_info.season_number
+                and self.episode_number == other_info.episode_number
+            )
+        # If a tuple of indices, compare
+        elif (isinstance(other_info, tuple) and len(other_info) == 2
+            and all(isinstance(entry, int) for entry in other_info)):
+            return (
+                self.season_number == other_info[0]
+                and self.episode_number == other_info[1]
             )
 
-        # Equality is determined by season and episode number only
-        season_match = (self.season_number == other_info.season_number)
-        episode_match = (self.episode_number == other_info.episode_number)
-
-        return season_match and episode_match
+        # Unsupported comparison type
+        raise TypeError(
+            f'Can only compare equality between EpisodeInfo objects and two-'
+            f'length tuples'
+        )
 
 
     @property
