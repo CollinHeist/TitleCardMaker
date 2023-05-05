@@ -77,6 +77,7 @@ class FadeTitleCard(BaseCardType):
             season_text: str,
             episode_text: str,
             hide_season_text: bool = False,
+            hide_episode_text: bool = False,
             font_color: str = TITLE_COLOR, 
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
@@ -129,11 +130,16 @@ class FadeTitleCard(BaseCardType):
 
         # Store attributes of the text
         self.title_text = self.image_magick.escape_chars(title_text)
-        if hide_season_text:
-            self.index_text=self.image_magick.escape_chars(episode_text.upper())
+        if ((hide_season_text or len(season_text) == 0)
+            and (hide_episode_text or len(episode_text) == 0)):
+            index_text = ''
+        elif hide_season_text or len(season_text) == 0:
+            index_text = episode_text
+        elif hide_episode_text or len(episode_text) == 0:
+            index_text = season_text
         else:
-            index_text = f'{season_text} {separator} {episode_text}'.upper()
-            self.index_text = self.image_magick.escape_chars(index_text)
+            index_text = f'{season_text} {separator} {episode_text}'
+        self.index_text = self.image_magick.escape_chars(index_text.upper())
 
         # Font customizations
         self.font_color = font_color
