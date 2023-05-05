@@ -21,11 +21,8 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
     cards can be loaded into).
     """
 
-    """Default no filesize limit for all uploaded assets"""
+    """Default is no filesize limit for all uploaded assets"""
     DEFAULT_FILESIZE_LIMIT = None
-
-    """Filepath to the database of each episode's loaded card characteristics"""
-    LOADED_DB = 'loaded_jellyfin.json'
 
     """Series ID's that can be set by Jellyfin"""
     SERIES_IDS = ('imdb_id', 'jellyfin_id', 'tmdb_id', 'tvdb_id')
@@ -86,7 +83,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         self.libraries = self._map_libraries()
 
 
-    def _get_user_id(self, username: str) -> 'str | None':
+    def _get_user_id(self, username: str) -> Optional[str]:
         """
         Get the User ID associated with the given username.
 
@@ -133,7 +130,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return {
             library['Name']: library['Id']
             for library in libraries['Items']
-            if library['CollectionType'] == 'tvshows'
+            if library.get('CollectionType', None) == 'tvshows'
         }
 
 
@@ -229,8 +226,8 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                     break
 
 
-    def get_library_paths(self, filter_libraries: list[str]=[]
-            ) -> dict[str, list[str]]:
+    def get_library_paths(self,
+            filter_libraries: list[str] = []) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
 
