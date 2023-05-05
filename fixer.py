@@ -262,8 +262,8 @@ if ((hasattr(args, 'import_cards') or hasattr(args, 'revert_series'))
 
     # Set EpisodeInfo database ID's
     media_interface.set_episode_ids(
-        library=library, series_info=series_info, episode_infos=episode_infos,
-        inplace=True
+        library_name=library, series_info=series_info,
+        episode_infos=episode_infos, inplace=True
     )
 
     # Load images into server

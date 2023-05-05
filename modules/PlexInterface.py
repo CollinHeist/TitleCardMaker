@@ -459,7 +459,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     @catch_and_log("Error setting series ID's")
-    def set_series_ids(self, library_name: str,series_info: SeriesInfo) -> None:
+    def set_series_ids(self,library_name: str, series_info: SeriesInfo) -> None:
         """
         Set all possible series ID's for the given SeriesInfo object.
 
@@ -482,14 +482,30 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # Set series ID's of all provided GUIDs
         for guid in series.guids:
-            if 'imdb://' in guid.id:
-                self.info_set.set_imdb_id(series_info, guid.id[len('imdb://'):])
-            elif 'tmdb://' in guid.id:
-                tmdb_id = int(guid.id[len('tmdb://'):])
-                self.info_set.set_tmdb_id(series_info, tmdb_id)
-            elif 'tvdb://' in guid.id:
-                tvdb_id = int(guid.id[len('tvdb://'):])
-                self.info_set.set_tvdb_id(series_info, tvdb_id)
+            # No MediaInfoSet, set directly
+            if self.info_set is None:
+                if 'imdb://' in guid.id:
+                    series_info.set_imdb_id(guid.id[len('imdb://'):])
+                elif 'tmdb://' in guid.id:
+                    series_info.set_tmdb_id(guid.id[len('tmdb://'):])
+                elif 'tvdb://' in guid.id:
+                    series_info.set_tvdb_id(guid.id[len('tvdb://'):])
+            # Set using global MediaInfoSet
+            else:
+                if 'imdb://' in guid.id:
+                    self.info_set.set_imdb_id(
+                        series_info, guid.id[len('imdb://'):]
+                    )
+                elif 'tmdb://' in guid.id:
+                    self.info_set.set_tmdb_id(
+                        series_info, guid.id[len('tmdb://'):]
+                    )
+                elif 'tvdb://' in guid.id:
+                    self.info_set.set_tvdb_id(
+                        series_info, guid.id[len('tvdb://'):]
+                    )
+
+        return None
 
 
     @catch_and_log("Error setting episode ID's")

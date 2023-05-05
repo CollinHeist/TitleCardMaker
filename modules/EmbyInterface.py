@@ -204,14 +204,25 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             for result in response['Items']:
                 if (result['Type'] == 'Series'
                     and series_info.matches(result['Name'])):
-                    # Set Emby, IMDb, TMDb, or TVDb
-                    self.info_set.set_emby_id(series_info, int(result['Id']))
-                    if (imdb_id := result['ProviderIds'].get('IMDB')):
-                        self.info_set.set_imdb_id(series_info, imdb_id)
-                    if (tmdb_id := result['ProviderIds'].get('Tmdb')):
-                        self.info_set.set_tmdb_id(series_info, int(tmdb_id))
-                    if (tvdb_id := result['ProviderIds'].get('Tvdb')):
-                        self.info_set.set_tvdb_id(series_info, int(tvdb_id))
+                    ids = result.get('ProviderIds', {})
+                    # No MediaInfoSet, set directly
+                    if self.info_set is None:
+                        series_info.set_emby_id(result['Id'])
+                        series_info.set_imdb_id(ids.get('IMDB', None))
+                        series_info.set_tmdb_id(ids.get('Tmdb', None))
+                        series_info.set_tvdb_id(ids.get('Tvdb', None))
+                    # Set using global MediaInfoSet
+                    else:
+                        self.info_set.set_emby_id(series_info, result['Id'])
+                        self.info_set.set_emby_id(
+                            series_info, ids.get('IMDb', None)
+                        )
+                        self.info_set.set_tmdb_id(
+                            series_info, ids.get('Tmdb', None)
+                        )
+                        self.info_set.set_tmdb_id(
+                            series_info, ids.get('Tvdb', None)
+                        )
                         
                     return None
 
