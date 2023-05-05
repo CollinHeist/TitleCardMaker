@@ -222,7 +222,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         """
 
         if inplace:
-            self.get_all_episodes(series_info, infos)
+            self.get_all_episodes(series_info, episode_infos)
         else:
             self.get_all_episodes(series_info)
 
