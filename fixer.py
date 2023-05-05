@@ -203,12 +203,16 @@ if ((hasattr(args, 'import_cards') or hasattr(args, 'revert_series'))
         spoil_type: str
         
     # Create MediaServer Interface
-    if args.media_server == 'emby':
-        media_interface = EmbyInterface(**pp.emby_interface_kwargs)
-    elif args.media_server == 'jellyfin':
-        media_interface = JellyfinInterface(**pp.jellyfin_interface_kwargs)
-    else:
-        media_interface = PlexInterface(**pp.plex_interface_kwargs)
+    try:
+        if args.media_server == 'emby':
+            media_interface = EmbyInterface(**pp.emby_interface_kwargs)
+        elif args.media_server == 'jellyfin':
+            media_interface = JellyfinInterface(**pp.jellyfin_interface_kwargs)
+        else:
+            media_interface = PlexInterface(**pp.plex_interface_kwargs)
+    except Exception as e:
+        log.critical(f'Cannot connect to "{args.media_server}" Media Server')
+        exit(1)
 
     # Get series/name + year from archive directory if unspecified
     if hasattr(args, 'import_cards'):
