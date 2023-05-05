@@ -210,8 +210,15 @@ def _create_episode_card(
     
     # If no episode text was indicated, determine
     if card_settings.get('episode_text', None) is None:
-        # TODO calculate using episode text format
-        card_settings['episode_text'] = 'Episode {episode_number}'.format(**card_settings)
+        if card_settings.get('episode_text_format', None) is None:
+            CardClass.EPISODE_TEXT_FORMAT.format(**card_settings)
+        else:
+            try:
+                fmt = card_settings['episode_text_format']
+                card_settings['episode_text'] = fmt.format(**card_settings)
+            except KeyError as e:
+                log.exception(f'{series.log_str} {episode.log_str} Episode Text Format is invalid - {e}', e)
+                return ['invalid']
 
     # Turn styles into boolean style toggles
     if (watched := card_settings.get('watched', None)) is not None:
