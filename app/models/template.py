@@ -48,3 +48,11 @@ class Template(Base):
             'watched_style': self.watched_style,
             'extras': self.extras,
         }
+
+
+    @hybrid_property
+    def image_source_properties(self) -> dict[str, Any]:
+        return {
+            'image_source_priority': self.image_source_priority,
+            'skip_localized_images': self.skip_localized_images,
+        }

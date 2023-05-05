@@ -107,6 +107,13 @@ class Series(Base):
         }
 
     @hybrid_property
+    def image_source_properties(self) -> dict[str, Any]:
+        return {
+            # 'image_source_priority': self.image_source_priority,
+            'skip_localized_images': self.skip_localized_images,
+        }
+
+    @hybrid_property
     def as_series_info(self) -> SeriesInfo:
         return SeriesInfo(
             name=self.name,
