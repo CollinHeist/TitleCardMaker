@@ -22,10 +22,44 @@ from modules.TieredSettings import TieredSettings
 from modules.WebInterface import WebInterface
 
 
+def download_all_source_images() -> None:
+    """
+    Schedule-able function to attempt to download all source images for
+    all monitored Series and Episodes in the Database.
+    """
+
+    try:
+        # Get the Database
+        with next(get_database()) as db:
+            # Get all Series
+            for series in db.query(models.series.Series).all():
+                # Skip if Series is unmonitored
+                if not series.monitored:
+                    log.debug(f'{series.log_str} is not monitored, skipping')
+                    continue
+
+                # Get all of this Series' Episodes
+                all_episodes = db.query(models.episode.Episode)\
+                    .filter_by(series_id=series.id)
+                for episode in all_episodes:
+                    # Download source for this image
+                    try:
+                        _download_episode_source_image(
+                            db, get_preferences(), get_emby_interface(),
+                            get_jellyfin_interface(), get_plex_interface(),
+                            get_tmdb_interface(), series, episode
+                        )
+                    except HTTPException as e:
+                        log.warning(f'{series.log_str} {episode.log_str} Skipping source selection')
+                        continue
+    except Exception as e:
+        log.exception(f'Failed to download source images', e)
+
+
 def download_all_series_logos():
     """
-    Schedule-able function to download all Logos for all Series in the
-    Database.
+    Schedule-able function to download all Logos for all monitored
+    Series in the Database.
     """
 
     try:
@@ -36,7 +70,7 @@ def download_all_series_logos():
             for series in all_series:
                 # If Series is unmonitored, skip
                 if not series.monitored:
-                    log.debug(f'{series.log_str} is Unmonitored, skipping')
+                    log.debug(f'{series.log_str} is not monitored, skipping')
                     continue
 
                 try:
@@ -46,10 +80,10 @@ def download_all_series_logos():
                         get_tmdb_interface(), series,
                     )
                 except HTTPException as e:
-                    log.info(f'{series.log_str} Skipping logo selection')
+                    log.warning(f'{series.log_str} Skipping logo selection')
                     continue
     except Exception as e:
-        log.exception(f'Failed to refresh all episode data', e)
+        log.exception(f'Failed to download series logos', e)
 
 
 source_router = APIRouter(
@@ -58,7 +92,7 @@ source_router = APIRouter(
 )
 
 
-def download_source_image(
+def _download_episode_source_image(
         db, preferences, emby_interface, jellyfin_interface, plex_interface,
         tmdb_interface, series, episode) -> Optional[str]:
     """
@@ -98,7 +132,6 @@ def download_source_image(
 
     # Go through all image sources    
     for image_source in image_source_settings['image_source_priority']:
-        log.debug(f'{series.log_str} {episode.log_str} Sourcing images from {image_source}')
         if image_source == 'Emby' and emby_interface:
             source_image = emby_interface.get_source_image(
                 episode.as_episode_info
@@ -277,7 +310,7 @@ def download_series_source_images(
     for episode in all_episodes:
         background_tasks.add_task(
             # Function
-            download_source_image,
+            _download_episode_source_image,
             # Arguments
             db, preferences, emby_interface, jellyfin_interface, plex_interface,
             tmdb_interface, series, episode
@@ -389,7 +422,7 @@ def download_episode_source_image(
     # Get the Series for this Episode, raise 404 if DNE
     series = get_series(db, episode.series_id, raise_exc=True)
 
-    return download_source_image(
+    return _download_episode_source_image(
         db, preferences, emby_interface, jellyfin_interface, plex_interface,
         tmdb_interface, series, episode
     )

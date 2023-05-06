@@ -70,7 +70,7 @@ class BaseSeries(BaseConfig):
         title='Series year',
         description='Year the series first aired'
     )
-    monitored: bool
+    monitored: bool = Field(default=True)
     template_id: Optional[int] = Field(
         default=None,
         title='Template ID',

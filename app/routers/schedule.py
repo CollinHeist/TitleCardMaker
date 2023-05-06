@@ -5,7 +5,9 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 from app.dependencies import get_scheduler, get_preferences
 from app.routers.cards import create_all_title_cards
 from app.routers.episodes import refresh_all_episode_data
-from app.routers.sources import download_all_series_logos
+from app.routers.sources import (
+    download_all_source_images, download_all_series_logos
+)
 from app.routers.sync import sync_all
 from app.routers.translate import translate_all_series
 from app.schemas.schedule import NewJob, ScheduledTask, UpdateInterval
@@ -64,7 +66,7 @@ def wrapped_download_all_series_logos():
 
 def wrapped_download_source_images():
     _wrap_before(JOB_DOWNLOAD_SOURCE_IMAGES)
-    fake_func()
+    download_all_source_images()
     _wrap_after(JOB_DOWNLOAD_SOURCE_IMAGES)
 
 def wrapped_load_media_servers():
