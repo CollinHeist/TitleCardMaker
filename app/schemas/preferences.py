@@ -61,7 +61,7 @@ Base classes
 class TautulliConnection(Base):
     tautulli_url: str = Field(...)
     tautulli_api_key: Hexstring = Field(..., min_length=1)
-    tautulli_verify_ssl: bool
+    tautulli_use_ssl: bool = Field(default=True)
     tautulli_agent_name: str = Field(..., min_length=1)
 
 """

@@ -263,7 +263,7 @@ def check_tautulli_integration(
         tcm_url=tcm_url,
         tautulli_url=tautulli_connection.tautulli_url,
         api_key=tautulli_connection.tautulli_api_key,
-        verify_ssl=tautulli_connection.tautulli_verify_ssl,
+        use_ssl=tautulli_connection.tautulli_use_ssl,
         agent_name=tautulli_connection.tautulli_agent_name,
     )
 
@@ -289,7 +289,7 @@ def add_tautulli_integration(
         tcm_url=tcm_url,
         tautulli_url=tautulli_connection.tautulli_url,
         api_key=tautulli_connection.tautulli_api_key,
-        verify_ssl=tautulli_connection.tautulli_verify_ssl,
+        use_ssl=tautulli_connection.tautulli_use_ssl,
         agent_name=tautulli_connection.tautulli_agent_name,
     )
 

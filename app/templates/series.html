@@ -377,7 +377,7 @@
             $('#monitor-status span').toggleClass('red', false).toggleClass('green', true);
             $('#monitor-status span')[0].innerHTML = '<i class="ui eye outline green icon"></i>Monitored';
           } else {
-            $.toast({class: 'warning', title: 'Stopped Monitoring Series'});
+            $.toast({class: 'blue info', title: 'Stopped Monitoring Series'});
             $('#monitor-status span').toggleClass('red', true).toggleClass('green', false);
             $('#monitor-status span')[0].innerHTML = '<i class="ui eye slash outline red icon"></i>Unmonitored';
           }

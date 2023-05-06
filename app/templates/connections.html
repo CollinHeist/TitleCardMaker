@@ -415,8 +415,8 @@
 
           <div id="sonarr-libraries" class="ui disabled field">
             <label>Library Paths</label>
-            <div class="ui compact message">
-              <p>Only required if <a href="/sync">syncing</a> from Sonarr</p>
+            <div class="ui compact raised segment">
+              <span class="ui text">Only required if <a href="/sync">syncing</a> from Sonarr</span>
             </div>
             <div class="fields">
               <div id="sonarr-libraries-library-names" class="two wide library field">
@@ -446,6 +446,13 @@
           </div>
         </form>
       </div>
+
+      <!-- Tautulli Integration -->
+      <h3 class="ui dividing header">Tautulli</h3>
+      <button id="tautulli-agent-button" class="ui labeled icon blue button">
+        <i class="bell icon"></i>
+        Create Notification Agent
+      </button>
 
       <!-- TMDb Connections -->
       <h3 class="ui dividing header">TheMovieDatabase</h3>
@@ -492,7 +499,7 @@
             {% if preferences.tmdb_download_logos %}
             <input name="download_logos" type="checkbox" checked="">
             {% else %}
-            <input name="download_logos" type="checkbox" >
+            <input name="download_logos" type="checkbox">
             {% endif %}
             <label>Download Logos</label>
           </div>
@@ -518,11 +525,55 @@
         </form>
       </div>
     </div>
+
+    <div id="tautulli-agent-modal" class="ui small modal">
+      <i class="close icon"></i>
+      <div class="header">Tautulli Notification Agent</div>
+      <div class="content">
+        <div class="ui compact raised segment">
+          <span><span class="ui blue text">TitleCardMaker</span> can create a Notification Agent on Tautulli to immediately update Title Cards for newly added or recently watched Episodes.</span>
+        </div>
+        <form id="tautulli-agent-form" class="ui form">
+          <div class="ui field">
+            <label>Tautulli URL</label>
+            <input name="tautulli_url">
+          </div>
+          
+          <div class="ui field">
+            <label>Tautulli API Key</label>
+            <input name="tautulli_api_key" type="password">
+          </div>
+
+          <div class="ui left aligned checkbox field">
+            <input name="tautulli_use_ssl" type="checkbox" checked="">
+            <label>Use SSL for Secure Connections</label>
+          </div>
+
+          <div class="ui field">
+            <label>Notification Agent Name</label>
+            <input name="tautulli_agent_name" value="Update TitleCardMaker" placeholder="Update TitleCardMaker">
+          </div>
+          <div class="ui info message"></div>
+        </form>
+      </div>
+      <div class="actions">
+        <button form="tautulli-agent-form" class="ui right labeled icon blue button">
+          Create Agent
+          <i class="checkmark icon"></i>
+        </button>
+      </div>
+    </div>
   </div>
 
   <script>
     // Enable dropdowns, checkboxes
     $('.ui.dropdown').dropdown();
+
+    // Attach Tautlli modal to button
+    $('#tautulli-agent-modal')
+      .modal({blurring: true})
+      .modal('attach events', '#tautulli-agent-button', 'show')
+      .modal('setting', 'transition', 'fade up')
 
     // Fields to enable/disable on button presses
     const toggleFields = [
@@ -534,27 +585,26 @@
     ];
     toggleFields.forEach(({title, buttonId, fields, toggleAPI}) => {
       $(buttonId).checkbox({
-        onChecked: function() {
-          // fields.forEach(fieldId => $(fieldId).toggleClass('disabled', false));
+        onChecked: response => {
           $(`#${title.toLowerCase()}-settings .field`).toggleClass('disabled', false);
           $.ajax({
             type: 'PUT',
             url: `${toggleAPI}/enable`,
-            success: function(response) {
+            success: response => {
               $.toast({
                 class: 'blue info',
                 title: `Enabled Connection to ${title}`,
               });
-            }, error: function(response) {
+            }, error: response => {
               $.toast({
                 class: 'error',
                 title: `Error Enabling Connection to ${title}`,
                 message: response.responseJSON.detail,
                 displayTime: 0,
               });
-            }, complete: function() {}
+            }, complete: () => {}
           });
-        }, onUnchecked: function() {
+        }, onUnchecked: () => {
           $(`#${title.toLowerCase()}-settings .field`).toggleClass('disabled', true);
           $.ajax({
             type: 'PUT',
@@ -692,12 +742,61 @@
               // message: response.responseJSON.detail,
               displayTime: 0,
             });
-          }, complete: function() {
+          }, complete: () => {
             $(submitButtonId).toggleClass('disabled loading', false);
           }
         });
       });
     });
+
+    // Tautulli agent form validation and submission
+    $('#tautulli-agent-form').form({
+      on: 'blur',
+      inline: true,
+      fields: {
+        tautulli_url: ['url', 'empty'],
+        tautulli_api_key: ['empty', 'regExp[/^[a-f0-9]+$/gi]'],
+        tautulli_agent_name: {
+          optional: true,
+          value: ['minLength[1]']
+        },
+      },
+    }).on('submit', event => {
+      // Prevent default event form handler, validate form
+      event.preventDefault();
+      if (!$('#tautulli-agent-form').form('is valid')) { return; }
+
+      // Create JSON from form
+      const data = Object.fromEntries(new FormData(event.target));
+
+      // Submit API request
+      $('#tautulli-agent-modal button').toggleClass('loading', true);
+      $.ajax({
+        type: 'POST',
+        url: '/api/connection/tautulli/integrate',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        success: response => {
+          // Show toast, disable 
+          $.toast({
+            class: 'blue info',
+            title: `Created "${data.tautulli_agent_name}" Notification Agent`,
+            displayTime: 5000,
+          });
+          $('#tautulli-agent-modal button').toggleClass('disabled', true);
+        }, error: response => {
+          $.toast({
+            class: 'error',
+            title: 'Error Creating Notification Agent',
+            message: response.responseJSON.detail,
+            displayTime: 0,
+          });
+        }, complete: () => {
+          $('#tautulli-agent-modal button').toggleClass('loading', false);
+        }
+      });
+    });
+
   </script>
 </body>
 

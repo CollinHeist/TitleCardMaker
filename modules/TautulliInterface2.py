@@ -5,7 +5,6 @@ from typing import Optional
 from fastapi import HTTPException
 
 from modules.Debug import log
-import modules.global_objects as global_objects
 from modules.WebInterface import WebInterface
 
 class TautulliInterface(WebInterface):
@@ -26,15 +25,18 @@ class TautulliInterface(WebInterface):
             tcm_url: str,
             tautulli_url: str,
             api_key: str,
-            verify_ssl: bool = True,
+            use_ssl: bool = True,
             agent_name: str = DEFAULT_AGENT_NAME) -> None:
         """
         Construct a new instance of an interface to Sonarr.
 
         Args:
-            url: The API url communicating with Tautulli.
+            tcm_url: Base URL of TitleCardMaker for the API endpoint.
+            tautulli_url: The API URL for interfacing with Tautulli.
             api_key: The API key for API requests.
-            verify_ssl: Whether to verify SSL requests.
+            use_ssl: Whether to use SSL for the interface.
+            agent_name: Name of the Notification Agent to check for and/
+                or create on Tautulli.
 
         Raises:
             HTTPException (401) if the URL or API Key is invalid.
@@ -42,7 +44,7 @@ class TautulliInterface(WebInterface):
         """
 
         # Initialize parent WebInterface 
-        super().__init__('Tautulli', verify_ssl, cache=False)
+        super().__init__('Tautulli', use_ssl, cache=False)
 
         # Get correct TCM URL
         tcm_url = tcm_url if tcm_url.endswith('/') else f'{tcm_url}/'
