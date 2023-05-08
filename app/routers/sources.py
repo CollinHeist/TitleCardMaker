@@ -205,10 +205,12 @@ def get_existing_series_source_images(
 
         # All sources have these details
         source = {
+            'episode_id': episode.id,
             'season_number': episode.season_number,
             'episode_number': episode.episode_number,
+            'source_file_name': source_file.name,
             'source_file': str(source_file.resolve()),
-            'source_url': f'/source/{source_file.parent}/{source_file.name}',
+            'source_url': f'/source/{source_file.parent.name}/{source_file.name}',
             'exists': source_file.exists(),
         }
 
@@ -251,10 +253,12 @@ def get_existing_episode_source_images(
 
     # All sources have these details
     source = {
+        'episode_id': episode_id,
         'season_number': episode.season_number,
         'episode_number': episode.episode_number,
         'source_file': str(source_file.resolve()),
-        'source_url': f'/source/{source_file.parent}/{source_file.name}',
+        'source_file_name': source_file.name,
+        'source_url': f'/source/{source_file.parent.name}/{source_file.name}',
         'exists': source_file.exists(),
     }
 

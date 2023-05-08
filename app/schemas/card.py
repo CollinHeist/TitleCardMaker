@@ -190,8 +190,10 @@ Update classes
 Return classes
 """
 class SourceImage(Base):
+    episode_id: int
     season_number: int
     episode_number: int
+    source_file_name: str
     source_file: str
     source_url: str
     exists: bool
