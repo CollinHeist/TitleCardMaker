@@ -457,17 +457,21 @@
     async function createTitleCards() {
       $.ajax({
         type: 'POST',
-        url: '/api/sources/{{series.id}}',
+        url: '/api/cards/series/{{series.id}}',
         success: response => {
+          const {deleted, missing_source, invalid, creating} = response;
           $.toast({
             class: 'blue info',
-            title: 'Started Downloading Source Images',
-            // message: '',
+            title: 'Started Title Card creation',
+            message: `<ul class="ui list"><li>Creating ${creating} cards</li><li>Deleted ${deleted} cards</li><li>Missing ${missing_source} source images</li><li>${invalid} invalid cards</li></ul>`,
+            displayTime: 10000,
           });
+          getEpisodeData();
+          getStatistics();
         }, error: response => {
           $.toast({
             class: 'error',
-            title: 'Error Downloading Source Images',
+            title: 'Error creating title cards',
             message: response.responseJSON.detail,
             displayTime: 0,
           });
