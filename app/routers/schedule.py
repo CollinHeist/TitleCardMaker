@@ -4,13 +4,13 @@ from typing import Literal
 from fastapi import APIRouter, Body, Depends, HTTPException
 
 from app.dependencies import get_scheduler, get_preferences
-from app.routers.cards import create_all_title_cards
-from app.routers.episodes import refresh_all_episode_data
-from app.routers.sources import (
+from app.internal.cards import create_all_title_cards
+from app.internal.episodes import refresh_all_episode_data
+from app.internal.sources import (
     download_all_source_images, download_all_series_logos
 )
-from app.routers.sync import sync_all
-from app.routers.translate import translate_all_series
+from app.internal.sync import sync_all
+from app.internal.translate import translate_all_series
 from app.schemas.schedule import NewJob, ScheduledTask, UpdateInterval
 
 from modules.Debug import log

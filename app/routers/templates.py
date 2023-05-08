@@ -1,54 +1,14 @@
 from typing import Any, Literal, Optional, Union
 
-from fastapi import APIRouter, Body, Depends, Form, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 
-from app.dependencies import get_database
-from app.dependencies import get_preferences
+from app.database.query import get_font, get_template
+from app.dependencies import get_database, get_preferences
 import app.models as models
-from app.routers.fonts import get_font
 from app.schemas.base import Base, UNSPECIFIED
-from app.schemas.preferences import EpisodeDataSource, Style
 from app.schemas.series import NewTemplate, Template, UpdateTemplate
 
 from modules.Debug import log
-
-
-def get_template(db, template_id, *, raise_exc=True) -> Optional[Template]:
-    """
-    Get the Template with the given ID from the given Database.
-
-    Args:
-        db: SQL Database to query for the given Template.
-        template_id: ID of the Template to query for.
-        raise_exc: Whether to raise 404 if the given Template does not 
-            exist. If False, then only an error message is logged.
-
-    Returns:
-        Template with the given ID. If one cannot be found and raise_exc
-        is False, then None is returned.
-
-    Raises:
-        HTTPException with a 404 status code if the Template cannot be
-        found and raise_exc is True.
-    """
-
-    # No ID given, return None
-    if template_id is None:
-        return None
-
-    template = db.query(models.template.Template)\
-        .filter_by(id=template_id).first()
-    if template is None:
-        if raise_exc:
-            raise HTTPException(
-                status_code=404,
-                detail=f'Template {template_id} not found',
-            )
-        else:
-            log.error(f'Template {template_id} not found')
-            return None
-
-    return template
 
 
 # Create sub router for all /templates API requests
@@ -147,19 +107,22 @@ def delete_template(
     - template_id: ID of the Template to delete.
     """
 
-    # Query for template, raise 404 if DNE
+    # Query for Template, raise 404 if DNE
     template = get_template(db, template_id, raise_exc=True)
 
-    # Delete template reference from any Series, Episode, or Sync
+    # Delete Template reference from any Series, Episode, or Sync
     for series in db.query(models.series.Series)\
             .filter_by(template_id=template_id).all():
         series.template_id = None
+        log.debug(f'Unlinked {template.log_str} from {series.log_str}')
     for episode in db.query(models.episode.Episode)\
             .filter_by(template_id=template_id).all():
         episode.template_id = None
+        log.debug(f'Unlinked {episode.log_str} from {series.log_str}')
     for sync in db.query(models.sync.Sync)\
             .filter_by(template_id=template_id).all():
         sync.template_id = None
+        log.debug(f'Unlinked {sync.log_str} from {series.log_str}')
 
     # Delete Template, update database
     db.delete(template)

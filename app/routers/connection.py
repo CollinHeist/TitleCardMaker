@@ -1,7 +1,6 @@
-from typing import Literal, Optional, Union
-from urllib.parse import unquote
+from typing import Literal, Optional
 
-from fastapi import APIRouter, Body, Depends, Form, HTTPException, Query, Request
+from fastapi import APIRouter, Body, Depends, HTTPException, Request
 from requests import get
 from sqlalchemy.orm import Session
 
@@ -20,17 +19,17 @@ from app.schemas.preferences import (
 from modules.Debug import log
 from modules.TautulliInterface2 import TautulliInterface
 
+
 # Create sub router for all /connection API requests
 connection_router = APIRouter(
     prefix='/connection',
     tags=['Connections'],
 )
 
-SupportedConnection = Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb']
 
 @connection_router.put('/{connection}/{status}', status_code=204)
 def enable_or_disable_connection(
-        connection: SupportedConnection,
+        connection: Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
         status: Literal['enable', 'disable'],
         preferences=Depends(get_preferences)) -> None:
     """

@@ -2,8 +2,8 @@ from pathlib import Path
 from typing import Any, Literal, Optional, Union
 
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, File, Form, HTTPException, Query, UploadFile
-from sqlalchemy.orm import Session
 
+from app.database.query import get_font
 from app.dependencies import get_database
 from app.dependencies import get_preferences
 from app.schemas.base import UNSPECIFIED
@@ -16,42 +16,6 @@ font_router = APIRouter(
     prefix='/fonts',
     tags=['Fonts']
 )
-
-
-def get_font(db, font_id, *, raise_exc=True) -> Optional[NamedFont]:
-    """
-    Get the Font with the given ID from the given Database.
-
-    Args:
-        db: SQL Database to query for the given Font.
-        font_id: ID of the Font to query for.
-        raise_exc: Whether to raise 404 if the given Font does not 
-            exist. If False, then only an error message is logged.
-
-    Returns:
-        Font with the given ID. If one cannot be found and raise_exc is
-        False, then None is returned.
-
-    Raises:
-        HTTPException with a 404 status code if the Font cannot be
-        found and raise_exc is True.
-    """
-
-    if font_id is None:
-        return None
-
-    font = db.query(models.font.Font).filter_by(id=font_id).first()
-    if font is None:
-        if raise_exc:
-            raise HTTPException(
-                status_code=404,
-                detail=f'Font {font_id} not found',
-            )
-        else:
-            log.error(f'Font {font_id} not found')
-            return None
-
-    return font
 
 
 @font_router.post('/new', status_code=201)
