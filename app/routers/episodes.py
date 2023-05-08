@@ -91,15 +91,6 @@ def delete_episode(
         db.query(models.loaded.Loaded).filter_by(episode_id=episode_id),
     )
 
-    # Delete Card files
-    for card in card_query.all():
-        try:
-            card_file = Path(card.card_file)
-            card_file.unlink(missing_ok=True)
-            log.info(f'{episode.log_str} Deleted "{card_file.resolve()}" card')
-        except Exception as e:
-            log.exception(f'{episode.log_str} Error deleting "{card_file.resolve()}" card')
-
     # Delete Episode itself
     db.delete(episode)
     db.commit()

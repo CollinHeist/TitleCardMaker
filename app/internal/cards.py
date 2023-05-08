@@ -374,7 +374,7 @@ def delete_cards(db, card_query, loaded_query) -> list[str]:
         List of file names of the deleted cards.
     """
 
-    # Delete all associated cards
+    # Delete all associated Card files
     deleted = []
     for card in card_query.all():
         if (card_file := Path(card.card_file)).exists():
