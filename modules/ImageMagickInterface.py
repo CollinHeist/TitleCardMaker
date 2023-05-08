@@ -1,7 +1,7 @@
 from pathlib import Path
 from shlex import split as command_split
 from subprocess import Popen, PIPE, TimeoutExpired
-from typing import Optional
+from typing import Literal, Optional
 
 from modules.Debug import log
 
@@ -180,3 +180,91 @@ class ImageMagickInterface:
                       f'stdout: {stdout}\n\n'
                       f'stderr: {stderr}\n'
                       f'{"-" * 60}')
+
+
+    def resize_image(self,
+            input_image: Path,
+            output_image: Path, *,
+            by: Literal['width', 'height'],
+            width: Optional[int] = None,
+            height: Optional[int] = None) -> Path:
+        """
+        Resize the given input image by a given width or height.
+
+        Args:
+            input_image: Path to the image to resize.
+            output_image: Path to write the resized image to.
+            by: Whether to resize by width or height.
+            width: Width dimension to resize toward (if indicated).
+            height: Height dimension to resize toward (if indicated).
+
+        Raises:
+            ValueError if by is not "width" or "height".
+            ValueError if the indicated dimension is not provided or 
+                less than 0.
+        """
+
+        if by not in ('width', 'height'):
+            raise ValueError(f'Can only resize by "width" or "height"')
+
+        if by == 'width' and width is not None and width > 0:
+            resize_command = f'-resize {width}x'
+        elif by == 'height' and height is not None and height > 0:
+            resize_command = f'-resize x{height}'
+        else:
+            raise ValueError(f'Resized dimension must be greater than zero')
+
+        command = ' '.join([
+            f'convert "{input_image.resolve()}"',
+            f'-sampling-factor 4:4:4',
+            f'-set colorspace sRGB',
+            f'+profile "*"',
+            f'-background transparent',
+            f'-gravity center',
+            resize_command,
+            f'"{output_image.resolve()}"',
+        ])
+
+        self.run(command)
+
+        return output_image
+
+
+    def convert_svg_to_png(self,
+            image: Path,
+            destination: Path,
+            min_dimension: int = 2500) -> Optional[Path]:
+        """
+        Convert the given SVG image to PNG format.
+
+        Args:
+            image: Path to the SVG image being converted.
+            destination: Path to the output image.
+            min_dimension: Minimum dimension of converted image.
+
+        Returns:
+            Path to the converted file. None if the conversion failed.
+        """
+
+        # If the temp file doesn't exist, return
+        if not image.exists():
+            return None
+
+        # Command to convert file to PNG
+        command = ' '.join([
+            f'convert',
+            f'-density 512',
+            f'-resize "{min_dimension}x{min_dimension}"',
+            f'-background None',
+            f'"{image.resolve()}"',
+            f'"{destination.resolve()}"',
+        ])
+
+        self.run(command)
+
+        # Print command history if conversion failed
+        if destination.exists():
+            return destination
+        else:
+            self.print_command_history()
+            return None
