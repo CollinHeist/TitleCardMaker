@@ -21,6 +21,7 @@
   <script type="text/javascript" src="/templates/loadStaticContent.js"></script>
   <script type="text/javascript" src="/templates/loadCardTypes.js"></script>
   <script type="text/javascript" src="/templates/theme.js"></script>
+  <script type="text/javascript" src="/templates/helper.js"></script>
   
   <!-- Global styles -->
   <link rel="stylesheet" type="text/css" href="/templates/style.css">
@@ -89,6 +90,12 @@
     /* IMDB ID inputs are slightly larger */
     .table .transparent.id.input input[name="imdb_id"] {
       width: 10ch;
+    }
+
+    /* File search icon should color on hover */
+    #files-list .card i[data-action="search"]:hover {
+      color: #2185d0;
+      cursor: pointer;
     }
   </style>
 
@@ -265,9 +272,22 @@
     <br>
   </template>
 
-  <!-- Scripts to load available options -->
+  <template id="file-template">
+    <div class="ui card">
+      <div class="content">
+        <i data-action="search" class="right floated search icon" title="Search for this image"></i>
+        <div data-value="index" class="header">{descriptive name}</div>
+        <div class="meta">
+          <span data-value="path">{path}</span>
+          <div data-value="missing" class="ui red label">Missing</div>
+          <div data-value="dimension" class="ui label">{dimensions}</div>
+          <div data-value="filesize" class="ui label">{filesize}</div>
+        </div>
+      </div>
+    </div>
+  </template>
+
   <script>
-    // Get series statistics
     async function getStatistics() {
       const statistics = await fetch('/api/statistics/series/{{series.id}}').then(resp => resp.json());
       const cardStat = statistics[0],
@@ -275,7 +295,6 @@
       $('#card-count')[0].innerHTML = `<i class="image outline icon"></i><span class="ui text">${cardStat.value} Cards / ${episodeStat.value} Episodes</span>`;
     }
 
-    // Get all available libraries for Emby and Plex
     async function getLibraries() {
       let plexLibraries = await fetch('/api/available/libraries/plex').then(resp => resp.json());
       $('#plex-library').dropdown({
@@ -292,7 +311,6 @@
       });
     }
   
-    // Update the episode config for the given episode
     async function saveEpisodeConfig(episodeId, batch=false) {
       // Get all inputs for this episode
       const episodeInputs = $(`#episode-id${episodeId} input`);
@@ -357,14 +375,17 @@
     }
 
     async function initAll() {
+      initalizeSeriesConfig();
       getStatistics();
       getLibraries();
       getEpisodeData();
-      initalizeSeriesConfig();
+      getFileData();
       initStyles();
       // Schedule recurring statistics query
       setInterval(getStatistics, 30000); // Refresh stats every 30s
     }
+
+    // Functions that can be triggered by a button press
 
     async function toggleMonitorStatus() {
       $.ajax({
@@ -400,6 +421,7 @@
         success: (response) => {
           $.toast({class: 'blue info', title: `Refreshed Episode Data`});
           getEpisodeData();
+          getFileData();
           getStatistics();
         }, error: (response) => {
           $.toast({
@@ -434,6 +456,31 @@
       });
     }
 
+    async function getEpisodeSourceImage(episodeId, cardElementId) {
+      $(`#${cardElementId}`).toggleClass('loading', true);
+      $.ajax({
+        type: 'POST',
+        url: `/api/sources/episode/${episodeId}`,
+        success: response => {
+          if (response === null) {
+            $.toast({class: 'warning', title: 'Unable to Download Image'});
+          } else { 
+            $.toast({class: 'blue info', title: 'Downloaded Image'});
+            getFileData();
+          }
+        }, error: response => {
+          $.toast({
+            class: 'error',
+            title: 'Error Download Source Image',
+            message: response.responseJSON.detail,
+            displayTime: 0,
+          });
+        }, complete: () => {
+          $(`#${cardElementId}`).toggleClass('loading', false);
+        }
+      });
+    }
+
     async function getSourceImages() {
       $('#download-source-images > i').toggleClass('loading', true);
       $.ajax({
@@ -441,6 +488,7 @@
         url: '/api/sources/series/{{series.id}}',
         success: response => {
           $.toast({class: 'blue info', title: 'Downloading Source Images'});
+          getFileData();
         }, error: response => {
           $.toast({
             class: 'error',
@@ -497,7 +545,6 @@
       });
     }
 
-    // Function to delete this series
     async function deleteSeries() {
       $.ajax({
         type: 'DELETE',
@@ -514,7 +561,6 @@
       });
     }
   
-    // Function to delete all title cards for this series
     async function deleteTitleCards() {
       $.ajax({
         type: 'DELETE',
@@ -546,6 +592,7 @@
             title: `Deleted ${response.length} Episodes`,
           });
           getEpisodeData();
+          getFileData();
           getStatistics();
         }, error: (response) => {
           $.toast({
@@ -568,6 +615,7 @@
             title: `Deleted Episode`,
           });
           getEpisodeData();
+          getFileData();
           getStatistics();
         }, error: (response) => {
           $.toast({
@@ -864,6 +912,40 @@
           }, complete: () => {}
         });
       });
+    }
+
+    async function getFileData() {
+      const fileHolder = document.getElementById('files-list');
+      const fileTemplate = document.getElementById('file-template');
+      if (fileHolder === undefined || fileTemplate === undefined) { return; }
+      const allFiles = await fetch('/api/sources/series/{{series.id}}').then(resp => resp.json());
+
+      const files = allFiles.map(source => {
+        const file = fileTemplate.content.cloneNode(true);
+        // Fill in the index/path for all images
+        const cardId = `file-episode${source.episode_id}`;
+        file.querySelector('.card').id = cardId;
+        file.querySelector('[data-value="index"]').innerHTML = `Season ${source.season_number} Episode ${source.episode_number}`;
+        file.querySelector('[data-value="path"]').innerHTML = source.source_file_name;
+        if (source.exists) {
+          // Disable search icon
+          file.querySelector('i[data-action="search"]').classList.add('disabled');
+          // Remove missing label, fill in dimensions and filesize
+          file.querySelector('[data-value="missing"]').remove();
+          file.querySelector('[data-value="dimension"]').innerHTML = `${source.width}x${source.height}`;
+          file.querySelector('[data-value="filesize"]').innerHTML = formatBytes(source.filesize, 1);
+        } else {
+          // Add download image function to icon click
+          file.querySelector('i[data-action="search"]').onclick = () => getEpisodeSourceImage(source.episode_id, cardId);
+          // Make the card red, remove unnecessary elements
+          file.querySelector('.card').classList.add('red');
+          file.querySelector('[data-value="dimension"]').remove();
+          file.querySelector('[data-value="filesize"]').remove();
+        }
+
+        return file;
+      });
+      fileHolder.replaceChildren(...files);
     }
 
     async function getEpisodeData() {
@@ -1659,7 +1741,12 @@
 
           <!-- Files Tab -->
           <div class="ui bottom attached tab segment" data-tab="files">
-            
+            <div class="ui segment">
+              <span class="ui text">
+                Source images are located within <span class="ui blue text">{{series.source_directory}}</span>
+              </span>
+            </div>
+            <div id="files-list" class="ui stackable cards"><!-- Added asyncrously --></div>
           </div>
 
           <!-- Database ID's Tab -->
