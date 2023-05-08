@@ -1,9 +1,15 @@
+from collections import namedtuple
 from pathlib import Path
 from shlex import split as command_split
 from subprocess import Popen, PIPE, TimeoutExpired
 from typing import Literal, Optional
 
+from imagesize import get as im_get
+from re import match
+
 from modules.Debug import log
+
+Dimensions = namedtuple('Dimensions', ('width', 'height'))
 
 class ImageMagickInterface:
     """
@@ -180,6 +186,24 @@ class ImageMagickInterface:
                       f'stdout: {stdout}\n\n'
                       f'stderr: {stderr}\n'
                       f'{"-" * 60}')
+
+
+    def get_image_dimensions(self, image: Path) -> Dimensions:
+        """
+        Get the dimensions of the given image.
+
+        Args:
+            image: Path to the image to get the dimensions of.
+
+        Returns:
+            Namedtuple of dimensions.
+        """
+
+        # Return dimenions of zero if image DNE
+        if not image.exists():
+            return Dimensions(0, 0)
+
+        return im_get(image)
 
 
     def resize_image(self,

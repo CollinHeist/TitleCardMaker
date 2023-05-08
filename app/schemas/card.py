@@ -1,6 +1,6 @@
 from typing import Literal, Optional
 
-from pydantic import Field, validator, root_validator
+from pydantic import Field, PositiveInt, validator, root_validator
 
 from app.schemas.base import Base, validate_argument_lists_to_dict
 # from app.schemas.font import NewUnnamedEpisodeFont, PreviewFont
@@ -189,6 +189,16 @@ Update classes
 """
 Return classes
 """
+class SourceImage(Base):
+    season_number: int
+    episode_number: int
+    source_file: str
+    source_url: str
+    exists: bool
+    filesize: int = Field(default=0)
+    width: int = Field(default=0)
+    height: int = Field(default=0)
+
 class TitleCard(Base):
     # Meta fields
     id: int

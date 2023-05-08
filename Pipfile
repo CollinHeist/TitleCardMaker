@@ -24,6 +24,7 @@ python-multipart = "*"
 jinja2 = "*"
 pydantic = "*"
 apscheduler = "*"
+imagesize = "*"
 
 [dev-packages]
 

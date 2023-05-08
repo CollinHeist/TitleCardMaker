@@ -155,7 +155,7 @@ def create_cards_for_series(
     stats = {'deleted': 0, 'missing_source': 0, 'invalid': 0, 'creating': 0}
     for episode in episodes:
         # Create this flag, get status flags
-        flags = _create_episode_card(
+        flags = create_episode_card(
             db, preferences, background_tasks, series, episode
         )
         for flag in flags:
@@ -250,7 +250,7 @@ def create_card_for_episode(
     )
 
     # Create card for this Episode
-    _create_episode_card(db, preferences, None, series, episode)
+    return create_episode_card(db, preferences, None, series, episode)
 
 
 @card_router.get('/episode/{episode_id}', tags=['Episodes'])
@@ -331,7 +331,7 @@ def create_cards_for_plex_key(
                 db.commit()
 
             # Create card
-            _create_episode_card(
+            create_episode_card(
                 db, preferences, background_tasks, series, episode
             )
 

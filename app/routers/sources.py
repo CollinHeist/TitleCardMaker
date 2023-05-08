@@ -18,6 +18,7 @@ from app.internal.sources import (
 )
 import app.models as models
 from app.schemas.base import UNSPECIFIED
+from app.schemas.card import SourceImage
 from modules.WebInterface import WebInterface
 
 
@@ -69,7 +70,7 @@ def download_series_source_images(
     return None
 
 
-@source_router.get('/series/{series_id}/backdrop')
+@source_router.post('/series/{series_id}/backdrop')
 def download_series_backdrop(
         series_id: int,
         ignore_blacklist: bool = Query(default=False),
@@ -116,7 +117,7 @@ def download_series_backdrop(
     return None
 
 
-@source_router.get('/series/{series_id}/logo')
+@source_router.post('/series/{series_id}/logo')
 def download_series_logo_(
         series_id: int,
         ignore_blacklist: bool = Query(default=False),
@@ -145,7 +146,7 @@ def download_series_logo_(
     )
 
 
-@source_router.get('/episode/{episode_id}')
+@source_router.post('/episode/{episode_id}')
 def download_episode_source_image_(
         episode_id: int,
         ignore_blacklist: bool = Query(default=False),
@@ -166,13 +167,101 @@ def download_episode_source_image_(
     the Episode has been internally blacklisted. 
     """
 
-    # Get the Episode with this ID, raise 404 if DNE
+    # Get the Episode and Series with this ID, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
-
-    # Get the Series for this Episode, raise 404 if DNE
     series = get_series(db, episode.series_id, raise_exc=True)
 
     return download_episode_source_image(
         db, preferences, emby_interface, jellyfin_interface, plex_interface,
         tmdb_interface, series, episode
     )
+
+
+@source_router.get('/series/{series_id}')
+def get_existing_series_source_images(
+        series_id: int,
+        db = Depends(get_database),
+        preferences = Depends(get_preferences),
+        imagemagick_interface = Depends(get_imagemagick_interface)
+        ) -> list[SourceImage]:
+    """
+    Get the SourceImage details for the given Series.
+
+    - series_id: ID of the Series to get the details of.
+    """
+
+    # Get the Series with this ID, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+    all_episodes = db.query(models.episode.Episode)\
+        .filter_by(series_id=series_id)
+
+    # Get all source files
+    sources = []
+    for episode in all_episodes:
+        # Get this Episode's source file
+        source_file = episode.get_source_file(
+            preferences.source_directory, series.path_safe_name,
+        )
+
+        # All sources have these details
+        source = {
+            'season_number': episode.season_number,
+            'episode_number': episode.episode_number,
+            'source_file': str(source_file.resolve()),
+            'source_url': f'/source/{source_file.parent}/{source_file.name}',
+            'exists': source_file.exists(),
+        }
+
+        # If the source file exists, add the filesize and dimensions
+        if source_file.exists():
+            w, h = imagemagick_interface.get_image_dimensions(source_file)
+            source |= {
+                'filesize': source_file.stat().st_size,
+                'width': w,
+                'height': h,
+            }
+        sources.append(source)
+
+    return sources
+
+
+@source_router.get('/episode/{episode_id}')
+def get_existing_episode_source_images(
+        episode_id: int,
+        db = Depends(get_database),
+        preferences = Depends(get_preferences),
+        imagemagick_interface = Depends(get_imagemagick_interface)
+        ) -> SourceImage:
+    """
+    Get the SourceImage details for the given Episode.
+
+    - episode_id: ID of the Episode to get the details of.
+    """
+
+    # Get the Episode with this ID, raise 404 if DNE
+    episode = get_episode(db, episode_id, raise_exc=True)
+
+    # Get this Episode's source file
+    source_file = episode.get_source_file(
+        preferences.source_directory, series.path_safe_name,
+    )
+
+    # All sources have these details
+    source = {
+        'season_number': episode.season_number,
+        'episode_number': episode.episode_number,
+        'source_file': str(source_file.resolve()),
+        'source_url': f'/source/{source_file.parent}/{source_file.name}',
+        'exists': source_file.exists(),
+    }
+
+    # If the source file exists, add the filesize and dimensions
+    if source_file.exists():
+        width, height = imagemagick_interface.get_image_dimensions(source_file)
+        source |= {
+            'filesize': source_file.stat().st_size,
+            'width': width,
+            'height': height,
+        }
+        
+    return source

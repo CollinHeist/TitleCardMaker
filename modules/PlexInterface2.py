@@ -309,7 +309,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     @catch_and_log('Error getting all episodes', default=[])
-    def get_all_episodes(self, library_name: str,
+    def get_all_episodes(self,
+            library_name: str,
             series_info: SeriesInfo) -> list[tuple[EpisodeInfo, bool]]:
         """
         Gets all episode info for the given series. Only episodes that have 
@@ -438,8 +439,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return None
 
     @catch_and_log("Error setting series ID's")
-    def set_series_ids(self, library_name: str,
-            series_info: SeriesInfo) -> None:
+    def set_series_ids(self,
+            library_name: str, series_info: SeriesInfo) -> None:
         """
         Set all possible series ID's for the given SeriesInfo object.
 

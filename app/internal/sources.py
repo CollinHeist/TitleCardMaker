@@ -41,7 +41,7 @@ def download_all_source_images() -> None:
                 for episode in all_episodes:
                     # Download source for this image
                     try:
-                        _download_episode_source_image(
+                        download_episode_source_image(
                             db, get_preferences(), get_emby_interface(),
                             get_jellyfin_interface(), get_plex_interface(),
                             get_tmdb_interface(), series, episode
@@ -90,7 +90,19 @@ def download_series_logo(
         imagemagick_interface: 'ImageMagickInterface',
         jellyfin_interface: 'JellyfinInterface',
         tmdb_interface: 'TMDbInterface',
-        series: Series):
+        series: Series) -> Optional[str]:
+    """
+    Download the logo for the given Series.
+
+    Returns:
+        The URI to the Series logo. If one cannot be downloaded, None is
+        returned instead.
+
+    Raises:
+        HTTPException (409) if an SVG image was returned but cannot be
+            converted into PNG.
+        HTTPException (400) if the logo cannot be downloaded.
+    """
 
     # Get the Series logo, return if already exists
     logo_file = series.get_logo_file(preferences.source_directory)
@@ -190,7 +202,14 @@ def download_episode_source_image(
         series: Series,
         episode: Episode) -> Optional[str]:
     """
+    Download the source image for the given Episode.
 
+    Returns:
+        The URI to the Episode source image. If one cannot be
+        downloaded, None is returned instead.
+
+    Raises:
+        HTTPException (400) if the image cannot be downloaded.
     """
 
     # If source already exists, return path to that

@@ -142,8 +142,8 @@ def initialize_scheduler() -> None:
     scheduler = get_scheduler()
     for job in BaseJobs.values():
         # If Job is not already scheduled, add
-        # if scheduler.get_job(job.id) is None:
-        if True:
+        if scheduler.get_job(job.id) is None:
+        # if True:
             scheduler.add_job(
                 job.function,
                 'interval',

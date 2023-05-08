@@ -36,7 +36,7 @@ def translate_all_series():
                 
                 # Translate each Episode
                 for episode in episodes:
-                    _translate_episode(
+                    translate_episode(
                         db, series, series_template,episode,get_tmdb_interface()
                     )
     except Exception as e:
