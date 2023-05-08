@@ -222,7 +222,10 @@ def get_existing_series_source_images(
             }
         sources.append(source)
 
-    return sources
+    return sorted(
+        sources,
+        key=lambda s: (s['season_number']*1000) + s['episode_number']
+    )
 
 
 @source_router.get('/episode/{episode_id}')
