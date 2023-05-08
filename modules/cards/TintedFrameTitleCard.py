@@ -167,7 +167,7 @@ class TintedFrameTitleCard(BaseCardType):
 
 
     @property
-    def title_text_command(self) -> ImageMagickCommands:
+    def title_text_commands(self) -> ImageMagickCommands:
         """
         Subcommand for adding title text to the source image.
 
@@ -208,7 +208,7 @@ class TintedFrameTitleCard(BaseCardType):
 
 
     @property
-    def index_text_command(self) -> ImageMagickCommands:
+    def index_text_commands(self) -> ImageMagickCommands:
         """
         Subcommand for adding index text to the source image.
 
@@ -257,7 +257,7 @@ class TintedFrameTitleCard(BaseCardType):
 
     
     @property
-    def logo_command(self) -> ImageMagickCommands:
+    def logo_commands(self) -> ImageMagickCommands:
         """
         Subcommand for adding the logo to the image if indicated by the
         bottom element extra (and the logo file exists).
@@ -307,14 +307,12 @@ class TintedFrameTitleCard(BaseCardType):
                 and (self.logo is None or not self.logo.exists()))
             or (self.top_element == 'title' and len(self.title_text) == 0)):
 
-            return [
-                Rectangle(TopLeft, TopRight).draw()
-            ]
+            return [Rectangle(TopLeft, TopRight).draw()]
 
         # Element is index text
         if self.top_element == 'index':
             element_width, _ = self.get_text_dimensions(
-                self.index_text_command, width='max', height='max',
+                self.index_text_commands, width='max', height='max',
             )
             margin = 25
         # Element is logo
@@ -325,13 +323,17 @@ class TintedFrameTitleCard(BaseCardType):
         # Element is title text
         elif self.top_element == 'title':
             element_width, _ = self.get_text_dimensions(
-                self.title_text_command, width='max', height='max',
+                self.title_text_commands, width='max', height='max',
             )
             margin = 10
 
         # Determine bounds based on element width
         left_box_x = (self.WIDTH / 2) - (element_width / 2) - margin
         right_box_x = (self.WIDTH / 2) + (element_width / 2) + margin
+
+        # If the boundaries are wider than the start of the frame, draw nothing
+        if left_box_x < INSET or right_box_x > (self.WIDTH - INSET):
+            return []
 
         # Create Rectangles for these two frame sections
         top_left_rectangle = Rectangle(
@@ -383,7 +385,7 @@ class TintedFrameTitleCard(BaseCardType):
         # Element is index text
         if self.bottom_element == 'index':
             element_width, _ = self.get_text_dimensions(
-                self.index_text_command, width='max', height='max',
+                self.index_text_commands, width='max', height='max',
             )
             margin = 25
         # Element is logo
@@ -394,13 +396,17 @@ class TintedFrameTitleCard(BaseCardType):
         # Element is title
         elif self.bottom_element == 'title':
             element_width, _ = self.get_text_dimensions(
-                self.title_text_command, width='max', height='max',
+                self.title_text_commands, width='max', height='max',
             )
             margin = 10
 
         # Determine bounds based on element width
         left_box_x = (self.WIDTH / 2) - (element_width / 2) - margin
         right_box_x = (self.WIDTH / 2) + (element_width / 2) + margin
+
+        # If the boundaries are wider than the start of the frame, draw nothing
+        if left_box_x < INSET or right_box_x > (self.WIDTH - INSET):
+            return []
 
         # Create Rectangles for these two frame sections
         bottom_left_rectangle = Rectangle(
@@ -419,7 +425,7 @@ class TintedFrameTitleCard(BaseCardType):
 
 
     @property
-    def frame_command(self) -> ImageMagickCommands:
+    def frame_commands(self) -> ImageMagickCommands:
         """
         Subcommand to add the box that separates the outer (blurred)
         image and the interior (unblurred) image. This box features a
@@ -559,10 +565,10 @@ class TintedFrameTitleCard(BaseCardType):
             # Overlay unblurred center area 
             f'-composite',
             # Add remaining sub-components
-            *self.title_text_command,
-            *self.index_text_command,
-            *self.logo_command,
-            *self.frame_command,
+            *self.title_text_commands,
+            *self.index_text_commands,
+            *self.logo_commands,
+            *self.frame_commands,
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
