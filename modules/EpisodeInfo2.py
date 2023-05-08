@@ -101,13 +101,24 @@ class EpisodeInfo(DatabaseInfoContainer):
         self.season_number = int(season_number)
         self.episode_number = int(episode_number)
         self.absolute_number = None if absolute_number is None else int(absolute_number)
-        self.emby_id = None if emby_id is None else int(emby_id)
-        self.imdb_id = imdb_id
-        self.jellyfin_id = jellyfin_id
-        self.tmdb_id = None if tmdb_id is None else int(tmdb_id)
-        self.tvdb_id = None if tvdb_id is None else int(tvdb_id)
-        self.tvrage_id = None if tvrage_id is None else int(tvrage_id)
         self.airdate = airdate
+
+        # Store default database ID's
+        self.emby_id = None
+        self.imdb_id = None
+        self.jellyfin_id = None
+        self.tmdb_id = None
+        self.tvdb_id = None
+        self.tvrage_id = None
+        self.airdate = None
+
+        # Update each ID
+        self.set_emby_id(emby_id)
+        self.set_imdb_id(imdb_id)
+        self.set_jellyfin_id(jellyfin_id)
+        self.set_tmdb_id(tmdb_id)
+        self.set_tvdb_id(tvdb_id)
+        self.set_tvrage_id(tvrage_id)
 
         # Add word variations for each of this episode's indices
         self.__word_set = WordSet()
