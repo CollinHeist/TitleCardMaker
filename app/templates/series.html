@@ -434,27 +434,44 @@
       });
     }
 
-    async function createTitleCards() {
+    async function getSourceImages() {
+      $('#download-source-images > i').toggleClass('loading', true);
       $.ajax({
         type: 'POST',
-        url: '/api/cards/series/{{series.id}}',
-        success: (response) => {
-          const {deleted, missing_source, invalid, creating} = response;
-          $.toast({
-            class: 'blue info',
-            title: 'Started Title Card Creation',
-            message: `<ul class="ui list"><li>Creating ${creating} cards</li><li>Deleted ${deleted} cards</li><li>Missing ${missing_source} source images</li><li>${invalid} invalid cards</li></ul>`,
-          });
-          getEpisodeData();
-          getStatistics();
-        }, error: (response) => {
+        url: '/api/sources/series/{{series.id}}',
+        success: response => {
+          $.toast({class: 'blue info', title: 'Downloading Source Images'});
+        }, error: response => {
           $.toast({
             class: 'error',
-            title: 'Error creating title cards',
+            title: 'Error Download Source Images',
             message: response.responseJSON.detail,
             displayTime: 0,
           });
+        }, complete: () => {
+          $('#download-source-images > i').toggleClass('loading', false);
         }
+      });
+    }
+
+    async function createTitleCards() {
+      $.ajax({
+        type: 'POST',
+        url: '/api/sources/{{series.id}}',
+        success: response => {
+          $.toast({
+            class: 'blue info',
+            title: 'Started Downloading Source Images',
+            // message: '',
+          });
+        }, error: response => {
+          $.toast({
+            class: 'error',
+            title: 'Error Downloading Source Images',
+            message: response.responseJSON.detail,
+            displayTime: 0,
+          });
+        }, 
       });
     }
 
@@ -1032,17 +1049,21 @@
           <!-- Series action bottons -->
           <div id="action-buttons">
             <div class="ui vertical labeled icon fluid buttons">
-              <button id="refresh" class="ui labeled icon button" onclick="refreshEpisodeData()" data-tooltip="Look for new, and update any existing episodes">
+              <button id="refresh" class="ui labeled icon button" onclick="refreshEpisodeData()" data-tooltip="Look for new, and update any existing Episodes">
                 <i class="sync icon"></i>
                 Refresh Episode Data
               </button>
               {% if series.translations or series.template_id %}
-              <button id="add-translations" class="ui labeled icon button" onclick="addTranslations()" data-tooltip="Look for any missing episode translations">
+              <button id="add-translations" class="ui labeled icon button" onclick="addTranslations()" data-tooltip="Look for any missing Episode translations">
                 <i class="language icon"></i>
                 Add Translations
               </button>
               {% endif %}
-              <button class="ui labeled icon button" onclick="createTitleCards()">
+              <button id="download-source-images" class="ui labeled icon button" onclick="getSourceImages()" data-tooltip="Search for and download any missing source images">
+                <i class="cloud download alternate icon"></i>
+                Download Source Images
+              </button>
+              <button class="ui labeled icon button" onclick="createTitleCards()" data-tooltip="Create missing or outdated Title Cards">
                 <i class="images outline icon"></i>
                 Create Title Cards
               </button>
