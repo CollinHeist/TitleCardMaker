@@ -71,6 +71,7 @@ class BaseSeries(BaseConfig):
         description='Year the series first aired'
     )
     monitored: bool = Field(default=True)
+    source_directory: str
     template_id: Optional[int] = Field(
         default=None,
         title='Template ID',

@@ -8,6 +8,7 @@ from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy import PickleType
 
 from app.database.session import Base
+from app.dependencies import get_preferences
 from modules.CleanPath import CleanPath
 from modules.SeriesInfo import SeriesInfo
 
@@ -72,7 +73,11 @@ class Series(Base):
 
     @hybrid_property
     def path_safe_name(self) -> str:
-        return CleanPath.sanitize_name(self.full_name)
+        return str(CleanPath.sanitize_name(self.full_name))
+
+    @hybrid_property
+    def source_directory(self) -> str:
+        return str(CleanPath(get_preferences().source_directory) / self.path_safe_name)
 
     @hybrid_property
     def log_str(self) -> str:
