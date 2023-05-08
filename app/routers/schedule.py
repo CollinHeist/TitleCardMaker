@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Literal
 
 from fastapi import APIRouter, Body, Depends, HTTPException
@@ -47,12 +48,14 @@ Wrap all periodically called functions to set the runnin attributes when
 the job is started and finished.
 """
 def _wrap_before(job_id):
-    BaseJobs[job_id].running = True
     log.debug(f'Task[{job_id}] Started execution')
+    BaseJobs[job_id].previous_start_time = datetime.now()
+    BaseJobs[job_id].running = True
 
 def _wrap_after(job_id):
-    BaseJobs[job_id].running = False
     log.debug(f'Task[{job_id}] Finished execution')
+    BaseJobs[job_id].previous_end_time = datetime.now()
+    BaseJobs[job_id].running = False
 
 def wrapped_create_all_title_cards():
     _wrap_before(JOB_CREATE_TITLE_CARDS)
@@ -139,7 +142,8 @@ def initialize_scheduler() -> None:
     scheduler = get_scheduler()
     for job in BaseJobs.values():
         # If Job is not already scheduled, add
-        if scheduler.get_job(job.id) is None:
+        # if scheduler.get_job(job.id) is None:
+        if True:
             scheduler.add_job(
                 job.function,
                 'interval',
@@ -150,7 +154,7 @@ def initialize_scheduler() -> None:
 initialize_scheduler()
 
 
-def _scheduled_task_from_job(job) -> ScheduledTask:
+def _scheduled_task_from_job(job: 'apscheduler.jobs.Job') -> ScheduledTask:
     """
     Create a ScheduledTask object for the given apscheduler.job.
 
@@ -161,12 +165,20 @@ def _scheduled_task_from_job(job) -> ScheduledTask:
         ScheduledTask describing the given Job.
     """
 
+    base_job = BaseJobs.get(job.id)
+    previous_duration = None
+    if (base_job.previous_start_time is not None
+        and base_job.previous_end_time is not None):
+        previous_duration = \
+            base_job.previous_end_time - base_job.previous_start_time
+
     return ScheduledTask(
         id=str(job.id),
         frequency=job.trigger.interval.total_seconds(),
         next_run=str(job.next_run_time),
-        description=BaseJobs.get(job.id).description,
-        running=BaseJobs.get(job.id).running,
+        description=base_job.description,
+        previous_duration=previous_duration,
+        running=base_job.running,
     )
 
 
@@ -245,7 +257,7 @@ def reschedule_task(
     return _scheduled_task_from_job(job)
 
 
-@schedule_router.post('/{task_id}', status_code=201)
+@schedule_router.post('/{task_id}', status_code=200)
 def run_task(
         task_id: TaskID,
         scheduler = Depends(get_scheduler)) -> None:
@@ -266,4 +278,4 @@ def run_task(
     # Run this Task's function
     job.function()
 
-    return None
+    return _scheduled_task_from_job(scheduler.get_job(task_id))

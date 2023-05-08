@@ -32,6 +32,7 @@
       </td>
       <td data-column="description" class="left aligned"></td>
       <td data-column="frequency" class="center aligned" data-tooltip="Edit and Save to Reschedule"></td>
+      <td data-column="previous_duration" class="center aligned"></td>
       <td data-column="next_run" class="left aligned"></td>
     </tr>
   </template>
@@ -62,7 +63,7 @@
       return inStr = timeUnits.slice(0, 2).join(', ');
     }
 
-    function timeFreqString(freq) {
+    function timeFreqString(freq, top=-1) {
       const seconds = Math.floor(freq);
       const minutes = Math.floor(seconds / 60);
       const hours = Math.floor(minutes / 60);
@@ -71,8 +72,10 @@
       if (days > 0) { timeUnits.push(`${days} days`); }
       if (hours % 24 > 0) { timeUnits.push(`${hours%24} hours`); }
       if (minutes % 60 > 0) { timeUnits.push(`${minutes%60} minutes`); }
-      if (seconds % 60 > 0) { timeUnits.push(`${seconds%60} seconds`); }
-      return timeUnits.join(', ');
+      if (seconds % 60 > 0 || timeUnits.length === 0) { timeUnits.push(`${seconds%60} seconds`); }
+      
+      if (top > 0) { return timeUnits.slice(0, top).join(', '); }
+      else { return timeUnits.join(', '); }
     }
 
     async function updateScheduledTasks() {
@@ -120,9 +123,10 @@
       $.ajax({
         type: 'POST',
         url: `/api/schedule/${taskId}`,
-        success: (response) => {
+        success: response => {
           $.toast({class: 'blue info', title: `Task ${taskId} Completed`});
-        }, error: (response) => {
+          $(`tr[data-id="${taskId}"] td[data-column="previous_duration"]`)[0].innerHTML = timeFreqString(response.previous_duration, 2);
+        }, error: response => {
           $.toast({
             class: 'error',
             title: 'Error Running Task',
@@ -156,6 +160,12 @@
         }
         row.querySelector('td[data-column="description"]').innerHTML = task.description;
         row.querySelector('td[data-column="frequency"]').innerHTML = `<span contenteditable="true">${timeFreqString(task.frequency)}</span>`;
+        if (task.previous_duration === null) {
+          row.querySelector('td[data-column="previous_duration"]').innerHTML = '-';
+        } else {
+          console.log(task.previous_duration);
+          row.querySelector('td[data-column="previous_duration"]').innerHTML = timeFreqString(task.previous_duration, 2);
+        }
         row.querySelector('td[data-column="next_run"]').innerHTML = `in ${timeDiffString(task.next_run)}`;
 
         return row;
@@ -181,6 +191,7 @@
               <th></th>
               <th class="left aligned">Task Description</th>
               <th class="center aligned" data-tooltip="How often to run this Task - enter times as seconds, minutes, hours, days, or weeks">Frequency</th>
+              <th class="center aligned" data-tooltip="How long this Task's last run took">Last Duration</th>
               <th class="left aligned">Next Run</th>                
             </tr>
           </thead>
