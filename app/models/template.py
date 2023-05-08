@@ -33,6 +33,10 @@ class Template(Base):
     extras = Column(MutableDict.as_mutable(PickleType), default={})
 
     @hybrid_property
+    def log_str(self) -> str:
+        return f'Template[{self.id}] {self.name}'
+
+    @hybrid_property
     def card_properties(self) -> dict[str, Any]:
         return {
             'template_id': self.id,
@@ -48,7 +52,6 @@ class Template(Base):
             'watched_style': self.watched_style,
             'extras': self.extras,
         }
-
 
     @hybrid_property
     def image_source_properties(self) -> dict[str, Any]:
