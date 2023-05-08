@@ -296,19 +296,32 @@
     }
 
     async function getLibraries() {
-      let plexLibraries = await fetch('/api/available/libraries/plex').then(resp => resp.json());
-      $('#plex-library').dropdown({
-        values: plexLibraries.map(name => {
-          return {name: name, value: name, selected: name === '{{series.plex_library_name}}'};
-        })
-      });
+      if (document.getElementById('emby-library') != null) {
+        const embyLibraries = await fetch('/api/available/libraries/emby').then(resp => resp.json());
+        $('#emby-library').dropdown({
+          values: embyLibraries.map(name => {
+            return {name: name, value: name, selected: name === '{{series.emby_library_name}}'};
+          })
+        });
+      }
 
-      let embyLibraries = await fetch('/api/available/libraries/emby').then(resp => resp.json());
-      $('#emby-library').dropdown({
-        values: embyLibraries.map(name => {
-          return {name: name, value: name, selected: name === '{{series.emby_library_name}}'};
-        })
-      });
+      if (document.getElementById('jellyfin-library') != null) {
+        const jellyfinLibraries = await fetch('/api/available/libraries/jellyfin').then(resp => resp.json());
+        $('#jellyfin-library').dropdown({
+          values: jellyfinLibraries.map(name => {
+            return {name: name, value: name, selected: name === '{{series.jellyfin_library_name}}'};
+          })
+        });
+      }
+
+      if (document.getElementById('plex-library') != null) {
+        const plexLibraries = await fetch('/api/available/libraries/plex').then(resp => resp.json());
+        $('#plex-library').dropdown({
+          values: plexLibraries.map(name => {
+            return {name: name, value: name, selected: name === '{{series.plex_library_name}}'};
+          })
+        });
+      }
     }
   
     async function saveEpisodeConfig(episodeId, batch=false) {
@@ -917,7 +930,7 @@
     async function getFileData() {
       const fileHolder = document.getElementById('files-list');
       const fileTemplate = document.getElementById('file-template');
-      if (fileHolder === undefined || fileTemplate === undefined) { return; }
+      if (fileHolder === null || fileTemplate === null) { return; }
       const allFiles = await fetch('/api/sources/series/{{series.id}}').then(resp => resp.json());
 
       const files = allFiles.map(source => {
@@ -1279,33 +1292,26 @@
 
               <!-- Emby Library -->
               {% if preferences.use_emby or series.emby_library_name %}
-              <div class="field">
+              <div class="ui field">
                 <label>Emby Library</label>
                 <div id="emby-library" class="ui compact selection clearable dropdown">
-                  <!-- Default (current) value -->
                   <input name="emby_library_name" id="emby-library-input" type="hidden">
                   <div class="default text">None</div>
                   <i class="dropdown icon"></i>
-                  <div class="menu">
-                    <!-- Child divs added by JS asynchronous request -->
-                  </div>
+                  <div class="menu"><!-- Added asynchronously --></div>
                 </div>
               </div>
               {% endif %}
 
               <!-- Jellyfin Library -->            
               {% if preferences.use_jellyfin or series.jellyfin_library_name %}
-              <div class="field">
+              <div class="ui field">
                 <label>Jellyfin Library</label>
                 <div id="jellyfin-library" class="ui compact selection clearable dropdown">
-                  <!-- Default (current) value -->
                   <input name="jellyfin_library_name" type="hidden">
                   <div class="default text">None</div>
                   <i class="dropdown icon"></i>
-                  <div id="jellyfin-library-choices" class="menu">
-                    <!-- <div class="item" data-value="None">None</div> -->
-                    <!-- Child divs added by JS asynchronous request -->
-                  </div>
+                  <div class="menu"><!-- Added asynchronously --></div>
                 </div>
               </div>
               {% endif %}
@@ -1315,22 +1321,18 @@
               <div class="ui field">
                 <label>Plex Library</label>
                 <div id="plex-library" class="ui compact selection clearable dropdown">
-                  <!-- Default (current) value -->
                   <input name="plex_library_name" type="hidden">
                   <div class="default text">None</div>
                   <i class="dropdown icon"></i>
-                  <div class="menu">
-                    <!-- <div class="item" data-value="None">None</div> -->
-                    <!-- Child divs added by JS asynchronous request -->
-                  </div>
+                  <div class="menu"><!-- Added asynchronously --></div>
                 </div>
               </div>
               {% endif %}
 
               <!-- Card Directory -->
-              <div class="ui field">
+              <div class="ui field" data-tooltip="Where to store title cards" data-position="top center">
                 <label>Card Directory</label>
-                <div class="ui left icon input" data-tooltip="Where to store title cards" data-position="top center">
+                <div class="ui left icon input">
                   {% if series.directory is none %}
                   <input name="card_directory" type="text" placeholder="{{preferences.card_directory}}{{series.path_safe_name}}/">
                   {% else %}
@@ -1341,12 +1343,12 @@
               </div>
 
               <!-- Filename Format -->
-              <div class="ui field" data-tooltip="Format of the title card file names" data-position="top center">
+              <div class="ui field" placeholder="Global Default" data-tooltip="Format of the title card file names" data-position="top center">
                 <label>Filename Format</label>
                 {% if series.card_filename_format is none %}
-                <input name="card_filename_format" type="text" placeholder="Global Default">
+                <input name="card_filename_format" type="text">
                 {% else %}
-                <input name="card_filename_format" type="text" placeholder="{{series.card_filename_format}}">
+                <input name="card_filename_format" type="text">
                 {% endif %}
               </div>
 

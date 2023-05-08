@@ -130,7 +130,8 @@ def get_image_source_priority(
     ]
 
 
-@availablility_router.get('/libraries/{media_server}', status_code=200, tags=['Emby', 'Jellyfin', 'Plex'])
+@availablility_router.get('/libraries/{media_server}', status_code=200,
+                          tags=['Emby', 'Jellyfin', 'Plex'])
 def get_server_libraries(
         media_server: Literal['emby', 'jellyfin', 'plex'],
         preferences = Depends(get_preferences),
