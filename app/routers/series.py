@@ -327,19 +327,21 @@ async def set_series_poster(
     series = get_series(db, series_id, raise_exc=True)
 
     # Get poster contents
-    uploaded_file = await poster_file.read()
+    uploaded_file = b''
+    if poster_file is not None:
+        uploaded_file = await poster_file.read()
 
     # Send error if both a URL and file were provided
     if poster_url is not None and len(uploaded_file) > 0:
         raise HTTPException(
-            status_code=400,
+            status_code=422,
             detail='Cannot provide multiple posters'
         )
 
     # Send error if neither were provided
     if poster_url is None and len(uploaded_file) == 0:
         raise HTTPException(
-            status_code=400,
+            status_code=422,
             detail='URL or file are required'
         )
 
