@@ -2,7 +2,7 @@ from pathlib import Path
 from requests import get
 from typing import Literal, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException, Query, UploadFile
 
 from modules.Debug import log
 from modules.SeriesInfo import SeriesInfo
@@ -14,7 +14,7 @@ from app.dependencies import (
     get_sonarr_interface, get_tmdb_interface
 )
 from app.internal.sources import (
-    download_episode_source_image, download_series_logo
+    create_source_image, download_episode_source_image, download_series_logo
 )
 import app.models as models
 from app.schemas.base import UNSPECIFIED
@@ -28,7 +28,7 @@ source_router = APIRouter(
 )
 
 
-@source_router.post('/series/{series_id}')
+@source_router.post('/series/{series_id}', status_code=200)
 def download_series_source_images(
         background_tasks: BackgroundTasks,
         series_id: int,
@@ -70,7 +70,7 @@ def download_series_source_images(
     return None
 
 
-@source_router.post('/series/{series_id}/backdrop')
+@source_router.post('/series/{series_id}/backdrop', status_code=200)
 def download_series_backdrop(
         series_id: int,
         ignore_blacklist: bool = Query(default=False),
@@ -117,7 +117,7 @@ def download_series_backdrop(
     return None
 
 
-@source_router.post('/series/{series_id}/logo')
+@source_router.post('/series/{series_id}/logo', status_code=200)
 def download_series_logo_(
         series_id: int,
         ignore_blacklist: bool = Query(default=False),
@@ -146,7 +146,7 @@ def download_series_logo_(
     )
 
 
-@source_router.post('/episode/{episode_id}')
+@source_router.post('/episode/{episode_id}', status_code=200)
 def download_episode_source_image_(
         episode_id: int,
         ignore_blacklist: bool = Query(default=False),
@@ -177,7 +177,7 @@ def download_episode_source_image_(
     )
 
 
-@source_router.get('/series/{series_id}')
+@source_router.get('/series/{series_id}', status_code=200)
 def get_existing_series_source_images(
         series_id: int,
         db = Depends(get_database),
@@ -196,33 +196,11 @@ def get_existing_series_source_images(
         .filter_by(series_id=series_id)
 
     # Get all source files
-    sources = []
-    for episode in all_episodes:
-        # Get this Episode's source file
-        source_file = episode.get_source_file(
-            preferences.source_directory, series.path_safe_name,
-        )
-
-        # All sources have these details
-        source = {
-            'episode_id': episode.id,
-            'season_number': episode.season_number,
-            'episode_number': episode.episode_number,
-            'source_file_name': source_file.name,
-            'source_file': str(source_file.resolve()),
-            'source_url': f'/source/{source_file.parent.name}/{source_file.name}',
-            'exists': source_file.exists(),
-        }
-
-        # If the source file exists, add the filesize and dimensions
-        if source_file.exists():
-            w, h = imagemagick_interface.get_image_dimensions(source_file)
-            source |= {
-                'filesize': source_file.stat().st_size,
-                'width': w,
-                'height': h,
-            }
-        sources.append(source)
+    sources = [
+        create_source_image(
+            preferences, imagemagick_interface, series, episode
+        ) for episode in all_episodes
+    ]
 
     return sorted(
         sources,
@@ -230,7 +208,7 @@ def get_existing_series_source_images(
     )
 
 
-@source_router.get('/episode/{episode_id}')
+@source_router.get('/episode/{episode_id}', status_code=200)
 def get_existing_episode_source_images(
         episode_id: int,
         db = Depends(get_database),
@@ -243,32 +221,79 @@ def get_existing_episode_source_images(
     - episode_id: ID of the Episode to get the details of.
     """
 
-    # Get the Episode with this ID, raise 404 if DNE
+    # Get the Episode and Series with this ID, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
+    series = get_series(db, episode.series_id, raise_exc=True)
 
-    # Get this Episode's source file
-    source_file = episode.get_source_file(
-        preferences.source_directory, series.path_safe_name,
+    return create_source_image(
+        preferences, imagemagick_interface, series, episode
     )
 
-    # All sources have these details
-    source = {
-        'episode_id': episode_id,
-        'season_number': episode.season_number,
-        'episode_number': episode.episode_number,
-        'source_file': str(source_file.resolve()),
-        'source_file_name': source_file.name,
-        'source_url': f'/source/{source_file.parent.name}/{source_file.name}',
-        'exists': source_file.exists(),
-    }
 
-    # If the source file exists, add the filesize and dimensions
+@source_router.post('/episode/{episode_id}/upload', status_code=201)
+async def set_source_image(
+        episode_id: int,
+        source_url: Optional[str] = Form(default=None),
+        source_file: Optional[UploadFile] = None,
+        db = Depends(get_database),
+        preferences = Depends(get_preferences),
+        imagemagick_interface = Depends(get_imagemagick_interface),
+        ) -> SourceImage:
+    """
+
+    """
+
+    # Get Episode and Series with this ID, raise 404 if DNE
+    episode = get_episode(db, episode_id, raise_exc=True)
+    series = get_series(db, episode.series_id, raise_exc=True)
+
+    # Get image contents
+    uploaded_file = b''
+    if source_file is not None:
+        uploaded_file = await source_file.read()
+
+    # Send error if both a URL and file were provided
+    if source_url is not None and len(uploaded_file) > 0:
+        raise HTTPException(
+            status_code=422,
+            detail='Cannot provide multiple sources'
+        )
+
+    # Send error if neither were provided
+    if source_url is None and len(uploaded_file) == 0:
+        raise HTTPException(
+            status_code=422,
+            detail='URL or file are required',
+        )
+
+    # If only URL was required, attempt to download, error if unable
+    if source_url is not None:
+        try:
+            content = get(source_url).content
+        except Exception as e:
+            log.exception(f'Download failed', e)
+            raise HTTPException(
+                status_code=400,
+                detail=f'Unable to download image - {e}'
+            )
+    # Use uploaded file if provided
+    else:
+        content = uploaded_file
+
+    # Get Episode source file
+    source_file = episode.get_source_file(
+        preferences.source_directory,
+        series.path_safe_name,
+    )
+
+    # If file already exists, warn about overwriting
     if source_file.exists():
-        width, height = imagemagick_interface.get_image_dimensions(source_file)
-        source |= {
-            'filesize': source_file.stat().st_size,
-            'width': width,
-            'height': height,
-        }
-        
-    return source
+        log.warning(f'{series.log_str} {episode.log_str} source file "{source_file.resolve()}" exists - replacing')
+
+    # Write new file to the disk
+    source_file.write_bytes(content)
+
+    # Return created SourceImage
+    return create_source_image(
+        preferences, imagemagick_interface, series, episode
+    )
