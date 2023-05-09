@@ -13,6 +13,7 @@ from app.dependencies import (
     get_sonarr_interface, get_tmdb_interface
 )
 import app.models as models
+from app.schemas.card import SourceImage
 from app.schemas.episode import Episode
 from app.schemas.series import Series
 from modules.TieredSettings import TieredSettings
@@ -291,3 +292,55 @@ def download_episode_source_image(
 
     # No image source returned a valid image, return None
     return None
+
+
+def create_source_image(
+        preferences: 'Preferences',
+        imagemagick_interface: Optional['ImageMagickInterface'],
+        series: Series,
+        episode: Episode) -> SourceImage:
+    """
+    Get the SourceImage details for the given objects.
+
+    Args:
+        preferences: Preferences to reference the global source
+            directory from.
+        imagemagick_interface: ImageMagickInterface to query the image
+            dimensions from.
+        series: Series of the SourceImage.
+        episode: Episode of the SourceImage.
+    """
+
+    # Get Episode source file
+    source_file = episode.get_source_file(
+        preferences.source_directory,
+        series.path_safe_name,
+    )
+
+    # All sources have these details
+    source = {
+        'episode_id': episode.id,
+        'season_number': episode.season_number,
+        'episode_number': episode.episode_number,
+        'source_file_name': source_file.name,
+        'source_file': str(source_file.resolve()),
+        'source_url': f'/source/{source_file.parent.name}/{source_file.name}',
+        'exists': source_file.exists(),
+    }
+
+    # If the source file exists, add the filesize and dimensions
+    if source_file.exists():
+        # Get image dimensions if ImageMagickInterface is provided
+        width, height = None, None
+        if imagemagick_interface is not None:
+            width, height = imagemagick_interface.get_image_dimensions(
+                source_file
+            )
+
+        source |= {
+            'filesize': source_file.stat().st_size,
+            'width': width,
+            'height': height,
+        }
+
+    return source
