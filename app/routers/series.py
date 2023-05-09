@@ -7,10 +7,6 @@ from fastapi import (
     APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, UploadFile
 )
 from sqlalchemy import or_
-from sqlalchemy.orm import Session
-
-from modules.Debug import log
-from modules.SeriesInfo import SeriesInfo
 
 from app.database.query import get_font, get_series, get_template
 from app.dependencies import (
@@ -28,6 +24,8 @@ from app.schemas.preferences import MediaServer
 from app.schemas.series import NewSeries, Series, UpdateSeries
 from app.schemas.episode import Episode
 
+from modules.Debug import log
+from modules.SeriesInfo import SeriesInfo
 
 series_router = APIRouter(
     prefix='/series',
@@ -128,6 +126,8 @@ def delete_series(
 @series_router.get('/search', status_code=200)
 def search_series(
         name: Optional[str] = None,
+        year: Optional[int] = None,
+        monitored: Optional[bool] = None,
         template_id: Optional[int] = None,
         font_id: Optional[int] = None,
         max_results: Optional[int] = 50,
@@ -136,13 +136,18 @@ def search_series(
     Query all defined defined series by the given parameters. This
     performs an AND operation with the given conditions.
 
-    - name: Substring to search for in the series names.
+    - Arguments: Search arguments to filter the results by.
     - max_results: Maximum number of results to return.
     """
 
+    # Generate conditions for the given arguments
     conditions = []
     if name is not None:
         conditions.append(models.series.Series.name.contains(name))
+    if year is not None:
+        conditions.append(models.series.Series.year==year)
+    if monitored is not None:
+        conditions.append(models.series.Series.monitored==monitored)
     if template_id is not None:
         conditions.append(models.series.Series.template_id==template_id)
     if font_id is not None:
@@ -318,7 +323,7 @@ async def set_series_poster(
     - poster_file: New poster file.
     """
 
-    # Find series with this ID, raise 404 if DNE
+    # Find Series with this ID, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
     # Get poster contents
