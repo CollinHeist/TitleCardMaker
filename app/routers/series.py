@@ -128,8 +128,9 @@ def search_series(
         name: Optional[str] = None,
         year: Optional[int] = None,
         monitored: Optional[bool] = None,
-        template_id: Optional[int] = None,
         font_id: Optional[int] = None,
+        sync_id: Optional[int] = None,
+        template_id: Optional[int] = None,
         max_results: Optional[int] = 50,
         db = Depends(get_database)):
     """
@@ -148,10 +149,12 @@ def search_series(
         conditions.append(models.series.Series.year==year)
     if monitored is not None:
         conditions.append(models.series.Series.monitored==monitored)
-    if template_id is not None:
-        conditions.append(models.series.Series.template_id==template_id)
     if font_id is not None:
         conditions.append(models.series.Series.font_id==font_id)
+    if sync_id is not None:
+        conditions.append(models.series.Series.sync_id==sync_id)
+    if template_id is not None:
+        conditions.append(models.series.Series.template_id==template_id)
 
     # Query by all given conditions
     all_series = db.query(models.series.Series).filter(*conditions).all()
