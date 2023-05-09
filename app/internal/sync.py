@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional
 
 from fastapi import BackgroundTasks, HTTPException
@@ -115,6 +116,7 @@ def run_sync(
                 series = models.series.Series(
                     name=series_info.name,
                     year=series_info.year,
+                    sync_id=sync.id,
                     template_id=sync.template_id,
                     emby_library_name=library,
                     **series_info.ids,
@@ -144,6 +146,7 @@ def run_sync(
                 series = models.series.Series(
                     name=series_info.name,
                     year=series_info.year,
+                    sync_id=sync.id,
                     template_id=sync.template_id,
                     jellyfin_library_name=library,
                     **series_info.ids,
@@ -164,6 +167,7 @@ def run_sync(
             # Look for existing series, add if DNE
             existing = db.query(models.series.Series)\
                 .filter(
+                    # TODO filter by other ID's
                     models.series.Series.name==series_info.name,
                     models.series.Series.year==series_info.year,
                 ).first() 
@@ -172,6 +176,7 @@ def run_sync(
                 series = models.series.Series(
                     name=series_info.name,
                     year=series_info.year,
+                    sync_id=sync.id,
                     template_id=sync.template_id,
                     plex_library_name=library,
                     **series_info.ids,
@@ -191,7 +196,6 @@ def run_sync(
         )
         for series_info, directory in all_series:
             # Look for an existing series with this name+year or Sonarr ID
-            # TODO maybe query by other database ID's?
             existing = db.query(models.series.Series)\
                 .filter(or_(
                     and_(
@@ -204,8 +208,8 @@ def run_sync(
                 series = models.series.Series(
                     name=series_info.name,
                     year=series_info.year,
+                    sync_id=sync.id,
                     template_id=sync.template_id,
-                    # TODO Determine which media server to assign this library to
                     plex_library_name=library,
                     **series_info.ids,
                 )

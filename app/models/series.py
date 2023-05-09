@@ -21,6 +21,7 @@ class Series(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
     year = Column(Integer, nullable=False)
+    sync_id = Column(Integer, ForeignKey('sync.id'), default=None)
     monitored = Column(Boolean, default=True, nullable=False)
     poster_file = Column(String, default=str(ASSET_DIRECTORY/'placeholder.jpg'))
     poster_url = Column(String, default='/assets/placeholder.jpg')
