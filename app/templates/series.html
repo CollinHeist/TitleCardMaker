@@ -2027,8 +2027,7 @@
       .modal({
         blurring: true,                           // Blur background when shown
         onHidden: ($element) => {                 // Reset input on close
-          $('#poster-upload-input')[0].value = '';
-          $('#poster-url-input')[0].value = '';
+          $('#edit-poster-form')[0].reset();
         }}
       );
 
@@ -2044,14 +2043,10 @@
         onApprove: () => {                            // Don't close if form is invalid
           return $('#new-episode-form').form('is valid');
         }, blurring: true,                            // Blur background when shown
-        onHidden: function($element) {                // Reset input on close
-          $('#poster-upload-input')[0].value = '';
-          $('#poster-url-input')[0].value = '';
-        }}
-      );
+      });
 
     // On edit poster modal submission, submit API request
-    $('#edit-poster-form').on('submit', (event) => {
+    $('#edit-poster-form').on('submit', event => {
       event.preventDefault();
       $('#submit-poster-button').toggleClass('loading', true);
       $.ajax({
@@ -2061,18 +2056,14 @@
         cache: false,
         contentType: false,
         processData: false,
-        success: (response) => {
-          $.toast({
-            class: 'blue info',
-            title: `Added series`,
-            message: response,
-          });
+        success: response => {
+          $.toast({class: 'blue info', title: 'Updated poster'});
           // Reload image
           $('#poster-image')[0].src = `${response}?${new Date().getTime()}`;
         }, error: (response) => {
           $.toast({
             class: 'error',
-            title: 'Error Updating Poster',
+            title: 'Error updating poster',
             message: response.responseJSON.detail,
           });
         }, complete: () => {
@@ -2194,7 +2185,7 @@
     }
 
     // Submit the updated series config
-    $('#series-config-form, #card-config-form, #series-ids-form').on('submit', (event) => {
+    $('#series-config-form, #card-config-form, #series-ids-form').on('submit', event => {
       event.preventDefault();
       if (!$('#series-config-form').form('is valid') || !$('#card-config-form').form('is valid')) { return; }
       $('#submit-changes').toggleClass('loading', true);
