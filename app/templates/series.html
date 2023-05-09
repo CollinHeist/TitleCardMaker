@@ -92,9 +92,15 @@
       width: 10ch;
     }
 
-    /* File search icon should color on hover */
+    /* File search icon should color semantic blue on hover */
     #files-list .card i[data-action="search"]:hover {
       color: #2185d0;
+      cursor: pointer;
+    }
+
+    /* Upload file icon should color semantic green on hover */
+    #files-list .card i[data-action="upload"]:hover {
+      color: #21ba45;
       cursor: pointer;
     }
   </style>
@@ -276,12 +282,13 @@
     <div class="ui card">
       <div class="content">
         <i data-action="search" class="right floated search icon" title="Search for this image"></i>
+        <i data-action="upload" class="right floated file import icon" title="Upload a new source image"></i>
         <div data-value="index" class="header">{descriptive name}</div>
         <div class="meta">
           <span data-value="path">{path}</span>
-          <div data-value="missing" class="ui red label">Missing</div>
-          <div data-value="dimension" class="ui label">{dimensions}</div>
-          <div data-value="filesize" class="ui label">{filesize}</div>
+          <div data-value="missing" class="ui tiny red label">Missing</div>
+          <div data-value="dimension" class="ui tiny label">{dimensions}</div>
+          <div data-value="filesize" class="ui tiny label">{filesize}</div>
         </div>
       </div>
     </div>
@@ -935,11 +942,38 @@
 
       const files = allFiles.map(source => {
         const file = fileTemplate.content.cloneNode(true);
-        // Fill in the index/path for all images
+        // Fill in the card values present on all files
         const cardId = `file-episode${source.episode_id}`;
         file.querySelector('.card').id = cardId;
         file.querySelector('[data-value="index"]').innerHTML = `Season ${source.season_number} Episode ${source.episode_number}`;
         file.querySelector('[data-value="path"]').innerHTML = source.source_file_name;
+        // Launch upload source modal when upload icon is clicked
+        file.querySelector('i[data-action="upload"]').onclick = () => {
+          $('#upload-source-form').off('submit').on('submit', event => {
+            event.preventDefault();
+            $.ajax({
+              type: 'POST',
+              url: `/api/sources/episode/${source.episode_id}/upload`,
+              data: new FormData(event.target),
+              cache: false,
+              contentType: false,
+              processData: false,
+              success: response => {
+                $.toast({class: 'blue info', title: 'Updated source image'});
+                getFileData();
+              }, error: response => {
+                $.toast({
+                  class: 'error',
+                  title: 'Error updating source image',
+                  message: response.responseJSON.detail,
+                });
+              }, complete: () => {
+                $('#upload-source-form')[0].reset();
+              },
+            });
+          });
+          $('#upload-source-modal').modal('show');
+        }
         if (source.exists) {
           // Disable search icon
           file.querySelector('i[data-action="search"]').classList.add('disabled');
@@ -959,6 +993,7 @@
         return file;
       });
       fileHolder.replaceChildren(...files);
+      refreshTheme();
     }
 
     async function getEpisodeData() {
@@ -1031,7 +1066,7 @@
         row.querySelector('input[name="tmdb_id"]').value = episode.tmdb_id;
         row.querySelector('input[name="tvdb_id"]').value = episode.tvdb_id;
         const tvrageIdInput = row.querySelector('input[name="tvrage_id"]')
-        if (tvrageIdInput != null) { tvrageIdInput.value = episode.tvrage_id; }
+        if (tvrageIdInput !== null) { tvrageIdInput.value = episode.tvrage_id; }
         row.querySelector('td[data-column="delete"] a').onclick = () => deleteEpisode(episode.id);
         return row;
       });
@@ -1877,6 +1912,33 @@
           <i class="images outline icon"></i>
           Yes, and Delete Cards
         </div>
+      </div>
+    </div>
+
+    <!-- Upload source image modal -->
+    <div id="upload-source-modal" class="ui mini modal">
+      <i class="close icon"></i>
+      <div class="header">Upload Source Image</div>
+      <div class="content">
+        <form id="upload-source-form" class="ui form">
+          <!-- URL -->
+          <div class="input field">
+            <label>URL</label>
+            <input type="text" name="source_url"></input>
+          </div>
+
+          <!-- OR divider between URL/upload -->
+          <div class="ui horizontal divider">Or</div>
+
+          <!-- File upload -->
+          <div class="file clearable input field">
+            <label>Upload File</label>
+            <input type="file" name="source_file">
+          </div>
+        </form>
+      </div>
+      <div class="actions">
+        <button class="ui positive button" type="submit" form="upload-source-form">Upload</button>
       </div>
     </div>
 
