@@ -219,6 +219,7 @@ def run_sync(
     # Process each newly added series
     for series in added:
         log.info(f'Sync[{sync.id}] Added {series.name} ({series.year})')
+        Path(series.source_directory).mkdir(parents=True, exist_ok=True)
         # Set Series ID's, download poster and logo
         if background_tasks is None:
             set_series_database_ids(
