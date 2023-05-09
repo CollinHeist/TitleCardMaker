@@ -122,6 +122,52 @@
       })
     }
 
+    async function showDeleteSyncModal(syncId) {
+      // Get list of Series associated with this Sync
+      const allSeriesResponse = await fetch(`/api/series/search?sync_id=${syncId}&max_results=25`).then(resp => resp.json());
+      const seriesElements = allSeriesResponse.results.map(({name, year}) => {
+        return `<li>${name} (${year})</li>`
+      });
+      // More than 25 Series, add indicator of total amount being deleted
+      if (allSeriesResponse.total_count > 25) {
+        seriesElements.push(`<li><span class="ui red text">${allSeriesResponse.total_count-25} more Series...</span></li>`)
+      }
+      $('#delete-sync-modal [data-value="series-list"]')[0].innerHTML = seriesElements.join('');
+      // Attach functions to delete buttons
+      $('#delete-sync-modal .button[data-action="delete-sync-only"]').off('click').on('click', () => {
+        $(`#card-sync${syncId}`).toggleClass('red double loading', true);
+        $.ajax({
+          type: 'DELETE',
+          url: `/api/sync/delete/${syncId}?delete_series=false`,
+          success: response => {
+            $.toast({class: 'blue info', title: `Deleted Sync "${name}"`});
+            getAllSyncs();
+          },
+          error: response => {
+            $.toast({class: 'error', title: 'Error Deleting Sync'});
+            $(`#card-sync${syncId}`).toggleClass('red double loading', false);
+          }, complete: () => {}
+        });
+      });
+      $('#delete-sync-modal .button[data-action="delete-sync-and-series"]').off('click').on('click', () => {
+        $(`#card-sync${syncId}`).toggleClass('red double loading', true);
+        $.ajax({
+          type: 'DELETE',
+          url: `/api/sync/delete/${syncId}?delete_series=true`,
+          success: response => {
+            $.toast({class: 'blue info', title: `Deleted Sync "${name}" and ${allSeriesResponse.total_count} Series`});
+            getAllSyncs();
+          },
+          error: response => {
+            $.toast({class: 'error', title: 'Error Deleting Sync'});
+            $(`#card-sync${syncId}`).toggleClass('red double loading', false);
+          }, complete: () => {}
+        });
+      });
+
+      $('#delete-sync-modal').modal('show');
+    }
+
     async function getAllSyncs() {
       const syncElements = [
         {source: 'emby', elementID: 'emby-syncs'},
@@ -154,28 +200,8 @@
             card.className = 'ui disabled card';
           }
 
-          // Add delete API request to the delete icon
-          clone.querySelector('i.trash').onclick = () => {
-            // Put card into loading state
-            $(`#card-sync${id}`)[0].className = 'ui red double loading card'
-            $.ajax({
-              type: 'DELETE',
-              url: `/api/sync/delete/${id}`,
-              success: (response) => {
-                $.toast({
-                  class: 'blue info',
-                  title: `Deleted Sync "${name}"`,
-                });
-                getAllSyncs();
-              },
-              error: (response) => {
-                $.toast({
-                  class: 'error',
-                  title: 'Error Deleting Sync',
-                });
-              }, complete: () => {}
-            });
-          }
+          // Launch delete sync modal on click of the delete icon
+          clone.querySelector('i.trash').onclick = () => showDeleteSyncModal(id);
 
           // Add sync API request to sync icon
           clone.querySelector('i.sync').onclick = () => {
@@ -268,9 +294,7 @@
       <div class="ui grid">
         <div id="sync" class="sixteen wide column">
           <h1 class="ui header">Syncs</h1>
-          <div id="next-sync" class="ui compact raised segment">
-            <span>Next sync is scheduled in <span class="ui blue text">6 hours</span></span>
-          </div>
+          <div id="next-sync" class="ui compact raised segment"></div>
 
           <!-- Emby -->
           <h3 class="ui horizontal divider left aligned header">Emby</h3>
@@ -685,6 +709,34 @@
             <i class="right arrow icon"></i>
           </div>
         </button>
+      </div>
+    </div>
+
+    <!-- Delete Sync Modal -->
+    <div id="delete-sync-modal" class="ui basic modal">
+      <div class="ui icon header">
+        <i class="trash icon"></i>
+        Delete Sync?
+      </div>
+      <div class="center aligned scrolling content">
+        <span class="ui blue text">This action cannot be undone.</span>
+        <br>
+        <span class="ui blue text">This Sync is linked to the following Series:</span>
+        <!-- <div class="ui divider"></div> -->
+        <ul class="ui list" data-value="series-list"></ul>
+      <div class="center aligned actions">
+        <div class="ui green ok basic inverted button">
+          <i class="remove icon"></i>
+          No
+        </div>
+        <div data-action="delete-sync-only" class="ui red cancel basic inverted button">
+          <i class="trash alternate outline icon"></i>
+          Yes
+        </div>
+        <div data-action="delete-sync-and-series" class="ui red ok inverted button">
+          <i class="trash alternate outline icon"></i>
+          Yes, and Delete Associated Series
+        </div>
       </div>
     </div>
 

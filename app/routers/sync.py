@@ -113,14 +113,30 @@ def edit_sync(
 @sync_router.delete('/delete/{sync_id}', status_code=204)
 def delete_sync(
         sync_id: int,
+        delete_series: bool = False,
         db = Depends(get_database)) -> None:
     """
     Delete the Sync with the given ID.
 
-    - sync_id: ID of the Sync to delete
+    - sync_id: ID of the Sync to delete.
+    - delete_series: Whether to delete Series that were added by this
+    Sync.
     """
 
+    # Get associated Sync, raise 404 if DNE
     sync = get_sync(db, sync_id, raise_exc=True)
+
+    # If indicated, delete Series added by this Sync
+    all_series = db.query(models.series.Series).filter_by(sync_id=sync_id).all()
+    if delete_series:
+        log.info(f'{sync.log_str} deleting {len(all_series)} Series')
+        db.query(models.series.Series).filter_by(sync_id=sync_id).delete()
+    # Reset the Sync ID of the linked Series
+    else:
+        for series in all_series:
+            log.debug(f'{series.log_str}.sync_id = None')
+            series.sync_id = None
+
     db.delete(sync)
     db.commit()
 
