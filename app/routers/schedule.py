@@ -6,6 +6,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 from app.dependencies import get_scheduler, get_preferences
 from app.internal.cards import create_all_title_cards
 from app.internal.episodes import refresh_all_episode_data
+from app.internal.series import load_all_media_servers
 from app.internal.sources import (
     download_all_source_images, download_all_series_logos
 )
@@ -15,11 +16,6 @@ from app.schemas.schedule import NewJob, ScheduledTask, UpdateInterval
 
 from modules.Debug import log
 
-def fake_func():
-    log.debug(f'Starting fake function')
-    from time import sleep
-    sleep(5)
-    log.debug(f'Ending fake function')
 
 # Create sub router for all /schedule API requests
 schedule_router = APIRouter(
@@ -74,7 +70,7 @@ def wrapped_download_source_images():
 
 def wrapped_load_media_servers():
     _wrap_before(JOB_LOAD_MEDIA_SERVERS)
-    fake_func()
+    load_all_media_servers()
     _wrap_after(JOB_LOAD_MEDIA_SERVERS)
 
 def wrapped_refresh_all_episode_data():

@@ -17,6 +17,42 @@ from app.schemas.preferences import MediaServer
 from app.schemas.series import Series
 
 
+def load_all_media_servers() -> None:
+    """
+    Schedule-able function to load all Title Cards in the Database to 
+    the media servers.
+    """
+
+    try:
+        # Get the Database
+        with next(get_database()) as db:
+            # Get all Series
+            for series in db.query(models.series.Series).all():
+                # Get the primary Media Server to load cards into
+                if series.emby_library_name is not None:
+                    media_server = 'Emby'
+                elif series.jellyfin_library_name is not None:
+                    media_server = 'Jellyfin'
+                elif series.plex_library_name is not None:
+                    media_server = 'Plex'
+                # Skip this Series if it has no library
+                else:
+                    log.debug(f'{series.log_str} has no Library, not loading Title Cards')
+                    continue
+
+                # Load Title Cards for this Series
+                try:
+                    load_series_title_cards(
+                        series, media_server, db, get_emby_interface(),
+                        get_jellyfin_interface(), get_plex_interface(),
+                    )
+                except HTTPException as e:
+                    log.warning(f'{series.log_str} Skipping Title Card loading')
+                    continue
+    except Exception as e:
+        log.exception(f'Failed to load Title Cards', e)
+
+
 def set_series_database_ids(
         series: Series,
         db: 'Database',
@@ -25,6 +61,17 @@ def set_series_database_ids(
         plex_interface: 'PlexInterface',
         sonarr_interface: 'SonarrInterface',
         tmdb_interface: 'TMDbInterface') -> Series:
+    """
+    Set the database ID's of the given Series.
+
+    Args:
+        series: Series to set the ID's of.
+        db: Database to commit changes to.
+        *_interface: Interface to query for database ID's from.
+
+    Returns:
+        Modified Series with the database ID's set.
+    """
 
     # Create SeriesInfo object for this entry, query all interfaces
     series_info = series.as_series_info
@@ -60,6 +107,15 @@ def download_series_poster(
         preferences: 'Preferences',
         series: Series,
         tmdb_interface: 'TMDbInterface') -> None:
+    """
+    Download the poster for the given Series.
+
+    Args:
+        db: Database to commit any changes to.
+        preferences: Base Preferences to get the global asset directory.
+        series: Series to download the poster of.
+        tmdb_interface: Interface to TMDb to download a poster from.
+    """
 
     # Exit if no TMDbInterface
     if tmdb_interface is None:
@@ -96,15 +152,25 @@ def download_series_poster(
 
 
 def load_series_title_cards(
-        series: 'Series',
+        series: Series,
         media_server: MediaServer,
         db: 'Database',
-        emby_interface: 'EmbyInterface',
-        jellyfin_interface: 'JellyfinInterface',
-        plex_interface: 'PlexInterface',
-        force_reload: bool = False):
+        emby_interface: Optional['EmbyInterface'],
+        jellyfin_interface: Optional['JellyfinInterface'],
+        plex_interface: Optional['PlexInterface'],
+        force_reload: bool = False) -> None:
     """
+    Load the Title Cards for the given Series into the associated media
+    server.
 
+    Args:
+        series: Series to load the Title Cards of.
+        media_server: Where to load the Title Cards into.
+        db: Database to look for and add Loaded records from/to.
+        *_interface: Interface to the applicable Media Server to load
+            Title Cards into.
+        force_reload: Whether to reload Title Cards even if no changes
+            are detected.
     """
 
     # Get associated library for the indicated media server
