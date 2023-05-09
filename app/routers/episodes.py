@@ -109,9 +109,16 @@ def delete_all_series_episodes(
     - series_id: ID of the Series to delete the Episodes of.
     """
 
-    # Get list of episode ID's to delete
+    # Get list of Episode ID's to delete
     query = db.query(models.episode.Episode).filter_by(series_id=series_id)
-    deleted = [episode.id for episode in query.all()]
+    deleted = [episode.id for episode in query]
+
+    # Delete card files, Card objects, and Loaded objects
+    delete_cards(
+        db,
+        db.query(models.card.Card).filter_by(series_id=series_id),
+        db.query(models.loaded.Loaded).filter_by(series_id=series_id),
+    )
 
     # Delete all associated Episodes
     query.delete()
