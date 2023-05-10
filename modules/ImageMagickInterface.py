@@ -30,6 +30,12 @@ class ImageMagickInterface:
     """How long to wait before terminating a command as timed out"""
     COMMAND_TIMEOUT_SECONDS = 240
 
+    """Directory for all temporary images created during image creation"""
+    TEMP_DIR = Path(__file__).parent / '.objects'
+
+    """Temporary file location for svg -> png conversion"""
+    TEMPORARY_SVG_FILE = TEMP_DIR / 'temp_logo.svg'
+
     """Characters that must be escaped in commands"""
     __REQUIRED_ESCAPE_CHARACTERS = ('"', '`', '%')
 
