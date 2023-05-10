@@ -1,7 +1,7 @@
 function refreshTheme() {
   const inverted = (window.localStorage.getItem('site-theme') === 'dark');
   $('#main-content .ui').toggleClass('inverted', inverted);
-  $('.modal:not(.basic), .modal:not(.basic) .ui, .accordion, .accordion .ui').toggleClass('inverted', inverted);
+  $('.modal:not(.basic):not(.uninvertible), .modal:not(.basic):not(.uninvertible) .ui, .accordion, .accordion .ui').toggleClass('inverted', inverted);
 }
 
 function toggleTheme() {

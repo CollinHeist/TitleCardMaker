@@ -1,7 +1,7 @@
 from typing import Any, Literal, Optional, Union
 from pathlib import Path
 
-from pydantic import constr, Field, root_validator, validator
+from pydantic import constr, Field, PositiveInt, root_validator, validator
 
 from app.schemas.base import Base, UNSPECIFIED, validate_argument_lists_to_dict
 from app.schemas.font import TitleCase

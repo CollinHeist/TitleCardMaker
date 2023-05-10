@@ -92,16 +92,32 @@
       width: 10ch;
     }
 
+    /* Show cursor on all file card icons, and images in tmdb modal */
+    #files-list .card .icon,
+    #browse-tmdb-modal .image.content .images a {
+      cursor: pointer;
+    }
+
     /* File search icon should color semantic blue on hover */
     #files-list .card i[data-action="search"]:hover {
       color: #2185d0;
-      cursor: pointer;
     }
 
     /* Upload file icon should color semantic green on hover */
     #files-list .card i[data-action="upload"]:hover {
       color: #21ba45;
-      cursor: pointer;
+    }
+
+    /* The TMDb logo should be 14px high */
+    #files-list .card img {
+      height: 14px;
+      padding-right: 3px;
+    }
+
+    /* Add padding between images on TMDb image browser */
+    #browse-tmdb-modal .image.content .images a {
+      display: inline-block;
+      margin: 0 .25rem 0.5rem;
     }
   </style>
 
@@ -283,6 +299,9 @@
       <div class="content">
         <i data-action="search" class="right floated search icon" title="Search for this image"></i>
         <i data-action="upload" class="right floated file import icon" title="Upload a new source image"></i>
+        {% if preferences.use_tmdb %}
+        <img data-action="browse-tmdb" class="right floated icon" src="/assets/tmdb_primary_full_logo.svg" title="Browse TMDb source images"/>
+        {% endif %}
         <div data-value="index" class="header">{descriptive name}</div>
         <div class="meta">
           <span data-value="path">{path}</span>
@@ -474,6 +493,51 @@
           $('#add-translations > i').toggleClass('loading', false);
         }
       });
+    }
+
+    function selectTmdbImage(episodeId, url) {
+      // Create psuedo form for this URL
+      const form = new FormData();
+      form.set('source_url', url);
+      // Submit API request to upload this URL
+      $.ajax({
+        type: 'POST',
+        url: `/api/sources/episode/${episodeId}/upload`,
+        data: form,
+        cache: false,
+        contentType: false,
+        processData: false,
+        success: response => {
+          $.toast({class: 'blue info', title: 'Updated source image'});
+        }, error: response => {
+          $.toast({
+            class: 'error',
+            title: 'Error updating source image',
+            message: response.responseJSON.detail,
+          });
+        }, complete: () => {},
+      });
+    }
+
+    async function browseTmdbImages(episodeId, cardElementId) {
+      // Get all source images for this Episode
+      const images = await fetch(`/api/sources/episode/${episodeId}/browse`).then(resp => resp.json());
+      console.log(images)
+      // If null, no images were returned
+      if (images === null) {
+        $.toast({class: 'error', title: 'Unable to Query TMDb'});
+        return;
+      } else if (images.detail !== undefined) {
+        $.toast({class: 'error', title: 'Unable to Query TMDb', message: images.detail});
+        return;
+      }
+
+      // Images returned, add to browse modal
+      const imageElements = images.map(url => {
+        return `<a onclick="selectTmdbImage(${episodeId}, '${url}')"><img src="${url}"/></a>`
+      });
+      $('#browse-tmdb-modal .content .images')[0].innerHTML = imageElements.join('');
+      $('#browse-tmdb-modal').modal('show');
     }
 
     async function getEpisodeSourceImage(episodeId, cardElementId) {
@@ -947,6 +1011,11 @@
         file.querySelector('.card').id = cardId;
         file.querySelector('[data-value="index"]').innerHTML = `Season ${source.season_number} Episode ${source.episode_number}`;
         file.querySelector('[data-value="path"]').innerHTML = source.source_file_name;
+        // Launch TMDb browse modal when TMDb logo is clicked
+        const tmdbLogo = file.querySelector('[data-action="browse-tmdb"]');
+        if (tmdbLogo !== null) {
+          tmdbLogo.onclick = () => browseTmdbImages(source.episode_id, cardId);
+        }
         // Launch upload source modal when upload icon is clicked
         file.querySelector('i[data-action="upload"]').onclick = () => {
           $('#upload-source-form').off('submit').on('submit', event => {
@@ -978,6 +1047,7 @@
           // Disable search icon
           file.querySelector('i[data-action="search"]').classList.add('disabled');
           // Remove missing label, fill in dimensions and filesize
+          // file.querySelector('.card').classList.add('blue');
           file.querySelector('[data-value="missing"]').remove();
           file.querySelector('[data-value="dimension"]').innerHTML = `${source.width}x${source.height}`;
           file.querySelector('[data-value="filesize"]').innerHTML = formatBytes(source.filesize, 1);
@@ -1915,22 +1985,19 @@
       </div>
     </div>
 
-    <!-- Upload source image modal -->
+    <!-- Add source image modal -->
     <div id="upload-source-modal" class="ui mini modal">
       <i class="close icon"></i>
       <div class="header">Upload Source Image</div>
       <div class="content">
         <form id="upload-source-form" class="ui form">
-          <!-- URL -->
           <div class="input field">
             <label>URL</label>
             <input type="text" name="source_url"></input>
           </div>
 
-          <!-- OR divider between URL/upload -->
           <div class="ui horizontal divider">Or</div>
 
-          <!-- File upload -->
           <div class="file clearable input field">
             <label>Upload File</label>
             <input type="file" name="source_file">
@@ -1939,6 +2006,15 @@
       </div>
       <div class="actions">
         <button class="ui positive button" type="submit" form="upload-source-form">Upload</button>
+      </div>
+    </div>
+
+    <!-- TMDb source browser modal -->
+    <div id="browse-tmdb-modal" class="ui scrolling content large uninvertible basic modal">
+      <i class="close icon"></i>
+      <div class="center aligned header">Browse TMDb Source Images</div>
+      <div class="center aligned scrolling image content">
+        <div class="ui large images"></div>
       </div>
     </div>
 
