@@ -240,7 +240,12 @@ async def set_source_image(
         imagemagick_interface = Depends(get_imagemagick_interface),
         ) -> SourceImage:
     """
+    Set the Source Image for the given Episode. If there is an existing
+    Title Card associated with this Episode, it is deleted.
 
+    - episode_id: ID of the Episode to set the Source Image of.
+    - source_url: URL to the Source Image to download and utilize.
+    - source_file: Source Image file content to utilize.
     """
 
     # Get Episode and Series with this ID, raise 404 if DNE
@@ -292,6 +297,13 @@ async def set_source_image(
 
     # Write new file to the disk
     source_file.write_bytes(content)
+
+    # Delete associated Card and Loaded entry to initiate future reload
+    delete_cards(
+        db,
+        db.query(models.card.Card).filter_by(episode_id=episode_id),
+        db.query(models.loaded.Loaded).filter_by(episode_id=episode_id),
+    )
 
     # Return created SourceImage
     return create_source_image(
