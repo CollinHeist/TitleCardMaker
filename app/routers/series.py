@@ -16,7 +16,8 @@ from app.dependencies import (
 )
 import app.models as models
 from app.internal.series import (
-    download_series_poster, load_series_title_cards, set_series_database_ids
+    delete_series_and_episodes, download_series_poster, load_series_title_cards,
+    set_series_database_ids
 )
 from app.internal.sources import download_series_logo
 from app.schemas.base import UNSPECIFIED
@@ -110,15 +111,8 @@ def delete_series(
     # Find series with this ID, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    # Delete poster if not the placeholder
-    series_poster = Path(series.poster_file)
-    if series_poster.stem != 'placeholder' and series_poster.exists():
-        series_poster.unlink(missing_ok=True)
-
-    # Delete series and episodes from database
-    db.query(models.series.Series).filter_by(id=series_id).delete()
-    db.query(models.episode.Episode).filter_by(series_id=series_id).delete()
-    db.commit()
+    # Delete Series, poster, and associated Episodes
+    delete_series_and_episodes(db, series)
 
     return None
 

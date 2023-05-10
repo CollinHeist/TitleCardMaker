@@ -245,3 +245,34 @@ def load_series_title_cards(
         db.commit()
 
     return None
+
+
+def delete_series_and_episodes(
+        db: 'Database',
+        series: Series, *,
+        commit_changes: bool = True) -> None:
+    """
+    Delete the given Series.
+
+    Args:
+        db: Database to commit any deletion to.
+        series: Series to delete.
+        commit_changes: Whether to commit Database changes.
+    """
+
+    # Delete poster if not the placeholder
+    series_poster = Path(series.poster_file)
+    if series_poster.stem != 'placeholder' and series_poster.exists():
+        series_poster.unlink(missing_ok=True)
+        log.debug(f'{series.log_str} Deleted poster')
+
+    # Delete series and episodes from database
+    log.info(f'Deleting {series.log_str}')
+    db.delete(series)
+    db.query(models.episode.Episode).filter_by(series_id=series.id).delete()
+
+    # Commit changes if indicated
+    if commit_changes:
+        db.commit()
+
+    return None

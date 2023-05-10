@@ -8,6 +8,7 @@ from app.dependencies import (
     get_imagemagick_interface, get_jellyfin_interface, get_plex_interface,
     get_sonarr_interface, get_tmdb_interface
 )
+from app.internal.series import delete_series_and_episodes
 from app.internal.sync import add_sync, run_sync
 from app.schemas.sync import (
     EmbySync, JellyfinSync, PlexSync, SonarrSeriesType, SonarrSync, Sync, Interface,
@@ -126,14 +127,16 @@ def delete_sync(
     # Get associated Sync, raise 404 if DNE
     sync = get_sync(db, sync_id, raise_exc=True)
 
-    # If indicated, delete Series added by this Sync
+    # Get all Series associated with this Sync
     all_series = db.query(models.series.Series).filter_by(sync_id=sync_id).all()
-    if delete_series:
-        log.info(f'{sync.log_str} deleting {len(all_series)} Series')
-        db.query(models.series.Series).filter_by(sync_id=sync_id).delete()
-    # Reset the Sync ID of the linked Series
-    else:
-        for series in all_series:
+
+    # Delete or reset the Sync ID for all associated Series
+    for series in all_series:
+        # Delete the actual Series
+        if delete_series:
+            delete_series_and_episodes(db, series, commit_changes=False)
+        # Reset the Sync ID of the linked Series
+        else:
             log.debug(f'{series.log_str}.sync_id = None')
             series.sync_id = None
 

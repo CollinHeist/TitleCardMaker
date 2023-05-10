@@ -23,7 +23,6 @@ from modules.CleanPath import CleanPath
 from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.SeasonTitleRanges import SeasonTitleRanges
-from modules.TieredSettings import TieredSettings
 from modules.Title import Title
 from modules.TitleCard import TitleCard as TitleCardCreator
 
