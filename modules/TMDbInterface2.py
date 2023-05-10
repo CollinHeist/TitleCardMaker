@@ -692,15 +692,65 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         return images[best_image['index']] if valid_image else None
 
 
+    @catch_and_log('Error getting all source images', default=None)
+    def get_all_source_images(self,
+            series_info: SeriesInfo,
+            episode_info: EpisodeInfo, *,
+            match_title: bool = True,
+            skip_localized_images: bool = False,
+            return_objects: bool = False,
+            ) -> Optional[list[Union['tmdbapis.objs.image.Still', str]]]:
+        """
+        Get all source image for the requested entry.
+
+        Args:
+            series_info: SeriesInfo for this entry.
+            episode_info: EpisodeInfo for this entry.
+            match_title:  (Keyword only) Whether to require the episode
+                title to match when querying TMDb.
+            skip_localized_images: (Keyword only) Whether to skip images
+                with a non-null language code - i.e. skipping localized
+                images.
+
+        Returns:
+            List of Still objects for the requested entry. If the
+            episode is blacklisted or not found on TMDb, then None is
+            returned.
+        """
+
+        # Don't query the database if this episode is in the blacklist
+        if self.__is_blacklisted(series_info, episode_info, 'image'):
+            return None
+
+        # Get Episode object for this episode
+        episode = self.__find_episode(series_info, episode_info, match_title)
+        if episode is None:
+            self.__update_blacklist(series_info, episode_info, 'image')
+            raise HTTPException(
+                status_code=404,
+                detail=f'"{series_info}" {episode_info} not found on TMDb'
+            )
+            return None
+
+        # Episode found on TMDb, get images/backdrops based on episode/movie
+        if hasattr(episode, 'stills'): images = episode.stills
+        else: images = episode.backdrops
+
+        # If returning objects, return TMDbImages directly - otherwise URL's.
+        if return_objects:
+            return images
+
+        return [image.url for image in images]
+
+
     @catch_and_log('Error getting source image', default=None)
     def get_source_image(self,
             series_info: SeriesInfo,
             episode_info: EpisodeInfo, *,
             title_match: bool = True,
-            skip_localized_images: bool = False) -> str:
+            skip_localized_images: bool = False) -> Optional[str]:
         """
-        Get the best source image for the requested entry. The URL of
-        this image is returned.
+        Get the best source image for the requested entry.
 
         Args:
             series_info: SeriesInfo for this entry.
@@ -716,31 +766,31 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             if no images are available.
         """
 
-        # Don't query the database if this episode is in the blacklist
-        if self.__is_blacklisted(series_info, episode_info, 'image'):
+        # Get all images for this episode
+        all_images = self.get_all_source_images(
+            series_info,
+            episode_info,
+            title_match=title_match,
+            skip_localized_images=skip_localized_images,
+            return_objects=True,
+        )
+
+        # If None, either blacklisted or episode was not found
+        if all_images is None:
             return None
 
-        # Get Episode object for this episode
-        episode = self.__find_episode(series_info, episode_info, title_match)
-        if episode is None:
-            log.debug(f'TMDb has no matching episode for "{series_info}" '
-                      f'{episode_info}')
-            self.__update_blacklist(series_info, episode_info, 'image')
-            return None
-
-        # Episode found on TMDb, get images/backdrops based on episode/movie
-        if hasattr(episode, 'stills'): images = episode.stills
-        else: images = episode.backdrops
-
-        # Exit if no backdrops for this episode
-        if len(images) == 0:
+        # Exit if no images for this episode
+        if len(all_images) == 0:
             log.debug(f'TMDb has no images for "{series_info}" {episode_info}')
             self.__update_blacklist(series_info, episode_info, 'image')
             return None
 
-        # Get the best image for this Episode
-        kwargs = {'is_source_image':True,'skip_localized':skip_localized_images}
-        if (best_image := self.__determine_best_image(images, **kwargs)):
+        # Get the best image for this episode
+        kwargs = {
+            'is_source_image': True,
+            'skip_localized':skip_localized_images
+        }
+        if (best_image := self.__determine_best_image(all_images, **kwargs)):
             return best_image.url
 
         log.debug(f'TMDb images for "{series_info}" {episode_info} do not meet '
@@ -750,7 +800,9 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
 
     def __is_generic_title(self,
-            title: str, language_code: str, episode_info: EpisodeInfo) -> bool:
+            title: str,
+            language_code: str,
+            episode_info: EpisodeInfo) -> bool:
         """
         Determine whether the given title is a generic translation of
         "Episode (x)" for the indicated language. 
@@ -786,7 +838,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
             language_code: str = 'en-US',
-            bypass_blacklist: bool = False) -> str:
+            bypass_blacklist: bool = False) -> Optional[str]:
         """
         Get the episode title for the given entry for the given language.
 
@@ -833,7 +885,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
 
     @catch_and_log('Error getting series logo', default=None)
-    def get_series_logo(self, series_info: SeriesInfo) -> str:
+    def get_series_logo(self, series_info: SeriesInfo) -> Optional[str]:
         """
         Get the best logo for the given series.
 
@@ -901,7 +953,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     @catch_and_log('Error setting series backdrop', default=None)
     def get_series_backdrop(self,
             series_info: SeriesInfo, *,
-            skip_localized_images: bool = False) -> Union[str, None]:
+            skip_localized_images: bool = False) -> Optional[str]:
         """
         Get the best backdrop for the given series.
 
@@ -980,52 +1032,3 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
                 best = poster
 
         return best.url
-
-
-    def manually_download_season(self, title: str, year: int,
-            season_number: int, episode_range: Iterable[int], directory: Path
-            ) -> None:
-        """
-        Download episodes 1-episode_count of the requested season for
-        the given show. They will be named as s{season}e{episode}.jpg.
-
-        Args:
-            title: The title of the requested show.
-            year: The year of the requested show.
-            season_number: Which season to download.
-            episode_range: Episode numbers to download images of.
-            directory: The directory to place the downloaded images in.
-        """
-
-        # Create SeriesInfo for the series
-        si = SeriesInfo(title, year)
-        self.set_series_ids(si)
-
-        # Go through each episode in the given range
-        for episode_number in episode_range:
-            ei = EpisodeInfo('', season_number, episode_number)
-            image_url = self.get_source_image(si, ei, title_match=False)
-
-            # If a valid URL was returned, download it
-            if image_url is not None:
-                filename = f's{season_number}e{episode_number}.jpg'
-                if self.download_image(image_url, directory / filename):
-                    log.debug(f'Downloaded {(directory / filename).resolve()}')
-
-
-    @staticmethod
-    def unblacklist(series_info: SeriesInfo) -> None:
-        """Remove all blacklist entries for the given series."""
-
-        blacklist = PersistentDatabase(TMDbInterface.__BLACKLIST_DB)
-        removed = blacklist.remove(where('series') == series_info.full_name)
-        log.info(f'Unblacklisted {len(removed)} queries')
-
-
-    @staticmethod
-    def delete_blacklist(database_directory: Path) -> None:
-        """Delete the blacklist file referenced by this class."""
-
-        database = database_directory / TMDbInterface.__BLACKLIST_DB
-        database.unlink(missing_ok=True)
-        log.info(f'Deleted blacklist file "{database.resolve()}"')
