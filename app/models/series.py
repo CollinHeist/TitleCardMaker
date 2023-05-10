@@ -36,7 +36,7 @@ class Series(Base):
     sync_specials = Column(Boolean, default=None)
     skip_localized_images = Column(Boolean, default=None)
     translations = Column(MutableList.as_mutable(PickleType), default=None)
-    match_titles = Column(Boolean, default=True)
+    match_titles = Column(Boolean, default=True, nullable=False)
 
     # Database arguments
     emby_id = Column(Integer, default=None)
