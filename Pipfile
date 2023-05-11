@@ -25,6 +25,7 @@ jinja2 = "*"
 pydantic = "*"
 apscheduler = "*"
 imagesize = "*"
+alembic = "*"
 
 [dev-packages]
 
