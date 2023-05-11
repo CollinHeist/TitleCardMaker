@@ -582,36 +582,28 @@ class Show(YamlReader):
             return None
 
         # Temporary function to load episode ID's
-        def load_emby(infos):
-            if self.emby_interface:
-                self.emby_interface.set_episode_ids(self.series_info, infos)
-        def load_jellyfin(infos):
-            if self.jellyfin_interface:
-                self.jellyfin_interface.set_episode_ids(self.series_info, infos)
-        def load_plex(infos):
-            if self.plex_interface:
-                self.plex_interface.set_episode_ids(self.library_name,
-                                                    self.series_info, infos)
-        def load_sonarr(infos):
-            if self.sonarr_interface:
-                self.sonarr_interface.set_episode_ids(self.series_info, infos)
-        def load_tmdb(infos):
-            if self.tmdb_interface:
-                self.tmdb_interface.set_episode_ids(self.series_info, infos)
+        def load(interface, episode_infos):
+            interface_obj = getattr(self, f'{interface}_interface', None)
+            if interface_obj is not None:
+                interface_obj.set_episode_ids(
+                    library_name=self.library_name,
+                    series_info=self.series_info,
+                    episode_infos=episode_infos,
+                )
 
         # Identify interface order for ID gathering based on primary episode
         # data source
         interface_orders = {
-            'emby':     [load_emby, load_sonarr, load_tmdb, load_plex, load_jellyfin],
-            'jellyfin': [load_jellyfin, load_sonarr, load_tmdb, load_plex, load_emby],
-            'sonarr':   [load_sonarr, load_plex, load_emby, load_jellyfin, load_tmdb],
-            'plex':     [load_plex, load_sonarr, load_tmdb, load_emby, load_jellyfin],
-            'tmdb':     [load_tmdb, load_sonarr, load_plex, load_emby, load_jellyfin],
+            'emby':     ['emby', 'sonarr', 'tmdb'],
+            'jellyfin': ['jellyfin', 'sonarr', 'tmdb'],
+            'sonarr':   ['sonarr', 'plex', 'emby', 'jellyfin', 'tmdb'],
+            'plex':     ['plex', 'sonarr', 'tmdb'],
+            'tmdb':     ['tmdb', 'sonarr', 'plex', 'emby', 'jellyfin'],
         }
 
         # Go through each interface and load ID's from it
-        for interface_function in interface_orders[self.episode_data_source]:
-            interface_function(infos)
+        for interface in interface_orders[self.episode_data_source]:
+            load(interface, infos)
 
 
     def add_translations(self) -> None:
