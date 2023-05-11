@@ -1,14 +1,13 @@
-from typing import Any, Literal, Optional, Union
-from pathlib import Path
+from typing import Any, Optional
 
-from pydantic import constr, Field, PositiveInt, root_validator, validator
+from pydantic import constr, Field, root_validator, validator
 
 from app.schemas.base import Base, UNSPECIFIED, validate_argument_lists_to_dict
 from app.schemas.font import TitleCase
 from app.schemas.ids import (
     EmbyID, IMDbID, JellyfinID, SonarrID, TMDbID, TVDbID, TVRageID
 )
-from app.schemas.preferences import EpisodeDataSource, ImageSourceToggle, Style, ImageSource, LanguageCode
+from app.schemas.preferences import EpisodeDataSource, Style, ImageSource, LanguageCode
 
 # Match absolute ranges (1-10), season numbers (1), episode ranges (s1e1-s1e10)
 SeasonTitleRange = constr(regex=r'^(\d+-\d+)|^(\d+)|^(s\d+e\d+-s\d+e\d+)$')
@@ -57,7 +56,6 @@ class BaseConfig(Base):
 
 class BaseTemplate(BaseConfig):
     name: str = Field(..., min_length=1, title='Template name')
-    image_source_priority: list[ImageSource] = Field(default=None)
     translations: list[Translation] = Field(default=[])
     hide_season_text: bool = Field(default=False)
     hide_episode_text: bool = Field(default=False)
@@ -244,7 +242,6 @@ class UpdateTemplate(BaseUpdate):
     skip_localized_images: Optional[bool] = Field(default=UNSPECIFIED)
     card_filename_format: Optional[str] = Field(default=UNSPECIFIED)
     episode_data_source: Optional[EpisodeDataSource] = Field(default=UNSPECIFIED)
-    image_source_priority: list[ImageSource] = Field(default=UNSPECIFIED)
     translations: list[Translation] = Field(default=UNSPECIFIED)
     card_type: Optional[str] = Field(default=UNSPECIFIED)
     hide_season_text: bool = Field(default=UNSPECIFIED)
