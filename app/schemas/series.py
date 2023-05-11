@@ -11,7 +11,7 @@ from app.schemas.preferences import EpisodeDataSource, Style, ImageSource, Langu
 
 # Match absolute ranges (1-10), season numbers (1), episode ranges (s1e1-s1e10)
 SeasonTitleRange = constr(regex=r'^(\d+-\d+)|^(\d+)|^(s\d+e\d+-s\d+e\d+)$')
-DictKey = constr(regex=r'^[a-zA-Z]+[^ ]*$', min_length=1)
+DictKey = constr(regex=r'^[a-zA-Z]+[^ -]*$', min_length=1)
 
 # TODO Add validation for filename format string
 
@@ -182,7 +182,7 @@ class NewTemplate(BaseTemplate):
     season_title_ranges: list[SeasonTitleRange] = Field(default=[])
     season_title_values: list[str] = Field(default=[])
     extra_keys: list[str] = Field(default=[])
-    extra_values: list[str] = Field(default=[])
+    extra_values: list[Any] = Field(default=[])
 
     @validator('season_title_ranges', 'season_title_values',
                'extra_keys', 'extra_values', pre=True)
@@ -368,8 +368,8 @@ Return classes
 """
 class Template(BaseTemplate):
     id: int
-    season_titles: Optional[dict[str, str]]
-    extras: Optional[dict[str, Any]]
+    season_titles: dict[SeasonTitleRange, str]
+    extras: dict[str, Any]
 
 class Series(BaseSeries):
     id: int
@@ -383,5 +383,5 @@ class Series(BaseSeries):
     font_stroke_width: Optional[float]
     font_interline_spacing: Optional[int]
     font_vertical_shift: Optional[int]
-    season_titles: Optional[dict[str, str]]
+    season_titles: Optional[dict[SeasonTitleRange, str]]
     extras: Optional[dict[str, Any]]
