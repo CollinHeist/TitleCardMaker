@@ -312,3 +312,22 @@ class Preferences:
                 return library
 
         return None
+    
+
+    def standardize_style(self, style: str) -> str:
+        """
+        Standardize the given style string so that style modifiers are
+        not order dependent.
+
+        For example, "blur unique" should standardize to the same value
+        as "unique blur".
+
+        Args:
+            style: Style string being standardized.
+
+        Returns:
+            Standardized value. This is an alphabetically sorted space-
+            separated lowercase variation of style.
+        """
+
+        return ' '.join(sorted(str(style).lower().strip().split(' ')))
