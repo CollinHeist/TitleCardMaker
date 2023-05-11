@@ -52,13 +52,13 @@ class BaseConfig(Base):
         title='Watched episode style',
         description='How to style watched episodes of this series',
     )
+    hide_season_text: Optional[bool] = Field(default=None)
+    hide_episode_text: Optional[bool] = Field(default=None)
     episode_text_format: Optional[str] = Field(default=None)
 
 class BaseTemplate(BaseConfig):
     name: str = Field(..., min_length=1, title='Template name')
     translations: list[Translation] = Field(default=[])
-    hide_season_text: bool = Field(default=False)
-    hide_episode_text: bool = Field(default=False)
 
 class BaseSeries(BaseConfig):
     name: str = Field(..., min_length=1, title='Series name')
@@ -77,9 +77,7 @@ class BaseSeries(BaseConfig):
     )
     match_titles: bool = Field(default=True)
     translations: Optional[list[Translation]] = Field(default=None)
-    
-    hide_season_text: Optional[bool] = Field(default=None)
-    hide_episode_text: Optional[bool] = Field(default=None)
+
     font_id: Optional[int] = Field(
         default=None,
         title='Font ID',
