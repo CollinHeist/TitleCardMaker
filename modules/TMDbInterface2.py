@@ -747,7 +747,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def get_source_image(self,
             series_info: SeriesInfo,
             episode_info: EpisodeInfo, *,
-            title_match: bool = True,
+            match_title: bool = True,
             skip_localized_images: bool = False) -> Optional[str]:
         """
         Get the best source image for the requested entry.
@@ -755,7 +755,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         Args:
             series_info: SeriesInfo for this entry.
             episode_info: EpisodeInfo for this entry.
-            title_match:  (Keyword only) Whether to require the episode
+            match_title:  (Keyword only) Whether to require the episode
                 title to match when querying TMDb.
             skip_localized_images: (Keyword only) Whether to skip images
                 with a non-null language code - i.e. skipping localized
@@ -770,7 +770,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         all_images = self.get_all_source_images(
             series_info,
             episode_info,
-            title_match=title_match,
+            match_title=match_title,
             skip_localized_images=skip_localized_images,
             return_objects=True,
         )
