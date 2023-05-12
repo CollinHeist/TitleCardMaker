@@ -7,7 +7,6 @@ from pickle import dump
 
 from modules.Debug import log
 from modules.ImageMagickInterface import ImageMagickInterface
-from modules.StyleSet import StyleSet
 from modules.TitleCard import TitleCard
 
 EpisodeDataSource = namedtuple('EpisodeDataSource', ('value', 'label'))
@@ -327,7 +326,13 @@ class Preferences:
 
         Returns:
             Standardized value. This is an alphabetically sorted space-
-            separated lowercase variation of style.
+            separated lowercase variation of style. If the given style
+            was just "blur", then "blur unique" is returned.
         """
 
-        return ' '.join(sorted(str(style).lower().strip().split(' ')))
+        # Standardize "blur" into "blur unique"
+        if (standardized := str(style).lower().strip()) == 'blur':
+            return 'blur unique'
+
+        # All other styles get typical standardization.
+        return ' '.join(sorted(standardized.split(' ')))
