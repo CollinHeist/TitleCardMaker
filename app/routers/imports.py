@@ -1,12 +1,21 @@
-from typing import Any, Literal, Optional, Union
-
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException
 from pydantic.error_wrappers import ValidationError
 
-from app.dependencies import get_database, get_preferences
-from app.internal.imports import parse_fonts, parse_raw_yaml, parse_templates
+from app.dependencies import (
+    get_database, get_preferences, get_emby_interface,
+    get_imagemagick_interface, get_jellyfin_interface, get_plex_interface,
+    get_sonarr_interface, get_tmdb_interface
+)
+from app.internal.imports import (
+    parse_fonts, parse_raw_yaml, parse_series, parse_templates
+)
+from app.internal.series import download_series_poster, set_series_database_ids
+from app.internal.sources import download_series_logo
 import app.models as models
 from app.schemas.font import NamedFont
+from app.schemas.imports import (
+    ImportFontYaml, ImportTemplateYaml, ImportSeriesYaml
+)
 from app.schemas.preferences import Preferences
 from app.schemas.series import Series, Template
 
@@ -30,18 +39,20 @@ def import_preferences_yaml(
     ...
 
 
-@import_router.post('/fonts')
+@import_router.post('/fonts', status_code=201)
 def import_fonts_yaml(
-        yaml: str = Body(...),
+        import_yaml: ImportFontYaml = Body(...),
         db = Depends(get_database)) -> list[NamedFont]:
     """
-    Import all Fonts defined in the given YAML.
+    Import all Fonts defined in the given YAML. This does NOT import any
+    custom font files - these will need to be added separately.
 
-    - yaml: YAML string to parse and import
+    - import_yaml: ImportFontYAML with the YAML string to parse and
+    import.
     """
 
     # Parse raw YAML into dictionary
-    yaml_dict = parse_raw_yaml(yaml)
+    yaml_dict = parse_raw_yaml(import_yaml.yaml)
     if len(yaml_dict) == 0:
         return []
     
@@ -56,29 +67,31 @@ def import_fonts_yaml(
         )
 
     # Add each defined Font to the database
-    fonts = []
+    all_fonts = []
     for new_font in new_fonts:
         font = models.font.Font(**new_font.dict())
         db.add(font)
-        fonts.append(font)
+        log.info(f'{font.log_str} imported to Database')
+        all_fonts.append(font)
     db.commit()
 
-    return fonts
+    return all_fonts
 
 
-@import_router.post('/templates')
+@import_router.post('/templates', status_code=201)
 def import_template_yaml(
-        yaml: str = Body(...),
+        import_yaml: ImportTemplateYaml = Body(...),
         db = Depends(get_database),
         preferences = Depends(get_preferences)) -> list[Template]:
     """
     Import all Templates defined in the given YAML.
 
-    - yaml: YAML string to parse and import
+    - import_yaml: ImportTemplateYAML with the YAML string to parse and
+    import.
     """
 
     # Parse raw YAML into dictionary
-    yaml_dict = parse_raw_yaml(yaml)
+    yaml_dict = parse_raw_yaml(import_yaml.yaml)
     if len(yaml_dict) == 0:
         return []
 
@@ -93,23 +106,84 @@ def import_template_yaml(
         )
 
     # Add each defined Template to the database
-    templates = []
+    all_templates = []
     for new_template in new_templates:
         template = models.template.Template(**new_template.dict())
         db.add(template)
-        templates.append(template)
+        log.info(f'{template.log_str} imported to Database')
+        all_templates.append(template)
     db.commit()
 
-    return templates
+    return all_templates
 
 
 @import_router.post('/series')
 def import_series_yaml(
-        yaml: str = Body(...),
+        background_tasks: BackgroundTasks,
+        import_yaml: ImportSeriesYaml = Body(...),
         db = Depends(get_database),
-        preferences = Depends(get_preferences)) -> list[Series]:
+        preferences = Depends(get_preferences),
+        emby_interface = Depends(get_emby_interface),
+        imagemagick_interface = Depends(get_imagemagick_interface),
+        jellyfin_interface = Depends(get_jellyfin_interface),
+        plex_interface = Depends(get_plex_interface),
+        sonarr_interface = Depends(get_sonarr_interface),
+        tmdb_interface = Depends(get_tmdb_interface)) -> list[Series]:
     """
-    
+    Import all Series defined in the given YAML.
+
+    - import_yaml: ImportSeriesYAML with the YAML string and library to
+    parse and import.
     """
 
-    ...
+    # Parse raw YAML into dictionary
+    yaml_dict = parse_raw_yaml(import_yaml.yaml)
+    if len(yaml_dict) == 0:
+        return []
+
+    # Create NewSeries objects from the YAML dictionary
+    try:
+        new_series = parse_series(
+            db, preferences, yaml_dict, import_yaml.default_library,
+        )
+    except ValidationError as e:
+        log.exception(f'Invalid YAML', e)
+        raise HTTPException(
+            status_code=422,
+            detail=f'YAML is invalid - {e}'
+        )
+
+    # Add each defined Series to the database
+    all_series = []
+    for new_series in new_series:
+        # Add to batabase
+        series = models.series.Series(**new_series.dict())
+        db.add(series)
+        log.info(f'{series.log_str} imported to Database')
+
+        # Add background tasks for setting ID's, downloading poster and logo
+        # Add background tasks to set ID's, download poster and logo
+        background_tasks.add_task(
+            # Function
+            set_series_database_ids,
+            # Arguments
+            series, db, emby_interface, jellyfin_interface, plex_interface,
+            sonarr_interface, tmdb_interface,
+        )
+        background_tasks.add_task(
+            # Function
+            download_series_poster,
+            # Arguments
+            db, preferences, series, tmdb_interface,
+        )
+        background_tasks.add_task(
+            # Function
+            download_series_logo,
+            # Arguments
+            db, preferences, emby_interface, imagemagick_interface,
+            jellyfin_interface, tmdb_interface, series
+        )
+        all_series.append(series)
+    db.commit()
+
+    return all_series

@@ -1,18 +1,16 @@
 from pathlib import Path
 from requests import get
-from typing import Any, Optional
+from typing import Optional
 
 from fastapi import HTTPException
 
 from modules.Debug import log
 
 from app.dependencies import (
-    get_database, get_preferences, get_emby_interface,
-    get_imagemagick_interface, get_jellyfin_interface, get_plex_interface,
-    get_sonarr_interface, get_tmdb_interface
+    get_database, get_emby_interface, get_jellyfin_interface,
+    get_plex_interface,
 )
 import app.models as models
-from app.database.query import get_font, get_template
 from app.schemas.preferences import MediaServer
 from app.schemas.series import Series
 

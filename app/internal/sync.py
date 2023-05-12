@@ -12,7 +12,7 @@ from app.dependencies import (
 )
 from app.internal.series import download_series_poster, set_series_database_ids
 from app.internal.sources import download_series_logo
-from app.schemas.sync import Sync, UpdateSync
+from app.schemas.sync import Sync
 from app.schemas.series import Series
 import app.models as models
 

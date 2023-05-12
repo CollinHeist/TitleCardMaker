@@ -1,8 +1,6 @@
-from typing import Any, Literal, Optional
+from typing import Optional
 
-from pydantic import constr, Field, PositiveInt
-
-from app.schemas.base import Base, UNSPECIFIED
+from pydantic import constr, PositiveInt
 
 EmbyID = Optional[PositiveInt]
 IMDbID =  Optional[constr(regex=r'^tt\d{4,}$')]

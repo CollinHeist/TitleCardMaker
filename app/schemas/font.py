@@ -1,6 +1,5 @@
-from typing import Literal, Optional, Union
+from typing import Literal, Optional
 
-from fastapi import UploadFile
 from pydantic import Field, validator, root_validator
 
 from app.schemas.base import Base, UNSPECIFIED, validate_argument_lists_to_dict
