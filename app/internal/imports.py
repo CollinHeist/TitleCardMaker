@@ -492,6 +492,12 @@ def parse_series(
                 status_code=422,
                 detail=f'Invalid extras in Series "{series_info}"',
             )
+        # Remove basic logo as this is now builtin
+        extras = {
+            k: v
+            for k, v in extras.items()
+            if k != 'logo' and str(v).endswith('logo.png')
+        }
         
         # Use default library if a manual one was not specified
         if (library := _get(series_dict, 'library')) is None:
