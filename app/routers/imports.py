@@ -1,19 +1,12 @@
 from typing import Any, Literal, Optional, Union
 
-from fastapi import (
-    APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, UploadFile
-)
+from fastapi import APIRouter, Body, Depends, HTTPException
 from pydantic.error_wrappers import ValidationError
-from sqlalchemy import or_
 
-from app.database.query import get_font, get_template
-from app.dependencies import (
-    get_database, get_preferences, get_emby_interface, get_jellyfin_interface,
-    get_plex_interface, get_sonarr_interface, get_tmdb_interface
-)
-from app.internal.imports import parse_raw_yaml, parse_templates
+from app.dependencies import get_database, get_preferences
+from app.internal.imports import parse_fonts, parse_raw_yaml, parse_templates
 import app.models as models
-from app.schemas.base import UNSPECIFIED
+from app.schemas.font import NamedFont
 from app.schemas.preferences import Preferences
 from app.schemas.series import Series, Template
 
@@ -37,13 +30,49 @@ def import_preferences_yaml(
     ...
 
 
-@import_router.post('/template')
+@import_router.post('/fonts')
+def import_fonts_yaml(
+        yaml: str = Body(...),
+        db = Depends(get_database)) -> list[NamedFont]:
+    """
+    Import all Fonts defined in the given YAML.
+
+    - yaml: YAML string to parse and import
+    """
+
+    # Parse raw YAML into dictionary
+    yaml_dict = parse_raw_yaml(yaml)
+    if len(yaml_dict) == 0:
+        return []
+    
+    # Create NewNamedFont objects from the YAML dictionary
+    try:
+        new_fonts = parse_fonts(yaml_dict)
+    except ValidationError as e:
+        log.exception(f'Invalid YAML', e)
+        raise HTTPException(
+            status_code=422,
+            detail=f'YAML is invalid - {e}'
+        )
+
+    # Add each defined Font to the database
+    fonts = []
+    for new_font in new_fonts:
+        font = models.font.Font(**new_font.dict())
+        db.add(font)
+        fonts.append(font)
+    db.commit()
+
+    return fonts
+
+
+@import_router.post('/templates')
 def import_template_yaml(
         yaml: str = Body(...),
         db = Depends(get_database),
         preferences = Depends(get_preferences)) -> list[Template]:
     """
-    Import Templates defined in the given YAML.
+    Import all Templates defined in the given YAML.
 
     - yaml: YAML string to parse and import
     """

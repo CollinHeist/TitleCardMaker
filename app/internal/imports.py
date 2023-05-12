@@ -5,12 +5,16 @@ from ruamel.yaml import YAML
 from sqlalchemy import or_
 
 import app.models as models
+from app.schemas.font import NewNamedFont
 from app.schemas.preferences import EpisodeDataSource, Preferences
 from app.schemas.series import NewSeries, Series, NewTemplate, Translation
 from app.schemas.episode import Episode
 
 from modules.Debug import log
 from modules.EpisodeMap import EpisodeMap
+
+
+Percentage = lambda s: float(str(s).split('%')[0]) / 100.0
 
 
 def parse_raw_yaml(yaml: str) -> dict[str, Any]:
@@ -169,6 +173,63 @@ def _parse_episode_data_source(
         )
 
 
+def parse_fonts(
+        yaml_dict: dict[str, Any]) -> list[NewNamedFont]:
+    """
+    Create NewNamedFont objects for any defined fonts in the given
+    YAML.
+
+    Args:
+        yaml_dict: Dictionary of YAML attributes to parse.
+
+    Returns:
+        List of NewTemplates that match any defined YAML templates.
+
+    Raises:
+        HTTPException (422) if there are any YAML formatting errors.
+        Pydantic ValidationError if a NewTemplate object cannot be 
+            created from the given YAML.
+    """
+
+    # If fonts header was included, get those
+    if 'fonts' in yaml_dict:
+        all_fonts = yaml_dict['fonts']
+    else:
+        all_fonts = yaml_dict
+
+    # If not a dictionary of fonts, return empty list
+    if not isinstance(all_fonts, dict):
+        return []
+
+    # Create NewNamedFont objects for all listed fonts
+    fonts = []
+    for font_name, font_dict in all_fonts.items():
+        # Get replacements
+        replacements = _get(font_dict, 'replacements', default={})
+        if not isinstance(replacements, dict):
+            raise HTTPException(
+                status_code=422,
+                detail=f'Invalid replacements in Font "{font_name}"',
+            )
+
+        # Create NewTemplate with all indicated customization
+        fonts.append(NewNamedFont(
+            name=str(font_name),
+            color=_get(font_dict, 'color'),
+            title_case=_get(font_dict, 'case'),
+            size=_get(font_dict, 'size', default=1.0, type_=Percentage),
+            kerning=_get(font_dict, 'kerning', default=1.0, type_=Percentage),
+            stroke_width=_get(font_dict, 'stroke_width', default=1.0, type_=Percentage),
+            interline_spacing=_get(font_dict, 'interline_spacing', default=0, type_=int),
+            vertical_shift=_get(font_dict, 'vertical_shift', default=0, type_=int),
+            delete_missing=_get(font_dict, 'delete_missing', default=True, type_=bool),
+            replacements_in=list(replacements.keys()),
+            replacements_out=list(replacements.values()),
+        ))
+
+    return fonts
+
+
 def parse_templates(
         db: 'Database',
         preferences: Preferences,
@@ -198,7 +259,7 @@ def parse_templates(
     else:
         all_templates = yaml_dict
 
-    # If not a dictionary of Templates, return empty list
+    # If not a dictionary of templates, return empty list
     if not isinstance(all_templates, dict):
         return []
 

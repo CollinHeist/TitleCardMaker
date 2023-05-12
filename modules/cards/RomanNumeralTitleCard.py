@@ -191,11 +191,15 @@ class RomanNumeralTitleCard(BaseCardType):
             Extra(
                 name='Background Color',
                 identifier='background',
-                description='Background color to utilize',
+                description='Color of the background',
             ), Extra(
                 name='Roman Numeral Color',
                 identifier='roman_numeral_color',
                 description='Color of the roman numerals',
+            ), Extra(
+                name='Season Text Color',
+                identifier='season_text_color',
+                description='Color of the season text around the roman numerals'
             ),
         ], description=[
             'Imageless title cards featuring large roman numerals indicating '
