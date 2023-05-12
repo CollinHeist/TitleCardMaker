@@ -131,7 +131,10 @@
               </div>
 
               <div data-value="season-titles" class="ui field">
-                <label>Season Titles</label>
+                <label>
+                  Season Titles
+                  <i class="ui blue question circle outline icon"></i>
+                </label>
                 <div class="two fields">
                   <div data-value="season-title-range" class="three wide right aligned field">
                     <label>Range</label>
@@ -446,7 +449,7 @@
           newTitle.name = 'season_title_values'; newTitle.type = 'text';
           $(`#template-id${templateObj.id} >* .field[data-value="season-title-range"]`).append(newRange);
           $(`#template-id${templateObj.id} >* .field[data-value="season-title-value"]`).append(newTitle);
-          $('input[data-value="season-titles"]').popup({
+          $('.field[data-value="season-titles"] label i').popup({
             popup: '#season-title-popup',
             position: 'right center',
           });
@@ -600,7 +603,7 @@
 
       // Enable accordion/dropdown/checkbox elements
       $('.ui.accordion').accordion();
-      $('input[data-value="season-titles"]').popup({
+      $('.field[data-value="season-titles"] label i').popup({
         popup: '#season-title-popup',
         position: 'right center',
       });
@@ -629,7 +632,7 @@
         <!-- Elements added asynchronously -->
       </div>
 
-      <div id="season-title-popup" class="ui fluid popup right">
+      <div id="season-title-popup" class="ui flowing popup right">
         <div class="ui list content">
           <div class="item">
             A number indicates an entire season - e.g. <span class="ui red text">1</span> for <span class="ui red text">season 1</span>.
