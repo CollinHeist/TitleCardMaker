@@ -17,7 +17,7 @@ class EpisodeMap:
     INDEX_RANGE_REGEX = re_compile('s(\d+)e(\d+)', IGNORECASE)
 
     __slots__ = (
-        'valid', 'is_custom', '__index_by', '__titles', '__sources',
+        'valid', 'is_custom', '__index_by', 'raw', '__titles', '__sources',
         '__applies', 'unique_season_titles',
     )
 
@@ -41,7 +41,7 @@ class EpisodeMap:
         self.valid = True
         self.is_custom = False
         self.__index_by = 'season'
-        self.__titles, self.__sources, self.__applies = {}, {}, {}
+        self.raw, self.__titles, self.__sources, self.__applies = {}, {}, {}, {}
         self.unique_season_titles = set()
 
         # If no custom specification, nothing else to parse
@@ -120,7 +120,8 @@ class EpisodeMap:
             # Parse title/source mapping
             if isinstance(mapping, dict):
                 if (value := mapping.get('title')):
-                    self.__titles[season_number] = value
+                    self.raw[season_number] = str(value)
+                    self.__titles[season_number] = str(value)
                     self.is_custom = True
                 if (value := mapping.get('source')):
                     self.__sources[season_number] = value
@@ -133,6 +134,7 @@ class EpisodeMap:
                         continue
                     self.__applies[season_number] = value
             else:
+                self.raw[season_number] = str(mapping)
                 self.__titles[season_number] = str(mapping)
                 self.is_custom = True
 
@@ -171,12 +173,14 @@ class EpisodeMap:
                 key = f's{start_season}e{episode_number}'
                 # Title specified directly
                 if isinstance(mapping, str):
+                    self.raw[episode_range] = str(mapping)
                     self.__titles[key] = mapping
                     self.is_custom = True
                 # Season specification is more complex
                 elif isinstance(mapping, dict):
                     # Title specified (via key)
                     if (value := mapping.get('title')):
+                        self.raw[episode_range] = str(value)
                         self.__titles[key] = value
                         self.is_custom = True
                     # Source specified (via key)
@@ -216,10 +220,12 @@ class EpisodeMap:
             # Assign attributes for every episode in this range
             for episode_number in range(start, end+1):
                 if isinstance(mapping, str):
+                    self.raw[episode_range] = str(mapping)
                     self.__titles[episode_number] = mapping
                     self.is_custom = True
                 elif isinstance(mapping, dict):
                     if (value := mapping.get('title')):
+                        self.raw[episode_range] = str(value)
                         self.__titles[episode_number] = value
                         self.is_custom = True
                     if (value := mapping.get('source')):
@@ -238,7 +244,7 @@ class EpisodeMap:
         """Reset this object go have generic titles."""
 
         # Always reset titles/applies - never reset sources
-        self.__titles, self.__applies = {}, {}
+        self.raw, self.__titles, self.__applies = {}, {}, {}
 
         # If no manual sources have been specified, reset index by flag
         if len(self.__sources) == 0:
