@@ -1,20 +1,16 @@
-from typing import Literal, Optional
+from typing import Literal
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
-from requests import get
-from sqlalchemy.orm import Session
 
 from app.dependencies import (
-    get_database, get_preferences, get_emby_interface, get_jellyfin_interface,
-    get_plex_interface, get_sonarr_interface, get_tmdb_interface,
-    refresh_emby_interface, refresh_jellyfin_interface, refresh_plex_interface,
-    refresh_sonarr_interface, refresh_tmdb_interface,
+    get_preferences, refresh_emby_interface, refresh_jellyfin_interface,
+    refresh_plex_interface, refresh_sonarr_interface, refresh_tmdb_interface,
 )
-from app.schemas.base import UNSPECIFIED
+from app.internal.connection import update_connection
 from app.schemas.preferences import (
-    EmbyConnection, JellyfinConnection, PlexConnection, Preferences,
-    SonarrConnection, TautulliConnection, TMDbConnection, UpdateEmby,
-    UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb
+    EmbyConnection, JellyfinConnection, PlexConnection, SonarrConnection,
+    TautulliConnection, TMDbConnection, UpdateEmby, UpdateJellyfin, UpdatePlex,
+    UpdateSonarr, UpdateTMDb
 )
 from modules.Debug import log
 from modules.TautulliInterface2 import TautulliInterface
@@ -94,155 +90,66 @@ def get_tmdb_connection_details(
 @connection_router.patch('/emby', status_code=200)
 def update_emby_connection(
         update_emby: UpdateEmby = Body(...),
-        preferences = Depends(get_preferences),
-        emby_interface = Depends(get_emby_interface)) -> EmbyConnection:
+        preferences = Depends(get_preferences)) -> EmbyConnection:
     """
     Update the connection details for Emby.
 
     - update_emby: Emby connection details to modify.
     """
 
-    # Validate arguments
-    if ((update_emby.filesize_limit_number not in (None, UNSPECIFIED))
-        and (update_emby.filesize_limit_unit in (None, UNSPECIFIED))):
-        raise HTTPException(
-            status_code=400,
-            detail='Provide both filesize limit number and unit'
-        )
-
-    # Update attributes
-    changed = False
-    for attribute, value in update_emby.dict().items():
-        if (value != UNSPECIFIED
-            and value != getattr(preferences, f'emby_{attribute}')):
-            setattr(preferences, f'emby_{attribute}', value)
-            changed = True
-
-    # Remake EmbyInterface if changed
-    if preferences.use_emby and changed:
-        refresh_emby_interface()
-
-    return preferences
+    return update_connection(preferences, update_emby)
 
 
 @connection_router.patch('/jellyfin', status_code=200)
 def update_jellyfin_connection(
         update_jellyfin: UpdateJellyfin = Body(...),
-        preferences = Depends(get_preferences),
-        jellyfin_interface = Depends(get_jellyfin_interface)) -> JellyfinConnection:
+        preferences = Depends(get_preferences)) -> JellyfinConnection:
     """
     Update the connection details for Jellyfin.
 
     - update_jellyfin: Jellyfin connection details to modify.
     """
-    log.critical(f'{update_jellyfin.dict()=}')
-    # Validate arguments
-    if ((update_jellyfin.filesize_limit_number not in (None, UNSPECIFIED))
-        and (update_jellyfin.filesize_limit_unit in (None, UNSPECIFIED))):
-        raise HTTPException(
-            status_code=400,
-            detail='Provide both filesize limit number and unit'
-        )
 
-    # Update attributes
-    changed = False
-    for attribute, value in update_jellyfin.dict().items():
-        if (value != UNSPECIFIED
-            and value != getattr(preferences, f'jellyfin_{attribute}')):
-            setattr(preferences, f'jellyfin_{attribute}', value)
-            changed = True
-
-    # Remake JellyfinInterface if changed
-    if preferences.use_jellyfin and changed:
-        refresh_jellyfin_interface()
-
-    return preferences
+    return update_connection(preferences, update_jellyfin, 'jellyfin')
 
 
 @connection_router.patch('/plex', status_code=200)
 def update_plex_connection(
         update_plex: UpdatePlex = Body(...),
-        preferences=Depends(get_preferences),
-        plex_interface = Depends(get_plex_interface)) -> PlexConnection:
+        preferences=Depends(get_preferences)) -> PlexConnection:
     """
     Update the connection details for Plex.
 
     - update_plex: Plex connection details to modify.
     """
 
-    # Validate arguments
-    if ((update_plex.filesize_limit_number not in (None, UNSPECIFIED))
-        and (update_plex.filesize_limit_unit in (None, UNSPECIFIED))):
-        raise HTTPException(
-            status_code=400,
-            detail='Provide both filesize limit number and unit'
-        )
-
-    # Update attributes
-    changed = False
-    for attribute, value in update_plex.dict().items():
-        if (value != UNSPECIFIED
-            and value != getattr(preferences, f'plex_{attribute}')):
-            setattr(preferences, f'plex_{attribute}', value)
-            changed = True
-
-    # Remake PlexInterface if changed
-    if preferences.use_plex and changed:
-        refresh_plex_interface()
-
-    return preferences
+    return update_connection(preferences, update_plex, 'plex')
 
 
 @connection_router.patch('/sonarr', status_code=200)
 def update_sonarr_connection(
         update_sonarr: UpdateSonarr = Body(...), 
-        preferences = Depends(get_preferences),
-        sonarr_interface = Depends(get_sonarr_interface)) -> SonarrConnection:
+        preferences = Depends(get_preferences)) -> SonarrConnection:
     """
     Update the connection details for Sonarr.
 
     - update_sonarr: Sonarr connection details to modify.
     """
 
-    # Update attributes
-    changed = False
-    for attribute, value in update_sonarr.dict().items():
-        if (value != UNSPECIFIED
-            and value != getattr(preferences, f'sonarr_{attribute}')):
-            setattr(preferences, f'sonarr_{attribute}', value)
-            changed = True
-
-    # Remake SonarrInterface if changed
-    if preferences.use_sonarr and changed:
-        refresh_sonarr_interface()
-
-    return preferences
+    return update_connection(preferences, update_sonarr, 'sonarr')
 
 
 @connection_router.patch('/tmdb', status_code=200)
 def update_tmdb_connection(
         update_tmdb: UpdateTMDb = Body(...),
-        preferences = Depends(get_preferences),
-        tmdb_interface = Depends(get_tmdb_interface)) -> TMDbConnection:
+        preferences = Depends(get_preferences)) -> TMDbConnection:
     """
     Update the connection details for TMDb.
 
     - update_tmdb: TMDb connection details to modify.
     """
 
-    # Update attributes
-    changed = False
-    for attribute, value in update_tmdb.dict().items():
-        if (value != UNSPECIFIED
-            and value != getattr(preferences, f'tmdb_{attribute}')):
-            setattr(preferences, f'tmdb_{attribute}', value)
-            changed = True
-
-    # Remake TMDbInterface if changed
-    if preferences.use_tmdb and changed:
-        refresh_tmdb_interface()
-
-    return preferences
+    return update_connection(preferences, update_tmdb, 'tmdb')
 
 
 @connection_router.post('/tautulli/check', status_code=200)
