@@ -7,14 +7,40 @@ from modules.Debug import log
 # Default value to use for arguments in Update objects that accept None
 UNSPECIFIED = '__default__'
 
+# Pydantic base class
+class Base(BaseModel):
+    class Config:
+        orm_mode = True
+
 # Function to validate two equal length lists are provided
 def validate_argument_lists_to_dict(
         values: dict[str, Any],
         label: str,
         key0: str,
         key1: str,
-        output_key: str,
-    ) -> dict[str, Any]:
+        output_key: str) -> dict[str, Any]:
+    """
+    Validation function to join two paired lists into a dictionary.
+
+    Args:
+        values: Dictionary to get the value lists from.
+        label: Name of the values being validated. For logging only.
+        key0: The key within values which contains the list of keys to
+            use as the output dictionary keys. Paired to key1.
+        key1: The key within values which contains thel ist of values to
+            use as the output ditionary values. Pared to key0.
+        output_key: Output key to store the paired dictionary within
+            values.
+
+    Returns:
+        Modified values dictionary with the merged dictionary added
+        under the output key. If only one key is provided, the 
+        unmodified dictionary is returned.
+
+    Raises:
+        ValueError if only one set of the provided values is a list, or
+            if the two lists are not the equal length.
+    """
 
     # Get values for these keys
     list0 = values.get(key0)
@@ -56,7 +82,3 @@ def validate_argument_lists_to_dict(
             }
 
     return values
-
-class Base(BaseModel):
-    class Config:
-        orm_mode = True

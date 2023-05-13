@@ -99,7 +99,14 @@ class UpdatePreferences(Base):
     def validate_list(cls, v):
         return [v] if isinstance(v, str) else v
 
-    @root_validator
+    @validator('default_watched_style', 'default_unwatched_style', pre=True)
+    def validate_styles(cls, v):
+        if (val := str(v).lower().strip()) == 'blur':
+            return 'blur unique'
+
+        return ' '.join(sorted(val.split(' ')))
+
+    @root_validator(pre=True)
     def delete_unspecified_args(cls, values):
         delete_keys = [key for key, value in values.items() if value == UNSPECIFIED]
         for key in delete_keys:
@@ -108,9 +115,20 @@ class UpdatePreferences(Base):
         return values
 
 class UpdateBase(Base):
-    url: str = Field(default=UNSPECIFIED)
+    ...
 
-class UpdateMediaServerBase(UpdateBase):
+    @root_validator(pre=True)
+    def delete_unspecified_args(cls, values):
+        delete_keys = [key for key, value in values.items() if value == UNSPECIFIED]
+        for key in delete_keys:
+            del values[key]
+
+        return values
+    
+class UpdateServerBase(UpdateBase):
+    url: AnyUrl = Field(default=UNSPECIFIED)
+
+class UpdateMediaServerBase(UpdateServerBase):
     use_ssl: bool = Field(default=UNSPECIFIED)
     filesize_limit_number: int = Field(gt=0, default=UNSPECIFIED)
     filesize_limit_unit: FilesizeUnit = Field(default=UNSPECIFIED)
@@ -131,6 +149,15 @@ class UpdateMediaServerBase(UpdateBase):
                 'terabytes': 'Terabytes',
             }[v.lower()]
 
+    @root_validator(pre=True)
+    def validate_filesize(cls, values):
+        log.critical(f'{values=}')
+        if (values.get('filesize_limit_number', UNSPECIFIED) != UNSPECIFIED
+            and not values.get('filesize_limit_unit',UNSPECIFIED) !=UNSPECIFIED):
+            raise ValidationError(f'Filesize limit number requires unit')
+        
+        return values
+
 class UpdateEmby(UpdateMediaServerBase):
     api_key: Hexstring = Field(default=UNSPECIFIED)
     username: str = Field(default=UNSPECIFIED, min_length=1)
@@ -143,7 +170,7 @@ class UpdatePlex(UpdateMediaServerBase):
     token: Hexstring = Field(default=UNSPECIFIED)
     integrate_with_pmm: bool = Field(default=UNSPECIFIED)
 
-class UpdateSonarr(UpdateBase):
+class UpdateSonarr(UpdateServerBase):
     api_key: Hexstring = Field(default=UNSPECIFIED)
     use_ssl: bool = Field(default=UNSPECIFIED)
     library_names: list[str] = Field(default=UNSPECIFIED)
@@ -153,7 +180,7 @@ class UpdateSonarr(UpdateBase):
     def validate_list(cls, v):
         # Filter out empty strings - all arguments can accept empty lists
         return [val for val in ([v] if isinstance(v, str) else v) if val != '']
-
+    
     @root_validator
     def validate_paired_lists(cls, values):
         return validate_argument_lists_to_dict(
@@ -162,7 +189,7 @@ class UpdateSonarr(UpdateBase):
             output_key='libraries'
         )
 
-class UpdateTMDb(Base):
+class UpdateTMDb(UpdateBase):
     api_key: Hexstring = Field(default=UNSPECIFIED)
     minimum_width: PositiveInt = Field(default=UNSPECIFIED)
     minimum_height: PositiveInt = Field(default=UNSPECIFIED)

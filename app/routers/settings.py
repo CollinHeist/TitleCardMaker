@@ -1,14 +1,13 @@
-from typing import Any, Literal, Optional, Union
-
-from fastapi import APIRouter, Body, Depends, Form, HTTPException
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Body, Depends
 
 from app.dependencies import get_preferences, refresh_imagemagick_interface
 from app.schemas.preferences import EpisodeDataSourceToggle, LanguageToggle, Preferences, UpdatePreferences
+
 from modules.Debug import log
 from modules.TMDbInterface2 import TMDbInterface
 
-# Create sub router for all /connection API requests
+
+# Create sub router for all /settings API requests
 settings_router = APIRouter(
     prefix='/settings',
     tags=['Settings'],

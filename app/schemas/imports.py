@@ -13,10 +13,7 @@ class ImportBase(Base):
 """
 Return classes
 """
-class ImportFontYaml(ImportBase):
-    ...
-
-class ImportTemplateYaml(ImportBase):
+class ImportYaml(ImportBase):
     ...
 
 class ImportSeriesYaml(ImportBase):

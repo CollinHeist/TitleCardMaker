@@ -1,13 +1,16 @@
 from collections import namedtuple
 from os import environ
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 from pickle import dump
+
+from app.schemas.base import UNSPECIFIED
 
 from modules.Debug import log
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.TitleCard import TitleCard
+
 
 EpisodeDataSource = namedtuple('EpisodeDataSource', ('value', 'label'))
 Emby = EpisodeDataSource('emby', 'Emby')
@@ -133,10 +136,11 @@ class Preferences:
         self.valid = False
 
 
-    def update_values(self, **update_kwargs) -> None:
+    def update_values(self, **update_kwargs: dict[str, Any]) -> None:
         for name, value in update_kwargs.items():
-            log.debug(f'preferences.__dict__[{name}] = {value}')
-            self.__dict__[name] = value
+            if value != UNSPECIFIED:
+                log.debug(f'Preferences.{name} = {value}')
+                self.__dict__[name] = value
         self._rewrite_preferences()
 
     
@@ -225,7 +229,7 @@ class Preferences:
 
 
     @property
-    def valid_image_sources(self) -> list[str]:
+    def valid_image_sources(self) -> set[str]:
         return set(
             (['Emby'] if self.use_emby else [])
             + (['Plex'] if self.use_plex else [])
@@ -252,7 +256,7 @@ class Preferences:
 
 
     @staticmethod
-    def get_filesize(value: int, unit: str) -> Union[int, None]:
+    def get_filesize(value: int, unit: str) -> Optional[int]:
         # If either value is None, return that
         if value is None or unit is None:
             return None
@@ -284,7 +288,7 @@ class Preferences:
 
 
     @property
-    def card_properties(self) -> dict[str, Any]:
+    def card_properties(self) -> dict[str, str]:
         return {
             'card_type': self.default_card_type,
             'watched_style': self.default_watched_style,
@@ -293,7 +297,7 @@ class Preferences:
         }
 
 
-    def determine_sonarr_library(self, directory: str) -> Union[str, None]:
+    def determine_sonarr_library(self, directory: str) -> Optional[str]:
         """
         Determine the library of the series in the given directory. This
         uses this object's sonarr_libraries attribute.

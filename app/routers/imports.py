@@ -7,15 +7,13 @@ from app.dependencies import (
     get_sonarr_interface, get_tmdb_interface
 )
 from app.internal.imports import (
-    parse_fonts, parse_raw_yaml, parse_series, parse_templates
+    parse_emby, parse_fonts, parse_preferences, parse_raw_yaml, parse_series, parse_templates
 )
 from app.internal.series import download_series_poster, set_series_database_ids
 from app.internal.sources import download_series_logo
 import app.models as models
 from app.schemas.font import NamedFont
-from app.schemas.imports import (
-    ImportFontYaml, ImportTemplateYaml, ImportSeriesYaml
-)
+from app.schemas.imports import ImportSeriesYaml, ImportYaml
 from app.schemas.preferences import Preferences
 from app.schemas.series import Series, Template
 
@@ -28,26 +26,61 @@ import_router = APIRouter(
 )
 
 
-@import_router.post('/preferences')
+@import_router.post('/preferences/options')
 def import_preferences_yaml(
-        yaml: str = Body(...),
+        import_yaml: ImportYaml = Body(...),
         preferences = Depends(get_preferences)) -> Preferences:
     """
-    
+    Import the global options from the preferences defined in the given
+    YAML. This imports the options and imagemagick sections.
+
+    - import_yaml: The YAML string to parse.
     """
 
-    ...
+    # Parse raw YAML into dictionary
+    yaml_dict = parse_raw_yaml(import_yaml.yaml)
+    if len(yaml_dict) == 0:
+        return preferences
+    
+    # Modify the preferences  from the YAML dictionary
+    try:
+        return parse_preferences(preferences, yaml_dict)
+    except ValidationError as e:
+        log.exception(f'Invalid YAML', e)
+        raise HTTPException(
+            status_code=422,
+            detail=f'YAML is invalid - {e}'
+        )
+
+
+@import_router.post('/preferences/emby')
+def import_emby_yaml(
+        import_yaml: ImportYaml = Body(...),
+        preferences = Depends(get_preferences)) -> Preferences:
+    """
+    Import the emby preferences defined in the given YAML.
+
+    - import_yaml: The YAML string to parse.
+    """
+
+    # Parse raw YAML into dictionary
+    yaml_dict = parse_raw_yaml(import_yaml.yaml)
+    if len(yaml_dict) == 0:
+        return preferences
+    
+    # Create NewNamedFont objects from the YAML dictionary
+    return parse_emby(preferences, yaml_dict)
 
 
 @import_router.post('/fonts', status_code=201)
 def import_fonts_yaml(
-        import_yaml: ImportFontYaml = Body(...),
+        import_yaml: ImportYaml = Body(...),
         db = Depends(get_database)) -> list[NamedFont]:
     """
     Import all Fonts defined in the given YAML. This does NOT import any
     custom font files - these will need to be added separately.
 
-    - import_yaml: ImportFontYAML with the YAML string to parse and
+    - import_yaml: The YAML string to parse.
     import.
     """
 
@@ -80,14 +113,13 @@ def import_fonts_yaml(
 
 @import_router.post('/templates', status_code=201)
 def import_template_yaml(
-        import_yaml: ImportTemplateYaml = Body(...),
+        import_yaml: ImportYaml = Body(...),
         db = Depends(get_database),
         preferences = Depends(get_preferences)) -> list[Template]:
     """
     Import all Templates defined in the given YAML.
 
-    - import_yaml: ImportTemplateYAML with the YAML string to parse and
-    import.
+    - import_yaml: The YAML string to parse.
     """
 
     # Parse raw YAML into dictionary
@@ -117,7 +149,7 @@ def import_template_yaml(
     return all_templates
 
 
-@import_router.post('/series')
+@import_router.post('/series', status_code=201)
 def import_series_yaml(
         background_tasks: BackgroundTasks,
         import_yaml: ImportSeriesYaml = Body(...),
@@ -132,8 +164,7 @@ def import_series_yaml(
     """
     Import all Series defined in the given YAML.
 
-    - import_yaml: ImportSeriesYAML with the YAML string and library to
-    parse and import.
+    - import_yaml: The YAML string and default library name to parse.
     """
 
     # Parse raw YAML into dictionary

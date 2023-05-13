@@ -1,21 +1,28 @@
-from typing import Any, Literal, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 from fastapi import HTTPException
 from ruamel.yaml import YAML
-from sqlalchemy import or_
 
+from app.dependencies import refresh_imagemagick_interface
+from app.internal.connection import update_connection
 import app.models as models
+from app.schemas.base import UNSPECIFIED
 from app.schemas.font import NewNamedFont
-from app.schemas.preferences import EpisodeDataSource, Preferences
-from app.schemas.series import NewSeries, Series, NewTemplate, Translation
-from app.schemas.episode import Episode
+from app.schemas.preferences import (
+    EpisodeDataSource, Preferences, UpdateEmby, UpdateJellyfin, UpdatePlex,
+    UpdatePreferences, UpdateSonarr, UpdateTMDb
+)
+from app.schemas.series import NewSeries, NewTemplate, Translation
 
 from modules.Debug import log
 from modules.EpisodeMap import EpisodeMap
 from modules.SeriesInfo import SeriesInfo
 
 
+Extension = lambda s: str(s) if s.startswith('.') else f'.{s}'
 Percentage = lambda s: float(str(s).split('%')[0]) / 100.0
+Width = lambda dims: int(str(dims).lower().split('x')[0])
+Height = lambda dims: int(str(dims).lower().split('x')[1])
 
 
 def parse_raw_yaml(yaml: str) -> dict[str, Any]:
@@ -47,7 +54,7 @@ def parse_raw_yaml(yaml: str) -> dict[str, Any]:
 def _get(
         yaml_dict: dict[str, Any],
         *keys: tuple[str],
-        type_: callable = None,
+        type_: Optional[Callable[..., Any]] = None,
         default: Any = None) -> Any:
     """
     Get the value at the given location in YAML.
@@ -69,14 +76,14 @@ def _get(
         Exception potentially raised by calling type_ on the value.
     """
 
-    if not isinstance(yaml_dict, dict):
-        return default
-
+    # Iterate through this object one key-at-a-time
     value = yaml_dict
     for key in keys:
+        # If the current value cannot be traversed, or the key is missing
         if not isinstance(value, dict) or key not in value:
             return default
 
+        # Key is present, continue iteration
         if key in value:
             value = value[key]
 
@@ -172,6 +179,144 @@ def _parse_episode_data_source(
             status_code=422,
             detail=f'Invalid episode data source "{eds}"',
         )
+
+
+def _parse_filesize_limit(
+        yaml_dict: dict[str, Any]) -> tuple[Union[int, str], str]:
+    """
+    
+    """
+
+    if (not isinstance(yaml_dict, dict)
+        or (limit := yaml_dict.get('filesize_limit', None)) is None):
+        return (UNSPECIFIED, UNSPECIFIED)
+    
+    try:
+        number, unit = limit.split(' ')
+        return int(number), unit
+    except Exception as e:
+        raise HTTPException(
+            status_code=422,
+            detail=f'Invalid filesize limit',
+        )
+
+
+def parse_preferences(
+        preferences: Preferences,
+        yaml_dict: dict[str, Any]) -> Preferences:
+    """
+    Modify the preferences for the given YAML.
+
+    Args:
+        preferences: Preferences to modify.
+        yaml_dict: Dictionary of YAML attributes to parse.
+
+    Returns:
+        Modified Preferences.
+
+    Raises:
+        HTTPException (422) if there are any YAML formatting errors.
+        Pydantic ValidationError if an object cannot be created from the
+            given YAML.
+    """
+
+    # Shorthand for an unspecified value
+    unsp = UNSPECIFIED
+
+    # Get each major section
+    options = _get(yaml_dict, 'options', default={})
+    imagemagick = _get(yaml_dict, 'imagemagick', default={})
+
+    # Determine which media server to query default styles from
+    if preferences.use_emby:
+        media_server = 'emby'
+    elif preferences.use_jellyfin:
+        media_server = 'jellyfin'
+    else:
+        media_server = 'plex'
+
+    # Parse image source priority
+    image_source_priority = unsp
+    if (isp := _get(options, 'image_source_priority')) is not None:
+        mapping = {
+            'emby': 'Emby', 'jellyfin': 'Jellyfin', 'plex': 'Plex', 'tmdb': 'TMDb'
+        }
+        image_source_priority = [
+            mapping[source] 
+            for source in isp.lower().replace(' ', '').split(',')
+            if source in mapping
+        ]
+
+    # Create UpdatePreferenes object from the YAML
+    update_preferences = UpdatePreferences(
+        source_directory=_get(options, 'source', default=unsp),
+        card_width=_get(options, 'card_dimensions', type_=Width, default=unsp),
+        card_height=_get(options, 'card_dimensions', type_=Height, default=unsp),
+        card_filename_format=_get(options, 'filename_format', default=unsp),
+        card_extension=_get(options, 'card_extension', type_=Extension, default=unsp),
+        image_source_priority=image_source_priority,
+        episode_data_source=_parse_episode_data_source(options),
+        # specials_folder_format=..., # New option
+        season_folder_format=_get(options, 'season_folder_format', default=unsp),
+        sync_specials=_get(options, 'sync_specials', type_=bool, default=unsp),
+        default_card_type=_get(options, 'card_type', default=unsp),
+        default_unwatched_style=_get(
+            yaml_dict,
+            media_server, 'unwatched_style',
+            type_=str,
+            default=unsp,
+        ), default_watched_style=_get(
+            yaml_dict,
+            media_server, 'watched_style',
+            type_=str,
+            default=unsp,
+        ), imagemagick_container=_get(imagemagick, 'container', default=unsp),
+    )
+
+    preferences.update_values(**update_preferences.dict())
+    refresh_imagemagick_interface()
+    preferences.determine_imagemagick_prefix()
+
+    return preferences
+
+
+def parse_emby(
+        preferences: Preferences,
+        yaml_dict: dict[str, Any]) -> Preferences:
+    """
+    Update the Emby connection preferences for the given YAML.
+
+    Args:
+        preferences: Preferences whose connection details are being
+            modified.
+        yaml_dict: Dictionary of YAML attributes to parse.
+    
+    Returns:
+        Modified Preferences object. If no changes are made, the object
+        is returned unmodified.
+
+    Raises:
+        HTTPException (422) if there are any YAML formatting errors.
+        Pydantic ValidationError if a NewTemplate object cannot be 
+            created from the given YAML.
+    """
+
+    # Get each major section
+    emby = _get(yaml_dict, 'emby', default={})
+
+    # Get filesize limit
+    limit_number, limit_unit = _parse_filesize_limit(emby)
+
+    update_emby = UpdateEmby(
+        url=_get(emby, 'url', type_=str, default=UNSPECIFIED),
+        api_key=_get(emby, 'api_key', default=UNSPECIFIED),
+        username=_get(emby, 'username', type_=str, default=UNSPECIFIED),
+        use_ssl=_get(emby, 'verify_ssl', type_=bool, default=UNSPECIFIED),
+        filesize_limit_number=limit_number,
+        filesize_limit_unit=limit_unit,
+    )
+
+    return update_connection(preferences, update_emby, 'emby')
 
 
 def parse_fonts(
@@ -492,11 +637,11 @@ def parse_series(
                 status_code=422,
                 detail=f'Invalid extras in Series "{series_info}"',
             )
-        # Remove basic logo as this is now builtin
+        # Remove basic logo as this is now built-in
         extras = {
             k: v
             for k, v in extras.items()
-            if k != 'logo' and str(v).endswith('logo.png')
+            if k != 'logo' and not str(v).endswith('logo.png')
         }
         
         # Use default library if a manual one was not specified
