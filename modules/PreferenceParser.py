@@ -817,7 +817,8 @@ class PreferenceParser(YamlReader):
         pass
 
 
-    def __validate_libraries(self, library_yaml: dict[str, str],
+    def __validate_libraries(self,
+            library_yaml: dict[str, str],
             file: Path) -> bool:
         """
         Validate the given libraries YAML.
@@ -865,7 +866,8 @@ class PreferenceParser(YamlReader):
         return True
 
 
-    def __validate_fonts(self, font_yaml: dict[str, 'str | float'],
+    def __validate_fonts(self,
+            font_yaml: dict[str, Union[str, float]],
             file: Path) -> bool:
         """
         Validate the given font YAML.
@@ -902,8 +904,10 @@ class PreferenceParser(YamlReader):
         return True
 
 
-    def __apply_template(self, templates: dict[str, Template],
-            series_yaml: dict[str, Any], series_name: str) -> bool:
+    def __apply_template(self,
+            templates: dict[str, Template],
+            series_yaml: dict[str, Any],
+            series_name: str) -> bool:
         """
         Apply the correct Template object (if indicated) to the given
         series YAML. This effectively "fill out" the indicated template,
@@ -954,9 +958,12 @@ class PreferenceParser(YamlReader):
         return template.apply_to_series(series_info, series_yaml)
 
 
-    def __finalize_show_yaml(self, show_name: str, show_yaml: dict[str, Any],
-            templates: list[Template], library_map: dict[str, Any],
-            font_map: dict[str, Any]) -> 'dict | None':
+    def __finalize_show_yaml(self,
+            show_name: str,
+            show_yaml: dict[str, Any],
+            templates: list[Template],
+            library_map: dict[str, Any],
+            font_map: dict[str, Any]) -> Optional[dict]:
         """
         Apply the indicated template, and merge the specified
         library/font to the given show YAML.
@@ -1055,6 +1062,7 @@ class PreferenceParser(YamlReader):
 
             # Update progress bar for this file
             pbar.set_description(f'Reading {file.name}')
+            log.info(f'Reading series YAML file "{file.resolve()}"..')
 
             # If the file doesn't exist, error and skip
             if not file.exists():
@@ -1067,11 +1075,8 @@ class PreferenceParser(YamlReader):
                 continue
 
             # Read file, parse yaml
-            if (file_yaml := self._read_file(file, critical=False)) == {}:
-                continue
-
-            # Skip if there are no series provided
-            if file_yaml is None or file_yaml.get('series') is None:
+            if ((file_yaml := self._read_file(file, critical=False)) == {}
+                or file_yaml is None or file_yaml.get('series', None) is None):
                 log.warning(f'Series file "{file.resolve()}" has no entries')
                 continue
 
@@ -1098,7 +1103,6 @@ class PreferenceParser(YamlReader):
                     templates[name] = Template(name, template)
 
             # Go through each series in this file
-            log.info(f'Reading series YAML file "{file.resolve()}"..')
             for show_name in tqdm(file_yaml['series'], desc='Reading entries',
                                   **TQDM_KWARGS):
                 # Skip if not a dictionary
