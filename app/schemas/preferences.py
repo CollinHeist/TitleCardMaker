@@ -1,12 +1,22 @@
 from pathlib import Path
-from re import IGNORECASE, compile as re_compile
-from typing import Literal, Optional, Union
+from typing import Literal, Optional
 
-from pydantic import Field, PositiveInt, SecretStr, constr, root_validator, validator
+from pydantic import AnyUrl, Field, PositiveInt, SecretStr, constr, root_validator, validator
+from pydantic.error_wrappers import ValidationError
 
 from app.schemas.base import Base, UNSPECIFIED, validate_argument_lists_to_dict
 
-Hexstring = constr(regex=r'^[a-f0-9]+$')
+from modules.Debug import log
+
+"""
+Match local identifiers (A-Z and space), remote card types (a-z/a-z, no space),
+and local card types (any character .py).
+""" 
+CardTypeIdentifier = constr(regex=r'^([a-zA-Z ]+|[a-zA-Z]+\/[a-zA-Z]+|.+\.py)$')
+"""
+Match hexstrings of A-F and 0-9 
+"""
+Hexstring = constr(regex=r'^[a-fA-F0-9]+$')
 
 CardExtension = Literal['.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp']
 FilesizeUnit = Literal[
@@ -59,7 +69,7 @@ MediaServer = Literal['Emby', 'Jellyfin', 'Plex']
 Base classes
 """
 class TautulliConnection(Base):
-    tautulli_url: str = Field(...)
+    tautulli_url: AnyUrl = Field(...)
     tautulli_api_key: Hexstring = Field(..., min_length=1)
     tautulli_use_ssl: bool = Field(default=True)
     tautulli_agent_name: str = Field(..., min_length=1)
@@ -70,8 +80,8 @@ Update classes
 class UpdatePreferences(Base):
     card_directory: str = Field(default=UNSPECIFIED, min_length=1)
     source_directory: str = Field(default=UNSPECIFIED, min_length=1)
-    card_width: int = Field(default=UNSPECIFIED, min=1)
-    card_height: int = Field(default=UNSPECIFIED, min=1)
+    card_width: PositiveInt = Field(default=UNSPECIFIED)
+    card_height: PositiveInt = Field(default=UNSPECIFIED)
     card_filename_format: str = Field(default=UNSPECIFIED)
     card_extension: CardExtension = Field(default=UNSPECIFIED)
     image_source_priority: list[ImageSource] = Field(default=UNSPECIFIED)
@@ -79,15 +89,11 @@ class UpdatePreferences(Base):
     specials_folder_format: str = Field(default=UNSPECIFIED)
     season_folder_format: str = Field(default=UNSPECIFIED)
     sync_specials: bool = Field(default=UNSPECIFIED)
-    default_card_type: str = Field(default=UNSPECIFIED, min_length=1)
-    excluded_card_types: list[str] = Field(default=UNSPECIFIED)
+    default_card_type: CardTypeIdentifier = Field(default=UNSPECIFIED)
+    excluded_card_types: list[CardTypeIdentifier] = Field(default=UNSPECIFIED)
+    imagemagick_container: str = Field(default=UNSPECIFIED, min_length=1)
     default_watched_style: Style = Field(default=UNSPECIFIED)
     default_unwatched_style: Style = Field(default=UNSPECIFIED)
-    imagemagick_container: str = Field(default=UNSPECIFIED, min_length=1)
-
-    @validator('*', pre=True)
-    def validate_arguments(cls, v):
-        return None if v == '' else v
 
     @validator('image_source_priority', 'excluded_card_types', pre=True)
     def validate_list(cls, v):
@@ -189,8 +195,8 @@ class Preferences(Base):
     sync_specials: bool
     # supported_language_codes = []
 
-    default_card_type: str
-    excluded_card_types: list[str]
+    default_card_type: CardTypeIdentifier
+    excluded_card_types: list[CardTypeIdentifier]
     default_watched_style: Style
     default_unwatched_style: Style
 
@@ -199,28 +205,28 @@ class Preferences(Base):
 
 class EmbyConnection(Base):
     use_emby: bool
-    emby_url: str
+    emby_url: AnyUrl
     emby_api_key: SecretStr #Hexstring
     emby_username: str = Field(min_length=1)
     emby_filesize_limit: Optional[int]
 
 class JellyfinConnection(Base):
     use_jellyfin: bool
-    jellyfin_url: str
+    jellyfin_url: AnyUrl
     jellyfin_api_key: SecretStr #Hexstring
     jellyfin_username: str = Field(min_length=1)
     jellyfin_filesize_limit: Optional[int]
 
 class PlexConnection(Base):
     use_plex: bool
-    plex_url: str
+    plex_url: AnyUrl
     plex_token: SecretStr
     plex_integrate_with_pmm: bool
     plex_filesize_limit: Optional[int]
 
 class SonarrConnection(Base):
     use_sonarr: bool
-    sonarr_url: str
+    sonarr_url: AnyUrl
     sonarr_api_key: SecretStr #Hexstring
     sonarr_libraries: dict[str, str]
 
