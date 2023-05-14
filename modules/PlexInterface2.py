@@ -24,7 +24,7 @@ from modules.WebInterface import WebInterface
 
 EpisodeDetails = namedtuple(
     'EpisodeDetails',
-    ('library_name', 'series_info', 'episode_info', 'watched_status')
+    ('series_info', 'episode_info', 'watched_status')
 )
 
 class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
@@ -757,7 +757,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 series_info = SeriesInfo(entry.title, entry.year)
 
                 return [EpisodeDetails(
-                    entry.librarySectionTitle,
+                    # entry.librarySectionTitle,
                     series_info,
                     EpisodeInfo.from_plex_episode(ep),
                     ep.isWatched
@@ -771,7 +771,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
                 series_info = SeriesInfo(entry.title, entry.year)
                 return [EpisodeDetails(
-                    series.librarySectionTitle,
+                    # series.librarySectionTitle,
                     series_info,
                     EpisodeInfo.from_plex_episode(ep),
                     ep.isWatched
@@ -783,7 +783,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
                 series_info = SeriesInfo(entry.grandparentTitle, series.year)
                 return [EpisodeDetails(
-                    entry.librarySectionTitle,
+                    # entry.librarySectionTitle,
                     series_info,
                     EpisodeInfo.from_plex_episode(entry),
                     entry.isWatched,
