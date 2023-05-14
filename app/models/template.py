@@ -1,7 +1,5 @@
-from pathlib import Path
 from typing import Any
 
-from json import dumps, loads
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.mutable import MutableDict, MutableList
@@ -55,6 +53,5 @@ class Template(Base):
     @hybrid_property
     def image_source_properties(self) -> dict[str, Any]:
         return {
-            'image_source_priority': self.image_source_priority,
             'skip_localized_images': self.skip_localized_images,
         }
