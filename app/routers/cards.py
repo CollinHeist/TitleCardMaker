@@ -1,29 +1,18 @@
-from pathlib import Path
-from typing import Any, Literal, Optional, Union
-
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, File, Form, HTTPException, UploadFile, Query, Request
-from sqlalchemy import and_, or_
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException
 
 from app.database.query import get_episode, get_font, get_series, get_template
 from app.dependencies import (
     get_database, get_emby_interface, get_jellyfin_interface, get_preferences,
-    get_plex_interface, get_scheduler
+    get_plex_interface, get_tmdb_interface,
 )
 import app.models as models
-from app.internal.cards import (
-    create_card, create_episode_card, delete_cards,
-    update_episode_watch_statuses
-)
+from app.internal.cards import create_episode_card, delete_cards, update_episode_watch_statuses
 from app.internal.series import load_series_title_cards
-from app.schemas.font import DefaultFont
-from app.schemas.card import TitleCard, NewTitleCard, PreviewTitleCard
+from app.internal.sources import download_episode_source_image
+from app.internal.translate import translate_episode
+from app.schemas.card import TitleCard, PreviewTitleCard
 
-from modules.CleanPath import CleanPath
 from modules.Debug import log
-from modules.EpisodeInfo2 import EpisodeInfo
-from modules.SeasonTitleRanges import SeasonTitleRanges
-from modules.Title import Title
 from modules.TitleCard import TitleCard as TitleCardCreator
 
 
@@ -271,7 +260,8 @@ def create_cards_for_plex_key(
         plex_rating_key: int = Body(...),
         preferences = Depends(get_preferences),
         db = Depends(get_database),
-        plex_interface = Depends(get_plex_interface)) -> None:
+        plex_interface = Depends(get_plex_interface),
+        tmdb_interface = Depends(get_tmdb_interface)) -> None:
     """
     Remake the Title Card for the item associated with the given Plex
     Rating Key. This item can be a Show, Season, or Episode.
@@ -299,7 +289,7 @@ def create_cards_for_plex_key(
 
     Episode = models.episode.Episode
     series_to_load = []
-    for library_name, series_info, episode_info, watched_status in details:
+    for series_info, episode_info, watched_status in details:
         # Find Episode
         episode = db.query(Episode)\
             .filter(episode_info.episode_filter_conditions(Episode))\
@@ -313,22 +303,35 @@ def create_cards_for_plex_key(
         # Episode exists, update card
         else:
             # Get this Episode's associated Series
-            series = db.query(models.series.Series)\
-                .filter_by(id=episode.series_id).first()
-
-            # If this Series does not exist, raise 404
+            series = get_series(db, episode.series_id, raise_exc=False)
             if series is None:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f'Episode[{episode.id}] has no associated Series',
-                )
+                log.warning(f'{episode.log_str} has no Series - skipping')
+                continue
+
+            # Get Series Template
+            series_template = get_template(db, series.template_id, raise_exc=False)
+            if series.template_id is not None and series_template is None:
+                log.warning(f'{series.log_str} Template is missing - skipping')
+                continue
 
             # Update Episode watched status
             if episode.watched != watched_status:
                 episode.watched = watched_status
                 db.commit()
 
-            # Create card
+            # Look for source, add translation, create card if source exists
+            image = download_episode_source_image(
+                db, preferences,
+                emby_interface=None, jellyfin_interface=None,
+                plex_interface=plex_interface, tmdb_interface=tmdb_interface,
+                series=series, episode=episode,
+            )
+            translate_episode(
+                db, series, series_template, episode, tmdb_interface
+            )
+            if image is None:
+                log.info(f'{episode.log_str} has no source image - skipping')
+                continue
             create_episode_card(
                 db, preferences, background_tasks, series, episode
             )
