@@ -194,7 +194,7 @@ def delete_series_title_cards(
 
 @card_router.delete('/episode/{episode_id}', status_code=200, tags=['Episodes'])
 def delete_episode_title_cards(
-        series_id: int,
+        episode_id: int,
         db = Depends(get_database)) -> list[str]:
     """
     Delete all TitleCards for the given Episode. Return a list of the
@@ -269,7 +269,6 @@ def get_episode_card(
 def create_cards_for_plex_key(
         background_tasks: BackgroundTasks,
         plex_rating_key: int = Body(...),
-        # TODO other query options
         preferences = Depends(get_preferences),
         db = Depends(get_database),
         plex_interface = Depends(get_plex_interface)) -> None:

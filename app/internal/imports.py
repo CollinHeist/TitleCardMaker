@@ -182,14 +182,25 @@ def _parse_episode_data_source(
 
 
 def _parse_filesize_limit(
-        yaml_dict: dict[str, Any]) -> tuple[Union[int, str], str]:
+        yaml_dict: dict[str, Any]
+    ) -> Union[tuple[int, str], tuple[UNSPECIFIED, UNSPECIFIED]]:
     """
-    
+    Parse the filesize limit unit and number from the given YAML.
+
+    Args:
+        yaml_dict: Dictionary of YAML to parse.
+
+    Returns:
+        Tuple of the filesize number and unit. If the limit is not in
+        the specified YAML, then a tuple of UNSPECIFIED is returned.
+
+    Raises:
+        HTTPException (422) if the limit values cannot be parsed.
     """
 
     if (not isinstance(yaml_dict, dict)
         or (limit := yaml_dict.get('filesize_limit', None)) is None):
-        return (UNSPECIFIED, UNSPECIFIED)
+        return UNSPECIFIED, UNSPECIFIED
     
     try:
         number, unit = limit.split(' ')
@@ -297,7 +308,7 @@ def parse_emby(
 
     Raises:
         HTTPException (422) if there are any YAML formatting errors.
-        Pydantic ValidationError if a NewTemplate object cannot be 
+        Pydantic ValidationError if an UpdateEmby object cannot be 
             created from the given YAML.
     """
 
@@ -317,6 +328,45 @@ def parse_emby(
     )
 
     return update_connection(preferences, update_emby, 'emby')
+
+
+def parse_jellyfin(
+        preferences: Preferences,
+        yaml_dict: dict[str, Any]) -> Preferences:
+    """
+    Update the Jellyfin connection preferences for the given YAML.
+
+    Args:
+        preferences: Preferences whose connection details are being
+            modified.
+        yaml_dict: Dictionary of YAML attributes to parse.
+    
+    Returns:
+        Modified Preferences object. If no changes are made, the object
+        is returned unmodified.
+
+    Raises:
+        HTTPException (422) if there are any YAML formatting errors.
+        Pydantic ValidationError if an UpdateJellyfin object cannot be 
+            created from the given YAML.
+    """
+
+    # Get each major section
+    jellyfin = _get(yaml_dict, 'jellyfin', default={})
+
+    # Get filesize limit
+    limit_number, limit_unit = _parse_filesize_limit(jellyfin)
+
+    update_emby = UpdateJellyfin(
+        url=_get(jellyfin, 'url', type_=str, default=UNSPECIFIED),
+        api_key=_get(jellyfin, 'api_key', default=UNSPECIFIED),
+        username=_get(jellyfin, 'username', type_=str, default=UNSPECIFIED),
+        use_ssl=_get(jellyfin, 'verify_ssl', type_=bool, default=UNSPECIFIED),
+        filesize_limit_number=limit_number,
+        filesize_limit_unit=limit_unit,
+    )
+
+    return update_connection(preferences, update_emby, 'jellyfin')
 
 
 def parse_fonts(

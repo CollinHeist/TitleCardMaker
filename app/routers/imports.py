@@ -7,7 +7,7 @@ from app.dependencies import (
     get_sonarr_interface, get_tmdb_interface
 )
 from app.internal.imports import (
-    parse_emby, parse_fonts, parse_preferences, parse_raw_yaml, parse_series, parse_templates
+    parse_emby, parse_fonts, parse_jellyfin, parse_preferences, parse_raw_yaml, parse_series, parse_templates
 )
 from app.internal.series import download_series_poster, set_series_database_ids
 from app.internal.sources import download_series_logo
@@ -68,8 +68,25 @@ def import_emby_yaml(
     if len(yaml_dict) == 0:
         return preferences
     
-    # Create NewNamedFont objects from the YAML dictionary
     return parse_emby(preferences, yaml_dict)
+
+
+@import_router.post('/preferences/jellyfin')
+def import_jellyfin_yaml(
+        import_yaml: ImportYaml = Body(...),
+        preferences = Depends(get_preferences)) -> Preferences:
+    """
+    Import the jellyfin preferences defined in the given YAML.
+
+    - import_yaml: The YAML string to parse.
+    """
+
+    # Parse raw YAML into dictionary
+    yaml_dict = parse_raw_yaml(import_yaml.yaml)
+    if len(yaml_dict) == 0:
+        return preferences
+    
+    return parse_jellyfin(preferences, yaml_dict)
 
 
 @import_router.post('/fonts', status_code=201)
