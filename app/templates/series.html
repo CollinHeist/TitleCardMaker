@@ -521,8 +521,9 @@
 
     async function browseTmdbImages(episodeId, cardElementId) {
       // Get all source images for this Episode
+      $(`#${cardElementId}`).toggleClass('loading', true);
       const images = await fetch(`/api/sources/episode/${episodeId}/browse`).then(resp => resp.json());
-      console.log(images)
+      $(`#${cardElementId}`).toggleClass('loading', false);
       // If null, no images were returned
       if (images === null) {
         $.toast({class: 'error', title: 'Unable to Query TMDb'});
