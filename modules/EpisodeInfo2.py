@@ -194,12 +194,6 @@ class EpisodeInfo(DatabaseInfoContainer):
             and self.title.matches(info.title)
         )
 
-        # Equality is determined by season and episode number only
-        season_match = (self.season_number == info.season_number)
-        episode_match = (self.episode_number == info.episode_number)
-
-        return season_match and episode_match
-
 
     @staticmethod
     def from_plex_episode(plex_episode: 'plexapi.video.Episode') -> 'EpisodeInfo':
@@ -331,7 +325,6 @@ class EpisodeInfo(DatabaseInfoContainer):
         if self.tvrage_id is not None:
             id_conditions.append(EpisodeModel.tvrage_id==self.tvrage_id)
 
-        # Try and find Episode
         return or_(
             # Find by database ID
             or_(*id_conditions),
