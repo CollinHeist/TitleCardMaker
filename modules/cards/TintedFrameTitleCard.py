@@ -92,6 +92,8 @@ class TintedFrameTitleCard(BaseCardType):
             font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_vertical_shift: int = 0,
+            season_number: int = 1,
+            episode_number: int = 1,
             blur: bool = False,
             grayscale: bool = False,
             episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
@@ -137,7 +139,12 @@ class TintedFrameTitleCard(BaseCardType):
             self.logo = None
         else:
             try:
-                self.logo = Path(logo)
+                self.logo = Path(
+                    str(logo).format(
+                        season_number=season_number,
+                        episode_number=episode_number
+                    )
+                )
             except:
                 log.exception(f'Logo path is invalid', e)
                 self.valid = False
