@@ -1,11 +1,27 @@
 from typing import Any
 
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy import PickleType
 
 from app.database.session import Base
+
+CONDITIONS = {
+    'is true': lambda v, r: bool(v),
+    'is false': lambda v, r: not bool(v),
+    'is null': lambda v, r: v is None,
+    'equals': lambda v, r: v == r,
+    'does not equal': lambda v, r: v != r,
+    'starts with': lambda v, r: str(v).startswith(str(r)),
+    'ends with': lambda v, r: str(v).endswith(str(r)),
+    'is less than': lambda v, r: v < r,
+    'is less than or equal': lambda v, r: v <= r,
+    'is greater than': lambda v, r: v > r,
+    'is greater than or equal': lambda v, r: v >= r,
+    'is before': lambda v, r: v < r,
+    'is after': lambda v, r: v > r,
+}
 
 class Template(Base):
     __tablename__ = 'template'
@@ -55,3 +71,39 @@ class Template(Base):
         return {
             'skip_localized_images': self.skip_localized_images,
         }
+    
+    @hybrid_method
+    def meets_filter_critera(self, series: 'Series', episode: 'Episode') -> bool:
+        """
+        Determine whether the given Series and Episode meet this Template's filter
+        criteria.
+        
+        Args:
+            series: Series whose arguments can be evaluated.
+            episode: Episode whose arguments can be evaluated.
+            
+        Returns:
+            True if the given objects meet this Template's critera, or if there are
+            no filters. False otherwise.
+        """
+        
+        if len(self.filters) == 0:
+            return True
+        
+        ARGUMENTS = {
+            'series_name': series.name,
+            'series_year': series.year,
+            'is_watched': episode.watched,
+            'season_number': episode.season_number,
+            'episode_number': episode.episode_number,
+            'absolute_number': episode.absolute_number,
+            'episode_title': episode.title,
+            'episode_title_length': len(episode.title),
+            'episode_airdate': episode.airdate,
+        }
+        
+        return all(
+            OPERATIONS[operator](ARGUMENTS[argument], reference)
+            for argument, operator, reference in self.filters
+            if (operator in OPERATIONS and argument in ARGUMENTS)
+        )
