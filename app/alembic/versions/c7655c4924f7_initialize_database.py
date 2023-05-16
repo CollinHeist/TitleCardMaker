@@ -1,8 +1,8 @@
 """Initialize Database
 
-Revision ID: b794dbece232
+Revision ID: c7655c4924f7
 Revises: 
-Create Date: 2023-05-12 23:26:38.197011
+Create Date: 2023-05-15 21:46:06.036839
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'b794dbece232'
+revision = 'c7655c4924f7'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -31,7 +31,7 @@ def upgrade() -> None:
         sa.Column('vertical_shift', sa.Integer(), nullable=True),
         sa.Column('validate_characters', sa.Boolean(), nullable=True),
         sa.Column('delete_missing', sa.Boolean(), nullable=True),
-        sa.Column('replacements', sa.PickleType(), nullable=True),
+        sa.Column('replacements', sa.JSON(), nullable=True),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_font_id'), 'font', ['id'], unique=False)
@@ -42,16 +42,17 @@ def upgrade() -> None:
         sa.Column('episode_data_source', sa.String(), nullable=True),
         sa.Column('sync_specials', sa.Boolean(), nullable=True),
         sa.Column('skip_localized_images', sa.Boolean(), nullable=True),
-        sa.Column('translations', sa.PickleType(), nullable=False),
+        sa.Column('translations', sa.JSON(), nullable=False),
         sa.Column('font_id', sa.Integer(), nullable=True),
         sa.Column('card_type', sa.String(), nullable=True),
         sa.Column('hide_season_text', sa.Boolean(), nullable=True),
-        sa.Column('season_titles', sa.PickleType(), nullable=False),
+        sa.Column('season_titles', sa.JSON(), nullable=False),
         sa.Column('hide_episode_text', sa.Boolean(), nullable=True),
         sa.Column('episode_text_format', sa.String(), nullable=True),
         sa.Column('unwatched_style', sa.String(), nullable=True),
         sa.Column('watched_style', sa.String(), nullable=True),
-        sa.Column('extras', sa.PickleType(), nullable=False),
+        sa.Column('extras', sa.JSON(), nullable=False),
+        sa.Column('filters', sa.JSON(), nullable=False),
         sa.ForeignKeyConstraint(['font_id'], ['font.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
@@ -61,10 +62,10 @@ def upgrade() -> None:
         sa.Column('name', sa.String(), nullable=False),
         sa.Column('interface', sa.String(), nullable=False),
         sa.Column('template_id', sa.Integer(), nullable=True),
-        sa.Column('required_tags', sa.PickleType(), nullable=True),
-        sa.Column('required_libraries', sa.PickleType(), nullable=True),
-        sa.Column('excluded_tags', sa.PickleType(), nullable=True),
-        sa.Column('excluded_libraries', sa.PickleType(), nullable=True),
+        sa.Column('required_tags', sa.JSON(), nullable=False),
+        sa.Column('required_libraries', sa.JSON(), nullable=False),
+        sa.Column('excluded_tags', sa.JSON(), nullable=False),
+        sa.Column('excluded_libraries', sa.JSON(), nullable=False),
         sa.Column('downloaded_only', sa.Boolean(), nullable=True),
         sa.Column('monitored_only', sa.Boolean(), nullable=True),
         sa.Column('required_series_type', sa.String(), nullable=True),
@@ -88,7 +89,7 @@ def upgrade() -> None:
         sa.Column('episode_data_source', sa.String(), nullable=True),
         sa.Column('sync_specials', sa.Boolean(), nullable=True),
         sa.Column('skip_localized_images', sa.Boolean(), nullable=True),
-        sa.Column('translations', sa.PickleType(), nullable=True),
+        sa.Column('translations', sa.JSON(), nullable=True),
         sa.Column('match_titles', sa.Boolean(), nullable=False),
         sa.Column('emby_id', sa.Integer(), nullable=True),
         sa.Column('imdb_id', sa.String(), nullable=True),
@@ -108,12 +109,12 @@ def upgrade() -> None:
         sa.Column('template_id', sa.Integer(), nullable=True),
         sa.Column('card_type', sa.String(), nullable=True),
         sa.Column('hide_season_text', sa.Boolean(), nullable=True),
-        sa.Column('season_titles', sa.PickleType(), nullable=True),
+        sa.Column('season_titles', sa.JSON(), nullable=True),
         sa.Column('hide_episode_text', sa.Boolean(), nullable=True),
         sa.Column('episode_text_format', sa.String(), nullable=True),
         sa.Column('unwatched_style', sa.String(), nullable=True),
         sa.Column('watched_style', sa.String(), nullable=True),
-        sa.Column('extras', sa.PickleType(), nullable=True),
+        sa.Column('extras', sa.JSON(), nullable=True),
         sa.ForeignKeyConstraint(['font_id'], ['font.id'], ),
         sa.ForeignKeyConstraint(['sync_id'], ['sync.id'], ),
         sa.ForeignKeyConstraint(['template_id'], ['template.id'], ),
@@ -153,9 +154,9 @@ def upgrade() -> None:
         sa.Column('tvdb_id', sa.Integer(), nullable=True),
         sa.Column('tvrage_id', sa.Integer(), nullable=True),
         sa.Column('airdate', sa.DateTime(), nullable=True),
-        sa.Column('extras', sa.PickleType(), nullable=True),
-        sa.Column('translations', sa.PickleType(), nullable=True),
-        sa.Column('image_source_attempts', sa.PickleType(), nullable=True),
+        sa.Column('extras', sa.JSON(), nullable=True),
+        sa.Column('translations', sa.JSON(), nullable=True),
+        sa.Column('image_source_attempts', sa.JSON(), nullable=True),
         sa.ForeignKeyConstraint(['font_id'], ['font.id'], ),
         sa.ForeignKeyConstraint(['series_id'], ['series.id'], ),
         sa.ForeignKeyConstraint(['template_id'], ['template.id'], ),
@@ -184,7 +185,7 @@ def upgrade() -> None:
         sa.Column('font_vertical_shift', sa.Integer(), nullable=False),
         sa.Column('blur', sa.Boolean(), nullable=False),
         sa.Column('grayscale', sa.Boolean(), nullable=False),
-        sa.Column('extras', sa.PickleType(), nullable=False),
+        sa.Column('extras', sa.JSON(), nullable=False),
         sa.Column('season_number', sa.Integer(), nullable=False),
         sa.Column('episode_number', sa.Integer(), nullable=False),
         sa.Column('absolute_number', sa.Integer(), nullable=True),
@@ -206,20 +207,11 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(['series_id'], ['series.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
-    op.drop_index('ix_apscheduler_jobs_next_run_time', table_name='apscheduler_jobs')
-    op.drop_table('apscheduler_jobs')
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
-    op.create_table('apscheduler_jobs',
-        sa.Column('id', sa.VARCHAR(length=191), nullable=False),
-        sa.Column('next_run_time', sa.FLOAT(), nullable=True),
-        sa.Column('job_state', sa.BLOB(), nullable=False),
-        sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index('ix_apscheduler_jobs_next_run_time', 'apscheduler_jobs', ['next_run_time'], unique=False)
     op.drop_table('loaded')
     op.drop_index(op.f('ix_card_id'), table_name='card')
     op.drop_table('card')

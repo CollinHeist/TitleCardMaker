@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 from pydantic import constr, Field, root_validator, validator
 
@@ -18,6 +18,22 @@ DictKey = constr(regex=r'^[a-zA-Z]+[^ -]*$', min_length=1)
 """
 Base classes
 """
+FilterOperation = Literal[
+    'is true', 'is false', 'is null', 'equals', 'does not equal', 'starts with',
+    'ends with', 'is less than', 'is less than or equal', 'is greater than',
+    'is greater than or equal', 'is before', 'is after'
+]
+FilterArgument = Literal[
+    'series_name', 'series_year', 'is_watched', 'season_number',
+    'episode_number', 'absolute_number', 'episode_title',
+    'episode_title_length', 'episode_airdate',
+]
+
+class Condition(Base):
+    argument: FilterArgument
+    operation: FilterOperation
+    reference: str
+
 class Translation(Base):
     language_code: LanguageCode
     data_key: DictKey
@@ -58,6 +74,7 @@ class BaseConfig(Base):
 
 class BaseTemplate(BaseConfig):
     name: str = Field(..., min_length=1, title='Template name')
+    filters: list[Condition] = Field(default=[])
     translations: list[Translation] = Field(default=[])
 
 class BaseSeries(BaseConfig):
@@ -234,6 +251,7 @@ Update classes
 """
 class UpdateTemplate(BaseUpdate):
     name: str = Field(default=UNSPECIFIED, min_length=1)
+    filters: list[Condition] = Field(default=UNSPECIFIED)
     font_id: Optional[int] = Field(default=UNSPECIFIED)
     sync_specials: bool = Field(default=UNSPECIFIED)
     skip_localized_images: Optional[bool] = Field(default=UNSPECIFIED)
