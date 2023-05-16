@@ -1,14 +1,12 @@
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, Float, ForeignKey, String
+from sqlalchemy import Boolean, Column, DateTime, Integer, Float, ForeignKey, String, JSON
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
-from sqlalchemy.ext.mutable import MutableDict, MutableList
+from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy import PickleType
 
 from app.database.session import Base
-from app.dependencies import get_preferences
-from modules.CleanPath import CleanPath
 from modules.EpisodeInfo2 import EpisodeInfo
 
 class Episode(Base):
@@ -54,11 +52,14 @@ class Episode(Base):
     tvrage_id = Column(Integer, default=None)
     airdate = Column(DateTime, default=None)
 
-    extras = Column(MutableDict.as_mutable(PickleType), default=None)
-    translations = Column(MutableDict.as_mutable(PickleType), default={})
+    extras = Column(JSON, default=None)
+    translations = Column(JSON, default={})
+    # extras = Column(MutableDict.as_mutable(PickleType), default=None)
+    # translations = Column(MutableDict.as_mutable(PickleType), default={})
 
     image_source_attempts = Column(
-        MutableDict.as_mutable(PickleType),
+        # MutableDict.as_mutable(PickleType),
+        JSON,
         default={'Emby': 0, 'Jellyfin': 0, 'Plex': 0, 'TMDb': 0}
     )
 

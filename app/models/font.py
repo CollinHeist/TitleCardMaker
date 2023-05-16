@@ -1,10 +1,9 @@
 from typing import Any
 
-from sqlalchemy import Boolean, Column, Integer, Float, String, ForeignKey
+from sqlalchemy import Boolean, Column, Integer, Float, String, JSON
 
-from json import dumps, loads
-from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
-from sqlalchemy.ext.mutable import MutableDict, MutableList
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy import PickleType
 
 from app.database.session import Base
@@ -24,7 +23,8 @@ class Font(Base):
     vertical_shift = Column(Integer, default=0)
     validate_characters = Column(Boolean, default=None)
     delete_missing = Column(Boolean, default=True)
-    replacements = Column(MutableDict.as_mutable(PickleType), default=None)
+    # replacements = Column(MutableDict.as_mutable(PickleType), default=None)
+    replacements = Column(JSON, default=None)
 
     @hybrid_property
     def card_properties(self) -> dict[str, Any]:

@@ -1,9 +1,9 @@
 from typing import Any
 
-from sqlalchemy import Boolean, Column, Float, Integer, String, ForeignKey
+from sqlalchemy import Boolean, Column, Float, Integer, String, ForeignKey, JSON
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.ext.mutable import MutableDict
-from sqlalchemy import PickleType
+# from sqlalchemy.ext.mutable import MutableDict
+# from sqlalchemy import PickleType
 
 from app.database.session import Base
 
@@ -36,12 +36,11 @@ class Card(Base):
     blur = Column(Boolean, nullable=False)
     grayscale = Column(Boolean, nullable=False)
 
-    extras = Column(MutableDict.as_mutable(PickleType), default={}, nullable=False)
+    extras = Column(JSON, default={}, nullable=False)
 
     season_number = Column(Integer, default=0, nullable=False)
     episode_number = Column(Integer, default=0, nullable=False)
     absolute_number = Column(Integer, default=0)
-
 
     @hybrid_property
     def comparison_properties(self) -> dict[str, Any]:
