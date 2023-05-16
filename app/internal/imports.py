@@ -13,6 +13,7 @@ from app.schemas.preferences import (
     UpdatePreferences, UpdateSonarr, UpdateTMDb
 )
 from app.schemas.series import NewSeries, NewTemplate, Translation
+from app.schemas.sync import NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync
 
 from modules.Debug import log
 from modules.EpisodeMap import EpisodeMap
@@ -367,6 +368,142 @@ def parse_jellyfin(
     )
 
     return update_connection(preferences, update_emby, 'jellyfin')
+
+
+def parse_plex(
+        preferences: Preferences,
+        yaml_dict: dict[str, Any]) -> Preferences:
+    """
+    Update the Plex connection preferences for the given YAML.
+
+    Args:
+        preferences: Preferences whose connection details are being
+            modified.
+        yaml_dict: Dictionary of YAML attributes to parse.
+    
+    Returns:
+        Modified Preferences object. If no changes are made, the object
+        is returned unmodified.
+
+    Raises:
+        HTTPException (422) if there are any YAML formatting errors.
+        Pydantic ValidationError if an UpdatePlex object cannot be
+            created from the given YAML.
+    """
+
+    # Get each major section
+    plex = _get(yaml_dict, 'plex', default={})
+
+    # Get filesize limit
+    limit_number, limit_unit = _parse_filesize_limit(plex)
+
+    update_plex = UpdatePlex(
+        url=_get(plex, 'url', type_=str, default=UNSPECIFIED),
+        token=_get(plex, 'token', default=UNSPECIFIED),
+        use_ssl=_get(plex, 'verify_ssl', type_=bool, default=UNSPECIFIED),
+        integrate_with_pmm=_get(
+            plex,
+            'integrate_with_pmm_overlays',
+            type_=bool, default=UNSPECIFIED,
+        ), filesize_limit_number=limit_number,
+        filesize_limit_unit=limit_unit,
+    )
+
+    return update_connection(preferences, update_plex, 'plex')
+
+
+def parse_tmdb(
+        preferences: Preferences,
+        yaml_dict: dict[str, Any]) -> Preferences:
+    """
+    Update the TMDb connection preferences for the given YAML.
+
+    Args:
+        preferences: Preferences whose connection details are being
+            modified.
+        yaml_dict: Dictionary of YAML attributes to parse.
+    
+    Returns:
+        Modified Preferences object. If no changes are made, the object
+        is returned unmodified.
+
+    Raises:
+        HTTPException (422) if there are any YAML formatting errors.
+        Pydantic ValidationError if an UpdateTMDb object cannot be
+            created from the given YAML.
+    """
+
+    # Get each major section
+    tmdb = _get(yaml_dict, 'tmdb', default={})
+
+    SplitList = lambda s: str(s).lower().replace(' ', '').split(',')
+
+    update_tmdb = UpdateTMDb(
+        api_key=_get(tmdb, 'api_key', default=UNSPECIFIED),
+        minimum_width=_get(
+            tmdb,
+            'minimum_resolution',
+            type_=Width, default=UNSPECIFIED,
+        ), minimum_height=_get(
+            tmdb,
+            'minimum_resolution',
+            type_=Height, default=UNSPECIFIED,
+        ), skip_localized=_get(
+            tmdb,
+            'skip_localized_images',
+            type_=bool, default=UNSPECIFIED,
+        ), logo_language_priority=_get(
+            tmdb,
+            'logo_language_priority',
+            type_=SplitList, default=UNSPECIFIED,
+        ),
+    )
+
+    return update_connection(preferences, update_tmdb, 'tmdb')
+
+
+def parse_sonarr(
+        preferences: Preferences,
+        yaml_dict: dict[str, Any]) -> Preferences:
+    """
+    Update the Sonarr connection preferences for the given YAML.
+
+    Args:
+        preferences: Preferences whose connection details are being
+            modified.
+        yaml_dict: Dictionary of YAML attributes to parse.
+    
+    Returns:
+        Modified Preferences object. If no changes are made, the object
+        is returned unmodified.
+
+    Raises:
+        HTTPException (422) if there are any YAML formatting errors.
+        Pydantic ValidationError if an UpdateSonarr object cannot be
+            created from the given YAML.
+    """
+
+    # Get each major section
+    sonarr = _get(yaml_dict, 'sonarr', default={})
+
+    update_sonarr = UpdateSonarr(
+        url=_get(sonarr, 'url', default=UNSPECIFIED),
+        api_key=_get(sonarr, 'api_key', default=UNSPECIFIED),
+        use_ssl=_get(sonarr, 'verify_ssl', default=UNSPECIFIED),
+    )
+
+    return update_connection(preferences, update_sonarr, 'sonarr')
+
+
+def parse_syncs(
+        yaml_dict: dict[str, Any]
+    ) -> Union[list[NewEmbySync], list[NewJellyfinSync], list[NewPlexSync],
+               list[NewSonarrSync]]:
+    """
+    
+    """
+
+    ...
 
 
 def parse_fonts(

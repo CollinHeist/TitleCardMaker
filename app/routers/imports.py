@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException
 from pydantic.error_wrappers import ValidationError
 
@@ -7,7 +9,7 @@ from app.dependencies import (
     get_sonarr_interface, get_tmdb_interface
 )
 from app.internal.imports import (
-    parse_emby, parse_fonts, parse_jellyfin, parse_preferences, parse_raw_yaml, parse_series, parse_templates
+    parse_emby, parse_fonts, parse_jellyfin, parse_plex, parse_preferences, parse_raw_yaml, parse_series, parse_sonarr, parse_syncs, parse_templates, parse_tmdb
 )
 from app.internal.series import download_series_poster, set_series_database_ids
 from app.internal.sources import download_series_logo
@@ -16,6 +18,7 @@ from app.schemas.font import NamedFont
 from app.schemas.imports import ImportSeriesYaml, ImportYaml
 from app.schemas.preferences import Preferences
 from app.schemas.series import Series, Template
+from app.schemas.sync import Sync
 
 from modules.Debug import log
 
@@ -26,7 +29,7 @@ import_router = APIRouter(
 )
 
 
-@import_router.post('/preferences/options')
+@import_router.post('/preferences/options', status_code=201)
 def import_preferences_yaml(
         import_yaml: ImportYaml = Body(...),
         preferences = Depends(get_preferences)) -> Preferences:
@@ -53,13 +56,16 @@ def import_preferences_yaml(
         )
 
 
-@import_router.post('/preferences/emby')
-def import_emby_yaml(
+@import_router.post('/preferences/{connection}', status_code=201)
+def import_connection_yaml(
+        connection: Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
         import_yaml: ImportYaml = Body(...),
         preferences = Depends(get_preferences)) -> Preferences:
     """
-    Import the emby preferences defined in the given YAML.
+    Import the connection preferences defined in the given YAML. This
+    does NOT import any Sync settings.
 
+    - connection: Which connection is being modified.
     - import_yaml: The YAML string to parse.
     """
 
@@ -67,26 +73,58 @@ def import_emby_yaml(
     yaml_dict = parse_raw_yaml(import_yaml.yaml)
     if len(yaml_dict) == 0:
         return preferences
+
+    parse_function = {
+        'emby': parse_emby,
+        'jellyfin': parse_jellyfin,
+        'plex': parse_plex,
+        'tmdb': parse_tmdb,
+        'sonarr': parse_sonarr,
+    }[connection]
+
+    try:
+        return parse_function(preferences, yaml_dict)
+    except ValidationError as e:
+        log.exception(f'Invalid YAML', e)
+        raise HTTPException(
+            status_code=422,
+            detail=f'YAML is invalid - {e}'
+        )
     
-    return parse_emby(preferences, yaml_dict)
 
-
-@import_router.post('/preferences/jellyfin')
-def import_jellyfin_yaml(
+@import_router.post('/sync')
+def import_sync_yaml(
         import_yaml: ImportYaml = Body(...),
-        preferences = Depends(get_preferences)) -> Preferences:
+        db = Depends(get_database)) -> list[Sync]:
     """
-    Import the jellyfin preferences defined in the given YAML.
-
-    - import_yaml: The YAML string to parse.
+    
     """
 
     # Parse raw YAML into dictionary
     yaml_dict = parse_raw_yaml(import_yaml.yaml)
     if len(yaml_dict) == 0:
-        return preferences
+        return []
     
-    return parse_jellyfin(preferences, yaml_dict)
+    # Create NewNamedFont objects from the YAML dictionary
+    try:
+        new_syncs = parse_syncs(yaml_dict)
+    except ValidationError as e:
+        log.exception(f'Invalid YAML', e)
+        raise HTTPException(
+            status_code=422,
+            detail=f'YAML is invalid - {e}'
+        )
+
+    # Add each defined Sync to the database
+    all_syncs = []
+    for new_sync in new_syncs:
+        sync = models.sync.Sync(**new_sync.dict())
+        db.add(sync)
+        log.info(f'{sync.log_str} imported to Database')
+        all_syncs.append(sync)
+    db.commit()
+
+    return all_syncs
 
 
 @import_router.post('/fonts', status_code=201)

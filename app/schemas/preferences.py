@@ -151,7 +151,6 @@ class UpdateMediaServerBase(UpdateServerBase):
 
     @root_validator(pre=True)
     def validate_filesize(cls, values):
-        log.critical(f'{values=}')
         if (values.get('filesize_limit_number', UNSPECIFIED) != UNSPECIFIED
             and not values.get('filesize_limit_unit',UNSPECIFIED) !=UNSPECIFIED):
             raise ValidationError(f'Filesize limit number requires unit')
