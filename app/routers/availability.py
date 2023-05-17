@@ -9,6 +9,7 @@ from app.dependencies import (
     get_plex_interface, get_sonarr_interface,
 )
 import app.models as models
+from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.card import CardType, LocalCardType, RemoteCardType
 from app.schemas.preferences import EpisodeDataSourceToggle, ImageSourceToggle, StyleOption
 from app.schemas.sync import Tag
@@ -75,6 +76,9 @@ def get_local_card_types() -> list[LocalCardType]:
 @availablility_router.get('/card-types/remote', status_code=200, tags=['Title Cards'])
 def get_remote_card_types(
         preferences=Depends(get_preferences)) -> list[RemoteCardType]:
+    """
+    Get all available remote card types.
+    """
     
     try:
         return _get_remote_cards()
@@ -85,8 +89,21 @@ def get_remote_card_types(
         )
 
 
+@availablility_router.get('/template-filters', status_code=200, tags=['Templates'])
+def get_available_template_filters() -> dict[str, list[str]]:
+    """
+    Get all available Tempalte filter condition argument and operation
+    values.
+    """
+
+    return {
+        'arguments': list(ARGUMENT_KEYS),
+        'operations': list(OPERATIONS),
+    }
+
+
 @availablility_router.get('/translations', status_code=200)
-def get_available_tmdb_translations():
+def get_available_tmdb_translations() -> list[dict[str, str]]:
     """
     Get all supported translations from TMDb.
     """
@@ -102,6 +119,9 @@ def get_available_tmdb_translations():
 @availablility_router.get('/episode-data-sources', status_code=200)
 def get_available_episode_data_sources(
         preferences=Depends(get_preferences)) -> list[EpisodeDataSourceToggle]:
+    """
+    ...
+    """
     
     return [
         {'name': source,
@@ -116,6 +136,9 @@ def get_available_episode_data_sources(
         response_model=list[ImageSourceToggle])
 def get_image_source_priority(
         preferences=Depends(get_preferences)) -> list[EpisodeDataSourceToggle]:
+    """
+    ...
+    """
     
     return [
         {
@@ -227,6 +250,10 @@ def get_available_templates(db=Depends(get_database)) -> list[str]:
 
 @availablility_router.get('/styles', status_code=200)
 def get_available_styles() -> list[StyleOption]:
+    """
+    ...
+    """
+
     return [
         {'name': 'Art', 'value': 'art', 'style_type': 'art'},
         {'name': 'Blurred Art', 'value': 'art blur', 'style_type': 'art'},
