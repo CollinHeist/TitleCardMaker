@@ -1,19 +1,17 @@
 from datetime import datetime, timedelta
-from typing import Literal, Union
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from requests import get as req_get
-from sqlalchemy.orm import Session
 
 from app.dependencies import (
     get_database, get_preferences, get_emby_interface, get_jellyfin_interface,
-    get_plex_interface, get_sonarr_interface, get_tmdb_interface,
+    get_plex_interface, get_sonarr_interface,
 )
 import app.models as models
 from app.schemas.card import CardType, LocalCardType, RemoteCardType
-from app.schemas.preferences import EpisodeDataSourceToggle, ImageSourceToggle,\
-    MediaServer, StyleOption
-from app.schemas.sonarr import Tag
+from app.schemas.preferences import EpisodeDataSourceToggle, ImageSourceToggle, StyleOption
+from app.schemas.sync import Tag
 from modules.cards.available import LocalCards
 from modules.Debug import log
 from modules.TMDbInterface2 import TMDbInterface

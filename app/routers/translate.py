@@ -1,9 +1,7 @@
-from typing import Literal, Optional
-
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 
 from app.database.query import get_episode, get_series, get_template
-from app.dependencies import get_database, get_preferences, get_tmdb_interface
+from app.dependencies import get_database, get_tmdb_interface
 from app.internal.translate import translate_episode
 import app.models as models
 

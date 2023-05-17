@@ -1,12 +1,9 @@
-from pathlib import Path
 from requests import get
-from shutil import copy as file_copy
-from typing import Any, Literal, Optional, Union
+from typing import Optional
 
 from fastapi import (
     APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, UploadFile
 )
-from sqlalchemy import or_
 
 from app.database.query import get_font, get_series, get_template
 from app.dependencies import (
@@ -23,10 +20,8 @@ from app.internal.sources import download_series_logo
 from app.schemas.base import UNSPECIFIED
 from app.schemas.preferences import MediaServer
 from app.schemas.series import NewSeries, Series, UpdateSeries
-from app.schemas.episode import Episode
 
 from modules.Debug import log
-from modules.SeriesInfo import SeriesInfo
 
 series_router = APIRouter(
     prefix='/series',

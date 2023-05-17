@@ -1,6 +1,6 @@
 from typing import Literal, Optional
 
-from pydantic import Field, PositiveInt, validator, root_validator
+from pydantic import Field, validator, root_validator
 
 from app.schemas.base import Base, validate_argument_lists_to_dict
 # from app.schemas.font import NewUnnamedEpisodeFont, PreviewFont

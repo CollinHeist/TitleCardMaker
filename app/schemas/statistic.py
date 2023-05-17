@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from app.schemas.base import Base
 
 class Statistic(Base):

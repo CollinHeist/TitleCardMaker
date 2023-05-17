@@ -1,3 +1,5 @@
+from datetime import datetime
+from re import match as re_match
 from typing import Any
 
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, JSON
@@ -9,20 +11,28 @@ from app.database.session import Base
 
 from modules.Debug import log
 
+"""Format of all refrence dates for before and after operations"""
+DATETIME_FORMAT = '%Y-%m-%d'
+
 OPERATIONS = {
     'is true': lambda v, r: bool(v),
     'is false': lambda v, r: not bool(v),
     'is null': lambda v, r: v is None,
+    'is not null': lambda v, r: v is not None,
     'equals': lambda v, r: str(v) == str(r),
     'does not equal': lambda v, r: str(v) != str(r),
-    'starts with': lambda v, r: str(v).startswith(str(r)),
-    'ends with': lambda v, r: str(v).endswith(str(r)),
+    'starts with': lambda v, r: str(v).lower().startswith(str(r).lower()),
+    'does not start with': lambda v, r: not str(v).lower().startswith(str(r).lower()),
+    'ends with': lambda v, r: str(v).lower().endswith(str(r).lower()),
+    'does not end with': lambda v, r: not str(v).lower().endswith(str(r).lower()),
+    'matches': lambda v, r: bool(re_match(r, v)),
+    'does not match': lambda v, r: not bool(re_match(r, v)),
     'is less than': lambda v, r: float(v) < float(r),
     'is less than or equal': lambda v, r: float(v) <= float(r),
     'is greater than': lambda v, r: float(v) > float(r),
     'is greater than or equal': lambda v, r: float(v) >= float(r),
-    'is before': lambda v, r: v < r,
-    'is after': lambda v, r: v > r,
+    'is before': lambda v, r: v < datetime.strptime(r, DATETIME_FORMAT),
+    'is after': lambda v, r: v > datetime.strptime(r, DATETIME_FORMAT),
 }
 
 
@@ -54,7 +64,7 @@ class Template(Base):
 
     @hybrid_property
     def log_str(self) -> str:
-        return f'Template[{self.id}] {self.name}'
+        return f'Template[{self.id}] "{self.name}"'
 
     @hybrid_property
     def card_properties(self) -> dict[str, Any]:
@@ -103,6 +113,9 @@ class Template(Base):
         ARGUMENTS = {
             'series_name': series.name,
             'series_year': series.year,
+            'series_emby_library': series.emby_library_name,
+            'series_jellyfin_library': series.jellyfin_library_name,
+            'series_plex_library': series.plex_library_name,
             'is_watched': episode.watched,
             'season_number': episode.season_number,
             'episode_number': episode.episode_number,
@@ -114,7 +127,7 @@ class Template(Base):
 
         # Go through each condition of this Template's filter
         for condition in self.filters:
-            # If condition and argument are valid, evalute
+            # If operation and argument are valid, evalute condition
             if (condition['operation'] in OPERATIONS
                 and condition['argument'] in ARGUMENTS):
                 # Return False if the condition evalutes to False

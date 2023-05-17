@@ -7,7 +7,7 @@ from app.schemas.font import TitleCase
 from app.schemas.ids import (
     EmbyID, IMDbID, JellyfinID, SonarrID, TMDbID, TVDbID, TVRageID
 )
-from app.schemas.preferences import EpisodeDataSource, Style, ImageSource, LanguageCode
+from app.schemas.preferences import EpisodeDataSource, Style, LanguageCode
 
 # Match absolute ranges (1-10), season numbers (1), episode ranges (s1e1-s1e10)
 SeasonTitleRange = constr(regex=r'^(\d+-\d+)|^(\d+)|^(s\d+e\d+-s\d+e\d+)$')
@@ -19,13 +19,15 @@ DictKey = constr(regex=r'^[a-zA-Z]+[^ -]*$', min_length=1)
 Base classes
 """
 FilterOperation = Literal[
-    'is true', 'is false', 'is null', 'equals', 'does not equal', 'starts with',
-    'ends with', 'is less than', 'is less than or equal', 'is greater than',
-    'is greater than or equal', 'is before', 'is after'
+    'is true', 'is false', 'is null', 'is not null', 'equals', 'does not equal',
+    'starts with', 'does not start with', 'ends with', 'does not end with',
+    'matches', 'does not match', 'is less than', 'is less than or equal',
+    'is greater than', 'is greater than or equal', 'is before', 'is after',
 ]
 FilterArgument = Literal[
-    'series_name', 'series_year', 'is_watched', 'season_number',
-    'episode_number', 'absolute_number', 'episode_title',
+    'series_name', 'series_year', 'series_emby_library',
+    'series_jellyfin_library', 'series_plex_library', 'is_watched',
+    'season_number', 'episode_number', 'absolute_number', 'episode_title',
     'episode_title_length', 'episode_airdate',
 ]
 

@@ -1,14 +1,13 @@
 from pathlib import Path
-from typing import Any, Literal, Optional, Union
 
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, File, Form, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Body, Depends, HTTPException, UploadFile
 
 from app.database.query import get_font
 from app.dependencies import get_database
 from app.dependencies import get_preferences
-from app.schemas.base import UNSPECIFIED
 from app.schemas.font import NamedFont, NewNamedFont, UpdateNamedFont
 import app.models as models
+
 from modules.Debug import log
 
 # Create sub router for all /fonts API requests

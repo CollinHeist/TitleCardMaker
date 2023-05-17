@@ -1,26 +1,22 @@
-from pathlib import Path
 from requests import get
-from typing import Literal, Optional
+from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException, Query, UploadFile
-
-from modules.Debug import log
-from modules.SeriesInfo import SeriesInfo
 
 from app.database.query import get_episode, get_series, get_template
 from app.dependencies import (
     get_database, get_preferences, get_emby_interface,
     get_imagemagick_interface, get_jellyfin_interface, get_plex_interface,
-    get_sonarr_interface, get_tmdb_interface
+    get_tmdb_interface
 )
 from app.internal.cards import delete_cards
 from app.internal.sources import (
     create_source_image, download_episode_source_image, download_series_logo
 )
 import app.models as models
-from app.schemas.base import UNSPECIFIED
 from app.schemas.card import SourceImage
-from modules.TieredSettings import TieredSettings
+
+from modules.Debug import log
 from modules.WebInterface import WebInterface
 
 

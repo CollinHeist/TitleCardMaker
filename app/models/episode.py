@@ -3,8 +3,8 @@ from typing import Any
 
 from sqlalchemy import Boolean, Column, DateTime, Integer, Float, ForeignKey, String, JSON
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
-from sqlalchemy.ext.mutable import MutableDict
-from sqlalchemy import PickleType
+# from sqlalchemy.ext.mutable import MutableDict
+# from sqlalchemy import PickleType
 
 from app.database.session import Base
 from modules.EpisodeInfo2 import EpisodeInfo
@@ -128,11 +128,3 @@ class Episode(Base):
             return Path(source_directory) / series_directory / filename
 
         return Path(source_directory) / series_directory / self.source_file
-
-
-    @hybrid_method
-    def get_extra(self, key: str) -> Any:
-        if self.extras is None:
-            return None
-
-        return self.extras.get(key, None)

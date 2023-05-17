@@ -1,11 +1,9 @@
-from typing import Any, Literal, Optional, Union
-
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends
 
 from app.database.query import get_font, get_template
-from app.dependencies import get_database, get_preferences
+from app.dependencies import get_database
 import app.models as models
-from app.schemas.base import Base, UNSPECIFIED
+from app.schemas.base import UNSPECIFIED
 from app.schemas.series import NewTemplate, Template, UpdateTemplate
 
 from modules.Debug import log
@@ -29,7 +27,7 @@ def create_template(
     """
 
     # Validate font ID if provided
-    get_font(db, getattr(new_template, 'font_id', None), raise_exc=True)
+    get_font(db, new_template.font_id, raise_exc=True)
 
     template = models.template.Template(**new_template.dict())
     db.add(template)
@@ -74,10 +72,10 @@ def update_template(
     - update_template: UpdateTemplate containing fields to update.
     """
     log.critical(f'{update_template.dict()=}')
-    # Query for template, raise 404 if DNE
+    # Query for Template, raise 404 if DNE
     template = get_template(db, template_id, raise_exc=True)
 
-    # If a font ID was specified, verify it exists
+    # If a Font ID was specified, verify it exists
     if getattr(update_template, 'font_id', None) is not None:
         get_font(db, update_template.font_id, raise_exc=True)
 

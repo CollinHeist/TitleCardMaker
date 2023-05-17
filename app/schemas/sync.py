@@ -7,6 +7,9 @@ from app.schemas.base import Base
 SonarrSeriesType = Literal['anime', 'daily', 'standard']
 Interface = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr']
 
+class Tag(Base):
+    id: int
+    label: str
 
 class NewBaseSync(Base):
     name: str = Field(..., min_length=1, title='Sync name')

@@ -1,16 +1,14 @@
-from requests import get
-from typing import Literal, Optional
+from typing import Optional
 
 from fastapi import HTTPException
 
 from modules.Debug import log
-from modules.SeriesInfo import SeriesInfo
 
-from app.database.query import get_series, get_template
+from app.database.query import get_template
 from app.dependencies import (
     get_database, get_preferences, get_emby_interface,
     get_imagemagick_interface, get_jellyfin_interface, get_plex_interface,
-    get_sonarr_interface, get_tmdb_interface
+    get_tmdb_interface
 )
 import app.models as models
 from app.schemas.card import SourceImage

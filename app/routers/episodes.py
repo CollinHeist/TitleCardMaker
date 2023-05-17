@@ -1,7 +1,6 @@
-from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal
 
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException
 
 from app.database.query import get_episode, get_font, get_series, get_template
 from app.dependencies import (
@@ -177,9 +176,8 @@ def update_episode_config(
     log.critical(f'{update_episode.dict()=}')
     # Get this episode, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
-    
+
     # If any reference ID's were indicated, verify referenced object exists
-    get_series(db, getattr(update_episode, 'series_id', None), raise_exc=True)
     get_template(db, getattr(update_episode, 'template_id', None), raise_exc=True)
     get_font(db, getattr(update_episode, 'font_id', None), raise_exc=True)
 

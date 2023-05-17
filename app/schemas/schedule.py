@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Any, Callable, Optional
+from typing import Callable, Optional
 
 from pydantic import Field, PositiveInt
 
@@ -10,7 +10,7 @@ Base classes
 """
 class NewJob(Base):
     id: str = Field(description='Unique ID of the Job')
-    function: Callable[None, None] = Field(description='Function this Job will run')
+    function: Callable[..., None] = Field(description='Function this Job will run')
     seconds: PositiveInt = Field(description='How often (in seconds) to run this Job')
     description: str = Field(description='Description of the Job')
     running: bool = Field(
