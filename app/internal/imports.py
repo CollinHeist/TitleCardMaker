@@ -1,4 +1,4 @@
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Literal, Optional, Union
 
 from fastapi import HTTPException
 from ruamel.yaml import YAML
@@ -18,6 +18,7 @@ from app.schemas.sync import NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonar
 from modules.Debug import log
 from modules.EpisodeMap import EpisodeMap
 from modules.SeriesInfo import SeriesInfo
+from modules.TieredSettings import TieredSettings
 
 
 Extension = lambda s: str(s) if s.startswith('.') else f'.{s}'
@@ -74,7 +75,8 @@ def _get(
         `default` otherwise.
 
     Raises:
-        Exception potentially raised by calling type_ on the value.
+        HTTPException (422) if the indicated type conversion raises any
+            Exceptions.
     """
 
     # Iterate through this object one key-at-a-time
@@ -90,7 +92,14 @@ def _get(
 
     # Return final value, apply type conversion if indicated
     if type_ is not None:
-        return type_(value)
+        try:
+            return type_(value)
+        except Exception as e:
+            log.exception(f'YAML value is incorrectly typed', e)
+            raise HTTPException(
+                status_code=422,
+                detail=f'YAML is incorrectly formatted - {e}',
+            )
     
     return value
 
@@ -496,14 +505,126 @@ def parse_sonarr(
 
 
 def parse_syncs(
-        yaml_dict: dict[str, Any]
-    ) -> Union[list[NewEmbySync], list[NewJellyfinSync], list[NewPlexSync],
-               list[NewSonarrSync]]:
+        db: 'Database',
+        yaml_dict: dict[str, Any],
+    ) -> Union[list[NewEmbySync], list[NewJellyfinSync],
+               list[NewPlexSync], list[NewSonarrSync]]:
     """
-    
+    Create NewSync objects for all defined syncs in the given YAML.
+
+    Args:
+        db: Database to query for Templates (if indicated).
+        yaml_dict: Dictionary of YAML attributes to parse.
+
+    Returns:
+        List of New*Sync objects corresponding to each indicated sync
+        defined in the YAML.
+
+    Raises:
+        HTTPException (404) if an indicated Template cannot be found in
+            the database.
+        HTTPException (422) if there are any YAML formatting errors.
+        Pydantic ValidationError if a New*Sync object cannot be created
+            from the given YAML.
     """
 
-    ...
+    def _get_template_id(sync: dict[str, Any]) -> Optional[int]:
+        if 'add_template' not in sync:
+            return None
+
+        template = db.query(models.template.Template)\
+            .filter_by(name=sync['add_template']).first()
+        if template is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f'Template {sync["add_template"]} not found',
+            )
+        return template.id
+
+    def _parse_media_server_sync(
+            yaml_dict: dict[str, Any],
+            media_server: Literal['Emby', 'Jellyfin', 'Plex'],
+            NewSyncClass: Union[NewEmbySync, NewJellyfinSync, NewPlexSync]
+        ) -> Union[NewEmbySync, NewJellyfinSync, NewPlexSync]:
+        """
+        
+        """
+
+        # Create New*Sync object for each defined sync
+        syncs = yaml_dict if isinstance(yaml_dict, list) else [yaml_dict]
+        all_syncs = []
+        for sync_id, sync in enumerate(syncs):
+            # Skip invalid syncs, and those not being written to files
+            if not isinstance(sync, dict) or 'file' not in sync:
+                continue
+
+            # Merge the first sync settings into this one
+            TieredSettings(sync, syncs[0], sync)
+
+            # Find matching Template if indicated
+            template_id = _get_template_id(sync)
+
+            # Get excluded tags
+            excluded_tags = [
+                list(exclusion.values())[0] for exclusion in _get(
+                    sync, 'exclusions', type_=list, default=[]
+                ) if list(exclusion.keys())[0] == 'tag'
+            ]
+
+            # Add object to list
+            all_syncs.append(NewSyncClass(
+                name=f'Imported {media_server} Sync {sync_id+1}',
+                template_id=template_id,
+                required_tags=_get(sync, 'required_tags', type_=list, default=[]),
+                excluded_tags=excluded_tags,
+                required_libraries=_get(sync, 'libraries', type_=list, default=[]),
+            ))
+
+        return all_syncs
+    
+    # Add Syncs for each defined section
+    all_syncs = []
+    if (emby := _get(yaml_dict, 'emby', 'sync')) is not None:
+        all_syncs += _parse_media_server_sync(emby, 'Emby', NewEmbySync)
+
+    if (jellyfin := _get(yaml_dict, 'jellyfin', 'sync')) is not None:
+        all_syncs += _parse_media_server_sync(jellyfin, 'Jellyfin', NewJellyfinSync)
+
+    if (plex := _get(yaml_dict, 'plex', 'sync')) is not None:
+        all_syncs += _parse_media_server_sync(plex, 'Plex', NewPlexSync)
+
+    if (sonarr := _get(yaml_dict, 'sonarr', 'sync')) is not None:
+        syncs = sonarr if isinstance(sonarr, list) else [sonarr]
+        for sync_id, sync in enumerate(syncs):
+            # Skip invalid syncs, and those not being written to files
+            if not isinstance(sync, dict) or 'file' not in sync:
+                continue
+
+            # Merge the first sync settings into this one
+            TieredSettings(sync, syncs[0], sync)
+
+            # Find matching Template if indicated
+            template_id = _get_template_id(sync)
+
+            # Get excluded tags
+            excluded_tags = [
+                list(exclusion.values())[0] for exclusion in _get(
+                    sync, 'exclusions', type_=list, default=[]
+                ) if list(exclusion.keys())[0] == 'tag'
+            ]
+
+            # Add object to list
+            all_syncs.append(NewSonarrSync(
+                name=f'Imported Sonarr Sync {sync_id+1}',
+                template_id=template_id,
+                required_tags=_get(sync, 'required_tags', type_=list, default=[]),
+                excluded_tags=excluded_tags,
+                required_series_type=_get(sync, 'series_type'),
+                downloaded_only=_get(sync, 'downloaded_only', type_=bool, default=False),
+                monitored_only=_get(sync, 'monitored_only', type_=bool, default=False),
+            ))
+
+    return all_syncs
 
 
 def parse_fonts(

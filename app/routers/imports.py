@@ -92,12 +92,14 @@ def import_connection_yaml(
         )
     
 
-@import_router.post('/sync')
+@import_router.post('/sync', status_code=201)
 def import_sync_yaml(
         import_yaml: ImportYaml = Body(...),
         db = Depends(get_database)) -> list[Sync]:
     """
-    
+    Import all Syncs defined in the given YAML.
+
+    - import_yaml: The YAML string to parse.
     """
 
     # Parse raw YAML into dictionary
@@ -105,9 +107,9 @@ def import_sync_yaml(
     if len(yaml_dict) == 0:
         return []
     
-    # Create NewNamedFont objects from the YAML dictionary
+    # Create New*Sync objects from the YAML dictionary
     try:
-        new_syncs = parse_syncs(yaml_dict)
+        new_syncs = parse_syncs(db, yaml_dict)
     except ValidationError as e:
         log.exception(f'Invalid YAML', e)
         raise HTTPException(
