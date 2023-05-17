@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
-from pathlib import Path
 from tinydb import where
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Optional, Union
 
 from fastapi import HTTPException
 from tmdbapis import TMDbAPIs, NotFound, Unauthorized, TMDbException
@@ -9,7 +8,6 @@ from tmdbapis import TMDbAPIs, NotFound, Unauthorized, TMDbException
 from modules.Debug import log
 from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo2 import EpisodeInfo
-import modules.global_objects as global_objects
 from modules.PersistentDatabase import PersistentDatabase
 from modules.SeriesInfo import SeriesInfo
 from modules.WebInterface import WebInterface
@@ -697,25 +695,23 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             series_info: SeriesInfo,
             episode_info: EpisodeInfo, *,
             match_title: bool = True,
-            skip_localized_images: bool = False,
-            return_objects: bool = False,
-            ) -> Optional[list[Union['tmdbapis.objs.image.Still', str]]]:
+        ) -> Optional[list['tmdbapis.objs.image.Still']]:
         """
-        Get all source image for the requested entry.
+        Get all source images for the requested entry.
 
         Args:
             series_info: SeriesInfo for this entry.
             episode_info: EpisodeInfo for this entry.
             match_title:  (Keyword only) Whether to require the episode
                 title to match when querying TMDb.
-            skip_localized_images: (Keyword only) Whether to skip images
-                with a non-null language code - i.e. skipping localized
-                images.
 
         Returns:
-            List of Still objects for the requested entry. If the
-            episode is blacklisted or not found on TMDb, then None is
-            returned.
+            List of tmdbapis.objs.image.Still objects. If the episode is
+            blacklisted or not found on TMDb, then None is returned.
+
+        Raises:
+            HTTPException (404) if the given Series+Episode is not found
+                on TMDb.
         """
 
         # Don't query the database if this episode is in the blacklist
@@ -730,17 +726,12 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
                 status_code=404,
                 detail=f'"{series_info}" {episode_info} not found on TMDb'
             )
-            return None
 
         # Episode found on TMDb, get images/backdrops based on episode/movie
         if hasattr(episode, 'stills'): images = episode.stills
         else: images = episode.backdrops
 
-        # If returning objects, return TMDbImages directly - otherwise URL's.
-        if return_objects:
-            return images
-
-        return [image.url for image in images]
+        return images
 
 
     @catch_and_log('Error getting source image', default=None)
@@ -768,11 +759,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
         # Get all images for this episode
         all_images = self.get_all_source_images(
-            series_info,
-            episode_info,
-            match_title=match_title,
-            skip_localized_images=skip_localized_images,
-            return_objects=True,
+            series_info, episode_info, match_title=match_title,
         )
 
         # If None, either blacklisted or episode was not found

@@ -536,8 +536,9 @@
       }
 
       // Images returned, add to browse modal
-      const imageElements = images.map(url => {
-        return `<a onclick="selectTmdbImage(${episodeId}, '${url}')"><img src="${url}"/></a>`
+      const imageElements = images.map(({url, width, height}, index) => {
+        const location = index % 2 ? 'right' : 'left';
+        return `<a class="ui image" onclick="selectTmdbImage(${episodeId}, '${url}')"><div class="ui blue ${location} ribbon label">${width}x${height}</div><img src="${url}"/></a>`;
       });
       $('#browse-tmdb-modal .content .images')[0].innerHTML = imageElements.join('');
       $('#browse-tmdb-modal').modal('show');

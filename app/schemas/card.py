@@ -189,6 +189,11 @@ Update classes
 """
 Return classes
 """
+class TMDbImage(Base):
+    url: str
+    width: int
+    height: int
+
 class SourceImage(Base):
     episode_id: int
     season_number: int

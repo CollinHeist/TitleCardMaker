@@ -14,7 +14,7 @@ from app.internal.sources import (
     create_source_image, download_episode_source_image, download_series_logo
 )
 import app.models as models
-from app.schemas.card import SourceImage
+from app.schemas.card import SourceImage, TMDbImage
 
 from modules.Debug import log
 from modules.WebInterface import WebInterface
@@ -179,8 +179,7 @@ def download_episode_source_image_(
 def get_all_tmdb_episode_source_images(
         episode_id: int,
         db = Depends(get_database),
-        preferences = Depends(get_preferences),
-        tmdb_interface = Depends(get_tmdb_interface)) -> Optional[list[str]]:
+        tmdb_interface = Depends(get_tmdb_interface)) -> list[TMDbImage]:
     """
     Get all Source Images on TMDb for the given Episode.
 
@@ -198,37 +197,18 @@ def get_all_tmdb_episode_source_images(
     episode = get_episode(db, episode_id, raise_exc=True)
     series = get_series(db, episode.series_id, raise_exc=True)
 
-    # Get the Templates for these items
-    series_template = get_template(db, series.template_id, raise_exc=True)
-    episode_template = get_template(db, episode.template_id, raise_exc=True)
-
     # Determine title matching
     if episode.match_title is not None:
         match_title = episode.match_title
     else:
         match_title = series.match_titles
 
-    # Determine whether to skip localized images
-    if (episode_template is not None
-        and episode_template.skip_localized_images is not None):
-        skip_localized_images = episode_template.skip_localized_images
-    elif series.skip_localized_images is not None:
-        skip_localized_images = series.skip_localized_images
-    elif (series_template is not None
-        and series_template.skip_localized_images is not None):
-        skip_localized_images = series_template.skip_localized_images
-    else:
-        skip_localized_images = preferences.tmdb_skip_localized
-
-    # Get all sources
-    sources = tmdb_interface.get_all_source_images(
+    # Get all source images
+    return tmdb_interface.get_all_source_images(
         series.as_series_info,
         episode.as_episode_info,
         match_title=match_title,
-        skip_localized_images=skip_localized_images,
     )
-
-    return sources
 
 
 @source_router.get('/series/{series_id}', status_code=200)
