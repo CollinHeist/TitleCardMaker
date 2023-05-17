@@ -448,7 +448,9 @@
             message: response.responseJSON.detail,
             displayTime: 0,
           });
-        }, complete: () => {}
+        }, complete: () => {
+          refreshTheme();
+        }
       });
     }
 
