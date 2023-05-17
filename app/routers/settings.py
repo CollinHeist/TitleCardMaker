@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi import APIRouter, Body, Depends
 
 from app.dependencies import get_preferences, refresh_imagemagick_interface
@@ -12,6 +14,15 @@ settings_router = APIRouter(
     prefix='/settings',
     tags=['Settings'],
 )
+
+
+@settings_router.get('/version', status_code=200)
+def get_current_version(preferences = Depends(get_preferences)) -> str:
+    """
+    Get the current version of TitleCardMaker.
+    """
+
+    return preferences.version
 
 
 @settings_router.patch('/update', status_code=200)

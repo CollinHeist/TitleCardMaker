@@ -23,6 +23,7 @@ TCM_ROOT = Path(__file__).parent.parent.parent
 
 class Preferences:
 
+    VERSION_FILE = TCM_ROOT / 'modules' / 'ref' / 'version'
     DEFAULT_CARD_FILENAME_FORMAT = (
         '{series_full_name} S{season_number:02}E{episode_number:02}'
     )
@@ -33,6 +34,9 @@ class Preferences:
     
 
     def __init__(self) -> None:
+        self.current_version = self.VERSION_FILE.read_text().strip()
+        self.available_version = None
+
         self.asset_directory = Path(__file__).parent.parent / 'assets'
         self.card_directory = TCM_ROOT / 'cards'
         self.source_directory = TCM_ROOT / 'source'

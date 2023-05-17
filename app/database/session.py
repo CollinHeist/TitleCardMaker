@@ -37,6 +37,7 @@ if (file := Path('/mnt/user/Media/TitleCardMaker/app/prefs.json')).exists():
     from pickle import load 
     with file.open('rb') as fh:
         PreferencesLocal = load(fh)
+        PreferencesLocal.current_version = Preferences.VERSION_FILE.read_text().strip()
 else:
     PreferencesLocal = Preferences()
 

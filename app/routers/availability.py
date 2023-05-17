@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Literal
+from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from requests import get as req_get
@@ -8,6 +8,7 @@ from app.dependencies import (
     get_database, get_preferences, get_emby_interface, get_jellyfin_interface,
     get_plex_interface, get_sonarr_interface,
 )
+from app.internal.availability import get_latest_version
 import app.models as models
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.card import CardType, LocalCardType, RemoteCardType
@@ -42,6 +43,16 @@ availablility_router = APIRouter(
     prefix='/available',
     tags=['Availability'],
 )
+
+
+@availablility_router.get('/version', status_code=200)
+def get_latest_available_version() -> Optional[str]:
+    """
+    Get the latest version number for TitleCardMaker.
+    """
+
+    return get_latest_version()
+
 
 @availablility_router.get('/card-types', status_code=200, tags=['Title Cards'])
 def get_all_available_card_types(

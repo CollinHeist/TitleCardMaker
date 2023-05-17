@@ -233,7 +233,7 @@ def create_card_for_episode(
     series = get_series(db, episode.series_id, raise_exc=True)
 
     # Set watch status of the Episode
-    _update_episode_watch_statuses(
+    update_episode_watch_statuses(
         emby_interface, jellyfin_interface, plex_interface, series, [episode]
     )
 

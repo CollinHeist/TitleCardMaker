@@ -13,6 +13,10 @@ class NewJob(Base):
     function: Callable[..., None] = Field(description='Function this Job will run')
     seconds: PositiveInt = Field(description='How often (in seconds) to run this Job')
     description: str = Field(description='Description of the Job')
+    internal: bool = Field(
+        default=False,
+        description='Whether this Job is internal and should not be exposed in API calls',
+    )
     running: bool = Field(
         default=False,
         description='Whether this Job is currently running'

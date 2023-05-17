@@ -3,7 +3,8 @@ from typing import Literal
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 
-from app.dependencies import get_scheduler, get_preferences
+from app.dependencies import get_scheduler
+from app.internal.availability import get_latest_version
 from app.internal.cards import create_all_title_cards
 from app.internal.episodes import refresh_all_episode_data
 from app.internal.series import load_all_media_servers
@@ -32,11 +33,13 @@ JOB_DOWNLOAD_SOURCE_IMAGES: str = 'DownloadSourceImages'
 JOB_LOAD_MEDIA_SERVERS: str = 'LoadMediaServers'
 JOB_REFRESH_EPISODE_DATA: str = 'RefreshEpisodeData'
 JOB_SYNC_INTERFACES: str = 'SyncInterfaces'
+# Internal Job ID's
+INTERNAL_JOB_CHECK_FOR_NEW_RELEASE: str = 'CheckForNewRelease'
 
 TaskID = Literal[
     JOB_REFRESH_EPISODE_DATA, JOB_SYNC_INTERFACES, JOB_DOWNLOAD_SOURCE_IMAGES,
     JOB_CREATE_TITLE_CARDS, JOB_LOAD_MEDIA_SERVERS, JOB_ADD_TRANSLATIONS,
-    JOB_DOWNLOAD_SERIES_LOGOS
+    JOB_DOWNLOAD_SERIES_LOGOS,
 ]
 
 """
@@ -88,12 +91,17 @@ def wrapped_translate_all_series():
     translate_all_series()
     _wrap_after(JOB_ADD_TRANSLATIONS)
 
+def wrapped_get_latest_version():
+    _wrap_before(INTERNAL_JOB_CHECK_FOR_NEW_RELEASE)
+    get_latest_version()
+    _wrap_after(INTERNAL_JOB_CHECK_FOR_NEW_RELEASE)
+
 """
 Dictionary of Job ID's to NewJob objects that contain the default Job
 attributes for all major functions.
 """
 BaseJobs = {
-    # TODO populate with actual function calls
+    # Public jobs
     JOB_REFRESH_EPISODE_DATA: NewJob(
         id=JOB_REFRESH_EPISODE_DATA,
         function=wrapped_refresh_all_episode_data,
@@ -129,7 +137,15 @@ BaseJobs = {
         function=wrapped_download_all_series_logos,
         seconds=60 * 60 * 24,
         description='Download Logos for all Series',
-    )
+    ),
+    # Internal (private) jobs
+    'CheckForNewRelease': NewJob(
+        id='CheckForNewRelease',
+        function=wrapped_get_latest_version,
+        seconds=60 * 60 * 12,
+        description='Check for a new release of TitleCardMaker',
+        internal=True,
+    ),
 }
 
 
@@ -188,7 +204,7 @@ def get_scheduled_tasks(
     return [
         _scheduled_task_from_job(job)
         for job in scheduler.get_jobs()
-        if job.id in BaseJobs
+        if job.id in BaseJobs and not BaseJobs[job.id].internal
     ]
 
 
