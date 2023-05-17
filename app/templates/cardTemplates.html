@@ -39,7 +39,41 @@
     .add-field.button {
       background: transparent;
     }
+
+    /* Reduce bottom margin between filter condition fields */
+    [data-value="conditions"] .fields {
+      margin-bottom: 0.3em !important;
+    }
   </style>
+
+  <template id="filter-template">
+    <div class="ui three fields">
+      <div class="ui field">
+        <!-- <label>Argument</label> -->
+        <div data-value="filter-arguments" class="ui clearable selection dropdown">
+          <input name="argument" type="hidden">
+          <i class="dropdown icon"></i>
+          <div class="default text">Select Argument</div>
+          <div class="menu"><!-- Added asynchrously --></div>
+        </div>
+      </div>
+      <div class="ui field">
+        <!-- <label>Operator</label> -->
+        <div data-value="filter-operators" class="ui clearable selection dropdown">
+          <input name="operation" type="hidden">
+          <i class="dropdown icon"></i>
+          <div class="default text">Select Operation</div>
+          <div class="menu"><!-- Added asynchrously --></div>
+        </div>
+      </div>
+      <div class="ui field">
+        <!-- <label>Reference</label> -->
+        <div class="ui input">
+          <input data-value="filter-reference" name="reference" type="text" placeholder="Reference Value">
+        </div>
+      </div>
+    </div>
+  </template>
 
   <template id="translation-template">
     <span class="ui text">
@@ -77,6 +111,27 @@
                 <input name="name" type="text" minlength="1">
               </div>
 
+              <h4 class="ui horizontal middle aligned divider header">Filters</h4>
+
+              <div class="ui field">
+                <div class="ui floating visible info small message">
+                  <span class="ui text">Filters restrict when a Template is active for a Series or Episode.</span>
+                  <ul class="list">
+                    <li class="ui text">All Filter conditions must be <b>TRUE</b> for the Template to be active.</span>
+                    <li class="ui text">Text-comparison is done case-<i>insensitively</i>.</li>
+                    <li class="ui text">The <code>matches</code> and <code>does not match</code> conditions allow <a href="https://regex101.com/" target="_blank">Regex</a> inputs.</li>
+                    <li class="ui text">Airdate reference values should be entered as <code>YYYY-MM-DD</code>, e.g. <code>2023-01-01</code>.</li>
+                  </ul>
+                </div>
+                <div data-value="conditions">
+                  
+                </div>
+                <div data-add-field="condition" class="ui circular mini icon add-field button">
+                  <i class="plus square outline icon"></i>
+                  Add Condition
+                </div>
+              </div>
+              
               <h4 class="ui horizontal middle aligned divider header">Card Settings</h4>
 
               <div class="field">
@@ -239,6 +294,10 @@
 
           <!-- Preview Cards -->
           <div class="eight wide column">
+            <button data-action="refresh" class="ui blue tertiary compact button">
+              <i class="redo icon"></i>
+              Refresh Previews
+            </button>
             <h3 class="ui header">Watched Content</h3>
             <div content-type="watched" class="ui fluid card">
               <div class="content">
@@ -291,10 +350,10 @@
         url: '/api/cards/preview',
         data: JSON.stringify(previewCard),
         contentType: 'application/json',
-        success: (response) => {
+        success: response => {
           imgElement.src = `${response}?${new Date().getTime()}`;
         },
-        error: (response) => {
+        error: response => {
           $.toast({
             class: 'error',
             title: 'Error Creating Preview Card',
@@ -312,12 +371,14 @@
 <body onload="initAll();">
   <script>
     async function getAllTemplates() {
+      const allFilterOptions = await fetch('/api/available/template-filters').then(resp => resp.json());
       const allCardTypes = await fetch('/api/available/card-types').then(resp => resp.json());
       const allFonts = await fetch('/api/fonts/all').then(resp => resp.json());
       const allStyles = await fetch('/api/available/styles').then(resp => resp.json());
       const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
       const allEpisodeDataSources = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
       const allTranslations = await fetch('/api/available/translations').then(resp => resp.json());
+      console.log(allTranslations);
       const elements = allTemplates.map(templateObj => {
         // Clone template
         const base = document.querySelector('#template').content.cloneNode(true);
@@ -326,6 +387,7 @@
         base.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${templateObj.name}`;
         const nameElem = base.querySelector('input[name="name"]');
         nameElem.placeholder = templateObj.name; nameElem.value = templateObj.name;
+        // Filters added later
         // Card type set later
         // Font set later
         // Unwatched and Watched style set later
@@ -380,7 +442,8 @@
             unwatchedCard = base.querySelector('.card[content-type="unwatched"]');
         const watchedImg = base.querySelector('img[content-type="watched"]'),
             unwatchedImg = base.querySelector('img[content-type="unwatched"]');
-        form.onchange = () => {
+            console.log(base.querySelector('.button[data-action="refresh"]'));
+        base.querySelector('.button[data-action="refresh"]').onclick = () => {
           reloadPreview('watched', form, watchedCard, watchedImg);
           reloadPreview('unwatched', form, unwatchedCard, unwatchedImg);
         }
@@ -392,6 +455,48 @@
 
       // Fill in fancy values
       allTemplates.forEach(templateObj => {
+        // Filters
+        if (templateObj.filters.length > 0) {
+          const conditionsDiv = $(`#template-id${templateObj.id} [data-value="conditions"]`);
+          for (const condition of templateObj.filters) {
+            // Create new filter, add to div
+            const newCondition = document.getElementById('filter-template').content.cloneNode(true);
+            conditionsDiv.append(newCondition);
+            // Initialize dropdowns
+            $(`#template-id${templateObj.id} .dropdown[data-value="filter-arguments"]`).last().dropdown({
+              placeholder: 'Select Argument',
+              values: allFilterOptions.arguments.map(argument => {
+                return {name: argument, value: argument, selected: argument === condition.argument};
+              })
+            });
+            $(`#template-id${templateObj.id} .dropdown[data-value="filter-operators"]`).last().dropdown({
+              placeholder: 'Select Operation',
+              values: allFilterOptions.operations.map(operation => {
+                return {name: operation, value: operation, selected: operation === condition.operation};
+              })
+            });
+            if (condition.reference !== null) {
+              $(`#template-id${templateObj.id} input[data-value="filter-reference"]`).last()[0].value = condition.reference;
+            }
+          }
+        }
+        // Add new fields with add condition button
+        $(`#template-id${templateObj.id} .button[data-add-field="condition"]`).on('click', () => {
+          const newCondition = document.getElementById('filter-template').content.cloneNode(true);
+          $(`#template-id${templateObj.id} [data-value="conditions"]`).append(newCondition);
+          $(`#template-id${templateObj.id} [data-value="conditions"] .dropdown[data-value="filter-arguments"]`).last().dropdown({
+            placeholder: 'Select Argument',
+            values: allFilterOptions.arguments.map(argument => {
+              return {name: argument, value: argument, selected: false};
+            }),
+          });
+          $(`#template-id${templateObj.id} [data-value="conditions"] .dropdown[data-value="filter-operators"]`).last().dropdown({
+            placeholder: 'Select Operation',
+            values: allFilterOptions.operations.map(operation => {
+              return {name: operation, value: operation, selected: false};
+            }),
+          });
+        });
         // Card type
         loadCardTypes({
           element: `#template-id${templateObj.id} >* .dropdown[data-value="card-types"]`,
@@ -441,7 +546,7 @@
           },
         });
         // Add new fields to add title button
-        $(`#template-id${templateObj.id} >* .button[data-value="add-title"]`).on('click', () => {
+        $(`#template-id${templateObj.id} .button[data-value="add-title"]`).on('click', () => {
           const newRange = document.createElement('input');
           newRange.name = 'season_title_ranges'; newRange.type = 'text';
           newRange.setAttribute('data-value', 'season-titles');
@@ -503,6 +608,7 @@
           const newTranslation = document.querySelector('#translation-template').content.cloneNode(true);
           $(`#template-id${templateObj.id} [data-value="translations"]`).append(newTranslation);
           // Language code dropdown
+          console.log(allTranslations);
           $(`#template-id${templateObj.id} .dropdown[data-value="language_code"]`).last().dropdown({
             values: [
               {name: 'Language', type: 'header'},
@@ -536,6 +642,7 @@
           event.preventDefault();
           let form = new FormData(event.target);
           let listData = {
+            argument: [], operation: [], reference: [],
             extra_keys: [], extra_values: [],
             season_title_ranges: [], season_title_values: [],
             language_code: [], data_key: [],
@@ -544,10 +651,17 @@
             if (Object.keys(listData).includes(key)) { listData[key].push(value); }
             if (value === '') { form.delete(key); }
           }
+          let filters = [];
+          listData.argument.forEach((value, index) => {
+            if (value !== '') {
+              // const reference = listData.reference[index] === '' ? null : listData.reference[index];
+              filters.push({argument: value, operation: listData.operation[index], reference: listData.reference[index]});
+            }
+          });
           let translations = [];
-          listData.language_code.forEach((val, index) => {
-            if (val !== '') {
-              translations.push({language_code: val, data_key: listData.data_key[index]});
+          listData.language_code.forEach((value, index) => {
+            if (value !== '') {
+              translations.push({language_code: value, data_key: listData.data_key[index]});
             }
           })
 
@@ -558,6 +672,7 @@
               ...Object.fromEntries(form.entries()),
               ...listData,
               translations: translations,
+              filters: filters,
             }),
             contentType: 'application/json',
             success: (response) => {
