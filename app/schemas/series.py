@@ -2,6 +2,7 @@ from typing import Any, Literal, Optional
 
 from pydantic import constr, Field, root_validator, validator
 
+from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.base import Base, UNSPECIFIED, validate_argument_lists_to_dict
 from app.schemas.font import TitleCase
 from app.schemas.ids import (
@@ -13,23 +14,13 @@ from app.schemas.preferences import EpisodeDataSource, Style, LanguageCode
 SeasonTitleRange = constr(regex=r'^(\d+-\d+)|^(\d+)|^(s\d+e\d+-s\d+e\d+)$')
 DictKey = constr(regex=r'^[a-zA-Z]+[^ -]*$', min_length=1)
 
-# TODO Add validation for filename format string
+# TODO Add validation for filename format string ?
 
 """
 Base classes
 """
-FilterOperation = Literal[
-    'is true', 'is false', 'is null', 'is not null', 'equals', 'does not equal',
-    'starts with', 'does not start with', 'ends with', 'does not end with',
-    'matches', 'does not match', 'is less than', 'is less than or equal',
-    'is greater than', 'is greater than or equal', 'is before', 'is after',
-]
-FilterArgument = Literal[
-    'series_name', 'series_year', 'series_emby_library',
-    'series_jellyfin_library', 'series_plex_library', 'is_watched',
-    'season_number', 'episode_number', 'absolute_number', 'episode_title',
-    'episode_title_length', 'episode_airdate',
-]
+FilterOperation = Literal[tuple(OPERATIONS.keys())]
+FilterArgument = Literal[tuple(ARGUMENT_KEYS)]
 
 class Condition(Base):
     argument: FilterArgument

@@ -1,6 +1,6 @@
 from datetime import datetime
 from re import match as re_match
-from typing import Any
+from typing import Any, Optional
 
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, JSON
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
@@ -34,6 +34,12 @@ OPERATIONS = {
     'is before': lambda v, r: v < datetime.strptime(r, DATETIME_FORMAT),
     'is after': lambda v, r: v > datetime.strptime(r, DATETIME_FORMAT),
 }
+ARGUMENT_KEYS = (
+    'Series Name', 'Series Year', 'Series Library (Emby)',
+    'Series Library (Jellyfin)', 'Series Library (Plex)', 'Episode is Watched',
+    'Season Number', 'Episode Number', 'Absolute Number', 'Episode Title',
+    'Episode Title Length', 'Episode Airdate',
+)
 
 
 class Template(Base):
@@ -90,7 +96,9 @@ class Template(Base):
         }
     
     @hybrid_method
-    def meets_filter_critera(self, series: 'Series', episode: 'Episode') -> bool:
+    def meets_filter_critera(self,
+            series: 'Series',
+            episode: Optional['Episode'] = None) -> bool:
         """
         Determine whether the given Series and Episode meet this
         Template's filter criteria.
@@ -100,8 +108,8 @@ class Template(Base):
             episode: Episode whose arguments can be evaluated.
             
         Returns:
-            True if the given objects meet this Template's critera, or
-            if there are no filters. False otherwise.
+            True if the given objects meet all of Template's filter
+            conditions, or if there are no filters. False otherwise.
 
         """
 
@@ -110,22 +118,27 @@ class Template(Base):
             return True
 
         # Arguments for this Series and Episode
-        ARGUMENTS = {
-            'series_name': series.name,
-            'series_year': series.year,
-            'series_emby_library': series.emby_library_name,
-            'series_jellyfin_library': series.jellyfin_library_name,
-            'series_plex_library': series.plex_library_name,
-            'is_watched': episode.watched,
-            'season_number': episode.season_number,
-            'episode_number': episode.episode_number,
-            'absolute_number': episode.absolute_number,
-            'episode_title': episode.title,
-            'episode_title_length': len(episode.title),
-            'episode_airdate': episode.airdate,
+        SERIES_ARGUMENTS = {
+            'Series Name': series.name,
+            'Series Year': series.year,
+            'Series Library Name (Emby)': series.emby_library_name,
+            'Series Library Name (Jellyfin)': series.jellyfin_library_name,
+            'Series Library Name (Plex)': series.plex_library_name,
         }
+        if episode is None:
+            ARGUMENTS = SERIES_ARGUMENTS
+        else:
+            ARGUMENTS = SERIES_ARGUMENTS | {
+                'Episode is Watched': episode.watched,
+                'Season Number': episode.season_number,
+                'Episode Number': episode.episode_number,
+                'Absolute Number': episode.absolute_number,
+                'Episode Title': episode.title,
+                'Episode Title Length': len(episode.title),
+                'Episode Airdate': episode.airdate,
+            }
 
-        # Go through each condition of this Template's filter
+        # Evaluate each condition of this Template's filter
         for condition in self.filters:
             # If operation and argument are valid, evalute condition
             if (condition['operation'] in OPERATIONS
