@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 
 from yaml import safe_load
 
@@ -14,8 +14,9 @@ class YamlReader:
     __slots__ = ('_base_yaml', 'valid', '__log')
 
 
-    def __init__(self, yaml: dict={}, *,
-                 log_function: callable=log.error) -> None:
+    def __init__(self,
+            yaml: dict[str, Any] = {}, *,
+            log_function: callable = log.error) -> None:
         """
         Initialize this object.
 
@@ -45,7 +46,10 @@ class YamlReader:
         return str(value).lower().strip()
 
 
-    def _get(self, *attributes, type_: type=None, default=None):
+    def _get(self,
+            *attributes: tuple[str],
+            type_: Optional[type] = None,
+            default: Any = None):
         """
         Get the value specified by the given attributes/sub-attributes
         of YAML, optionally converting to the given type. Log invalidity
@@ -53,7 +57,7 @@ class YamlReader:
         converted to the type.
 
         Args:
-            attributes:Any number of nested attributes to get value of.
+            attributes: Any number of nested attributes to get value of.
             type_: Optional callable (i.e. type) to call on specified
                 value before returning.
             default: Default value to return if unspecified.
@@ -88,7 +92,7 @@ class YamlReader:
             return default
 
 
-    def _is_specified(self, *attributes) -> bool:
+    def _is_specified(self, *attributes: tuple[str]) -> bool:
         """
         Determines whether the given attribute/sub-attribute has been
         manually  specified in the show's YAML.
@@ -146,7 +150,7 @@ class YamlReader:
 
 
     @staticmethod
-    def _read_file(file: 'Path', *, critical: bool=False) -> dict:
+    def _read_file(file: 'Path', *, critical: bool = False) -> dict:
         """
         Read the given file and return the contained YAML.
 
@@ -171,9 +175,10 @@ class YamlReader:
             except Exception as e:
                 # Log error, if critical then exit with error code
                 if critical:
-                    log.critical(f'Error reading "{file.resolve()}":\n{e}\n')
+                    log.exception(f'Error encountered while reading file', e)
+                    log.critical(f'Error reading "{file.resolve()}"')
                     exit(1)
                 else:
-                    log.error(f'Error reading "{file.resolve()}":\n{e}\n')
+                    log.exception(f'Error reading "{file.resolve}"', e)
 
         return {}

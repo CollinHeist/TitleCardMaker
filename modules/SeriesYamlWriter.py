@@ -180,7 +180,7 @@ class SeriesYamlWriter:
                     with Path(value).open('r', encoding='utf-8') as file_handle:
                         read_yaml = YAML().load(file_handle)
                 except Exception as e:
-                    log.error(f'Cannot read "{value}" as exclusion file - {e}')
+                    log.exception(f'Cannot read "{value}" as exclusion file', e)
                     continue
 
                 # Delete each file's specified series
