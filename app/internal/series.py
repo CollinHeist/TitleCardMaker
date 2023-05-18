@@ -250,7 +250,7 @@ def delete_series_and_episodes(
         series: Series, *,
         commit_changes: bool = True) -> None:
     """
-    Delete the given Series.
+    Delete the given Series, it's poster, and all associated Episodes.
 
     Args:
         db: Database to commit any deletion to.

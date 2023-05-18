@@ -39,7 +39,7 @@ def add_new_episode(
     - new_episode: NewEpisode to add.
     """
 
-    # Verify series exists
+    # Verify Series exists
     series = get_series(db, new_episode.series_id, raise_exc=True)
 
     # Create new entry, add to database
@@ -209,7 +209,7 @@ def get_all_series_episodes(
     """
 
     query = db.query(models.episode.Episode).filter_by(series_id=series_id)
-    
+
     if order_by == 'index':
         return query.order_by(models.episode.Episode.season_number)\
             .order_by(models.episode.Episode.episode_number)\

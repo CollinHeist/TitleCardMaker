@@ -4,8 +4,7 @@ from typing import Any, Optional
 
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, JSON
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
-# from sqlalchemy.ext.mutable import MutableDict, MutableList
-# from sqlalchemy import PickleType
+from sqlalchemy.orm import relationship
 
 from app.database.session import Base
 
@@ -45,7 +44,14 @@ ARGUMENT_KEYS = (
 class Template(Base):
     __tablename__ = 'template'
 
+    # Referencial arguments
     id = Column(Integer, primary_key=True, index=True)
+    font_id = Column(Integer, ForeignKey('font.id'))
+    syncs = relationship('Sync', back_populates='template')
+    font = relationship('Font', back_populates='templates')
+    series = relationship('Series', back_populates='templates')
+    episodes = relationship('Episode', back_populates='templates')
+    
     name = Column(String, nullable=False)
     filters = Column(JSON, default=[], nullable=False)
 
@@ -54,13 +60,10 @@ class Template(Base):
     sync_specials = Column(Boolean, default=None)
     skip_localized_images = Column(Boolean, default=None)
     translations = Column(JSON, default=[], nullable=False)
-    # translations = Column(MutableList.as_mutable(PickleType), default=[], nullable=False)
 
-    font_id = Column(Integer, ForeignKey('font.id'))
     card_type = Column(String, default=None)
     hide_season_text = Column(Boolean, default=None)
     season_titles = Column(JSON, default={}, nullable=False)
-    # season_titles = Column(MutableDict.as_mutable(PickleType), default={}, nullable=False)
     hide_episode_text = Column(Boolean, default=None)
     episode_text_format = Column(String, default=None)
     unwatched_style = Column(String, default=None)
@@ -144,10 +147,16 @@ class Template(Base):
             if (condition['operation'] in OPERATIONS
                 and condition['argument'] in ARGUMENTS):
                 # Return False if the condition evalutes to False
-                meets_condition = OPERATIONS[condition['operation']](
-                    ARGUMENTS[condition['argument']],
-                    condition['reference'],
-                )
+                try:
+                    meets_condition = OPERATIONS[condition['operation']](
+                        ARGUMENTS[condition['argument']],
+                        condition['reference'],
+                    )
+                except Exception as e:
+                    log.exception(f'{series.log_str} {episode.log_str} '
+                                  f'Condition evaluation raised an error', e)
+                    return False
+                log.debug(f'{self.log_str} {ARGUMENTS[condition["argument"]]} {condition["operation"]} {condition["reference"]} -> {meets_condition}')
                 if not meets_condition:
                     return False
 

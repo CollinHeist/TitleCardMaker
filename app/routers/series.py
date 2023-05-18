@@ -97,8 +97,7 @@ def delete_series(
         series_id: int,
         db = Depends(get_database)) -> None:
     """
-    Delete the Series with the given ID. This also deletes the poster
-    file, as well as any episodes associated with this series.
+    Delete the Series with the given ID. This also deletes the poster.
 
     - series_id: ID of the Series to delete.
     """

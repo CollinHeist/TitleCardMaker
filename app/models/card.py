@@ -2,17 +2,19 @@ from typing import Any
 
 from sqlalchemy import Boolean, Column, Float, Integer, String, ForeignKey, JSON
 from sqlalchemy.ext.hybrid import hybrid_property
-# from sqlalchemy.ext.mutable import MutableDict
-# from sqlalchemy import PickleType
+from sqlalchemy.orm import relationship
 
 from app.database.session import Base
 
 class Card(Base):
     __tablename__ = 'card'
 
+    # Referencial arguments
     id = Column(Integer, primary_key=True, index=True)
     series_id = Column(Integer, ForeignKey('series.id'))
     episode_id = Column(Integer, ForeignKey('episode.id'))
+    series = relationship('Series', back_populates='cards')
+    episode = relationship('Episode', back_populates='card')
 
     source_file = Column(String, nullable=False)
     card_file = Column(String, nullable=False)

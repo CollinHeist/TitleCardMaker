@@ -76,8 +76,7 @@ def update_template(
     template = get_template(db, template_id, raise_exc=True)
 
     # If a Font ID was specified, verify it exists
-    if getattr(update_template, 'font_id', None) is not None:
-        get_font(db, update_template.font_id, raise_exc=True)
+    get_font(db, getattr(update_template, 'font_id', None), raise_exc=True)
 
     # Update each attribute of the object
     changed = False
@@ -99,31 +98,13 @@ def delete_template(
         template_id: int,
         db = Depends(get_database)) -> None:
     """
-    Delete the given Template. This also deletes the reference to this
-    Template on any associated Series of Episode entries.
+    Delete the given Template.
 
     - template_id: ID of the Template to delete.
     """
 
-    # Query for Template, raise 404 if DNE
-    template = get_template(db, template_id, raise_exc=True)
-
-    # Delete Template reference from any Series, Episode, or Sync
-    for series in db.query(models.series.Series)\
-            .filter_by(template_id=template_id).all():
-        series.template_id = None
-        log.debug(f'Unlinked {template.log_str} from {series.log_str}')
-    for episode in db.query(models.episode.Episode)\
-            .filter_by(template_id=template_id).all():
-        episode.template_id = None
-        log.debug(f'Unlinked {episode.log_str} from {series.log_str}')
-    for sync in db.query(models.sync.Sync)\
-            .filter_by(template_id=template_id).all():
-        sync.template_id = None
-        log.debug(f'Unlinked {sync.log_str} from {series.log_str}')
-
     # Delete Template, update database
-    db.delete(template)
+    db.delete(get_template(db, template_id, raise_exc=True))
     db.commit()
 
     return None

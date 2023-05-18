@@ -167,43 +167,26 @@ def delete_font(
         db = Depends(get_database)) -> None:
     """
     Delete the Font with the given ID. This also deletes the font's
-    font file if it exists, as well as removing any references to this
-    font on any associated Template, Series, or Episode entries.
+    font file if it exists.
 
     - font_id: ID of the Font to delete.
     """
 
-    query = db.query(models.font.Font).filter_by(id=font_id)
-    if query.first() is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Font {font_id} not found',
-        )
+    # Get specified Font, raise 404 if DNE
+    font = get_font(db, font_id, raise_exc=True)
 
-    # If font file is specified (and exists), delete
-    if (path := query.first().file) is not None:
-        if (file := Path(path)).exists():
-            try:
-                file.unlink()
-            except Exception as e:
-                log.exception(f'Error deleting {file}', e)
-                raise HTTPException(
-                    status_code=500,
-                    detail=f'Error deleting font file - {e}',
-                )
-    
-    # Delete font reference from any template, series, or episode
-    for template in db.query(models.template.Template)\
-            .filter_by(font_id=font_id).all():
-        template.font_id = None
-    for series in db.query(models.series.Series)\
-            .filter_by(font_id=font_id).all():
-        series.font_id = None
-    for episode in db.query(models.episode.Episode)\
-            .filter_by(font_id=font_id).all():
-        episode.font_id = None
-        
-    query.delete()
+    # If Font file is specified (and exists), delete
+    if (font_file := font.file) is not None:
+        try:
+            Path(font_file).unlink(missing_ok=True)
+        except Exception as e:
+            log.exception(f'Error deleting {font_file}', e)
+            raise HTTPException(
+                status_code=500,
+                detail=f'Error deleting font file - {e}',
+            )
+
+    db.delete(font)
     db.commit()
 
     return None

@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Optional
 
 from fastapi import BackgroundTasks, HTTPException
 
@@ -7,7 +7,7 @@ from app.dependencies import (
     get_plex_interface, get_sonarr_interface, get_tmdb_interface
 )
 import app.models as models
-from app.database.query import get_font, get_series, get_template
+from app.database.query import get_template
 from app.schemas.episode import Episode
 from app.schemas.series import Series
 
@@ -206,7 +206,7 @@ def refresh_episode_data(
         if existing is None:
             log.debug(f'{series.log_str} New episode "{episode_info.title.full_title}"')
             episode = models.episode.Episode(
-                series_id=series.id,
+                series=series,
                 title=episode_info.title.full_title,
                 **episode_info.indices,
                 **episode_info.ids,

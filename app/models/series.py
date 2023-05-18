@@ -3,8 +3,7 @@ from typing import Any
 
 from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, JSON
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
-from sqlalchemy.ext.mutable import MutableDict, MutableList
-from sqlalchemy import PickleType
+from sqlalchemy.orm import relationship
 
 from app.database.session import Base
 from app.dependencies import get_preferences
@@ -16,8 +15,17 @@ ASSET_DIRECTORY = Path(__file__).parent.parent / 'assets'
 class Series(Base):
     __tablename__ = 'series'
 
-    # Required arguments
+    # Referencial arguments
     id = Column(Integer, primary_key=True)
+    font_id = Column(Integer, ForeignKey('font.id'))
+    template_id = Column(Integer, ForeignKey('template.id'))
+    cards = relationship('Card', back_populates='series')
+    episodes = relationship('Episode', back_populates='series')
+    font = relationship('Font', back_populates='series')
+    loaded = relationship('Loaded', back_populates='series')
+    templates = relationship('Template', back_populates='series')
+
+    # Required arguments
     name = Column(String, nullable=False)
     year = Column(Integer, nullable=False)
     sync_id = Column(Integer, ForeignKey('sync.id'), default=None)
@@ -34,7 +42,6 @@ class Series(Base):
     episode_data_source = Column(String, default=None)
     sync_specials = Column(Boolean, default=None)
     skip_localized_images = Column(Boolean, default=None)
-    # translations = Column(MutableList.as_mutable(PickleType), default=None)
     translations = Column(JSON, default=None)
     match_titles = Column(Boolean, default=True, nullable=False)
 
@@ -48,7 +55,6 @@ class Series(Base):
     tvrage_id = Column(Integer, default=None)
 
     # Font arguments
-    font_id = Column(Integer, ForeignKey('font.id'))
     font_color = Column(String, default=None)
     font_title_case = Column(String, default=None)
     font_size = Column(Float, default=None)
@@ -58,16 +64,13 @@ class Series(Base):
     font_vertical_shift = Column(Integer, default=None)
 
     # Card arguments
-    template_id = Column(Integer, ForeignKey('template.id'))
     card_type = Column(String, default=None)
     hide_season_text = Column(Boolean, default=None)
-    # season_titles = Column(MutableDict.as_mutable(PickleType), default=None)
     season_titles = Column(JSON, default=None)
     hide_episode_text = Column(Boolean, default=None)
     episode_text_format = Column(String, default=None)
     unwatched_style = Column(String, default=None)
     watched_style = Column(String, default=None)
-    # extras = Column(MutableDict.as_mutable(PickleType), default=None)
     extras = Column(JSON, default=None)
 
     @hybrid_property

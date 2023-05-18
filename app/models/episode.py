@@ -3,8 +3,7 @@ from typing import Any
 
 from sqlalchemy import Boolean, Column, DateTime, Integer, Float, ForeignKey, String, JSON
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
-# from sqlalchemy.ext.mutable import MutableDict
-# from sqlalchemy import PickleType
+from sqlalchemy.orm import relationship
 
 from app.database.session import Base
 from modules.EpisodeInfo2 import EpisodeInfo
@@ -12,9 +11,15 @@ from modules.EpisodeInfo2 import EpisodeInfo
 class Episode(Base):
     __tablename__ = 'episode'
 
+    # Referencial arguments
     id = Column(Integer, primary_key=True, index=True)
+    font_id = Column(Integer, ForeignKey('font.id'))
     series_id = Column(Integer, ForeignKey('series.id'))
     template_id = Column(Integer, ForeignKey('template.id'))
+    card = relationship('Card', back_populates='episode')
+    font = relationship('Font', back_populates='episodes')
+    series = relationship('Series', back_populates='episodes')
+    templates = relationship('Template', back_populates='episodes')
 
     source_file = Column(String, default=None)
     card_file = Column(String, default=None)
@@ -36,7 +41,6 @@ class Episode(Base):
     unwatched_style = Column(String, default=None)
     watched_style = Column(String, default=None)
 
-    font_id = Column(Integer, ForeignKey('font.id'))
     font_color = Column(String, default=None) 
     font_size = Column(Float, default=None)
     font_kerning = Column(Float, default=None)
@@ -54,11 +58,8 @@ class Episode(Base):
 
     extras = Column(JSON, default=None)
     translations = Column(JSON, default={})
-    # extras = Column(MutableDict.as_mutable(PickleType), default=None)
-    # translations = Column(MutableDict.as_mutable(PickleType), default={})
 
     image_source_attempts = Column(
-        # MutableDict.as_mutable(PickleType),
         JSON,
         default={'Emby': 0, 'Jellyfin': 0, 'Plex': 0, 'TMDb': 0}
     )
