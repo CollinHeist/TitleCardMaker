@@ -1,17 +1,19 @@
 from pathlib import Path
-from typing import Any, Literal, Optional, Union
+from typing import Optional
 
-from fastapi import BackgroundTasks, HTTPException, Query
+from fastapi import BackgroundTasks
 
-from app.database.query import get_episode, get_font, get_series, get_template
+from app.database.query import get_font, get_template
 from app.dependencies import (
     get_database, get_emby_interface, get_jellyfin_interface, get_preferences,
-    get_plex_interface, get_scheduler
+    get_plex_interface
 )
 import app.models as models
-from app.internal.series import load_series_title_cards
 from app.schemas.font import DefaultFont
-from app.schemas.card import TitleCard, NewTitleCard, PreviewTitleCard
+from app.schemas.card import NewTitleCard
+from app.schemas.episode import Episode
+from app.schemas.preferences import Preferences
+from app.schemas.series import Series
 
 from modules.CleanPath import CleanPath
 from modules.Debug import log
@@ -53,10 +55,33 @@ def create_all_title_cards():
         log.exception(f'Failed to create title cards', e)
 
 
+def add_card_to_database(db, card_model, card_settings) -> 'Card':
+    """
+    
+    """
 
-def create_card(db, preferences, card_model, card_settings):
+    card_model.filesize = card_settings['card_file'].stat().st_size
+    card = models.card.Card(**card_model.dict())
+    db.add(card)
+    db.commit()
+    log.debug(f'Card[{card.id}] Created "{card_settings["card_file"].resolve()}"')
+
+    return card
+
+
+def create_card(db, preferences, card_model, card_settings) -> None:
+    """
+    Create the given Card, adding the resulting entry to the Database.
+
+    Args:
+        db: Database to add the Card entry to.
+        preferences: Preferences to pass to the CardType class.
+        card_model: TitleCard model to update and add to the Database.
+        card_settings: Settings to pass to the CardType class to
+            initialize and create the actual card.
+    """
+
     # Initialize class of the card type being created
-
     CardClass = TitleCardCreator.CARD_TYPES[card_settings.get('card_type')]
     card_maker = CardClass(
         **(card_settings | card_settings['extras']),
@@ -68,24 +93,22 @@ def create_card(db, preferences, card_model, card_settings):
 
     # If file exists, card was created successfully - add to database
     if card_settings['card_file'].exists():
-        # Create new card entry
-        card_model.filesize = card_settings['card_file'].stat().st_size
-        card = models.card.Card(**card_model.dict())
-        db.add(card)
-        db.commit()
+        card = add_card_to_database(db, card_model, card_settings)
         log.debug(f'Card[{card.id}] Created "{card_settings["card_file"].resolve()}"')
     # Card file does not exist, log failure
     else:
         log.warning(f'Card creation failed')
         card_maker.image_magick.print_command_history()
+    
+    return None
 
 
 def create_episode_card(
         db: 'Database',
-        preferences: 'Preferences',
+        preferences: Preferences,
         background_tasks: Optional[BackgroundTasks],
-        series: 'Series',
-        episode: 'Episode') -> str:
+        series: Series,
+        episode: Episode) -> list[str]:
     """
 
     """
@@ -108,8 +131,7 @@ def create_episode_card(
         episode_font_dict = font.card_properties
     # Episode template has custom font
     elif episode_template_dict.get('font_id', None) is not None:
-        if (font := get_font(db, episode_template_dict['font_id'],
-                                raise_exc=False)) is None:
+        if (font := get_font(db, episode_template_dict['font_id'], raise_exc=False)) is None:
             return ['invalid']
         episode_font_dict = font.card_properties
     # Series has custom font
@@ -119,16 +141,11 @@ def create_episode_card(
         series_font_dict = font.card_properties
     # Series template has custom font
     elif series_template_dict.get('font_id', None) is not None:
-        if (font := get_font(db, series_template_dict['font_id'],
-                                raise_exc=False)) is None:
+        if (font := get_font(db, series_template_dict['font_id'], raise_exc=False)) is None:
             return ['invalid']
         series_font_dict = font.card_properties
 
-    # Get any existing card for this episode
-    existing_card = db.query(models.card.Card)\
-        .filter_by(episode_id=episode.id).first()
-    
-    # Resolve all settings from global -> episode
+    # Resolve all settings from global -> Episode
     card_settings = {}
     TieredSettings(
         card_settings,
@@ -186,12 +203,11 @@ def create_episode_card(
     # TODO modify CardType objects to use title_text attribute instead of title
     card_settings['title'] = card_settings['title_text'] 
 
-    # Get EpisodeInfo for this episode
+    # Get EpisodeInfo for this Episode
     episode_info = episode.as_episode_info
 
     # If no season text was indicated, determine
     if card_settings.get('season_text', None) is None:
-        # TODO calculate using season titles
         ranges = SeasonTitleRanges(card_settings.get('season_titles', {}))
         card_settings['season_text'] = ranges.get_season_text(
             episode_info, card_settings,
@@ -236,7 +252,6 @@ def create_episode_card(
         and not card_settings['source_file'].exists()):
         log.debug(f'{series.log_str} {episode.log_str} Card source image '
                     f'({card_settings["source_file"]}) is missing')
-        # TODO Maybe not use invalid flag here
         return ['missing_source']
 
     # Get card folder
@@ -264,17 +279,19 @@ def create_episode_card(
     # Add extension if needed
     card_file_name = card_settings['card_file'].name
     if not card_file_name.endswith(preferences.VALID_IMAGE_EXTENSIONS):
-        path = card_settings['card_file'].parent
         new_name = card_file_name + preferences.card_extension
-        card_settings['card_file'] = path / new_name
+        card_settings['card_file'] = card_settings['card_file'].parent /new_name
     card_settings['card_file'] = CleanPath(card_settings['card_file']).sanitize()
 
     # Create parent directories if needed
     card_settings['card_file'].parent.mkdir(parents=True, exist_ok=True)
 
-    # No existing card, add task to create and add to database
-    # card = NewTitleCard(**(card_settings | card_extras))
+    # Get any existing card for this episode
+    existing_card = db.query(models.card.Card)\
+        .filter_by(episode_id=episode.id).first()
     card = NewTitleCard(**card_settings)
+
+    # No existing card, add task to create and add to database
     if existing_card is None:
         if background_tasks is None:
             create_card(db, preferences, card, card_settings)
@@ -292,7 +309,7 @@ def create_episode_card(
                 log.info(f'Card.{attr} | existing={val}, new={getattr(card, attr)}')
         log.debug(f'{series.log_str} {episode.log_str} Card config changed - recreating')
         # Delete existing card file, remove from database
-        card_settings['card_file'].unlink(missing_ok=True)
+        Path(existing_card.card_file).unlink(missing_ok=True)
         db.delete(existing_card)
         db.commit()
 
@@ -321,7 +338,7 @@ def create_episode_card(
         return ['creating']
         
     # Existing card matches, do nothing
-    return []
+    return ['existing']
 
 
 def update_episode_watch_statuses(

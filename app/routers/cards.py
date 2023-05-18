@@ -10,7 +10,7 @@ from app.internal.cards import create_episode_card, delete_cards, update_episode
 from app.internal.series import load_series_title_cards
 from app.internal.sources import download_episode_source_image
 from app.internal.translate import translate_episode
-from app.schemas.card import TitleCard, PreviewTitleCard
+from app.schemas.card import CardActions, TitleCard, PreviewTitleCard
 
 from modules.Debug import log
 from modules.TitleCard import TitleCard as TitleCardCreator
@@ -120,7 +120,7 @@ def create_cards_for_series(
         db = Depends(get_database),
         emby_interface = Depends(get_emby_interface),
         jellyfin_interface = Depends(get_jellyfin_interface),
-        plex_interface = Depends(get_plex_interface)) -> dict[str, int]:
+        plex_interface = Depends(get_plex_interface)) -> CardActions:
     """
     Create the Title Cards for the given Series. This deletes and
     remakes any outdated existing Cards.
@@ -140,16 +140,16 @@ def create_cards_for_series(
         emby_interface, jellyfin_interface, plex_interface, series, episodes
     )
 
-    stats = {'deleted': 0, 'missing_source': 0, 'invalid': 0, 'creating': 0}
+    actions = CardActions()
     for episode in episodes:
-        # Create this flag, get status flags
+        # Create this Episode's Card, get status flags
         flags = create_episode_card(
             db, preferences, background_tasks, series, episode
         )
         for flag in flags:
-            stats[flag] += 1
+            setattr(actions, flag, getattr(actions, flag)+1)
 
-    return stats
+    return actions
 
 
 @card_router.get('/series/{series_id}', status_code=200, tags=['Series'])
@@ -168,7 +168,7 @@ def get_series_cards(
 @card_router.delete('/series/{series_id}', status_code=200, tags=['Series'])
 def delete_series_title_cards(
         series_id: int,
-        db = Depends(get_database)) -> list[str]:
+        db = Depends(get_database)) -> CardActions:
     """
     Delete all TitleCards for the given Series. Return a list of the
     deleted files.
@@ -178,13 +178,14 @@ def delete_series_title_cards(
 
     card_query = db.query(models.card.Card).filter_by(series_id=series_id)
     loaded_query = db.query(models.loaded.Loaded).filter_by(series_id=series_id)
-    return delete_cards(db, card_query, loaded_query)
+
+    return CardActions(deleted=delete_cards(db, card_query, loaded_query))
 
 
 @card_router.delete('/episode/{episode_id}', status_code=200, tags=['Episodes'])
 def delete_episode_title_cards(
         episode_id: int,
-        db = Depends(get_database)) -> list[str]:
+        db = Depends(get_database)) -> CardActions:
     """
     Delete all TitleCards for the given Episode. Return a list of the
     deleted files.
@@ -194,13 +195,14 @@ def delete_episode_title_cards(
 
     card_query = db.query(models.card.Card).filter_by(episode_id=episode_id)
     loaded_query = db.query(models.loaded.Loaded).filter_by(episode_id=episode_id)
-    return delete_cards(db, card_query, loaded_query)
+
+    return CardActions(deleted=delete_cards(db, card_query, loaded_query))
 
 
 @card_router.delete('/card/{card_id}', status_code=200)
 def delete_title_card(
         card_id: int,
-        db = Depends(get_database)) -> list[str]:
+        db = Depends(get_database)) -> CardActions:
     """
     Delete the TitleCard with the given ID. Return a list of the
     deleted file(s).
@@ -210,7 +212,8 @@ def delete_title_card(
 
     card_query = db.query(models.card.Card).filter_by(id=card_id)
     loaded_query = db.query(models.loaded.Loaded).filter_by(id=card_id)
-    return delete_cards(db, card_query, loaded_query)
+
+    return CardActions(deleted=delete_cards(db, card_query, loaded_query))
 
 
 @card_router.post('/episode/{episode_id}', status_code=200, tags=['Episodes'])
@@ -220,7 +223,7 @@ def create_card_for_episode(
         preferences = Depends(get_preferences),
         emby_interface = Depends(get_emby_interface),
         jellyfin_interface = Depends(get_jellyfin_interface),
-        plex_interface = Depends(get_plex_interface)) -> None:
+        plex_interface = Depends(get_plex_interface)) -> CardActions:
     """
     Create the Title Cards for the given Episode. This deletes and
     remakes the existing Title Card if it is outdated.
@@ -238,7 +241,15 @@ def create_card_for_episode(
     )
 
     # Create card for this Episode
-    return create_episode_card(db, preferences, None, series, episode)
+    actions = create_episode_card(db, preferences, None, series, episode)
+    if actions:
+        all_actions = CardActions()
+        for action in actions:
+            setattr(all_actions, action, getattr(all_actions, action)+1)
+
+        return all_actions
+
+    return CardActions()
 
 
 @card_router.get('/episode/{episode_id}', tags=['Episodes'])
