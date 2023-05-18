@@ -24,6 +24,7 @@ OPERATIONS = {
     'does not start with': lambda v, r: not str(v).lower().startswith(str(r).lower()),
     'ends with': lambda v, r: str(v).lower().endswith(str(r).lower()),
     'does not end with': lambda v, r: not str(v).lower().endswith(str(r).lower()),
+    'contains': lambda v, r: r in v,
     'matches': lambda v, r: bool(re_match(r, v)),
     'does not match': lambda v, r: not bool(re_match(r, v)),
     'is less than': lambda v, r: float(v) < float(r),
