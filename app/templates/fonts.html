@@ -186,9 +186,9 @@
                 <img alt="Preview Title Card" src="/assets/blank.png">
               </div>
             </div>
-            <div class="ui bottom attached info message">
+            <div class="ui bottom attached floating info message">
               <i class="exclamation icon"></i>
-              A custom font file must be <b>uploaded</b> and <b>submitted</b> in order to appear in the live preview.
+              A custom Font file must be <b>uploaded</b> and <b>submitted</b> in order to appear in the live preview.
             </div>
           </div>
         </div>
@@ -477,14 +477,22 @@
 
     <!-- Actual page content -->
     <div id="main-content" class="article">
-      <!-- Page title -->
       <h1 class="ui header">Fonts</h1>
 
-      <!-- Add a new font -->
+      <!-- Add font button -->
       <button class="ui primary tertiary button" onclick="addFont()">Create New Font</button>
 
-      <div id="fonts">
-        <!-- Elements added asynchronously -->
+      <div id="fonts"><!-- Elements added asynchronously --></div>
+
+      <div class="ui compact floating info message">
+        <div class="header">What are Fonts?</div>
+        <ul class="list">
+          <li>A custom Font can override the default Font characteristics - color, size, etc. - of a Title Card.</li>
+          <li>Custom Fonts can be assigned as part of a Template.</li>
+          <li>Custom Font definitions can be overwritten per-Series or Episode.</li>
+          <li>Creating a <i>Named Font</i> (on this Page) allows the custom Font to be reused by multiple Series or Templates.</li>
+          <li>Only custom <i>Named Fonts</i> can have custom Font files, Series and Episode Fonts cannot.</li>
+        </ul>
       </div>
     </div>
 

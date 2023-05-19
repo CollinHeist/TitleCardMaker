@@ -42,6 +42,11 @@
     .connection-form .checkbox:first-child {
       margin-bottom: 1em;
     }
+
+    /* Ensure the Sonarr libraries info message is compact */
+    #sonarr-libraries .compact.message {
+      display: inline-block;
+    }
   </style>
 
   <template id="sync-volume">
@@ -415,8 +420,9 @@
 
           <div id="sonarr-libraries" class="ui disabled field">
             <label>Library Paths</label>
-            <div class="ui compact raised segment">
-              <span class="ui text">Only required if <a href="/sync">syncing</a> from Sonarr</span>
+            <div class="ui compact floating visible info message">
+              <i class="exclamation icon"></i>
+              Only required if <a href="/sync">syncing</a> from Sonarr
             </div>
             <div class="fields">
               <div id="sonarr-libraries-library-names" class="two wide library field">
