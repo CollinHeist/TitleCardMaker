@@ -36,19 +36,14 @@ def add_series_translations(
 
     # Find Series and Template with this ID, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
-    series_template = get_template(db, series.template_id, raise_exc=True)
-
-    # Get all Episodes for this series
-    episodes = db.query(models.episode.Episode)\
-        .filter_by(series_id=series_id).all()
 
     # Add background task to translate each Episode
-    for episode in episodes:
+    for episode in series.episodes:
         background_tasks.add_task(
             # Function
             translate_episode,
             # Arguments
-            db, series, series_template, episode, tmdb_interface
+            db, series, episode, tmdb_interface
         )
 
     return None
@@ -74,15 +69,13 @@ def add_episode_translations(
             detail=f'Unable to communicate with TMDb'
         )
 
-    # Find this Episode, associated Series/Template, raise 404 if DNE
+    # Find this Episode, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
-    series = get_series(db, episode.series_id, raise_exc=True)
-    series_template = get_template(db, series.template_id, raise_exc=True)
 
     # Add background task for translating this Episode
     background_tasks.add_task(
         # Function
         translate_episode,
         # Arguments
-        db, series, series_template, episode, tmdb_interface
+        db, episode.series, episode, tmdb_interface
     )

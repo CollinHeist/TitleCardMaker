@@ -1,6 +1,6 @@
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException
 
-from app.database.query import get_episode, get_font, get_series, get_template
+from app.database.query import get_card, get_episode, get_font, get_series, get_template
 from app.dependencies import (
     get_database, get_emby_interface, get_jellyfin_interface, get_preferences,
     get_plex_interface, get_tmdb_interface,
@@ -102,14 +102,7 @@ def get_title_card(
     - card_id: ID of the TitleCard to get the details of.
     """
 
-    card = db.query(models.card.Card).filter_by(id=card_id).first()
-    if card is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f'Card {card_id} not found',
-        )
-
-    return card
+    return get_card(db, card_id, raise_exc=True)
 
 
 @card_router.post('/series/{series_id}', status_code=200, tags=['Series'])
@@ -131,21 +124,17 @@ def create_cards_for_series(
     # Get this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    # Get all Episodes for this Series
-    episodes = db.query(models.episode.Episode)\
-        .filter_by(series_id=series_id).all()
-
     # Set watch statuses of the Episodes
     update_episode_watch_statuses(
-        emby_interface, jellyfin_interface, plex_interface, series, episodes
+        emby_interface, jellyfin_interface, plex_interface,
+        series, series.episodes
     )
+    db.commit()
 
     actions = CardActions()
-    for episode in episodes:
+    for episode in series.episodes:
         # Create this Episode's Card, get status flags
-        flags = create_episode_card(
-            db, preferences, background_tasks, series, episode
-        )
+        flags = create_episode_card(db, preferences, background_tasks, episode)
         for flag in flags:
             setattr(actions, flag, getattr(actions, flag)+1)
 
@@ -231,17 +220,17 @@ def create_card_for_episode(
     - episode_id: ID of the Episode to create the Title Card for.
     """
 
-    # Find associated Episode and Series, raise 404 if DNE
+    # Find associated Episode, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
-    series = get_series(db, episode.series_id, raise_exc=True)
 
     # Set watch status of the Episode
     update_episode_watch_statuses(
-        emby_interface, jellyfin_interface, plex_interface, series, [episode]
+        emby_interface, jellyfin_interface, plex_interface,
+        episode.series, [episode]
     )
 
-    # Create card for this Episode
-    actions = create_episode_card(db, preferences, None, series, episode)
+    # Create Card for this Episode, record actions
+    actions = create_episode_card(db, preferences, None, episode.series, episode)
     if actions:
         all_actions = CardActions()
         for action in actions:

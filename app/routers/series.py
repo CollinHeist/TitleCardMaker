@@ -5,7 +5,7 @@ from fastapi import (
     APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, UploadFile
 )
 
-from app.database.query import get_font, get_series, get_template
+from app.database.query import get_all_templates, get_font, get_series, get_template
 from app.dependencies import (
     get_database, get_preferences, get_emby_interface,
     get_imagemagick_interface, get_jellyfin_interface, get_plex_interface,
@@ -58,12 +58,15 @@ def add_new_series(
     - new_series: Series definition to create.
     """
 
-    # If a Template or Font was indicated, verify they exist
-    get_template(db, getattr(new_series, 'template_id', None), raise_exc=True)
+    # Convert object to dictionary
+    new_series_dict = new_series.dict()
+
+    # If a Font or any Templates were indicated, verify they exist
     get_font(db, getattr(new_series, 'font_id', None), raise_exc=True)
+    templates = get_all_templates(db, new_series_dict)
 
     # Add to database
-    series = models.series.Series(**new_series.dict())
+    series = models.series.Series(**new_series_dict, templates=templates)
     db.add(series)
     db.commit()
 
@@ -186,12 +189,22 @@ def update_series(
     # Query for this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    # If a Template or Font were indicated, verify they exist
-    get_template(db, getattr(update_series, 'template_id', None),raise_exc=True)
-    get_font(db, getattr(update_series, 'font_id', None), raise_exc=True)
+    # Get object as dictionary
+    update_series_dict = update_series.dict()
+
+    # If a Font is indicated, verify it exists
+    get_font(db, update_series_dict.get('font_id', None), raise_exc=True)
+
+    # Assign Templates if indicated
+    changed = False
+    if ((template_ids := update_series_dict.get('template_ids', None))
+        not in (None, UNSPECIFIED)):
+        if series.template_ids != template_ids:
+            series.templates = get_all_templates(db, update_series_dict)
+            log.debug(f'{series.log_str}.templates = {template_ids}')
+            changed = True
 
     # Update each attribute of the object
-    changed = False
     for attr, value in update_series.dict().items():
         if value != UNSPECIFIED and getattr(series, attr) != value:
             log.debug(f'Series[{series_id}].{attr} = {value}')

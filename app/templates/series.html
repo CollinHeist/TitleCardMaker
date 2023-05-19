@@ -92,6 +92,10 @@
       width: 10ch;
     }
 
+    #episode-data-table .ui.multiple.dropdown {
+      padding: unset;
+    }
+
     /* Show cursor on all file card icons, and images in tmdb modal */
     #files-list .card .icon,
     #browse-tmdb-modal .image.content .images a {
@@ -141,9 +145,9 @@
       </td>
       <td data-column="match_title" data-type="boolean" class="center aligned collapsing"><!-- Icon --></td>
       <td data-column="auto_split_title" data-type="boolean" class="center aligned collapsing"><!-- Icon --></td>
-      <td data-column="template" class="center aligned collapsing">
-        <div data-value="template_id" class="ui inline clearable scrolling dropdown">
-          <input name="template_id" type="hidden">
+      <td data-column="templates" class="center aligned collapsing">
+        <div data-value="template_ids" class="ui inline clearable scrolling multiple dropdown">
+          <input name="template_ids" type="hidden">
           <i class="dropdown icon"></i>
           <div class="default text">Default</div>
           <div class="menu"><!-- Submenu --></div>
@@ -383,14 +387,14 @@
         url: `/api/episodes/${episodeId}`,
         contentType: 'application/json',
         data: JSON.stringify(updateEpisode),
-        success: (response) => {
+        success: response => {
           if (!batch) {
             $.toast({
               class: 'blue info',
               title: 'Updated Episode',
             });
           }
-        }, error: (response) => {
+        }, error: response => {
           $.toast({
             class: 'error',
             title: 'Error Updating Episode',
@@ -459,12 +463,12 @@
       $.ajax({
         type: 'POST',
         url: '/api/episodes/{{series.id}}/refresh',
-        success: (response) => {
+        success: response => {
           $.toast({class: 'blue info', title: `Refreshed Episode Data`});
           getEpisodeData();
           getFileData();
           getStatistics();
-        }, error: (response) => {
+        }, error: response => {
           $.toast({
             class: 'error',
             title: 'Error Refreshing Data',
@@ -482,9 +486,9 @@
       $.ajax({
         type: 'POST',
         url: '/api/translate/series/{{series.id}}',
-        success: (response) => {
+        success: response => {
           $.toast({class: 'blue info', title: `Adding Translations`});
-        }, error: (response) => {
+        }, error: response => {
           $.toast({
             class: 'error',
             title: 'Error Adding Translations',
@@ -619,10 +623,10 @@
       $.ajax({
         type: 'POST',
         url:`/api/series/{{series.id}}/${reload ? 'reload' : 'load'}/${mediaServer}`,
-        success: (response) => {
+        success: response => {
           $.toast({class: 'blue info', title: 'Loaded Title Cards'});
           getStatistics();
-        }, error: (response) => {
+        }, error: response => {
           $.toast({
             class: 'error',
             title: 'Error Loading Title Cards',
@@ -639,7 +643,7 @@
         url: '/api/series/{{series.id}}',
         success: () => {
           window.location.href = '/';
-        }, error: (response) => {
+        }, error: response => {
           $.toast({
             class: 'error',
             title: 'Error Deleting Series',
@@ -674,7 +678,7 @@
       $.ajax({
         type: 'DELETE',
         url: '/api/episodes/series/{{series.id}}',
-        success: (response) => {
+        success: response => {
           $.toast({
             class: 'blue info',
             title: `Deleted ${response.length} Episodes`,
@@ -682,7 +686,7 @@
           getEpisodeData();
           getFileData();
           getStatistics();
-        }, error: (response) => {
+        }, error: response => {
           $.toast({
             class: 'error',
             title: 'Error Deleting Episodes',
@@ -697,7 +701,7 @@
       $.ajax({
         type: 'DELETE',
         url: `/api/episodes/${id}`,
-        success: (response) => {
+        success: response => {
           $.toast({
             class: 'blue info',
             title: `Deleted Episode`,
@@ -705,7 +709,7 @@
           getEpisodeData();
           getFileData();
           getStatistics();
-        }, error: (response) => {
+        }, error: response => {
           $.toast({
             class: 'error',
             title: 'Error Deleting Episode',
@@ -747,10 +751,8 @@
       });
       // Template
       const templates = await fetch('/api/templates/all').then(resp => resp.json());
-      $('#card-config-form .dropdown[data-value="template_id"]').dropdown({
-        values: templates.map(({id, name}) => {
-          return {name: name, value: id, selected: `${id}` === '{{series.template_id}}'};
-        })
+      $('#card-config-form .dropdown[data-value="template_ids"]').dropdown({
+        values: getActiveTemplates({{series.template_ids}}, templates),
       });
       // Card types
       loadCardTypes({
@@ -1151,10 +1153,8 @@
       // Initialize dropdowns, assign form submit API request
       episodeData.forEach(episode => {
         // Templates
-        $(`#episode-id${episode.id} .dropdown[data-value="template_id"]`).dropdown({
-          values: allTemplates.map(({id, name}) => {
-            return {name: name, value: id, selected: episode.template_id === id};
-          })
+        $(`#episode-id${episode.id} .dropdown[data-value="template_ids"]`).dropdown({
+          values: getActiveTemplates(episode.template_ids, allTemplates),
         });
         // Fonts
         $(`#episode-id${episode.id} .dropdown[data-value="font_id"]`).dropdown({
@@ -1257,7 +1257,7 @@
                 <i class="sync icon"></i>
                 Refresh Episode Data
               </button>
-              {% if series.translations or series.template_id %}
+              {% if series.translations or series.template_ids %}
               <button id="add-translations" class="ui labeled icon button" onclick="addTranslations()" data-tooltip="Look for any missing Episode translations">
                 <i class="language icon"></i>
                 Add Translations
@@ -1481,8 +1481,8 @@
                   <!-- Template ID -->
                   <div class="field">
                     <label>Template</label>
-                    <div data-value="template_id" class="ui very long compact clearable search selection dropdown">
-                      <input name="template_id" type="hidden">
+                    <div data-value="template_ids" class="ui long compact clearable search selection multiple dropdown">
+                      <input name="template_ids" type="hidden">
                       <i class="dropdown icon"></i>
                       <div class="default text">None</div>
                       <div class="menu"><!-- Added asynchrously --></div>
@@ -1786,7 +1786,7 @@
                     <th class="collapsing">Match<br>Title</th>
                     <th class="collapsing">Auto-Split<br>Title</th>
 
-                    <th class="collapsing">Template</th>
+                    <th class="collapsing">Templates</th>
                     <th class="collapsing">Font</th>
                     <th class="collapsing">Card<br>Type</th>
 
@@ -1805,7 +1805,7 @@
                     <th class="collapsing">Font Interline<br>Spacing</th>
                     <th class="collapsing">Font<br>Vertical Shift</th>
 
-                    <th class="collapsing">Extras</th>
+                    <th class="collapsing">Extras &<br>Translations</th>
 
                     <th class="collapsing">Source<br>File</th>
                     <th class="collapsing">Card<br>File</th>
@@ -2337,13 +2337,16 @@
         season_title_ranges: [], season_title_values: [],
         language_code: [], data_key: [],
       };
+      let template_ids = [];
       for (const [key, value] of [...form.entries()]) {
+        // Handle Templates
+        if (key === 'template_ids' && value != '') { template_ids = value.split(','); }
         // Add list data fields to listData object
         if (Object.keys(listData).includes(key)) {
           if (value !== '') { listData[key].push(value);  }
         }
         // Handle percentage values
-        if (value != '' && ['font_size', 'font_kerning', 'font_stroke_width'].includes(key)) {
+        else if (value != '' && ['font_size', 'font_kerning', 'font_stroke_width'].includes(key)) {
           form.set(key, value/100.0);
         }
       }
@@ -2370,7 +2373,7 @@
       $.ajax({
         type: 'PATCH',
         url: '/api/series/{{series.id}}',
-        data: JSON.stringify({...Object.fromEntries(form.entries()), ...listData}),
+        data: JSON.stringify({...Object.fromEntries(form.entries()), ...listData, template_ids: template_ids}),
         contentType: 'application/json',
         success: (response) => {
           $('#submit-changes').toggleClass('loading', false);

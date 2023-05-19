@@ -8,6 +8,8 @@ from app.dependencies import (
     get_database, get_emby_interface, get_jellyfin_interface, get_preferences,
     get_plex_interface
 )
+from app.internal.font import get_effective_fonts
+from app.internal.templates import get_effective_templates
 import app.models as models
 from app.schemas.font import DefaultFont
 from app.schemas.card import NewTitleCard
@@ -35,22 +37,16 @@ def create_all_title_cards():
             # Get all Series
             all_series = db.query(models.series.Series).all()
             for series in all_series:
-                # Get all Episodes of this Series
-                episodes = db.query(models.episode.Episode)\
-                    .filter_by(series_id=series.id).all()
-                
-                # Set watch statuses of the episodes
+                # Set watch statuses of all Episodes
                 update_episode_watch_statuses(
                     get_emby_interface(), get_jellyfin_interface(),
                     get_plex_interface(),
-                    series, episodes
+                    series, series.episodes
                 )
 
-                # Create title cards for each Episode
-                for episode in episodes:
-                    create_episode_card(
-                        db, get_preferences(), None, series, episode
-                    )
+                # Create Cards for all Episodes
+                for episode in series.episodes:
+                    create_episode_card(db, get_preferences(), None, episode)
     except Exception as e:
         log.exception(f'Failed to create title cards', e)
 
@@ -107,60 +103,46 @@ def create_episode_card(
         db: 'Database',
         preferences: Preferences,
         background_tasks: Optional[BackgroundTasks],
-        series: Series,
         episode: Episode) -> list[str]:
     """
 
     """
 
-    # Get effective template for this episode
-    series_template_dict, episode_template_dict = {}, {}
-    if episode.template_id is not None:
-        template = get_template(db, episode.template_id, raise_exc=True)
-        episode_template_dict = template.card_properties
-    elif series.template_id is not None:
-        template = get_template(db, series.template_id, raise_exc=True)
-        series_template_dict = template.card_properties
+    series = episode.series
 
-    # Get effective font for this episode
+    # Get effective Template for this Series and Episode
+    series_template, episode_template = get_effective_templates(series, episode)
+    series_template_dict, episode_template_dict = {}, {}
+    if series_template is not None:
+        series_template_dict = series_template.card_properties
+    if episode_template is not None:
+        episode_template_dict = episode_template.card_properties
+
+    # Get effective Font for this Series and Episode
     series_font_dict, episode_font_dict = {}, {}
-    # Episode has custom font
-    if episode.font_id is not None:
-        if (font := get_font(db, episode.font_id, raise_exc=False)) is None:
-            return ['invalid']
-        episode_font_dict = font.card_properties
-    # Episode template has custom font
-    elif episode_template_dict.get('font_id', None) is not None:
-        if (font := get_font(db, episode_template_dict['font_id'], raise_exc=False)) is None:
-            return ['invalid']
-        episode_font_dict = font.card_properties
-    # Series has custom font
-    elif series.font_id is not None:
-        if (font := get_font(db, series.font_id, raise_exc=False)) is None:
-            return ['invalid']
-        series_font_dict = font.card_properties
-    # Series template has custom font
-    elif series_template_dict.get('font_id', None) is not None:
-        if (font := get_font(db, series_template_dict['font_id'], raise_exc=False)) is None:
-            return ['invalid']
-        series_font_dict = font.card_properties
+    if episode.font:
+        episode_font_dict = episode.font.card_properties
+    elif episode_template and episode_template.font:
+        episode_font_dict = episode_template.font.card_properties
+    elif series.font:
+        series_font_dict = series.font.card_properties
+    elif series_template and series_template.font:
+        series_font_dict = series_template.font.card_properties
 
     # Resolve all settings from global -> Episode
-    card_settings = {}
-    TieredSettings(
-        card_settings,
-        # TODO use card-specific hiding enables
+    card_settings = TieredSettings.new_settings(
         {'hide_season_text': False, 'hide_episode_text': False},
         DefaultFont,
-        preferences.card_properties, # Global preferences are the lowest priority
-        series_template_dict,        # Series template
-        series_font_dict,            # Series font/template font
-        series.card_properties,      # Series
+        preferences.card_properties,
+        series_template_dict,
+        series_font_dict,
+        series.card_properties,
         {'logo_file': series.get_logo_file(preferences.source_directory)},
-        episode_template_dict,       # Episode template
-        episode_font_dict,           # Episode font/template font
-        episode.card_properties,     # Episode
+        episode_template_dict,
+        episode_font_dict,
+        episode.card_properties,
     )
+
     # Resolve all extras
     card_extras = {}
     TieredSettings(
@@ -172,7 +154,7 @@ def create_episode_card(
     )
     # Override settings with extras
     TieredSettings(card_settings, card_extras)
-    # Merge translations into extras
+    # Merge Episode translations into extras
     TieredSettings(card_extras, episode.translations)
     card_settings['extras'] = card_extras | episode.translations
 
@@ -342,13 +324,19 @@ def create_episode_card(
 
 
 def update_episode_watch_statuses(
-        emby_interface: 'EmbyInterface',
-        jellyfin_interface: 'JellyfinInterface',
-        plex_interface: 'PlexInterface',
-        series: 'Series',
-        episodes: list['Episode']) -> None:
+        emby_interface: Optional['EmbyInterface'],
+        jellyfin_interface: Optional['JellyfinInterface'],
+        plex_interface: Optional['PlexInterface'],
+        series: Series,
+        episodes: list[Episode]) -> None:
     """
+    Update the watch statuses of all Episodes for the given Series.
 
+    Args:
+        *_interface: Interface to the media server to query for updated
+            watch statuses.
+        series: Series whose Episodes are being updated.
+        Episodes: List of Episodes to update the statuses of.
     """
 
     if series.emby_library_name is not None:
@@ -356,21 +344,27 @@ def update_episode_watch_statuses(
             log.warning(f'Cannot query watch statuses - no Emby connection')
         else:
             emby_interface.update_watched_statuses(
-                series.emby_library_name, series.as_series_info, episodes,
+                series.emby_library_name,
+                series.as_series_info,
+                episodes,
             )
     elif series.jellyfin_library_name is not None:
         if jellyfin_interface is None:
             log.warning(f'Cannot query watch statuses - no Jellyfin connection')
         else:
             jellyfin_interface.update_watched_statuses(
-                series.jellyfin_library_name, series.as_series_info, episodes,
+                series.jellyfin_library_name,
+                series.as_series_info,
+                episodes,
             )
     elif series.plex_library_name is not None:
         if plex_interface is None:
             log.warning(f'Cannot query watch statuses - no Plex connection')
         else:
             plex_interface.update_watched_statuses(
-                series.plex_library_name, series.as_series_info, episodes,
+                series.plex_library_name,
+                series.as_series_info,
+                episodes,
             )
 
     return None

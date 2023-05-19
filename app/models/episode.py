@@ -3,9 +3,11 @@ from typing import Any
 
 from sqlalchemy import Boolean, Column, DateTime, Integer, Float, ForeignKey, String, JSON
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
+from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import relationship
 
 from app.database.session import Base
+from app.models.template import EpisodeTemplates
 from modules.EpisodeInfo2 import EpisodeInfo
 
 class Episode(Base):
@@ -14,13 +16,17 @@ class Episode(Base):
     # Referencial arguments
     id = Column(Integer, primary_key=True, index=True)
     font_id = Column(Integer, ForeignKey('font.id'))
-    series_id = Column(Integer, ForeignKey('series.id'))
-    template_id = Column(Integer, ForeignKey('template.id'))
-    card = relationship('Card', back_populates='episode')
     font = relationship('Font', back_populates='episodes')
+    series_id = Column(Integer, ForeignKey('series.id'))
     series = relationship('Series', back_populates='episodes')
-    templates = relationship('Template', back_populates='episodes')
-
+    card = relationship('Card', back_populates='episode')
+    loaded = relationship('Loaded', back_populates='episode')
+    templates = relationship(
+        'Template',
+        secondary=EpisodeTemplates.__table__,
+        back_populates='episodes'
+    )
+    
     source_file = Column(String, default=None)
     card_file = Column(String, default=None)
     watched = Column(Boolean, default=None)
@@ -57,12 +63,17 @@ class Episode(Base):
     airdate = Column(DateTime, default=None)
 
     extras = Column(JSON, default=None)
-    translations = Column(JSON, default={})
+    translations = Column(MutableDict.as_mutable(JSON), default={})
 
     image_source_attempts = Column(
-        JSON,
+        MutableDict.as_mutable(JSON),
         default={'Emby': 0, 'Jellyfin': 0, 'Plex': 0, 'TMDb': 0}
     )
+
+    # Relationship column properties
+    @hybrid_property
+    def template_ids(self) -> list[int]:
+        return [template.id for template in self.templates]
 
 
     @hybrid_property
@@ -73,8 +84,6 @@ class Episode(Base):
     @hybrid_property
     def card_properties(self) -> dict[str, Any]:
         return {
-            'episode_id': self.id,
-            'template_id': self.template_id,
             'source_file': self.source_file,
             'card_file': self.card_file,
             'watched': self.watched,
@@ -91,7 +100,6 @@ class Episode(Base):
             'episode_text': self.episode_text,
             'unwatched_style': self.unwatched_style,
             'watched_style': self.watched_style,
-            'font_id': self.font_id,
             'font_color': self.font_color,
             'font_size': self.font_size,
             'font_kerning': self.font_kerning,

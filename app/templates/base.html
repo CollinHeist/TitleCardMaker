@@ -21,6 +21,7 @@
   <script type="text/javascript" src="/templates/loadStaticContent.js"></script>
   <script type="text/javascript" src="/templates/loadCardTypes.js"></script>
   <script type="text/javascript" src="/templates/theme.js"></script>
+  <script type="text/javascript" src="/templates/helper.js"></script>
 
   <!-- Styles -->
   <link rel="stylesheet" type="text/css" href="/templates/style.css">
@@ -189,9 +190,7 @@
       if (document.getElementById('#templates') !== undefined) {
         const templates = await fetch('/api/templates/all').then(resp => resp.json());
         $('#templates').dropdown({
-          values: templates.map(({id, name}) => {
-            return {name: name, value: id};
-          }),
+          values: getActiveTemplates(null, templates),
         });
       }
     }
@@ -296,11 +295,11 @@
             </div>
           </div>
 
-          <!-- Template -->
+          <!-- Templates -->
           <div class="compact field">
-            <label>Template</label>
-            <div id="templates" class="ui selection clearable dropdown">
-              <input name="template_id" type="hidden">
+            <label>Templates</label>
+            <div id="templates" class="ui multiple selection clearable dropdown">
+              <input name="template_ids" type="hidden">
               <i class="dropdown icon"></i>
               <div class="default text">None</div>
               <div class="menu"><!-- Added asynchronously --></div>
@@ -396,7 +395,9 @@
 
       // Get form data, remove blanks
       let form = new FormData(event.target);
+      let template_ids = [];
       for (const [key, value] of [...form.entries()]) {
+        if (key === 'template_ids' && value !== '') { template_ids = value.split(','); }
         if (value === '') { form.delete(key); }
       }
 
@@ -404,7 +405,7 @@
       $.ajax({
         type: 'POST',
         url: '/api/series/new',
-        data: JSON.stringify(Object.fromEntries(form.entries())),
+        data: JSON.stringify({...Object.fromEntries(form.entries()), template_ids: template_ids}),
         contentType: "application/json",
         success: (response) => {
           getAllSeries();

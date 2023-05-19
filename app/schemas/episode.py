@@ -17,7 +17,7 @@ Creation classes
 """
 class NewEpisode(Base):
     series_id: int = Field(..., description='ID of the Series this Episode belongs to')
-    template_id: Optional[int] = Field(default=None, description='ID of the Template for this Episode')
+    template_ids: list[int] = Field(default=[], description='ID of the Template for this Episode')
     font_id: Optional[int] = Field(default=None, description='ID of the Font of this Episode')
 
     source_file: Optional[str] = Field(description='Path to the source image for this episode card')
@@ -62,7 +62,7 @@ class NewEpisode(Base):
 Update classes
 """
 class UpdateEpisode(Base):
-    template_id: Optional[int] = Field(default=UNSPECIFIED)
+    template_ids: list[int] = Field(default=UNSPECIFIED)
     font_id: Optional[int] = Field(default=UNSPECIFIED)
 
     source_file: Optional[str] = Field(default=UNSPECIFIED)
@@ -134,7 +134,7 @@ Return classes
 class Episode(Base):
     id: int
     series_id: int
-    template_id: Optional[int]
+    template_ids: list[int]
     font_id: Optional[int]
 
     source_file: Optional[str]

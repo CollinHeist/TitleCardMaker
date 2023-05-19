@@ -1,10 +1,10 @@
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy import and_, or_
 
-from app.database.query import get_template
+from app.database.query import get_all_templates
 from app.dependencies import (
     get_database, get_preferences, get_emby_interface, get_imagemagick_interface,
     get_jellyfin_interface, get_plex_interface, get_sonarr_interface,
@@ -12,8 +12,9 @@ from app.dependencies import (
 )
 from app.internal.series import download_series_poster, set_series_database_ids
 from app.internal.sources import download_series_logo
-from app.schemas.sync import Sync
+from app.schemas.sync import NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync, Sync
 from app.schemas.series import Series
+from app.schemas.preferences import Preferences
 import app.models as models
 
 from modules.Debug import log
@@ -40,7 +41,10 @@ def sync_all() -> None:
         log.exception(f'Failed to run all Syncs', e)
 
 
-def add_sync(db, new_sync: 'NewSync') -> Sync:
+def add_sync(
+        db: 'Database',
+        new_sync: Union[NewEmbySync, NewJellyfinSync, NewPlexSync,NewSonarrSync]
+        ) -> Sync:
     """
     Add the given sync to the database.
 
@@ -49,20 +53,21 @@ def add_sync(db, new_sync: 'NewSync') -> Sync:
         new_sync: New Sync object to add to the database.
     """
 
-    # Verify template exists (if specified), raise 404 if DNE
-    get_template(db, new_sync.template_id, raise_exc=True)
-
+    # Verify all Templates exists, raise 404 if DNE
+    new_sync_dict = new_sync.dict()
+    templates = get_all_templates(db, new_sync_dict)
+    log.info(f'{templates=} for NewSync')
     # Create DB entry from Pydantic model, add to database
-    sync = models.sync.Sync(**new_sync.dict())
+    sync = models.sync.Sync(**new_sync_dict, templates=templates)
     db.add(sync)
     db.commit()
-
+    log.warning(f'{sync.template_ids=}')
     return sync
 
 
 def run_sync(
         db: 'Database',
-        preferences: 'Preferences',
+        preferences: Preferences,
         sync: Sync,
         emby_interface: Optional['EmbyInterface'],
         imagemagick_interface: Optional['ImageMagickInterface'],
@@ -116,8 +121,8 @@ def run_sync(
                 series = models.series.Series(
                     name=series_info.name,
                     year=series_info.year,
-                    sync_id=sync.id,
-                    template_id=sync.template_id,
+                    sync=sync,
+                    templates=sync.templates,
                     emby_library_name=library,
                     **series_info.ids,
                 )
@@ -146,8 +151,8 @@ def run_sync(
                 series = models.series.Series(
                     name=series_info.name,
                     year=series_info.year,
-                    sync_id=sync.id,
-                    template_id=sync.template_id,
+                    sync=sync,
+                    templates=sync.templates,
                     jellyfin_library_name=library,
                     **series_info.ids,
                 )
@@ -176,8 +181,8 @@ def run_sync(
                 series = models.series.Series(
                     name=series_info.name,
                     year=series_info.year,
-                    sync_id=sync.id,
-                    template_id=sync.template_id,
+                    sync=sync,
+                    templates=sync.templates,
                     plex_library_name=library,
                     **series_info.ids,
                 )
@@ -208,8 +213,8 @@ def run_sync(
                 series = models.series.Series(
                     name=series_info.name,
                     year=series_info.year,
-                    sync_id=sync.id,
-                    template_id=sync.template_id,
+                    sync=sync,
+                    templates=sync.templates,
                     plex_library_name=library,
                     **series_info.ids,
                 )

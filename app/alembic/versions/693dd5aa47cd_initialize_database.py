@@ -1,8 +1,8 @@
-"""Initialize Database
+"""Initialize database
 
-Revision ID: c7655c4924f7
+Revision ID: 693dd5aa47cd
 Revises: 
-Create Date: 2023-05-15 21:46:06.036839
+Create Date: 2023-05-18 17:56:58.518419
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'c7655c4924f7'
+revision = '693dd5aa47cd'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -34,34 +34,13 @@ def upgrade() -> None:
         sa.Column('replacements', sa.JSON(), nullable=True),
         sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_font_id'), 'font', ['id'], unique=False)
-    op.create_table('template',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('name', sa.String(), nullable=False),
-        sa.Column('card_filename_format', sa.String(), nullable=True),
-        sa.Column('episode_data_source', sa.String(), nullable=True),
-        sa.Column('sync_specials', sa.Boolean(), nullable=True),
-        sa.Column('skip_localized_images', sa.Boolean(), nullable=True),
-        sa.Column('translations', sa.JSON(), nullable=False),
-        sa.Column('font_id', sa.Integer(), nullable=True),
-        sa.Column('card_type', sa.String(), nullable=True),
-        sa.Column('hide_season_text', sa.Boolean(), nullable=True),
-        sa.Column('season_titles', sa.JSON(), nullable=False),
-        sa.Column('hide_episode_text', sa.Boolean(), nullable=True),
-        sa.Column('episode_text_format', sa.String(), nullable=True),
-        sa.Column('unwatched_style', sa.String(), nullable=True),
-        sa.Column('watched_style', sa.String(), nullable=True),
-        sa.Column('extras', sa.JSON(), nullable=False),
-        sa.Column('filters', sa.JSON(), nullable=False),
-        sa.ForeignKeyConstraint(['font_id'], ['font.id'], ),
-        sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_template_id'), 'template', ['id'], unique=False)
+    with op.batch_alter_table('font', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_font_id'), ['id'], unique=False)
+
     op.create_table('sync',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('name', sa.String(), nullable=False),
         sa.Column('interface', sa.String(), nullable=False),
-        sa.Column('template_id', sa.Integer(), nullable=True),
         sa.Column('required_tags', sa.JSON(), nullable=False),
         sa.Column('required_libraries', sa.JSON(), nullable=False),
         sa.Column('excluded_tags', sa.JSON(), nullable=False),
@@ -70,11 +49,14 @@ def upgrade() -> None:
         sa.Column('monitored_only', sa.Boolean(), nullable=True),
         sa.Column('required_series_type', sa.String(), nullable=True),
         sa.Column('excluded_series_type', sa.String(), nullable=True),
-        sa.ForeignKeyConstraint(['template_id'], ['template.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
+    with op.batch_alter_table('sync', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_sync_id'), ['id'], unique=False)
+
     op.create_table('series',
         sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('font_id', sa.Integer(), nullable=True),
         sa.Column('name', sa.String(), nullable=False),
         sa.Column('year', sa.Integer(), nullable=False),
         sa.Column('sync_id', sa.Integer(), nullable=True),
@@ -98,7 +80,6 @@ def upgrade() -> None:
         sa.Column('tmdb_id', sa.Integer(), nullable=True),
         sa.Column('tvdb_id', sa.Integer(), nullable=True),
         sa.Column('tvrage_id', sa.Integer(), nullable=True),
-        sa.Column('font_id', sa.Integer(), nullable=True),
         sa.Column('font_color', sa.String(), nullable=True),
         sa.Column('font_title_case', sa.String(), nullable=True),
         sa.Column('font_size', sa.Float(), nullable=True),
@@ -106,7 +87,6 @@ def upgrade() -> None:
         sa.Column('font_stroke_width', sa.Float(), nullable=True),
         sa.Column('font_interline_spacing', sa.Integer(), nullable=True),
         sa.Column('font_vertical_shift', sa.Integer(), nullable=True),
-        sa.Column('template_id', sa.Integer(), nullable=True),
         sa.Column('card_type', sa.String(), nullable=True),
         sa.Column('hide_season_text', sa.Boolean(), nullable=True),
         sa.Column('season_titles', sa.JSON(), nullable=True),
@@ -117,13 +97,36 @@ def upgrade() -> None:
         sa.Column('extras', sa.JSON(), nullable=True),
         sa.ForeignKeyConstraint(['font_id'], ['font.id'], ),
         sa.ForeignKeyConstraint(['sync_id'], ['sync.id'], ),
-        sa.ForeignKeyConstraint(['template_id'], ['template.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('template',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('font_id', sa.Integer(), nullable=True),
+        sa.Column('name', sa.String(), nullable=False),
+        sa.Column('filters', sa.JSON(), nullable=False),
+        sa.Column('card_filename_format', sa.String(), nullable=True),
+        sa.Column('episode_data_source', sa.String(), nullable=True),
+        sa.Column('sync_specials', sa.Boolean(), nullable=True),
+        sa.Column('skip_localized_images', sa.Boolean(), nullable=True),
+        sa.Column('translations', sa.JSON(), nullable=False),
+        sa.Column('card_type', sa.String(), nullable=True),
+        sa.Column('hide_season_text', sa.Boolean(), nullable=True),
+        sa.Column('season_titles', sa.JSON(), nullable=False),
+        sa.Column('hide_episode_text', sa.Boolean(), nullable=True),
+        sa.Column('episode_text_format', sa.String(), nullable=True),
+        sa.Column('unwatched_style', sa.String(), nullable=True),
+        sa.Column('watched_style', sa.String(), nullable=True),
+        sa.Column('extras', sa.JSON(), nullable=False),
+        sa.ForeignKeyConstraint(['font_id'], ['font.id'], ),
+        sa.PrimaryKeyConstraint('id')
+    )
+    with op.batch_alter_table('template', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_template_id'), ['id'], unique=False)
+
     op.create_table('episode',
         sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('font_id', sa.Integer(), nullable=True),
         sa.Column('series_id', sa.Integer(), nullable=True),
-        sa.Column('template_id', sa.Integer(), nullable=True),
         sa.Column('source_file', sa.String(), nullable=True),
         sa.Column('card_file', sa.String(), nullable=True),
         sa.Column('watched', sa.Boolean(), nullable=True),
@@ -140,7 +143,6 @@ def upgrade() -> None:
         sa.Column('episode_text', sa.String(), nullable=True),
         sa.Column('unwatched_style', sa.String(), nullable=True),
         sa.Column('watched_style', sa.String(), nullable=True),
-        sa.Column('font_id', sa.Integer(), nullable=True),
         sa.Column('font_color', sa.String(), nullable=True),
         sa.Column('font_size', sa.Float(), nullable=True),
         sa.Column('font_kerning', sa.Float(), nullable=True),
@@ -159,10 +161,33 @@ def upgrade() -> None:
         sa.Column('image_source_attempts', sa.JSON(), nullable=True),
         sa.ForeignKeyConstraint(['font_id'], ['font.id'], ),
         sa.ForeignKeyConstraint(['series_id'], ['series.id'], ),
+        sa.PrimaryKeyConstraint('id')
+    )
+    with op.batch_alter_table('episode', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_episode_id'), ['id'], unique=False)
+
+    op.create_table('series_templates',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('template_id', sa.Integer(), nullable=True),
+        sa.Column('series_id', sa.Integer(), nullable=True),
+        sa.ForeignKeyConstraint(['series_id'], ['series.id'], ),
         sa.ForeignKeyConstraint(['template_id'], ['template.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_episode_id'), 'episode', ['id'], unique=False)
+    with op.batch_alter_table('series_templates', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_series_templates_id'), ['id'], unique=False)
+
+    op.create_table('sync_templates',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('template_id', sa.Integer(), nullable=True),
+        sa.Column('sync_id', sa.Integer(), nullable=True),
+        sa.ForeignKeyConstraint(['sync_id'], ['sync.id'], ),
+        sa.ForeignKeyConstraint(['template_id'], ['template.id'], ),
+        sa.PrimaryKeyConstraint('id')
+    )
+    with op.batch_alter_table('sync_templates', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_sync_templates_id'), ['id'], unique=False)
+
     op.create_table('card',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('series_id', sa.Integer(), nullable=True),
@@ -193,13 +218,26 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(['series_id'], ['series.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_card_id'), 'card', ['id'], unique=False)
+    with op.batch_alter_table('card', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_card_id'), ['id'], unique=False)
+
+    op.create_table('episode_templates',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('template_id', sa.Integer(), nullable=True),
+        sa.Column('episode_id', sa.Integer(), nullable=True),
+        sa.ForeignKeyConstraint(['episode_id'], ['episode.id'], ),
+        sa.ForeignKeyConstraint(['template_id'], ['template.id'], ),
+        sa.PrimaryKeyConstraint('id')
+    )
+    with op.batch_alter_table('episode_templates', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_episode_templates_id'), ['id'], unique=False)
+
     op.create_table('loaded',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('media_server', sa.String(), nullable=False),
         sa.Column('series_id', sa.Integer(), nullable=True),
         sa.Column('episode_id', sa.Integer(), nullable=True),
         sa.Column('card_id', sa.Integer(), nullable=True),
+        sa.Column('media_server', sa.String(), nullable=False),
         sa.Column('filesize', sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(['card_id'], ['card.id'], ),
         sa.ForeignKeyConstraint(['episode_id'], ['episode.id'], ),
@@ -213,14 +251,37 @@ def upgrade() -> None:
 def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table('loaded')
-    op.drop_index(op.f('ix_card_id'), table_name='card')
+    with op.batch_alter_table('episode_templates', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_episode_templates_id'))
+
+    op.drop_table('episode_templates')
+    with op.batch_alter_table('card', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_card_id'))
+
     op.drop_table('card')
-    op.drop_index(op.f('ix_episode_id'), table_name='episode')
+    with op.batch_alter_table('sync_templates', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_sync_templates_id'))
+
+    op.drop_table('sync_templates')
+    with op.batch_alter_table('series_templates', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_series_templates_id'))
+
+    op.drop_table('series_templates')
+    with op.batch_alter_table('episode', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_episode_id'))
+
     op.drop_table('episode')
-    op.drop_table('series')
-    op.drop_table('sync')
-    op.drop_index(op.f('ix_template_id'), table_name='template')
+    with op.batch_alter_table('template', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_template_id'))
+
     op.drop_table('template')
-    op.drop_index(op.f('ix_font_id'), table_name='font')
+    op.drop_table('series')
+    with op.batch_alter_table('sync', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_sync_id'))
+
+    op.drop_table('sync')
+    with op.batch_alter_table('font', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_font_id'))
+
     op.drop_table('font')
     # ### end Alembic commands ###

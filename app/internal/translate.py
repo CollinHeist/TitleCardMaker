@@ -1,12 +1,15 @@
-from fastapi import HTTPException
-
 from modules.Debug import log
 
 from app.dependencies import get_database, get_tmdb_interface
+from app.internal.templates import get_effective_templates
 import app.models as models
 from app.database.query import get_template
 from app.schemas.episode import Episode
-from app.schemas.series import Series, Template
+from app.schemas.series import Series
+
+from modules.TieredSettings import TieredSettings
+from modules.TMDbInterface2 import TMDbInterface
+
 
 def translate_all_series() -> None:
     """
@@ -53,9 +56,8 @@ def translate_all_series() -> None:
 def translate_episode(
         db: 'Database',
         series: Series,
-        series_template: Template,
         episode: Episode,
-        tmdb_interface: 'TMDbInterface') -> None:
+        tmdb_interface: TMDbInterface) -> None:
     """
     Add the given Episode's translations to the Database.
 
@@ -69,21 +71,18 @@ def translate_episode(
         tmdb_interface: TMDbInterface to query for translations.
     """
 
-    # Get this Episode's Template, exit if specified and DNE
-    try:
-        episode_template = get_template(db, episode.template_id, raise_exc=True)
-    except HTTPException:
-        log.warning(f'{episode.log_str} not translating - missing Template')
-        return None
+    # Get the Series and Episode Template
+    series_template, episode_template = get_effective_templates(series, episode)
 
-    # Get translations for this episode, exit if no translation
-    if episode_template is not None and episode_template.translations:
-        translations = episode_template.translations
-    elif series.translations:
-        translations = series.translations
-    elif series_template is not None and series_template.translations:
-        translations = series_template.translations
-    else:
+    # Get the highest priority translation setting
+    translations = TieredSettings.resolve_singular_setting(
+        getattr(series_template, 'translations', None),
+        series.translations,
+        getattr(episode_template, 'translations', None)
+    )
+
+    # Exit if there are no translations to add
+    if translations is None or len(translations) == 0:
         return None
 
     # Look for and add each translation for this Episode

@@ -3,6 +3,7 @@ from typing import Any, Optional
 from fastapi import HTTPException
 
 import app.models as models
+from app.schemas.card import TitleCard
 from app.schemas.episode import Episode
 from app.schemas.font import NamedFont
 from app.schemas.series import Series, Template
@@ -51,6 +52,19 @@ def _get_obj(
             return None
 
     return obj
+
+
+def get_card(
+        db: 'Database',
+        card_id: int, *,
+        raise_exc: bool = True) -> Optional[TitleCard]:
+    """
+    Get the Card with the given ID from the given Database.
+
+    See _get_obj docstring for all details.
+    """
+
+    return _get_obj(db, models.card.Card, 'Card', card_id, raise_exc)
 
 
 def get_episode(
@@ -118,3 +132,33 @@ def get_template(
     return _get_obj(
         db, models.template.Template, 'Template', template_id, raise_exc
     )
+
+
+def get_all_templates(
+        db: 'Database',
+        obj_dict: dict[str, Any]) -> list[Template]:
+    """
+    Get all Templates defined in the given Dictionaries "template_ids"
+    key. This removes the "template_ids" key from obj_dict.
+
+    Args:
+        db: Database to query for Templates by their ID's.
+        obj_dict: Dictionary whose "template_ids" key to pop and parse
+            for Template ID's.
+
+    Returns:
+        List of Template objects whose order and ID correspond to the
+        indicated ID's.
+
+    Raises:
+        HTTPException (404) if any of the indicated Templates do not
+        exist.
+    """
+
+    # Parse all indicated Template ID's, removing key from dictionary
+    templates = []
+    if (template_ids := obj_dict.pop('template_ids', None)) is not None:
+        for template_id in template_ids:
+            templates.append(get_template(db, template_id, raise_exc=True))
+
+    return templates

@@ -11,7 +11,7 @@ from app.dependencies import (
     get_plex_interface,
 )
 import app.models as models
-from app.schemas.preferences import MediaServer
+from app.schemas.preferences import MediaServer, Preferences
 from app.schemas.series import Series
 
 
@@ -102,7 +102,7 @@ def set_series_database_ids(
 
 def download_series_poster(
         db: 'Database',
-        preferences: 'Preferences',
+        preferences: Preferences,
         series: Series,
         tmdb_interface: 'TMDbInterface') -> None:
     """
@@ -192,12 +192,13 @@ def load_series_title_cards(
         )
 
     # Get all episodes associated with this series
-    all_episodes = db.query(models.episode.Episode)\
-        .filter_by(series_id=series.id).all()
+    # all_episodes = db.query(models.episode.Episode)\
+    #     .filter_by(series_id=series.id).all()
     
     # Get list of episodes to reload
     episodes_to_load = []
-    for episode in all_episodes:
+    # for episode in all_episodes:
+    for episode in series.episodes:
         # Only load if episode has a Card
         card = db.query(models.card.Card)\
             .filter_by(episode_id=episode.id).first()
@@ -231,10 +232,9 @@ def load_series_title_cards(
         db.add(
             models.loaded.Loaded(
                 media_server=media_server,
-                series_id=series.id,
-                episode_id=loaded_episode.id,
-                card_id=loaded_card.id,
-                filesize=loaded_card.filesize,
+                series=series,
+                episode=loaded_episode,
+                card=loaded_card,
             )
         )
 

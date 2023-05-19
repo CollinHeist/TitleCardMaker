@@ -100,7 +100,7 @@
 
     async function getTemplates() {
       const templates = await fetch('/api/templates/all').then(resp => resp.json());
-      $('.dropdown[dropdown-type="template"]').dropdown({
+      $('.dropdown[data-value="template_ids"]').dropdown({
         placeholder: 'None',
         clearable: true,
         values: templates.map(({id, name}) => {
@@ -215,7 +215,7 @@
             $.ajax({
               type: 'POST',
               url: `/api/sync/${id}`,
-              success: (response) => {
+              success: response => {
                 let message = '';
                 for (let {id, name} of response) {
                   message += `<a class="item" href="/series/${id}">${name}</a>`;
@@ -228,7 +228,7 @@
                   classProgress: 'black',
                 });
               },
-              error: (response) => {
+              error: response => {
                 $.toast({
                   class: 'error',
                   title: 'Error encountered while Syncing',
@@ -386,8 +386,8 @@
 
           <div class="field">
             <label>Template to Apply</label>
-            <div dropdown-type="template" class="ui selection clearable dropdown">
-              <input name="template_id" type="hidden">
+            <div data-value="template_ids" class="ui multiple selection clearable dropdown">
+              <input name="template_ids" type="hidden">
               <i class="dropdown icon"></i>
               <div class="default text">None</div>
               <div class="menu"><!-- Added asynchronously --></div>
@@ -464,8 +464,8 @@
 
           <div class="field">
             <label>Template to Apply</label>
-            <div dropdown-type="template" class="ui selection clearable dropdown">
-              <input name="template_id" type="hidden">
+            <div data-value="template_ids" class="ui multiple selection clearable dropdown">
+              <input name="template_ids" type="hidden">
               <i class="dropdown icon"></i>
               <div class="default text">None</div>
               <div class="menu"><!-- Added asynchronously --></div>
@@ -541,9 +541,9 @@
           </div>
 
           <div class="field">
-            <label>Template to Apply</label>
-            <div dropdown-type="template" class="ui selection clearable dropdown">
-              <input name="template_id" type="hidden">
+            <label>Templates to Apply</label>
+            <div data-value="template_ids" class="ui multiple selection clearable dropdown">
+              <input name="template_ids" type="hidden">
               <i class="dropdown icon"></i>
               <div class="default text">None</div>
               <div class="menu"><!-- Added asynchronously --></div>
@@ -620,8 +620,8 @@
 
           <div class="field">
             <label>Template to Apply</label>
-            <div dropdown-type="template" class="ui selection clearable dropdown">
-              <input name="template_id" type="hidden">
+            <div data-value="template_ids" class="ui multiple selection clearable dropdown">
+              <input name="template_ids" type="hidden">
               <i class="dropdown icon"></i>
               <div class="default text">None</div>
               <div class="menu">
@@ -771,7 +771,7 @@
         let form = new FormData(event.target);
         let dataObj = {};
         for (let [name, value] of [...form.entries()]) {
-          if (name.includes('_tags') || name.includes('_libraries')) {
+          if (name.includes('_tags') || name.includes('_libraries') || name == 'template_ids') {
             if (value !== '') {
               dataObj[name] = value.split(',');
             }
@@ -785,14 +785,14 @@
           url: `/api/sync/${interface}/new`,
           data: JSON.stringify(dataObj),
           contentType: 'application/json',
-          success: (response) => {
+          success: response => {
             $.toast({
               class: 'blue info',
               title: `Created Sync "${response.name}"`,
             });
             getAllSyncs();
             $(`#${modalID}`).modal('hide');
-          }, error: (response) => {
+          }, error: response => {
             $.toast({
               class: 'error',
               title: 'Error Creating Sync',

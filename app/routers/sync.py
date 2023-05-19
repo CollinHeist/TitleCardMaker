@@ -1,8 +1,6 @@
-from typing import Literal, Optional, Union
+from fastapi import APIRouter, BackgroundTasks, Body, Depends
 
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, Query
-
-from app.database.query import get_template, get_sync
+from app.database.query import get_all_templates, get_sync
 from app.dependencies import (
     get_database, get_preferences, get_emby_interface,
     get_imagemagick_interface, get_jellyfin_interface, get_plex_interface,
@@ -11,8 +9,8 @@ from app.dependencies import (
 from app.internal.series import delete_series_and_episodes
 from app.internal.sync import add_sync, run_sync
 from app.schemas.sync import (
-    EmbySync, JellyfinSync, PlexSync, SonarrSeriesType, SonarrSync, Sync, Interface,
-    NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync, UpdateSync,
+    EmbySync, JellyfinSync, PlexSync, SonarrSync, Sync, NewEmbySync,
+    NewJellyfinSync, NewPlexSync, NewSonarrSync, UpdateSync,
 )
 from app.schemas.series import Series
 import app.models as models
@@ -93,18 +91,22 @@ def edit_sync(
 
     # Get existing Sync, raise 404 if DNE
     sync = get_sync(db, sync_id, raise_exc=True)
+    update_sync_dict = update_sync.dict()
 
-    # Verify Template exists (if specified), raise 404 if DNE
-    get_template(db, getattr(update_sync, 'template_id', None), raise_exc=True)
-
-    # Update object
+    # Verify any indicated Templates exist and update Sync
     changed = False
-    for attribute, value in update_sync.dict().items():
+    if (template_ids := getattr(update_sync, 'template_ids', None)) is not None:
+        if template_ids != sync.template_ids:
+            sync.templates = get_all_templates(db, update_sync_dict)
+            changed = True
+
+    # Update Sync
+    for attribute, value in update_sync_dict.items():
         if value is not None and getattr(sync, attribute) != value:
             setattr(sync, attribute, value)
             changed = True
 
-    # If object was changed, update DB
+    # If Sync was changed, update DB
     if changed:
         db.commit()
 
@@ -127,18 +129,10 @@ def delete_sync(
     # Get associated Sync, raise 404 if DNE
     sync = get_sync(db, sync_id, raise_exc=True)
 
-    # Get all Series associated with this Sync
-    all_series = db.query(models.series.Series).filter_by(sync_id=sync_id).all()
-
-    # Delete or reset the Sync ID for all associated Series
-    for series in all_series:
-        # Delete the actual Series
-        if delete_series:
+    # If deleting Series, iterate and delete Series and all Episodes
+    if delete_series:
+        for series in sync.series:
             delete_series_and_episodes(db, series, commit_changes=False)
-        # Reset the Sync ID of the linked Series
-        else:
-            log.debug(f'{series.log_str}.sync_id = None')
-            series.sync_id = None
 
     db.delete(sync)
     db.commit()

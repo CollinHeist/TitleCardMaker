@@ -7,7 +7,10 @@ from sqlalchemy.orm import relationship
 
 from app.database.session import Base
 from app.dependencies import get_preferences
+from app.models.template import SeriesTemplates
+
 from modules.CleanPath import CleanPath
+from modules.Debug import log
 from modules.SeriesInfo import SeriesInfo
 
 ASSET_DIRECTORY = Path(__file__).parent.parent / 'assets'
@@ -18,17 +21,21 @@ class Series(Base):
     # Referencial arguments
     id = Column(Integer, primary_key=True)
     font_id = Column(Integer, ForeignKey('font.id'))
-    template_id = Column(Integer, ForeignKey('template.id'))
-    cards = relationship('Card', back_populates='series')
-    episodes = relationship('Episode', back_populates='series')
     font = relationship('Font', back_populates='series')
+    sync_id = Column(Integer, ForeignKey('sync.id'), default=None)
+    sync = relationship('Sync', back_populates='series')
+    cards = relationship('Card', back_populates='series')
     loaded = relationship('Loaded', back_populates='series')
-    templates = relationship('Template', back_populates='series')
+    episodes = relationship('Episode', back_populates='series')
+    templates = relationship(
+        'Template',
+        secondary=SeriesTemplates.__table__,
+        back_populates='series'
+    )
 
     # Required arguments
     name = Column(String, nullable=False)
     year = Column(Integer, nullable=False)
-    sync_id = Column(Integer, ForeignKey('sync.id'), default=None)
     monitored = Column(Boolean, default=True, nullable=False)
     poster_file = Column(String, default=str(ASSET_DIRECTORY/'placeholder.jpg'))
     poster_url = Column(String, default='/assets/placeholder.jpg')
@@ -73,6 +80,15 @@ class Series(Base):
     watched_style = Column(String, default=None)
     extras = Column(JSON, default=None)
 
+    # Columns from relationships
+    @hybrid_property
+    def episode_ids(self) -> list[int]:
+        return [episode.id for episode in self.episodes]
+
+    @hybrid_property
+    def template_ids(self) -> list[int]:
+        return [template.id for template in self.templates]
+
     @hybrid_property
     def full_name(self) -> str:
         return f'{self.name} ({self.year})'
@@ -93,11 +109,12 @@ class Series(Base):
     def card_properties(self) -> dict[str, Any]:
         return {
             'series_id': self.id,
+            'template_ids': self.template_ids,
+            'font_id': self.font_id,
             'series_name': self.name,
             'series_full_name': self.full_name,
             'year': self.year,
             'card_filename_format': self.card_filename_format,
-            'font_id': self.font_id,
             'font_color': self.font_color,
             'font_title_case': self.font_title_case,
             'font_size': self.font_size,
@@ -105,7 +122,6 @@ class Series(Base):
             'font_stroke_width': self.font_stroke_width,
             'font_interline_spacing': self.font_interline_spacing,
             'font_vertical_shift': self.font_vertical_shift,
-            'template_id': self.template_id,
             'directory': self.directory,
             'card_type': self.card_type,
             'hide_season_text': self.hide_season_text,

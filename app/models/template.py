@@ -4,6 +4,7 @@ from typing import Any, Optional
 
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, JSON
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
+from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy.orm import relationship
 
 from app.database.session import Base
@@ -41,36 +42,71 @@ ARGUMENT_KEYS = (
     'Episode Title Length', 'Episode Airdate',
 )
 
+# Tables for many <-> many Template relationships
 
+class SeriesTemplates(Base):
+    __tablename__ = 'series_templates'
+
+    id = Column(Integer, primary_key=True, index=True)
+    template_id = Column(Integer, ForeignKey('template.id'))
+    series_id = Column(Integer, ForeignKey('series.id'))
+
+class EpisodeTemplates(Base):
+    __tablename__ = 'episode_templates'
+
+    id = Column(Integer, primary_key=True, index=True)
+    template_id = Column(Integer, ForeignKey('template.id'))
+    episode_id = Column(Integer, ForeignKey('episode.id'))
+
+class SyncTemplates(Base):
+    __tablename__ = 'sync_templates'
+
+    id = Column(Integer, primary_key=True, index=True)
+    template_id = Column(Integer, ForeignKey('template.id'))
+    sync_id = Column(Integer, ForeignKey('sync.id'))
+
+# Template table
 class Template(Base):
     __tablename__ = 'template'
 
     # Referencial arguments
     id = Column(Integer, primary_key=True, index=True)
     font_id = Column(Integer, ForeignKey('font.id'))
-    syncs = relationship('Sync', back_populates='template')
     font = relationship('Font', back_populates='templates')
-    series = relationship('Series', back_populates='templates')
-    episodes = relationship('Episode', back_populates='templates')
-    
+    syncs = relationship(
+        'Sync',
+        secondary=SyncTemplates.__table__,
+        back_populates='templates'
+    )
+    series = relationship(
+        'Series',
+        secondary=SeriesTemplates.__table__,
+        back_populates='templates'
+    )
+    episodes = relationship(
+        'Episode',
+        secondary=EpisodeTemplates.__table__,
+        back_populates='templates'
+    )
+
     name = Column(String, nullable=False)
-    filters = Column(JSON, default=[], nullable=False)
+    filters = Column(MutableList.as_mutable(JSON), default=[], nullable=False)
 
     card_filename_format = Column(String, default=None)
     episode_data_source = Column(String, default=None)
     sync_specials = Column(Boolean, default=None)
     skip_localized_images = Column(Boolean, default=None)
-    translations = Column(JSON, default=[], nullable=False)
+    translations = Column(MutableList.as_mutable(JSON), default=None, nullable=False)
 
     card_type = Column(String, default=None)
     hide_season_text = Column(Boolean, default=None)
-    season_titles = Column(JSON, default={}, nullable=False)
+    season_titles = Column(MutableDict.as_mutable(JSON), default={}, nullable=False)
     hide_episode_text = Column(Boolean, default=None)
     episode_text_format = Column(String, default=None)
     unwatched_style = Column(String, default=None)
     watched_style = Column(String, default=None)
 
-    extras = Column(JSON, default={}, nullable=False)
+    extras = Column(MutableDict.as_mutable(JSON), default={}, nullable=False)
 
     @hybrid_property
     def log_str(self) -> str:
@@ -100,7 +136,7 @@ class Template(Base):
         }
     
     @hybrid_method
-    def meets_filter_critera(self,
+    def meets_filter_criteria(self,
             series: 'Series',
             episode: Optional['Episode'] = None) -> bool:
         """

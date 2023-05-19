@@ -7,7 +7,6 @@ from app.dependencies import (
     get_plex_interface, get_sonarr_interface, get_tmdb_interface
 )
 import app.models as models
-from app.database.query import get_template
 from app.schemas.episode import Episode
 from app.schemas.series import Series
 
@@ -126,11 +125,12 @@ def refresh_episode_data(
             be communicated with.
     """
 
-    # Query for template if indicated
+    # Query for Template if indicated
     template_dict = {}
-    if series.template_id is not None:
-        template = get_template(db, series.template_id, raise_exc=True)
-        template_dict = template.__dict__
+    for template in series.templates:
+        if template.meets_filter_criteria(series):
+            template_dict = template.__dict__
+            break
 
     # Get highest priority options
     series_options = {}

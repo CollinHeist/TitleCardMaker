@@ -68,7 +68,7 @@ class BaseConfig(Base):
 class BaseTemplate(BaseConfig):
     name: str = Field(..., min_length=1, title='Template name')
     filters: list[Condition] = Field(default=[])
-    translations: list[Translation] = Field(default=[])
+    translations: Optional[list[Translation]] = Field(default=None)
 
 class BaseSeries(BaseConfig):
     name: str = Field(..., min_length=1, title='Series name')
@@ -79,7 +79,7 @@ class BaseSeries(BaseConfig):
         description='Year the series first aired'
     )
     monitored: bool = Field(default=True)
-    template_id: Optional[int] = Field(
+    template_ids: Optional[list[int]] = Field(
         default=None,
         title='Template ID',
         description='ID of the Template applied to this series',
@@ -250,7 +250,7 @@ class UpdateTemplate(BaseUpdate):
     skip_localized_images: Optional[bool] = Field(default=UNSPECIFIED)
     card_filename_format: Optional[str] = Field(default=UNSPECIFIED)
     episode_data_source: Optional[EpisodeDataSource] = Field(default=UNSPECIFIED)
-    translations: list[Translation] = Field(default=UNSPECIFIED)
+    translations: Optional[list[Translation]] = Field(default=UNSPECIFIED)
     card_type: Optional[str] = Field(default=UNSPECIFIED)
     hide_season_text: bool = Field(default=UNSPECIFIED)
     season_title_ranges: list[SeasonTitleRange] = Field(default=UNSPECIFIED)
@@ -300,7 +300,7 @@ class UpdateSeries(BaseUpdate):
     name: str = Field(default=UNSPECIFIED, min_length=1)
     year: int = Field(default=UNSPECIFIED, ge=1900)
 
-    template_id: Optional[int] = Field(default=UNSPECIFIED)
+    template_ids: Optional[list[int]] = Field(default=UNSPECIFIED)
     font_id: Optional[int] = Field(default=UNSPECIFIED)
     sync_specials: Optional[bool] = Field(default=UNSPECIFIED)
     skip_localized_images: Optional[bool] = Field(default=UNSPECIFIED)
@@ -383,6 +383,7 @@ class Template(BaseTemplate):
 
 class Series(BaseSeries):
     id: int
+    sync_id: Optional[int]
     full_name: str
     poster_path: Optional[str]
     poster_url: str
