@@ -20,8 +20,12 @@ class Episode:
     )
 
 
-    def __init__(self, episode_info: 'EpisodeInfo', card_class: 'CardType',
-            base_source: Path, destination: Path, given_keys: set[str],
+    def __init__(self,
+            episode_info: 'EpisodeInfo',
+            card_class: 'CardType',
+            base_source: Path,
+            destination: Path,
+            given_keys: set[str],
             **extras: dict[str, Any]) -> None:
         """
         Construct a new instance of an Episode.
@@ -122,7 +126,8 @@ class Episode:
         self.spoil_type = style_set.effective_spoil_type(watched)
 
 
-    def update_source(self, new_source: Union[Path, str, None], *,
+    def update_source(self,
+            new_source: Union[Path, str, None], *,
             downloadable: bool) -> bool:
         """
         Update the source image for this Episode, as well as the
@@ -159,7 +164,7 @@ class Episode:
         return True
 
 
-    def delete_card(self, *, reason: Optional[str]=None) -> bool:
+    def delete_card(self, *, reason: Optional[str] = None) -> bool:
         """
         Delete the title card for this Episode.
 
