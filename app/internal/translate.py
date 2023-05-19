@@ -28,7 +28,10 @@ def translate_all_series() -> None:
             # Get all Series
             all_series = db.query(models.series.Series).all()
             for series in all_series:
-                # TODO skip unmonitored Series
+                if not series.monitored:
+                    log.debug(f'{series.log_str} is Unmonitored, skipping')
+                    continue
+
                 # Get the Series Template
                 try:
                     series_template = get_template(
