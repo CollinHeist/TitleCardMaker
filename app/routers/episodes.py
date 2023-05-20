@@ -2,7 +2,7 @@ from typing import Literal
 
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException
 
-from app.database.query import get_episode, get_font, get_series, get_template
+from app.database.query import get_all_templates, get_episode, get_font, get_series
 from app.dependencies import (
     get_database, get_preferences, get_emby_interface, get_jellyfin_interface,
     get_plex_interface, get_sonarr_interface, get_tmdb_interface
@@ -176,13 +176,21 @@ def update_episode_config(
     log.critical(f'{update_episode.dict()=}')
     # Get this episode, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
+    update_episode_dict = update_episode.dict()
 
     # If any reference ID's were indicated, verify referenced object exists
-    get_template(db, getattr(update_episode, 'template_id', None), raise_exc=True)
     get_font(db, getattr(update_episode, 'font_id', None), raise_exc=True)
+    
+    # Assign Templates if indicated
+    changed = False
+    if ((template_ids := update_episode_dict.get('template_ids', None))
+        not in (None, UNSPECIFIED)):
+        if episode.template_ids != template_ids:
+            episode.templates = get_all_templates(db, update_episode_dict)
+            log.debug(f'{episode.log_str}.templates = {template_ids}')
+            changed = True
 
     # Update each attribute of the object
-    changed = False
     for attr, value in update_episode.dict().items():
         if value != UNSPECIFIED and getattr(episode, attr) != value:
             log.debug(f'Episode[{episode_id}].{attr} = {value}')
