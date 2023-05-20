@@ -358,11 +358,16 @@
       // Get all inputs for this episode
       const episodeInputs = $(`#episode-id${episodeId} input`);
       // Construct updateEpisode object
-      let updateEpisode = {};
+      let updateEpisode = {},
+          template_ids = [];
       Object.entries(episodeInputs).forEach(([index, input]) => {
         if (input.name !== undefined) {
+          // Handle Templates
+          if (input.name === 'template_ids' && input.value !== '') {
+            template_ids = input.value.split(','); 
+          }
           // Handle percentage values
-          if (input.value != '' && ['font_size', 'font_kerning', 'font_stroke_width'].includes(input.name)) {
+          else if (input.value != '' && ['font_size', 'font_kerning', 'font_stroke_width'].includes(input.name)) {
             updateEpisode[input.name] = input.value/100.0;
           } else {
             updateEpisode[input.name] = input.value;
@@ -386,7 +391,7 @@
         type: 'PATCH',
         url: `/api/episodes/${episodeId}`,
         contentType: 'application/json',
-        data: JSON.stringify(updateEpisode),
+        data: JSON.stringify({...updateEpisode, template_ids: template_ids}),
         success: response => {
           if (!batch) {
             $.toast({
