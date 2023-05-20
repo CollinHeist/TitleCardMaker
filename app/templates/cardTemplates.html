@@ -375,7 +375,6 @@
       const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
       const allEpisodeDataSources = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
       const allTranslations = await fetch('/api/available/translations').then(resp => resp.json());
-      console.log(allTranslations);
       const elements = allTemplates.map(templateObj => {
         // Clone template
         const base = document.querySelector('#template').content.cloneNode(true);
@@ -439,7 +438,6 @@
             unwatchedCard = base.querySelector('.card[content-type="unwatched"]');
         const watchedImg = base.querySelector('img[content-type="watched"]'),
             unwatchedImg = base.querySelector('img[content-type="unwatched"]');
-            console.log(base.querySelector('.button[data-action="refresh"]'));
         base.querySelector('.button[data-action="refresh"]').onclick = () => {
           reloadPreview('watched', form, watchedCard, watchedImg);
           reloadPreview('unwatched', form, unwatchedCard, unwatchedImg);
@@ -570,7 +568,7 @@
             return {name: name, value: value, selected: value === templateObj.episode_data_source};
           }), placeholder: 'Global Default',
         });
-        if (templateObj.translations.length > 0) {
+        if (templateObj.translations !== null && templateObj.translations.length > 0) {
           const translationSegment = $(`#template-id${templateObj.id} [data-value="translations"]`);
           for (const translation of templateObj.translations) {
             // Create new translation entry, add to translation segment
@@ -605,7 +603,6 @@
           const newTranslation = document.querySelector('#translation-template').content.cloneNode(true);
           $(`#template-id${templateObj.id} [data-value="translations"]`).append(newTranslation);
           // Language code dropdown
-          console.log(allTranslations);
           $(`#template-id${templateObj.id} .dropdown[data-value="language_code"]`).last().dropdown({
             values: [
               {name: 'Language', type: 'header'},
