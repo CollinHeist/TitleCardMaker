@@ -3,12 +3,10 @@ from typing import Optional
 
 from fastapi import BackgroundTasks
 
-from app.database.query import get_font, get_template
 from app.dependencies import (
     get_database, get_emby_interface, get_jellyfin_interface, get_preferences,
     get_plex_interface
 )
-from app.internal.font import get_effective_fonts
 from app.internal.templates import get_effective_templates
 import app.models as models
 from app.schemas.font import DefaultFont
@@ -19,6 +17,8 @@ from app.schemas.series import Series
 
 from modules.CleanPath import CleanPath
 from modules.Debug import log
+from modules.RemoteCardType2 import RemoteCardType
+from modules.RemoteFile import RemoteFile
 from modules.SeasonTitleRanges import SeasonTitleRanges
 from modules.TieredSettings import TieredSettings
 from modules.Title import Title
@@ -51,6 +51,57 @@ def create_all_title_cards():
         log.exception(f'Failed to create title cards', e)
 
 
+def refresh_all_remote_card_types():
+    """
+    Schedule-able function to refresh all specified RemoteCardTypes.
+    """
+
+    try:
+        # Get the Database
+        with next(get_database()) as db:
+            refresh_remote_card_types(db, get_preferences())
+    except Exception as e:
+        log.exception(f'Failed to refresh remote card types', e)
+
+
+def refresh_remote_card_types(db: 'Database', preferences: Preferences) -> None:
+    """
+    Refresh all specified RemoteCardTypes. This re-downloads all
+    RemoteCardType and RemoteFile files.
+
+    Args:
+        db: Database to query for remote card type identifiers.
+        preferences: Preferences to load the RemoteCardType classes
+            into.
+    """
+
+    # Function to get all unique card types for the table model
+    def _get_unique_card_types(model) -> set[str]:
+        return set(obj[0] for obj in db.query(model.card_type).distinct().all())
+
+    # Get all card types globally, from Templates, Series, and Episodes
+    card_identifiers = {preferences.default_card_type} \
+        | _get_unique_card_types(models.template.Template) \
+        | _get_unique_card_types(models.series.Series) \
+        | _get_unique_card_types(models.episode.Episode)
+
+    # Reset loaded remote file(s)
+    RemoteFile.reset_loaded_database()
+
+    # Refresh all remote card types
+    for card_identifier in card_identifiers:
+        # Card type is remote
+        if (card_identifier is not None
+            and card_identifier not in TitleCardCreator.CARD_TYPES):
+            log.debug(f'Loading RemoteCardType[{card_identifier}]..')
+            remote_card_type = RemoteCardType(card_identifier)
+            if remote_card_type.valid and remote_card_type is not None:
+                preferences.remote_card_types[card_identifier] =\
+                    remote_card_type.card_class
+
+    return None
+
+
 def add_card_to_database(db, card_model, card_settings) -> 'Card':
     """
     
@@ -78,7 +129,15 @@ def create_card(db, preferences, card_model, card_settings) -> None:
     """
 
     # Initialize class of the card type being created
-    CardClass = TitleCardCreator.CARD_TYPES[card_settings.get('card_type')]
+    # Get the effective card class
+    if (card_type := card_settings['card_type']) in TitleCardCreator.CARD_TYPES:
+        CardClass = TitleCardCreator.CARD_TYPES[card_type]
+    elif card_type in preferences.remote_card_types:
+        CardClass = preferences.remote_card_types[card_type]
+    else:
+        log.error(f'Unable to identify card type "{card_type}", skipping')
+        return None
+
     card_maker = CardClass(
         **(card_settings | card_settings['extras']),
         preferences=preferences,
@@ -158,8 +217,14 @@ def create_episode_card(
     TieredSettings(card_extras, episode.translations)
     card_settings['extras'] = card_extras | episode.translations
 
-    # Get the effective card type class
-    CardClass = TitleCardCreator.CARD_TYPES[card_settings.get('card_type')]
+    # Get the effective card class
+    if (card_type := card_settings['card_type']) in TitleCardCreator.CARD_TYPES:
+        CardClass = TitleCardCreator.CARD_TYPES[card_type]
+    elif card_type in preferences.remote_card_types:
+        CardClass = preferences.remote_card_types[card_type]
+    else:
+        log.error(f'Unable to identify card type "{card_type}", skipping')
+        return ['invalid']
 
     # Add card default font stuff
     if card_settings.get('font_file', None) is None:
@@ -271,7 +336,7 @@ def create_episode_card(
     # Get any existing card for this episode
     existing_card = db.query(models.card.Card)\
         .filter_by(episode_id=episode.id).first()
-    card = NewTitleCard(**card_settings)
+    card = NewTitleCard(**card_settings, episode_id=episode.id)
 
     # No existing card, add task to create and add to database
     if existing_card is None:

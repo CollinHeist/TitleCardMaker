@@ -230,7 +230,7 @@ def create_card_for_episode(
     )
 
     # Create Card for this Episode, record actions
-    actions = create_episode_card(db, preferences, None, episode.series, episode)
+    actions = create_episode_card(db, preferences, None, episode)
     if actions:
         all_actions = CardActions()
         for action in actions:

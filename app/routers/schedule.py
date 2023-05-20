@@ -5,7 +5,9 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 
 from app.dependencies import get_scheduler
 from app.internal.availability import get_latest_version
-from app.internal.cards import create_all_title_cards
+from app.internal.cards import (
+    create_all_title_cards, refresh_all_remote_card_types
+)
 from app.internal.episodes import refresh_all_episode_data
 from app.internal.series import load_all_media_servers
 from app.internal.sources import (
@@ -35,6 +37,7 @@ JOB_REFRESH_EPISODE_DATA: str = 'RefreshEpisodeData'
 JOB_SYNC_INTERFACES: str = 'SyncInterfaces'
 # Internal Job ID's
 INTERNAL_JOB_CHECK_FOR_NEW_RELEASE: str = 'CheckForNewRelease'
+INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES: str = 'RefreshRemoteCardTypes'
 
 TaskID = Literal[
     JOB_REFRESH_EPISODE_DATA, JOB_SYNC_INTERFACES, JOB_DOWNLOAD_SOURCE_IMAGES,
@@ -96,6 +99,12 @@ def wrapped_get_latest_version():
     get_latest_version()
     _wrap_after(INTERNAL_JOB_CHECK_FOR_NEW_RELEASE)
 
+def wrapped_refresh_all_remote_cards():
+    _wrap_before(INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES)
+    refresh_all_remote_card_types()
+    _wrap_after(INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES)
+
+
 """
 Dictionary of Job ID's to NewJob objects that contain the default Job
 attributes for all major functions.
@@ -139,11 +148,17 @@ BaseJobs = {
         description='Download Logos for all Series',
     ),
     # Internal (private) jobs
-    'CheckForNewRelease': NewJob(
-        id='CheckForNewRelease',
+    INTERNAL_JOB_CHECK_FOR_NEW_RELEASE: NewJob(
+        id=INTERNAL_JOB_CHECK_FOR_NEW_RELEASE,
         function=wrapped_get_latest_version,
         seconds=60 * 60 * 12,
         description='Check for a new release of TitleCardMaker',
+        internal=True,
+    ), INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES: NewJob(
+        id=INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES,
+        function=...,
+        seconds=60 * 60 * 24,
+        description='Refresh all RemoteCardType files',
         internal=True,
     ),
 }

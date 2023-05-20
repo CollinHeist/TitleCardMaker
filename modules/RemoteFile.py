@@ -72,8 +72,8 @@ class RemoteFile:
                 pass
         except Exception as e:
             self.valid = False
-            log.error(f'Could not download RemoteFile "{username}/{filename}", '
-                      f'returned "{e}"')
+            log.exception(f'Could not download RemoteFile '
+                          f'"{username}/{filename}"', e)
 
 
     def __str__(self) -> str:

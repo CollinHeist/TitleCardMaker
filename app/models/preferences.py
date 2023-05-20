@@ -53,6 +53,7 @@ class Preferences:
         self.season_folder_format = 'Season {season_number}'
         self.sync_specials = True
 
+        self.remote_card_types = {}
         self.default_card_type = 'standard'
         self.excluded_card_types = []
         self.default_watched_style = 'unique'
@@ -106,7 +107,7 @@ class Preferences:
 
     def __setattr__(self, name, value) -> None:
         self.__dict__[name] = value
-        log.debug(f'preferences.__dict__[{name}] = {value}')
+        log.debug(f'preferences.{name} = {value}')
         self._rewrite_preferences()
 
 
