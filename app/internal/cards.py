@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import BackgroundTasks
 
@@ -59,20 +59,20 @@ def refresh_all_remote_card_types():
     try:
         # Get the Database
         with next(get_database()) as db:
-            refresh_remote_card_types(db, get_preferences())
+            refresh_remote_card_types(db, reset=True)
     except Exception as e:
         log.exception(f'Failed to refresh remote card types', e)
 
 
-def refresh_remote_card_types(db: 'Database', preferences: Preferences) -> None:
+def refresh_remote_card_types(
+        db: 'Database',
+        reset: bool = False) -> None:
     """
     Refresh all specified RemoteCardTypes. This re-downloads all
     RemoteCardType and RemoteFile files.
 
     Args:
         db: Database to query for remote card type identifiers.
-        preferences: Preferences to load the RemoteCardType classes
-            into.
     """
 
     # Function to get all unique card types for the table model
@@ -80,19 +80,26 @@ def refresh_remote_card_types(db: 'Database', preferences: Preferences) -> None:
         return set(obj[0] for obj in db.query(model.card_type).distinct().all())
 
     # Get all card types globally, from Templates, Series, and Episodes
+    preferences = get_preferences()
     card_identifiers = {preferences.default_card_type} \
         | _get_unique_card_types(models.template.Template) \
         | _get_unique_card_types(models.series.Series) \
         | _get_unique_card_types(models.episode.Episode)
 
     # Reset loaded remote file(s)
-    RemoteFile.reset_loaded_database()
+    if reset:
+        RemoteFile.reset_loaded_database()
 
     # Refresh all remote card types
     for card_identifier in card_identifiers:
         # Card type is remote
         if (card_identifier is not None
             and card_identifier not in TitleCardCreator.CARD_TYPES):
+            # If not resetting, skip already loaded types
+            if not reset and card_identifier in preferences.remote_card_types:
+                continue
+
+            # Load new type
             log.debug(f'Loading RemoteCardType[{card_identifier}]..')
             remote_card_type = RemoteCardType(card_identifier)
             if remote_card_type.valid and remote_card_type is not None:
@@ -102,7 +109,10 @@ def refresh_remote_card_types(db: 'Database', preferences: Preferences) -> None:
     return None
 
 
-def add_card_to_database(db, card_model, card_settings) -> 'Card':
+def add_card_to_database(
+        db: 'Database',
+        card_model: NewTitleCard,
+        card_settings: dict[str, Any]) -> 'Card':
     """
     
     """
@@ -111,12 +121,15 @@ def add_card_to_database(db, card_model, card_settings) -> 'Card':
     card = models.card.Card(**card_model.dict())
     db.add(card)
     db.commit()
-    log.debug(f'Card[{card.id}] Created "{card_settings["card_file"].resolve()}"')
 
     return card
 
 
-def create_card(db, preferences, card_model, card_settings) -> None:
+def create_card(
+        db: 'Database',
+        preferences: Preferences,
+        card_model: NewTitleCard,
+        card_settings: dict[str, Any]) -> None:
     """
     Create the given Card, adding the resulting entry to the Database.
 
@@ -167,9 +180,9 @@ def create_episode_card(
 
     """
 
-    series = episode.series
 
     # Get effective Template for this Series and Episode
+    series = episode.series
     series_template, episode_template = get_effective_templates(series, episode)
     series_template_dict, episode_template_dict = {}, {}
     if series_template is not None:
@@ -203,9 +216,7 @@ def create_episode_card(
     )
 
     # Resolve all extras
-    card_extras = {}
-    TieredSettings(
-        card_extras,
+    card_extras = TieredSettings.new_settings(
         series_template_dict.get('extras', {}),
         series.card_properties.get('extras', {}),
         episode_template_dict.get('extras', {}),
@@ -313,11 +324,11 @@ def create_episode_card(
     try:
         if card_settings.get('card_file', None) is None:
             card_settings['card_file'] = series_directory \
-                / preferences.season_folder_format.format(**episode_info.indices) \
+                / preferences.get_folder_format(episode_info) \
                 / card_settings['card_filename_format'].format(**card_settings)
         else:
             card_settings['card_file'] = series_directory \
-                / preferences.season_folder_format.format(**episode_info.indices) \
+                / preferences.get_folder_format(episode_info) \
                 / card_settings['card_file']
     except KeyError as e:
         log.exception(f'Cannot format filename - missing data', e)
@@ -336,7 +347,11 @@ def create_episode_card(
     # Get any existing card for this episode
     existing_card = db.query(models.card.Card)\
         .filter_by(episode_id=episode.id).first()
-    card = NewTitleCard(**card_settings, episode_id=episode.id)
+    card = NewTitleCard(
+        **card_settings,
+        series_id=series.id,
+        episode_id=episode.id,
+    )
 
     # No existing card, add task to create and add to database
     if existing_card is None:

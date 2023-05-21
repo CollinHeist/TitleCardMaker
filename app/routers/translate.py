@@ -43,7 +43,7 @@ def add_series_translations(
             # Function
             translate_episode,
             # Arguments
-            db, series, episode, tmdb_interface
+            db, episode, tmdb_interface
         )
 
     return None

@@ -4,15 +4,18 @@ from fastapi import HTTPException
 
 from modules.Debug import log
 
-from app.database.query import get_template
 from app.dependencies import (
     get_database, get_preferences, get_emby_interface,
     get_imagemagick_interface, get_jellyfin_interface, get_plex_interface,
     get_tmdb_interface
 )
+from app.internal.templates import (
+    get_effective_series_template, get_effective_templates
+)
 import app.models as models
 from app.schemas.card import SourceImage
 from app.schemas.episode import Episode
+from app.schemas.preferences import Preferences
 from app.schemas.series import Series
 from modules.TieredSettings import TieredSettings
 from modules.WebInterface import WebInterface
@@ -34,22 +37,21 @@ def download_all_source_images() -> None:
                     log.debug(f'{series.log_str} is not monitored, skipping')
                     continue
 
-                # Get all of this Series' Episodes
-                all_episodes = db.query(models.episode.Episode)\
-                    .filter_by(series_id=series.id)
-                for episode in all_episodes:
-                    # Download source for this image
+                # Download source image for all Episodes
+                for episode in series.episodes:
                     try:
                         download_episode_source_image(
                             db, get_preferences(), get_emby_interface(),
                             get_jellyfin_interface(), get_plex_interface(),
-                            get_tmdb_interface(), series, episode
+                            get_tmdb_interface(), episode
                         )
                     except HTTPException as e:
                         log.warning(f'{series.log_str} {episode.log_str} Skipping source selection')
                         continue
     except Exception as e:
         log.exception(f'Failed to download source images', e)
+
+    return None
 
 
 def download_all_series_logos() -> None:
@@ -71,7 +73,7 @@ def download_all_series_logos() -> None:
 
                 try:
                     download_series_logo(
-                        db, get_preferences(), get_emby_interface(),
+                        get_preferences(), get_emby_interface(),
                         get_imagemagick_interface(), get_jellyfin_interface(),
                         get_tmdb_interface(), series,
                     )
@@ -81,10 +83,11 @@ def download_all_series_logos() -> None:
     except Exception as e:
         log.exception(f'Failed to download series logos', e)
 
+    return None
+
 
 def download_series_logo(
-        db: 'Database',
-        preferences: 'Preferences',
+        preferences: Preferences,
         emby_interface: 'EmbyInterface',
         imagemagick_interface: 'ImageMagickInterface',
         jellyfin_interface: 'JellyfinInterface',
@@ -110,22 +113,17 @@ def download_series_logo(
         return f'/source/{series.path_safe_name}/logo.png'
 
     # Get Template and Template dictionary
-    series_template = get_template(db, series.template_id, raise_exc=True)
-    series_template_dict = {}
-    if series_template is not None:
-        series_template_dict = series_template.__dict__
+    series_template_dict = get_effective_series_template(series, as_dict=True)
 
-    # Resolve all settings
-    image_source_settings = {}
-    TieredSettings(
-        image_source_settings,
-        {'image_source_priority': preferences.image_source_priority},
-        series_template_dict,
-        series.image_source_properties,
+    # Resolve ISP setting
+    image_source_priority = TieredSettings.resolve_singular_setting(
+        preferences.image_source_priority,
+        series_template_dict.get('image_source_priority', None),
+        series.image_source_properties.get('image_source_priority', None),
     )
 
     # Go through all image sources    
-    for image_source in image_source_settings['image_source_priority']:
+    for image_source in image_source_priority:
         if image_source == 'Emby' and emby_interface:
             logo = emby_interface.get_series_logo(series.as_series_info)
         elif image_source == 'Jellyfin' and jellyfin_interface:
@@ -193,12 +191,11 @@ def download_series_logo(
 
 def download_episode_source_image(
         db: 'Database',
-        preferences: 'Preferences',
+        preferences: Preferences,
         emby_interface: Optional['EmbyInterface'],
         jellyfin_interface: Optional['JellyfinInterface'],
         plex_interface: Optional['PlexInterface'],
         tmdb_interface: Optional['TMDbInterface'],
-        series: Series,
         episode: Episode) -> Optional[str]:
     """
     Download the source image for the given Episode.
@@ -212,6 +209,7 @@ def download_episode_source_image(
     """
 
     # If source already exists, return path to that
+    series = episode.series
     source_file = episode.get_source_file(
         preferences.source_directory, series.path_safe_name
     )
@@ -219,31 +217,19 @@ def download_episode_source_image(
         log.debug(f'{series.log_str} {episode.log_str} Source image already exists')
         return f'/source/{series.path_safe_name}/{source_file.name}'
 
-    # Get effective template
-    series_template_dict, episode_template_dict = {}, {}
-    if episode.template_id is not None:
-        episode_template_dict = get_template(
-            db, episode.template_id, raise_exc=True
-        ).image_source_properties
-    elif series.template_id is not None:
-        series_template_dict = get_template(
-            db, series.template_id, raise_exc=True
-        ).image_source_properties
+    # Get effective Templates
+    series_template, episode_template = get_effective_templates(series, episode)
 
-    # Resolve all settings from global -> episode
-    image_source_settings = {}
-    TieredSettings(
-        image_source_settings,
-        {'image_source_priority': preferences.image_source_priority,
-         'skip_localized_images': preferences.tmdb_skip_localized},
-        series_template_dict,
-        series.image_source_properties,
-        episode_template_dict,
+    # Get source image settings
+    skip_localized_images = TieredSettings.resolve_singular_setting(
+        preferences.tmdb_skip_localized,
+        getattr(series_template, 'skip_localized_images', None),
+        series.skip_localized_images,
+        getattr(episode_template, 'skip_localized_images', None),
     )
-    skip_localized_images = image_source_settings['skip_localized_images']
 
     # Go through all image sources    
-    for image_source in image_source_settings['image_source_priority']:
+    for image_source in preferences.image_source_priority:
         if image_source == 'Emby' and emby_interface:
             source_image = emby_interface.get_source_image(
                 episode.as_episode_info
@@ -276,6 +262,7 @@ def download_episode_source_image(
         # If no source image was returned, increment attempts counter
         if source_image is None:
             episode.image_source_attempts[image_source] += 1
+            db.commit()
             continue
 
         # Source image is valid, download - error if download fails
@@ -292,10 +279,9 @@ def download_episode_source_image(
     return None
 
 
-def create_source_image(
-        preferences: 'Preferences',
+def get_source_image(
+        preferences: Preferences,
         imagemagick_interface: Optional['ImageMagickInterface'],
-        series: Series,
         episode: Episode) -> SourceImage:
     """
     Get the SourceImage details for the given objects.
@@ -305,14 +291,13 @@ def create_source_image(
             directory from.
         imagemagick_interface: ImageMagickInterface to query the image
             dimensions from.
-        series: Series of the SourceImage.
         episode: Episode of the SourceImage.
     """
 
     # Get Episode source file
     source_file = episode.get_source_file(
         preferences.source_directory,
-        series.path_safe_name,
+        episode.series.path_safe_name,
     )
 
     # All sources have these details

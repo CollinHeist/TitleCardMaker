@@ -2,6 +2,7 @@ from fastapi import APIRouter, Body, Depends
 
 from app.database.query import get_font, get_template
 from app.dependencies import get_database
+from app.internal.cards import refresh_remote_card_types
 import app.models as models
 from app.schemas.base import UNSPECIFIED
 from app.schemas.series import NewTemplate, Template, UpdateTemplate
@@ -32,6 +33,9 @@ def create_template(
     template = models.template.Template(**new_template.dict())
     db.add(template)
     db.commit()
+
+    # Refresh card types in case new remote type was specified
+    refresh_remote_card_types(db)
 
     return template
 
@@ -89,6 +93,9 @@ def update_template(
     # If any values were changed, commit to database
     if changed:
         db.commit()
+
+    # Refresh card types in case new remote type was specified
+    refresh_remote_card_types(db)
 
     return template
 

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException
 
-from app.database.query import get_card, get_episode, get_font, get_series, get_template
+from app.database.query import get_card, get_episode, get_font, get_series
 from app.dependencies import (
     get_database, get_emby_interface, get_jellyfin_interface, get_preferences,
     get_plex_interface, get_tmdb_interface,
@@ -131,9 +131,9 @@ def create_cards_for_series(
     )
     db.commit()
 
+    # Create each associated Episode's Card, get status flags
     actions = CardActions()
     for episode in series.episodes:
-        # Create this Episode's Card, get status flags
         flags = create_episode_card(db, preferences, background_tasks, episode)
         for flag in flags:
             setattr(actions, flag, getattr(actions, flag)+1)
@@ -287,12 +287,11 @@ def create_cards_for_plex_key(
         )
     log.debug(f'Identified {len(details)} entries from RatingKey={plex_rating_key}')
 
-    Episode = models.episode.Episode
     series_to_load = []
     for series_info, episode_info, watched_status in details:
         # Find Episode
-        episode = db.query(Episode)\
-            .filter(episode_info.episode_filter_conditions(Episode))\
+        episode = db.query(models.episode.Episode)\
+            .filter(episode_info.episode_filter_conditions(models.episode.Episode))\
             .first()
 
         # Episode does not exist
@@ -302,18 +301,6 @@ def create_cards_for_plex_key(
             log.warning(f'New episode {series_info} {episode_info}, not implemented')
         # Episode exists, update card
         else:
-            # Get this Episode's associated Series
-            series = get_series(db, episode.series_id, raise_exc=False)
-            if series is None:
-                log.warning(f'{episode.log_str} has no Series - skipping')
-                continue
-
-            # Get Series Template
-            series_template = get_template(db, series.template_id, raise_exc=False)
-            if series.template_id is not None and series_template is None:
-                log.warning(f'{series.log_str} Template is missing - skipping')
-                continue
-
             # Update Episode watched status
             if episode.watched != watched_status:
                 episode.watched = watched_status
@@ -324,20 +311,16 @@ def create_cards_for_plex_key(
                 db, preferences,
                 emby_interface=None, jellyfin_interface=None,
                 plex_interface=plex_interface, tmdb_interface=tmdb_interface,
-                series=series, episode=episode,
+                episode=episode,
             )
-            translate_episode(
-                db, series, series_template, episode, tmdb_interface
-            )
+            translate_episode(db, series, episode, tmdb_interface)
             if image is None:
                 log.info(f'{episode.log_str} has no source image - skipping')
                 continue
-            create_episode_card(
-                db, preferences, background_tasks, series, episode
-            )
+            create_episode_card(db, preferences, background_tasks, episode)
 
             # Add this Series to list of Series to load
-            series_to_load.append(series)
+            series_to_load.append(episode.series)
 
     # Load all series that require reloading
     for series in series_to_load:

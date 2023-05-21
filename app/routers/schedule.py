@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal
 
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 
 from app.dependencies import get_scheduler
 from app.internal.availability import get_latest_version
@@ -156,7 +156,7 @@ BaseJobs = {
         internal=True,
     ), INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES: NewJob(
         id=INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES,
-        function=...,
+        function=wrapped_refresh_all_remote_cards,
         seconds=60 * 60 * 24,
         description='Refresh all RemoteCardType files',
         internal=True,
@@ -211,15 +211,18 @@ def _scheduled_task_from_job(job: 'apscheduler.jobs.Job') -> ScheduledTask:
 
 @schedule_router.get('/scheduled', status_code=200)
 def get_scheduled_tasks(
+        show_internal: bool = Query(default=False),
         scheduler = Depends(get_scheduler)) -> list[ScheduledTask]:
     """
     Get scheduling details for all defined Tasks.
+
+    - show_internal: Whether to show internal tasks.
     """
 
     return [
         _scheduled_task_from_job(job)
         for job in scheduler.get_jobs()
-        if job.id in BaseJobs and not BaseJobs[job.id].internal
+        if job.id in BaseJobs and (show_internal or not BaseJobs[job.id].internal)
     ]
 
 

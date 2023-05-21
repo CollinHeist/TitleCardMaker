@@ -47,9 +47,7 @@ def translate_all_series() -> None:
                 
                 # Translate each Episode
                 for episode in episodes:
-                    translate_episode(
-                        db, series, series_template, episode, tmdb_interface
-                    )
+                    translate_episode(db, episode, tmdb_interface)
     except Exception as e:
         log.exception(f'Failed to add translations', e)
 
@@ -58,7 +56,6 @@ def translate_all_series() -> None:
 
 def translate_episode(
         db: 'Database',
-        series: Series,
         episode: Episode,
         tmdb_interface: TMDbInterface) -> None:
     """
@@ -66,8 +63,6 @@ def translate_episode(
 
     Args:
         db: Database to query and update.
-        series: Series this Episode belongs to. Can have defined
-            translations.
         series_template: Template of the Series that can define
             translations.
         episode: Episode to translate and add translations to.
@@ -75,6 +70,7 @@ def translate_episode(
     """
 
     # Get the Series and Episode Template
+    series = episode.series
     series_template, episode_template = get_effective_templates(series, episode)
 
     # Get the highest priority translation setting

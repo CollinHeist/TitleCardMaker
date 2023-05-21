@@ -8,6 +8,7 @@ from pickle import dump
 from app.schemas.base import UNSPECIFIED
 
 from modules.Debug import log
+from modules.EpisodeInfo2 import EpisodeInfo
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.TitleCard import TitleCard
 
@@ -153,7 +154,6 @@ class Preferences:
     def card_dimensions(self) -> str:
         return f'{self.card_width}x{self.card_height}'
 
-
     @property
     def emby_filesize_limit(self) -> int:
         return self.get_filesize(
@@ -232,7 +232,6 @@ class Preferences:
             'logo_language_priority': self.tmdb_logo_language_priority,
         }
 
-
     @property
     def valid_image_sources(self) -> set[str]:
         return set(
@@ -240,7 +239,6 @@ class Preferences:
             + (['Plex'] if self.use_plex else [])
             + (['TMDb'] if self.use_tmdb else [])
         )
-
 
     @property
     def valid_episode_data_sources(self) -> list[str]:
@@ -251,7 +249,6 @@ class Preferences:
             + (['Sonarr'] if self.use_sonarr else [])
         )
 
-
     @property
     def enabled_media_servers(self) -> list[str]:
         return (
@@ -259,6 +256,14 @@ class Preferences:
             + (['Plex'] if self.use_plex else [])
         )
 
+    @property
+    def card_properties(self) -> dict[str, str]:
+        return {
+            'card_type': self.default_card_type,
+            'watched_style': self.default_watched_style,
+            'unwatched_style': self.default_unwatched_style,
+            'card_filename_format': self.card_filename_format,
+        }
 
     @staticmethod
     def get_filesize(value: int, unit: str) -> Optional[int]:
@@ -290,16 +295,6 @@ class Preferences:
                 return f'{value/ref_value:,.1f}', unit
 
         return '0', 'Bytes'
-
-
-    @property
-    def card_properties(self) -> dict[str, str]:
-        return {
-            'card_type': self.default_card_type,
-            'watched_style': self.default_watched_style,
-            'unwatched_style': self.default_unwatched_style,
-            'card_filename_format': self.card_filename_format,
-        }
 
 
     def determine_sonarr_library(self, directory: str) -> Optional[str]:
@@ -345,3 +340,21 @@ class Preferences:
 
         # All other styles get typical standardization.
         return ' '.join(sorted(standardized.split(' ')))
+    
+
+    def get_folder_format(self, episode_info: EpisodeInfo) -> str:
+        """
+        Get the season folder name for the given Episode.
+
+        Args:
+            episode_info: EpisodeInfo of the Episode whose folder is
+                being evaluated.
+
+        Returns:
+            Name of the season subfolder for the given Episode.
+        """
+
+        if episode_info.season_number == 0:
+            return self.specials_folder_format.format(**episode_info.indices)
+        
+        return self.season_folder_format.format(**episode_info.indices)

@@ -3,7 +3,7 @@ from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException, Query, UploadFile
 
-from app.database.query import get_episode, get_series, get_template
+from app.database.query import get_episode, get_series
 from app.dependencies import (
     get_database, get_preferences, get_emby_interface,
     get_imagemagick_interface, get_jellyfin_interface, get_plex_interface,
@@ -11,7 +11,7 @@ from app.dependencies import (
 )
 from app.internal.cards import delete_cards
 from app.internal.sources import (
-    create_source_image, download_episode_source_image, download_series_logo
+    get_source_image, download_episode_source_image, download_series_logo
 )
 import app.models as models
 from app.schemas.card import SourceImage, TMDbImage
@@ -231,9 +231,8 @@ def get_existing_series_source_images(
 
     # Get all source files
     sources = [
-        create_source_image(
-            preferences, imagemagick_interface, series, episode
-        ) for episode in all_episodes
+        get_source_image(preferences, imagemagick_interface, episode)
+        for episode in all_episodes
     ]
 
     return sorted(
@@ -257,11 +256,8 @@ def get_existing_episode_source_images(
 
     # Get the Episode and Series with this ID, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
-    series = get_series(db, episode.series_id, raise_exc=True)
 
-    return create_source_image(
-        preferences, imagemagick_interface, series, episode
-    )
+    return get_source_image(preferences, imagemagick_interface, episode)
 
 
 @source_router.post('/episode/{episode_id}/upload', status_code=201)
@@ -282,9 +278,8 @@ async def set_source_image(
     - source_file: Source Image file content to utilize.
     """
 
-    # Get Episode and Series with this ID, raise 404 if DNE
+    # Get Episode with this ID, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
-    series = get_series(db, episode.series_id, raise_exc=True)
 
     # Get image contents
     uploaded_file = b''
@@ -322,12 +317,13 @@ async def set_source_image(
     # Get Episode source file
     source_file = episode.get_source_file(
         preferences.source_directory,
-        series.path_safe_name,
+        episode.series.path_safe_name,
     )
 
     # If file already exists, warn about overwriting
     if source_file.exists():
-        log.warning(f'{series.log_str} {episode.log_str} source file "{source_file.resolve()}" exists - replacing')
+        log.warning(f'{episode.series.log_str} {episode.log_str} source file '
+                    f'"{source_file.resolve()}" exists - replacing')
 
     # Write new file to the disk
     source_file.write_bytes(content)
@@ -340,6 +336,4 @@ async def set_source_image(
     )
 
     # Return created SourceImage
-    return create_source_image(
-        preferences, imagemagick_interface, series, episode
-    )
+    return get_source_image(preferences, imagemagick_interface, episode)

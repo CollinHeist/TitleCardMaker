@@ -12,6 +12,7 @@ from app.dependencies import (
     get_sonarr_interface, get_tmdb_interface
 )
 import app.models as models
+from app.internal.cards import refresh_remote_card_types
 from app.internal.series import (
     delete_series_and_episodes, download_series_poster, load_series_title_cards,
     set_series_database_ids
@@ -35,7 +36,7 @@ def get_all_series(
     """
     Get all defined Series.
     """
-    
+
     return db.query(models.series.Series).all()
 
 
@@ -88,9 +89,12 @@ def add_new_series(
         # Function
         download_series_logo,
         # Arguments
-        db, preferences, emby_interface, imagemagick_interface,
+        preferences, emby_interface, imagemagick_interface,
         jellyfin_interface, tmdb_interface, series
     )
+
+    # Refresh card types in case new remote type was specified
+    refresh_remote_card_types(db)
 
     return series
 
@@ -214,6 +218,9 @@ def update_series(
     # If any values were changed, commit to database
     if changed:
         db.commit()
+
+    # Refresh card types in case new remote type was specified
+    refresh_remote_card_types(db)
     
     return series
 

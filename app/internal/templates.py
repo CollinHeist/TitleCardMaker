@@ -1,6 +1,5 @@
 from typing import Any, Optional
 
-from app.database.query import get_template
 from app.schemas.episode import Episode
 from app.schemas.series import Series, Template
 
@@ -9,7 +8,8 @@ from modules.Debug import log
 
 def get_effective_series_template(
         series: Series,
-        episode: Optional[Episode] = None) -> Optional[Template]:
+        episode: Optional[Episode] = None, *,
+        as_dict: bool = False) -> Optional[Template]:
     """
     Get the effective Series Template for the given Series and optional
     Episode. This evaluates all Template conditions.
@@ -18,6 +18,8 @@ def get_effective_series_template(
         series: Series whose Templates are being evaluated.
         episode: Episode that can be used in the Template Condition
             evaluation.
+        as_dict: Whether to return the dictionary of the given Template.
+            If None would be returned, then an empty dict is returned.
 
     Returns:
         The first Template of the given Series whose Conditions are all
@@ -28,9 +30,9 @@ def get_effective_series_template(
     # Evaluate each Series Template
     for template in series.templates:
         if template.meets_filter_criteria(series, episode):
-            return template
+            return template.__dict__ if as_dict else template
         
-    return None
+    return {} if as_dict else None
 
 
 def get_effective_episode_template(

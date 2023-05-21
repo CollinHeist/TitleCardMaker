@@ -89,9 +89,18 @@ class Series(Base):
     def template_ids(self) -> list[int]:
         return [template.id for template in self.templates]
 
+    def __repr__(self) -> str:
+        return (
+            f'<Series {self.id=}, {self.name=}, {self.year=}>'
+        )
+
     @hybrid_property
     def full_name(self) -> str:
         return f'{self.name} ({self.year})'
+    
+    @hybrid_property
+    def number_of_seasons(self) -> int:
+        return len(set(episode.season_number for episode in self.episodes))
 
     @hybrid_property
     def path_safe_name(self) -> str:
@@ -108,9 +117,6 @@ class Series(Base):
     @hybrid_property
     def card_properties(self) -> dict[str, Any]:
         return {
-            'series_id': self.id,
-            'template_ids': self.template_ids,
-            'font_id': self.font_id,
             'series_name': self.name,
             'series_full_name': self.full_name,
             'year': self.year,

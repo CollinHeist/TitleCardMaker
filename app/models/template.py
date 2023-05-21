@@ -36,9 +36,10 @@ OPERATIONS = {
     'is after': lambda v, r: v > datetime.strptime(r, DATETIME_FORMAT),
 }
 ARGUMENT_KEYS = (
-    'Series Name', 'Series Year', 'Series Library (Emby)',
-    'Series Library (Jellyfin)', 'Series Library (Plex)', 'Episode is Watched',
-    'Season Number', 'Episode Number', 'Absolute Number', 'Episode Title',
+    'Series Name', 'Series Year', 'Number of Seasons',
+    'Series Library Name (Emby)', 'Series Library Name (Jellyfin)',
+    'Series Library Name (Plex)', 'Episode is Watched', 'Season Number',
+    'Episode Number', 'Absolute Number', 'Episode Title',
     'Episode Title Length', 'Episode Airdate',
 )
 
@@ -135,6 +136,7 @@ class Template(Base):
             'skip_localized_images': self.skip_localized_images,
         }
     
+    
     @hybrid_method
     def meets_filter_criteria(self,
             series: 'Series',
@@ -161,6 +163,7 @@ class Template(Base):
         SERIES_ARGUMENTS = {
             'Series Name': series.name,
             'Series Year': series.year,
+            'Number of Seasons': series.number_of_seasons,
             'Series Library Name (Emby)': series.emby_library_name,
             'Series Library Name (Jellyfin)': series.jellyfin_library_name,
             'Series Library Name (Plex)': series.plex_library_name,
@@ -193,8 +196,11 @@ class Template(Base):
                     log.exception(f'{series.log_str} {episode.log_str} '
                                   f'Condition evaluation raised an error', e)
                     return False
-                log.debug(f'{self.log_str} {ARGUMENTS[condition["argument"]]} {condition["operation"]} {condition["reference"]} -> {meets_condition}')
                 if not meets_condition:
+                    log.debug(f'{self.log_str} [{ARGUMENTS[condition["argument"]]}] [{condition["operation"]}] [{condition["reference"]}]')
                     return False
+            else:
+                log.debug(f'{self.log_str} [{ARGUMENTS[condition["argument"]]}] [{condition["operation"]}] [{condition["reference"]}] is unevaluatable')
+                continue
 
         return True

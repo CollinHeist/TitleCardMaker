@@ -8,7 +8,7 @@ from app.dependencies import (
     get_plex_interface, get_sonarr_interface, get_tmdb_interface
 )
 import app.models as models
-from app.internal.cards import delete_cards
+from app.internal.cards import delete_cards, refresh_remote_card_types
 from app.internal.episodes import set_episode_ids, refresh_episode_data
 from app.schemas.base import UNSPECIFIED
 from app.schemas.episode import Episode, NewEpisode, UpdateEpisode
@@ -46,6 +46,9 @@ def add_new_episode(
     episode = models.episode.Episode(**new_episode.dict())
     db.add(episode)
     db.commit()
+
+    # Refresh card types in case new remote type was specified
+    refresh_remote_card_types(db)
 
     # Add background task to add episode ID's for this Episode
     background_tasks.add_task(
@@ -200,6 +203,9 @@ def update_episode_config(
     # If any values were changed, commit to database
     if changed:
         db.commit()
+
+    # Refresh card types in case new remote type was specified
+    refresh_remote_card_types(db)
 
     return episode
     
