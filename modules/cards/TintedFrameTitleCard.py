@@ -556,7 +556,7 @@ class TintedFrameTitleCard(BaseCardType):
         
         # Error and exit if logo is specified and DNE
         if ('logo' in (self.top_element, self.bottom_element)
-            and (self.logo is None or not self.logo.exists()):
+            and (self.logo is None or not self.logo.exists())):
             log.error(f'Logo file "{self.logo}" does not exist')
             return None
 
