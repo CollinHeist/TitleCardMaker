@@ -17,113 +17,51 @@
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
   <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.js"></script>
   
+  <!-- JS Files -->
+  <script type="text/javascript" src="/templates/loadStaticContent.js"></script>
+  <script type="text/javascript" src="/templates/loadCardTypes.js"></script>
+  <script type="text/javascript" src="/templates/theme.js"></script>
+  <script type="text/javascript" src="/templates/helper.js"></script>
+
   <!-- Global styles -->
   <link rel="stylesheet" type="text/css" href="/templates/style.css"/>
   <style>
-    .card {
-      max-width: 1000px;
-    }
-    img {
-      max-width: 1000px;
-      position: relative;
-      display: inline-block;
-    }
-    .overlay {
-      display: none;
-    }
-    .card:hover .overlay {
-      width: 100%;
-      height: 100%;
-      background: rgba(12, 12, 12, 0.5);
-      position: absolute;
-      top: 50px;
-      left: 50px;
-      display:inline-block;
-      -webkit-box-sizing:border-box;
-      -moz-box-sizing:border-box;
-      box-sizing:border-box;
-    }
-
-    :root {
-      --clr-neon: hsl(215, 55%, 61%);
-      --clr-bg: rgb(24, 24, 24)
-    }
-    body {
-      background-color: var(--clr-bg);
-    }
-    #main-content {
-      min-height: 80vh;
-      display: grid;
-      place-items: center;
-      background: var(--clr-bg);
-      color: var(--clr-neon);
-    }
-
-    .neon-button {
-      font-size: 4rem;
-
-      display: inline-block;
-      cursor: pointer;
-      text-decoration: none;
-      color: var(--clr-neon);
-      border: var(--clr-neon) 0.125em solid;
-      padding: 0.5em;
-      border-radius: 0.25em;
-
-      text-shadow: 0 0 0.125em hsl(0 0% 100% / 0.3), 0 0 0.45em currentColor;
-
-      box-shadow: inset 0 0 0.5em 0 var(--clr-neon), 0 0 0.5em 0 var(--clr-neon);
-
-      position: relative;
-    }
-
-    .neon-button::before {
-      pointer-events: none;
-      content: "";
-      position: absolute;
-      background: var(--clr-neon);
-      top: 120%;
-      left: 0;
-      width: 100%;
-      height: 100%;
-
-      transform: perspective(1em) rotateX(40deg) scale(1, 0.35);
-      filter: blur(1em);
-      opacity: 0.7;
-    }
-
-    /* .neon-button::after {
-      content: "";
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      box-shadow: 0 0 2em 0.5em var(--clr-neon);
-      opacity: 0;
-      background-color: var(--clr-neon);
-      z-index: -1;
-      transition: opacity 100ms linear;
-    } */
-
-    .neon-button:hover,
-    .neon-button:focus {
-      /* color: var(--clr-bg); */
-      color: hsl(215, 65%, 71%);
-      border:hsl(215, 65%, 71%) 0.125em solid;
-      box-shadow: inset 0 0 0.5em 0 hsl(215, 65%, 71%), 0 0 0.5em 0 hsl(215, 65%, 71%);
-      background: rgba(12, 12, 12, 0.75)
-      /* animation: pulse 2.5s infinite;  */
-    }
-
-    .neon-button:hover::before {
-      background: hsl(215, 65%, 71%);
+    textarea {
+      width: 50%
     }
   </style>
-  
 </head>
 
 <body>
+  <script>
+    async function submitYamlForm(args) {
+      const {url, data, formId, name, successMessage} = args;
+      $(`${formId} button`).toggleClass('loading', true);
+      $.ajax({
+        type: 'POST',
+        url: url,
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        success: response => { 
+          if (successMessage === undefined) {
+            $.toast({class: 'blue info', title: `Imported ${name} YAML`});
+          } else {
+            const message = successMessage(response);
+            $.toast({class: 'blue info', title: `Imported ${name} YAML`, message: message});
+          }
+          $(`${formId} .error.message`).toggleClass('visible', false);
+        }, error: response => {
+          console.log(response);
+          const messageHtml = `<div class="header">YAML Parsing Error</div><p>${response.responseJSON.detail}</p>`
+          $(`${formId} .error.message`).toggleClass('visible', true)[0].innerHTML = messageHtml;
+          $.toast({class: 'error', title: `Unable to Import ${name} YAML`, displayTime: 5000});
+        }, complete: () => {
+          $(`${formId} button`).toggleClass('loading', false);
+        },
+      });
+    }
+  </script>
+
   <div class="pusher">
     <!-- Static header and sidebar loaded by external script -->
     <div id="page-header"></div>
@@ -131,27 +69,165 @@
 
     <!-- Actual page content -->
     <div id="main-content" class="article">
-      <!-- <div class="ui card">
-        <img src="/assets/cards/anime.jpg">
-        <div class="overlay">
-          Overlay Content
-        </div>
-      </div> -->
+      <div class="ui stackable grid">
+        <div class="sixteen wide column">
+          <h1 class="ui header">Import YAML</h1>
 
-      <div class="neon-button" contentEditable="true">
-        <i class="spinner loading icon"></i>
-        TitleCardMaker
+          <div class="ui compact raised segment">
+            <span class="ui text">Import YAML from v1 of TitleCardMaker</span>
+          </div>
+
+          <h2 class="ui header">Preferences File</h2>
+          <form id="preferences-form" class="ui form">
+            <div data-value="yaml" class="ui field">
+              <textarea name="yaml" rows="10"></textarea>
+            </div>
+
+            <div class="grouped fields">
+              <div class="ui inline field">
+                <div data-value="options" class="ui checkbox">
+                  <input type="checkbox" class="hidden">
+                  <label>Global Options</label>
+                </div>
+              </div>
+
+              <div class="ui inline field">
+                <div data-value="connections" class="ui checkbox">
+                  <input type="checkbox" class="hidden">
+                  <label>Connections (Emby, Jellyfin, Plex, Sonarr, and TMDb)</label>
+                </div>
+              </div>
+
+              <div class="ui inline field">
+                <div data-value="syncs" class="ui checkbox">
+                  <input type="checkbox" class="hidden">
+                  <label>Syncs (All Sections)</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="ui error message"></div>
+            <button class="ui animated primary button" type="submit">
+              <div class="visible content">Submit</div>
+              <div class="hidden content">
+                <i class="right arrow icon"></i>
+              </div>
+            </button>
+          </form>
+
+          <h2 class="ui header">Series YAML (or Sync) File</h2>
+          <form id="series-form" class="ui form">
+            <div data-value="yaml" class="ui field">
+              <textarea name="yaml" rows="10"></textarea>
+            </div>
+
+            <div class="grouped fields">
+              <div class="ui inline field">
+                <div data-value="fonts" class="ui checkbox">
+                  <input type="checkbox" class="hidden">
+                  <label>Fonts</label>
+                </div>
+              </div>
+
+              <div class="ui inline field">
+                <div data-value="templates" class="ui checkbox">
+                  <input type="checkbox" class="hidden">
+                  <label>Templates</label>
+                </div>
+              </div>
+
+              <div class="ui inline field">
+                <div data-value="series" class="ui checkbox">
+                  <input type="checkbox" class="hidden">
+                  <label>Series</label>
+                </div>
+              </div>
+            </div>
+            
+            <div class="ui error message"></div>
+            <button class="ui animated primary button" type="submit">
+              <div class="visible content">Submit</div>
+              <div class="hidden content">
+                <i class="right arrow icon"></i>
+              </div>
+            </button>
+          </form>
+        </div>
       </div>
     </div>
 
   </div>
 
   <script>
-    
-  </script>
+    $('.ui.checkbox').checkbox();
 
-  <!-- Load Sidebar -->
-  <script src="/templates/loadStaticContent.js"></script>
+    // Preferences form submission
+    $('#preferences-form').on('submit', event => {
+      // Prevent page reload
+      event.preventDefault();
+      const form = new FormData(event.target);
+      // Determine which queries to submit
+      if ($('#preferences-form .checkbox[data-value="options"]').checkbox('is checked')) {
+        submitYamlForm({
+          url: '/api/import/preferences/options',
+          data: Object.fromEntries(form),
+          formId: '#preferences-form',
+          name: 'Options',
+        });
+      }
+      if ($('#preferences-form .checkbox[data-value="connections"]').checkbox('is checked')) {
+        submitYamlForm({
+          url: '/api/import/preferences/connection/all',
+          data: Object.fromEntries(form),
+          formId: '#preferences-form',
+          name: 'Connections',
+        });
+      }
+      if ($('#preferences-form .checkbox[data-value="syncs"]').checkbox('is checked')) {
+        submitYamlForm({
+          url: '/api/import/preferences/sync',
+          data: Object.fromEntries(form),
+          formId: '#preferences-form',
+          name: 'Syncs',
+        });
+      }
+    });
+
+    // Series YAML form submission
+    $('#series-form').on('submit', event => {
+      // Prevent page reload
+      event.preventDefault();
+      const form = new FormData(event.target);
+      // Determine which queries to submit
+      if ($('#series-form .checkbox[data-value="fonts"]').checkbox('is checked')) {
+        submitYamlForm({
+          url: '/api/import/fonts',
+          data: Object.fromEntries(form),
+          formId: '#series-form',
+          name: 'Fonts',
+          successMessage: newFonts => `Created ${newFonts.length} Custom Fonts`,
+        });
+      }
+      if ($('#series-form .checkbox[data-value="templates"]').checkbox('is checked')) {
+        submitYamlForm({
+          url: '/api/import/templates',
+          data: Object.fromEntries(form),
+          formId: '#series-form',
+          name: 'Templates',
+          successMessage: newTemplates => `Created ${newTemplates.length} Templates`,
+        });
+      }
+      if ($('#series-form .checkbox[data-value="series"]').checkbox('is checked')) {
+        submitYamlForm({
+          url: '/api/import/series',
+          data: Object.fromEntries(form),
+          formId: '#series-form',
+          name: 'Series',
+          successMessage: newSeries => `Created ${newSeries.length} Series`,
+        });
+      }
+    })
+  </script>
 </body>
 
 </html>

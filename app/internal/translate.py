@@ -5,7 +5,6 @@ from app.internal.templates import get_effective_templates
 import app.models as models
 from app.database.query import get_template
 from app.schemas.episode import Episode
-from app.schemas.series import Series
 
 from modules.TieredSettings import TieredSettings
 from modules.TMDbInterface2 import TMDbInterface

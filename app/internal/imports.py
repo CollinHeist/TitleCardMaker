@@ -44,7 +44,8 @@ def parse_raw_yaml(yaml: str) -> dict[str, Any]:
     """
 
     try:
-        return YAML().load(yaml)
+        yaml_dict = YAML().load(yaml)
+        return {} if yaml_dict is None else yaml_dict
     except Exception as e:
         log.exception(f'YAML parsing failed', e)
         raise HTTPException(
@@ -268,6 +269,11 @@ def parse_preferences(
             if source in mapping
         ]
 
+    # Parse episode data source
+    episode_data_source = _parse_episode_data_source(options)
+    if episode_data_source is None:
+        episode_data_source = UNSPECIFIED
+
     # Create UpdatePreferenes object from the YAML
     update_preferences = UpdatePreferences(
         source_directory=_get(options, 'source', default=unsp),
@@ -276,7 +282,7 @@ def parse_preferences(
         card_filename_format=_get(options, 'filename_format', default=unsp),
         card_extension=_get(options, 'card_extension', type_=Extension, default=unsp),
         image_source_priority=image_source_priority,
-        episode_data_source=_parse_episode_data_source(options),
+        episode_data_source=episode_data_source,
         # specials_folder_format=..., # New option
         season_folder_format=_get(options, 'season_folder_format', default=unsp),
         sync_specials=_get(options, 'sync_specials', type_=bool, default=unsp),
@@ -528,18 +534,18 @@ def parse_syncs(
             from the given YAML.
     """
 
-    def _get_template_id(sync: dict[str, Any]) -> Optional[int]:
+    def _get_templates(sync: dict[str, Any]) -> list[int]:
         if 'add_template' not in sync:
-            return None
+            return []
 
         template = db.query(models.template.Template)\
             .filter_by(name=sync['add_template']).first()
         if template is None:
             raise HTTPException(
                 status_code=404,
-                detail=f'Template {sync["add_template"]} not found',
+                detail=f'Template "{sync["add_template"]}" not found',
             )
-        return template.id
+        return [template.id]
 
     def _parse_media_server_sync(
             yaml_dict: dict[str, Any],
@@ -561,9 +567,6 @@ def parse_syncs(
             # Merge the first sync settings into this one
             TieredSettings(sync, syncs[0], sync)
 
-            # Find matching Template if indicated
-            template_id = _get_template_id(sync)
-
             # Get excluded tags
             excluded_tags = [
                 list(exclusion.values())[0] for exclusion in _get(
@@ -574,7 +577,7 @@ def parse_syncs(
             # Add object to list
             all_syncs.append(NewSyncClass(
                 name=f'Imported {media_server} Sync {sync_id+1}',
-                template_id=template_id,
+                templates=_get_templates(sync),
                 required_tags=_get(sync, 'required_tags', type_=list, default=[]),
                 excluded_tags=excluded_tags,
                 required_libraries=_get(sync, 'libraries', type_=list, default=[]),
@@ -602,10 +605,7 @@ def parse_syncs(
 
             # Merge the first sync settings into this one
             TieredSettings(sync, syncs[0], sync)
-
-            # Find matching Template if indicated
-            template_id = _get_template_id(sync)
-
+            
             # Get excluded tags
             excluded_tags = [
                 list(exclusion.values())[0] for exclusion in _get(
@@ -616,7 +616,7 @@ def parse_syncs(
             # Add object to list
             all_syncs.append(NewSonarrSync(
                 name=f'Imported Sonarr Sync {sync_id+1}',
-                template_id=template_id,
+                template_ids=_get_templates(sync),
                 required_tags=_get(sync, 'required_tags', type_=list, default=[]),
                 excluded_tags=excluded_tags,
                 required_series_type=_get(sync, 'series_type'),
@@ -645,11 +645,10 @@ def parse_fonts(
             created from the given YAML.
     """
 
-    # If fonts header was included, get those
-    if 'fonts' in yaml_dict:
-        all_fonts = yaml_dict['fonts']
-    else:
-        all_fonts = yaml_dict
+    # Return empty list if no header
+    if 'fonts' not in yaml_dict:
+        return []
+    all_fonts = yaml_dict['fonts']
 
     # If not a dictionary of fonts, return empty list
     if not isinstance(all_fonts, dict):
@@ -716,11 +715,10 @@ def parse_templates(
             created from the given YAML.
     """
 
-    # If templates header was included, get those
-    if 'templates' in yaml_dict:
-        all_templates = yaml_dict['templates']
-    else:
-        all_templates = yaml_dict
+    # Return empty list if no header
+    if 'templates' not in yaml_dict:
+        return []
+    all_templates = yaml_dict['templates']
 
     # If not a dictionary of templates, return empty list
     if not isinstance(all_templates, dict):
@@ -841,11 +839,10 @@ def parse_series(
             created from the given YAML.
     """
 
-    # If series header was included, get those
-    if 'series' in yaml_dict:
-        all_series = yaml_dict['series']
-    else:
-        all_series = yaml_dict
+    # Return empty list if no header
+    if 'series' not in yaml_dict:
+        return []
+    all_series = yaml_dict['series']
 
     # If not a dictionary of series, return empty list
     if not isinstance(all_series, dict):
@@ -884,7 +881,7 @@ def parse_series(
 
         # Parse custom Font
         series_font = _get(series_dict, 'font', default={})
-        font_id = None
+        font = None
         if not isinstance(series_font, (str, dict)):
             raise HTTPException(
                 status_code=422,
@@ -899,10 +896,9 @@ def parse_series(
                     status_code=404,
                     detail=f'Font "{series_font}" not found',
                 )
-            font_id = font.id
 
         # Parse template
-        template_id = None
+        template_ids = []
         if 'template' in series_dict:
             # Get template name for querying
             series_template = series_dict['template']
@@ -916,7 +912,7 @@ def parse_series(
                     detail=f'Unrecognized Template in Series "{series_info}"',
                 )
             
-            # Get Template ID
+            # Get Template
             template = db.query(models.template.Template)\
                 .filter_by(name=template_name).first()
             if template is None:
@@ -924,7 +920,7 @@ def parse_series(
                     status_code=404,
                     detail=f'Template "{template_name}" not found',
                 )
-            template_id = template.id
+            template_ids = [template.id]
 
         # Get season titles via episode_ranges or seasons
         episode_map = EpisodeMap(
@@ -960,7 +956,7 @@ def parse_series(
         series.append(NewSeries(
             name=series_info.name,
             year=series_info.year,
-            template_id=template_id,
+            template_ids=template_ids,
             sync_specials=_get(series_dict, 'sync_specials', type_=bool),
             card_filename_format=_get(series_dict, 'filename_format'),
             episode_data_source=_parse_episode_data_source(series_dict),
@@ -976,7 +972,7 @@ def parse_series(
                 type_=preferences.standardize_style
             ),
             translations=_parse_translations(series_dict),
-            font_id=font_id,
+            font=font,
             font_color=_get(series_dict, 'font', 'color'),
             font_title_case=_get(series_dict, 'font', 'case'),
             size=_get(

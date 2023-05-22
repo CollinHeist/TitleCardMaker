@@ -757,7 +757,6 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 series_info = SeriesInfo(entry.title, entry.year)
 
                 return [EpisodeDetails(
-                    # entry.librarySectionTitle,
                     series_info,
                     EpisodeInfo.from_plex_episode(ep),
                     ep.isWatched
@@ -767,11 +766,10 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 # Get series associated with this season
                 series = self.__server.fetchItem(entry.parentKey)
                 if series.year is None:
-                    raise ValueError
+                    raise ValueError(f'Series has no year')
 
-                series_info = SeriesInfo(entry.title, entry.year)
+                series_info = SeriesInfo(entry.title, series.year)
                 return [EpisodeDetails(
-                    # series.librarySectionTitle,
                     series_info,
                     EpisodeInfo.from_plex_episode(ep),
                     ep.isWatched
@@ -783,7 +781,6 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
                 series_info = SeriesInfo(entry.grandparentTitle, series.year)
                 return [EpisodeDetails(
-                    # entry.librarySectionTitle,
                     series_info,
                     EpisodeInfo.from_plex_episode(entry),
                     entry.isWatched,

@@ -30,6 +30,10 @@ class Font(Base):
     replacements = Column(JSON, default=None)
 
     @hybrid_property
+    def log_str(self) -> str:
+        return f'Font[{self.id}] "{self.name}"'
+
+    @hybrid_property
     def card_properties(self) -> dict[str, Any]:
         return {
             f'font_{key}': value

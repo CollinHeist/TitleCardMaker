@@ -197,7 +197,7 @@ class Template(Base):
                                   f'Condition evaluation raised an error', e)
                     return False
                 if not meets_condition:
-                    log.debug(f'{self.log_str} [{ARGUMENTS[condition["argument"]]}] [{condition["operation"]}] [{condition["reference"]}]')
+                    log.debug(f'{self.log_str} Does not satisfy Condition: [{ARGUMENTS[condition["argument"]]}] [{condition["operation"]}] [{condition["reference"]}]')
                     return False
             else:
                 log.debug(f'{self.log_str} [{ARGUMENTS[condition["argument"]]}] [{condition["operation"]}] [{condition["reference"]}] is unevaluatable')

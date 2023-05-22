@@ -695,6 +695,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             series_info: SeriesInfo,
             episode_info: EpisodeInfo, *,
             match_title: bool = True,
+            bypass_blacklist: bool = False,
         ) -> Optional[list['tmdbapis.objs.image.Still']]:
         """
         Get all source images for the requested entry.
@@ -704,6 +705,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             episode_info: EpisodeInfo for this entry.
             match_title:  (Keyword only) Whether to require the episode
                 title to match when querying TMDb.
+            bypass_blacklist: Whether to bypass the blacklist.
 
         Returns:
             List of tmdbapis.objs.image.Still objects. If the episode is
@@ -715,7 +717,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         """
 
         # Don't query the database if this episode is in the blacklist
-        if self.__is_blacklisted(series_info, episode_info, 'image'):
+        if (not bypass_blacklist
+            and self.__is_blacklisted(series_info, episode_info, 'image')):
             return None
 
         # Get Episode object for this episode

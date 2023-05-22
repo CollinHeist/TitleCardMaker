@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from fastapi import BackgroundTasks
 
@@ -112,12 +112,21 @@ def refresh_remote_card_types(
 def add_card_to_database(
         db: 'Database',
         card_model: NewTitleCard,
-        card_settings: dict[str, Any]) -> 'Card':
+        card_file: Path) -> 'Card':
     """
-    
+    Add the given Card to the Database.
+
+    Args:
+        db: Database to add the Card entry to.
+        card_model: NewTitleCard model being added to the Database.
+        card_file: Path to the Card associated with the given model
+            being added to the Database.
+
+    Returns:
+        Created Card entry within the Database.
     """
 
-    card_model.filesize = card_settings['card_file'].stat().st_size
+    card_model.filesize = card_file.stat().st_size
     card = models.card.Card(**card_model.dict())
     db.add(card)
     db.commit()
@@ -161,7 +170,7 @@ def create_card(
 
     # If file exists, card was created successfully - add to database
     if card_settings['card_file'].exists():
-        card = add_card_to_database(db, card_model, card_settings)
+        card = add_card_to_database(db, card_model, card_settings['card_file'])
         log.debug(f'Card[{card.id}] Created "{card_settings["card_file"].resolve()}"')
     # Card file does not exist, log failure
     else:
@@ -171,15 +180,21 @@ def create_card(
     return None
 
 
-def create_episode_card(
-        db: 'Database',
+def resolve_card_settings(
         preferences: Preferences,
-        background_tasks: Optional[BackgroundTasks],
-        episode: Episode) -> list[str]:
+        episode: Episode) -> Union[list[str], dict[str, Any]]:
     """
+    Resolve the Title Card settings for the given Episode. This evalutes
+    all global, Series, and Template overrides.
 
+    Args:
+        preferences: Preferences with the default global settings.
+        episode: Episode whose Card settings are being resolved.
+
+    Returns:
+        List of CardAction strings if some error occured in setting
+        resolution; or the settings themselves as a dictionary.
     """
-
 
     # Get effective Template for this Series and Episode
     series = episode.series
@@ -258,8 +273,6 @@ def create_episode_card(
     else:
         case_func = CardClass.CASE_FUNCTIONS[card_settings['font_title_case']]
     card_settings['title_text'] = case_func(card_settings['title_text'])
-    # TODO modify CardType objects to use title_text attribute instead of title
-    card_settings['title'] = card_settings['title_text'] 
 
     # Get EpisodeInfo for this Episode
     episode_info = episode.as_episode_info
@@ -320,7 +333,6 @@ def create_episode_card(
         series_directory = Path(card_settings.get('directory'))
 
     # If an explicit card file was indicated, use it vs. default
-    # TODO get season folder format from preferences object directly
     try:
         if card_settings.get('card_file', None) is None:
             card_settings['card_file'] = series_directory \
@@ -341,20 +353,51 @@ def create_episode_card(
         card_settings['card_file'] = card_settings['card_file'].parent /new_name
     card_settings['card_file'] = CleanPath(card_settings['card_file']).sanitize()
 
+    return card_settings
+
+
+def create_episode_card(
+        db: 'Database',
+        preferences: Preferences,
+        background_tasks: Optional[BackgroundTasks],
+        episode: Episode) -> list[str]:
+    """
+    Create the Title Card for the given Episode.
+
+    Args:
+        db: Database to query and update.
+        preferences: Global Preferences to use as lowest priority
+            settings.
+        background_tasks: Optional BackgroundTasks to queue card
+            creation within.
+        episode: Episode whose Card is being created.
+
+    Returns:
+        List of CardAction strings indicating what ocurred with the
+        given Card.
+    """
+
+    # Resolve Card settings
+    series = episode.series
+    card_settings = resolve_card_settings(preferences, episode)
+
+    # If return was a list of CardActions, return those instead of continuing
+    if isinstance(card_settings, list):
+        return card_settings
+
     # Create parent directories if needed
     card_settings['card_file'].parent.mkdir(parents=True, exist_ok=True)
 
-    # Get any existing card for this episode
-    existing_card = db.query(models.card.Card)\
-        .filter_by(episode_id=episode.id).first()
+    # Create NewTitleCard object for these settings
     card = NewTitleCard(
         **card_settings,
         series_id=series.id,
         episode_id=episode.id,
     )
 
-    # No existing card, add task to create and add to database
-    if existing_card is None:
+    # No existing card, create and add to database
+    existing_card = episode.card
+    if not existing_card:
         if background_tasks is None:
             create_card(db, preferences, card, card_settings)
         else:
@@ -362,8 +405,10 @@ def create_episode_card(
                 create_card, db, preferences, card, card_settings
             )
         return ['creating']
+    
     # Existing card doesn't match, delete and remake
-    elif any(str(val) != str(getattr(card, attr)) 
+    existing_card = existing_card[0]
+    if any(str(val) != str(getattr(card, attr)) 
              for attr, val in existing_card.comparison_properties.items()):
         # TODO delete temporary logging
         for attr, val in existing_card.comparison_properties.items():
@@ -383,8 +428,9 @@ def create_episode_card(
                 create_card, db, preferences, card, card_settings
             )
         return ['creating', 'deleted']
+
     # Existing card file doesn't exist anymore
-    elif not Path(existing_card.card_file).exists():
+    if not Path(existing_card.card_file).exists():
         # Remove existing card from database
         log.debug(f'{series.log_str} {episode.log_str} Card not found - recreating')
         db.delete(existing_card)

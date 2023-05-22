@@ -1,21 +1,26 @@
+from pathlib import Path
+from re import match, IGNORECASE
 from typing import Literal
 
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException
 from pydantic.error_wrappers import ValidationError
 
+from app.database.query import get_all_templates, get_series
 from app.dependencies import (
     get_database, get_preferences, get_emby_interface,
     get_imagemagick_interface, get_jellyfin_interface, get_plex_interface,
     get_sonarr_interface, get_tmdb_interface
 )
+from app.internal.cards import add_card_to_database, resolve_card_settings
 from app.internal.imports import (
     parse_emby, parse_fonts, parse_jellyfin, parse_plex, parse_preferences, parse_raw_yaml, parse_series, parse_sonarr, parse_syncs, parse_templates, parse_tmdb
 )
 from app.internal.series import download_series_poster, set_series_database_ids
 from app.internal.sources import download_series_logo
 import app.models as models
+from app.schemas.card import CardActions, NewTitleCard
 from app.schemas.font import NamedFont
-from app.schemas.imports import ImportSeriesYaml, ImportYaml
+from app.schemas.imports import ImportCardDirectory, ImportSeriesYaml, ImportYaml
 from app.schemas.preferences import Preferences
 from app.schemas.series import Series, Template
 from app.schemas.sync import Sync
@@ -30,7 +35,7 @@ import_router = APIRouter(
 
 
 @import_router.post('/preferences/options', status_code=201)
-def import_preferences_yaml(
+def import_global_options_yaml(
         import_yaml: ImportYaml = Body(...),
         preferences = Depends(get_preferences)) -> Preferences:
     """
@@ -56,9 +61,9 @@ def import_preferences_yaml(
         )
 
 
-@import_router.post('/preferences/{connection}', status_code=201)
+@import_router.post('/preferences/connection/{connection}', status_code=201)
 def import_connection_yaml(
-        connection: Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
+        connection: Literal['all', 'emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
         import_yaml: ImportYaml = Body(...),
         preferences = Depends(get_preferences)) -> Preferences:
     """
@@ -73,8 +78,18 @@ def import_connection_yaml(
     yaml_dict = parse_raw_yaml(import_yaml.yaml)
     if len(yaml_dict) == 0:
         return preferences
+    
+    def _parse_all(*args, **kwargs):
+        parse_emby(*args, **kwargs)
+        parse_jellyfin(*args, **kwargs)
+        parse_plex(*args, **kwargs)
+        parse_plex(*args, **kwargs)
+        parse_sonarr(*args, **kwargs)
+
+        return preferences
 
     parse_function = {
+        'all': _parse_all, 
         'emby': parse_emby,
         'jellyfin': parse_jellyfin,
         'plex': parse_plex,
@@ -92,7 +107,7 @@ def import_connection_yaml(
         )
     
 
-@import_router.post('/sync', status_code=201)
+@import_router.post('/preferences/sync', status_code=201)
 def import_sync_yaml(
         import_yaml: ImportYaml = Body(...),
         db = Depends(get_database)) -> list[Sync]:
@@ -120,7 +135,9 @@ def import_sync_yaml(
     # Add each defined Sync to the database
     all_syncs = []
     for new_sync in new_syncs:
-        sync = models.sync.Sync(**new_sync.dict())
+        new_sync_dict = new_sync.dict()
+        templates = get_all_templates(db, new_sync_dict)
+        sync = models.sync.Sync(**new_sync_dict, templates=templates)
         db.add(sync)
         log.info(f'{sync.log_str} imported to Database')
         all_syncs.append(sync)
@@ -245,7 +262,9 @@ def import_series_yaml(
     all_series = []
     for new_series in new_series:
         # Add to batabase
-        series = models.series.Series(**new_series.dict())
+        new_series_dict = new_series.dict()
+        templates = get_all_templates(db, new_series_dict)
+        series = models.series.Series(**new_series_dict, templates=templates)
         db.add(series)
         log.info(f'{series.log_str} imported to Database')
 
@@ -268,10 +287,97 @@ def import_series_yaml(
             # Function
             download_series_logo,
             # Arguments
-            db, preferences, emby_interface, imagemagick_interface,
+            preferences, emby_interface, imagemagick_interface,
             jellyfin_interface, tmdb_interface, series
         )
         all_series.append(series)
     db.commit()
 
     return all_series
+
+
+@import_router.post('/series/{series_id}/cards', status_code=200, tags=['Cards', 'Series'])
+def import_cards_for_series(
+        series_id: int,
+        card_directory: ImportCardDirectory = Body(...),
+        preferences = Depends(get_preferences),
+        db = Depends(get_database)) -> CardActions:
+    """
+    Import any existing Title Cards for the given Series. This finds
+    card files by filename, and makes the assumption that each file
+    exactly matches the Episode's currently specified config.
+
+    - series_id: ID of the Series whose cards are being imported.
+    - card_directory: Directory details to parse for cards to import.
+    """
+
+    # Get this Series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Glob directory for images to import
+    all_images = list(
+        card_directory.directory.glob(f'**/*{card_directory.image_extension}')
+    )
+
+    # No images to import, return empty actions
+    if len(all_images) == 0:
+        return []
+
+    # For each image, identify associated Episode
+    actions = CardActions()
+    for image in all_images:
+        if (groups := match(r'.*s(\d+).*e(\d+)', image.name, IGNORECASE)):
+            season_number, episode_number = map(int, groups.groups())
+        else:
+            log.warning(f'Cannot identify index of {image.resolve()} - skipping')
+            actions.invalid += 1
+            continue
+
+        # Find associated Episode
+        episode = db.query(models.episode.Episode).filter(
+            models.episode.Episode.series_id==series_id,
+            models.episode.Episode.season_number==season_number,
+            models.episode.Episode.episode_number==episode_number,
+        ).first()
+
+        # No associated Episode, skip
+        if episode is None:
+            log.warning(f'{series.log_str} No associated Episode for {image.resolve()} - skipping')
+            actions.invalid += 1
+            continue
+
+        # Episode has an existing Card, skip if not forced
+        if episode.card and not card_directory.force_reload:
+            log.info(f'{series.log_str} {episode.log_str} has an associated Card - skipping')
+            actions.existing += 1
+            continue
+        # Episode has card, delete if reloading
+        elif episode.card and card_directory.force_reload:
+            for card in episode.card:
+                log.debug(f'{card.log_str} deleting record')
+                db.query(models.card.Card).filter_by(id=card.id).delete()
+                log.info(f'{series.log_str} {episode.log_str} has associated Card - reloading')
+                actions.deleted += 1
+
+        # Get finalized Card settings for this Episode, override card file
+        card_settings = resolve_card_settings(preferences, episode)
+
+        # If a list of CardActions were returned, update actions and skip
+        if isinstance(card_settings, list):
+            for action in card_settings:
+                setattr(actions, action, getattr(actions, action)+1)
+            continue
+
+        # Card is valid, create and add to Database
+        card_settings['card_file'] = image
+        title_card = NewTitleCard(
+            **card_settings,
+            series_id=series.id,
+            episode_id=episode.id,
+        )
+
+        card = add_card_to_database(db, title_card, card_settings['card_file'])
+        log.debug(f'{series.log_str} {episode.log_str} Imported {image.resolve()}')
+        actions.creating += 1
+
+    return actions

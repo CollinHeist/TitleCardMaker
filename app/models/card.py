@@ -51,6 +51,10 @@ class Card(Base):
     absolute_number = Column(Integer, default=0)
 
     @hybrid_property
+    def log_str(self) -> str:
+        return f'Card[{self.id}] "{self.card_file}"'
+
+    @hybrid_property
     def comparison_properties(self) -> dict[str, Any]:
         """
         Get a dictionary of properties that should be used to compare

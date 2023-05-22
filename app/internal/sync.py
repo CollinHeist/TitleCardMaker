@@ -56,12 +56,12 @@ def add_sync(
     # Verify all Templates exists, raise 404 if DNE
     new_sync_dict = new_sync.dict()
     templates = get_all_templates(db, new_sync_dict)
-    log.info(f'{templates=} for NewSync')
+
     # Create DB entry from Pydantic model, add to database
     sync = models.sync.Sync(**new_sync_dict, templates=templates)
     db.add(sync)
     db.commit()
-    log.warning(f'{sync.template_ids=}')
+
     return sync
 
 

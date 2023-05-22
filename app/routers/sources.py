@@ -25,7 +25,7 @@ source_router = APIRouter(
     tags=['Source Images'],
 )
 
-
+# TODO implement blacklist bypassing all over?
 @source_router.post('/series/{series_id}', status_code=200)
 def download_series_source_images(
         background_tasks: BackgroundTasks,
@@ -48,9 +48,6 @@ def download_series_source_images(
     the associated Episode has been internally blacklisted. 
     """
 
-    # Get this series, raise 404 if DNE
-    series = get_series(db, series_id, raise_exc=True)
-
     # Get all episodes for this series
     all_episodes = db.query(models.episode.Episode)\
         .filter_by(series_id=series_id).all()
@@ -62,7 +59,7 @@ def download_series_source_images(
             download_episode_source_image,
             # Arguments
             db, preferences, emby_interface, jellyfin_interface, plex_interface,
-            tmdb_interface, series, episode
+            tmdb_interface, episode
         )
 
     return None
@@ -193,22 +190,23 @@ def get_all_tmdb_episode_source_images(
             detail=f'No connection to TMDb'
         )
 
-    # Get the Episode and Series with this ID, raise 404 if DNE
+    # Get the Episode, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
-    series = get_series(db, episode.series_id, raise_exc=True)
 
     # Determine title matching
     if episode.match_title is not None:
         match_title = episode.match_title
     else:
-        match_title = series.match_titles
+        match_title = episode.series.match_titles
 
     # Get all source images
-    return tmdb_interface.get_all_source_images(
-        series.as_series_info,
+    source_images = tmdb_interface.get_all_source_images(
+        episode.series.as_series_info,
         episode.as_episode_info,
         match_title=match_title,
+        bypass_blacklist=True,
     )
+    return [] if source_images is None else source_images
 
 
 @source_router.get('/series/{series_id}', status_code=200)
@@ -224,8 +222,7 @@ def get_existing_series_source_images(
     - series_id: ID of the Series to get the details of.
     """
 
-    # Get the Series with this ID, raise 404 if DNE
-    series = get_series(db, series_id, raise_exc=True)
+    # Get all Episodes for this Series
     all_episodes = db.query(models.episode.Episode)\
         .filter_by(series_id=series_id)
 

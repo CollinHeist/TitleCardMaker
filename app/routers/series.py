@@ -5,7 +5,7 @@ from fastapi import (
     APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, UploadFile
 )
 
-from app.database.query import get_all_templates, get_font, get_series, get_template
+from app.database.query import get_all_templates, get_font, get_series
 from app.dependencies import (
     get_database, get_preferences, get_emby_interface,
     get_imagemagick_interface, get_jellyfin_interface, get_plex_interface,

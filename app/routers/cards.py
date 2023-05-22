@@ -3,10 +3,11 @@ from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException
 from app.database.query import get_card, get_episode, get_font, get_series
 from app.dependencies import (
     get_database, get_emby_interface, get_jellyfin_interface, get_preferences,
-    get_plex_interface, get_tmdb_interface,
+    get_plex_interface, get_sonarr_interface, get_tmdb_interface,
 )
 import app.models as models
 from app.internal.cards import create_episode_card, delete_cards, update_episode_watch_statuses
+from app.internal.episodes import refresh_episode_data
 from app.internal.series import load_series_title_cards
 from app.internal.sources import download_episode_source_image
 from app.internal.translate import translate_episode
@@ -168,7 +169,7 @@ def delete_series_title_cards(
     card_query = db.query(models.card.Card).filter_by(series_id=series_id)
     loaded_query = db.query(models.loaded.Loaded).filter_by(series_id=series_id)
 
-    return CardActions(deleted=delete_cards(db, card_query, loaded_query))
+    return CardActions(deleted=len(delete_cards(db, card_query, loaded_query)))
 
 
 @card_router.delete('/episode/{episode_id}', status_code=200, tags=['Episodes'])
@@ -185,7 +186,7 @@ def delete_episode_title_cards(
     card_query = db.query(models.card.Card).filter_by(episode_id=episode_id)
     loaded_query = db.query(models.loaded.Loaded).filter_by(episode_id=episode_id)
 
-    return CardActions(deleted=delete_cards(db, card_query, loaded_query))
+    return CardActions(deleted=len(delete_cards(db, card_query, loaded_query)))
 
 
 @card_router.delete('/card/{card_id}', status_code=200)
@@ -261,6 +262,7 @@ def create_cards_for_plex_key(
         preferences = Depends(get_preferences),
         db = Depends(get_database),
         plex_interface = Depends(get_plex_interface),
+        sonarr_interface = Depends(get_sonarr_interface),
         tmdb_interface = Depends(get_tmdb_interface)) -> None:
     """
     Remake the Title Card for the item associated with the given Plex
@@ -294,32 +296,40 @@ def create_cards_for_plex_key(
             .filter(episode_info.episode_filter_conditions(models.episode.Episode))\
             .first()
 
-        # Episode does not exist
+        # Episode does not exist, refresh episode data and try again
         if episode is None:
-            # TODO create new episodes?
-            ...
-            log.warning(f'New episode {series_info} {episode_info}, not implemented')
-        # Episode exists, update card
-        else:
-            # Update Episode watched status
-            if episode.watched != watched_status:
-                episode.watched = watched_status
-                db.commit()
-
-            # Look for source, add translation, create card if source exists
-            image = download_episode_source_image(
-                db, preferences,
-                emby_interface=None, jellyfin_interface=None,
-                plex_interface=plex_interface, tmdb_interface=tmdb_interface,
-                episode=episode,
+            refresh_episode_data(
+                db, preferences, series, emby_interface=None,
+                jellyfin_interface=None, plex_interface=plex_interface,
+                sonarr_interface=sonarr_interface,tmdb_interface=tmdb_interface,
             )
-            translate_episode(db, series, episode, tmdb_interface)
-            if image is None:
-                log.info(f'{episode.log_str} has no source image - skipping')
+            episode = db.query(models.episode.Episode)\
+                .filter(episode_info.episode_filter_conditions(models.episode.Episode))\
+                .first()
+            if episode is None:
+                log.error(f'Cannot find {series_info} {episode_info} details')
                 continue
-            create_episode_card(db, preferences, background_tasks, episode)
 
-            # Add this Series to list of Series to load
+        # Update Episode watched status
+        if episode.watched != watched_status:
+            episode.watched = watched_status
+            db.commit()
+
+        # Look for source, add translation, create card if source exists
+        image = download_episode_source_image(
+            db, preferences,
+            emby_interface=None, jellyfin_interface=None,
+            plex_interface=plex_interface, tmdb_interface=tmdb_interface,
+            episode=episode,
+        )
+        translate_episode(db, episode, tmdb_interface)
+        if image is None:
+            log.info(f'{episode.log_str} has no source image - skipping')
+            continue
+        create_episode_card(db, preferences, background_tasks, episode)
+
+        # Add this Series to list of Series to load
+        if episode.series not in series_to_load:
             series_to_load.append(episode.series)
 
     # Load all series that require reloading

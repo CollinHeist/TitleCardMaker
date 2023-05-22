@@ -6,6 +6,7 @@ from app.dependencies import (
     get_database, get_preferences, get_emby_interface, get_jellyfin_interface,
     get_plex_interface, get_sonarr_interface, get_tmdb_interface
 )
+from app.internal.templates import get_effective_series_template
 import app.models as models
 from app.schemas.episode import Episode
 from app.schemas.series import Series
@@ -125,23 +126,21 @@ def refresh_episode_data(
             be communicated with.
     """
 
-    # Query for Template if indicated
-    template_dict = {}
-    for template in series.templates:
-        if template.meets_filter_criteria(series):
-            template_dict = template.__dict__
-            break
+    # Get Series Template
+    series_template_dict = get_effective_series_template(series, as_dict=True)
 
     # Get highest priority options
-    series_options = {}
-    TieredSettings(
-        series_options,
-        preferences.__dict__,
-        template_dict,
-        series.__dict__,
+    # Get effective episode data source and sync specials toggle
+    episode_data_source = TieredSettings.resolve_singular_setting(
+        preferences.episode_data_source,
+        series_template_dict.get('episode_data_source', None),
+        series.episode_data_source,
     )
-    episode_data_source = series_options['episode_data_source']
-    sync_specials = series_options['sync_specials']
+    sync_specials = TieredSettings.resolve_singular_setting(
+        preferences.sync_specials,
+        series_template_dict.get('sync_specials', None),
+        series.sync_specials,
+    )
 
     # Raise 409 if cannot communicate with the series episode data source
     interface = {

@@ -579,12 +579,12 @@
             excluded_card_types: ect.split(','),
           }),
           contentType: 'application/json',
-          success: (response) => { 
+          success: response => { 
             $.toast({
               class: 'blue info',
               title: 'Updated Settings',
             });
-          }, error: (response) => {
+          }, error: response => {
             $.toast({
               class: 'error',
               title: 'Unable to update settngs',
