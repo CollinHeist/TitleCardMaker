@@ -108,15 +108,10 @@ def run_sync(
             excluded_tags=sync.excluded_tags,
         )
         for series_info, library in all_series:
-            # Look for an existing series with this name+year or Emby ID
-            # TODO maybe query by other database ID's?
+            # Look for existing series, add if DNE
             existing = db.query(models.series.Series)\
-                .filter(or_(
-                    and_(
-                        models.series.Series.name==series_info.name,
-                        models.series.Series.year==series_info.year
-                    ), models.series.Series.emby_id==series_info.emby_id,
-                )).first()
+                .filter(series_info.filter_conditions(models.series.Series))\
+                .first()
             if existing is None:
                 series = models.series.Series(
                     name=series_info.name,
@@ -138,15 +133,10 @@ def run_sync(
             excluded_tags=sync.excluded_tags,
         )
         for series_info, library in all_series:
-            # Look for an existing series with this name+year or Jellyfin ID
-            # TODO maybe query by other database ID's?
+            # Look for existing series, add if DNE
             existing = db.query(models.series.Series)\
-                .filter(or_(
-                    and_(
-                        models.series.Series.name==series_info.name,
-                        models.series.Series.year==series_info.year
-                    ), models.series.Series.jellyfin_id==series_info.jellyfin_id
-                )).first()
+                .filter(series_info.filter_conditions(models.series.Series))\
+                .first()
             if existing is None:
                 series = models.series.Series(
                     name=series_info.name,
@@ -171,12 +161,8 @@ def run_sync(
         for series_info, library in all_series:
             # Look for existing series, add if DNE
             existing = db.query(models.series.Series)\
-                .filter(
-                    # TODO filter by other ID's
-                    models.series.Series.name==series_info.name,
-                    models.series.Series.year==series_info.year,
-                ).first() 
-
+                .filter(series_info.filter_conditions(models.series.Series))\
+                .first()
             if existing is None:
                 series = models.series.Series(
                     name=series_info.name,
@@ -200,14 +186,10 @@ def run_sync(
             excluded_series_type=sync.excluded_series_type,
         )
         for series_info, directory in all_series:
-            # Look for an existing series with this name+year or Sonarr ID
+            # Look for existing series, add if DNE
             existing = db.query(models.series.Series)\
-                .filter(or_(
-                    and_(
-                        models.series.Series.name==series_info.name,
-                        models.series.Series.year==series_info.year
-                    ), models.series.Series.sonarr_id==series_info.sonarr_id,
-                )).first()
+                .filter(series_info.filter_conditions(models.series.Series))\
+                .first()
             if existing is None:
                 library = preferences.determine_sonarr_library(directory)
                 series = models.series.Series(
