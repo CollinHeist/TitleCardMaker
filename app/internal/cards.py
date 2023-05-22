@@ -151,13 +151,9 @@ def create_card(
     """
 
     # Initialize class of the card type being created
-    # Get the effective card class
-    if (card_type := card_settings['card_type']) in TitleCardCreator.CARD_TYPES:
-        CardClass = TitleCardCreator.CARD_TYPES[card_type]
-    elif card_type in preferences.remote_card_types:
-        CardClass = preferences.remote_card_types[card_type]
-    else:
-        log.error(f'Unable to identify card type "{card_type}", skipping')
+    CardClass = preferences.get_card_type_class(card_settings['card_type'])
+    if CardClass is None:
+        log.error(f'Unable to identify card type "{card_settings["card_type"]}", skipping')
         return None
 
     card_maker = CardClass(
@@ -244,12 +240,8 @@ def resolve_card_settings(
     card_settings['extras'] = card_extras | episode.translations
 
     # Get the effective card class
-    if (card_type := card_settings['card_type']) in TitleCardCreator.CARD_TYPES:
-        CardClass = TitleCardCreator.CARD_TYPES[card_type]
-    elif card_type in preferences.remote_card_types:
-        CardClass = preferences.remote_card_types[card_type]
-    else:
-        log.error(f'Unable to identify card type "{card_type}", skipping')
+    CardClass = preferences.get_card_type_class(card_settings['card_type'])
+    if CardClass is None:
         return ['invalid']
 
     # Add card default font stuff
