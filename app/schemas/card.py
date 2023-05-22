@@ -205,6 +205,7 @@ class CardActions(Base):
     existing: int = Field(default=0)
     deleted: int = Field(default=0)
     missing_source: int = Field(default=0)
+    imported: int = Field(default=0)
     invalid: int = Field(default=0)
 
 class TitleCard(Base):

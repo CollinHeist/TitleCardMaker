@@ -21,6 +21,6 @@ class ImportSeriesYaml(ImportBase):
     default_library: Optional[str] = Field(default=None, min_length=1)
 
 class ImportCardDirectory(Base):
-    directory: DirectoryPath
+    directory: Optional[DirectoryPath] = Field(default=None)
     image_extension: CardExtension = Field(default='.jpg')
     force_reload: bool = Field(default=False)

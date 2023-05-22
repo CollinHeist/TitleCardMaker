@@ -314,6 +314,10 @@ def import_cards_for_series(
     # Get this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
+    # If explicit directory was not provided, use Series default
+    if card_directory.directory is None:
+        card_directory.directory = series.card_directory
+
     # Glob directory for images to import
     all_images = list(
         card_directory.directory.glob(f'**/*{card_directory.image_extension}')
@@ -378,6 +382,6 @@ def import_cards_for_series(
 
         card = add_card_to_database(db, title_card, card_settings['card_file'])
         log.debug(f'{series.log_str} {episode.log_str} Imported {image.resolve()}')
-        actions.creating += 1
+        actions.imported += 1
 
     return actions
