@@ -105,6 +105,11 @@ class Series(Base):
     @hybrid_property
     def path_safe_name(self) -> str:
         return str(CleanPath.sanitize_name(self.full_name))
+    
+    @hybrid_property
+    def card_directory(self) -> Path:
+        directory = self.path_safe_name if self.directory is None else self.directory
+        return CleanPath(get_preferences().card_directory) / directory
 
     @hybrid_property
     def source_directory(self) -> str:

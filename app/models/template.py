@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 from re import match as re_match
 from typing import Any, Optional
 
@@ -34,13 +35,14 @@ OPERATIONS = {
     'is greater than or equal': lambda v, r: float(v) >= float(r),
     'is before': lambda v, r: v < datetime.strptime(r, DATETIME_FORMAT),
     'is after': lambda v, r: v > datetime.strptime(r, DATETIME_FORMAT),
+    'file exists': lambda v, r: Path(v).exists(),
 }
 ARGUMENT_KEYS = (
     'Series Name', 'Series Year', 'Number of Seasons',
     'Series Library Name (Emby)', 'Series Library Name (Jellyfin)',
-    'Series Library Name (Plex)', 'Episode is Watched', 'Season Number',
-    'Episode Number', 'Absolute Number', 'Episode Title',
-    'Episode Title Length', 'Episode Airdate',
+    'Series Library Name (Plex)', 'Series Logo', 'Episode is Watched',
+    'Season Number', 'Episode Number', 'Absolute Number', 'Episode Title',
+    'Episode Title Length', 'Episode Airdate', 'Episode Source',
 )
 
 # Tables for many <-> many Template relationships
@@ -139,6 +141,7 @@ class Template(Base):
     
     @hybrid_method
     def meets_filter_criteria(self,
+            preferences: 'Preferences',
             series: 'Series',
             episode: Optional['Episode'] = None) -> bool:
         """
@@ -167,6 +170,7 @@ class Template(Base):
             'Series Library Name (Emby)': series.emby_library_name,
             'Series Library Name (Jellyfin)': series.jellyfin_library_name,
             'Series Library Name (Plex)': series.plex_library_name,
+            'Series Logo': series.get_logo_file(preferences.source_directory),
         }
         if episode is None:
             ARGUMENTS = SERIES_ARGUMENTS
@@ -179,6 +183,9 @@ class Template(Base):
                 'Episode Title': episode.title,
                 'Episode Title Length': len(episode.title),
                 'Episode Airdate': episode.airdate,
+                'Episode Source': episode.get_source_file(
+                    preferences.source_directory, series.path_safe_name, 
+                ),
             }
 
         # Evaluate each condition of this Template's filter

@@ -1,5 +1,6 @@
 from typing import Any, Optional
 
+from app.dependencies import get_preferences
 from app.schemas.episode import Episode
 from app.schemas.series import Series, Template
 
@@ -23,13 +24,14 @@ def get_effective_series_template(
 
     Returns:
         The first Template of the given Series whose Conditions are all
-        met. None if no Template criteria are satisfied, or no Templates
-        are defined.
+        met. None (or an empty dictionary if as_dict is True) if no
+        Template criteria are satisfied, or no Templates are defined.
     """
 
     # Evaluate each Series Template
+    preferences = get_preferences()
     for template in series.templates:
-        if template.meets_filter_criteria(series, episode):
+        if template.meets_filter_criteria(preferences, series, episode):
             return template.__dict__ if as_dict else template
         
     return {} if as_dict else None

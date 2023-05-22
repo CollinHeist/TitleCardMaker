@@ -14,7 +14,6 @@ from app.internal.translate import translate_episode
 from app.schemas.card import CardActions, TitleCard, PreviewTitleCard
 
 from modules.Debug import log
-from modules.TitleCard import TitleCard as TitleCardCreator
 
 
 # Create sub router for all /cards API requests
@@ -37,12 +36,9 @@ def create_preview_card(
     - card: Card definition to create.
     """
 
-    if card.card_type in TitleCardCreator.CARD_TYPES:
-        CardClass = TitleCardCreator.CARD_TYPES[card.card_type]
-    elif False:
-        # TODO handle remote card types
-        ...
-    else:
+    # Get the effective card class
+    CardClass = preferences.get_card_type_class(card.card_type)
+    if CardClass is None:
         raise HTTPException(
             status_code=400,
             detail=f'Cannot create preview for card type "{card.card_type}"',
@@ -293,21 +289,30 @@ def create_cards_for_plex_key(
     for series_info, episode_info, watched_status in details:
         # Find Episode
         episode = db.query(models.episode.Episode)\
-            .filter(episode_info.episode_filter_conditions(models.episode.Episode))\
+            .filter(episode_info.filter_conditions(models.episode.Episode))\
             .first()
 
         # Episode does not exist, refresh episode data and try again
         if episode is None:
+            # Try and find associated Series, skip if DNE
+            series = db.query(models.series.Series)\
+                .filter(series_info.filter_conditions(models.series.Series))\
+                .first()
+            if series is None:
+                log.error(f'Cannot find Series for {series_info}')
+                continue
+
+            # Series found, refresh data and look for Episode again
             refresh_episode_data(
                 db, preferences, series, emby_interface=None,
                 jellyfin_interface=None, plex_interface=plex_interface,
                 sonarr_interface=sonarr_interface,tmdb_interface=tmdb_interface,
             )
             episode = db.query(models.episode.Episode)\
-                .filter(episode_info.episode_filter_conditions(models.episode.Episode))\
+                .filter(episode_info.filter_conditions(models.episode.Episode))\
                 .first()
             if episode is None:
-                log.error(f'Cannot find {series_info} {episode_info} details')
+                log.error(f'Cannot find Episode for {series_info} {episode_info}')
                 continue
 
         # Update Episode watched status

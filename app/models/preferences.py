@@ -354,7 +354,31 @@ class Preferences:
             Name of the season subfolder for the given Episode.
         """
 
+        # Format Specials differently
         if episode_info.season_number == 0:
             return self.specials_folder_format.format(**episode_info.indices)
         
         return self.season_folder_format.format(**episode_info.indices)
+    
+
+    def get_card_type_class(self,
+            card_type_identifier: str) -> Optional['CardType']:
+        """
+        Get the CardType class for the given card type identifier.
+
+        Args:
+            card_type_identifier: Identifier of the CardType class.
+
+        Returns:
+            CardType subclass of the given identifier. If this is an
+            unknown identifier, None is returned instead.
+        """
+
+        # Get the effective card class
+        if card_type_identifier in TitleCard.CARD_TYPES:
+            return TitleCard.CARD_TYPES[card_type_identifier]
+        elif card_type_identifier in self.remote_card_types:
+            return self.remote_card_types[card_type_identifier]
+
+        log.error(f'Unable to identify card type "{card_type_identifier}"')
+        return None

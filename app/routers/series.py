@@ -268,10 +268,12 @@ def load_title_cards_into_media_server(
     # Get this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    return load_series_title_cards(
+    load_series_title_cards(
         series, media_server, db, emby_interface, jellyfin_interface,
         plex_interface, force_reload=False
     )
+
+    return None
 
 
 @series_router.post('/{series_id}/reload/{media_server}', status_code=201,
