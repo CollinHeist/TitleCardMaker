@@ -26,15 +26,117 @@
   <!-- Global styles -->
   <link rel="stylesheet" type="text/css" href="/templates/style.css"/>
   <style>
+    /* Change color of dropdowns in series importer to make options more clear */
+    .segment[data-value="import-series-segment"] .dropdown .text,
+    .segment[data-value="import-series-segment"] input[type="text"],
+    .segment[data-value="import-series-segment"] input[type="text"]::placeholder {
+      color: #00b5ad !important
+    }
+
+    /* Limit the width of the YAML textarea inputs, set font to monospace */
     textarea {
-      width: 50%
+      width: 50% !important;
+      font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace !important;
     }
   </style>
 </head>
 
-<body>
+<body onload="initAll();">
   <script>
-    async function submitYamlForm(args) {
+    async function initSeriesImport() {
+      // Extension selector
+      $('.dropdown[data-value="image_extension"]').dropdown({
+        values: [
+          {name: 'jpg', value: '.jpg', selected: true},
+          {name: 'jpeg', value: '.jpeg', selected: false},
+          {name: 'png', value: '.png', selected: false},
+          {name: 'tiff', value: '.tiff', selected: false},
+          {name: 'gif', value: '.gif', selected: false},
+          {name: 'webp', value: '.webp', selected: false},
+        ],
+      });
+      // Series selector
+      const allSeries = await fetch('/api/series/all').then(resp => resp.json());
+      let seriesMap = {};
+      for (series of allSeries) { seriesMap[series.id] = series; }
+      $('.dropdown[data-value="series_id"]').dropdown({
+        ignoreDiacritics: true,
+        sortSelect: true,
+        placeholder: 'Series..',
+        values: allSeries.sort((a, b) => a.name.localeCompare(b.name)).map(series => {
+          return {
+            name: series.name,
+            value: series.id,
+            // image: series.poster_url,
+            text: series.name,
+            description: series.year,
+            sortSelect: true,
+            descriptionVertical: true,
+          };
+        }), onChange: (value, text, $selectedItem) => {
+          if (seriesMap[value].directory !== null) {
+            $('input[name="directory"]')[0].value = seriesMap[value].directory;
+          }
+        },
+      });
+    }
+
+    async function initAll() {
+      initSeriesImport();
+    }
+
+    function loadCards(seriesId) {
+      // Get associated Media Server to load cards into, default Plex
+      let mediaServer = $('input[name="media_server"]')[0].value;
+      mediaServer = mediaServer === '' ? 'Plex' : mediaServer;
+      $.ajax({
+        type: 'POST',
+        url: `/api/series/${seriesId}/load/${mediaServer}`,
+        success: response => {
+          $.toast({class: 'blue info', title: `Loaded Cards`});
+        }, error: response => {
+          $.toast({class: 'error', title: 'Error loading Cards', message: response.responseJSON.detail});
+        }, complete: () => {},
+      });
+    }
+
+    function importSeries() {
+      // Get associated Series
+      const seriesId = $('input[name="series_id"]')[0].value;
+      if (seriesId === '') {
+        $('.dropdown[data-value="series_id"]').toggleClass('error', true);
+        return;
+      }
+      $('.dropdown[data-value="series_id"]').toggleClass('error', false);
+      // Data for request
+      const directoryValue = $('input[name="directory"]')[0].value
+      const data = {
+        directory: directoryValue === '' ? null : directoryValue,
+        image_extension: $('input[name="image_extension"]')[0].value,
+        force_reload: $('input[name="force_reload"]')[0].value !== 'skip',
+      };
+      // Submit request
+      $('.segment[data-value="import-series-segment"] .dimmer').toggleClass('active', true);
+      $.ajax({
+        type: 'POST',
+        url: `/api/import/series/${seriesId}/cards`,
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        success: response => {
+          $.toast({
+            class: 'blue info',
+            title: `Imported ${response.imported} Cards`,
+          });
+          if ($('input[name="load_afterwards"]')[0].value === 'Load') { loadCards(seriesId); }
+        }, error: response => {
+          $.toast({class: 'error', title: 'Error importing Cards', message: response.responseJSON.detail});
+        }, complete: () => {
+          $('.segment[data-value="import-series-segment"] .dimmer').toggleClass('active', false);
+        },
+      });
+    }
+
+    function submitYamlForm(args) {
       const {url, data, formId, name, successMessage} = args;
       $(`${formId} button`).toggleClass('loading', true);
       $.ajax({
@@ -49,11 +151,11 @@
             const message = successMessage(response);
             $.toast({class: 'blue info', title: `Imported ${name} YAML`, message: message});
           }
-          $(`${formId} .error.message`).toggleClass('visible', false);
+          $(formId).toggleClass('error', false);
         }, error: response => {
-          console.log(response);
           const messageHtml = `<div class="header">YAML Parsing Error</div><p>${response.responseJSON.detail}</p>`
-          $(`${formId} .error.message`).toggleClass('visible', true)[0].innerHTML = messageHtml;
+          $(`${formId} .error.message`)[0].innerHTML = messageHtml;
+          $(formId).toggleClass('error', true);
           $.toast({class: 'error', title: `Unable to Import ${name} YAML`, displayTime: 5000});
         }, complete: () => {
           $(`${formId} button`).toggleClass('loading', false);
@@ -71,16 +173,83 @@
     <div id="main-content" class="article">
       <div class="ui stackable grid">
         <div class="sixteen wide column">
-          <h1 class="ui header">Import YAML</h1>
+          <h1 class="ui header">Importer</h1>
 
-          <div class="ui compact raised segment">
-            <span class="ui text">Import YAML from v1 of TitleCardMaker</span>
+          <h2 class="ui dividing header">Title Cards</h2>
+          <div data-value="import-series-segment" class="ui compact segment">
+            <div class="ui dimmer">
+              <div class="ui blue elastic text loader">Reading Files..</div>
+            </div>
+            <span class="ui text">
+              Import existing
+              <div data-value="image_extension" class="ui search inline dropdown" data-tooltip="File extension of Cards to search for">
+                <input name="image_extension" type="hidden">
+                <div class="text">.jpg</div>
+                <i class="dropdown icon"></i>
+                <div class="menu"></div>
+              </div>
+              Title Cards for 
+              <div data-value="series_id" class="ui search inline dropdown" data-tooltip="Series to import the Cards into">
+                <input name="series_id" type="hidden">
+                <div class="text"></div>
+                <i class="dropdown icon"></i>
+                <div class="menu"></div>
+              </div>
+              from the
+              <div data-value="directory" class="ui right icon input" data-tooltip="Directory to search for Cards">
+                <input name="directory" type="text" placeholder="series default">
+                <i class="folder outline icon"></i>
+              </div>
+              Card directory, and 
+              <div data-value="force_reload" class="ui inline dropdown" data-tooltip="Whether to override existing Cards">
+                <input name="force_reload" type="hidden" value="skip">
+                <div class="default text">skip</div>
+                <i class="dropdown icon"></i>
+                <div class="menu">
+                  <div class="item">skip</div>
+                  <div class="item">do not skip</div>
+                </div>
+              </div>
+              Episodes with existing Title Cards.
+            </span>
+            <br>
+            <span>
+              <div data-value="load_afterwards" class="ui inline dropdown">
+                <input name="load_afterwards" type="hidden" value="Load">
+                <div class="default text">Load</div>
+                <i class="dropdown icon"></i>
+                <div class="menu">
+                  <div class="item">Load</div>
+                  <div class="item">Do not load</div>
+                </div>
+              </div>
+              the Cards into
+              <div data-value="media_server" class="ui inline dropdown">
+                <input name="media_server" type="hidden" placeholder="Plex">
+                <div class="default text">Plex</div>
+                <i class="dropdown icon"></i>
+                <div class="menu">
+                  <div class="item">Emby</div>
+                  <div class="item">Jellyfin</div>
+                  <div class="item">Plex</div>
+                </div>
+              </div>
+              afterwards.
+            </span>
+            <br>
+            <button class="ui primary animated tiny button" onclick="importSeries();">
+              <div class="visible content">Import</div>
+              <div class="hidden content">
+                <i class="right arrow icon"></i>
+              </div>
+            </button>
           </div>
-
-          <h2 class="ui header">Preferences File</h2>
+          
+          <h2 class="ui dividing header">YAML</h2>
+          <h3 class="ui header">Preferences File</h3>
           <form id="preferences-form" class="ui form">
             <div data-value="yaml" class="ui field">
-              <textarea name="yaml" rows="10"></textarea>
+              <textarea name="yaml" placeholder="Paste YAML here.." rows="10"></textarea>
             </div>
 
             <div class="grouped fields">
@@ -115,10 +284,10 @@
             </button>
           </form>
 
-          <h2 class="ui header">Series YAML (or Sync) File</h2>
+          <h3 class="ui header">Series YAML (or Sync) File</h3>
           <form id="series-form" class="ui form">
             <div data-value="yaml" class="ui field">
-              <textarea name="yaml" rows="10"></textarea>
+              <textarea name="yaml" placeholder="Paste YAML here.." rows="10"></textarea>
             </div>
 
             <div class="grouped fields">
@@ -160,6 +329,7 @@
 
   <script>
     $('.ui.checkbox').checkbox();
+    $('.ui.dropdown').dropdown();
 
     // Preferences form submission
     $('#preferences-form').on('submit', event => {
