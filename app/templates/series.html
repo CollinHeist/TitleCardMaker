@@ -50,6 +50,10 @@
       overflow-wrap: break-word;
     }
 
+    #main-content input {
+      max-width: 500px;
+    }
+
     /* Add top padding above the delete button for each episode */
     .tab[data-tab="episode-data"] .negative.button {
       margin-top: 5px;
@@ -463,7 +467,7 @@
       });
     }
 
-    async function refreshEpisodeData() {
+    function refreshEpisodeData() {
       $('#refresh > i').toggleClass('loading', true);
       $.ajax({
         type: 'POST',
@@ -486,7 +490,7 @@
       });
     }
 
-    async function addTranslations() {
+    function addTranslations() {
       $('#add-translations > i').toggleClass('loading', true);
       $.ajax({
         type: 'POST',
@@ -1217,7 +1221,7 @@
     <div id="main-content" class="article">
       <div class="ui stackable grid">
         <!-- Poster and label -->
-        <div class="four wide column" style="min-width: 150px;">
+        <div class="four wide column">
           <div class="ui raised card">
             <!-- Series poster -->
             <div id="poster" class="blurring dimmable image">
@@ -1444,7 +1448,7 @@
                 <label>Card Directory</label>
                 <div class="ui left icon input">
                   {% if series.directory is none %}
-                  <input name="card_directory" type="text" placeholder="{{preferences.card_directory}}{{series.path_safe_name}}/">
+                  <input name="card_directory" type="text" placeholder="{{preferences.card_directory}}{{series.path_safe_name}}">
                   {% else %}
                   <input name="card_directory" type="text" value="{{series.directory}}">
                   {% endif %}
@@ -1456,9 +1460,9 @@
               <div class="ui field" placeholder="Global Default" data-tooltip="Format of the title card file names" data-position="top center">
                 <label>Filename Format</label>
                 {% if series.card_filename_format is none %}
-                <input name="card_filename_format" type="text">
+                <input name="card_filename_format" type="text" placeholder="Default">
                 {% else %}
-                <input name="card_filename_format" type="text">
+                <input name="card_filename_format" type="text" value="{{series.card_filename_format}}">
                 {% endif %}
               </div>
 
@@ -1485,7 +1489,7 @@
                 <form id="card-config-form" class="ui compact form">
                   <!-- Template ID -->
                   <div class="field">
-                    <label>Template</label>
+                    <label>Templates</label>
                     <div data-value="template_ids" class="ui long compact clearable search selection multiple dropdown">
                       <input name="template_ids" type="hidden">
                       <i class="dropdown icon"></i>
