@@ -18,11 +18,12 @@ async function loadCardTypes(args) {
       localTypes.push({name: name, value: identifier, selected: selected});
     } else {
       remoteTypes.push({
-      name: name,
-      value: identifier,
-      selected: selected,
-      description: creators[0],
-      descriptionVertical: true,
+        name: name,
+        value: identifier,
+        text: identifier,
+        selected: selected,
+        description: creators[0],
+        descriptionVertical: true,
       });
     }
   });
