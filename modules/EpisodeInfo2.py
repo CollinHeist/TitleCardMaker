@@ -186,6 +186,7 @@ class EpisodeInfo(DatabaseInfoContainer):
                 log.info(f'Title matches on {self}')
             else:
                 log.warning(f'Title does not match {self}')
+                log.debug(f'{self.title=} vs. {info.title=}')
 
         # Require title match
         return (
@@ -300,7 +301,7 @@ class EpisodeInfo(DatabaseInfoContainer):
         self._update_attribute('airdate', airdate)
 
 
-    def episode_filter_conditions(self,
+    def filter_conditions(self,
             EpisodeModel: 'sqlachemy.Model') -> 'sqlalchemy.Query':
         """
         Get the SQLAlchemy Query condition for this object.

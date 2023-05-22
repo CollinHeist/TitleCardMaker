@@ -190,32 +190,23 @@ def load_series_title_cards(
             status_code=409,
             detail=f'Unable to communicate with {media_server}',
         )
-
-    # Get all episodes associated with this series
-    # all_episodes = db.query(models.episode.Episode)\
-    #     .filter_by(series_id=series.id).all()
     
     # Get list of episodes to reload
     episodes_to_load = []
     # for episode in all_episodes:
     for episode in series.episodes:
         # Only load if episode has a Card
-        card = db.query(models.card.Card)\
-            .filter_by(episode_id=episode.id).first()
-        if card is None:
+        if not episode.card:
             log.debug(f'{series.log_str} {episode.log_str} - no associated card')
             continue
-
-        # Look for a previously loaded asset
-        loaded = db.query(models.loaded.Loaded)\
-            .filter_by(episode_id=episode.id).first()
+        card = episode.card[0]
 
         # No previously loaded card for this episode, load
-        if loaded is None:
+        if not episode.loaded:
             episodes_to_load.append((episode, card))
         # There is a previously loaded card, delete loaded entry, reload
-        elif force_reload or (loaded.filesize != card.filesize):
-            db.delete(loaded)
+        elif force_reload or (episode.loaded[0].filesize != card.filesize):
+            db.delete(episode.loaded[0])
             episodes_to_load.append((episode, card))
         # Episode does not need to be (re)loaded
         else:
