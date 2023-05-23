@@ -24,3 +24,8 @@ class ImportCardDirectory(Base):
     directory: Optional[DirectoryPath] = Field(default=None)
     image_extension: CardExtension = Field(default='.jpg')
     force_reload: bool = Field(default=False)
+
+class MultiCardImport(Base):
+    series_ids: list[int]
+    image_extension: CardExtension = Field(default='.jpg')
+    force_reload: bool = Field(default=False)

@@ -26,15 +26,6 @@
   <!-- Global styles -->
   <link rel="stylesheet" type="text/css" href="/templates/style.css"/>
   <style>
-    /* Change color of dropdowns in series importer to make options more clear */
-    .segment[data-value="import-series-segment"] .dropdown .text,
-    .segment[data-value="import-series-segment"] input[type="text"] {
-      color: #2185d0 !important
-    }
-    .segment[data-value="import-series-segment"] input[type="text"]::placeholder {
-      color: #2184d06c !important;
-    }
-
     /* Limit the width of the YAML textarea inputs, set font to monospace */
     textarea {
       width: 50% !important;
@@ -69,6 +60,7 @@
         ignoreDiacritics: true,
         sortSelect: true,
         placeholder: 'Series..',
+        useLabels: false,
         values: allSeries.sort((a, b) => a.name.localeCompare(b.name)).map(series => {
           return {
             name: series.name,
@@ -80,12 +72,43 @@
             descriptionVertical: true,
           };
         }), onChange: (value, text, $selectedItem) => {
-          if (seriesMap[value].directory === null) {
-            $('input[name="directory"]')[0].value = '';
+          // Disable directory field if multiple series are selected
+          if (value.includes(',')) {
+            $('.field[data-value="directory"]').toggleClass('disabled', true);
+            const infoMessage = $('#import-cards-form .info.message');
+            infoMessage[0].innerHTML = `<i class="info circle icon"></i><b>Info</b> When importing Cards for multiple Series, only each default Card Directory is searched.`;
+            infoMessage.toggleClass('visible', true);
+          // Single series selected, enable field and update with series directory
           } else {
-            $('input[name="directory"]')[0].value = seriesMap[value].directory;
+            $('.field[data-value="directory"]').toggleClass('disabled', false);
+            $('#import-cards-form .info.message').toggleClass('visible', false);
+            if (seriesMap[value].directory === null) {
+              $('input[name="directory"]')[0].value = '';
+            } else {
+              $('input[name="directory"]')[0].value = seriesMap[value].directory;
+            }
           }
         },
+      });
+      // Toggle media server dropdown with load checkbox
+      $('.checkbox[data-value="load_afterwards"]').checkbox({
+        onChecked: () => $('.field[data-value="media_server"]').toggleClass('disabled', false),
+        onUnchecked: () => $('.field[data-value="media_server"]').toggleClass('disabled', true),
+      });
+      // Media server dropdown
+      $('.dropdown[data-value="media_server"]').dropdown({
+        placeholder: 'Plex',
+        values: [
+          {% if preferences.use_emby %}
+          {name: 'Emby', selected: false},
+          {% endif %}
+          {% if preferences.use_jellyfin %}
+          {name: 'Jellyfin', selected: false},
+          {% endif %}
+          {% if preferences.use_plex %}
+          {name: 'Plex', selected: true},
+          {% endif %}
+        ],
       });
     }
 
@@ -110,24 +133,28 @@
 
     function importSeries() {
       // Get associated Series
-      const seriesId = $('input[name="series_id"]')[0].value;
-      if (seriesId === '') {
+      let seriesIds = $('input[name="series_id"]')[0].value;
+      if (seriesIds === '') {
         $('.dropdown[data-value="series_id"]').toggleClass('error', true);
         return;
       }
       $('.dropdown[data-value="series_id"]').toggleClass('error', false);
+      seriesIds = seriesIds.split(',');
       // Data for request
       const directoryValue = $('input[name="directory"]')[0].value
       const data = {
+        series_ids: seriesIds,
         directory: directoryValue === '' ? null : directoryValue,
         image_extension: $('input[name="image_extension"]')[0].value,
-        force_reload: $('input[name="force_reload"]')[0].value !== 'skip',
+        force_reload: $('.checkbox[data-value="force_reload"]').checkbox('is checked'),
       };
+      // URL for request if submitting >1 series
+      const url = seriesIds.length > 1 ? '/api/import/series/cards' : `/api/import/series/${seriesIds[0]}/cards`;
       // Submit request
-      $('.segment[data-value="import-series-segment"] .dimmer').toggleClass('active', true);
+      $('.segment .dimmer').toggleClass('active', true);
       $.ajax({
         type: 'POST',
-        url: `/api/import/series/${seriesId}/cards`,
+        url: url,
         data: JSON.stringify(data),
         contentType: 'application/json',
         success: response => {
@@ -135,11 +162,13 @@
             class: 'blue info',
             title: `Imported ${response.imported} Cards`,
           });
-          if ($('input[name="load_afterwards"]')[0].value === 'Load') { loadCards(seriesId); }
+          if ($('.checkbox[data-value="load_afterwards"]').checkbox('is checked')) {
+            for (let series_id of seriesIds) { loadCards(series_id); }
+          }
         }, error: response => {
           $.toast({class: 'error', title: 'Error importing Cards', message: response.responseJSON.detail});
         }, complete: () => {
-          $('.segment[data-value="import-series-segment"] .dimmer').toggleClass('active', false);
+          $('.segment .dimmer').toggleClass('active', false);
         },
       });
     }
@@ -183,74 +212,71 @@
         <div class="sixteen wide column">
           <h1 class="ui header">Importer</h1>
 
-          <h2 class="ui dividing header">Title Cards</h2>
           <div data-value="import-series-segment" class="ui compact segment">
+            <h2 class="ui dividing header">Existing Title Cards</h2>
             <div class="ui dimmer">
-              <div class="ui blue elastic text loader">Reading Files..</div>
+              <div class="ui text blue elastic loader">Importing Title Cards..</div>
             </div>
-            <span class="ui text">
-              Import existing
-              <div data-value="image_extension" class="ui search inline dropdown" data-tooltip="File extension of Cards to search for">
-                <input name="image_extension" type="hidden">
-                <div class="text">.jpg</div>
-                <i class="dropdown icon"></i>
-                <div class="menu"></div>
-              </div>
-              Title Cards for 
-              <div data-value="series_id" class="ui search inline dropdown" data-tooltip="Series to import the Cards into">
-                <input name="series_id" type="hidden">
-                <div class="text"></div>
-                <i class="dropdown icon"></i>
-                <div class="menu"></div>
-              </div>
-              from the
-              <div data-value="directory" class="ui right icon input" data-tooltip="Directory to search for Cards">
-                <input name="directory" type="text" placeholder="series default">
-                <i class="folder outline icon"></i>
-              </div>
-              Card directory, and 
-              <div data-value="force_reload" class="ui inline dropdown" data-tooltip="Whether to override existing Cards">
-                <input name="force_reload" type="hidden" value="skip">
-                <div class="default text">skip</div>
-                <i class="dropdown icon"></i>
-                <div class="menu">
-                  <div class="item">skip</div>
-                  <div class="item">do not skip</div>
+            <form id="import-cards-form" class="ui form">
+              <div class="ui field">
+                <label>Series</label>
+                <div data-value="series_id" class="ui search multiple selection dropdown" data-tooltip="Series to import the Cards into">
+                  <input name="series_id" type="hidden">
+                  <div class="text"></div>
+                  <i class="dropdown icon"></i>
+                  <div class="menu"></div>
                 </div>
               </div>
-              Episodes with existing Title Cards.
-            </span>
-            <br>
-            <span>
-              <div data-value="load_afterwards" class="ui inline dropdown">
-                <input name="load_afterwards" type="hidden" value="Load">
-                <div class="default text">Load</div>
-                <i class="dropdown icon"></i>
-                <div class="menu">
-                  <div class="item">Load</div>
-                  <div class="item">Do not load</div>
+
+              <div data-value="image_extension" class="ui field">
+                <label>Card Extension</label>
+                <div data-value="image_extension" class="ui search selection dropdown" data-tooltip="File extension of Cards to search for">
+                  <input name="image_extension" type="hidden">
+                  <div class="text">.jpg</div>
+                  <i class="dropdown icon"></i>
+                  <div class="menu"></div>
                 </div>
               </div>
-              the Cards into
-              <div data-value="media_server" class="ui inline dropdown">
-                <input name="media_server" type="hidden" placeholder="Plex">
-                <div class="default text">Plex</div>
-                <i class="dropdown icon"></i>
-                <div class="menu">
-                  <div class="item">Emby</div>
-                  <div class="item">Jellyfin</div>
-                  <div class="item">Plex</div>
+
+              <div data-value="directory" class="ui field">
+                <label>Card Directory</label>
+                <div data-value="directory" class="ui right icon input" data-tooltip="Directory to search for Cards">
+                  <input name="directory" type="text" placeholder="Series Default">
+                  <i class="folder outline icon"></i>
                 </div>
               </div>
-              afterwards.
-            </span>
-            <br>
-            <button class="ui primary animated tiny button" onclick="importSeries();">
-              <div class="visible content">Import</div>
-              <div class="hidden content">
-                <i class="right arrow icon"></i>
+
+              <div data-value="force_reload" class="ui inline field">
+                <div data-value="force_reload" class="ui checked checkbox">
+                  <input type="checkbox" class="hidden" checked="">
+                  <label>Skip Episodes with existing Cards</label>
+                </div>
               </div>
-            </button>
+
+              <div class="ui inline field">
+                <div data-value="load_afterwards" class="ui checked checkbox">
+                  <input type="checkbox" class="hidden" checked="">
+                  <label>Load Title Cards</label>
+                </div>
+              </div>
+
+              <div data-value="media_server" class="ui field">
+                <label>Media Server</label>
+                <div data-value="media_server" class="ui selection dropdown">
+                  <input name="media_server" type="hidden" placeholder="Plex">
+                  <i class="dropdown icon"></i>
+                  <div class="default text"></div>
+                  <div class="menu"></div>
+                </div>
+              </div>
+              <div class="ui info message"></div>
+              <button class="ui animated primary button" type="submit">
+                <div class="visible content">Submit</div>
+                <div class="hidden content">
+                  <i class="right arrow icon"></i>
+                </div>
+              </button>
+            </form>
           </div>
           
           <h2 class="ui dividing header">YAML</h2>
@@ -347,6 +373,13 @@
   <script>
     $('.ui.checkbox').checkbox();
     $('.ui.dropdown').dropdown();
+
+    // Import cards form submission
+    $('#import-cards-form').on('submit', event => {
+      // Prevent page reload
+      event.preventDefault();
+      importSeries();
+    });
 
     // Preferences form submission
     $('#preferences-form').on('submit', event => {

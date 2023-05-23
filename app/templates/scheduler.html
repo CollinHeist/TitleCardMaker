@@ -163,7 +163,6 @@
         if (task.previous_duration === null) {
           row.querySelector('td[data-column="previous_duration"]').innerHTML = '-';
         } else {
-          console.log(task.previous_duration);
           row.querySelector('td[data-column="previous_duration"]').innerHTML = timeFreqString(task.previous_duration, 2);
         }
         row.querySelector('td[data-column="next_run"]').innerHTML = `in ${timeDiffString(task.next_run)}`;

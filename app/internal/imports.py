@@ -1,18 +1,22 @@
+from pathlib import Path
+from re import match, IGNORECASE
 from typing import Any, Callable, Literal, Optional, Union
 
 from fastapi import HTTPException
 from ruamel.yaml import YAML
 
 from app.dependencies import refresh_imagemagick_interface
+from app.internal.cards import add_card_to_database, resolve_card_settings
 from app.internal.connection import update_connection
 import app.models as models
 from app.schemas.base import UNSPECIFIED
+from app.schemas.card import CardActions, NewTitleCard
 from app.schemas.font import NewNamedFont
 from app.schemas.preferences import (
-    EpisodeDataSource, Preferences, UpdateEmby, UpdateJellyfin, UpdatePlex,
-    UpdatePreferences, UpdateSonarr, UpdateTMDb
+    CardExtension, EpisodeDataSource, Preferences, UpdateEmby, UpdateJellyfin,
+    UpdatePlex, UpdatePreferences, UpdateSonarr, UpdateTMDb
 )
-from app.schemas.series import NewSeries, NewTemplate, Translation
+from app.schemas.series import NewSeries, NewTemplate, Series, Translation
 from app.schemas.sync import NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync
 
 from modules.Debug import log
@@ -1021,3 +1025,101 @@ def parse_series(
         ))
 
     return series
+
+
+def import_cards(
+        db: 'Database',
+        preferences: Preferences,
+        series: Series,
+        directory: Optional[Path],
+        image_extension: CardExtension,
+        force_reload: bool) -> CardActions:
+    """
+    Import any existing Title Cards for the given Series. This finds
+    card files by filename, and makes the assumption that each file
+    exactly matches the Episode's currently specified config.
+
+    Args:
+        db: Database to query for existing Cards.
+        preferences: Preferences for resolving the Card settings.
+        series: Series whose Cards are being imported.
+        directory: Directory to search for Cards to import. If omitted,
+            then the Series default card directory is used.
+        image_extension: Extension of images to search for.
+        force_reload: Whether to replace any existing Card entries for
+            Episodes identified while importing.
+
+    Returns:
+        CardActions describing the taken actions.
+    """
+
+    # If explicit directory was not provided, use Series default
+    if directory is None:
+        directory = series.card_directory
+
+    # Glob directory for images to import
+    all_images = list(directory.glob(f'**/*{image_extension}'))
+
+    # No images to import, return empty actions
+    if len(all_images) == 0:
+        log.debug(f'No Cards identified within "{directory}" to import')
+        return CardActions()
+
+    # For each image, identify associated Episode
+    actions = CardActions()
+    for image in all_images:
+        if (groups := match(r'.*s(\d+).*e(\d+)', image.name, IGNORECASE)):
+            season_number, episode_number = map(int, groups.groups())
+        else:
+            log.warning(f'Cannot identify index of {image.resolve()} - skipping')
+            actions.invalid += 1
+            continue
+
+        # Find associated Episode
+        episode = db.query(models.episode.Episode).filter(
+            models.episode.Episode.series_id==series.id,
+            models.episode.Episode.season_number==season_number,
+            models.episode.Episode.episode_number==episode_number,
+        ).first()
+
+        # No associated Episode, skip
+        if episode is None:
+            log.warning(f'{series.log_str} No associated Episode for {image.resolve()} - skipping')
+            actions.invalid += 1
+            continue
+
+        # Episode has an existing Card, skip if not forced
+        if episode.card and not force_reload:
+            log.info(f'{series.log_str} {episode.log_str} has an associated Card - skipping')
+            actions.existing += 1
+            continue
+        # Episode has card, delete if reloading
+        elif episode.card and force_reload:
+            for card in episode.card:
+                log.debug(f'{card.log_str} deleting record')
+                db.query(models.card.Card).filter_by(id=card.id).delete()
+                log.debug(f'{series.log_str} {episode.log_str} has associated Card - reloading')
+                actions.deleted += 1
+
+        # Get finalized Card settings for this Episode, override card file
+        card_settings = resolve_card_settings(preferences, episode)
+
+        # If a list of CardActions were returned, update actions and skip
+        if isinstance(card_settings, list):
+            for action in card_settings:
+                setattr(actions, action, getattr(actions, action)+1)
+            continue
+
+        # Card is valid, create and add to Database
+        card_settings['card_file'] = image
+        title_card = NewTitleCard(
+            **card_settings,
+            series_id=series.id,
+            episode_id=episode.id,
+        )
+
+        card = add_card_to_database(db, title_card, card_settings['card_file'])
+        log.debug(f'{series.log_str} {episode.log_str} Imported {image.resolve()}')
+        actions.imported += 1
+
+    return actions

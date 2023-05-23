@@ -1,5 +1,3 @@
-from pathlib import Path
-from re import match, IGNORECASE
 from typing import Literal
 
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException
@@ -11,16 +9,19 @@ from app.dependencies import (
     get_imagemagick_interface, get_jellyfin_interface, get_plex_interface,
     get_sonarr_interface, get_tmdb_interface
 )
-from app.internal.cards import add_card_to_database, resolve_card_settings
 from app.internal.imports import (
-    parse_emby, parse_fonts, parse_jellyfin, parse_plex, parse_preferences, parse_raw_yaml, parse_series, parse_sonarr, parse_syncs, parse_templates, parse_tmdb
+    import_cards, parse_emby, parse_fonts, parse_jellyfin, parse_plex,
+    parse_preferences, parse_raw_yaml, parse_series, parse_sonarr, parse_syncs,
+    parse_templates, parse_tmdb
 )
 from app.internal.series import download_series_poster, set_series_database_ids
 from app.internal.sources import download_series_logo
 import app.models as models
-from app.schemas.card import CardActions, NewTitleCard
+from app.schemas.card import CardActions
 from app.schemas.font import NamedFont
-from app.schemas.imports import ImportCardDirectory, ImportSeriesYaml, ImportYaml
+from app.schemas.imports import (
+    ImportCardDirectory, ImportSeriesYaml, ImportYaml, MultiCardImport
+)
 from app.schemas.preferences import Preferences
 from app.schemas.series import Series, Template
 from app.schemas.sync import Sync
@@ -314,74 +315,47 @@ def import_cards_for_series(
     # Get this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    # If explicit directory was not provided, use Series default
-    if card_directory.directory is None:
-        card_directory.directory = series.card_directory
-
-    # Glob directory for images to import
-    all_images = list(
-        card_directory.directory.glob(f'**/*{card_directory.image_extension}')
+    return import_cards(
+        db,
+        preferences,
+        series, 
+        card_directory.directory,
+        card_directory.image_extension,
+        card_directory.force_reload,
     )
 
-    # No images to import, return empty actions
-    if len(all_images) == 0:
-        return []
 
-    # For each image, identify associated Episode
-    actions = CardActions()
-    for image in all_images:
-        if (groups := match(r'.*s(\d+).*e(\d+)', image.name, IGNORECASE)):
-            season_number, episode_number = map(int, groups.groups())
-        else:
-            log.warning(f'Cannot identify index of {image.resolve()} - skipping')
-            actions.invalid += 1
-            continue
+@import_router.post('/series/cards', status_code=200, tags=['Cards', 'Series'])
+def import_cards_for_multiple_series(
+        card_import: MultiCardImport = Body(...),
+        preferences = Depends(get_preferences),
+        db = Depends(get_database)) -> CardActions:
+    """
+    Import any existing Title Cards for all the given Series. This finds
+    card files by filename, and makes the assumption that each file
+    exactly matches the Episode's currently specified config.
 
-        # Find associated Episode
-        episode = db.query(models.episode.Episode).filter(
-            models.episode.Episode.series_id==series_id,
-            models.episode.Episode.season_number==season_number,
-            models.episode.Episode.episode_number==episode_number,
-        ).first()
+    - card_import: Import details to parse for all Cards to import.
+    """
 
-        # No associated Episode, skip
-        if episode is None:
-            log.warning(f'{series.log_str} No associated Episode for {image.resolve()} - skipping')
-            actions.invalid += 1
-            continue
+    # Import Card for each identified Series
+    card_actions = CardActions()
+    for series_id in card_import.series_ids:
+        # Get this Series, raise 404 if DNE
+        series = get_series(db, series_id, raise_exc=True)
 
-        # Episode has an existing Card, skip if not forced
-        if episode.card and not card_directory.force_reload:
-            log.info(f'{series.log_str} {episode.log_str} has an associated Card - skipping')
-            actions.existing += 1
-            continue
-        # Episode has card, delete if reloading
-        elif episode.card and card_directory.force_reload:
-            for card in episode.card:
-                log.debug(f'{card.log_str} deleting record')
-                db.query(models.card.Card).filter_by(id=card.id).delete()
-                log.info(f'{series.log_str} {episode.log_str} has associated Card - reloading')
-                actions.deleted += 1
-
-        # Get finalized Card settings for this Episode, override card file
-        card_settings = resolve_card_settings(preferences, episode)
-
-        # If a list of CardActions were returned, update actions and skip
-        if isinstance(card_settings, list):
-            for action in card_settings:
-                setattr(actions, action, getattr(actions, action)+1)
-            continue
-
-        # Card is valid, create and add to Database
-        card_settings['card_file'] = image
-        title_card = NewTitleCard(
-            **card_settings,
-            series_id=series.id,
-            episode_id=episode.id,
+        # Import Cards for this Series
+        actions = import_cards(
+            db,
+            preferences,
+            series, 
+            None,
+            card_import.image_extension,
+            card_import.force_reload,
         )
 
-        card = add_card_to_database(db, title_card, card_settings['card_file'])
-        log.debug(f'{series.log_str} {episode.log_str} Imported {image.resolve()}')
-        actions.imported += 1
+        # Add Action flags
+        for flag, count in actions.dict().items():
+            setattr(card_actions, flag, getattr(card_actions, flag)+count)
 
-    return actions
+    return card_actions
