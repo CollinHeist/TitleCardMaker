@@ -28,15 +28,21 @@
   <style>
     /* Change color of dropdowns in series importer to make options more clear */
     .segment[data-value="import-series-segment"] .dropdown .text,
-    .segment[data-value="import-series-segment"] input[type="text"],
+    .segment[data-value="import-series-segment"] input[type="text"] {
+      color: #2185d0 !important
+    }
     .segment[data-value="import-series-segment"] input[type="text"]::placeholder {
-      color: #00b5ad !important
+      color: #2184d06c !important;
     }
 
     /* Limit the width of the YAML textarea inputs, set font to monospace */
     textarea {
       width: 50% !important;
       font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace !important;
+    }
+
+    .ui.compact.visible.message {
+      display: inline-block !important;
     }
   </style>
 </head>
@@ -74,7 +80,9 @@
             descriptionVertical: true,
           };
         }), onChange: (value, text, $selectedItem) => {
-          if (seriesMap[value].directory !== null) {
+          if (seriesMap[value].directory === null) {
+            $('input[name="directory"]')[0].value = '';
+          } else {
             $('input[name="directory"]')[0].value = seriesMap[value].directory;
           }
         },
@@ -315,9 +323,14 @@
             <div class="ui visible compact floating warning message">
               <i class="exclamation triangle icon"></i>
               <b>Warning</b>
-              Template settings will be applied to imported Series. Templates will not be assigned.
+              <ul class="list">
+                <li>Template settings will be applied to imported Series. Templates will not be assigned.</li>
+                <li>Custom Font files will need to be manually uploaded.</li>
+              </ul>
             </div>
-            <div class="ui floating error message"></div>
+            <br>
+            <div class="ui compact floating error message"></div>
+            <br>
             <button class="ui animated primary button" type="submit">
               <div class="visible content">Submit</div>
               <div class="hidden content">
