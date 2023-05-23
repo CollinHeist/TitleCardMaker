@@ -334,9 +334,10 @@ class Preferences:
             was just "blur", then "blur unique" is returned.
         """
 
-        # Standardize "blur" into "blur unique"
-        if (standardized := str(style).lower().strip()) == 'blur':
-            return 'blur unique'
+        # Add "unique" if not in the style
+        standardized = str(style).lower().strip()
+        if 'art' not in standardized and 'unique' not in standardized:
+            standardized += ' unique'
 
         # All other styles get typical standardization.
         return ' '.join(sorted(standardized.split(' ')))
