@@ -900,17 +900,23 @@ def parse_series(
         log.debug(f'Finalized YAML {series_dict}')
 
         # Create SeriesInfo for this series - parsing name/year/ID's
-        series_info = SeriesInfo(
-            _get(series_dict, 'name', type_=str, default=series_name),
-            _get(series_dict, 'year', type_=int, default=None),
-            emby_id=_get(series_dict, 'emby_id', default=None),
-            imdb_id=_get(series_dict, 'imdb_id', default=None),
-            jellyfin_id=_get(series_dict, 'jellyfin_id', default=None),
-            sonarr_id=_get(series_dict, 'sonarr_id', default=None),
-            tmdb_id=_get(series_dict, 'tmdb_id', default=None),
-            tvdb_id=_get(series_dict, 'tvdb_id', default=None),
-            tvrage_id=_get(series_dict, 'tvrage_id', default=None),
-        )
+        try:
+            series_info = SeriesInfo(
+                _get(series_dict, 'name', type_=str, default=series_name),
+                _get(series_dict, 'year', type_=int, default=None),
+                emby_id=_get(series_dict, 'emby_id', default=None),
+                imdb_id=_get(series_dict, 'imdb_id', default=None),
+                jellyfin_id=_get(series_dict, 'jellyfin_id', default=None),
+                sonarr_id=_get(series_dict, 'sonarr_id', default=None),
+                tmdb_id=_get(series_dict, 'tmdb_id', default=None),
+                tvdb_id=_get(series_dict, 'tvdb_id', default=None),
+                tvrage_id=_get(series_dict, 'tvrage_id', default=None),
+            )
+        except ValueError:
+            raise HTTPException(
+                status_code=422,
+                detail=f'Series "{series_name}" is missing the required Year',
+            )
 
         # Parse custom Font
         series_font = _get(series_dict, 'font', default={})
