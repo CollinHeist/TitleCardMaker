@@ -17,7 +17,9 @@ from app.schemas.sync import NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonar
 
 from modules.Debug import log
 from modules.EpisodeMap import EpisodeMap
+from modules.PreferenceParser import PreferenceParser
 from modules.SeriesInfo import SeriesInfo
+from modules.Template import Template as YamlTemplate
 from modules.TieredSettings import TieredSettings
 
 
@@ -847,7 +849,6 @@ def parse_series(
     # If not a dictionary of series, return empty list
     if not isinstance(all_series, dict):
         return []
-    
     # Determine which media server to assume libraries are for
     if preferences.use_emby:
         library_type = 'emby_library_name'
@@ -856,7 +857,21 @@ def parse_series(
     else:
         library_type = 'plex_library_name'
 
-    # Create NewSeries objects for all listed templates
+    # Parse library section
+    yaml_libraries = _get(yaml_dict, 'libraries', type_=dict, default={})
+
+    # Parse YAML templates
+    yaml_templates = {}
+    if 'templates' in yaml_dict and isinstance(yaml_dict['templates'], dict):
+        for name, template_yaml in yaml_dict['templates'].items():
+            if not isinstance(template_yaml, dict):
+                raise HTTPException(
+                    status_code=422,
+                    detail=f'Template "{name}" is invalid'
+                )
+            yaml_templates[name] = YamlTemplate(name, template_yaml)
+
+    # Create NewSeries objects for all listed Sseries
     series = []
     for series_name, series_dict in all_series.items():
         # Skip if not a dictionary
@@ -865,6 +880,24 @@ def parse_series(
                 status_code=422,
                 detail=f'Invalid Series "{series_name}"',
             )
+        
+        # Finalize with PreferenceParser
+        series_dict = PreferenceParser.finalize_show_yaml(
+            _get(series_dict, 'name', type_=str, default=series_name),
+            series_dict,
+            yaml_templates,
+            yaml_libraries,
+            {},
+            raise_exc=True,
+        )
+
+        # If None, then finalization failed
+        if series_dict is None:
+            raise HTTPException(
+                status_code=422,
+                detail=f'Unable to finalize YAML for {series_name}',
+            )
+        log.debug(f'Finalized YAML {series_dict}')
 
         # Create SeriesInfo for this series - parsing name/year/ID's
         series_info = SeriesInfo(
@@ -896,31 +929,6 @@ def parse_series(
                     status_code=404,
                     detail=f'Font "{series_font}" not found',
                 )
-
-        # Parse template
-        template_ids = []
-        if 'template' in series_dict:
-            # Get template name for querying
-            series_template = series_dict['template']
-            if isinstance(series_template, str):
-                template_name = series_template
-            elif isinstance(series_template, dict) and 'name' in series_template:
-                template_name = series_template['name']
-            else:
-                raise HTTPException(
-                    status_code=422,
-                    detail=f'Unrecognized Template in Series "{series_info}"',
-                )
-            
-            # Get Template
-            template = db.query(models.template.Template)\
-                .filter_by(name=template_name).first()
-            if template is None:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f'Template "{template_name}" not found',
-                )
-            template_ids = [template.id]
 
         # Get season titles via episode_ranges or seasons
         episode_map = EpisodeMap(
@@ -956,7 +964,6 @@ def parse_series(
         series.append(NewSeries(
             name=series_info.name,
             year=series_info.year,
-            template_ids=template_ids,
             sync_specials=_get(series_dict, 'sync_specials', type_=bool),
             card_filename_format=_get(series_dict, 'filename_format'),
             episode_data_source=_parse_episode_data_source(series_dict),
@@ -975,23 +982,23 @@ def parse_series(
             font=font,
             font_color=_get(series_dict, 'font', 'color'),
             font_title_case=_get(series_dict, 'font', 'case'),
-            size=_get(
+            font_size=_get(
                 series_dict,
                 'font', 'size',
                 default=1.0, type_=Percentage
-            ), kerning=_get(
+            ), font_kerning=_get(
                 series_dict,
                 'font', 'kerning',
                 default=1.0, type_=Percentage
-            ), stroke_width=_get(
+            ), font_stroke_width=_get(
                 series_dict,
                 'font', 'stroke_width',
                 default=1.0, type_=Percentage
-            ), interline_spacing=_get(
+            ), font_interline_spacing=_get(
                 series_dict,
                 'font', 'interline_spacing',
                 default=0, type_=int
-            ), vertical_shift=_get(
+            ), font_vertical_shift=_get(
                 series_dict,
                 'font', 'vertical_shift',
                 default=0, type_=int

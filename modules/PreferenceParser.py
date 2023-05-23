@@ -2,6 +2,7 @@ from collections import namedtuple
 from pathlib import Path
 from typing import Any, Iterable, Optional, Union
 
+from fastapi import HTTPException
 from num2words import CONVERTER_CLASSES as SUPPORTED_LANGUAGE_CODES
 from tqdm import tqdm
 
@@ -817,7 +818,8 @@ class PreferenceParser(YamlReader):
         pass
 
 
-    def __validate_libraries(self, library_yaml: dict[str, str],
+    def __validate_libraries(self,
+            library_yaml: dict[str, str],
             file: Path) -> bool:
         """
         Validate the given libraries YAML.
@@ -865,7 +867,8 @@ class PreferenceParser(YamlReader):
         return True
 
 
-    def __validate_fonts(self, font_yaml: dict[str, 'str | float'],
+    def __validate_fonts(self,
+            font_yaml: dict[str, Union[str, float]],
             file: Path) -> bool:
         """
         Validate the given font YAML.
@@ -902,8 +905,12 @@ class PreferenceParser(YamlReader):
         return True
 
 
-    def __apply_template(self, templates: dict[str, Template],
-            series_yaml: dict[str, Any], series_name: str) -> bool:
+    @staticmethod
+    def apply_template(
+            templates: dict[str, Template],
+            series_yaml: dict[str, Any],
+            series_name: str, *,
+            raise_exc: bool = False) -> bool:
         """
         Apply the correct Template object (if indicated) to the given
         series YAML. This effectively "fill out" the indicated template,
@@ -932,11 +939,21 @@ class PreferenceParser(YamlReader):
             series_yaml['template'] = series_template
         # Warn and return if no template name given
         elif not (template_name := series_template.get('name', None)):
+            if raise_exc:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f'Missing Template name for "{series_name}"',
+                )
             log.error(f'Missing template name for "{series_name}"')
             return False
 
         # Warn and return if template name not mapped
         if not (template := templates.get(template_name, None)):
+            if raise_exc:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f'Template "{template_name}" not defined'
+                )
             template_names = '"' + '", "'.join(templates.keys()) + '"'
             log.error(f'Template "{template_name}" not defined')
             log.info(f'Defined templates are {template_names}')
@@ -946,17 +963,30 @@ class PreferenceParser(YamlReader):
         try:
             series_info = SeriesInfo(series_name, series_yaml.get('year'))
         except Exception as e:
+            if raise_exc:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f'Error identifying series info of {series_name}',
+                )
             log.exception(f'Error identifying series info of {series_name}', e)
             log.debug(f'Series YAML: {series_yaml}')
             series_info = None
 
         # Apply using Template object
-        return template.apply_to_series(series_info, series_yaml)
+        return template.apply_to_series(
+            series_info, series_yaml, raise_exc=raise_exc
+        )
 
 
-    def __finalize_show_yaml(self, show_name: str, show_yaml: dict[str, Any],
-            templates: list[Template], library_map: dict[str, Any],
-            font_map: dict[str, Any]) -> 'dict | None':
+    @staticmethod
+    def finalize_show_yaml(
+            show_name: str,
+            show_yaml: dict[str, Any],
+            templates: dict[str, Template],
+            library_map: dict[str, Any],
+            font_map: dict[str, Any], *,
+            default_media_server: str = 'plex',
+            raise_exc: bool = False) -> Optional[dict]:
         """
         Apply the indicated template, and merge the specified
         library/font to the given show YAML.
@@ -974,7 +1004,8 @@ class PreferenceParser(YamlReader):
         """
 
         # Apply template to series, stop if invalid
-        if not self.__apply_template(templates, show_yaml, show_name):
+        if not PreferenceParser.apply_template(templates, show_yaml, show_name,
+                                               raise_exc=raise_exc):
             return None
 
         # Parse library from map
@@ -990,11 +1021,11 @@ class PreferenceParser(YamlReader):
             # Library identifier in map, merge YAML
             else:
                 Template.recurse_priority_union(show_yaml, library_yaml)
+                server = library_yaml.get('media_server', default_media_server)
                 show_yaml['library'] = {
                     'name': library_yaml.get('library_name', library_name),
                     'path': CleanPath(library_yaml.get('path')).sanitize(),
-                    'media_server': library_yaml.get('media_server',
-                                                     self.default_media_server),
+                    'media_server': server,
                 }
 
         # Parse font from map (if given font is just an identifier)
@@ -1055,6 +1086,7 @@ class PreferenceParser(YamlReader):
 
             # Update progress bar for this file
             pbar.set_description(f'Reading {file.name}')
+            log.info(f'Reading series YAML file "{file.resolve()}"..')
 
             # If the file doesn't exist, error and skip
             if not file.exists():
@@ -1067,11 +1099,8 @@ class PreferenceParser(YamlReader):
                 continue
 
             # Read file, parse yaml
-            if (file_yaml := self._read_file(file, critical=False)) == {}:
-                continue
-
-            # Skip if there are no series provided
-            if file_yaml is None or file_yaml.get('series') is None:
+            if ((file_yaml := self._read_file(file, critical=False)) == {}
+                or file_yaml is None or file_yaml.get('series', None) is None):
                 log.warning(f'Series file "{file.resolve()}" has no entries')
                 continue
 
@@ -1098,7 +1127,6 @@ class PreferenceParser(YamlReader):
                     templates[name] = Template(name, template)
 
             # Go through each series in this file
-            log.info(f'Reading series YAML file "{file.resolve()}"..')
             for show_name in tqdm(file_yaml['series'], desc='Reading entries',
                                   **TQDM_KWARGS):
                 # Skip if not a dictionary
@@ -1107,12 +1135,13 @@ class PreferenceParser(YamlReader):
                     continue
 
                 # Apply template and merge libraries+font maps
-                show_yaml = self.__finalize_show_yaml(
+                show_yaml = self.finalize_show_yaml(
                     file_yaml['series'][show_name].get('name', show_name),
                     file_yaml['series'][show_name],
                     templates,
                     library_map,
                     font_map,
+                    default_media_server=self.default_media_server,
                 )
 
                 # If returned YAML is None (invalid) skip series
@@ -1133,8 +1162,9 @@ class PreferenceParser(YamlReader):
                 show_yaml.pop('archive', None)
                 for variation in variations:
                     # Apply template and merge libraries+font maps to variation
-                    variation = self.__finalize_show_yaml(
+                    variation = self.finalize_show_yaml(
                         show_name, variation, templates, library_map, font_map,
+                        default_media_server=self.default_media_server,
                     )
 
                     # Skip if finalization failed

@@ -2,6 +2,8 @@ from copy import deepcopy
 from re import findall
 from typing import Any
 
+from fastapi import HTTPException
+
 from modules.Debug import log
 
 class Template:
@@ -164,8 +166,10 @@ class Template:
                     base_yaml[t_key] = t_value
 
 
-    def apply_to_series(self, series_info: 'SeriesInfo',
-            series_yaml: dict[str, Any]) -> bool:
+    def apply_to_series(self,
+            series_info: 'SeriesInfo',
+            series_yaml: dict[str, Any], *,
+            raise_exc: bool = False) -> bool:
         """
         Apply this Template object to the given series YAML, modifying
         it to include the templated values. This function assumes that
@@ -200,6 +204,11 @@ class Template:
         given_keys = set(series_yaml['template'].keys())
         default_keys = set(self.defaults.keys())
         if not (given_keys | default_keys).issuperset(self.keys):
+            if raise_exc:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f'Missing template data for {series_info}',
+                )
             log.warning(f'Missing "{self.name}" template data for '
                         f'"{series_info}"')
             return False
@@ -224,6 +233,11 @@ class Template:
 
         # Log and exit if failed to apply
         if count >= self.MAX_TEMPLATE_DEPTH:
+            if raise_exc:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f'Unable to apply Template to {series_info}',
+                )
             log.warning(f'Unable to apply template "{self.name}" to {series_info}')
             return False
 

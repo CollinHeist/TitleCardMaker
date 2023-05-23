@@ -290,7 +290,7 @@
               <textarea name="yaml" placeholder="Paste YAML here.." rows="10"></textarea>
             </div>
 
-            <div class="grouped fields">
+            <div class="ui grouped fields">
               <div class="ui inline field">
                 <div data-value="fonts" class="ui checkbox">
                   <input type="checkbox" class="hidden">
@@ -312,8 +312,12 @@
                 </div>
               </div>
             </div>
-            
-            <div class="ui error message"></div>
+            <div class="ui visible compact floating warning message">
+              <i class="exclamation triangle icon"></i>
+              <b>Warning</b>
+              Template settings will be applied to imported Series. Templates will not be assigned.
+            </div>
+            <div class="ui floating error message"></div>
             <button class="ui animated primary button" type="submit">
               <div class="visible content">Submit</div>
               <div class="hidden content">
