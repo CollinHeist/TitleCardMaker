@@ -1701,7 +1701,11 @@
                   <!-- Episode text format -->
                   <div class="field">
                     <label>Episode Text Format</label>
+                    {% if series.episode_text_format is none %}
                     <input name="episode_text_format" type="text" placeholder="Card Default">
+                    {% else %}
+                    <input name="episode_text_format" type="text" placeholder="Card Default" value="{{series.episode_text_format}}">
+                    {% endif %}
                   </div>
 
                   <h4 class="ui horizontal middle aligned divider header">Miscellaneous</h4>
