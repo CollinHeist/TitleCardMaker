@@ -135,4 +135,4 @@ class Episode(Base):
         if (source_file := self.source_file) is None:
             source_file = f's{self.season_number}e{self.episode_number}.jpg'
 
-        return Path(source_directory) / series_directory / source_file
+        return (Path(source_directory) / series_directory / source_file).resolve()

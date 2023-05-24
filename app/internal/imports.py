@@ -289,7 +289,6 @@ def parse_preferences(
         card_extension=_get(options, 'card_extension', type_=Extension, default=unsp),
         image_source_priority=image_source_priority,
         episode_data_source=episode_data_source,
-        # specials_folder_format=..., # New option
         season_folder_format=_get(options, 'season_folder_format', default=unsp),
         sync_specials=_get(options, 'sync_specials', type_=bool, default=unsp),
         default_card_type=_get(options, 'card_type', default=unsp),
