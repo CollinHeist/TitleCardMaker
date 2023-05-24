@@ -33,13 +33,9 @@ Scheduler = BackgroundScheduler(
 Scheduler.start()
 
 # Preference file/object
-if (file := Path('/mnt/user/Media/TitleCardMaker/app/prefs.json')).exists():
-    from pickle import load 
-    with file.open('rb') as fh:
-        PreferencesLocal = load(fh)
-        PreferencesLocal.current_version = Preferences.VERSION_FILE.read_text().strip()
-else:
-    PreferencesLocal = Preferences()
+PreferencesLocal = Preferences(
+    Path(__file__).parent.parent.parent / 'modules' / '.objects' / 'prefs.json'
+)
 
 
 # Initialize all interfaces

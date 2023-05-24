@@ -41,6 +41,7 @@ def update_connection(
             and value != getattr(preferences, f'{connection}_{attribute}')):
             setattr(preferences, f'{connection}_{attribute}', value)
             changed = True
+    preferences.commit()
 
     # Refresh interface if changed
     if changed and getattr(preferences, f'use_{connection}'):

@@ -3,7 +3,7 @@ from os import environ
 from pathlib import Path
 from typing import Any, Optional
 
-from pickle import dump
+from pickle import dump, load
 
 from app.schemas.base import UNSPECIFIED
 
@@ -23,6 +23,9 @@ TMDb = EpisodeDataSource('tmdb', 'TMDb')
 TCM_ROOT = Path(__file__).parent.parent.parent
 
 class Preferences:
+    """
+    Class defining global Preferences.
+    """
 
     VERSION_FILE = TCM_ROOT / 'modules' / 'ref' / 'version'
     DEFAULT_CARD_FILENAME_FORMAT = (
@@ -34,87 +37,164 @@ class Preferences:
     VALID_IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp')
     
 
-    def __init__(self) -> None:
-        self.current_version = self.VERSION_FILE.read_text().strip()
-        self.available_version = None
+    def __init__(self, file: Path) -> None:
+        """
+        Initialize this object with the arguments from the given file.
 
-        self.asset_directory = Path(__file__).parent.parent / 'assets'
-        self.card_directory = TCM_ROOT / 'cards'
-        self.source_directory = TCM_ROOT / 'source'
+        Args:
+            file: Path to the file to parse for existing preferences.
+        """
 
-        self.card_width = TitleCard.DEFAULT_WIDTH
-        self.card_height = TitleCard.DEFAULT_HEIGHT
-        self.card_filename_format = self.DEFAULT_CARD_FILENAME_FORMAT
-        self.card_extension = self.DEFAULT_CARD_EXTENSION
-        self.image_source_priority = self.DEFAULT_IMAGE_SOURCE_PRIORITY
-        self.episode_data_source = self.DEFAULT_EPISODE_DATA_SOURCE
-        self.valid_image_extensions = self.VALID_IMAGE_EXTENSIONS
+        # Get preferences from file
+        self.file = file
+        obj = self.read_file()
 
-        self.specials_folder_format = 'Specials'
-        self.season_folder_format = 'Season {season_number}'
-        self.sync_specials = True
-
-        self.remote_card_types = {}
-        self.default_card_type = 'standard'
-        self.excluded_card_types = []
-        self.default_watched_style = 'unique'
-        self.default_unwatched_style = 'unique'
-
-        self.use_emby = False
-        self.emby_url = 'http://192.168.0.11:8096/emby' #''
-        self.emby_api_key = 'e25b06a1aee34fc0949c35d74f379d03' #''
-        self.emby_username = 'CollinHeist' #''
-        self.emby_use_ssl = False
-        self.emby_filesize_limit_number = None
-        self.emby_filesize_limit_unit = None
-
-        self.use_jellyfin = False
-        self.jellyfin_url = ''
-        self.jellyfin_api_key = ''
-        self.jellyfin_username = ''
-        self.jellyfin_use_ssl = False
-        self.jellyfin_filesize_limit_number = None
-        self.jellyfin_filesize_limit_unit = None
-
-        self.use_plex = True #False
-        self.plex_url = 'http://192.168.0.29:32400/' #''
-        self.plex_token = 'pzfzWxW-ygxzJJc-t_Pw' #''
-        self.plex_use_ssl = False
-        self.plex_integrate_with_pmm = False
-        self.plex_filesize_limit_number = 10
-        self.plex_filesize_limit_unit = 'Megabytes'
-
-        self.use_sonarr = True #False
-        self.sonarr_url = 'http://192.168.0.29:8989/api/v3/' #''
-        self.sonarr_api_key = 'd43fdeb9c3744f58b1ffbaf5dc21e55a' #''
-        self.sonarr_use_ssl = False
-        self.sonarr_libraries = {}
-
-        self.use_tmdb = True #False
-        self.tmdb_api_key = 'b1dbf02a14b523a94401e3e6ee521353' #''
-        self.tmdb_minimum_width = 800 #0
-        self.tmdb_minimum_height = 400 #0
-        self.tmdb_skip_localized = False
-        self.tmdb_download_logos = True
-        self.tmdb_logo_language_priority = ['en']
-        self.supported_language_codes = []
-
-        self.is_docker = environ.get('TCM_IS_DOCKER', 'false').lower() == 'true'
-        self.use_magick_prefix = False
-        self.imagemagick_container = 'ImageMagick' #None
-        self.imagemagick_timeout = 60
-        self.determine_imagemagick_prefix()
+        # Initialize object based on parsed file
+        self.parse_file(obj)
 
 
-    def __setattr__(self, name, value) -> None:
+    def __setattr__(self, name: str, value: Any) -> None:
+        """
+        
+        """
+
+        # Update this object's dictionary
         self.__dict__[name] = value
         log.debug(f'preferences.{name} = {value}')
-        self._rewrite_preferences()
 
 
-    def _rewrite_preferences(self) -> None:
-        with Path('/mnt/user/Media/TitleCardMaker/app/prefs.json').open('wb') as fh:
-            dump(self, fh)
+    def read_file(self) -> Optional[object]:
+        """
+        Read this object's file, returning the loaded object.
+
+        Returns:
+            Object unpickled (loaded) from this object's file.
+        """
+
+        # Skip if file DNE
+        if not self.file.exists():
+            log.error(f'Preference file "{self.file.resolve()}" does not exist')
+            return None
+
+        # Parse file
+        try:
+            with self.file.open('rb') as file_handle:
+                return load(file_handle)
+        except Exception as e:
+            log.exception(f'Error occured while loading Preferences', e)
+
+        return None
+
+
+    def parse_file(self, obj: object) -> None:
+        """
+        Initialize this object with the defaults for each attribute.
+        """
+
+        # Set attributes not parsed from the object
+        self.current_version = self.VERSION_FILE.read_text().strip()
+        self.available_version = None
+        self.is_docker = environ.get('TCM_IS_DOCKER', 'false').lower() == 'true'
+
+        # Default arguments
+        default_card_directory = '/config/cards' if self.is_docker else TCM_ROOT / 'cards'
+        default_source_directory = '/config/source' if self.is_docker else TCM_ROOT / 'source'
+        DEFAULTS = {
+            'asset_directory':  Path(__file__).parent.parent / 'assets',
+            'card_directory': default_card_directory,
+            'source_directory': default_source_directory,
+            'card_width': TitleCard.DEFAULT_WIDTH,
+            'card_height': TitleCard.DEFAULT_HEIGHT,
+            'card_filename_format': self.DEFAULT_CARD_FILENAME_FORMAT,
+            'card_extension': self.DEFAULT_CARD_EXTENSION,
+            'image_source_priority': self.DEFAULT_IMAGE_SOURCE_PRIORITY,
+            'episode_data_source': self.DEFAULT_EPISODE_DATA_SOURCE,
+            'valid_image_extensions': self.VALID_IMAGE_EXTENSIONS,
+            'specials_folder_format': 'Specials',
+            'season_folder_format': 'Season {season_number}',
+            'sync_specials': True,
+            'remote_card_types': {},
+            'default_card_type': 'standard',
+            'excluded_card_types': [],
+            'default_watched_style': 'unique',
+            'default_unwatched_style': 'unique',
+            'use_emby': False,
+            'emby_url': '',
+            'emby_api_key': '',
+            'emby_username': '',
+            'emby_use_ssl': True,
+            'emby_filesize_limit_number': None,
+            'emby_filesize_limit_unit': None,
+            'use_jellyfin': False,
+            'jellyfin_url': '',
+            'jellyfin_api_key': '',
+            'jellyfin_username': '',
+            'jellyfin_use_ssl': True,
+            'jellyfin_filesize_limit_number': None,
+            'jellyfin_filesize_limit_unit': None,
+            'use_plex': False,
+            'plex_url': '',
+            'plex_token': '',
+            'plex_use_ssl': True,
+            'plex_integrate_with_pmm': False,
+            'plex_filesize_limit_number': 10,
+            'plex_filesize_limit_unit': 'Megabytes',
+            'use_sonarr': False,
+            'sonarr_url': '',
+            'sonarr_api_key': '',
+            'sonarr_use_ssl': True,
+            'sonarr_libraries': {},
+            'use_tmdb': False,
+            'tmdb_api_key': '',
+            'tmdb_minimum_width': 0,
+            'tmdb_minimum_height': 0,
+            'tmdb_skip_localized': False,
+            'tmdb_download_logos': True,
+            'tmdb_logo_language_priority': ['en'],
+            'supported_language_codes': [],
+            'use_magick_prefix': False,
+            'imagemagick_container': None,
+            'imagemagick_timeout': 60,
+        }
+
+        # Update each attribute known to this object
+        for attribute, value in DEFAULTS.items():
+            if hasattr(obj, attribute):
+                setattr(self, attribute, getattr(obj, attribute))
+            else:
+                setattr(self, value)
+
+        self.commit()
+
+
+    def commit(self) -> None:
+        """
+        Commit the changes to this object to file.
+        """
+
+        # Open the file, dump this object's contents
+        with self.file.open('wb') as file_handle:
+            dump(self, file_handle)
+
+        log.debug(f'Dumped Preferences to "{self.file.resolve()}"..')
+
+
+    def update_values(self, **update_kwargs: dict[str, Any]) -> None:
+        """
+        Update multiple values at once, and commit the changes
+        afterwards.
+
+        Args:
+            update_kwargs: Dictionary of values to update.
+        """
+
+        # Iterate through updated attributes, set dictionary directly
+        for name, value in update_kwargs.items():
+            if value != UNSPECIFIED:
+                log.debug(f'Preferences.{name} = {value}')
+                self.__dict__[name] = value
+
+        self.commit()
 
 
     def determine_imagemagick_prefix(self) -> None:
@@ -142,14 +222,6 @@ class Preferences:
         self.valid = False
 
 
-    def update_values(self, **update_kwargs: dict[str, Any]) -> None:
-        for name, value in update_kwargs.items():
-            if value != UNSPECIFIED:
-                log.debug(f'Preferences.{name} = {value}')
-                self.__dict__[name] = value
-        self._rewrite_preferences()
-
-    
     @property
     def card_dimensions(self) -> str:
         return f'{self.card_width}x{self.card_height}'
@@ -267,6 +339,18 @@ class Preferences:
 
     @staticmethod
     def get_filesize(value: int, unit: str) -> Optional[int]:
+        """
+        Get the filesize for the given value and unit.
+
+        Args:
+            value: Value of the filesize limit.
+            unit: Unit of the filesize limit.
+
+        Returns:
+            The integer value of the filesize equivalent of the given
+            arguments (in Bytes). None if value or unit is None.
+        """
+
         # If either value is None, return that
         if value is None or unit is None:
             return None
@@ -282,6 +366,19 @@ class Preferences:
 
     @staticmethod
     def format_filesize(value: Optional[int]) -> tuple[str, str]:
+        """
+        Format the given filesize limit into a tuple of filesize value
+        and units. Formatted as the highest >1 unit value.
+
+        Args:
+            value: Integer value of the filesize (in Bytes).
+
+        Returns:
+            Tuple of the string equivalent of the filesize bytes and the
+            corresponding unit.
+        """
+
+
         if value is None or value == 0:
             return '0', 'Bytes'
 
