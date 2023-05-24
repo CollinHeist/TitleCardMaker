@@ -47,6 +47,7 @@ class Preferences:
 
         # Get preferences from file
         self.file = file
+        self.file.parent.mkdir(exist_ok=True)
         obj = self.read_file()
 
         # Initialize object based on parsed file
@@ -162,7 +163,7 @@ class Preferences:
             if hasattr(obj, attribute):
                 setattr(self, attribute, getattr(obj, attribute))
             else:
-                setattr(self, value)
+                setattr(self, attribute, value)
 
         self.commit()
 
