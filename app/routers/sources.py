@@ -136,7 +136,7 @@ def download_series_logo_(
     series = get_series(db, series_id, raise_exc=True)
 
     return download_series_logo(
-        db, preferences, emby_interface, imagemagick_interface,
+        preferences, emby_interface, imagemagick_interface,
         jellyfin_interface, tmdb_interface, series,
     )
 
