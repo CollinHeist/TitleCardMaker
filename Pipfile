@@ -26,6 +26,8 @@ pydantic = "*"
 apscheduler = "*"
 imagesize = "*"
 alembic = "*"
+mkdocs = "*"
+mkdocs-material = "*"
 
 [dev-packages]
 
