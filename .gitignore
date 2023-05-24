@@ -12,9 +12,8 @@ __pypackages__/
 source/
 logs/
 fonts/
+yml/
 modules/.objects/
 *._*
-*.yml
-*.yaml
 *.prof
 .DS_Store

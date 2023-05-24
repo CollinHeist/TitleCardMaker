@@ -1,0 +1,74 @@
+site_name: TitleCardMaker
+site_url: ''
+site_author: Collin Heist
+site_description: >-
+  Automated title card creator for Plex, Emby, and Jellyfin.
+
+repo_name: CollinHeist/TitleCardMaker
+repo_url: https://github.com/CollinHeist/TitleCardMaker
+
+theme:
+  logo: /assets/logo512.png
+  favicon: /assets/favicon.ico
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue # indigo
+      accent: red # indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue # indigo
+      accent: red # indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+  favicon: assets/favicon.png
+  icon:
+    logo: logo
+
+# Plugins
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  # - minify:
+  #     minify_html: true
+
+# Extensions
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+
+  # Code blocks
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+nav:
+  - Home: index.md
+  - Getting Started - Tutorial:
+    - Installation - Docker:
+      - Docker: getting_started/docker/docker.md
+      - UnRAID: getting_started/docker/unraid.md
+      - Synology NAS: getting_started/docker/synology.md
+    - Installation - Local:
+      - Linux: getting_started/local/linux.md
+      - MacOS: getting_started/local/macos.md
+      - Windows: getting_started/local/windows.md
+    - Setting up Connections: getting_started/connections.md
+    - Adding a Series: getting_started/add_series.md
+    - Creating the First Sync:
+      - Emby: getting_started/first_sync/emby.md
+      - Jellyfin: getting_started/first_sync/jellyfin.md
+      - Plex: getting_started/first_sync/plex.md
+      - Sonarr: getting_started/first_sync/sonarr.md
