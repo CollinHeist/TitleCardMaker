@@ -84,8 +84,8 @@ def import_connection_yaml(
         parse_emby(*args, **kwargs)
         parse_jellyfin(*args, **kwargs)
         parse_plex(*args, **kwargs)
-        parse_plex(*args, **kwargs)
         parse_sonarr(*args, **kwargs)
+        parse_tmdb(*args, **kwargs)
 
         return preferences
 
