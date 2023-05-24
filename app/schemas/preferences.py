@@ -166,7 +166,7 @@ class UpdateJellyfin(UpdateMediaServerBase):
     username: str = Field(default=UNSPECIFIED, min_length=1)
 
 class UpdatePlex(UpdateMediaServerBase):
-    token: Hexstring = Field(default=UNSPECIFIED)
+    token: str = Field(default=UNSPECIFIED)
     integrate_with_pmm: bool = Field(default=UNSPECIFIED)
 
 class UpdateSonarr(UpdateServerBase):
