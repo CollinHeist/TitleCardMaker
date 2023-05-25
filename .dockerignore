@@ -3,6 +3,13 @@ config/
 fonts/
 logs/
 source/
+cards/
+archives/
+title_cards/
+docs/
+yml/
+yaml/
+app/title_cards/
 .DS_Store
 .git
 .github

@@ -159,11 +159,11 @@ class UpdateMediaServerBase(UpdateServerBase):
 
 class UpdateEmby(UpdateMediaServerBase):
     api_key: Hexstring = Field(default=UNSPECIFIED)
-    username: str = Field(default=UNSPECIFIED, min_length=1)
+    username: Optional[str] = Field(default=UNSPECIFIED)
 
 class UpdateJellyfin(UpdateMediaServerBase):
     api_key: Hexstring = Field(default=UNSPECIFIED)
-    username: str = Field(default=UNSPECIFIED, min_length=1)
+    username: Optional[str] = Field(default=UNSPECIFIED, min_length=1)
 
 class UpdatePlex(UpdateMediaServerBase):
     token: str = Field(default=UNSPECIFIED)
@@ -233,14 +233,14 @@ class EmbyConnection(Base):
     use_emby: bool
     emby_url: AnyUrl
     emby_api_key: SecretStr #Hexstring
-    emby_username: str = Field(min_length=1)
+    emby_username: Optional[str]
     emby_filesize_limit: Optional[int]
 
 class JellyfinConnection(Base):
     use_jellyfin: bool
     jellyfin_url: AnyUrl
     jellyfin_api_key: SecretStr #Hexstring
-    jellyfin_username: str = Field(min_length=1)
+    jellyfin_username: Optional[str]
     jellyfin_filesize_limit: Optional[int]
 
 class PlexConnection(Base):

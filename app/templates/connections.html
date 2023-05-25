@@ -64,29 +64,21 @@
     // Function to grab list of usernames from Emby
     async function getEmbyUsernames() {
       const usernames = await fetch('/api/available/usernames/emby').then(resp => resp.json());
-      const select = document.getElementById('emby-username-select');
-      const usernameElements = usernames.map(username => {
-        let option = document.createElement('option');
-        option.value = username;
-        option.innerText = username;
-        return option;
+      $('.dropdown[data-value="emby_username"]').dropdown({
+        values: usernames.map(username => {
+          return {name: username, value: username, selected: username === '{{preferences.emby_username}}'};
+        }),
       });
-      // Replace existing children
-      select.replaceChildren(select.firstChild, ...usernameElements);
     }
 
     // Function to grab list of usernames from Jellyfin
     async function getJellyfinUsernames() {
       const usernames = await fetch('/api/available/usernames/jellyfin').then(resp => resp.json());
-      const select = document.getElementById('jellyfin-username-select');
-      const usernameElements = usernames.map(username => {
-        let option = document.createElement('option');
-        option.value = username;
-        option.innerText = username;
-        return option;
+      $('.dropdown[data-value="jellyfin_username"]').dropdown({
+        values: usernames.map(username => {
+          return {name: username, value: username, selected: username === '{{preferences.jellyfin_username}}'};
+        }),
       });
-      // Replace existing children
-      select.replaceChildren(select.firstChild, ...usernameElements);
     }
 
     // Function to get the Sonarr library mappings
@@ -176,10 +168,12 @@
 
           <div id="emby-username" class="ui disabled required field" title="Username of the Emby user to query watch statuses from">
             <label>Username</label>
-            <select name="username" id="emby-username-select" class="ui compact search clearable dropdown">
-              <option value=""></option>
-              <!-- Options added via asynchronous requests -->
-            </select>
+            <div data-value="emby_username" class="ui compact selection dropdown">
+              <input type="hidden" name="username">
+              <i class="dropdown icon"></i>
+              <div class="default text">{{preferences.emby_username}}</div>
+              <div class="menu"></div>
+            </div>
           </div>
 
           <div id="emby-use-ssl" class="ui left aligned disabled checkbox field" title="Connect with HTTPS instead of HTTP">
@@ -250,10 +244,12 @@
 
           <div id="jellyfin-username" class="ui disabled required field" title="Username of the Jellyfin user to query watch statuses from">
             <label>Username</label>
-            <select name="username" id="jellyfin-username-select" class="ui compact search clearable dropdown">
-              <option value=""></option>
-              <!-- Options added via asynchronous requests -->
-            </select>
+            <div data-value="jellyfin_username" class="ui compact selection dropdown">
+              <input type="hidden" name="username">
+              <i class="dropdown icon"></i>
+              <div class="default text">{{preferences.jellyfin_username}}</div>
+              <div class="menu"></div>
+            </div>
           </div>
 
           <div id="jellyfin-use-ssl" class="ui left aligned disabled checkbox field" title="Connect with HTTPS instead of HTTP">
@@ -602,6 +598,7 @@
                 title: `Enabled Connection to ${title}`,
               });
             }, error: response => {
+              console.log(response);
               $.toast({
                 class: 'error',
                 title: `Error Enabling Connection to ${title}`,
@@ -615,12 +612,13 @@
           $.ajax({
             type: 'PUT',
             url: `${toggleAPI}/disable`,
-            success: function(response) {
+            success: response => {
               $.toast({
                 class: 'warning',
                 title: `Disabled Connection to ${title}`,
               });
-            }, error: function(response) {
+            }, error: response => {
+              console.log(response);
               $.toast({
                 class: 'error',
                 title: `Error Disabling Connection to ${title}`,
@@ -657,7 +655,10 @@
       fields: {
         url: ['url', 'empty'],
         api_key: ['empty', 'regExp[/^[a-f0-9]+$/gi]'],
-        filesize_limit_number: ['integer[0..]'],
+        filesize_limit_number: {
+          optional: true,
+          rules: [{type: 'integer[0..]'}], 
+        },
       },
     });
     $('#jellyfin-settings').form({
@@ -666,7 +667,10 @@
       fields: {
         url: ['url', 'empty'],
         api_key: ['empty', 'regExp[/^[a-f0-9]+$/gi]'],
-        filesize_limit_number: ['integer[0..]'],
+        filesize_limit_number: {
+          optional: true,
+          rules: [{type: 'integer[0..]'}], 
+        },
       },
     });
     $('#plex-settings').form({
@@ -674,7 +678,6 @@
       inline: true,
       fields: {
         url: ['url', 'empty'],
-        // token: [],
         filesize_limit_number: ['integer[0..]'],
       },
     });
@@ -733,7 +736,7 @@
           url: `/api/connection/${connection}`,
           data: JSON.stringify({...Object.fromEntries(form.entries()), ...listData}),
           contentType: 'application/json',
-          success: (response) => {
+          success: response => {
             if (successCallback !== undefined ) { successCallback(); }
             $.toast({
               class: 'blue info',
@@ -741,7 +744,7 @@
             });
             getEmbyUsernames();
             getJellyfinUsernames();
-          }, error: (response) => {
+          }, error: response => {
             $.toast({
               class: 'error',
               title: `Invalid ${title} Connection`,

@@ -1,6 +1,6 @@
 from typing import Literal
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Request
+from fastapi import APIRouter, Body, Depends, Request
 
 from app.dependencies import (
     get_preferences, refresh_emby_interface, refresh_jellyfin_interface,
@@ -51,6 +51,10 @@ def enable_or_disable_connection(
         preferences.use_tmdb = (status == 'enable')
         if preferences.use_emby: refresh_tmdb_interface()
 
+    preferences.commit()
+
+    return None
+
 
 @connection_router.get('/emby', status_code=200)
 def get_emby_connection_details(
@@ -97,7 +101,7 @@ def update_emby_connection(
     - update_emby: Emby connection details to modify.
     """
 
-    return update_connection(preferences, update_emby)
+    return update_connection(preferences, update_emby, 'emby')
 
 
 @connection_router.patch('/jellyfin', status_code=200)

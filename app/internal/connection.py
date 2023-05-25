@@ -8,6 +8,7 @@ from app.schemas.base import UNSPECIFIED
 from app.schemas.preferences import (
     Preferences, UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb
 )
+from modules.Debug import log
 
 UpdateConnection = Union[
     UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb
@@ -27,13 +28,11 @@ def update_connection(
         update_connection: Update object with attributes to update.
         connection: Name of the connection being updated. Used as the
             prefix for the updated attributes, e.g. emby_*.
-        refresh_interface_function: Function to call to refresh the
-            interface if any attributes were changed.
 
     Returns:
         Modified Preferences with any updated attributes.
     """
-
+    log.info(f'{update_connection.dict()=}')
     # Change any attributes that are specified and different
     changed = False
     for attribute, value in update_connection.dict().items():
@@ -41,10 +40,10 @@ def update_connection(
             and value != getattr(preferences, f'{connection}_{attribute}')):
             setattr(preferences, f'{connection}_{attribute}', value)
             changed = True
-    preferences.commit()
 
     # Refresh interface if changed
     if changed and getattr(preferences, f'use_{connection}'):
+        preferences.commit()
         if   connection == 'emby':     refresh_emby_interface()
         elif connection == 'jellyfin': refresh_jellyfin_interface()
         elif connection == 'plex':     refresh_plex_interface()
