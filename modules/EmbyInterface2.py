@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from modules.Debug import log
 from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo2 import EpisodeInfo
-from modules.MediaServer import MediaServer
+from modules.MediaServer2 import MediaServer
 from modules.SeriesInfo import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
@@ -86,14 +86,16 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             )
 
         # Get user ID
-        if (user_id := self._get_user_id(username)) is None:
-            log.critical(f'Cannot identify ID of user "{username}"')
-            raise HTTPException(
-                status_code=400,
-                detail=f'Cannot identify ID of user "{username}"',
-            )
-        else:
-            self.user_id = user_id
+        self.user_id = None
+        if self.username is not None:
+            if (user_id := self._get_user_id(username)) is None:
+                log.critical(f'Cannot identify ID of user "{username}"')
+                raise HTTPException(
+                    status_code=400,
+                    detail=f'Cannot identify ID of user "{username}"',
+                )
+            else:
+                self.user_id = user_id
 
         # Get the ID's of all libraries within this server
         self.libraries = self._map_libraries()
@@ -156,12 +158,10 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             List of usernames.
         """
 
-        users = self.session._get(
-            f'{self.url}/Users',
-            params=self.__params
-        )
-
-        return [user['Name'] for user in users]
+        return [
+            user['Name'] for user in 
+            self.session._get(f'{self.url}/Users', params=self.__params)
+        ]
 
 
     def set_series_ids(self, library_name: str, series_info: SeriesInfo) ->None:

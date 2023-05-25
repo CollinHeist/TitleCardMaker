@@ -1,11 +1,15 @@
 # UnRAID Installation
 ## Background
-For UnRAID users, there is a pre-built Docker template available on the
-[Community Applications](https://unraid.net/community/apps) (CA) Store.
-This template provides an easy way to set up TitleCardMaker with all the
-necessary Docker variables and paths.
+!!! info "Benefits of Docker"
+
+    For more info on the benefits of Docker, see [here](./docker.md#background).
+
+For Synology DSM users, the built-in Docker manager can be used to
+easily set up TitleCardMaker with all the necessary Docker variables and
+paths.
 
 ## Instructions
+
 1. Navigate to the UnRAID WebGUI home page for your server.
 2. Select the `APPS` tab from the top toolbar.
 3. In the search bar, search for `titlecardmaker`

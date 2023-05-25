@@ -26,10 +26,12 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
+  features:
+    # Linked content tabs
+    - content.tabs.link
   font:
     text: Roboto
     code: Roboto Mono
-  favicon: assets/favicon.png
   icon:
     logo: logo
 
@@ -42,8 +44,25 @@ plugins:
 
 # Extensions
 markdown_extensions:
+  # Abbreviations
+  - abbr
+  - attr_list
+  - pymdownx.snippets
+
+  # Admonitions
   - admonition
   - pymdownx.details
+
+  # Annotations
+  # - attr_list
+  - md_in_html
+  - pymdownx.superfences
+
+  # Icons
+  # - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
 
   # Code blocks
   - pymdownx.highlight:
@@ -51,8 +70,16 @@ markdown_extensions:
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
-  - pymdownx.snippets
+  # - pymdownx.snippets
   - pymdownx.superfences
+
+  # Markdown extensions
+  # - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true 
+
+  # Tables
+  - tables
 
 nav:
   - Home: index.md
@@ -60,15 +87,18 @@ nav:
     - Installation - Docker:
       - Docker: getting_started/docker/docker.md
       - UnRAID: getting_started/docker/unraid.md
-      - Synology NAS: getting_started/docker/synology.md
+      - Synology DSM: getting_started/docker/synology.md
     - Installation - Local:
       - Linux: getting_started/local/linux.md
       - MacOS: getting_started/local/macos.md
       - Windows: getting_started/local/windows.md
-    - Setting up Connections: getting_started/connections.md
+    - Configuring Connections: getting_started/connections.md
+    - Global Settings: getting_started/settings.md
     - Adding a Series: getting_started/add_series.md
     - Creating the First Sync:
       - Emby: getting_started/first_sync/emby.md
       - Jellyfin: getting_started/first_sync/jellyfin.md
       - Plex: getting_started/first_sync/plex.md
       - Sonarr: getting_started/first_sync/sonarr.md
+    - Customizing Title Cards: getting_started/customizing.md
+  - Settings: settings.md

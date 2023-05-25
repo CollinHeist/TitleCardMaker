@@ -5,8 +5,7 @@ from typing import Optional, Union
 from modules.Debug import log
 from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo2 import EpisodeInfo
-import modules.global_objects as global_objects
-from modules.MediaServer import MediaServer
+from modules.MediaServer2 import MediaServer
 from modules.SeriesInfo import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
@@ -73,11 +72,13 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             log.exception(f'Bad Jellyfin connection', e)
 
         # Get user ID if indicated
-        if (username is not None
-            and (user_id := self._get_user_id(username)) is None):
-            log.critical(f'Cannot identify ID of user "{username}"')
-        else:
+        if username is None:
+            self.user_id = None
+        elif (user_id := self._get_user_id(username)) is not None:
             self.user_id = user_id
+        else:
+            log.critical(f'Cannot identify ID of user "{username}"')
+            self.user_id = None
 
         # Get the ID's of all libraries within this server
         self.libraries = self._map_libraries()
@@ -201,7 +202,9 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return None 
 
 
-    def set_episode_ids(self, series_info: SeriesInfo) -> None:
+    def set_episode_ids(self,
+            series_info: SeriesInfo,
+            episode_infos: list[EpisodeInfo]) -> None:
         """
         Set the Episode ID's for the given EpisodeInfo objects.
 
