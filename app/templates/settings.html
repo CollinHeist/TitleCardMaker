@@ -559,9 +559,9 @@
         $('#save-changes').toggleClass('loading', true);
         // Prep form
         let form = new FormData(event.target);
-        let isp = form.get('image_source_priority');
-        const ect = form.get('excluded_card_types');
-        form.delete('image_source_priority');
+        const imageSourcePriority = form.get('image_source_priority') === '' ? [] : form.get('image_source_priority').split(',');
+        const excludedCardTypes = (form.get('excluded_card_types') === '') ? [] : form.get('excluded_card_types').split(',');
+        form.delete('image_source_priority'); form.delete('excluded_card_types');
         for (const [key, value] of [...form.entries()]) {
           if (value === '') { form.delete(key); }
         }
@@ -575,8 +575,8 @@
           url: '/api/settings/update',
           data: JSON.stringify({
             ...Object.fromEntries(form),
-            image_source_priority: isp.split(','),
-            excluded_card_types: ect.split(','),
+            image_source_priority: imageSourcePriority,
+            excluded_card_types: excludedCardTypes,
           }),
           contentType: 'application/json',
           success: response => { 

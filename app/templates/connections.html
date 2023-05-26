@@ -106,11 +106,36 @@
       });
     }
 
+    function initializeFilesizeDropdown() {
+      // Emby
+      $('.dropdown[data-value="emby_filesize_limit_unit"]').dropdown({
+        placeholder: '{{preferences.emby_filesize_limit_unit}}',
+        values: ['Bytes', 'Kilobytes', 'Megabytes', 'Gigabytes', 'Terabytes'].map(unit => {
+          return {name: unit, value: unit, selected: unit === '{{preferences.emby_filesize_limit_unit}}'};
+        }),
+      });
+      // Jellyfin
+      $('.dropdown[data-value="jellyfin_filesize_limit_unit"]').dropdown({
+        placeholder: '{{preferences.jellyfin_filesize_limit_unit}}',
+        values: ['Bytes', 'Kilobytes', 'Megabytes', 'Gigabytes', 'Terabytes'].map(unit => {
+          return {name: unit, value: unit, selected: unit === '{{preferences.jellyfin_filesize_limit_unit}}'};
+        }),
+      });
+      // Plex
+      $('.dropdown[data-value="plex_filesize_limit_unit"]').dropdown({
+        placeholder: '{{preferences.plex_filesize_limit_unit}}',
+        values: ['Bytes', 'Kilobytes', 'Megabytes', 'Gigabytes', 'Terabytes'].map(unit => {
+          return {name: unit, value: unit, selected: unit === '{{preferences.plex_filesize_limit_unit}}'};
+        }),
+      });
+    }
+
     async function initAll() {
       getEmbyUsernames();
       getJellyfinUsernames();
       getSonarrLibraries();
       getLanguagePriorities();
+      initializeFilesizeDropdown();
     }
 
     // Add new library path
@@ -192,20 +217,17 @@
                 <input name="filesize_limit_number" type="number" min="0" value="{{preferences.emby_filesize_limit_number}}">
               </div>
               <div class="three wide field">
-                <div class="ui selection dropdown">
+                <div data-value="emby_filesize_limit_unit" class="ui selection dropdown">
                   <input name="filesize_limit_unit" type="hidden">
                   <i class="dropdown icon"></i>
-                  <div class="default text">{{preferences.emby_filesize_limit_unit}}</div>
-                  <div class="scrollhint menu">
-                    <div class="item">Bytes</div>
-                    <div class="item">Kilobytes</div>
-                    <div class="item">Megabytes</div>
-                  </div>
+                  <div class="default text"></div>
+                  <div class="menu"></div>
                 </div>
               </div>
             </div>
           </div>
 
+          <div class="ui error message"></div>
           <div class=field>
             <button id="submit-emby" class="ui primary animated button" type="submit">
               <div class="visible content">Save Changes</div>
@@ -268,20 +290,17 @@
                 <input name="filesize_limit_number" type="number" min="0" placeholder="{{preferences.jellyfin_filesize_limit_number}}" value="{{preferences.jellyfin_filesize_limit_number}}">
               </div>
               <div class="three wide field">
-                <div class="ui selection dropdown">
+                <div data-value="jellyfin_filesize_limit_unit" class="ui selection dropdown">
                   <input name="filesize_limit_unit" type="hidden">
                   <i class="dropdown icon"></i>
-                  <div class="default text">{{preferences.jellyfin_filesize_limit_unit}}</div>
-                  <div class="scrollhint menu">
-                    <div class="item">Bytes</div>
-                    <div class="item">Kilobytes</div>
-                    <div class="item">Megabytes</div>
-                  </div>
+                  <div class="default text"></div>
+                  <div class="menu"></div>
                 </div>
               </div>
             </div>
           </div>
 
+          <div class="ui error message"></div>
           <div class=field>
             <button id="submit-jellyfin" class="ui primary animated button" type="submit">
               <div class="visible content">Save Changes</div>
@@ -338,22 +357,18 @@
             <label>Integrate with Plex Meta Manager</label>
           </div>
 
-          <div id="plex-filesize-limit" class="ui disabled field" title="Maximum file size of assets to upload to Plex">
+          <div data-value="plex_filesize_limit" class="ui disabled field" title="Maximum file size of assets to upload to Plex">
             <label>Filesize Limit</label>
             <div class="ui fields">
               <div class="two wide field">
-                <input name="filesize_limit_number" id="plex-filesize-limit-input-number" type="number" min="1" value="{{preferences.plex_filesize_limit_number}}">
+                <input name="filesize_limit_number" type="number" min="1" value="{{preferences.plex_filesize_limit_number}}">
               </div>
               <div class="three wide field">
-                <div class="ui selection dropdown">
+                <div data-value="plex_filesize_limit_unit" class="ui selection dropdown">
                   <input name="filesize_limit_unit" type="hidden">
                   <i class="dropdown icon"></i>
-                  <div class="default text">{{preferences.plex_filesize_limit_unit}}</div>
-                  <div class="scrollhint menu">
-                    <div class="item">Bytes</div>
-                    <div class="item">Kilobytes</div>
-                    <div class="item">Megabytes</div>
-                  </div>
+                  <div class="default text"></div>
+                  <div class="menu"></div>
                 </div>
               </div>
             </div>
@@ -368,14 +383,15 @@
             <b>Warning</b> Plex will reject images larger than <code>10 MB</code>
           </div>
 
-          <div class=field>
+          <div class="ui error message"></div>
+          <!-- <div class=field> -->
             <button id="submit-plex" class="ui primary animated button" type="submit">
               <div class="visible content">Save Changes</div>
               <div class="hidden content">
                 <i class="right arrow icon"></i>
               </div>
             </button>
-          </div>
+          <!-- </div> -->
         </form>
       </div>
 
@@ -438,14 +454,13 @@
             </div>
           </div>
 
-          <div class=field>
-            <button id="submit-sonarr" class="ui primary animated button" type="submit">
-              <div class="visible content">Save Changes</div>
-              <div class="hidden content">
-                <i class="right arrow icon"></i>
-              </div>
-            </button>
-          </div>
+          <div class="ui error message"></div>
+          <button id="submit-sonarr" class="ui primary animated button" type="submit">
+            <div class="visible content">Save Changes</div>
+            <div class="hidden content">
+              <i class="right arrow icon"></i>
+            </div>
+          </button>
         </form>
       </div>
 
@@ -516,14 +531,13 @@
             </div>
           </div>
 
-          <div class=field>
-            <button id="submit-tmdb" class="ui primary animated button" type="submit">
-              <div class="visible content">Save Changes</div>
-              <div class="hidden content">
-                <i class="right arrow icon"></i>
-              </div>
-            </button>
-          </div>
+          <div class="ui error message"></div>
+          <button id="submit-tmdb" class="ui primary animated button" type="submit">
+            <div class="visible content">Save Changes</div>
+            <div class="hidden content">
+              <i class="right arrow icon"></i>
+            </div>
+          </button>
         </form>
       </div>
     </div>
@@ -637,14 +651,14 @@
     });
     
     // Show filesize warning in Plex if >10 MB
-    $('#plex-filesize-limit').on('change', function(event) {
-      let number = $('#plex-filesize-limit-input-number').val();
-      let unit = $('#plex-filesize-limit-input-unit').val();
-      let unitValues = {
-        'B': 1, 'KB':  2**10, 'MB':  2**20, 'GB':  2**30, 'TB':  2**40
+    $('.field[data-value="plex_filesize_limit"]').on('change', event => {
+      const number = $('.field[data-value="plex_filesize_limit"] input[name="filesize_limit_number"]').val() * 1;
+      const unit = $('.field[data-value="plex_filesize_limit"] input[name="filesize_limit_unit"]').val();
+      const unitValues = {
+        'Bytes': 1, 'Kilobytes':  2**10, 'Megabytes':  2**20, 'Gigabytes':  2**30, 'Terabytes':  2**40
       };
       let current = unitValues[unit] * number,
-          limit   = 10 * unitValues['MB'];
+          limit   = 10 * unitValues['Megabytes'];
       $('#plex-filesize-warning').toggleClass('visible', current > limit);
     })
 
@@ -744,6 +758,7 @@
             });
             getEmbyUsernames();
             getJellyfinUsernames();
+            $(formId).toggleClass('error', false);
           }, error: response => {
             $.toast({
               class: 'error',
@@ -751,6 +766,8 @@
               // message: response.responseJSON.detail,
               displayTime: 0,
             });
+            $(formId).toggleClass('error', true);
+            $(`${formId} .error.message`)[0].innerHTML = `<div class="header">${response.statusText}</div><p>${response.responseText}</p>`;
           }, complete: () => {
             $(submitButtonId).toggleClass('disabled loading', false);
           }

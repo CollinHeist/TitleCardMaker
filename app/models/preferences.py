@@ -379,7 +379,6 @@ class Preferences:
             corresponding unit.
         """
 
-
         if value is None or value == 0:
             return '0', 'Bytes'
 
