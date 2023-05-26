@@ -27,8 +27,19 @@ theme:
         icon: material/brightness-4
         name: Switch to light mode
   features:
+    # SPA instant navigation
+    - navigation.instant
     # Linked content tabs
     - content.tabs.link
+    # Navigation bar/menu
+    # - navigation.tabs
+    # - navigation.tabs.sticky
+    # Back to top buttom
+    - navigation.top
+    # Add bottom next/previous nav buttons
+    - navigation.footer
+    # Index page for nav subsections
+    - navigation.indexes
   font:
     text: Roboto
     code: Roboto Mono
@@ -41,6 +52,16 @@ plugins:
       separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   # - minify:
   #     minify_html: true
+
+extra:
+  # Social links on the footer
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/CollinHeist/TitleCardMaker
+      name: TitleCardMaker GitHub
+    - icon: fontawesome/brands/discord
+      link: https://github.com/CollinHeist/TitleCardMaker
+      name: TitleCardMaker Discord
 
 # Extensions
 markdown_extensions:
@@ -96,6 +117,7 @@ nav:
     - Global Settings: getting_started/settings.md
     - Adding a Series: getting_started/add_series.md
     - Creating the First Sync:
+      - getting_started/first_sync/index.md
       - Emby: getting_started/first_sync/emby.md
       - Jellyfin: getting_started/first_sync/jellyfin.md
       - Plex: getting_started/first_sync/plex.md
