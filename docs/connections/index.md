@@ -12,6 +12,3 @@ are applicable to your setup will improve TCM's operation.
     Emby, Jellyfin, and Plex - is _possible_, using [watch-specific
     styles]() will not integrate well if the two Servers have different
     watch statuses.
-
-*[TCM]: TitleCardMaker
-*[TMDb]: TheMovieDatabase

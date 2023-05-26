@@ -8,10 +8,14 @@ are applicable to your setup will improve TCM's operation.
 
 !!! warning "Using Multiple Media Servers"
 
-    Although using multiple media servers together - e.g. any two of
-    Emby, Jellyfin, and Plex - is _possible_, using [watch-specific
-    styles]() will not integrate well if the two Servers have different
-    watch statuses.
+    Although using multiple Media Servers together is _possible_, using
+    [watch-specific styles]() will not integrate well if the two Servers
+    have different watch statuses for a given Episode.
 
+Use the sidebar to find the instructions to set up the connections for
+each type of server.
+
+*[Media Server]: Plex, Emby, or Jellyfin
+*[Media Servers]: Plex, Emby, or Jellyfin
 *[TCM]: TitleCardMaker
 *[TMDb]: TheMovieDatabase

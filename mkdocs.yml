@@ -113,7 +113,12 @@ nav:
       - Linux: getting_started/local/linux.md
       - MacOS: getting_started/local/macos.md
       - Windows: getting_started/local/windows.md
-    - Configuring Connections: getting_started/connections.md
+    - Configuring Connections:
+      - getting_started/connections/index.md
+      - Emby: getting_started/connections/emby.md
+      - Jellyfin: getting_started/connections/jellyfin.md
+      - Plex: getting_started/connections/plex.md
+      - Sonarr: getting_started/connections/sonarr.md
     - Global Settings: getting_started/settings.md
     - Adding a Series: getting_started/add_series.md
     - Creating the First Sync:
@@ -122,5 +127,6 @@ nav:
       - Jellyfin: getting_started/first_sync/jellyfin.md
       - Plex: getting_started/first_sync/plex.md
       - Sonarr: getting_started/first_sync/sonarr.md
+      - Tautulli: getting_started/first_sync/tautulli.md
     - Customizing Title Cards: getting_started/customizing.md
   - Settings: settings.md

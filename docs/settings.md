@@ -139,3 +139,9 @@ _in order_ until a source image is found.
     because TMDb has a much wider variety of image availability, and is
     typically much higher quality than the auto-scraped images from your
     Media Server.
+
+
+*[Media Server]: Plex, Emby, or Jellyfin
+*[Media Servers]: Plex, Emby, or Jellyfin
+*[TCM]: TitleCardMaker
+*[TMDb]: TheMovieDatabase
