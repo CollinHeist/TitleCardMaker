@@ -42,6 +42,8 @@ theme:
     - navigation.indexes
     # Copy code button
     - content.code.copy
+    # Code annotations
+    - content.code.annotate
   font:
     text: Roboto
     code: Roboto Mono
@@ -62,7 +64,7 @@ extra:
       link: https://github.com/CollinHeist/TitleCardMaker
       name: TitleCardMaker GitHub
     - icon: fontawesome/brands/discord
-      link: https://github.com/CollinHeist/TitleCardMaker
+      link: https://discord.gg/bJ3bHtw8wH
       name: TitleCardMaker Discord
 
 extra_css:
