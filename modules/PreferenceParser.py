@@ -928,15 +928,21 @@ class PreferenceParser(YamlReader):
         if 'template' not in series_yaml:
             return True
 
-        # Get the specified template for this series
-        if isinstance((series_template := series_yaml['template']), str):
-            # Assume if only a string, then its the template name
+        # Get the indicated template YAML
+        series_template = series_yaml['template']
+
+        # If directly specified as a key, add to series YAML
+        if isinstance(series_template, str):
             template_name = series_template
             series_template = {'template_name': series_template}
             series_yaml['template'] = series_template
-        # Warn and return if no template name given
-        elif not (template_name := series_template.get('name', None)):
-            log.error(f'Missing template name for "{series_name}"')
+        elif isinstance(series_template, dict):
+            if 'name' not in series_template:
+                log.error(f'Missing template name for "{series_name}"')
+                return False
+            template_name = series_template['name']
+        else:
+            log.error(f'Template specification for "{series_name}" is invalid')
             return False
 
         # Warn and return if template name not mapped
@@ -961,9 +967,10 @@ class PreferenceParser(YamlReader):
     def __finalize_show_yaml(self,
             show_name: str,
             show_yaml: dict[str, Any],
-            templates: list[Template],
+            templates: dict[str, Template],
             library_map: dict[str, Any],
-            font_map: dict[str, Any]) -> Optional[dict]:
+            font_map: dict[str, Any], *,
+            default_media_server: str = 'plex') -> Optional[dict]:
         """
         Apply the indicated template, and merge the specified
         library/font to the given show YAML.
@@ -997,11 +1004,11 @@ class PreferenceParser(YamlReader):
             # Library identifier in map, merge YAML
             else:
                 Template.recurse_priority_union(show_yaml, library_yaml)
+                server = library_yaml.get('media_server', default_media_server)
                 show_yaml['library'] = {
                     'name': library_yaml.get('library_name', library_name),
                     'path': CleanPath(library_yaml.get('path')).sanitize(),
-                    'media_server': library_yaml.get('media_server',
-                                                     self.default_media_server),
+                    'media_server': server,
                 }
 
         # Parse font from map (if given font is just an identifier)
@@ -1117,6 +1124,7 @@ class PreferenceParser(YamlReader):
                     templates,
                     library_map,
                     font_map,
+                    default_media_server=self.default_media_server,
                 )
 
                 # If returned YAML is None (invalid) skip series
@@ -1139,6 +1147,7 @@ class PreferenceParser(YamlReader):
                     # Apply template and merge libraries+font maps to variation
                     variation = self.__finalize_show_yaml(
                         show_name, variation, templates, library_map, font_map,
+                        default_media_server=self.default_media_server,
                     )
 
                     # Skip if finalization failed
