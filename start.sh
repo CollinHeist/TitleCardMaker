@@ -1,7 +1,7 @@
 #!/bin/bash
 
-PUID=${PUID:-314}
-PGID=${PGID:-314}
+PUID=${PUID:-100}
+PGID=${PGID:-99}
 
 groupmod -o -g "$PGID" titlecardmaker
 usermod -o -u "$PUID" titlecardmaker

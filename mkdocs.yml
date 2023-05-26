@@ -40,6 +40,8 @@ theme:
     - navigation.footer
     # Index page for nav subsections
     - navigation.indexes
+    # Copy code button
+    - content.code.copy
   font:
     text: Roboto
     code: Roboto Mono
@@ -62,6 +64,9 @@ extra:
     - icon: fontawesome/brands/discord
       link: https://github.com/CollinHeist/TitleCardMaker
       name: TitleCardMaker Discord
+
+extra_css:
+  - stylesheets/extra.css
 
 # Extensions
 markdown_extensions:
@@ -106,6 +111,7 @@ nav:
   - Home: index.md
   - Getting Started - Tutorial:
     - Installation - Docker:
+      - getting_started/docker/index.md
       - Docker: getting_started/docker/docker.md
       - UnRAID: getting_started/docker/unraid.md
       - Synology DSM: getting_started/docker/synology.md
@@ -119,6 +125,7 @@ nav:
       - Jellyfin: getting_started/connections/jellyfin.md
       - Plex: getting_started/connections/plex.md
       - Sonarr: getting_started/connections/sonarr.md
+      - Tautulli: getting_started/connections/tautulli.md
     - Global Settings: getting_started/settings.md
     - Adding a Series: getting_started/add_series.md
     - Creating the First Sync:
