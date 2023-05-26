@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Literal, Optional
 
-from pydantic import AnyUrl, Field, PositiveInt, SecretStr, constr, root_validator, validator
+from pydantic import AnyUrl, Field, NonNegativeInt, PositiveInt, SecretStr, constr, root_validator, validator
 from pydantic.error_wrappers import ValidationError
 
 from app.schemas.base import Base, UNSPECIFIED, validate_argument_lists_to_dict
@@ -190,8 +190,8 @@ class UpdateSonarr(UpdateServerBase):
 
 class UpdateTMDb(UpdateBase):
     api_key: Hexstring = Field(default=UNSPECIFIED)
-    minimum_width: PositiveInt = Field(default=UNSPECIFIED)
-    minimum_height: PositiveInt = Field(default=UNSPECIFIED)
+    minimum_width: NonNegativeInt = Field(default=UNSPECIFIED)
+    minimum_height: NonNegativeInt = Field(default=UNSPECIFIED)
     skip_localized: bool = Field(default=UNSPECIFIED)
     download_logos: bool = Field(default=UNSPECIFIED)
     logo_language_priority: list[LanguageCode] = Field(default=UNSPECIFIED)
@@ -259,8 +259,8 @@ class SonarrConnection(Base):
 class TMDbConnection(Base):
     use_tmdb: bool
     tmdb_api_key: SecretStr #Hexstring
-    tmdb_minimum_width: PositiveInt
-    tmdb_minimum_height: PositiveInt
+    tmdb_minimum_width: NonNegativeInt
+    tmdb_minimum_height: NonNegativeInt
     tmdb_skip_localized: bool
     tmdb_download_logos: bool
     tmdb_logo_language_priority: list[LanguageCode]
