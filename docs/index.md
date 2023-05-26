@@ -10,26 +10,20 @@ media server services like Plex, Jellyfin, or Emby.
     Plex. Some Series have "official" Title Cards featured in the
     Episode itself.
 
-TitleCardMaker can be automated such that everything can be done without
-manual intervention. All your series can be read from your media server
-or Sonarr; episode data can be pulled from Sonarr, your media server, or
-TheMovieDatabase; images from TheMovieDatabase, or your media server;
-and TitleCardMaker can even utilize an episode's watch status to create
-"spoiler free" versions of title cards automatically, as shown below:
-
-    ...
+...
 
 # Early Access
-## Downloading the Code
 
 !!! info "Availability of Early Access"
 
     While the TitleCardMaker Web UI is under development, it is only
     accessible to project Sponsors.
 
+## Downloading the Code
+
 Sponsors of the project will be invited to a [private GitHub
 repository](https://github.com/CollinHeist/TitleCardMaker-WebUI/). These
-steps will walk you through getting access from that repository.
+steps will walk you through getting the code from that repository.
 
 1. After being invited, you will recieve an email at your GitHub's
 associated email address, open it and accept the invitation to
@@ -61,7 +55,16 @@ like the installation to live. Open the unzipped folder.
         1. Replace `~/Your/Install/Directory` with the path to the directory
         from the above Step 2.
 
-    === "Windows"
+    === "Windows (Powershell)"
+
+        ```bash
+        cd 'C:\Your\Install\Directory' <#(1)#>
+        ```
+
+        1. Replace `~/Your/Install/Directory` with the path to the directory
+        from the above Step 2.
+
+    === "Windows (Non-Powershell)"
 
         ```bash
         cd 'C:\Your\Install\Directory' # (1)
@@ -86,9 +89,15 @@ executing the following commands:
         mkdir cards logs source
         ```
 
-    === "Windows"
+    === "Windows (Powershell)"
 
         ```bash
+        mkdir cards; mkrdir logs; mkdir source;
+        ```
+
+    === "Windows (Non-Powershell)"
+
+         ```bash
         mkdir cards; mkrdir logs; mkdir source;
         ```
 
@@ -106,7 +115,7 @@ and then launch the TCM web server.
     === "MacOS"
 
         ```bash
-        pipenv install # (1)
+        pipenv install; # (1)
         pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 # (2)
         ```
 
@@ -117,7 +126,7 @@ and then launch the TCM web server.
     === "Linux"
 
         ```bash
-        pipenv install # (1)
+        pipenv install; # (1)
         pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 # (2)
         ```
 
@@ -125,10 +134,21 @@ and then launch the TCM web server.
         2. This launches a webserver at your `{your IP}:4242` which
         the TCM Web UI is accessible at.
 
-    === "Windows"
+    === "Windows (Powershell)"
 
         ```bash
-        pipenv install # (1)
+        pipenv install; <#(1)#>
+        pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 <#(2)#>
+        ```
+
+        1. This installs the required Python dependencies
+        2. This launches a webserver at your `{your IP}:4242` which
+        the TCM Web UI is accessible at.
+
+    === "Windows (Non-Powershell)"
+
+        ```bash
+        pipenv install; # (1)
         pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 # (2)
         ```
 
@@ -161,7 +181,15 @@ and then launch the TCM web server.
 
         1. This will label the built container `titlecardmaker`.
 
-    === "Windows"
+    === "Windows (Powershell)"
+
+        ```bash
+        docker build -t "titlecardmaker" . <#(1)#>
+        ```
+
+        1. This will label the built container `titlecardmaker`.
+
+    === "Windows (Non-Powershell)"
 
         ```bash
         docker build -t "titlecardmaker" . # (1)
@@ -211,15 +239,35 @@ and then launch the TCM web server.
         6. This exposes the _internal_ `4242` port outside the
         container, so that you can access it on your machine.
 
-    === "Windows"
+    === "Windows (Powershell)"
 
         ```bash
-        docker run -itd `# (1)` \
-            --net="bridge" `# (2)` \
-            -v "$(pwd)\logs":"/maker/logs/" `# (3)` \
-            -v "$(pwd)\source":"/config/source/" `# (4)` \
-            -v "$(pwd)\cards":"/config/cards/" `# (5)` \
-            -p 4242:4242 `# (6)` \
+        docker run -itd <#(1)#> `
+            --net="bridge" <# (2) #> `
+            -v "$(pwd)\logs":"/maker/logs/" <#(3)#> `
+            -v "$(pwd)\source":"/config/source/" <#(4)#> `
+            -v "$(pwd)\cards":"/config/cards/" <#(5)#> `
+            -p 4242:4242 <#(6)#> `
+            titlecardmaker
+        ```
+
+        1. This launches the container in the background.
+        2. This makes the TCM ports available to other Docker containers.
+        3. The makes the TCM logs available outside the container.
+        4. This mounts the source directory inside the container.
+        5. The mounts the cards directory inside the container.
+        6. This exposes the _internal_ `4242` port outside the
+        container, so that you can access it on your machine.
+
+    === "Windows (Non-Powershell)"
+
+        ```bash
+        docker run -itd `# (1)` ^
+            --net="bridge" `# (2)` ^
+            -v "$(pwd)\logs":"/maker/logs/" `# (3)` ^
+            -v "$(pwd)\source":"/config/source/" `# (4)` ^
+            -v "$(pwd)\cards":"/config/cards/" `# (5)` ^
+            -p 4242:4242 `# (6)` ^
             titlecardmaker
         ```
 
@@ -253,5 +301,7 @@ Plex, Emby, Jellyfin, or Tautulli.
 with [Syncs].
 4. Customize the look and style of Title Cards to your liking.
 
-
-
+*[Media Server]: Plex, Emby, or Jellyfin
+*[Media Servers]: Plex, Emby, or Jellyfin
+*[TCM]: TitleCardMaker
+*[TMDb]: TheMovieDatabase

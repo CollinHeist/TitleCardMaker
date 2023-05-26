@@ -41,5 +41,7 @@ successfully added a series to TitleCardMaker.
     stays as a blank black image, then TCM might be unable to communicate with
     TMDb.
 
+*[Media Server]: Plex, Emby, or Jellyfin
+*[Media Servers]: Plex, Emby, or Jellyfin
 *[TCM]: TitleCardMaker
 *[TMDb]: TheMovieDatabase
