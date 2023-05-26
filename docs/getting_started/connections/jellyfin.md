@@ -1,4 +1,4 @@
-# :simple-jellyfin: Jellyfin
+# :simple-jellyfin:{ .jellyfin } Jellyfin
 
 !!! info "Optional Step"
 
@@ -20,6 +20,12 @@ the hamburger icon in the top left.
 5. Click the `+` icon, and enter the name `TitleCardMaker`.
 6. Copy the created key, it should be a 32-character long string of
 numbers and the letters between A and F.
+
+    ??? warning "Security Warning"
+
+        Keep this API key private, as it can be used to remotely access
+        and modify Jellyfin.
+
 7. Back within TitleCardMaker, paste the API key from Step 6 into the
 API key input box and then click the `Save Changes` button.
 

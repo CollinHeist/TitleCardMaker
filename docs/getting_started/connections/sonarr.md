@@ -19,6 +19,13 @@ navigation bar.
 5. Under the Security subsection, and find and copy the API key - it
 should be a 32-character long string of numbers and the letters between
 A and F.
+
+
+    ??? warning "Security Warning"
+
+        Keep this API key private, as it can be used to remotely access
+        and modify Sonarr.
+
 6. Back within TitleCardMaker, paste the API key from Step 5 into the
 API key input box.
 7. The next step is to add the top-level directories for each of your

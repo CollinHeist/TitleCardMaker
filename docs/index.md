@@ -6,7 +6,7 @@ media server services like Plex, Jellyfin, or Emby.
 ??? question "What is a Title Card?"
 
     A Title Card is a thumbnail image for an Episode used to add a
-    unique look within a personal media server like Plex, Jellyfin, or
+    unique look within a personal media server like Emby, Jellyfin, or
     Plex. Some Series have "official" Title Cards featured in the
     Episode itself.
 

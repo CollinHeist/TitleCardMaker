@@ -1,4 +1,4 @@
-# :material-plex: Plex
+# :material-plex:{ .plex } Plex
 
 !!! info "Optional Step"
 
@@ -15,6 +15,12 @@
 
 3. Follow [these instructions](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/) and copy the
 X-Plex-Token value.
+
+    ??? warning "Security Warning"
+
+        Keep this API key private, as it can be used to remotely access
+        and modify Plex, and does not automatically expire.
+
 4. Back within TitleCardMaker, paste the X-Plex-Token from Step 3 into
 the Token input box.
 5. If you use Plex Meta Manager episode overlays, toggle the `Integrate
