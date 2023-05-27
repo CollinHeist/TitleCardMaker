@@ -136,6 +136,7 @@ def download_series_poster(
     # Poster downloaded, write file, update database
     else:
         path = preferences.asset_directory / 'posters' / f'{series.id}.jpg'
+        path.parent.mkdir(exist_ok=True)
         try:
             path.write_bytes(get(poster_url).content)
             series.poster_file = str(path)
