@@ -157,7 +157,7 @@ def create_card(
         return None
 
     card_maker = CardClass(
-        **(card_settings | card_settings['extras']),
+        **(card_settings),# | card_settings['extras']),
         preferences=preferences,
     )
 
@@ -233,11 +233,25 @@ def resolve_card_settings(
         episode_template_dict.get('extras', {}),
         episode.card_properties.get('extras', {}),
     )
-    # Override settings with extras
+    # Override settings with extras, and merge translations into extras
     TieredSettings(card_settings, card_extras)
-    # Merge Episode translations into extras
     TieredSettings(card_extras, episode.translations)
     card_settings['extras'] = card_extras | episode.translations
+
+    # Resolve logo file format string if indicated
+    try:
+        card_settings['logo_file'] = Path(card_settings['logo_file'])
+        filename = card_settings['logo_file'].stem
+        formatted_filename = filename.format(
+            season_number=episode.season_number,
+            episode_number=episode.episode_number,
+            absolute_number=episode.absolute_number,
+        )
+        card_settings['logo_file'] = Path(series.source_directory) \
+            / f"{formatted_filename}{card_settings['logo_file'].suffix}"
+    except KeyError as e:
+        log.exception(f'Cannot format logo filename - missing data', e)
+        return ['invalid']
 
     # Get the effective card class
     CardClass = preferences.get_card_type_class(card_settings['card_type'])
