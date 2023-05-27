@@ -16,7 +16,7 @@ covered in this step.
 ## Instructions
 ### Installing Python
 
-??? tip "Python Already Installed?"
+??? note "Python Already Installed?"
 
     If you believe Python is already installed, you can quickly check
     this (and that you have a suitable version), by running the
@@ -33,9 +33,37 @@ to install Python with Homebrew.
 
 ### Installing git
 
-### Installing Pip
+??? note "Git Already Installed?"
+
+    If you believe git is already installed, you can quickly check this
+    (and that you have a suitable version), by running the following
+    command:
+
+    ```bash
+    git --version
+    ```
+
+Execute the following command:
+
+```bash
+brew install git
+```
+
+### Upgrading Pip
+
+Execute the following command:
+
+```bash
+python3 -m pip install --upgrade pip
+```
 
 ### Installing Pipenv
+
+Execute the following command:
+
+```bash
+pip3 install pipenv
+```
 
 ### Installing ImageMagick
 

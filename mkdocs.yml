@@ -117,10 +117,7 @@ nav:
       - Docker: getting_started/docker/docker.md
       - UnRAID: getting_started/docker/unraid.md
       - Synology DSM: getting_started/docker/synology.md
-    - Installation - Local:
-      - Linux: getting_started/local/linux.md
-      - MacOS: getting_started/local/macos.md
-      - Windows: getting_started/local/windows.md
+    - Installation - Local: getting_started/local.md
     - Configuring Connections:
       - getting_started/connections/index.md
       - Emby: getting_started/connections/emby.md

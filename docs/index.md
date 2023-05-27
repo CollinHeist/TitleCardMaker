@@ -97,20 +97,55 @@ executing the following commands:
 
     === "Windows (Non-Powershell)"
 
-         ```bash
+        ```bash
         mkdir cards; mkrdir logs; mkdir source;
         ```
 
+6. We now need to make sure these directories have the correct
+permissions assigned to them. 
+
+    === "Linux"
+
+        With the Group and User ID that you would like TCM to execute
+        with, run the following command:
+
+        ```bash
+        sudo chown -R {group}:{user} ./cards ./logs ./source # (1)
+        ```
+
+        1. Replace `{group}` and `{user}` with the actual group and user
+        (or their ID's) - e.g. `99:100`.
+
+    === "MacOS"
+
+        With the Group and User ID that you would like TCM to execute
+        with, run the following command:
+
+        ```bash
+        sudo chown -R {group}:{user} ./cards ./logs ./source # (1)
+        ```
+
+        1. Replace `{group}` and `{user}` with the actual group and user
+        (or their ID's) - e.g. `99:100`.
+
+    === "Windows (Powershell)"
+
+        Changing the permissions is not necessary on Windows.
+
+    === "Windows (Non-Powershell)"
+
+        Changing the permissions is not necessary on Windows.
+
     !!! info "Choice of Installation"
 
-        You now have the choice of building and running the Docker container
-        yourself, or launching the Python script directly. Those who wish to
-        (or must) use a Docker container, continue
-        [here](#building-the-docker-container). The Python steps continue
-        below.
+        You now have the choice of building and running the Docker
+        container yourself, or launching the Python script directly.
+        Those who wish to (or must) use a Docker container, continue
+        [here](#building-the-docker-container). The Python steps
+        continue below.
 
-5. Run the following command to install the required Python packages
-and then launch the TCM web server.
+7. Run the following command to install the required Python packages
+and launch the TCM interface.
 
     === "Linux"
 

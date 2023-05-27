@@ -16,7 +16,7 @@ covered in this step.
 ## Instructions
 ### Installing Python
 
-??? tip "Python Already Installed?"
+??? note "Python Already Installed?"
 
     If you believe Python is already installed, you can quickly check
     this (and that you have a suitable version), by running the
@@ -36,9 +36,46 @@ checkbox during installation.
 
 ### Installing git
 
-### Installing Pip
+??? note "Git Already Installed?"
+
+    If you believe git is already installed, you can quickly check this
+    (and that you have a suitable version), by running the following
+    command:
+
+    ```bash
+    git --version
+    ```
+
+1. Download the 64-bit standalone installer from
+[here](https://git-scm.com/download/win).
+2. Run the installer, and click through until you get to the "Choosing
+the default editor used by Git" step.
+
+    !!! tip "Recommendation"
+
+        I recommend changing the default editor to something other than
+        Vim (such as Sublime Text, Notepad++, etc.).
+
+3. Continue clicking through until you get to the "Adjusting your PATH
+environment" step and make sure that the (Recommended) option of "Git
+from the command line and also from 3rd-party software" option is
+selected.
+
+### Upgrading Pip
+
+Execute the following command:
+
+```bash
+python3 -m pip install --upgrade pip
+```
 
 ### Installing Pipenv
+
+Execute the following command:
+
+```bash
+pip3 install pipenv
+```
 
 ### Installing ImageMagick
 
