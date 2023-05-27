@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import Optional, Union
 
 from fastapi import BackgroundTasks, HTTPException
-from sqlalchemy import and_, or_
 
 from app.database.query import get_all_templates
 from app.dependencies import (
@@ -219,7 +218,7 @@ def run_sync(
             )
             download_series_poster(db, preferences, series, tmdb_interface)
             download_series_logo(
-                db, preferences, emby_interface, imagemagick_interface,
+                preferences, emby_interface, imagemagick_interface,
                 jellyfin_interface, tmdb_interface, series,
             )
         else:
@@ -240,7 +239,7 @@ def run_sync(
                 # Function
                 download_series_logo, 
                 # Arguments
-                db, preferences, emby_interface, imagemagick_interface,
+                preferences, emby_interface, imagemagick_interface,
                 jellyfin_interface, tmdb_interface, series,
             )
 
