@@ -8,21 +8,21 @@ repo_name: CollinHeist/TitleCardMaker
 repo_url: https://github.com/CollinHeist/TitleCardMaker
 
 theme:
-  logo: /assets/logo512.png
-  favicon: /assets/favicon.ico
+  logo: ./assets/logo512.png
+  favicon: ./assets/favicon.ico
   name: material
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: blue # indigo
-      accent: red # indigo
+      primary: blue
+      accent: red
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: blue # indigo
-      accent: red # indigo
+      primary: blue
+      accent: red
       toggle:
         icon: material/brightness-4
         name: Switch to light mode

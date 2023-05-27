@@ -761,8 +761,13 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             True if the title is a generic translation, False otherwise.
         """
 
+        # Get ISO-639-1 if combined language code was given
+        code = language_code
+        if '-' in language_code:
+            code = language_code.split('-')[0]
+
         # Assume non-generic if the code isn't pre-mapped
-        if not (generic := self.GENERIC_TITLE_FORMATS.get(language_code, None)):
+        if not (generic := self.GENERIC_TITLE_FORMATS.get(code, None)):
             log.debug(f'Unrecognized language code "{language_code}"')
             return False
 
@@ -807,7 +812,10 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
         # Look for this translation
         for translation in episode.translations:
-            if language_code in (translation.iso_3166_1, translation.iso_639_1):
+            codes = (translation.iso_639_1, translation.iso_3166_1)
+            combined_code = '-'.join(codes)
+            if (('-' in language_code and language_code == combined_code)
+                or language_code in codes):
                 # If the title translation is blank (i.e. non-existent)
                 if hasattr(translation, 'name'):
                     title = translation.name
@@ -824,6 +832,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
                     return None
 
                 return title
+
+        return None
 
 
     @catch_and_log('Error getting series logo', default=None)
