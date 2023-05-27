@@ -4,7 +4,6 @@ from typing import Optional
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
-from modules.CleanPath import CleanPath
 from modules.Debug import log
 
 SeriesExtra = Optional
@@ -26,10 +25,6 @@ class LogoTitleCard(BaseCardType):
         supports_custom_seasons=True,
         supported_extras=[
             Extra(
-                name='Logo File',
-                identifier='logo',
-                description='Required logo file to place in the center of the title card',
-            ), Extra(
                 name='Separator Character',
                 identifier='separator',
                 description='Character to separate season and episode text',
@@ -122,11 +117,9 @@ class LogoTitleCard(BaseCardType):
             font_interline_spacing: int = 0,
             font_stroke_width: float = 1.0,
             font_vertical_shift: int = 0,
-            season_number: int = 1,
-            episode_number: int = 1,
             blur: bool = False,
             grayscale: bool = False,
-            logo: SeriesExtra[str] = None,
+            logo_file: Optional[Path] = None,
             background: SeriesExtra[str] = 'black',
             separator: SeriesExtra[str] = '•', 
             stroke_color: SeriesExtra[str] = 'black',
@@ -142,21 +135,10 @@ class LogoTitleCard(BaseCardType):
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
 
-        # Look for logo if it's a format string
-        if logo is None:
-            self.logo = None
-        else:
-            try:
-                logo = logo.format(season_number=season_number,
-                                   episode_number=episode_number)
-                self.logo = Path(CleanPath(logo).sanitize())
-            except Exception as e:
-                self.valid = False
-                log.exception(f'Invalid logo file "{logo}"', e)
-
         # Get source file if indicated
         self.use_background_image = use_background_image
         self.blur_only_image = blur_only_image
+        self.logo = logo_file
         self.source_file = source_file
         if self.use_background_image and self.source_file is None:
             log.error(f'Source file must be provided if using a background '
