@@ -4,7 +4,6 @@ from typing import Optional
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
-from modules.CleanPath import CleanPath
 from modules.Debug import log
 
 SeriesExtra = Optional
@@ -27,10 +26,6 @@ class FadeTitleCard(BaseCardType):
         supports_custom_seasons=True,
         supported_extras=[
             Extra(
-                name='Logo File',
-                identifier='logo',
-                description='Logo file to place on the left of the card',
-            ), Extra(
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to use for the episode text',
@@ -91,11 +86,9 @@ class FadeTitleCard(BaseCardType):
             font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_vertical_shift: int = 0,
-            season_number: int = 1,
-            episode_number: int = 1,
             blur: bool = False,
             grayscale: bool = False,
-            logo: SeriesExtra[str] = None,
+            logo_file: Optional[Path] = None,
             episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
             separator: SeriesExtra[str] = '•',
             preferences: 'Preferences' = None,
@@ -107,33 +100,10 @@ class FadeTitleCard(BaseCardType):
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
 
-        # Store source and output file
+        # Store indicated files
         self.source_file = source_file
         self.output_file = card_file
-        
-        # Find logo file if indicated
-        if logo is None:
-            self.logo = None
-        else:
-            try:
-                logo = logo.format(
-                    season_number=season_number, episode_number=episode_number
-                )
-                logo = Path(CleanPath(logo).sanitize())
-            except Exception as e:
-                # Bad format strings will be caught during card creation
-                self.valid = False
-                log.exception(f'Invalid logo file "{logo}"', e)
-
-            # Explicitly specicifed logo 
-            if logo.exists():
-                self.logo = logo
-            # Try to find logo alongside source image
-            elif (self.source_file.parent / logo.name).exists():
-                self.logo = self.source_file.parent / logo.name
-            # Assume non-existent explicitly specified filename
-            else:
-                self.logo = logo
+        self.logo = logo_file
 
         # Store attributes of the text
         self.title_text = self.image_magick.escape_chars(title_text)

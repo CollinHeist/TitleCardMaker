@@ -25,13 +25,8 @@ class PosterTitleCard(BaseCardType):
         source='local',
         supports_custom_fonts=False,
         supports_custom_seasons=False,
-        supported_extras=[
-            Extra(
-                name='Logo File',
-                identifier='logo',
-                description='Required logo file to place in the center of the title card',
-            ),
-        ], description=[
+        supported_extras=[],
+        description=[
             'Title card featuring a vertical poster with a starry background, '
             'originally designed for the Gundam series.',
             'This card is designed for vertical source images, and you will '
@@ -86,9 +81,7 @@ class PosterTitleCard(BaseCardType):
             episode_text: str,
             blur: bool = False,
             grayscale: bool = False,
-            season_number: int = 1,
-            episode_number: int = 1,
-            logo: SeriesExtra[str] = None,
+            logo_file: Optional[Path] = None,
             preferences: 'Preferences' = None,
             **unused) -> None:
         """
@@ -98,33 +91,10 @@ class PosterTitleCard(BaseCardType):
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
 
-        # Store source and output file
+        # Store indicated files
         self.source_file = source_file
         self.output_file = card_file
-
-        # No logo file specified
-        if logo is None:
-            self.logo = None
-        # Attempt to modify as if it's a format string
-        else:
-            try:
-                logo = logo.format(season_number=season_number,
-                                   episode_number=episode_number)
-                logo = Path(CleanPath(logo).sanitize())
-            except Exception as e:
-                # Bad format strings will be caught during card creation
-                self.valid = False
-                log.exception(f'Invalid logo file "{logo}"', e)
-
-            # Explicitly specicifed logo 
-            if logo.exists():
-                self.logo = logo
-            # Try to find logo alongside source image
-            elif (source.parent / logo.name).exists():
-                self.logo = source.parent / logo.name
-            # Assume non-existent explicitly specified filename
-            else:
-                self.logo = logo
+        self.logo = logo_file
 
         # Store text
         self.title_text = self.image_magick.escape_chars(title_text.upper())
