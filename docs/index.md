@@ -37,7 +37,7 @@ that dropdown, click `Download ZIP`.
 like the installation to live. Open the unzipped folder.
 2. Navigate to the installation directory within the command line:
 
-    === "MacOS"
+    === "Linux"
 
         ```bash
         cd "~/Your/Install/Directory" # (1)
@@ -46,7 +46,7 @@ like the installation to live. Open the unzipped folder.
         1. Replace `~/Your/Install/Directory` with the path to the directory
         from the above Step 2.
 
-    === "Linux"
+    === "MacOS"
 
         ```bash
         cd "~/Your/Install/Directory" # (1)
@@ -77,13 +77,13 @@ like the installation to live. Open the unzipped folder.
 for TCM - these are the `cards`, `logs`, and `source` directories - by
 executing the following commands:
 
-    === "MacOS"
+    === "Linux"
 
         ```bash
         mkdir cards logs source
         ```
 
-    === "Linux"
+    === "MacOS"
 
         ```bash
         mkdir cards logs source
@@ -112,7 +112,7 @@ executing the following commands:
 5. Run the following command to install the required Python packages
 and then launch the TCM web server.
 
-    === "MacOS"
+    === "Linux"
 
         ```bash
         pipenv install; # (1)
@@ -123,7 +123,7 @@ and then launch the TCM web server.
         2. This launches a webserver at your `{your IP}:4242` which
         the TCM Web UI is accessible at.
 
-    === "Linux"
+    === "MacOS"
 
         ```bash
         pipenv install; # (1)
@@ -165,7 +165,7 @@ and then launch the TCM web server.
 
 1. Build the Docker container by executing the following command:
 
-    === "MacOS"
+    === "Linux"
 
         ```bash
         docker build -t "titlecardmaker" . # (1)
@@ -173,7 +173,7 @@ and then launch the TCM web server.
 
         1. This will label the built container `titlecardmaker`.
 
-    === "Linux"
+    === "MacOS"
 
         ```bash
         docker build -t "titlecardmaker" . # (1)
@@ -199,7 +199,7 @@ and then launch the TCM web server.
 
 2. Launch the Docker container by executing the following command:
 
-    === "MacOS"
+    === "Linux"
 
         ```bash
         docker run -itd `# (1)` \
@@ -219,7 +219,7 @@ and then launch the TCM web server.
         6. This exposes the _internal_ `4242` port outside the
         container, so that you can access it on your machine.
 
-    === "Linux"
+    === "MacOS"
 
         ```bash
         docker run -itd `# (1)` \

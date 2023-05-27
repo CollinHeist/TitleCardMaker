@@ -1,4 +1,4 @@
-# Synology DSM Installation
+# Synology DSM Docker Installation
 ## Background
 !!! info "Benefits of Docker"
 

@@ -18,7 +18,7 @@ Series can be _manually_ added to TCM.
 corner.
 2. In the top right (below the search bar), click the `+` button.
 3. For this tutorial, we'll be adding and customizing [Better Call Saul]() - in
-the popup form, fill out the name and year as `Better Call Saul` and `2016`.
+the popup form, fill out the name and year as `Better Call Saul` and `2015`.
 
     !!! tip "Required Information"
 
