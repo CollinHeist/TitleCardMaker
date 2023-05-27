@@ -1,3 +1,4 @@
+from os import environ
 from pathlib import Path
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -16,6 +17,10 @@ from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
 SQLALCHEMY_DATABASE_URL = 'sqlite:///./db.sqlite'
+if environ.get('TCM_IS_DOCKER', 'false').lower() == 'true':
+    SQLALCHEMY_DATABASE_URL = 'sqlite:////config/source/db.sqlite'
+else:
+    SQLALCHEMY_DATABASE_URL = 'sqlite:///./db.sqlite'
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={'check_same_thread': False}
 )
@@ -30,7 +35,6 @@ Scheduler = BackgroundScheduler(
     job_defaults={'coalesce': True},
     misfire_grace_time=60,
 )
-Scheduler.start()
 
 # Preference file/object
 PreferencesLocal = Preferences(
