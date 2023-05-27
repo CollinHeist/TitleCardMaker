@@ -1,4 +1,4 @@
-# Local Linux Installation
+# Local Installation
 
 !!! warning "Linux Compatability"
 
@@ -123,7 +123,8 @@ Execute the following command:
 
 ### Installing Pipenv
 
-Execute the following command:
+TitleCardMaker uses `pipenv` to install the external Python libraries
+that are required. Install pipenv by executing the following command:
 
 === "Linux"
 
@@ -143,14 +144,34 @@ Execute the following command:
     pip3 install pipenv
     ```
 
+Then install the required libraries (dependencies) by executing:
+
+=== "Linux"
+
+    ```bash
+    pipenv install 
+    ```
+
+=== "MacOS"
+
+    ```bash
+    pipenv install 
+    ```
+
+=== "Windows"
+
+    ```bash
+    pipenv install 
+    ```
+
 !!! failure "Command Failure"
 
-    If this command fails, it is possible `pip3` has not been added to
+    If this command fails, it is possible `pipenv` has not been added to
     your PATH. Retry this by prefacing the command with `python3 -m`,
     like so:
 
     ```bash
-    python3 -m pip3 install pipenv
+    python3 -m pipenv install
     ```
 
 ### Installing ImageMagick
@@ -175,6 +196,24 @@ Execute the following command:
     2. Follow the installer, be sure to check the `Add application
     directory to your system path` and the `Install legacy utilities
     (e.g. convert)` checkboxes during installation.
+
+### Launching TitleCardMaker
+With all the required packages and software installed, you are ready
+to launch TitleCardMaker. This can be done by executing the following
+command:
+
+```bash
+pipenv run uvicorn app-main:app --host 0.0.0.0 --port 4242
+```
+
+This launches the TitleCardMaker web interface, and you will be able to
+access it by going to `http://0.0.0.0:4242` or `http://localhost:4242`
+in a browser. 
+
+!!! success "Success"
+
+    Installation is complete, and TitleCardMaker is ready to be
+    configured.
 
 *[Media Server]: Plex, Emby, or Jellyfin
 *[Media Servers]: Plex, Emby, or Jellyfin

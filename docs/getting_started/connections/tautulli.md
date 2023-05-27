@@ -56,7 +56,7 @@ than the Plex setting from Step 9.
     
         Because this integration is so fast (typically triggering within
         5 seconds of finishing an Episode) - it is important that
-        Tautulli trigger's TCM to update a Title Card _after_ an
+        Tautulli triggers TCM to update a Title Card _after_ an
         Episode's watch-status has had time to update within Plex.
 
 *[Media Server]: Plex, Emby, or Jellyfin

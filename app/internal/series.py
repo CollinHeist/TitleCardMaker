@@ -184,7 +184,7 @@ def load_series_title_cards(
     if library is None:
         raise HTTPException(
             status_code=409,
-            detail=f'Series {series.id} has no {media_server} Library',
+            detail=f'{series.log_str} has no {media_server} Library',
         )
     elif interface is None:
         raise HTTPException(

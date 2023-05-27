@@ -450,6 +450,45 @@ def parse_plex(
     return update_connection(preferences, update_plex, 'plex')
 
 
+def parse_sonarr(
+        preferences: Preferences,
+        yaml_dict: dict[str, Any]) -> Preferences:
+    """
+    Update the Sonarr connection preferences for the given YAML.
+
+    Args:
+        preferences: Preferences whose connection details are being
+            modified.
+        yaml_dict: Dictionary of YAML attributes to parse.
+    
+    Returns:
+        Modified Preferences object. If no changes are made, the object
+        is returned unmodified.
+
+    Raises:
+        HTTPException (422) if there are any YAML formatting errors.
+        Pydantic ValidationError if an UpdateSonarr object cannot be
+            created from the given YAML.
+    """
+
+    # Skip if no section
+    if not isinstance(yaml_dict, dict) or 'sonarr' not in yaml_dict:
+        return preferences
+
+    # Get sonarr options
+    sonarr = _get(yaml_dict, 'sonarr', default={})
+
+    update_sonarr = UpdateSonarr(
+        url=_get(sonarr, 'url', default=UNSPECIFIED),
+        api_key=_get(sonarr, 'api_key', default=UNSPECIFIED),
+        use_ssl=_get(sonarr, 'verify_ssl', default=UNSPECIFIED),
+    )
+    preferences.use_sonarr = True
+    preferences.commit()
+
+    return update_connection(preferences, update_sonarr, 'sonarr')
+
+
 def parse_tmdb(
         preferences: Preferences,
         yaml_dict: dict[str, Any]) -> Preferences:
@@ -504,45 +543,6 @@ def parse_tmdb(
     preferences.commit()
 
     return update_connection(preferences, update_tmdb, 'tmdb')
-
-
-def parse_sonarr(
-        preferences: Preferences,
-        yaml_dict: dict[str, Any]) -> Preferences:
-    """
-    Update the Sonarr connection preferences for the given YAML.
-
-    Args:
-        preferences: Preferences whose connection details are being
-            modified.
-        yaml_dict: Dictionary of YAML attributes to parse.
-    
-    Returns:
-        Modified Preferences object. If no changes are made, the object
-        is returned unmodified.
-
-    Raises:
-        HTTPException (422) if there are any YAML formatting errors.
-        Pydantic ValidationError if an UpdateSonarr object cannot be
-            created from the given YAML.
-    """
-
-    # Skip if no section
-    if not isinstance(yaml_dict, dict) or 'sonarr' not in yaml_dict:
-        return preferences
-
-    # Get sonarr options
-    sonarr = _get(yaml_dict, 'sonarr', default={})
-
-    update_sonarr = UpdateSonarr(
-        url=_get(sonarr, 'url', default=UNSPECIFIED),
-        api_key=_get(sonarr, 'api_key', default=UNSPECIFIED),
-        use_ssl=_get(sonarr, 'verify_ssl', default=UNSPECIFIED),
-    )
-    preferences.use_sonarr = True
-    preferences.commit()
-
-    return update_connection(preferences, update_sonarr, 'sonarr')
 
 
 def parse_syncs(

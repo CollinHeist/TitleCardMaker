@@ -72,4 +72,7 @@ note of, all other settings can be adjusted within TitleCardMaker.
 finished, go back to the `DOCKER` tab, click the newly created
 TitleCardMaker container, and then select `WebUI` from the dropdown.
 
-Installation is complete, and TitleCardMaker is ready to be configured.
+!!! success "Success"
+
+    Installation is complete, and TitleCardMaker is ready to be
+    configured.

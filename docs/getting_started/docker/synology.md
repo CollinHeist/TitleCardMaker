@@ -104,7 +104,12 @@ select it and click `Launch`.
     7. Make sure this new rule is _above_ any base `Deny` action(s).
     8. Hit `OK`.
 
-Installation is complete, and TitleCardMaker is ready to be configured.
+!!! success "Success"
+
+    Installation is complete, and TitleCardMaker is ready to be
+    configured. It can be accessed at `http://{server ip}:4242`, where
+    `{server ip}` is the same IP address as your host NAS - e.g.
+    `http://192.168.0.19:4242`.
 
 *[Media Server]: Plex, Emby, or Jellyfin
 *[Media Servers]: Plex, Emby, or Jellyfin
