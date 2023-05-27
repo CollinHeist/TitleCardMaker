@@ -41,12 +41,15 @@ ENV TCM_PREFERENCES=/config/preferences.yml \
 # Override default ImageMagick policy XML file
 RUN set -eux; \
     rm -f Pipfile Pipfile.lock; \
-    groupadd -g 100 titlecardmaker; \
-    useradd -u 99 -g 100 titlecardmaker; \
+    groupadd -g 314 titlecardmaker; \
+    useradd -u 314 -g 314 titlecardmaker; \
     apt-get update; \
     apt-get install -y --no-install-recommends gosu imagemagick libmagickcore-6.q16-6-extra; \
     rm -rf /var/lib/apt/lists/*; \
     cp modules/ref/policy.xml /etc/ImageMagick-6/policy.xml
+
+# Expose TCM Port
+EXPOSE 4242
 
 # Entrypoint
 CMD ["python3", "-m", "uvicorn", "app-main:app", "--host", "0.0.0.0", "--port", "4242"]
