@@ -59,7 +59,7 @@ def download_series_source_images(
             download_episode_source_image,
             # Arguments
             db, preferences, emby_interface, jellyfin_interface, plex_interface,
-            tmdb_interface, episode
+            tmdb_interface, episode, raise_exc=False,
         )
 
     return None

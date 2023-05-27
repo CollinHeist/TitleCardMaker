@@ -527,12 +527,15 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         ...
 
 
-    def get_source_image(self, episode_info: EpisodeInfo) -> SourceImage:
+    def get_source_image(self,
+            episode_info: EpisodeInfo, *,
+            raise_exc: bool = True) -> SourceImage:
         """
         Get the source image for the given episode within Emby.
 
         Args:
             episode_info: The episode to get the source image of.
+            raise_exc: Whether to raise any HTTPExceptions that arise.
 
         Returns:
             Bytes of the source image for the given Episode. None if the

@@ -742,7 +742,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             series_info: SeriesInfo,
             episode_info: EpisodeInfo, *,
             match_title: bool = True,
-            skip_localized_images: bool = False) -> Optional[str]:
+            skip_localized_images: bool = False,
+            raise_exc: bool = True) -> Optional[str]:
         """
         Get the best source image for the requested entry.
 
@@ -754,6 +755,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             skip_localized_images: (Keyword only) Whether to skip images
                 with a non-null language code - i.e. skipping localized
                 images.
+            raise_exc: Whether to raise any HTTPExceptions that arise.
 
         Returns:
             URL to the 'best' source image for the requested entry. None
@@ -761,9 +763,15 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         """
 
         # Get all images for this episode
-        all_images = self.get_all_source_images(
-            series_info, episode_info, match_title=match_title,
-        )
+        try:
+            all_images = self.get_all_source_images(
+                series_info, episode_info, match_title=match_title,
+            )
+        # Some error occurred, raise if indicated, otherwise return None
+        except HTTPException as e:
+            if raise_exc:
+                raise e
+            return None
 
         # If None, either blacklisted or episode was not found
         if all_images is None:

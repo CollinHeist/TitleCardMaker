@@ -196,7 +196,8 @@ def download_episode_source_image(
         jellyfin_interface: Optional['JellyfinInterface'],
         plex_interface: Optional['PlexInterface'],
         tmdb_interface: Optional['TMDbInterface'],
-        episode: Episode) -> Optional[str]:
+        episode: Episode,
+        raise_exc: bool = False) -> Optional[str]:
     """
     Download the source image for the given Episode.
 
@@ -232,11 +233,11 @@ def download_episode_source_image(
     for image_source in preferences.image_source_priority:
         if image_source == 'Emby' and emby_interface:
             source_image = emby_interface.get_source_image(
-                episode.as_episode_info
+                episode.as_episode_info, raise_exc=raise_exc,
             )
         elif image_source == 'Jellyfin' and jellyfin_interface:
             source_image = jellyfin_interface.get_source_image(
-                episode.as_episode_info
+                episode.as_episode_info, raise_exc=raise_exc,
             )
         elif image_source == 'Plex' and plex_interface:
             # Verify series has a library
@@ -247,13 +248,15 @@ def download_episode_source_image(
                 series.plex_library_name,
                 series.as_series_info,
                 episode.as_episode_info,
+                raise_exc=raise_exc,
             )
         elif image_source == 'TMDb' and tmdb_interface:
-            # TODO implement blacklist bypassing w/ force
+            # TODO implement blacklist bypassing
             source_image = tmdb_interface.get_source_image(
                 series.as_series_info,
                 episode.as_episode_info,
-                skip_localized_images=skip_localized_images
+                skip_localized_images=skip_localized_images,
+                raise_exc=raise_exc,
             )
         else:
             log.warning(f'{series.log_str} {episode.log_str} Cannot source images from {image_source}')
@@ -270,10 +273,11 @@ def download_episode_source_image(
             log.debug(f'{series.log_str} {episode.log_str} Downloaded {source_file.resolve()} from {image_source}')
             return f'/source/{series.path_safe_name}/{source_file.name}'
         else:
-            raise HTTPException(
-                status_code=400,
-                detail=f'Unable to download source image'
-            )
+            if raise_exc:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f'Unable to download source image'
+                )
 
     # No image source returned a valid image, return None
     return None

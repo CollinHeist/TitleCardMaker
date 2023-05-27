@@ -524,7 +524,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def get_source_image(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_info: EpisodeInfo) -> Optional[str]:
+            episode_info: EpisodeInfo, *,
+            raise_exc: bool = True) -> Optional[str]:
         """
         Get the source image for the given episode within Plex.
 
@@ -532,6 +533,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             library_name: Name of the library the series is under.
             series_info: The series to get the source image of.
             episode_info: The episode to get the source image of.
+            raise_exc: Whether to raise any HTTPExceptions that arise.
 
         Returns:
             URL to the thumbnail of the given Episode. None if the
@@ -553,8 +555,10 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 episode=episode_info.episode_number
             )
 
-            return (f'{self.__server._baseurl}{plex_episode.thumb}'
-                    f'?X-Plex-Token={self.__token}')
+            return (
+                f'{self.__server._baseurl}{plex_episode.thumb}'
+                f'?X-Plex-Token={self.__token}'
+            )
         # Episode DNE in Plex, return
         except NotFound:
             return None
