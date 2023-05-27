@@ -733,7 +733,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             log.info(f'Loaded {loaded_count} season posters for "{series_info}"')
 
 
-    @catch_and_log('Error getting episode details')
+    @catch_and_log('Error getting rating key details')
     def get_episode_details(self, rating_key: int) -> list[EpisodeDetails]:
         """
         Get all details for all episodes indicated by the given Plex

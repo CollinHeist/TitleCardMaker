@@ -1,15 +1,14 @@
 from pathlib import Path
-from typing import Any, Literal, Optional, Union
+from typing import Any, Literal, Optional
 
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
-from modules.CleanPath import CleanPath
 from modules.Debug import log
 
 SeriesExtra = Optional
 Element = Literal['index', 'logo', 'omit', 'title']
-
+MiddleElement = Literal['logo', 'omit']
 
 class Coordinate:
     __slots__ = ('x', 'y')
@@ -70,18 +69,22 @@ class TintedFrameTitleCard(BaseCardType):
                 identifier='top_element',
                 description='Which element to display on the top of the frame',
             ), Extra(
+                name='Middle Element',
+                identifier='middle_element',
+                description='Which element to display in the middle of the frame',
+            ), Extra(
                 name='Bottom Element',
                 identifier='bottom_element',
                 description='Which element to display on the bottom of the frame',
             ), Extra(
-                name='Logo File',
-                identifier='logo',
-                description='Logo file to place within the frame if indicated',
-            ), 
+                name='Logo Size',
+                identifier='logo_size',
+                description='Scalar for how much to scale the size of the logo element',
+            ),
         ], description=[
             'Title card featuring a rectangular frame with blurred content on the'
             ' outside of the frame, and unblurred content within.',
-            'The and all text can be recolored via extras.',
+            'The frame and all text can be recolored via extras.',
             'The top and bottoms of the frame can also be optionally '
             'intersected by title text, index text, and/or a logo.',
         ]
@@ -122,7 +125,7 @@ class TintedFrameTitleCard(BaseCardType):
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_file',
         'font_size', 'font_color', 'font_interline_spacing', 'font_kerning',
         'font_vertical_shift', 'episode_text_color', 'separator', 'frame_color',
-        'logo', 'top_element', 'bottom_element',
+        'logo', 'top_element', 'middle_element', 'bottom_element', 'logo_size',
     )
 
     def __init__(self, *,
@@ -141,12 +144,14 @@ class TintedFrameTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-            episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
+            episode_text_color: SeriesExtra[str] = None,
             separator: SeriesExtra[str] = '-',
             frame_color: SeriesExtra[str] = None,
             top_element: Element = 'title',
+            middle_element: MiddleElement = 'omit',
             bottom_element: Element = 'index',
-            logo: SeriesExtra[str] = None,
+            logo_file: Optional[Path] = None,
+            logo_size: SeriesExtra[float] = 1.0,
             preferences: 'Preferences' = None,
             **unused) -> None:
         """
@@ -158,6 +163,7 @@ class TintedFrameTitleCard(BaseCardType):
 
         self.source_file = source_file
         self.output_file = card_file
+        self.logo = Path(logo_file)
 
         # Ensure characters that need to be escaped are
         self.title_text = self.image_magick.escape_chars(title_text)
@@ -175,42 +181,38 @@ class TintedFrameTitleCard(BaseCardType):
         self.font_vertical_shift = font_vertical_shift
 
         # Optional extras
-        self.episode_text_color = episode_text_color
         self.separator = separator
         self.frame_color = font_color if frame_color is None else frame_color
-
-        # If a logo was provided, convert to Path object
-        if logo is None:
-            self.logo = None
+        self.logo_size = logo_size
+        if episode_text_color is None:
+            self.episode_text_color = font_color
         else:
-            try:
-                self.logo = CleanPath(logo).sanitize()
-            except:
-                log.exception(f'Logo path is invalid', e)
-                self.valid = False
+            self.episode_text_color = episode_text_color
 
-        # Validate top and bottom element extras
-        top_element = str(top_element).strip().lower()
-        if top_element not in ('omit', 'title', 'index', 'logo'):
-            log.warning(f'Invalid "top_element" - must be "omit", "title", '
-                        f'"index", or "logo"')
-            self.valid = False
-        bottom_element = str(bottom_element).strip().lower()
-        if bottom_element not in ('omit', 'title', 'index', 'logo'):
-            log.warning(f'Invalid "bottom_element" - must be "omit", "title", '
-                        f'"index", or "logo"')
-            self.valid = False
-        if top_element != 'omit' and top_element == bottom_element:
-            log.warning(f'Top and bottom element cannot both be "{top_element}"')
-            self.valid = False
+        # Validate top, middle, and bottom elements
+        def _validate_element(element: str, middle: bool = False) -> str:
+            element = str(element).strip().lower()
+            if middle and element not in ('omit', 'logo'):
+                log.warning(f'Invalid element - must be "omit" or "logo')
+                self.valid = False
+            elif (not middle
+                and element not in ('omit', 'title', 'index', 'logo')):
+                log.warning(f'Invalid element - must be "omit", "title", '
+                            f'"index", or "logo"')
+                self.valid = False
+            return element
+        self.top_element = _validate_element(top_element)
+        self.middle_element = _validate_element(middle_element, middle=True)
+        self.bottom_element = _validate_element(bottom_element)
 
         # If logo was indicated, verify logo was provided
-        self.top_element = top_element
-        self.bottom_element = bottom_element
-        if ((top_element == 'logo' or bottom_element == 'logo')
-            and self.logo is None):
+        if (self.logo is None
+            and ('logo' in (self.top_element, self.middle_element,
+                            self.bottom_element))):
             log.warning(f'Logo file not provided')
             self.valid = False
+
+        return None
 
 
     @property
@@ -306,25 +308,50 @@ class TintedFrameTitleCard(BaseCardType):
     @property
     def logo_commands(self) -> ImageMagickCommands:
         """
-        Subcommand for adding the logo to the image if indicated by the
-        bottom element extra (and the logo file exists).
+        Subcommand for adding the logo to the image if indicated by
+        either extra (and the logo file exists).
 
         Returns:
             List of ImageMagick commands.
         """
 
         # Logo not indicated or not available, return empty commands
-        if ((self.top_element != 'logo' and self.bottom_element != 'logo')
+        if ((self.top_element != 'logo'
+             and self.middle_element != 'logo'
+             and self.bottom_element != 'logo')
             or self.logo is None or not self.logo.exists()):
             return []
 
         # Determine vertical position based on which element the logo is
-        vertical_shift = 700 * (-1 if self.top_element == 'logo' else +1)
+        if self.top_element == 'logo':
+            vertical_shift = -700
+        elif self.middle_element == 'logo':
+            vertical_shift = 0
+        elif self.bottom_element == 'logo':
+            vertical_shift = 700
+        else:
+            vertical_shift = 0
+
+        # Determine logo height
+        if self.middle_element == 'logo':
+            logo_height = 350 * self.logo_size
+        else:
+            logo_height = 150 * self.logo_size
+
+        # Determine resizing for the logo
+        if self.middle_element == 'logo':
+            # Constrain by width and height
+            resize_command = [
+                f'-resize x{logo_height}',
+                f'-resize {2500 * self.logo_size}x{logo_height}\>',
+            ]
+        else:
+            resize_command = [f'-resize x{logo_height}']
 
         return [
             f'\( "{self.logo.resolve()}"',
-            f'-resize x150 \)',
-            f'-gravity center',
+            *resize_command,
+            f'\) -gravity center',
             f'-geometry +0{vertical_shift:+}',
             f'-composite',
         ]
