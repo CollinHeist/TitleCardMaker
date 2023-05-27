@@ -28,9 +28,34 @@ steps will walk you through getting the code from that repository.
 1. After being invited, you will recieve an email at your GitHub's
 associated email address, open it and accept the invitation to
 collaborate (while signed into your GitHub account).
-2. Once you have access to the repository, the code can be accessed by 
-clicking the green `<> Code` button on the repository home page - from
-that dropdown, click `Download ZIP`.
+
+2. Follow [these](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-personal-access-token-classic)
+instructions to get a __classic__ personal access token (PAT) so that
+you can retrieve the TCM code from git. Copy this code.
+
+    ??? question "Why is this necessary?"
+
+        Because the repository is Private, the `git clone` command
+        requires authentication. You _can_ download the zipped code from
+        the website, but this makes getting updates difficult.
+
+        A PAT is required instead of a password because GitHub does not
+        allow passwords to be used from the command line.
+
+    ??? warning "Security Warning"
+
+        Keep this access code private, as it can be used to access your
+        GitHub account.
+
+3. Open a terminal of your choice, and go to the desired install
+location. Then clone the repository with:
+
+    ```bash
+    git clone https://github.com/CollinHeist/TitleCardMaker-WebUI.git
+    ```
+
+4. Enter your account Username and the PAT from Step 2. The TCM code
+will now be downloaded into that directory.
 
 ## Running TitleCardMaker
 1. After the zipped code has been downloaded, unzip it wherever you'd
