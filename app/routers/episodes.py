@@ -42,8 +42,12 @@ def add_new_episode(
     # Verify Series exists
     series = get_series(db, new_episode.series_id, raise_exc=True)
 
+    # Get dictionary of object and all associated Templates
+    new_episode_dict = new_episode.dict()
+    templates = get_all_templates(db, new_episode_dict)
+
     # Create new entry, add to database
-    episode = models.episode.Episode(**new_episode.dict())
+    episode = models.episode.Episode(**new_episode_dict, templates=templates)
     db.add(episode)
     db.commit()
 
