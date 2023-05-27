@@ -1,3 +1,4 @@
+from pathlib import Path
 from requests import get
 from typing import Optional
 
@@ -70,6 +71,9 @@ def add_new_series(
     series = models.series.Series(**new_series_dict, templates=templates)
     db.add(series)
     db.commit()
+
+    # Create source directory if DNE
+    Path(series.source_directory).mkdir(parents=True, exist_ok=True)
 
     # Add background tasks to set ID's, download poster and logo
     background_tasks.add_task(
