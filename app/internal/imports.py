@@ -333,7 +333,11 @@ def parse_emby(
             created from the given YAML.
     """
 
-    # Get each major section
+    # Skip if no section
+    if not isinstance(yaml_dict, dict) or 'emby' not in yaml_dict:
+        return preferences
+
+    # Get emby options
     emby = _get(yaml_dict, 'emby', default={})
 
     # Get filesize limit
@@ -347,6 +351,8 @@ def parse_emby(
         filesize_limit_number=limit_number,
         filesize_limit_unit=limit_unit,
     )
+    preferences.use_emby = True
+    preferences.commit()
 
     return update_connection(preferences, update_emby, 'emby')
 
@@ -372,13 +378,17 @@ def parse_jellyfin(
             created from the given YAML.
     """
 
-    # Get each major section
+    # Skip if no section
+    if not isinstance(yaml_dict, dict) or 'jellyfin' not in yaml_dict:
+        return preferences
+
+    # Get jellyfin options
     jellyfin = _get(yaml_dict, 'jellyfin', default={})
 
     # Get filesize limit
     limit_number, limit_unit = _parse_filesize_limit(jellyfin)
 
-    update_emby = UpdateJellyfin(
+    update_jellyfin = UpdateJellyfin(
         url=_get(jellyfin, 'url', type_=str, default=UNSPECIFIED),
         api_key=_get(jellyfin, 'api_key', default=UNSPECIFIED),
         username=_get(jellyfin, 'username', type_=str, default=UNSPECIFIED),
@@ -386,8 +396,10 @@ def parse_jellyfin(
         filesize_limit_number=limit_number,
         filesize_limit_unit=limit_unit,
     )
+    preferences.use_jellyfin = True
+    preferences.commit()
 
-    return update_connection(preferences, update_emby, 'jellyfin')
+    return update_connection(preferences, update_jellyfin, 'jellyfin')
 
 
 def parse_plex(
@@ -411,7 +423,11 @@ def parse_plex(
             created from the given YAML.
     """
 
-    # Get each major section
+    # Skip if no section
+    if not isinstance(yaml_dict, dict) or 'plex' not in yaml_dict:
+        return preferences
+
+    # Get plex options
     plex = _get(yaml_dict, 'plex', default={})
 
     # Get filesize limit
@@ -428,6 +444,8 @@ def parse_plex(
         ), filesize_limit_number=limit_number,
         filesize_limit_unit=limit_unit,
     )
+    preferences.use_plex = True
+    preferences.commit()
 
     return update_connection(preferences, update_plex, 'plex')
 
@@ -453,7 +471,11 @@ def parse_tmdb(
             created from the given YAML.
     """
 
-    # Get each major section
+    # Skip if no section
+    if not isinstance(yaml_dict, dict) or 'tmdb' not in yaml_dict:
+        return preferences
+
+    # Get tmdb options
     tmdb = _get(yaml_dict, 'tmdb', default={})
 
     SplitList = lambda s: str(s).lower().replace(' ', '').split(',')
@@ -478,6 +500,8 @@ def parse_tmdb(
             type_=SplitList, default=UNSPECIFIED,
         ),
     )
+    preferences.use_tmdb = True
+    preferences.commit()
 
     return update_connection(preferences, update_tmdb, 'tmdb')
 
@@ -503,7 +527,11 @@ def parse_sonarr(
             created from the given YAML.
     """
 
-    # Get each major section
+    # Skip if no section
+    if not isinstance(yaml_dict, dict) or 'sonarr' not in yaml_dict:
+        return preferences
+
+    # Get sonarr options
     sonarr = _get(yaml_dict, 'sonarr', default={})
 
     update_sonarr = UpdateSonarr(
@@ -511,6 +539,8 @@ def parse_sonarr(
         api_key=_get(sonarr, 'api_key', default=UNSPECIFIED),
         use_ssl=_get(sonarr, 'verify_ssl', default=UNSPECIFIED),
     )
+    preferences.use_sonarr = True
+    preferences.commit()
 
     return update_connection(preferences, update_sonarr, 'sonarr')
 
