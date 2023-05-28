@@ -763,7 +763,7 @@
             $.toast({
               class: 'error',
               title: `Invalid ${title} Connection`,
-              // message: response.responseJSON.detail,
+              message: response.responseJSON.detail,
               displayTime: 0,
             });
             $(formId).toggleClass('error', true);

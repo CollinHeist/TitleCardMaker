@@ -1,4 +1,5 @@
 from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
 from app.database.session import Base
@@ -17,3 +18,7 @@ class Loaded(Base):
 
     media_server = Column(String, nullable=False)
     filesize = Column(Integer, ForeignKey('card.filesize'))
+
+    @hybrid_property
+    def log_str(self) -> str:
+        return f'Loaded[{self.id}] Card[{self.card_id}] in {self.media_server}'

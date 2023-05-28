@@ -194,7 +194,7 @@ def load_series_title_cards(
     
     # Get list of episodes to reload
     episodes_to_load = []
-    # for episode in all_episodes:
+    changed = False
     for episode in series.episodes:
         # Only load if episode has a Card
         if not episode.card:
@@ -202,12 +202,25 @@ def load_series_title_cards(
             continue
         card = episode.card[0]
 
-        # No previously loaded card for this episode, load
-        if not episode.loaded:
+        # Find previously loaded Card
+        previously_loaded = None
+        for loaded in episode.loaded:
+            if loaded.media_server == media_server:
+                previously_loaded = loaded
+                break
+
+        # No previously loaded Cards for this Episode in this server, load
+        if not previously_loaded:
             episodes_to_load.append((episode, card))
+            continue
+
         # There is a previously loaded card, delete loaded entry, reload
-        elif force_reload or (episode.loaded[0].filesize != card.filesize):
-            db.delete(episode.loaded[0])
+        if force_reload or previously_loaded.filesize != card.filesize:
+            # Delete previosly loaded entries for this server
+            for loaded in episode.loaded:
+                if loaded.media_server == media_server:
+                    db.delete(loaded)
+                    changed = True
             episodes_to_load.append((episode, card))
         # Episode does not need to be (re)loaded
         else:
@@ -215,23 +228,24 @@ def load_series_title_cards(
             continue
 
     # Load into indicated interface
-    loaded = interface.load_title_cards(
+    loaded_assets = interface.load_title_cards(
         library, series.as_series_info, episodes_to_load
     )
 
     # Update database with loaded entries
-    for loaded_episode, loaded_card in loaded:
+    for loaded_episode, loaded_card in loaded_assets:
         db.add(
             models.loaded.Loaded(
                 media_server=media_server,
                 series=series,
                 episode=loaded_episode,
                 card=loaded_card,
+                filesize=loaded_card.filesize,
             )
         )
 
     # If any cards were (re)loaded, commit updates to database
-    if loaded:
+    if changed or loaded_assets:
         db.commit()
 
     return None
