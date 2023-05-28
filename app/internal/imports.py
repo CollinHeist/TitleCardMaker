@@ -948,7 +948,7 @@ def parse_series(
         except ValueError:
             raise HTTPException(
                 status_code=422,
-                detail=f'Series "{series_name}" is missing the required Year',
+                detail=f'Series "{series_name}" is missing the required year',
             )
 
         # Parse custom Font
@@ -996,7 +996,7 @@ def parse_series(
         }
         
         # Use default library if a manual one was not specified
-        if (library := _get(series_dict, 'library')) is None:
+        if (library := _get(series_dict, 'library', 'name')) is None:
             library = default_library
 
         # Create NewTemplate with all indicated customization
