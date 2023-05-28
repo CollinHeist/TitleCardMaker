@@ -86,6 +86,9 @@ markdown_extensions:
   - md_in_html
   - pymdownx.superfences
 
+  # Definition lists https://squidfunk.github.io/mkdocs-material/reference/lists/#using-definition-lists
+  - def_list
+
   # Icons
   # - attr_list
   - pymdownx.emoji:
@@ -118,6 +121,7 @@ nav:
       - UnRAID: getting_started/docker/unraid.md
       - Synology DSM: getting_started/docker/synology.md
     - Installation - Local: getting_started/local.md
+    - Importing YAML Settings: getting_started/import_settings.md
     - Configuring Connections:
       - getting_started/connections/index.md
       - Emby: getting_started/connections/emby.md

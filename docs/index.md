@@ -60,43 +60,45 @@ will now be downloaded into that directory.
 ## Running TitleCardMaker
 1. After the zipped code has been downloaded, unzip it wherever you'd
 like the installation to live. Open the unzipped folder.
-2. Navigate to the installation directory within the command line:
+2. Navigate to the installation directory within the command line.
 
-    === "Linux"
+    ??? example "Example"
 
-        ```bash
-        cd "~/Your/Install/Directory" # (1)
-        ```
+        === "Linux"
 
-        1. Replace `~/Your/Install/Directory` with the path to the directory
-        from the above Step 2.
+            ```bash
+            cd "~/Your/Install/Directory" # (1)
+            ```
 
-    === "MacOS"
+            1. Replace `~/Your/Install/Directory` with the path to the directory
+            from the above Step 2.
 
-        ```bash
-        cd "~/Your/Install/Directory" # (1)
-        ```
+        === "MacOS"
 
-        1. Replace `~/Your/Install/Directory` with the path to the directory
-        from the above Step 2.
+            ```bash
+            cd "~/Your/Install/Directory" # (1)
+            ```
 
-    === "Windows (Powershell)"
+            1. Replace `~/Your/Install/Directory` with the path to the directory
+            from the above Step 2.
 
-        ```bash
-        cd 'C:\Your\Install\Directory' <#(1)#>
-        ```
+        === "Windows (Powershell)"
 
-        1. Replace `~/Your/Install/Directory` with the path to the directory
-        from the above Step 2.
+            ```bash
+            cd 'C:\Your\Install\Directory' <#(1)#>
+            ```
 
-    === "Windows (Non-Powershell)"
+            1. Replace `~/Your/Install/Directory` with the path to the directory
+            from the above Step 2.
 
-        ```bash
-        cd 'C:\Your\Install\Directory' # (1)
-        ```
+        === "Windows (Non-Powershell)"
 
-        1. Replace `~/Your/Install/Directory` with the path to the directory
-        from the above Step 2.
+            ```bash
+            cd 'C:\Your\Install\Directory' # (1)
+            ```
+
+            1. Replace `~/Your/Install/Directory` with the path to the directory
+            from the above Step 2.
 
 3. Within the main installation directory, create the required folders
 for TCM - these are the `cards`, `logs`, and `source` directories - by
@@ -363,5 +365,6 @@ with [Syncs].
 
 *[Media Server]: Plex, Emby, or Jellyfin
 *[Media Servers]: Plex, Emby, or Jellyfin
+*[PAT]: Personal Access Token
 *[TCM]: TitleCardMaker
 *[TMDb]: TheMovieDatabase
