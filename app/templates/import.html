@@ -188,12 +188,12 @@
             const message = successMessage(response);
             $.toast({class: 'blue info', title: `Imported ${name} YAML`, message: message});
           }
-          $(formId).toggleClass('error', false);
+          $(`${formId} .error.message[data-value="${name}"]`)[0].innerHTML = '';
         }, error: response => {
-          const messageHtml = `<div class="header">YAML Parsing Error</div><p>${response.responseJSON.detail}</p>`
-          $(`${formId} .error.message`)[0].innerHTML = messageHtml;
           $(formId).toggleClass('error', true);
           $.toast({class: 'error', title: `Unable to Import ${name} YAML`, displayTime: 5000});
+          const messageHtml = `<div class="header">${name} YAML Parsing Error</div><p>${response.responseJSON.detail}</p>`
+          $(`${formId} .error.message[data-value="${name}"]`)[0].innerHTML = messageHtml;
         }, complete: () => {
           $(`${formId} button`).toggleClass('loading', false);
         },
@@ -355,7 +355,9 @@
               </ul>
             </div>
             <br>
-            <div class="ui compact floating error message"></div>
+            <div data-value="Fonts" class="ui compact floating error message"></div>
+            <div data-value="Templates" class="ui compact floating error message"></div>
+            <div data-value="Series" class="ui compact floating error message"></div>
             <br>
             <button class="ui animated primary button" type="submit">
               <div class="visible content">Submit</div>
@@ -418,6 +420,8 @@
       // Prevent page reload
       event.preventDefault();
       const form = new FormData(event.target);
+      // Turn off error status of the form
+      $('#series-form').toggleClass('error', false);
       // Determine which queries to submit
       if ($('#series-form .checkbox[data-value="fonts"]').checkbox('is checked')) {
         submitYamlForm({
