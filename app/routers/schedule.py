@@ -178,7 +178,6 @@ def initialize_scheduler() -> None:
                 id=job.id,
                 replace_existing=True,
             )
-initialize_scheduler()
 
 
 def _scheduled_task_from_job(job: 'apscheduler.jobs.Job') -> ScheduledTask:
