@@ -95,9 +95,33 @@ class UpdatePreferences(Base):
     default_watched_style: Style = Field(default=UNSPECIFIED)
     default_unwatched_style: Style = Field(default=UNSPECIFIED)
 
+    @validator('card_filename_format', pre=True)
+    def validate_card_filename_format(cls, v):
+        try:
+            v.format(
+                series_name='test', series_full_name='test (2000)',
+                year=2000, season_number=1, episode_number=1, absolute_number=1,
+                emby_id='abc123', imdb_id='tt1234', jellyfin_id='abc123',
+                tmdb_id=123, tvdb_id=123, tvrage_id=123,
+            )
+        except KeyError as e:
+            raise ValueError(f'Invalid Card filename format - missing data {e}')
+
+        return v
+
     @validator('image_source_priority', 'excluded_card_types', pre=True)
     def validate_list(cls, v):
         return [v] if isinstance(v, str) else v
+    
+    @validator('specials_folder_format', 'season_folder_format', pre=True)
+    def validate_folder_formats(cls, v):
+        try:
+            v.format(season_number=1, episode_number=1, absolute_number=1)
+        except KeyError:
+            raise ValueError(f'Invalid folder format - use "season_number", '
+                             f'"episode_numer" and/or "absolute_number"')
+
+        return v
 
     @validator('default_watched_style', 'default_unwatched_style', pre=True)
     def validate_styles(cls, v):
