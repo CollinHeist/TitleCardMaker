@@ -28,7 +28,7 @@ class ImageMagickInterface:
     """
 
     """How long to wait before terminating a command as timed out"""
-    COMMAND_TIMEOUT_SECONDS = 240
+    COMMAND_TIMEOUT_SECONDS = 60
 
     """Directory for all temporary images created during image creation"""
     TEMP_DIR = Path(__file__).parent / '.objects'
