@@ -35,6 +35,11 @@ class Preferences:
     DEFAULT_IMAGE_SOURCE_PRIORITY = ['TMDb', 'Plex', 'Jellyfin', 'Emby']
     DEFAULT_EPISODE_DATA_SOURCE = 'Sonarr'
     VALID_IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp')
+
+    PRIVATE_ATTRIBUTES = (
+        'emby_url', 'emby_api_key', 'jellyfin_url', 'jellyfin_api_key',
+        'plex_url', 'plex_token', 'sonarr_url', 'sonarr_api_key', 'tmdb_api_key'
+    )
     
 
     def __init__(self, file: Path) -> None:
@@ -61,7 +66,10 @@ class Preferences:
 
         # Update this object's dictionary
         self.__dict__[name] = value
-        log.debug(f'preferences.{name} = {value}')
+
+        # Log if not prviate
+        if name not in self.PRIVATE_ATTRIBUTES:
+            log.debug(f'preferences.{name} = {value}')
 
 
     def read_file(self) -> Optional[object]:
@@ -192,8 +200,9 @@ class Preferences:
         # Iterate through updated attributes, set dictionary directly
         for name, value in update_kwargs.items():
             if value != UNSPECIFIED:
-                log.debug(f'Preferences.{name} = {value}')
                 self.__dict__[name] = value
+                if name not in self.PRIVATE_ATTRIBUTES:
+                    log.debug(f'UPDATE preferences.{name} = {value}')
 
         self.commit()
 

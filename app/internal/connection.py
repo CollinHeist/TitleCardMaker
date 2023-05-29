@@ -32,7 +32,7 @@ def update_connection(
     Returns:
         Modified Preferences with any updated attributes.
     """
-    log.info(f'{update_connection.dict()=}')
+
     # Change any attributes that are specified and different
     changed = False
     for attribute, value in update_connection.dict().items():
