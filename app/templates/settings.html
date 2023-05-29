@@ -21,6 +21,7 @@
   <script type="text/javascript" src="/templates/loadStaticContent.js"></script>
   <script type="text/javascript" src="/templates/loadCardTypes.js"></script>
   <script type="text/javascript" src="/templates/theme.js"></script>
+  <script type="text/javascript" src="/templates/helper.js"></script>
   
   <!-- Global styles -->
   <link rel="stylesheet" type="text/css" href="/templates/style.css"/>
@@ -208,9 +209,9 @@
               <div class="ui stackable grid">
                 <!-- Card settings -->
                 <div class="four wide column">
-                  <div class="field" data-tooltip="Global default card type for all series" data-position="right center">
+                  <div class="field">
                     <label>Default Card Type</label>
-                    <div id="default-card-type" class="ui long compact search selection dropdown">
+                    <div id="default-card-type" class="ui long compact search selection dropdown" data-tooltip="Global default card type for all series" data-position="right center">
                       <span class="text"></span>
                       <input name="default_card_type" type="hidden" value="{{preferences.default_card_type.lower()}}">
                       <i class="dropdown icon"></i>
@@ -532,24 +533,18 @@
         inline : true,
         fields: {
           card_directory: {
-            identifier: 'card_directory',
             rules: [{type: 'minLength[1]', prompt: 'Card directory is required'}]
           }, source_directory: {
-            identifier: 'source_directory',
             rules: [{type: 'minLength[1]', prompt: 'Source directory is required'}]
           }, image_source_priority: {
-            identifier: 'image_source_priority',
             rules: [{type: 'minCount[1]', prompt: 'Select at least one source'}]
           }, card_width: {
-            identifier: 'card_width',
             rules: [{type: 'integer[1..]', prompt: 'Dimension must be a positive number'}]
           }, card_height: {
-            identifier: 'card_height',
             rules: [{type: 'integer[1..]', prompt: 'Dimension must be a positive number'}]
           }, card_filename_format: {
-            identifier: 'card_filename_format',
             rules: [{type: 'minLength[1]', prompt: 'Filename format is required'}]
-          }
+          }, 
         },
       })
       // On form submission, submit API request to change settings
@@ -587,11 +582,12 @@
           }, error: response => {
             $.toast({
               class: 'error',
-              title: 'Unable to update settngs',
-              message: response,
+              title: 'Unable to Update Settngs',
+              message: formatValidationError(response),
+              displayTime: 0,
             });
           }, complete: () => {
-            setTimeout(() => $('#save-changes').toggleClass('loading', false), 750);
+            $('#save-changes').toggleClass('loading', false);
           },
         });
       });

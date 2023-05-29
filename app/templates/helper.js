@@ -36,3 +36,10 @@ function getActiveTemplates(activeIds, allTemplates) {
 
   return values;
 }
+
+function formatValidationError(response) {
+  const detail = response.responseJSON.detail;
+  let message = '';
+  detail.forEach(obj => message += `<li>${obj.loc[1]} : ${obj.msg}</li>`)
+  return `<ul class="ui list">${message}</ul>`;
+}
