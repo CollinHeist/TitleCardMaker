@@ -36,28 +36,27 @@ character long string of numbers and the letters between A and F.
 
 6. Back within TitleCardMaker, paste the API key from Step 5 into the
 API key input box.
-7. Enter some descriptive name (or leave the default), and then click
-the `Create Agent` button.
-8. Open Plex (on a computer) and navigate to your server settings via
-the Wrench icon in the top right corner.
-9. From the left navigation bar, scroll down to `Library` under the
-`Settings` section and take note of your `Video Played Threshold`
-setting.
-10. Back in Tautulli, open the `General` settings from the sidebar, and
-find the `TV Episode Watched Percent` setting. Set this to 1% _higher_
-than the Plex setting from Step 9.
+7. Enter some descriptive name (or leave the default), and then click the
+`Create Agent` button.
+8. Open Plex (on a computer) and navigate to your server settings via the Wrench
+icon in the top right corner.
+9. From the left navigation bar, scroll down to `Library` under the `Settings`
+section and take note of your `Video Played Threshold` setting.
+10. Back in Tautulli, open the `General` settings from the sidebar, and find the
+`TV Episode Watched Percent` setting. Set this to 1% _higher_ than the Plex
+setting from Step 9.
 
     ??? example "Example Setting"
 
-        For a Plex played threshold of 90%, the appropriate Tautulli
-        setting is 91%.
+        For a Plex played threshold of 90%, the appropriate Tautulli setting is
+        91%.
 
     ??? question "Why is this Necessary?"
     
-        Because this integration is so fast (typically triggering within
-        5 seconds of finishing an Episode) - it is important that
-        Tautulli triggers TCM to update a Title Card _after_ an
-        Episode's watch-status has had time to update within Plex.
+        Because this integration is so fast (typically triggering within 5
+        seconds of finishing an Episode) - it is important that Tautulli
+        triggers TCM to update a Title Card _after_ an Episode's watch-status
+        has had time to update within Plex.
 
 *[Media Server]: Plex, Emby, or Jellyfin
 *[Media Servers]: Plex, Emby, or Jellyfin

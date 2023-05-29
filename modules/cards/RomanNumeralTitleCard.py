@@ -204,9 +204,9 @@ class RomanNumeralTitleCard(BaseCardType):
         ], description=[
             'Imageless title cards featuring large roman numerals indicating '
             'the episode or absolute episode number just behind the title.',
-            'Season text, if enabled, is placed at deterministic, but randomly'
+            'Season text, if enabled, is placed at deterministic, but randomly '
             'selected locations around the roman numerals.',
-            'This style of title card is based off the official Devilman Crybaby title cards.',
+            # 'This style of title card is based off the official Devilman Crybaby title cards.',
         ]
     )
 

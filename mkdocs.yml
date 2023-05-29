@@ -137,6 +137,5 @@ nav:
       - Jellyfin: getting_started/first_sync/jellyfin.md
       - Plex: getting_started/first_sync/plex.md
       - Sonarr: getting_started/first_sync/sonarr.md
-      - Tautulli: getting_started/first_sync/tautulli.md
     - Customizing Title Cards: getting_started/customizing.md
   - Settings: settings.md

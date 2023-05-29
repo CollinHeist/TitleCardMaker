@@ -16,8 +16,9 @@ Series can be _manually_ added to TCM.
 1. Navigate back to the TitleCardMaker homepage - this can be done by clicking
 `Series` from the side navigation bar, or clicking the TCM logo in the top
 corner.
-2. In the top right (below the search bar), click the `+` button.
-3. For this tutorial, we'll be adding and customizing [Better Call Saul]() - in
+2. In the top right (below the search bar), click the `+ New Series` button.
+3. For this tutorial, we'll be adding and customizing
+[Better Call Saul](https://www.themoviedb.org/tv/60059-better-call-saul) - in
 the popup form, fill out the name and year as `Better Call Saul` and `2015`.
 
     !!! tip "Required Information"
@@ -27,19 +28,25 @@ the popup form, fill out the name and year as `Better Call Saul` and `2015`.
         is optional.
 
 4. Click `Add`. Behind the scenes, TCM will automatically try and match this
-name and year to an existing Series based on the global Episode Data Source
-established [previously](./settings.md). If you enabled a connection to TMDb,
-then TCM will also try and download a poster.
+name and year to an existing Series based on the global Episode Data Source set
+[previously](./settings.md). If you enabled a connection to TMDb, then TCM will
+also try and download a poster.
 5. Close the "Add Series" popup.
 
-If a poster for `Better Call Saul` is now visible on your homepage, you've
-successfully added a series to TitleCardMaker.
+    !!! success "Success"
 
-!!! warning "Missing Poster"
+        If a poster for `Better Call Saul` is now visible on your homepage,
+        you've successfully added a series to TitleCardMaker.
 
-    If the `Better Call Saul` poster does not load (even after a refresh), and
-    stays as a blank black image, then TCM might be unable to communicate with
-    TMDb.
+        You can view the Series customization page by clicking the name or the
+        View button (visible when hovering over the poster). We'll explore this
+        page [later on]().
+
+    !!! warning "Missing Poster"
+
+        If the `Better Call Saul` poster does not load (even after a refresh),
+        and stays as a blank black image, then TCM might be unable to
+        communicate with TMDb.
 
 *[Media Server]: Plex, Emby, or Jellyfin
 *[Media Servers]: Plex, Emby, or Jellyfin
