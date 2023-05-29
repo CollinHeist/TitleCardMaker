@@ -13,5 +13,7 @@ are applicable to your setup will improve TCM's operation.
     styles]() will not integrate well if the two Servers have different
     watch statuses.
 
+*[Media Server]: Plex, Emby, or Jellyfin
+*[Media Servers]: Plex, Emby, or Jellyfin
 *[TCM]: TitleCardMaker
 *[TMDb]: TheMovieDatabase
