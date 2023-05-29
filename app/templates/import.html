@@ -59,19 +59,25 @@
       $('.dropdown[data-value="series_id"]').dropdown({
         ignoreDiacritics: true,
         sortSelect: true,
-        placeholder: 'Series..',
+        placeholder: 'Select 1+ Series',
         useLabels: false,
-        values: allSeries.sort((a, b) => a.name.localeCompare(b.name)).map(series => {
-          return {
-            name: series.name,
-            value: series.id,
-            // image: series.poster_url,
-            text: series.name,
-            description: series.year,
-            sortSelect: true,
-            descriptionVertical: true,
-          };
-        }), onChange: (value, text, $selectedItem) => {
+        values: [
+          // All series toggle
+          {name: 'Select All Series', actionable: true},
+          {name: 'Series', type: 'header'},
+          // All series
+          ...allSeries.sort((a, b) => a.name.localeCompare(b.name)).map(series => {
+            return {
+              name: series.name,
+              value: series.id,
+              // image: series.poster_url,
+              text: series.name,
+              description: series.year,
+              sortSelect: true,
+              descriptionVertical: true,
+            };
+          }),
+        ], onChange: (value, text, $selectedItem) => {
           // Disable directory field if multiple series are selected
           if (value.includes(',')) {
             $('.field[data-value="directory"]').toggleClass('disabled', true);
@@ -82,12 +88,30 @@
           } else {
             $('.field[data-value="directory"]').toggleClass('disabled', false);
             $('#import-cards-form .info.message').toggleClass('visible', false);
-            if (seriesMap[value].directory === null) {
+            if (seriesMap[value] === undefined || seriesMap[value].directory === null) {
               $('input[name="directory"]')[0].value = '';
             } else {
               $('input[name="directory"]')[0].value = seriesMap[value].directory;
             }
           }
+        }, onActionable: (value, text, $selected) => {
+          $('.dropdown[data-value="series_id"]').dropdown({
+            ignoreDiacritics: true,
+            sortSelect: true,
+            placeholder: 'Select 1+ Series',
+            useLabels: false,
+            values: allSeries.sort((a, b) => a.name.localeCompare(b.name)).map(series => {
+              return {
+                name: series.name,
+                value: series.id,
+                selected: true,
+                text: series.name,
+                description: series.year,
+                sortSelect: true,
+                descriptionVertical: true,
+              };
+            }),
+          });
         },
       });
       // Toggle media server dropdown with load checkbox
