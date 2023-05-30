@@ -11,7 +11,7 @@ Installing TitleCardMaker locally, instead of in a Docker container,
 requires a few additional pieces of software, these are:
 
 - Python
-- git (_recommended_)
+- git
 - Pip
 - Pipenv
 - ImageMagick
@@ -103,66 +103,24 @@ covered in this step.
 
 Execute the following command:
 
-=== "Linux"
-
-    ```bash
-    python3 -m pip install --upgrade pip
-    ```
-
-=== "MacOS"
-
-    ```bash
-    python3 -m pip install --upgrade pip
-    ```
-
-=== "Windows"
-
-    ```bash
-    python3 -m pip install --upgrade pip
-    ```
+```bash
+python3 -m pip install --upgrade pip
+```
 
 ### Installing Pipenv
 
 TitleCardMaker uses `pipenv` to install the external Python libraries
 that are required. Install pipenv by executing the following command:
 
-=== "Linux"
-
-    ```bash
-    pip3 install pipenv
-    ```
-
-=== "MacOS"
-
-    ```bash
-    pip3 install pipenv
-    ```
-
-=== "Windows"
-
-    ```bash
-    pip3 install pipenv
-    ```
+```bash
+pip3 install pipenv
+```
 
 Then install the required libraries (dependencies) by executing:
 
-=== "Linux"
-
-    ```bash
-    pipenv install 
-    ```
-
-=== "MacOS"
-
-    ```bash
-    pipenv install 
-    ```
-
-=== "Windows"
-
-    ```bash
-    pipenv install 
-    ```
+```bash
+pipenv install 
+```
 
 !!! failure "Command Failure"
 
@@ -203,7 +161,7 @@ to launch TitleCardMaker. This can be done by executing the following
 command:
 
 ```bash
-pipenv run uvicorn app-main:app --host 0.0.0.0 --port 4242
+pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242
 ```
 
 This launches the TitleCardMaker web interface, and you will be able to

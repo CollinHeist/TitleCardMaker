@@ -9,7 +9,7 @@ Series can be _manually_ added to TCM.
 
     Manually adding Series is not the typical use-case for TCM, as adding an
     entire server's worth of Series would be extremely tedious. Automatically
-    adding Series is covered in the next step, Creating the First Sync.
+    adding Series is covered in [the next step](./first_sync/index.md).
 
 ## Instructions
 
@@ -31,22 +31,23 @@ the popup form, fill out the name and year as `Better Call Saul` and `2015`.
 name and year to an existing Series based on the global Episode Data Source set
 [previously](./settings.md). If you enabled a connection to TMDb, then TCM will
 also try and download a poster.
-5. Close the "Add Series" popup.
 
-    !!! success "Success"
-
-        If a poster for `Better Call Saul` is now visible on your homepage,
-        you've successfully added a series to TitleCardMaker.
-
-        You can view the Series customization page by clicking the name or the
-        View button (visible when hovering over the poster). We'll explore this
-        page [later on]().
-
-    !!! warning "Missing Poster"
+    ??? warning "Missing Poster?"
 
         If the `Better Call Saul` poster does not load (even after a refresh),
         and stays as a blank black image, then TCM might be unable to
         communicate with TMDb.
+
+5. Close the "Add Series" popup.
+
+!!! success "Success"
+
+    If a poster for `Better Call Saul` is now visible on your homepage, you've
+    successfully added a Series to TitleCardMaker.
+
+    You can view the Series customization page by clicking the name or the View
+    button (visible when hovering over the poster). We'll explore this page
+    [later on]().
 
 *[Media Server]: Plex, Emby, or Jellyfin
 *[Media Servers]: Plex, Emby, or Jellyfin

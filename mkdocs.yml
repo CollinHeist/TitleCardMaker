@@ -112,6 +112,9 @@ markdown_extensions:
   # Tables
   - tables
 
+  # Adding keyboard keys
+  - pymdownx.keys
+
 nav:
   - Home: index.md
   - Getting Started - Tutorial:
@@ -130,6 +133,7 @@ nav:
       - Sonarr: getting_started/connections/sonarr.md
       - Tautulli: getting_started/connections/tautulli.md
     - Global Settings: getting_started/settings.md
+    - Creating a Template: getting_started/creating_template.md
     - Adding a Series: getting_started/add_series.md
     - Creating the First Sync:
       - getting_started/first_sync/index.md
@@ -137,5 +141,5 @@ nav:
       - Jellyfin: getting_started/first_sync/jellyfin.md
       - Plex: getting_started/first_sync/plex.md
       - Sonarr: getting_started/first_sync/sonarr.md
-    - Customizing Title Cards: getting_started/customizing.md
+    - Creating Title Cards: getting_started/creating_cards.md
   - Settings: settings.md

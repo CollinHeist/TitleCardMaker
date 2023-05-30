@@ -18,3 +18,4 @@ modules/.objects/
 *.prof
 .DS_Store
 db.sqlite
+missing.yml
