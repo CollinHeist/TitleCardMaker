@@ -529,6 +529,7 @@
         processData: false,
         success: response => {
           $.toast({class: 'blue info', title: 'Updated source image'});
+          getFileData();
         }, error: response => {
           $.toast({
             class: 'error',
@@ -570,9 +571,8 @@
         success: response => {
           if (response === null) {
             $.toast({class: 'warning', title: 'Unable to Download Image'});
-          } else { 
+          } else {
             $.toast({class: 'blue info', title: 'Downloaded Image'});
-            getFileData();
           }
         }, error: response => {
           $.toast({
