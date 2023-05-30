@@ -251,9 +251,8 @@ def parse_preferences(
     # Shorthand for an unspecified value
     unsp = UNSPECIFIED
 
-    # Get each major section
+    # Get options section
     options = _get(yaml_dict, 'options', default={})
-    imagemagick = _get(yaml_dict, 'imagemagick', default={})
 
     # Determine which media server to query default styles from
     if preferences.use_emby:
@@ -302,7 +301,7 @@ def parse_preferences(
             media_server, 'watched_style',
             type_=str,
             default=unsp,
-        ), imagemagick_container=_get(imagemagick, 'container', default=unsp),
+        ),
     )
 
     preferences.update_values(**update_preferences.dict())

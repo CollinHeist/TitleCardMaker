@@ -162,8 +162,6 @@ class Preferences:
             'tmdb_logo_language_priority': ['en'],
             'supported_language_codes': [],
             'use_magick_prefix': False,
-            'imagemagick_container': None,
-            'imagemagick_timeout': 60,
         }
 
         # Update each attribute known to this object
@@ -217,11 +215,7 @@ class Preferences:
         # Try variations of the font list command with/out the "magick " prefix
         for prefix, use_magick in zip(('', 'magick '), (False, True)):
             # Create ImageMagickInterface and verify validity
-            interface = ImageMagickInterface(
-                self.imagemagick_container,
-                use_magick,
-                self.imagemagick_timeout
-            )
+            interface = ImageMagickInterface(use_magick)
             if interface.validate_interface():
                 self.use_magick_prefix = use_magick
                 log.debug(f'Using "{prefix}" ImageMagick command prefix')
@@ -229,12 +223,8 @@ class Preferences:
 
         # If none of the font commands worked, IM might not be installed
         log.critical(f"ImageMagick doesn't appear to be installed")
-        self.valid = False
+        return None
 
-
-    @property
-    def card_dimensions(self) -> str:
-        return f'{self.card_width}x{self.card_height}'
 
     @property
     def emby_filesize_limit(self) -> int:
@@ -269,11 +259,9 @@ class Preferences:
         }
 
     @property
-    def imagemagick_arguments(self) -> dict[str, Any]:
+    def imagemagick_arguments(self) -> dict[str, bool]:
         return {
-            'container': self.imagemagick_container,
             'use_magick_prefix': self.use_magick_prefix,
-            'timeout': self.imagemagick_timeout,
         }
 
     @property
@@ -346,6 +334,10 @@ class Preferences:
             'unwatched_style': self.default_unwatched_style,
             'card_filename_format': self.card_filename_format,
         }
+    
+    @property
+    def card_dimensions(self) -> str:
+        return f'{self.card_width}x{self.card_height}'
 
     @staticmethod
     def get_filesize(value: int, unit: str) -> Optional[int]:

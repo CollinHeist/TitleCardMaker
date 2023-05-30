@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections import namedtuple
 from pathlib import Path
-from re import findall, match
+from re import findall
 from typing import Literal, Optional, Union
 
 from modules.Debug import log
@@ -43,57 +43,26 @@ class ImageMaker(ABC):
 
 
     @abstractmethod
-    def __init__(self, *, preferences: 'Preferences' = None) -> None:
+    def __init__(self, *, preferences: Optional['Preferences'] = None) -> None:
         """
         Initializes a new instance. This gives all subclasses access to
         an ImageMagickInterface via the image_magick attribute.
         """
 
+        # No Preferences object, use global
         if preferences is None:
             self.preferences = global_objects.pp
+            self.image_magick = ImageMagickInterface(
+                self.preferences.imagemagick_container,
+                self.preferences.use_magick_prefix,
+                self.preferences.imagemagick_timeout,
+            )
+        # Preferences object provided, use directly
         else:
             self.preferences = preferences
-
-        # All ImageMakers have an instance of an ImageMagickInterface
-        self.image_magick = ImageMagickInterface(
-            self.preferences.imagemagick_container,
-            self.preferences.use_magick_prefix,
-            self.preferences.imagemagick_timeout,
-        )
-
-
-    def get_image_dimensions(self, image: Path) -> Dimensions:
-        """
-        Get the dimensions of the given image.
-
-        Args:
-            image: Path to the image to get the dimensions of.
-
-        Returns:
-            Namedtuple of dimensions.
-        """
-
-        # Return dimenions of zero if image DNE
-        if not image.exists():
-            return Dimensions(0, 0)
-
-        # Get the dimensions
-        command = ' '.join([
-            f'identify',
-            f'-format "%w %h"',
-            f'"{image.resolve()}"',
-        ])
-
-        output = self.image_magick.run_get_output(command)
-
-        # Get width/height from output
-        try:
-            return Dimensions(
-                *map(int, match(r'^(\d+)\s+(\d+)$', output).groups())
+            self.image_magick = ImageMagickInterface(
+                **preferences.imagemagick_arguments,
             )
-        except Exception as e:
-            log.debug(f'Cannot identify dimensions of {image.resolve()}')
-            return Dimensions(0, 0)
 
 
     def get_text_dimensions(self, text_command: list[str], *,
@@ -152,7 +121,7 @@ class ImageMaker(ABC):
 
 
     @staticmethod
-    def reduce_file_size(image: Path, quality: int=90) -> Path:
+    def reduce_file_size(image: Path, quality: int = 90) -> Path:
         """
         Reduce the file size of the given image.
 

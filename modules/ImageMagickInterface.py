@@ -5,7 +5,6 @@ from subprocess import Popen, PIPE, TimeoutExpired
 from typing import Literal, Optional
 
 from imagesize import get as im_get
-from re import match
 
 from modules.Debug import log
 

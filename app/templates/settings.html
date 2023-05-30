@@ -362,39 +362,6 @@
               </div>
             </div>
 
-            <!-- ImageMagick -->
-            <h3 class="ui horizontal divider header">
-              <i class="magic icon"></i>
-              ImageMagick
-            </h3>
-            <div class="field">
-              {% if preferences.is_docker %}
-              <!-- Info for disabled ImageMagick container fields -->
-              <div id="card-extension-warning" class="ui visible info message">
-                <i class="info icon"></i>
-                <b>Info</b> TitleCardMaker is being executed within a Docker container, no separate ImageMagick container required.
-              </div>
-              {% else %}
-              <div id="imagemagick-is-docker" class="ui right aligned checkbox field" data-tooltip="Whether TitleCardMaker is executing within Docker">
-                {% if preferences.imagemagick_container is none %}
-                <input name="imagemagick_is_docker" type="checkbox">
-                {% else %}
-                <input name="imagemagick_is_docker" type="checkbox" checked="">
-                {% endif %}
-                <label>Use ImageMagick Docker Container</label>
-              </div>
-
-              {% if preferences.imagemagick_container %}
-              <div id="imagemagick-container-name" class="field">
-              {% else %}
-              <div id="imagemagick-container-name" class="disabled field">
-              {% endif %}
-                <label>ImageMagick Container</label>
-                <input name="imagemagick_container" type="text" placeholder="{{preferences.imagemagick_container}}" value="{{preferences.imagemagick_container}}">
-              </div>
-              {% endif %}
-            </div>
-
             <!-- Validation message -->
             <div class="ui floating error message"></div>
             
@@ -516,15 +483,6 @@
           );
         }
       );
-
-    // When the ImageMagick in docker checkbox is toggled, disable/enable field
-    $('#imagemagick-is-docker').checkbox({
-      onChecked: () => {
-        $('#imagemagick-container-name').toggleClass('disabled', false);
-      }, onUnchecked: () => {
-        $('#imagemagick-container-name').toggleClass('disabled', true);
-      }
-    });
     
     $('#settings-form')
       // Add form validation
