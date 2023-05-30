@@ -86,7 +86,7 @@ def get_effective_templates(
 
     # No Episode OR Episode has no Templates, return Series Template and None
     if episode is None or not episode.templates:
-        return get_effective_series_template(series, None), None
+        return get_effective_series_template(series, episode), None
 
     # Episode defines Templates, return None and Episode Template
     return None, get_effective_episode_template(series, episode)
