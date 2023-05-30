@@ -207,7 +207,7 @@ class Template(Base):
                     log.debug(f'{self.log_str} Does not satisfy Condition: [{ARGUMENTS[condition["argument"]]}] [{condition["operation"]}] [{condition["reference"]}]')
                     return False
             else:
-                log.debug(f'{self.log_str} [{ARGUMENTS[condition["argument"]]}] [{condition["operation"]}] [{condition["reference"]}] is unevaluatable')
+                log.debug(f'{self.log_str} [{condition["argument"]}] [{condition["operation"]}] [{condition["reference"]}] is unevaluatable')
                 continue
 
         return True
