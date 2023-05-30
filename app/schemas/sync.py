@@ -2,7 +2,7 @@ from typing import Literal, Optional
 
 from pydantic import Field
 
-from app.schemas.base import Base, UNSPECIFIED
+from app.schemas.base import Base, UpdateBase, UNSPECIFIED
 
 SonarrSeriesType = Literal['anime', 'daily', 'standard']
 Interface = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr']
@@ -84,7 +84,7 @@ class SonarrSync(ExistingBaseSync, NewSonarrSync):
 class Sync(ExistingBaseSync, NewSonarrSync):
     ...
 
-class UpdateSync(Base):
+class UpdateSync(UpdateBase):
     name: Optional[str] = Field(default=UNSPECIFIED, min_length=1)
     template_ids: list[int] = Field(default=UNSPECIFIED)
     required_tags: list[str] = Field(default=UNSPECIFIED)

@@ -2,7 +2,7 @@ from typing import Literal, Optional
 
 from pydantic import Field, validator, root_validator
 
-from app.schemas.base import Base, UNSPECIFIED, validate_argument_lists_to_dict
+from app.schemas.base import Base, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
 
 TitleCase = Literal['blank', 'lower', 'source', 'title', 'upper']
 
@@ -93,7 +93,7 @@ class PreviewFont(Base):
 """
 Update classes
 """
-class UpdateNamedFont(Base):
+class UpdateNamedFont(UpdateBase):
     name: str = Field(default=UNSPECIFIED, min_length=1)
     color: Optional[str] = Field(default=UNSPECIFIED, min_length=1)
     title_case: Optional[TitleCase] = Field(default=UNSPECIFIED)
@@ -113,14 +113,6 @@ class UpdateNamedFont(Base):
     @validator('replacements_in', 'replacements_out', pre=True)
     def validate_list(cls, v):
         return [v] if isinstance(v, str) else v
-
-    @root_validator
-    def delete_unspecified_args(cls, values):
-        delete_keys = [key for key, value in values.items() if value == UNSPECIFIED]
-        for key in delete_keys:
-            del values[key]
-
-        return values
 
     @root_validator
     def validate_paired_lists(cls, values):

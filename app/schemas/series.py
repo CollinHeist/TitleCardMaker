@@ -3,7 +3,7 @@ from typing import Any, Literal, Optional
 from pydantic import constr, Field, root_validator, validator
 
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
-from app.schemas.base import Base, UNSPECIFIED, validate_argument_lists_to_dict
+from app.schemas.base import Base, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
 from app.schemas.font import TitleCase
 from app.schemas.ids import (
     EmbyID, IMDbID, JellyfinID, SonarrID, TMDbID, TVDbID, TVRageID
@@ -131,7 +131,7 @@ class BaseSeries(BaseConfig):
         description='Top-level directory for all title cards of this series'
     )
 
-class BaseUpdate(Base):
+class BaseUpdate(UpdateBase):
     name: Optional[str] = Field(default=UNSPECIFIED, min_length=1)
     monitored: bool = Field(default=UNSPECIFIED)
     font_id: Optional[int] = Field(default=UNSPECIFIED)
@@ -159,14 +159,6 @@ class BaseUpdate(Base):
                'extra_keys', 'extra_values', pre=True)
     def validate_list(cls, v):
         return [v] if isinstance(v, str) else v
-
-    @root_validator
-    def delete_unspecified_args(cls, values):
-        delete_keys = [key for key, value in values.items() if value == UNSPECIFIED]
-        for key in delete_keys:
-            del values[key]
-
-        return values
 
     @root_validator
     def validate_paired_lists(cls, values):
@@ -274,14 +266,6 @@ class UpdateTemplate(BaseUpdate):
         return [val for val in ([v] if isinstance(v, str) else v) if val != '']
 
     @root_validator
-    def delete_unspecified_args(cls, values):
-        delete_keys = [key for key, value in values.items() if value == UNSPECIFIED]
-        for key in delete_keys:
-            del values[key]
-
-        return values
-
-    @root_validator
     def validate_paired_lists(cls, values):
         # Season title ranges
         values = validate_argument_lists_to_dict(
@@ -343,14 +327,6 @@ class UpdateSeries(BaseUpdate):
     @validator('*', pre=True)
     def validate_arguments(cls, v):
         return None if v == '' else v
-
-    @root_validator
-    def delete_unspecified_args(cls, values):
-        delete_keys = [key for key, value in values.items() if value == UNSPECIFIED]
-        for key in delete_keys:
-            del values[key]
-
-        return values
 
     @validator('translations',
                'season_title_ranges', 'season_title_values',

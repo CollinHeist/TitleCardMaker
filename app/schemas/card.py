@@ -2,8 +2,7 @@ from typing import Literal, Optional
 
 from pydantic import Field, validator, root_validator
 
-from app.schemas.base import Base, validate_argument_lists_to_dict
-# from app.schemas.font import NewUnnamedEpisodeFont, PreviewFont
+from app.schemas.base import Base, UpdateBase, validate_argument_lists_to_dict
 from app.schemas.preferences import Style
 
 LocalCardIdentifiers = Literal[
@@ -73,7 +72,7 @@ class BaseTitleCard(Base):
 """
 Creation classes
 """
-class PreviewTitleCard(Base):
+class PreviewTitleCard(UpdateBase):
     card_type: str = Field(title='Card type identifier')
     title_text: str
     season_text: str
@@ -114,14 +113,6 @@ class PreviewTitleCard(Base):
     @validator('*', pre=True)
     def validate_arguments(cls, v):
         return None if v == '' else v
-
-    @root_validator
-    def delete_unspecified_args(cls, values):
-        delete_keys = [key for key, value in values.items() if value == None]
-        for key in delete_keys:
-            del values[key]
-
-        return values
 
     @validator('extra_keys', 'extra_values', pre=True)
     def validate_list(cls, v):

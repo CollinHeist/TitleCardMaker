@@ -4,7 +4,9 @@ from typing import Literal, Optional
 from pydantic import AnyUrl, Field, NonNegativeInt, PositiveInt, SecretStr, constr, root_validator, validator
 from pydantic.error_wrappers import ValidationError
 
-from app.schemas.base import Base, UNSPECIFIED, validate_argument_lists_to_dict
+from app.schemas.base import (
+    Base, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
+)
 
 from modules.Debug import log
 
@@ -77,7 +79,7 @@ class TautulliConnection(Base):
 """
 Update classes
 """
-class UpdatePreferences(Base):
+class UpdatePreferences(UpdateBase):
     card_directory: str = Field(default=UNSPECIFIED, min_length=1)
     source_directory: str = Field(default=UNSPECIFIED, min_length=1)
     card_width: PositiveInt = Field(default=UNSPECIFIED)
@@ -91,7 +93,6 @@ class UpdatePreferences(Base):
     sync_specials: bool = Field(default=UNSPECIFIED)
     default_card_type: CardTypeIdentifier = Field(default=UNSPECIFIED)
     excluded_card_types: list[CardTypeIdentifier] = Field(default=UNSPECIFIED)
-    imagemagick_container: str = Field(default=UNSPECIFIED, min_length=1)
     default_watched_style: Style = Field(default=UNSPECIFIED)
     default_unwatched_style: Style = Field(default=UNSPECIFIED)
 
@@ -122,32 +123,6 @@ class UpdatePreferences(Base):
                              f'"episode_numer" and/or "absolute_number"')
 
         return v
-
-    @validator('default_watched_style', 'default_unwatched_style', pre=True)
-    def validate_styles(cls, v):
-        if (val := str(v).lower().strip()) == 'blur':
-            return 'blur unique'
-
-        return ' '.join(sorted(val.split(' ')))
-
-    @root_validator(pre=True)
-    def delete_unspecified_args(cls, values):
-        delete_keys = [key for key, value in values.items() if value == UNSPECIFIED]
-        for key in delete_keys:
-            del values[key]
-
-        return values
-
-class UpdateBase(Base):
-    ...
-
-    @root_validator(pre=True)
-    def delete_unspecified_args(cls, values):
-        delete_keys = [key for key, value in values.items() if value == UNSPECIFIED]
-        for key in delete_keys:
-            del values[key]
-
-        return values
     
 class UpdateServerBase(UpdateBase):
     url: AnyUrl = Field(default=UNSPECIFIED)
@@ -249,9 +224,6 @@ class Preferences(Base):
     excluded_card_types: list[CardTypeIdentifier]
     default_watched_style: Style
     default_unwatched_style: Style
-
-    imagemagick_container: Optional[str]
-    imagemagick_timeout: int
 
 class EmbyConnection(Base):
     use_emby: bool

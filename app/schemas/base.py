@@ -1,16 +1,25 @@
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, root_validator
 
 from modules.Debug import log
 
 # Default value to use for arguments in Update objects that accept None
-UNSPECIFIED = '__default__'
+UNSPECIFIED = '__unspecified_'
 
 # Pydantic base class
 class Base(BaseModel):
     class Config:
         orm_mode = True
+
+class UpdateBase(Base):
+    @root_validator(pre=True)
+    def delete_unspecified_args(cls, values):
+        delete_keys = [key for key, value in values.items() if value == UNSPECIFIED]
+        for key in delete_keys:
+            del values[key]
+
+        return values
 
 # Function to validate two equal length lists are provided
 def validate_argument_lists_to_dict(

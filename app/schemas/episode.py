@@ -3,7 +3,7 @@ from typing import Any, Optional
 
 from pydantic import Field, PositiveFloat, root_validator, validator
 
-from app.schemas.base import Base, UNSPECIFIED, validate_argument_lists_to_dict
+from app.schemas.base import Base, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
 from app.schemas.ids import EmbyID, IMDbID, JellyfinID, TMDbID, TVDbID, TVRageID
 from app.schemas.preferences import Style
 
@@ -61,7 +61,7 @@ class NewEpisode(Base):
 """
 Update classes
 """
-class UpdateEpisode(Base):
+class UpdateEpisode(UpdateBase):
     template_ids: list[int] = Field(default=UNSPECIFIED)
     font_id: Optional[int] = Field(default=UNSPECIFIED)
 
@@ -107,14 +107,6 @@ class UpdateEpisode(Base):
     @validator('*', pre=True)
     def validate_arguments(cls, v):
         return None if v == '' else v
-
-    @root_validator
-    def delete_unspecified_args(cls, values):
-        delete_keys = [key for key, value in values.items() if value == UNSPECIFIED]
-        for key in delete_keys:
-            del values[key]
-
-        return values
 
     @validator('extra_keys', 'extra_values', pre=True)
     def validate_list(cls, v):
