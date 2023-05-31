@@ -28,6 +28,7 @@ imagesize = "*"
 alembic = "*"
 mkdocs = "*"
 mkdocs-material = "*"
+tzdata = "*"
 
 [dev-packages]
 
