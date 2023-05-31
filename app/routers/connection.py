@@ -156,7 +156,7 @@ def update_tmdb_connection(
     return update_connection(preferences, update_tmdb, 'tmdb')
 
 
-@connection_router.post('/tautulli/check', status_code=200)
+@connection_router.post('/tautulli/check', status_code=200, tags=['Tautulli'])
 def check_tautulli_integration(
         request: Request,
         tautulli_connection: TautulliConnection = Body(...)) -> bool:
@@ -180,7 +180,7 @@ def check_tautulli_integration(
     return interface.is_integrated()
 
 
-@connection_router.post('/tautulli/integrate', status_code=201)
+@connection_router.post('/tautulli/integrate', status_code=201, tags=['Tautulli'])
 def add_tautulli_integration(
         request: Request,
         tautulli_connection: TautulliConnection = Body(...)) -> None:

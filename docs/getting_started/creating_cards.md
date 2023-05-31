@@ -52,8 +52,8 @@ and store it inside the Source Image directory. Download any image.
         When manually browsing the images on TMDb, your global minimum
         resolution is ignored.
 
-6. Close the browser. The file for that Episode should now be filled in with
-Source Image information.
+6. Close the image browser. The file for that Episode should now be filled in
+with Source Image information.
 
 7. To tell TCM to _automatically_ gather Source Images, click the `Download
 Source Images` button on the left-hand side.
@@ -63,8 +63,8 @@ Source Images` button on the left-hand side.
         Downloading Source Images happens automatically as a [scheduled task](),
         __unless__ the Series is marked as `Unmonitored`.
 
-8. Now that TCM has started downloading Source Images, we are ready to create
-Title Cards.
+Now that TCM has started downloading Source Images, we are ready to create Title
+Cards.
 
 ### Title Cards
 
