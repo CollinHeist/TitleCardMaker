@@ -83,14 +83,12 @@
         const taskId = row.dataset.id;
         const frequencyText = $(`tr[data-id="${taskId}"] > td[data-column="frequency"]`)[0].innerText
 
-        const intervalRegex = /(\d+) (weeks|days|hours|minutes|seconds)/g;
+        const intervalRegex = /(\d+) (week|day|hour|minute|second)s?/g;
         const allMatches = [...frequencyText.matchAll(intervalRegex)];
 
         // Create UpdateInterval object based on this frequency text
         const updateInterval = {};
-        allMatches.forEach(([_, interval, unit]) => {
-          updateInterval[unit] = interval;
-        });
+        allMatches.forEach(([_, interval, unit]) => updateInterval[`${unit}s`] = interval);
         
         // Submit API request to reschedule this task
         $.ajax({
@@ -98,9 +96,9 @@
           url: `/api/schedule/update/${taskId}`,
           data: JSON.stringify(updateInterval),
           contentType: 'application/json',
-          success: (response) => {
+          success: response => {
             $.toast({class: 'blue info', title: `Rescheduled Task ${taskId}`});
-          }, error: (response) => {
+          }, error: response => {
             $.toast({
               class: 'error',
               title: 'Error Rescheduling Task',
