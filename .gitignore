@@ -9,6 +9,7 @@ __pycache__/
 # PEP 582
 __pypackages__/
 
+app/assets/tmp/
 source/
 logs/
 fonts/
