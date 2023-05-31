@@ -67,7 +67,7 @@ like the installation to live. Open the unzipped folder.
         === "Linux"
 
             ```bash
-            cd "~/Your/Install/Directory" # (1)
+            cd "~/Your/Install/Directory" # (1)!
             ```
 
             1. Replace `~/Your/Install/Directory` with the path to the directory
@@ -76,7 +76,7 @@ like the installation to live. Open the unzipped folder.
         === "MacOS"
 
             ```bash
-            cd "~/Your/Install/Directory" # (1)
+            cd "~/Your/Install/Directory" # (1)!
             ```
 
             1. Replace `~/Your/Install/Directory` with the path to the directory
@@ -94,7 +94,7 @@ like the installation to live. Open the unzipped folder.
         === "Windows (Non-Powershell)"
 
             ```bash
-            cd 'C:\Your\Install\Directory' # (1)
+            cd 'C:\Your\Install\Directory' # (1)!
             ```
 
             1. Replace `~/Your/Install/Directory` with the path to the directory
@@ -137,7 +137,7 @@ permissions assigned to them.
         with, run the following command:
 
         ```bash
-        sudo chown -R {group}:{user} ./cards ./logs ./source # (1)
+        sudo chown -R {group}:{user} ./cards ./logs ./source # (1)!
         ```
 
         1. Replace `{group}` and `{user}` with the actual group and user
@@ -149,7 +149,7 @@ permissions assigned to them.
         with, run the following command:
 
         ```bash
-        sudo chown -R {group}:{user} ./cards ./logs ./source # (1)
+        sudo chown -R {group}:{user} ./cards ./logs ./source # (1)!
         ```
 
         1. Replace `{group}` and `{user}` with the actual group and user
@@ -177,8 +177,8 @@ and launch the TCM interface.
     === "Linux"
 
         ```bash
-        pipenv install; # (1)
-        pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 # (2)
+        pipenv install; # (1)!
+        pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 # (2)!
         ```
 
         1. This installs the required Python dependencies
@@ -188,8 +188,8 @@ and launch the TCM interface.
     === "MacOS"
 
         ```bash
-        pipenv install; # (1)
-        pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 # (2)
+        pipenv install; # (1)!
+        pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 # (2)!
         ```
 
         1. This installs the required Python dependencies
@@ -210,8 +210,8 @@ and launch the TCM interface.
     === "Windows (Non-Powershell)"
 
         ```bash
-        pipenv install; # (1)
-        pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 # (2)
+        pipenv install; # (1)!
+        pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 # (2)!
         ```
 
         1. This installs the required Python dependencies
@@ -230,7 +230,7 @@ and launch the TCM interface.
     === "Linux"
 
         ```bash
-        docker build -t "titlecardmaker" . # (1)
+        docker build -t "titlecardmaker" . # (1)!
         ```
 
         1. This will label the built container `titlecardmaker`.
@@ -238,7 +238,7 @@ and launch the TCM interface.
     === "MacOS"
 
         ```bash
-        docker build -t "titlecardmaker" . # (1)
+        docker build -t "titlecardmaker" . # (1)!
         ```
 
         1. This will label the built container `titlecardmaker`.
@@ -254,7 +254,7 @@ and launch the TCM interface.
     === "Windows (Non-Powershell)"
 
         ```bash
-        docker build -t "titlecardmaker" . # (1)
+        docker build -t "titlecardmaker" . # (1)!
         ```
 
         1. This will label the built container `titlecardmaker`.
@@ -264,12 +264,12 @@ and launch the TCM interface.
     === "Linux"
 
         ```bash
-        docker run -itd `# (1)` \
-            --net="bridge" `# (2)` \
-            -v "$(pwd)/logs/":"/maker/logs/" `# (3)` \
-            -v "$(pwd)/source/":"/config/source/" `# (4)` \
-            -v "$(pwd)/cards/":"/config/cards/" `# (5)` \
-            -p 4242:4242 `# (6)` \
+        docker run -itd `# (1)!` \
+            --net="bridge" `# (2)!` \
+            -v "$(pwd)/logs/":"/maker/logs/" `# (3)!` \
+            -v "$(pwd)/source/":"/config/source/" `# (4)!` \
+            -v "$(pwd)/cards/":"/config/cards/" `# (5)!` \
+            -p 4242:4242 `# (6)!` \
             titlecardmaker
         ```
 
@@ -284,12 +284,12 @@ and launch the TCM interface.
     === "MacOS"
 
         ```bash
-        docker run -itd `# (1)` \
-            --net="bridge" `# (2)` \
-            -v "$(pwd)/logs/":"/maker/logs/" `# (3)` \
-            -v "$(pwd)/source/":"/config/source/" `# (4)` \
-            -v "$(pwd)/cards/":"/config/cards/" `# (5)` \
-            -p 4242:4242 `# (6)` \
+        docker run -itd `# (1)!` \
+            --net="bridge" `# (2)!` \
+            -v "$(pwd)/logs/":"/maker/logs/" `# (3)!` \
+            -v "$(pwd)/source/":"/config/source/" `# (4)!` \
+            -v "$(pwd)/cards/":"/config/cards/" `# (5)!` \
+            -p 4242:4242 `# (6)!` \
             titlecardmaker
         ```
 
@@ -305,7 +305,7 @@ and launch the TCM interface.
 
         ```bash
         docker run -itd <#(1)#> `
-            --net="bridge" <# (2) #> `
+            --net="bridge" <#(2)#> `
             -v "$(pwd)\logs":"/maker/logs/" <#(3)#> `
             -v "$(pwd)\source":"/config/source/" <#(4)#> `
             -v "$(pwd)\cards":"/config/cards/" <#(5)#> `

@@ -48,8 +48,3 @@ also try and download a poster.
     You can view the Series customization page by clicking the name or the View
     button (visible when hovering over the poster). We'll explore this page
     [later on]().
-
-*[Media Server]: Plex, Emby, or Jellyfin
-*[Media Servers]: Plex, Emby, or Jellyfin
-*[TCM]: TitleCardMaker
-*[TMDb]: TheMovieDatabase

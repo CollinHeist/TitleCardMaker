@@ -70,8 +70,3 @@ Template".
     to Standard.
 
     We'll use these later in the tutorial.
-
-*[Media Server]: Plex, Emby, or Jellyfin
-*[Media Servers]: Plex, Emby, or Jellyfin
-*[TCM]: TitleCardMaker
-*[TMDb]: TheMovieDatabase

@@ -57,8 +57,3 @@ setting from Step 9.
         seconds of finishing an Episode) - it is important that Tautulli
         triggers TCM to update a Title Card _after_ an Episode's watch-status
         has had time to update within Plex.
-
-*[Media Server]: Plex, Emby, or Jellyfin
-*[Media Servers]: Plex, Emby, or Jellyfin
-*[TCM]: TitleCardMaker
-*[TMDb]: TheMovieDatabase

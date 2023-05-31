@@ -110,8 +110,3 @@ select it and click `Launch`.
     configured. It can be accessed at `http://{server ip}:4242`, where
     `{server ip}` is the same IP address as your host NAS - e.g.
     `http://192.168.0.19:4242`.
-
-*[Media Server]: Plex, Emby, or Jellyfin
-*[Media Servers]: Plex, Emby, or Jellyfin
-*[TCM]: TitleCardMaker
-*[TMDb]: TheMovieDatabase

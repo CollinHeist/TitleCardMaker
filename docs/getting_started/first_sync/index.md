@@ -11,8 +11,3 @@ your Series, and can also automatically assign specific Card customizations
 
 For most users, I recommend to Sync from [Sonarr](./sonarr.md). However, if you
 are not using Sonarr, then your primary Media Server is the next-best option.
-
-*[Media Server]: Plex, Emby, or Jellyfin
-*[Media Servers]: Plex, Emby, or Jellyfin
-*[TCM]: TitleCardMaker
-*[TMDb]: TheMovieDatabase

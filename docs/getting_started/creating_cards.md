@@ -105,8 +105,3 @@ with the card type you _just_ selected, overriding any Template specifications.
     These are all the major components of TCM, and mark the end of the tutorial.
     If you have any other questions, you can browse this documentation or reach
     out for help on the [Discord](https://discord.gg/bJ3bHtw8wH).
-
-*[Media Server]: Plex, Emby, or Jellyfin
-*[Media Servers]: Plex, Emby, or Jellyfin
-*[TCM]: TitleCardMaker
-*[TMDb]: TheMovieDatabase

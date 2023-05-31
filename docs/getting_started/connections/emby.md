@@ -36,8 +36,3 @@ input box and then click the `Save Changes` button.
 8. Select the username of the account you would like Episode watch-statuses to
 be queried from.
 9. Click the `Save Changes` button.
-
-*[Media Server]: Plex, Emby, or Jellyfin
-*[Media Servers]: Plex, Emby, or Jellyfin
-*[TCM]: TitleCardMaker
-*[TMDb]: TheMovieDatabase

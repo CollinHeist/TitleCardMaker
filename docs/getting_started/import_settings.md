@@ -147,8 +147,3 @@ __exactly__ matches the name in your Sync.
 
 5. After selecting your desired import options, click the `Submit` button to
 start the import process.
-
-*[Media Server]: Plex, Emby, or Jellyfin
-*[Media Servers]: Plex, Emby, or Jellyfin
-*[TCM]: TitleCardMaker
-*[TMDb]: TheMovieDatabase

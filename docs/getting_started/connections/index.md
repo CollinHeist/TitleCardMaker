@@ -14,8 +14,3 @@ applicable to your setup will improve TCM's operation.
 
 Use the sidebar to find the instructions to set up the connections for each type
 of server.
-
-*[Media Server]: Plex, Emby, or Jellyfin
-*[Media Servers]: Plex, Emby, or Jellyfin
-*[TCM]: TitleCardMaker
-*[TMDb]: TheMovieDatabase

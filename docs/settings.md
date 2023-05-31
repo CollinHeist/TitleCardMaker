@@ -150,13 +150,13 @@ Episode Data source - however, there are some differences between each.
 
     | Episode Data Source | Provides Absolute Episode Numbers | Only Provides Data for Downloaded Episodes | Relative Speed |
     | :---: | :---: | :---: | :---: |
-    | Emby | :material-close: | :material-check: | Slow |
-    | Jellyfin | :material-close: | :material-check: | Slow |
-    | Plex | :material-close: | :material-check: | Slow |
-    | Sonarr | :material-check: | :material-check:{color: green} | Fast |
-    | TMDb | :material-close: | :material-check: | Fast |
+    | Emby | :material-close:{.red} | :material-check:{.green} | Slow |
+    | Jellyfin | :material-close:{.red} | :material-check:{.green} | Slow |
+    | Plex | :material-close:{.red} | :material-check:{.green} | Slow |
+    | Sonarr | :material-check:{.green} | :material-check:{.green} | Fast |
+    | TMDb | :material-close:{.red} | :material-check:{.green} | Fast |
 
-This setting _can_ be overwritten per-Series, and with Templates.
+This setting _can_ be overwritten with Templates, or per-Series.
 
 ### Image Source Priority
 
@@ -185,14 +185,88 @@ shorts, commercials, etc. listed under Season 0 as _Specials_. If you
 would like TCM to ignore these when grabbing Episode data from your
 specified Episode data source, then uncheck this setting.
 
-This setting can be overwritten per-Series, or with Templates.
+This setting _can_ be overwritten with Templates, or per-Series.
 
 ??? note "Manually Adding Specials"
 
     Even if this setting is disabled (so Specials are ignored), Episodes
     can still be added manually.
 
-*[Media Server]: Plex, Emby, or Jellyfin
-*[Media Servers]: Plex, Emby, or Jellyfin
-*[TCM]: TitleCardMaker
-*[TMDb]: TheMovieDatabase
+## Title Cards
+### Default Card Type
+
+The global default card type for all Title Cards. Any instances where the card
+type is left _unspecified_ will use this card type.
+
+This setting _can_ be overwritten with Templates, per-Series, or per-Episode.
+
+??? warning "Missing Card Types?"
+
+    [Excluded card types](#excluded-card-types) are _not_ shown in this dropdown.
+
+### Excluded Card Types
+
+Any number of card types to exclude from any card type dropdowns. This is purely
+a cosmetic selector, and is intended to make finding your desired card easier if
+you find there are specific types you intend to never use.
+
+### Watched Episode Style
+
+The default style for all Episodes that are **watched** in their indicated
+Media Server.
+
+This setting _can_ be overwritten with Templates, per-Series, or per-Episode.
+
+### Unwatched Episode Style
+
+The default style for all Episodes that are **unwatched** in their indicated
+Media Server.
+
+This setting _can_ be overwritten with Templates, per-Series, or per-Episode.
+
+### Card Dimensions
+
+The output dimensions of all created Title Cards. This can be reduced to
+decrease the filesize (and therefore quality) of your Title Card assets, or
+increased for the opposite effect.
+
+!!! warning "16:9 Aspect Ratio"
+
+    TCM will not stop you from setting a non-standard (non-16:9) aspect ratio,
+    but your created Title Cards __will__ be cropped.
+
+## File Naming
+### Card Extension
+
+Image extension for all created Title Cards. Below is a table summarizing the
+differences in each type (with regards to TCM):
+
+??? tip "Image Extension Differences"
+ 
+    | Format | Compression Category | Supports Transparency | Relative Filesize |
+    | :---: | :---: | :---: | :---: |
+    | `jpg` / `jpeg` | Lossy | :material-close:{.red} | 100% |
+    | `png` | Lossless | :material-check:{.green} | 230% |
+    | `tiff` | Lossless | :material-check:{.green} | 300% |
+    | `gif` | Lossless | :material-check:{.green} | 90% |
+    | `webp` | Lessless / Lossy | :material-check:{.green} | 70% |
+
+    !!! note "Note about Transparency"
+
+        Only a select few card types can take advantage of transparency. These
+        are typically types that allow use of a background _color_ instead of an
+        image - e.g. the [Roman Numeral](...) and [Logo](...) cards.
+
+My personal recommendation is to use the `webp` image extension because of the
+file size savings and support for transparency. The reason this is not the
+default is because of the ubiquity of JPEG images.
+
+### Filename Format
+
+
+
+### Specials Folder Format
+
+### Season Folder Format
+
+^([^{]*(?:{(?:season|episode|absolute)_number(?::\d+)?})*)+$

@@ -115,6 +115,11 @@ markdown_extensions:
   # Adding keyboard keys
   - pymdownx.keys
 
+  # Embedding files, auto-include a glossary
+  - pymdownx.snippets:
+      auto_append:
+        - docs/includes/abbreviations.md
+
 nav:
   - Home: index.md
   - Getting Started - Tutorial:
@@ -141,5 +146,9 @@ nav:
       - Jellyfin: getting_started/first_sync/jellyfin.md
       - Plex: getting_started/first_sync/plex.md
       - Sonarr: getting_started/first_sync/sonarr.md
+    - Rescheduling Tasks: getting_started/scheduler.md
     - Creating Title Cards: getting_started/creating_cards.md
   - Settings: settings.md
+
+  - API: api.md
+  - Release Notes: release_notes.md

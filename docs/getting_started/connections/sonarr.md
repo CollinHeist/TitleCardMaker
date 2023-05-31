@@ -88,8 +88,3 @@ guidance on how to enter your library paths.
 
 8. After entering all the necessary library paths, click the `Save Changes`
 button.
-
-*[Media Server]: Plex, Emby, or Jellyfin
-*[Media Servers]: Plex, Emby, or Jellyfin
-*[TCM]: TitleCardMaker
-*[TMDb]: TheMovieDatabase

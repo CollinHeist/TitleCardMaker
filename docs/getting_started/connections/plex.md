@@ -26,8 +26,3 @@ input box.
 5. If you use Plex Meta Manager episode overlays, toggle the `Integrate with
 Plex Meta Manager` checkbox.
 6. Click the `Save Changes` button.
-
-*[Media Server]: Plex, Emby, or Jellyfin
-*[Media Servers]: Plex, Emby, or Jellyfin
-*[TCM]: TitleCardMaker
-*[TMDb]: TheMovieDatabase

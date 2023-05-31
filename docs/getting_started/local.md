@@ -172,8 +172,3 @@ in a browser.
 
     Installation is complete, and TitleCardMaker is ready to be
     configured.
-
-*[Media Server]: Plex, Emby, or Jellyfin
-*[Media Servers]: Plex, Emby, or Jellyfin
-*[TCM]: TitleCardMaker
-*[TMDb]: TheMovieDatabase
