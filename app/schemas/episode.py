@@ -119,6 +119,10 @@ class UpdateEpisode(UpdateBase):
             'extra_keys', 'extra_values',
             output_key='extras',
         )
+    
+class BatchUpdateEpisode(Base):
+    episode_id: int
+    update_episode: UpdateEpisode
 
 """
 Return classes

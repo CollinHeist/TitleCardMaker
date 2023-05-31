@@ -487,11 +487,11 @@
 
     function sortSeries(elem, sortBy) {
       // Get all card elements
-      let divList = $(".card");
+      let cardList = $(".card");
       let {state, allStates} = sortStates[sortBy];
       let {sortState} = allStates[state];
 
-      divList.sort((a, b) => {
+      cardList.sort((a, b) => {
         switch (sortState) {
           case 'id-asc': return $(a).data('series-id')-$(b).data('series-id');
           case 'id-desc': return $(b).data('series-id')-$(a).data('series-id');
@@ -503,7 +503,7 @@
         }
       });
       // Return newly sorted list
-      $("#series-list").append(divList);
+      $("#series-list").append(cardList);
 
       // Rotate icon
       document.getElementById(elem.firstElementChild.id).classList.toggle('rotate');

@@ -11,7 +11,9 @@ import app.models as models
 from app.internal.cards import delete_cards, refresh_remote_card_types
 from app.internal.episodes import set_episode_ids, refresh_episode_data
 from app.schemas.base import UNSPECIFIED
-from app.schemas.episode import Episode, NewEpisode, UpdateEpisode
+from app.schemas.episode import (
+    BatchUpdateEpisode, Episode, NewEpisode, UpdateEpisode
+)
 
 from modules.Debug import log
 
@@ -168,6 +170,60 @@ def refresh_episode_data_(
     return db.query(models.episode.Episode).filter_by(series_id=series_id).all()
 
 
+@episodes_router.patch('/batch', status_code=200)
+def update_multiple_episode_configs(
+        update_episodes: list[BatchUpdateEpisode] = Body(...),
+        db = Depends(get_database)) -> list[Episode]:
+    """
+    Update all the Epiodes with the given IDs. Only provided fields are 
+    updated.
+
+    - update_episodes: List of BatchUpdateEpisode containing fields to
+    update.
+    """
+
+    # Update each Episode in the list
+    episodes, changed = [], False
+    for update_obj in update_episodes:
+        episode_id = update_obj.episode_id
+        update_episode = update_obj.update_episode
+
+        # Get this Episode, raise 404 if DNE
+        episode = get_episode(db, update_obj.episode_id, raise_exc=True)
+        update_episode_dict = update_obj.update_episode.dict()
+
+        # If any reference ID's were indicated, verify referenced object exists
+        get_font(db, getattr(update_episode, 'font_id', None), raise_exc=True)
+
+        # Assign Templates if indicated
+        changed = False
+        if ((template_ids := update_episode_dict.get('template_ids', None))
+            not in (None, UNSPECIFIED)):
+            if episode.template_ids != template_ids:
+                episode.templates = get_all_templates(db, update_episode_dict)
+                log.debug(f'{episode.log_str}.templates = {template_ids}')
+                changed = True
+
+        # Update each attribute of the object
+        for attr, value in update_episode.dict().items():
+            if value != UNSPECIFIED and getattr(episode, attr) != value:
+                log.debug(f'Episode[{episode_id}].{attr} = {value}')
+                setattr(episode, attr, value)
+                changed = True
+
+        # Append updated Episode
+        episodes.append(episode)
+
+    # If any values were changed, commit to database
+    if changed:
+        db.commit()
+
+    # Refresh card types in case new remote type was specified
+    refresh_remote_card_types(db)
+
+    return episodes
+
+
 @episodes_router.patch('/{episode_id}', status_code=200)
 def update_episode_config(
         episode_id: int,
@@ -181,7 +237,7 @@ def update_episode_config(
     - update_episode: UpdateEpisode containing fields to update.
     """
     log.critical(f'{update_episode.dict()=}')
-    # Get this episode, raise 404 if DNE
+    # Get this Episode, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
     update_episode_dict = update_episode.dict()
 
@@ -212,7 +268,7 @@ def update_episode_config(
     refresh_remote_card_types(db)
 
     return episode
-    
+
 
 @episodes_router.get('/{series_id}/all', status_code=200, tags=['Series'])
 def get_all_series_episodes(
