@@ -106,11 +106,32 @@
 
   <!-- Scripts -->
   <script>
+    function sortStandardizeStr(text) {
+      return text.toString().replace(/^(a|an|the)(\s)/i, '');
+    }
+
     // Get all series and load their cards into HTML
     async function getAllSeries() {
-      const allSeries = await fetch('/api/series/all').then(resp => resp.json());
+      let allSeries = await fetch('/api/series/all').then(resp => resp.json());
+
+      // Sort Series by stored sort order
+      const sortState = window.localStorage.getItem('series-sort-order');
+      if (sortState !== undefined) {
+        allSeries.sort((a, b) => {
+          switch (sortState) {
+            case 'id-asc': return a.id - b.id;
+            case 'id-desc': return b.id - a.id;
+            case 'a-z': return sortStandardizeStr(a.name).localeCompare(sortStandardizeStr(b.name));
+            case 'z-a': return sortStandardizeStr(b.name).localeCompare(sortStandardizeStr(a.name));
+            case 'year-asc': return a.year - b.year;
+            case 'year-desc': return b.year - a.year;
+            default: return 0;
+          }
+        });
+      }
+
       const template = document.querySelector('#series-template');
-      const all = allSeries.map(series => {
+      let allSeriesCards = allSeries.map(series => {
         const clone = template.content.cloneNode(true);
         const topDiv = clone.querySelector('div');
         topDiv.setAttribute('data-series-id', series.id);
@@ -127,8 +148,7 @@
 
         return clone;
       });
-      // const seriesList = document.getElementById('series-list');
-      document.getElementById('series-list').replaceChildren(...all);
+      document.getElementById('series-list').replaceChildren(...allSeriesCards);
 
       $('.ui.cards .image').dimmer({
         on: 'ontouchstart' in document.documentElement ? 'click' : 'hover'
@@ -462,22 +482,21 @@
     let sortStates = {
       'id': {state: 0, allStates: [{icon: 'sort icon', sortState: 'id-desc'}, {icon: 'sort icon', sortState: 'id-asc'}]},
       'title': {state: 0, allStates: [{icon: 'sort alphabet down icon', sortState: 'a-z'}, {icon: 'sort alphabet down alternate icon', sortState: 'z-a'}]},
-      // 'cards': {state: 0, allStates: [{icon: 'sort alphabet down icon', sortState: 'a-z'}, {icon: 'sort alphabet down alternate icon', sortState: 'z-a'}]},
       'year': {state: 0, allStates: [{icon: 'sort numeric down icon', sortState: 'year-asc'}, {icon: 'sort numeric down alternate icon', sortState: 'year-desc'}]},
     }
 
-    function sortSeries(elem, by) {
+    function sortSeries(elem, sortBy) {
       // Get all card elements
       let divList = $(".card");
-      let {state, allStates} = sortStates[by];
+      let {state, allStates} = sortStates[sortBy];
       let {sortState} = allStates[state];
 
       divList.sort((a, b) => {
         switch (sortState) {
           case 'id-asc': return $(a).data('series-id')-$(b).data('series-id');
           case 'id-desc': return $(b).data('series-id')-$(a).data('series-id');
-          case 'a-z': return $(a).data('series-name').toString().localeCompare($(b).data('series-name').toString());
-          case 'z-a': return $(b).data('series-name').toString().localeCompare($(a).data('series-name').toString());
+          case 'a-z': return sortStandardizeStr($(a).data('series-name')).localeCompare(sortStandardizeStr($(b).data('series-name')));
+          case 'z-a': return sortStandardizeStr($(b).data('series-name')).localeCompare(sortStandardizeStr($(a).data('series-name')));
           case 'year-asc': return $(a).data('series-year')-$(b).data('series-year');
           case 'year-desc': return $(b).data('series-year')-$(a).data('series-year');
           default: return 0;
@@ -491,12 +510,15 @@
 
       // Wait for rotation to finish, then change icon state
       setTimeout(() => {
-        sortStates[by].state = (sortStates[by].state + 1) % 2;
-        let {icon} = sortStates[by].allStates[sortStates[by].state];
+        sortStates[sortBy].state = (sortStates[sortBy].state + 1) % 2;
+        let {icon} = sortStates[sortBy].allStates[sortStates[sortBy].state];
         elem.firstElementChild.className = icon;
+        // Update local storage for sort setting
+        window.localStorage.setItem('series-sort-order', sortState);
 			}, 500); // Timeout set to match the transition duration
     }
 
+    // Get all Series
     allSeries = getAllSeries();
   </script>
 </body>

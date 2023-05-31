@@ -27,8 +27,6 @@ function toggleTheme() {
 }
 
 // Default theme is LIGHT, so if dark is indicated, toggle
-// let theme = window.localStorage.getItem('site-theme');
-// if (theme === 'dark') { toggleTheme(); }
 $(document).ready(() => {
   if (window.localStorage.getItem('site-theme') === 'dark') { toggleTheme(); }
 });
