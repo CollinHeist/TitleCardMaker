@@ -324,12 +324,12 @@ and launch the TCM interface.
     === "Windows (Non-Powershell)"
 
         ```bash
-        docker run -itd `# (1)` ^
-            --net="bridge" `# (2)` ^
-            -v "$(pwd)\logs":"/maker/logs/" `# (3)` ^
-            -v "$(pwd)\source":"/config/source/" `# (4)` ^
-            -v "$(pwd)\cards":"/config/cards/" `# (5)` ^
-            -p 4242:4242 `# (6)` ^
+        docker run -itd `# (1)!` ^
+            --net="bridge" `# (2)!` ^
+            -v "$(pwd)\logs":"/maker/logs/" `# (3)!` ^
+            -v "$(pwd)\source":"/config/source/" `# (4)!` ^
+            -v "$(pwd)\cards":"/config/cards/" `# (5)!` ^
+            -p 4242:4242 `# (6)!` ^
             titlecardmaker
         ```
 
@@ -360,11 +360,7 @@ basic steps are as follows:
 2. Set up your Connections to your other services - such as Sonarr, TMDb,
 Plex, Emby, Jellyfin, or Tautulli.
 3. Start adding Series to TitleCardMaker - this can be done manually, or
-with [Syncs].
+with [Syncs](./getting_started/first_sync/index.md).
 4. Customize the look and style of Title Cards to your liking.
 
-*[Media Server]: Plex, Emby, or Jellyfin
-*[Media Servers]: Plex, Emby, or Jellyfin
 *[PAT]: Personal Access Token
-*[TCM]: TitleCardMaker
-*[TMDb]: TheMovieDatabase

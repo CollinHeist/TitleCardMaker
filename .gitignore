@@ -21,3 +21,4 @@ modules/.objects/
 db.sqlite
 missing.yml
 temp*
+preferences.yml

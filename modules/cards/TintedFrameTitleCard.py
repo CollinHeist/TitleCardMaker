@@ -126,6 +126,7 @@ class TintedFrameTitleCard(BaseCardType):
         'font_size', 'font_color', 'font_interline_spacing', 'font_kerning',
         'font_vertical_shift', 'episode_text_color', 'separator', 'frame_color',
         'logo', 'top_element', 'middle_element', 'bottom_element', 'logo_size',
+        'blur_edges',
     )
 
     def __init__(self, *,
@@ -144,14 +145,15 @@ class TintedFrameTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-            episode_text_color: SeriesExtra[str] = None,
             separator: SeriesExtra[str] = '-',
+            episode_text_color: SeriesExtra[str] = None,
             frame_color: SeriesExtra[str] = None,
             top_element: Element = 'title',
             middle_element: MiddleElement = 'omit',
             bottom_element: Element = 'index',
             logo_file: Optional[Path] = None,
             logo_size: SeriesExtra[float] = 1.0,
+            blur_edges: bool = True,
             preferences: 'Preferences' = None,
             **unused) -> None:
         """
@@ -163,7 +165,7 @@ class TintedFrameTitleCard(BaseCardType):
 
         self.source_file = source_file
         self.output_file = card_file
-        self.logo = Path(logo_file)
+        self.logo = None if logo_file is None else Path(logo_file)
 
         # Ensure characters that need to be escaped are
         self.title_text = self.image_magick.escape_chars(title_text)
@@ -184,6 +186,7 @@ class TintedFrameTitleCard(BaseCardType):
         self.separator = separator
         self.frame_color = font_color if frame_color is None else frame_color
         self.logo_size = logo_size
+        self.blur_edges = blur_edges
         if episode_text_color is None:
             self.episode_text_color = font_color
         else:
@@ -205,6 +208,15 @@ class TintedFrameTitleCard(BaseCardType):
         self.middle_element = _validate_element(middle_element, middle=True)
         self.bottom_element = _validate_element(bottom_element)
 
+        # Validate no duplicate elements were indicated
+        if ((self.top_element != 'omit'
+            and (self.top_element == self.middle_element
+                 or self.top_element == self.bottom_element))
+            or (self.middle_element != 'omit'
+                and self.middle_element == self.bottom_element)):
+            log.warning(f'Top/middle/bottom elements cannot be the same')
+            self.valid = False
+
         # If logo was indicated, verify logo was provided
         if (self.logo is None
             and ('logo' in (self.top_element, self.middle_element,
@@ -213,6 +225,37 @@ class TintedFrameTitleCard(BaseCardType):
             self.valid = False
 
         return None
+
+
+    @property
+    def blur_commands(self) -> ImageMagickCommands:
+        """
+        Subcommand to blur the outer frame of the source image (if
+        indicated).
+
+        Returns:
+            List of ImageMagick Commands.
+        """
+
+        # Blurring is disabled, return empty command
+        if not self.blur_edges:
+            return []
+
+        crop_width = self.WIDTH - (2 * self.BOX_OFFSET) - 6 # 6px margin
+        crop_height = self.HEIGHT - (2 * self.BOX_OFFSET) - 4 # 4px margin
+
+        return [
+            # Blur entire image
+            f'-blur 0x20',
+            # Crop out center area of the source image
+            f'-gravity center',
+            f'\( "{self.source_file.resolve()}"',
+            *self.resize_and_style,
+            f'-crop {crop_width}x{crop_height}+0+0',
+            f'+repage \)',
+            # Overlay unblurred center area 
+            f'-composite',
+        ]
 
 
     @property
@@ -324,7 +367,7 @@ class TintedFrameTitleCard(BaseCardType):
 
         # Determine vertical position based on which element the logo is
         if self.top_element == 'logo':
-            vertical_shift = -700
+            vertical_shift = -720
         elif self.middle_element == 'logo':
             vertical_shift = 0
         elif self.bottom_element == 'logo':
@@ -621,23 +664,18 @@ class TintedFrameTitleCard(BaseCardType):
         object's defined title card.
         """
 
-        crop_width = self.WIDTH - (2 * self.BOX_OFFSET) - 6 # 6px margin
-        crop_height = self.HEIGHT - (2 * self.BOX_OFFSET) - 4 # 4px margin
+        # Error and exit if logo is specified and DNE
+        if ('logo' in (self.top_element, self.middle_element, self.bottom_element)
+            and (self.logo is None or not self.logo.exists())):
+            log.error(f'Logo file "{self.logo}" does not exist')
+            return None
 
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
             # Resize and apply styles to source image
             *self.resize_and_style,
-            # Blur entire image
-            f'-blur 0x20',
-            # Crop out center area of the source image
-            f'-gravity center',
-            f'\( "{self.source_file.resolve()}"',
-            *self.resize_and_style,
-            f'-crop {crop_width}x{crop_height}+0+0',
-            f'+repage \)',
-            # Overlay unblurred center area 
-            f'-composite',
+            # Add blurred edges (if indicated)
+            *self.blur_commands,
             # Add remaining sub-components
             *self.title_text_commands,
             *self.index_text_commands,

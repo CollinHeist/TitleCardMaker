@@ -52,9 +52,8 @@ the side navigation bar.
         to them.
 
 8. At the top of the page is an indication of when all your Syncs will next
-run - we'll adjust this [next](../scheduler.md) - but to run a Sync
-immediately, click the small blue Sync icon (the circular arrows next to the
-delete icon).
+run - we'll adjust this [next](../scheduler.md) - but to run a Sync immediately,
+click the small blue Sync icon (the circular arrows next to the delete icon).
 
 9. TCM will then query Sonarr for all your Series, filter the results by our
 indicated filters (in our case the `tcm-test` tag), and then filter out any
