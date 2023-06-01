@@ -81,7 +81,7 @@ class DividerTitleCard(BaseCardType):
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
         'font_file', 'font_interline_spacing', 'font_kerning', 'font_size',
         'font_stroke_width', 'stroke_color', 'title_text_position',
-        'text_position',
+        'text_position', 'font_vertical_shift'
     )
 
     def __init__(self, *,
@@ -98,6 +98,7 @@ class DividerTitleCard(BaseCardType):
             font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_stroke_width: float = 1.0,
+            font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
             stroke_color: SeriesExtra[str] = 'black',
@@ -129,6 +130,7 @@ class DividerTitleCard(BaseCardType):
         self.font_kerning = font_kerning
         self.font_size = font_size
         self.font_stroke_width = font_stroke_width
+        self.font_vertical_shift = font_vertical_shift
 
         # Optional extras
         self.stroke_color = stroke_color
@@ -390,7 +392,7 @@ class DividerTitleCard(BaseCardType):
             # Combine text images
             f'+smush 25',
             # Add border so the blurred text doesn't get sharply cut off
-            f'-border 50x50',
+            f'-border 50x{50+self.font_vertical_shift}',
             f'-blur 0x5 \)',
             # Overlay blurred text in correct position 
             f'-gravity {gravity}',
@@ -401,7 +403,7 @@ class DividerTitleCard(BaseCardType):
             f'-stroke "rgba(1, 1, 1, 0.01)"',
             *self.text_command(divider_height, self.font_color),
             f'+smush 25',
-            f'-border 50x50 \)',
+            f'-border 50x{50+self.font_vertical_shift} \)',
             # Overlay title text in correct position 
             f'-gravity {gravity}',
             f'-composite',

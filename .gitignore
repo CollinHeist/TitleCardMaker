@@ -20,5 +20,4 @@ modules/.objects/
 .DS_Store
 db.sqlite
 missing.yml
-temp*
 preferences.yml
