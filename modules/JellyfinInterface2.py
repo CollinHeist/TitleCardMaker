@@ -262,9 +262,10 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     def get_all_series(self,
-            filter_libraries: list[str] = [],
-            required_tags: list[str] = []
-            ) -> list[tuple[SeriesInfo, str, str]]: 
+            required_libraries: list[str] = [],
+            excluded_libraries: list[str] = [],
+            required_tags: list[str] = [], 
+            excluded_tags: list[str] = []) -> list[tuple[SeriesInfo, str]]: 
         """
         Get all series within Jellyfin, as filtered by the given
         libraries and tags.
@@ -279,8 +280,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         Returns:
             List of tuples whose elements are the SeriesInfo of the
-            series, the  path (string) it is located, and its
-            corresponding library name.
+            series, and its corresponding library name.
         """
 
         # Temporarily override request timeout to 240s (4 min)
@@ -290,7 +290,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         params = {
             'recursive': True,
             'includeItemTypes': 'Series',
-            'fields': 'ProviderIds,Path',
+            'fields': 'ProviderIds',
         } | self.__params
 
         # Also filter by tags if any were provided
@@ -300,8 +300,9 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         # Get all series library at a time
         all_series = []
         for library, library_id in self.libraries.items():
-            # If filtering by library, skip if not specified
-            if filter_libraries and library not in filter_libraries:
+            # Filter by library
+            if (required_libraries and library not in required_libraries
+                or excluded_libraries and library in excluded_libraries):
                 continue
 
             response = self.session._get(
@@ -313,14 +314,18 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 if series.get('PremiereDate', None) is None:
                     log.debug(f'Series {series["Name"]} has no premiere date')
                     continue
-                
+                log.info(f'{series=}')
                 series_info = SeriesInfo(
                     series['Name'], 
                     datetime.strptime(series['PremiereDate'],
                                       self.AIRDATE_FORMAT).year,
+                    imdb_id=series.get('ProviderIds', {}).get('Imdb'),
                     jellyfin_id=series['Id'],
+                    tmdb_id=series.get('ProviderIds', {}).get('Tmdb'),
+                    tvdb_id=series.get('ProviderIds', {}).get('Tvdb'),
+                    tvrage_id=series.get('ProviderIds', {}).get('TvRage'),
                 )
-                all_series.append((series_info, series['Path'], library))
+                all_series.append((series_info, library))
 
         # Reset request timeout
         self.REQUEST_TIMEOUT = 30
@@ -358,8 +363,9 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             airdate = None
             if 'PremiereDate' in episode:
                 try:
-                    airdate = datetime.strptime(episode['PremiereDate'],
-                                                self.AIRDATE_FORMAT)
+                    airdate = datetime.strptime(
+                        episode['PremiereDate'], self.AIRDATE_FORMAT
+                    )
                 except Exception as e:
                     log.exception(f'Cannot parse airdate', e)
                     log.debug(f'Episode data: {episode}')
@@ -368,8 +374,8 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 episode['Name'],
                 episode['ParentIndexNumber'],
                 episode['IndexNumber'],
-                jellyfin_id=episode.get('Id'),
                 imdb_id=episode['ProviderIds'].get('Imdb'),
+                jellyfin_id=episode.get('Id'),
                 tmdb_id=episode['ProviderIds'].get('Tmdb'),
                 tvdb_id=episode['ProviderIds'].get('Tvdb'),
                 tvrage_id=episode['ProviderIds'].get('TvRage'),

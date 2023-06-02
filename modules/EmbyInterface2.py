@@ -318,7 +318,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         params = {
             'Recursive': True,
             'IncludeItemTypes': 'series',
-            'Fields': 'ProviderIds,Path',
+            'Fields': 'ProviderIds',
         } | self.__params
 
         # Also filter by tags if any were provided
@@ -329,7 +329,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         all_series = []
         for library, library_ids in self.libraries.items():
             # Filter by library
-            if (required_libraries and library not in filter_libraries
+            if (required_libraries and library not in required_libraries
                 or excluded_libraries and library in excluded_libraries):
                 continue
 
