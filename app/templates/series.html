@@ -934,7 +934,23 @@
       });
     }
 
-    async function deleteObject(args) {
+    async function queryTMDbPoster() {
+      $.ajax({
+        type: 'PUT',
+        url: '/api/series/{{series.id}}/poster/query',
+        success: response => {
+          if (response === null) {
+            $.ajax({class: 'error', title: 'TMDb returned no images'});
+          } else {
+            $('#edit-poster-modal input[name="poster_url"]').val(response);
+          }
+        }, error: response => {
+          $.ajax({class: 'error', title: 'TMDb returned no images'});
+        }, complete: () => {},
+      });
+    }
+
+    function deleteObject(args) {
       const {url, dataObject, label, deleteElements} = args;
       $.ajax({
         type: 'PATCH',
@@ -1983,7 +1999,10 @@
           <!-- URL -->
           <div class="input field">
             <label>URL</label>
-            <input id="poster-url-input" type="text" name="poster_url"></input>
+            <div class="ui action input">
+              <input name="poster_url"></input>
+              <button onclick="queryTMDbPoster();" class="ui blue button">Query TMDb</button>
+            </div>
           </div>
 
           <!-- OR divider between URL/upload -->
@@ -1992,7 +2011,7 @@
           <!-- File upload -->
           <div class="file clearable input field">
             <label>Upload File</label>
-            <input id="poster-upload-input" type="file" name="poster_file">
+            <input type="file" name="poster_file">
           </div>
         </form>
       </div>
