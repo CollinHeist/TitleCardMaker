@@ -26,7 +26,7 @@ the side navigation bar.
     1. Enter the Sync Name as `Test Sync`
     2. In the "Templates to Apply", select __in order__, the `Tier 1 - Standard`
     and `Tier 0 - Tinted Frame` Templates from
-    [the last step](../creating_template.md).
+    [earlier](../creating_template.md) in the tutorial.
 
         !!! tip "Template Order Matters"
 
@@ -58,7 +58,7 @@ click the small blue Sync icon (the circular arrows next to the delete icon).
 9. TCM will then query Sonarr for all your Series, filter the results by our
 indicated filters (in our case the `tcm-test` tag), and then filter out any
 exclusions (none). The added Series will be listed in a message. You should
-see "Synced 1 Series", with "Breaking Bad" listed below.
+see "Synced 1 Series", with _Breaking Bad_ listed below.
 
     ??? question "Why is _Better Call Saul_ not listed here?"
 
@@ -66,6 +66,21 @@ see "Synced 1 Series", with "Breaking Bad" listed below.
         runs a Sync, it checks the resulting list of Series against any
         _existing_ Series. Since BCS was added in the previous step, TCM does
         not add it again.
+
+10. From the message, you can click on the newly added _Breaking Bad_ to
+directly go to the Series page. On the main Configuration tab, double check that
+the Library field for your Media Server is filled in with the correct library.
+
+    ??? failure "Don't see a Library?"
+
+        If you have enabled any other Media Servers and do not see a Library
+        listed for this Series, that means that your Sonarr Library Paths
+        are set incorectly, and TCM will not auto-detect a Series Library when
+        syncing.
+
+        Review Step 7 of the [Sonarr Setup](../connections/sonarr.md) page to
+        correct your Library Paths. When you've corrected these, delete
+        _Breaking Bad_ and re-Sync to verify they are correct.
 
 !!! success "Synced from Sonarr"
 

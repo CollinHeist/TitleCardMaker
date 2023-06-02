@@ -27,8 +27,8 @@ all Syncs are run.
 
 ## Instructions
 
-1. Navigate to the Scheduler page by clicking `Scheduler` from the side
-navigation bar.
+1. Navigate to the Scheduler page by clicking :fontawesome-solid-stopwatch:
+`Scheduler` from the side navigation bar.
 
 2. Find the task description that reads "Run all defined Syncs, adding any new
 Series".

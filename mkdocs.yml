@@ -138,7 +138,7 @@ nav:
       - Sonarr: getting_started/connections/sonarr.md
       - Tautulli: getting_started/connections/tautulli.md
     - Global Settings: getting_started/settings.md
-    - Creating a Template: getting_started/creating_template.md
+    - Creating Templates: getting_started/creating_templates.md
     - Adding a Series: getting_started/add_series.md
     - Creating the First Sync:
       - getting_started/first_sync/index.md

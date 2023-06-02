@@ -1,4 +1,5 @@
-# Creating a Template
+# Creating Templates
+
 ## Background
 
 Templates are a critical component of quickly customizing your TitleCardMaker
@@ -16,8 +17,8 @@ apply these Templates automatically with a [Sync](./first_sync/index.md).
 
 ## Instructions
 
-1. Navigate to the Template page by clicking `Templates` from the side
-navigation bar.
+1. Navigate to the Template page by clicking :fontawesome-solid-layer-group:
+`Templates` from the side navigation bar.
 
 2. Create a new Template by clicking the `Create a New Template` button.
 

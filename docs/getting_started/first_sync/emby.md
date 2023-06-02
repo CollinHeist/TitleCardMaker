@@ -28,7 +28,7 @@ the side navigation bar.
     1. Enter the Sync Name as `Test Sync`
     2. In the "Templates to Apply", select __in order__, the `Tier 1 - Standard`
     and `Tier 0 - Tinted Frame` Templates from
-    [the last step](../creating_template.md).
+    [earlier](../creating_template.md) in the tutorial.
 
         !!! tip "Template Order Matters"
 
