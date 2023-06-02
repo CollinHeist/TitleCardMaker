@@ -31,8 +31,8 @@ def sync_all() -> None:
             all_syncs = db.query(models.sync.Sync).all()
             for sync in all_syncs:
                 run_sync(
-                    db, get_preferences(), sync, get_imagemagick_interface(),
-                    get_emby_interface(), get_jellyfin_interface(),
+                    db, get_preferences(), sync, get_emby_interface(), 
+                    get_imagemagick_interface(), get_jellyfin_interface(),
                     get_plex_interface(), get_sonarr_interface(),
                     get_tmdb_interface(),
                 )
