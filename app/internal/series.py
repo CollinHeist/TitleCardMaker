@@ -107,8 +107,8 @@ def download_series_poster(
         db: 'Database',
         preferences: Preferences,
         series: Series,
-        tmdb_interface: Optional[TMDbInterface],
-        image_magick_interface: Optional[ImageMagickInterface]) -> None:
+        image_magick_interface: Optional[ImageMagickInterface],
+        tmdb_interface: Optional[TMDbInterface]) -> None:
     """
     Download the poster for the given Series.
 

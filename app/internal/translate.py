@@ -31,21 +31,8 @@ def translate_all_series() -> None:
                     log.debug(f'{series.log_str} is Unmonitored, skipping')
                     continue
 
-                # Get the Series Template
-                try:
-                    series_template = get_template(
-                        db, series.template_id, raise_exc=True
-                    )
-                except Exception as e:
-                    log.warning(f'{series.log_str} skipping - missing Template')
-                    continue
-
-                # Get all Episodes of this Series
-                episodes = db.query(models.episode.Episode)\
-                    .filter_by(series_id=series.id).all()
-                
                 # Translate each Episode
-                for episode in episodes:
+                for episode in series.episodes:
                     translate_episode(db, episode, tmdb_interface)
     except Exception as e:
         log.exception(f'Failed to add translations', e)

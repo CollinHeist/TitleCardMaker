@@ -158,11 +158,9 @@ def refresh_episode_data(
 
     # Create SeriesInfo for this object to use in querying
     if episode_data_source == 'Emby':
-        all_episodes = emby_interface.get_all_episodes(series)
+        all_episodes = emby_interface.get_all_episodes(series.as_series_info)
     elif episode_data_source == 'Jellyfin':
-        all_episodes = jellyfin_interface.get_all_episodes(
-            series.as_series_info, preferences=preferences
-        )
+        all_episodes =jellyfin_interface.get_all_episodes(series.as_series_info)
     elif episode_data_source == 'Plex':
         # Raise 409 if source is Plex but series has no library
         if series.plex_library_name is None: 

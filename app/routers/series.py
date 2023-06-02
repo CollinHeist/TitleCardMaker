@@ -89,7 +89,7 @@ def add_new_series(
         # Function
         download_series_poster,
         # Arguments
-        db, preferences, series, tmdb_interface,
+        db, preferences, series, imagemagick_interface, tmdb_interface,
     )
     background_tasks.add_task(
         # Function
@@ -314,8 +314,8 @@ def download_series_poster(
         series_id: int,
         db = Depends(get_database),
         preferences = Depends(get_preferences),
-        tmdb_interface = Depends(get_tmdb_interface),
-        image_magick_interface = Depends(get_imagemagick_interface)) -> str:
+        imagemagick_interface = Depends(get_imagemagick_interface),
+        tmdb_interface = Depends(get_tmdb_interface)) -> str:
     """
     Download and return a poster for the given Series.
 
@@ -326,7 +326,7 @@ def download_series_poster(
     series = get_series(db, series_id, raise_exc=True)
 
     return download_series_poster(
-        db, preferences, series, tmdb_interface, image_magick_interface
+        db, preferences, series, imagemagick_interface, tmdb_interface,
     )
 
 
