@@ -1,10 +1,13 @@
 from pathlib import Path
 from requests import get
+from shutil import copy as file_copy
 from typing import Optional
 
 from fastapi import HTTPException
 
 from modules.Debug import log
+from modules.ImageMagickInterface import ImageMagickInterface
+from modules.TMDbInterface2 import TMDbInterface
 
 from app.dependencies import (
     get_database, get_emby_interface, get_jellyfin_interface,
@@ -104,7 +107,8 @@ def download_series_poster(
         db: 'Database',
         preferences: Preferences,
         series: Series,
-        tmdb_interface: 'TMDbInterface') -> None:
+        tmdb_interface: Optional[TMDbInterface],
+        image_magick_interface: Optional[ImageMagickInterface]) -> None:
     """
     Download the poster for the given Series.
 
@@ -142,6 +146,18 @@ def download_series_poster(
             path.write_bytes(get(poster_url).content)
             series.poster_file = str(path)
             series.poster_url = f'/assets/{series.id}/poster.jpg'
+
+            # Create resized small poster
+            resized_path = path.parent / 'poster-750.jpg'
+            if image_magick_interface is None:
+                file_copy(
+                    preferences.INTERNAL_ASSET_DIRECTORY / 'placeholder.jpg',
+                    resized_path,
+                )
+            else:
+                image_magick_interface.resize_image(
+                    path, resized_path, by='width', width=750,
+                )
 
             db.commit()
             log.debug(f'Series[{series.id}] Downloaded poster {path.resolve()}')

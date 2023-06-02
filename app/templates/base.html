@@ -138,7 +138,7 @@
         topDiv.setAttribute('data-series-name', series.name);
         topDiv.setAttribute('data-series-year', series.year);
         // const clone = template.content.cloneNode(true);
-        clone.querySelector('img').src = series.poster_url;
+        clone.querySelector('img').src = series.small_poster_url;
         const as = clone.querySelectorAll('a');
         as[0].href = `/series/${series.id}`;
         as[1].href = `/series/${series.id}`;
