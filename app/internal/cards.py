@@ -157,7 +157,7 @@ def create_card(
         return None
 
     card_maker = CardClass(
-        **(card_settings),# | card_settings['extras']),
+        **(card_settings | card_settings['extras']),
         preferences=preferences,
     )
 
@@ -233,6 +233,7 @@ def resolve_card_settings(
         episode_template_dict.get('extras', {}),
         episode.card_properties.get('extras', {}),
     )
+
     # Override settings with extras, and merge translations into extras
     TieredSettings(card_settings, card_extras)
     TieredSettings(card_extras, episode.translations)
