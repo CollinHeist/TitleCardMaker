@@ -315,6 +315,7 @@ class Preferences:
     def valid_image_sources(self) -> set[str]:
         return set(
             (['Emby'] if self.use_emby else [])
+            + (['Jellyfin'] if self.use_jellyfin else [])
             + (['Plex'] if self.use_plex else [])
             + (['TMDb'] if self.use_tmdb else [])
         )
@@ -323,6 +324,7 @@ class Preferences:
     def valid_episode_data_sources(self) -> list[str]:
         return (
             (['Emby'] if self.use_emby else [])
+            + (['Jellyfin'] if self.use_jellyfin else [])
             + (['Plex'] if self.use_plex else [])
             + (['TMDb'] if self.use_tmdb else [])
             + (['Sonarr'] if self.use_sonarr else [])
@@ -332,6 +334,7 @@ class Preferences:
     def enabled_media_servers(self) -> list[str]:
         return (
             (['Emby'] if self.use_emby else [])
+            + (['Jellyfin'] if self.use_jellyfin else [])
             + (['Plex'] if self.use_plex else [])
         )
 
