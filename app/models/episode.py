@@ -62,7 +62,7 @@ class Episode(Base):
     tvrage_id = Column(Integer, default=None)
     airdate = Column(DateTime, default=None)
 
-    extras = Column(JSON, default=None)
+    extras = Column(MutableDict.as_mutable(JSON), default=None)
     translations = Column(MutableDict.as_mutable(JSON), default={})
 
     image_source_attempts = Column(
