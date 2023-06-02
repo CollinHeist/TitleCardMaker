@@ -20,7 +20,7 @@ class CutoutTitleCard(BaseCardType):
     API_DETAILS = CardDescription(
         name='Cutout',
         identifier='cutout',
-        example='/assets/cards/cutout.jpg',
+        example='/internal_assets/cards/cutout.jpg',
         creators=['/u/Phendrena', 'CollinHeist'],
         source='local',
         supports_custom_fonts=True,

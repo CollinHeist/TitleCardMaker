@@ -19,7 +19,7 @@ class FadeTitleCard(BaseCardType):
     API_DETAILS = CardDescription(
         name='Fade',
         identifier='fade',
-        example='/assets/cards/fade.jpg',
+        example='/internal_assets/cards/fade.jpg',
         creators=['Yozora', 'CollinHeist'],
         source='local',
         supports_custom_fonts=True,

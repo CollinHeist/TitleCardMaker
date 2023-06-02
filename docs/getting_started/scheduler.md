@@ -10,7 +10,7 @@ allows these to be adjusted to any arbitrary interval.
 
     Below are the default intervals for all core TCM tasks:
 
-    | Task | Reschedulable | Default Interval |
+    | Task | Adjustable | Default Interval |
     | ---: | :---: | :---: |
     |  Download missing Source Images | :material-check:{.green} | 4 hours |
     | Load Title Cards into your Media server | :material-check:{.green} | 4 hours |
@@ -38,8 +38,8 @@ Series".
 
     ??? question "Why this interval?"
 
-        This is a completely arbitrary interval, and was chosen just to show
-        how any different interval units can be utilized.
+        This is a completely arbitrary interval, and was chosen just to show how
+        any different interval units can be utilized.
 
 4. Click the `Save Changes` button.
 

@@ -20,7 +20,7 @@ class PosterTitleCard(BaseCardType):
     API_DETAILS = CardDescription(
         name='Poster',
         identifier='poster',
-        example='/assets/cards/poster.jpg',
+        example='/internal_assets/cards/poster.jpg',
         creators=['/u/Olivier_286', 'CollinHeist'],
         source='local',
         supports_custom_fonts=False,

@@ -7,6 +7,10 @@
     Emby server, you can add them (and remove them later - or not, because
     they're great shows), or just pick two entirely different Series.
 
+!!! warning "Under Construction"
+
+    This documentation is actively being developed.
+
 1. For the purposes of this tutorial, we will be Syncing a subset of your
 Series by using a filter tag within Emby. Open Emby.
 

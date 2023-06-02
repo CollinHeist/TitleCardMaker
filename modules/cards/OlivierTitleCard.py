@@ -18,7 +18,7 @@ class OlivierTitleCard(BaseCardType):
     API_DETAILS = CardDescription(
         name='Olivier',
         identifier='olivier',
-        example='/assets/cards/olivier.jpg',
+        example='/internal_assets/cards/olivier.jpg',
         creators=['/u/Olivier_286', 'Yozora', 'CollinHeist'],
         source='local',
         supports_custom_fonts=True,

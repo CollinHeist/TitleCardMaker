@@ -182,7 +182,7 @@ class RomanNumeralTitleCard(BaseCardType):
     API_DETAILS = CardDescription(
         name='Roman Numeral',
         identifier='roman numeral',
-        example='/assets/cards/roman.jpg',
+        example='/internal_assets/cards/roman.jpg',
         creators=['CollinHeist'],
         source='local',
         supports_custom_fonts=False,

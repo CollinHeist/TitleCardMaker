@@ -314,12 +314,12 @@ def get_series_poster(
         preferences = Depends(get_preferences),
         tmdb_interface = Depends(get_tmdb_interface)) -> str:
     """
-    Download and return a poster for the given series.
+    Download and return a poster for the given Series.
 
     - series_id: Series being queried.
     """
 
-    # Find series with this ID, raise 404 if DNE
+    # Find Series with this ID, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
     return download_series_poster(db, preferences, series, tmdb_interface)
@@ -377,9 +377,11 @@ async def set_series_poster(
             )
 
     # Valid poster provided, download into asset directory
-    poster_path = preferences.asset_directory / 'posters' / f'{series.id}.jpg'
+    poster_path = preferences.asset_directory / str(series.id) / 'poster.jpg'
     series.poster_file = str(poster_path)
-    poster_file.write_bytes(poster_content)
+    poster_path.parent.mkdir(exist_ok=True, parents=True)
+    poster_path.write_bytes(poster_content)
+
 
     # Update poster, commit to database
     series.poster_url = f'/assets/posters/{poster_file.name}'

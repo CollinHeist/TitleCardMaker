@@ -120,10 +120,10 @@ def download_series_poster(
         log.debug(f'Series[{series.id}] Cannot download poster, TMDb interface disabled')
         return None
 
-    # If series poster exists and is not a placeholder, return that
+    # If Series poster exists and is not a placeholder, return that
     path = Path(series.poster_file)
     if path.name != 'placeholder.jpg' and path.exists():
-        series.poster_url = f'/assets/posters/{series.id}.jpg'
+        series.poster_url = f'/assets/{series.id}/poster.jpg'
         db.commit()
         log.debug(f'Series[{series.id}] Poster already exists, using {path.resolve()}')
         return None
@@ -135,17 +135,53 @@ def download_series_poster(
         return None
     # Poster downloaded, write file, update database
     else:
-        path = preferences.asset_directory / 'posters' / f'{series.id}.jpg'
-        path.parent.mkdir(exist_ok=True)
+        path = preferences.asset_directory / str(series.id) / 'poster.jpg'
+        path.parent.mkdir(parents=True, exist_ok=True)
         try:
+            # Download
             path.write_bytes(get(poster_url).content)
             series.poster_file = str(path)
-            series.poster_url = f'/assets/posters/{series.id}.jpg'
+            series.poster_url = f'/assets/{series.id}/poster.jpg'
+
             db.commit()
             log.debug(f'Series[{series.id}] Downloaded poster {path.resolve()}')
         except Exception as e:
             log.error(f'Error downloading poster', e)
             return None
+
+    return None
+
+
+def delete_series_and_episodes(
+        db: 'Database',
+        series: Series, *,
+        commit_changes: bool = True) -> None:
+    """
+    Delete the given Series, it's poster, and all associated Episodes.
+
+    Args:
+        db: Database to commit any deletion to.
+        series: Series to delete.
+        commit_changes: Whether to commit Database changes.
+    """
+
+    # Delete poster if not the placeholder
+    series_poster = Path(series.poster_file)
+    if series_poster.stem != 'placeholder' and series_poster.exists():
+        series_poster.unlink(missing_ok=True)
+        small_poster = series_poster.parent / 'poster-750.jpg'
+        small_poster.unlink(missing_ok=True)
+
+        log.debug(f'{series.log_str} Deleted poster(s)')
+
+    # Delete series and episodes from database
+    log.info(f'Deleting {series.log_str}')
+    db.delete(series)
+    [db.delete(episode) for episode in series.episodes]
+
+    # Commit changes if indicated
+    if commit_changes:
+        db.commit()
 
     return None
 
@@ -246,37 +282,6 @@ def load_series_title_cards(
 
     # If any cards were (re)loaded, commit updates to database
     if changed or loaded_assets:
-        db.commit()
-
-    return None
-
-
-def delete_series_and_episodes(
-        db: 'Database',
-        series: Series, *,
-        commit_changes: bool = True) -> None:
-    """
-    Delete the given Series, it's poster, and all associated Episodes.
-
-    Args:
-        db: Database to commit any deletion to.
-        series: Series to delete.
-        commit_changes: Whether to commit Database changes.
-    """
-
-    # Delete poster if not the placeholder
-    series_poster = Path(series.poster_file)
-    if series_poster.stem != 'placeholder' and series_poster.exists():
-        series_poster.unlink(missing_ok=True)
-        log.debug(f'{series.log_str} Deleted poster')
-
-    # Delete series and episodes from database
-    log.info(f'Deleting {series.log_str}')
-    db.delete(series)
-    db.query(models.episode.Episode).filter_by(series_id=series.id).delete()
-
-    # Commit changes if indicated
-    if commit_changes:
         db.commit()
 
     return None

@@ -22,7 +22,7 @@ class StarWarsTitleCard(BaseCardType):
     API_DETAILS = CardDescription(
         name='Star Wars',
         identifier='star wars',
-        example='/assets/cards/star wars.jpg',
+        example='/internal_assets/cards/star wars.jpg',
         creators=['/u/Olivier_286', 'CollinHeist'],
         source='local',
         supports_custom_fonts=False,

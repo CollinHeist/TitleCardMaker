@@ -16,7 +16,7 @@ class TextlessTitleCard(BaseCardType):
     API_DETAILS = CardDescription(
         name='Textless',
         identifier='textless',
-        example='/assets/cards/textless.jpg',
+        example='/internal_assets/cards/textless.jpg',
         creators=['CollinHeist'],
         source='local',
         supports_custom_fonts=False,

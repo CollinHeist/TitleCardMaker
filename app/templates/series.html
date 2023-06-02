@@ -7,10 +7,10 @@
   <title>{{series.name}} - TitleCardMaker</title>
 
   <!-- Favicon -->
-  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16.png">
-  <link rel="manifest" href="/assets/favicon/site.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="/internal_assets/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/internal_assets/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/internal_assets/favicon/favicon-16x16.png">
+  <link rel="manifest" href="/internal_assets/favicon/site.webmanifest">
 
   <!-- Formantic UI -->
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
@@ -314,7 +314,7 @@
         <i data-action="search" class="right floated search icon" title="Search for this image"></i>
         <i data-action="upload" class="right floated file import icon" title="Upload a new source image"></i>
         {% if preferences.use_tmdb %}
-        <img data-action="browse-tmdb" class="right floated icon" src="/assets/tmdb_primary_full_logo.svg" title="Browse TMDb source images"/>
+        <img data-action="browse-tmdb" class="right floated icon" src="/internal_assets/tmdb_primary_full_logo.svg" title="Browse TMDb source images"/>
         {% endif %}
         <div data-value="index" class="header">{descriptive name}</div>
         <div class="meta">
@@ -937,13 +937,10 @@
         url: url,
         data: JSON.stringify(dataObject),
         contentType: 'application/json',
-        success: (response) => {
-          $.toast({
-            class: 'blue info',
-            title: `Deleted ${label}`,
-          });
+        success: response => {
+          $.toast({class: 'blue info', title: `Deleted ${label}`});
           $(deleteElements).remove();
-        }, error: (response) => {
+        }, error: response => {
           $.toast({
             class: 'error',
             title: `Error Deleting ${label}`,
@@ -954,7 +951,7 @@
       });
     }
 
-    async function editEpisodeExtras(episode) {
+    function editEpisodeExtras(episode) {
       // Clear existing values
       $('#episode-extras-modal input').remove();
       // Add existing translations
@@ -2033,7 +2030,7 @@
         <form id="upload-source-form" class="ui form">
           <div class="input field">
             <label>URL</label>
-            <input type="text" name="source_url"></input>
+            <input name="source_url"></input>
           </div>
 
           <div class="ui horizontal divider">Or</div>

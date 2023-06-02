@@ -36,6 +36,8 @@ class Preferences:
     DEFAULT_EPISODE_DATA_SOURCE = 'Sonarr'
     VALID_IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp')
 
+    INTERNAL_ASSET_DIRECTORY = TCM_ROOT / 'app' / 'assets'
+
     PRIVATE_ATTRIBUTES = (
         'emby_url', 'emby_api_key', 'jellyfin_url', 'jellyfin_api_key',
         'plex_url', 'plex_token', 'sonarr_url', 'sonarr_api_key', 'tmdb_api_key'
@@ -57,6 +59,13 @@ class Preferences:
 
         # Initialize object based on parsed file
         self.parse_file(obj)
+
+        # Override fixed attributes
+        if self.is_docker:
+            self.asset_directory = '/config/assets'
+        else:
+            self.asset_directory = TCM_ROOT / 'assets'
+        self.asset_directory.mkdir(parents=True, exist_ok=True)
 
 
     def __setattr__(self, name: str, value: Any) -> None:
@@ -106,10 +115,11 @@ class Preferences:
         self.is_docker = environ.get('TCM_IS_DOCKER', 'false').lower() == 'true'
 
         # Default arguments
+        default_asset_directory = '/config/assets' if self.is_docker else TCM_ROOT / 'assets'
         default_card_directory = '/config/cards' if self.is_docker else TCM_ROOT / 'cards'
         default_source_directory = '/config/source' if self.is_docker else TCM_ROOT / 'source'
         DEFAULTS = {
-            'asset_directory':  Path(__file__).parent.parent / 'assets',
+            'asset_directory':  default_asset_directory,
             'card_directory': default_card_directory,
             'source_directory': default_source_directory,
             'card_width': TitleCard.DEFAULT_WIDTH,
@@ -207,9 +217,8 @@ class Preferences:
 
     def determine_imagemagick_prefix(self) -> None:
         """
-        Determine whether to use the "magick " prefix for ImageMagick commands.
-        If a prefix cannot be determined, a critical message is logged and the
-        program exits with an error.
+        Determine whether to use the "magick " prefix for ImageMagick
+        commands.
         """
 
         # Try variations of the font list command with/out the "magick " prefix

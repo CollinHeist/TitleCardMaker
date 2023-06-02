@@ -27,7 +27,7 @@ class LandscapeTitleCard(BaseCardType):
     API_DETAILS = CardDescription(
         name='Landscape',
         identifier='landscape',
-        example='/assets/cards/landscape.jpg',
+        example='/internal_assets/cards/landscape.jpg',
         creators=['CollinHeist'],
         source='local',
         supports_custom_fonts=True,
