@@ -282,7 +282,7 @@ def import_series_yaml(
             # Function
             download_series_poster,
             # Arguments
-            db, preferences, series, tmdb_interface,
+            db, preferences, series, imagemagick_interface, tmdb_interface,
         )
         background_tasks.add_task(
             # Function

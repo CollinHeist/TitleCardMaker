@@ -10,6 +10,7 @@ __pycache__/
 __pypackages__/
 
 app/assets/tmp/
+assets/
 source/
 logs/
 fonts/

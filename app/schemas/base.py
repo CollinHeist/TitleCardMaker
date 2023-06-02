@@ -13,7 +13,7 @@ class Base(BaseModel):
         orm_mode = True
 
 class UpdateBase(Base):
-    @root_validator(pre=True)
+    @root_validator
     def delete_unspecified_args(cls, values):
         delete_keys = [key for key, value in values.items() if value == UNSPECIFIED]
         for key in delete_keys:

@@ -25,7 +25,7 @@ class DividerTitleCard(BaseCardType):
     API_DETAILS = CardDescription(
         name='Divider',
         identifier='divider',
-        example='/assets/cards/divider.jpg',
+        example='/internal_assets/cards/divider.jpg',
         creators=['CollinHeist'],
         source='local',
         supports_custom_fonts=True,

@@ -20,7 +20,7 @@ class FrameTitleCard(BaseCardType):
     API_DETAILS = CardDescription(
         name='Frame',
         identifier='frame',
-        example='/assets/cards/frame.jpg',
+        example='/internal_assets/cards/frame.jpg',
         creators=['CollinHeist'],
         source='local',
         supports_custom_fonts=True,

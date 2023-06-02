@@ -13,7 +13,7 @@ from modules.CleanPath import CleanPath
 from modules.Debug import log
 from modules.SeriesInfo import SeriesInfo
 
-ASSET_DIRECTORY = Path(__file__).parent.parent / 'assets'
+INTERNAL_ASSET_DIRECTORY = Path(__file__).parent.parent / 'assets'
 
 class Series(Base):
     __tablename__ = 'series'
@@ -37,8 +37,11 @@ class Series(Base):
     name = Column(String, nullable=False)
     year = Column(Integer, nullable=False)
     monitored = Column(Boolean, default=True, nullable=False)
-    poster_file = Column(String, default=str(ASSET_DIRECTORY/'placeholder.jpg'))
-    poster_url = Column(String, default='/assets/placeholder.jpg')
+    poster_file = Column(
+        String,
+        default=str(INTERNAL_ASSET_DIRECTORY/'placeholder.jpg')
+    )
+    poster_url = Column(String, default='/internal_assets/placeholder.jpg')
 
     # Series config arguments
     directory = Column(String, default=None)
@@ -89,14 +92,13 @@ class Series(Base):
     def template_ids(self) -> list[int]:
         return [template.id for template in self.templates]
 
-    def __repr__(self) -> str:
-        return (
-            f'<Series {self.id=}, {self.name=}, {self.year=}>'
-        )
-
     @hybrid_property
     def full_name(self) -> str:
         return f'{self.name} ({self.year})'
+    
+    @hybrid_property
+    def small_poster_url(self) -> str:
+        return f'/assets/{self.id}/poster-750.jpg'
     
     @hybrid_property
     def number_of_seasons(self) -> int:

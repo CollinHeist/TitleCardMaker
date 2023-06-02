@@ -1,9 +1,11 @@
 from pathlib import Path
 from requests import get
+from shutil import copy as file_copy
 from typing import Optional
 
 from fastapi import (
-    APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, UploadFile
+    APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, Query,
+    UploadFile
 )
 
 from app.database.query import get_all_templates, get_font, get_series
@@ -87,7 +89,7 @@ def add_new_series(
         # Function
         download_series_poster,
         # Arguments
-        db, preferences, series, tmdb_interface,
+        db, preferences, series, imagemagick_interface, tmdb_interface,
     )
     background_tasks.add_task(
         # Function
@@ -308,21 +310,42 @@ def reload_title_cards_into_media_server(
 
 
 @series_router.get('/{series_id}/poster', status_code=200)
-def get_series_poster(
+def download_series_poster(
         series_id: int,
         db = Depends(get_database),
         preferences = Depends(get_preferences),
+        imagemagick_interface = Depends(get_imagemagick_interface),
         tmdb_interface = Depends(get_tmdb_interface)) -> str:
     """
-    Download and return a poster for the given series.
+    Download and return a poster for the given Series.
 
     - series_id: Series being queried.
     """
 
-    # Find series with this ID, raise 404 if DNE
+    # Find Series with this ID, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    return download_series_poster(db, preferences, series, tmdb_interface)
+    return download_series_poster(
+        db, preferences, series, imagemagick_interface, tmdb_interface,
+    )
+
+
+@series_router.put('/{series_id}/poster/query', status_code=200)
+def query_series_poster(
+        series_id: int,
+        db = Depends(get_database),
+        tmdb_interface = Depends(get_tmdb_interface)) -> Optional[str]:
+    """
+    Query for a poster of the given Series.
+
+    - series_id: Series being queried.
+    """
+
+    # Find Series with this ID, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Return queried poster
+    return tmdb_interface.get_series_poster(series.as_series_info)
 
 
 @series_router.post('/{series_id}/poster', status_code=201)
@@ -331,7 +354,8 @@ async def set_series_poster(
         poster_url: Optional[str] = Form(default=None),
         poster_file: Optional[UploadFile] = None,
         db = Depends(get_database),
-        preferences = Depends(get_preferences)) -> str:
+        preferences = Depends(get_preferences),
+        image_magick_interface = Depends(get_imagemagick_interface)) -> str:
     """
     Set the poster for the given series.
 
@@ -377,12 +401,25 @@ async def set_series_poster(
             )
 
     # Valid poster provided, download into asset directory
-    poster_path = preferences.asset_directory / 'posters' / f'{series.id}.jpg'
+    poster_path = preferences.asset_directory / str(series.id) / 'poster.jpg'
     series.poster_file = str(poster_path)
-    poster_file.write_bytes(poster_content)
+    poster_path.parent.mkdir(exist_ok=True, parents=True)
+    poster_path.write_bytes(poster_content)
+
+    # Create resized poster for preview
+    resized_path = poster_path.parent / 'poster-750.jpg'
+    if image_magick_interface is None:
+        file_copy(
+            preferences.INTERNAL_ASSET_DIRECTORY / 'placeholder.jpg',
+            resized_path,
+        )
+    else:
+        image_magick_interface.resize_image(
+            poster_path, resized_path, by='width', width=500,
+        )
 
     # Update poster, commit to database
-    series.poster_url = f'/assets/posters/{poster_file.name}'
+    series.poster_url = f'/assets/{series.id}/poster.jpg'
     db.commit()
     
     return series.poster_url

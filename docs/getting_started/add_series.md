@@ -19,7 +19,7 @@ corner.
 2. In the top right (below the search bar), click the `+ New Series` button.
 3. For this tutorial, we'll be adding and customizing
 [Better Call Saul](https://www.themoviedb.org/tv/60059-better-call-saul) - in
-the popup form, fill out the name and year as `Better Call Saul` and `2015`.
+the popup form, fill out the name and year as _Better Call Saul_ and `2015`.
 
     !!! tip "Required Information"
 
@@ -34,7 +34,7 @@ also try and download a poster.
 
     ??? warning "Missing Poster?"
 
-        If the `Better Call Saul` poster does not load (even after a refresh),
+        If the _Better Call Saul_ poster does not load (even after a refresh),
         and stays as a blank black image, then TCM might be unable to
         communicate with TMDb.
 

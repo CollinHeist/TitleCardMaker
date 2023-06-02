@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional, Union
 
 from num2words import num2words
@@ -77,14 +78,15 @@ class EpisodeInfo(DatabaseInfoContainer):
             title: Union[str, Title],
             season_number: int,
             episode_number: int,
-            absolute_number: Optional[int] = None, *,
+            absolute_number: Optional[int] = None,
+            *,
             emby_id: Optional[int] = None,
             imdb_id: Optional[str] = None,
             jellyfin_id: Optional[str] = None,
             tmdb_id: Optional[int] = None,
             tvdb_id: Optional[int] = None,
             tvrage_id: Optional[int] = None,
-            airdate: Optional['datetime'] = None,
+            airdate: Optional[datetime] = None,
             preferences: 'Preferences' = None) -> None:
         """
         Initialize this object with the given title, indices, database

@@ -216,7 +216,9 @@ def run_sync(
                 series, db, emby_interface, jellyfin_interface, plex_interface,
                 sonarr_interface, tmdb_interface,
             )
-            download_series_poster(db, preferences, series, tmdb_interface)
+            download_series_poster(
+                db, preferences, series, imagemagick_interface, tmdb_interface,
+            )
             download_series_logo(
                 preferences, emby_interface, imagemagick_interface,
                 jellyfin_interface, tmdb_interface, series,
@@ -233,7 +235,7 @@ def run_sync(
                 # Function
                 download_series_poster,
                 # Arguments
-                db, preferences, series, tmdb_interface,
+                db, preferences, series, imagemagick_interface, tmdb_interface, 
             )
             background_tasks.add_task(
                 # Function

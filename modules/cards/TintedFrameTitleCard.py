@@ -46,7 +46,7 @@ class TintedFrameTitleCard(BaseCardType):
     API_DETAILS = CardDescription(
         name='Tinted Frame',
         identifier='tinted frame',
-        example='/assets/cards/tinted frame.jpg',
+        example='/internal_assets/cards/tinted frame.jpg',
         creators=['CollinHeist'],
         source='local',
         supports_custom_fonts=True,

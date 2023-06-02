@@ -85,8 +85,7 @@ def get_local_card_types() -> list[LocalCardType]:
 
 
 @availablility_router.get('/card-types/remote', status_code=200, tags=['Title Cards'])
-def get_remote_card_types(
-        preferences=Depends(get_preferences)) -> list[RemoteCardType]:
+def get_remote_card_types() -> list[RemoteCardType]:
     """
     Get all available remote card types.
     """

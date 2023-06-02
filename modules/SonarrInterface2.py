@@ -328,7 +328,7 @@ class SonarrInterface(WebInterface, SyncInterface):
 
     def get_all_episodes(self,
             series_info: SeriesInfo, *,
-            preferences = None) -> list[EpisodeInfo]:
+            preferences: Optional['Preferences'] = None) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that
         have  already aired are returned.

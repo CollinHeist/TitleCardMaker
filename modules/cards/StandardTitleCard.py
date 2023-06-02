@@ -20,7 +20,7 @@ class StandardTitleCard(BaseCardType):
     API_DETAILS = CardDescription(
         name='Standard',
         identifier='standard',
-        example='/assets/cards/standard.jpg',
+        example='/internal_assets/cards/standard.jpg',
         creators=['/u/UniversalPolymath', 'CollinHeist'],
         source='local',
         supports_custom_fonts=True,
