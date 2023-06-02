@@ -2,23 +2,21 @@
 
 !!! note "Example Series"
 
-    For this tutorial, I'll be referring to `Better Call Saul` and `Breaking
-    Bad` as example Series. If you do not have either of these Series in your
+    For this tutorial, I'll be referring to _Better Call Saul_ and _Breaking
+    Bad_ as example Series. If you do not have either of these Series in your
     Emby server, you can add them (and remove them later - or not, because
     they're great shows), or just pick two entirely different Series.
 
-!!! warning "Under Construction"
+1. For the purposes of this tutorial, we will be Syncing a subset of your Series
+by using a filter tag within Emby. Open Emby.
 
-    This documentation is actively being developed.
+2. Open _Better Call Saul_, and then click the "more data"
+:material-dots-horizontal: button, then click `Edit Metadata` for the Series.
 
-1. For the purposes of this tutorial, we will be Syncing a subset of your
-Series by using a filter tag within Emby. Open Emby.
+3. At the very bottom click the `+` button next to Tags, type `tcm-test` and hit
+++enter++ - click `Save`.
 
-2. ... Open `Better Call Saul`, and then click the `Edit` wrench.
-
-3. In the Tags section, type `tcm-test` and hit ++enter++ - click `Save`.
-
-4. Repeat Steps 2-3 for `Breaking Bad`.
+4. Repeat Steps 2-3 for _Breaking Bad_.
 
 5. Back within TitleCardMaker, navigate to the Sync page by clicking `Sync` from
 the side navigation bar.
@@ -55,9 +53,9 @@ delete icon).
 9. TCM will then query Emby for all your Series, filter the results by our
 indicated filters (in our case the `tcm-test` tag), and then filter out any
 exclusions (none). The added Series will be listed in a message. You should
-see "Synced 1 Series", with "Breaking Bad" listed below.
+see "Synced 1 Series", with _Breaking Bad_ listed below.
 
-    ??? question "Why is Better Call Saul not listed here?"
+    ??? question "Why is _Better Call Saul_ not listed here?"
 
         The reason BCS is not listed as having been Synced is because when TCM
         runs a Sync, it checks the resulting list of Series against any

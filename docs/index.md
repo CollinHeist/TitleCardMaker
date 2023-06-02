@@ -280,8 +280,8 @@ the TCM interface.
         2. This makes the TCM ports available to other Docker containers.
         3. These `-v` commands make your directories accessible inside the
         container.
-        4. This exposes the _internal_ `4242` port outside the
-        container, so that you can access it on your machine.
+        4. This exposes the _internal_ `4242` port outside the container, so
+        that you can access it on your machine.
 
     === "MacOS"
 
@@ -300,8 +300,8 @@ the TCM interface.
         2. This makes the TCM ports available to other Docker containers.
         3. These `-v` commands make your directories accessible inside the
         container.
-        4. This exposes the _internal_ `4242` port outside the
-        container, so that you can access it on your machine.
+        4. This exposes the _internal_ `4242` port outside the container, so
+        that you can access it on your machine.
 
     === "Windows (Powershell)"
 
@@ -320,8 +320,8 @@ the TCM interface.
         2. This makes the TCM ports available to other Docker containers.
         3. These `-v` commands make your directories accessible inside the
         container.
-        4. This exposes the _internal_ `4242` port outside the
-        container, so that you can access it on your machine.
+        4. This exposes the _internal_ `4242` port outside the container, so
+        that you can access it on your machine.
 
     === "Windows (Non-Powershell)"
 
@@ -340,8 +340,8 @@ the TCM interface.
         2. This makes the TCM ports available to other Docker containers.
         3. These `-v` commands make your directories accessible inside the
         container.
-        4. This exposes the _internal_ `4242` port outside the
-        container, so that you can access it on your machine.
+        4. This exposes the _internal_ `4242` port outside the container, so
+        that you can access it on your machine.
 
 !!! success "Success"
 
