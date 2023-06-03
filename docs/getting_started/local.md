@@ -34,14 +34,14 @@ covered in this step.
 
     This should output _at least_ `Python 3.9`.
 
-=== "Linux"
+=== ":material-linux: Linux"
 
     Given the wide diversity of Linux Distros, it is not feasible to
     cover the installation of Python in all circumstances. [This
     guide](https://realpython.com/installing-python/#how-to-install-python-on-linux)
     covers some common installation methods.
 
-=== "MacOS"
+=== ":material-apple: MacOS"
 
     Python comes pre-installed on MacOS, but it can be updated with
     Homebrew by running the following command:
@@ -50,7 +50,7 @@ covered in this step.
     brew update && brew upgrade python
     ```
 
-=== "Windows"
+=== ":material-microsoft-windows: Windows"
 
     1. Go to the [Python website](https://www.python.org/downloads/windows/),
     and download the installer for the latest version of Python 3.10.
@@ -70,18 +70,18 @@ covered in this step.
     git --version
     ```
 
-=== "Linux"
+=== ":material-linux: Linux"
 
     Follow [these](https://git-scm.com/download/linux) distro-specific
     instructions.
 
-=== "MacOS"
+=== ":material-apple: MacOS"
 
     ```bash
     brew install git
     ```
 
-=== "Windows"
+=== ":material-microsoft-windows: Windows"
 
     1. Download the 64-bit standalone installer from
     [here](https://git-scm.com/download/win).
@@ -134,20 +134,20 @@ pipenv install
 
 ### Installing ImageMagick
 
-=== "Linux"
+=== ":material-linux: Linux"
 
     Depending on your Linux distro, you might be able to use
     whatever package manager comes installed. Some of the common
     installations are detailed
     [here](https://www.xmodulo.com/install-imagemagick-linux.html).
 
-=== "MacOS"
+=== ":material-apple: MacOS"
 
     ```bash
     brew install imagemagick
     ```
 
-=== "Windows"
+=== ":material-microsoft-windows: Windows"
 
     1. Download the Windows Binary Release from
     [here](https://imagemagick.org/script/download.php#windows).

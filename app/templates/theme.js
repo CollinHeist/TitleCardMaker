@@ -13,14 +13,14 @@ function toggleTheme() {
     currentIcons[0].className = 'moon outline icon';
     currentIcons[1].className = 'sun outline icon';
     // $('body')[0].style.setProperty('background-color', 'var(--background-color-dark)');
-    $('body')[0].style.setProperty('background-image', 'linear-gradient(to bottom right, var(--background-color-dark), #313131)');
+    $('#main-content')[0].style.setProperty('background-image', 'linear-gradient(to bottom right, var(--background-color-dark), #313131)');
     window.localStorage.setItem('site-theme', 'dark');
   // Dark -> light
   } else {
     currentIcons[1].className = 'moon outline icon';
     currentIcons[0].className = 'sun outline icon';
     // $('body')[0].style.setProperty('background-color', 'var(--background-color-light)');
-    $('body')[0].style.setProperty('background-image', 'linear-gradient(to bottom right, var(--background-color-light), #d9d9d9)');
+    $('#main-content')[0].style.setProperty('background-image', 'linear-gradient(to bottom right, var(--background-color-light), #d9d9d9)');
     window.localStorage.setItem('site-theme', 'light');
   }
   refreshTheme();

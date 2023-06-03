@@ -14,8 +14,8 @@ Series can be _manually_ added to TCM.
 ## Instructions
 
 1. Navigate back to the TitleCardMaker homepage - this can be done by clicking
-`Series` from the side navigation bar, or clicking the TCM logo in the top
-corner.
+:fontawesome-solid-tv: `Series` from the side navigation bar, or clicking the
+TCM logo in the top corner.
 2. In the top right (below the search bar), click the `+ New Series` button.
 3. For this tutorial, we'll be adding and customizing
 [Better Call Saul](https://www.themoviedb.org/tv/60059-better-call-saul) - in

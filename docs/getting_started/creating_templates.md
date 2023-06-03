@@ -65,7 +65,7 @@ Template".
 
 14. Hit `Save Changes`.
 
-!!! success "Two Templates Created"
+!!! success "Templates Created"
 
     You have now successfully created two Templates. One of which sets the card
     type to the Tinted Frame card, and sets the bottom element to a logo. The

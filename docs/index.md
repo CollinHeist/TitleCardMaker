@@ -67,7 +67,7 @@ installation to live. Open the unzipped folder.
 
     ??? example "Example"
 
-        === "Linux"
+        === ":material-linux: Linux"
 
             ```bash
             cd "~/Your/Install/Directory" # (1)!
@@ -76,7 +76,7 @@ installation to live. Open the unzipped folder.
             1. Replace `~/Your/Install/Directory` with the path to the directory
             from the above Step 2.
 
-        === "MacOS"
+        === ":material-apple: MacOS"
 
             ```bash
             cd "~/Your/Install/Directory" # (1)!
@@ -85,7 +85,7 @@ installation to live. Open the unzipped folder.
             1. Replace `~/Your/Install/Directory` with the path to the directory
             from the above Step 2.
 
-        === "Windows (Powershell)"
+        === ":material-powershell: Windows (Powershell)"
 
             ```bash
             cd 'C:\Your\Install\Directory' <#(1)#>
@@ -94,7 +94,7 @@ installation to live. Open the unzipped folder.
             1. Replace `~/Your/Install/Directory` with the path to the directory
             from the above Step 2.
 
-        === "Windows (Non-Powershell)"
+        === ":material-microsoft-windows: Windows (Non-Powershell)"
 
             ```bash
             cd 'C:\Your\Install\Directory' # (1)!
@@ -107,25 +107,25 @@ installation to live. Open the unzipped folder.
 TCM - these are the `assets`, `cards`, `logs`, and `source` directories - by
 executing the following command(s):
 
-    === "Linux"
+    === ":material-linux: Linux"
 
         ```bash
         mkdir assets cards logs source
         ```
 
-    === "MacOS"
+    === ":material-apple: MacOS"
 
         ```bash
         mkdir assets cards logs source
         ```
 
-    === "Windows (Powershell)"
+    === ":material-powershell: Windows (Powershell)"
 
         ```bash
         mkdir assets; mkdir cards; mkrdir logs; mkdir source;
         ```
 
-    === "Windows (Non-Powershell)"
+    === ":material-microsoft-windows: Windows (Non-Powershell)"
 
         ```bash
         mkdir assets; mkdir cards; mkrdir logs; mkdir source;
@@ -134,7 +134,7 @@ executing the following command(s):
 6. We now need to make sure these directories have the correct permissions
 assigned to them. 
 
-    === "Linux"
+    === ":material-linux: Linux"
 
         With the Group and User ID that you would like TCM to execute with, run
         the following command:
@@ -146,7 +146,7 @@ assigned to them.
         1. Replace `{group}` and `{user}` with the actual group and user (or
         their ID's) - e.g. `99:100`.
 
-    === "MacOS"
+    === ":material-apple: MacOS"
 
         With the Group and User ID that you would like TCM to execute with, run
         the following command:
@@ -158,11 +158,11 @@ assigned to them.
         1. Replace `{group}` and `{user}` with the actual group and user (or
         their ID's) - e.g. `99:100`.
 
-    === "Windows (Powershell)"
+    === ":material-powershell: Windows (Powershell)"
 
         Changing the permissions is not necessary on Windows.
 
-    === "Windows (Non-Powershell)"
+    === ":material-microsoft-windows: Windows (Non-Powershell)"
 
         Changing the permissions is not necessary on Windows.
 
@@ -176,7 +176,7 @@ assigned to them.
 7. Run the following command to install the required Python packages and launch
 the TCM interface.
 
-    === "Linux"
+    === ":material-linux: Linux"
 
         ```bash
         pipenv install; # (1)!
@@ -187,7 +187,7 @@ the TCM interface.
         2. This launches a webserver at your `{your IP}:4242` which the TCM Web
         UI is accessible at.
 
-    === "MacOS"
+    === ":material-apple: MacOS"
 
         ```bash
         pipenv install; # (1)!
@@ -198,7 +198,7 @@ the TCM interface.
         2. This launches a webserver at your `{your IP}:4242` which the TCM Web
         UI is accessible at.
 
-    === "Windows (Powershell)"
+    === ":material-powershell: Windows (Powershell)"
 
         ```bash
         pipenv install; <#(1)#>
@@ -209,7 +209,7 @@ the TCM interface.
         2. This launches a webserver at your `{your IP}:4242` which the TCM Web
         UI is accessible at.
 
-    === "Windows (Non-Powershell)"
+    === ":material-microsoft-windows: Windows (Non-Powershell)"
 
         ```bash
         pipenv install; # (1)!
@@ -229,7 +229,7 @@ the TCM interface.
 
 1. Build the Docker container by executing the following command:
 
-    === "Linux"
+    === ":material-linux: Linux"
 
         ```bash
         docker build -t "titlecardmaker" . # (1)!
@@ -237,7 +237,7 @@ the TCM interface.
 
         1. This will label the built container `titlecardmaker`.
 
-    === "MacOS"
+    === ":material-apple: MacOS"
 
         ```bash
         docker build -t "titlecardmaker" . # (1)!
@@ -245,7 +245,7 @@ the TCM interface.
 
         1. This will label the built container `titlecardmaker`.
 
-    === "Windows (Powershell)"
+    === ":material-powershell: Windows (Powershell)"
 
         ```bash
         docker build -t "titlecardmaker" . <#(1)#>
@@ -253,7 +253,7 @@ the TCM interface.
 
         1. This will label the built container `titlecardmaker`.
 
-    === "Windows (Non-Powershell)"
+    === ":material-microsoft-windows: Windows (Non-Powershell)"
 
         ```bash
         docker build -t "titlecardmaker" . # (1)!
@@ -263,7 +263,7 @@ the TCM interface.
 
 2. Launch the Docker container by executing the following command:
 
-    === "Linux"
+    === ":material-linux: Linux"
 
         ```bash
         docker run -itd `# (1)!` \
@@ -283,7 +283,7 @@ the TCM interface.
         4. This exposes the _internal_ `4242` port outside the container, so
         that you can access it on your machine.
 
-    === "MacOS"
+    === ":material-apple: MacOS"
 
         ```bash
         docker run -itd `# (1)!` \
@@ -303,7 +303,7 @@ the TCM interface.
         4. This exposes the _internal_ `4242` port outside the container, so
         that you can access it on your machine.
 
-    === "Windows (Powershell)"
+    === ":material-powershell: Windows (Powershell)"
 
         ```bash
         docker run -itd <#(1)#> `
@@ -323,7 +323,7 @@ the TCM interface.
         4. This exposes the _internal_ `4242` port outside the container, so
         that you can access it on your machine.
 
-    === "Windows (Non-Powershell)"
+    === ":material-microsoft-windows: Windows (Non-Powershell)"
 
         ```bash
         docker run -itd `# (1)!` ^

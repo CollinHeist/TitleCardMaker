@@ -1,4 +1,9 @@
 # Settings
+
+!!! warning "Under Construction"
+
+    This documentation is actively being developed.
+
 ## Background
 From the left-hand navigation menu, Global Settings can be accessed and
 set. Settings listed here are the _global_ defaults for TitleCardMaker,
@@ -150,11 +155,15 @@ Episode Data source - however, there are some differences between each.
 
     | Episode Data Source | Provides Absolute Episode Numbers | Only Provides Data for Downloaded Episodes | Relative Speed |
     | :---: | :---: | :---: | :---: |
-    | Emby | :material-close:{.red} | :material-check:{.green} | Slow |
-    | Jellyfin | :material-close:{.red} | :material-check:{.green} | Slow |
+    | Emby | :material-close:{.red} | :material-check:{.green} | Average |
+    | Jellyfin | :material-close:{.red} | :material-check:{.green} | Average |
     | Plex | :material-close:{.red} | :material-check:{.green} | Slow |
-    | Sonarr | :material-check:{.green} | :material-check:{.green} | Fast |
-    | TMDb | :material-close:{.red} | :material-check:{.green} | Fast |
+    | Sonarr | :material-check:{.green} | :octicons-x-16:{.red}| Fast |
+    | TMDb | :material-close:{.red} | :octicons-x-16:{.red} | Fast |
+
+    The speed of a Media Server as an Episode data source will vary wildy with
+    both the number of Episodes for a given Series, as well as the overall size
+    of your database.
 
 This setting _can_ be overwritten with Templates, or per-Series.
 
@@ -230,10 +239,11 @@ The output dimensions of all created Title Cards. This can be reduced to
 decrease the filesize (and therefore quality) of your Title Card assets, or
 increased for the opposite effect.
 
-!!! warning "16:9 Aspect Ratio"
+??? warning "16:9 Aspect Ratio"
 
     TCM will not stop you from setting a non-standard (non-16:9) aspect ratio,
-    but your created Title Cards __will__ be cropped.
+    but your created Title Cards __will__ be cropped when loaded into your
+    Media Server.
 
 ## File Naming
 ### Card Extension

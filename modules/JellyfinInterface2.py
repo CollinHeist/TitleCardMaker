@@ -314,7 +314,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 if series.get('PremiereDate', None) is None:
                     log.debug(f'Series {series["Name"]} has no premiere date')
                     continue
-                log.info(f'{series=}')
+
                 series_info = SeriesInfo(
                     series['Name'], 
                     datetime.strptime(series['PremiereDate'],

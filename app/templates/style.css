@@ -10,7 +10,7 @@
   --support-button-color: #db2828;
 }
 
-body {
+#main-content {
   /* background-color: var(--background-color-light); */
   background-image: linear-gradient(to bottom right, var(--background-color-light), #d9d9d9);
 }

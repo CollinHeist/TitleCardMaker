@@ -18,8 +18,8 @@ by using a filter tag within Emby. Open Emby.
 
 4. Repeat Steps 2-3 for _Breaking Bad_.
 
-5. Back within TitleCardMaker, navigate to the Sync page by clicking `Sync` from
-the side navigation bar.
+5. Back within TitleCardMaker, navigate to the Sync page by clicking
+:fontawesome-solid-arrows-rotate: `Sync` from the side navigation bar.
 
 6. Under the Emby section of the page, click the `+ Add Sync` button.
 
@@ -47,8 +47,7 @@ the side navigation bar.
 
 8. At the top of the page is an indication of when all your Syncs will next
 run - we'll adjust this [next](../scheduler.md) - but to run a Sync
-immediately, click the small blue Sync icon (the circular arrows next to the
-delete icon).
+immediately, click the small :fontawesome-solid-arrows-rotate: Sync icon.
 
 9. TCM will then query Emby for all your Series, filter the results by our
 indicated filters (in our case the `tcm-test` tag), and then filter out any
