@@ -2397,7 +2397,9 @@
       let template_ids = [];
       for (const [key, value] of [...form.entries()]) {
         // Handle Templates
-        if (key === 'template_ids' && value != '') { template_ids = value.split(','); }
+        if (key === 'template_ids' && value != '') {
+          template_ids = value.split(',');
+        }
         // Add list data fields to listData object
         if (Object.keys(listData).includes(key)) {
           if (value !== '') { listData[key].push(value);  }
@@ -2427,10 +2429,16 @@
         form.append($(val).attr('name'), $(val).is(':checked'))
       });
 
+      // Add Templates if the correct form
+      if (event.target.id === 'card-config-form') {
+        listData.template_ids = template_ids;
+      }
+
+      // Submit API request
       $.ajax({
         type: 'PATCH',
         url: '/api/series/{{series.id}}',
-        data: JSON.stringify({...Object.fromEntries(form.entries()), ...listData, template_ids: template_ids}),
+        data: JSON.stringify({...Object.fromEntries(form.entries()), ...listData}),
         contentType: 'application/json',
         success: (response) => {
           $('#submit-changes').toggleClass('loading', false);
