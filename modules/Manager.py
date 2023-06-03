@@ -400,7 +400,11 @@ class Manager:
                 self.archives = [archive]
 
             # Run all functions on this series
-            self.__run(serial=True)
+            try:
+                self.__run(serial=True)
+            except Exception as e:
+                log.exception(f'Uncaught Exception while processing {show}', e)
+                continue
 
 
     def run(self) -> None:
