@@ -111,12 +111,15 @@ def _get(
     return value
 
 
-def _parse_translations(yaml_dict: dict[str, Any]) -> list[Translation]:
+def _parse_translations(
+        yaml_dict: dict[str, Any],
+        default: Any = None) -> list[Translation]:
     """
     Parse translations from the given YAML.
 
     Args:
         yaml_dict: Dictionary of YAML to parse.
+        default: Default value to return if no translations are defined.
 
     Returns:
         List of Translations defined by the given YAML.
@@ -125,8 +128,9 @@ def _parse_translations(yaml_dict: dict[str, Any]) -> list[Translation]:
         HTTPException (422) if the YAML is invalid and cannot be parsed.
     """
 
+    # No translations, return default
     if (translations := yaml_dict.get('translation', None)) is None:
-        return []
+        return default
     
     def _parse_single_translation(translation: dict[str, Any]) -> dict[str, str]:
         if (not isinstance(translation, dict)
@@ -141,7 +145,7 @@ def _parse_translations(yaml_dict: dict[str, Any]) -> list[Translation]:
             'data_key': str(translation['key']),
         }
 
-    # List of Translations
+    # List of translations
     if isinstance(translations, list):
         return [
             _parse_single_translation(translation)
@@ -151,7 +155,8 @@ def _parse_translations(yaml_dict: dict[str, Any]) -> list[Translation]:
     # Singular translation
     if isinstance(translations, dict):
         return [_parse_single_translation(translations)]
-    
+
+    # Not list or dictionary, invalid translations
     raise HTTPException(
         status_code=422,
         detail=f'Invalid translations',
@@ -823,7 +828,7 @@ def parse_templates(
             card_filename_format=_get(template_dict, 'filename_format'),
             episode_data_source=_parse_episode_data_source(template_dict),
             sync_specials=_get(template_dict, 'sync_specials', type_=bool),
-            translations=_parse_translations(template_dict),
+            translations=_parse_translations(template_dict, default=[]),
             font_id=font_id,
             card_type=_get(template_dict, 'card_type'),
             season_title_ranges=list(season_titles.keys()),
@@ -1016,30 +1021,30 @@ def parse_series(
                 'watched_style',
                 type_=preferences.standardize_style
             ),
-            translations=_parse_translations(series_dict),
+            translations=_parse_translations(series_dict, default=None),
             font=font,
             font_color=_get(series_dict, 'font', 'color'),
             font_title_case=_get(series_dict, 'font', 'case'),
             font_size=_get(
                 series_dict,
                 'font', 'size',
-                default=1.0, type_=Percentage
+                type_=Percentage
             ), font_kerning=_get(
                 series_dict,
                 'font', 'kerning',
-                default=1.0, type_=Percentage
+                type_=Percentage
             ), font_stroke_width=_get(
                 series_dict,
                 'font', 'stroke_width',
-                default=1.0, type_=Percentage
+                type_=Percentage
             ), font_interline_spacing=_get(
                 series_dict,
                 'font', 'interline_spacing',
-                default=0, type_=int
+                type_=int
             ), font_vertical_shift=_get(
                 series_dict,
                 'font', 'vertical_shift',
-                default=0, type_=int
+                type_=int
             ), directory=_get(series_dict, 'media_directory'),
             **{library_type: library},
             **series_info.ids,
