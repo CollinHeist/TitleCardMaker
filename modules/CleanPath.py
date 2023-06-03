@@ -99,7 +99,6 @@ class CleanPath(_Path_):
             finalized_path = self.finalize()
         # If path resolution raises an error, clean and then re-resolve
         except Exception as e:
-            log.exception(f'Error finalizing "{self}"', e)
             finalized_path =self._sanitize_parts(CleanPath.cwd()/self).resolve()
 
         return self._sanitize_parts(finalized_path)
