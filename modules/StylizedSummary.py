@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 from modules.Debug import log
 from modules.BaseSummary import BaseSummary
@@ -22,8 +23,10 @@ class StylizedSummary(BaseSummary):
     __RESIZED_LOGO_PATH = BaseSummary.TEMP_DIR / 'resized_logo.png'
 
 
-    def __init__(self, show: 'Show', background: str=BACKGROUND_COLOR,
-                 created_by: str=None) -> None:
+    def __init__(self,
+            show: 'Show',
+            background: str = BACKGROUND_COLOR,
+            created_by: Optional[str] = None) -> None:
         """
         Construct a new instance of this object.
 

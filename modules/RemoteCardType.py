@@ -3,7 +3,7 @@ from importlib.util import spec_from_file_location, module_from_spec
 
 from pathlib import Path
 from requests import get
-from tinydb import TinyDB, where
+from tinydb import where
 
 from modules.CleanPath import CleanPath
 from modules.Debug import log
@@ -50,8 +50,6 @@ class RemoteCardType:
 
         # Get database of loaded assets/cards
         self.loaded = PersistentDatabase(self.LOADED)
-
-        # Assume file is valid until invalidated
         self.valid = True
 
         # If local file has been specified..
