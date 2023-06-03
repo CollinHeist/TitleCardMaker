@@ -3,7 +3,7 @@ from typing import Any
 
 from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, JSON
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
-from sqlalchemy.ext.mutable import MutableDict
+from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy.orm import relationship
 
 from app.database.session import Base
@@ -53,7 +53,7 @@ class Series(Base):
     episode_data_source = Column(String, default=None)
     sync_specials = Column(Boolean, default=None)
     skip_localized_images = Column(Boolean, default=None)
-    translations = Column(JSON, default=None)
+    translations = Column(MutableList.as_mutable(JSON), default=None)
     match_titles = Column(Boolean, default=True, nullable=False)
 
     # Database arguments
