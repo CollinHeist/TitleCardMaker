@@ -669,12 +669,12 @@
               filters: filters,
             }),
             contentType: 'application/json',
-            success: (response) => {
+            success: updatedTemplate => {
               $.toast({
                 class: 'blue info',
-                title: `Updated Template "${templateObj.name}"`,
+                title: `Updated Template "${updatedTemplate.name}"`,
               });
-            }, error: (response) => {
+            }, error: response => {
               $.toast({
                 class: 'error',
                 title: 'Error Updating Template',
