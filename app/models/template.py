@@ -42,7 +42,7 @@ ARGUMENT_KEYS = (
     'Series Library Name (Emby)', 'Series Library Name (Jellyfin)',
     'Series Library Name (Plex)', 'Series Logo', 'Episode is Watched',
     'Season Number', 'Episode Number', 'Absolute Number', 'Episode Title',
-    'Episode Title Length', 'Episode Airdate', 'Episode Source',
+    'Episode Title Length', 'Episode Airdate',
 )
 
 # Tables for many <-> many Template relationships
@@ -183,9 +183,6 @@ class Template(Base):
                 'Episode Title': episode.title,
                 'Episode Title Length': len(episode.title),
                 'Episode Airdate': episode.airdate,
-                'Episode Source': episode.get_source_file(
-                    preferences.source_directory, series.path_safe_name, 
-                ),
             }
 
         # Evaluate each condition of this Template's filter
