@@ -1055,6 +1055,17 @@
       if (fileHolder === null || fileTemplate === null) { return; }
       const allFiles = await fetch('/api/sources/series/{{series.id}}').then(resp => resp.json());
 
+      // Some error occured, toast and exit
+      if (allFiles.detail !== undefined) {
+        $.toast({
+          'class': 'error',
+          title: 'Error getting Source details',
+          message: allFiles.detail,
+          displayTime: 0,
+        });
+        return;
+      }
+
       const files = allFiles.map(source => {
         const file = fileTemplate.content.cloneNode(true);
         // Fill in the card values present on all files

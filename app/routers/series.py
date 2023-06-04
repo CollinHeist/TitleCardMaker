@@ -310,7 +310,7 @@ def reload_title_cards_into_media_server(
 
 
 @series_router.get('/{series_id}/poster', status_code=200)
-def download_series_poster(
+def download_series_poster_(
         series_id: int,
         db = Depends(get_database),
         preferences = Depends(get_preferences),

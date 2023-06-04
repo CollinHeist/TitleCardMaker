@@ -162,13 +162,12 @@ def download_episode_source_image_(
     the Episode has been internally blacklisted. 
     """
 
-    # Get the Episode and Series with this ID, raise 404 if DNE
+    # Get the Episode with this ID, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
-    series = get_series(db, episode.series_id, raise_exc=True)
 
     return download_episode_source_image(
         db, preferences, emby_interface, jellyfin_interface, plex_interface,
-        tmdb_interface, series, episode
+        tmdb_interface, episode, raise_exc=True,
     )
 
 
