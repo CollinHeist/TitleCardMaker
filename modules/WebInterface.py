@@ -27,6 +27,7 @@ class WebInterface:
     BAD_CONTENT = (
         b'<html><head><title>Not Found</title></head>'
         b'<body><h1>404 Not Found</h1></body></html>',
+        b'<Code>AccessDenied</Code>'
     )
 
 
@@ -157,9 +158,9 @@ class WebInterface:
             error = lambda s: f'URL {image} returned {s} content'
             image = get(image).content
             if len(image) == 0:
-                raise Exception(f'URL {image} returned no content')
-            if image in WebInterface.BAD_CONTENT:
-                raise Exception(f'URL {image} returned bad (malformed) content')
+                raise Exception(error('no'))
+            if any(bad_content in image for bad_content in WebInterface.BAD_CONTENT):
+                raise Exception(error('bad (malformed)'))
 
             # Write content to file, return success
             destination.write_bytes(image)
