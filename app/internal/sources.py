@@ -1,8 +1,7 @@
+from pathlib import Path
 from typing import Optional
 
 from fastapi import HTTPException
-
-from modules.Debug import log
 
 from app.dependencies import (
     get_database, get_preferences, get_emby_interface,
@@ -15,8 +14,11 @@ from app.internal.templates import (
 import app.models as models
 from app.schemas.card import SourceImage
 from app.schemas.episode import Episode
-from app.schemas.preferences import Preferences
+from app.schemas.preferences import Preferences, Style
 from app.schemas.series import Series
+
+from modules.Debug import log
+from modules.ImageMagickInterface import ImageMagickInterface
 from modules.TieredSettings import TieredSettings
 from modules.WebInterface import WebInterface
 
@@ -84,6 +86,71 @@ def download_all_series_logos() -> None:
         log.exception(f'Failed to download series logos', e)
 
     return None
+
+
+def resolve_source_settings(preferences, episode) -> tuple[Style, Path]:
+    """
+    Get the Episode style and source file for the given Episode.
+
+    Args:
+        preferences: Preferences whose global style settings to use in
+            Style resolution.
+        episode: Episode being evaluated.
+
+    Returns:
+        Tuple of the effective Style and the Path to the source file for
+        the given Episode.
+    """
+
+    # Get effective Template for this Series and Episode
+    series = episode.series
+    series_template, episode_template = get_effective_templates(series, episode)
+
+    # Resolve styles
+    watched_style = TieredSettings.resolve_singular_setting(
+        preferences.default_watched_style,
+        getattr(series_template, 'watched_style', None),
+        # getattr(series_template, 'extras', {}).get('watched_style', None),
+        series.watched_style,
+        getattr(series.extras, 'watched_style', None),
+        getattr(episode_template, 'watched_style', None),
+        # getattr(episode_template, 'extras', {}).get('watched_style', None),
+        episode.watched_style,
+        # getattr(episode.extras, 'watched_style', None),
+    )
+    unwatched_style = TieredSettings.resolve_singular_setting(
+        preferences.default_unwatched_style,
+        getattr(series_template, 'unwatched_style', None),
+        # getattr(series_template, 'extras', {}).get('unwatched_style', None),
+        series.watched_style,
+        getattr(series.extras, 'unwatched_style', None),
+        getattr(episode_template, 'unwatched_style', None),
+        # getattr(episode_template, 'extras', {}).get('unwatched_style', None),
+        episode.unwatched_style,
+        # getattr(episode.extras, 'unwatched_style', None),
+    )
+
+    # Styles are the same, Episode watch status does not matter
+    if (('art' in watched_style and 'art' in unwatched_style)
+        or ('unique' in watched_style and 'unique' in unwatched_style)):
+        return watched_style, episode.get_source_file(
+            preferences.source_directory, series.path_safe_name, watched_style
+        )
+    # Episode watch status is unset, use unwatched style
+    elif episode.watched is None:
+        return unwatched_style, episode.get_source_file(
+            preferences.source_directory, series.path_safe_name, unwatched_style
+        )
+    # Episode is watched, use watched style
+    elif episode.watched:
+        return watched_style, episode.get_source_file(
+            preferences.source_directory, series.path_safe_name, watched_style
+        )
+
+    # Episode is unwatched, use unwatched style
+    return unwatched_style, episode.get_source_file(
+        preferences.source_directory, series.path_safe_name, unwatched_style
+    )
 
 
 def download_series_logo(
@@ -209,11 +276,11 @@ def download_episode_source_image(
         HTTPException (400) if the image cannot be downloaded.
     """
 
-    # If source already exists, return path to that
+    # Determine Episode style and source file
+    style, source_file = resolve_source_settings(preferences, episode)
+
+    # If source already exists, return that
     series = episode.series
-    source_file = episode.get_source_file(
-        preferences.source_directory, series.path_safe_name
-    )
     if source_file.exists():
         log.debug(f'{series.log_str} {episode.log_str} Source image already exists')
         return f'/source/{series.path_safe_name}/{source_file.name}'
@@ -232,18 +299,31 @@ def download_episode_source_image(
     # Go through all image sources    
     for image_source in preferences.image_source_priority:
         if image_source == 'Emby' and emby_interface:
+            if 'art' in style:
+                log.debug(f'Cannot source Art images from Emby - skipping')
+                continue
+
             source_image = emby_interface.get_source_image(
                 episode.as_episode_info, raise_exc=raise_exc,
             )
         elif image_source == 'Jellyfin' and jellyfin_interface:
+            if 'art' in style:
+                log.debug(f'Cannot source Art images from Jellyfin - skipping')
+                continue
+
             source_image = jellyfin_interface.get_source_image(
                 episode.as_episode_info, raise_exc=raise_exc,
             )
         elif image_source == 'Plex' and plex_interface:
-            # Verify series has a library
+            if 'art' in style:
+                log.debug(f'Cannot source Art images from Emby - skipping')
+                continue
+
+            # Verify Series has a library
             if series.plex_library_name is None:
                 log.warning(f'{series.log_str} Has no Plex library')
                 continue
+
             source_image = plex_interface.get_source_image(
                 series.plex_library_name,
                 series.as_series_info,
@@ -252,12 +332,20 @@ def download_episode_source_image(
             )
         elif image_source == 'TMDb' and tmdb_interface:
             # TODO implement blacklist bypassing
-            source_image = tmdb_interface.get_source_image(
-                series.as_series_info,
-                episode.as_episode_info,
-                skip_localized_images=skip_localized_images,
-                raise_exc=raise_exc,
-            )
+            # Get backdrop or source image
+            if 'art' in style:
+                source_image = tmdb_interface.get_series_backdrop(
+                    series.as_series_info,
+                    skip_localized_images=skip_localized_images,
+                    raise_exc=raise_exc,
+                )
+            else:
+                source_image = tmdb_interface.get_source_image(
+                    series.as_series_info,
+                    episode.as_episode_info,
+                    skip_localized_images=skip_localized_images,
+                    raise_exc=raise_exc,
+                )
         else:
             log.warning(f'{series.log_str} {episode.log_str} Cannot source images from {image_source}')
             continue
@@ -285,7 +373,7 @@ def download_episode_source_image(
 
 def get_source_image(
         preferences: Preferences,
-        imagemagick_interface: Optional['ImageMagickInterface'],
+        imagemagick_interface: Optional[ImageMagickInterface],
         episode: Episode) -> SourceImage:
     """
     Get the SourceImage details for the given objects.
@@ -298,11 +386,8 @@ def get_source_image(
         episode: Episode of the SourceImage.
     """
 
-    # Get Episode source file
-    source_file = episode.get_source_file(
-        preferences.source_directory,
-        episode.series.path_safe_name,
-    )
+    # Determine Episode (style not used) source file
+    _, source_file = resolve_source_settings(preferences, episode)
 
     # All sources have these details
     source = {
@@ -316,7 +401,7 @@ def get_source_image(
     }
 
     # If the source file exists, add the filesize and dimensions
-    if source_file.exists():
+    if source['exists']:
         # Get image dimensions if ImageMagickInterface is provided
         width, height = None, None
         if imagemagick_interface is not None:

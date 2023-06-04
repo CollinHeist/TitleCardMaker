@@ -8,6 +8,8 @@ from sqlalchemy.orm import relationship
 
 from app.database.session import Base
 from app.models.template import EpisodeTemplates
+from app.schemas.preferences import Style
+
 from modules.EpisodeInfo2 import EpisodeInfo
 
 class Episode(Base):
@@ -130,9 +132,28 @@ class Episode(Base):
     @hybrid_method
     def get_source_file(self,
             source_directory: str,
-            series_directory: str) -> Path:
+            series_directory: str,
+            style: Style) -> Path:
+        """
+        Get the source file for this Episode based on the given
+        attributes.
 
+        Args:
+            source_directory: Root Source directory for all Series.
+            series_directory: Series source directory for this specific
+                Series.
+            style: Effective Style for this episode.
+
+        Returns:
+            Fully resolved Path to the source file for this Episode.
+        """
+
+        # No manually specified source, use default based on style
         if (source_file := self.source_file) is None:
-            source_file = f's{self.season_number}e{self.episode_number}.jpg'
+            if 'art' in style:
+                source_file = 'backdrop.jpg'
+            else:
+                source_file = f's{self.season_number}e{self.episode_number}.jpg'
 
+        # Return full path for this source base and Series
         return (Path(source_directory) / series_directory / source_file).resolve()

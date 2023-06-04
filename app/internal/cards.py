@@ -322,7 +322,9 @@ def resolve_card_settings(
     
     # Add source and output keys
     card_settings['source_file'] = episode.get_source_file(
-        preferences.source_directory, series.path_safe_name
+        preferences.source_directory,
+        series.path_safe_name,
+        card_settings['watched_style' if watched else 'unwatched_style'],
     )
 
     # Exit if the source file does not exist
