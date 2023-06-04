@@ -773,17 +773,17 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
                 raise e
             return None
 
-        # If None, either blacklisted or episode was not found
+        # If None, either blacklisted or Episode was not found
         if all_images is None:
             return None
 
-        # Exit if no images for this episode
+        # Exit if no images for this Episode
         if len(all_images) == 0:
             log.debug(f'TMDb has no images for "{series_info}" {episode_info}')
             self.__update_blacklist(series_info, episode_info, 'image')
             return None
 
-        # Get the best image for this episode
+        # Get the best image for this Episode
         kwargs = {
             'is_source_image': True,
             'skip_localized':skip_localized_images
@@ -951,7 +951,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     @catch_and_log('Error setting series backdrop', default=None)
     def get_series_backdrop(self,
             series_info: SeriesInfo, *,
-            skip_localized_images: bool = False) -> Optional[str]:
+            skip_localized_images: bool = False,
+            raise_exc: bool = True) -> Optional[str]:
         """
         Get the best backdrop for the given series.
 
@@ -959,6 +960,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             series_info: Series to get the logo of.
             skip_localized_images: Whether to skip images with a non-
                 null language code.
+            raise_exc: Whether to raise any HTTPExceptions that arise.
 
         Returns:
             URL to the 'best' backdrop for the given series, and None if
@@ -974,6 +976,11 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             series = self.api.tv_show(series_info.tmdb_id)
         except NotFound:
             self.__update_blacklist(series_info, None, 'backdrop')
+            if raise_exc:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f'"{series_info}" not found on TMDb'
+                )
             return None
 
         # Blacklist if there are no backdrops
