@@ -249,7 +249,7 @@ class Show(YamlReader):
             self.info_set.set_imdb_id(self.series_info, value)
 
         if (value := self._get('jellyfin_id', type_=str)) is not None:
-            self.info_set.set_jellyfin_id(self,series_info, value)
+            self.info_set.set_jellyfin_id(self.series_info, value)
 
         if (value := self._get('sonarr_id', type_=int)) is not None:
             sonarr_id = value if '-' in str(value) else f'0-{value}'
