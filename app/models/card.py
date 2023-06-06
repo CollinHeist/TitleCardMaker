@@ -2,10 +2,12 @@ from typing import Any
 
 from sqlalchemy import Boolean, Column, Float, Integer, String, ForeignKey, JSON
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import relationship
 
 from app.database.session import Base
 from app.models.loaded import Loaded
+
 class Card(Base):
     __tablename__ = 'card'
 
@@ -18,7 +20,6 @@ class Card(Base):
     loaded = relationship(
         'Loaded',
         back_populates='card',
-        # uselist=False,
         foreign_keys=[Loaded.card_id]
     )
 
@@ -44,7 +45,7 @@ class Card(Base):
     blur = Column(Boolean, nullable=False)
     grayscale = Column(Boolean, nullable=False)
 
-    extras = Column(JSON, default={}, nullable=False)
+    extras = Column(MutableDict.as_mutable(JSON), default={}, nullable=False)
 
     season_number = Column(Integer, default=0, nullable=False)
     episode_number = Column(Integer, default=0, nullable=False)
