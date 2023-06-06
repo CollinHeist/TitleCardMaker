@@ -62,7 +62,7 @@ class Preferences:
 
         # Override fixed attributes
         if self.is_docker:
-            self.asset_directory = '/config/assets'
+            self.asset_directory = Path('/config/assets')
         else:
             self.asset_directory = TCM_ROOT / 'assets'
         self.asset_directory.mkdir(parents=True, exist_ok=True)
