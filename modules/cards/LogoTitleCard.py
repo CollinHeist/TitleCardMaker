@@ -96,8 +96,8 @@ class LogoTitleCard(BaseCardType):
 
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'season_text',
-        'episode_text', 'hide_season_text', 'font_color', 'font_file',
-        'font_kerning', 'font_interline_spacing', 'font_size',
+        'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
+        'font_file', 'font_kerning', 'font_interline_spacing', 'font_size',
         'font_stroke_width',  'font_vertical_shift', 'separator', 'logo',
         'omit_gradient', 'background', 'stroke_color', 'use_background_image',
         'blur_only_image',
@@ -110,11 +110,12 @@ class LogoTitleCard(BaseCardType):
             episode_text: str,
             source_file: Optional[Path] = None,
             hide_season_text: bool = False,
-            font_file: str = TITLE_FONT,
+            hide_episode_text: bool = False,
             font_color: str = TITLE_COLOR,
-            font_size: float = 1.0,
-            font_kerning: float = 1.0,
+            font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
+            font_kerning: float = 1.0,
+            font_size: float = 1.0,
             font_stroke_width: float = 1.0,
             font_vertical_shift: int = 0,
             blur: bool = False,
@@ -152,6 +153,7 @@ class LogoTitleCard(BaseCardType):
         self.season_text = self.image_magick.escape_chars(season_text.upper())
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
         self.hide_season_text = hide_season_text or len(season_text) == 0
+        self.hide_episode_text = hide_episode_text or len(episode_text) == 0
 
         # Font attributes
         self.font_color = font_color
@@ -200,7 +202,7 @@ class LogoTitleCard(BaseCardType):
         """
 
         # All index text is disabled, return blank command
-        if self.hide_season and self.hide_episode_text:
+        if self.hide_season_text and self.hide_episode_text:
             return []
         
         # Only add season text
@@ -209,7 +211,6 @@ class LogoTitleCard(BaseCardType):
                 f'-kerning 5.42',       
                 f'-pointsize 67.75',
                 f'-interword-spacing 14.5',
-                # Add season text
                 f'-font "{self.SEASON_COUNT_FONT.resolve()}"',
                 f'-gravity center',
                 f'-fill black',
@@ -223,7 +224,7 @@ class LogoTitleCard(BaseCardType):
             ]
 
         # Only add episode text
-        if self.hide_season:
+        if self.hide_season_text:
             return [
                 f'-kerning 5.42',       
                 f'-pointsize 67.75',
