@@ -77,9 +77,11 @@ if PreferencesLocal.use_plex:
 SonarrInterfaceLocal = None
 if PreferencesLocal.use_sonarr:
     try:
+        SonarrInterfaceLocal.REQUEST_TIMEOUT = 15
         SonarrInterfaceLocal = SonarrInterface(
             **PreferencesLocal.sonarr_arguments
         )
+        SonarrInterfaceLocal.REQUEST_TIMEOUT = 600
     except Exception as e:
         ...
 
