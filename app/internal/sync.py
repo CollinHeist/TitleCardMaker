@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Optional, Union
 
 from fastapi import BackgroundTasks, HTTPException
+from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates
 from app.dependencies import (
@@ -17,6 +18,12 @@ from app.schemas.preferences import Preferences
 import app.models as models
 
 from modules.Debug import log
+from modules.EmbyInterface2 import EmbyInterface
+from modules.ImageMagickInterface import ImageMagickInterface
+from modules.JellyfinInterface2 import JellyfinInterface
+from modules.PlexInterface2 import PlexInterface
+from modules.SonarrInterface2 import SonarrInterface
+from modules.TMDbInterface2 import TMDbInterface
 
 
 def sync_all() -> None:
@@ -41,7 +48,7 @@ def sync_all() -> None:
 
 
 def add_sync(
-        db: 'Database',
+        db: Session,
         new_sync: Union[NewEmbySync, NewJellyfinSync, NewPlexSync,NewSonarrSync]
         ) -> Sync:
     """
@@ -65,15 +72,15 @@ def add_sync(
 
 
 def run_sync(
-        db: 'Database',
+        db: Session,
         preferences: Preferences,
         sync: Sync,
-        emby_interface: Optional['EmbyInterface'],
-        imagemagick_interface: Optional['ImageMagickInterface'],
-        jellyfin_interface: Optional['JellyfinInterface'],
-        plex_interface: Optional['PlexInterface'],
-        sonarr_interface: Optional['SonarrInterface'],
-        tmdb_interface: Optional['TMDbInterface'],
+        emby_interface: Optional[EmbyInterface],
+        imagemagick_interface: Optional[ImageMagickInterface],
+        jellyfin_interface: Optional[JellyfinInterface],
+        plex_interface: Optional[PlexInterface],
+        sonarr_interface: Optional[SonarrInterface],
+        tmdb_interface: Optional[TMDbInterface],
         background_tasks: Optional[BackgroundTasks] = None) -> list[Series]:
     """
     Run the given Sync. This adds any missing Series from the given Sync

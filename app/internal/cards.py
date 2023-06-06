@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Any, Optional, Union
 
 from fastapi import BackgroundTasks
+from sqlalchemy.orm import Query, Session
 
 from app.dependencies import (
     get_database, get_emby_interface, get_jellyfin_interface, get_preferences,
@@ -17,6 +18,9 @@ from app.schemas.series import Series
 
 from modules.CleanPath import CleanPath
 from modules.Debug import log
+from modules.EmbyInterface import EmbyInterface
+from modules.JellyfinInterface2 import JellyfinInterface
+from modules.PlexInterface2 import PlexInterface
 from modules.RemoteCardType2 import RemoteCardType
 from modules.RemoteFile import RemoteFile
 from modules.SeasonTitleRanges import SeasonTitleRanges
@@ -65,7 +69,7 @@ def refresh_all_remote_card_types():
 
 
 def refresh_remote_card_types(
-        db: 'Database',
+        db: Session,
         reset: bool = False) -> None:
     """
     Refresh all specified RemoteCardTypes. This re-downloads all
@@ -110,7 +114,7 @@ def refresh_remote_card_types(
 
 
 def add_card_to_database(
-        db: 'Database',
+        db: Session,
         card_model: NewTitleCard,
         card_file: Path) -> 'Card':
     """
@@ -135,7 +139,7 @@ def add_card_to_database(
 
 
 def create_card(
-        db: 'Database',
+        db: Session,
         preferences: Preferences,
         card_model: NewTitleCard,
         card_settings: dict[str, Any]) -> None:
@@ -155,7 +159,14 @@ def create_card(
     if CardClass is None:
         log.error(f'Unable to identify card type "{card_settings["card_type"]}", skipping')
         return None
-
+    
+    # from app.schemas.card_type import LOCAL_CARD_TYPES
+    # CardTypeModel = LOCAL_CARD_TYPES[card_settings['card_type']]
+    # card_maker = CardClass(
+    #     **CardTypeModel(**card_settings).dict(),
+    #     # **AnimeCardType(**card_settings).dict(),
+    #     preferences=preferences,
+    # )
     card_maker = CardClass(
         **(card_settings | card_settings['extras']),
         preferences=preferences,
@@ -366,7 +377,7 @@ def resolve_card_settings(
 
 
 def create_episode_card(
-        db: 'Database',
+        db: Session,
         preferences: Preferences,
         background_tasks: Optional[BackgroundTasks],
         episode: Episode) -> list[str]:
@@ -459,7 +470,7 @@ def create_episode_card(
 
 
 def update_episode_watch_statuses(
-        emby_interface: Optional['EmbyInterface'],
+        emby_interface: Optional[EmbyInterface],
         jellyfin_interface: Optional['JellyfinInterface'],
         plex_interface: Optional['PlexInterface'],
         series: Series,
@@ -505,7 +516,10 @@ def update_episode_watch_statuses(
     return None
 
 
-def delete_cards(db, card_query, loaded_query) -> list[str]:
+def delete_cards(
+        db: Session,
+        card_query: Query,
+        loaded_query: Query) -> list[str]:
     """
     Delete all Title Card files for the given card Query. Also remove
     the two queries from the Database.

@@ -4,10 +4,7 @@ from shutil import copy as file_copy
 from typing import Optional
 
 from fastapi import HTTPException
-
-from modules.Debug import log
-from modules.ImageMagickInterface import ImageMagickInterface
-from modules.TMDbInterface2 import TMDbInterface
+from sqlalchemy.orm import Session
 
 from app.dependencies import (
     get_database, get_emby_interface, get_jellyfin_interface,
@@ -16,6 +13,14 @@ from app.dependencies import (
 import app.models as models
 from app.schemas.preferences import MediaServer, Preferences
 from app.schemas.series import Series
+
+from modules.Debug import log
+from modules.EmbyInterface2 import EmbyInterface
+from modules.ImageMagickInterface import ImageMagickInterface
+from modules.JellyfinInterface2 import JellyfinInterface
+from modules.PlexInterface2 import PlexInterface
+from modules.SonarrInterface2 import SonarrInterface
+from modules.TMDbInterface2 import TMDbInterface
 
 
 def load_all_media_servers() -> None:
@@ -56,12 +61,12 @@ def load_all_media_servers() -> None:
 
 def set_series_database_ids(
         series: Series,
-        db: 'Database',
-        emby_interface: 'EmbyInterface',
-        jellyfin_interface: 'JellyfinInterface',
-        plex_interface: 'PlexInterface',
-        sonarr_interface: 'SonarrInterface',
-        tmdb_interface: 'TMDbInterface') -> Series:
+        db: Session,
+        emby_interface: Optional[EmbyInterface],
+        jellyfin_interface: Optional[JellyfinInterface],
+        plex_interface: Optional[PlexInterface],
+        sonarr_interface: Optional[SonarrInterface],
+        tmdb_interface: Optional[TMDbInterface]) -> Series:
     """
     Set the database ID's of the given Series.
 
@@ -104,7 +109,7 @@ def set_series_database_ids(
 
 
 def download_series_poster(
-        db: 'Database',
+        db: Session,
         preferences: Preferences,
         series: Series,
         image_magick_interface: Optional[ImageMagickInterface],
@@ -169,7 +174,7 @@ def download_series_poster(
 
 
 def delete_series_and_episodes(
-        db: 'Database',
+        db: Session,
         series: Series, *,
         commit_changes: bool = True) -> None:
     """
@@ -205,10 +210,10 @@ def delete_series_and_episodes(
 def load_series_title_cards(
         series: Series,
         media_server: MediaServer,
-        db: 'Database',
-        emby_interface: Optional['EmbyInterface'],
-        jellyfin_interface: Optional['JellyfinInterface'],
-        plex_interface: Optional['PlexInterface'],
+        db: Session,
+        emby_interface: Optional[EmbyInterface],
+        jellyfin_interface: Optional[JellyfinInterface],
+        plex_interface: Optional[PlexInterface],
         force_reload: bool = False) -> None:
     """
     Load the Title Cards for the given Series into the associated media

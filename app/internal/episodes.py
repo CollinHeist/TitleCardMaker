@@ -1,6 +1,7 @@
 from typing import Optional
 
 from fastapi import BackgroundTasks, HTTPException
+from sqlalchemy.orm import Session
 
 from app.dependencies import (
     get_database, get_preferences, get_emby_interface, get_jellyfin_interface,
@@ -8,11 +9,17 @@ from app.dependencies import (
 )
 from app.internal.templates import get_effective_series_template
 import app.models as models
+from app.models.preferences import Preferences
 from app.schemas.episode import Episode
 from app.schemas.series import Series
 
 from modules.Debug import log
+from modules.EmbyInterface2 import EmbyInterface
+from modules.JellyfinInterface2 import JellyfinInterface
+from modules.PlexInterface2 import PlexInterface
+from modules.SonarrInterface2 import SonarrInterface
 from modules.TieredSettings import TieredSettings
+from modules.TMDbInterface2 import TMDbInterface
 
 
 def refresh_all_episode_data() -> None:
@@ -42,14 +49,14 @@ def refresh_all_episode_data() -> None:
 
 
 def set_episode_ids(
-        db: 'Database',
+        db: Session,
         series: Series,
         episodes: list[Episode],
-        emby_interface: 'EmbyInterface',
-        jellyfin_interface: 'JellyfinInterface',
-        plex_interface: 'PlexInterface',
-        sonarr_interface: 'SonarrInterface',
-        tmdb_interface: 'TMDbInterface') -> None:
+        emby_interface: Optional[EmbyInterface],
+        jellyfin_interface: Optional[JellyfinInterface],
+        plex_interface: Optional[PlexInterface],
+        sonarr_interface: Optional[SonarrInterface],
+        tmdb_interface: Optional[TMDbInterface]) -> None:
     """
     Set the database ID's of the given Episodes using the given
     Interfaces.
@@ -96,14 +103,14 @@ def set_episode_ids(
 
 
 def refresh_episode_data(
-        db: 'Database',
-        preferences: 'Preferences',
+        db: Session,
+        preferences: Preferences,
         series: Series,
-        emby_interface: 'EmbyInterface',
-        jellyfin_interface: 'JellyfinInterface',
-        plex_interface: 'PlexInterface',
-        sonarr_interface: 'SonarrInterface',
-        tmdb_interface: 'TMDbInterface',
+        emby_interface: Optional[EmbyInterface],
+        jellyfin_interface: Optional[JellyfinInterface],
+        plex_interface: Optional[PlexInterface],
+        sonarr_interface: Optional[SonarrInterface],
+        tmdb_interface: Optional[TMDbInterface],
         background_tasks: Optional[BackgroundTasks] = None) -> None:
     """
     Refresh the episode data for the given Series. This adds any new

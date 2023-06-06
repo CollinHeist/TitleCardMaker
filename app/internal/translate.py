@@ -1,4 +1,4 @@
-from modules.Debug import log
+from sqlalchemy.orm import Session
 
 from app.dependencies import get_database, get_tmdb_interface
 from app.internal.templates import get_effective_templates
@@ -6,6 +6,7 @@ import app.models as models
 from app.database.query import get_template
 from app.schemas.episode import Episode
 
+from modules.Debug import log
 from modules.TieredSettings import TieredSettings
 from modules.TMDbInterface2 import TMDbInterface
 
@@ -41,7 +42,7 @@ def translate_all_series() -> None:
 
 
 def translate_episode(
-        db: 'Database',
+        db: Session,
         episode: Episode,
         tmdb_interface: TMDbInterface) -> None:
     """

@@ -4,6 +4,7 @@ from typing import Any, Callable, Literal, Optional, Union
 
 from fastapi import HTTPException
 from ruamel.yaml import YAML
+from sqlalchemy.orm import Session
 
 from app.dependencies import refresh_imagemagick_interface
 from app.internal.cards import add_card_to_database, resolve_card_settings
@@ -550,7 +551,7 @@ def parse_tmdb(
 
 
 def parse_syncs(
-        db: 'Database',
+        db: Session,
         yaml_dict: dict[str, Any],
     ) -> Union[list[NewEmbySync], list[NewJellyfinSync],
                list[NewPlexSync], list[NewSonarrSync]]:
@@ -730,7 +731,7 @@ def parse_fonts(
 
 
 def parse_templates(
-        db: 'Database',
+        db: Session,
         preferences: Preferences,
         yaml_dict: dict[str, Any]) -> list[NewTemplate]:
     """
@@ -851,7 +852,7 @@ def parse_templates(
 
 
 def parse_series(
-        db: 'Database',
+        db: Session,
         preferences: Preferences,
         yaml_dict: dict[str, Any],
         default_library: Optional[str] = None) -> list[NewSeries]:
@@ -1061,7 +1062,7 @@ def parse_series(
 
 
 def import_cards(
-        db: 'Database',
+        db: Session,
         preferences: Preferences,
         series: Series,
         directory: Optional[Path],

@@ -58,7 +58,7 @@ def get_effective_episode_template(
     for template in episode.templates:
         if template.meets_filter_criteria(series, episode):
             return template
-        
+
     return None
 
 

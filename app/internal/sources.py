@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import HTTPException
+from sqlalchemy.orm import Session
 
 from app.dependencies import (
     get_database, get_preferences, get_emby_interface,
@@ -18,7 +19,11 @@ from app.schemas.preferences import Preferences, Style
 from app.schemas.series import Series
 
 from modules.Debug import log
+from modules.EmbyInterface2 import EmbyInterface
 from modules.ImageMagickInterface import ImageMagickInterface
+from modules.JellyfinInterface2 import JellyfinInterface
+from modules.PlexInterface2 import PlexInterface
+from modules.TMDbInterface2 import TMDbInterface
 from modules.TieredSettings import TieredSettings
 from modules.WebInterface import WebInterface
 
@@ -155,10 +160,10 @@ def resolve_source_settings(preferences, episode) -> tuple[Style, Path]:
 
 def download_series_logo(
         preferences: Preferences,
-        emby_interface: 'EmbyInterface',
-        imagemagick_interface: 'ImageMagickInterface',
-        jellyfin_interface: 'JellyfinInterface',
-        tmdb_interface: 'TMDbInterface',
+        emby_interface: Optional[EmbyInterface],
+        imagemagick_interface: Optional[ImageMagickInterface],
+        jellyfin_interface: Optional[JellyfinInterface],
+        tmdb_interface: Optional[TMDbInterface],
         series: Series) -> Optional[str]:
     """
     Download the logo for the given Series.
@@ -257,12 +262,12 @@ def download_series_logo(
 
 
 def download_episode_source_image(
-        db: 'Database',
+        db: Session,
         preferences: Preferences,
-        emby_interface: Optional['EmbyInterface'],
-        jellyfin_interface: Optional['JellyfinInterface'],
-        plex_interface: Optional['PlexInterface'],
-        tmdb_interface: Optional['TMDbInterface'],
+        emby_interface: Optional[EmbyInterface],
+        jellyfin_interface: Optional[JellyfinInterface],
+        plex_interface: Optional[PlexInterface],
+        tmdb_interface: Optional[TMDbInterface],
         episode: Episode,
         raise_exc: bool = False) -> Optional[str]:
     """
