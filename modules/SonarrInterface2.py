@@ -18,7 +18,7 @@ class SonarrInterface(WebInterface, SyncInterface):
     """
 
     """Use a longer request timeout for Sonarr to handle slow databases"""
-    REQUEST_TIMEOUT = 30
+    REQUEST_TIMEOUT = 600
 
     """Series ID's that can be set by Sonarr"""
     SERIES_IDS = ('imdb_id', 'sonarr_id', 'tvdb_id', 'tvrage_id')
@@ -208,9 +208,6 @@ class SonarrInterface(WebInterface, SyncInterface):
             and the Path to the series' media as reported by Sonarr.
         """
 
-        # Temporarily override request timeout to 240s (4 min)
-        self.REQUEST_TIMEOUT = 240
-
         # Construct GET arguments
         all_series = self._get(f'{self.url}series', self.__standard_params)
 
@@ -282,9 +279,6 @@ class SonarrInterface(WebInterface, SyncInterface):
 
             # Add to returned list
             series.append((series_info, show['path']))
-
-        # Reset request timeout
-        self.REQUEST_TIMEOUT = 30
 
         return series
 
