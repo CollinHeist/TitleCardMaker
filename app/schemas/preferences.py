@@ -1,7 +1,10 @@
 from pathlib import Path
 from typing import Literal, Optional
 
-from pydantic import AnyUrl, Field, NonNegativeInt, PositiveInt, SecretStr, constr, root_validator, validator
+from pydantic import (
+    AnyUrl, DirectoryPath, Field, NonNegativeInt, PositiveInt, SecretStr,
+    constr, root_validator, validator
+)
 from pydantic.error_wrappers import ValidationError
 
 from app.schemas.base import (
@@ -80,8 +83,8 @@ class TautulliConnection(Base):
 Update classes
 """
 class UpdatePreferences(UpdateBase):
-    card_directory: str = Field(default=UNSPECIFIED, min_length=1)
-    source_directory: str = Field(default=UNSPECIFIED, min_length=1)
+    card_directory: DirectoryPath = Field(default=UNSPECIFIED)
+    source_directory: DirectoryPath = Field(default=UNSPECIFIED)
     card_width: PositiveInt = Field(default=UNSPECIFIED)
     card_height: PositiveInt = Field(default=UNSPECIFIED)
     card_filename_format: str = Field(default=UNSPECIFIED)

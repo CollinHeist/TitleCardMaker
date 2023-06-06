@@ -21,7 +21,6 @@ class Extra(Base):
     identifier: str
     description: str
 
-
 class CardType(Base):
     name: str
     identifier: str

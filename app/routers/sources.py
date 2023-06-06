@@ -19,7 +19,6 @@ from app.schemas.card import SourceImage, TMDbImage
 from modules.Debug import log
 from modules.WebInterface import WebInterface
 
-
 source_router = APIRouter(
     prefix='/sources',
     tags=['Source Images'],
