@@ -65,6 +65,7 @@ class OlivierTitleCard(BaseCardType):
     EPISODE_TEXT_COLOR = 'white'
     EPISODE_PREFIX_FONT = SW_REF_DIRECTORY / 'HelveticaNeue.ttc'
     EPISODE_NUMBER_FONT = SW_REF_DIRECTORY / 'HelveticaNeue-Bold.ttf'
+    STROKE_COLOR = 'black'
 
     """Whether this class uses season titles for the purpose of archives"""
     USES_SEASON_TITLE = False
@@ -89,14 +90,14 @@ class OlivierTitleCard(BaseCardType):
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
+            font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_stroke_width: float = 1.0,
             font_vertical_shift: int = 0,
-            font_kerning: float = 1.0,
             blur: bool = False,
             grayscale: bool = False,
             episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
-            stroke_color: SeriesExtra[str] = 'black',
+            stroke_color: SeriesExtra[str] = STROKE_COLOR,
             preferences: 'Preferences' = None,
             **unused) -> None:
         """
