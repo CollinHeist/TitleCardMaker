@@ -37,10 +37,9 @@ retrieve the TCM code from git. Copy this code.
 
     ??? question "Why is this necessary?"
 
-        Because the repository is Private, the `git clone` command requires the
-        website, but this makes getting updates difficult. authentication. You
-        _can_ download the zipped code from the website, but this makes getting
-        updates difficult.
+        Because the repository is Private, the `git clone` command requires
+        authentication. You _can_ download the zipped code from the website, but
+        this makes getting updates difficult.
 
         A PAT is required instead of a password because GitHub does not allow
         passwords to be used from the command line.
@@ -122,13 +121,13 @@ executing the following command(s):
     === ":material-powershell: Windows (Powershell)"
 
         ```bash
-        mkdir assets; mkdir cards; mkrdir logs; mkdir source;
+        mkdir assets; mkdir cards; mkdir logs; mkdir source;
         ```
 
     === ":material-microsoft-windows: Windows (Non-Powershell)"
 
         ```bash
-        mkdir assets; mkdir cards; mkrdir logs; mkdir source;
+        mkdir assets; mkdir cards; mkdir logs; mkdir source;
         ```
 
 6. We now need to make sure these directories have the correct permissions
@@ -213,7 +212,7 @@ the TCM interface.
 
         ```bash
         pipenv install; # (1)!
-        pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 # (2)!
+        pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 --workers 4 # (2)!
         ```
 
         1. This installs the required Python dependencies
@@ -224,6 +223,19 @@ the TCM interface.
 
     TitleCardMaker is now accessible at the `http://0.0.0.0:4242` or
     `http://localhost:4242/` URL.
+
+??? failure "Interface not accessible?"
+
+    If your log shows
+
+    ```log
+    INFO:     Application startup complete.
+    ```
+    
+    And neither the `http://0.0.0.0:4242` or `http://localhost:4242/` URL loads
+    into the TCM UI, then replace the `0.0.0.0` part of the previous command
+    with your _local_ IP address - e.g. `192.168.0.10`. If you still have
+    issues, reach out on the Discord.
 
 ## Building the Docker Container
 
