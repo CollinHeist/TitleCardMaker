@@ -259,18 +259,19 @@ class RomanNumeralTitleCard(BaseCardType):
 
     __slots__ = (
         'output_file', 'title_text', 'season_text', 'hide_season_text',
-        'font_color', 'background', 'roman_numeral_color', 'roman_numeral',
-        '__roman_text_scalar', '__roman_numeral_lines', 'rotation', 'offset',
-        'season_text_color',
+        'font_color', 'font_size', 'background', 'roman_numeral_color',
+        'roman_numeral', '__roman_text_scalar', '__roman_numeral_lines',
+        'rotation', 'offset', 'season_text_color',
     )
 
     def __init__(self,
             card_file: Path,
             title_text: str,
             season_text: str, 
-            episode_text: str,
             hide_season_text: bool = False,
+            hide_episode_text: bool = False,
             font_color: str = TITLE_COLOR,
+            font_size: float = 1.0,
             episode_number: int = 1,
             blur: bool = False,
             grayscale: bool = False,
@@ -290,18 +291,18 @@ class RomanNumeralTitleCard(BaseCardType):
         self.output_file = card_file
         self.title_text = self.image_magick.escape_chars(title_text)
         self.font_color = font_color
+        self.font_size = font_size
         self.background = background
         self.roman_numeral_color = roman_numeral_color
         self.season_text_color = season_text_color
 
-        # Try and parse roman digit from the episode text, if cannot be done,
-        # just use actual episode number
-        digit = int(episode_text) if episode_text.isdigit() else episode_number
-        self.__assign_roman_numeral(digit)
+        # Parse roman digits from the episode number
+        self.__assign_roman_numeral(episode_number)
 
         # Select roman numeral for season text
         self.season_text = season_text.strip().upper()
-        self.hide_season_text = hide_season_text or len(self.season_text) == 0
+        self.hide_season_text = hide_season_text
+        self.hide_episode_text = hide_episode_text
 
         # Rotation and offset attributes to be determined later
         self.rotation, self.offset = None, None
@@ -389,6 +390,9 @@ class RomanNumeralTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
+        if self.hide_episode_text:
+            return []
+
         # Scale font size and interline spacing of roman text
         font_size = 1250 * self.__roman_text_scalar
         interline_spacing = -400 * self.__roman_text_scalar
@@ -419,12 +423,13 @@ class RomanNumeralTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
-        if self.hide_season_text or rotation is None or offset is None:
+        if (self.hide_season_text or self.hide_episode_text
+            or rotation is None or offset is None):
             return []
 
         # Override font color only if a custom background color was specified
         if self.season_text_color != self.SEASON_TEXT_COLOR:
-            color = season_text_color
+            color = self.season_text_color
         elif self.background != self.BACKGROUND_COLOR:
             color = self.font_color
         else:
@@ -450,9 +455,11 @@ class RomanNumeralTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
+        font_size = 150 * self.font_size
+
         return [
             f'-font "{self.TITLE_FONT}"',
-            f'-pointsize 150',
+            f'-pointsize {font_size}',
             f'-interword-spacing 40',
             f'-interline-spacing 0',
             f'-fill "{self.font_color}"',            
@@ -550,8 +557,8 @@ class RomanNumeralTitleCard(BaseCardType):
         attributes are set.
         """
 
-        # If season titles are hidden, exit
-        if self.hide_season_text:
+        # If text is hidden, exit
+        if self.hide_season_text or self.hide_episode_text:
             return None
 
         # Get boundaries of title text
@@ -671,7 +678,9 @@ class RomanNumeralTitleCard(BaseCardType):
             False, as custom fonts aren't used.
         """
 
-        return ((font.color != RomanNumeralTitleCard.TITLE_COLOR))
+        return ((font.color != RomanNumeralTitleCard.TITLE_COLOR)
+            or (font.size != 1.0)
+        )
 
 
     @staticmethod

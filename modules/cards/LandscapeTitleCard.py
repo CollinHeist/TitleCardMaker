@@ -7,8 +7,7 @@ from modules.BaseCardType import (
 )
 from modules.Debug import log
 
-SeriesExtra = Optional
-DarkenOption = SeriesExtra[Union[Literal['all', 'box'], bool]]
+DarkenOption = Union[Literal['all', 'box'], bool]
 
 BoxCoordinates = namedtuple('BoxCoordinates', ('x0', 'y0', 'x1', 'y1'))
 
@@ -104,8 +103,8 @@ class LandscapeTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             darken: DarkenOption = False,
-            add_bounding_box: SeriesExtra[bool] = False,
-            box_adjustments: SeriesExtra[str] = None,
+            add_bounding_box: bool = False,
+            box_adjustments: tuple[int, int, int, int] = (0, 0, 0, 0),
             preferences: 'Preferences' = None,
             **unused) ->None:
         """
@@ -127,36 +126,9 @@ class LandscapeTitleCard(BaseCardType):
         self.font_vertical_shift = font_vertical_shift
 
         # Store extras
+        self.box_adjustments = box_adjustments
         self.add_bounding_box = add_bounding_box
-        if isinstance(darken, str):
-            try:
-                er1 = '"darken" must be "all" or "box"'
-                er2 = '"add_bounding_box" must be true if "darken" is "box"'
-                assert (darken := str(darken).lower()) in ('all', 'box'), er1
-                assert not (darken == 'box' and not self.add_bounding_box), er2
-                self.darken = darken
-            except Exception as e:
-                log.error(f'Invalid extras - {e}')
-                self.valid = False
-                self.darken = False
-        else:
-            self.darken = bool(darken)
-
-        # Parse box adjustments
-        self.box_adjustments = (0, 0, 0, 0)
-        if box_adjustments:
-            # Verify adjustments are properly provided
-            try:
-                adjustments = box_adjustments.split(' ')
-                self.box_adjustments = tuple(map(float, adjustments))
-                error = ('must provide numeric adjustments for all sides like '
-                         '"top right bottom left", e.g. "20 0 40 0"')
-                assert len(self.box_adjustments) == 4, error
-            # Invalid adjustments, log and mark invalid
-            except Exception as e:
-                log.error(f'Invalid box adjustments "{box_adjustments}" - {e}')
-                self.box_adjustments = (0, 0, 0, 0)
-                self.valid = False
+        self.darken = darken
 
 
     def darken_command(self, coordinates: BoxCoordinates) ->ImageMagickCommands:

@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Any, Optional, Union
 
-from fastapi import BackgroundTasks
+from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy.orm import Query, Session
 
 from app.dependencies import (
@@ -12,6 +12,7 @@ from app.internal.templates import get_effective_templates
 import app.models as models
 from app.schemas.font import DefaultFont
 from app.schemas.card import NewTitleCard
+from app.schemas.card_type import LocalCardTypeModels
 from app.schemas.episode import Episode
 from app.schemas.preferences import Preferences
 from app.schemas.series import Series
@@ -50,9 +51,17 @@ def create_all_title_cards():
 
                 # Create Cards for all Episodes
                 for episode in series.episodes:
-                    create_episode_card(db, get_preferences(), None, episode)
+                    try:
+                        create_episode_card(
+                            db, get_preferences(), None, episode
+                        )
+                    except HTTPException as e:
+                        log.warning(f'{series.log_str} {episode.log_str} - skipping Card')
+                        continue
     except Exception as e:
         log.exception(f'Failed to create title cards', e)
+
+    return None
 
 
 def refresh_all_remote_card_types():
@@ -138,47 +147,62 @@ def add_card_to_database(
     return card
 
 
-def create_card(
-        db: Session,
+def validate_card_type_model(
         preferences: Preferences,
-        card_model: NewTitleCard,
-        card_settings: dict[str, Any]) -> None:
+        card_settings: dict[str, Any]) -> tuple[Any, Any]:
     """
-    Create the given Card, adding the resulting entry to the Database.
-
-    Args:
-        db: Database to add the Card entry to.
-        preferences: Preferences to pass to the CardType class.
-        card_model: TitleCard model to update and add to the Database.
-        card_settings: Settings to pass to the CardType class to
-            initialize and create the actual card.
+    
     """
 
     # Initialize class of the card type being created
     CardClass = preferences.get_card_type_class(card_settings['card_type'])
     if CardClass is None:
-        log.error(f'Unable to identify card type "{card_settings["card_type"]}", skipping')
-        return None
-    
-    # from app.schemas.card_type import LOCAL_CARD_TYPES
-    # CardTypeModel = LOCAL_CARD_TYPES[card_settings['card_type']]
-    # card_maker = CardClass(
-    #     **CardTypeModel(**card_settings).dict(),
-    #     # **AnimeCardType(**card_settings).dict(),
-    #     preferences=preferences,
-    # )
-    card_maker = CardClass(
-        **(card_settings | card_settings['extras']),
-        preferences=preferences,
-    )
+        raise HTTPException(
+            status_code=400,
+            detail=f'Cannot create Card - invalid card type {card_settings["card_type"]}',
+        )
+
+    # Get Pydantic model for this card type
+    if card_settings['card_type'] in LocalCardTypeModels: # Local card type
+        CardTypeModel = LocalCardTypeModels[card_settings['card_type']]
+    else: # Remote card type
+        CardTypeModel = CardClass.CardModel
+
+    try:
+        return CardClass, CardTypeModel(**card_settings)
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f'Cannot create Card - invalid card settings - {e}',
+        )
+
+
+def create_card(
+        db: Session,
+        preferences: Preferences,
+        card_model: NewTitleCard,
+        CardClass: Any,
+        CardTypeModel: Any) -> None:
+    """
+    Create the given Card, adding the resulting entry to the Database.
+
+    Args:
+        db: Database to add the Card entry to.
+        preferences: Preferences to pass to the CardClass.
+        card_model: TitleCard model to update and add to the Database.
+        CardClass: Class to initialize for Card creation.
+        CardTypeModel: Pydantic model for this Card to pass the
+            attributes of to the CardClass.
+    """
 
     # Create card
+    card_maker = CardClass(**CardTypeModel.dict(), preferences=preferences)
     card_maker.create()
 
     # If file exists, card was created successfully - add to database
-    if card_settings['card_file'].exists():
-        card = add_card_to_database(db, card_model, card_settings['card_file'])
-        log.debug(f'Card[{card.id}] Created "{card_settings["card_file"].resolve()}"')
+    if (card_file := CardTypeModel.card_file).exists():
+        card = add_card_to_database(db, card_model, card_file)
+        log.debug(f'Card[{card.id}] Created "{card_file.resolve()}"')
     # Card file does not exist, log failure
     else:
         log.warning(f'Card creation failed')
@@ -189,7 +213,7 @@ def create_card(
 
 def resolve_card_settings(
         preferences: Preferences,
-        episode: Episode) -> Union[list[str], dict[str, Any]]:
+        episode: Episode) -> dict[str, Any]:
     """
     Resolve the Title Card settings for the given Episode. This evalutes
     all global, Series, and Template overrides.
@@ -263,12 +287,18 @@ def resolve_card_settings(
             / f"{formatted_filename}{card_settings['logo_file'].suffix}"
     except KeyError as e:
         log.exception(f'Cannot format logo filename - missing data', e)
-        return ['invalid']
+        raise HTTPException(
+            status_code=400,
+            detail=f'Cannot create Card - invalid logo filename format - missing data {e}',
+        )
 
     # Get the effective card class
     CardClass = preferences.get_card_type_class(card_settings['card_type'])
     if CardClass is None:
-        return ['invalid']
+        raise HTTPException(
+            status_code=400,
+            detail=f'Cannot create Card - invalid card type {card_settings["card_type"]}',
+        )
 
     # Add card default font stuff
     if card_settings.get('font_file', None) is None:
@@ -313,7 +343,10 @@ def resolve_card_settings(
                 card_settings['episode_text'] = fmt.format(**card_settings)
             except KeyError as e:
                 log.exception(f'{series.log_str} {episode.log_str} Episode Text Format is invalid - {e}', e)
-                return ['invalid']
+                raise HTTPException(
+                    status_code=400,
+                    detail=f'Cannot create Card - invalid episode text format - missing data {e}',
+                )
 
     # Turn styles into boolean style toggles
     if (watched := card_settings.get('watched', None)) is not None:
@@ -343,7 +376,10 @@ def resolve_card_settings(
         and not card_settings['source_file'].exists()):
         log.debug(f'{series.log_str} {episode.log_str} Card source image '
                     f'({card_settings["source_file"]}) is missing')
-        return ['missing_source']
+        raise HTTPException(
+            status_code=400,
+            detail=f'Cannot create Card - missing source image',
+        )
 
     # Get card folder
     if card_settings.get('directory', None) is None:
@@ -364,7 +400,10 @@ def resolve_card_settings(
                 / card_settings['card_file']
     except KeyError as e:
         log.exception(f'Cannot format filename - missing data', e)
-        return ['invalid']
+        raise HTTPException(
+            status_code=400,
+            detail=f'Cannot create Card - missing source image',
+        )
 
     # Add extension if needed
     card_file_name = card_settings['card_file'].name
@@ -380,7 +419,7 @@ def create_episode_card(
         db: Session,
         preferences: Preferences,
         background_tasks: Optional[BackgroundTasks],
-        episode: Episode) -> list[str]:
+        episode: Episode) -> None:
     """
     Create the Title Card for the given Episode.
 
@@ -391,22 +430,11 @@ def create_episode_card(
         background_tasks: Optional BackgroundTasks to queue card
             creation within.
         episode: Episode whose Card is being created.
-
-    Returns:
-        List of CardAction strings indicating what ocurred with the
-        given Card.
     """
 
     # Resolve Card settings
     series = episode.series
     card_settings = resolve_card_settings(preferences, episode)
-
-    # If return was a list of CardActions, return those instead of continuing
-    if isinstance(card_settings, list):
-        return card_settings
-
-    # Create parent directories if needed
-    card_settings['card_file'].parent.mkdir(parents=True, exist_ok=True)
 
     # Create NewTitleCard object for these settings
     card = NewTitleCard(
@@ -415,21 +443,33 @@ def create_episode_card(
         episode_id=episode.id,
     )
 
+    # Get a validated card class, and card type Pydantic model
+    CardClass, CardTypeModel = validate_card_type_model(
+        preferences, card_settings
+    )
+
+    # Create Card parent directories if needed
+    card_settings['card_file'].parent.mkdir(parents=True, exist_ok=True)
+
+    # Inner function to begin card creation as a background task, or immediately
+    def _start_card_creation():
+        if background_tasks is None:
+            create_card(db, preferences, card, CardClass, CardTypeModel)
+        else:
+            background_tasks.add_task(
+                create_card, db, preferences, card, CardClass, CardTypeModel
+            )
+
     # No existing card, create and add to database
     existing_card = episode.card
     if not existing_card:
-        if background_tasks is None:
-            create_card(db, preferences, card, card_settings)
-        else:
-            background_tasks.add_task(
-                create_card, db, preferences, card, card_settings
-            )
-        return ['creating']
+        _start_card_creation()
+        return None
     
     # Existing card doesn't match, delete and remake
     existing_card = existing_card[0]
     if any(str(val) != str(getattr(card, attr)) 
-             for attr, val in existing_card.comparison_properties.items()):
+            for attr, val in existing_card.comparison_properties.items()):
         # TODO delete temporary logging
         for attr, val in existing_card.comparison_properties.items():
             if str(val) != str(getattr(card, attr)):
@@ -441,13 +481,8 @@ def create_episode_card(
         db.commit()
 
         # Create new card 
-        if background_tasks is None:
-            create_card(db, preferences, card, card_settings)
-        else:
-            background_tasks.add_task(
-                create_card, db, preferences, card, card_settings
-            )
-        return ['creating', 'deleted']
+        _start_card_creation()
+        return None
 
     # Existing card file doesn't exist anymore
     if not Path(existing_card.card_file).exists():
@@ -457,16 +492,11 @@ def create_episode_card(
         db.commit()
 
         # Create new card
-        if background_tasks is None:
-            create_card(db, preferences, card, card_settings)
-        else:
-            background_tasks.add_task(
-                create_card, db, preferences, card, card_settings
-            )
-        return ['creating']
-        
+        _start_card_creation()
+        return None
+
     # Existing card matches, do nothing
-    return ['existing']
+    return None
 
 
 def update_episode_watch_statuses(

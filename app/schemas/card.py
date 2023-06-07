@@ -6,10 +6,10 @@ from app.schemas.base import Base, UpdateBase, validate_argument_lists_to_dict
 from app.schemas.preferences import Style
 
 LocalCardIdentifiers = Literal[
-    'anime', 'cutout', 'fade', 'frame', 'generic', 'gundam', 'ishalioh',
-    'landscape', 'logo', 'olivier', 'phendrena', 'photo', 'polymath', 'poster',
-    'reality tv', 'roman', 'roman numeral', 'sherlock', 'standard', 'star wars',
-    'textless', 'tinted glass', '4x3'
+    'anime', 'comic book', 'cutout', 'fade', 'frame', 'generic', 'gundam',
+    'ishalioh', 'landscape', 'logo', 'olivier', 'phendrena', 'photo', 'polymath',
+    'poster', 'reality tv', 'roman', 'roman numeral', 'sherlock', 'standard',
+    'star wars', 'textless', 'tinted glass', '4x3'
 ]
 
 """

@@ -102,7 +102,7 @@ def get_title_card(
     return get_card(db, card_id, raise_exc=True)
 
 
-@card_router.post('/series/{series_id}', status_code=200, tags=['Series'])
+@card_router.post('/series/{series_id}', status_code=201, tags=['Series'])
 def create_cards_for_series(
         background_tasks: BackgroundTasks,
         series_id: int,
@@ -110,7 +110,7 @@ def create_cards_for_series(
         db = Depends(get_database),
         emby_interface = Depends(get_emby_interface),
         jellyfin_interface = Depends(get_jellyfin_interface),
-        plex_interface = Depends(get_plex_interface)) -> CardActions:
+        plex_interface = Depends(get_plex_interface)) -> None:
     """
     Create the Title Cards for the given Series. This deletes and
     remakes any outdated existing Cards.
@@ -128,14 +128,11 @@ def create_cards_for_series(
     )
     db.commit()
 
-    # Create each associated Episode's Card, get status flags
-    actions = CardActions()
+    # Create each associated Episode's Card
     for episode in series.episodes:
-        flags = create_episode_card(db, preferences, background_tasks, episode)
-        for flag in flags:
-            setattr(actions, flag, getattr(actions, flag)+1)
+        create_episode_card(db, preferences, background_tasks, episode)
 
-    return actions
+    return None
 
 
 @card_router.get('/series/{series_id}', status_code=200, tags=['Series'])

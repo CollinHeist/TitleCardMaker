@@ -1,8 +1,5 @@
 from pathlib import Path
-from re import match
-from typing import Optional
-
-from num2words import num2words
+from typing import Optional, Any
 
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
@@ -27,8 +24,13 @@ class StarWarsTitleCard(BaseCardType):
         source='local',
         supports_custom_fonts=False,
         supports_custom_seasons=False,
-        supported_extras=[],
-        description=[
+        supported_extras=[
+            Extra(
+                name='Episode Text Color',
+                identifier='episode_text_color',
+                description='Color of the season and episode text',
+            ), 
+        ], description=[
             'Title cards intended for Star Wars (or more generically Space-themed) shows.',
             'Similar to the Olivier title card, these cards feature left-aligned title and episode text',
             'A star-filled gradient overlay is applied to the source image.',
@@ -69,7 +71,8 @@ class StarWarsTitleCard(BaseCardType):
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'episode_text',
         'hide_episode_text', 'font_color', 'font_file',
-        'font_interline_spacing', 'font_size', 'episode_prefix',
+        'font_interline_spacing', 'font_size', 'episode_text_color',
+        'episode_prefix',
     )
 
     def __init__(self,
@@ -84,6 +87,7 @@ class StarWarsTitleCard(BaseCardType):
             font_size: float = 1.0,
             blur: bool = False,
             grayscale: bool = False,
+            episode_text_color: str = EPISODE_TEXT_COLOR,
             preferences: 'Preferences' = None,
             **unused) -> None:
         """
@@ -121,6 +125,9 @@ class StarWarsTitleCard(BaseCardType):
                 self.episode_prefix = self.image_magick.escape_chars(
                     episode_text
                 )
+
+        # Extras
+        self.episode_text_color = episode_text_color
 
 
     @property
@@ -164,7 +171,7 @@ class StarWarsTitleCard(BaseCardType):
             f'-gravity west',
             f'-pointsize 53',
             f'-kerning 19',
-            f'-fill "{self.EPISODE_TEXT_COLOR}"',
+            f'-fill "{self.episode_text_color}"',
             f'-background transparent',
             # Create prefix text
             f'\( -font "{self.EPISODE_TEXT_FONT.resolve()}"',
@@ -178,6 +185,28 @@ class StarWarsTitleCard(BaseCardType):
             f'-geometry +325-140',
             f'-composite',
         ]
+    
+
+    @staticmethod
+    def modify_extras(
+            extras: dict[str, Any],
+            custom_font: bool,
+            custom_season_titles: bool) -> None:
+        """
+        Modify the given extras based on whether font or season titles
+        are custom.
+
+        Args:
+            extras: Dictionary to modify.
+            custom_font: Whether the font are custom.
+            custom_season_titles: Whether the season titles are custom.
+        """
+
+        # Generic font, reset episode text and box colors
+        if not custom_font:
+            if 'episode_text_color' in extras:
+                extras['episode_text_color'] =\
+                    StarWarsTitleCard.EPISODE_TEXT_COLOR
 
 
     @staticmethod

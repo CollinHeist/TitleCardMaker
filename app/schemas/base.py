@@ -1,6 +1,7 @@
-from typing import Any
+from typing import Any, Literal, Union
 
 from pydantic import BaseModel, root_validator
+from pydantic.color import Color
 
 from modules.Debug import log
 
@@ -12,6 +13,7 @@ class Base(BaseModel):
     class Config:
         orm_mode = True
 
+# Base class for all "update" models
 class UpdateBase(Base):
     @root_validator
     def delete_unspecified_args(cls, values):
@@ -20,6 +22,9 @@ class UpdateBase(Base):
             del values[key]
 
         return values
+    
+# Better "Color" class to support "transparent"
+BetterColor = Union[Color, Literal['transparent']]
 
 # Function to validate two equal length lists are provided
 def validate_argument_lists_to_dict(

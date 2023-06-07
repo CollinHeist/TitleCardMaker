@@ -1486,7 +1486,7 @@
               {% if preferences.use_plex or series.plex_library_name %}
               <div class="ui field">
                 <label>Plex Library</label>
-                <div id="plex-library" class="ui compact selection clearable dropdown">
+                <div id="plex-library" class="ui compact selection clearable dropdown" data-tooltip="Library within Plex to load Title Cards into" data-position="right center">
                   <input name="plex_library_name" type="hidden">
                   <div class="default text">None</div>
                   <i class="dropdown icon"></i>
@@ -1496,7 +1496,7 @@
               {% endif %}
 
               <!-- Card Directory -->
-              <div class="ui field" data-tooltip="Where to store title cards" data-position="top center">
+              <div class="ui field" data-tooltip="Where to store title cards" data-position="top left">
                 <label>Card Directory</label>
                 <div class="ui left icon input">
                   {% if series.directory is none %}
@@ -1509,7 +1509,7 @@
               </div>
 
               <!-- Filename Format -->
-              <div class="ui field" placeholder="Global Default" data-tooltip="Format of the title card file names" data-position="top center">
+              <div class="ui field" placeholder="Global Default" data-tooltip="Format of the title card file names" data-position="top left">
                 <label>Filename Format</label>
                 {% if series.card_filename_format is none %}
                 <input name="card_filename_format" type="text" placeholder="Default">

@@ -76,7 +76,7 @@ class PosterTitleCard(BaseCardType):
 
     __slots__ = (
         'source_file', 'output_file', 'logo', 'title_text', 'episode_text',
-        'font_color', 'font_file', 'font_interline_spacing,' 'font_size',
+        'font_color', 'font_file', 'font_interline_spacing', 'font_size',
         'episode_text_color',
     )
 

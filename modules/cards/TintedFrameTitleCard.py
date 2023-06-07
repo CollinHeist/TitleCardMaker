@@ -165,14 +165,14 @@ class TintedFrameTitleCard(BaseCardType):
 
         self.source_file = source_file
         self.output_file = card_file
-        self.logo = None if logo_file is None else Path(logo_file)
+        self.logo = logo_file
 
         # Ensure characters that need to be escaped are
         self.title_text = self.image_magick.escape_chars(title_text)
         self.season_text = self.image_magick.escape_chars(season_text.upper())
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
-        self.hide_season_text = hide_season_text or len(season_text) == 0
-        self.hide_episode_text = hide_episode_text or len(episode_text) == 0
+        self.hide_season_text = hide_season_text
+        self.hide_episode_text = hide_episode_text
 
         # Font/card customizations
         self.font_color = font_color
@@ -184,47 +184,13 @@ class TintedFrameTitleCard(BaseCardType):
 
         # Optional extras
         self.separator = separator
-        self.frame_color = font_color if frame_color is None else frame_color
+        self.frame_color = frame_color
         self.logo_size = logo_size
         self.blur_edges = blur_edges
-        if episode_text_color is None:
-            self.episode_text_color = font_color
-        else:
-            self.episode_text_color = episode_text_color
-
-        # Validate top, middle, and bottom elements
-        def _validate_element(element: str, middle: bool = False) -> str:
-            element = str(element).strip().lower()
-            if middle and element not in ('omit', 'logo'):
-                log.warning(f'Invalid element - must be "omit" or "logo')
-                self.valid = False
-            elif (not middle
-                and element not in ('omit', 'title', 'index', 'logo')):
-                log.warning(f'Invalid element - must be "omit", "title", '
-                            f'"index", or "logo"')
-                self.valid = False
-            return element
-        self.top_element = _validate_element(top_element)
-        self.middle_element = _validate_element(middle_element, middle=True)
-        self.bottom_element = _validate_element(bottom_element)
-
-        # Validate no duplicate elements were indicated
-        if ((self.top_element != 'omit'
-            and (self.top_element == self.middle_element
-                 or self.top_element == self.bottom_element))
-            or (self.middle_element != 'omit'
-                and self.middle_element == self.bottom_element)):
-            log.warning(f'Top/middle/bottom elements cannot be the same')
-            self.valid = False
-
-        # If logo was indicated, verify logo was provided
-        if (self.logo is None
-            and ('logo' in (self.top_element, self.middle_element,
-                            self.bottom_element))):
-            log.warning(f'Logo file not provided')
-            self.valid = False
-
-        return None
+        self.episode_text_color = episode_text_color
+        self.top_element = top_element
+        self.middle_element = middle_element
+        self.bottom_element = bottom_element
 
 
     @property
