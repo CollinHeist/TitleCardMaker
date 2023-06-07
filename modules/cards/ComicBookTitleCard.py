@@ -21,6 +21,12 @@ class Coordinate:
         self.x = x
         self.y = y
 
+    def __iadd__(self, other: 'Coordinate') -> 'Coordinate':
+        self.x += other.x
+        self.y += other.y
+
+        return self
+
     @property
     def as_svg(self) -> str:
         return f'{self.x:.1f} {self.y:.1f}'
@@ -143,6 +149,14 @@ class ComicBookTitleCard(BaseCardType):
                 identifier='banner_fill_color',
                 description='Fill color for both the title and episode text banners',
             ), Extra(
+                name='Title Banner Vertical Shift',
+                identifier='title_banner_shift',
+                description='Additional vertical shift (in pixels) to apply to the title text banner',
+            ), Extra(
+                name='Index Banner Vertical Shift',
+                identifier='index_banner_shift',
+                description='Additional vertical shift (in pixels) to apply to the index text banner',
+            ), Extra(
                 name='Hide Title Banner',
                 identifier='hide_title_banner',
                 description='Whether to hide the title text banner',
@@ -196,7 +210,8 @@ class ComicBookTitleCard(BaseCardType):
         'font_vertical_shift', 'episode_text_color', 'index_text_position',
         'text_box_fill_color', 'text_box_edge_color',
         'title_text_rotation_angle', 'index_text_rotation_angle',
-        'banner_fill_color', 'hide_title_banner', 'hide_index_banner',
+        'banner_fill_color', 'title_banner_shift', 'index_banner_shift',
+        'hide_title_banner', 'hide_index_banner',
     )
 
     def __init__(self, *,
@@ -222,6 +237,8 @@ class ComicBookTitleCard(BaseCardType):
             title_text_rotation_angle: float = -4.0,
             index_text_rotation_angle: float = -4.0,
             banner_fill_color: str = 'rgba(235,73,69,0.6)',
+            title_banner_shift: int = 0,
+            index_banner_shift: int = 0,
             hide_title_banner: bool = False,
             hide_index_banner: bool = False,
             preferences: 'Preferences' = None,
@@ -258,6 +275,8 @@ class ComicBookTitleCard(BaseCardType):
         self.title_text_rotation_angle = title_text_rotation_angle
         self.index_text_rotation_angle = index_text_rotation_angle
         self.banner_fill_color = banner_fill_color
+        self.title_banner_shift = title_banner_shift
+        self.index_banner_shift = index_banner_shift
         self.hide_title_banner = hide_title_banner
         self.hide_index_banner = hide_index_banner
 
@@ -370,7 +389,7 @@ class ComicBookTitleCard(BaseCardType):
                 + (self.TITLE_TEXT_VERTICAL_OFFSET+500)/2
             )
         )
-        bottom_fill_rectangle.offset = Coordinate(0, -125)
+        bottom_fill_rectangle.offset = Coordinate(0, self.title_banner_shift)
 
         return [
             # Draw bottom fill rectangle
@@ -498,6 +517,9 @@ class ComicBookTitleCard(BaseCardType):
                 x * cos(angle) - y * sin(angle),
                 (x * sin(angle) + y * cos(angle))/abs(self.index_text_rotation_angle),
             )
+
+        # Adjust offset by manually indicated shift
+        index_fill_rectangle.offset += Coordinate(0, self.index_banner_shift)
 
         # Shift rectangle to placement of index text
         index_text_rectangle.shift_origin(index_text_origin)

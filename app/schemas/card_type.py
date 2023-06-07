@@ -106,6 +106,8 @@ class ComicBookCardType(BaseCardTypeCustomFontAllText):
     title_text_rotation_angle: Union[float, RandomAngle] = Field(default=-4.0)
     index_text_rotation_angle: Union[float, RandomAngle] = Field(default=-4.0)
     banner_fill_color: BetterColor = Field(default='rgba(235,73,69,0.6)')
+    title_banner_shift: int = Field(default=0)
+    index_banner_shift: int = Field(default=0)
     hide_title_banner: bool = Field(default=None)
     hide_index_banner: bool = Field(default=None)
 
