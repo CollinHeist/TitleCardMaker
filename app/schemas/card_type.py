@@ -1,5 +1,5 @@
 from pathlib import Path
-from random import randint
+from random import uniform
 from re import IGNORECASE, match as re_match
 from typing import Literal, Optional, Union
 
@@ -92,7 +92,7 @@ class AnimeCardType(BaseCardTypeCustomFontAllText):
         default=AnimeTitleCard.SERIES_COUNT_TEXT_COLOR
     )
 
-RandomAngleRegex = r'random\[([+-]?\d+),\s*([+-]?\d+)\]'
+RandomAngleRegex = r'random\[([+-]?\d+.?\d*),\s*([+-]?\d+.?\d*)\]'
 RandomAngle = constr(regex=RandomAngleRegex)
 class ComicBookCardType(BaseCardTypeCustomFontAllText):
     font_color: BetterColor = Field(default=ComicBookTitleCard.TITLE_COLOR)
@@ -103,8 +103,8 @@ class ComicBookCardType(BaseCardTypeCustomFontAllText):
     )
     text_box_fill_color: BetterColor = Field(default='white')
     text_box_edge_color: Optional[BetterColor] = Field(default=None)
-    title_text_rotation_angle: Union[int, RandomAngle] = Field(default=-4)
-    index_text_rotation_angle: Union[int, RandomAngle] = Field(default=-4)
+    title_text_rotation_angle: Union[float, RandomAngle] = Field(default=-4.0)
+    index_text_rotation_angle: Union[float, RandomAngle] = Field(default=-4.0)
     banner_fill_color: BetterColor = Field(default='rgba(235,73,69,0.6)')
     hide_title_banner: bool = Field(default=None)
     hide_index_banner: bool = Field(default=None)
@@ -114,13 +114,13 @@ class ComicBookCardType(BaseCardTypeCustomFontAllText):
         # If angle is a random range string, replace with random value in range
         if isinstance(val, str):
             # Get bounds from the random range string
-            lower, upper = map(int, re_match(RandomAngleRegex, val).groups())
+            lower, upper = map(float, re_match(RandomAngleRegex, val).groups())
 
             # Lower bound cannot be above upper bound
             if lower > upper:
                 raise ValueError(f'Lower bound must be below upper bound')
 
-            return randint(lower, upper)
+            return uniform(lower, upper)
 
         return val
             
