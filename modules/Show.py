@@ -1,5 +1,6 @@
 from copy import copy
 from pathlib import Path
+from typing import Any
 
 from tqdm import tqdm
 
@@ -7,6 +8,7 @@ from modules.CleanPath import CleanPath
 from modules.DataFileInterface import DataFileInterface
 from modules.Debug import log, TQDM_KWARGS
 from modules.Episode import Episode
+from modules.EpisodeInfo import EpisodeInfo
 from modules.EpisodeMap import EpisodeMap
 from modules.Font import Font
 from modules.MultiEpisode import MultiEpisode
@@ -46,8 +48,11 @@ class Show(YamlReader):
         'image_source_priority',
     )
 
-    def __init__(self, name: str, yaml_dict: dict, source_directory: Path,
-                 preferences: 'PreferenceParser') -> None:
+    def __init__(self,
+            name: str,
+            yaml_dict: dict[str, Any],
+            source_directory: Path,
+            preferences: 'PreferenceParser') -> None:
         """
         Constructs a new instance of a Show object from the given YAML
         dictionary, library map, and referencing the base source
@@ -249,7 +254,7 @@ class Show(YamlReader):
             self.info_set.set_imdb_id(self.series_info, value)
 
         if (value := self._get('jellyfin_id', type_=str)) is not None:
-            self.info_set.set_jellyfin_id(self,series_info, value)
+            self.info_set.set_jellyfin_id(self.series_info, value)
 
         if (value := self._get('sonarr_id', type_=int)) is not None:
             sonarr_id = value if '-' in str(value) else f'0-{value}'
@@ -444,7 +449,7 @@ class Show(YamlReader):
             interface_function()
 
 
-    def __get_destination(self, episode_info: 'EpisodeInfo') -> Path:
+    def __get_destination(self, episode_info: EpisodeInfo) -> Path:
         """
         Get the destination filename for the given entry of a datafile.
 
@@ -890,7 +895,6 @@ class Show(YamlReader):
 
             # Get the partless title for this episode, and match within season
             partless_title = episode.episode_info.title.get_partless_title()
-            season_number = episode.episode_info.season_number
 
             # Sublist of all matching episodes
             matching_episodes = [episode]
