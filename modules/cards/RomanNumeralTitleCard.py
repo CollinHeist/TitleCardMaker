@@ -255,7 +255,7 @@ class RomanNumeralTitleCard(BaseCardType):
     MAX_ROMAN_NUMERAL = 3999
 
     """Maximum number of attempts for season text placement (if overlapping)"""
-    SEASON_TEXT_PLACEMENT_ATTEMPS = 10
+    SEASON_TEXT_PLACEMENT_ATTEMPS = 5
 
     __slots__ = (
         'output_file', 'title_text', 'season_text', 'hide_season_text',
