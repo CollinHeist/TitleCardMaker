@@ -66,6 +66,11 @@ class PersistentDatabase:
                 log.exception(f'Database {self.file.resolve()} is corrupted', e)
                 self.reset()
                 return getattr(self.db, database_func)(*args, **kwargs)
+            except ValueError as e:
+                log.exception(f'Database {self.file.resolve()} has conflicting '
+                              f'document', e)
+                self.reset()
+                return getattr(self.db, database_func)(*args, **kwargs)
 
         # Return "attribute" that is the wrapped function
         return wrapper
