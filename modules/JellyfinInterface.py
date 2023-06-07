@@ -3,11 +3,13 @@ from datetime import datetime
 from typing import Optional, Union
 
 from modules.Debug import log
+from modules.Episode import Episode
 from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo import EpisodeInfo
 import modules.global_objects as global_objects
 from modules.MediaServer import MediaServer
 from modules.SeriesInfo import SeriesInfo
+from modules.StyleSet import StyleSet
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
 
@@ -196,7 +198,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                         self.info_set.set_imdb_id(
                             series_info, ids.get('Tvdb', None)
                         )
-                        
+
                     return None
 
         # Not found on server
@@ -310,12 +312,16 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 if series.get('PremiereDate', None) is None:
                     log.debug(f'Series {series["Name"]} has no premiere date')
                     continue
-                
+
                 series_info = SeriesInfo(
                     series['Name'], 
                     datetime.strptime(series['PremiereDate'],
                                       self.AIRDATE_FORMAT).year,
                     jellyfin_id=series['Id'],
+                    imdb_id=series['ProviderIds'].get('Imdb'),
+                    tmdb_id=series['ProviderIds'].get('Tmdb'),
+                    tvdb_id=series['ProviderIds'].get('Tvdb'),
+                    tvrage_id=series['ProviderIds'].get('TvRage'),
                 )
                 all_series.append((series_info, series['Path'], library))
 
@@ -420,9 +426,11 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return series_info.has_id('jellyfin_id')
 
 
-    def update_watched_statuses(self, library_name: str,
-            series_info: SeriesInfo, episode_map: dict[str, 'Episode'],
-            style_set: 'StyleSet') -> None:
+    def update_watched_statuses(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_map: dict[str, Episode],
+            style_set: StyleSet) -> None:
         """
         Modify the Episode objects according to the watched status of
         the corresponding episodes within Jellyfin, and the spoil status
