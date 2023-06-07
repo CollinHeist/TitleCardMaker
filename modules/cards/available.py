@@ -1,4 +1,5 @@
 from modules.cards.AnimeTitleCard import AnimeTitleCard
+from modules.cards.ComicBookTitleCard import ComicBookTitleCard
 from modules.cards.CutoutTitleCard import CutoutTitleCard
 from modules.cards.DividerTitleCard import DividerTitleCard
 from modules.cards.FadeTitleCard import FadeTitleCard
@@ -16,6 +17,7 @@ from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
 
 LocalCards = [
     AnimeTitleCard.API_DETAILS,
+    ComicBookTitleCard.API_DETAILS,
     CutoutTitleCard.API_DETAILS,
     DividerTitleCard.API_DETAILS,
     FadeTitleCard.API_DETAILS,
