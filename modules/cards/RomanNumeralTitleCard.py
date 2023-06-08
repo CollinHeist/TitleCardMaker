@@ -259,9 +259,9 @@ class RomanNumeralTitleCard(BaseCardType):
 
     __slots__ = (
         'output_file', 'title_text', 'season_text', 'hide_season_text',
-        'font_color', 'font_size', 'background', 'roman_numeral_color',
-        'roman_numeral', '__roman_text_scalar', '__roman_numeral_lines',
-        'rotation', 'offset', 'season_text_color',
+        'hide_episode_text', 'font_color', 'font_size', 'background',
+        'roman_numeral_color', 'roman_numeral', '__roman_text_scalar',
+        '__roman_numeral_lines', 'rotation', 'offset', 'season_text_color',
     )
 
     def __init__(self,
