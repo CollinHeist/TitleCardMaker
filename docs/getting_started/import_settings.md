@@ -141,7 +141,7 @@ importing YAML. A summary of what each box enables is below:
 
 4. If you plan on importing Sync data, _and_ you have any `add_template`
 specifications, you first need to create those Templates so that TCM can assign
-them to the imported Syncs. See [here](../getting_started/creating_template.md)
+them to the imported Syncs. See [here](../getting_started/creating_templates.md)
 for an introduction to creating Templates. Make sure the Template name
 __exactly__ matches the name in your Sync.
 
