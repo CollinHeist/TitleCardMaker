@@ -772,7 +772,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 if series.year is None:
                     raise ValueError(f'Series has no year')
 
-                series_info = SeriesInfo(entry.title, series.year)
+                series_info = SeriesInfo(entry.parentTitle, series.year)
                 return [EpisodeDetails(
                     series_info,
                     EpisodeInfo.from_plex_episode(ep),
