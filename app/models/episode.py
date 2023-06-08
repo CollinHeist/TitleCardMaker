@@ -108,7 +108,14 @@ class Episode(Base):
             'font_stroke_width': self.font_stroke_width,
             'font_interline_spacing': self.font_interline_spacing,
             'font_vertical_shift': self.font_vertical_shift,
+            'airdate': self.airdate,
             'extras': self.extras,
+            'episode_emby_id': self.emby_id,
+            'episode_imdb_id': self.imdb_id,
+            'episode_jellyfin_id': self.jellyfin_id,
+            'episode_tmdb_id': self.tmdb_id,
+            'episode_tvdb_id': self.tvdb_id,
+            'episode_tvrage_id': self.tvrage_id,
         } 
 
 

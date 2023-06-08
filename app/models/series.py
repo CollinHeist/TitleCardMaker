@@ -145,6 +145,13 @@ class Series(Base):
             'unwatched_style': self.unwatched_style,
             'watched_style': self.watched_style,
             'extras': self.extras,
+            'series_emby_id': self.emby_id,
+            'series_imdb_id': self.imdb_id,
+            'series_jellyfin_id': self.jellyfin_id,
+            'series_sonarr_id': self.sonarr_id,
+            'series_tmdb_id': self.tmdb_id,
+            'series_tvdb_id': self.tvdb_id,
+            'series_tvrage_id': self.tvrage_id,
         }
 
     @hybrid_property
