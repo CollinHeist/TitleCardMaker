@@ -21,7 +21,7 @@ in the top right.
 6. Copy the created key, it should be a 32-character long string of numbers and
 the letters between A and F.
 
-    ??? warning "Security Warning"
+    ??? danger "Security Warning"
 
         Keep this API key private, as it can be used to remotely access and
         modify Emby.

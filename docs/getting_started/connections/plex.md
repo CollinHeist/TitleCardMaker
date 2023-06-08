@@ -16,7 +16,7 @@
 3. Follow [these instructions](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/) and copy the
 X-Plex-Token value.
 
-    ??? warning "Security Warning"
+    ??? danger "Security Warning"
 
         Keep this API key private, as it can be used to remotely access and
         modify Plex, and does not automatically expire.

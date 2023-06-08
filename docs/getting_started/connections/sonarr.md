@@ -18,8 +18,7 @@
 5. Under the Security subsection, and find and copy the API key - it should be a
 32-character long string of numbers and the letters between A and F.
 
-
-    ??? warning "Security Warning"
+    ??? danger "Security Warning"
 
         Keep this API key private, as it can be used to remotely access and
         modify Sonarr.

@@ -278,82 +278,65 @@ the TCM interface.
     === ":material-linux: Linux"
 
         ```bash
-        docker run -itd `# (1)!` \
-            --net="bridge" `# (2)!` \
+        docker run -itd \
+            --net="bridge" \
             -v "$(pwd)/logs/":"/maker/logs/" \
             -v "$(pwd)/assets/":"/config/assets/" \
             -v "$(pwd)/source/":"/config/source/" \
-            -v "$(pwd)/cards/":"/config/cards/" `# (3)!` \
-            -p 4242:4242 `# (4)!` \
+            -v "$(pwd)/cards/":"/config/cards/" \
+            -p 4242:4242 \
             titlecardmaker
         ```
-
-        1. This launches the container in the background.
-        2. This makes the TCM ports available to other Docker containers.
-        3. These `-v` commands make your directories accessible inside the
-        container.
-        4. This exposes the _internal_ `4242` port outside the container, so
-        that you can access it on your machine.
 
     === ":material-apple: MacOS"
 
         ```bash
-        docker run -itd `# (1)!` \
-            --net="bridge" `# (2)!` \
+        docker run -itd \
+            --net="bridge" \
             -v "$(pwd)/logs/":"/maker/logs/" \
             -v "$(pwd)/assets/":"/config/assets/" \
             -v "$(pwd)/source/":"/config/source/" \
-            -v "$(pwd)/cards/":"/config/cards/" `# (3)!` \
-            -p 4242:4242 `# (4)!` \
+            -v "$(pwd)/cards/":"/config/cards/" \
+            -p 4242:4242 \
             titlecardmaker
         ```
-
-        1. This launches the container in the background.
-        2. This makes the TCM ports available to other Docker containers.
-        3. These `-v` commands make your directories accessible inside the
-        container.
-        4. This exposes the _internal_ `4242` port outside the container, so
-        that you can access it on your machine.
 
     === ":material-powershell: Windows (Powershell)"
 
         ```bash
-        docker run -itd <#(1)#> `
-            --net="bridge" <#(2)#> `
+        docker run -itd `
+            --net="bridge" `
             -v "$(pwd)\logs":"/maker/logs/" `
             -v "$(pwd)\assets":"/config/assets/" `
             -v "$(pwd)\source":"/config/source/" `
-            -v "$(pwd)\cards":"/config/cards/" <#(3)#> `
-            -p 4242:4242 <#(4)#> `
+            -v "$(pwd)\cards":"/config/cards/" `
+            -p 4242:4242 `
             titlecardmaker
         ```
-
-        1. This launches the container in the background.
-        2. This makes the TCM ports available to other Docker containers.
-        3. These `-v` commands make your directories accessible inside the
-        container.
-        4. This exposes the _internal_ `4242` port outside the container, so
-        that you can access it on your machine.
 
     === ":material-microsoft-windows: Windows (Non-Powershell)"
 
         ```bash
-        docker run -itd `# (1)!` ^
-            --net="bridge" `# (2)!` ^
+        docker run -itd ^
+            --net="bridge" ^
             -v "$(pwd)\logs":"/maker/logs/" ^
             -v "$(pwd)\assets":"/config/assets/" ^
             -v "$(pwd)\source":"/config/source/" ^
-            -v "$(pwd)\cards":"/config/cards/" `# (3)!` ^
-            -p 4242:4242 `# (4)!` ^
+            -v "$(pwd)\cards":"/config/cards/" ^
+            -p 4242:4242 ^
             titlecardmaker
         ```
 
-        1. This launches the container in the background.
-        2. This makes the TCM ports available to other Docker containers.
-        3. These `-v` commands make your directories accessible inside the
+    ??? question "What does this command do?"
+
+        This does a few things:
+
+        1. Launches the container in the background.
+        2. Makes the TCM ports available to other Docker containers.
+        3. The `-v` commands make your directories accessible inside the
         container.
-        4. This exposes the _internal_ `4242` port outside the container, so
-        that you can access it on your machine.
+        4. Exposes the _internal_ `4242` port outside the container, so that you
+        can access it on your machine.
 
 !!! success "Success"
 

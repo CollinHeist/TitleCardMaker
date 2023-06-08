@@ -42,9 +42,9 @@ also try and download a poster.
 
 !!! success "Success"
 
-    If a poster for `Better Call Saul` is now visible on your homepage, you've
+    If a poster for _Better Call Saul_ is now visible on your homepage, you've
     successfully added a Series to TitleCardMaker.
 
     You can view the Series customization page by clicking the name or the View
     button (visible when hovering over the poster). We'll explore this page
-    [later on]().
+    [later on](./creating_cards.md).

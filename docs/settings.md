@@ -275,7 +275,7 @@ default is because of the ubiquity of JPEG images.
 
 The format / naming convention of how to name the Title Card files. This is a
 _format_, and will be applied to each individual Title Card. This format can
-contain _variable_ data (contained in `{}` characters) that is evaluated for
+contain _variable_ data (wrapped in `{}` curly braces) that is evaluated for
 each Title Card.
 
 A full list of the available variables are listed below.
@@ -327,6 +327,33 @@ A full list of the available variables are listed below.
 
         All text data can be made fully upper or lowercase. Just specify the
         variable as `{variable.upper()}` or `{variable.lower()}`.
+
+??? example "Example Formats"
+
+    ```
+    {series_full_name} - S{season_number:02}E{episode_number:02}
+    ```
+
+    Will produce files named like `Breaking Bad (2008) - S01E01`.
+
+    ```
+    {series_name} [{series_imdb_id}] - S{season_number}E{episode_number} - {title}
+    ```
+
+    Will produce files named like `Breaking Bad [tt0903747] - S1E1 - Pilot`.
+
+??? example "TRaSH Naming Convention"
+
+    If you follow the [TRaSH](https://trash-guides.info/Sonarr/Sonarr-recommended-naming-scheme/)
+    recommended naming scheme, you can use the following setting:
+
+    ```
+    {series_full_name} - S{season_number:02}E{episode_number:02} - {title}
+    ```
+
+    It is important to note that this can produce _extremely_ long file names
+    - sometimes _too_ long for your OS - if the Episode titles are exceedingly
+    long, in particular for some Anime.
 
 ### Specials Folder Format
 

@@ -6,16 +6,16 @@ There has been a lot of preamble, but the core of TitleCardMaker is making
 Title Cards. We'll be creating Title Card in order to showcase the effects of
 our Templates, as well as show how these Cards can be further customized.
 
-!!! warning "Example Series"
+!!! example "Example Series"
 
-    This part of the tutorial will refer to Breaking Bad as the example Series. 
-    Those who decided to Sync a Series _other than_ Breaking Bad can still
+    This part of the tutorial will refer to _Breaking Bad_ as the example Series. 
+    Those who decided to Sync a Series __other than__ _Breaking Bad_ can still
     follow these steps, just apply them to whatever Series you chose.
 
 ## Instructions
 ### Episode Data
-1. Go to the Breaking Bad Series configuration page - you can quickly access it
-by searching for the title in the top left search bar (next to the TCM logo).
+1. Go to the _Breaking Bad_ Series configuration page - you can quickly access
+it by searching for the title in the top left search bar (next to the TCM logo).
 
 2. Just below the poster is a set of action buttons. Click the `Refresh Episode
 Data` button. TCM will now query your global Episode Data Source for new
@@ -23,21 +23,16 @@ Episodes.
 
     !!! note "Scheduled Task"
 
-        Refreshing Episode data happens automatically as a [scheduled task](),
-        __unless__ the Series is marked as `Unmonitored`.
+        Refreshing Episode data happens automatically as a
+        [scheduled task](./scheduler.md), __unless__ the Series is marked as
+        `Unmonitored`.
 
 3. Open the "Episode Data" tab - there should now be either 62 or 80 Episodes,
 depending on whether you have turned on or off the Specials syncing.
 
-    !!! tip "Editing the Episode Data"
-    
-        You can edit any fields in this table and save the changes by clicking the
-        blue save icon in the left-most column, or by clicking the `Save All
-        Changes` button.
-
 ### Source Images
 4. Open the "Files" tab. This tab has shows image information for all Source
-Images for each Episode of the Series. Since we just added Breaking Bad, all
+Images for each Episode of the Series. Since we just added _Breaking Bad_, all
 images should show as missing.
 
 5. For Season 1 Episode 1, click the small TMDb logo. This will launch a browser
@@ -60,8 +55,9 @@ Source Images` button on the left-hand side.
 
     !!! note "Scheduled Task"
 
-        Downloading Source Images happens automatically as a [scheduled task](),
-        __unless__ the Series is marked as `Unmonitored`.
+        Downloading Source Images happens automatically as a
+        [scheduled task](./scheduler.md), __unless__ the Series is marked as
+        `Unmonitored`.
 
 Now that TCM has started downloading Source Images, we are ready to create Title
 Cards.
@@ -80,8 +76,8 @@ Season Number < 3. All other Title Cards were created with the lower priority
 criteria.
 
 11. Back within TCM, go to the "Episode Data" tab and change the card type of
-Season 2 Episode 1 to something else. Save this change by clicking the Save icon
-in the left-most column.
+Season 2 Episode 1 to something else. Save this change by clicking the
+:material-content-save: Save icon in the left-most column.
 
 12. Click the `Create Title Cards` again, and TCM should inform you that it is
 creating 1 card and deleting 1 card. Looking at the file, this Card is now made
