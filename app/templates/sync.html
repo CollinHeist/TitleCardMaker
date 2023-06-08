@@ -83,6 +83,17 @@
       });
     }
 
+    async function getJellyfinLibraries() {
+      const libraries = await fetch('/api/available/libraries/jellyfin').then(resp => resp.json());
+      const values = libraries.map(name => {
+        return {name: name, value: name, selected: false}
+      });
+      $('.dropdown[data-value="jellyfin_libraries"]').dropdown({
+        placeholder: 'None',
+        values: values
+      });
+    }
+
     async function getPlexLibraries() {
       const libraries = await fetch('/api/available/libraries/plex').then(resp => resp.json());
       const values = libraries.map(name => {
@@ -272,6 +283,7 @@
     async function initAll() {
       getAllSyncs();
       getEmbyLibraries();
+      getJellyfinLibraries();
       getPlexLibraries();
       getTemplates();
       getSonarrTags();
@@ -487,7 +499,7 @@
 
           <div class="field">
             <label>Libraries</label>
-            <div id="jellyfin-required-library" class="ui clearable multiple selection dropdown">
+            <div data-value="jellyfin_libraries" class="ui clearable multiple selection dropdown">
               <input type="hidden" name="required_libraries">
               <i class="dropdown icon"></i>
               <div class="default text">Libraries</div>
@@ -510,7 +522,7 @@
 
           <div class="field">
             <label>Libraries</label>
-            <div id="jellyfin-excluded-library" class="ui clearable multiple selection dropdown">
+            <div data-value="jellyfin_libraries" class="ui clearable multiple selection dropdown">
               <input type="hidden" name="excluded_libraries">
               <i class="dropdown icon"></i>
               <div class="default text">Libraries</div>
