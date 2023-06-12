@@ -142,3 +142,4 @@ class RemoteFile:
         """Reset (clear) this class's database of loaded remote files."""
 
         PersistentDatabase(RemoteFile.LOADED_FILE).reset()
+        log.debug(f'Reset PersistentDatabase[{RemoteFile.LOADED_FILE}]')
