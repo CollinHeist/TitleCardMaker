@@ -9,8 +9,7 @@ __pycache__/
 # PEP 582
 __pypackages__/
 
-app/assets/tmp/
-assets/
+app/assets/preview/card*.png
 source/
 logs/
 fonts/
