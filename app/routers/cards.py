@@ -220,7 +220,7 @@ def create_card_for_episode(
         preferences = Depends(get_preferences),
         emby_interface = Depends(get_emby_interface),
         jellyfin_interface = Depends(get_jellyfin_interface),
-        plex_interface = Depends(get_plex_interface)) -> CardActions:
+        plex_interface = Depends(get_plex_interface)) -> None:
     """
     Create the Title Cards for the given Episode. This deletes and
     remakes the existing Title Card if it is outdated.
@@ -237,16 +237,10 @@ def create_card_for_episode(
         episode.series, [episode]
     )
 
-    # Create Card for this Episode, record actions
-    actions = create_episode_card(db, preferences, None, episode)
-    if actions:
-        all_actions = CardActions()
-        for action in actions:
-            setattr(all_actions, action, getattr(all_actions, action)+1)
+    # Create Card for this Episode
+    create_episode_card(db, preferences, None, episode)
 
-        return all_actions
-
-    return CardActions()
+    return None
 
 
 @card_router.get('/episode/{episode_id}', tags=['Episodes'])
