@@ -6,15 +6,19 @@ from app.dependencies import (
     get_plex_interface, get_sonarr_interface, get_tmdb_interface,
 )
 import app.models as models
-from app.internal.cards import create_episode_card, delete_cards, update_episode_watch_statuses
+from app.internal.cards import (
+    create_episode_card, delete_cards, update_episode_watch_statuses,
+    validate_card_type_model
+)
 from app.internal.episodes import refresh_episode_data
 from app.internal.series import load_series_title_cards
 from app.internal.sources import download_episode_source_image
 from app.internal.translate import translate_episode
 from app.schemas.card import CardActions, TitleCard, PreviewTitleCard
+from app.schemas.font import DefaultFont
 
 from modules.Debug import log
-
+from modules.TieredSettings import TieredSettings
 
 # Create sub router for all /cards API requests
 card_router = APIRouter(
@@ -43,50 +47,60 @@ def create_preview_card(
             status_code=400,
             detail=f'Cannot create preview for card type "{card.card_type}"',
         )
-
-    # Get defaults from the card class
-    font = {
-        'color': CardClass.TITLE_COLOR,
-        'title_case': CardClass.DEFAULT_FONT_CASE,
-        'file': CardClass.TITLE_FONT,
-        'size': 1.0,
-    }
-
-    # Query for font if an ID was given, update font with those attributes
+    
+    # Get Font if indicated
+    font_template_dict = {}
     if getattr(card, 'font_id', None) is not None:
-        font_object = get_font(db, card.font_id, raise_exc=True)
-        for attr in ('file', 'color', 'title_case', 'size', 'kerning', 
-                     'stroke_width', 'interline_spacing', 'vertical_shift'):
-            if getattr(font_object, attr) is not None:
-                font[attr] = getattr(font_object, attr)
+        font = get_font(db, card.font_id, raise_exc=True)
+        font_template_dict = font.card_properties
+    
+    # Determine appropriate Source and Output file
+    preview_dir = preferences.INTERNAL_ASSET_DIRECTORY / 'preview'
+    source = preview_dir / (('art' if 'art' in card.style else 'unique') + '.jpg')
+    output = preview_dir / f'card-{card.style}.png'
 
-    # Use manually specified font attributes if given
-    for attr, value in card.dict().items():
-        if attr.startswith('font_') and value is not None:
-            font[attr[len('font_'):]] = value
+    # Resolve all settings
+    card_settings = TieredSettings.new_settings(
+        {'hide_season_text': False, 'hide_episode_text': False},
+        {'logo_file': preferences.INTERNAL_ASSET_DIRECTORY / 'logo512.png'},
+        DefaultFont,
+        preferences.card_properties,
+        font_template_dict,
+        {'source_file': source, 'card_file': output},
+        card.dict(),
+        card.extras,
+    )
 
-    # Update title for given case
-    card.title_text = CardClass.CASE_FUNCTIONS[font['title_case']](card.title_text)
+    # Add card default font stuff
+    if card_settings.get('font_file', None) is None:
+        card_settings['font_file'] = CardClass.TITLE_FONT
+    if card_settings.get('font_color', None) is None:
+        card_settings['font_color'] = CardClass.TITLE_COLOR
 
-    output = preferences.asset_directory / 'tmp' / f'card-{card.style}.png'
-    source = preferences.asset_directory / (('art' if 'art' in card.style else 'unique') + '.jpg')
+    # Apply title text case function
+    if card_settings.get('font_title_case', None) is None:
+        case_func = CardClass.CASE_FUNCTIONS[CardClass.DEFAULT_FONT_CASE]
+    else:
+        case_func = CardClass.CASE_FUNCTIONS[card_settings['font_title_case']]
+    card_settings['title_text'] = case_func(card_settings['title_text'])
 
-    # Delete card if it already exists
+    CardClass, CardTypeModel = validate_card_type_model(
+        preferences, card_settings
+    )
+
+    # Delete output if it exists, then create Card
     output.unlink(missing_ok=True)
+    card_maker = CardClass(**CardTypeModel.dict(), preferences=preferences)
+    card_maker.create()
 
-    kwargs = {
-        'source_file': source, 'card_file': output, 'preferences': preferences,
-        'title': card.title_text,
-        'font_file': font.pop('file'), 'font_color': font['color'],
-        'font_size': font.pop('size'),
-    } | font | card.dict().pop('extras', {}) | card.dict()
-    card = CardClass(**kwargs)
-    card.create()
-
+    # Card created, return URI
     if output.exists():
-        return f'/assets/tmp/{output.name}'
+        return f'/internal_assets/preview/{output.name}'
 
-    raise HTTPException(status_code=500, detail='Failed to create preview card')
+    raise HTTPException(
+        status_code=500,
+        detail='Failed to create preview card'
+    )
 
 
 @card_router.get('/{card_id}', status_code=200)
