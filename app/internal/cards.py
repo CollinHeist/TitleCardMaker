@@ -270,8 +270,8 @@ def resolve_card_settings(
     )
 
     # Override settings with extras, and merge translations into extras
+    TieredSettings(card_extras, episode.translations) # TODO maybe swap?
     TieredSettings(card_settings, card_extras)
-    TieredSettings(card_extras, episode.translations)
     card_settings['extras'] = card_extras | episode.translations
 
     # Resolve logo file format string if indicated
