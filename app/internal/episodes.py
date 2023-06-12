@@ -1,7 +1,9 @@
+from time import sleep
 from typing import Optional
 
 from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import OperationalError
 
 from app.dependencies import (
     get_database, get_preferences, get_emby_interface, get_jellyfin_interface,
@@ -31,21 +33,25 @@ def refresh_all_episode_data() -> None:
     try:
         # Get the Database
         with next(get_database()) as db:
-            # Get all Series
-            all_series = db.query(models.series.Series).all()
-            for series in all_series:
+            # Get through each Series, refresh Episode data
+            for series in db.query(models.series.Series).all():
                 # If Series is unmonitored, skip
                 if not series.monitored:
                     log.debug(f'{series.log_str} is Unmonitored, skipping')
                     continue
 
-                refresh_episode_data(
-                    db, get_preferences(), series, get_emby_interface(),
-                    get_jellyfin_interface(), get_plex_interface(),
-                    get_sonarr_interface(), get_tmdb_interface(),
-                )
+                try:
+                    refresh_episode_data(
+                        db, get_preferences(), series, get_emby_interface(),
+                        get_jellyfin_interface(), get_plex_interface(),
+                        get_sonarr_interface(), get_tmdb_interface(),
+                    )
+                except OperationalError:
+                    sleep(3)
     except Exception as e:
         log.exception(f'Failed to refresh all episode data', e)
+
+    return None
 
 
 def set_episode_ids(
