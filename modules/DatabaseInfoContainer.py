@@ -26,6 +26,7 @@ class DatabaseInfoContainer(ABC):
 
         # Set attribute if current value is None and new value isn't
         if (value is not None
+            and value != 0
             and getattr(self, attribute) is None
             and len(str(value)) > 0):
             # If a type is defined, use that
