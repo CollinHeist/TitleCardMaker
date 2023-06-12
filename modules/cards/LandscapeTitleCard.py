@@ -131,7 +131,7 @@ class LandscapeTitleCard(BaseCardType):
         self.darken = darken
 
 
-    def darken_command(self, coordinates: BoxCoordinates) ->ImageMagickCommands:
+    def darken_commands(self, coordinates: BoxCoordinates) ->ImageMagickCommands:
         """
         Subcommand to darken the image if indicated.
 
@@ -172,7 +172,7 @@ class LandscapeTitleCard(BaseCardType):
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
             *self.resize_and_style,
-            *self.darken_command((0, 0, 0, 0)),
+            *self.darken_commands((0, 0, 0, 0)),
             f'"{self.output_file.resolve()}"',
         ])
 
@@ -362,7 +362,7 @@ class LandscapeTitleCard(BaseCardType):
             f'convert "{self.source_file.resolve()}"',
             # Resize and apply any style modifiers
             *self.resize_and_style,
-            *self.darken_command(bounding_box),
+            *self.darken_commands(bounding_box),
             # Add title text
             f'\( -background None',
             f'-font "{self.font_file}"',
