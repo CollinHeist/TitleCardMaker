@@ -249,6 +249,10 @@ class PlexConnection(Base):
     plex_integrate_with_pmm: bool
     plex_filesize_limit: Optional[int]
 
+class SonarrLibrary(Base):
+    name: str
+    path: str
+
 class SonarrConnection(Base):
     use_sonarr: bool
     sonarr_url: AnyUrl

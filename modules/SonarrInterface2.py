@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
+from pathlib import Path
 from re import IGNORECASE, compile as re_compile
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
@@ -34,8 +35,11 @@ class SonarrInterface(WebInterface, SyncInterface):
     __AIRDATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 
 
-    def __init__(self, url: str, api_key: str, verify_ssl: bool=True,
-            server_id: int=0) -> None:
+    def __init__(self,
+            url: str,
+            api_key: str,
+            verify_ssl: bool = True,
+            server_id: int = 0) -> None:
         """
         Construct a new instance of an interface to Sonarr.
 
@@ -51,9 +55,6 @@ class SonarrInterface(WebInterface, SyncInterface):
 
         # Initialize parent WebInterface
         super().__init__('Sonarr', verify_ssl)
-
-        # Get global MediaInfoSet object
-        # self.info_set = global_objects.info_set
 
         # Get correct URL
         url = url if url.endswith('/') else f'{url}/'
@@ -83,15 +84,6 @@ class SonarrInterface(WebInterface, SyncInterface):
         # Parse all Sonarr series
         self.__series_data = {}
         self.__map_all_series_data()
-
-
-    def __repr__(self) -> str:
-        """Returns an unambiguous string representation of the object."""
-
-        return (
-            f'<SonarrInterface {self.server_id=}, {self.url=}, '
-            f'{self.__api_key=}>'
-        )
 
 
     def __map_all_series_data(self) -> None:
@@ -148,6 +140,20 @@ class SonarrInterface(WebInterface, SyncInterface):
 
             # Update all identified keys inside series data dict
             self.__series_data.update(dict.fromkeys(keys, data))
+
+
+    def get_root_folders(self) -> list[Path]:
+        """
+        Get all the root folder paths from Sonarr.
+
+        Returns:
+            List of root folder paths in Sonarr.
+        """
+
+        return [
+            Path(folder['path']) for folder in 
+            self._get(f'{self.url}rootfolder', self.__standard_params)
+        ]
 
 
     def has_series(self, series_info: SeriesInfo) -> bool:
@@ -262,11 +268,6 @@ class SonarrInterface(WebInterface, SyncInterface):
             if show['year'] == 0:
                 continue
 
-            # Get TVRage ID (0 if not filled out)
-            tvrage_id = None
-            if show.get('tvRageId'):
-                tvrage_id = show.get('tvRageId')
-
             # Construct SeriesInfo object for this show, do not use MediaInfoSet
             series_info = SeriesInfo(
                 show['title'],
@@ -274,7 +275,7 @@ class SonarrInterface(WebInterface, SyncInterface):
                 imdb_id=show.get('imdbId'),
                 sonarr_id=f'{self.server_id}-{show.get("id")}',
                 tvdb_id=show.get('tvdbId'),
-                tvrage_id=tvrage_id,
+                tvrage_id=show.get('tvRageId'),
             )
 
             # Add to returned list
@@ -427,7 +428,7 @@ class SonarrInterface(WebInterface, SyncInterface):
                     break
 
 
-    def get_all_tags(self) -> list[dict[str, 'str | int']]:
+    def get_all_tags(self) -> list[dict[str, Any]]:
         """
         Get all tags present in Sonarr.
 

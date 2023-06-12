@@ -44,8 +44,13 @@
     }
 
     /* Ensure the Sonarr libraries info message is compact */
-    #sonarr-libraries .compact.message {
-      display: inline-block;
+    .visible.compact.message {
+      display: inline-block !important;
+    }
+
+    /* Ensure there is a newline before the submit buttons */
+    .button[type="submit"] {
+      display: block;
     }
   </style>
 
@@ -150,6 +155,38 @@
       pathInput.type = 'text'; pathInput.placeholder = 'Library Path';
       pathInput.name = 'library_paths';
       $('#sonarr-libraries-library-paths').append(pathInput);
+    }
+
+    // Query for Sonarr libraries
+    async function querySonarrLibraries() {
+      // Get all the potential Sonarr libraries
+      $('#submit-sonarr').toggleClass('loading', true);
+      const libraries = await fetch('/api/connection/sonarr/libraries').then(resp => resp.json());
+      if (libraries === undefined) {
+        $.toast({class: 'error', message: 'Unable to query Sonarr Libraries'});
+        $('#submit-sonarr').toggleClass('loading', false);
+        return;
+      }
+
+      // Get the existing input elements
+      const libraryNames = $('input[name="library_names"]');
+      const libraryPaths = $('input[name="library_paths"]');
+      for (let [index, {name, path}] of libraries.entries()) {
+        // If there is no existing input for this library, add a new one
+        if (libraryNames[index] === undefined) {
+          addSonarrLibrary();
+          const libraryNames = $('input[name="library_names"]');
+          const libraryPaths = $('input[name="library_paths"]');
+        }
+
+        // Fill in text input fields
+        libraryNames[index].value = name;
+        libraryPaths[index].value = path;
+      }
+
+      // Add warning that these libraries will need to be checked
+      $('#sonarr-settings').toggleClass('warning', true);
+      $('#submit-sonarr').toggleClass('loading', false);
     }
   </script>
   
@@ -375,9 +412,9 @@
           </div>
           <!-- Filesize warning -->
           {% if (preferences.plex_filesize_limit or 0) > 10485760 %}
-          <div id="plex-filesize-warning" class="ui visible warning message">
+          <div id="plex-filesize-warning" class="ui compact visible warning message">
           {% else %}
-          <div id="plex-filesize-warning" class="ui warning message">
+          <div id="plex-filesize-warning" class="ui compact warning message">
           {% endif %}
             <i class="exclamation triangle icon"></i>
             <b>Warning</b> Plex will reject images larger than <code>10 MB</code>
@@ -450,9 +487,18 @@
               <i class="plus square outline icon"></i>
               Add Library
             </div>
+            <div class="circular ui icon mini button" onclick="querySonarrLibraries()" data-tooltip="Attempt to detect any Sonarr libraries ">
+              <i class="search icon"></i>
+              Auto-fill Libraries
+            </div>
           </div>
 
           <div class="ui error message"></div>
+          <div class="ui compact warning message">
+            <i class="exclamation triangle icon"></i>
+            These Library names and paths are <b>best guesses</b> from your Sonarr root folders.
+            Double check their validity before saving.
+          </div>
           <button id="submit-sonarr" class="ui primary animated button" type="submit">
             <div class="visible content">Save Changes</div>
             <div class="hidden content">

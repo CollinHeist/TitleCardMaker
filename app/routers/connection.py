@@ -1,18 +1,20 @@
 from typing import Literal
 
-from fastapi import APIRouter, Body, Depends, Request
+from fastapi import APIRouter, Body, Depends, HTTPException, Request
 
 from app.dependencies import (
-    get_preferences, refresh_emby_interface, refresh_jellyfin_interface,
-    refresh_plex_interface, refresh_sonarr_interface, refresh_tmdb_interface,
+    get_preferences, get_sonarr_interface, refresh_emby_interface,
+    refresh_jellyfin_interface, refresh_plex_interface,
+    refresh_sonarr_interface, refresh_tmdb_interface,
 )
 from app.internal.connection import update_connection
 from app.schemas.preferences import (
     EmbyConnection, JellyfinConnection, PlexConnection, SonarrConnection,
-    TautulliConnection, TMDbConnection, UpdateEmby, UpdateJellyfin, UpdatePlex,
-    UpdateSonarr, UpdateTMDb
+    SonarrLibrary, TautulliConnection, TMDbConnection, UpdateEmby,
+    UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb, 
 )
 from modules.Debug import log
+from modules.SonarrInterface2 import SonarrInterface
 from modules.TautulliInterface2 import TautulliInterface
 
 
@@ -154,6 +156,32 @@ def update_tmdb_connection(
     """
 
     return update_connection(preferences, update_tmdb, 'tmdb')
+
+
+@connection_router.get('/sonarr/libraries', status_code=200, tags=['Sonarr'])
+def get_potential_sonarr_libraries(
+        sonarr_interface: SonarrInterface = Depends(get_sonarr_interface)
+        ) -> list[SonarrLibrary]:
+    """
+    Get the potential library names and paths from Sonarr.
+    """
+
+    # If Sonarr is disabled, raise 409
+    if sonarr_interface is None:
+        raise HTTPException(
+            status_code=409,
+            detail=f'Unable to communicate with Sonarr'
+        )
+    
+    # Function to parse a library name from a folder name
+    def _guess_library_name(folder_name: str) -> str:
+        return folder_name.replace('-', ' ').replace('_', ' ')
+    
+    # Attempt to interpret library names from root folders
+    return [
+        SonarrLibrary(name=_guess_library_name(folder.name), path=str(folder))
+        for folder in sonarr_interface.get_root_folders()
+    ]
 
 
 @connection_router.post('/tautulli/check', status_code=200, tags=['Tautulli'])
