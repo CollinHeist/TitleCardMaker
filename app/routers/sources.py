@@ -313,6 +313,7 @@ async def set_source_image(
     source_file = episode.get_source_file(
         preferences.source_directory,
         episode.series.path_safe_name,
+        'unique',
     )
 
     # If file already exists, warn about overwriting
