@@ -48,7 +48,7 @@ class BaseCardTypeAllText(BaseCardType):
     hide_season_text: bool = Field(default=False)
     hide_episode_text: bool = Field(default=False)
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def toggle_text_hiding(cls, values):
         values['hide_season_text'] |= (len(values['season_text']) == 0)
         values['hide_episode_text'] |= (len(values['episode_text']) == 0)
@@ -188,7 +188,7 @@ class LogoCardType(BaseCardTypeCustomFontAllText):
     use_background_image: bool = Field(default=False)
     blur_only_image: bool = Field(default=False)
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def validate_source_file(cls, values):
         if values['use_background_image'] and not values['source_file'].exists():
             raise ValueError(f'Source file indicated and does not exist')
@@ -214,7 +214,7 @@ class PosterCardType(BaseCardType):
     logo_file: Optional[FilePath] = Field(default=None)
     episode_text_color: Optional[BetterColor] = Field(default=None)
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def assign_episode_text_color(cls, values):
         # None means match font color
         if values['episode_text_color'] is None:
@@ -256,7 +256,7 @@ class StarWarsCardType(BaseCardType):
     font_size: PositiveFloat = Field(default=1.0)
     episode_text_color: BetterColor = Field(default=StarWarsTitleCard.EPISODE_TEXT_COLOR)
     
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def toggle_text_hiding(cls, values):
         values['hide_episode_text'] |= (len(values['episode_text']) == 0)
 
@@ -286,7 +286,6 @@ class TintedFrameCardType(BaseCardTypeAllText):
 
     @root_validator(skip_on_failure=True)
     def validate_extras(cls, values):
-        log.critical(f'{values=}')
         # Logo indicated, verify it exists
         top = values['top_element']
         middle = values['middle_element']
@@ -325,7 +324,7 @@ class TintedGlassCardType(BaseCardTypeCustomFontNoText):
     def parse_box_adjustments(cls, val):
         return tuple(map(int, re_match(BoxAdjustmentRegex, val).groups()))
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def toggle_text_hiding(cls, values):
         values['hide_episode_text'] |= (len(values['episode_text']) == 0)
 
