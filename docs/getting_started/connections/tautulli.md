@@ -24,8 +24,7 @@
 :fontawesome-solid-gears: Gear icon in the top right.
 4. From the left navigation bar, open the `Web Interface` settings.
 5. Scroll to the bottom, and ensure the `Enable API` checkbox is checked, then
-show and copy the generated API key - it should be a 32-character long string of
-numbers and the letters between A and F.
+show and copy the generated API key.
 
     ??? danger "Security Warning"
 

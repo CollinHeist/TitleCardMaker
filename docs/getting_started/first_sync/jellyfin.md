@@ -28,7 +28,7 @@ button, type `tcm-test` and hit ++enter++ - click `Save Changes`.
     1. Enter the Sync Name as `Test Sync`
     2. In the "Templates to Apply", select __in order__, the `Tier 1 - Standard`
     and `Tier 0 - Tinted Frame` Templates from
-    [earlier](../creating_template.md) in the tutorial.
+    [earlier](../creating_templates.md) in the tutorial.
 
         !!! tip "Template Order Matters"
 

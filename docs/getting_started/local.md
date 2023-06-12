@@ -4,7 +4,7 @@
 
     Some Linux distros __do not__ support ImageMagick - which is a
     requirement for TitleCardMaker - in this case the [Docker
-    installation](../docker/index.md) is required.
+    installation](../docker/) is required.
 
 ## Background
 Installing TitleCardMaker locally, instead of in a Docker container,
