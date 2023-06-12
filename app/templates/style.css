@@ -10,33 +10,50 @@
   --support-button-color: #db2828;
 }
 
-#main-content {
-  /* background-color: var(--background-color-light); */
-  background-image: linear-gradient(to bottom right, var(--background-color-light), #d9d9d9);
-}
-
-/* Keep header as fixed (non-scrollable) content */
-body > .pusher {
+/* Fix header in place, lock window positioning */
+body > div:first-of-type {
   display: flex;
-  height: 100%;
   flex-direction: column;
-}
-#main-content {
-  flex: 1;
-  overflow: auto;
-  overflow-x: hidden;
+  overflow: hidden;
+  height: 100%;
 }
 
-/* Center logo horizontally */
+#main-content {
+  /* Ensure main content is scrollable */
+  overflow-x: hidden;
+  /* Add margin for main content to space from header and sidebar */
+  padding: 15px 15px 15px 135px;
+}
+
+/* Header element alignment */
+#page-header {
+  align-items: center;
+  display: flex;
+  height: 70px;
+  flex: 0 0 auto;
+}
+#page-header >* {
+  display: flex;
+}
+/* Right aligned header elements */
+#page-header > [data-position="right"] {
+  justify-content: flex-end;
+  flex-grow: 1;
+  margin-right: 25px;
+}
+#page-header > [data-position="right"] >* {
+  margin-right: 10px;
+}
 #tcm-logo {
-  width: 115px;
+  /* Pad the entire width of the sidebar */
+  flex: 0 0 109px;
+  /* Center logo horizontally */
+  justify-content: center;
 }
-/* Remove outline from logo */
-#tcm-logo img {
-  max-height: 50px;
-}
-#tcm-logo, #tcm-logo:hover {
-  box-shadow: none;
+
+/* Global background gradient */
+body {
+  background-image: linear-gradient(to bottom right, var(--background-color-light), #d9d9d9);
 }
 
 /* Don't put any scrollbars in the sidebar */
@@ -46,17 +63,17 @@ body > .pusher {
 
 /* Style for the header on all pages */
 #page-header {
-  height: 70px;
+  /* height: 70px; */
   background-color: var(--sidebar-color-light);
-  position: sticky;
-  top: 0px; /* Align to top of the page */
   z-index: 99; /* Position above all elements */
-  display: flex;
-  align-items: center;
 }
-#header-search {
-  position: absolute;
-  left: 125px;
+
+/* Remove outline from logo */
+#tcm-logo img {
+  max-height: 50px;
+}
+#tcm-logo, #tcm-logo:hover {
+  box-shadow: none;
 }
 
 /* Position sidebar below header */
@@ -106,11 +123,7 @@ input ~ input {
 
 /* Support button */
 #support-button {
-  /* 25px from right of screen */
-  position: absolute;
-  right: 25px;
   /* Add glow effect */
-  /* color: var(--support-button-color); */
   border-radius: 0.25em;
   box-shadow: 0 0 1.1em 0 var(--support-button-color); /* 1.1 */
   animation: glowPulse 6s infinite;
@@ -122,24 +135,8 @@ input ~ input {
 @keyframes glowPulse {
   0%, 100% { box-shadow: 0 0 0.3em 1px var(--support-button-color); }
   50% { box-shadow: 0 0 1.5em 3px var(--support-button-color); }
-  /* 0% { box-shadow: 0 0 1.1em 0 var(--support-button-color); } */
-  /* 50% { box-shadow: 0 0 1.3em var(--support-button-color); } */
-  /* 70% { box-shadow: 0 0 1.1em 5px var(--support-button-color); } */
-  /* 100% { box-shadow: 0 0 1.1em 0 var(--support-button-color); } */
 }
 
-/* Theme toggle button */
-#theme-toggle {
-  position: absolute;
-  right: 150px;
-}
-
-/* Style for the main content on all pages */
-#main-content {
-  /* Appropriate margin around sides and sidebar */
-  /* margin: 15px 25px 15px 135px; */
-  padding: 15px 15px 15px 135px;
-}
 
 html.ios {
   overflow-x: hidden;
@@ -205,7 +202,6 @@ html.ios body {
   }
   #nav-menu .sidebar {
     top: 70px;
-     /* Hide sidebar by default */
-    /* width: 0px !important; */
   }
 }
+
