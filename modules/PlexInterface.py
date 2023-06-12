@@ -829,7 +829,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                     raise ValueError
 
                 series_info = self.info_set.get_series_info(
-                    entry.title, entry.year
+                    entry.parentTitle, entry.year
                 )
 
                 return [
