@@ -35,14 +35,16 @@ def sync_all() -> None:
         # Get the Database
         with next(get_database()) as db:
             # Get and run all Syncs
-            all_syncs = db.query(models.sync.Sync).all()
-            for sync in all_syncs:
-                run_sync(
-                    db, get_preferences(), sync, get_emby_interface(), 
-                    get_imagemagick_interface(), get_jellyfin_interface(),
-                    get_plex_interface(), get_sonarr_interface(),
-                    get_tmdb_interface(),
-                )
+            for sync in db.query(models.sync.Sync).all():
+                try:
+                    run_sync(
+                        db, get_preferences(), sync, get_emby_interface(), 
+                        get_imagemagick_interface(), get_jellyfin_interface(),
+                        get_plex_interface(), get_sonarr_interface(),
+                        get_tmdb_interface(),
+                    )
+                except HTTPException as e:
+                    log.exception(f'Error Syncing Sync [{sync.id}] - {e.detail}', e)
     except Exception as e:
         log.exception(f'Failed to run all Syncs', e)
 
