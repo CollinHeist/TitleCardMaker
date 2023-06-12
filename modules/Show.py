@@ -1,5 +1,6 @@
 from copy import copy
 from pathlib import Path
+from typing import Any, Optional
 
 from tqdm import tqdm
 
@@ -7,6 +8,7 @@ from modules.CleanPath import CleanPath
 from modules.DataFileInterface import DataFileInterface
 from modules.Debug import log, TQDM_KWARGS
 from modules.Episode import Episode
+from modules.EpisodeInfo import EpisodeInfo
 from modules.EpisodeMap import EpisodeMap
 from modules.Font import Font
 from modules.MultiEpisode import MultiEpisode
@@ -444,7 +446,7 @@ class Show(YamlReader):
             interface_function()
 
 
-    def __get_destination(self, episode_info: 'EpisodeInfo') -> Path:
+    def __get_destination(self, episode_info: EpisodeInfo) -> Path:
         """
         Get the destination filename for the given entry of a datafile.
 
@@ -699,7 +701,7 @@ class Show(YamlReader):
                 log.debug(f'Downloaded logo for {self}')
 
 
-    def __apply_styles(self, select_only: Episode=None) -> bool:
+    def __apply_styles(self, select_only: Optional[Episode] = None) -> bool:
         """
         Modify this series' Episode source images based on their watch
         statuses, and how that style applies to this show's un/watched
@@ -769,7 +771,8 @@ class Show(YamlReader):
         return download_backdrop
 
 
-    def select_source_images(self, select_only: Episode=None) -> None:
+    def select_source_images(self,
+            select_only: Optional[Episode] = None) -> None:
         """
         Modify this series' Episode source images based on their watch
         statuses, and how that style applies to this show's un/watched
@@ -864,14 +867,21 @@ class Show(YamlReader):
                         episode.episode_info,
                         skip_localized_images=self.tmdb_skip_localized_images,
                     )
-                    # If None was returned (e.g. temp blacklisted), exit loops
-                    if not image: break
+                    # Exit loop or continue depending on permanent blacklist status
+                    if not image:
+                        pb = self.tmdb_interface.is_permanently_blacklisted(
+                            self.series_info, episode.episode_info
+                        )
+                        if pb: continue
+                        else:  break
 
                 # Attempt to download image, log and exit if successful
                 if image and WebInterface.download_image(image, episode.source):
                     log.debug(f'Downloaded {episode.source.name} for {self} '
                               f'from {source_interface}')
                     break
+            
+        return None
 
 
     def find_multipart_episodes(self) -> None:
@@ -890,7 +900,6 @@ class Show(YamlReader):
 
             # Get the partless title for this episode, and match within season
             partless_title = episode.episode_info.title.get_partless_title()
-            season_number = episode.episode_info.season_number
 
             # Sublist of all matching episodes
             matching_episodes = [episode]
@@ -936,7 +945,7 @@ class Show(YamlReader):
             self.episodes[f'0{mp.season_number}-{mp.episode_start}'] = mp
 
 
-    def create_missing_title_cards(self) ->None:
+    def create_missing_title_cards(self) -> None:
         """Create any missing title cards for each episode."""
 
         # If the media directory is unspecified, exit
@@ -1021,3 +1030,5 @@ class Show(YamlReader):
         media_interface.set_season_posters(
             self.library_name, self.series_info, self.season_poster_set,
         )
+
+        return None
