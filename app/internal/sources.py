@@ -303,6 +303,10 @@ def download_episode_source_image(
 
     # Go through all image sources    
     for image_source in preferences.image_source_priority:
+        # Skip and do not warn if this interface is outright disabled
+        if not getattr(preferences, f'use_{image_source.lower()}', False):
+            continue
+
         if image_source == 'Emby' and emby_interface:
             if 'art' in style:
                 log.debug(f'Cannot source Art images from Emby - skipping')
