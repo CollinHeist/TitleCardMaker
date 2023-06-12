@@ -163,18 +163,21 @@ def refresh_episode_data(
             detail=f'Unable to communicate with {episode_data_source}'
         )
 
+    # Verify Series has an associated Library
+    library_attribute = f'{episode_data_source.lower()}_library_name'
+    if (episode_data_source in ('Emby', 'Jellyfin', 'Plex')
+        and getattr(series, library_attribute, None) is None):
+        raise HTTPException(
+            status_code=409,
+            detail=f'Series does not have an associated {episode_data_source} library'
+        )
+
     # Create SeriesInfo for this object to use in querying
     if episode_data_source == 'Emby':
         all_episodes = emby_interface.get_all_episodes(series.as_series_info)
     elif episode_data_source == 'Jellyfin':
         all_episodes =jellyfin_interface.get_all_episodes(series.as_series_info)
     elif episode_data_source == 'Plex':
-        # Raise 409 if source is Plex but series has no library
-        if series.plex_library_name is None: 
-            raise HTTPException(
-                status_code=409,
-                detail=f'Series does not have an associated library'
-            )
         all_episodes = plex_interface.get_all_episodes(
             series.plex_library_name, series.as_series_info,
         )
