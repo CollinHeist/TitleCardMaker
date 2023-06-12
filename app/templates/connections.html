@@ -440,12 +440,10 @@
               <div id="sonarr-libraries-library-names" class="two wide library field">
                 <label>Library Name</label> 
                 <!-- Added asynchronously -->
-                <!-- <input type="text" placeholder="Library Name" name="library_names"> -->
               </div>
               <div id="sonarr-libraries-library-paths" class="four wide field">
                 <label>Path</label>
                 <!-- Added asynchronously -->
-                <!-- <input type="text" placeholder="Library Path" name="library_paths"> -->
               </div>
             </div>
             <div class="circular ui icon mini button" onclick="addSonarrLibrary()">
@@ -781,7 +779,7 @@
       inline: true,
       fields: {
         tautulli_url: ['url', 'empty'],
-        tautulli_api_key: ['empty', 'regExp[/^[a-f0-9]+$/gi]'],
+        tautulli_api_key: ['empty'],
         tautulli_agent_name: {
           optional: true,
           value: ['minLength[1]']
