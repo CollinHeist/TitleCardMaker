@@ -1,7 +1,3 @@
-!!! warning "Under Construction"
-
-    This documentation is actively being developed.
-
 # Syncing from Plex
 
 !!! note "Example Series"

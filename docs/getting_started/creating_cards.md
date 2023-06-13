@@ -3,7 +3,7 @@
 ## Background
 
 There has been a lot of preamble, but the core of TitleCardMaker is making
-Title Cards. We'll be creating Title Card in order to showcase the effects of
+Title Cards. We'll be creating Title Cards in order to showcase the effects of
 our Templates, as well as show how these Cards can be further customized.
 
 !!! example "Example Series"
@@ -46,6 +46,8 @@ and store it inside the Source Image directory. Download any image.
         
         When manually browsing the images on TMDb, your global minimum
         resolution is ignored.
+
+    ![](../assets/tmdb_browse_images.jpg)
 
 6. Close the image browser. The file for that Episode should now be filled in
 with Source Image information.

@@ -122,7 +122,7 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Getting Started - Tutorial:
+  - Getting Started:
     - Installation - Docker:
       - getting_started/docker/index.md
       - Docker: getting_started/docker/docker.md
@@ -148,7 +148,36 @@ nav:
       - Sonarr: getting_started/first_sync/sonarr.md
     - Rescheduling Tasks: getting_started/scheduler.md
     - Creating Title Cards: getting_started/creating_cards.md
-  - Settings: settings.md
-
-  - API: api.md
-  - Release Notes: release_notes.md
+  - User Guide:
+    - user_guide/index.md
+    - Series: user_guide/series.md
+    - Templates: user_guide/templates.md
+    - Fonts: user_guide/fonts.md
+    - Sync: user_guide/sync.md
+    - Connections: user_guide/connections.md
+    - Settings: user_guide/settings.md
+    - Scheduler: user_guide/scheduler.md
+    - Importer: user_guide/importer.md
+  - Card Types:
+    - card_types/index.md
+    - Local:
+      - Anime: card_types/local/anime.md
+      - Cutout: card_types/local/cutout.md
+      - Divider: card_types/local/divider.md
+      - Fade: card_types/local/fade.md
+      - Frame: card_types/local/frame.md
+      - Landscape: card_types/local/landscape.md
+      - Logo: card_types/local/logo.md
+      - Olivier: card_types/local/olivier.md
+      - Poster: card_types/local/poster.md
+      - Roman Numeral: card_types/local/roman_numeral.md
+      - Standard: card_types/local/standard.md
+      - Star Wars: card_types/local/star_wars.md
+      - Textless: card_types/local/textless.md
+      - Tinted Frame: card_types/local/tinted_frame.md
+      - Tinted Glass: card_types/local/tinted_glass.md
+    # - User
+  - Development:
+    - Contributing: development/contributing.md
+    - The API: development/api.md
+  - Help & Support: help_and_support.md
