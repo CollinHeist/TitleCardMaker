@@ -23,8 +23,8 @@ class UpdateBase(Base):
 
         return values
     
-# Better "Color" class to support "transparent"
-BetterColor = Union[Color, Literal['transparent']]
+# Better "Color" class to support "transparent", required until Pydantic v2.0
+BetterColor = Union[str, Literal['transparent']]
 
 # Function to validate two equal length lists are provided
 def validate_argument_lists_to_dict(
