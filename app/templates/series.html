@@ -755,6 +755,29 @@
         }, complete: () => {}
       });
     }
+
+    async function navigateSeries(next_or_previous) {
+      // Function to standardize the Series name
+      const sortStandardizeStr = (text) => text.toString().replace(/^(a|an|the)(\s)/i, '');
+      // Get all Series
+      const allSeries = await fetch('/api/series/all?order_by=alphabetical').then(resp => resp.json());
+      const thisSeriesName = sortStandardizeStr('{{series.name}}');
+      // Function to filter the Series list by
+      let filterFunc;
+      if (next_or_previous === 'next') {
+        filterFunc = series => thisSeriesName.localeCompare(sortStandardizeStr(series.name)) < 0;
+      } else {
+        filterFunc = series => thisSeriesName.localeCompare(sortStandardizeStr(series.name)) > 0;
+      }
+      // Get Series that come before or after this one
+      const filteredSeries = allSeries.filter(series => filterFunc(series));
+      // If next/previous Series, go to that page - if not, disable button
+      if (filteredSeries.length > 0) {
+        window.location.href = `/series/${filteredSeries[0].id}`;
+      } else {
+        $(`i[data-action="${next_or_previous}-series"]`).toggleClass('disabled', true);
+      }
+    }
   </script>
 </head>
 
@@ -1288,6 +1311,10 @@
             </div>
             <!-- Series info (name, year, etc.) -->
             <div class="content">
+              <div class="ui right floated">
+                <i data-action="previous-series" class="ui arrow alternate circle left outline link icon"></i>
+                <i data-action="next-series" class="ui arrow alternate circle right outline link icon"></i>
+              </div>
               <div class="header">{{series.name}}</div>
               <div class="meta">
                 <span class="date">{{series.year}}</span>
@@ -2249,6 +2276,10 @@
           $('#edit-poster-form')[0].reset();
         }}
       );
+
+    // Previous/next series button
+    $('i[data-action="previous-series"]').on('click', () => navigateSeries('previous'));
+    $('i[data-action="next-series"]').on('click', () => navigateSeries('next'));
 
     // Delete series modal
     $('#delete-series-modal').modal('attach events', '#delete-series');
