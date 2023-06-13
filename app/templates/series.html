@@ -1500,9 +1500,9 @@
                 <label>Card Directory</label>
                 <div class="ui left icon input">
                   {% if series.directory is none %}
-                  <input name="card_directory" type="text" placeholder="{{preferences.card_directory}}{{series.path_safe_name}}">
+                  <input name="directory" type="text" placeholder="{{preferences.card_directory}}{{series.path_safe_name}}">
                   {% else %}
-                  <input name="card_directory" type="text" value="{{series.directory}}">
+                  <input name="directory" type="text" value="{{series.directory}}">
                   {% endif %}
                   <i class="folder icon"></i>
                 </div>
