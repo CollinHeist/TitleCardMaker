@@ -1,12 +1,13 @@
 from pathlib import Path
 from requests import get
 from shutil import copy as file_copy
-from typing import Optional
+from typing import Literal, Optional
 
 from fastapi import (
     APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, Query,
     UploadFile
 )
+from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_font, get_series
 from app.dependencies import (
@@ -35,19 +36,40 @@ series_router = APIRouter(
 
 @series_router.get('/all', status_code=200)
 def get_all_series(
-        db = Depends(get_database)) -> list[Series]:
+        db: Session = Depends(get_database),
+        order_by: Literal['alphabetical', 'id', 'year'] = 'id') -> list[Series]:
     """
     Get all defined Series.
+
+    - order_by: How to order the Series in the returned list.
     """
 
-    return db.query(models.series.Series).all()
+    # Return ordered by Name > Year
+    query = db.query(models.series.Series)
+    if order_by == 'alphabetical':
+        return query.order_by(models.series.Series.name)\
+            .order_by(models.series.Series.year)\
+            .all()
+    # Return ordered by ID
+    elif order_by == 'id':
+        return query.all()
+    # Returned ordered by Year > Name
+    elif order_by == 'year':
+        return query.order_by(models.series.Series.year)\
+            .order_by(models.series.Series.name)\
+            .all()
+    else:
+        raise HTTPException(
+            status_code=500,
+            detail=f'Cannot order by "{order_by}"'
+        )
 
 
 @series_router.post('/new', status_code=201)
 def add_new_series(
         background_tasks: BackgroundTasks,
         new_series: NewSeries = Body(...),
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         emby_interface = Depends(get_emby_interface),
         imagemagick_interface = Depends(get_imagemagick_interface),
@@ -108,7 +130,7 @@ def add_new_series(
 @series_router.delete('/{series_id}', status_code=204)
 def delete_series(
         series_id: int,
-        db = Depends(get_database)) -> None:
+        db: Session = Depends(get_database)) -> None:
     """
     Delete the Series with the given ID. This also deletes the poster.
 
@@ -133,7 +155,7 @@ def search_series(
         sync_id: Optional[int] = None,
         template_id: Optional[int] = None,
         max_results: Optional[int] = 50,
-        db = Depends(get_database)):
+        db: Session = Depends(get_database)):
     """
     Query all defined defined series by the given parameters. This
     performs an AND operation with the given conditions.
@@ -174,7 +196,7 @@ def search_series(
 @series_router.get('/{series_id}', status_code=200)
 def get_series_config(
         series_id: int,
-        db = Depends(get_database)) -> Series:
+        db: Session = Depends(get_database)) -> Series:
     """
     Get the config for the given Series.
 
@@ -188,7 +210,7 @@ def get_series_config(
 def update_series(
         series_id: int,
         update_series: UpdateSeries = Body(...),
-        db = Depends(get_database)) -> Series:
+        db: Session = Depends(get_database)) -> Series:
     """
     Update the config of the given Series.
 
@@ -234,7 +256,7 @@ def update_series(
 @series_router.post('/{series_id}/toggle-monitor', status_code=201)
 def toggle_series_monitored_status(
         series_id: int,
-        db = Depends(get_database)) -> Series:
+        db: Session = Depends(get_database)) -> Series:
     """
     Toggle the monitored attribute of the given Series.
 
@@ -257,7 +279,7 @@ def toggle_series_monitored_status(
 def load_title_cards_into_media_server(
         series_id: int,
         media_server: MediaServer,
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         emby_interface = Depends(get_emby_interface),
         jellyfin_interface = Depends(get_jellyfin_interface),
         plex_interface = Depends(get_plex_interface)) -> None:
@@ -287,7 +309,7 @@ def load_title_cards_into_media_server(
 def reload_title_cards_into_media_server(
         series_id: int,
         media_server: MediaServer,
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         emby_interface = Depends(get_emby_interface),
         jellyfin_interface = Depends(get_jellyfin_interface),
         plex_interface = Depends(get_plex_interface)) -> None:
@@ -312,7 +334,7 @@ def reload_title_cards_into_media_server(
 @series_router.get('/{series_id}/poster', status_code=200)
 def download_series_poster_(
         series_id: int,
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         imagemagick_interface = Depends(get_imagemagick_interface),
         tmdb_interface = Depends(get_tmdb_interface)) -> str:
@@ -333,7 +355,7 @@ def download_series_poster_(
 @series_router.put('/{series_id}/poster/query', status_code=200)
 def query_series_poster(
         series_id: int,
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         tmdb_interface = Depends(get_tmdb_interface)) -> Optional[str]:
     """
     Query for a poster of the given Series.
@@ -353,7 +375,7 @@ async def set_series_poster(
         series_id: int,
         poster_url: Optional[str] = Form(default=None),
         poster_file: Optional[UploadFile] = None,
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         image_magick_interface = Depends(get_imagemagick_interface)) -> str:
     """
