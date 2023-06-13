@@ -272,6 +272,7 @@ class ComicBookTitleCard(BaseCardType):
         self.episode_text_color = episode_text_color
         self.index_text_position = index_text_position
         self.text_box_fill_color = text_box_fill_color
+        self.text_box_edge_color = text_box_edge_color
         self.title_text_rotation_angle = title_text_rotation_angle
         self.index_text_rotation_angle = index_text_rotation_angle
         self.banner_fill_color = banner_fill_color
@@ -280,11 +281,7 @@ class ComicBookTitleCard(BaseCardType):
         self.hide_title_banner = hide_title_banner
         self.hide_index_banner = hide_index_banner
 
-        # If omitted, use font color
-        if text_box_edge_color is None:
-            self.text_box_edge_color = font_color
-        else:
-            self.text_box_edge_color = text_box_edge_color
+        return None
 
 
     @property

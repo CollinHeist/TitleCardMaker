@@ -1,6 +1,6 @@
 from pathlib import Path
 from random import uniform
-from re import IGNORECASE, match as re_match
+from re import match as re_match
 from typing import Literal, Optional, Union
 
 from pydantic import (
@@ -125,6 +125,14 @@ class ComicBookCardType(BaseCardTypeCustomFontAllText):
             return uniform(lower, upper)
 
         return val
+    
+    @root_validator(skip_on_failure=True)
+    def assign_unassigned_color(cls, values):
+        # None means match font color
+        if values['text_box_edge_color'] is None:
+            values['text_box_edge_color'] = values['font_color']
+
+        return values
             
 class CutoutCardType(BaseCardType):
     title_text: str
@@ -140,7 +148,6 @@ TextPosition = Literal[
 class DividerCardType(BaseCardTypeCustomFontAllText):
     font_color: BetterColor = Field(default=DividerTitleCard.TITLE_COLOR)
     font_file: FilePath = Field(default=DividerTitleCard.TITLE_FONT)
-
     stroke_color: BetterColor = Field(default='black')
     title_text_position: Literal['left', 'right'] = Field(default='left')
     text_position: TextPosition = Field(default='lower right')
@@ -148,7 +155,6 @@ class DividerCardType(BaseCardTypeCustomFontAllText):
 class FadeCardType(BaseCardTypeCustomFontAllText):
     font_color: BetterColor = Field(default=FadeTitleCard.TITLE_COLOR)
     font_file: FilePath = Field(default=FadeTitleCard.TITLE_FONT)
-
     logo: Optional[FilePath] = Field(default=None)
     episode_text_color: BetterColor = Field(default=FadeTitleCard.EPISODE_TEXT_COLOR)
     separator: str = Field(default='•')
@@ -156,7 +162,6 @@ class FadeCardType(BaseCardTypeCustomFontAllText):
 class FrameCardType(BaseCardTypeCustomFontAllText):
     font_color: BetterColor = Field(default=FrameTitleCard.TITLE_COLOR)
     font_file: FilePath = Field(default=FrameTitleCard.TITLE_FONT)
-
     episode_text_color: BetterColor = Field(default=FrameTitleCard.EPISODE_TEXT_COLOR)
     episode_text_position: Literal['left', 'right', 'surround'] = Field(default='surround')
 
@@ -177,7 +182,7 @@ class LandscapeCardType(BaseCardType):
     @validator('box_adjustments')
     def parse_box_adjustments(cls, val):
         return tuple(map(int, re_match(BoxAdjustmentRegex, val).groups()))
-
+    
 class LogoCardType(BaseCardTypeCustomFontAllText):
     source_file: Path
     font_color: BetterColor = Field(default=LogoTitleCard.TITLE_COLOR)
