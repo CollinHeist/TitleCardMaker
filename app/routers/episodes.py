@@ -1,6 +1,7 @@
 from typing import Literal
 
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException
+from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_episode, get_font, get_series
 from app.dependencies import (
@@ -26,9 +27,8 @@ episodes_router = APIRouter(
 
 @episodes_router.post('/new', status_code=201)
 def add_new_episode(
-        background_tasks: BackgroundTasks,
         new_episode: NewEpisode = Body(...),
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         emby_interface = Depends(get_emby_interface),
         jellyfin_interface = Depends(get_jellyfin_interface),
         plex_interface = Depends(get_plex_interface),
@@ -56,11 +56,11 @@ def add_new_episode(
     # Refresh card types in case new remote type was specified
     refresh_remote_card_types(db)
 
-    # Add background task to add episode ID's for this Episode
-    background_tasks.add_task(
-        set_episode_ids,
+    # Add ID's for this Episode
+    set_episode_ids(
         db, series, [episode],
-        emby_interface, jellyfin_interface, plex_interface, sonarr_interface, tmdb_interface
+        emby_interface, jellyfin_interface, plex_interface, sonarr_interface,
+        tmdb_interface
     )
 
     return episode
@@ -69,7 +69,7 @@ def add_new_episode(
 @episodes_router.get('/{episode_id}', status_code=200)
 def get_episode_by_id(
         episode_id: int,
-        db = Depends(get_database)) -> Episode:
+        db: Session = Depends(get_database)) -> Episode:
     """
     Get the Episode with the given ID.
 
@@ -82,7 +82,7 @@ def get_episode_by_id(
 @episodes_router.delete('/{episode_id}', status_code=204)
 def delete_episode(
         episode_id: int,
-        db = Depends(get_database)) -> None:
+        db: Session = Depends(get_database)) -> None:
     """
     Delete the Episode with the ID.
 
@@ -110,7 +110,7 @@ def delete_episode(
 @episodes_router.delete('/series/{series_id}', status_code=200, tags=['Series'])
 def delete_all_series_episodes(
         series_id: int,
-        db = Depends(get_database)) -> list[int]:
+        db: Session = Depends(get_database)) -> list[int]:
     """
     Delete all Episodes for the Series with the given ID.
 
@@ -139,7 +139,7 @@ def delete_all_series_episodes(
 def refresh_episode_data_(
         background_tasks: BackgroundTasks,
         series_id: int,
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         emby_interface = Depends(get_emby_interface),
         jellyfin_interface = Depends(get_jellyfin_interface),
@@ -173,7 +173,7 @@ def refresh_episode_data_(
 @episodes_router.patch('/batch', status_code=200)
 def update_multiple_episode_configs(
         update_episodes: list[BatchUpdateEpisode] = Body(...),
-        db = Depends(get_database)) -> list[Episode]:
+        db: Session = Depends(get_database)) -> list[Episode]:
     """
     Update all the Epiodes with the given IDs. Only provided fields are 
     updated.
@@ -228,7 +228,7 @@ def update_multiple_episode_configs(
 def update_episode_config(
         episode_id: int,
         update_episode: UpdateEpisode = Body(...),
-        db = Depends(get_database)) -> Episode:
+        db: Session = Depends(get_database)) -> Episode:
     """
     Update the Epiode with the given ID. Only provided fields are 
     updated.
@@ -274,7 +274,7 @@ def update_episode_config(
 def get_all_series_episodes(
         series_id: int,
         order_by: Literal['index', 'absolute'] = 'index', 
-        db = Depends(get_database)) -> list[Episode]:
+        db: Session = Depends(get_database)) -> list[Episode]:
     """
     Get all the episodes associated with the given series.
 

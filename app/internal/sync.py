@@ -12,7 +12,9 @@ from app.dependencies import (
 )
 from app.internal.series import download_series_poster, set_series_database_ids
 from app.internal.sources import download_series_logo
-from app.schemas.sync import NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync, Sync
+from app.schemas.sync import (
+    NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync, Sync
+)
 from app.schemas.series import Series
 from app.schemas.preferences import Preferences
 import app.models as models

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 from app.dependencies import get_database, get_preferences
 import app.models as models
@@ -12,8 +13,11 @@ statistics_router = APIRouter(
 
 @statistics_router.get('/', status_code=200)
 def get_all_statistics(
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         preferences = Depends(get_preferences)) -> list[Statistic]:
+    """
+    Get all statistics.
+    """
     
     series_count = db.query(models.series.Series).count()
     episode_count = db.query(models.episode.Episode).count()
@@ -38,7 +42,10 @@ def get_all_statistics(
 
 @statistics_router.get('/series-count', status_code=200)
 def get_series_count(
-        db = Depends(get_database)) -> SeriesCount:
+        db: Session = Depends(get_database)) -> SeriesCount:
+    """
+    Get the statistics for the number of series.
+    """
 
     count = db.query(models.series.Series).count()
     return SeriesCount(value=count, value_text=f'{count:,}')
@@ -47,7 +54,7 @@ def get_series_count(
 @statistics_router.get('/series/{series_id}', status_code=200)
 def get_series_statistics(
         series_id: int,
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         preferences = Depends(get_preferences)) -> list[Statistic]:
     
     episode_count = db.query(models.episode.Episode)\

@@ -1,9 +1,10 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from sqlalchemy.orm import Session
 
-from app.database.query import get_episode, get_series, get_template
+from app.database.query import get_episode, get_series
 from app.dependencies import get_database, get_tmdb_interface
 from app.internal.translate import translate_episode
-import app.models as models
+from app.schemas.episode import Episode
 
 from modules.Debug import log
 
@@ -18,7 +19,7 @@ def add_series_translations(
         background_tasks: BackgroundTasks,
         series_id: int,
         # force_refresh: bool = Query(default=False),
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         tmdb_interface = Depends(get_tmdb_interface)) -> None:
     """
     Get all translations for all Episodes of the given Series.
@@ -49,13 +50,11 @@ def add_series_translations(
     return None
 
 
-@translation_router.post('/episode/{episode_id}', status_code=201)
+@translation_router.post('/episode/{episode_id}', status_code=200)
 def add_episode_translations(
-        background_tasks: BackgroundTasks,
         episode_id: int,
-        # force_refresh: bool = Query(default=False),
-        db = Depends(get_database),
-        tmdb_interface = Depends(get_tmdb_interface)) -> None:
+        db: Session = Depends(get_database),
+        tmdb_interface = Depends(get_tmdb_interface)) -> Episode:
     """
     Get all translations for the given Episode.
 
@@ -72,10 +71,7 @@ def add_episode_translations(
     # Find this Episode, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
 
-    # Add background task for translating this Episode
-    background_tasks.add_task(
-        # Function
-        translate_episode,
-        # Arguments
-        db, episode.series, episode, tmdb_interface
-    )
+    # Translate this Episode
+    translate_episode(db, episode.series, episode, tmdb_interface)
+
+    return Episode

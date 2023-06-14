@@ -2,6 +2,7 @@ from typing import Literal
 
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException
 from pydantic.error_wrappers import ValidationError
+from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_series
 from app.dependencies import (
@@ -111,7 +112,7 @@ def import_connection_yaml(
 @import_router.post('/preferences/sync', status_code=201)
 def import_sync_yaml(
         import_yaml: ImportYaml = Body(...),
-        db = Depends(get_database)) -> list[Sync]:
+        db: Session = Depends(get_database)) -> list[Sync]:
     """
     Import all Syncs defined in the given YAML.
 
@@ -150,7 +151,7 @@ def import_sync_yaml(
 @import_router.post('/fonts', status_code=201)
 def import_fonts_yaml(
         import_yaml: ImportYaml = Body(...),
-        db = Depends(get_database)) -> list[NamedFont]:
+        db: Session = Depends(get_database)) -> list[NamedFont]:
     """
     Import all Fonts defined in the given YAML. This does NOT import any
     custom font files - these will need to be added separately.
@@ -189,7 +190,7 @@ def import_fonts_yaml(
 @import_router.post('/templates', status_code=201)
 def import_template_yaml(
         import_yaml: ImportYaml = Body(...),
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         preferences = Depends(get_preferences)) -> list[Template]:
     """
     Import all Templates defined in the given YAML.
@@ -228,7 +229,7 @@ def import_template_yaml(
 def import_series_yaml(
         background_tasks: BackgroundTasks,
         import_yaml: ImportSeriesYaml = Body(...),
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         emby_interface = Depends(get_emby_interface),
         imagemagick_interface = Depends(get_imagemagick_interface),
@@ -302,7 +303,7 @@ def import_cards_for_series(
         series_id: int,
         card_directory: ImportCardDirectory = Body(...),
         preferences = Depends(get_preferences),
-        db = Depends(get_database)) -> CardActions:
+        db: Session = Depends(get_database)) -> CardActions:
     """
     Import any existing Title Cards for the given Series. This finds
     card files by filename, and makes the assumption that each file
@@ -329,7 +330,7 @@ def import_cards_for_series(
 def import_cards_for_multiple_series(
         card_import: MultiCardImport = Body(...),
         preferences = Depends(get_preferences),
-        db = Depends(get_database)) -> CardActions:
+        db: Session = Depends(get_database)) -> CardActions:
     """
     Import any existing Title Cards for all the given Series. This finds
     card files by filename, and makes the assumption that each file

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Body, Depends
+from sqlalchemy.orm import Session
 
 from app.database.query import get_font, get_template
 from app.dependencies import get_database
@@ -20,7 +21,7 @@ template_router = APIRouter(
 @template_router.post('/new', status_code=201)
 def create_template(
         new_template: NewTemplate = Body(...),
-        db = Depends(get_database)) -> Template:
+        db: Session = Depends(get_database)) -> Template:
     """
     Create a new Template. Any referenced font_id must exist.
 
@@ -42,7 +43,7 @@ def create_template(
 
 @template_router.get('/all', status_code=200)
 def get_all_templates(
-        db = Depends(get_database)) -> list[Template]:
+        db: Session = Depends(get_database)) -> list[Template]:
     """
     Get all defined Templates.
     """    
@@ -53,7 +54,7 @@ def get_all_templates(
 @template_router.get('/{template_id}', status_code=200)
 def get_template_by_id(
         template_id: int,
-        db = Depends(get_database)) -> Template:
+        db: Session = Depends(get_database)) -> Template:
     """
     Get the Template with the given ID.
 
@@ -67,7 +68,7 @@ def get_template_by_id(
 def update_template(
         template_id: int,
         update_template: UpdateTemplate = Body(...),
-        db = Depends(get_database)) -> Template:
+        db: Session = Depends(get_database)) -> Template:
     """
     Update the Template with the given ID. Only provided fields are
     updated.
@@ -103,7 +104,7 @@ def update_template(
 @template_router.delete('/{template_id}', status_code=204)
 def delete_template(
         template_id: int,
-        db = Depends(get_database)) -> None:
+        db: Session = Depends(get_database)) -> None:
     """
     Delete the given Template.
 

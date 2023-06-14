@@ -93,7 +93,7 @@ def download_all_series_logos() -> None:
     return None
 
 
-def resolve_source_settings(preferences, episode) -> tuple[Style, Path]:
+def resolve_source_settings(preferences, episode: Episode) -> tuple[Style, Path]:
     """
     Get the Episode style and source file for the given Episode.
 

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks, Body, Depends
+from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_sync
 from app.dependencies import (
@@ -28,7 +29,7 @@ sync_router = APIRouter(
 @sync_router.post('/emby/new', tags=['Emby'], status_code=201)
 def create_new_emby_sync(
         new_sync: NewEmbySync = Body(...),
-        db = Depends(get_database)) -> EmbySync:
+        db: Session = Depends(get_database)) -> EmbySync:
     """
     Create a new Sync that interfaces with Emby.
 
@@ -41,7 +42,7 @@ def create_new_emby_sync(
 @sync_router.post('/jellyfin/new', tags=['Jellyfin'], status_code=201)
 def create_new_jellyfin_sync(
         new_sync: NewJellyfinSync = Body(...),
-        db = Depends(get_database)) -> JellyfinSync:
+        db: Session = Depends(get_database)) -> JellyfinSync:
     """
     Create a new Sync that interfaces with Jellyfin.
 
@@ -54,20 +55,20 @@ def create_new_jellyfin_sync(
 @sync_router.post('/plex/new', tags=['Plex'], status_code=201)
 def create_new_plex_sync(
         new_sync: NewPlexSync = Body(...),
-        db = Depends(get_database)) -> PlexSync:
+        db: Session = Depends(get_database)) -> PlexSync:
     """
     Create a new Sync that interfaces with Plex.
 
     - new_sync: Sync definition to create.
     """
-    
+
     return add_sync(db, new_sync)
 
 
 @sync_router.post('/sonarr/new', tags=['Sonarr'], status_code=201)
 def create_new_sonarr_sync(
         new_sync: NewSonarrSync = Body(...),
-        db = Depends(get_database)) -> SonarrSync:
+        db: Session = Depends(get_database)) -> SonarrSync:
     """
     Create a new Sync that interfaces with Sonarr.
 
@@ -81,7 +82,7 @@ def create_new_sonarr_sync(
 def edit_sync(
         sync_id: int,
         update_sync: UpdateSync = Body(...),
-        db = Depends(get_database)) -> Sync:
+        db: Session = Depends(get_database)) -> Sync:
     """
     Update the Sync with the given ID. Only provided fields are updated.
 
@@ -117,7 +118,7 @@ def edit_sync(
 def delete_sync(
         sync_id: int,
         delete_series: bool = False,
-        db = Depends(get_database)) -> None:
+        db: Session = Depends(get_database)) -> None:
     """
     Delete the Sync with the given ID.
 
@@ -142,7 +143,7 @@ def delete_sync(
 
 @sync_router.get('/all', status_code=200)
 def get_all_syncs(
-        db = Depends(get_database)) -> list[Sync]:
+        db: Session = Depends(get_database)) -> list[Sync]:
     """
     Get all defined Syncs.
     """
@@ -152,7 +153,7 @@ def get_all_syncs(
 
 @sync_router.get('/emby/all', tags=['Emby'], status_code=200)
 def get_all_emby_syncs(
-        db = Depends(get_database)) -> list[EmbySync]:
+        db: Session = Depends(get_database)) -> list[EmbySync]:
     """
     Get all defined Syncs that interface with Emby.
     """
@@ -162,7 +163,7 @@ def get_all_emby_syncs(
 
 @sync_router.get('/jellyfin/all', tags=['Jellyfin'], status_code=200)
 def get_all_jellyfin_syncs(
-        db = Depends(get_database)) -> list[JellyfinSync]:
+        db: Session = Depends(get_database)) -> list[JellyfinSync]:
     """
     Get all defined Syncs that interface with Jellyfin.
     """
@@ -172,7 +173,7 @@ def get_all_jellyfin_syncs(
 
 @sync_router.get('/plex/all', tags=['Plex'], status_code=200)
 def get_all_plex_syncs(
-        db = Depends(get_database)) -> list[PlexSync]:
+        db: Session = Depends(get_database)) -> list[PlexSync]:
     """
     Get all defined Syncs that interface with Plex.
     """
@@ -182,7 +183,7 @@ def get_all_plex_syncs(
 
 @sync_router.get('/sonarr/all', tags=['Sonarr'], status_code=200)
 def get_all_sonarr_syncs(
-        db = Depends(get_database)) -> list[SonarrSync]:
+        db: Session = Depends(get_database)) -> list[SonarrSync]:
     """
     Get all defined Syncs that interface with Sonarr.
     """
@@ -193,7 +194,7 @@ def get_all_sonarr_syncs(
 @sync_router.get('/{sync_id}', status_code=200)
 def get_sync_by_id(
         sync_id: int,
-        db = Depends(get_database)) -> Sync:
+        db: Session = Depends(get_database)) -> Sync:
     """
     Get the Sync with the given ID.
 
@@ -207,7 +208,7 @@ def get_sync_by_id(
 def sync(
         sync_id: int,
         background_tasks: BackgroundTasks,
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         emby_interface = Depends(get_emby_interface),
         imagemagick_interface = Depends(get_imagemagick_interface),

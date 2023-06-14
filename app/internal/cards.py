@@ -125,7 +125,7 @@ def refresh_remote_card_types(
 def add_card_to_database(
         db: Session,
         card_model: NewTitleCard,
-        card_file: Path) -> 'Card':
+        card_file: Path) -> 'models.card.Card':
     """
     Add the given Card to the Database.
 

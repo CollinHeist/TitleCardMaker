@@ -21,7 +21,9 @@ class AspectRatioFixer(ImageMaker):
     __slots__ = ('source', 'destination', 'style')
 
 
-    def __init__(self, source: Path, destination: Path,
+    def __init__(self,
+            source: Path,
+            destination: Path,
             style: Literal['copy', 'stretch'] = DEFAULT_STYLE) -> None:
         """
         Initialize this object. This stores attributes, and initialzies

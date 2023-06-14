@@ -1,7 +1,10 @@
 from requests import get
 from typing import Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException, Query, UploadFile
+from fastapi import (
+    APIRouter, BackgroundTasks, Depends, Form, HTTPException, Query, UploadFile
+)
+from sqlalchemy.orm import Session
 
 from app.database.query import get_episode, get_series
 from app.dependencies import (
@@ -30,7 +33,7 @@ def download_series_source_images(
         background_tasks: BackgroundTasks,
         series_id: int,
         ignore_blacklist: bool = Query(default=False),
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         emby_interface = Depends(get_emby_interface),
         jellyfin_interface = Depends(get_jellyfin_interface),
@@ -68,7 +71,7 @@ def download_series_source_images(
 def download_series_backdrop(
         series_id: int,
         ignore_blacklist: bool = Query(default=False),
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         # emby_interface = Depends(get_emby_interface),
         # jellyfin_interface = Depends(get_jellyfin_interface),
@@ -115,7 +118,7 @@ def download_series_backdrop(
 def download_series_logo_(
         series_id: int,
         ignore_blacklist: bool = Query(default=False),
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         emby_interface = Depends(get_emby_interface),
         imagemagick_interface = Depends(get_imagemagick_interface),
@@ -131,7 +134,7 @@ def download_series_logo_(
     the associated Series logo has been internally blacklisted.
     """
 
-    # Get this series and associated Template, raise 404 if DNE
+    # Get this Series and associated Template, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
     return download_series_logo(
@@ -144,7 +147,7 @@ def download_series_logo_(
 def download_episode_source_image_(
         episode_id: int,
         ignore_blacklist: bool = Query(default=False),
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         emby_interface = Depends(get_emby_interface),
         jellyfin_interface = Depends(get_jellyfin_interface),
@@ -173,7 +176,7 @@ def download_episode_source_image_(
 @source_router.get('/episode/{episode_id}/browse', status_code=200)
 def get_all_tmdb_episode_source_images(
         episode_id: int,
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         tmdb_interface = Depends(get_tmdb_interface)) -> list[TMDbImage]:
     """
     Get all Source Images on TMDb for the given Episode.
@@ -210,7 +213,7 @@ def get_all_tmdb_episode_source_images(
 @source_router.get('/series/{series_id}', status_code=200)
 def get_existing_series_source_images(
         series_id: int,
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         imagemagick_interface = Depends(get_imagemagick_interface)
         ) -> list[SourceImage]:
@@ -239,7 +242,7 @@ def get_existing_series_source_images(
 @source_router.get('/episode/{episode_id}', status_code=200)
 def get_existing_episode_source_images(
         episode_id: int,
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         imagemagick_interface = Depends(get_imagemagick_interface)
         ) -> SourceImage:
@@ -260,7 +263,7 @@ async def set_source_image(
         episode_id: int,
         source_url: Optional[str] = Form(default=None),
         source_file: Optional[UploadFile] = None,
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         imagemagick_interface = Depends(get_imagemagick_interface),
         ) -> SourceImage:

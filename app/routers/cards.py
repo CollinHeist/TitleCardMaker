@@ -1,4 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException
+from sqlalchemy.orm import Session
 
 from app.database.query import get_card, get_episode, get_font, get_series
 from app.dependencies import (
@@ -30,7 +31,7 @@ card_router = APIRouter(
 @card_router.post('/preview', status_code=201)
 def create_preview_card(
         card: PreviewTitleCard = Body(...),
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         preferences = Depends(get_preferences)) -> str:
     """
     Create a preview title card. This uses a fixed source file and
@@ -106,7 +107,7 @@ def create_preview_card(
 @card_router.get('/{card_id}', status_code=200)
 def get_title_card(
         card_id: int,
-        db = Depends(get_database)) -> TitleCard:
+        db: Session = Depends(get_database)) -> TitleCard:
     """
     Get the details of the given TitleCard.
 
@@ -121,7 +122,7 @@ def create_cards_for_series(
         background_tasks: BackgroundTasks,
         series_id: int,
         preferences = Depends(get_preferences),
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         emby_interface = Depends(get_emby_interface),
         jellyfin_interface = Depends(get_jellyfin_interface),
         plex_interface = Depends(get_plex_interface)) -> None:
@@ -152,7 +153,7 @@ def create_cards_for_series(
 @card_router.get('/series/{series_id}', status_code=200, tags=['Series'])
 def get_series_cards(
         series_id: int,
-        db = Depends(get_database)) -> list[TitleCard]:
+        db: Session = Depends(get_database)) -> list[TitleCard]:
     """
     Get all TitleCards for the given Series.
 
@@ -165,7 +166,7 @@ def get_series_cards(
 @card_router.delete('/series/{series_id}', status_code=200, tags=['Series'])
 def delete_series_title_cards(
         series_id: int,
-        db = Depends(get_database)) -> CardActions:
+        db: Session = Depends(get_database)) -> CardActions:
     """
     Delete all TitleCards for the given Series. Return a list of the
     deleted files.
@@ -182,7 +183,7 @@ def delete_series_title_cards(
 @card_router.delete('/episode/{episode_id}', status_code=200, tags=['Episodes'])
 def delete_episode_title_cards(
         episode_id: int,
-        db = Depends(get_database)) -> CardActions:
+        db: Session = Depends(get_database)) -> CardActions:
     """
     Delete all TitleCards for the given Episode. Return a list of the
     deleted files.
@@ -199,7 +200,7 @@ def delete_episode_title_cards(
 @card_router.delete('/card/{card_id}', status_code=200)
 def delete_title_card(
         card_id: int,
-        db = Depends(get_database)) -> CardActions:
+        db: Session = Depends(get_database)) -> CardActions:
     """
     Delete the TitleCard with the given ID. Return a list of the
     deleted file(s).
@@ -216,7 +217,7 @@ def delete_title_card(
 @card_router.post('/episode/{episode_id}', status_code=200, tags=['Episodes'])
 def create_card_for_episode(
         episode_id: int,
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         emby_interface = Depends(get_emby_interface),
         jellyfin_interface = Depends(get_jellyfin_interface),
@@ -246,7 +247,7 @@ def create_card_for_episode(
 @card_router.get('/episode/{episode_id}', tags=['Episodes'])
 def get_episode_card(
         episode_id: int,
-        db = Depends(get_database)) -> list[TitleCard]:
+        db: Session = Depends(get_database)) -> list[TitleCard]:
     """
     Get all TitleCards for the given Episode.
 
@@ -261,7 +262,7 @@ def create_cards_for_plex_key(
         background_tasks: BackgroundTasks,
         plex_rating_key: int = Body(...),
         preferences = Depends(get_preferences),
-        db = Depends(get_database),
+        db: Session = Depends(get_database),
         plex_interface = Depends(get_plex_interface),
         sonarr_interface = Depends(get_sonarr_interface),
         tmdb_interface = Depends(get_tmdb_interface)) -> None:

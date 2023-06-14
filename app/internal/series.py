@@ -6,10 +6,7 @@ from typing import Optional
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app.dependencies import (
-    get_database, get_emby_interface, get_jellyfin_interface,
-    get_plex_interface,
-)
+from app.dependencies import *
 import app.models as models
 from app.schemas.preferences import MediaServer, Preferences
 from app.schemas.series import Series
@@ -126,7 +123,7 @@ def download_series_poster(
 
     # Exit if no TMDbInterface
     if tmdb_interface is None:
-        log.debug(f'Series[{series.id}] Cannot download poster, TMDb interface disabled')
+        log.debug(f'{series.log_str} Cannot download poster, TMDb interface disabled')
         return None
 
     # If Series poster exists and is not a placeholder, return that
@@ -134,13 +131,13 @@ def download_series_poster(
     if path.name != 'placeholder.jpg' and path.exists():
         series.poster_url = f'/assets/{series.id}/poster.jpg'
         db.commit()
-        log.debug(f'Series[{series.id}] Poster already exists, using {path.resolve()}')
+        log.debug(f'{series.log_str} Poster already exists, using {path.resolve()}')
         return None
 
     # Attempt to download poster
     series_info = series.as_series_info
     if (poster_url := tmdb_interface.get_series_poster(series_info)) is None:
-        log.debug(f'Series[{series.id}] TMDb returned no valid posters')
+        log.debug(f'{series.log_str} TMDb returned no valid posters')
         return None
     # Poster downloaded, write file, update database
     else:
@@ -165,7 +162,7 @@ def download_series_poster(
                 )
 
             db.commit()
-            log.debug(f'Series[{series.id}] Downloaded poster {path.resolve()}')
+            log.debug(f'{series.log_str} Downloaded poster {path.resolve()}')
         except Exception as e:
             log.error(f'Error downloading poster', e)
             return None

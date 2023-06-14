@@ -44,7 +44,7 @@ def update_global_settings(
 
 @settings_router.get('/sonarr-libraries', tags=['Sonarr'])
 def get_sonarr_libraries(
-        preferences=Depends(get_preferences)) -> list[dict[str, str]]:
+        preferences = Depends(get_preferences)) -> list[dict[str, str]]:
 
     return [
         {'name': library, 'path': path}
@@ -54,7 +54,7 @@ def get_sonarr_libraries(
 
 @settings_router.get('/image-source-priority')
 def get_image_source_priority(
-        preferences=Depends(get_preferences)) -> list[EpisodeDataSourceToggle]:
+        preferences = Depends(get_preferences)) -> list[EpisodeDataSourceToggle]:
     
     sources = []
     for source in preferences.image_source_priority:
@@ -68,7 +68,7 @@ def get_image_source_priority(
 
 @settings_router.get('/logo-language-priority')
 def get_tmdb_logo_language_priority(
-        preferences=Depends(get_preferences)) -> list[LanguageToggle]:
+        preferences = Depends(get_preferences)) -> list[LanguageToggle]:
 
     languages = []
     for code in preferences.tmdb_logo_language_priority:

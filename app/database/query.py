@@ -1,6 +1,7 @@
 from typing import Any, Optional
 
 from fastapi import HTTPException
+from sqlalchemy.orm import Session
 
 import app.models as models
 from app.schemas.card import TitleCard
@@ -12,7 +13,7 @@ from modules.Debug import log
 
 
 def _get_obj(
-        db: 'Database',
+        db: Session,
         model: Any,
         model_name: str,
         object_id: int,
@@ -55,7 +56,7 @@ def _get_obj(
 
 
 def get_card(
-        db: 'Database',
+        db: Session,
         card_id: int, *,
         raise_exc: bool = True) -> Optional[TitleCard]:
     """
@@ -68,7 +69,7 @@ def get_card(
 
 
 def get_episode(
-        db: 'Database',
+        db: Session,
         episode_id: int, *,
         raise_exc: bool = True) -> Optional[Episode]:
     """
@@ -81,7 +82,7 @@ def get_episode(
 
 
 def get_font(
-        db: 'Database',
+        db: Session,
         font_id: int, *,
         raise_exc: bool = True) -> Optional[NamedFont]:
     """
@@ -94,7 +95,7 @@ def get_font(
 
 
 def get_series(
-        db: 'Database',
+        db: Session,
         series_id: int, *,
         raise_exc: bool = True) -> Optional[Series]:
     """
@@ -107,7 +108,7 @@ def get_series(
 
 
 def get_sync(
-        db: 'Database',
+        db: Session,
         sync_id: int, *,
         raise_exc: bool = True) -> Optional[Sync]:
     """
@@ -120,7 +121,7 @@ def get_sync(
 
 
 def get_template(
-        db: 'Database',
+        db: Session,
         template_id: int, *,
         raise_exc: bool = True) -> Optional[Template]:
     """
@@ -135,7 +136,7 @@ def get_template(
 
 
 def get_all_templates(
-        db: 'Database',
+        db: Session,
         obj_dict: dict[str, Any]) -> list[Template]:
     """
     Get all Templates defined in the given Dictionaries "template_ids"

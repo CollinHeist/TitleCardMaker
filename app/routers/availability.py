@@ -3,6 +3,7 @@ from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from requests import get as req_get
+from sqlalchemy.orm import Session
 
 from app.dependencies import (
     get_database, get_preferences, get_emby_interface, get_jellyfin_interface,
@@ -12,7 +13,9 @@ from app.internal.availability import get_latest_version
 import app.models as models
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.card import CardType, LocalCardType, RemoteCardType
-from app.schemas.preferences import EpisodeDataSourceToggle, ImageSourceToggle, StyleOption
+from app.schemas.preferences import (
+    EpisodeDataSourceToggle, ImageSourceToggle, StyleOption
+)
 from app.schemas.sync import Tag
 from modules.cards.available import LocalCards
 from modules.Debug import log
@@ -57,7 +60,7 @@ def get_latest_available_version() -> Optional[str]:
 @availablility_router.get('/card-types', status_code=200, tags=['Title Cards'])
 def get_all_available_card_types(
         show_excluded: bool = Query(default=False),
-        preferences=Depends(get_preferences)) -> list[CardType]:
+        preferences = Depends(get_preferences)) -> list[CardType]:
     """
     Get a list of all available card types (local and remote).
 
@@ -128,7 +131,7 @@ def get_available_tmdb_translations() -> list[dict[str, str]]:
 
 @availablility_router.get('/episode-data-sources', status_code=200)
 def get_available_episode_data_sources(
-        preferences=Depends(get_preferences)) -> list[EpisodeDataSourceToggle]:
+        preferences = Depends(get_preferences)) -> list[EpisodeDataSourceToggle]:
     """
     ...
     """
@@ -145,7 +148,7 @@ def get_available_episode_data_sources(
         status_code=200,
         response_model=list[ImageSourceToggle])
 def get_image_source_priority(
-        preferences=Depends(get_preferences)) -> list[EpisodeDataSourceToggle]:
+        preferences = Depends(get_preferences)) -> list[EpisodeDataSourceToggle]:
     """
     ...
     """
@@ -196,7 +199,7 @@ def get_server_libraries(
 
 @availablility_router.get('/usernames/emby', status_code=200, tags=['Emby'])
 def get_emby_usernames(
-        preferences=Depends(get_preferences),
+        preferences = Depends(get_preferences),
         emby_interface = Depends(get_emby_interface)) -> list[str]:
     """
     Get all the public usernames in Emby. Returns an empty list if
@@ -226,7 +229,7 @@ def get_jellyfin_usernames(
 
 @availablility_router.get('/tags/sonarr', status_code=200, tags=['Sonarr'])
 def get_sonarr_tags(
-        preferences=Depends(get_preferences),
+        preferences = Depends(get_preferences),
         sonarr_interface = Depends(get_sonarr_interface)) -> list[Tag]:
     """
     Get all tags defined in Sonarr.
@@ -239,7 +242,8 @@ def get_sonarr_tags(
 
 
 @availablility_router.get('/fonts', status_code=200, tags=['Fonts'])
-def get_available_fonts(db=Depends(get_database)) -> list[str]:
+def get_available_fonts(
+        db: Session = Depends(get_database)) -> list[str]:
     """
     Get the names of all the available Fonts.
     """
@@ -248,7 +252,8 @@ def get_available_fonts(db=Depends(get_database)) -> list[str]:
 
 
 @availablility_router.get('/templates', status_code=200, tags=['Templates'])
-def get_available_templates(db=Depends(get_database)) -> list[str]:
+def get_available_templates(
+        db: Session = Depends(get_database)) -> list[str]:
     """
     Get the names of all the available Templates.
     """

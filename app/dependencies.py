@@ -1,6 +1,7 @@
-from typing import Generator
+from typing import Iterator
 
 from apscheduler.schedulers.background import BackgroundScheduler
+from sqlalchemy.orm import Session
 
 from app.database.session import (
     EmbyInterfaceLocal, ImageMagickInterfaceLocal, JellyfinInterfaceLocal,
@@ -19,7 +20,7 @@ from modules.TMDbInterface2 import TMDbInterface
 """
 Miscellaneous global dependencies
 """
-def get_database() -> Generator:
+def get_database() -> Iterator[Session]:
     db = SessionLocal()
     try:
         yield db

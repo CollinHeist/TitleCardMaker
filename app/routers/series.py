@@ -3,10 +3,7 @@ from requests import get
 from shutil import copy as file_copy
 from typing import Literal, Optional
 
-from fastapi import (
-    APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, Query,
-    UploadFile
-)
+from fastapi import APIRouter, Body, Depends, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_font, get_series
@@ -27,6 +24,7 @@ from app.schemas.preferences import MediaServer
 from app.schemas.series import NewSeries, Series, UpdateSeries
 
 from modules.Debug import log
+
 
 series_router = APIRouter(
     prefix='/series',
@@ -67,7 +65,6 @@ def get_all_series(
 
 @series_router.post('/new', status_code=201)
 def add_new_series(
-        background_tasks: BackgroundTasks,
         new_series: NewSeries = Body(...),
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
@@ -100,25 +97,16 @@ def add_new_series(
     Path(series.source_directory).mkdir(parents=True, exist_ok=True)
 
     # Add background tasks to set ID's, download poster and logo
-    background_tasks.add_task(
-        # Function
-        set_series_database_ids,
-        # Arguments
+    set_series_database_ids(
         series, db, emby_interface, jellyfin_interface, plex_interface,
-        sonarr_interface, tmdb_interface,
+        sonarr_interface, tmdb_interface
     )
-    background_tasks.add_task(
-        # Function
-        download_series_poster,
-        # Arguments
-        db, preferences, series, imagemagick_interface, tmdb_interface,
+    download_series_poster(
+        db, preferences, series, imagemagick_interface, tmdb_interface
     )
-    background_tasks.add_task(
-        # Function
-        download_series_logo,
-        # Arguments
-        preferences, emby_interface, imagemagick_interface,
-        jellyfin_interface, tmdb_interface, series
+    download_series_logo(
+        preferences, emby_interface, imagemagick_interface, jellyfin_interface,
+        tmdb_interface, series,
     )
 
     # Refresh card types in case new remote type was specified
