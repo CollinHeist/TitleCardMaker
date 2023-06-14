@@ -254,7 +254,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return {
             lib['Name']: [location for location in lib['Locations']]
             for lib in libraries
-            if (lib['CollectionType'] == 'tvshows'
+            if (lib.get('CollectionType', None) == 'tvshows'
                 and include_library(lib['Name']))
         }
 
