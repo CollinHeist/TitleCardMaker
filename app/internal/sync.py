@@ -12,9 +12,7 @@ from app.dependencies import (
 )
 from app.internal.series import download_series_poster, set_series_database_ids
 from app.internal.sources import download_series_logo
-from app.schemas.sync import (
-    NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync, Sync
-)
+from app.schemas.sync import NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync, Sync
 from app.schemas.series import Series
 from app.schemas.preferences import Preferences
 import app.models as models
@@ -228,7 +226,8 @@ def run_sync(
                 sonarr_interface, tmdb_interface,
             )
             download_series_poster(
-                db, preferences, series, imagemagick_interface, tmdb_interface,
+                db, preferences, series, emby_interface, imagemagick_interface,
+                jellyfin_interface, plex_interface, tmdb_interface,
             )
             download_series_logo(
                 preferences, emby_interface, imagemagick_interface,
@@ -246,7 +245,8 @@ def run_sync(
                 # Function
                 download_series_poster,
                 # Arguments
-                db, preferences, series, imagemagick_interface, tmdb_interface, 
+                db, preferences, series, emby_interface, imagemagick_interface,
+                jellyfin_interface, plex_interface, tmdb_interface,
             )
             background_tasks.add_task(
                 # Function

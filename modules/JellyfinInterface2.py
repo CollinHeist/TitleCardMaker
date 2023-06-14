@@ -542,6 +542,37 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             return None 
 
         return response
+    
+
+    def get_series_poster(self, series_info: SeriesInfo) -> SourceImage:
+        """
+        Get the poster for the given Series.
+
+        Args:
+            series_info: The series to get the poster of.
+
+        Returns:
+            URL to the poster for the given series. None if the library,
+            series, or thumbnail cannot be found.
+        """
+
+        # If series has no Emby ID, cannot get poster
+        if not series_info.has_id('jellyfin_id'):
+            log.warning(f'Series not found in Jellyfin {series_info!r}')
+            return []
+        
+        # Get the poster image for this Series
+        response = self.session.session.get(
+            f'{self.url}/Items/{series_info.emby_id}/Images/Primary',
+            params={'Quality': 100} | self.__params,
+        ).content
+
+        # Check if valid content was returned
+        if b'does not have an image of type' in response:
+            log.warning(f'Series {series_info} has no poster')
+            return None 
+
+        return response
 
 
     def get_series_logo(self, series_info: SeriesInfo) -> SourceImage:

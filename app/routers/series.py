@@ -3,15 +3,14 @@ from requests import get
 from shutil import copy as file_copy
 from typing import Literal, Optional
 
-from fastapi import APIRouter, Body, Depends, Form, HTTPException, UploadFile
+from fastapi import (
+    APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, Query,
+    UploadFile
+)
 from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_font, get_series
-from app.dependencies import (
-    get_database, get_preferences, get_emby_interface,
-    get_imagemagick_interface, get_jellyfin_interface, get_plex_interface,
-    get_sonarr_interface, get_tmdb_interface
-)
+from app.dependencies import *
 import app.models as models
 from app.internal.cards import refresh_remote_card_types
 from app.internal.series import (
@@ -24,7 +23,11 @@ from app.schemas.preferences import MediaServer
 from app.schemas.series import NewSeries, Series, UpdateSeries
 
 from modules.Debug import log
-
+from modules.EmbyInterface2 import EmbyInterface
+from modules.JellyfinInterface2 import JellyfinInterface
+from modules.PlexInterface2 import PlexInterface
+from modules.SonarrInterface2 import SonarrInterface
+from modules.TMDbInterface2 import TMDbInterface
 
 series_router = APIRouter(
     prefix='/series',
@@ -68,12 +71,13 @@ def add_new_series(
         new_series: NewSeries = Body(...),
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
-        emby_interface = Depends(get_emby_interface),
-        imagemagick_interface = Depends(get_imagemagick_interface),
-        jellyfin_interface = Depends(get_jellyfin_interface),
-        plex_interface = Depends(get_plex_interface),
-        sonarr_interface = Depends(get_sonarr_interface),
-        tmdb_interface = Depends(get_tmdb_interface)) -> Series:
+        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
+        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
+        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
+        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
+        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+    ) -> Series:
     """
     Create a new Series. This also creates background tasks to set the
     database ID's of the series, as well as find and download a poster.
@@ -96,17 +100,18 @@ def add_new_series(
     # Create source directory if DNE
     Path(series.source_directory).mkdir(parents=True, exist_ok=True)
 
-    # Add background tasks to set ID's, download poster and logo
+    # Set Series ID's, download poster and logo
     set_series_database_ids(
         series, db, emby_interface, jellyfin_interface, plex_interface,
-        sonarr_interface, tmdb_interface
+        sonarr_interface, tmdb_interface,
     )
     download_series_poster(
-        db, preferences, series, imagemagick_interface, tmdb_interface
+        db, preferences, series, emby_interface, imagemagick_interface,
+        jellyfin_interface, plex_interface, tmdb_interface,
     )
     download_series_logo(
         preferences, emby_interface, imagemagick_interface, jellyfin_interface,
-        tmdb_interface, series,
+        tmdb_interface, series
     )
 
     # Refresh card types in case new remote type was specified

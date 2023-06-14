@@ -563,7 +563,32 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         except NotFound:
             return None
 
-        return None
+
+    @catch_and_log('Error getting Series poster')
+    def get_series_poster(self,
+            library_name: str,
+            series_info: SeriesInfo) -> Optional[str]:
+        """
+        Get the poster for the given Series.
+
+        Args:
+            library_name: Name of the library the series is under.
+            series_info: The series to get the poster of.
+
+        Returns:
+            URL to the poster for the given series. None if the library,
+            series, or thumbnail cannot be found.
+        """
+
+        # If the given library cannot be found, exit
+        if not (library := self.__get_library(library_name)):
+            return None
+
+        # If the given series cannot be found in this library, exit
+        if not (series := self.__get_series(library, series_info)):
+            return None
+        
+        return series.thumbUrl
 
 
     @catch_and_log('Error getting library names', default=[])

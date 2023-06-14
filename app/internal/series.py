@@ -71,8 +71,9 @@ def download_all_series_posters() -> None:
             for series in db.query(models.series.Series).all():
                 try:
                     download_series_poster(
-                        db, get_preferences(), series,
-                        get_imagemagick_interface(), get_tmdb_interface(),
+                        db, get_preferences(), series, get_emby_interface(),
+                        get_imagemagick_interface(), get_jellyfin_interface(),
+                        get_plex_interface(), get_tmdb_interface(),
                     )
                 except HTTPException as e:
                     log.warning(f'{series.log_str} Skipping poster selection')
@@ -136,7 +137,10 @@ def download_series_poster(
         db: Session,
         preferences: Preferences,
         series: Series,
+        emby_interface: Optional[EmbyInterface],
         image_magick_interface: Optional[ImageMagickInterface],
+        jellyfin_interface: Optional[JellyfinInterface],
+        plex_interface: Optional[PlexInterface],
         tmdb_interface: Optional[TMDbInterface]) -> None:
     """
     Download the poster for the given Series.
@@ -148,52 +152,69 @@ def download_series_poster(
         tmdb_interface: Interface to TMDb to download a poster from.
     """
 
-    # Exit if no TMDbInterface
-    if tmdb_interface is None:
-        log.debug(f'{series.log_str} Cannot download poster, TMDb interface disabled')
+    # Exit if no interface 
+    if not any((emby_interface, jellyfin_interface, plex_interface,
+                tmdb_interface)):
+        log.debug(f'Series[{series.id}] Cannot download poster')
         return None
 
     # If Series poster exists and is not a placeholder, return that
     path = Path(series.poster_file)
     if path.name != 'placeholder.jpg' and path.exists():
+        poster_url = f'/assets/{series.id}/poster.jpg'
+        if series.poster_url != poster_url:
+            series.poster_url = poster_url
+            db.commit()
+            log.debug(f'Series[{series.id}] Poster already exists, using {path.resolve()}')
+        return None
+    
+    # Download poster from Media Server if possible, then TMDb
+    series_info = series.as_series_info
+    poster = None
+    if series.emby_library_name is not None and emby_interface is not None:
+        poster = emby_interface.get_series_poster(series_info)
+    elif series.jellyfin_library_name is not None and jellyfin_interface is not None:
+        poster = jellyfin_interface.get_series_poster(series_info)
+    elif series.plex_library_name and plex_interface is not None:
+        poster = plex_interface.get_series_poster(
+            series.plex_library_name, series_info
+        )
+    
+    # If no poster was returned, download from TMDb
+    if poster is None and tmdb_interface is not None:
+        poster = tmdb_interface.get_series_logo(series_info)
+
+    # If no posters were returned, log and exit
+    if poster is None:
+        log.debug(f'Series[{series.id}] has no valid posters')
+        return None
+
+    # Get path to the poster to download
+    path = preferences.asset_directory / str(series.id) / 'poster.jpg'
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        # Write or download
+        if isinstance(poster, bytes):
+            path.write_bytes(poster)
+        else:
+            path.write_bytes(get(poster).content)
+        series.poster_file = str(path)
         series.poster_url = f'/assets/{series.id}/poster.jpg'
         db.commit()
-        log.debug(f'{series.log_str} Poster already exists, using {path.resolve()}')
+    except Exception as e:
+        log.error(f'Error downloading poster', e)
         return None
 
-    # Attempt to download poster
-    series_info = series.as_series_info
-    if (poster_url := tmdb_interface.get_series_poster(series_info)) is None:
-        log.debug(f'{series.log_str} TMDb returned no valid posters')
-        return None
-    # Poster downloaded, write file, update database
+    # Create resized small poster
+    resized_path = path.parent / 'poster-750.jpg'
+    if image_magick_interface is None:
+        file_copy(series.poster_path, resized_path)
     else:
-        path = preferences.asset_directory / str(series.id) / 'poster.jpg'
-        path.parent.mkdir(parents=True, exist_ok=True)
-        try:
-            # Download
-            path.write_bytes(get(poster_url).content)
-            series.poster_file = str(path)
-            series.poster_url = f'/assets/{series.id}/poster.jpg'
+        image_magick_interface.resize_image(
+            path, resized_path, by='width', width=750,
+        )
 
-            # Create resized small poster
-            resized_path = path.parent / 'poster-750.jpg'
-            if image_magick_interface is None:
-                file_copy(
-                    preferences.INTERNAL_ASSET_DIRECTORY / 'placeholder.jpg',
-                    resized_path,
-                )
-            else:
-                image_magick_interface.resize_image(
-                    path, resized_path, by='width', width=750,
-                )
-
-            db.commit()
-            log.debug(f'{series.log_str} Downloaded poster {path.resolve()}')
-        except Exception as e:
-            log.error(f'Error downloading poster', e)
-            return None
-
+    log.debug(f'Series[{series.id}] Downloaded poster {path.resolve()}')
     return None
 
 

@@ -4,10 +4,7 @@ from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_episode, get_font, get_series
-from app.dependencies import (
-    get_database, get_preferences, get_emby_interface, get_jellyfin_interface,
-    get_plex_interface, get_sonarr_interface, get_tmdb_interface
-)
+from app.dependencies import *
 import app.models as models
 from app.internal.cards import delete_cards, refresh_remote_card_types
 from app.internal.episodes import set_episode_ids, refresh_episode_data
@@ -56,11 +53,10 @@ def add_new_episode(
     # Refresh card types in case new remote type was specified
     refresh_remote_card_types(db)
 
-    # Add ID's for this Episode
+    # Add background task to add episode ID's for this Episode
     set_episode_ids(
-        db, series, [episode],
-        emby_interface, jellyfin_interface, plex_interface, sonarr_interface,
-        tmdb_interface
+        db, series, [episode], emby_interface, jellyfin_interface,
+        plex_interface, sonarr_interface, tmdb_interface
     )
 
     return episode
