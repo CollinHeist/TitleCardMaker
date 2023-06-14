@@ -4,10 +4,10 @@ from shutil import copy as file_copy
 from typing import Literal, Optional
 
 from fastapi import (
-    APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, Query,
-    UploadFile
+    APIRouter, Body, Depends, Form, HTTPException, Query, UploadFile
 )
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.database.query import get_all_templates, get_font, get_series
 from app.dependencies import *
@@ -48,7 +48,7 @@ def get_all_series(
     # Return ordered by Name > Year
     query = db.query(models.series.Series)
     if order_by == 'alphabetical':
-        return query.order_by(models.series.Series.name)\
+        return query.order_by(func.lower(models.series.Series.name))\
             .order_by(models.series.Series.year)\
             .all()
     # Return ordered by ID
@@ -57,7 +57,7 @@ def get_all_series(
     # Returned ordered by Year > Name
     elif order_by == 'year':
         return query.order_by(models.series.Series.year)\
-            .order_by(models.series.Series.name)\
+            .order_by(func.lower(models.series.Series.name))\
             .all()
     else:
         raise HTTPException(
