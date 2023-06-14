@@ -9,7 +9,9 @@ from app.internal.cards import (
     create_all_title_cards, refresh_all_remote_card_types
 )
 from app.internal.episodes import refresh_all_episode_data
-from app.internal.series import load_all_media_servers
+from app.internal.series import (
+    download_all_series_posters, load_all_media_servers
+)
 from app.internal.sources import (
     download_all_source_images, download_all_series_logos
 )
@@ -31,6 +33,7 @@ schedule_router = APIRouter(
 JOB_ADD_TRANSLATIONS: str = 'AddMissingTranslations'
 JOB_CREATE_TITLE_CARDS: str = 'CreateTitleCards'
 JOB_DOWNLOAD_SERIES_LOGOS: str = 'DownloadSeriesLogos'
+JOB_DOWNLOAD_SERIES_POSTERS: str = 'DownloadSeriesPosters'
 JOB_DOWNLOAD_SOURCE_IMAGES: str = 'DownloadSourceImages'
 JOB_LOAD_MEDIA_SERVERS: str = 'LoadMediaServers'
 JOB_REFRESH_EPISODE_DATA: str = 'RefreshEpisodeData'
@@ -42,7 +45,7 @@ INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES: str = 'RefreshRemoteCardTypes'
 TaskID = Literal[
     JOB_REFRESH_EPISODE_DATA, JOB_SYNC_INTERFACES, JOB_DOWNLOAD_SOURCE_IMAGES,
     JOB_CREATE_TITLE_CARDS, JOB_LOAD_MEDIA_SERVERS, JOB_ADD_TRANSLATIONS,
-    JOB_DOWNLOAD_SERIES_LOGOS,
+    JOB_DOWNLOAD_SERIES_LOGOS, JOB_DOWNLOAD_SERIES_POSTERS,
     # Internal jobs
     INTERNAL_JOB_CHECK_FOR_NEW_RELEASE, INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES,
 ]
@@ -70,6 +73,11 @@ def wrapped_download_all_series_logos():
     _wrap_before(JOB_DOWNLOAD_SERIES_LOGOS)
     download_all_series_logos()
     _wrap_after(JOB_DOWNLOAD_SERIES_LOGOS)
+
+def wrapped_download_all_series_posters():
+    _wrap_before(JOB_DOWNLOAD_SERIES_POSTERS)
+    download_all_series_posters()
+    _wrap_after(JOB_DOWNLOAD_SERIES_POSTERS)
 
 def wrapped_download_source_images():
     _wrap_before(JOB_DOWNLOAD_SOURCE_IMAGES)
@@ -146,8 +154,13 @@ BaseJobs = {
     ), JOB_DOWNLOAD_SERIES_LOGOS: NewJob(
         id=JOB_DOWNLOAD_SERIES_LOGOS,
         function=wrapped_download_all_series_logos,
-        seconds=60 * 60 * 24,
+        seconds=60 * 60 * 24 * 2,
         description='Download Logos for all Series',
+    ), JOB_DOWNLOAD_SERIES_POSTERS: NewJob(
+        id=JOB_DOWNLOAD_SERIES_POSTERS,
+        function=wrapped_download_all_series_posters,
+        seconds=60 * 60 * 24 * 2,
+        description='Download Posters for all Series',
     ),
     # Internal (private) jobs
     INTERNAL_JOB_CHECK_FOR_NEW_RELEASE: NewJob(

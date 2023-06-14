@@ -56,6 +56,31 @@ def load_all_media_servers() -> None:
         log.exception(f'Failed to load Title Cards', e)
 
 
+def download_all_series_posters() -> None:
+    """
+    Schedule-able function to download all posters for all monitored
+    Series in the Database.
+    """
+
+    try:
+        # Get the Database
+        with next(get_database()) as db:
+            # Get all Series
+            for series in db.query(models.series.Series).all():
+                try:
+                    download_series_poster(
+                        db, get_preferences(), series,
+                        get_imagemagick_interface(), get_tmdb_interface(),
+                    )
+                except HTTPException as e:
+                    log.warning(f'{series.log_str} Skipping poster selection')
+                    continue
+    except Exception as e:
+        log.exception(f'Failed to download Series posters', e)
+
+    return None
+
+
 def set_series_database_ids(
         series: Series,
         db: Session,
