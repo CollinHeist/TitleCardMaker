@@ -154,12 +154,12 @@ BaseJobs = {
     ), JOB_DOWNLOAD_SERIES_LOGOS: NewJob(
         id=JOB_DOWNLOAD_SERIES_LOGOS,
         function=wrapped_download_all_series_logos,
-        seconds=60 * 60 * 24 * 2,
+        seconds=60 * 60 * 24,
         description='Download Logos for all Series',
     ), JOB_DOWNLOAD_SERIES_POSTERS: NewJob(
         id=JOB_DOWNLOAD_SERIES_POSTERS,
         function=wrapped_download_all_series_posters,
-        seconds=60 * 60 * 24 * 2,
+        seconds=60 * 60 * 24,
         description='Download Posters for all Series',
     ),
     # Internal (private) jobs

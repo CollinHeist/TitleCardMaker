@@ -55,6 +55,8 @@ def load_all_media_servers() -> None:
     except Exception as e:
         log.exception(f'Failed to load Title Cards', e)
 
+    return None
+
 
 def download_all_series_posters() -> None:
     """

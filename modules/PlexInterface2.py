@@ -6,18 +6,17 @@ from typing import Optional
 
 from fastapi import HTTPException
 from plexapi.exceptions import PlexApiException
+from plexapi.library import Library as PlexLibrary
 from plexapi.server import PlexServer, NotFound, Unauthorized
+from plexapi.video import Show as PlexShow
 from requests.exceptions import ReadTimeout, ConnectionError
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 from tinydb import where
-from tqdm import tqdm
 
-from modules.Debug import log, TQDM_KWARGS
+from modules.Debug import log
 from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo2 import EpisodeInfo
-from modules.ImageMaker import ImageMaker
 from modules.MediaServer2 import MediaServer
-from modules.PersistentDatabase import PersistentDatabase
 from modules.SeriesInfo import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
@@ -124,7 +123,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     @retry(stop=stop_after_attempt(5),
            wait=wait_fixed(3)+wait_exponential(min=1, max=32),
            reraise=True)
-    def __get_library(self, library_name: str) -> 'Library':
+    def __get_library(self, library_name: str) ->  PlexLibrary:
         """
         Get the Library object under the given name.
 
@@ -145,8 +144,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     @retry(stop=stop_after_attempt(5),
            wait=wait_fixed(3)+wait_exponential(min=1, max=32),
            reraise=True)
-    def __get_series(self, library: 'Library',
-            series_info: SeriesInfo) -> 'Show':
+    def __get_series(self,
+            library: PlexLibrary,
+            series_info: SeriesInfo) -> PlexShow:
         """
         Get the Series object from within the given Library associated
         with the given SeriesInfo. This tries to match by TVDb ID,
@@ -201,8 +201,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     @catch_and_log('Error getting library paths', default={})
-    def get_library_paths(self, filter_libraries: list[str] = []
-            ) -> dict[str, list[str]]:
+    def get_library_paths(self,
+            filter_libraries: list[str] = []) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
 

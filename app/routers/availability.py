@@ -13,9 +13,7 @@ from app.internal.availability import get_latest_version
 import app.models as models
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.card import CardType, LocalCardType, RemoteCardType
-from app.schemas.preferences import (
-    EpisodeDataSourceToggle, ImageSourceToggle, StyleOption
-)
+from app.schemas.preferences import EpisodeDataSourceToggle, ImageSourceToggle, StyleOption
 from app.schemas.sync import Tag
 from modules.cards.available import LocalCards
 from modules.Debug import log
@@ -242,8 +240,7 @@ def get_sonarr_tags(
 
 
 @availablility_router.get('/fonts', status_code=200, tags=['Fonts'])
-def get_available_fonts(
-        db: Session = Depends(get_database)) -> list[str]:
+def get_available_fonts(db: Session = Depends(get_database)) -> list[str]:
     """
     Get the names of all the available Fonts.
     """
@@ -252,8 +249,7 @@ def get_available_fonts(
 
 
 @availablility_router.get('/templates', status_code=200, tags=['Templates'])
-def get_available_templates(
-        db: Session = Depends(get_database)) -> list[str]:
+def get_available_templates(db: Session = Depends(get_database)) -> list[str]:
     """
     Get the names of all the available Templates.
     """

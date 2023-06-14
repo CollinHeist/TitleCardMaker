@@ -6,7 +6,6 @@ from modules.BaseCardType import (
 )
 from modules.Debug import log
 
-SeriesExtra = Optional
 Element = Literal['index', 'logo', 'omit', 'title']
 MiddleElement = Literal['logo', 'omit']
 
@@ -80,7 +79,11 @@ class TintedFrameTitleCard(BaseCardType):
                 name='Logo Size',
                 identifier='logo_size',
                 description='Scalar for how much to scale the size of the logo element',
-            ),
+            ), Extra(
+                name='Edge Blurring',
+                identifier='blur_edges',
+                description='Whether to blur the edges around the frame'
+            )
         ], description=[
             'Title card featuring a rectangular frame with blurred content on the'
             ' outside of the frame, and unblurred content within.',
@@ -145,14 +148,14 @@ class TintedFrameTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-            separator: SeriesExtra[str] = '-',
-            episode_text_color: SeriesExtra[str] = None,
-            frame_color: SeriesExtra[str] = None,
+            separator: str = '-',
+            episode_text_color: str = None,
+            frame_color: str = None,
             top_element: Element = 'title',
             middle_element: MiddleElement = 'omit',
             bottom_element: Element = 'index',
             logo_file: Optional[Path] = None,
-            logo_size: SeriesExtra[float] = 1.0,
+            logo_size: float = 1.0,
             blur_edges: bool = True,
             preferences: 'Preferences' = None,
             **unused) -> None:

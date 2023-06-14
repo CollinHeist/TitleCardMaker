@@ -1,9 +1,7 @@
 from requests import get
 from typing import Optional
 
-from fastapi import (
-    APIRouter, BackgroundTasks, Depends, Form, HTTPException, Query, UploadFile
-)
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session
 
 from app.database.query import get_episode, get_series
@@ -50,11 +48,11 @@ def download_series_source_images(
     the associated Episode has been internally blacklisted. 
     """
 
-    # Get all episodes for this series
+    # Get all Episodes for this Series
     all_episodes = db.query(models.episode.Episode)\
         .filter_by(series_id=series_id).all()
 
-    # Add task to download source image for each episode
+    # Add task to download source image for each Episode
     for episode in all_episodes:
         background_tasks.add_task(
             # Function
@@ -86,7 +84,7 @@ def download_series_backdrop(
     the associated Series backdrop has been internally blacklisted.
     """
     # TODO add ability to download art from a media server
-    # Get this series, raise 404 if DNE
+    # Get this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
     # Get backdrop, return if exists
@@ -134,7 +132,7 @@ def download_series_logo_(
     the associated Series logo has been internally blacklisted.
     """
 
-    # Get this Series and associated Template, raise 404 if DNE
+    # Get this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
     return download_series_logo(

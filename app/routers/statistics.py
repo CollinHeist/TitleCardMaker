@@ -4,7 +4,9 @@ from sqlalchemy.orm import Session
 
 from app.dependencies import get_database, get_preferences
 import app.models as models
-from app.schemas.statistic import Statistic, CardCount, EpisodeCount, SeriesCount, AssetSize
+from app.schemas.statistic import (
+    Statistic, CardCount, EpisodeCount, SeriesCount, AssetSize
+)
 
 statistics_router = APIRouter(
     prefix='/statistics',
@@ -18,14 +20,16 @@ def get_all_statistics(
     """
     Get all statistics.
     """
-    
+
+    # Count the Series, Episodes, and Cards
     series_count = db.query(models.series.Series).count()
     episode_count = db.query(models.episode.Episode).count()
     card_count = db.query(models.card.Card).count()
 
-    # Get/format total asset size
+    # Get and format total asset size
     asset_size = db.query(models.card.Card)\
-        .with_entities(func.sum(models.card.Card.filesize)).scalar()
+        .with_entities(func.sum(models.card.Card.filesize))\
+        .scalar()
     asset_size = 0 if asset_size is None else asset_size
 
     return [
@@ -56,7 +60,13 @@ def get_series_statistics(
         series_id: int,
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences)) -> list[Statistic]:
-    
+    """
+    Get the statistics for the given Series.
+
+    - series_id: ID of the Series to get the statistics of.
+    """
+
+    # Count the Episodes, Cards, and total asset size
     episode_count = db.query(models.episode.Episode)\
         .filter_by(series_id=series_id).count()
     card_count = db.query(models.card.Card)\
@@ -65,7 +75,7 @@ def get_series_statistics(
         .filter_by(series_id=series_id)\
         .with_entities(func.sum(models.card.Card.filesize)).scalar()
     asset_size = 0 if asset_size is None else asset_size
-    
+
     return [
         CardCount(value=card_count, value_text=f'{card_count:,}'),
         EpisodeCount(value=episode_count, value_text=f'{episode_count:,}'),

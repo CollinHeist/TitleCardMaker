@@ -164,7 +164,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         ]
 
 
-    def set_series_ids(self, library_name: str, series_info: SeriesInfo) ->None:
+    def set_series_ids(self,
+            library_name: str,
+            series_info: SeriesInfo) -> None:
         """
         Set the series ID's for the given SeriesInfo object.
 
@@ -256,9 +258,11 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                             log.debug(f'Set {old_episode_info}.{id_type}={id_}')
                     break
 
+        return None
+
 
     def get_library_paths(self,
-            filter_libraries: list[str]=[]) -> dict[str, list[str]]:
+            filter_libraries: list[str] = []) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
 
@@ -511,7 +515,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return loaded
 
 
-    def load_season_posters(self, library_name: str, series_info: SeriesInfo,
+    def load_season_posters(self,
+            library_name: str,
+            series_info: SeriesInfo,
             season_poster_set: 'SeasonPosterSet') -> None:
         """
         Set the season posters from the given set within Emby.
