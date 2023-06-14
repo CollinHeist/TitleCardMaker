@@ -145,7 +145,11 @@ def create_cards_for_series(
 
     # Create each associated Episode's Card
     for episode in series.episodes:
-        create_episode_card(db, preferences, background_tasks, episode)
+        try:
+            create_episode_card(db, preferences, background_tasks, episode)
+        except HTTPException as e:
+            log.exception(f'{series.log_str} {episode.log_str} Card creation failed', e)
+            pass
 
     return None
 
