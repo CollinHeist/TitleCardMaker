@@ -110,7 +110,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return None
 
 
-    def _map_libraries(self) -> dict[str, int]:
+    def _map_libraries(self) -> dict[str, str]:
         """
         Map the libraries on this interface's server.
 
@@ -129,9 +129,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         )
 
         return {
-            library['Name']: library['Id']
-            for library in libraries['Items']
-            if library.get('CollectionType', None) == 'tvshows'
+            library['Name']: library['Id'] for library in libraries['Items']
         }
 
 

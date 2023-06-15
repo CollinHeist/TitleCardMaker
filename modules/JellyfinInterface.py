@@ -256,7 +256,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return {
             lib['Name']: [location for location in lib['Locations']]
             for lib in libraries
-            if (lib['CollectionType'] == 'tvshows'
+            if (lib.get('CollectionType', None) == 'tvshows'
                 and include_library(lib['Name']))
         }
 
@@ -362,6 +362,12 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         # Parse each returned episode into EpisodeInfo object
         all_episodes = []
         for episode in response['Items']:
+            # Skip Episodes without episode or season numbers
+            if (episode.get('IndexNumber', None) is None
+                or episode.get('ParentIndexNumber', None) is None):
+                log.debug(f'Series {series_info} episode is missing index data - {e}')
+                continue
+
             # Parse airdate for this episode
             airdate = None
             if 'PremiereDate' in episode:
