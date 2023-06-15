@@ -428,6 +428,11 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # Go through each episode in Jellyfin, update Episode status/card
         for jellyfin_episode in response['Items']:
+            # Skip episodes without episode or season numbers
+            if (jellyfin_episode.get('IndexNumber', None) is None
+                or jellyfin_episode.get('ParentIndexNumber', None) is None):
+                continue
+
             for episode in episodes:
                 if (jellyfin_episode['ParentIndexNumber'] == episode.season_number
                     and jellyfin_episode["IndexNumber"] == episode.episode_number):
@@ -450,6 +455,10 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             series_info: SeriesInfo whose cards are being loaded.
             episode_and_cards: List of tuple of Episode and their
                 corresponding Card objects to load.
+
+        Returns:
+            List of tuples of the Episode and the corresponding Card
+            that was loaded.
         """
 
         # If series has no Jellyfin ID, or no episodes, exit
