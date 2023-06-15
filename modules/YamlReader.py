@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 from yaml import safe_load
 
@@ -17,7 +17,7 @@ class YamlReader:
 
     def __init__(self,
             yaml: dict[str, Any] = {}, *,
-            log_function: callable = log.error) -> None:
+            log_function: Callable = log.error) -> None:
         """
         Initialize this object.
 

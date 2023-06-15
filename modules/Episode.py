@@ -3,6 +3,7 @@ from typing import Any, Optional, Union
 
 from modules.CleanPath import CleanPath
 from modules.Debug import log
+from modules.EpisodeInfo import EpisodeInfo
 from modules.StyleSet import StyleSet
 from modules.TitleCard import TitleCard
 
@@ -21,7 +22,7 @@ class Episode:
 
 
     def __init__(self,
-            episode_info: 'EpisodeInfo',
+            episode_info: EpisodeInfo,
             card_class: 'CardType',
             base_source: Path,
             destination: Path,
@@ -112,7 +113,7 @@ class Episode:
         return key in self.given_keys
 
 
-    def update_statuses(self, watched: bool, style_set: 'StyleSet') -> None:
+    def update_statuses(self, watched: bool, style_set: StyleSet) -> None:
         """
         Update the statuses of this Episode. In particular the watched
         status and un/watched styles.

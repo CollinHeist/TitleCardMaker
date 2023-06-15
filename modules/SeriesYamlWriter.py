@@ -28,7 +28,7 @@ class SeriesYamlWriter:
 
     def __init__(self,
             file: CleanPath,
-            sync_mode: str = 'append',
+            sync_mode: Literal['append', 'match'] = 'append',
             compact_mode: bool = True,
             volume_map: dict[str, str] = {},
             template: Optional[str] = None,

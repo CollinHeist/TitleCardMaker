@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 from modules.Debug import log
 
@@ -14,7 +14,7 @@ class DatabaseInfoContainer(ABC):
     def _update_attribute(self,
             attribute: str,
             value: Any, 
-            type_: Optional[callable] = None) -> None:
+            type_: Optional[Callable] = None) -> None:
         """
         Set the given attribute to the given value with the given type.
 

@@ -1,3 +1,5 @@
+from pathlib import Path
+from typing import Any, Callable
 from modules.Debug import log
 import modules.global_objects as global_objects
 
@@ -38,7 +40,7 @@ class ShowArchive:
     __slots__ = ('series_info', 'shows', 'summaries')
 
 
-    def __init__(self, archive_directory: 'Path', base_show: 'Show') -> None:
+    def __init__(self, archive_directory: Path, base_show: 'Show') -> None:
         """
         Constructs a new instance of this class. Creates a list of all
         applicable Show objects for later us.
@@ -118,7 +120,7 @@ class ShowArchive:
                 f'profiles>')
 
 
-    def __getattr__(self, show_function) -> callable:
+    def __getattr__(self, show_function: Callable) -> Callable:
         """
         Get an arbitrary function for this object. This returns a wrapped
         version of the given function that calls that function on all

@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Optional
 
 from tinydb import where, Query
@@ -280,7 +281,7 @@ class MediaInfoSet:
             tmdb_id: Optional[int] = None,
             tvdb_id: Optional[int] = None,
             tvrage_id: Optional[int] = None,
-            airdate: Optional['datetime'] = None,
+            airdate: Optional[datetime] = None,
             title_match: bool = True,
             **queried_kwargs: dict[str, bool]) -> EpisodeInfo:
         """

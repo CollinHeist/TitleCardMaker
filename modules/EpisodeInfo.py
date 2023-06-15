@@ -14,7 +14,11 @@ class WordSet(dict):
     of numbers.
     """
 
-    def add_numeral(self, label: str, number: int, lang: str=None) -> None:
+    def add_numeral(self,
+            label: str,
+            number: int,
+            lang: Optional[str] = None
+        ) -> None:
         """
         Add the cardinal and ordinal versions of the given number under
         the given label. For example:
@@ -75,7 +79,9 @@ class EpisodeInfo(DatabaseInfoContainer):
     )
 
 
-    def __init__(self, title: 'str | Title', season_number: int,
+    def __init__(self,
+            title: Union[str, Title],
+            season_number: int,
             episode_number: int,
             abs_number: Optional[int] = None, *,
             emby_id: Optional[int] = None,
@@ -281,22 +287,22 @@ class EpisodeInfo(DatabaseInfoContainer):
     def set_emby_id(self, emby_id) -> None:
         self._update_attribute('emby_id', emby_id, int)
 
-    def set_imdb_id(self, imdb_id) -> None:
+    def set_imdb_id(self, imdb_id: str) -> None:
         self._update_attribute('imdb_id', imdb_id, str)
 
-    def set_jellyfin_id(self, jellyfin_id) -> None:
+    def set_jellyfin_id(self, jellyfin_id: str) -> None:
         self._update_attribute('jellyfin_id', jellyfin_id, str)
 
-    def set_tmdb_id(self, tmdb_id) -> None:
+    def set_tmdb_id(self, tmdb_id: int) -> None:
         self._update_attribute('tmdb_id', tmdb_id, int)
 
-    def set_tvdb_id(self, tvdb_id) -> None:
+    def set_tvdb_id(self, tvdb_id: int) -> None:
         self._update_attribute('tvdb_id', tvdb_id, int)
 
-    def set_tvrage_id(self, tvrage_id) -> None:
+    def set_tvrage_id(self, tvrage_id: int) -> None:
         self._update_attribute('tvrage_id', tvrage_id, int)
 
-    def set_airdate(self, airdate: 'datetime') -> None:
+    def set_airdate(self, airdate: datetime) -> None:
         self._update_attribute('airdate', airdate)
 
 

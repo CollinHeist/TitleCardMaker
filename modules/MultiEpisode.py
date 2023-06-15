@@ -1,4 +1,5 @@
 from copy import deepcopy
+from pathlib import Path
 from re import compile as re_compile
 from typing import Any
 
@@ -202,7 +203,7 @@ class MultiEpisode:
         return episode_format_string
 
 
-    def set_destination(self, destination: 'Path') -> None:
+    def set_destination(self, destination: Path) -> None:
         """
         Set the destination for the card associated with these Episdoes.
 

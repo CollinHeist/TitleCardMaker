@@ -1,6 +1,6 @@
 from copy import copy
 from pathlib import Path
-from typing import Any, Optional, Literal
+from typing import Optional, Literal
 
 from tqdm import tqdm
 

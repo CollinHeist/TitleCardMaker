@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
 from pathlib import Path
-from tinydb import where
+from tinydb import Query, where
 from typing import Any, Callable, Iterable, Optional
 
 from tmdbapis import TMDbAPIs, NotFound, Unauthorized, TMDbException
+from tmdbapis.objs.reload import Episode as TMDbEpisode
+from tmdbapis.objs.image import Still as TMDbStill
 
 from modules.Debug import log
 from modules.EpisodeDataSource import EpisodeDataSource
@@ -124,7 +126,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
     def catch_and_log(
             message: str,
-            log_func: Callable[str, None] = log.error, *,
+            log_func: Callable[[str], None] = log.error, *,
             default: Any = None) -> Callable[..., Any]:
         """
         Return a decorator that logs (with the given log function) the
@@ -157,7 +159,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def __get_condition(self,
             query_type: str,
             series_info: SeriesInfo,
-            episode_info: EpisodeInfo=None) -> 'QueryInstance':
+            episode_info: Optional[EpisodeInfo] = None) -> Query:
         """
         Get the tinydb query condition for the given query.
 
@@ -456,7 +458,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
             title_match: bool = True
-            ) -> Optional['tmdbapis.objs.reload.Episode']:
+        ) -> Optional[TMDbEpisode]:
         """
         Finds the episode index for the given entry. Searching is done
         in the following priority:
@@ -639,7 +641,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
 
     def __determine_best_image(self,
-            images: list['tmdbapis.objs.image.Still'], *,
+            images: list[TMDbStill], *,
             is_source_image: bool = True,
             skip_localized: bool = False) -> dict:
         """
