@@ -1,3 +1,4 @@
+from pathlib import Path
 from re import IGNORECASE, compile as re_compile
 from requests import get, Session
 from typing import Any, Union
@@ -31,8 +32,10 @@ class WebInterface:
     )
 
 
-    def __init__(self, name: str, verify_ssl: bool=True, *,
-            cache: bool=True) -> None:
+    def __init__(self,
+            name: str,
+            verify_ssl: bool = True, *,
+            cache: bool = True) -> None:
         """
         Construct a new instance of a WebInterface. This creates creates
         cached request and results lists, and establishes a session for
@@ -131,7 +134,7 @@ class WebInterface:
 
 
     @staticmethod
-    def download_image(image: Union[str, bytes], destination: 'Path') -> bool:
+    def download_image(image: Union[str, bytes], destination: Path) -> bool:
         """
         Download the provided image to the destination filepath.
 

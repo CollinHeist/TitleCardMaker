@@ -1,17 +1,21 @@
 from copy import copy
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Literal
 
 from tqdm import tqdm
 
 from modules.CleanPath import CleanPath
 from modules.DataFileInterface import DataFileInterface
 from modules.Debug import log, TQDM_KWARGS
+from modules.EmbyInterface import EmbyInterface
 from modules.Episode import Episode
 from modules.EpisodeInfo import EpisodeInfo
 from modules.EpisodeMap import EpisodeMap
 from modules.Font import Font
+from modules.JellyfinInterface import JellyfinInterface
 from modules.MultiEpisode import MultiEpisode
+from modules.SonarrInterface import SonarrInterface
+from modules.TMDbInterface import TMDbInterface
 import modules.global_objects as global_objects
 from modules.PlexInterface import PlexInterface
 from modules.Profile import Profile
@@ -22,6 +26,8 @@ from modules.TitleCard import TitleCard
 from modules.Title import Title
 from modules.WebInterface import WebInterface
 from modules.YamlReader import YamlReader
+
+MediaServer = Optional[Literal['emby', 'jellyfin', 'plex']]
 
 class Show(YamlReader):
     """
@@ -48,8 +54,12 @@ class Show(YamlReader):
         'image_source_priority',
     )
 
-    def __init__(self, name: str, yaml_dict: dict, source_directory: Path,
-                 preferences: 'PreferenceParser') -> None:
+    def __init__(self,
+            name: str,
+            yaml_dict: dict,
+            source_directory: Path,
+            preferences: 'PreferenceParser', # type: ignore
+        ) -> None:
         """
         Constructs a new instance of a Show object from the given YAML
         dictionary, library map, and referencing the base source
@@ -92,7 +102,7 @@ class Show(YamlReader):
         self.library_name = None
         self.library = None
         self.media_directory = None
-        self.media_server = preferences.default_media_server
+        self.media_server: MediaServer = preferences.default_media_server
         self.image_source_priority = preferences.image_source_priority
         self.archive = preferences.create_archive
         self.archive_name = None
@@ -169,7 +179,7 @@ class Show(YamlReader):
         )
 
         # Attributes to be filled/modified later
-        self.episodes = {}
+        self.episodes: dict[str, Episode] = {}
         self.emby_interface = None
         self.jellyfin_interface = None
         self.plex_interface = None
@@ -339,11 +349,12 @@ class Show(YamlReader):
             self.extras = self._get('extras', type_=dict)
 
 
-    def assign_interfaces(self, emby_interface: 'EmbyInterface' = None,
-            jellyfin_interface: 'JellyfinInterface' = None,
-            plex_interface: 'PlexInterface' = None,
-            sonarr_interfaces: list['SonarrInterface'] = [],
-            tmdb_interface: 'TMDbInterface' = None) -> None:
+    def assign_interfaces(self,
+            emby_interface: Optional[EmbyInterface] = None,
+            jellyfin_interface: Optional[JellyfinInterface] = None,
+            plex_interface: Optional[PlexInterface] = None,
+            sonarr_interfaces: list[SonarrInterface] = [],
+            tmdb_interface: Optional[TMDbInterface] = None) -> None:
         """
         Assign the given interfaces to attributes of this object for
         later use.
@@ -564,13 +575,20 @@ class Show(YamlReader):
 
         # Filter episodes needing ID's - i.e. missing card or translation
         def episode_needs_id(episode) -> bool:
+            # Episodes with all ID's or no card do not need ID's
             if episode.episode_info.has_all_ids or episode.destination is None:
                 return False
+            # Emby and Jellyfin require per-Episode ID's to match content
+            if self.media_server in ('emby', 'jellyfin'):
+                return True
+            # Missing card, requires ID's for potential matching
             if not episode.destination.exists():
                 return True
+            # Missing translations, requires ID's for potential matching
             for translation in self.title_languages:
                 if not episode.key_is_specified(translation['key']):
                     return True
+            # All content is present, not Emby/Jellyfin, no ID's required
             return False
 
         # Apply filter of only those needing ID's, get only EpisodeInfo objects
@@ -583,8 +601,8 @@ class Show(YamlReader):
         if not infos:
             return None
 
-        # Temporary function to load episode ID's
-        def load(interface, episode_infos):
+        # Temporary function to set episode ID's
+        def set_ids(interface, episode_infos):
             interface_obj = getattr(self, f'{interface}_interface', None)
             if interface_obj is not None:
                 interface_obj.set_episode_ids(
@@ -605,7 +623,7 @@ class Show(YamlReader):
 
         # Go through each interface and load ID's from it
         for interface in interface_orders[self.episode_data_source]:
-            load(interface, infos)
+            set_ids(interface, infos)
 
 
     def add_translations(self) -> None:

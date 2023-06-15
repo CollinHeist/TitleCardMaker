@@ -3,6 +3,7 @@ from re import findall
 from typing import Any
 
 from modules.Debug import log
+from modules.SeriesInfo import SeriesInfo
 
 class Template:
     """
@@ -164,7 +165,8 @@ class Template:
                     base_yaml[t_key] = t_value
 
 
-    def apply_to_series(self, series_info: 'SeriesInfo',
+    def apply_to_series(self,
+            series_info: SeriesInfo,
             series_yaml: dict[str, Any]) -> bool:
         """
         Apply this Template object to the given series YAML, modifying

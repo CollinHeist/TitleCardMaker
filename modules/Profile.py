@@ -2,7 +2,10 @@ from regex import compile as re_compile, match, IGNORECASE
 from typing import Any
 
 from modules.Debug import log
+from modules.EpisodeInfo import EpisodeInfo
+from modules.Font import Font
 from modules.MultiEpisode import MultiEpisode
+from modules.SeriesInfo import SeriesInfo
 
 class Profile:
     """
@@ -20,8 +23,8 @@ class Profile:
     )
 
     def __init__(self,
-            series_info: 'SeriesInfo',
-            font: 'Font',
+            series_info: SeriesInfo,
+            font: Font,
             hide_seasons: bool,
             episode_map: 'EpisodeMap',
             episode_text_format: str) -> None:
@@ -162,7 +165,7 @@ class Profile:
         )
 
 
-    def get_season_text(self, episode_info: 'EpisodeInfo') -> str:
+    def get_season_text(self, episode_info: EpisodeInfo) -> str:
         """
         Gets the season text for the given season number, after applying
         this profile's rules about season text.
@@ -189,7 +192,7 @@ class Profile:
         return self.__episode_map.get_season_title(episode_info)
 
 
-    def get_episode_text(self, episode: 'Episode') -> str:
+    def get_episode_text(self, episode: 'Episode') -> str: # type: ignore
         """
         Gets the episode text for the given episode info, as defined by
         this profile.
@@ -337,7 +340,7 @@ class Profile:
 
     def convert_title(self,
             title_text: str,
-            manually_specified: bool=False) -> str:
+            manually_specified: bool = False) -> str:
         """
         Convert the given title text through this profile's settings.
         This is any combination of text substitutions, case functions,

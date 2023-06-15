@@ -3,6 +3,7 @@ from re import compile as re_compile
 from typing import Any, Optional
 
 from modules.Debug import log
+from modules.SeriesInfo import SeriesInfo
 import modules.global_objects as global_objects
 from modules.YamlReader import YamlReader
 
@@ -30,8 +31,10 @@ class Font(YamlReader):
     )
 
 
-    def __init__(self, yaml: dict, card_class: 'CardType',
-            series_info: 'SeriesInfo') -> None:
+    def __init__(self,
+            yaml: dict,
+            card_class: 'CardType', # type: ignore
+            series_info: SeriesInfo) -> None:
         """
         Construct a new instance of a Font.
 

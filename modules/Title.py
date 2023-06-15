@@ -1,5 +1,5 @@
 from re import compile as re_compile, IGNORECASE
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Optional, Union
 
 from modules.Debug import log
 

@@ -8,7 +8,8 @@ class SyncInterface(ABC):
     """
 
     def get_library_paths(self,
-            filter_libraries: list[str] = []) -> dict[str, list[str]]:
+            filter_libraries: list[str] = []
+        ) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
 

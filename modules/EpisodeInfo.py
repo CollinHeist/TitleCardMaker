@@ -1,4 +1,5 @@
-from typing import Optional, Union
+from datetime import datetime
+from typing import Any, Optional, Union
 
 from num2words import num2words
 
@@ -83,7 +84,7 @@ class EpisodeInfo(DatabaseInfoContainer):
             tmdb_id: Optional[int] = None,
             tvdb_id: Optional[int] = None,
             tvrage_id: Optional[int] = None,
-            airdate: Optional['datetime'] = None,
+            airdate: Optional[datetime] = None,
             queried_emby: bool = False,
             queried_jellyfin: bool = False,
             queried_plex: bool = False,
@@ -225,7 +226,7 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     @property
-    def ids(self) -> dict[str, 'int | str | None']:
+    def ids(self) -> dict[str, Any]:
         """This object's ID's (as a dictionary)"""
 
         return {
@@ -239,7 +240,7 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     @property
-    def characteristics(self) -> dict[str, 'int | str']:
+    def characteristics(self) -> dict[str, Any]:
         """
         Get the characteristics of this object for formatting.
 
@@ -259,7 +260,7 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     @property
-    def indices(self) -> dict[str, 'int | None']:
+    def indices(self) -> dict[str, Any]:
         """This object's season/episode indices (as a dictionary)"""
 
         return {
@@ -300,11 +301,11 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     def update_queried_statuses(self,
-            queried_emby: bool=False,
-            queried_jellyfin: bool=False,
-            queried_plex: bool=False,
-            queried_sonarr: bool=False,
-            queried_tmdb: bool=False) -> None:
+            queried_emby: bool = False,
+            queried_jellyfin: bool = False,
+            queried_plex: bool = False,
+            queried_sonarr: bool = False,
+            queried_tmdb: bool = False) -> None:
         """
         Update the queried attributes of this object to reflect the
         given arguments. Only updates an attribute from False to True.

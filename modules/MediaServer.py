@@ -7,6 +7,7 @@ from tinydb import where, Query
 from modules.Debug import log
 from modules.ImageMaker import ImageMaker
 from modules.PersistentDatabase import PersistentDatabase
+from modules.SeriesInfo import SeriesInfo
 
 SourceImage = Union[str, bytes, None]
 
@@ -84,7 +85,9 @@ class MediaServer(ABC):
         return small_image
 
 
-    def _get_condition(self, library_name: str, series_info: 'SeriesInfo',
+    def _get_condition(self,
+            library_name: str,
+            series_info: SeriesInfo,
             episode: 'Episode' = None) -> Query:
         """
         Get the tinydb Query condition for the given entry.
@@ -115,7 +118,8 @@ class MediaServer(ABC):
         )
 
 
-    def _get_loaded_episode(self, loaded_series: list[dict[str, Any]],
+    def _get_loaded_episode(self,
+            loaded_series: list[dict[str, Any]],
             episode: 'Episode') -> Union[dict[str, Any], None]:
         """
         Get the loaded details of the given Episode from the given list
@@ -139,7 +143,9 @@ class MediaServer(ABC):
         return None
 
 
-    def _filter_loaded_cards(self, library_name: str, series_info:'SeriesInfo',
+    def _filter_loaded_cards(self,
+            library_name: str,
+            series_info: SeriesInfo,
             episode_map: dict[str, 'Episode']) -> dict[str, 'Episode']:
         """
         Filter the given episode map and remove all Episode objects

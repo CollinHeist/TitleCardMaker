@@ -501,7 +501,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 )
 
 
-    def set_title_cards(self, library_name: str, series_info: 'SeriesInfo',
+    def set_title_cards(self,
+            library_name: str,
+            series_info: SeriesInfo,
             episode_map: dict[str, 'Episode']) -> None:
         """
         Set the title cards for the given series. This only updates
@@ -570,7 +572,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             log.info(f'Loaded {loaded_count} cards for "{series_info}"')
 
 
-    def set_season_posters(self, library_name: str, series_info: SeriesInfo,
+    def set_season_posters(self,
+            library_name: str,
+            series_info: SeriesInfo,
             season_poster_set: 'SeasonPosterSet') -> None:
         """
         Set the season posters from the given set within Emby.

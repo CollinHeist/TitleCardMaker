@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, Optional
 
 from yaml import safe_load
@@ -150,7 +151,7 @@ class YamlReader:
 
 
     @staticmethod
-    def _read_file(file: 'Path', *, critical: bool = False) -> dict:
+    def _read_file(file: Path, *, critical: bool = False) -> dict:
         """
         Read the given file and return the contained YAML.
 

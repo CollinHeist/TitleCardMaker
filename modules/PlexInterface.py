@@ -1,10 +1,14 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from plexapi.exceptions import PlexApiException
+from plexapi.library import library as PlexLibrary
 from plexapi.server import PlexServer, NotFound, Unauthorized
+from plexapi.video import (
+    Episode as PlexEpisode, Show as PlexShow, Season as PlexSeason
+)
 from requests.exceptions import ReadTimeout, ConnectionError
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 from tinydb import where
@@ -14,7 +18,6 @@ from modules.Debug import log, TQDM_KWARGS
 import modules.global_objects as global_objects
 from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo import EpisodeInfo
-from modules.ImageMaker import ImageMaker
 from modules.MediaServer import MediaServer
 from modules.PersistentDatabase import PersistentDatabase
 from modules.SeriesInfo import SeriesInfo
@@ -40,10 +43,12 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     __TEMP_IGNORE_REGEX = re_compile(r'^(tba|tbd|episode \d+)$', IGNORECASE)
 
 
-    def __init__(self, url: str, x_plex_token: str='NA',
-            verify_ssl: bool=True,
-            integrate_with_pmm_overlays: bool=False,
-            filesize_limit: int=10485760) -> None:
+    def __init__(self,
+            url: str,
+            x_plex_token: str = 'NA',
+            verify_ssl: bool = True,
+            integrate_with_pmm_overlays: bool = False,
+            filesize_limit: int = 10485760) -> None:
         """
         Constructs a new instance of a Plex Interface.
 
@@ -86,7 +91,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         self.__warned = set()
 
 
-    def catch_and_log(message: str, *, default=None) -> callable:
+    def catch_and_log(message: str, *, default: Any = None) -> callable:
         """
         Return a decorator that logs (with the given log function) the given
         message if the decorated function raises an uncaught PlexApiException.
@@ -120,7 +125,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     @retry(stop=stop_after_attempt(5),
            wait=wait_fixed(3)+wait_exponential(min=1, max=32),
            reraise=True)
-    def __get_library(self, library_name: str) -> 'plexapi.library.Library':
+    def __get_library(self, library_name: str) -> Optional[PlexLibrary]:
         """
         Get the Library object under the given name.
 
@@ -142,8 +147,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
            wait=wait_fixed(3)+wait_exponential(min=1, max=32),
            reraise=True)
     def __get_series(self,
-            library: 'plexapi.library.Library',
-            series_info: SeriesInfo) -> 'plexapi.video.Show':
+            library: PlexLibrary,
+            series_info: SeriesInfo) -> Optional[PlexShow]:
         """
         Get the Series object from within the given Library associated
         with the given SeriesInfo. This tries to match by TVDb ID,
@@ -232,7 +237,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def get_all_series(self,
             filter_libraries: list[str] = [],
             required_tags: list[str] = [],
-            ) -> list[tuple[SeriesInfo, str, str]]: 
+        ) -> list[tuple[SeriesInfo, str, str]]: 
         """
         Get all series within Plex, as filtered by the given libraries.
 
@@ -398,8 +403,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def update_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_map: dict[str, 'Episode'],
-            style_set: 'StyleSet') -> None:
+            episode_map: dict[str, 'Episode'], # type: ignore
+            style_set: 'StyleSet', # type: ignore
+        ) -> None:
         """
         Modify the Episode objects according to the watched status of the
         corresponding episodes within Plex, and the spoil status of the object.
@@ -620,7 +626,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
            before_sleep=lambda _:log.warning('Cannot upload image, retrying..'),
            reraise=True)
     def __retry_upload(self,
-            plex_object: Union['plexapi.video.Episode' 'plexapi.video.Season'],
+            plex_object: Union[PlexEpisode, PlexSeason],
             filepath: Path) -> None:
         """
         Upload the given poster to the given Episode, retrying if it fails.
@@ -637,7 +643,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def set_title_cards(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_map: dict[str, 'Episode']) -> None:
+            episode_map: dict[str, 'Episode'], # type: ignore
+        ) -> None:
         """
         Set the title cards for the given series. This only updates episodes
         that have title cards, and those episodes whose card filesizes are
@@ -720,7 +727,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def set_season_posters(self,
             library_name: str,
             series_info: SeriesInfo,
-            season_poster_set: 'SeasonPosterSet') -> None:
+            season_poster_set: 'SeasonPosterSet', # type: ignore
+        ) -> None:
         """
         Set the season posters from the given set within Plex.
 

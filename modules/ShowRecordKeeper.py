@@ -1,5 +1,6 @@
 from pathlib import Path
 from hashlib import sha256
+from typing import Callable
 
 from tinydb import where
 
@@ -67,7 +68,7 @@ class ShowRecordKeeper:
         log.info(f'Read {len(self.records)} show records')
 
 
-    def __get_record_hash(self, hash_obj: 'hashalg', record) -> None:
+    def __get_record_hash(self, hash_obj: Callable, record) -> None:
         """
         Get the hash of the given record.
 
