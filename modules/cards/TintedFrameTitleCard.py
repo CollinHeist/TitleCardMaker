@@ -155,7 +155,7 @@ class TintedFrameTitleCard(BaseCardType):
                         episode_number=episode_number
                     )
                 )
-            except:
+            except Exception as e:
                 log.exception(f'Logo path is invalid', e)
                 self.valid = False
 
