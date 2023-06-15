@@ -412,7 +412,7 @@ class RomanNumeralTitleCard(BaseCardType):
 
         # Override font color only if a custom background color was specified
         if self.season_text_color != self.SEASON_TEXT_COLOR:
-            color = season_text_color
+            color = self.season_text_color
         elif self.background != self.BACKGROUND_COLOR:
             color = self.font_color
         else:
