@@ -591,13 +591,13 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # Get the source image for this episode
         response = self.session.session.get(
-            f'{self.url}/Items/{episode_info.jellyfin_id}/Images/Logo',
+            f'{self.url}/Items/{series_id}/Images/Logo',
             params={'Quality': 100} | self.__params,
         ).content
 
         # Check if valid content was returned
         if b'does not have an image of type' in response:
-            log.warning(f'Episode {episode_info} has no logo')
+            log.warning(f'Series {series_info} has no logo')
             return None 
 
         return response
