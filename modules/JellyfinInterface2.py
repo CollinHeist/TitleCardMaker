@@ -288,7 +288,8 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         params = {
             'recursive': True,
             'includeItemTypes': 'Series',
-            'fields': 'ProviderIds',
+            'fields': 'ProviderIds,Tags',
+            'enableImages': False,
         } | self.__params
 
         # Also filter by tags if any were provided
@@ -311,6 +312,10 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 # Skip series without airdate/year
                 if series.get('PremiereDate', None) is None:
                     log.debug(f'Series {series["Name"]} has no premiere date')
+                    continue
+
+                # Skip series if an excluded tag is present
+                if any(tag in series.get('Tags') for tag in excluded_tags):
                     continue
 
                 series_info = SeriesInfo(
