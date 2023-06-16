@@ -182,7 +182,9 @@ def refresh_episode_data(
     if episode_data_source == 'Emby':
         all_episodes = emby_interface.get_all_episodes(series.as_series_info)
     elif episode_data_source == 'Jellyfin':
-        all_episodes =jellyfin_interface.get_all_episodes(series.as_series_info)
+        all_episodes = jellyfin_interface.get_all_episodes(
+            series.jellyfin_library_name, series.as_series_info
+        )
     elif episode_data_source == 'Plex':
         all_episodes = plex_interface.get_all_episodes(
             series.plex_library_name, series.as_series_info,

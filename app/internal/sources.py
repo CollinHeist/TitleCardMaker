@@ -184,29 +184,26 @@ def download_series_logo(
         log.debug(f'{series.log_str} Logo exists')
         return f'/source/{series.path_safe_name}/logo.png'
 
-    # Get Template and Template dictionary
-    series_template_dict = get_effective_series_template(series, as_dict=True)
-
-    # Resolve ISP setting
-    image_source_priority = TieredSettings.resolve_singular_setting(
-        preferences.image_source_priority,
-        series_template_dict.get('image_source_priority', None),
-        series.image_source_properties.get('image_source_priority', None),
-    )
-
     # Go through all image sources    
-    for image_source in image_source_priority:
-        if image_source == 'Emby' and emby_interface:
-            logo = emby_interface.get_series_logo(series.as_series_info)
-        elif image_source == 'Jellyfin' and jellyfin_interface:
-            logo = jellyfin_interface.get_series_logo(series.as_series_info)
+    for image_source in preferences.image_source_priority:
+        if (image_source == 'Emby'
+            and emby_interface is not None
+            and series.emby_library_name is not None):
+            logo = emby_interface.get_series_logo(
+                series.emby_library_name, series.as_series_info
+            )
+        elif (image_source == 'Jellyfin'
+            and jellyfin_interface is not None
+            and series.jellyfin_library_name is not None):
+            logo = jellyfin_interface.get_series_logo(
+                series.jellyfin_library_name, series.as_series_info
+            )
         elif image_source == 'TMDb' and tmdb_interface:
-            # TODO implement blacklist bypassing
             logo = tmdb_interface.get_series_logo(series.as_series_info)
         else:
             continue
 
-        # If no logo was returned, skip
+        # If no logo was returned, move on to next image source
         if logo is None:
             continue
 
@@ -285,7 +282,7 @@ def download_episode_source_image(
     style, source_file = resolve_source_settings(preferences, episode)
 
     # If source already exists, return that
-    series = episode.series
+    series: Series = episode.series
     if source_file.exists():
         log.debug(f'{series.log_str} {episode.log_str} Source image already exists')
         return f'/source/{series.path_safe_name}/{source_file.name}'
@@ -307,47 +304,45 @@ def download_episode_source_image(
         if not getattr(preferences, f'use_{image_source.lower()}', False):
             continue
 
-        if image_source == 'Emby' and emby_interface:
-            if 'art' in style:
-                log.debug(f'Cannot source Art images from Emby - skipping')
-                continue
+        # Verify Series has a library, skip if not
+        library_attribute = f'{image_source.lower()}_library_name'
+        if (image_source in ('Emby', 'Jellyfin', 'Plex')
+            and getattr(series, library_attribute, None) is None):
+            log.warning(f'{series.log_str} Has no {image_source} library')
+            continue
 
+        # Skip if sourcing art from a media server
+        if (image_source in ('Emby', 'Jellyfin', 'Plex')
+            and 'art' in style):
+            log.debug(f'Cannot source Art images from {image_source} - skipping')
+            continue
+
+        if image_source == 'Emby' and emby_interface:
             source_image = emby_interface.get_source_image(
                 episode.as_episode_info, raise_exc=raise_exc,
             )
-        elif image_source == 'Jellyfin' and jellyfin_interface:
-            if 'art' in style:
-                log.debug(f'Cannot source Art images from Jellyfin - skipping')
-                continue
-
+        elif image_source == 'Jellyfin' and jellyfin_interface is not None:
             source_image = jellyfin_interface.get_source_image(
-                episode.as_episode_info, raise_exc=raise_exc,
+                series.jellyfin_library_name,
+                series.as_series_info,
+                episode.as_episode_info,
             )
         elif image_source == 'Plex' and plex_interface:
-            if 'art' in style:
-                log.debug(f'Cannot source Art images from Emby - skipping')
-                continue
-
-            # Verify Series has a library
-            if series.plex_library_name is None:
-                log.warning(f'{series.log_str} Has no Plex library')
-                continue
-
             source_image = plex_interface.get_source_image(
                 series.plex_library_name,
                 series.as_series_info,
                 episode.as_episode_info,
-                raise_exc=raise_exc,
             )
-        elif image_source == 'TMDb' and tmdb_interface:
+        elif image_source == 'TMDb' and tmdb_interface is not None:
             # TODO implement blacklist bypassing
-            # Get backdrop or source image
+            # Get art backdrop
             if 'art' in style:
                 source_image = tmdb_interface.get_series_backdrop(
                     series.as_series_info,
                     skip_localized_images=skip_localized_images,
                     raise_exc=raise_exc,
                 )
+            # Get source image
             else:
                 source_image = tmdb_interface.get_source_image(
                     series.as_series_info,

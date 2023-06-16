@@ -131,6 +131,128 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return {
             library['Name']: library['Id'] for library in libraries['Items']
         }
+    
+
+    def __get_series_id(self,
+            library_name: str,
+            series_info: SeriesInfo, *,
+            raw_obj: bool = False) -> Optional[Union[str, dict]]:
+        """
+        Get the Jellyfin ID for the given series.
+
+        Args:
+            library_name: Name of the library containing the series.
+            series_info: The series being evaluated.
+
+        Returns:
+            None if the series is not found. The Jellyfin ID of the
+            series if raw_obj is False, otherwise the series dictionary
+            itself.
+        """
+
+        # Get ID of this library
+        if (library_id := self.libraries.get(library_name, None)) is None:
+            log.error(f'Library "{library_name}" not found in Jellyfin')
+            return None
+
+        # Base params for all queries
+        params = {
+            'recursive': True,
+            'includeItemTypes': 'Series',
+            'searchTerm': series_info.name,
+            'fields': 'ProviderIds',
+            'enableImages': False,
+            'parentId': library_id,
+        } | self.__params
+
+        # Inner function to look for the Series in a specific year
+        def _query_series(year: int) -> Optional[str]:
+            # Look for this series in this library
+            response = self.session._get(
+                f'{self.url}/Items',
+                params=(params | {'years': f'{year}'}),
+            )
+
+            # If no responses, return
+            if response['TotalRecordCount'] == 0:
+                return None
+            
+            # Go through all items and match name and type, setting database IDs
+            for result in response['Items']:
+                if series_info.matches(result['Name']):
+                    return result if raw_obj else result['Id']
+
+        # Look for series in this year, then surrounding years
+        for year in (series_info.year, series_info.year-1, series_info.year+1):
+            if (jellyfin_id := _query_series(year)) is not None:
+                return jellyfin_id
+            
+        return None
+    
+
+    def __get_episode_id(self,
+            series_jellyfin_id: str,
+            episode_info: EpisodeInfo) -> Optional[str]:
+        """
+        Get the Jellyfin ID for the given episode.
+
+        Args:
+            library_name: Name of the library containing the series.
+            episode_info: The episode being evaluated.
+
+        Returns:
+            Jellyfin ID of the episode, if found. None otherwise.
+        """
+
+        # Query for this Episode
+        response = self.session._get(
+            f'{self.url}/Items',
+            params={
+                'recursive': True,
+                'includeItemTypes': 'Episode',
+                'ParentId': series_jellyfin_id,
+                'parentIndexNumber': episode_info.season_number,
+                'startIndex': episode_info.episode_number - 1,
+                'limit': 1,
+            } | self.__params,
+        )
+        
+        if len(response['Items']) == 0:
+            return None
+        
+        return response['Items'][0]['Id']
+
+
+    def __find_ids(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_info: Optional[EpisodeInfo]
+        ) -> tuple[Optional[str], Optional[str]]:
+        """
+        Get the Jellyfin ID's for the given series and episode.
+
+        Args:
+            library_name: Name of the library containing the series.
+            series_info: The series being evaluated.
+            episode_info: The episode being evaluated.
+
+        Returns:
+            Tuple of the series and episode Jellyfin ID's. The series ID
+            will be None if the series cannot be found; the epispde ID
+            will be None if an episode was not provided or the episode
+            cannot be found.
+        """
+
+        # Find series
+        series_id = self.__get_series_id(library_name, series_info)
+        if series_id is None:
+            return None, None
+        
+        # If no episode to find, return
+        if episode_info is None:
+            return series_id, None
+        
+        return series_id, self.__get_episode_id(series_id, episode_info)
 
 
     def get_usernames(self) -> list[str]:
@@ -156,47 +278,21 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             series_info: Series to set the ID of.
         """
 
-        # If all possible ID's are defined
-        if series_info.has_ids(*self.SERIES_IDS):
+        # Find series 
+        series = self.__get_series_id(library_name, series_info, raw_obj=True)
+        if series is None:
+            log.warning(f'Series "{series_info}" was not found under library '
+                        f'"{library_name}" in Jellyfin')
             return None
 
-        # If library not mapped, error and exit
-        if (library_id := self.libraries.get(library_name)) is None:
-            log.error(f'Library "{library_name}" not found in Jellyfin')
-            return None
+        # Assign ID's
+        if (imdb_id := series['ProviderIds'].get('Imdb')):
+            series_info.set_imdb_id(imdb_id)
+        if (tmdb_id := series['ProviderIds'].get('Tmdb')):
+            series_info.set_tmdb_id(tmdb_id)
+        if (tvdb_id := series['ProviderIds'].get('Tvdb')):
+            series_info.set_tvdb_id(tvdb_id)
 
-        # Base params for all requests
-        params = {
-            'recursive': True,
-            'years': series_info.year,
-            'includeItemTypes': 'Series',
-            'searchTerm': series_info.name,
-            'fields': 'ProviderIds',
-            'parentId': library_id,
-        } | self.__params
-
-        # Look for this series in this library
-        response = self.session._get(f'{self.url}/Items', params=params)
-
-        # If no responses, skip
-        if response['TotalRecordCount'] > 0:
-            # Go through all items and match name and type, setting database IDs
-            for result in response['Items']:
-                if (result['Type'] == 'Series'
-                    and series_info.matches(result['Name'])):
-                    series_info.set_jellyfin_id(result['Id'])
-                    if (imdb_id := result['ProviderIds'].get('Imdb')):
-                        series_info.set_imdb_id(imdb_id)
-                    if (tmdb_id := result['ProviderIds'].get('Tmdb')):
-                        series_info.set_tmdb_id(int(tmdb_id))
-                    if (tvdb_id := result['ProviderIds'].get('Tvdb')):
-                        series_info.set_tvdb_id(int(tvdb_id))
-                        
-                    return None
-
-        # Not found on server
-        log.warning(f'Series "{series_info}" was not found under library '
-                    f'"{library_name}" in Jellyfin')
         return None 
 
 
@@ -226,37 +322,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                             log.debug(f'Set {old_episode_info}.{id_type}={id_}')
                     break
 
-
-    def get_library_paths(self,
-            filter_libraries: list[str] = []) -> dict[str, list[str]]:
-        """
-        Get all libraries and their associated base directories.
-
-        Args:
-            filter_libraries: List of library names to filter the return.
-
-        Returns:
-            Dictionary whose keys are the library names, and whose values are
-            the list of paths to that library's base directories.
-        """
-
-        # Get all library folders 
-        libraries = self.session._get(
-            f'{self.url}/Library/VirtualFolders',
-            params=self.__params
-        )
-
-        # Inner function on whether to include this library in the return
-        def include_library(library_name) -> bool:
-            if len(filter_libraries) == 0: return True
-            return library_name in filter_libraries
-
-        return {
-            lib['Name']: [location for location in lib['Locations']]
-            for lib in libraries
-            if (lib['CollectionType'] == 'tvshows'
-                and include_library(lib['Name']))
-        }
+        return None
 
 
     def get_all_series(self,
@@ -336,32 +402,42 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return all_series
 
 
-    def get_all_episodes(self, series_info: SeriesInfo) -> list[EpisodeInfo]:
+    def get_all_episodes(self,
+            library_name: str,
+            series_info: SeriesInfo) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that
         have  already aired are returned.
 
         Args:
+            library_name: Name of the library containing the series.
             series_info: Series to get the episodes of.
 
         Returns:
             List of EpisodeInfo objects for this series.
         """
 
-        # If series has no Jellyfin ID, cannot query episodes
-        if not series_info.has_id('jellyfin_id'):
-            log.warning(f'Series not found in Jellyfin {series_info!r}')
-            return []
+        # Find this series
+        series_id = self.__get_series_id(library_name, series_info)
+        if series_id is None:
+            log.warning(f'Series {series_info!r} not found in Jellyfin')
+            return None
 
         # Get all episodes for this series
         response = self.session._get(
-            f'{self.url}/Shows/{series_info.jellyfin_id}/Episodes',
+            f'{self.url}/Shows/{series_id}/Episodes',
             params={'Fields': 'ProviderIds'} | self.__params
         )
 
         # Parse each returned episode into EpisodeInfo object
         all_episodes = []
         for episode in response['Items']:
+            # Skip episodes without episode or season numbers
+            if (episode.get('IndexNumber', None) is None
+                or episode.get('ParentIndexNumber', None) is None):
+                log.debug(f'Series {series_info} episode is missing index data')
+                continue
+
             # Parse airdate for this episode
             airdate = None
             if 'PremiereDate' in episode:
@@ -392,21 +468,6 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return all_episodes
 
 
-    def has_series(self, series_info: SeriesInfo) -> bool:
-        """
-        Determine whether the given series is present within Jellyfin.
-
-        Args:
-            series_info: The series being evaluated.
-
-        Returns:
-            True if the series is present within Jellyfin. False
-            otherwise.
-        """
-
-        return series_info.has_id('jellyfin_id')
-
-
     def update_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
@@ -421,13 +482,19 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             episodes: List of Episode objects to update.
         """
 
-        # If no episodes, or series has no ID, exit
-        if len(episodes) == 0 or not series_info.has_id('jellyfin_id'):
+        # If no episodes, exit
+        if len(episodes) == 0:
+            return None
+
+        # Find this series
+        series_id = self.__get_series_id(library_name, series_info)
+        if series_id is None:
+            log.warning(f'Series not found in Jellyfin {series_info!r}')
             return None
 
         # Query for all episodes of this series
         response = self.session._get(
-            f'{self.url}/Shows/{series_info.jellyfin_id}/Episodes',
+            f'{self.url}/Shows/{series_id}/Episodes',
             params={'UserId': self.user_id} | self.__params
         )
 
@@ -466,15 +533,18 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             that was loaded.
         """
 
-        # If series has no Jellyfin ID, or no episodes, exit
-        if not series_info.has_id('jellyfin_id') or len(episode_and_cards) == 0:
+        # Find this series
+        series_id = self.__get_series_id(library_name, series_info)
+        if series_id is None:
+            log.warning(f'Series not found in Jellyfin {series_info!r}')
             return None
 
         # Load each episode and card
         loaded = []
         for episode, card in episode_and_cards.values():
-            # Skip episodes without ID's (e.g. not in Jellyfin)
-            if (jellyfin_id := episode.jellyfin_id) is None:
+            # Find episode, skip if not found
+            episode_id = self.__get_episode_id(series_id, episode.as_episode_info)
+            if episode_id is None:
                 continue
 
             # Shrink image if necessary, skip if cannot be compressed
@@ -485,7 +555,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             card_base64 = b64encode(image.read_bytes())
             try:
                 self.session.session.post(
-                    url=f'{self.url}/Items/{jellyfin_id}/Images/Primary',
+                    url=f'{self.url}/Items/{episode_id}/Images/Primary',
                     headers={'Content-Type': 'image/jpeg'},
                     params=self.__params,
                     data=card_base64,
@@ -522,14 +592,14 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     def get_source_image(self,
-            episode_info: EpisodeInfo, *,
-            raise_exc: bool = True) -> SourceImage:
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_info: EpisodeInfo) -> SourceImage:
         """
         Get the source image for the given episode within Jellyfin.
 
         Args:
             episode_info: The episode to get the source image of.
-            raise_exc: Whether to raise any HTTPExceptions that arise.
 
         Returns:
             Bytes of the source image for the given Episode. None if the
@@ -537,30 +607,41 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             returned.
         """
 
-        # If series has no Jellyfin ID, cannot query episodes
-        if not episode_info.has_id('jellyfin_id'):
-            log.warning(f'Episode {episode_info} not found in Jellyfin')
+        # Find series and episode
+        series_id, episode_id = self.__find_ids(
+            library_name, series_info, episode_info
+        )
+
+        # Exit if either series or episode was not found
+        if series_id is None:
+            log.warning(f'Series {series_info!r} not found in Jellyfin')
+            return None
+        if episode_id is None:
+            log.warning(f'{series_info} Episode {episode_info!r} not found in Jellyfin')
             return None
 
         # Get the source image for this episode
         response = self.session.session.get(
-            f'{self.url}/Items/{episode_info.jellyfin_id}/Images/Primary',
+            f'{self.url}/Items/{episode_id}/Images/Primary',
             params={'Quality': 100} | self.__params,
         ).content
 
         # Check if valid content was returned
         if b'does not have an image of type' in response:
             log.warning(f'Episode {episode_info} has no source images')
-            return None 
+            return None
 
         return response
-    
 
-    def get_series_poster(self, series_info: SeriesInfo) -> SourceImage:
+
+    def get_series_poster(self,
+            library_name: str,
+            series_info: SeriesInfo) -> SourceImage:
         """
         Get the poster for the given Series.
 
         Args:
+            library_name: Name of the library containing the series.
             series_info: The series to get the poster of.
 
         Returns:
@@ -568,14 +649,15 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             series, or thumbnail cannot be found.
         """
 
-        # If series has no Emby ID, cannot get poster
-        if not series_info.has_id('jellyfin_id'):
+        # Find this series
+        series_id = self.__get_series_id(library_name, series_info)
+        if series_id is None:
             log.warning(f'Series not found in Jellyfin {series_info!r}')
-            return []
-        
+            return None
+
         # Get the poster image for this Series
         response = self.session.session.get(
-            f'{self.url}/Items/{series_info.emby_id}/Images/Primary',
+            f'{self.url}/Items/{series_id}/Images/Primary',
             params={'Quality': 100} | self.__params,
         ).content
 
@@ -587,19 +669,24 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return response
 
 
-    def get_series_logo(self, series_info: SeriesInfo) -> SourceImage:
+    def get_series_logo(self,
+            library_name: str,
+            series_info: SeriesInfo) -> SourceImage:
         """
         Get the logo for the given Series within Jellyfin.
 
         Args:
-            series_info: The Series to get the logo of.
+            library_name: Name of the library containing the series.
+            series_info: The series to get the logo of.
 
         Returns:
-            Bytes of the logo for given Series. None if the Series does
+            Bytes of the logo for given series. None if the series does
             not exist in Jellyfin, or no valid image was returned.
         """
 
-        if not series_info.has_id('jellyfin_id'):
+        # Find this series
+        series_id = self.__get_series_id(library_name, series_info)
+        if series_id is None:
             log.warning(f'Series not found in Jellyfin {series_info!r}')
             return None
 

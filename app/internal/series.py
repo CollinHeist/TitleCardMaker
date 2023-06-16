@@ -168,14 +168,17 @@ def download_series_poster(
             log.debug(f'Series[{series.id}] Poster already exists, using {path.resolve()}')
         return None
     
-    # Download poster from Media Server if possible, then TMDb
+    # Download poster from Media Server if possible
     series_info = series.as_series_info
     poster = None
     if series.emby_library_name is not None and emby_interface is not None:
         poster = emby_interface.get_series_poster(series_info)
-    elif series.jellyfin_library_name is not None and jellyfin_interface is not None:
-        poster = jellyfin_interface.get_series_poster(series_info)
-    elif series.plex_library_name and plex_interface is not None:
+    elif (series.jellyfin_library_name is not None
+        and jellyfin_interface is not None):
+        poster = jellyfin_interface.get_series_poster(
+            series.jellyfin_library_name, series_info
+        )
+    elif series.plex_library_name is not None and plex_interface is not None:
         poster = plex_interface.get_series_poster(
             series.plex_library_name, series_info
         )
@@ -186,7 +189,7 @@ def download_series_poster(
 
     # If no posters were returned, log and exit
     if poster is None:
-        log.debug(f'Series[{series.id}] has no valid posters')
+        log.debug(f'{series.log_str} no valid posters found')
         return None
 
     # Get path to the poster to download
@@ -294,11 +297,11 @@ def load_series_title_cards(
             detail=f'Unable to communicate with {media_server}',
         )
     
-    # Get list of episodes to reload
+    # Get list of Episodes to reload
     episodes_to_load = []
     changed = False
     for episode in series.episodes:
-        # Only load if episode has a Card
+        # Only load if Episode has a Card
         if not episode.card:
             log.debug(f'{series.log_str} {episode.log_str} - no associated card')
             continue
