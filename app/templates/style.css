@@ -175,12 +175,12 @@ html.ios body {
   /* Remove fixed width on logo */
   #tcm-logo {
     width: unset;
+    flex: 0 0 70px;
   }
 
   /* Do not use absolute positioning, let items stack themselves */
   #page-header > div {
     position: unset;
-    padding-left: 0.3em;
   }
 
   /* Shrink search input */
