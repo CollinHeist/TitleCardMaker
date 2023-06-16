@@ -1,13 +1,15 @@
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Any, Union
+from typing import Any, Optional, Union
 from pathlib import Path
 
 from tinydb import where, Query
 
 from modules.Debug import log
+from modules.Episode import Episode
 from modules.ImageMaker import ImageMaker
 from modules.PersistentDatabase import PersistentDatabase
 from modules.SeriesInfo import SeriesInfo
+from modules.StyleSet import StyleSet
 
 SourceImage = Union[str, bytes, None]
 
@@ -46,7 +48,7 @@ class MediaServer(ABC):
         self.filesize_limit = filesize_limit
 
 
-    def compress_image(self, image: Path) -> Union[Path, None]:
+    def compress_image(self, image: Path) -> Optional[Path]:
         """
         Compress the given image until below the filesize limit.
 
@@ -120,7 +122,8 @@ class MediaServer(ABC):
 
     def _get_loaded_episode(self,
             loaded_series: list[dict[str, Any]],
-            episode: 'Episode') -> Union[dict[str, Any], None]:
+            episode: Episode
+        ) -> Optional[dict[str, Any]]:
         """
         Get the loaded details of the given Episode from the given list
         of loaded series details.
@@ -146,7 +149,8 @@ class MediaServer(ABC):
     def _filter_loaded_cards(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_map: dict[str, 'Episode']) -> dict[str, 'Episode']:
+            episode_map: dict[str, Episode]
+        ) -> dict[str, Episode]:
         """
         Filter the given episode map and remove all Episode objects
         without created cards, or whose card's filesizes matches that of
@@ -194,7 +198,7 @@ class MediaServer(ABC):
         return filtered
 
 
-    def remove_records(self, library_name: str, series_info: 'SeriesInfo') ->None:
+    def remove_records(self, library_name: str, series_info: SeriesInfo) ->None:
         """
         Remove all records for the given library and series from the
         loaded database.
@@ -222,9 +226,11 @@ class MediaServer(ABC):
         raise NotImplementedError('All MediaServer objects must implement this')
 
     @abstractmethod
-    def update_watched_statuses(self, library_name: str,
-            series_info: 'SeriesInfo', episode_map: dict[str, 'Episode'],
-            style_set: 'StyleSet') -> None:
+    def update_watched_statuses(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_map: dict[str, Episode],
+            style_set: StyleSet) -> None:
         """Abstract method to update watched statuses of Episode objects."""
         raise NotImplementedError('All MediaServer objects must implement this')
 

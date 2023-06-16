@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from requests import get, Response
+from requests import Response, get
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 from tinydb import where
 
@@ -145,5 +145,3 @@ class RemoteFile:
 
         PersistentDatabase(RemoteFile.LOADED_FILE).reset()
         log.debug(f'Reset PersistentDatabase[{RemoteFile.LOADED_FILE}]')
-
-        return None

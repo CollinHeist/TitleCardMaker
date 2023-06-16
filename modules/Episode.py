@@ -23,7 +23,7 @@ class Episode:
 
     def __init__(self,
             episode_info: EpisodeInfo,
-            card_class: 'CardType',
+            card_class: BaseCardType,
             base_source: Path,
             destination: Path,
             given_keys: set[str],

@@ -1,4 +1,3 @@
-from pathlib import Path
 from yaml import dump
 from tqdm import tqdm
 from typing import Iterable
@@ -473,7 +472,7 @@ class Manager:
                         f'entry was found')
 
 
-    def report_missing(self, file: Path) -> None:
+    def report_missing(self, file: 'Path') -> None:
         """Report all missing assets for all shows."""
 
         # Serial mode won't have an accurate show list

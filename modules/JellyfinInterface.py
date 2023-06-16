@@ -6,6 +6,7 @@ from modules.Debug import log
 from modules.Episode import Episode
 from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo import EpisodeInfo
+from modules.SeasonPosterSet import SeasonPosterSet
 import modules.global_objects as global_objects
 from modules.MediaServer import MediaServer
 from modules.SeriesInfo import SeriesInfo
@@ -202,7 +203,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                     return None
 
         # Not found on server
-        log.warning(f'Series {series_info} was not found under library '
+        log.warning(f'Series "{series_info}" was not found under library '
                     f'"{library_name}" in Jellyfin')
         return None 
 
@@ -518,11 +519,11 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # If series has no ID, cannot set title cards
         if not series_info.has_id('jellyfin_id'):
-            log.debug(f'Not loading {series_info} - not found in Jellyfin')
+            log.debug(f'Not loading "{series_info}" - not found in Jellyfin')
             return None
 
         # Filter loaded cards
-        filtered_episodes: dict[str, Episode] = self._filter_loaded_cards(
+        filtered_episodes = self._filter_loaded_cards(
             library_name, series_info, episode_map
         )
 
@@ -580,8 +581,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def set_season_posters(self,
             library_name: str,
             series_info: SeriesInfo,
-            season_poster_set: 'SeasonPosterSet', # type: ignore
-        ) -> None:
+            season_poster_set: SeasonPosterSet) -> None:
         """
         Set the season posters from the given set within Plex.
 

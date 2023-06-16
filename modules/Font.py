@@ -1,6 +1,7 @@
 from pathlib import Path
 from re import compile as re_compile
 from typing import Any, Optional
+from modules.BaseCardType import BaseCardType
 
 from modules.Debug import log
 from modules.SeriesInfo import SeriesInfo
@@ -33,7 +34,7 @@ class Font(YamlReader):
 
     def __init__(self,
             yaml: dict,
-            card_class: 'CardType', # type: ignore
+            card_class: BaseCardType,
             series_info: SeriesInfo) -> None:
         """
         Construct a new instance of a Font.

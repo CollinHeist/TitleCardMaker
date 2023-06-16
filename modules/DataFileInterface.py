@@ -224,7 +224,7 @@ class DataFileInterface:
         self.__write_data(yaml)
 
 
-    def add_many_entries(self, new_episodes: Iterable['EpisodeInfo']) -> None:
+    def add_many_entries(self, new_episodes: Iterable[EpisodeInfo]) -> None:
         """
         Adds many entries at once. This only reads and writes from this
         interface's file once.

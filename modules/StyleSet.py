@@ -29,7 +29,8 @@ class StyleSet:
 
     def __init__(self,
             watched: str = 'unique',
-            unwatched: str = 'unique') -> None:
+            unwatched: str = 'unique'
+        ) -> None:
         """
         Initialize this object with the given watched/unwatched styles.
         Also updates the validity of this object.

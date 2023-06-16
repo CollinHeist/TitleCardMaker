@@ -68,7 +68,7 @@ class ShowRecordKeeper:
         log.info(f'Read {len(self.records)} show records')
 
 
-    def __get_record_hash(self, hash_obj: Any, record) -> None:
+    def __get_record_hash(self, hash_obj: Any, record: Any) -> None:
         """
         Get the hash of the given record.
 

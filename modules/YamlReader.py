@@ -49,7 +49,7 @@ class YamlReader:
 
     def _get(self,
             *attributes: tuple[str],
-            type_: Optional[type] = None,
+            type_: Optional[Callable] = None,
             default: Any = None):
         """
         Get the value specified by the given attributes/sub-attributes

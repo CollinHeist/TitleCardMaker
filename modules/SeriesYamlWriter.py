@@ -14,6 +14,7 @@ from modules.SonarrInterface import SonarrInterface
 from modules.SyncInterface import SyncInterface
 
 SeriesYaml = dict[str, dict[str, str]]
+SyncMode = Literal['append', 'match']
 
 class SeriesYamlWriter:
     """
@@ -28,7 +29,7 @@ class SeriesYamlWriter:
 
     def __init__(self,
             file: CleanPath,
-            sync_mode: Literal['append', 'match'] = 'append',
+            sync_mode: SyncMode = 'append',
             compact_mode: bool = True,
             volume_map: dict[str, str] = {},
             template: Optional[str] = None,
@@ -366,7 +367,7 @@ class SeriesYamlWriter:
             downloaded_only: bool,
             series_type: str,
             exclusions: list[dict[str, str]]
-            ) -> SeriesYaml:
+        ) -> SeriesYaml:
         """
         Get the YAML from Sonarr, as filtered by the given attributes.
 
@@ -554,7 +555,7 @@ class SeriesYamlWriter:
 
 
     def update_from_sonarr(self,
-            sonarr_interface: 'SonarrInterface',
+            sonarr_interface: SonarrInterface,
             plex_libraries: dict[str, str] = {},
             required_tags: list[str] = [],
             monitored_only: bool = False,

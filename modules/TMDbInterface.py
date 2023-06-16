@@ -159,7 +159,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def __get_condition(self,
             query_type: str,
             series_info: SeriesInfo,
-            episode_info: Optional[EpisodeInfo] = None) -> Query:
+            episode_info: Optional[EpisodeInfo] = None
+        ) -> Query:
         """
         Get the tinydb query condition for the given query.
 
@@ -191,7 +192,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
     def __update_blacklist(self,
             series_info: SeriesInfo,
-            episode_info: EpisodeInfo,
+            episode_info: Optional[EpisodeInfo],
             query_type: str) -> None:
         """
         Adds the given request to the blacklist; indicating that this
@@ -379,7 +380,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def get_all_episodes(self,
             series_info: SeriesInfo,
             episode_infos: Optional[list[EpisodeInfo]] = None
-            ) -> list[EpisodeInfo]:
+        ) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that
         have already aired are returned.
@@ -643,7 +644,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def __determine_best_image(self,
             images: list[TMDbStill], *,
             is_source_image: bool = True,
-            skip_localized: bool = False) -> dict:
+            skip_localized: bool = False) -> dict[str, Any]:
         """
         Determine the best image and return it's contents from within the
         database return JSON.
