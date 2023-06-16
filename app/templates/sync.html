@@ -151,7 +151,7 @@
           type: 'DELETE',
           url: `/api/sync/delete/${syncId}?delete_series=false`,
           success: response => {
-            $.toast({class: 'blue info', title: `Deleted Sync "${name}"`});
+            $.toast({class: 'blue info', title: `Deleted Sync`});
             getAllSyncs();
           },
           error: response => {
@@ -166,7 +166,7 @@
           type: 'DELETE',
           url: `/api/sync/delete/${syncId}?delete_series=true`,
           success: response => {
-            $.toast({class: 'blue info', title: `Deleted Sync "${name}" and ${allSeriesResponse.total_count} Series`});
+            $.toast({class: 'blue info', title: `Deleted Sync and ${allSeriesResponse.total_count} Series`});
             getAllSyncs();
           },
           error: response => {
