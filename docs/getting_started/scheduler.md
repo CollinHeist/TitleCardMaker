@@ -19,8 +19,10 @@ allows these to be adjusted to any arbitrary interval.
     | Run all Syncs | :material-check:{.green} | 6 hours |
     | Create Title Cards | :material-check:{.green} | 6 hours |
     | Download Series logos | :material-check:{.green} | 1 day |
-    | Check for a new version of TCM | :octicons-x-16:{.red} | 12 hours |
+    | Download Series posters | :material-check:{.green} | 1 day |
+    | Check for a new version of TCM | :octicons-x-16:{.red} | 1 day |
     | Refresh user Card Types | :octicons-x-16:{.red} | 1 day |
+    | Set Series ID's | :octicons-x-16:{.red} | 1 day |
 
 For this part of the tutorial, we'll be adjusting the interval for how often
 all Syncs are run. 

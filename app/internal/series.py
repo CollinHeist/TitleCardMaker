@@ -20,6 +20,38 @@ from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
 
+def set_all_series_ids() -> None:
+    """
+    Schedule-able function to set any missing Series ID's for all Series
+    in the Database.
+    """
+
+    try:
+        # Get the Database
+        with next(get_database()) as db:
+            # Get all Series
+            changed = False
+            for series in db.query(models.series.Series).all():
+                try:
+                    changed |= set_series_database_ids(
+                        series, db, get_emby_interface(),
+                        get_jellyfin_interface(), get_plex_interface(),
+                        get_sonarr_interface(), get_tmdb_interface(),
+                        commit=False,
+                    )
+                except HTTPException as e:
+                    log.warning(f'{series.log_str} Skipping ID assignment')
+                    continue
+
+            # Commit changes if any were made
+            if changed:
+                db.commit()
+    except Exception as e:
+        log.exception(f'Failed to set Series IDs', e)
+
+    return None
+
+
 def load_all_media_servers() -> None:
     """
     Schedule-able function to load all Title Cards in the Database to 
@@ -91,7 +123,9 @@ def set_series_database_ids(
         jellyfin_interface: Optional[JellyfinInterface],
         plex_interface: Optional[PlexInterface],
         sonarr_interface: Optional[SonarrInterface],
-        tmdb_interface: Optional[TMDbInterface]) -> Series:
+        tmdb_interface: Optional[TMDbInterface], *,
+        commit: bool = True,
+    ) -> bool:
     """
     Set the database ID's of the given Series.
 
@@ -99,9 +133,10 @@ def set_series_database_ids(
         series: Series to set the ID's of.
         db: Database to commit changes to.
         *_interface: Interface to query for database ID's from.
+        commit: Whether to commit changes after setting any ID's.
 
     Returns:
-        Modified Series with the database ID's set.
+        Whether the Series was modified.
     """
 
     # Create SeriesInfo object for this entry, query all interfaces
@@ -127,10 +162,10 @@ def set_series_database_ids(
             setattr(series, id_type, getattr(series_info, id_type))
             changed = True
 
-    if changed:
+    if commit and changed:
         db.commit()
 
-    return series
+    return changed
 
 
 def download_series_poster(

@@ -10,7 +10,7 @@ from app.internal.cards import (
 )
 from app.internal.episodes import refresh_all_episode_data
 from app.internal.series import (
-    download_all_series_posters, load_all_media_servers
+    download_all_series_posters, load_all_media_servers, set_all_series_ids
 )
 from app.internal.sources import (
     download_all_source_images, download_all_series_logos
@@ -41,6 +41,7 @@ JOB_SYNC_INTERFACES: str = 'SyncInterfaces'
 # Internal Job ID's
 INTERNAL_JOB_CHECK_FOR_NEW_RELEASE: str = 'CheckForNewRelease'
 INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES: str = 'RefreshRemoteCardTypes'
+INTERNAL_JOB_SET_SERIES_IDS: str = 'SetSeriesIDs'
 
 TaskID = Literal[
     JOB_REFRESH_EPISODE_DATA, JOB_SYNC_INTERFACES, JOB_DOWNLOAD_SOURCE_IMAGES,
@@ -48,6 +49,7 @@ TaskID = Literal[
     JOB_DOWNLOAD_SERIES_LOGOS, JOB_DOWNLOAD_SERIES_POSTERS,
     # Internal jobs
     INTERNAL_JOB_CHECK_FOR_NEW_RELEASE, INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES,
+    INTERNAL_JOB_SET_SERIES_IDS,
 ]
 
 """
@@ -114,6 +116,10 @@ def wrapped_refresh_all_remote_cards():
     refresh_all_remote_card_types()
     _wrap_after(INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES)
 
+def wrapped_set_series_ids():
+    _wrap_before(INTERNAL_JOB_SET_SERIES_IDS)
+    set_all_series_ids()
+    _wrap_after(INTERNAL_JOB_SET_SERIES_IDS)
 
 """
 Dictionary of Job ID's to NewJob objects that contain the default Job
@@ -166,7 +172,7 @@ BaseJobs = {
     INTERNAL_JOB_CHECK_FOR_NEW_RELEASE: NewJob(
         id=INTERNAL_JOB_CHECK_FOR_NEW_RELEASE,
         function=wrapped_get_latest_version,
-        seconds=60 * 60 * 12,
+        seconds=60 * 60 * 24,
         description='Check for a new release of TitleCardMaker',
         internal=True,
     ), INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES: NewJob(
@@ -175,7 +181,13 @@ BaseJobs = {
         seconds=60 * 60 * 24,
         description='Refresh all RemoteCardType files',
         internal=True,
-    ),
+    ), INTERNAL_JOB_SET_SERIES_IDS: NewJob(
+        id=INTERNAL_JOB_SET_SERIES_IDS,
+        function=wrapped_set_series_ids,
+        seconds=60 * 60 * 24,
+        description='Set Series IDs',
+        internal=True,
+    )
 }
 
 
