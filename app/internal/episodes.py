@@ -47,7 +47,8 @@ def refresh_all_episode_data() -> None:
                         get_sonarr_interface(), get_tmdb_interface(),
                     )
                 except OperationalError:
-                    sleep(3)
+                    log.debug(f'Database is busy, sleeping..')
+                    sleep(30)
     except Exception as e:
         log.exception(f'Failed to refresh all episode data', e)
 
