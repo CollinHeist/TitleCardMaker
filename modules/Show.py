@@ -1,6 +1,6 @@
 from copy import copy
 from pathlib import Path
-from typing import Optional, Literal
+from typing import Optional
 
 from tqdm import tqdm
 
@@ -12,22 +12,20 @@ from modules.Episode import Episode
 from modules.EpisodeInfo import EpisodeInfo
 from modules.EpisodeMap import EpisodeMap
 from modules.Font import Font
+import modules.global_objects as global_objects
 from modules.JellyfinInterface import JellyfinInterface
 from modules.MultiEpisode import MultiEpisode
-from modules.SonarrInterface import SonarrInterface
-from modules.TMDbInterface import TMDbInterface
-import modules.global_objects as global_objects
 from modules.PlexInterface import PlexInterface
 from modules.Profile import Profile
 from modules.SeasonPosterSet import SeasonPosterSet
 from modules.SeriesInfo import SeriesInfo
+from modules.SonarrInterface import SonarrInterface
 from modules.StyleSet import StyleSet
 from modules.TitleCard import TitleCard
 from modules.Title import Title
+from modules.TMDbInterface import TMDbInterface
 from modules.WebInterface import WebInterface
 from modules.YamlReader import YamlReader
-
-MediaServer = Optional[Literal['emby', 'jellyfin', 'plex']]
 
 class Show(YamlReader):
     """
@@ -457,7 +455,7 @@ class Show(YamlReader):
             interface_function()
 
 
-    def __get_destination(self, episode_info: EpisodeInfo) -> Path:
+    def __get_destination(self, episode_info: EpisodeInfo) -> Optional[Path]:
         """
         Get the destination filename for the given entry of a datafile.
 
@@ -624,6 +622,8 @@ class Show(YamlReader):
         # Go through each interface and load ID's from it
         for interface in interface_orders[self.episode_data_source]:
             set_ids(interface, infos)
+
+        return None
 
 
     def add_translations(self) -> None:

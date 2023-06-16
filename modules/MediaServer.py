@@ -90,7 +90,7 @@ class MediaServer(ABC):
     def _get_condition(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode: 'Episode' = None) -> Query:
+            episode: Episode = None) -> Query:
         """
         Get the tinydb Query condition for the given entry.
 

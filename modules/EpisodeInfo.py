@@ -111,12 +111,23 @@ class EpisodeInfo(DatabaseInfoContainer):
         self.season_number = int(season_number)
         self.episode_number = int(episode_number)
         self.abs_number = None if abs_number is None else int(abs_number)
-        self.emby_id = None if emby_id is None else int(emby_id)
-        self.imdb_id = imdb_id
-        self.jellyfin_id = jellyfin_id
-        self.tmdb_id = None if tmdb_id is None else int(tmdb_id)
-        self.tvdb_id = None if tvdb_id is None else int(tvdb_id)
-        self.tvrage_id = None if tvrage_id is None else int(tvrage_id)
+
+        # Store default database ID's
+        self.emby_id = None
+        self.imdb_id = None
+        self.jellyfin_id = None
+        self.tmdb_id = None
+        self.tvdb_id = None
+        self.tvrage_id = None
+
+        # Update each ID
+        self.set_emby_id(emby_id)
+        self.set_imdb_id(imdb_id)
+        self.set_jellyfin_id(jellyfin_id)
+        self.set_tmdb_id(tmdb_id)
+        self.set_tvdb_id(tvdb_id)
+        self.set_tvrage_id(tvrage_id)
+
         self.queried_emby = queried_emby
         self.queried_jellyfin = queried_jellyfin
         self.queried_plex = queried_plex
@@ -266,7 +277,7 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     @property
-    def indices(self) -> dict[str, Any]:
+    def indices(self) -> dict[str, Optional[int]]:
         """This object's season/episode indices (as a dictionary)"""
 
         return {
@@ -287,19 +298,19 @@ class EpisodeInfo(DatabaseInfoContainer):
     def set_emby_id(self, emby_id) -> None:
         self._update_attribute('emby_id', emby_id, int)
 
-    def set_imdb_id(self, imdb_id: str) -> None:
+    def set_imdb_id(self, imdb_id) -> None:
         self._update_attribute('imdb_id', imdb_id, str)
 
-    def set_jellyfin_id(self, jellyfin_id: str) -> None:
+    def set_jellyfin_id(self, jellyfin_id) -> None:
         self._update_attribute('jellyfin_id', jellyfin_id, str)
 
-    def set_tmdb_id(self, tmdb_id: int) -> None:
+    def set_tmdb_id(self, tmdb_id) -> None:
         self._update_attribute('tmdb_id', tmdb_id, int)
 
-    def set_tvdb_id(self, tvdb_id: int) -> None:
+    def set_tvdb_id(self, tvdb_id) -> None:
         self._update_attribute('tvdb_id', tvdb_id, int)
 
-    def set_tvrage_id(self, tvrage_id: int) -> None:
+    def set_tvrage_id(self, tvrage_id) -> None:
         self._update_attribute('tvrage_id', tvrage_id, int)
 
     def set_airdate(self, airdate: datetime) -> None:

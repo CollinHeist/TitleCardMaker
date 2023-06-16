@@ -192,7 +192,7 @@ class Profile:
         return self.__episode_map.get_season_title(episode_info)
 
 
-    def get_episode_text(self, episode: 'Episode') -> str: # type: ignore
+    def get_episode_text(self, episode: 'Episode') -> str:
         """
         Gets the episode text for the given episode info, as defined by
         this profile.

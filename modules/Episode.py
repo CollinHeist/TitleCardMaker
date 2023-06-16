@@ -1,6 +1,7 @@
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
+from modules.BaseCardType import BaseCardType
 from modules.CleanPath import CleanPath
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
@@ -27,7 +28,7 @@ class Episode:
             base_source: Path,
             destination: Path,
             given_keys: set[str],
-            **extras: dict[str, Any]) -> None:
+            **extras: dict) -> None:
         """
         Construct a new instance of an Episode.
 
@@ -83,7 +84,7 @@ class Episode:
 
 
     @property
-    def characteristics(self) -> dict[str, Any]:
+    def characteristics(self) -> dict:
         """
         Get the characteristics of this object for formatting.
 

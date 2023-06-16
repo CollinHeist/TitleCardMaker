@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
-from typing import Any, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 from plexapi.exceptions import PlexApiException
-from plexapi.library import library as PlexLibrary
 from plexapi.server import PlexServer, NotFound, Unauthorized
+from plexapi.library import Library as PlexLibrary
 from plexapi.video import (
     Episode as PlexEpisode, Show as PlexShow, Season as PlexSeason
 )
@@ -15,12 +15,13 @@ from tinydb import where
 from tqdm import tqdm
 
 from modules.Debug import log, TQDM_KWARGS
-import modules.global_objects as global_objects
+from modules.Episode import Episode
 from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo import EpisodeInfo
 from modules.MediaServer import MediaServer
 from modules.PersistentDatabase import PersistentDatabase
 from modules.SeriesInfo import SeriesInfo
+from modules.StyleSet import StyleSet
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
 
@@ -445,6 +446,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
             # Set Episode watched/spoil statuses
             episode.update_statuses(plex_episode.isWatched, style_set)
+
 
             # Get characteristics of this Episode's loaded card
             details = self._get_loaded_episode(loaded_series, episode)

@@ -138,7 +138,7 @@ class MediaInfoSet:
         # Info for this series already exists
         # Check if multiple matches were returned (somehow)
         if len(info) > 1:
-            log.warning(f'Multiple matches for existing SeriesInfo: {info}')
+            log.debug(f'Multiple matches for existing SeriesInfo: {info}')
         info = info[0]
 
         # Update database only with ID's that are more accurate

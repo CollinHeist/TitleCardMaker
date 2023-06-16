@@ -222,7 +222,7 @@ class Title:
 
 
     def apply_profile(self,
-            profile: 'Profile',
+            profile: 'Profile', # type: ignore
             **title_characteristics: dict[str, Any]) -> str:
         """
         Apply the given profile to this title. If this object was
