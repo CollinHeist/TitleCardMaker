@@ -7,6 +7,10 @@ class SyncInterface(ABC):
     Interface which can be synced (e.g. series can be grabbed) from.
     """
 
+    def __bool__(self) -> bool:
+        return True
+
+
     def get_library_paths(self,
             filter_libraries: list[str] = []
         ) -> dict[str, list[str]]:

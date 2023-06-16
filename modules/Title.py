@@ -1,5 +1,5 @@
 from re import compile as re_compile, IGNORECASE
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
 from modules.Debug import log
 
@@ -223,7 +223,7 @@ class Title:
 
     def apply_profile(self,
             profile: 'Profile', # type: ignore
-            **title_characteristics: dict[str, Any]) -> str:
+            **title_characteristics) -> str:
         """
         Apply the given profile to this title. If this object was
         created with manually specified title lines, then the profile is

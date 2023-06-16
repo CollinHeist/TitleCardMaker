@@ -87,6 +87,10 @@ class TautulliInterface(WebInterface):
         self.agent_name = agent_name
 
 
+    def __bool__(self) -> bool:
+        return True
+
+
     def is_integrated(self) -> bool:
         """
         Check if this interface's Tautulli instance already has

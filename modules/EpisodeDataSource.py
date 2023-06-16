@@ -8,6 +8,9 @@ class EpisodeDataSource(ABC):
     this type define sources of episode data.
     """
 
+    def __bool__(self) -> bool:
+        return True
+
     @abstractproperty
     def SERIES_IDS(self) -> tuple[str]:
         """Valid SeriesInfo ID's that can be set by this data source."""
