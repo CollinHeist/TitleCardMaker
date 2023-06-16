@@ -32,6 +32,13 @@
       font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace !important;
     }
 
+    /* Override width on mobile */
+    @media (max-width: 768px) {
+      textarea {
+        width: 100% !important;
+      }
+    }
+
     .ui.compact.visible.message {
       display: inline-block !important;
     }
