@@ -6,6 +6,7 @@ from modules.Debug import log
 from modules.Episode import Episode
 from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo import EpisodeInfo
+from modules.SeasonPosterSet import SeasonPosterSet
 import modules.global_objects as global_objects
 from modules.MediaServer import MediaServer
 from modules.SeriesInfo import SeriesInfo
@@ -334,7 +335,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def get_all_episodes(self,
             series_info: SeriesInfo,
             episode_infos: Optional[list[EpisodeInfo]] = None,
-            ) -> list[EpisodeInfo]:
+        ) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that
         have already aired are returned.
@@ -500,14 +501,17 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 )
 
 
-    def set_title_cards(self, library_name: str, series_info: SeriesInfo,
-            episode_map: dict[str, 'Episode']) -> None:
+    def set_title_cards(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_map: dict[str, Episode]) -> None:
         """
         Set the title cards for the given series. This only updates
         episodes that have title cards, and those episodes whose card
         filesizes are different than what has been set previously.
 
         Args:
+            library_name: The name of the library containing the series.
             series_info: The series to update.
             episode_map: Dictionary of episode keys to Episode objects
                 to update the cards of.
@@ -515,6 +519,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # If series has no ID, cannot set title cards
         if not series_info.has_id('jellyfin_id'):
+            log.debug(f'Not loading "{series_info}" - not found in Jellyfin')
             return None
 
         # Filter loaded cards
@@ -531,6 +536,8 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         for episode in filtered_episodes.values():
             # Skip episodes without ID's (e.g. not in Jellyfin)
             if (jellyfin_id := episode.episode_info.jellyfin_id) is None:
+                log.debug(f'Skipping {episode.episode_info!r} - not found in '
+                          f'Jellyfin')
                 continue
 
             # Shrink image if necessary, skip if cannot be compressed
@@ -549,9 +556,11 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                     data=card_base64,
                 )
                 loaded_count += 1
+                log.debug(f'Loaded "{series_info}" Episode '
+                          f'{episode.episode_info} into Jellyfin')
             except Exception as e:
                 log.exception(f'Unable to upload {card.resolve()} to '
-                              f'{series_info}', e)
+                              f'"{series_info}"', e)
                 continue
 
             # Update loaded database for this episode
@@ -569,8 +578,10 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             log.info(f'Loaded {loaded_count} cards for "{series_info}"')
 
 
-    def set_season_posters(self, library_name: str, series_info: SeriesInfo,
-            season_poster_set: 'SeasonPosterSet') -> None:
+    def set_season_posters(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            season_poster_set: SeasonPosterSet) -> None:
         """
         Set the season posters from the given set within Plex.
 

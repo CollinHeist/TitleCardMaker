@@ -5,6 +5,8 @@ from typing import Any
 from modules.BaseCardType import BaseCardType
 from modules.CleanPath import CleanPath
 from modules.Debug import log
+from modules.EpisodeInfo import EpisodeInfo
+from modules.SeriesInfo import SeriesInfo
 import modules.global_objects as global_objects
 
 # Built-in BaseCardType classes
@@ -142,8 +144,8 @@ class TitleCard:
     @staticmethod
     def get_output_filename(
             format_string: str,
-            series_info: 'SeriesInfo', 
-            episode_info: 'EpisodeInfo',
+            series_info: SeriesInfo, 
+            episode_info: EpisodeInfo,
             media_directory: Path) -> Path:
         """
         Get the output filename for a title card described by the given
@@ -188,7 +190,7 @@ class TitleCard:
     @staticmethod
     def get_multi_output_filename(
             format_string: str,
-            series_info: 'SeriesInfo',
+            series_info: SeriesInfo,
             multi_episode: 'MultiEpisode',
             media_directory: Path) -> Path:
         """

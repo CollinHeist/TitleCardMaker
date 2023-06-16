@@ -26,7 +26,7 @@ class Manager:
     VALID_EXECUTION_MODES = ('serial', 'batch')
 
 
-    def __init__(self, check_tautulli: bool=True) -> None:
+    def __init__(self, check_tautulli: bool = True) -> None:
         """
         Constructs a new instance of the Manager. This uses the global
         PreferenceParser object in preferences, and optionally creates

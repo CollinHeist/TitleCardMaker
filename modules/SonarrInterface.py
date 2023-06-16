@@ -108,9 +108,6 @@ class SonarrInterface(WebInterface, SyncInterface):
         params = self.__standard_params
         all_series = self._get(url, params)
 
-        # Reset series dictionary
-        self.__series_ids = {}
-
         # Go through each series in Sonarr
         for series in all_series:
             # Skip unaired series with a year of 0

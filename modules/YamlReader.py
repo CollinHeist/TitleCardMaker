@@ -1,4 +1,5 @@
-from typing import Any, Optional
+from pathlib import Path
+from typing import Any, Callable, Optional
 
 from yaml import safe_load
 
@@ -16,7 +17,7 @@ class YamlReader:
 
     def __init__(self,
             yaml: dict[str, Any] = {}, *,
-            log_function: callable = log.error) -> None:
+            log_function: Callable = log.error) -> None:
         """
         Initialize this object.
 
@@ -48,7 +49,7 @@ class YamlReader:
 
     def _get(self,
             *attributes: tuple[str],
-            type_: Optional[type] = None,
+            type_: Optional[Callable] = None,
             default: Any = None):
         """
         Get the value specified by the given attributes/sub-attributes
@@ -150,7 +151,7 @@ class YamlReader:
 
 
     @staticmethod
-    def _read_file(file: 'Path', *, critical: bool = False) -> dict:
+    def _read_file(file: Path, *, critical: bool = False) -> dict:
         """
         Read the given file and return the contained YAML.
 

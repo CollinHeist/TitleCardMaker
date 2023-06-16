@@ -1,9 +1,11 @@
 from copy import deepcopy
+from pathlib import Path
 from re import compile as re_compile
 from typing import Any
 
 from modules.Debug import log
 from modules.EpisodeInfo import WordSet
+from modules.Title import Title
 import modules.global_objects as global_objects
 
 class MultiEpisode:
@@ -24,7 +26,7 @@ class MultiEpisode:
     )
 
 
-    def __init__(self, episodes: list['Episode'], title: 'Title') -> None:
+    def __init__(self, episodes: list['Episode'], title: Title) -> None:
         """
         Constructs a new instance of a MultiEpisode that represents the
         given list of Episode objects, and has the given (modified)
@@ -115,7 +117,7 @@ class MultiEpisode:
         return f'{ret}>'
 
 
-    def __getattr__(self, attribute):
+    def __getattr__(self, attribute: str) -> Any:
         """
         Get an attribute from the first episode of this object.
 
@@ -126,7 +128,7 @@ class MultiEpisode:
         return getattr(self._first_episode, attribute)
 
 
-    def __setattr__(self, attribute, value) -> None:
+    def __setattr__(self, attribute: str, value: Any) -> None:
         """
         Set an attribute of the first episode of this object.
 
@@ -202,7 +204,7 @@ class MultiEpisode:
         return episode_format_string
 
 
-    def set_destination(self, destination: 'Path') -> None:
+    def set_destination(self, destination: Path) -> None:
         """
         Set the destination for the card associated with these Episdoes.
 

@@ -146,6 +146,8 @@ class TintedFrameTitleCard(BaseCardType):
             font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_vertical_shift: int = 0,
+            season_number: int = 1,
+            episode_number: int = 1,
             blur: bool = False,
             grayscale: bool = False,
             separator: str = '-',
@@ -194,6 +196,39 @@ class TintedFrameTitleCard(BaseCardType):
         self.top_element = top_element
         self.middle_element = middle_element
         self.bottom_element = bottom_element
+
+
+    @property
+    def blur_commands(self) -> ImageMagickCommands:
+        """
+        Subcommand to blur the outer frame of the source image (if
+        indicated).
+
+        Returns:
+            List of ImageMagick Commands.
+        """
+
+        # Blurring is disabled, return empty command
+        if not self.blur_edges:
+            return []
+
+        crop_width = self.WIDTH - (2 * self.BOX_OFFSET) - 6 # 6px margin
+        crop_height = self.HEIGHT - (2 * self.BOX_OFFSET) - 4 # 4px margin
+
+        return [
+            # Blur entire image
+            f'-blur 0x20',
+            # Crop out center area of the source image
+            f'-gravity center',
+            f'\( "{self.source_file.resolve()}"',
+            *self.resize_and_style,
+            f'-crop {crop_width}x{crop_height}+0+0',
+            f'+repage \)',
+            # Overlay unblurred center area 
+            f'-composite',
+        ]
+
+        return None
 
 
     @property
@@ -632,12 +667,6 @@ class TintedFrameTitleCard(BaseCardType):
         Make the necessary ImageMagick and system calls to create this
         object's defined title card.
         """
-
-        # Error and exit if logo is specified and DNE
-        if ('logo' in (self.top_element, self.middle_element, self.bottom_element)
-            and (self.logo is None or not self.logo.exists())):
-            log.error(f'Logo file "{self.logo}" does not exist')
-            return None
 
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',

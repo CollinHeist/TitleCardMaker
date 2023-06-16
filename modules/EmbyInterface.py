@@ -3,8 +3,10 @@ from datetime import datetime
 from typing import Optional, Union
 
 from modules.Debug import log
+from modules.Episode import Episode
 from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo import EpisodeInfo
+from modules.SeasonPosterSet import SeasonPosterSet
 import modules.global_objects as global_objects
 from modules.MediaServer import MediaServer
 from modules.SeriesInfo import SeriesInfo
@@ -37,9 +39,12 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
     YEAR_RANGE = range(1960, datetime.now().year)
 
 
-    def __init__(self, url: str, api_key: str, username: str,
-            verify_ssl: bool=True,
-            filesize_limit: int=None) -> None:
+    def __init__(self,
+            url: str,
+            api_key: str,
+            username: str,
+            verify_ssl: bool = True,
+            filesize_limit: Optional[int] = None) -> None:
         """
         Construct a new instance of an interface to an Emby server.
 
@@ -90,7 +95,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         self.libraries = self._map_libraries()
 
 
-    def _get_user_id(self, username: str) -> 'str | None':
+    def _get_user_id(self, username: str) -> Optional[str]:
         """
         Get the User ID associated with the given username.
 
@@ -349,7 +354,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def get_all_episodes(self,
             series_info: SeriesInfo,
             episode_infos: Optional[list[EpisodeInfo]] = None
-            ) -> list[EpisodeInfo]:
+        ) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that
         have already aired are returned.
@@ -424,7 +429,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return all_episodes
 
 
-    def has_series(self, series_info: 'SeriesInfo') -> bool:
+    def has_series(self, series_info: SeriesInfo) -> bool:
         """
         Determine whether the given series is present within Emby.
 
@@ -438,8 +443,10 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return series_info.has_id('emby_id')
 
 
-    def update_watched_statuses(self, library_name: str,
-            series_info: SeriesInfo, episode_map: dict[str, 'Episode'],
+    def update_watched_statuses(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_map: dict[str, 'Episode'],
             style_set: 'StyleSet') -> None:
         """
         Modify the Episode objects according to the watched status of
@@ -501,8 +508,10 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 )
 
 
-    def set_title_cards(self, library_name: str, series_info: 'SeriesInfo',
-            episode_map: dict[str, 'Episode']) -> None:
+    def set_title_cards(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_map: dict[str, Episode]) -> None:
         """
         Set the title cards for the given series. This only updates
         episodes that have title cards, and those episodes whose card
@@ -570,8 +579,10 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             log.info(f'Loaded {loaded_count} cards for "{series_info}"')
 
 
-    def set_season_posters(self, library_name: str, series_info: SeriesInfo,
-            season_poster_set: 'SeasonPosterSet') -> None:
+    def set_season_posters(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            season_poster_set: SeasonPosterSet) -> None:
         """
         Set the season posters from the given set within Emby.
 

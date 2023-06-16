@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 from modules.Debug import log
 from modules.BaseSummary import BaseSummary
@@ -31,8 +32,10 @@ class StandardSummary(BaseSummary):
     __slots__ = ('background', '__background_is_image')
 
 
-    def __init__(self, show: 'Show', background: str=BACKGROUND_COLOR,
-                 created_by: str=None) -> None:
+    def __init__(self,
+            show: 'Show',
+            background: str = BACKGROUND_COLOR,
+            created_by: Optional[str] = None) -> None:
         """
         Construct a new instance of this object.
 
@@ -194,8 +197,9 @@ class StandardSummary(BaseSummary):
         return self.__LOGO_AND_HEADER_PATH
 
 
-    def _add_created_by(self, montage_and_logo: Path,
-                        created_by: Path) -> Path:
+    def _add_created_by(self,
+            montage_and_logo: Path,
+            created_by: Path) -> Path:
         """
         Add the 'created by' image to the bottom of the montage.
 
@@ -224,8 +228,9 @@ class StandardSummary(BaseSummary):
         return self.output
 
 
-    def __add_background_image(self, montage_and_logo: Path,
-                               created_by: Path) -> Path:
+    def __add_background_image(self,
+            montage_and_logo: Path,
+            created_by: Path) -> Path:
         """
         Add the two images on top of the background image.
 

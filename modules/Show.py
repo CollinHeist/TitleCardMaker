@@ -1,27 +1,33 @@
 from copy import copy
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, Optional
 
 from tqdm import tqdm
 
 from modules.CleanPath import CleanPath
 from modules.DataFileInterface import DataFileInterface
 from modules.Debug import log, TQDM_KWARGS
+from modules.EmbyInterface import EmbyInterface
 from modules.Episode import Episode
 from modules.EpisodeInfo import EpisodeInfo
 from modules.EpisodeMap import EpisodeMap
 from modules.Font import Font
-from modules.MultiEpisode import MultiEpisode
 import modules.global_objects as global_objects
+from modules.JellyfinInterface import JellyfinInterface
+from modules.MultiEpisode import MultiEpisode
 from modules.PlexInterface import PlexInterface
 from modules.Profile import Profile
 from modules.SeasonPosterSet import SeasonPosterSet
 from modules.SeriesInfo import SeriesInfo
+from modules.SonarrInterface import SonarrInterface
 from modules.StyleSet import StyleSet
 from modules.TitleCard import TitleCard
 from modules.Title import Title
+from modules.TMDbInterface import TMDbInterface
 from modules.WebInterface import WebInterface
 from modules.YamlReader import YamlReader
+
+MediaServer = Literal['emby', 'jellyfin', 'plex']
 
 class Show(YamlReader):
     """
@@ -52,7 +58,8 @@ class Show(YamlReader):
             name: str,
             yaml_dict: dict[str, Any],
             source_directory: Path,
-            preferences: 'PreferenceParser') -> None:
+            preferences: 'PreferenceParser', # type: ignore
+        ) -> None:
         """
         Constructs a new instance of a Show object from the given YAML
         dictionary, library map, and referencing the base source
@@ -95,7 +102,7 @@ class Show(YamlReader):
         self.library_name = None
         self.library = None
         self.media_directory = None
-        self.media_server = preferences.default_media_server
+        self.media_server: MediaServer = preferences.default_media_server
         self.image_source_priority = preferences.image_source_priority
         self.archive = preferences.create_archive
         self.archive_name = None
@@ -172,7 +179,7 @@ class Show(YamlReader):
         )
 
         # Attributes to be filled/modified later
-        self.episodes = {}
+        self.episodes: dict[str, Episode] = {}
         self.emby_interface = None
         self.jellyfin_interface = None
         self.plex_interface = None
@@ -342,11 +349,12 @@ class Show(YamlReader):
             self.extras = self._get('extras', type_=dict)
 
 
-    def assign_interfaces(self, emby_interface: 'EmbyInterface' = None,
-            jellyfin_interface: 'JellyfinInterface' = None,
-            plex_interface: 'PlexInterface' = None,
-            sonarr_interfaces: list['SonarrInterface'] = [],
-            tmdb_interface: 'TMDbInterface' = None) -> None:
+    def assign_interfaces(self,
+            emby_interface: Optional[EmbyInterface] = None,
+            jellyfin_interface: Optional[JellyfinInterface] = None,
+            plex_interface: Optional[PlexInterface] = None,
+            sonarr_interfaces: list[SonarrInterface] = [],
+            tmdb_interface: Optional[TMDbInterface] = None) -> None:
         """
         Assign the given interfaces to attributes of this object for
         later use.
@@ -449,7 +457,7 @@ class Show(YamlReader):
             interface_function()
 
 
-    def __get_destination(self, episode_info: EpisodeInfo) -> Path:
+    def __get_destination(self, episode_info: EpisodeInfo) -> Optional[Path]:
         """
         Get the destination filename for the given entry of a datafile.
 
@@ -567,13 +575,20 @@ class Show(YamlReader):
 
         # Filter episodes needing ID's - i.e. missing card or translation
         def episode_needs_id(episode) -> bool:
+            # Episodes with all ID's or no card do not need ID's
             if episode.episode_info.has_all_ids or episode.destination is None:
                 return False
+            # Emby and Jellyfin require per-Episode ID's to match content
+            if self.media_server in ('emby', 'jellyfin'):
+                return True
+            # Missing card, requires ID's for potential matching
             if not episode.destination.exists():
                 return True
+            # Missing translations, requires ID's for potential matching
             for translation in self.title_languages:
                 if not episode.key_is_specified(translation['key']):
                     return True
+            # All content is present, not Emby/Jellyfin, no ID's required
             return False
 
         # Apply filter of only those needing ID's, get only EpisodeInfo objects
@@ -586,8 +601,8 @@ class Show(YamlReader):
         if not infos:
             return None
 
-        # Temporary function to load episode ID's
-        def load(interface, episode_infos):
+        # Temporary function to set episode ID's
+        def set_ids(interface, episode_infos):
             interface_obj = getattr(self, f'{interface}_interface', None)
             if interface_obj is not None:
                 interface_obj.set_episode_ids(
@@ -608,7 +623,9 @@ class Show(YamlReader):
 
         # Go through each interface and load ID's from it
         for interface in interface_orders[self.episode_data_source]:
-            load(interface, infos)
+            set_ids(interface, infos)
+
+        return None
 
 
     def add_translations(self) -> None:
@@ -704,7 +721,7 @@ class Show(YamlReader):
                 log.debug(f'Downloaded logo for {self}')
 
 
-    def __apply_styles(self, select_only: Episode=None) -> bool:
+    def __apply_styles(self, select_only: Optional[Episode] = None) -> bool:
         """
         Modify this series' Episode source images based on their watch
         statuses, and how that style applies to this show's un/watched
@@ -774,7 +791,8 @@ class Show(YamlReader):
         return download_backdrop
 
 
-    def select_source_images(self, select_only: Episode=None) -> None:
+    def select_source_images(self,
+            select_only: Optional[Episode] = None) -> None:
         """
         Modify this series' Episode source images based on their watch
         statuses, and how that style applies to this show's un/watched
@@ -869,14 +887,21 @@ class Show(YamlReader):
                         episode.episode_info,
                         skip_localized_images=self.tmdb_skip_localized_images,
                     )
-                    # If None was returned (e.g. temp blacklisted), exit loops
-                    if not image: break
+                    # Exit loop or continue depending on permanent blacklist status
+                    if not image:
+                        pb = self.tmdb_interface.is_permanently_blacklisted(
+                            self.series_info, episode.episode_info
+                        )
+                        if pb: continue
+                        else:  break
 
                 # Attempt to download image, log and exit if successful
                 if image and WebInterface.download_image(image, episode.source):
                     log.debug(f'Downloaded {episode.source.name} for {self} '
                               f'from {source_interface}')
                     break
+            
+        return None
 
 
     def find_multipart_episodes(self) -> None:
@@ -940,7 +965,7 @@ class Show(YamlReader):
             self.episodes[f'0{mp.season_number}-{mp.episode_start}'] = mp
 
 
-    def create_missing_title_cards(self) ->None:
+    def create_missing_title_cards(self) -> None:
         """Create any missing title cards for each episode."""
 
         # If the media directory is unspecified, exit
@@ -1025,3 +1050,5 @@ class Show(YamlReader):
         media_interface.set_season_posters(
             self.library_name, self.series_info, self.season_poster_set,
         )
+
+        return None

@@ -4,6 +4,7 @@ from yaml import safe_load, dump
 
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
+from modules.SeriesInfo import SeriesInfo
 import modules.global_objects as global_objects
 from modules.Title import Title
 
@@ -18,7 +19,7 @@ class DataFileInterface:
     GENERIC_DATA_FILE_NAME = 'data.yml'
 
 
-    def __init__(self, series_info: 'SeriesInfo', data_file: Path) -> None:
+    def __init__(self, series_info: SeriesInfo, data_file: Path) -> None:
         """
         Constructs a new instance of the interface for the specified
         data file. This also creates the parent directories for the data
@@ -223,7 +224,7 @@ class DataFileInterface:
         self.__write_data(yaml)
 
 
-    def add_many_entries(self, new_episodes: Iterable['EpisodeInfo']) -> None:
+    def add_many_entries(self, new_episodes: Iterable[EpisodeInfo]) -> None:
         """
         Adds many entries at once. This only reads and writes from this
         interface's file once.

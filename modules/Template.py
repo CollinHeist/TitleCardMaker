@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import HTTPException
 
 from modules.Debug import log
+from modules.SeriesInfo import SeriesInfo
 
 class Template:
     """
@@ -130,8 +131,7 @@ class Template:
 
 
     @staticmethod
-    def recurse_priority_union(base_yaml: dict,
-            template_yaml: dict) -> None:
+    def recurse_priority_union(base_yaml: dict, template_yaml: dict) -> None:
         """
         Construct the union of the two dictionaries, with all key/values
         of template_yaml being ADDED to the first, priority dictionary
@@ -167,9 +167,10 @@ class Template:
 
 
     def apply_to_series(self,
-            series_info: 'SeriesInfo',
+            series_info: SeriesInfo,
             series_yaml: dict[str, Any], *,
-            raise_exc: bool = False) -> bool:
+            raise_exc: bool = False,
+        ) -> bool:
         """
         Apply this Template object to the given series YAML, modifying
         it to include the templated values. This function assumes that

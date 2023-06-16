@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Optional
 
 from tinydb import where, Query
@@ -137,7 +138,7 @@ class MediaInfoSet:
         # Info for this series already exists
         # Check if multiple matches were returned (somehow)
         if len(info) > 1:
-            log.warning(f'Multiple matches for existing SeriesInfo: {info}')
+            log.debug(f'Multiple matches for existing SeriesInfo: {info}')
         info = info[0]
 
         # Update database only with ID's that are more accurate
@@ -280,7 +281,7 @@ class MediaInfoSet:
             tmdb_id: Optional[int] = None,
             tvdb_id: Optional[int] = None,
             tvrage_id: Optional[int] = None,
-            airdate: Optional['datetime'] = None,
+            airdate: Optional[datetime] = None,
             title_match: bool = True,
             **queried_kwargs: dict[str, bool]) -> EpisodeInfo:
         """

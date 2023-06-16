@@ -31,7 +31,7 @@ class SeasonPosterSet(YamlReader):
 
 
     def __init__(self,
-            episode_map: 'EpisodeMap',
+            episode_map: 'EpisodeMap', # type: ignore
             source_directory: Path,
             media_directory: Path,
             poster_config: Optional[dict[str, Any]] = None) -> None:
@@ -119,7 +119,8 @@ class SeasonPosterSet(YamlReader):
 
 
     def __prepare_posters(self,
-            poster_config: dict[str, Any], episode_map: 'EpisodeMap') -> None:
+            poster_config: dict[str, Any],
+            episode_map: 'EpisodeMap') -> None:
         """
         Create SeasonPoster objects for all available season poster
         images, using the given config.
@@ -189,7 +190,7 @@ class SeasonPosterSet(YamlReader):
             )
 
 
-    def get_poster(self, season_number: int) -> 'Path | None':
+    def get_poster(self, season_number: int) -> Optional[Path]:
         """
         Get the path to the Poster from this set for the given season
         number.
@@ -236,3 +237,5 @@ class SeasonPosterSet(YamlReader):
                 log.debug(f'Could not create poster '
                           f'"{poster.destination.resolve()}"')
                 poster.image_magick.print_command_history()
+
+        return None

@@ -1,8 +1,10 @@
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
+from modules.BaseCardType import BaseCardType
 from modules.CleanPath import CleanPath
 from modules.Debug import log
+from modules.EpisodeInfo import EpisodeInfo
 from modules.StyleSet import StyleSet
 from modules.TitleCard import TitleCard
 
@@ -21,12 +23,12 @@ class Episode:
 
 
     def __init__(self,
-            episode_info: 'EpisodeInfo',
-            card_class: 'CardType',
+            episode_info: EpisodeInfo,
+            card_class: BaseCardType,
             base_source: Path,
             destination: Path,
             given_keys: set[str],
-            **extras: dict[str, Any]) -> None:
+            **extras: dict) -> None:
         """
         Construct a new instance of an Episode.
 
@@ -82,7 +84,7 @@ class Episode:
 
 
     @property
-    def characteristics(self) -> dict[str, Any]:
+    def characteristics(self) -> dict:
         """
         Get the characteristics of this object for formatting.
 
@@ -112,7 +114,7 @@ class Episode:
         return key in self.given_keys
 
 
-    def update_statuses(self, watched: bool, style_set: 'StyleSet') -> None:
+    def update_statuses(self, watched: bool, style_set: StyleSet) -> None:
         """
         Update the statuses of this Episode. In particular the watched
         status and un/watched styles.
