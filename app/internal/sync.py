@@ -52,7 +52,7 @@ def sync_all() -> None:
 def add_sync(
         db: Session,
         new_sync: Union[NewEmbySync, NewJellyfinSync, NewPlexSync,NewSonarrSync]
-        ) -> Sync:
+    ) -> Sync:
     """
     Add the given sync to the database.
 
@@ -83,7 +83,8 @@ def run_sync(
         plex_interface: Optional[PlexInterface],
         sonarr_interface: Optional[SonarrInterface],
         tmdb_interface: Optional[TMDbInterface],
-        background_tasks: Optional[BackgroundTasks] = None) -> list[Series]:
+        background_tasks: Optional[BackgroundTasks] = None
+    ) -> list[Series]:
     """
     Run the given Sync. This adds any missing Series from the given Sync
     to the Database. Any newly added Series have their database ID's
