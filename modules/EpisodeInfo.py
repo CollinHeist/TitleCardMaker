@@ -111,6 +111,7 @@ class EpisodeInfo(DatabaseInfoContainer):
         self.season_number = int(season_number)
         self.episode_number = int(episode_number)
         self.abs_number = None if abs_number is None else int(abs_number)
+        self.airdate = airdate
 
         # Store default database ID's
         self.emby_id = None
@@ -133,7 +134,6 @@ class EpisodeInfo(DatabaseInfoContainer):
         self.queried_plex = queried_plex
         self.queried_sonarr = queried_sonarr
         self.queried_tmdb = queried_tmdb
-        self.airdate = airdate
 
         # Create key
         self.key = f'{self.season_number}-{self.episode_number}'

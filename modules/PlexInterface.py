@@ -92,7 +92,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         self.__warned = set()
 
 
-    def catch_and_log(message: str, *, default: Any = None) -> callable:
+    def catch_and_log(message: str, *, default: Any = None) -> Callable:
         """
         Return a decorator that logs (with the given log function) the given
         message if the decorated function raises an uncaught PlexApiException.
@@ -521,7 +521,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             library_name: str,
             series_info: SeriesInfo,
             episode_infos: list[EpisodeInfo],
-            inplace: bool=False) -> None:
+            inplace: bool = False) -> None:
         """
         Set all the episode ID's for the given list of EpisodeInfo
         objects. This sets the Sonarr and TVDb ID's for each episode. As
@@ -645,8 +645,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def set_title_cards(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_map: dict[str, 'Episode'], # type: ignore
-        ) -> None:
+            episode_map: dict[str, 'Episode']) -> None:
         """
         Set the title cards for the given series. This only updates episodes
         that have title cards, and those episodes whose card filesizes are
@@ -729,8 +728,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def set_season_posters(self,
             library_name: str,
             series_info: SeriesInfo,
-            season_poster_set: 'SeasonPosterSet', # type: ignore
-        ) -> None:
+            season_poster_set: SeasonPosterSet) -> None:
         """
         Set the season posters from the given set within Plex.
 
