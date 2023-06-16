@@ -931,11 +931,9 @@ class PreferenceParser(YamlReader):
         if 'template' not in series_yaml:
             return True
 
-        # Get the indicated template YAML
-        series_template = series_yaml['template']
-
-        # If directly specified as a key, add to series YAML
-        if isinstance(series_template, str):
+        # Get the specified template for this series
+        if isinstance((series_template := series_yaml['template']), str):
+            # Assume if only a string, then its the template name
             template_name = series_template
             series_template = {'template_name': series_template}
             series_yaml['template'] = series_template

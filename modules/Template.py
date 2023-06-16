@@ -169,8 +169,7 @@ class Template:
     def apply_to_series(self,
             series_info: SeriesInfo,
             series_yaml: dict[str, Any], *,
-            raise_exc: bool = False,
-        ) -> bool:
+            raise_exc: bool = False) -> bool:
         """
         Apply this Template object to the given series YAML, modifying
         it to include the templated values. This function assumes that

@@ -35,7 +35,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
     AIRDATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f000000Z'
 
     """Range of years to query series by"""
-    YEAR_RANGE = range(1960, datetime.now().year)
+    YEARS = ','.join(map(str, range(1960, datetime.now().year)))
 
 
     def __init__(self,
@@ -98,7 +98,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 self.user_id = user_id
 
         # Get the ID's of all libraries within this server
-        self.libraries = self._map_libraries()
+        self.libraries: dict[str, tuple[int]] = self._map_libraries()
 
 
     def _get_user_id(self, username: str) -> Union[str, None]:
@@ -262,7 +262,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     def get_library_paths(self,
-            filter_libraries: list[str] = []) -> dict[str, list[str]]:
+            filter_libraries: list[str] = []
+        ) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
 
@@ -298,7 +299,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             required_libraries: list[str] = [],
             excluded_libraries: list[str] = [],
             required_tags: list[str] = [], 
-            excluded_tags: list[str] = []) -> list[tuple[SeriesInfo, str]]: 
+            excluded_tags: list[str] = []
+        ) -> list[tuple[SeriesInfo, str]]: 
         """
         Get all series within Emby, as filtered by the given libraries.
 
@@ -306,8 +308,14 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             filter_libraries: Optional list of library names to filter
                 returned list by. If provided, only series that are
                 within a given library are returned.
+            excluded_libraries: Optional list of library names to filter
+                returned list by. If provided, only series that are not
+                within a given library are returned.
             required_tags: Optional list of tags to filter return by. If
                 provided, only series with all the given tags are
+                returned.
+            excluded_tags: Optional list of tags to filter return by. If
+                provided, series with any of the given tags are not
                 returned.
 
         Returns:
@@ -325,34 +333,54 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             'Fields': 'ProviderIds',
         } | self.__params
 
+        # Get excluded series ID's if excluding by tags
+        if len(excluded_tags) > 0:
+            # Get all items (series) for any of the excluded tags
+            response = self.session._get(
+                f'{self.url}/Items',
+                params=params | {'Tags': '|'.join(excluded_tags)},
+            )
+            params |= {
+                'ExcludeItemIds': ','.join(
+                    map(str, [series['Id'] for series in response['Items']])
+                )
+            }
+
         # Also filter by tags if any were provided
         if len(required_tags) > 0:
             params |= {'Tags': '|'.join(required_tags)}
-        # TODO Filter by exclusion tags. No explicit query param for this
+
         # Go through each library in this server
         all_series = []
         for library, library_ids in self.libraries.items():
             # Filter by library
-            if (required_libraries and library not in required_libraries
-                or excluded_libraries and library in excluded_libraries):
+            if ((required_libraries and library not in required_libraries)
+                or (excluded_libraries and library in excluded_libraries)):
                 continue
 
             # Go through every subfolder (the parent ID) in this library
             for parent_id in library_ids:
-                # Have to query year by year, for SOME stupid reason...
-                for year in self.YEAR_RANGE:
-                    # Get all items (series) in this subfolder for this year
-                    response = self.session._get(
-                        f'{self.url}/Items',
-                        params=params | {'ParentId': parent_id, 'Years': year}
-                    )
+                # Get all items (series) in this subfolder
+                response = self.session._get(
+                    f'{self.url}/Items',
+                    params=params | {'ParentId': parent_id, 'Years': self.YEARS}
+                )
 
-                    for series in response['Items']:
+                # Process each returned Series
+                for series in response['Items']:
+                    try:
+                        ids = series.get('ProviderIds', {})
                         series_info = SeriesInfo(
-                            series['Name'], year, emby_id=series['Id'],
-                            # TODO add other series ID's
+                            series['Name'], None,
+                            emby_id=series['Id'],
+                            imdb_id=ids.get('IMDB'),
+                            tmdb_id=ids.get('Tmdb'),
+                            tvdb_id=ids.get('Tvdb'),
                         )
                         all_series.append((series_info, library))
+                    except ValueError as e:
+                        log.error(f'Series {series["Name"]} is missing a year')
+                        continue
 
         # Reset request timeout
         self.REQUEST_TIMEOUT = 30
@@ -360,7 +388,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return all_series
 
 
-    def get_all_episodes(self, series_info: SeriesInfo) -> list[EpisodeInfo]:
+    def get_all_episodes(self,
+            series_info: SeriesInfo
+        ) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that
         have  already aired are returned.
@@ -386,11 +416,18 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         # Parse each returned episode into EpisodeInfo object
         all_episodes = []
         for episode in response['Items']:
+            # Skip episodes without episode or season numbers
+            if (episode.get('IndexNumber', None) is None
+                or episode.get('ParentIndexNumber', None) is None):
+                log.debug(f'Series {series_info} episode is missing index data')
+                continue
+
             # Parse airdate for this episode
             airdate = None
             try:
-                airdate = datetime.strptime(episode['PremiereDate'],
-                                            self.AIRDATE_FORMAT)
+                airdate = datetime.strptime(
+                    episode['PremiereDate'], self.AIRDATE_FORMAT
+                )
             except Exception as e:
                 log.exception(f'Cannot parse airdate', e)
                 log.debug(f'Episode data: {episode}')
@@ -467,7 +504,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             library_name: str,
             series_info: SeriesInfo,
             episode_and_cards: list[tuple['Episode', 'Card']],
-            ) -> list[tuple['Episode', 'Card']]:
+        ) -> list[tuple['Episode', 'Card']]:
         """
         Load the title cards for the given Series and Episodes.
 
@@ -533,15 +570,12 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         ...
 
 
-    def get_source_image(self,
-            episode_info: EpisodeInfo, *,
-            raise_exc: bool = True) -> SourceImage:
+    def get_source_image(self, episode_info: EpisodeInfo) -> SourceImage:
         """
         Get the source image for the given episode within Emby.
 
         Args:
             episode_info: The episode to get the source image of.
-            raise_exc: Whether to raise any HTTPExceptions that arise.
 
         Returns:
             Bytes of the source image for the given Episode. None if the

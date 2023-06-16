@@ -319,7 +319,7 @@ def download_episode_source_image(
 
         if image_source == 'Emby' and emby_interface:
             source_image = emby_interface.get_source_image(
-                episode.as_episode_info, raise_exc=raise_exc,
+                episode.as_episode_info
             )
         elif image_source == 'Jellyfin' and jellyfin_interface is not None:
             source_image = jellyfin_interface.get_source_image(

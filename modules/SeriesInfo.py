@@ -75,7 +75,7 @@ class SeriesInfo(DatabaseInfoContainer):
         self.set_sonarr_id(sonarr_id)
         self.set_tmdb_id(tmdb_id)
         self.set_tvdb_id(tvdb_id)
-        self.set_tvrage_id(tvdb_id)
+        self.set_tvrage_id(tvrage_id)
 
         # If no year was specified, parse from name as "name (year)"
         if (self.year is None

@@ -1,6 +1,6 @@
 from copy import copy
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Literal, Optional
 
 from tqdm import tqdm
 
@@ -56,7 +56,7 @@ class Show(YamlReader):
 
     def __init__(self,
             name: str,
-            yaml_dict: dict[str, Any],
+            yaml_dict: dict,
             source_directory: Path,
             preferences: 'PreferenceParser', # type: ignore
         ) -> None:

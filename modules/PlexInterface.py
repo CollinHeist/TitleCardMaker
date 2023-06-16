@@ -18,8 +18,10 @@ from modules.Debug import log, TQDM_KWARGS
 from modules.Episode import Episode
 from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo import EpisodeInfo
+import modules.global_objects as global_objects
 from modules.MediaServer import MediaServer
 from modules.PersistentDatabase import PersistentDatabase
+from modules.SeasonPosterSet import SeasonPosterSet
 from modules.SeriesInfo import SeriesInfo
 from modules.StyleSet import StyleSet
 from modules.SyncInterface import SyncInterface
@@ -404,9 +406,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def update_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_map: dict[str, 'Episode'], # type: ignore
-            style_set: 'StyleSet', # type: ignore
-        ) -> None:
+            episode_map: dict[str, Episode],
+            style_set: StyleSet) -> None:
         """
         Modify the Episode objects according to the watched status of the
         corresponding episodes within Plex, and the spoil status of the object.

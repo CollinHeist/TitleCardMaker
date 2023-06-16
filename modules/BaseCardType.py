@@ -118,7 +118,8 @@ class BaseCardType(ImageMaker):
     def __init__(self,
             blur: bool = False,
             grayscale: bool = False, *,
-            preferences: Optional['Preferences'] = None) -> None: # type: ignore
+            preferences: Optional['Preferences'] = None, # type: ignore
+        ) -> None:
         """
         Construct a new CardType. Must call super().__init__() to
         initialize the parent ImageMaker class (for PreferenceParser and
