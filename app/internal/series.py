@@ -185,7 +185,7 @@ def download_series_poster(
     
     # If no poster was returned, download from TMDb
     if poster is None and tmdb_interface is not None:
-        poster = tmdb_interface.get_series_logo(series_info)
+        poster = tmdb_interface.get_series_poster(series_info)
 
     # If no posters were returned, log and exit
     if poster is None:
