@@ -70,7 +70,7 @@
                 <div class="field">
                   <label>Text Case</label>
                   <div class="ui clearable selection dropdown">
-                    <input name="case" type="hidden">
+                    <input name="title_case" type="hidden">
                     <div class="default text">Default</div>
                     <i class="dropdown icon"></i>
                     <div class="menu">
@@ -276,7 +276,7 @@
           color.placeholder = fontObj.color; color.value = fontObj.color;
         }
         if (fontObj.title_case !== null) {
-          template.querySelector('input[name="case"]').value = fontObj.title_case;
+          template.querySelector('input[name="title_case"]').value = fontObj.title_case;
         }
         const size = template.querySelector('input[name="size"]');
         size.placeholder = fontObj.size*100; size.value = fontObj.size*100;
