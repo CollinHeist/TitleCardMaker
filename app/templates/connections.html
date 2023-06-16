@@ -169,14 +169,14 @@
       }
 
       // Get the existing input elements
-      const libraryNames = $('input[name="library_names"]');
-      const libraryPaths = $('input[name="library_paths"]');
+      let libraryNames = $('input[name="library_names"]');
+      let libraryPaths = $('input[name="library_paths"]');
       for (let [index, {name, path}] of libraries.entries()) {
         // If there is no existing input for this library, add a new one
         if (libraryNames[index] === undefined) {
           addSonarrLibrary();
-          const libraryNames = $('input[name="library_names"]');
-          const libraryPaths = $('input[name="library_paths"]');
+          libraryNames = $('input[name="library_names"]');
+          libraryPaths = $('input[name="library_paths"]');
         }
 
         // Fill in text input fields
