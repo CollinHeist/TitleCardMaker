@@ -20,13 +20,16 @@
   <!-- Global styles -->
   <link rel="stylesheet" type="text/css" href="/templates/style.css">
   <style>
-
+    @media (max-width: 768px) {
+      table th, table td {
+        text-align: center !important;
+      }
+    }
   </style>
 
   <!-- Templates -->
   <template id="task-template">
     <tr>
-      <!-- <td data-column="task_id" class="right aligned"></td> -->
       <td data-column="runTask" class="center aligned selectable" data-tooltip="Run this Task">
         <a><i class="sync icon"></i></a>
       </td>
