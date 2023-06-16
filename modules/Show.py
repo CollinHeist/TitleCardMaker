@@ -1,6 +1,6 @@
 from copy import copy
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 from tqdm import tqdm
 
@@ -26,6 +26,8 @@ from modules.Title import Title
 from modules.TMDbInterface import TMDbInterface
 from modules.WebInterface import WebInterface
 from modules.YamlReader import YamlReader
+
+MediaServer = Literal['emby', 'jellyfin', 'plex']
 
 class Show(YamlReader):
     """
@@ -712,7 +714,8 @@ class Show(YamlReader):
                 else:
                     log.debug(f'Converted logo for {self} from .svg to .png')
             else:
-                self.tmdb_interface.download_image(url, self.logo)
+                if not self.tmdb_interface.download_image(url, self.logo):
+                    log.error(f'Error downloading logo for {self}')
 
             # Log to user
             if self.logo.exists():
@@ -816,8 +819,7 @@ class Show(YamlReader):
                 self.series_info,
                 skip_localized_images=self.tmdb_skip_localized_images
             )
-            if url:
-                self.tmdb_interface.download_image(url, self.backdrop)
+            if url and self.tmdb_interface.download_image(url, self.backdrop):
                 log.debug(f'Downloaded backdrop for {self} from tmdb')
 
         # Whether to always check each interface
@@ -893,12 +895,17 @@ class Show(YamlReader):
                         if pb: continue
                         else:  break
 
-                # Attempt to download image, log and exit if successful
-                if image and WebInterface.download_image(image, episode.source):
-                    log.debug(f'Downloaded {episode.source.name} for {self} '
-                              f'from {source_interface}')
+                # Attempt to download image, log status and exit loop
+                if image:
+                    if WebInterface.download_image(image, episode.source):
+                        log.debug(f'Downloaded {episode.source.name} for {self} '
+                                f'from {source_interface}')
+                    else:
+                        log.error(f'Unable to download image '
+                                  f'{episode.source.name} for {self} from '
+                                  f'{source_interface}')
                     break
-            
+
         return None
 
 

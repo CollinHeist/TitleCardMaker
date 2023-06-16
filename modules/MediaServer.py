@@ -48,6 +48,10 @@ class MediaServer(ABC):
         self.filesize_limit = filesize_limit
 
 
+    def __bool__(self) -> bool:
+        return True
+
+
     def compress_image(self, image: Path) -> Optional[Path]:
         """
         Compress the given image until below the filesize limit.
