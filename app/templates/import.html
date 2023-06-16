@@ -35,6 +35,14 @@
     .ui.compact.visible.message {
       display: inline-block !important;
     }
+
+    /* Add green checkbox before the name of active items in dropdowns */
+    #import-cards-form .dropdown .active.item .text::before {
+      content: "\f00c";
+      color: #21ba45;
+      margin-right: 0.2em;
+      font-family: icons;
+    }
   </style>
 </head>
 
@@ -81,13 +89,9 @@
           // Disable directory field if multiple series are selected
           if (value.includes(',')) {
             $('.field[data-value="directory"]').toggleClass('disabled', true);
-            const infoMessage = $('#import-cards-form .info.message');
-            infoMessage[0].innerHTML = `<i class="info circle icon"></i><b>Info</b> When importing Cards for multiple Series, only each default Card Directory is searched.`;
-            infoMessage.toggleClass('visible', true);
           // Single series selected, enable field and update with series directory
           } else {
             $('.field[data-value="directory"]').toggleClass('disabled', false);
-            $('#import-cards-form .info.message').toggleClass('visible', false);
             if (seriesMap[value] === undefined || seriesMap[value].directory === null) {
               $('input[name="directory"]')[0].value = '';
             } else {
@@ -269,16 +273,20 @@
                   <i class="folder outline icon"></i>
                 </div>
               </div>
+              <div class="ui visible info message">
+                <i class="info circle icon"></i>
+                <b>Info</b> When importing Cards for multiple Series, only each default Card Directory is searched.
+              </div>
 
               <div data-value="force_reload" class="ui inline field">
-                <div data-value="force_reload" class="ui checked checkbox">
+                <div data-value="force_reload" class="ui checked checkbox" data-tooltip="Do not import Episodes that TCM has already created Cards for" data-position="right center">
                   <input type="checkbox" class="hidden" checked="">
                   <label>Skip Episodes with existing Cards</label>
                 </div>
               </div>
 
               <div class="ui inline field">
-                <div data-value="load_afterwards" class="ui checked checkbox">
+                <div data-value="load_afterwards" class="ui checked checkbox" data-tooltip="Whether to load the title cards after importing them" data-position="right center">
                   <input type="checkbox" class="hidden" checked="">
                   <label>Load Title Cards</label>
                 </div>
@@ -286,14 +294,13 @@
 
               <div data-value="media_server" class="ui field">
                 <label>Media Server</label>
-                <div data-value="media_server" class="ui selection dropdown">
+                <div data-value="media_server" class="ui selection dropdown" data-tooltip="Which server to load the cards into after importing (if enabled)">
                   <input name="media_server" type="hidden" placeholder="Plex">
                   <i class="dropdown icon"></i>
                   <div class="default text"></div>
                   <div class="menu"></div>
                 </div>
               </div>
-              <div class="ui info message"></div>
               <button class="ui animated primary button" type="submit">
                 <div class="visible content">Submit</div>
                 <div class="hidden content">
