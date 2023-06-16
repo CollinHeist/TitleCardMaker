@@ -1,18 +1,20 @@
 from pathlib import Path
+from time import sleep
 from typing import Optional, Union
 
 from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import OperationalError
 
 from app.database.query import get_all_templates
-from app.dependencies import (
-    get_database, get_preferences, get_emby_interface, get_imagemagick_interface,
-    get_jellyfin_interface, get_plex_interface, get_sonarr_interface,
-    get_tmdb_interface
+from app.dependencies import *
+from app.internal.series import (
+    download_series_poster, set_series_database_ids
 )
-from app.internal.series import download_series_poster, set_series_database_ids
 from app.internal.sources import download_series_logo
-from app.schemas.sync import NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync, Sync
+from app.schemas.sync import (
+    NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync, Sync
+)
 from app.schemas.series import Series
 from app.schemas.preferences import Preferences
 import app.models as models
@@ -45,6 +47,9 @@ def sync_all() -> None:
                     )
                 except HTTPException as e:
                     log.exception(f'Error Syncing Sync [{sync.id}] - {e.detail}', e)
+                except OperationalError:
+                    log.debug(f'Database is busy, sleeping..')
+                    sleep(30)
     except Exception as e:
         log.exception(f'Failed to run all Syncs', e)
 
