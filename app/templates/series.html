@@ -33,7 +33,7 @@
     }
 
     #poster {
-      min-height: 322px;
+      min-height: 200px;
     }
 
     /* Add field buttons appear transparent */
@@ -53,10 +53,6 @@
     #new-episode-form .text.input {
       width: 100%;
       overflow-wrap: break-word;
-    }
-
-    #main-content input {
-      max-width: 500px;
     }
 
     /* Add top padding above the delete button for each episode */
@@ -1448,11 +1444,8 @@
                 <div id="episode-data-source" class="ui compact selection clearable dropdown" data-tooltip="Where to get episode data from" data-position="right center">
                   <input name="episode_data_source" type="hidden">
                   <i class="dropdown icon"></i>
-                  <!-- Default (current) value -->
                   <div class="default text"></div>
-                  <div class="menu">
-                    <!-- Added asynchronously -->
-                  </div>
+                  <div class="menu"><!-- Added asynchronously --></div>
                 </div>
               </div>
 
@@ -1529,7 +1522,7 @@
               <!-- Card Directory -->
               <div class="ui field" data-tooltip="Where to store title cards" data-position="top left">
                 <label>Card Directory</label>
-                <div class="ui left icon input">
+                <div class="ui left icon fluid input">
                   {% if series.directory is none %}
                   <input name="directory" type="text" placeholder="{{preferences.card_directory}}{{series.path_safe_name}}">
                   {% else %}
