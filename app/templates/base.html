@@ -26,6 +26,7 @@
   <!-- Styles -->
   <link rel="stylesheet" type="text/css" href="/templates/style.css">
   <style>
+    /* Style series cards */
     .series-name {
       text-align: center;
       max-width: 100%;
@@ -41,6 +42,14 @@
     }
     .card img {
       aspect-ratio: 1 / 1.5;
+    }
+
+    /* On mobile, show 3 cards/row */
+    @media (max-width: 768px) {
+      .ui.cards .card {
+        min-width: unset;
+        width: calc(33% - 1em);
+      }
     }
 
     /* Pulse cards on hover - alternate */
@@ -69,6 +78,10 @@
       /* Start the toolbar on the right side of the screen, move left */
       display: inline-block;
       right: 30px;
+    }
+
+    #toolbar > .menu {
+      margin-left: 10px;
     }
     
     /* Add drop shadow to all children of the toolbar */
@@ -248,21 +261,18 @@
 
     <!-- Actual page content -->
     <div id="main-content" class="article">
-      <div id="statistics" class="ui small statistics">
-        <!-- Statistics added on page load by async request -->
-      </div>
+      <div id="statistics" class="ui small statistics"><!-- Added asynchrously --></div>
 
-      <!-- Toolbar for force syncing and sorting series -->
       <div id="toolbar">
-        <!-- Button to add a new series -->
-        <div id="add-series" class="ui compact blue inverted menu" title="Add a new series" style="margin-right: 10px;">
+        <!-- Add new Series -->
+        <div id="add-series" class="ui compact blue inverted menu" title="Add a new series">
           <a class="blue item">
             <i class="plus icon"></i>
             New Series
           </a>
         </div>
 
-        <!-- Sort series bar -->
+        <!-- Sort buttons -->
         <div class="ui compact blue inverted menu">
           <a class="item" title="Sort titles by ID" onclick="sortSeries(this, 'id')">
             <i id="sort-by-id" class="sort icon"></i>
