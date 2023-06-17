@@ -756,8 +756,12 @@
       // Function to standardize the Series name
       const sortStandardizeStr = (text) => text.toString().toLowerCase().replace(/^(a|an|the)(\s)/i, '');
       // Get all Series
-      const allSeries = await fetch('/api/series/all?order_by=alphabetical').then(resp => resp.json());
+      let allSeries = await fetch('/api/series/all?order_by=alphabetical').then(resp => resp.json());
       const thisSeriesName = sortStandardizeStr(`{{series.name|safe}}`);
+      // Sort Series
+      allSeries.sort((a, b) => {
+        return sortStandardizeStr(a.name).localeCompare(sortStandardizeStr(b.name));
+      });
       // Function to filter the Series list by
       let filterFunc;
       if (next_or_previous === 'next') {

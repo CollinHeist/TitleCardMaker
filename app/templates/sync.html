@@ -151,7 +151,7 @@
           type: 'DELETE',
           url: `/api/sync/delete/${syncId}?delete_series=false`,
           success: response => {
-            $.toast({class: 'blue info', title: `Deleted Sync`});
+            $.toast({class: 'blue info', title: 'Deleted Sync'});
             getAllSyncs();
           },
           error: response => {
