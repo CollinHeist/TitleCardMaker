@@ -20,8 +20,10 @@ class Offset:
     """Regex to match signed float offsets from an ImageMagick offset string"""
     OFFSET_REGEX = re_compile(r'([-+]\d+.?\d*)([-+]\d+.?\d*)')
 
-    def __init__(self, offset_str: str=None, *,
-            x: float=None, y: float=None) -> None:
+    def __init__(self,
+            offset_str: Optional[str] = None, *,
+            x: Optional[float] = None,
+            y: Optional[float] = None) -> None:
         """
         Initialize an Offset object with the given ImageMagick offset
         string. For example, Offset('+20-10') indicates a 20 pixel
@@ -247,6 +249,7 @@ class RomanNumeralTitleCard(BaseCardType):
         'output_file', 'title_text', 'season_text', 'hide_season_text',
         'font_color', 'background', 'roman_numeral_color', 'roman_numeral',
         '__roman_text_scalar', '__roman_numeral_lines', 'rotation', 'offset',
+        'season_text_color',
     )
 
     def __init__(self,
@@ -261,23 +264,11 @@ class RomanNumeralTitleCard(BaseCardType):
             grayscale: bool = False,
             background: SeriesExtra[str] = BACKGROUND_COLOR, 
             roman_numeral_color: SeriesExtra[str] = ROMAN_NUMERAL_TEXT_COLOR,
+            season_text_color: SeriesExtra[str] = SEASON_TEXT_COLOR,
             preferences: 'Preferences' = None,
             **unused) -> None:
         """
-        Construct a new instance of this card.
-
-        Args:
-            output_file: Output file.
-            title: Episode title.
-            episode_text: The episode text to parse the roman numeral
-                from.
-            episode_number: Episode number for the roman numerals.
-            font_color: Color to use for the episode title.
-            blur: Whether to blur the source image.
-            grayscale: Whether to make the source image grayscale.
-            background: Color for the background.
-            roman_numeral_color: Color for the roman numerals.
-            unused: Unused arguments.
+        Construct a new instance of this Card.
         """
 
         # Initialize the parent class - this sets up an ImageMagickInterface
@@ -289,6 +280,7 @@ class RomanNumeralTitleCard(BaseCardType):
         self.font_color = font_color
         self.background = background
         self.roman_numeral_color = roman_numeral_color
+        self.season_text_color = season_text_color
 
         # Try and parse roman digit from the episode text, if cannot be done,
         # just use actual episode number
@@ -419,7 +411,9 @@ class RomanNumeralTitleCard(BaseCardType):
             return []
 
         # Override font color only if a custom background color was specified
-        if self.background != self.BACKGROUND_COLOR:
+        if self.season_text_color != self.SEASON_TEXT_COLOR:
+            color = self.season_text_color
+        elif self.background != self.BACKGROUND_COLOR:
             color = self.font_color
         else:
             color = self.SEASON_TEXT_COLOR
@@ -647,6 +641,9 @@ class RomanNumeralTitleCard(BaseCardType):
             if 'roman_numeral_color' in extras:
                 extras['roman_numeral_color'] =\
                     RomanNumeralTitleCard.ROMAN_NUMERAL_TEXT_COLOR
+            if 'season_text_color' in extras:
+                extras['season_text_color'] =\
+                    RomanNumeralTitleCard.SEASON_TEXT_COLOR
 
 
     @staticmethod

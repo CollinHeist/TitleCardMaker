@@ -27,7 +27,10 @@ class StyleSet:
     __slots__ = ('__kwargs', 'valid', 'watched', 'unwatched')
 
 
-    def __init__(self, watched: str='unique', unwatched: str='unique') -> None:
+    def __init__(self,
+            watched: str = 'unique',
+            unwatched: str = 'unique'
+        ) -> None:
         """
         Initialize this object with the given watched/unwatched styles.
         Also updates the validity of this object.

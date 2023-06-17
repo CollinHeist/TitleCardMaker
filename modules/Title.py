@@ -1,5 +1,5 @@
 from re import compile as re_compile, IGNORECASE
-from typing import Any, Iterable, Optional, Union
+from typing import Optional, Union
 
 from modules.Debug import log
 
@@ -222,8 +222,8 @@ class Title:
 
 
     def apply_profile(self,
-            profile: 'Profile',
-            **title_characteristics: dict[str, Any]) -> str:
+            profile: 'Profile', # type: ignore
+            **title_characteristics) -> str:
         """
         Apply the given profile to this title. If this object was
         created with manually specified title lines, then the profile is
@@ -267,7 +267,7 @@ class Title:
         return ''.join(filter(str.isalnum, text)).lower()
 
 
-    def matches(self, *titles: tuple[str]) -> bool:
+    def matches(self, *titles: tuple[Union[str, 'Title']]) -> bool:
         """
         Get whether any of the given titles match this object.
 

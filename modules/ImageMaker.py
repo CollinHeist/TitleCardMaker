@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from collections import namedtuple
 from pathlib import Path
 from re import findall, match
-from typing import Literal, Union
+from typing import Literal, Optional, Union
 
 from modules.Debug import log
 from modules.ImageMagickInterface import ImageMagickInterface
@@ -43,7 +43,7 @@ class ImageMaker(ABC):
 
 
     @abstractmethod
-    def __init__(self, *, preferences: 'Preferences' = None) -> None:
+    def __init__(self, *, preferences: Optional['Preferences'] = None) -> None:
         """
         Initializes a new instance. This gives all subclasses access to
         an ImageMagickInterface via the image_magick attribute.
@@ -152,7 +152,7 @@ class ImageMaker(ABC):
 
 
     @staticmethod
-    def reduce_file_size(image: Path, quality: int=90) -> Path:
+    def reduce_file_size(image: Path, quality: int = 90) -> Path:
         """
         Reduce the file size of the given image.
 
@@ -197,7 +197,9 @@ class ImageMaker(ABC):
 
 
     @staticmethod
-    def convert_svg_to_png(image: Path, destination: Path,
+    def convert_svg_to_png(
+            image: Path,
+            destination: Path,
             min_dimension: int = 2500) -> Union[Path, None]:
         """
         Convert the given SVG image to PNG format.

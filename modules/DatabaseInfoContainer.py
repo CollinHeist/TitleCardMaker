@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 from modules.Debug import log
 
@@ -11,8 +11,10 @@ class DatabaseInfoContainer(ABC):
     within an objct.
     """
 
-    def _update_attribute(self, attribute: str, value: Any, 
-            type_: Optional[callable] = None) -> None:
+    def _update_attribute(self,
+            attribute: str,
+            value: Any, 
+            type_: Optional[Callable] = None) -> None:
         """
         Set the given attribute to the given value with the given type.
 
@@ -23,7 +25,10 @@ class DatabaseInfoContainer(ABC):
         """
 
         # Set attribute if current value is None and new value isn't
-        if getattr(self, attribute) is None and value is not None:
+        if (value is not None
+            and value != 0
+            and getattr(self, attribute) is None
+            and len(str(value)) > 0):
             # If a type is defined, use that
             if type_ is None:
                 setattr(self, attribute, value)

@@ -16,7 +16,7 @@ class SonarrInterface(WebInterface, SyncInterface):
     """
 
     """Use a longer request timeout for Sonarr to handle slow databases"""
-    REQUEST_TIMEOUT = 30
+    REQUEST_TIMEOUT = 600
 
     """Series ID's that can be set by Sonarr"""
     SERIES_IDS = ('imdb_id', 'sonarr_id', 'tvdb_id', 'tvrage_id')
@@ -32,8 +32,11 @@ class SonarrInterface(WebInterface, SyncInterface):
     __AIRDATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 
 
-    def __init__(self, url: str, api_key: str, verify_ssl: bool=True,
-            server_id: int=0) -> None:
+    def __init__(self,
+            url: str,
+            api_key: str,
+            verify_ssl: bool = True,
+            server_id: int = 0) -> None:
         """
         Construct a new instance of an interface to Sonarr.
 
@@ -104,9 +107,6 @@ class SonarrInterface(WebInterface, SyncInterface):
         url = f'{self.url}series'
         params = self.__standard_params
         all_series = self._get(url, params)
-
-        # Reset series dictionary
-        self.__series_ids = {}
 
         # Go through each series in Sonarr
         for series in all_series:
@@ -209,9 +209,6 @@ class SonarrInterface(WebInterface, SyncInterface):
             Sonarr.
         """
 
-        # Temporarily override request timeout to 240s (4 min)
-        self.REQUEST_TIMEOUT = 240
-
         # Construct GET arguments
         all_series = self._get(f'{self.url}series', self.__standard_params)
 
@@ -280,9 +277,6 @@ class SonarrInterface(WebInterface, SyncInterface):
             # Add to returned list
             series.append((series_info, show['path']))
 
-        # Reset request timeout
-        self.REQUEST_TIMEOUT = 30
-
         return series
 
 
@@ -323,7 +317,10 @@ class SonarrInterface(WebInterface, SyncInterface):
         series_info.set_tvrage_id(data['tvrage_id'])
 
 
-    def get_all_episodes(self, series_info: SeriesInfo) -> list[EpisodeInfo]:
+    def get_all_episodes(self,
+            series_info: SeriesInfo,
+            episode_infos: Optional[list[EpisodeInfo]] = None
+            ) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that
         have  already aired are returned.
@@ -342,8 +339,10 @@ class SonarrInterface(WebInterface, SyncInterface):
 
         # Construct GET arguments
         url = f'{self.url}episode/'
-        params = {'apikey': self.__api_key,
-                  'seriesId': int(series_info.sonarr_id.split('-')[1])}
+        params = {
+            'apikey': self.__api_key, 
+            'seriesId': int(series_info.sonarr_id.split('-')[1])
+        }
 
         # Query Sonarr to get JSON of all episodes for this series
         all_episodes = self._get(url, params)
@@ -376,22 +375,31 @@ class SonarrInterface(WebInterface, SyncInterface):
                 episode['tvdbId'] = None
                 has_bad_ids = True
 
-            # Create EpisodeInfo object for this entry
-            episode_info = self.info_set.get_episode_info(
-                series_info,
-                episode['title'],
-                episode['seasonNumber'],
-                episode['episodeNumber'],
-                episode.get('absoluteEpisodeNumber'),
-                tvdb_id=episode.get('tvdbId'),
-                title_match=True,
-                queried_sonarr=True,
-                airdate=air_datetime,
-            )
+            # Create new EpisodeInfo via global MediaInfoSet object
+            if episode_infos is None:
+                episode_info = self.info_set.get_episode_info(
+                    series_info,
+                    episode['title'],
+                    episode['seasonNumber'],
+                    episode['episodeNumber'],
+                    episode.get('absoluteEpisodeNumber'),
+                    tvdb_id=episode.get('tvdbId'),
+                    title_match=True,
+                    queried_sonarr=True,
+                    airdate=air_datetime,
+                )
 
-            # Add to episode list
-            if episode_info is not None:
-                all_episode_info.append(episode_info)
+                # Add to episode list
+                if episode_info is not None:
+                    all_episode_info.append(episode_info)
+            else:
+                tmp_ei = (episode['seasonNumber'], episode['episodeNumber'])
+                for episode_info in episode_infos:
+                    # Index match, update ID's
+                    if episode_info == tmp_ei:
+                        episode_info.set_tvdb_id(episode.get('tvdbId'))
+                        all_episode_info.append(episode_info)
+                        break
 
         # If any episodes had TVDb ID's of 0, then warn user to refresh series
         if has_bad_ids:
@@ -401,8 +409,11 @@ class SonarrInterface(WebInterface, SyncInterface):
         return all_episode_info
 
 
-    def set_episode_ids(self, series_info: SeriesInfo,
-            infos: list[EpisodeInfo]) -> None:
+    def set_episode_ids(self,
+            library_name: Optional[str],
+            series_info: SeriesInfo,
+            episode_infos: list[EpisodeInfo],
+            inplace: bool = False) -> None:
         """
         Set all the episode ID's for the given list of EpisodeInfo
         objects. This sets the TVDb ID for each episode.
@@ -412,8 +423,10 @@ class SonarrInterface(WebInterface, SyncInterface):
             infos: List of EpisodeInfo objects to update. Not used.
         """
 
-        # Get all Sonarr-created EpisodeInfo objects
-        self.get_all_episodes(series_info)
+        if inplace:
+            self.get_all_episodes(series_info, episode_infos)
+        else:
+            self.get_all_episodes(series_info)
 
 
     def get_all_tags(self) -> list[dict[str, 'str | int']]:

@@ -3,6 +3,7 @@ from re import findall
 from typing import Any
 
 from modules.Debug import log
+from modules.SeriesInfo import SeriesInfo
 
 class Template:
     """
@@ -128,8 +129,7 @@ class Template:
 
 
     @staticmethod
-    def recurse_priority_union(base_yaml: dict,
-            template_yaml: dict) -> None:
+    def recurse_priority_union(base_yaml: dict, template_yaml: dict) -> None:
         """
         Construct the union of the two dictionaries, with all key/values
         of template_yaml being ADDED to the first, priority dictionary
@@ -164,7 +164,8 @@ class Template:
                     base_yaml[t_key] = t_value
 
 
-    def apply_to_series(self, series_info: 'SeriesInfo',
+    def apply_to_series(self,
+            series_info: SeriesInfo,
             series_yaml: dict[str, Any]) -> bool:
         """
         Apply this Template object to the given series YAML, modifying

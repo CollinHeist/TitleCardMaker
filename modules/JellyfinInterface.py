@@ -3,11 +3,14 @@ from datetime import datetime
 from typing import Optional, Union
 
 from modules.Debug import log
+from modules.Episode import Episode
 from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo import EpisodeInfo
+from modules.SeasonPosterSet import SeasonPosterSet
 import modules.global_objects as global_objects
 from modules.MediaServer import MediaServer
 from modules.SeriesInfo import SeriesInfo
+from modules.StyleSet import StyleSet
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
 
@@ -36,7 +39,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     def __init__(self, url: str, api_key: str,
             username: Optional[str] = None,
-            verify_ssl: bool=True,
+            verify_ssl: bool = True,
             filesize_limit: Optional[int] = None) -> None:
         """
         Construct a new instance of an interface to a Jellyfin server.
@@ -78,7 +81,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             log.exception(f'Bad Jellyfin connection', e)
             exit(1)
 
-        # Get user ID
+        # Get user ID if indicated
         if (user_id := self._get_user_id(username)) is None:
             log.critical(f'Cannot identify ID of user "{username}"')
             exit(1)
@@ -89,7 +92,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         self.libraries = self._map_libraries()
 
 
-    def _get_user_id(self, username: str) -> 'str | None':
+    def _get_user_id(self, username: str) -> Optional[str]:
         """
         Get the User ID associated with the given username.
 
@@ -136,7 +139,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return {
             library['Name']: library['Id']
             for library in libraries['Items']
-            if library['CollectionType'] == 'tvshows'
+            if library.get('CollectionType', None) == 'tvshows'
         }
 
 
@@ -177,14 +180,26 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             for result in response['Items']:
                 if (result['Type'] == 'Series'
                     and series_info.matches(result['Name'])):
-                    self.info_set.set_jellyfin_id(series_info, result['Id'])
-                    if (imdb_id := result['ProviderIds'].get('Imdb')):
-                        self.info_set.set_imdb_id(series_info, imdb_id)
-                    if (tmdb_id := result['ProviderIds'].get('Tmdb')):
-                        self.info_set.set_tmdb_id(series_info, int(tmdb_id))
-                    if (tvdb_id := result['ProviderIds'].get('Tvdb')):
-                        self.info_set.set_tvdb_id(series_info, int(tvdb_id))
-                        
+                    ids = result.get('ProviderIds', {})
+                    # No MediaInfoSet, set directly
+                    if self.info_set is None:
+                        series_info.set_jellyfin_id(result['Id'])
+                        series_info.set_imdb_id(ids.get('Imdb', None))
+                        series_info.set_imdb_id(ids.get('Tmdb', None))
+                        series_info.set_imdb_id(ids.get('Tvdb', None))
+                    # Set using global MediaInfoSet
+                    else:
+                        self.info_set.set_jellyfin_id(series_info, result['Id'])
+                        self.info_set.set_imdb_id(
+                            series_info, ids.get('Imdb', None)
+                        )
+                        self.info_set.set_imdb_id(
+                            series_info, ids.get('Tmdb', None)
+                        )
+                        self.info_set.set_imdb_id(
+                            series_info, ids.get('Tvdb', None)
+                        )
+
                     return None
 
         # Not found on server
@@ -193,21 +208,30 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return None 
 
 
-    def set_episode_ids(self, series_info: SeriesInfo,
-            infos: list[EpisodeInfo]) -> None:
+    def set_episode_ids(self,
+            library_name: Optional[str],
+            series_info: SeriesInfo,
+            episode_infos: list[EpisodeInfo],
+            inplace: bool=False) -> None:
         """
         Set the Episode ID's for the given EpisodeInfo objects.
 
         Args:
             series_info: Series to get the episodes of.
-            infos: List of EpisodeInfo objects to set the ID's of.
+            episode_infos: List of EpisodeInfo objects to set the ID's
+                of.
+            inplace: Whether to modify episode_infos directly, or use
+                the global MediaInfoSet object.
         """
 
-        self.get_all_episodes(series_info)
+        if inplace:
+            self.get_all_episodes(series_info, episode_infos)
+        else:
+            self.get_all_episodes(series_info)
 
 
-    def get_library_paths(self, filter_libraries: list[str]=[]
-            ) -> dict[str, list[str]]:
+    def get_library_paths(self,
+            filter_libraries: list[str] = []) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
 
@@ -233,14 +257,14 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return {
             lib['Name']: [location for location in lib['Locations']]
             for lib in libraries
-            if (lib['CollectionType'] == 'tvshows'
+            if (lib.get('CollectionType', None) == 'tvshows'
                 and include_library(lib['Name']))
         }
 
 
-    def get_all_series(self, filter_libraries: list[str]=[],
-            required_tags: list[str]=[]
-            ) -> list[tuple[SeriesInfo, str, str]]: 
+    def get_all_series(self,
+            filter_libraries: list[str] = [],
+            required_tags: list[str] = []) -> list[tuple[SeriesInfo, str, str]]: 
         """
         Get all series within Jellyfin, as filtered by the given
         libraries and tags.
@@ -289,12 +313,16 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 if series.get('PremiereDate', None) is None:
                     log.debug(f'Series {series["Name"]} has no premiere date')
                     continue
-                
+
                 series_info = SeriesInfo(
                     series['Name'], 
                     datetime.strptime(series['PremiereDate'],
                                       self.AIRDATE_FORMAT).year,
                     jellyfin_id=series['Id'],
+                    imdb_id=series['ProviderIds'].get('Imdb'),
+                    tmdb_id=series['ProviderIds'].get('Tmdb'),
+                    tvdb_id=series['ProviderIds'].get('Tvdb'),
+                    tvrage_id=series['ProviderIds'].get('TvRage'),
                 )
                 all_series.append((series_info, series['Path'], library))
 
@@ -304,13 +332,18 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return all_series
 
 
-    def get_all_episodes(self, series_info: SeriesInfo) -> list[EpisodeInfo]:
+    def get_all_episodes(self,
+            series_info: SeriesInfo,
+            episode_infos: Optional[list[EpisodeInfo]] = None,
+        ) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that
-        have  already aired are returned.
+        have already aired are returned.
 
         Args:
             series_info: Series to get the episodes of.
+            episode_infos: Optional EpisodeInfos. If provided, these are
+                updated instead of using the global MediaInfoSet object.
 
         Returns:
             List of EpisodeInfo objects for this series.
@@ -330,39 +363,62 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         # Parse each returned episode into EpisodeInfo object
         all_episodes = []
         for episode in response['Items']:
+            # Skip Episodes without episode or season numbers
+            if (episode.get('IndexNumber', None) is None
+                or episode.get('ParentIndexNumber', None) is None):
+                log.debug(f'Series {series_info} episode is missing index data - {e}')
+                continue
+
             # Parse airdate for this episode
             airdate = None
             if 'PremiereDate' in episode:
                 try:
-                    airdate = datetime.strptime(episode['PremiereDate'],
-                                                self.AIRDATE_FORMAT)
+                    airdate = datetime.strptime(
+                        episode['PremiereDate'], self.AIRDATE_FORMAT
+                    )
                 except Exception as e:
                     log.exception(f'Cannot parse airdate', e)
                     log.debug(f'Episode data: {episode}')
+            
+            # Create new EpisodeInfo via global MediaInfoSet object
+            if episode_infos is None:
+                episode_info = self.info_set.get_episode_info(
+                    series_info,
+                    episode['Name'],
+                    episode['ParentIndexNumber'],
+                    episode['IndexNumber'],
+                    jellyfin_id=episode.get('Id'),
+                    imdb_id=episode['ProviderIds'].get('Imdb'),
+                    tmdb_id=episode['ProviderIds'].get('Tmdb'),
+                    tvdb_id=episode['ProviderIds'].get('Tvdb'),
+                    tvrage_id=episode['ProviderIds'].get('TvRage'),
+                    airdate=airdate,
+                    title_match=True,
+                    queried_jellyfin=True,
+                )
 
-            episode_info = self.info_set.get_episode_info(
-                series_info,
-                episode['Name'],
-                episode['ParentIndexNumber'],
-                episode['IndexNumber'],
-                jellyfin_id=episode.get('Id'),
-                imdb_id=episode['ProviderIds'].get('Imdb'),
-                tmdb_id=episode['ProviderIds'].get('Tmdb'),
-                tvdb_id=episode['ProviderIds'].get('Tvdb'),
-                tvrage_id=episode['ProviderIds'].get('TvRage'),
-                airdate=airdate,
-                title_match=True,
-                queried_jellyfin=True,
-            )
-
-            # Add to list
-            if episode_info is not None:
-                all_episodes.append(episode_info)
+                # Add to list
+                if episode_info is not None:
+                    all_episodes.append(episode_info)
+            # If updating existing infos, match by index
+            else:
+                tmp_ei = (episode['ParentIndexNumber'], episode['IndexNumber'])
+                for episode_info in episode_infos:
+                    # Index match, update ID's
+                    if episode_info == tmp_ei:
+                        ep_ids = episode['ProviderIds']
+                        episode_info.set_jellyfin_id(episode.get('Id'))
+                        episode_info.set_imdb_id(ep_ids.get('Imdb'))
+                        episode_info.set_tmdb_id(ep_ids.get('Tmdb'))
+                        episode_info.set_tvdb_id(ep_ids.get('Tvdb'))
+                        episode_info.set_tvrage_id(ep_ids.get('TvRage'))
+                        all_episodes.append(episode_info)
+                        break
 
         return all_episodes
 
 
-    def has_series(self, series_info: 'SeriesInfo') -> bool:
+    def has_series(self, series_info: SeriesInfo) -> bool:
         """
         Determine whether the given series is present within Jellyfin.
 
@@ -377,9 +433,11 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return series_info.has_id('jellyfin_id')
 
 
-    def update_watched_statuses(self, library_name: str,
-            series_info: SeriesInfo, episode_map: dict[str, 'Episode'],
-            style_set: 'StyleSet') -> None:
+    def update_watched_statuses(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_map: dict[str, Episode],
+            style_set: StyleSet) -> None:
         """
         Modify the Episode objects according to the watched status of
         the corresponding episodes within Jellyfin, and the spoil status
@@ -443,14 +501,17 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 )
 
 
-    def set_title_cards(self, library_name: str, series_info: 'SeriesInfo',
-            episode_map: dict[str, 'Episode']) -> None:
+    def set_title_cards(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_map: dict[str, Episode]) -> None:
         """
         Set the title cards for the given series. This only updates
         episodes that have title cards, and those episodes whose card
         filesizes are different than what has been set previously.
 
         Args:
+            library_name: The name of the library containing the series.
             series_info: The series to update.
             episode_map: Dictionary of episode keys to Episode objects
                 to update the cards of.
@@ -458,6 +519,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # If series has no ID, cannot set title cards
         if not series_info.has_id('jellyfin_id'):
+            log.debug(f'Not loading "{series_info}" - not found in Jellyfin')
             return None
 
         # Filter loaded cards
@@ -474,6 +536,8 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         for episode in filtered_episodes.values():
             # Skip episodes without ID's (e.g. not in Jellyfin)
             if (jellyfin_id := episode.episode_info.jellyfin_id) is None:
+                log.debug(f'Skipping {episode.episode_info!r} - not found in '
+                          f'Jellyfin')
                 continue
 
             # Shrink image if necessary, skip if cannot be compressed
@@ -492,9 +556,11 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                     data=card_base64,
                 )
                 loaded_count += 1
+                log.debug(f'Loaded "{series_info}" Episode '
+                          f'{episode.episode_info} into Jellyfin')
             except Exception as e:
                 log.exception(f'Unable to upload {card.resolve()} to '
-                              f'{series_info}', e)
+                              f'"{series_info}"', e)
                 continue
 
             # Update loaded database for this episode
@@ -512,8 +578,10 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             log.info(f'Loaded {loaded_count} cards for "{series_info}"')
 
 
-    def set_season_posters(self, library_name: str, series_info: SeriesInfo,
-            season_poster_set: 'SeasonPosterSet') -> None:
+    def set_season_posters(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            season_poster_set: SeasonPosterSet) -> None:
         """
         Set the season posters from the given set within Plex.
 

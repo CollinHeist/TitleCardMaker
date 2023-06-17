@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from requests import get
+from requests import Response, get
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 from tinydb import where
 
@@ -72,8 +72,8 @@ class RemoteFile:
                 pass
         except Exception as e:
             self.valid = False
-            log.error(f'Could not download RemoteFile "{username}/{filename}", '
-                      f'returned "{e}"')
+            log.exception(f'Could not download RemoteFile '
+                          f'"{username}/{filename}"', e)
 
 
     def __str__(self) -> str:
@@ -105,7 +105,7 @@ class RemoteFile:
 
     @retry(stop=stop_after_attempt(3),
            wait=wait_fixed(3)+wait_exponential(min=1, max=16))
-    def __get_remote_content(self) -> 'Response':
+    def __get_remote_content(self) -> Response:
         """
         Get the content at the remote source.
 
@@ -116,7 +116,7 @@ class RemoteFile:
         return get(self.remote_source)
 
 
-    def download(self):
+    def download(self) -> None:
         """
         Download the specified remote file from the TCM CardTypes
         GitHub, and write it to a temporary local file.
@@ -136,9 +136,12 @@ class RemoteFile:
         with self.local_file.open('wb') as file_handle:
             file_handle.write(content.content)
 
+        return None
+
 
     @staticmethod
     def reset_loaded_database() -> None:
         """Reset (clear) this class's database of loaded remote files."""
 
         PersistentDatabase(RemoteFile.LOADED_FILE).reset()
+        log.debug(f'Reset PersistentDatabase[{RemoteFile.LOADED_FILE}]')

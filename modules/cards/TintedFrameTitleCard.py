@@ -6,6 +6,7 @@ from modules.Debug import log
 
 SeriesExtra = Optional
 Element = Literal['index', 'logo', 'omit', 'title']
+MiddleElement = Literal['logo', 'omit']
 
 
 class Coordinate:
@@ -75,7 +76,8 @@ class TintedFrameTitleCard(BaseCardType):
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_file',
         'font_size', 'font_color', 'font_interline_spacing', 'font_kerning',
         'font_vertical_shift', 'episode_text_color', 'separator', 'frame_color',
-        'logo', 'top_element', 'bottom_element',
+        'logo', 'top_element', 'middle_element', 'bottom_element', 'logo_size',
+        'blur_edges',
     )
 
     def __init__(self, *,
@@ -92,14 +94,19 @@ class TintedFrameTitleCard(BaseCardType):
             font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_vertical_shift: int = 0,
+            season_number: int = 1,
+            episode_number: int = 1,
             blur: bool = False,
             grayscale: bool = False,
-            episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
+            episode_text_color: SeriesExtra[str] = None,
             separator: SeriesExtra[str] = '-',
             frame_color: SeriesExtra[str] = None,
             top_element: Element = 'title',
+            middle_element: MiddleElement = 'omit',
             bottom_element: Element = 'index',
             logo: SeriesExtra[str] = None,
+            logo_size: SeriesExtra[float] = 1.0,
+            blur_edges: bool = True,
             preferences: 'Preferences' = None,
             **unused) -> None:
         """
@@ -127,47 +134,99 @@ class TintedFrameTitleCard(BaseCardType):
         self.font_size = font_size
         self.font_vertical_shift = font_vertical_shift
 
-        # Optional extras
-        self.episode_text_color = episode_text_color
+       # Optional extras
         self.separator = separator
         self.frame_color = font_color if frame_color is None else frame_color
+        self.logo_size = logo_size
+        self.blur_edges = blur_edges
+        if episode_text_color is None:
+            self.episode_text_color = font_color
+        else:
+            self.episode_text_color = episode_text_color
 
         # If a logo was provided, convert to Path object
         if logo is None:
             self.logo = None
         else:
             try:
-                self.logo = Path(logo)
-            except:
+                self.logo = Path(
+                    str(logo).format(
+                        season_number=season_number,
+                        episode_number=episode_number
+                    )
+                )
+            except Exception as e:
                 log.exception(f'Logo path is invalid', e)
                 self.valid = False
 
-        # Validate top and bottom element extras
-        top_element = str(top_element).strip().lower()
-        if top_element not in ('omit', 'title', 'index', 'logo'):
-            log.warning(f'Invalid "top_element" - must be "omit", "title", '
-                        f'"index", or "logo"')
-            self.valid = False
-        bottom_element = str(bottom_element).strip().lower()
-        if bottom_element not in ('omit', 'title', 'index', 'logo'):
-            log.warning(f'Invalid "bottom_element" - must be "omit", "title", '
-                        f'"index", or "logo"')
-            self.valid = False
-        if top_element != 'omit' and top_element == bottom_element:
-            log.warning(f'Top and bottom element cannot both be "{top_element}"')
+        # Validate top, middle, and bottom elements
+        def _validate_element(element: str, middle: bool = False) -> str:
+            element = str(element).strip().lower()
+            if middle and element not in ('omit', 'logo'):
+                log.warning(f'Invalid element - must be "omit" or "logo')
+                self.valid = False
+            elif (not middle
+                and element not in ('omit', 'title', 'index', 'logo')):
+                log.warning(f'Invalid element - must be "omit", "title", '
+                            f'"index", or "logo"')
+                self.valid = False
+            return element
+        self.top_element = _validate_element(top_element)
+        self.middle_element = _validate_element(middle_element, middle=True)
+        self.bottom_element = _validate_element(bottom_element)
+
+        # Validate no duplicate elements were indicated
+        if ((self.top_element != 'omit'
+            and (self.top_element == self.middle_element
+                 or self.top_element == self.bottom_element))
+            or (self.middle_element != 'omit'
+                and self.middle_element == self.bottom_element)):
+            log.warning(f'Top/middle/bottom elements cannot be the same')
             self.valid = False
 
         # If logo was indicated, verify logo was provided
-        self.top_element = top_element
-        self.bottom_element = bottom_element
-        if ((top_element == 'logo' or bottom_element == 'logo')
-            and self.logo is None):
+        if (self.logo is None
+            and ('logo' in (self.top_element, self.middle_element,
+                            self.bottom_element))):
             log.warning(f'Logo file not provided')
             self.valid = False
 
+        return None
+
 
     @property
-    def title_text_command(self) -> ImageMagickCommands:
+    def blur_commands(self) -> ImageMagickCommands:
+        """
+        Subcommand to blur the outer frame of the source image (if
+        indicated).
+
+        Returns:
+            List of ImageMagick Commands.
+        """
+
+        # Blurring is disabled, return empty command
+        if not self.blur_edges:
+            return []
+
+        crop_width = self.WIDTH - (2 * self.BOX_OFFSET) - 6 # 6px margin
+        crop_height = self.HEIGHT - (2 * self.BOX_OFFSET) - 4 # 4px margin
+
+        return [
+            # Blur entire image
+            f'-blur 0x20',
+            # Crop out center area of the source image
+            f'-gravity center',
+            f'\( "{self.source_file.resolve()}"',
+            *self.resize_and_style,
+            f'-crop {crop_width}x{crop_height}+0+0',
+            f'+repage \)',
+            # Overlay unblurred center area 
+            f'-composite',
+        ]
+
+
+    @property
+    def title_text_commands(self) -> ImageMagickCommands:
         """
         Subcommand for adding title text to the source image.
 
@@ -208,7 +267,7 @@ class TintedFrameTitleCard(BaseCardType):
 
 
     @property
-    def index_text_command(self) -> ImageMagickCommands:
+    def index_text_commands(self) -> ImageMagickCommands:
         """
         Subcommand for adding index text to the source image.
 
@@ -257,27 +316,52 @@ class TintedFrameTitleCard(BaseCardType):
 
     
     @property
-    def logo_command(self) -> ImageMagickCommands:
+    def logo_commands(self) -> ImageMagickCommands:
         """
-        Subcommand for adding the logo to the image if indicated by the
-        bottom element extra (and the logo file exists).
+        Subcommand for adding the logo to the image if indicated by
+        either extra (and the logo file exists).
 
         Returns:
             List of ImageMagick commands.
         """
 
         # Logo not indicated or not available, return empty commands
-        if ((self.top_element != 'logo' and self.bottom_element != 'logo')
+        if ((self.top_element != 'logo'
+             and self.middle_element != 'logo'
+             and self.bottom_element != 'logo')
             or self.logo is None or not self.logo.exists()):
             return []
 
         # Determine vertical position based on which element the logo is
-        vertical_shift = 700 * (-1 if self.top_element == 'logo' else +1)
+        if self.top_element == 'logo':
+            vertical_shift = -720
+        elif self.middle_element == 'logo':
+            vertical_shift = 0
+        elif self.bottom_element == 'logo':
+            vertical_shift = 700
+        else:
+            vertical_shift = 0
+
+        # Determine logo height
+        if self.middle_element == 'logo':
+            logo_height = 350 * self.logo_size
+        else:
+            logo_height = 150 * self.logo_size
+
+        # Determine resizing for the logo
+        if self.middle_element == 'logo':
+            # Constrain by width and height
+            resize_command = [
+                f'-resize x{logo_height}',
+                f'-resize {2500 * self.logo_size}x{logo_height}\>',
+            ]
+        else:
+            resize_command = [f'-resize x{logo_height}']
 
         return [
             f'\( "{self.logo.resolve()}"',
-            f'-resize x150 \)',
-            f'-gravity center',
+            *resize_command,
+            f'\) -gravity center',
             f'-geometry +0{vertical_shift:+}',
             f'-composite',
         ]
@@ -307,14 +391,12 @@ class TintedFrameTitleCard(BaseCardType):
                 and (self.logo is None or not self.logo.exists()))
             or (self.top_element == 'title' and len(self.title_text) == 0)):
 
-            return [
-                Rectangle(TopLeft, TopRight).draw()
-            ]
+            return [Rectangle(TopLeft, TopRight).draw()]
 
         # Element is index text
         if self.top_element == 'index':
             element_width, _ = self.get_text_dimensions(
-                self.index_text_command, width='max', height='max',
+                self.index_text_commands, width='max', height='max',
             )
             margin = 25
         # Element is logo
@@ -325,13 +407,17 @@ class TintedFrameTitleCard(BaseCardType):
         # Element is title text
         elif self.top_element == 'title':
             element_width, _ = self.get_text_dimensions(
-                self.title_text_command, width='max', height='max',
+                self.title_text_commands, width='max', height='max',
             )
             margin = 10
 
         # Determine bounds based on element width
         left_box_x = (self.WIDTH / 2) - (element_width / 2) - margin
         right_box_x = (self.WIDTH / 2) + (element_width / 2) + margin
+
+        # If the boundaries are wider than the start of the frame, draw nothing
+        if left_box_x < INSET or right_box_x > (self.WIDTH - INSET):
+            return []
 
         # Create Rectangles for these two frame sections
         top_left_rectangle = Rectangle(
@@ -383,7 +469,7 @@ class TintedFrameTitleCard(BaseCardType):
         # Element is index text
         if self.bottom_element == 'index':
             element_width, _ = self.get_text_dimensions(
-                self.index_text_command, width='max', height='max',
+                self.index_text_commands, width='max', height='max',
             )
             margin = 25
         # Element is logo
@@ -394,13 +480,17 @@ class TintedFrameTitleCard(BaseCardType):
         # Element is title
         elif self.bottom_element == 'title':
             element_width, _ = self.get_text_dimensions(
-                self.title_text_command, width='max', height='max',
+                self.title_text_commands, width='max', height='max',
             )
             margin = 10
 
         # Determine bounds based on element width
         left_box_x = (self.WIDTH / 2) - (element_width / 2) - margin
         right_box_x = (self.WIDTH / 2) + (element_width / 2) + margin
+
+        # If the boundaries are wider than the start of the frame, draw nothing
+        if left_box_x < INSET or right_box_x > (self.WIDTH - INSET):
+            return []
 
         # Create Rectangles for these two frame sections
         bottom_left_rectangle = Rectangle(
@@ -419,7 +509,7 @@ class TintedFrameTitleCard(BaseCardType):
 
 
     @property
-    def frame_command(self) -> ImageMagickCommands:
+    def frame_commands(self) -> ImageMagickCommands:
         """
         Subcommand to add the box that separates the outer (blurred)
         image and the interior (unblurred) image. This box features a
@@ -441,7 +531,8 @@ class TintedFrameTitleCard(BaseCardType):
         # Determine frame draw commands
         top = self._frame_top_commands
         left = [Rectangle(TopLeft, BottomLeft).draw()]
-        right = [Rectangle(
+        right = [
+            Rectangle(
                 Coordinate(self.WIDTH - INSET - BOX_WIDTH, INSET),
                 BottomRight,
             ).draw()
@@ -539,29 +630,24 @@ class TintedFrameTitleCard(BaseCardType):
         Make the necessary ImageMagick and system calls to create this
         object's defined title card.
         """
-
-        crop_width = self.WIDTH - (2 * self.BOX_OFFSET) - 6 # 6px margin
-        crop_height = self.HEIGHT - (2 * self.BOX_OFFSET) - 4 # 4px margin
+        
+        # Error and exit if logo is specified and DNE
+        if ('logo' in (self.top_element, self.middle_element, self.bottom_element)
+            and (self.logo is None or not self.logo.exists())):
+            log.error(f'Logo file "{self.logo}" does not exist')
+            return None
 
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
             # Resize and apply styles to source image
             *self.resize_and_style,
-            # Blur entire image
-            f'-blur 0x20',
-            # Crop out center area of the source image
-            f'-gravity center',
-            f'\( "{self.source_file.resolve()}"',
-            *self.resize_and_style,
-            f'-crop {crop_width}x{crop_height}+0+0',
-            f'+repage \)',
-            # Overlay unblurred center area 
-            f'-composite',
+            # Add blurred edges (if indicated)
+            *self.blur_commands,
             # Add remaining sub-components
-            *self.title_text_command,
-            *self.index_text_command,
-            *self.logo_command,
-            *self.frame_command,
+            *self.title_text_commands,
+            *self.index_text_commands,
+            *self.logo_commands,
+            *self.frame_commands,
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

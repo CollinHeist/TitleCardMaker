@@ -26,7 +26,7 @@ class Manager:
     VALID_EXECUTION_MODES = ('serial', 'batch')
 
 
-    def __init__(self, check_tautulli: bool=True) -> None:
+    def __init__(self, check_tautulli: bool = True) -> None:
         """
         Constructs a new instance of the Manager. This uses the global
         PreferenceParser object in preferences, and optionally creates
@@ -400,7 +400,11 @@ class Manager:
                 self.archives = [archive]
 
             # Run all functions on this series
-            self.__run(serial=True)
+            try:
+                self.__run(serial=True)
+            except Exception as e:
+                log.exception(f'Uncaught Exception while processing {show}', e)
+                continue
 
 
     def run(self) -> None:

@@ -1,5 +1,5 @@
 from re import match, compile as re_compile
-from typing import Optional
+from typing import Optional, Union
 
 from modules.CleanPath import CleanPath
 from modules.DatabaseInfoContainer import DatabaseInfoContainer
@@ -21,15 +21,17 @@ class SeriesInfo(DatabaseInfoContainer):
     )
 
 
-    def __init__(self, name: str, year: Optional[int]=None, *,
-            emby_id: Optional[int]=None,
-            imdb_id: Optional[str]=None,
-            jellyfin_id: Optional[str]=None,
-            sonarr_id: Optional[str]=None,
-            tmdb_id: Optional[int]=None,
-            tvdb_id: Optional[int]=None,
-            tvrage_id: Optional[int]=None,
-            match_titles: Optional[bool]=True) -> None:
+    def __init__(self,
+            name: str,
+            year: Optional[int] = None, *,
+            emby_id: Optional[int] = None,
+            imdb_id: Optional[str] = None,
+            jellyfin_id: Optional[str] = None,
+            sonarr_id: Optional[str]  =None,
+            tmdb_id: Optional[int] = None,
+            tvdb_id: Optional[int] = None,
+            tvrage_id: Optional[int] = None,
+            match_titles: Optional[bool] = True) -> None:
         """
         Create a SeriesInfo object that defines a series described by
         all of  these attributes.
@@ -56,14 +58,22 @@ class SeriesInfo(DatabaseInfoContainer):
         # Parse arguments into attributes
         self.name = name
         self.year = year
-        self.emby_id = None if emby_id is None else int(emby_id)
-        self.imdb_id = imdb_id
-        self.jellyfin_id = jellyfin_id
-        self.sonarr_id = sonarr_id
-        self.tmdb_id = None if tmdb_id is None else int(tmdb_id)
-        self.tvdb_id = None if tvdb_id is None else int(tvdb_id)
-        self.tvrage_id = None if tvrage_id is None else int(tvrage_id)
+        self.emby_id = None
+        self.imdb_id = None
+        self.jellyfin_id = None
+        self.sonarr_id = None
+        self.tmdb_id = None
+        self.tvdb_id = None
+        self.tvrage_id = None
         self.match_titles = match_titles
+
+        self.set_emby_id(emby_id)
+        self.set_imdb_id(imdb_id)
+        self.set_jellyfin_id(jellyfin_id)
+        self.set_sonarr_id(sonarr_id)
+        self.set_tmdb_id(tmdb_id)
+        self.set_tvdb_id(tvdb_id)
+        self.set_tvrage_id(tvrage_id)
 
         # If no year was specified, parse from name as "name (year)"
         if (self.year is None
@@ -101,11 +111,24 @@ class SeriesInfo(DatabaseInfoContainer):
 
 
     @property
-    def characteristics(self) -> dict[str, str]:
+    def characteristics(self) -> dict[str, Union[str, int]]:
         
         return {
             'series_name': self.name,
             'series_year': self.year,
+        }
+
+    
+    @property
+    def ids(self) -> dict[str, Union[str, int]]:
+        return {
+            'emby_id': self.emby_id,
+            'imdb_id': self.imdb_id,
+            'jellyfin_id': self.jellyfin_id,
+            'sonarr_id': self.sonarr_id,
+            'tmdb_id': self.tmdb_id,
+            'tvdb_id': self.tvdb_id,
+            'tvrage_id': self.tvrage_id,
         }
 
 

@@ -108,7 +108,7 @@ class StarWarsTitleCard(BaseCardType):
             self.episode_prefix, self.episode_text = None, None
         else:
             if ' ' in episode_text:
-                prefix, text = episode_text.split(' ', 1)
+                prefix, text = episode_text.upper().split(' ', 1)
                 self.episode_prefix, self.episode_text = map(
                     self.image_magick.escape_chars,
                     (prefix, text)

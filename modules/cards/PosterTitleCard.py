@@ -113,8 +113,8 @@ class PosterTitleCard(BaseCardType):
             if logo.exists():
                 self.logo = logo
             # Try to find logo alongside source image
-            elif (source.parent / logo.name).exists():
-                self.logo = source.parent / logo.name
+            elif (source_file.parent / logo.name).exists():
+                self.logo = source_file.parent / logo.name
             # Assume non-existent explicitly specified filename
             else:
                 self.logo = logo

@@ -1,6 +1,8 @@
 from re import compile as re_compile, IGNORECASE
+from typing import Any, Callable, Literal, Optional
 
 from modules.Debug import log
+from modules.EpisodeInfo import EpisodeInfo
 
 class EpisodeMap:
     """
@@ -23,8 +25,9 @@ class EpisodeMap:
 
 
     def __init__(self,
-            seasons: dict = None,
-            episode_ranges: dict = None) -> None:
+            seasons: Optional[dict[str, Any]] = None,
+            episode_ranges: Optional[dict[str, Any]] = None
+        ) -> None:
         """
         Construct a new instance of an EpisodeMap. This maps titles and
         source images to episodes, and can be initialized with EITHER a
@@ -96,7 +99,7 @@ class EpisodeMap:
         return f'{self.__titles}|{self.__sources}|{self.__applies}'
 
 
-    def __parse_seasons(self, seasons: dict) -> None:
+    def __parse_seasons(self, seasons: dict[str, Any]) -> None:
         """
         Parse the given season map, filling this object's title, source,
         and applies dictionaries. Also update's object validity.
@@ -137,7 +140,8 @@ class EpisodeMap:
                 self.is_custom = True
 
 
-    def __parse_index_episode_range(self, episode_ranges: dict) -> None:
+    def __parse_index_episode_range(self,
+            episode_ranges: dict[str, Any]) -> None:
         """
         Parse the given episode range map, filling this object's title,
         source, and applies dictionaries. Also update's object validity.
@@ -193,7 +197,8 @@ class EpisodeMap:
                         self.__applies[key] = value
 
 
-    def __parse_absolute_episode_ranges(self, episode_ranges: dict) -> None:
+    def __parse_absolute_episode_ranges(self,
+            episode_ranges: dict[str, Any]) -> None:
         """
         Parse the given episode range map, filling this object's title,
         source, and applies dictionaries. Also update's object validity.
@@ -245,8 +250,10 @@ class EpisodeMap:
             self.__index_by = 'season'
 
 
-    def get_generic_season_title(self, *, season_number: int=None,
-                                 episode_info: 'EpisodeInfo'=None) -> str:
+    def get_generic_season_title(self, *,
+            season_number: Optional[int] = None,
+            episode_info: Optional[EpisodeInfo] = None
+        ) -> str:
         """
         Get the generic season title for the given entry.
 
@@ -273,7 +280,7 @@ class EpisodeMap:
         return 'Specials' if season_number == 0 else f'Season {season_number}'
 
 
-    def get_all_season_titles(self) -> dict:
+    def get_all_season_titles(self) -> dict[str, str]:
         """
         Get the dictionary of season titles.
 
@@ -285,7 +292,10 @@ class EpisodeMap:
 
 
     def __get_value(self,
-            episode_info: 'EpisodeInfo', which: str, default: callable):
+            episode_info: EpisodeInfo,
+            which: Literal['season_titles', 'source', 'applies_to'], 
+            default: Callable[[EpisodeInfo], str]
+        ) -> str:
         """
         Get the value for the given Episode from the target associated with
         'which' (i.e. the season title/source/applies map).
@@ -337,7 +347,7 @@ class EpisodeMap:
             return default(episode_info=episode_info)
 
 
-    def get_season_title(self, episode_info: 'EpisodeInfo') -> str:
+    def get_season_title(self, episode_info: EpisodeInfo) -> str:
         """
         Get the season title for the given Episode.
 
@@ -369,7 +379,7 @@ class EpisodeMap:
         return season_title
 
 
-    def get_source(self, episode_info: 'EpisodeInfo') -> str:
+    def get_source(self, episode_info: EpisodeInfo) -> str:
         """
         Get the specified source filename for the given Episode.
 
@@ -397,7 +407,7 @@ class EpisodeMap:
         return source
 
 
-    def get_applies_to(self, episode_info: 'EpisodeInfo') -> str:
+    def get_applies_to(self, episode_info: EpisodeInfo) -> str:
         """
         Get the specified applies to value of for the given Episode.
 

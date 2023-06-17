@@ -28,26 +28,13 @@ setLoggerClass(BetterExceptionLogger)
 
 # StreamHandler to integrate log messages with TQDM
 class LogHandler(StreamHandler):
-    def __init__(self, level=NOTSET):
-        super().__init__(level)
-        self.__just_logged = []
-
     def emit(self, record):
-        # Skip if logged recently and not at least an error
-        if record.levelno < ERROR and record.msg in self.__just_logged:
-            return None
-
         # Write after flushing buffer to integrate with tqdm
         try:
             tqdm.write(self.format(record))
             self.flush()
         except Exception:
             self.handleError(record)
-
-        # Add to just logged list, keep list below 5 entries
-        self.__just_logged.append(record.msg)
-        if len(self.__just_logged) > 5:
-            self.__just_logged.pop(0)
 
 
 # Formatter classes to handle exceptions

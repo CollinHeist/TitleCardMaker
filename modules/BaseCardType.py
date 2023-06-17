@@ -101,7 +101,7 @@ class BaseCardType(ImageMaker):
     def __init__(self,
             blur: bool = False,
             grayscale: bool = False, *,
-            preferences: Optional['Preferences'] = None) -> None:
+            preferences: Optional['Preferences'] = None) -> None: # type: ignore
         """
         Construct a new CardType. Must call super().__init__() to
         initialize the parent ImageMaker class (for PreferenceParser and
@@ -190,6 +190,8 @@ class BaseCardType(ImageMaker):
         """
 
         return [
+            # Use 4:4:4 sampling by default
+            f'-sampling-factor 4:4:4',
             # Full sRGB colorspace on source image
             f'-set colorspace sRGB',
             # Ignore profile conversion warnings
@@ -213,6 +215,8 @@ class BaseCardType(ImageMaker):
         """
 
         return [
+            # Use 4:4:4 sampling by default
+            f'-sampling-factor 4:4:4',
             # Full sRGB colorspace on source image
             f'-set colorspace sRGB',
             # Ignore profile conversion warnings
@@ -237,6 +241,8 @@ class BaseCardType(ImageMaker):
         """
 
         return [
+            # Use 4:4:4 sampling by default
+            f'-sampling-factor 4:4:4',
             # Full sRGB colorspace on source image
             f'-set colorspace sRGB',
             # Ignore profile conversion warnings
@@ -267,6 +273,11 @@ class BaseCardType(ImageMaker):
         """
 
         return [
+            f'-sampling-factor 4:4:4',
+            f'-set colorspace sRGB',
+            f'+profile "*"',
+            f'-background transparent',
+            f'-gravity center',
             f'-resize "{self.preferences.card_dimensions}"',
             f'-extent "{self.preferences.card_dimensions}"',
         ]

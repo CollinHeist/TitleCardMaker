@@ -26,12 +26,12 @@ class SeasonPosterSet(YamlReader):
     __slots__ = (
         'valid', 'font_file', 'font_color', 'font_kerning', 'posters',
         'font_size', '__source_directory', '__logo', 'has_posters',
-        '__media_directory'
+        '__media_directory', 'logo_is_optional',
     )
 
 
     def __init__(self,
-            episode_map: 'EpisodeMap',
+            episode_map: 'EpisodeMap', # type: ignore
             source_directory: Path,
             media_directory: Path,
             poster_config: Optional[dict[str, Any]] = None) -> None:
@@ -54,10 +54,11 @@ class SeasonPosterSet(YamlReader):
         super().__init__(poster_config)
 
         # Assign default attributes
-        self.font_file = SeasonPoster.SEASON_TEXT_FONT
         self.font_color = SeasonPoster.SEASON_TEXT_COLOR
+        self.font_file = SeasonPoster.SEASON_TEXT_FONT
         self.font_kerning = 1.0
         self.font_size = 1.0
+        self.logo_is_optional = poster_config.get('omit_logo', False)
 
         # Future list of SeasonPoster objects
         self.posters = {}
@@ -118,7 +119,8 @@ class SeasonPosterSet(YamlReader):
 
 
     def __prepare_posters(self,
-            poster_config: dict[str, Any], episode_map: 'EpisodeMap') -> None:
+            poster_config: dict[str, Any],
+            episode_map: 'EpisodeMap') -> None:
         """
         Create SeasonPoster objects for all available season poster
         images, using the given config.
@@ -139,8 +141,9 @@ class SeasonPosterSet(YamlReader):
         # Get whether to use top or bottom placement
         top_placement = poster_config.get('placement', 'bottom').lower() =='top'
 
-        # Get whether to omit gradient
+        # Get whether to omit gradient and logo
         omit_gradient = poster_config.get('omit_gradient', False)
+        omit_logo = poster_config.get('omit_logo', False)
 
         # Get all the season posters that exist in the source directory
         for poster_file in self.__source_directory.glob('season*.jpg'):
@@ -174,8 +177,8 @@ class SeasonPosterSet(YamlReader):
             self.has_posters = True
             self.posters[season_number] = SeasonPoster(
                 source=poster_file,
-                logo=self.__logo,
                 destination=destination,
+                logo=self.__logo,
                 season_text=season_text,
                 font=self.font_file,
                 font_color=self.font_color,
@@ -183,10 +186,11 @@ class SeasonPosterSet(YamlReader):
                 font_kerning=self.font_kerning,
                 top_placement=top_placement,
                 omit_gradient=omit_gradient,
+                omit_logo=omit_logo,
             )
 
 
-    def get_poster(self, season_number: int) -> 'Path | None':
+    def get_poster(self, season_number: int) -> Optional[Path]:
         """
         Get the path to the Poster from this set for the given season
         number.
@@ -211,7 +215,8 @@ class SeasonPosterSet(YamlReader):
         """Create all season posters within this set."""
 
         # Warn and exit if logo DNE
-        if len(self.posters) > 1 and not self.__logo.exists():
+        if (self.has_posters
+            and (not self.logo_is_optional and not self.__logo.exists())):
             log.error(f'Cannot create season posters, logo file '
                       f'"{self.__logo.resolve()}" does not exist')
             return None
@@ -232,3 +237,5 @@ class SeasonPosterSet(YamlReader):
                 log.debug(f'Could not create poster '
                           f'"{poster.destination.resolve()}"')
                 poster.image_magick.print_command_history()
+
+        return None

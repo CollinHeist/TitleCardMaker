@@ -2,6 +2,7 @@ from abc import abstractmethod
 from math import ceil
 from pathlib import Path
 from random import sample
+from typing import Optional
 
 from modules.Debug import log
 from modules.ImageMaker import ImageMaker
@@ -35,7 +36,7 @@ class BaseSummary(ImageMaker):
 
 
     @abstractmethod
-    def __init__(self, show: 'Show', created_by: str=None) -> None:
+    def __init__(self, show: 'Show', created_by: Optional[str] = None) -> None:
         """
         Initialize this object.
 
@@ -65,7 +66,7 @@ class BaseSummary(ImageMaker):
         self.number_rows = 0
 
 
-    def _select_images(self, maximum_images: int=9) -> bool:
+    def _select_images(self, maximum_images: int = 9) -> bool:
         """
         Select the images that are to be incorporated into the show
         summary. This updates the object's inputs and number_rows

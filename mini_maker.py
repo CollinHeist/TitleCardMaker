@@ -318,10 +318,16 @@ season_poster_group = parser.add_argument_group(
 season_poster_group.add_argument(
     '--season-poster',
     type=Path,
-    nargs=3,
+    nargs=2,
     default=SUPPRESS,
-    metavar=('SOURCE', 'LOGO', 'DESTINATION'),
+    metavar=('SOURCE', 'DESTINATION'),
     help='Create a season poster with the given assets')
+season_poster_group.add_argument(
+    '--season-poster-logo',
+    type=Path,
+    default=SUPPRESS,
+    metavar='LOGO',
+    help='Add the given logo to the created season poster')
 season_poster_group.add_argument(
     '--season-text',
     type=str,
@@ -550,10 +556,15 @@ if hasattr(args, 'show_summary'):
 
 # Create season posters
 if hasattr(args, 'season_poster'):
+    if hasattr(args, 'season_poster_logo'):
+        logo = args.season_poster_logo
+    else:
+        logo = None
+
     SeasonPoster(
         source=args.season_poster[0],
-        logo=args.season_poster[1],
-        destination=args.season_poster[2],
+        destination=args.season_poster[1],
+        logo=logo,
         season_text=args.season_text,
         font=args.season_font,
         font_color=args.season_font_color,
@@ -561,4 +572,5 @@ if hasattr(args, 'season_poster'):
         font_kerning=float(args.season_font_kerning[:-1])/100.0,
         top_placement=args.top_placement,
         omit_gradient=args.no_gradient,
+        omit_logo=not hasattr(args, 'season_poster_logo'),
     ).create()

@@ -1,4 +1,5 @@
-from typing import Optional
+from datetime import datetime
+from typing import Any, Optional, Union
 
 from num2words import num2words
 
@@ -13,7 +14,11 @@ class WordSet(dict):
     of numbers.
     """
 
-    def add_numeral(self, label: str, number: int, lang: str=None) -> None:
+    def add_numeral(self,
+            label: str,
+            number: int,
+            lang: Optional[str] = None
+        ) -> None:
         """
         Add the cardinal and ordinal versions of the given number under
         the given label. For example:
@@ -74,7 +79,9 @@ class EpisodeInfo(DatabaseInfoContainer):
     )
 
 
-    def __init__(self, title: 'str | Title', season_number: int,
+    def __init__(self,
+            title: Union[str, Title],
+            season_number: int,
             episode_number: int,
             abs_number: Optional[int] = None, *,
             emby_id: Optional[int] = None,
@@ -83,7 +90,7 @@ class EpisodeInfo(DatabaseInfoContainer):
             tmdb_id: Optional[int] = None,
             tvdb_id: Optional[int] = None,
             tvrage_id: Optional[int] = None,
-            airdate: Optional['datetime'] = None,
+            airdate: Optional[datetime] = None,
             queried_emby: bool = False,
             queried_jellyfin: bool = False,
             queried_plex: bool = False,
@@ -104,18 +111,29 @@ class EpisodeInfo(DatabaseInfoContainer):
         self.season_number = int(season_number)
         self.episode_number = int(episode_number)
         self.abs_number = None if abs_number is None else int(abs_number)
-        self.emby_id = None if emby_id is None else int(emby_id)
-        self.imdb_id = imdb_id
-        self.jellyfin_id = jellyfin_id
-        self.tmdb_id = None if tmdb_id is None else int(tmdb_id)
-        self.tvdb_id = None if tvdb_id is None else int(tvdb_id)
-        self.tvrage_id = None if tvrage_id is None else int(tvrage_id)
+        self.airdate = airdate
+
+        # Store default database ID's
+        self.emby_id = None
+        self.imdb_id = None
+        self.jellyfin_id = None
+        self.tmdb_id = None
+        self.tvdb_id = None
+        self.tvrage_id = None
+
+        # Update each ID
+        self.set_emby_id(emby_id)
+        self.set_imdb_id(imdb_id)
+        self.set_jellyfin_id(jellyfin_id)
+        self.set_tmdb_id(tmdb_id)
+        self.set_tvdb_id(tvdb_id)
+        self.set_tvrage_id(tvrage_id)
+
         self.queried_emby = queried_emby
         self.queried_jellyfin = queried_jellyfin
         self.queried_plex = queried_plex
         self.queried_sonarr = queried_sonarr
         self.queried_tmdb = queried_tmdb
-        self.airdate = airdate
 
         # Create key
         self.key = f'{self.season_number}-{self.episode_number}'
@@ -176,7 +194,7 @@ class EpisodeInfo(DatabaseInfoContainer):
         return f'{self.season_number}-{self.episode_number+count}'
 
 
-    def __eq__(self, other_info: 'EpisodeInfo') -> bool:
+    def __eq__(self, other_info: Union['EpisodeInfo', tuple[int, int]]) -> bool:
         """
         Returns whether the given EpisodeInfo object corresponds to the
         same entry (has the same season and episode index).
@@ -187,19 +205,31 @@ class EpisodeInfo(DatabaseInfoContainer):
         Returns:
             True if the season and episode number of the two objects
             match,  False otherwise.
+
+        Raises:
+            TypeError if other_info is not an EpisodeInfo or two-length
+            tuple of integers.
         """
 
-        # Verify the comparison is another EpisodeInfo object
-        if not isinstance(other_info, EpisodeInfo):
-            raise TypeError(
-                f'Can only compare equality between EpisodeInfo objects'
+        # If another EpisodeInfo, compare by indices
+        if isinstance(other_info, EpisodeInfo):
+            return (
+                self.season_number == other_info.season_number
+                and self.episode_number == other_info.episode_number
+            )
+        # If a tuple of indices, compare
+        elif (isinstance(other_info, tuple) and len(other_info) == 2
+            and all(isinstance(entry, int) for entry in other_info)):
+            return (
+                self.season_number == other_info[0]
+                and self.episode_number == other_info[1]
             )
 
-        # Equality is determined by season and episode number only
-        season_match = (self.season_number == other_info.season_number)
-        episode_match = (self.episode_number == other_info.episode_number)
-
-        return season_match and episode_match
+        # Unsupported comparison type
+        raise TypeError(
+            f'Can only compare equality between EpisodeInfo objects and two-'
+            f'length tuples'
+        )
 
 
     @property
@@ -213,7 +243,7 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     @property
-    def ids(self) -> dict[str, 'int | str | None']:
+    def ids(self) -> dict[str, Any]:
         """This object's ID's (as a dictionary)"""
 
         return {
@@ -227,7 +257,7 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     @property
-    def characteristics(self) -> dict[str, 'int | str']:
+    def characteristics(self) -> dict[str, Any]:
         """
         Get the characteristics of this object for formatting.
 
@@ -247,7 +277,7 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     @property
-    def indices(self) -> dict[str, 'int | None']:
+    def indices(self) -> dict[str, Optional[int]]:
         """This object's season/episode indices (as a dictionary)"""
 
         return {
@@ -283,16 +313,16 @@ class EpisodeInfo(DatabaseInfoContainer):
     def set_tvrage_id(self, tvrage_id) -> None:
         self._update_attribute('tvrage_id', tvrage_id, int)
 
-    def set_airdate(self, airdate: 'datetime') -> None:
+    def set_airdate(self, airdate: datetime) -> None:
         self._update_attribute('airdate', airdate)
 
 
     def update_queried_statuses(self,
-            queried_emby: bool=False,
-            queried_jellyfin: bool=False,
-            queried_plex: bool=False,
-            queried_sonarr: bool=False,
-            queried_tmdb: bool=False) -> None:
+            queried_emby: bool = False,
+            queried_jellyfin: bool = False,
+            queried_plex: bool = False,
+            queried_sonarr: bool = False,
+            queried_tmdb: bool = False) -> None:
         """
         Update the queried attributes of this object to reflect the
         given arguments. Only updates an attribute from False to True.

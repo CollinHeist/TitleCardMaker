@@ -117,7 +117,7 @@ class TautulliInterface(WebInterface):
         return watched_integrated, created_integrated
 
 
-    def __create_agent(self) -> 'int | None':
+    def __create_agent(self) -> Optional[int]:
         """
         Create a new Notification Agent.
 

@@ -1,22 +1,29 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
+from typing import Any, Callable, Optional, Union
 
 from plexapi.exceptions import PlexApiException
 from plexapi.server import PlexServer, NotFound, Unauthorized
+from plexapi.library import Library as PlexLibrary
+from plexapi.video import (
+    Episode as PlexEpisode, Show as PlexShow, Season as PlexSeason
+)
 from requests.exceptions import ReadTimeout, ConnectionError
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 from tinydb import where
 from tqdm import tqdm
 
 from modules.Debug import log, TQDM_KWARGS
-import modules.global_objects as global_objects
+from modules.Episode import Episode
 from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo import EpisodeInfo
-from modules.ImageMaker import ImageMaker
+import modules.global_objects as global_objects
 from modules.MediaServer import MediaServer
 from modules.PersistentDatabase import PersistentDatabase
+from modules.SeasonPosterSet import SeasonPosterSet
 from modules.SeriesInfo import SeriesInfo
+from modules.StyleSet import StyleSet
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
 
@@ -39,10 +46,12 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     __TEMP_IGNORE_REGEX = re_compile(r'^(tba|tbd|episode \d+)$', IGNORECASE)
 
 
-    def __init__(self, url: str, x_plex_token: str='NA',
-            verify_ssl: bool=True,
-            integrate_with_pmm_overlays: bool=False,
-            filesize_limit: int=10485760) -> None:
+    def __init__(self,
+            url: str,
+            x_plex_token: str = 'NA',
+            verify_ssl: bool = True,
+            integrate_with_pmm_overlays: bool = False,
+            filesize_limit: int = 10485760) -> None:
         """
         Constructs a new instance of a Plex Interface.
 
@@ -85,7 +94,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         self.__warned = set()
 
 
-    def catch_and_log(message: str, *, default=None) -> callable:
+    def catch_and_log(message: str, *, default: Any = None) -> Callable:
         """
         Return a decorator that logs (with the given log function) the given
         message if the decorated function raises an uncaught PlexApiException.
@@ -119,7 +128,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     @retry(stop=stop_after_attempt(5),
            wait=wait_fixed(3)+wait_exponential(min=1, max=32),
            reraise=True)
-    def __get_library(self, library_name: str) -> 'Library':
+    def __get_library(self, library_name: str) -> Optional[PlexLibrary]:
         """
         Get the Library object under the given name.
 
@@ -140,8 +149,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     @retry(stop=stop_after_attempt(5),
            wait=wait_fixed(3)+wait_exponential(min=1, max=32),
            reraise=True)
-    def __get_series(self, library: 'Library',
-            series_info: SeriesInfo) -> 'Show':
+    def __get_series(self,
+            library: PlexLibrary,
+            series_info: SeriesInfo) -> Optional[PlexShow]:
         """
         Get the Series object from within the given Library associated
         with the given SeriesInfo. This tries to match by TVDb ID,
@@ -228,9 +238,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     @catch_and_log('Error getting all series', default=[])
     def get_all_series(self,
-            filter_libraries: list[str]=[],
-            required_tags: list[str]=[],
-            ) -> list[tuple[SeriesInfo, str, str]]: 
+            filter_libraries: list[str] = [],
+            required_tags: list[str] = [],
+        ) -> list[tuple[SeriesInfo, str, str]]: 
         """
         Get all series within Plex, as filtered by the given libraries.
 
@@ -300,8 +310,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     @catch_and_log('Error getting all episodes', default=[])
-    def get_all_episodes(self, library_name: str,
-                         series_info: SeriesInfo) -> list[EpisodeInfo]:
+    def get_all_episodes(self,
+            library_name: str, series_info: SeriesInfo) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that have 
         already aired are returned.
@@ -371,7 +381,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return all_episodes
 
 
-    def has_series(self, library_name: str, series_info: 'SeriesInfo') -> bool:
+    def has_series(self, library_name: str, series_info: SeriesInfo) -> bool:
         """
         Determine whether the given series is present within Plex.
 
@@ -393,10 +403,11 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     @catch_and_log('Error updating watched statuses')
-    def update_watched_statuses(self, library_name: str,
-                                series_info: SeriesInfo,
-                                episode_map: dict[str, 'Episode'],
-                                style_set: 'StyleSet') -> None:
+    def update_watched_statuses(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_map: dict[str, Episode],
+            style_set: StyleSet) -> None:
         """
         Modify the Episode objects according to the watched status of the
         corresponding episodes within Plex, and the spoil status of the object.
@@ -423,8 +434,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             return None
 
         # Get loaded characteristics of the series
-        loaded_series = self.loaded_db.search(self._get_condition(library_name,
-                                                                  series_info))
+        loaded_series = self.loaded_db.search(
+            self._get_condition(library_name, series_info)
+        )
 
         # Go through each episode within Plex and update Episode spoiler status
         for plex_episode in series.episodes():
@@ -435,6 +447,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
             # Set Episode watched/spoil statuses
             episode.update_statuses(plex_episode.isWatched, style_set)
+
 
             # Get characteristics of this Episode's loaded card
             details = self._get_loaded_episode(loaded_series, episode)
@@ -455,14 +468,13 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     @catch_and_log("Error setting series ID's")
-    def set_series_ids(self, library_name: str,
-                       series_info: SeriesInfo) -> None:
+    def set_series_ids(self,library_name: str, series_info: SeriesInfo) -> None:
         """
         Set all possible series ID's for the given SeriesInfo object.
 
         Args:
             library_name: The name of the library containing the series.
-            series_info: SeriesInfo to update.
+            series_info: SeriesInfo object to update.
         """
 
         # If all possible ID's are defined
@@ -479,30 +491,48 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # Set series ID's of all provided GUIDs
         for guid in series.guids:
-            if 'imdb://' in guid.id:
-                self.info_set.set_imdb_id(series_info, guid.id[len('imdb://'):])
-            elif 'tmdb://' in guid.id:
-                tmdb_id = int(guid.id[len('tmdb://'):])
-                self.info_set.set_tmdb_id(series_info, tmdb_id)
-            elif 'tvdb://' in guid.id:
-                tvdb_id = int(guid.id[len('tvdb://'):])
-                self.info_set.set_tvdb_id(series_info, tvdb_id)
+            # No MediaInfoSet, set directly
+            if self.info_set is None:
+                if 'imdb://' in guid.id:
+                    series_info.set_imdb_id(guid.id[len('imdb://'):])
+                elif 'tmdb://' in guid.id:
+                    series_info.set_tmdb_id(guid.id[len('tmdb://'):])
+                elif 'tvdb://' in guid.id:
+                    series_info.set_tvdb_id(guid.id[len('tvdb://'):])
+            # Set using global MediaInfoSet
+            else:
+                if 'imdb://' in guid.id:
+                    self.info_set.set_imdb_id(
+                        series_info, guid.id[len('imdb://'):]
+                    )
+                elif 'tmdb://' in guid.id:
+                    self.info_set.set_tmdb_id(
+                        series_info, guid.id[len('tmdb://'):]
+                    )
+                elif 'tvdb://' in guid.id:
+                    self.info_set.set_tvdb_id(
+                        series_info, guid.id[len('tvdb://'):]
+                    )
+
+        return None
 
 
     @catch_and_log("Error setting episode ID's")
     def set_episode_ids(self,
             library_name: str,
             series_info: SeriesInfo,
-            infos: list[EpisodeInfo]) -> None:
+            episode_infos: list[EpisodeInfo],
+            inplace: bool = False) -> None:
         """
-        Set all the episode ID's for the given list of EpisodeInfo objects. This
-        sets the Sonarr and TVDb ID's for each episode. As a byproduct, this
-        also updates the series ID's for the SeriesInfo object
+        Set all the episode ID's for the given list of EpisodeInfo
+        objects. This sets the Sonarr and TVDb ID's for each episode. As
+        a byproduct, this also updates the series ID's for the
+        SeriesInfo object
 
         Args:
             library_name: Name of the library the series is under.
             series_info: SeriesInfo for the entry.
-            infos: List of EpisodeInfo objects to update.
+            episode_infos: List of EpisodeInfo objects to update.
         """
 
         # If the given library cannot be found, exit
@@ -514,7 +544,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             return None
 
         # Go through each provided EpisodeInfo and update the ID's
-        for info in infos:
+        for info in episode_infos:
             # Skip if EpisodeInfo already has all the possible ID's
             if info.queried_plex or info.has_ids(*self.SERIES_IDS):
                 continue
@@ -540,8 +570,10 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             
 
     @catch_and_log('Error getting source image')
-    def get_source_image(self, library_name: str, series_info: 'SeriesInfo',
-                         episode_info: EpisodeInfo) -> 'str | None':
+    def get_source_image(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_info: EpisodeInfo) -> Optional[str]:
         """
         Get the source image for the given episode within Plex.
 
@@ -596,7 +628,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
            wait=wait_fixed(3)+wait_exponential(min=1, max=32),
            before_sleep=lambda _:log.warning('Cannot upload image, retrying..'),
            reraise=True)
-    def __retry_upload(self, plex_object: 'Episode', filepath: Path) -> None:
+    def __retry_upload(self,
+            plex_object: Union[PlexEpisode, PlexSeason],
+            filepath: Path) -> None:
         """
         Upload the given poster to the given Episode, retrying if it fails.
 
@@ -609,7 +643,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     @catch_and_log('Error uploading title cards')
-    def set_title_cards(self, library_name: str, series_info: 'SeriesInfo',
+    def set_title_cards(self,
+            library_name: str,
+            series_info: SeriesInfo,
             episode_map: dict[str, 'Episode']) -> None:
         """
         Set the title cards for the given series. This only updates episodes
@@ -693,7 +729,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def set_season_posters(self,
             library_name: str,
             series_info: SeriesInfo,
-            season_poster_set: 'SeasonPosterSet') -> None:
+            season_poster_set: SeasonPosterSet) -> None:
         """
         Set the season posters from the given set within Plex.
 
@@ -802,7 +838,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                     raise ValueError
 
                 series_info = self.info_set.get_series_info(
-                    entry.title, entry.year
+                    entry.parentTitle, entry.year
                 )
 
                 return [
