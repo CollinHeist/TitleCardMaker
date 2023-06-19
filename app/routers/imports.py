@@ -5,11 +5,7 @@ from pydantic.error_wrappers import ValidationError
 from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_series
-from app.dependencies import (
-    get_database, get_preferences, get_emby_interface,
-    get_imagemagick_interface, get_jellyfin_interface, get_plex_interface,
-    get_sonarr_interface, get_tmdb_interface
-)
+from app.dependencies import *
 from app.internal.imports import (
     import_cards, parse_emby, parse_fonts, parse_jellyfin, parse_plex,
     parse_preferences, parse_raw_yaml, parse_series, parse_sonarr, parse_syncs,
@@ -39,7 +35,8 @@ import_router = APIRouter(
 @import_router.post('/preferences/options', status_code=201)
 def import_global_options_yaml(
         import_yaml: ImportYaml = Body(...),
-        preferences = Depends(get_preferences)) -> Preferences:
+        preferences = Depends(get_preferences)
+    ) -> Preferences:
     """
     Import the global options from the preferences defined in the given
     YAML. This imports the options and imagemagick sections.
@@ -304,7 +301,8 @@ def import_cards_for_series(
         series_id: int,
         card_directory: ImportCardDirectory = Body(...),
         preferences = Depends(get_preferences),
-        db: Session = Depends(get_database)) -> CardActions:
+        db: Session = Depends(get_database)
+    ) -> CardActions:
     """
     Import any existing Title Cards for the given Series. This finds
     card files by filename, and makes the assumption that each file
@@ -331,7 +329,8 @@ def import_cards_for_series(
 def import_cards_for_multiple_series(
         card_import: MultiCardImport = Body(...),
         preferences = Depends(get_preferences),
-        db: Session = Depends(get_database)) -> CardActions:
+        db: Session = Depends(get_database)
+    ) -> CardActions:
     """
     Import any existing Title Cards for all the given Series. This finds
     card files by filename, and makes the assumption that each file

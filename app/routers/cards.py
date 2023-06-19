@@ -1,11 +1,9 @@
+from typing import Optional, Union
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database.query import get_card, get_episode, get_font, get_series
-from app.dependencies import (
-    get_database, get_emby_interface, get_jellyfin_interface, get_preferences,
-    get_plex_interface, get_sonarr_interface, get_tmdb_interface,
-)
+from app.dependencies import *
 import app.models as models
 from app.internal.cards import (
     create_episode_card, delete_cards, update_episode_watch_statuses,
@@ -19,7 +17,10 @@ from app.schemas.card import CardActions, TitleCard, PreviewTitleCard
 from app.schemas.font import DefaultFont
 
 from modules.Debug import log
+from modules.PlexInterface2 import PlexInterface
+from modules.SonarrInterface2 import SonarrInterface
 from modules.TieredSettings import TieredSettings
+from modules.TMDbInterface2 import TMDbInterface
 
 # Create sub router for all /cards API requests
 card_router = APIRouter(
@@ -262,20 +263,21 @@ def get_episode_card(
 
 
 @card_router.post('/key', tags=['Plex', 'Tautulli'], status_code=200)
-def create_cards_for_plex_key(
+def create_cards_for_plex_rating_keys(
         background_tasks: BackgroundTasks,
-        plex_rating_key: int = Body(...),
+        plex_rating_keys: Union[int, list[int]] = Body(...),
         preferences = Depends(get_preferences),
         db: Session = Depends(get_database),
-        plex_interface = Depends(get_plex_interface),
-        sonarr_interface = Depends(get_sonarr_interface),
-        tmdb_interface = Depends(get_tmdb_interface)) -> None:
+        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
+        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+    ) -> None:
     """
     Remake the Title Card for the item associated with the given Plex
     Rating Key. This item can be a Show, Season, or Episode.
 
-    - plex_rating_key: Unique key within Plex that identifies the item
-    to remake the card of.
+    - plex_rating_keys: Unique keys within Plex that identifies the item
+        to remake the card of.
     """
 
     # Key provided, no PlexInterface, raise 409
@@ -285,16 +287,23 @@ def create_cards_for_plex_key(
             detail=f'Unable to communicate with Plex',
         )
 
-    # Get details of this key from Plex, raise 404 if not found/invalid
-    details = plex_interface.get_episode_details(plex_rating_key)
-    if len(details) == 0:
-        # TODO maybe revise status codes based on exact error
-        raise HTTPException(
-            status_code=404,
-            detail=f'Rating key {plex_rating_key} is invalid'
-        )
-    log.debug(f'Identified {len(details)} entries from RatingKey={plex_rating_key}')
+    # Convert to list if only a single key was provided
+    if isinstance(plex_rating_keys, int):
+        plex_rating_keys = [plex_rating_keys]
 
+    # Get details of each key from Plex, raise 404 if not found/invalid
+    details = []
+    for key in plex_rating_keys:
+        deets = plex_interface.get_episode_details(key)
+        if len(deets) == 0:
+            raise HTTPException(
+                status_code=404,
+                detail=f'Rating key {key} is invalid'
+            )
+        log.debug(f'Identified {len(details)} entries from RatingKey={key}')
+        details += deets
+
+    # Process each set of details
     series_to_load = []
     for series_info, episode_info, watched_status in details:
         # Find Episode
