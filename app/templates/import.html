@@ -68,7 +68,8 @@
         ],
       });
       // Series selector
-      const allSeries = await fetch('/api/series/all').then(resp => resp.json());
+      const seriesResults = await fetch('/api/series/all?size=9999&page=1').then(resp => resp.json());
+      const allSeries = seriesResults.items;
       let seriesMap = {};
       for (series of allSeries) { seriesMap[series.id] = series; }
       $('.dropdown[data-value="series_id"]').dropdown({
