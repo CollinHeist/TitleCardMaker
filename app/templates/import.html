@@ -181,7 +181,7 @@
         series_ids: seriesIds,
         directory: directoryValue === '' ? null : directoryValue,
         image_extension: $('input[name="image_extension"]')[0].value,
-        force_reload: $('.checkbox[data-value="force_reload"]').checkbox('is checked'),
+        force_reload: $('.checkbox[data-value="force_reload"]').checkbox('is unchecked'),
       };
       // URL for request if submitting >1 series
       const url = seriesIds.length > 1 ? '/api/import/series/cards' : `/api/import/series/${seriesIds[0]}/cards`;
