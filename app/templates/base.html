@@ -98,8 +98,15 @@
       transform: rotate(180deg);
     }
 
+    /* Ensure sidebar starts on the right of the statistics */
     #statistics {
-      display: inline-block; /* Ensure sidebar starts on the right of the statistics */
+      display: inline-block; 
+      margin-bottom: 10px;
+    }
+
+    /* Add spacing between pagination menu and series cards */
+    #pagination {
+      margin-top: 25px;
     }
   </style>
 
@@ -109,12 +116,51 @@
       return text.toString().replace(/^(a|an|the)(\s)/i, '');
     }
 
+    function createPageElement(pageNumber, pageText, active = false) {
+      let element = document.createElement('a');
+      element.className = active ? 'active item' : 'item';
+      element.innerText = pageText;
+      if (pageNumber !== undefined) { element.onclick = () => getAllSeries(pageNumber); }
+      return element;
+    }
+
+    function updatePagination(allSeriesData) {
+      // If only one page, don't update pagination menu
+      const {page, size, pages} = allSeriesData;
+      if (pages === 1) { return; }
+      // Add first, n-1, n, n+1, last items
+      let links = [];
+      if (page > 1) {
+        links.push(createPageElement(1, '«'))
+        links.push(createPageElement(page-1, page-1)); 
+      }
+      links.push(createPageElement(undefined, page, true));
+      if (page + 1 < pages) {
+        links.push(createPageElement(page+1, page+1)); 
+        links.push(createPageElement(pages, '»')); 
+      }
+      // Remove existing page links, add new ones
+      $('#pagination a').remove();
+      $('#pagination').append(links);
+    }
+
     // Get all series and load their cards into HTML
-    async function getAllSeries() {
-      let allSeries = await fetch('/api/series/all').then(resp => resp.json());
+    async function getAllSeries(page=1) {
+      // Get associated sort query param
+      const sortState = window.localStorage.getItem('series-sort-order') || 'id-asc';
+      const sortParam = {
+        'id-asc': 'id',
+        'id-desc': 'reverse-id',
+        'a-z': 'alphabetical',
+        'z-a': 'reverse-alphabetical',
+        'year-asc': 'year',
+        'year-desc': 'reverse-year',
+      }[sortState];
+
+      let allSeriesData = await fetch(`/api/series/all?order_by=${sortParam}&size=100&page=${page}`).then(resp => resp.json());
+      let allSeries = allSeriesData.items;
 
       // Sort Series by stored sort order
-      const sortState = window.localStorage.getItem('series-sort-order');
       if (sortState !== undefined) {
         allSeries.sort((a, b) => {
           switch (sortState) {
@@ -148,6 +194,9 @@
         return clone;
       });
       document.getElementById('series-list').replaceChildren(...allSeriesCards);
+
+      // Update pagination at the bottom
+      updatePagination(allSeriesData);
 
       $('.ui.cards .image').dimmer({
         on: 'ontouchstart' in document.documentElement ? 'click' : 'hover'
@@ -280,19 +329,23 @@
           <a class="item" title="Sort titles alphabetically" onclick="sortSeries(this, 'title')">
             <i id="sort-by-az" class="sort alphabet down icon"></i>
           </a>
-          <!-- <a class="item" title="Sort titles by number of cards" onclick="sortSeries(this, 'cards')">
-            <i id="sort-by-cards" class="sort amount down icon"></i>
-          </a> -->
           <a class="item" title="Sort titles by release year" onclick="sortSeries(this, 'year')">
             <i id="sort-by-year" class="sort numeric down icon"></i>
+          </a>
+        </div>
+
+        <!-- Filter series -->
+        <div class="ui compact blue inverted menu">
+          <a class="item" onclick="">
+            <i class="filter icon"></i>
           </a>
         </div>
       </div>
 
       <!-- Actual series content, added asynchronously -->
-      <div>
-        <div id="series-list" class="ui cards"></div>
-      </div>
+      <div id="series-list" class="ui cards"></div>
+
+      <div id="pagination" class="ui centered pagination menu"><!-- Pagination added later --></div>
     </div>
 
     <!-- Add series modal -->

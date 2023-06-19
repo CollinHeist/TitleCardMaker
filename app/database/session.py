@@ -4,6 +4,8 @@ from pathlib import Path
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor
+from fastapi_pagination import Page
+from pydantic import Field
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -41,6 +43,10 @@ PreferencesLocal = Preferences(
     Path(__file__).parent.parent.parent / 'modules' / '.objects' / 'prefs.json'
 )
 
+# Page used for all paginated returns
+Page = Page.with_custom_options(
+    size=Field(250, ge=1, le=1000),
+)
 
 # Initialize all interfaces
 ImageMagickInterfaceLocal = None

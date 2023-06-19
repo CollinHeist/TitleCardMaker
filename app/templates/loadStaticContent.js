@@ -8,7 +8,8 @@ $(document).ready(function() {
       // Search bar uses the search API 
       $('#search-bar').search({
         apiSettings: {
-          url: '/api/series/search?name={query}&max_results=8',
+          url: '/api/series/search?name={query}&size=8&page=1',
+          onResponse: serverResponse => { return serverResponse.items; },
         },
       });
     })
@@ -24,7 +25,7 @@ $(document).ready(function() {
 
   // Search results should show a poster preview
   $.fn.search.settings.templates = {
-    standard: (response) => {
+    standard: response => {
       let elements = response.results.map(({id, name, poster_url}) => {
         return `<a class="search result" href="/series/${id}"><div class="search content"><img src="${poster_url}">${name}</div></a>`;
       });
@@ -35,6 +36,6 @@ $(document).ready(function() {
       } else {
         return `<div class="search result">${message}</div>`;
       }
-     },
+    },
   }
 })

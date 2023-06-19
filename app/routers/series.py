@@ -1,4 +1,5 @@
 from pathlib import Path
+from pydantic import PositiveInt
 from requests import get
 from shutil import copy as file_copy
 from typing import Literal, Optional
@@ -6,11 +7,13 @@ from typing import Literal, Optional
 from fastapi import (
     APIRouter, Body, Depends, Form, HTTPException, Query, UploadFile
 )
+from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from app.database.query import get_all_templates, get_font, get_series
 from app.dependencies import *
+from app.database.session import Page
+from app.database.query import get_all_templates, get_font, get_series
 import app.models as models
 from app.internal.cards import refresh_remote_card_types
 from app.internal.series import (
@@ -35,35 +38,45 @@ series_router = APIRouter(
 )
 
 
+OrderBy = Literal[
+    'alphabetical', 'reverse-alphabetical',
+    'id', 'reverse-id',
+    'year', 'reverse-year'
+]
 @series_router.get('/all', status_code=200)
 def get_all_series(
         db: Session = Depends(get_database),
-        order_by: Literal['alphabetical', 'id', 'year'] = 'id') -> list[Series]:
+        order_by: OrderBy = 'id',
+    ) -> Page[Series]:
     """
     Get all defined Series.
 
     - order_by: How to order the Series in the returned list.
     """
 
-    # Return ordered by Name > Year
+    # Order by Name > Year
     query = db.query(models.series.Series)
     if order_by == 'alphabetical':
-        return query.order_by(func.lower(models.series.Series.name))\
-            .order_by(models.series.Series.year)\
-            .all()
-    # Return ordered by ID
+        series = query.order_by(func.lower(models.series.Series.name))\
+            .order_by(models.series.Series.year)
+    elif order_by == 'reverse-alphabetical':
+        series = query.order_by(func.lower(models.series.Series.name).desc())\
+            .order_by(models.series.Series.year)
+    # Order by ID
     elif order_by == 'id':
-        return query.all()
-    # Returned ordered by Year > Name
+        series = query.order_by(models.series.Series.id)
+    elif order_by == 'reverse-id':
+        series = query.order_by(models.series.Series.id.desc())
+    # Order by Year > Name
     elif order_by == 'year':
-        return query.order_by(models.series.Series.year)\
-            .order_by(func.lower(models.series.Series.name))\
-            .all()
-    else:
-        raise HTTPException(
-            status_code=500,
-            detail=f'Cannot order by "{order_by}"'
-        )
+        series = query.order_by(models.series.Series.year)\
+            .order_by(func.lower(models.series.Series.name))
+    elif order_by == 'reverse-year':
+        series = query.order_by(models.series.Series.year.desc())\
+            .order_by(func.lower(models.series.Series.name))
+
+    # Return paginated results
+    return paginate(series)
 
 
 @series_router.post('/new', status_code=201)
@@ -147,14 +160,13 @@ def search_series(
         font_id: Optional[int] = None,
         sync_id: Optional[int] = None,
         template_id: Optional[int] = None,
-        max_results: Optional[int] = 50,
-        db: Session = Depends(get_database)):
+        db: Session = Depends(get_database),
+    ) -> Page[Series]:
     """
     Query all defined defined series by the given parameters. This
     performs an AND operation with the given conditions.
 
     - Arguments: Search arguments to filter the results by.
-    - max_results: Maximum number of results to return.
     """
 
     # Generate conditions for the given arguments
@@ -173,17 +185,11 @@ def search_series(
         conditions.append(models.series.Series.template_id==template_id)
 
     # Query by all given conditions
-    all_series = db.query(models.series.Series).filter(*conditions).all()
+    query = db.query(models.series.Series).filter(*conditions)\
+        .order_by(models.series.Series.name)
 
-    # Limit number of results if indicated
-    results = all_series
-    if max_results is not None:
-        results = all_series[:max_results]
-
-    return {
-        'results': results,
-        'total_count': len(all_series),
-    }
+    # Return paginated results
+    return paginate(query)
 
 
 @series_router.get('/{series_id}', status_code=200)
@@ -210,7 +216,7 @@ def update_series(
     - series_id: ID of the Series to update.
     - update_series: Attributes of the Series to update.
     """
-    log.critical(f'{update_series.dict()=}')
+    log.debug(f'{update_series.dict()=}')
     # Query for this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
@@ -324,13 +330,50 @@ def reload_title_cards_into_media_server(
     )
 
 
+@series_router.delete('/{series_id}/plex-labels', status_code=204)
+def remove_series_labels(
+        series_id: int,
+        labels: list[str] = Query(default=[]),
+        db: Session = Depends(get_database),
+        plex_interface = Depends(get_plex_interface)) -> None:
+    """
+    Remove the given labels from the given Series' Episodes within Plex.
+    This can be used to reset PMM overlays.
+
+    - series_id: ID of the Series whose Episode labels are being remove.
+    - labels: Any number of labels to remove.
+    """
+
+    # Get this Series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Raise 409 if no library, or the server's interface is invalid
+    if series.plex_library_name is None:
+        raise HTTPException(
+            status_code=409,
+            detail=f'{series.log_str} has no Plex Library',
+        )
+    elif plex_interface is None:
+        raise HTTPException(
+            status_code=409,
+            detail=f'Unable to communicate with Plex',
+        )
+
+    # Remove labels
+    plex_interface.remove_series_labels(
+        series.plex_library_name, series.as_series_info, labels,
+    )
+    
+    return None
+
+
 @series_router.get('/{series_id}/poster', status_code=200)
 def download_series_poster_(
         series_id: int,
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         imagemagick_interface = Depends(get_imagemagick_interface),
-        tmdb_interface = Depends(get_tmdb_interface)) -> str:
+        tmdb_interface = Depends(get_tmdb_interface)) -> None:
     """
     Download and return a poster for the given Series.
 

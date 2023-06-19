@@ -29,6 +29,7 @@ alembic = "*"
 mkdocs = "*"
 mkdocs-material = "*"
 tzdata = "*"
+fastapi-pagination = "*"
 
 [dev-packages]
 
