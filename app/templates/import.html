@@ -59,12 +59,12 @@
       // Extension selector
       $('.dropdown[data-value="image_extension"]').dropdown({
         values: [
-          {name: 'jpg', value: '.jpg', selected: true},
-          {name: 'jpeg', value: '.jpeg', selected: false},
-          {name: 'png', value: '.png', selected: false},
-          {name: 'tiff', value: '.tiff', selected: false},
-          {name: 'gif', value: '.gif', selected: false},
-          {name: 'webp', value: '.webp', selected: false},
+          {name: '.jpg',  value: '.jpg',  selected: '{{preferences.card_extension}}' === '.jpg'},
+          {name: '.jpeg', value: '.jpeg', selected: '{{preferences.card_extension}}' === '.jpeg'},
+          {name: '.png',  value: '.png',  selected: '{{preferences.card_extension}}' === '.png'},
+          {name: '.tiff', value: '.tiff', selected: '{{preferences.card_extension}}' === '.tiff'},
+          {name: '.gif',  value: '.gif',  selected: '{{preferences.card_extension}}' === '.gif'},
+          {name: '.webp', value: '.webp', selected: '{{preferences.card_extension}}' === '.webp'},
         ],
       });
       // Series selector
