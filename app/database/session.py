@@ -45,7 +45,7 @@ PreferencesLocal = Preferences(
 
 # Page used for all paginated returns
 Page = Page.with_custom_options(
-    size=Field(250, ge=1, le=1000),
+    size=Field(250, ge=1),
 )
 
 # Initialize all interfaces

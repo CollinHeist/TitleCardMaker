@@ -182,7 +182,9 @@ def search_series(
     if sync_id is not None:
         conditions.append(models.series.Series.sync_id==sync_id)
     if template_id is not None:
-        conditions.append(models.series.Series.template_id==template_id)
+        return paginate(db.query(models.series.Series)\
+            .join(models.series.Series.templates)\
+            .filter(models.template.Template.id==template_id))
 
     # Query by all given conditions
     query = db.query(models.series.Series).filter(*conditions)\
