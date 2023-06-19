@@ -135,13 +135,13 @@
 
     async function showDeleteSyncModal(syncId) {
       // Get list of Series associated with this Sync
-      const allSeriesResponse = await fetch(`/api/series/search?sync_id=${syncId}&max_results=25`).then(resp => resp.json());
-      const seriesElements = allSeriesResponse.results.map(({name, year}) => {
+      const allSeriesResponse = await fetch(`/api/series/search?sync_id=${syncId}&size=25`).then(resp => resp.json());
+      const seriesElements = allSeriesResponse.items.map(({name, year}) => {
         return `<li>${name} (${year})</li>`
       });
       // More than 25 Series, add indicator of total amount being deleted
-      if (allSeriesResponse.total_count > 25) {
-        seriesElements.push(`<li><span class="ui red text">${allSeriesResponse.total_count-25} more Series...</span></li>`)
+      if (allSeriesResponse.total > 25) {
+        seriesElements.push(`<li><span class="ui red text">${allSeriesResponse.total-25} more Series...</span></li>`)
       }
       $('#delete-sync-modal [data-value="series-list"]')[0].innerHTML = seriesElements.join('');
       // Attach functions to delete buttons
@@ -734,7 +734,6 @@
         <span class="ui blue text">This action cannot be undone.</span>
         <br>
         <span class="ui blue text">This Sync is linked to the following Series:</span>
-        <!-- <div class="ui divider"></div> -->
         <ul class="ui list" data-value="series-list"></ul>
       <div class="center aligned actions">
         <div class="ui green ok basic inverted button">
