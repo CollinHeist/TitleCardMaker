@@ -103,3 +103,10 @@ with the card type you _just_ selected, overriding any Template specifications.
     These are all the major components of TCM, and mark the end of the tutorial.
     If you have any other questions, you can browse this documentation or reach
     out for help on the [Discord](https://discord.gg/bJ3bHtw8wH).
+
+!!! question "What's Next?"
+
+    For most users, the next step is to create a Sync that doesn't just Sync
+    the example Series, but instead _all_ (or large portions) of your Series.
+    Review [Creating the First Sync](./first_sync/index.md) for a reminder on
+    how to create Syncs.

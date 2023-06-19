@@ -1,4 +1,4 @@
-# Getting Started - Docker Tutorial
+# Docker Installation
 
 Docker is a very convenient way of compartmentalizing a piece of software, in
 this case TitleCardMaker, from the rest of your host machine. It also has the

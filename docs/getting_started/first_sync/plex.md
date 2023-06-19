@@ -7,8 +7,7 @@
     Plex server, you can add them (and remove them later - or not, because
     they're great shows), or just pick two entirely different Series.
 
-1. For the purposes of this tutorial, we will be Syncing a subset of your Series
-by using a filter tag within Plex. Open Plex.
+1. Open Plex.
 
 2. Open _Better Call Saul_, and then click the :material-pencil: edit icon, then
 open the :busts_in_silhouette: `Sharing` section from the sidebar.

@@ -123,6 +123,7 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Getting Started:
+    - getting_started/index.md
     - Installation - Docker:
       - getting_started/docker/index.md
       - Docker: getting_started/docker/docker.md
@@ -138,6 +139,7 @@ nav:
       - Sonarr: getting_started/connections/sonarr.md
       - Tautulli: getting_started/connections/tautulli.md
     - Global Settings: getting_started/settings.md
+    - Creating a Font: getting_started/custom_font.md
     - Creating Templates: getting_started/creating_templates.md
     - Adding a Series: getting_started/add_series.md
     - Creating the First Sync:

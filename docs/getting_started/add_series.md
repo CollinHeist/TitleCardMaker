@@ -40,11 +40,15 @@ also try and download a poster.
 
 5. Close the "Add Series" popup.
 
+6. From the homepage, hover over _Better Call Saul_ and click `View` to view the
+Series customization page.
+
+7. Click the `Card Configuration` tab, then in the "Font" dropdown select the
+`Better Call Saul` font we created earlier. This _assigns_ this custom font (and
+all of it's associated customizations) to BCS. Scroll down and click `Save.`
+
 !!! success "Success"
 
-    If a poster for _Better Call Saul_ is now visible on your homepage, you've
-    successfully added a Series to TitleCardMaker.
-
-    You can view the Series customization page by clicking the name or the View
-    button (visible when hovering over the poster). We'll explore this page
-    [later on](./creating_cards.md).
+    You've now manually added a Series to TCM, as well as assigned a custom
+    font. After the tutorial is completed you can review the cards created for
+    BCS and see how this font is applied.

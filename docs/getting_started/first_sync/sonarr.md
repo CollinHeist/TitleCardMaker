@@ -7,8 +7,7 @@
     add them (and remove them later - or not, because they're great shows), or
     just pick two entirely different Series.
 
-1. For the purposes of this tutorial, we will be Syncing a subset of your
-Series by using a filter tag within Sonarr. Open the Sonarr Web Interface.
+1. Open the Sonarr Web Interface.
 
 2. Open _Better Call Saul_, and then click the `Edit` wrench.
 
@@ -39,7 +38,7 @@ Series by using a filter tag within Sonarr. Open the Sonarr Web Interface.
 
         ??? warning "Tag not appearing?"
 
-            Sonarr can take a while to refresh the API with newly created Tags,
+            Sonarr can take a while to refresh the API with newly created tags,
             so if the `tcm-test` tag does not appear in the dropdown, you can
             type it and hit ++enter++ to manually enter the tag.
 
