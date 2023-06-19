@@ -367,6 +367,35 @@
 
 <body onload="initAll();">
   <script>
+    async function showDeleteModal(templateId) {
+      // Get list of Series associated with this Template
+      const allSeriesResponse = await fetch(`/api/series/search?template_id=${templateId}&size=25`).then(resp => resp.json());
+      const seriesElements = allSeriesResponse.items.map(({name, year}) => {
+        return `<li>${name} (${year})</li>`
+      });
+      // More than 25 Series, add indicator of total amount being deleted
+      if (allSeriesResponse.total > 25) {
+        seriesElements.push(`<li><span class="ui red text">${allSeriesResponse.total-25} more Series...</span></li>`)
+      }
+      $('#delete-template-modal [data-value="series-list"]')[0].innerHTML = seriesElements.join('');
+      // Attach functions to delete buttons
+      $('#delete-template-modal .button[data-action="delete-template"]').off('click').on('click', () => {
+        $.ajax({
+          type: 'DELETE',
+          url: `/api/templates/${templateId}`,
+          success: response => {
+            $.toast({class: 'blue info', title: 'Deleted Template'});
+            getAllTemplates();
+          },
+          error: response => {
+            $.toast({class: 'error', title: 'Error Deleting Template'});
+          }, complete: () => {}
+        });
+      });
+
+      $('#delete-template-modal').modal('show');
+    }
+
     async function getAllTemplates() {
       const allFilterOptions = await fetch('/api/available/template-filters').then(resp => resp.json());
       const allCardTypes = await fetch('/api/available/card-types').then(resp => resp.json());
@@ -686,27 +715,7 @@
         // Delete via API
         $(`#template-id${templateObj.id} >* button[button-type="delete"]`).on('click', (event) => {
           event.preventDefault();
-          $(`#template-id${templateObj.id} >* button[button-type="delete"]`).addClass('loading', true);
-          $.ajax({
-            type: 'DELETE',
-            url: `/api/templates/${templateObj.id}`,
-            cache: false,
-            contentType: false,
-            processData: false,
-            success: function(response) {
-              $.toast({
-                class: 'blue info',
-                title: `Deleted Template "${templateObj.name}"`,
-              });
-              getAllTemplates();
-            }, error: function(response) {
-              $.toast({
-                class: 'error',
-                title: 'Error Deleting Template',
-                message: response.responseJSON.detail,
-              });
-            }
-          });
+          showDeleteModal(templateObj.id);
         });
       });
 
@@ -764,6 +773,29 @@
         </div>
       </div>
         
+    </div>
+
+    <!-- Delete Template Modal -->
+    <div id="delete-template-modal" class="ui basic modal">
+      <div class="ui icon header">
+        <i class="trash icon"></i>
+        Delete Template?
+      </div>
+      <div class="center aligned scrolling content">
+        <span class="ui blue text">This action cannot be undone.</span>
+        <br>
+        <span class="ui blue text">This Template is linked to the following Series:</span>
+        <ul class="ui list" data-value="series-list"></ul>
+      <div class="center aligned actions">
+        <div class="ui green ok basic inverted button">
+          <i class="remove icon"></i>
+          No
+        </div>
+        <div data-action="delete-template" class="ui red ok inverted button">
+          <i class="trash alternate outline icon"></i>
+          Yes
+        </div>
+      </div>
     </div>
 
   </div>
