@@ -1,5 +1,4 @@
 from pathlib import Path
-from pydantic import PositiveInt
 from requests import get
 from shutil import copy as file_copy
 from typing import Literal, Optional

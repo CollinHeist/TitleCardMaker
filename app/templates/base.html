@@ -127,7 +127,7 @@
     function updatePagination(allSeriesData) {
       // If only one page, don't update pagination menu
       const {page, size, pages} = allSeriesData;
-      if (pages === 1) { return; }
+      if (pages === 1) { $('#pagination').remove(); }
       // Add first, n-1, n, n+1, last items
       let links = [];
       if (page > 1) {
