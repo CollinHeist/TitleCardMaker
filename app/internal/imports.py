@@ -1067,7 +1067,8 @@ def import_cards(
         series: Series,
         directory: Optional[Path],
         image_extension: CardExtension,
-        force_reload: bool) -> CardActions:
+        force_reload: bool
+    ) -> CardActions:
     """
     Import any existing Title Cards for the given Series. This finds
     card files by filename, and makes the assumption that each file

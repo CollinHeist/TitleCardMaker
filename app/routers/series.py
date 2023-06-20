@@ -32,6 +32,7 @@ from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
+
 series_router = APIRouter(
     prefix='/series',
     tags=['Series'],
@@ -187,17 +188,17 @@ def search_series(
             .filter(models.template.Template.id==template_id))
 
     # Query by all given conditions
-    query = db.query(models.series.Series).filter(*conditions)\
-        .order_by(models.series.Series.name)
-
-    # Return paginated results
-    return paginate(query)
+    return paginate(
+        db.query(models.series.Series).filter(*conditions)\
+            .order_by(func.lower(models.series.Series.name))
+    )
 
 
 @series_router.get('/{series_id}', status_code=200)
 def get_series_config(
         series_id: int,
-        db: Session = Depends(get_database)) -> Series:
+        db: Session = Depends(get_database)
+    ) -> Series:
     """
     Get the config for the given Series.
 
@@ -211,7 +212,8 @@ def get_series_config(
 def update_series(
         series_id: int,
         update_series: UpdateSeries = Body(...),
-        db: Session = Depends(get_database)) -> Series:
+        db: Session = Depends(get_database)
+    ) -> Series:
     """
     Update the config of the given Series.
 
@@ -257,7 +259,8 @@ def update_series(
 @series_router.post('/{series_id}/toggle-monitor', status_code=201)
 def toggle_series_monitored_status(
         series_id: int,
-        db: Session = Depends(get_database)) -> Series:
+        db: Session = Depends(get_database)
+    ) -> Series:
     """
     Toggle the monitored attribute of the given Series.
 
@@ -415,7 +418,8 @@ async def set_series_poster(
         poster_file: Optional[UploadFile] = None,
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
-        image_magick_interface = Depends(get_imagemagick_interface)) -> str:
+        image_magick_interface = Depends(get_imagemagick_interface)
+    ) -> str:
     """
     Set the poster for the given series.
 

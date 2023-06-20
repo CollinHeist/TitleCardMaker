@@ -607,11 +607,11 @@
 
     function getSourceImages() {
       $('#download-source-images > i').toggleClass('loading', true);
+      $.toast({class: 'blue info', title: 'Starting to Download Source Images'});
       $.ajax({
         type: 'POST',
         url: '/api/sources/series/{{series.id}}',
         success: response => {
-          $.toast({class: 'blue info', title: 'Downloading Source Images'});
           getFileData();
         }, error: response => {
           $.toast({

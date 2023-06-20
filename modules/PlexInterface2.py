@@ -202,7 +202,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     @catch_and_log('Error getting library paths', default={})
     def get_library_paths(self,
-            filter_libraries: list[str] = []) -> dict[str, list[str]]:
+            filter_libraries: list[str] = []
+        ) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
 

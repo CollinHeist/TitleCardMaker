@@ -634,7 +634,7 @@ class TintedFrameTitleCard(BaseCardType):
         """
 
         command = ' '.join([
-            f'convert "{self.source_file.resolve()}"',
+            f'magick "{self.source_file.resolve()}"',
             # Resize and apply styles to source image
             *self.resize_and_style,
             # Add blurred edges (if indicated)

@@ -16,6 +16,7 @@ from modules.SeriesInfo import SeriesInfo
 
 INTERNAL_ASSET_DIRECTORY = Path(__file__).parent.parent / 'assets'
 
+
 class Series(Base):
     __tablename__ = 'series'
 
@@ -96,11 +97,11 @@ class Series(Base):
     @hybrid_property
     def full_name(self) -> str:
         return f'{self.name} ({self.year})'
-    
+
     @hybrid_property
     def small_poster_url(self) -> str:
         return f'/assets/{self.id}/poster-750.jpg'
-    
+
     @hybrid_property
     def number_of_seasons(self) -> int:
         return len(set(episode.season_number for episode in self.episodes))

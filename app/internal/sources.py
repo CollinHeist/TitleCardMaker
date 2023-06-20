@@ -4,14 +4,8 @@ from typing import Optional
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app.dependencies import (
-    get_database, get_preferences, get_emby_interface,
-    get_imagemagick_interface, get_jellyfin_interface, get_plex_interface,
-    get_tmdb_interface
-)
-from app.internal.templates import (
-    get_effective_series_template, get_effective_templates
-)
+from app.dependencies import *
+from app.internal.templates import get_effective_templates
 import app.models as models
 from app.schemas.card import SourceImage
 from app.schemas.episode import Episode
@@ -378,7 +372,8 @@ def download_episode_source_image(
 def get_source_image(
         preferences: Preferences,
         imagemagick_interface: Optional[ImageMagickInterface],
-        episode: Episode) -> SourceImage:
+        episode: Episode
+    ) -> SourceImage:
     """
     Get the SourceImage details for the given objects.
 

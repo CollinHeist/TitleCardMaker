@@ -101,7 +101,7 @@ class DividerTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-            stroke_color: SeriesExtra[str] = 'black',
+            stroke_color: str = 'black',
             title_text_position: TitleTextPosition = 'left',
             text_position: TextPosition = 'lower right',
             preferences: 'Preferences' = None,

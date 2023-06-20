@@ -30,7 +30,7 @@ from modules.Title import Title
 from modules.TitleCard import TitleCard as TitleCardCreator
 
 
-def create_all_title_cards():
+def create_all_title_cards() -> None:
     """
     Schedule-able function to re/create all Title Cards for all Series
     and Episodes in the Database.
@@ -64,7 +64,7 @@ def create_all_title_cards():
     return None
 
 
-def refresh_all_remote_card_types():
+def refresh_all_remote_card_types() -> None:
     """
     Schedule-able function to refresh all specified RemoteCardTypes.
     """
@@ -125,7 +125,8 @@ def refresh_remote_card_types(
 def add_card_to_database(
         db: Session,
         card_model: NewTitleCard,
-        card_file: Path) -> 'models.card.Card':
+        card_file: Path
+    ) -> 'models.card.Card':
     """
     Add the given Card to the Database.
 
@@ -211,9 +212,7 @@ def create_card(
     return None
 
 
-def resolve_card_settings(
-        preferences: Preferences,
-        episode: Episode) -> dict[str, Any]:
+def resolve_card_settings(preferences: Preferences, episode: Episode) -> dict:
     """
     Resolve the Title Card settings for the given Episode. This evalutes
     all global, Series, and Template overrides.
@@ -501,8 +500,8 @@ def create_episode_card(
 
 def update_episode_watch_statuses(
         emby_interface: Optional[EmbyInterface],
-        jellyfin_interface: Optional['JellyfinInterface'],
-        plex_interface: Optional['PlexInterface'],
+        jellyfin_interface: Optional[JellyfinInterface],
+        plex_interface: Optional[PlexInterface],
         series: Series,
         episodes: list[Episode]) -> None:
     """
@@ -549,7 +548,8 @@ def update_episode_watch_statuses(
 def delete_cards(
         db: Session,
         card_query: Query,
-        loaded_query: Query) -> list[str]:
+        loaded_query: Query
+    ) -> list[str]:
     """
     Delete all Title Card files for the given card Query. Also remove
     the two queries from the Database.

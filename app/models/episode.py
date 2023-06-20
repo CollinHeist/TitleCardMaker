@@ -79,6 +79,11 @@ class Episode(Base):
 
 
     @hybrid_property
+    def index_str(self) -> str:
+        return f'S{self.season_number:02}E{self.episode_number:02}'
+
+
+    @hybrid_property
     def log_str(self) -> str:
         return f'Episode[{self.id}] {self.as_episode_info}'
 

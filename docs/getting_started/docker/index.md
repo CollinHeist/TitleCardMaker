@@ -5,8 +5,8 @@ this case TitleCardMaker, from the rest of your host machine. It also has the
 benefit of coming pre-packaged with all the required dependent software, making
 installation much easier.
 
-Because of this, Docker is the recommended installation method for all Operating
-Systems.
+For these reasons, Docker is the recommended installation method for all
+Operating Systems.
 
 For [UnRAID](../docker/unraid.md) and [Synology DSM](../docker/synology.md)
 users, there are OS-specific tutorials written to walk you through the

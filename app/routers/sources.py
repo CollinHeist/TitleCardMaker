@@ -1,15 +1,13 @@
 from requests import get
 from typing import Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException, Query, UploadFile
+from fastapi import (
+    APIRouter, BackgroundTasks, Depends, Form, HTTPException, Query, UploadFile,
+)
 from sqlalchemy.orm import Session
 
 from app.database.query import get_episode, get_series
-from app.dependencies import (
-    get_database, get_preferences, get_emby_interface,
-    get_imagemagick_interface, get_jellyfin_interface, get_plex_interface,
-    get_tmdb_interface
-)
+from app.dependencies import *
 from app.internal.cards import delete_cards
 from app.internal.sources import (
     get_source_image, download_episode_source_image, download_series_logo
@@ -74,7 +72,8 @@ def download_series_backdrop(
         # emby_interface = Depends(get_emby_interface),
         # jellyfin_interface = Depends(get_jellyfin_interface),
         # plex_interface = Depends(get_plex_interface),
-        tmdb_interface = Depends(get_tmdb_interface)) -> Optional[str]:
+        tmdb_interface = Depends(get_tmdb_interface)
+    ) -> Optional[str]:
     """
     Download a backdrop (art image) for the given Series. This only uses
     TMDb.
@@ -214,7 +213,7 @@ def get_existing_series_source_images(
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         imagemagick_interface = Depends(get_imagemagick_interface)
-        ) -> list[SourceImage]:
+    ) -> list[SourceImage]:
     """
     Get the SourceImage details for the given Series.
 
@@ -243,7 +242,7 @@ def get_existing_episode_source_images(
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         imagemagick_interface = Depends(get_imagemagick_interface)
-        ) -> SourceImage:
+    ) -> SourceImage:
     """
     Get the SourceImage details for the given Episode.
 
@@ -264,7 +263,7 @@ async def set_source_image(
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         imagemagick_interface = Depends(get_imagemagick_interface),
-        ) -> SourceImage:
+    ) -> SourceImage:
     """
     Set the Source Image for the given Episode. If there is an existing
     Title Card associated with this Episode, it is deleted.
