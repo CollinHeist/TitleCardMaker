@@ -296,7 +296,8 @@ def import_series_yaml(
     return all_series
 
 
-@import_router.post('/series/{series_id}/cards', status_code=200, tags=['Cards', 'Series'])
+@import_router.post('/series/{series_id}/cards', status_code=200,
+                    tags=['Title Cards', 'Series'])
 def import_cards_for_series(
         series_id: int,
         card_directory: ImportCardDirectory = Body(...),
@@ -325,7 +326,8 @@ def import_cards_for_series(
     )
 
 
-@import_router.post('/series/cards', status_code=200, tags=['Cards', 'Series'])
+@import_router.post('/series/cards', status_code=200,
+                    tags=['Title Cards', 'Series'])
 def import_cards_for_multiple_series(
         card_import: MultiCardImport = Body(...),
         preferences = Depends(get_preferences),
