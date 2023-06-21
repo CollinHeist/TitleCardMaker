@@ -18,9 +18,12 @@ from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
+# Whether a Docker execution or not
+IS_DOCKER = environ.get('TCM_IS_DOCKER', 'false').lower() == 'true'
+
 # Get URL of the SQL Database - based on whether in Docker or not
 SQLALCHEMY_DATABASE_URL = 'sqlite:///./db.sqlite'
-if environ.get('TCM_IS_DOCKER', 'false').lower() == 'true':
+if IS_DOCKER:
     SQLALCHEMY_DATABASE_URL = 'sqlite:////config/source/db.sqlite'
 else:
     SQLALCHEMY_DATABASE_URL = 'sqlite:///./db.sqlite'
@@ -40,9 +43,11 @@ Scheduler = BackgroundScheduler(
 )
 
 # Preference file/object
-PreferencesLocal = Preferences(
-    Path(__file__).parent.parent.parent / 'modules' / '.objects' / 'prefs.json'
-)
+if IS_DOCKER:
+    preferences_file = Path('/config/.objects/prefs.json')
+else:
+    preferences_file = Path(__file__).parent.parent.parent / 'modules' / '.objects' / 'prefs.json'
+PreferencesLocal = Preferences(preferences_file)
 
 # Page used for all paginated returns
 Page = Page.with_custom_options(
