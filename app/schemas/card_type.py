@@ -177,7 +177,7 @@ class LandscapeCardType(BaseCardType):
     font_vertical_shift: int = Field(default=0)
     darken: Union[Literal['all', 'box'], bool] = Field(default=False)
     add_bounding_box: bool = Field(default=False)
-    box_adjustments: BoxAdjustments = Field(default="(0, 0, 0, 0)")
+    box_adjustments: BoxAdjustments = Field(default=(0, 0, 0, 0))
 
     @validator('box_adjustments')
     def parse_box_adjustments(cls, val):
@@ -323,7 +323,7 @@ class TintedGlassCardType(BaseCardTypeCustomFontNoText):
         default=TintedGlassTitleCard.EPISODE_TEXT_COLOR
     )
     episode_text_position: EpisodeTextPosition = Field(default='center')
-    box_adjustments: BoxAdjustments = Field(default="(0, 0, 0, 0)")
+    box_adjustments: BoxAdjustments = Field(default=(0, 0, 0, 0))
 
     @validator('box_adjustments')
     def parse_box_adjustments(cls, val):
