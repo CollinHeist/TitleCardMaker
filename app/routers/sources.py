@@ -23,6 +23,7 @@ source_router = APIRouter(
     tags=['Source Images'],
 )
 
+
 # TODO implement blacklist bypassing all over?
 @source_router.post('/series/{series_id}', status_code=200)
 def download_series_source_images(
@@ -31,10 +32,11 @@ def download_series_source_images(
         ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
-        emby_interface = Depends(get_emby_interface),
-        jellyfin_interface = Depends(get_jellyfin_interface),
-        plex_interface = Depends(get_plex_interface),
-        tmdb_interface = Depends(get_tmdb_interface)) -> None:
+        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
+        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
+        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+    ) -> None:
     """
     Download a Source image for all Episodes in the given Series. This
     uses the most relevant image source indicated by the appropriate
@@ -117,10 +119,11 @@ def download_series_logo_(
         ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
-        emby_interface = Depends(get_emby_interface),
-        imagemagick_interface = Depends(get_imagemagick_interface),
-        jellyfin_interface = Depends(get_jellyfin_interface),
-        tmdb_interface = Depends(get_tmdb_interface)) -> Optional[str]:
+        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
+        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
+        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+    ) -> Optional[str]:
     """
     Download a logo for the given Series. This uses the most relevant
     image source indicated by the appropriate image source priority
@@ -146,10 +149,11 @@ def download_episode_source_image_(
         ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
-        emby_interface = Depends(get_emby_interface),
-        jellyfin_interface = Depends(get_jellyfin_interface),
-        plex_interface = Depends(get_plex_interface),
-        tmdb_interface = Depends(get_tmdb_interface)) -> Optional[str]:
+        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
+        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
+        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+    ) -> Optional[str]:
     """
     Download a Source image for the given Episode. This uses the most
     relevant image source indicated by the appropriate
