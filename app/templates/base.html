@@ -135,7 +135,7 @@
         links.push(createPageElement(page-1, page-1)); 
       }
       links.push(createPageElement(undefined, page, true));
-      if (page + 1 < pages) {
+      if (page + 1 <= pages) {
         links.push(createPageElement(page+1, page+1)); 
         links.push(createPageElement(pages, '»')); 
       }
