@@ -5,10 +5,7 @@ from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import OperationalError
 
-from app.dependencies import (
-    get_database, get_preferences, get_emby_interface, get_jellyfin_interface,
-    get_plex_interface, get_sonarr_interface, get_tmdb_interface
-)
+from app.dependencies import *
 from app.internal.templates import get_effective_series_template
 import app.models as models
 from app.models.preferences import Preferences
@@ -34,7 +31,8 @@ def refresh_all_episode_data() -> None:
         # Get the Database
         with next(get_database()) as db:
             # Get through each Series, refresh Episode data
-            for series in db.query(models.series.Series).all():
+            all_series = db.query(models.series.Series).all()
+            for series in all_series:
                 # If Series is unmonitored, skip
                 if not series.monitored:
                     log.debug(f'{series.log_str} is Unmonitored, skipping')
