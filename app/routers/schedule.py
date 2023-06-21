@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Literal
 
+from apscheduler.job import Job
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 
 from app.dependencies import get_scheduler
@@ -204,10 +205,11 @@ def initialize_scheduler() -> None:
                 seconds=job.seconds,
                 id=job.id,
                 replace_existing=True,
+                misfire_grace_time=60 * 10,
             )
 
 
-def _scheduled_task_from_job(job: 'apscheduler.jobs.Job') -> ScheduledTask:
+def _scheduled_task_from_job(job: Job) -> ScheduledTask:
     """
     Create a ScheduledTask object for the given apscheduler.job.
 
@@ -238,7 +240,8 @@ def _scheduled_task_from_job(job: 'apscheduler.jobs.Job') -> ScheduledTask:
 @schedule_router.get('/scheduled', status_code=200)
 def get_scheduled_tasks(
         show_internal: bool = Query(default=False),
-        scheduler = Depends(get_scheduler)) -> list[ScheduledTask]:
+        scheduler = Depends(get_scheduler)
+    ) -> list[ScheduledTask]:
     """
     Get scheduling details for all defined Tasks.
 
@@ -255,7 +258,8 @@ def get_scheduled_tasks(
 @schedule_router.get('/{task_id}', status_code=200)
 def get_scheduled_task(
         task_id: TaskID,
-        scheduler = Depends(get_scheduler)) -> ScheduledTask:
+        scheduler = Depends(get_scheduler)
+    ) -> ScheduledTask:
     """
     Get the schedule details for the indicated Task.
 
@@ -275,7 +279,8 @@ def get_scheduled_task(
 def reschedule_task(
         task_id: TaskID,
         update_interval: UpdateInterval = Body(...),
-        scheduler = Depends(get_scheduler)) -> ScheduledTask:
+        scheduler = Depends(get_scheduler)
+    ) -> ScheduledTask:
     """
     Reschedule the given Task with a new interval.
 
@@ -316,7 +321,8 @@ def reschedule_task(
 @schedule_router.post('/{task_id}', status_code=200)
 def run_task(
         task_id: TaskID,
-        scheduler = Depends(get_scheduler)) -> None:
+        scheduler = Depends(get_scheduler)
+    ) -> ScheduledTask:
     """
     Run the given Task immediately. This __does not__ reschedule or
     modify the Task's next scheduled run.
