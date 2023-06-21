@@ -38,13 +38,13 @@ Base = declarative_base()
 Scheduler = BackgroundScheduler(
     jobstores={'default': SQLAlchemyJobStore(url=SQLALCHEMY_DATABASE_URL)},
     executors={'default': ThreadPoolExecutor(20)},
-    job_defaults={'coalesce': True, 'misfire_grace_time': 600},
+    job_defaults={'coalesce': True, 'misfire_grace_time': 60 * 10},
     misfire_grace_time=600,
 )
 
 # Preference file/object
 if IS_DOCKER:
-    preferences_file = Path('/config/.objects/prefs.json')
+    preferences_file = Path('/config/source/prefs.json')
 else:
     preferences_file = Path(__file__).parent.parent.parent / 'modules' / '.objects' / 'prefs.json'
 PreferencesLocal = Preferences(preferences_file)
