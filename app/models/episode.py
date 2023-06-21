@@ -1,7 +1,9 @@
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, Float, ForeignKey, String, JSON
+from sqlalchemy import (
+    Boolean, Column, DateTime, Integer, Float, ForeignKey, String, JSON
+)
 from sqlalchemy.ext.hybrid import hybrid_method, hybrid_property
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import relationship
@@ -94,9 +96,6 @@ class Episode(Base):
             'source_file': self.source_file,
             'card_file': self.card_file,
             'watched': self.watched,
-            'season_number': self.season_number,
-            'episode_number': self.episode_number,
-            'absolute_number': self.absolute_number,
             'title': self.translations.get('preferred_title', self.title),
             'match_title': self.match_title,
             'auto_split_title': self.auto_split_title,
@@ -113,7 +112,6 @@ class Episode(Base):
             'font_stroke_width': self.font_stroke_width,
             'font_interline_spacing': self.font_interline_spacing,
             'font_vertical_shift': self.font_vertical_shift,
-            'airdate': self.airdate,
             'extras': self.extras,
             'episode_emby_id': self.emby_id,
             'episode_imdb_id': self.imdb_id,
@@ -121,6 +119,7 @@ class Episode(Base):
             'episode_tmdb_id': self.tmdb_id,
             'episode_tvdb_id': self.tvdb_id,
             'episode_tvrage_id': self.tvrage_id,
+            **self.as_episode_info.characteristics,
         } 
 
 
@@ -145,7 +144,8 @@ class Episode(Base):
     def get_source_file(self,
             source_directory: str,
             series_directory: str,
-            style: Style) -> Path:
+            style: Style
+        ) -> Path:
         """
         Get the source file for this Episode based on the given
         attributes.

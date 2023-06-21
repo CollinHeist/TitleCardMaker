@@ -1,12 +1,15 @@
 from datetime import datetime
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from num2words import num2words
+from plexapi.video import Episode as PlexEpisode
 from sqlalchemy import and_, or_
+from sqlalchemy.orm import Query
 
 from modules.Debug import log
 from modules.DatabaseInfoContainer import DatabaseInfoContainer
 from modules.Title import Title
+
 
 class WordSet(dict):
     """
@@ -14,7 +17,10 @@ class WordSet(dict):
     of numbers.
     """
 
-    def add_numeral(self, label: str, number: int, lang: str=None) -> None:
+    def add_numeral(self,
+            label: str,
+            number: Optional[int],
+            lang: Optional[str] = None) -> None:
         """
         Add the cardinal and ordinal versions of the given number under
         the given label. For example:
@@ -87,7 +93,8 @@ class EpisodeInfo(DatabaseInfoContainer):
             tvdb_id: Optional[int] = None,
             tvrage_id: Optional[int] = None,
             airdate: Optional[datetime] = None,
-            preferences: 'Preferences' = None) -> None:
+            preferences: 'Preferences' = None, # type: ignore
+        ) -> None:
         """
         Initialize this object with the given title, indices, database
         ID's, airdate.
@@ -199,7 +206,7 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     @staticmethod
-    def from_plex_episode(plex_episode: 'plexapi.video.Episode') -> 'EpisodeInfo':
+    def from_plex_episode(plex_episode: PlexEpisode) -> 'EpisodeInfo':
         """
         Create an EpisodeInfo object from a plexapi Episode object.
 
@@ -236,7 +243,7 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     @property
-    def ids(self) -> dict[str, 'int | str | None']:
+    def ids(self) -> dict[str, Any]:
         """This object's ID's (as a dictionary)"""
 
         return {
@@ -250,7 +257,7 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     @property
-    def characteristics(self) -> dict[str, 'int | str']:
+    def characteristics(self) -> dict[str, Union[int, str, None]]:
         """
         Get the characteristics of this object for formatting.
 
@@ -270,7 +277,7 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     @property
-    def indices(self) -> dict[str, 'int | None']:
+    def indices(self) -> dict[str, Optional[int]]:
         """This object's season/episode indices (as a dictionary)"""
 
         return {
@@ -304,7 +311,8 @@ class EpisodeInfo(DatabaseInfoContainer):
 
 
     def filter_conditions(self,
-            EpisodeModel: 'sqlachemy.Model') -> 'sqlalchemy.Query':
+            EpisodeModel: 'sqlachemy.Model', # type: ignore
+        ) -> Query:
         """
         Get the SQLAlchemy Query condition for this object.
 
