@@ -18,6 +18,7 @@ from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
+# Get URL of the SQL Database - based on whether in Docker or not
 SQLALCHEMY_DATABASE_URL = 'sqlite:///./db.sqlite'
 if environ.get('TCM_IS_DOCKER', 'false').lower() == 'true':
     SQLALCHEMY_DATABASE_URL = 'sqlite:////config/source/db.sqlite'
@@ -34,7 +35,7 @@ Base = declarative_base()
 Scheduler = BackgroundScheduler(
     jobstores={'default': SQLAlchemyJobStore(url=SQLALCHEMY_DATABASE_URL)},
     executors={'default': ThreadPoolExecutor(20)},
-    job_defaults={'coalesce': True},
+    job_defaults={'coalesce': True, 'misfire_grace_time': 600},
     misfire_grace_time=600,
 )
 
