@@ -73,6 +73,11 @@
       text-align: right;
     }
 
+    /* Position table header below page header drop shadow */
+    .table thead {
+      z-index: 3;
+    }
+
     /* Fade any indetermine status icons */
     .table .question.icon {
       opacity: 30%;
@@ -2479,7 +2484,7 @@
       }
       // Add checkbox status as true/false
       $.each($("#series-config-form, #card-config-form, #series-ids-form").find('input[type=checkbox]'), (key, val) => {
-        form.append($(val).attr('name'), $(val).is(':checked'))
+        form.append($(val).attr('name'), $(val).is(':checked'));
       });
 
       // Add Templates if the correct form
