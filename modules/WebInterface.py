@@ -75,7 +75,8 @@ class WebInterface:
 
     @retry(stop=stop_after_attempt(5),
            wait=wait_fixed(5)+wait_exponential(min=1, max=16),
-           before_sleep=lambda _:log.warning('Failed to submit GET request, retrying..'))
+           before_sleep=lambda _:log.warning('Failed to submit GET request, retrying..'),
+           reraise=True)
     def __retry_get(self, url: str, params: dict[str, Any]) -> dict[str, Any]:
         """
         Retry the given GET request until successful (or really fails).

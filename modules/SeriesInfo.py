@@ -2,6 +2,7 @@ from re import match, compile as re_compile
 from typing import Optional, Union
 
 from sqlalchemy import and_, or_
+from sqlalchemy.orm import Query
 
 from modules.CleanPath import CleanPath
 from modules.DatabaseInfoContainer import DatabaseInfoContainer
@@ -33,7 +34,8 @@ class SeriesInfo(DatabaseInfoContainer):
             tmdb_id: Optional[int] = None,
             tvdb_id: Optional[int] = None,
             tvrage_id: Optional[int] = None,
-            match_titles: Optional[bool] = True) -> None:
+            match_titles: Optional[bool] = True
+        ) -> None:
         """
         Create a SeriesInfo object that defines a series described by
         all of  these attributes.
@@ -54,7 +56,8 @@ class SeriesInfo(DatabaseInfoContainer):
                 episodes for this series.
 
         Raises:
-            ValueError: If no year is provided.
+            ValueError: If no year is provided or one cannot be
+                determined.
         """
 
         # Parse arguments into attributes
@@ -114,7 +117,6 @@ class SeriesInfo(DatabaseInfoContainer):
 
     @property
     def characteristics(self) -> dict[str, Union[str, int]]:
-        
         return {
             'series_name': self.name,
             'series_year': self.year,
@@ -216,7 +218,8 @@ class SeriesInfo(DatabaseInfoContainer):
     
 
     def filter_conditions(self,
-            SeriesModel: 'sqlachemy.Model') -> 'sqlalchemy.Query':
+            SeriesModel: 'sqlachemy.Model' # type: ignore
+        ) -> Query:
         """
         Get the SQLAlchemy Query condition for this object.
 
