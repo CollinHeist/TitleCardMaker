@@ -52,5 +52,5 @@ RUN set -eux; \
 EXPOSE 4242
 
 # Entrypoint
-CMD ["python3", "-m", "uvicorn", "app-main:app", "--host", "0.0.0.0", "--port", "4242"]
+CMD ["python3", "-m", "uvicorn", "app-main:app", "--host", "0.0.0.0", "--port", "4242", "--workers", "4"]
 ENTRYPOINT ["bash", "./start.sh"]
