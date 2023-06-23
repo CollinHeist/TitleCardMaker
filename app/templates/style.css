@@ -31,6 +31,8 @@ body > div:first-of-type {
   display: flex;
   height: 70px;
   flex: 0 0 auto;
+  /* Drop shadow so header is separated from rest of page */
+  box-shadow: 1px 1px 10px -3px rgba(252, 252, 252, 0.8);
 }
 #page-header >* {
   display: flex;
