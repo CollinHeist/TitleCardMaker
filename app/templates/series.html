@@ -636,19 +636,12 @@
         type: 'POST',
         url: '/api/cards/series/{{series.id}}',
         success: response => {
-          const {deleted, missing_source, invalid, creating} = response;
-          $.toast({
-            class: 'blue info',
-            title: 'Started Title Card creation',
-            message: `<ul class="ui list"><li>Creating ${creating} cards</li><li>Deleted ${deleted} cards</li><li>Missing ${missing_source} source images</li><li>${invalid} invalid cards</li></ul>`,
-            displayTime: 10000,
-          });
           getEpisodeData();
           getStatistics();
         }, error: response => {
           $.toast({
             class: 'error',
-            title: 'Error creating title cards',
+            title: 'Error creating Title Cards',
             message: response.responseJSON.detail,
             displayTime: 0,
           });
@@ -716,10 +709,7 @@
         type: 'DELETE',
         url: '/api/episodes/series/{{series.id}}',
         success: response => {
-          $.toast({
-            class: 'blue info',
-            title: `Deleted ${response.length} Episodes`,
-          });
+          $.toast({class: 'blue info', title: `Deleted ${response.length} Episodes`});
           getEpisodeData();
           getFileData();
           getStatistics();
