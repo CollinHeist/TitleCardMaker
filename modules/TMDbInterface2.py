@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
-from tinydb import where
-from typing import Any, Optional, Union
+from tinydb import Query, where
+from typing import Any, Literal, Optional
 
 from fastapi import HTTPException
 from tmdbapis import TMDbAPIs, NotFound, Unauthorized, TMDbException
+from tmdbapis.objs.reload import Episode as TMDbEpisode
+from tmdbapis.objs.image import Still as TMDbStill
 
 from modules.Debug import log
 from modules.EpisodeDataSource import EpisodeDataSource
@@ -95,7 +97,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             minimum_source_width: int = 0,
             minimum_source_height: int = 0,
             blacklist_threshold: int = BLACKLIST_THRESHOLD,
-            logo_language_priority: list[LANGUAGE_CODES] = ['en']) -> None:
+            logo_language_priority: list[LANGUAGE_CODES] = ['en']
+        ) -> None:
         """
         Construct a new instance of an interface to TMDb.
 
@@ -128,13 +131,14 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
-        return f'<TMDbInterface {self.api=}>'
+        return f'<TMDbInterface>'
 
 
     def catch_and_log(
             message: str,
             log_func=log.error, *,
-            default=None) -> callable:
+            default=None
+        ) -> callable:
         """
         Return a decorator that logs (with the given log function) the
         given message if the decorated function raises an uncaught
@@ -164,9 +168,10 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
 
     def __get_condition(self,
-            query_type: str,
+            query_type: Literal['backdrop', 'image', 'logo', 'title'],
             series_info: SeriesInfo,
-            episode_info: EpisodeInfo=None) -> 'QueryInstance':
+            episode_info: Optional[EpisodeInfo] = None
+        ) -> Query:
         """
         Get the tinydb query condition for the given query.
 
@@ -199,7 +204,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def __update_blacklist(self,
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
-            query_type: str) -> None:
+            query_type: str
+        ) -> None:
         """
         Adds the given request to the blacklist; indicating that this
         exact request shouldn't be queried to TMDb for another day.
@@ -247,7 +253,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def __is_blacklisted(self,
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
-            query_type: str) -> bool:
+            query_type: str
+        ) -> bool:
         """
         Determines if the specified entry is in the blacklist (e.g.
         should not bother querying TMDb.
@@ -281,7 +288,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def is_permanently_blacklisted(self,
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
-            query_type: str='image') -> bool:
+            query_type: str = 'image'
+        ) -> bool:
         """
         Determines if permanently blacklisted.
 
@@ -445,7 +453,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def __find_episode(self,
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
-            title_match: bool=True) ->'tmdbapis.objs.reload.Episode':
+            title_match: bool = True
+        ) -> TMDbEpisode:
         """
         Finds the episode index for the given entry. Searching is done
         in the following priority:
@@ -640,9 +649,10 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
 
     def __determine_best_image(self,
-            images: list['tmdbapis.objs.image.Still'], *,
+            images: list[TMDbStill], *,
             is_source_image: bool = True,
-            skip_localized: bool = False) -> Optional[dict[str, Any]]:
+            skip_localized: bool = False
+        ) -> Optional[dict[str, Any]]:
         """
         Determine the best image and return it's contents from within
         the database return JSON.
@@ -696,7 +706,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             episode_info: EpisodeInfo, *,
             match_title: bool = True,
             bypass_blacklist: bool = False,
-        ) -> Optional[list['tmdbapis.objs.image.Still']]:
+        ) -> Optional[list[TMDbStill]]:
         """
         Get all source images for the requested entry.
 
@@ -743,7 +753,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             episode_info: EpisodeInfo, *,
             match_title: bool = True,
             skip_localized_images: bool = False,
-            raise_exc: bool = True) -> Optional[str]:
+            raise_exc: bool = True
+        ) -> Optional[str]:
         """
         Get the best source image for the requested entry.
 
@@ -800,7 +811,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def __is_generic_title(self,
             title: str,
             language_code: str,
-            episode_info: EpisodeInfo) -> bool:
+            episode_info: EpisodeInfo
+        ) -> bool:
         """
         Determine whether the given title is a generic translation of
         "Episode (x)" for the indicated language. 
@@ -836,7 +848,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
             language_code: str = 'en-US',
-            bypass_blacklist: bool = False) -> Optional[str]:
+            bypass_blacklist: bool = False
+        ) -> Optional[str]:
         """
         Get the episode title for the given entry for the given language.
 
@@ -952,7 +965,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def get_series_backdrop(self,
             series_info: SeriesInfo, *,
             skip_localized_images: bool = False,
-            raise_exc: bool = True) -> Optional[str]:
+            raise_exc: bool = True
+        ) -> Optional[str]:
         """
         Get the best backdrop for the given series.
 
