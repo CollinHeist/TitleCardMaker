@@ -37,6 +37,10 @@ body > div:first-of-type {
 #page-header >* {
   display: flex;
 }
+/* Remove extra margin from header button */
+#page-header .ui.button > .icon {
+  margin: unset;
+}
 /* Right aligned header elements */
 #page-header > [data-position="right"] {
   justify-content: flex-end;
