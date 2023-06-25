@@ -1,6 +1,7 @@
 from re import match, compile as re_compile
 from typing import Optional, Union
 
+from plexapi.video import Show as PlexShow
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Query
 
@@ -113,6 +114,34 @@ class SeriesInfo(DatabaseInfoContainer):
         """Returns a string representation of the object."""
 
         return self.full_name
+    
+
+    @staticmethod
+    def from_plex_show(plex_show: PlexShow) -> 'SeriesInfo':
+        """
+        Create a SeriesInfo object from a plexapi Show object.
+
+        Args:
+            plex_show: Show to create an object from. Any available
+                GUID's are utilized.
+
+        Returns:
+            SeriesInfo object encapsulating the given show.
+        """
+
+        # Create SeriesInfo for this show
+        series_info = SeriesInfo(plex_show.title, plex_show.year)
+
+        # Add any GUIDs as database ID's
+        for guid in plex_show.guids:
+            if 'imdb://' in guid.id:
+                series_info.set_imdb_id(guid.id[len('imdb://'):])
+            elif 'tmdb://' in guid.id:
+                series_info.set_tmdb_id(int(guid.id[len('tmdb://'):]))
+            elif 'tvdb://' in guid.id:
+                series_info.set_tvdb_id(int(guid.id[len('tvdb://'):]))
+
+        return series_info
 
 
     @property
