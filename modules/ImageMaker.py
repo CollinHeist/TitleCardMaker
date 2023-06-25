@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from collections import namedtuple
 from pathlib import Path
 from re import findall
-from typing import Literal, Optional, Union
+from typing import Literal, Optional
 
 from modules.Debug import log
 from modules.ImageMagickInterface import ImageMagickInterface
@@ -65,9 +65,11 @@ class ImageMaker(ABC):
             )
 
 
-    def get_text_dimensions(self, text_command: list[str], *,
-            width: Literal['sum', 'max'],
-            height: Literal['sum', 'max']) -> Dimensions:
+    def get_text_dimensions(self,
+            text_command: list[str], *,
+            width: Literal['sum', 'max'] = 'max',
+            height: Literal['sum', 'max'] = 'sum',
+        ) -> Dimensions:
         """
         Get the dimensions of the text produced by the given text
         command. For 'width' and 'height' arguments, if 'max' then the
@@ -169,7 +171,8 @@ class ImageMaker(ABC):
     def convert_svg_to_png(
             image: Path,
             destination: Path,
-            min_dimension: int = 2500) -> Union[Path, None]:
+            min_dimension: int = 2500
+        ) -> Optional[Path]:
         """
         Convert the given SVG image to PNG format.
 

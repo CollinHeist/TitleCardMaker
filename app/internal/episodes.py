@@ -78,10 +78,8 @@ def set_episode_ids(
 
     # Set ID's from all possible interfaces
     if emby_interface and series.emby_library_name:
-        # TODO validate
         emby_interface.set_episode_ids(series.as_series_info, episode_infos)
     if jellyfin_interface and series.jellyfin_library_name:
-        # TODO validate
         jellyfin_interface.set_episode_ids(series.as_series_info, episode_infos)
     if plex_interface and series.plex_library_name:
         plex_interface.set_episode_ids(

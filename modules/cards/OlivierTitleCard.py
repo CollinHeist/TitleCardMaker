@@ -98,8 +98,9 @@ class OlivierTitleCard(BaseCardType):
             grayscale: bool = False,
             episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
             stroke_color: SeriesExtra[str] = STROKE_COLOR,
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            preferences: 'Preferences' = None, # type: ignore
+            **unused
+        ) -> None:
         """
         Construct a new instance of this card.
         """

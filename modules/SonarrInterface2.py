@@ -5,7 +5,6 @@ from typing import Any, Literal, Optional
 
 from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
-# import modules.global_objects as global_objects
 from modules.SeriesInfo import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
@@ -39,7 +38,8 @@ class SonarrInterface(WebInterface, SyncInterface):
             url: str,
             api_key: str,
             verify_ssl: bool = True,
-            server_id: int = 0) -> None:
+            server_id: int = 0
+        ) -> None:
         """
         Construct a new instance of an interface to Sonarr.
 
@@ -67,7 +67,6 @@ class SonarrInterface(WebInterface, SyncInterface):
             self.url = f'{re_match.group(1)}/api/v3/'
 
         # Base parameters for sending requests to Sonarr
-        self.__api_key = api_key
         self.__standard_params = {'apikey': api_key}
         self.server_id = server_id
 
@@ -75,8 +74,10 @@ class SonarrInterface(WebInterface, SyncInterface):
         try:
             status =self._get(f'{self.url}system/status',self.__standard_params)
             if status.get('appName') != 'Sonarr':
-                log.critical(f'Cannot get Sonarr status - invalid URL/API key')
-                exit(1)
+                raise HTTPException(
+                    status_code=401,
+                    detail='Invalid URL / API key',
+                )
         except Exception as e:
             log.critical(f'Cannot connect to Sonarr - returned error: "{e}"')
             exit(1)
@@ -402,7 +403,8 @@ class SonarrInterface(WebInterface, SyncInterface):
 
     def set_episode_ids(self,
             series_info: SeriesInfo,
-            episode_infos: list[EpisodeInfo]) -> None:
+            episode_infos: list[EpisodeInfo]
+        ) -> None:
         """
         Set all the episode ID's for the given list of EpisodeInfo
         objects. This sets the TVDb ID for each episode.

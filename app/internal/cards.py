@@ -1,13 +1,10 @@
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy.orm import Query, Session
 
-from app.dependencies import (
-    get_database, get_emby_interface, get_jellyfin_interface, get_preferences,
-    get_plex_interface
-)
+from app.dependencies import *
 from app.internal.templates import get_effective_templates
 import app.models as models
 from app.schemas.font import DefaultFont
@@ -55,7 +52,7 @@ def create_all_title_cards() -> None:
                         create_episode_card(
                             db, get_preferences(), None, episode
                         )
-                    except HTTPException as e:
+                    except HTTPException:
                         log.warning(f'{series.log_str} {episode.log_str} - skipping Card')
                         continue
     except Exception as e:
@@ -75,6 +72,8 @@ def refresh_all_remote_card_types() -> None:
             refresh_remote_card_types(db, reset=True)
     except Exception as e:
         log.exception(f'Failed to refresh remote card types', e)
+
+    return None
 
 
 def refresh_remote_card_types(
@@ -150,7 +149,8 @@ def add_card_to_database(
 
 def validate_card_type_model(
         preferences: Preferences,
-        card_settings: dict[str, Any]) -> tuple[Any, Any]:
+        card_settings: dict[str, Any]
+    ) -> tuple[Any, Any]:
     """
     
     """
@@ -401,7 +401,7 @@ def resolve_card_settings(preferences: Preferences, episode: Episode) -> dict:
         log.exception(f'Cannot format filename - missing data', e)
         raise HTTPException(
             status_code=400,
-            detail=f'Cannot create Card - missing source image',
+            detail=f'Cannot create Card - invalid filename format',
         )
 
     # Add extension if needed
@@ -418,7 +418,8 @@ def create_episode_card(
         db: Session,
         preferences: Preferences,
         background_tasks: Optional[BackgroundTasks],
-        episode: Episode) -> None:
+        episode: Episode
+    ) -> None:
     """
     Create the Title Card for the given Episode.
 
@@ -503,7 +504,8 @@ def update_episode_watch_statuses(
         jellyfin_interface: Optional[JellyfinInterface],
         plex_interface: Optional[PlexInterface],
         series: Series,
-        episodes: list[Episode]) -> None:
+        episodes: list[Episode]
+    ) -> None:
     """
     Update the watch statuses of all Episodes for the given Series.
 

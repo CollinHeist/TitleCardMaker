@@ -109,8 +109,9 @@ class StandardTitleCard(BaseCardType):
             stroke_color: str = 'black',
             episode_text_color: str = SERIES_COUNT_TEXT_COLOR,
             omit_gradient: bool = False,
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            preferences: 'Preferences' = None, # type: ignore
+            **unused
+        ) -> None:
         """
         Construct a new instance of this card.
         """
@@ -264,7 +265,8 @@ class StandardTitleCard(BaseCardType):
     def modify_extras(
             extras: dict[str, Any],
             custom_font: bool,
-            custom_season_titles: bool) -> None:
+            custom_season_titles: bool
+        ) -> None:
         """
         Modify the given extras based on whether font or season titles
         are custom.
@@ -285,7 +287,7 @@ class StandardTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
@@ -309,7 +311,9 @@ class StandardTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str
+        ) -> bool:
         """
         Determine whether the given attributes constitute custom or
         generic season titles.

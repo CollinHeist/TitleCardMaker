@@ -404,7 +404,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def update_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
-            episodes: list['Episode']) -> None:
+            episodes: list['Episode']
+        ) -> None:
         """
         Modify the Episodes' watched attribute according to the watched
         status of the corresponding episodes within Plex. 
@@ -441,7 +442,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     @catch_and_log("Error setting series ID's")
     def set_series_ids(self,
-            library_name: str, series_info: SeriesInfo) -> None:
+            library_name: str,
+            series_info: SeriesInfo,
+        ) -> None:
         """
         Set all possible series ID's for the given SeriesInfo object.
 
@@ -476,7 +479,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def set_episode_ids(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_infos: list[EpisodeInfo]) -> None:
+            episode_infos: list[EpisodeInfo]
+        ) -> None:
         """
         Set all the episode ID's for the given list of EpisodeInfo objects. This
         sets the Sonarr and TVDb ID's for each episode. As a byproduct, this
@@ -525,7 +529,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def get_source_image(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_info: EpisodeInfo) -> Optional[str]:
+            episode_info: EpisodeInfo
+        ) -> Optional[str]:
         """
         Get the source image for the given episode within Plex.
 
@@ -566,7 +571,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     @catch_and_log('Error getting Series poster')
     def get_series_poster(self,
             library_name: str,
-            series_info: SeriesInfo) -> Optional[str]:
+            series_info: SeriesInfo
+        ) -> Optional[str]:
         """
         Get the poster for the given Series.
 
@@ -627,7 +633,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             library_name: str,
             series_info: SeriesInfo,
             episode_and_cards: list[tuple['Episode', 'Card']],
-            ) -> list[tuple['Episode', 'Card']]:
+        ) -> list[tuple['Episode', 'Card']]:
         """
         Load the title cards for the given Series and Episodes.
 
