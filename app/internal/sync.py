@@ -3,14 +3,12 @@ from time import sleep
 from typing import Optional, Union
 
 from fastapi import BackgroundTasks, HTTPException
-from sqlalchemy.orm import Session
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates
 from app.dependencies import *
-from app.internal.series import (
-    download_series_poster, set_series_database_ids
-)
+from app.internal.series import download_series_poster, set_series_database_ids
 from app.internal.sources import download_series_logo
 from app.schemas.sync import (
     NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync, Sync
@@ -110,7 +108,7 @@ def run_sync(
         )
 
     # Sync depending on the associated interface
-    added = []
+    added: list[Series] = []
     log.debug(f'Starting to Sync[{sync.id}] from {sync.interface}')
     # Sync from Emby
     if sync.interface == 'Emby':
@@ -263,6 +261,6 @@ def run_sync(
             )
 
     if not added:
-        log.info(f'Sync[{sync.id}] No series synced')
+        log.info(f'Sync[{sync.id}] No new Series synced')
 
     return added

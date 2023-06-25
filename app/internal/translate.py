@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from app.dependencies import get_database, get_tmdb_interface
 from app.internal.templates import get_effective_templates
 import app.models as models
-from app.database.query import get_template
 from app.schemas.episode import Episode
 
 from modules.Debug import log
@@ -81,7 +80,6 @@ def translate_episode(
 
         # Skip if this translation already exists
         if data_key in episode.translations:
-            log.debug(f'{series.log_str} {episode.log_str} already has "{data_key}" - skipping')
             continue
 
         # Get new translation from TMDb, add to Episode
