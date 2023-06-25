@@ -14,8 +14,6 @@ from app.schemas.preferences import EpisodeDataSource, Style, LanguageCode
 SeasonTitleRange = constr(regex=r'^(\d+-\d+)|^(\d+)|^(s\d+e\d+-s\d+e\d+)$')
 DictKey = constr(regex=r'^[a-zA-Z]+[^ -]*$', min_length=1)
 
-# TODO Add validation for filename format string ?
-
 """
 Base classes
 """
@@ -237,20 +235,8 @@ Update classes
 class UpdateTemplate(BaseUpdate):
     name: str = Field(default=UNSPECIFIED, min_length=1)
     filters: list[Condition] = Field(default=UNSPECIFIED)
-    font_id: Optional[int] = Field(default=UNSPECIFIED)
-    sync_specials: bool = Field(default=UNSPECIFIED)
-    skip_localized_images: Optional[bool] = Field(default=UNSPECIFIED)
-    card_filename_format: Optional[str] = Field(default=UNSPECIFIED)
-    episode_data_source: Optional[EpisodeDataSource] = Field(default=UNSPECIFIED)
-    translations: Optional[list[Translation]] = Field(default=UNSPECIFIED)
-    card_type: Optional[str] = Field(default=UNSPECIFIED)
-    hide_season_text: bool = Field(default=UNSPECIFIED)
     season_title_ranges: list[SeasonTitleRange] = Field(default=UNSPECIFIED)
     season_title_values: list[str] = Field(default=UNSPECIFIED)
-    hide_episode_text: bool = Field(default=UNSPECIFIED)
-    unwatched_style: Optional[Style] = Field(default=UNSPECIFIED)
-    watched_style: Optional[Style] = Field(default=UNSPECIFIED)
-    episode_text_format: Optional[str] = Field(default=UNSPECIFIED)
     extra_keys: list[DictKey] = Field(default=UNSPECIFIED)
     extra_values: list[Any] = Field(default=UNSPECIFIED)
 
