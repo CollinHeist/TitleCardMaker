@@ -63,6 +63,7 @@ def create_preview_card(
 
     # Resolve all settings
     card_settings = TieredSettings.new_settings(
+        {'series_full_name': 'Test Series', 'season_number': 1, 'episode_number': 1},
         {'hide_season_text': False, 'hide_episode_text': False},
         {'logo_file': preferences.INTERNAL_ASSET_DIRECTORY / 'logo512.png'},
         DefaultFont,
@@ -108,7 +109,8 @@ def create_preview_card(
 @card_router.get('/{card_id}', status_code=200)
 def get_title_card(
         card_id: int,
-        db: Session = Depends(get_database)) -> TitleCard:
+        db: Session = Depends(get_database)
+    ) -> TitleCard:
     """
     Get the details of the given TitleCard.
 
@@ -158,7 +160,8 @@ def create_cards_for_series(
 @card_router.get('/series/{series_id}', status_code=200, tags=['Series'])
 def get_series_cards(
         series_id: int,
-        db: Session = Depends(get_database)) -> list[TitleCard]:
+        db: Session = Depends(get_database)
+    ) -> list[TitleCard]:
     """
     Get all TitleCards for the given Series.
 
@@ -171,7 +174,8 @@ def get_series_cards(
 @card_router.delete('/series/{series_id}', status_code=200, tags=['Series'])
 def delete_series_title_cards(
         series_id: int,
-        db: Session = Depends(get_database)) -> CardActions:
+        db: Session = Depends(get_database)
+    ) -> CardActions:
     """
     Delete all TitleCards for the given Series. Return a list of the
     deleted files.
@@ -188,7 +192,8 @@ def delete_series_title_cards(
 @card_router.delete('/episode/{episode_id}', status_code=200, tags=['Episodes'])
 def delete_episode_title_cards(
         episode_id: int,
-        db: Session = Depends(get_database)) -> CardActions:
+        db: Session = Depends(get_database)
+    ) -> CardActions:
     """
     Delete all TitleCards for the given Episode. Return a list of the
     deleted files.
@@ -205,7 +210,8 @@ def delete_episode_title_cards(
 @card_router.delete('/card/{card_id}', status_code=200)
 def delete_title_card(
         card_id: int,
-        db: Session = Depends(get_database)) -> CardActions:
+        db: Session = Depends(get_database)
+    ) -> CardActions:
     """
     Delete the TitleCard with the given ID. Return a list of the
     deleted file(s).
@@ -294,8 +300,7 @@ def create_cards_for_plex_rating_keys(
     # Get details of each key from Plex, raise 404 if not found/invalid
     details = []
     for key in plex_rating_keys:
-        deets = plex_interface.get_episode_details(key)
-        if len(deets) == 0:
+        if len(deets := plex_interface.get_episode_details(key)) == 0:
             raise HTTPException(
                 status_code=404,
                 detail=f'Rating key {key} is invalid'
