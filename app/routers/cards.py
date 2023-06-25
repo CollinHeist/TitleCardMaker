@@ -33,7 +33,8 @@ card_router = APIRouter(
 def create_preview_card(
         card: PreviewTitleCard = Body(...),
         db: Session = Depends(get_database),
-        preferences = Depends(get_preferences)) -> str:
+        preferences = Depends(get_preferences)
+    ) -> str:
     """
     Create a preview title card. This uses a fixed source file and
     writes the created card only to a temporary directory. Returns a
@@ -305,7 +306,7 @@ def create_cards_for_plex_rating_keys(
                 status_code=404,
                 detail=f'Rating key {key} is invalid'
             )
-        log.debug(f'Identified {len(details)} entries from RatingKey={key}')
+        log.debug(f'Identified {len(deets)} entries from RatingKey={key}')
         details += deets
 
     # Process each set of details
