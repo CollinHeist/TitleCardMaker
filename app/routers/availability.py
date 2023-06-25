@@ -1,22 +1,27 @@
 from datetime import datetime, timedelta
-from typing import Literal, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from requests import get as req_get
 from sqlalchemy.orm import Session
 
-from app.dependencies import (
-    get_database, get_preferences, get_emby_interface, get_jellyfin_interface,
-    get_plex_interface, get_sonarr_interface,
-)
+from app.dependencies import *
 from app.internal.availability import get_latest_version
 import app.models as models
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.card import CardType, LocalCardType, RemoteCardType
-from app.schemas.preferences import EpisodeDataSourceToggle, ImageSourceToggle, StyleOption
+from app.schemas.preferences import (
+    EpisodeDataSourceToggle, ImageSourceToggle, MediaServer, Preferences,
+    StyleOption
+)
 from app.schemas.sync import Tag
+
 from modules.cards.available import LocalCards
 from modules.Debug import log
+from modules.EmbyInterface2 import EmbyInterface
+from modules.JellyfinInterface2 import JellyfinInterface
+from modules.PlexInterface2 import PlexInterface
+from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
 # URL for user card types
@@ -33,7 +38,6 @@ def _get_remote_cards() -> list[RemoteCardType]:
         _cache['expires'] = datetime.now() + timedelta(minutes=5)
     # Cache has not expired, use cached content
     else:
-        log.debug(f'Using cached content')
         response = _cache['content']
 
     return [RemoteCardType(**card) for card in response]
@@ -58,7 +62,8 @@ def get_latest_available_version() -> Optional[str]:
 @availablility_router.get('/card-types', status_code=200, tags=['Title Cards'])
 def get_all_available_card_types(
         show_excluded: bool = Query(default=False),
-        preferences = Depends(get_preferences)) -> list[CardType]:
+        preferences = Depends(get_preferences)
+    ) -> list[CardType]:
     """
     Get a list of all available card types (local and remote).
 
@@ -146,7 +151,8 @@ def get_available_episode_data_sources(
         status_code=200,
         response_model=list[ImageSourceToggle])
 def get_image_source_priority(
-        preferences = Depends(get_preferences)) -> list[EpisodeDataSourceToggle]:
+        preferences: Preferences = Depends(get_preferences)
+    ) -> list[EpisodeDataSourceToggle]:
     """
     ...
     """
@@ -165,11 +171,12 @@ def get_image_source_priority(
 @availablility_router.get('/libraries/{media_server}', status_code=200,
                           tags=['Emby', 'Jellyfin', 'Plex'])
 def get_server_libraries(
-        media_server: Literal['emby', 'jellyfin', 'plex'],
-        preferences = Depends(get_preferences),
-        emby_interface = Depends(get_emby_interface),
-        jellyfin_interface = Depends(get_jellyfin_interface),
-        plex_interface = Depends(get_plex_interface)) -> list[str]:
+        media_server: MediaServer,
+        preferences: Preferences = Depends(get_preferences),
+        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
+        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
+        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface)
+    ) -> list[str]:
     """
     Get all available TV library names on the given media server.
 
@@ -197,8 +204,9 @@ def get_server_libraries(
 
 @availablility_router.get('/usernames/emby', status_code=200, tags=['Emby'])
 def get_emby_usernames(
-        preferences = Depends(get_preferences),
-        emby_interface = Depends(get_emby_interface)) -> list[str]:
+        preferences: Preferences = Depends(get_preferences),
+        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface)
+    ) -> list[str]:
     """
     Get all the public usernames in Emby. Returns an empty list if
     Emby is disabled.
@@ -212,8 +220,9 @@ def get_emby_usernames(
 
 @availablility_router.get('/usernames/jellyfin', status_code=200, tags=['Jellyfin'])
 def get_jellyfin_usernames(
-        preferences = Depends(get_preferences),
-        jellyfin_interface = Depends(get_jellyfin_interface)) -> list[str]:
+        preferences: Preferences = Depends(get_preferences),
+        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface)
+    ) -> list[str]:
     """
     Get all the public usernames in Jellyfin. Returns an empty list if
     Jellyfin is disabled.
@@ -227,8 +236,9 @@ def get_jellyfin_usernames(
 
 @availablility_router.get('/tags/sonarr', status_code=200, tags=['Sonarr'])
 def get_sonarr_tags(
-        preferences = Depends(get_preferences),
-        sonarr_interface = Depends(get_sonarr_interface)) -> list[Tag]:
+        preferences: Preferences = Depends(get_preferences),
+        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface)
+    ) -> list[Tag]:
     """
     Get all tags defined in Sonarr.
     """
