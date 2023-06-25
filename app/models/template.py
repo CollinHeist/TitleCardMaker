@@ -143,7 +143,8 @@ class Template(Base):
     def meets_filter_criteria(self,
             preferences: 'Preferences',
             series: 'Series',
-            episode: Optional['Episode'] = None) -> bool:
+            episode: Optional['Episode'] = None
+        ) -> bool:
         """
         Determine whether the given Series and Episode meet this
         Template's filter criteria.
@@ -201,7 +202,6 @@ class Template(Base):
                                   f'Condition evaluation raised an error', e)
                     return False
                 if not meets_condition:
-                    log.debug(f'{self.log_str} Does not satisfy Condition: [{ARGUMENTS[condition["argument"]]}] [{condition["operation"]}] [{condition["reference"]}]')
                     return False
             else:
                 log.debug(f'{self.log_str} [{condition["argument"]}] [{condition["operation"]}] [{condition["reference"]}] is unevaluatable')
