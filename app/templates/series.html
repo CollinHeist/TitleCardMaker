@@ -794,18 +794,14 @@
         })
       });
       // Special syncing
-      $('#series-config-form .dropdown[data-value="sync_specials"]').dropdown({
-        values: [
-          {name: 'True', value: 'True', selected: '{{series.sync_specials}}' === 'True'},
-          {name: 'False', value: 'False', selected: '{{series.sync_specials}}' === 'False'},
-        ],
+      initializeNullableBoolean({
+        dropdownElement: $('#series-config-form .dropdown[data-value="sync_specials"]'),
+        value: '{{series.sync_specials}}',
       });
       // Skip localized images
-      $('#series-config-form .dropdown[data-value="skip_localized_images"]').dropdown({
-        values: [
-          {name: 'True', value: 'True', selected: '{{series.skip_localized_images}}' === 'True'},
-          {name: 'False', value: 'False', selected: '{{series.skip_localized_images}}' === 'False'},
-        ],
+      initializeNullableBoolean({
+        dropdownElement: $('#series-config-form .dropdown[data-value="skip_localized_images"]'),
+        value: '{{series.skip_localized_images}}',
       });
       // Template
       const templates = await fetch('/api/templates/all').then(resp => resp.json());
@@ -867,18 +863,14 @@
         ],
       });
       // Hide season text
-      $('#card-config-form .dropdown[data-value="hide_season_text"]').dropdown({
-        values: [
-          {name: 'True', value: 'True', selected: '{{series.hide_season_text}}' === 'True'},
-          {name: 'False', value: 'False', selected: '{{series.hide_season_text}}' === 'False'},
-        ],
+      initializeNullableBoolean({
+        dropdownElement: $('#card-config-form .dropdown[data-value="hide_season_text"]'),
+        value: '{{series.hide_season_text}}',
       });
       // Hide episode text
-      $('#card-config-form .dropdown[data-value="hide_episode_text"]').dropdown({
-        values: [
-          {name: 'True', value: 'True', selected: '{{series.hide_episode_text}}' === 'True'},
-          {name: 'False', value: 'False', selected: '{{series.hide_episode_text}}' === 'False'},
-        ],
+      initializeNullableBoolean({
+        dropdownElement: $('#card-config-form .dropdown[data-value="hide_episode_text"]'),
+        value: '{{series.hide_episode_text}}',
       });
       // Translations
       const allTranslations = await fetch('/api/available/translations').then(resp => resp.json());
@@ -1054,15 +1046,12 @@
           url: `/api/episodes/${episode.id}`,
           data: JSON.stringify(data),
           contentType: 'application/json',
-          success: (response) => {
-            $.toast({
-              class: 'blue info',
-              title: `Updated Episode`,
-            });
-          }, error: (response) => {
+          success: response => {
+            $.toast({class: 'blue info', title: 'Updated Episode'});
+          }, error: response => {
             $.toast({
               class: 'error',
-              title: `Error Updating Episode`,
+              title: 'Error Updating Episode',
               message: response.responseJSON.detail,
               displayTime: 0,
             });
@@ -1131,7 +1120,6 @@
           // Disable search icon
           file.querySelector('i[data-action="search"]').classList.add('disabled');
           // Remove missing label, fill in dimensions and filesize
-          // file.querySelector('.card').classList.add('blue');
           file.querySelector('[data-value="missing"]').remove();
           file.querySelector('[data-value="dimension"]').innerHTML = `${source.width}x${source.height}`;
           file.querySelector('[data-value="filesize"]').innerHTML = formatBytes(source.filesize, 1);
@@ -1150,7 +1138,7 @@
       refreshTheme();
     }
 
-    async function getEpisodeData() {
+    async function getEpisodeData(page=1) {
       // Get the parent table
       let episodeTable = document.getElementById('episode-data-table');
       if (episodeTable === null) { return; }
@@ -1159,9 +1147,10 @@
       const rowTemplate = document.querySelector('#episode-row');
       if (rowTemplate === null) { return; }
 
-      // Get all episodes via API
-      const episodeData = await fetch('/api/episodes/{{series.id}}/all').then(resp => resp.json());
-      if (episodeData === null) { return; }
+      // Get page of episodes via API
+      const episodeData = await fetch(`/api/episodes/{{series.id}}/all?size=100&page=${page}`).then(resp => resp.json());
+      if (episodeData === null || episodeData.items.length === 0) { return; }
+      const episodes = episodeData.items;
 
       // Different HTML for each togglable boolean icon
       function getIcon(value, triState=true) {
@@ -1176,7 +1165,7 @@
       }
 
       // Create 
-      const rows = episodeData.map(episode => {
+      const rows = episodes.map(episode => {
         // Create new row for this episode
         const row = rowTemplate.content.cloneNode(true);
         // Set row ID
@@ -1234,7 +1223,7 @@
       const allStyles = await fetch('/api/available/styles').then(resp => resp.json());
 
       // Initialize dropdowns, assign form submit API request
-      episodeData.forEach(episode => {
+      episodes.forEach(episode => {
         // Templates
         $(`#episode-id${episode.id} .dropdown[data-value="template_ids"]`).dropdown({
           values: getActiveTemplates(episode.template_ids, allTemplates),
@@ -1283,6 +1272,15 @@
       });
       $('.sortable.table').tablesort()
       initStyles();
+
+      // Update Episode pagination
+      updatePagination({
+        paginationElementId: 'pagination',
+        navigateFunction: getEpisodeData,
+        page: episodeData.page,
+        pages: episodeData.pages,
+        amountVisible: 5,
+      });
     }
   </script>
 
@@ -1718,10 +1716,7 @@
                       <input name="hide_season_text" type="hidden">
                       <i class="dropdown icon"></i>
                       <div class="default text">Default</div>
-                      <div class="menu">
-                        <div class="item">True</div>
-                        <div class="item">False</div>
-                      </div>
+                      <div class="menu"></div>
                     </div>
                   </div>
     
@@ -1916,6 +1911,7 @@
                 <tbody id="episode-data-table" ><!-- Rows added asynchronously --></tbody>
               </table>
             </div>
+            <div id="pagination" class="ui attached pagination menu"><!-- Added asynchrously --></div>
 
             <!-- Icon descriptions -->
             <div class="ui segment">

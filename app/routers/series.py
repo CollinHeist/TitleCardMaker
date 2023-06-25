@@ -285,7 +285,8 @@ def load_title_cards_into_media_server(
         db: Session = Depends(get_database),
         emby_interface = Depends(get_emby_interface),
         jellyfin_interface = Depends(get_jellyfin_interface),
-        plex_interface = Depends(get_plex_interface)) -> None:
+        plex_interface = Depends(get_plex_interface)
+    ) -> None:
     """
     Load all of the given Series' unloaded Title Cards into the given
     Media Server. This only loads Cards that have not previously been
@@ -313,9 +314,10 @@ def reload_title_cards_into_media_server(
         series_id: int,
         media_server: MediaServer,
         db: Session = Depends(get_database),
-        emby_interface = Depends(get_emby_interface),
-        jellyfin_interface = Depends(get_jellyfin_interface),
-        plex_interface = Depends(get_plex_interface)) -> None:
+        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
+        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
+        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface)
+    ) -> None:
     """
     Reload all of the given Series' Title Cards into the given Media
     Server. This loads all Cards, even those that have not changed.
@@ -339,7 +341,8 @@ def remove_series_labels(
         series_id: int,
         labels: list[str] = Query(default=[]),
         db: Session = Depends(get_database),
-        plex_interface = Depends(get_plex_interface)) -> None:
+        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface)
+    ) -> None:
     """
     Remove the given labels from the given Series' Episodes within Plex.
     This can be used to reset PMM overlays.
@@ -376,8 +379,9 @@ def download_series_poster_(
         series_id: int,
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
-        imagemagick_interface = Depends(get_imagemagick_interface),
-        tmdb_interface = Depends(get_tmdb_interface)) -> None:
+        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+    ) -> None:
     """
     Download and return a poster for the given Series.
 
@@ -396,7 +400,8 @@ def download_series_poster_(
 def query_series_poster(
         series_id: int,
         db: Session = Depends(get_database),
-        tmdb_interface = Depends(get_tmdb_interface)) -> Optional[str]:
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+    ) -> Optional[str]:
     """
     Query for a poster of the given Series.
 
@@ -416,8 +421,8 @@ async def set_series_poster(
         poster_url: Optional[str] = Form(default=None),
         poster_file: Optional[UploadFile] = None,
         db: Session = Depends(get_database),
-        preferences = Depends(get_preferences),
-        image_magick_interface = Depends(get_imagemagick_interface)
+        preferences: Preferences = Depends(get_preferences),
+        image_magick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface)
     ) -> str:
     """
     Set the poster for the given series.

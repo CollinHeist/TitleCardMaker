@@ -1,9 +1,13 @@
-from typing import Literal
+from typing import Literal, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Body, Depends
+from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 
-from app.database.query import get_all_templates, get_episode, get_font, get_series
+from app.database.query import (
+    get_all_templates, get_episode, get_font, get_series
+)
+from app.database.session import Page
 from app.dependencies import *
 import app.models as models
 from app.internal.cards import delete_cards, refresh_remote_card_types
@@ -26,11 +30,12 @@ episodes_router = APIRouter(
 def add_new_episode(
         new_episode: NewEpisode = Body(...),
         db: Session = Depends(get_database),
-        emby_interface = Depends(get_emby_interface),
-        jellyfin_interface = Depends(get_jellyfin_interface),
-        plex_interface = Depends(get_plex_interface),
-        sonarr_interface = Depends(get_sonarr_interface),
-        tmdb_interface = Depends(get_tmdb_interface)) -> Episode:
+        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
+        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
+        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
+        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+    ) -> Episode:
     """
     Add a new episode to the given series.
 
@@ -65,7 +70,8 @@ def add_new_episode(
 @episodes_router.get('/{episode_id}', status_code=200)
 def get_episode_by_id(
         episode_id: int,
-        db: Session = Depends(get_database)) -> Episode:
+        db: Session = Depends(get_database)
+    ) -> Episode:
     """
     Get the Episode with the given ID.
 
@@ -137,11 +143,12 @@ def refresh_episode_data_(
         series_id: int,
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
-        emby_interface = Depends(get_emby_interface),
-        jellyfin_interface = Depends(get_jellyfin_interface),
-        plex_interface = Depends(get_plex_interface),
-        sonarr_interface = Depends(get_sonarr_interface),
-        tmdb_interface = Depends(get_tmdb_interface)) -> list[Episode]:
+        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
+        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
+        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
+        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+    ) -> None:
     """
     Refresh the episode data associated with the given series. This
     queries the series' episode data source for any new episodes, and
@@ -161,15 +168,15 @@ def refresh_episode_data_(
         tmdb_interface,
         background_tasks,
     )
-
-    # Return all of this Series Episodes
-    return db.query(models.episode.Episode).filter_by(series_id=series_id).all()
+    
+    return None
 
 
 @episodes_router.patch('/batch', status_code=200)
 def update_multiple_episode_configs(
         update_episodes: list[BatchUpdateEpisode] = Body(...),
-        db: Session = Depends(get_database)) -> list[Episode]:
+        db: Session = Depends(get_database)
+    ) -> list[Episode]:
     """
     Update all the Epiodes with the given IDs. Only provided fields are 
     updated.
@@ -224,7 +231,8 @@ def update_multiple_episode_configs(
 def update_episode_config(
         episode_id: int,
         update_episode: UpdateEpisode = Body(...),
-        db: Session = Depends(get_database)) -> Episode:
+        db: Session = Depends(get_database)
+    ) -> Episode:
     """
     Update the Epiode with the given ID. Only provided fields are 
     updated.
@@ -269,8 +277,9 @@ def update_episode_config(
 @episodes_router.get('/{series_id}/all', status_code=200, tags=['Series'])
 def get_all_series_episodes(
         series_id: int,
-        order_by: Literal['index', 'absolute'] = 'index', 
-        db: Session = Depends(get_database)) -> list[Episode]:
+        order_by: Literal['index', 'absolute', 'id'] = 'index', 
+        db: Session = Depends(get_database)
+    ) -> Page[Episode]:
     """
     Get all the episodes associated with the given series.
 
@@ -278,16 +287,16 @@ def get_all_series_episodes(
     - order_by: How to order the returned episodes.
     """
 
+    # Query for Episodes of this Series
     query = db.query(models.episode.Episode).filter_by(series_id=series_id)
 
+    # Order by indicated attribute
     if order_by == 'index':
-        return query.order_by(models.episode.Episode.season_number)\
-            .order_by(models.episode.Episode.episode_number)\
-            .all()
+        sorted_query = query.order_by(models.episode.Episode.season_number)\
+            .order_by(models.episode.Episode.episode_number)
     elif order_by == 'absolute':
-        return query.order_by(models.episode.Episode.absolute_number).all()
-    else:
-        raise HTTPException(
-            status_code=500,
-            detail=f'Cannot order by "{order_by}"',
-        )
+        sorted_query = query.order_by(models.episode.Episode.absolute_number)
+    elif order_by == 'id':
+        sorted_query = query
+    
+    return paginate(sorted_query)
