@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Optional
 
 from app.dependencies import get_preferences
 from app.schemas.episode import Episode
@@ -10,7 +10,8 @@ from modules.Debug import log
 def get_effective_series_template(
         series: Series,
         episode: Optional[Episode] = None, *,
-        as_dict: bool = False) -> Optional[Template]:
+        as_dict: bool = False
+    ) -> Optional[Template]:
     """
     Get the effective Series Template for the given Series and optional
     Episode. This evaluates all Template conditions.
@@ -39,7 +40,8 @@ def get_effective_series_template(
 
 def get_effective_episode_template(
         series: Series,
-        episode: Episode) -> Optional[Template]:
+        episode: Episode
+    ) -> Optional[Template]:
     """
     Get the effective Episode Template for the given Series and Episode.
     This evaluates all Template conditions.
@@ -65,7 +67,7 @@ def get_effective_episode_template(
 def get_effective_templates(
         series: Series,
         episode: Optional[Episode] = None
-        ) -> tuple[Optional[Template], Optional[Template]]:
+    ) -> tuple[Optional[Template], Optional[Template]]:
     """
     Get the effective Series and Episode Templates for the given Series
     and optional Episode. This evaluates all Template conditions and

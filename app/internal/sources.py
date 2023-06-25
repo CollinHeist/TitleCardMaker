@@ -87,7 +87,10 @@ def download_all_series_logos() -> None:
     return None
 
 
-def resolve_source_settings(preferences, episode: Episode) -> tuple[Style, Path]:
+def resolve_source_settings(
+        preferences: Preferences,
+        episode: Episode
+    ) -> tuple[Style, Path]:
     """
     Get the Episode style and source file for the given Episode.
 
@@ -158,7 +161,8 @@ def download_series_logo(
         imagemagick_interface: Optional[ImageMagickInterface],
         jellyfin_interface: Optional[JellyfinInterface],
         tmdb_interface: Optional[TMDbInterface],
-        series: Series) -> Optional[str]:
+        series: Series
+    ) -> Optional[str]:
     """
     Download the logo for the given Series.
 
@@ -260,7 +264,8 @@ def download_episode_source_image(
         plex_interface: Optional[PlexInterface],
         tmdb_interface: Optional[TMDbInterface],
         episode: Episode,
-        raise_exc: bool = False) -> Optional[str]:
+        raise_exc: bool = False,
+    ) -> Optional[str]:
     """
     Download the source image for the given Episode.
 

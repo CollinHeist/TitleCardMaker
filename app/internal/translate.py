@@ -44,7 +44,8 @@ def translate_all_series() -> None:
 def translate_episode(
         db: Session,
         episode: Episode,
-        tmdb_interface: TMDbInterface) -> None:
+        tmdb_interface: TMDbInterface
+    ) -> None:
     """
     Add the given Episode's translations to the Database.
 

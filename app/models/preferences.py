@@ -68,19 +68,6 @@ class Preferences:
         self.asset_directory.mkdir(parents=True, exist_ok=True)
 
 
-    def __setattr__(self, name: str, value: Any) -> None:
-        """
-        
-        """
-
-        # Update this object's dictionary
-        self.__dict__[name] = value
-
-        # Log if not prviate
-        if name not in self.PRIVATE_ATTRIBUTES:
-            log.debug(f'preferences.{name} = {value}')
-
-
     def read_file(self) -> Optional[object]:
         """
         Read this object's file, returning the loaded object.
@@ -208,9 +195,7 @@ class Preferences:
         # Iterate through updated attributes, set dictionary directly
         for name, value in update_kwargs.items():
             if value != UNSPECIFIED:
-                self.__dict__[name] = value
-                if name not in self.PRIVATE_ATTRIBUTES:
-                    log.debug(f'UPDATE preferences.{name} = {value}')
+                setattr(self, name, value)
 
         self.commit()
 
@@ -473,7 +458,8 @@ class Preferences:
     
 
     def get_card_type_class(self,
-            card_type_identifier: str) -> Optional['CardType']:
+            card_type_identifier: str
+        ) -> Optional['CardType']:
         """
         Get the CardType class for the given card type identifier.
 
