@@ -374,15 +374,14 @@ def load_series_title_cards(
 
     # Update database with loaded entries
     for loaded_episode, loaded_card in loaded_assets:
-        db.add(
-            models.loaded.Loaded(
-                media_server=media_server,
-                series=series,
-                episode=loaded_episode,
-                card=loaded_card,
-                filesize=loaded_card.filesize,
-            )
-        )
+        log.debug(f'{series.log_str} {loaded_episode.log_str} Loaded card {card.log_str}')
+        db.add(models.loaded.Loaded(
+            media_server=media_server,
+            series=series,
+            episode=loaded_episode,
+            card=loaded_card,
+            filesize=loaded_card.filesize,
+        ))
 
     # If any cards were (re)loaded, commit updates to database
     if changed or loaded_assets:

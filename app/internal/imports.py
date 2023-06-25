@@ -855,7 +855,8 @@ def parse_series(
         db: Session,
         preferences: Preferences,
         yaml_dict: dict[str, Any],
-        default_library: Optional[str] = None) -> list[NewSeries]:
+        default_library: Optional[str] = None
+    ) -> list[NewSeries]:
     """
     Create NewSeries objects for any defined series in the given YAML.
 

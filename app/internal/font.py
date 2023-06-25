@@ -10,7 +10,7 @@ from modules.Debug import log
 def get_effective_fonts(
         series: Series,
         episode: Optional[Episode] = None
-        ) -> tuple[Optional[NamedFont], Optional[NamedFont]]:
+    ) -> tuple[Optional[NamedFont], Optional[NamedFont]]:
     """
     Get the effective Series and Episode Fonts for the given Series and
     optional Episode. This evaluates the Episode Font overrides Series
