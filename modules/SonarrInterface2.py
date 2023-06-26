@@ -4,6 +4,8 @@ from re import IGNORECASE, compile as re_compile
 from typing import Any, Literal, Optional
 
 from modules.Debug import log
+from fastapi import HTTPException
+
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.SeriesInfo import SeriesInfo
 from modules.SyncInterface import SyncInterface
@@ -82,67 +84,9 @@ class SonarrInterface(WebInterface, SyncInterface):
                 )
         except Exception as e:
             log.critical(f'Cannot connect to Sonarr - returned error: "{e}"')
-            exit(1)
+            raise e
 
-        # Parse all Sonarr series
-        self.__series_data = {}
-        self.__map_all_series_data()
-
-
-    def __map_all_series_data(self) -> None:
-        """
-        Map all Sonarr series to their Sonarr and TVDb ID's. This
-        updates this object's __series_data attribute with keys of the
-        full name for each series (as well as the full name version of
-        each alternate title) to a SonarrSeriesInfo dataclass.
-        """
-
-        # Construct GET arguments
-        url = f'{self.url}series'
-        params = self.__standard_params
-        all_series = self._get(url, params)
-
-        # Reset series dictionary
-        self.__series_ids = {}
-
-        # Go through each series in Sonarr
-        for series in all_series:
-            # Skip unaired series with a year of 0
-            if series['year'] == 0:
-                continue
-
-            # Unpopulated TVRage ID's are left as 0
-            tvrage_id = None
-            if series.get('tvRageId'):
-                tvrage_id = series.get('tvRageId')
-
-            # Data to store for this series, eventually for updating
-            # a SeriesInfo object with
-            data = {
-                'imdb_id': series.get('imdbId'),
-                'sonarr_id': f'{self.server_id}-{series["id"]}',
-                'tvdb_id': series.get('tvdbId'),
-                'tvrage_id': tvrage_id,
-            }
-
-            # Create keys to store this data under
-            # Always store series under full name and sonarr ID
-            keys = [
-                f'{series["title"]} ({series["year"]})',
-                f'sonarr:{self.server_id}-{series["id"]}',
-            ]
-
-            # Also store under any provided database ID's
-            if series.get('imdbId'): keys.append(f'imdb:{series["imdbId"]}')
-            if series.get('tvdbId'): keys.append(f'tvdb:{series["tvdbId"]}')
-            if tvrage_id:            keys.append(f'tvrage:{tvrage_id}')
-
-            # Also store series under any available alternative titles
-            for alt_title in series['alternateTitles']:
-                keys.append(f'{alt_title["title"]} ({series["year"]})')
-
-            # Update all identified keys inside series data dict
-            self.__series_data.update(dict.fromkeys(keys, data))
+        return None
 
 
     def get_root_folders(self) -> list[Path]:
@@ -157,37 +101,6 @@ class SonarrInterface(WebInterface, SyncInterface):
             Path(folder['path']) for folder in 
             self._get(f'{self.url}rootfolder', self.__standard_params)
         ]
-
-
-    def has_series(self, series_info: SeriesInfo) -> bool:
-        """
-        Query whether this Sonarr server has the given series.
-
-        Args:
-            series_info: Series being evaluated.
-
-        Returns:
-            True if the series is present on this server. False
-            otherwise.
-        """
-
-        # Check for series under any possible keys
-        if self.__series_data.get(series_info.full_name):
-            return True
-        elif (series_info.has_id('imdb_id')
-            and self.__series_data.get(f'imdb:{series_info.imdb_id}')):
-            return True
-        elif (series_info.has_id('sonarr_id')
-            and self.__series_data.get(f'sonarr:{series_info.sonarr_id}')):
-            return True
-        elif (series_info.has_id('tvdb_id')
-            and self.__series_data.get(f'tvdb:{series_info.tvdb_id}')):
-            return True
-        elif (series_info.has_id('tvrage_id')
-            and self.__series_data.get(f'tvrage_id:{series_info.tvrage_id}')):
-            return True
-
-        return False
 
 
     def get_all_series(self,
@@ -298,30 +211,33 @@ class SonarrInterface(WebInterface, SyncInterface):
         # If all possible ID's are defined, exit
         if series_info.has_ids(*self.SERIES_IDS):
             return None
+        
+        # Search for Series
+        search_results = self._get(
+            url=f'{self.url}series/lookup',
+            params={'term': series_info.name} | self.__standard_params,
+        )
 
-        # Look for this series under any of the possible stored keys
-        if (data := self.__series_data.get(series_info.full_name)):
-            pass
-        elif (series_info.has_id('imdb_id') and
-            (data := self.__series_data.get(f'imdb:{series_info.imdb_id}'))):
-            pass
-        elif (series_info.has_id('sonarr_id') and
-            (data := self.__series_data.get(f'sonarr:{series_info.sonarr_id}'))):
-            pass
-        elif (series_info.has_id('tvdb_id') and
-            (data := self.__series_data.get(f'tvdb:{series_info.tvdb_id}'))):
-            pass
-        elif (series_info.has_id('tvrage_id') and
-            (data := self.__series_data.get(f'tvrage_id:{series_info.tvrage_id}'))):
-            pass
-        else:
-            log.warning(f'Series "{series_info}" not found in Sonarr')
+        # No results, nothing to set
+        if len(search_results) == 0:
             return None
+        
+        # Find matching Series
+        for series in search_results:
+            reference_series_info = SeriesInfo(
+                series['title'],
+                series['year'],
+                imdb_id=series.get('imdbId'),
+                sonarr_id=f'{self.server_id}-{series.get("id")}',
+                tvdb_id=series.get('tvdbId'),
+                tvrage_id=series.get('tvRageId'),
+            )
 
-        series_info.set_imdb_id(data['imdb_id'])
-        series_info.set_sonarr_id(data['sonarr_id'])
-        series_info.set_tvdb_id(data['tvdb_id'])
-        series_info.set_tvrage_id(data['tvrage_id'])
+            if series_info == reference_series_info:
+                series_info.copy_ids(reference_series_info)
+                break
+
+        return None
 
 
     def get_all_episodes(self,
