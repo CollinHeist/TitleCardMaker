@@ -100,7 +100,9 @@ Sonarr interface
 def refresh_sonarr_interface() -> None:
     preferences = get_preferences()
     global SonarrInterfaceLocal
+    SonarrInterface.REQUEST_TIMEOUT = 15
     SonarrInterfaceLocal = SonarrInterface(**preferences.sonarr_arguments)
+    SonarrInterface.REQUEST_TIMEOUT = 600
 
 def get_sonarr_interface() -> SonarrInterface:
     preferences = get_preferences()
