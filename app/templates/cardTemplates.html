@@ -21,6 +21,7 @@
   <script type="text/javascript" src="/templates/loadStaticContent.js"></script>
   <script type="text/javascript" src="/templates/loadCardTypes.js"></script>
   <script type="text/javascript" src="/templates/theme.js"></script>
+  <script type="text/javascript" src="/templates/helper.js"></script>
 
   <!-- Global styles -->
   <link rel="stylesheet" type="text/css" href="/templates/style.css"/>
@@ -173,9 +174,14 @@
 
               <h4 class="ui horizontal middle aligned divider header">Season and Episode Text</h4>
 
-              <div data-value="hide-seasons" class="ui right aligned checkbox field">
-                <input name="hide_season_text" type="checkbox" class="hidden">
+              <div class="ui field">
                 <label>Hide Season Titles</label>
+                <div data-value="hide_season_text" class="ui compact selection clearable dropdown" data-tooltip="Omit season text" data-position="right center">
+                  <input name="hide_season_text" type="hidden">
+                  <i class="dropdown icon"></i>
+                  <div class="default text">Default</div>
+                  <div class="menu"></div>
+                </div>
               </div>
 
               <div data-value="season-titles" class="ui field">
@@ -199,9 +205,14 @@
                 </div>
               </div>
 
-              <div data-value="hide-episode-text" class="ui right aligned checkbox field">
-                <input name="hide_episode_text" type="checkbox" class="hidden">
+              <div class="ui field">
                 <label>Hide Episode Text</label>
+                <div data-value="hide_episode_text" class="ui compact selection clearable dropdown" data-tooltip="Omit episode text" data-position="right center">
+                  <input name="hide_episode_text" type="hidden">
+                  <i class="dropdown icon"></i>
+                  <div class="default text">Default</div>
+                  <div class="menu"></div>
+                </div>
               </div>
 
               <div data-value="episode-text-format" class="field">
@@ -215,9 +226,14 @@
 
               <h4 class="ui horizontal middle aligned divider header">Non-Card Settings</h4>
 
-              <div class="ui right aligned checkbox field">
-                <input name="skip_localized_images" type="checkbox">
-                <label>Ignore Localized Images</label>
+              <div class="ui field">
+                <label>Ignored Localized Images</label>
+                <div data-value="skip_localized_images" class="ui compact selection clearable dropdown">
+                  <input name="skip_localized_images" type="hidden">
+                  <i class="dropdown icon"></i>
+                  <div class="default text">Default</div>
+                  <div class="menu"></div>
+                </div>
               </div>
 
               <div class="field">
@@ -226,15 +242,18 @@
                   <input name="episode_data_source" type="hidden">
                   <i class="dropdown icon"></i>
                   <div class="default text">Global Default</div>
-                  <div class="menu">
-                    <!-- Added asynchronously -->
-                  </div>
+                  <div class="menu"><!-- Added asynchronously --></div>
                 </div>
               </div>
 
-              <div class="ui right aligned checkbox field">
-                <input name="sync_specials" type="checkbox">
+              <div class="ui field">
                 <label>Sync Specials</label>
+                <div data-value="sync_specials" class="ui compact selection clearable dropdown">
+                  <input name="sync_specials" type="hidden">
+                  <i class="dropdown icon"></i>
+                  <div class="default text">Default</div>
+                  <div class="menu"></div>
+                </div>
               </div>
 
               <h4 class="ui horizontal middle aligned divider header">Miscellaneous</h4>
@@ -412,11 +431,7 @@
         // Card type set later
         // Font set later
         // Unwatched and Watched style set later
-        // Hide season checkbox
-        if (templateObj.hide_season_text) {
-          base.querySelector('input[name="hide_season_text"]').setAttribute('checked', '');
-          base.querySelector('.field[data-value="season-titles"]').className = 'ui disabled field';
-        }
+        // Hide season text set later
         // Season titles
         if (Object.entries(templateObj.season_titles).length > 0) {
           const rangeDiv = base.querySelector('.field[data-value="season-title-range"]');
@@ -431,10 +446,11 @@
             valueDiv.appendChild(valueElem);
           }
         }
-        if (templateObj.hide_episode_text) {
-          base.querySelector('input[name="hide_episode_text"]').setAttribute('checked', '');
-          base.querySelector('.field[data-value="episode-text-format"]').className = 'ui disabled field';
-        }
+        // Hide episode text set later
+        // if (templateObj.hide_episode_text) {
+        //   base.querySelector('input[name="hide_episode_text"]').setAttribute('checked', '');
+        //   base.querySelector('.field[data-value="episode-text-format"]').className = 'ui disabled field';
+        // }
         // Episode text format
         base.querySelector('input[name="episode_text_format"]').value = templateObj.episode_text_format;
         // Ignore localized
@@ -442,6 +458,7 @@
           base.querySelector('input[name="skip_localized_images"]').setAttribute('checked', '');
         }
         // Episode data source set later
+        // Sync specials set later
         // Image source priority set later
         // Translations added later
         // Extras
@@ -557,13 +574,10 @@
             }),
           ], placeholder: 'Global Default',
         });
-        // Attach disabled toggle to hide season button
-        $(`#template-id${templateObj.id} >* .checkbox[data-value="hide-seasons"]`).checkbox({
-          onChecked: () => {
-            $(`#template-id${templateObj.id} >* .field[data-value="season-titles"]`).toggleClass('disabled', true);
-          }, onUnchecked: () => {
-            $(`#template-id${templateObj.id} >* .field[data-value="season-titles"]`).toggleClass('disabled', false);
-          },
+        // Hide season text
+        initializeNullableBoolean({
+          dropdownElement: $(`#template-id${templateObj.id} .dropdown[data-value="hide_season_text"]`),
+          value: templateObj.hide_season_text,
         });
         // Add new fields to add title button
         $(`#template-id${templateObj.id} .button[data-value="add-title"]`).on('click', () => {
@@ -579,13 +593,10 @@
             position: 'right center',
           });
         });
-        // Attach disabled toggle to hide episode text button
-        $(`#template-id${templateObj.id} >* .checkbox[data-value="hide-episode-text"]`).checkbox({
-          onChecked: () => {
-            $(`#template-id${templateObj.id} >* .field[data-value="episode-text-format"]`).toggleClass('disabled', true);
-          }, onUnchecked: () => {
-            $(`#template-id${templateObj.id} >* .field[data-value="episode-text-format"]`).toggleClass('disabled', false);
-          },
+        // Hide episode text
+        initializeNullableBoolean({
+          dropdownElement: $(`#template-id${templateObj.id} .dropdown[data-value="hide_episode_text"]`),
+          value: templateObj.hide_episode_text,
         });
         // Episode data source
         $(`#template-id${templateObj.id} >* .dropdown[data-value="episode-data-source"]`).dropdown({
@@ -593,6 +604,12 @@
             return {name: name, value: value, selected: value === templateObj.episode_data_source};
           }), placeholder: 'Global Default',
         });
+        // Skip localized images
+        initializeNullableBoolean({
+          dropdownElement: $(`#template-id${templateObj.id} .dropdown[data-value="skip_localized_images"]`),
+          value: templateObj.skip_localized_images,
+        });
+        // Translations
         if (templateObj.translations !== null && templateObj.translations.length > 0) {
           const translationSegment = $(`#template-id${templateObj.id} [data-value="translations"]`);
           for (const translation of templateObj.translations) {
@@ -659,6 +676,7 @@
         // Update via API
         $(`#template-id${templateObj.id} >* form`).on('submit', (event) => {
           event.preventDefault();
+          // Parse form
           let form = new FormData(event.target);
           let listData = {
             argument: [], operation: [], reference: [],
@@ -668,21 +686,22 @@
           };
           for (const [key, value] of [...form.entries()]) {
             if (Object.keys(listData).includes(key)) { listData[key].push(value); }
-            if (value === '') { form.delete(key); }
+            // if (value === '') { form.delete(key); }
           }
+          // Parse array of Filters
           let filters = [];
           listData.argument.forEach((value, index) => {
             if (value !== '') {
-              // const reference = listData.reference[index] === '' ? null : listData.reference[index];
               filters.push({argument: value, operation: listData.operation[index], reference: listData.reference[index]});
             }
           });
+          // Parse array of Translations
           let translations = [];
           listData.language_code.forEach((value, index) => {
             if (value !== '') {
               translations.push({language_code: value, data_key: listData.data_key[index]});
             }
-          })
+          });
 
           $.ajax({
             type: 'PATCH',
