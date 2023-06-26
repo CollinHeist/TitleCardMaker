@@ -1,7 +1,11 @@
 from pathlib import Path
+from re import sub as re_sub, IGNORECASE
 from typing import Any
 
-from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, JSON
+from sqlalchemy import (
+    Boolean, Column, Float, ForeignKey, Integer, String, JSON, func
+)
+
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy.orm import relationship
@@ -16,6 +20,8 @@ from modules.SeriesInfo import SeriesInfo
 
 INTERNAL_ASSET_DIRECTORY = Path(__file__).parent.parent / 'assets'
 
+def regex_replace(pattern, replacement, string):
+    return re_sub(pattern, replacement, string, IGNORECASE)
 
 class Series(Base):
     __tablename__ = 'series'
@@ -99,6 +105,14 @@ class Series(Base):
         return f'{self.name} ({self.year})'
 
     @hybrid_property
+    def sort_name(self) -> str:
+        return regex_replace(r'^(a|an|the)(\s)', '', self.name.lower())
+    
+    @sort_name.expression
+    def sort_name(cls: 'Series'):
+        return func.regex_replace(r'^(a|an|the)(\s)', '', func.lower(cls.name))
+
+    @hybrid_property
     def small_poster_url(self) -> str:
         return f'/assets/{self.id}/poster-750.jpg'
 
@@ -175,6 +189,23 @@ class Series(Base):
             tvdb_id=self.tvdb_id,
             tvrage_id=self.tvrage_id,
         )
+    
+
+    @hybrid_method
+    def comes_before(self, name: str) -> bool:
+        return self.sort_name < name
+    
+    @comes_before.expression
+    def comes_before(cls, name: str) -> bool:
+        return cls.sort_name < name
+    
+    @hybrid_method
+    def comes_after(self, name: str) -> bool:
+        return self.sort_name > name
+    
+    @comes_after.expression
+    def comes_after(cls, name: str) -> bool:
+        return cls.sort_name > name
 
 
     @hybrid_method

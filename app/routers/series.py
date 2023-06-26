@@ -57,10 +57,10 @@ def get_all_series(
     # Order by Name > Year
     query = db.query(models.series.Series)
     if order_by == 'alphabetical':
-        series = query.order_by(func.lower(models.series.Series.name))\
+        series = query.order_by(models.series.Series.sort_name)\
             .order_by(models.series.Series.year)
     elif order_by == 'reverse-alphabetical':
-        series = query.order_by(func.lower(models.series.Series.name).desc())\
+        series = query.order_by(models.series.Series.sort_name.desc())\
             .order_by(models.series.Series.year)
     # Order by ID
     elif order_by == 'id':
@@ -70,13 +70,53 @@ def get_all_series(
     # Order by Year > Name
     elif order_by == 'year':
         series = query.order_by(models.series.Series.year)\
-            .order_by(func.lower(models.series.Series.name))
+            .order_by(func.lower(models.series.Series.sort_name))
     elif order_by == 'reverse-year':
         series = query.order_by(models.series.Series.year.desc())\
-            .order_by(func.lower(models.series.Series.name))
+            .order_by(func.lower(models.series.Series.sort_name))
 
     # Return paginated results
     return paginate(series)
+
+
+@series_router.get('/{series_id}/previous', status_code=200)
+def get_previous_series(
+        series_id: int,
+        db: Session = Depends(get_database),
+    ) -> Optional[Series]:
+    """
+    Get the previous alphabetically sorted Series.
+
+    - series_id: ID of the reference Series.
+    """
+
+    # Get the reference Series
+    series = get_series(db, series_id, raise_exc=True)
+    
+    return db.query(models.series.Series)\
+        .filter(models.series.Series.comes_before(series.sort_name))\
+        .order_by(models.series.Series.sort_name.desc())\
+        .first()
+
+
+@series_router.get('/{series_id}/next', status_code=200)
+def get_next_series(
+        series_id: int,
+        db: Session = Depends(get_database),
+    ) -> Optional[Series]:
+    """
+    Get the next alphabetically sorted Series.
+
+    - series_id: ID of the reference Series.
+    """
+
+    # Get the reference Series
+    series = get_series(db, series_id, raise_exc=True)
+    
+    return db.query(models.series.Series)\
+        .filter(models.series.Series.comes_after(series.sort_name))\
+        .order_by(models.series.Series.sort_name)\
+        .first()
 
 
 @series_router.post('/new', status_code=201)

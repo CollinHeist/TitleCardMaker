@@ -129,7 +129,8 @@ def create_cards_for_series(
         db: Session = Depends(get_database),
         emby_interface = Depends(get_emby_interface),
         jellyfin_interface = Depends(get_jellyfin_interface),
-        plex_interface = Depends(get_plex_interface)) -> None:
+        plex_interface = Depends(get_plex_interface),
+    ) -> None:
     """
     Create the Title Cards for the given Series. This deletes and
     remakes any outdated existing Cards.

@@ -112,42 +112,10 @@
 
   <!-- Scripts -->
   <script>
-    function sortStandardizeStr(text) {
-      return text.toString().replace(/^(a|an|the)(\s)/i, '');
-    }
-
-    function createPageElement(pageNumber, pageText, active = false) {
-      let element = document.createElement('a');
-      element.className = active ? 'active item' : 'item';
-      element.innerText = pageText;
-      if (pageNumber !== undefined) { element.onclick = () => getAllSeries(pageNumber); }
-      return element;
-    }
-
-    function updatePagination(allSeriesData) {
-      // If only one page, don't update pagination menu
-      const {page, size, pages} = allSeriesData;
-      if (pages === 1) { $('#pagination').remove(); }
-      // Add first, n-1, n, n+1, last items
-      let links = [];
-      if (page > 1) {
-        links.push(createPageElement(1, '«'))
-        links.push(createPageElement(page-1, page-1)); 
-      }
-      links.push(createPageElement(undefined, page, true));
-      if (page + 1 <= pages) {
-        links.push(createPageElement(page+1, page+1)); 
-        links.push(createPageElement(pages, '»')); 
-      }
-      // Remove existing page links, add new ones
-      $('#pagination a').remove();
-      $('#pagination').append(links);
-    }
-
     // Get all series and load their cards into HTML
     async function getAllSeries(page=1) {
       // Get associated sort query param
-      const sortState = window.localStorage.getItem('series-sort-order') || 'id-asc';
+      const sortState = window.localStorage.getItem('series-sort-order') || 'a-z';
       const sortParam = {
         'id-asc': 'id',
         'id-desc': 'reverse-id',
@@ -157,24 +125,11 @@
         'year-desc': 'reverse-year',
       }[sortState];
 
+      // Get this page of Series data
       let allSeriesData = await fetch(`/api/series/all?order_by=${sortParam}&size=100&page=${page}`).then(resp => resp.json());
       let allSeries = allSeriesData.items;
 
-      // Sort Series by stored sort order
-      if (sortState !== undefined) {
-        allSeries.sort((a, b) => {
-          switch (sortState) {
-            case 'id-asc': return a.id - b.id;
-            case 'id-desc': return b.id - a.id;
-            case 'a-z': return sortStandardizeStr(a.name).localeCompare(sortStandardizeStr(b.name));
-            case 'z-a': return sortStandardizeStr(b.name).localeCompare(sortStandardizeStr(a.name));
-            case 'year-asc': return a.year - b.year;
-            case 'year-desc': return b.year - a.year;
-            default: return 0;
-          }
-        });
-      }
-
+      // Create Series cards
       const template = document.querySelector('#series-template');
       let allSeriesCards = allSeries.map(series => {
         const clone = template.content.cloneNode(true);

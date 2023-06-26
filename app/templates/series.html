@@ -748,33 +748,14 @@
     }
 
     async function navigateSeries(next_or_previous) {
-      // Function to standardize the Series name
-      const sortStandardizeStr = (text) => text.toString().toLowerCase().replace(/^(a|an|the)(\s)/i, '');
-      // Get all Series
-      let allSeries = await fetch('/api/series/all?order_by=alphabetical').then(resp => resp.json());
-      const thisSeriesName = sortStandardizeStr(`{{series.name|safe}}`);
-      // Sort Series
-      allSeries.sort((a, b) => {
-        return sortStandardizeStr(a.name).localeCompare(sortStandardizeStr(b.name));
-      });
-      // Function to filter the Series list by
-      let filterFunc;
-      if (next_or_previous === 'next') {
-        filterFunc = series => thisSeriesName.localeCompare(sortStandardizeStr(series.name)) < 0;
-      } else {
-        filterFunc = series => thisSeriesName.localeCompare(sortStandardizeStr(series.name)) > 0;
-      }
-      // Get Series that come before or after this one
-      const filteredSeries = allSeries.filter(series => filterFunc(series));
-      // If next/previous Series, go to that page - if not, disable button
-      if (filteredSeries.length > 0) {
-        if (next_or_previous === 'next') {
-          window.location.href = `/series/${filteredSeries[0].id}`;
-        } else {
-          window.location.href = `/series/${filteredSeries[filteredSeries.length-1].id}`;
-        }
-      } else {
+      // Get the associated Series
+      const navSeries = await fetch(`/api/series/{{series.id}}/${next_or_previous}`).then(resp => resp.json());
+
+      // No Series to navigate to, disable nav button
+      if (navSeries === null) {
         $(`i[data-action="${next_or_previous}-series"]`).toggleClass('disabled', true);
+      } else {
+        window.location.href = `/series/${navSeries.id}`;
       }
     }
   </script>

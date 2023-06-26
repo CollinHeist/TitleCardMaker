@@ -28,11 +28,12 @@ BetterColor = Union[str, Literal['transparent']]
 
 # Function to validate two equal length lists are provided
 def validate_argument_lists_to_dict(
-        values: dict[str, Any],
+        values: dict,
         label: str,
         key0: str,
         key1: str,
-        output_key: str) -> dict[str, Any]:
+        output_key: str
+    ) -> dict:
     """
     Validation function to join two paired lists into a dictionary.
 

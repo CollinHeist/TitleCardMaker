@@ -7,6 +7,7 @@ from apscheduler.executors.pool import ThreadPoolExecutor
 from fastapi_pagination import Page
 from pydantic import Field
 from sqlalchemy import create_engine
+from sqlalchemy.event import listens_for
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -30,6 +31,15 @@ else:
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={'check_same_thread': False}
 )
+
+# Register regex replacement function
+from re import sub as re_sub
+def regex_replace(pattern, replacement, string):
+    return re_sub(pattern, replacement, string)
+
+@listens_for(engine, 'connect')
+def register_custom_functions(dbapi_connection, connection_record):
+    dbapi_connection.create_function('regex_replace', 3, regex_replace)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()

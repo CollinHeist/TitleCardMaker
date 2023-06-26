@@ -2,11 +2,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
 
-from app.dependencies import (
-    get_preferences, get_sonarr_interface, refresh_emby_interface,
-    refresh_jellyfin_interface, refresh_plex_interface,
-    refresh_sonarr_interface, refresh_tmdb_interface,
-)
+from app.dependencies import *
 from app.internal.connection import update_connection
 from app.schemas.preferences import (
     EmbyConnection, JellyfinConnection, PlexConnection, SonarrConnection,
@@ -29,7 +25,8 @@ connection_router = APIRouter(
 def enable_or_disable_connection(
         connection: Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
         status: Literal['enable', 'disable'],
-        preferences=Depends(get_preferences)) -> None:
+        preferences: Preferences = Depends(get_preferences)
+    ) -> None:
     """
     Set the enabled/disabled status of the given connection.
 
@@ -60,35 +57,55 @@ def enable_or_disable_connection(
 
 @connection_router.get('/emby', status_code=200)
 def get_emby_connection_details(
-        preferences = Depends(get_preferences)) -> EmbyConnection:
+        preferences: Preferences = Depends(get_preferences)
+    ) -> EmbyConnection:
+    """
+    
+    """
 
     return preferences
 
 
 @connection_router.get('/jellyfin', status_code=200)
 def get_jellyfin_connection_details(
-        preferences = Depends(get_preferences)) -> JellyfinConnection:
+        preferences: Preferences = Depends(get_preferences)
+    ) -> JellyfinConnection:
+    """
+    
+    """
 
     return preferences
 
 
 @connection_router.get('/plex', status_code=200)
 def get_plex_connection_details(
-        preferences = Depends(get_preferences)) -> PlexConnection:
+        preferences: Preferences = Depends(get_preferences)
+    ) -> PlexConnection:
+    """
+    
+    """
 
     return preferences
 
 
 @connection_router.get('/sonarr', status_code=200)
 def get_sonarr_connection_details(
-        preferences = Depends(get_preferences)) -> SonarrConnection:
+        preferences: Preferences = Depends(get_preferences)
+    ) -> SonarrConnection:
+    """
+    
+    """
 
     return preferences
 
 
 @connection_router.get('/tmdb', status_code=200)
 def get_tmdb_connection_details(
-        preferences = Depends(get_preferences)) -> TMDbConnection:
+        preferences: Preferences = Depends(get_preferences)
+    ) -> TMDbConnection:
+    """
+    
+    """
 
     return preferences
 
@@ -96,7 +113,8 @@ def get_tmdb_connection_details(
 @connection_router.patch('/emby', status_code=200)
 def update_emby_connection(
         update_emby: UpdateEmby = Body(...),
-        preferences = Depends(get_preferences)) -> EmbyConnection:
+        preferences: Preferences = Depends(get_preferences)
+    ) -> EmbyConnection:
     """
     Update the connection details for Emby.
 
@@ -109,7 +127,8 @@ def update_emby_connection(
 @connection_router.patch('/jellyfin', status_code=200)
 def update_jellyfin_connection(
         update_jellyfin: UpdateJellyfin = Body(...),
-        preferences = Depends(get_preferences)) -> JellyfinConnection:
+        preferences: Preferences = Depends(get_preferences)
+    ) -> JellyfinConnection:
     """
     Update the connection details for Jellyfin.
 
@@ -122,7 +141,8 @@ def update_jellyfin_connection(
 @connection_router.patch('/plex', status_code=200)
 def update_plex_connection(
         update_plex: UpdatePlex = Body(...),
-        preferences=Depends(get_preferences)) -> PlexConnection:
+        preferences: Preferences = Depends(get_preferences)
+    ) -> PlexConnection:
     """
     Update the connection details for Plex.
 
@@ -135,7 +155,8 @@ def update_plex_connection(
 @connection_router.patch('/sonarr', status_code=200)
 def update_sonarr_connection(
         update_sonarr: UpdateSonarr = Body(...), 
-        preferences = Depends(get_preferences)) -> SonarrConnection:
+        preferences: Preferences = Depends(get_preferences)
+    ) -> SonarrConnection:
     """
     Update the connection details for Sonarr.
 
@@ -148,7 +169,8 @@ def update_sonarr_connection(
 @connection_router.patch('/tmdb', status_code=200)
 def update_tmdb_connection(
         update_tmdb: UpdateTMDb = Body(...),
-        preferences = Depends(get_preferences)) -> TMDbConnection:
+        preferences: Preferences = Depends(get_preferences)
+    ) -> TMDbConnection:
     """
     Update the connection details for TMDb.
 
@@ -160,8 +182,8 @@ def update_tmdb_connection(
 
 @connection_router.get('/sonarr/libraries', status_code=200, tags=['Sonarr'])
 def get_potential_sonarr_libraries(
-        sonarr_interface: SonarrInterface = Depends(get_sonarr_interface)
-        ) -> list[SonarrLibrary]:
+        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface)
+    ) -> list[SonarrLibrary]:
     """
     Get the potential library names and paths from Sonarr.
     """
@@ -187,7 +209,8 @@ def get_potential_sonarr_libraries(
 @connection_router.post('/tautulli/check', status_code=200, tags=['Tautulli'])
 def check_tautulli_integration(
         request: Request,
-        tautulli_connection: TautulliConnection = Body(...)) -> bool:
+        tautulli_connection: TautulliConnection = Body(...)
+    ) -> bool:
     """
     Check whether Tautulli is integrated with TCM.
 
@@ -195,10 +218,8 @@ def check_tautulli_integration(
     Notification Agent to search for integration of.
     """
 
-    tcm_url = str(request.url).split('/tautulli/check')[0]
-
     interface = TautulliInterface(
-        tcm_url=tcm_url,
+        tcm_url=str(request.url).split('/tautulli/check')[0],
         tautulli_url=tautulli_connection.tautulli_url,
         api_key=tautulli_connection.tautulli_api_key.get_secret_value(),
         use_ssl=tautulli_connection.tautulli_use_ssl,
@@ -211,7 +232,8 @@ def check_tautulli_integration(
 @connection_router.post('/tautulli/integrate', status_code=201, tags=['Tautulli'])
 def add_tautulli_integration(
         request: Request,
-        tautulli_connection: TautulliConnection = Body(...)) -> None:
+        tautulli_connection: TautulliConnection = Body(...)
+    ) -> None:
     """
     Integrate Tautulli with TitleCardMaker by creating a Notification
     Agent that triggers the /cards/key API route to quickly create
@@ -221,10 +243,8 @@ def add_tautulli_integration(
     Notification Agent to search for or create.
     """
 
-    tcm_url = str(request.url).split('/api/connection/tautulli/integrate')[0]
-
     interface = TautulliInterface(
-        tcm_url=tcm_url,
+        tcm_url=str(request.url).split('/api/connection/tautulli/integrate')[0],
         tautulli_url=tautulli_connection.tautulli_url,
         api_key=tautulli_connection.tautulli_api_key.get_secret_value(),
         use_ssl=tautulli_connection.tautulli_use_ssl,
