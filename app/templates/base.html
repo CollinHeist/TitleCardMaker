@@ -150,8 +150,15 @@
       });
       document.getElementById('series-list').replaceChildren(...allSeriesCards);
 
-      // Update pagination at the bottom
-      updatePagination(allSeriesData);
+      // Update pagination
+      updatePagination({
+        paginationElementId: 'pagination',
+        navigateFunction: getAllSeries,
+        page: allSeriesData.page,
+        pages: allSeriesData.pages,
+        amountVisible: 5,
+        hideIfSinglePage: true,
+      });
 
       $('.ui.cards .image').dimmer({
         on: 'ontouchstart' in document.documentElement ? 'click' : 'hover'
