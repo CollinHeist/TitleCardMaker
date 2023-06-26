@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from requests import get as req_get
@@ -11,8 +11,7 @@ import app.models as models
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.card import CardType, LocalCardType, RemoteCardType
 from app.schemas.preferences import (
-    EpisodeDataSourceToggle, ImageSourceToggle, MediaServer, Preferences,
-    StyleOption
+    EpisodeDataSourceToggle, ImageSourceToggle, Preferences, StyleOption
 )
 from app.schemas.sync import Tag
 
@@ -171,7 +170,7 @@ def get_image_source_priority(
 @availablility_router.get('/libraries/{media_server}', status_code=200,
                           tags=['Emby', 'Jellyfin', 'Plex'])
 def get_server_libraries(
-        media_server: MediaServer,
+        media_server: Literal['emby', 'jellyfin', 'plex'],
         preferences: Preferences = Depends(get_preferences),
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
         jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),

@@ -178,7 +178,8 @@ def download_episode_source_image_(
 def get_all_tmdb_episode_source_images(
         episode_id: int,
         db: Session = Depends(get_database),
-        tmdb_interface = Depends(get_tmdb_interface)) -> list[TMDbImage]:
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+    ) -> list[TMDbImage]:
     """
     Get all Source Images on TMDb for the given Episode.
 
@@ -215,8 +216,8 @@ def get_all_tmdb_episode_source_images(
 def get_existing_series_source_images(
         series_id: int,
         db: Session = Depends(get_database),
-        preferences = Depends(get_preferences),
-        imagemagick_interface = Depends(get_imagemagick_interface)
+        preferences: Preferences = Depends(get_preferences),
+        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface)
     ) -> list[SourceImage]:
     """
     Get the SourceImage details for the given Series.
@@ -244,8 +245,8 @@ def get_existing_series_source_images(
 def get_existing_episode_source_images(
         episode_id: int,
         db: Session = Depends(get_database),
-        preferences = Depends(get_preferences),
-        imagemagick_interface = Depends(get_imagemagick_interface)
+        preferences: Preferences = Depends(get_preferences),
+        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface)
     ) -> SourceImage:
     """
     Get the SourceImage details for the given Episode.

@@ -234,7 +234,8 @@ def create_card_for_episode(
         preferences = Depends(get_preferences),
         emby_interface = Depends(get_emby_interface),
         jellyfin_interface = Depends(get_jellyfin_interface),
-        plex_interface = Depends(get_plex_interface)) -> None:
+        plex_interface = Depends(get_plex_interface)
+    ) -> None:
     """
     Create the Title Cards for the given Episode. This deletes and
     remakes the existing Title Card if it is outdated.
@@ -274,11 +275,11 @@ def get_episode_card(
 def create_cards_for_plex_rating_keys(
         background_tasks: BackgroundTasks,
         plex_rating_keys: Union[int, list[int]] = Body(...),
-        preferences = Depends(get_preferences),
+        preferences: Preferences = Depends(get_preferences),
         db: Session = Depends(get_database),
         plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
         sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> None:
     """
     Remake the Title Card for the item associated with the given Plex

@@ -29,7 +29,8 @@ sync_router = APIRouter(
 @sync_router.post('/emby/new', tags=['Emby'], status_code=201)
 def create_new_emby_sync(
         new_sync: NewEmbySync = Body(...),
-        db: Session = Depends(get_database)) -> EmbySync:
+        db: Session = Depends(get_database)
+    ) -> EmbySync:
     """
     Create a new Sync that interfaces with Emby.
 
@@ -42,7 +43,8 @@ def create_new_emby_sync(
 @sync_router.post('/jellyfin/new', tags=['Jellyfin'], status_code=201)
 def create_new_jellyfin_sync(
         new_sync: NewJellyfinSync = Body(...),
-        db: Session = Depends(get_database)) -> JellyfinSync:
+        db: Session = Depends(get_database)
+    ) -> JellyfinSync:
     """
     Create a new Sync that interfaces with Jellyfin.
 
@@ -55,7 +57,8 @@ def create_new_jellyfin_sync(
 @sync_router.post('/plex/new', tags=['Plex'], status_code=201)
 def create_new_plex_sync(
         new_sync: NewPlexSync = Body(...),
-        db: Session = Depends(get_database)) -> PlexSync:
+        db: Session = Depends(get_database)
+    ) -> PlexSync:
     """
     Create a new Sync that interfaces with Plex.
 
@@ -68,7 +71,8 @@ def create_new_plex_sync(
 @sync_router.post('/sonarr/new', tags=['Sonarr'], status_code=201)
 def create_new_sonarr_sync(
         new_sync: NewSonarrSync = Body(...),
-        db: Session = Depends(get_database)) -> SonarrSync:
+        db: Session = Depends(get_database)
+    ) -> SonarrSync:
     """
     Create a new Sync that interfaces with Sonarr.
 
@@ -82,7 +86,8 @@ def create_new_sonarr_sync(
 def edit_sync(
         sync_id: int,
         update_sync: UpdateSync = Body(...),
-        db: Session = Depends(get_database)) -> Sync:
+        db: Session = Depends(get_database)
+    ) -> Sync:
     """
     Update the Sync with the given ID. Only provided fields are updated.
 
@@ -209,13 +214,14 @@ def sync(
         sync_id: int,
         background_tasks: BackgroundTasks,
         db: Session = Depends(get_database),
-        preferences = Depends(get_preferences),
-        emby_interface = Depends(get_emby_interface),
-        imagemagick_interface = Depends(get_imagemagick_interface),
-        jellyfin_interface = Depends(get_jellyfin_interface),
-        plex_interface = Depends(get_plex_interface),
-        sonarr_interface = Depends(get_sonarr_interface),
-        tmdb_interface = Depends(get_tmdb_interface)) -> list[Series]:
+        preferences: Preferences = Depends(get_preferences),
+        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
+        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
+        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
+        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
+        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+    ) -> list[Series]:
     """
     Run the given Sync by querying the assigned interface, adding any
     new series to the database. Return a list of any new Series.

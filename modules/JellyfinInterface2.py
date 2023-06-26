@@ -192,7 +192,8 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     def __get_episode_id(self,
             series_jellyfin_id: str,
-            episode_info: EpisodeInfo) -> Optional[str]:
+            episode_info: EpisodeInfo
+        ) -> Optional[str]:
         """
         Get the Jellyfin ID for the given episode.
 
@@ -506,8 +507,8 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 continue
 
             for episode in episodes:
-                if (jellyfin_episode['ParentIndexNumber'] == episode.season_number
-                    and jellyfin_episode["IndexNumber"] == episode.episode_number):
+                if (jellyfin_episode['ParentIndexNumber']==episode.season_number
+                    and jellyfin_episode["IndexNumber"]==episode.episode_number):
                     episode.watched = jellyfin_episode['UserData']['Played']
                     break
 
@@ -576,7 +577,8 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def load_season_posters(self,
             library_name: str,
             series_info: SeriesInfo,
-            season_poster_set: 'SeasonPosterSet') -> None:
+            season_poster_set: 'SeasonPosterSet'
+        ) -> None:
         """
         Set the season posters from the given set within Plex.
 
@@ -599,6 +601,8 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         Get the source image for the given episode within Jellyfin.
 
         Args:
+            library_name: Name of the library containing the series.
+            series_info: The series whose episode is being queried.
             episode_info: The episode to get the source image of.
 
         Returns:

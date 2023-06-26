@@ -288,7 +288,6 @@ def reschedule_task(
     - update_interval: UpdateInterval whose total interval is used to
       reschedule the given Task.
     """
-    log.critical(f'{update_interval.dict()=}')
     # Verify job exists, raise 404 if DNE
     if (job := scheduler.get_job(task_id)) is None:
         raise HTTPException(
@@ -309,6 +308,7 @@ def reschedule_task(
         return _scheduled_task_from_job(job)
 
     # Reschedule with modified interval
+    log.debug(f'Task[{job.id}] rescheduled via {update_interval.dict()}')
     job = scheduler.reschedule_job(
         task_id,
         trigger='interval',

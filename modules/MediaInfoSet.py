@@ -58,8 +58,15 @@ class MediaInfoSet:
 
 
     def __series_info_condition(self,
-            full_name: str, emby_id: str, imdb_id: str, jellyfin_id: str,
-            sonarr_id: int, tmdb_id: int, tvdb_id: int,tvrage_id: int) -> Query:
+            full_name: Optional[str],
+            emby_id: Optional[str],
+            imdb_id: Optional[str],
+            jellyfin_id: Optional[str],
+            sonarr_id: Optional[int],
+            tmdb_id: Optional[int],
+            tvdb_id: Optional[int],
+            tvrage_id: Optional[int]
+        ) -> Query:
         """
         Get the Query condition associated with the given SeriesInfo
         attributes.
@@ -179,7 +186,10 @@ class MediaInfoSet:
 
 
     def __set_series_id(self,
-            id_type: str, series_info: SeriesInfo, id_: Any) -> None:
+            id_type: str,
+            series_info: SeriesInfo,
+            id_: Any
+        ) -> None:
         """
         Set the series ID within this object's database and on the given
         SeriesInfo object.
@@ -242,8 +252,16 @@ class MediaInfoSet:
 
     @staticmethod
     def __get_episode_info_storage_keys(
-            series_info, season_number, episode_number, emby_id, imdb_id,
-            jellyfin_id, tmdb_id, tvdb_id, tvrage_id) -> list[str]:
+            series_info: SeriesInfo,
+            season_number: int,
+            episode_number: int,
+            emby_id: Optional[str],
+            imdb_id: Optional[str],
+            jellyfin_id: Optional[str],
+            tmdb_id: Optional[int],
+            tvdb_id: Optional[int],
+            tvrage_id: Optional[int]
+        ) -> list[str]:
         """
         Get the keys to update within the EpisodeInfo map for the given
         data.
@@ -274,7 +292,8 @@ class MediaInfoSet:
             title: str,
             season_number: int,
             episode_number: int,
-            abs_number: Optional[int] = None, *,
+            abs_number: Optional[int] = None,
+            *,
             emby_id: Optional[str] = None,
             imdb_id: Optional[str] = None,
             jellyfin_id: Optional[str] = None,
@@ -283,7 +302,8 @@ class MediaInfoSet:
             tvrage_id: Optional[int] = None,
             airdate: Optional[datetime] = None,
             title_match: bool = True,
-            **queried_kwargs: dict[str, bool]) -> EpisodeInfo:
+            **queried_kwargs: dict[str, bool]
+        ) -> EpisodeInfo:
         """
         Get the EpisodeInfo object indicated by the given attributes.
 

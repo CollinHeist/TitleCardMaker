@@ -42,8 +42,7 @@ def create_template(
 
 
 @template_router.get('/all', status_code=200)
-def get_all_templates(
-        db: Session = Depends(get_database)) -> list[Template]:
+def get_all_templates(db: Session = Depends(get_database)) -> list[Template]:
     """
     Get all defined Templates.
     """    
@@ -76,7 +75,6 @@ def update_template(
     - template_id: ID of the Template to update.
     - update_template: UpdateTemplate containing fields to update.
     """
-    log.critical(f'{update_template.dict()=}')
     # Query for Template, raise 404 if DNE
     template = get_template(db, template_id, raise_exc=True)
 

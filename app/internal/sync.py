@@ -92,6 +92,15 @@ def run_sync(
     Run the given Sync. This adds any missing Series from the given Sync
     to the Database. Any newly added Series have their database ID's
     set, and a poster and logo are downloaded.
+
+    Args:
+        db: Database to query for existing Series.
+        preferences: Preferences to use for global settings.
+        sync: Sync to run.
+        *_interface: Interfaces to query.
+        background_tasks: BackgroundTasks to add tasks to for any newly
+            added Series.
+        log: (Keyword) Logger for all log messages.
     """
 
     # If specified interface is disabled, raise 409

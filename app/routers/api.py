@@ -16,9 +16,7 @@ from app.routers.templates import template_router
 from app.routers.translate import translation_router
 
 # Create sub router for all API requests
-api_router = APIRouter(
-    prefix='/api',
-)
+api_router = APIRouter(prefix='/api')
 
 # Include sub-routers
 api_router.include_router(availablility_router)

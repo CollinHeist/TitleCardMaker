@@ -101,7 +101,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         self.libraries: dict[str, tuple[int]] = self._map_libraries()
 
 
-    def _get_user_id(self, username: str) -> Union[str, None]:
+    def _get_user_id(self, username: str) -> Optional[str]:
         """
         Get the User ID associated with the given username.
 
@@ -223,7 +223,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                         series_info.set_tmdb_id(int(tmdb_id))
                     if (tvdb_id := result['ProviderIds'].get('Tvdb')):
                         series_info.set_tvdb_id(int(tvdb_id))
-                        
+
                     return None
 
         # Not found on server
@@ -451,7 +451,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return all_episodes
 
 
-    def has_series(self, series_info: 'SeriesInfo') -> bool:
+    def has_series(self, series_info: SeriesInfo) -> bool:
         """
         Determine whether the given series is present within Emby.
 
@@ -468,7 +468,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def update_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
-            episodes: list['Episode']) -> None:
+            episodes: list['Episode']
+        ) -> None:
         """
         Modify the Episodes' watched attribute according to the watched
         status of the corresponding episodes within Emby.
@@ -555,7 +556,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def load_season_posters(self,
             library_name: str,
             series_info: SeriesInfo,
-            season_poster_set: 'SeasonPosterSet') -> None:
+            season_poster_set: 'SeasonPosterSet'
+        ) -> None:
         """
         Set the season posters from the given set within Emby.
 

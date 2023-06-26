@@ -33,7 +33,8 @@ class SeriesYamlWriter:
             compact_mode: bool = True,
             volume_map: dict[str, str] = {},
             template: Optional[str] = None,
-            card_directory: Optional[CleanPath] = None) -> None:
+            card_directory: Optional[CleanPath] = None
+        ) -> None:
         """
         Initialize an instance of a SeriesYamlWrite object.
 
@@ -143,7 +144,8 @@ class SeriesYamlWriter:
 
     def __apply_exclusion(self,
             yaml: SeriesYaml,
-            exclusions: list[dict[str, str]]) -> None:
+            exclusions: list[dict[str, str]]
+        ) -> None:
         """
         Apply the given exclusions to the given YAML. This modifies the
         YAML object in-place.
@@ -561,7 +563,8 @@ class SeriesYamlWriter:
             monitored_only: bool = False,
             downloaded_only: bool = False,
             series_type: Optional[str] = None,
-            exclusions: list[dict[str, str]] = []) -> None:
+            exclusions: list[dict[str, str]] = [],
+        ) -> None:
         """
         Update this object's file from Sonarr.
 
@@ -596,7 +599,8 @@ class SeriesYamlWriter:
             plex_interface: PlexInterface,
             filter_libraries: list[str] = [],
             required_tags: list[str] = [],
-            exclusions: list[dict[str, str]] = []) -> None:
+            exclusions: list[dict[str, str]] = [],
+        ) -> None:
         """
         Update this object's file from Plex.
 
@@ -630,7 +634,8 @@ class SeriesYamlWriter:
             emby_interface: EmbyInterface,
             filter_libraries: list[str] = [],
             required_tags: list[str] = [],
-            exclusions: list[dict[str, str]] = []) -> None:
+            exclusions: list[dict[str, str]] = [],
+        ) -> None:
         """
         Update this object's file from Emby.
 
@@ -663,7 +668,8 @@ class SeriesYamlWriter:
             jellyfin_interface: JellyfinInterface,
             filter_libraries: list[str] = [],
             required_tags: list[str] = [],
-            exclusions: list[dict[str, str]] = []) -> None:
+            exclusions: list[dict[str, str]] = [],
+        ) -> None:
         """
         Update this object's file from Jellyfin.
 

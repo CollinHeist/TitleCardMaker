@@ -112,7 +112,8 @@ def delete_episode(
 @episodes_router.delete('/series/{series_id}', status_code=200, tags=['Series'])
 def delete_all_series_episodes(
         series_id: int,
-        db: Session = Depends(get_database)) -> list[int]:
+        db: Session = Depends(get_database)
+    ) -> list[int]:
     """
     Delete all Episodes for the Series with the given ID.
 
@@ -142,7 +143,7 @@ def refresh_episode_data_(
         background_tasks: BackgroundTasks,
         series_id: int,
         db: Session = Depends(get_database),
-        preferences = Depends(get_preferences),
+        preferences: Preferences = Depends(get_preferences),
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
         jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
         plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
@@ -240,7 +241,6 @@ def update_episode_config(
     - episode_id: ID of the Episode to update.
     - update_episode: UpdateEpisode containing fields to update.
     """
-    log.critical(f'{update_episode.dict()=}')
     # Get this Episode, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
     update_episode_dict = update_episode.dict()
@@ -254,7 +254,6 @@ def update_episode_config(
         not in (None, UNSPECIFIED)):
         if episode.template_ids != template_ids:
             episode.templates = get_all_templates(db, update_episode_dict)
-            log.debug(f'{episode.log_str}.templates = {template_ids}')
             changed = True
 
     # Update each attribute of the object

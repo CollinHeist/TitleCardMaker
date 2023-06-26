@@ -135,7 +135,7 @@ def update_font(
         if getattr(font, attribute) != value:
             setattr(font, attribute, value)
             changed = True
-            log.debug(f'SETTING font[{font_id}].{attribute} = {value}')
+            log.debug(f'Font[{font_id}].{attribute} = {value}')
 
     # If object was changed, update DB
     if changed:

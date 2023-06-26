@@ -28,7 +28,8 @@ class Episode:
             base_source: Path,
             destination: Path,
             given_keys: set[str],
-            **extras: dict) -> None:
+            **extras: dict
+        ) -> None:
         """
         Construct a new instance of an Episode.
 
@@ -141,7 +142,7 @@ class Episode:
                 this Episode's base source directory - if that file DNE
                 then it's taken as a Path and converted; if None,
                 nothing happens.
-            downloadable: (Keyword only) Whether the new source is
+            downloadable: (Keyword) Whether the new source is
                 downloadable or not.
 
         Returns:
@@ -171,8 +172,8 @@ class Episode:
         Delete the title card for this Episode.
 
         Args:
-            reason: (Keyword only) Optional string to log why the card
-                is being deleted.
+            reason: (Keyword) String to log why the card is being
+                deleted.
 
         Returns:
             True if card was deleted, False otherwise.

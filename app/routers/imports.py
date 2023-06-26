@@ -109,7 +109,8 @@ def import_connection_yaml(
 @import_router.post('/preferences/sync', status_code=201)
 def import_sync_yaml(
         import_yaml: ImportYaml = Body(...),
-        db: Session = Depends(get_database)) -> list[Sync]:
+        db: Session = Depends(get_database)
+    ) -> list[Sync]:
     """
     Import all Syncs defined in the given YAML.
 
@@ -148,7 +149,8 @@ def import_sync_yaml(
 @import_router.post('/fonts', status_code=201)
 def import_fonts_yaml(
         import_yaml: ImportYaml = Body(...),
-        db: Session = Depends(get_database)) -> list[NamedFont]:
+        db: Session = Depends(get_database)
+    ) -> list[NamedFont]:
     """
     Import all Fonts defined in the given YAML. This does NOT import any
     custom font files - these will need to be added separately.
@@ -188,7 +190,8 @@ def import_fonts_yaml(
 def import_template_yaml(
         import_yaml: ImportYaml = Body(...),
         db: Session = Depends(get_database),
-        preferences = Depends(get_preferences)) -> list[Template]:
+        preferences = Depends(get_preferences)
+    ) -> list[Template]:
     """
     Import all Templates defined in the given YAML.
 
@@ -227,13 +230,14 @@ def import_series_yaml(
         background_tasks: BackgroundTasks,
         import_yaml: ImportSeriesYaml = Body(...),
         db: Session = Depends(get_database),
-        preferences = Depends(get_preferences),
-        emby_interface = Depends(get_emby_interface),
-        imagemagick_interface = Depends(get_imagemagick_interface),
-        jellyfin_interface = Depends(get_jellyfin_interface),
-        plex_interface = Depends(get_plex_interface),
-        sonarr_interface = Depends(get_sonarr_interface),
-        tmdb_interface = Depends(get_tmdb_interface)) -> list[Series]:
+        preferences: Preferences = Depends(get_preferences),
+        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
+        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
+        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
+        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
+        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+    ) -> list[Series]:
     """
     Import all Series defined in the given YAML.
 
@@ -301,7 +305,7 @@ def import_series_yaml(
 def import_cards_for_series(
         series_id: int,
         card_directory: ImportCardDirectory = Body(...),
-        preferences = Depends(get_preferences),
+        preferences: Preferences = Depends(get_preferences),
         db: Session = Depends(get_database)
     ) -> CardActions:
     """

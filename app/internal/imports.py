@@ -102,7 +102,6 @@ def _get(yaml_dict: dict[str, Any],
         try:
             return type_(value)
         except Exception as e:
-            log.exception(f'YAML value is incorrectly typed', e)
             raise HTTPException(
                 status_code=422,
                 detail=f'YAML is incorrectly formatted - {e}',

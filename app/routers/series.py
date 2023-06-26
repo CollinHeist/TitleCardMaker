@@ -259,7 +259,6 @@ def update_series(
     - series_id: ID of the Series to update.
     - update_series: Attributes of the Series to update.
     """
-    log.debug(f'{update_series.dict()=}')
     # Query for this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
@@ -275,7 +274,6 @@ def update_series(
         not in (None, UNSPECIFIED)):
         if series.template_ids != template_ids:
             series.templates = get_all_templates(db, update_series_dict)
-            log.debug(f'{series.log_str}.templates = {template_ids}')
             changed = True
 
     # Update each attribute of the object
@@ -311,7 +309,6 @@ def toggle_series_monitored_status(
 
     # Toggle monitored attribute, update Database
     series.monitored = not series.monitored
-    log.debug(f'{series.log_str}.monitored={series.monitored}')
     db.commit()
 
     return series

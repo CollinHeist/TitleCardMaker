@@ -123,7 +123,8 @@ def set_series_database_ids(
         jellyfin_interface: Optional[JellyfinInterface],
         plex_interface: Optional[PlexInterface],
         sonarr_interface: Optional[SonarrInterface],
-        tmdb_interface: Optional[TMDbInterface], *,
+        tmdb_interface: Optional[TMDbInterface],
+        *,
         commit: bool = True,
     ) -> bool:
     """
@@ -364,7 +365,6 @@ def load_series_title_cards(
             episodes_to_load.append((episode, card))
         # Episode does not need to be (re)loaded
         else:
-            log.debug(f'{series.log_str} {episode.log_str} Not loading card - has not changed')
             continue
 
     # Load into indicated interface

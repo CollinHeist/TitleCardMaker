@@ -47,7 +47,8 @@ class ImageMagickInterface:
     def __init__(self,
             container: Optional[str] = None,
             use_magick_prefix: bool = False,
-            timeout: int = COMMAND_TIMEOUT_SECONDS) -> None:
+            timeout: int = COMMAND_TIMEOUT_SECONDS
+        ) -> None:
         """
         Construct a new instance. If container is falsey, then commands
         will not use a docker container.
@@ -262,7 +263,8 @@ class ImageMagickInterface:
     def convert_svg_to_png(self,
             image: Path,
             destination: Path,
-            min_dimension: int = 2500) -> Optional[Path]:
+            min_dimension: int = 2500
+        ) -> Optional[Path]:
         """
         Convert the given SVG image to PNG format.
 

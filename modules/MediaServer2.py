@@ -72,9 +72,11 @@ class MediaServer(ABC):
         return small_image
 
     @abstractmethod
-    def update_watched_statuses(self, library_name: str,
-            series_info: 'SeriesInfo', episode_map: dict[str, 'Episode'],
-            style_set: 'StyleSet') -> None:
+    def update_watched_statuses(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episodes: list['Episode'],
+        ) -> None:
         """Abstract method to update watched statuses of Episode objects."""
         raise NotImplementedError('All MediaServer objects must implement this')
 

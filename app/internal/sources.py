@@ -166,6 +166,12 @@ def download_series_logo(
     """
     Download the logo for the given Series.
 
+    Args:
+        preferences: Preferences to use for global settings
+        *_interface: Interface to query for any logos.
+        series: Series whose logo to download.
+        log: (Keyword) Logger for all log messages.
+
     Returns:
         The URI to the Series logo. If one cannot be downloaded, None is
         returned instead.
@@ -179,7 +185,6 @@ def download_series_logo(
     # Get the Series logo, return if already exists
     logo_file = series.get_logo_file(preferences.source_directory)
     if logo_file.exists():
-        log.debug(f'{series.log_str} Logo exists')
         return f'/source/{series.path_safe_name}/logo.png'
 
     # Go through all image sources    
@@ -269,6 +274,14 @@ def download_episode_source_image(
     """
     Download the source image for the given Episode.
 
+    Args:
+        db: Database to update.
+        preferences: Preferences to utilize for global settings.
+        *_interface: Interface to query for each source image.
+        episode: Episode whose source image is being downloaded.
+        raise_exc: Whether to raise any HTTPExceptions.
+        log: (Keyword) Logger for all log messages.
+
     Returns:
         The URI to the Episode source image. If one cannot be
         downloaded, None is returned instead.
@@ -283,7 +296,6 @@ def download_episode_source_image(
     # If source already exists, return that
     series: Series = episode.series
     if source_file.exists():
-        log.debug(f'{series.log_str} {episode.log_str} Source image already exists')
         return f'/source/{series.path_safe_name}/{source_file.name}'
 
     # Get effective Templates
@@ -320,7 +332,7 @@ def download_episode_source_image(
             source_image = emby_interface.get_source_image(
                 episode.as_episode_info
             )
-        elif image_source == 'Jellyfin' and jellyfin_interface is not None:
+        elif image_source == 'Jellyfin' and jellyfin_interface:
             source_image = jellyfin_interface.get_source_image(
                 series.jellyfin_library_name,
                 series.as_series_info,
@@ -332,7 +344,7 @@ def download_episode_source_image(
                 series.as_series_info,
                 episode.as_episode_info,
             )
-        elif image_source == 'TMDb' and tmdb_interface is not None:
+        elif image_source == 'TMDb' and tmdb_interface:
             # TODO implement blacklist bypassing
             # Get art backdrop
             if 'art' in style:
