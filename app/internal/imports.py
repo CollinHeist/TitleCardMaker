@@ -54,18 +54,17 @@ def parse_raw_yaml(yaml: str) -> dict[str, Any]:
         yaml_dict = YAML().load(yaml)
         return {} if yaml_dict is None else yaml_dict
     except Exception as e:
-        log.exception(f'YAML parsing failed', e)
         raise HTTPException(
             status_code=422,
-            detail=f'YAML is invalid',
+            detail=f'YAML cannot be parsed',
         )
 
 
-def _get(
-        yaml_dict: dict[str, Any],
+def _get(yaml_dict: dict[str, Any],
         *keys: tuple[str],
         type_: Optional[Callable[..., Any]] = None,
-        default: Any = None) -> Any:
+        default: Any = None,
+    ) -> Any:
     """
     Get the value at the given location in YAML.
 
@@ -114,7 +113,8 @@ def _get(
 
 def _parse_translations(
         yaml_dict: dict[str, Any],
-        default: Any = None) -> list[Translation]:
+        default: Any = None
+    ) -> list[Translation]:
     """
     Parse translations from the given YAML.
 
@@ -165,7 +165,8 @@ def _parse_translations(
 
 
 def _parse_episode_data_source(
-        yaml_dict: dict[str, Any]) -> Optional[EpisodeDataSource]:
+        yaml_dict: dict[str, Any]
+    ) -> Optional[EpisodeDataSource]:
     """
     Parse the episode data source from the given YAML.
 
@@ -237,7 +238,8 @@ def _parse_filesize_limit(
 
 def parse_preferences(
         preferences: Preferences,
-        yaml_dict: dict[str, Any]) -> Preferences:
+        yaml_dict: dict[str, Any]
+    ) -> Preferences:
     """
     Modify the preferences for the given YAML.
 
@@ -319,7 +321,8 @@ def parse_preferences(
 
 def parse_emby(
         preferences: Preferences,
-        yaml_dict: dict[str, Any]) -> Preferences:
+        yaml_dict: dict[str, Any]
+    ) -> Preferences:
     """
     Update the Emby connection preferences for the given YAML.
 
@@ -364,7 +367,8 @@ def parse_emby(
 
 def parse_jellyfin(
         preferences: Preferences,
-        yaml_dict: dict[str, Any]) -> Preferences:
+        yaml_dict: dict[str, Any]
+    ) -> Preferences:
     """
     Update the Jellyfin connection preferences for the given YAML.
 
@@ -409,7 +413,8 @@ def parse_jellyfin(
 
 def parse_plex(
         preferences: Preferences,
-        yaml_dict: dict[str, Any]) -> Preferences:
+        yaml_dict: dict[str, Any]
+    ) -> Preferences:
     """
     Update the Plex connection preferences for the given YAML.
 
@@ -457,7 +462,8 @@ def parse_plex(
 
 def parse_sonarr(
         preferences: Preferences,
-        yaml_dict: dict[str, Any]) -> Preferences:
+        yaml_dict: dict[str, Any]
+    ) -> Preferences:
     """
     Update the Sonarr connection preferences for the given YAML.
 
@@ -496,7 +502,8 @@ def parse_sonarr(
 
 def parse_tmdb(
         preferences: Preferences,
-        yaml_dict: dict[str, Any]) -> Preferences:
+        yaml_dict: dict[str, Any]
+    ) -> Preferences:
     """
     Update the TMDb connection preferences for the given YAML.
 
@@ -667,8 +674,7 @@ def parse_syncs(
     return all_syncs
 
 
-def parse_fonts(
-        yaml_dict: dict[str, Any]) -> list[NewNamedFont]:
+def parse_fonts(yaml_dict: dict[str, Any]) -> list[NewNamedFont]:
     """
     Create NewNamedFont objects for any defined fonts in the given
     YAML.
@@ -733,7 +739,8 @@ def parse_fonts(
 def parse_templates(
         db: Session,
         preferences: Preferences,
-        yaml_dict: dict[str, Any]) -> list[NewTemplate]:
+        yaml_dict: dict[str, Any]
+    ) -> list[NewTemplate]:
     """
     Create NewTemplate objects for any defined templates in the given
     YAML.

@@ -1,7 +1,7 @@
-from requests import get as req_get
 from typing import Optional
 
 from fastapi import HTTPException
+from requests import get as req_get
 
 from modules.Debug import log
 

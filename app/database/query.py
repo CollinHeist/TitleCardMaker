@@ -17,7 +17,8 @@ def _get_obj(
         model: Any,
         model_name: str,
         object_id: int,
-        raise_exc: bool = True) -> Optional[Any]:
+        raise_exc: bool = True
+    ) -> Optional[Any]:
     """
     Get the Object from the Database with the given ID.
 
@@ -57,8 +58,10 @@ def _get_obj(
 
 def get_card(
         db: Session,
-        card_id: int, *,
-        raise_exc: bool = True) -> Optional[TitleCard]:
+        card_id: int,
+        *,
+        raise_exc: bool = True
+    ) -> Optional[TitleCard]:
     """
     Get the Card with the given ID from the given Database.
 
@@ -70,8 +73,10 @@ def get_card(
 
 def get_episode(
         db: Session,
-        episode_id: int, *,
-        raise_exc: bool = True) -> Optional[Episode]:
+        episode_id: int,
+        *,
+        raise_exc: bool = True
+    ) -> Optional[Episode]:
     """
     Get the Episode with the given ID from the given Database.
 
@@ -83,8 +88,10 @@ def get_episode(
 
 def get_font(
         db: Session,
-        font_id: int, *,
-        raise_exc: bool = True) -> Optional[NamedFont]:
+        font_id: int,
+        *,
+        raise_exc: bool = True
+    ) -> Optional[NamedFont]:
     """
     Get the Font with the given ID from the given Database.
 
@@ -96,8 +103,10 @@ def get_font(
 
 def get_series(
         db: Session,
-        series_id: int, *,
-        raise_exc: bool = True) -> Optional[Series]:
+        series_id: int,
+        *,
+        raise_exc: bool = True
+    ) -> Optional[Series]:
     """
     Get the Series with the given ID from the given Database.
 
@@ -109,8 +118,10 @@ def get_series(
 
 def get_sync(
         db: Session,
-        sync_id: int, *,
-        raise_exc: bool = True) -> Optional[Sync]:
+        sync_id: int,
+        *,
+        raise_exc: bool = True
+    ) -> Optional[Sync]:
     """
     Get the Sync with the given ID from the given Database.
 
@@ -122,8 +133,10 @@ def get_sync(
 
 def get_template(
         db: Session,
-        template_id: int, *,
-        raise_exc: bool = True) -> Optional[Template]:
+        template_id: int,
+        *,
+        raise_exc: bool = True
+    ) -> Optional[Template]:
     """
     Get the Template with the given ID from the given Database.
 
@@ -137,7 +150,8 @@ def get_template(
 
 def get_all_templates(
         db: Session,
-        obj_dict: dict[str, Any]) -> list[Template]:
+        obj_dict: dict[str, Any]
+    ) -> list[Template]:
     """
     Get all Templates defined in the given Dictionaries "template_ids"
     key. This removes the "template_ids" key from obj_dict.
