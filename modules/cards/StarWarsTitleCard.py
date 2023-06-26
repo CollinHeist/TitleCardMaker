@@ -114,6 +114,7 @@ class StarWarsTitleCard(BaseCardType):
                     (prefix, text)
                 )
             else:
+                self.episode_text = None
                 self.episode_prefix = self.image_magick.escape_chars(
                     episode_text
                 )
