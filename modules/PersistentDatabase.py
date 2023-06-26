@@ -1,4 +1,6 @@
 from pathlib import Path
+from time import sleep
+from typing import Callable
 
 from json.decoder import JSONDecodeError
 from tinydb import TinyDB
@@ -16,6 +18,8 @@ class PersistentDatabase:
     are caught, the database is deleted, and the function is
     re-executed.
     """
+
+    MAX_DB_RETRY_COUNT: int = 5
 
 
     def __init__(self, filename: str) -> None:
@@ -42,7 +46,7 @@ class PersistentDatabase:
             self.reset()
 
 
-    def __getattr__(self, database_func: str) -> callable:
+    def __getattr__(self, database_func: str) -> Callable:
         """
         Get an arbitrary function for this object. This returns a
         wrapped version of the accessed function that catches any
@@ -59,18 +63,20 @@ class PersistentDatabase:
 
         # Define wrapper that calls given function with args, and then catches
         # any uncaught exceptions
-        def wrapper(*args, **kwargs) -> None:
+        def wrapper(*args, __retries: int = 0, **kwargs) -> None:
             try:
+                kwargs.pop('__retries', None)
                 return getattr(self.db, database_func)(*args, **kwargs)
-            except JSONDecodeError as e:
-                log.exception(f'Database {self.file.resolve()} is corrupted', e)
+            except (ValueError, JSONDecodeError) as e:
+                # If this function has been attempted too many times, just raise
+                if __retries > self.MAX_DB_RETRY_COUNT:
+                    raise e
+                
+                # Log conflict, sleep, reset database, and try function again
+                log.exception(f'Database {self.file.resolve()} has conflict', e)
+                sleep(3)
                 self.reset()
-                return getattr(self.db, database_func)(*args, **kwargs)
-            except ValueError as e:
-                log.exception(f'Database {self.file.resolve()} has conflicting '
-                              f'document', e)
-                self.reset()
-                return getattr(self.db, database_func)(*args, **kwargs)
+                return wrapper(*args, **kwargs, __retries=__retries+1)
 
         # Return "attribute" that is the wrapped function
         return wrapper
