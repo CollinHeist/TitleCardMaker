@@ -62,7 +62,6 @@ class SonarrInterface(WebInterface, SyncInterface):
             self.url = url
         elif (re_match := self._URL_REGEX.match(url)) is None:
             log.critical(f'Invalid Sonarr URL "{url}"')
-            exit(1)
         else:
             self.url = f'{re_match.group(1)}/api/v3/'
 
@@ -72,7 +71,10 @@ class SonarrInterface(WebInterface, SyncInterface):
 
         # Query system status to verify connection to Sonarr
         try:
-            status =self._get(f'{self.url}system/status',self.__standard_params)
+            status = self._get(
+                f'{self.url}system/status',
+                self.__standard_params,
+            )
             if status.get('appName') != 'Sonarr':
                 raise HTTPException(
                     status_code=401,
@@ -343,8 +345,9 @@ class SonarrInterface(WebInterface, SyncInterface):
 
         # Construct GET arguments
         url = f'{self.url}episode/'
-        params = {'apikey': self.__api_key,
-                  'seriesId': int(series_info.sonarr_id.split('-')[1])}
+        params = {
+            'seriesId': int(series_info.sonarr_id.split('-')[1])
+        } | self.__standard_params
 
         # Query Sonarr to get JSON of all episodes for this series
         all_episodes = self._get(url, params)
@@ -386,7 +389,6 @@ class SonarrInterface(WebInterface, SyncInterface):
                 episode.get('absoluteEpisodeNumber'),
                 tvdb_id=episode.get('tvdbId'),
                 airdate=air_datetime,
-                preferences=preferences,
             )
 
             # Add to episode list
@@ -426,8 +428,9 @@ class SonarrInterface(WebInterface, SyncInterface):
                         if (getattr(old_episode_info, id_type) is None
                             and id_ is not None):
                             setattr(old_episode_info, id_type, id_)
-                            log.debug(f'[Sonarr] Set {old_episode_info}.{id_type}={id_}')
                     break
+
+        return None
 
 
     def get_all_tags(self) -> list[dict[str, Any]]:

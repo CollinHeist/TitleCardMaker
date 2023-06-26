@@ -28,7 +28,8 @@ class TautulliInterface(WebInterface):
             update_script: Path,
             agent_name: str = DEFAULT_AGENT_NAME,
             script_timeout: int = DEFAULT_SCRIPT_TIMEOUT,
-            username: Optional[str] = None) -> None:
+            username: Optional[str] = None
+        ) -> None:
         """
         Construct a new instance of an interface to Sonarr.
 
