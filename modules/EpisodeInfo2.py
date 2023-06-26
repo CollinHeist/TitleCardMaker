@@ -20,7 +20,8 @@ class WordSet(dict):
     def add_numeral(self,
             label: str,
             number: Optional[int],
-            lang: Optional[str] = None) -> None:
+            lang: Optional[str] = None
+        ) -> None:
         """
         Add the cardinal and ordinal versions of the given number under
         the given label. For example:
@@ -220,7 +221,8 @@ class EpisodeInfo(DatabaseInfoContainer):
 
         # Create EpisodeInfo for this Episode
         episode_info = EpisodeInfo(
-            plex_episode.title, plex_episode.parentIndex, plex_episode.index
+            plex_episode.title, plex_episode.parentIndex, plex_episode.index,
+            airdate=plex_episode.originallyAvailableAt
         )
 
         # Add any GUIDs as database ID's
