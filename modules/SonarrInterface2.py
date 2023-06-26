@@ -443,22 +443,3 @@ class SonarrInterface(WebInterface, SyncInterface):
         """
 
         return self._get(f'{self.url}tag', self.__standard_params)
-
-
-    def list_all_series_id(self) -> None:
-        """List all the series ID's of all shows used by Sonarr. """
-
-        # Construct GET arguments
-        url = f'{self.url}series'
-        params = self.__standard_params
-        all_series = self._get(url, params)
-
-        # Go through each series in Sonarr
-        for show in all_series:
-            # Print the main and alternate titles
-            main_title = show['title']
-            alt_titles = [_['title'] for _ in show['alternateTitles']]
-
-            padding = len(f'{show["id"]} : ')
-            titles = f'\n{" " * padding}'.join([main_title] + alt_titles)
-            print(f'{show["id"]} : {titles}')
