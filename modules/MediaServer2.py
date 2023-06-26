@@ -71,15 +71,6 @@ class MediaServer(ABC):
         log.debug(f'Compressed "{image.resolve()}" with {quality}% quality')
         return small_image
 
-
-    @abstractmethod
-    def has_series(self) -> bool:
-        """
-        Determine whether the given series is present within this
-        MediaServer.
-        """
-        raise NotImplementedError('All MediaServer objects must implement this')
-
     @abstractmethod
     def update_watched_statuses(self, library_name: str,
             series_info: 'SeriesInfo', episode_map: dict[str, 'Episode'],

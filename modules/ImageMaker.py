@@ -66,7 +66,8 @@ class ImageMaker(ABC):
 
 
     def get_text_dimensions(self,
-            text_command: list[str], *,
+            text_command: list[str],
+            *,
             width: Literal['sum', 'max'] = 'max',
             height: Literal['sum', 'max'] = 'sum',
         ) -> Dimensions:

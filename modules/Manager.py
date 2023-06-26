@@ -1,6 +1,6 @@
 from yaml import dump
 from tqdm import tqdm
-from typing import Iterable
+from typing import Callable, Iterable
 
 from modules.EmbyInterface import EmbyInterface
 from modules.Debug import log, TQDM_KWARGS
@@ -87,7 +87,7 @@ class Manager:
         self.archives = []
 
 
-    def notify(message: str) -> callable:
+    def notify(message: str) -> Callable:
         """
         Return a decorator that notifies the given message when the
         decorated function starts executing. Only notify if the global
