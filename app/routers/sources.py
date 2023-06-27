@@ -2,7 +2,8 @@ from requests import get
 from typing import Optional
 
 from fastapi import (
-    APIRouter, BackgroundTasks, Depends, Form, HTTPException, Query, UploadFile,
+    APIRouter, BackgroundTasks, Depends, Form, HTTPException, Query, Request,
+    UploadFile,
 )
 from sqlalchemy.orm import Session
 
@@ -29,6 +30,7 @@ source_router = APIRouter(
 def download_series_source_images(
         background_tasks: BackgroundTasks,
         series_id: int,
+        request: Request,
         ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
@@ -59,7 +61,7 @@ def download_series_source_images(
             download_episode_source_image,
             # Arguments
             db, preferences, emby_interface, jellyfin_interface, plex_interface,
-            tmdb_interface, episode, raise_exc=False,
+            tmdb_interface, episode, raise_exc=False, log=request.state.log,
         )
 
     return None
@@ -68,13 +70,14 @@ def download_series_source_images(
 @source_router.post('/series/{series_id}/backdrop', status_code=200)
 def download_series_backdrop(
         series_id: int,
+        request: Request,
         ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
-        preferences = Depends(get_preferences),
+        preferences: Preferences = Depends(get_preferences),
         # emby_interface = Depends(get_emby_interface),
         # jellyfin_interface = Depends(get_jellyfin_interface),
         # plex_interface = Depends(get_plex_interface),
-        tmdb_interface = Depends(get_tmdb_interface)
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
     ) -> Optional[str]:
     """
     Download a backdrop (art image) for the given Series. This only uses
@@ -85,6 +88,9 @@ def download_series_backdrop(
     the associated Series backdrop has been internally blacklisted.
     """
     # TODO add ability to download art from a media server
+    # Get contextual logger
+    log = request.state.log
+
     # Get this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
@@ -116,6 +122,7 @@ def download_series_backdrop(
 @source_router.post('/series/{series_id}/logo', status_code=200)
 def download_series_logo_(
         series_id: int,
+        request: Request,
         ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
@@ -139,13 +146,14 @@ def download_series_logo_(
 
     return download_series_logo(
         preferences, emby_interface, imagemagick_interface,
-        jellyfin_interface, tmdb_interface, series,
+        jellyfin_interface, tmdb_interface, series, log=request.state.log,
     )
 
 
 @source_router.post('/episode/{episode_id}', status_code=200)
 def download_episode_source_image_(
         episode_id: int,
+        request: Request,
         ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
@@ -170,13 +178,14 @@ def download_episode_source_image_(
 
     return download_episode_source_image(
         db, preferences, emby_interface, jellyfin_interface, plex_interface,
-        tmdb_interface, episode, raise_exc=True,
+        tmdb_interface, episode, raise_exc=True, log=request.state.log,
     )
 
 
 @source_router.get('/episode/{episode_id}/browse', status_code=200)
 def get_all_tmdb_episode_source_images(
         episode_id: int,
+        request: Request,
         db: Session = Depends(get_database),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
     ) -> list[TMDbImage]:
@@ -208,6 +217,7 @@ def get_all_tmdb_episode_source_images(
         episode.as_episode_info,
         match_title=match_title,
         bypass_blacklist=True,
+        log=request.state.log,
     )
     return [] if source_images is None else source_images
 

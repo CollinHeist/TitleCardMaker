@@ -1,8 +1,10 @@
 from datetime import datetime
-from typing import Literal
+from logging import Logger
+from typing import Literal, Optional
 
 from apscheduler.job import Job
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from apscheduler.schedulers.background import BackgroundScheduler
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 
 from app.dependencies import get_scheduler
 from app.internal.availability import get_latest_version
@@ -20,7 +22,7 @@ from app.internal.sync import sync_all
 from app.internal.translate import translate_all_series
 from app.schemas.schedule import NewJob, ScheduledTask, UpdateInterval
 
-from modules.Debug import log
+from modules.Debug import contextualize, log
 
 
 # Create sub router for all /schedule API requests
@@ -45,82 +47,93 @@ INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES: str = 'RefreshRemoteCardTypes'
 INTERNAL_JOB_SET_SERIES_IDS: str = 'SetSeriesIDs'
 
 TaskID = Literal[
-    JOB_REFRESH_EPISODE_DATA, JOB_SYNC_INTERFACES, JOB_DOWNLOAD_SOURCE_IMAGES,
-    JOB_CREATE_TITLE_CARDS, JOB_LOAD_MEDIA_SERVERS, JOB_ADD_TRANSLATIONS,
-    JOB_DOWNLOAD_SERIES_LOGOS, JOB_DOWNLOAD_SERIES_POSTERS,
+    JOB_REFRESH_EPISODE_DATA, JOB_SYNC_INTERFACES, JOB_DOWNLOAD_SOURCE_IMAGES,  # type: ignore
+    JOB_CREATE_TITLE_CARDS, JOB_LOAD_MEDIA_SERVERS, JOB_ADD_TRANSLATIONS,       # type: ignore
+    JOB_DOWNLOAD_SERIES_LOGOS, JOB_DOWNLOAD_SERIES_POSTERS,                     # type: ignore
     # Internal jobs
-    INTERNAL_JOB_CHECK_FOR_NEW_RELEASE, INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES,
-    INTERNAL_JOB_SET_SERIES_IDS,
-]
+    INTERNAL_JOB_CHECK_FOR_NEW_RELEASE, INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES, # type: ignore
+    INTERNAL_JOB_SET_SERIES_IDS,                                                # type: ignore
+] 
 
 """
 Wrap all periodically called functions to set the runnin attributes when
 the job is started and finished.
 """
-def _wrap_before(job_id):
-    log.debug(f'Task[{job_id}] Started execution')
+def _wrap_before(job_id, *, log: Logger = log):
+    log.info(f'Task[{job_id}] Started execution')
     BaseJobs[job_id].previous_start_time = datetime.now()
     BaseJobs[job_id].running = True
 
-def _wrap_after(job_id):
-    log.debug(f'Task[{job_id}] Finished execution')
+def _wrap_after(job_id, *, log: Logger = log):
+    log.info(f'Task[{job_id}] Finished execution')
     BaseJobs[job_id].previous_end_time = datetime.now()
     BaseJobs[job_id].running = False
 
-def wrapped_create_all_title_cards():
-    _wrap_before(JOB_CREATE_TITLE_CARDS)
-    create_all_title_cards()
-    _wrap_after(JOB_CREATE_TITLE_CARDS)
+def wrapped_create_all_title_cards(log: Optional[Logger] = None):
+    log = contextualize() if log is None else log
+    _wrap_before(JOB_CREATE_TITLE_CARDS, log=log)
+    create_all_title_cards(log=log)
+    _wrap_after(JOB_CREATE_TITLE_CARDS, log=log)
 
-def wrapped_download_all_series_logos():
-    _wrap_before(JOB_DOWNLOAD_SERIES_LOGOS)
-    download_all_series_logos()
-    _wrap_after(JOB_DOWNLOAD_SERIES_LOGOS)
+def wrapped_download_all_series_logos(log: Optional[Logger] = None):
+    log = contextualize() if log is None else log
+    _wrap_before(JOB_DOWNLOAD_SERIES_LOGOS, log=log)
+    download_all_series_logos(log=log)
+    _wrap_after(JOB_DOWNLOAD_SERIES_LOGOS, log=log)
 
-def wrapped_download_all_series_posters():
-    _wrap_before(JOB_DOWNLOAD_SERIES_POSTERS)
-    download_all_series_posters()
-    _wrap_after(JOB_DOWNLOAD_SERIES_POSTERS)
+def wrapped_download_all_series_posters(log: Optional[Logger] = None):
+    log = contextualize() if log is None else log
+    _wrap_before(JOB_DOWNLOAD_SERIES_POSTERS, log=log)
+    download_all_series_posters(log=log)
+    _wrap_after(JOB_DOWNLOAD_SERIES_POSTERS, log=log)
 
-def wrapped_download_source_images():
-    _wrap_before(JOB_DOWNLOAD_SOURCE_IMAGES)
-    download_all_source_images()
-    _wrap_after(JOB_DOWNLOAD_SOURCE_IMAGES)
+def wrapped_download_source_images(log: Optional[Logger] = None):
+    log = contextualize() if log is None else log
+    _wrap_before(JOB_DOWNLOAD_SOURCE_IMAGES, log=log)
+    download_all_source_images(log=log)
+    _wrap_after(JOB_DOWNLOAD_SOURCE_IMAGES, log=log)
 
-def wrapped_load_media_servers():
-    _wrap_before(JOB_LOAD_MEDIA_SERVERS)
-    load_all_media_servers()
-    _wrap_after(JOB_LOAD_MEDIA_SERVERS)
+def wrapped_load_media_servers(log: Optional[Logger] = None):
+    log = contextualize() if log is None else log
+    _wrap_before(JOB_LOAD_MEDIA_SERVERS, log=log)
+    load_all_media_servers(log=log)
+    _wrap_after(JOB_LOAD_MEDIA_SERVERS, log=log)
 
-def wrapped_refresh_all_episode_data():
-    _wrap_before(JOB_REFRESH_EPISODE_DATA)
-    refresh_all_episode_data()
-    _wrap_after(JOB_REFRESH_EPISODE_DATA)
+def wrapped_refresh_all_episode_data(log: Optional[Logger] = None):
+    log = contextualize() if log is None else log
+    _wrap_before(JOB_REFRESH_EPISODE_DATA, log=log)
+    refresh_all_episode_data(log=log)
+    _wrap_after(JOB_REFRESH_EPISODE_DATA, log=log)
 
-def wrapped_sync_all():
-    _wrap_before(JOB_SYNC_INTERFACES)
-    sync_all()
-    _wrap_after(JOB_SYNC_INTERFACES)
+def wrapped_sync_all(log: Optional[Logger] = None):
+    log = contextualize() if log is None else log
+    _wrap_before(JOB_SYNC_INTERFACES, log=log)
+    sync_all(log=log)
+    _wrap_after(JOB_SYNC_INTERFACES, log=log)
 
-def wrapped_translate_all_series():
-    _wrap_before(JOB_ADD_TRANSLATIONS)
-    translate_all_series()
-    _wrap_after(JOB_ADD_TRANSLATIONS)
+def wrapped_translate_all_series(log: Optional[Logger] = None):
+    log = contextualize() if log is None else log
+    _wrap_before(JOB_ADD_TRANSLATIONS, log=log)
+    translate_all_series(log=log)
+    _wrap_after(JOB_ADD_TRANSLATIONS, log=log)
 
-def wrapped_get_latest_version():
-    _wrap_before(INTERNAL_JOB_CHECK_FOR_NEW_RELEASE)
-    get_latest_version()
-    _wrap_after(INTERNAL_JOB_CHECK_FOR_NEW_RELEASE)
+def wrapped_get_latest_version(log: Optional[Logger] = None):
+    log = contextualize() if log is None else log
+    _wrap_before(INTERNAL_JOB_CHECK_FOR_NEW_RELEASE, log=log)
+    get_latest_version(log=log)
+    _wrap_after(INTERNAL_JOB_CHECK_FOR_NEW_RELEASE, log=log)
 
-def wrapped_refresh_all_remote_cards():
-    _wrap_before(INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES)
-    refresh_all_remote_card_types()
-    _wrap_after(INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES)
+def wrapped_refresh_all_remote_cards(log: Optional[Logger] = None):
+    log = contextualize() if log is None else log
+    _wrap_before(INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES, log=log)
+    refresh_all_remote_card_types(log=log)
+    _wrap_after(INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES, log=log)
 
-def wrapped_set_series_ids():
-    _wrap_before(INTERNAL_JOB_SET_SERIES_IDS)
-    set_all_series_ids()
-    _wrap_after(INTERNAL_JOB_SET_SERIES_IDS)
+def wrapped_set_series_ids(log: Optional[Logger] = None):
+    log = contextualize() if log is None else log
+    _wrap_before(INTERNAL_JOB_SET_SERIES_IDS, log=log)
+    set_all_series_ids(log=log)
+    _wrap_after(INTERNAL_JOB_SET_SERIES_IDS, log=log)
 
 """
 Dictionary of Job ID's to NewJob objects that contain the default Job
@@ -240,7 +253,7 @@ def _scheduled_task_from_job(job: Job) -> ScheduledTask:
 @schedule_router.get('/scheduled', status_code=200)
 def get_scheduled_tasks(
         show_internal: bool = Query(default=False),
-        scheduler = Depends(get_scheduler)
+        scheduler: BackgroundScheduler = Depends(get_scheduler)
     ) -> list[ScheduledTask]:
     """
     Get scheduling details for all defined Tasks.
@@ -258,7 +271,7 @@ def get_scheduled_tasks(
 @schedule_router.get('/{task_id}', status_code=200)
 def get_scheduled_task(
         task_id: TaskID,
-        scheduler = Depends(get_scheduler)
+        scheduler: BackgroundScheduler = Depends(get_scheduler)
     ) -> ScheduledTask:
     """
     Get the schedule details for the indicated Task.
@@ -278,8 +291,9 @@ def get_scheduled_task(
 @schedule_router.patch('/update/{task_id}', status_code=200)
 def reschedule_task(
         task_id: TaskID,
+        request: Request,
         update_interval: UpdateInterval = Body(...),
-        scheduler = Depends(get_scheduler)
+        scheduler: BackgroundScheduler = Depends(get_scheduler)
     ) -> ScheduledTask:
     """
     Reschedule the given Task with a new interval.
@@ -288,6 +302,10 @@ def reschedule_task(
     - update_interval: UpdateInterval whose total interval is used to
       reschedule the given Task.
     """
+
+    # Get contextual logger
+    log = request.state.log
+
     # Verify job exists, raise 404 if DNE
     if (job := scheduler.get_job(task_id)) is None:
         raise HTTPException(
@@ -321,7 +339,8 @@ def reschedule_task(
 @schedule_router.post('/{task_id}', status_code=200)
 def run_task(
         task_id: TaskID,
-        scheduler = Depends(get_scheduler)
+        request: Request,
+        scheduler: BackgroundScheduler = Depends(get_scheduler)
     ) -> ScheduledTask:
     """
     Run the given Task immediately. This __does not__ reschedule or
@@ -338,6 +357,6 @@ def run_task(
         )
 
     # Run this Task's function
-    job.function()
+    job.function(request.state.log)
 
     return _scheduled_task_from_job(scheduler.get_job(task_id))

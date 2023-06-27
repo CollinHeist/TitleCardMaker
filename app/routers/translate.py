@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.database.query import get_episode, get_series, get_template
@@ -19,8 +19,9 @@ translation_router = APIRouter(
 
 @translation_router.post('/series/{series_id}', status_code=201)
 def add_series_translations(
-        background_tasks: BackgroundTasks,
         series_id: int,
+        background_tasks: BackgroundTasks,
+        request: Request,
         # force_refresh: bool = Query(default=False),
         db: Session = Depends(get_database),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
@@ -48,7 +49,7 @@ def add_series_translations(
             # Function
             translate_episode,
             # Arguments
-            db, episode, tmdb_interface
+            db, episode, tmdb_interface, log=request.state.log,
         )
 
     return None
@@ -57,6 +58,7 @@ def add_series_translations(
 @translation_router.post('/episode/{episode_id}', status_code=200)
 def add_episode_translations(
         episode_id: int,
+        request: Request,
         db: Session = Depends(get_database),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
     ) -> Episode:
@@ -77,6 +79,8 @@ def add_episode_translations(
     episode = get_episode(db, episode_id, raise_exc=True)
 
     # Translating this Episode
-    translate_episode(db, episode.series, episode, tmdb_interface)
+    translate_episode(
+        db, episode.series, episode, tmdb_interface, log=request.state.log
+    )
 
     return episode

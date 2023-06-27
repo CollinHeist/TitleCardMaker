@@ -4,7 +4,7 @@ from shutil import copy as file_copy
 from typing import Literal, Optional
 
 from fastapi import (
-    APIRouter, Body, Depends, Form, HTTPException, Query, UploadFile
+    APIRouter, Body, Depends, Form, HTTPException, Query, Request, UploadFile
 )
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
@@ -121,6 +121,7 @@ def get_next_series(
 
 @series_router.post('/new', status_code=201)
 def add_new_series(
+        request: Request,
         new_series: NewSeries = Body(...),
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
@@ -137,6 +138,9 @@ def add_new_series(
 
     - new_series: Series definition to create.
     """
+
+    # Get contextual logger
+    log = request.state.log
 
     # Convert object to dictionary
     new_series_dict = new_series.dict()
@@ -156,19 +160,19 @@ def add_new_series(
     # Set Series ID's, download poster and logo
     set_series_database_ids(
         series, db, emby_interface, jellyfin_interface, plex_interface,
-        sonarr_interface, tmdb_interface,
+        sonarr_interface, tmdb_interface, log=log,
     )
     download_series_poster(
         db, preferences, series, emby_interface, imagemagick_interface,
-        jellyfin_interface, plex_interface, tmdb_interface,
+        jellyfin_interface, plex_interface, tmdb_interface, log=log
     )
     download_series_logo(
         preferences, emby_interface, imagemagick_interface, jellyfin_interface,
-        tmdb_interface, series
+        tmdb_interface, series, log=log,
     )
 
     # Refresh card types in case new remote type was specified
-    refresh_remote_card_types(db)
+    refresh_remote_card_types(db, log=log)
 
     return series
 
@@ -176,6 +180,7 @@ def add_new_series(
 @series_router.delete('/{series_id}', status_code=204)
 def delete_series(
         series_id: int,
+        request: Request,
         db: Session = Depends(get_database)) -> None:
     """
     Delete the Series with the given ID. This also deletes the poster.
@@ -187,7 +192,7 @@ def delete_series(
     series = get_series(db, series_id, raise_exc=True)
 
     # Delete Series, poster, and associated Episodes
-    delete_series_and_episodes(db, series)
+    delete_series_and_episodes(db, series, log=request.state.log)
 
     return None
 
@@ -250,6 +255,7 @@ def get_series_config(
 @series_router.patch('/{series_id}', status_code=200)
 def update_series(
         series_id: int,
+        request: Request,
         update_series: UpdateSeries = Body(...),
         db: Session = Depends(get_database)
     ) -> Series:
@@ -259,6 +265,10 @@ def update_series(
     - series_id: ID of the Series to update.
     - update_series: Attributes of the Series to update.
     """
+
+    # Get contextual logger
+    log = request.state.log
+
     # Query for this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
@@ -288,7 +298,7 @@ def update_series(
         db.commit()
 
     # Refresh card types in case new remote type was specified
-    refresh_remote_card_types(db)
+    refresh_remote_card_types(db, log=log)
     
     return series
 
@@ -319,6 +329,7 @@ def toggle_series_monitored_status(
 def load_title_cards_into_media_server(
         series_id: int,
         media_server: MediaServer,
+        request: Request,
         db: Session = Depends(get_database),
         emby_interface = Depends(get_emby_interface),
         jellyfin_interface = Depends(get_jellyfin_interface),
@@ -339,7 +350,7 @@ def load_title_cards_into_media_server(
 
     load_series_title_cards(
         series, media_server, db, emby_interface, jellyfin_interface,
-        plex_interface, force_reload=False
+        plex_interface, force_reload=False, log=request.state.log,
     )
 
     return None
@@ -350,6 +361,7 @@ def load_title_cards_into_media_server(
 def reload_title_cards_into_media_server(
         series_id: int,
         media_server: MediaServer,
+        request: Request,
         db: Session = Depends(get_database),
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
         jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
@@ -369,7 +381,7 @@ def reload_title_cards_into_media_server(
 
     return load_series_title_cards(
         series, media_server, db, emby_interface, jellyfin_interface,
-        plex_interface, force_reload=True
+        plex_interface, force_reload=True, log=request.state.log,
     )
 
 
@@ -414,6 +426,7 @@ def remove_series_labels(
 @series_router.get('/{series_id}/poster', status_code=200)
 def download_series_poster_(
         series_id: int,
+        request: Request,
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
@@ -430,6 +443,7 @@ def download_series_poster_(
 
     return download_series_poster(
         db, preferences, series, imagemagick_interface, tmdb_interface,
+        log=request.state.log,
     )
 
 

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Body, Depends
+from fastapi import APIRouter, Body, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.database.query import get_font, get_template
@@ -21,7 +21,8 @@ template_router = APIRouter(
 @template_router.post('/new', status_code=201)
 def create_template(
         new_template: NewTemplate = Body(...),
-        db: Session = Depends(get_database)) -> Template:
+        db: Session = Depends(get_database)
+    ) -> Template:
     """
     Create a new Template. Any referenced font_id must exist.
 
@@ -53,7 +54,8 @@ def get_all_templates(db: Session = Depends(get_database)) -> list[Template]:
 @template_router.get('/{template_id}', status_code=200)
 def get_template_by_id(
         template_id: int,
-        db: Session = Depends(get_database)) -> Template:
+        db: Session = Depends(get_database)
+    ) -> Template:
     """
     Get the Template with the given ID.
 
@@ -66,8 +68,10 @@ def get_template_by_id(
 @template_router.patch('/{template_id}', status_code=200)
 def update_template(
         template_id: int,
+        request: Request,
         update_template: UpdateTemplate = Body(...),
-        db: Session = Depends(get_database)) -> Template:
+        db: Session = Depends(get_database)
+    ) -> Template:
     """
     Update the Template with the given ID. Only provided fields are
     updated.
@@ -75,6 +79,10 @@ def update_template(
     - template_id: ID of the Template to update.
     - update_template: UpdateTemplate containing fields to update.
     """
+
+    # Get contextual logger
+    log = request.state.log
+
     # Query for Template, raise 404 if DNE
     template = get_template(db, template_id, raise_exc=True)
 
@@ -94,7 +102,7 @@ def update_template(
         db.commit()
 
     # Refresh card types in case new remote type was specified
-    refresh_remote_card_types(db)
+    refresh_remote_card_types(db, log=log)
 
     return template
 

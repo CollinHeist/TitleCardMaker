@@ -157,7 +157,7 @@ class TintedFrameTitleCard(BaseCardType):
             logo_file: Optional[Path] = None,
             logo_size: float = 1.0,
             blur_edges: bool = True,
-            preferences: 'Preferences' = None,
+            preferences: Optional['Preferences'] = None,                        # type: ignore
             **unused) -> None:
         """
         Construct a new instance of this Card.

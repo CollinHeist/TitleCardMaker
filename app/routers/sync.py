@@ -1,14 +1,12 @@
-from fastapi import APIRouter, BackgroundTasks, Body, Depends
+from typing import Optional
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_sync
-from app.dependencies import (
-    get_database, get_preferences, get_emby_interface,
-    get_imagemagick_interface, get_jellyfin_interface, get_plex_interface,
-    get_sonarr_interface, get_tmdb_interface
-)
+from app.dependencies import *
 from app.internal.series import delete_series_and_episodes
 from app.internal.sync import add_sync, run_sync
+from app.models.preferences import Preferences
 from app.schemas.sync import (
     EmbySync, JellyfinSync, PlexSync, SonarrSync, Sync, NewEmbySync,
     NewJellyfinSync, NewPlexSync, NewSonarrSync, UpdateSync,
@@ -17,6 +15,12 @@ from app.schemas.series import Series
 import app.models as models
 
 from modules.Debug import log
+from modules.EmbyInterface2 import EmbyInterface
+from modules.ImageMagickInterface import ImageMagickInterface
+from modules.JellyfinInterface2 import JellyfinInterface
+from modules.PlexInterface2 import PlexInterface
+from modules.SonarrInterface2 import SonarrInterface
+from modules.TMDbInterface2 import TMDbInterface
 
 
 # Create sub router for all /sync API requests
@@ -121,6 +125,7 @@ def edit_sync(
 
 @sync_router.delete('/delete/{sync_id}', status_code=204)
 def delete_sync(
+        request: Request,
         sync_id: int,
         delete_series: bool = False,
         db: Session = Depends(get_database)) -> None:
@@ -138,7 +143,7 @@ def delete_sync(
     # If deleting Series, iterate and delete Series and all Episodes
     if delete_series:
         for series in sync.series:
-            delete_series_and_episodes(db, series, commit_changes=False)
+            delete_series_and_episodes(db, series, commit_changes=False,log=log)
 
     db.delete(sync)
     db.commit()
@@ -213,6 +218,7 @@ def get_sync_by_id(
 def sync(
         sync_id: int,
         background_tasks: BackgroundTasks,
+        request: Request,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
@@ -236,5 +242,5 @@ def sync(
         db, preferences, sync, emby_interface, imagemagick_interface,
         jellyfin_interface, plex_interface, sonarr_interface,
         tmdb_interface,
-        background_tasks=background_tasks
+        background_tasks=background_tasks, log=request.state.log,
     )
