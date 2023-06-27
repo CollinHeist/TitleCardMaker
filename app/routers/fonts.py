@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from fastapi import APIRouter, Body, Depends, HTTPException, UploadFile
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, UploadFile
 from sqlalchemy.orm import Session
 
 from app.database.query import get_font
@@ -79,6 +79,7 @@ async def add_font_file(
 @font_router.delete('/{font_id}/file', status_code=200)
 def delete_font_file(
         font_id: int,
+        request: Request,
         db: Session = Depends(get_database)
     ) -> NamedFont:
     """
@@ -86,6 +87,9 @@ def delete_font_file(
 
     - font_id: ID of the Font to delete the file of.
     """
+
+    # Get contextual logger
+    log = request.state.log
 
     # Get existing font object, raise 404 if DNE
     font = get_font(db, font_id, raise_exc=True)
@@ -116,6 +120,7 @@ def delete_font_file(
 @font_router.patch('/{font_id}', status_code=200)
 def update_font(
         font_id: int,
+        request: Request,
         update_font: UpdateNamedFont = Body(...),
         db: Session = Depends(get_database)
     ) -> NamedFont:
@@ -125,6 +130,9 @@ def update_font(
     - font_id: ID of the Font to update.
     - update_font: UpdateFont containing fields to update.
     """
+
+    # Get contextual logger
+    log = request.state.log
 
     # Get existing font object, raise 404 if DNE
     font = get_font(db, font_id, raise_exc=True)
@@ -172,6 +180,7 @@ def get_font_by_id(
 @font_router.delete('/{font_id}', status_code=204)
 def delete_font(
         font_id: int,
+        request: Request,
         db: Session = Depends(get_database)
     ) -> None:
     """
@@ -180,6 +189,9 @@ def delete_font(
 
     - font_id: ID of the Font to delete.
     """
+
+    # Get contextual logger
+    log = request.state.log
 
     # Get specified Font, raise 404 if DNE
     font = get_font(db, font_id, raise_exc=True)

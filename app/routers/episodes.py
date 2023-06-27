@@ -1,6 +1,6 @@
 from typing import Literal, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Body, Depends
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, Request
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 
@@ -28,6 +28,7 @@ episodes_router = APIRouter(
 
 @episodes_router.post('/new', status_code=201)
 def add_new_episode(
+        request: Request,
         new_episode: NewEpisode = Body(...),
         db: Session = Depends(get_database),
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
@@ -56,12 +57,12 @@ def add_new_episode(
     db.commit()
 
     # Refresh card types in case new remote type was specified
-    refresh_remote_card_types(db)
+    refresh_remote_card_types(db, log=request.state.log)
 
     # Add background task to add episode ID's for this Episode
     set_episode_ids(
         db, series, [episode], emby_interface, jellyfin_interface,
-        plex_interface, sonarr_interface, tmdb_interface
+        plex_interface, sonarr_interface, tmdb_interface, log=request.state.log,
     )
 
     return episode
@@ -83,6 +84,7 @@ def get_episode_by_id(
 
 @episodes_router.delete('/{episode_id}', status_code=204)
 def delete_episode(
+        request: Request,
         episode_id: int,
         db: Session = Depends(get_database)) -> None:
     """
@@ -99,18 +101,19 @@ def delete_episode(
         db, 
         db.query(models.card.Card).filter_by(episode_id=episode_id),
         db.query(models.loaded.Loaded).filter_by(episode_id=episode_id),
+        log=request.state.log,
     )
 
     # Delete Episode itself
     db.delete(episode)
     db.commit()
-    log.info(f'Deleted Episode {episode_id}')
 
     return None
 
 
 @episodes_router.delete('/series/{series_id}', status_code=200, tags=['Series'])
 def delete_all_series_episodes(
+        request: Request,
         series_id: int,
         db: Session = Depends(get_database)
     ) -> list[int]:
@@ -129,6 +132,7 @@ def delete_all_series_episodes(
         db,
         db.query(models.card.Card).filter_by(series_id=series_id),
         db.query(models.loaded.Loaded).filter_by(series_id=series_id),
+        log=request.state.log,
     )
 
     # Delete all associated Episodes
@@ -141,6 +145,7 @@ def delete_all_series_episodes(
 @episodes_router.post('/{series_id}/refresh', status_code=201)
 def refresh_episode_data_(
         background_tasks: BackgroundTasks,
+        request: Request,
         series_id: int,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
@@ -166,8 +171,7 @@ def refresh_episode_data_(
         db, preferences, 
         series,
         emby_interface, jellyfin_interface, plex_interface, sonarr_interface,
-        tmdb_interface,
-        background_tasks,
+        tmdb_interface, background_tasks, log=request.state.log,
     )
     
     return None
@@ -175,6 +179,7 @@ def refresh_episode_data_(
 
 @episodes_router.patch('/batch', status_code=200)
 def update_multiple_episode_configs(
+        request: Request,
         update_episodes: list[BatchUpdateEpisode] = Body(...),
         db: Session = Depends(get_database)
     ) -> list[Episode]:
@@ -185,6 +190,9 @@ def update_multiple_episode_configs(
     - update_episodes: List of BatchUpdateEpisode containing fields to
     update.
     """
+
+    # Get contextual logger
+    log = request.state.log
 
     # Update each Episode in the list
     episodes, changed = [], False
@@ -223,13 +231,14 @@ def update_multiple_episode_configs(
         db.commit()
 
     # Refresh card types in case new remote type was specified
-    refresh_remote_card_types(db)
+    refresh_remote_card_types(db, log=log)
 
     return episodes
 
 
 @episodes_router.patch('/{episode_id}', status_code=200)
 def update_episode_config(
+        request: Request,
         episode_id: int,
         update_episode: UpdateEpisode = Body(...),
         db: Session = Depends(get_database)
@@ -241,6 +250,10 @@ def update_episode_config(
     - episode_id: ID of the Episode to update.
     - update_episode: UpdateEpisode containing fields to update.
     """
+
+    # Get contextual logger
+    log = request.state.log
+
     # Get this Episode, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
     update_episode_dict = update_episode.dict()
@@ -268,7 +281,7 @@ def update_episode_config(
         db.commit()
 
     # Refresh card types in case new remote type was specified
-    refresh_remote_card_types(db)
+    refresh_remote_card_types(db, log=log)
 
     return episode
 

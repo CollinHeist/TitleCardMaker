@@ -1,5 +1,8 @@
 from typing import Optional, Union
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException
+
+from fastapi import (
+    APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request
+)
 from sqlalchemy.orm import Session
 
 from app.database.query import get_card, get_episode, get_font, get_series
@@ -125,6 +128,7 @@ def get_title_card(
 def create_cards_for_series(
         background_tasks: BackgroundTasks,
         series_id: int,
+        request: Request,
         preferences = Depends(get_preferences),
         db: Session = Depends(get_database),
         emby_interface = Depends(get_emby_interface),
@@ -138,20 +142,25 @@ def create_cards_for_series(
     - series_id: ID of the Series to create Title Cards for.
     """
 
+    # Get contextual logger
+    log = request.state.log
+
     # Get this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
     # Set watch statuses of the Episodes
     update_episode_watch_statuses(
         emby_interface, jellyfin_interface, plex_interface,
-        series, series.episodes
+        series, series.episodes, log=log,
     )
     db.commit()
 
     # Create each associated Episode's Card
     for episode in series.episodes:
         try:
-            create_episode_card(db, preferences, background_tasks, episode)
+            create_episode_card(
+                db, preferences, background_tasks, episode, log=log
+            )
         except HTTPException as e:
             log.exception(f'{series.log_str} {episode.log_str} Card creation failed', e)
             pass
@@ -176,6 +185,7 @@ def get_series_cards(
 @card_router.delete('/series/{series_id}', status_code=200, tags=['Series'])
 def delete_series_title_cards(
         series_id: int,
+        request: Request,
         db: Session = Depends(get_database)
     ) -> CardActions:
     """
@@ -185,15 +195,20 @@ def delete_series_title_cards(
     - series_id: ID of the Series whose TitleCards to delete.
     """
 
+    # Create Queries for Cards of this Series
     card_query = db.query(models.card.Card).filter_by(series_id=series_id)
     loaded_query = db.query(models.loaded.Loaded).filter_by(series_id=series_id)
 
-    return CardActions(deleted=len(delete_cards(db, card_query, loaded_query)))
+    # Delete cards
+    deleted = delete_cards(db, card_query, loaded_query, log=request.state.log)
+
+    return CardActions(deleted=len(deleted))
 
 
 @card_router.delete('/episode/{episode_id}', status_code=200, tags=['Episodes'])
 def delete_episode_title_cards(
         episode_id: int,
+        request: Request,
         db: Session = Depends(get_database)
     ) -> CardActions:
     """
@@ -203,15 +218,20 @@ def delete_episode_title_cards(
     - episode_id: ID of the Episode whose TitleCards to delete.
     """
 
+    # Create Queries for Cards of this Episode
     card_query = db.query(models.card.Card).filter_by(episode_id=episode_id)
     loaded_query = db.query(models.loaded.Loaded).filter_by(episode_id=episode_id)
 
-    return CardActions(deleted=len(delete_cards(db, card_query, loaded_query)))
+    # Delete cards
+    deleted = delete_cards(db, card_query, loaded_query, log=request.state.log)
+
+    return CardActions(deleted=len(deleted))
 
 
 @card_router.delete('/card/{card_id}', status_code=200)
 def delete_title_card(
         card_id: int,
+        request: Request,
         db: Session = Depends(get_database)
     ) -> CardActions:
     """
@@ -221,15 +241,20 @@ def delete_title_card(
     - card_id: ID of the TitleCard to delete.
     """
 
+    # Create Queries for Cards of this Episode
     card_query = db.query(models.card.Card).filter_by(id=card_id)
     loaded_query = db.query(models.loaded.Loaded).filter_by(id=card_id)
 
-    return CardActions(deleted=delete_cards(db, card_query, loaded_query))
+    # Delete cards
+    deleted = delete_cards(db, card_query, loaded_query, log=request.state.log)
+
+    return CardActions(deleted=len(deleted))
 
 
 @card_router.post('/episode/{episode_id}', status_code=200, tags=['Episodes'])
 def create_card_for_episode(
         episode_id: int,
+        request: Request,
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         emby_interface = Depends(get_emby_interface),
@@ -249,11 +274,11 @@ def create_card_for_episode(
     # Set watch status of the Episode
     update_episode_watch_statuses(
         emby_interface, jellyfin_interface, plex_interface,
-        episode.series, [episode]
+        episode.series, [episode], log=request.state.log,
     )
 
     # Create Card for this Episode
-    create_episode_card(db, preferences, None, episode)
+    create_episode_card(db, preferences, None, episode, log=request.state.log)
 
     return None
 
@@ -274,6 +299,7 @@ def get_episode_card(
 @card_router.post('/key', tags=['Plex', 'Tautulli'], status_code=200)
 def create_cards_for_plex_rating_keys(
         background_tasks: BackgroundTasks,
+        request: Request,
         plex_rating_keys: Union[int, list[int]] = Body(...),
         preferences: Preferences = Depends(get_preferences),
         db: Session = Depends(get_database),
@@ -289,6 +315,9 @@ def create_cards_for_plex_rating_keys(
         to remake the card of.
     """
 
+    # Get contextual logger
+    log = request.state.log
+
     # Key provided, no PlexInterface, raise 409
     if plex_interface is None:
         raise HTTPException(
@@ -303,7 +332,7 @@ def create_cards_for_plex_rating_keys(
     # Get details of each key from Plex, raise 404 if not found/invalid
     details = []
     for key in plex_rating_keys:
-        if len(deets := plex_interface.get_episode_details(key)) == 0:
+        if len(deets := plex_interface.get_episode_details(key, log=log)) == 0:
             raise HTTPException(
                 status_code=404,
                 detail=f'Rating key {key} is invalid'
@@ -334,6 +363,7 @@ def create_cards_for_plex_rating_keys(
                 db, preferences, series, emby_interface=None,
                 jellyfin_interface=None, plex_interface=plex_interface,
                 sonarr_interface=sonarr_interface,tmdb_interface=tmdb_interface,
+                log=log,
             )
             episode = db.query(models.episode.Episode)\
                 .filter(episode_info.filter_conditions(models.episode.Episode))\
@@ -352,13 +382,13 @@ def create_cards_for_plex_rating_keys(
             db, preferences,
             emby_interface=None, jellyfin_interface=None,
             plex_interface=plex_interface, tmdb_interface=tmdb_interface,
-            episode=episode,
+            episode=episode, log=log,
         )
-        translate_episode(db, episode, tmdb_interface)
+        translate_episode(db, episode, tmdb_interface, log=log)
         if image is None:
             log.info(f'{episode.log_str} has no source image - skipping')
             continue
-        create_episode_card(db, preferences, background_tasks, episode)
+        create_episode_card(db, preferences, background_tasks, episode, log=log)
 
         # Add this Series to list of Series to load
         if episode.series not in series_to_load:
@@ -371,7 +401,7 @@ def create_cards_for_plex_rating_keys(
             load_series_title_cards,
             # Args
             series, 'Plex', db, emby_interface=None, jellyfin_interface=None,
-            plex_interface=plex_interface, force_reload=False,
+            plex_interface=plex_interface, force_reload=False, log=log,
         )
 
     return None

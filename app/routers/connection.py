@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
 
@@ -224,6 +224,7 @@ def check_tautulli_integration(
         api_key=tautulli_connection.tautulli_api_key.get_secret_value(),
         use_ssl=tautulli_connection.tautulli_use_ssl,
         agent_name=tautulli_connection.tautulli_agent_name,
+        log=request.state.log,
     )
 
     return interface.is_integrated()
@@ -249,6 +250,7 @@ def add_tautulli_integration(
         api_key=tautulli_connection.tautulli_api_key.get_secret_value(),
         use_ssl=tautulli_connection.tautulli_use_ssl,
         agent_name=tautulli_connection.tautulli_agent_name,
+        log=request.state.log,
     )
 
-    interface.integrate()
+    interface.integrate(log=log)

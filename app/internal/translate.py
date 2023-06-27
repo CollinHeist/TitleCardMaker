@@ -1,3 +1,4 @@
+from logging import Logger
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_database, get_tmdb_interface
@@ -10,7 +11,7 @@ from modules.TieredSettings import TieredSettings
 from modules.TMDbInterface2 import TMDbInterface
 
 
-def translate_all_series() -> None:
+def translate_all_series(*, log: Logger = log) -> None:
     """
     Schedule-able function to add missing translations to all Series and
     Episodes in the Database.
@@ -33,7 +34,7 @@ def translate_all_series() -> None:
 
                 # Translate each Episode
                 for episode in series.episodes:
-                    translate_episode(db, episode, tmdb_interface)
+                    translate_episode(db, episode, tmdb_interface, log=log)
     except Exception as e:
         log.exception(f'Failed to add translations', e)
 
@@ -43,7 +44,9 @@ def translate_all_series() -> None:
 def translate_episode(
         db: Session,
         episode: Episode,
-        tmdb_interface: TMDbInterface
+        tmdb_interface: TMDbInterface,
+        *,
+        log: Logger = log,
     ) -> None:
     """
     Add the given Episode's translations to the Database.
@@ -54,6 +57,7 @@ def translate_episode(
             translations.
         episode: Episode to translate and add translations to.
         tmdb_interface: TMDbInterface to query for translations.
+        log: (Keyword) Logger for all log messages.
     """
 
     # Get the Series and Episode Template
@@ -84,11 +88,13 @@ def translate_episode(
 
         # Get new translation from TMDb, add to Episode
         translation = tmdb_interface.get_episode_title(
-            series.as_series_info, episode.as_episode_info, language_code
+            series.as_series_info, episode.as_episode_info, language_code,
+            log=log,
         )
         if translation is not None:
             episode.translations[data_key] = translation
-            log.info(f'{series.log_str} {episode.log_str} translated {language_code} -> "{translation}" -> {data_key}')
+            log.info(f'{series.log_str} {episode.log_str} translated '
+                     f'{language_code} -> "{translation}" -> {data_key}')
             changed = True
 
     # If any translations were added, commit updates to database

@@ -1,6 +1,6 @@
-from typing import Literal
+from typing import Literal, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request
 from pydantic.error_wrappers import ValidationError
 from sqlalchemy.orm import Session
 
@@ -34,6 +34,7 @@ import_router = APIRouter(
 
 @import_router.post('/preferences/options', status_code=201)
 def import_global_options_yaml(
+        request: Request,
         import_yaml: ImportYaml = Body(...),
         preferences = Depends(get_preferences)
     ) -> Preferences:
@@ -43,6 +44,9 @@ def import_global_options_yaml(
 
     - import_yaml: The YAML string to parse.
     """
+
+    # Get contextual logger
+    log = request.state.log
 
     # Parse raw YAML into dictionary
     yaml_dict = parse_raw_yaml(import_yaml.yaml)
@@ -63,8 +67,10 @@ def import_global_options_yaml(
 @import_router.post('/preferences/connection/{connection}', status_code=201)
 def import_connection_yaml(
         connection: Literal['all', 'emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
+        request: Request,
         import_yaml: ImportYaml = Body(...),
-        preferences = Depends(get_preferences)) -> Preferences:
+        preferences = Depends(get_preferences)
+    ) -> Preferences:
     """
     Import the connection preferences defined in the given YAML. This
     does NOT import any Sync settings.
@@ -72,6 +78,9 @@ def import_connection_yaml(
     - connection: Which connection is being modified.
     - import_yaml: The YAML string to parse.
     """
+
+    # Get contextual logger
+    log = request.state.log
 
     # Parse raw YAML into dictionary
     yaml_dict = parse_raw_yaml(import_yaml.yaml)
@@ -108,6 +117,7 @@ def import_connection_yaml(
 
 @import_router.post('/preferences/sync', status_code=201)
 def import_sync_yaml(
+        request: Request,
         import_yaml: ImportYaml = Body(...),
         db: Session = Depends(get_database)
     ) -> list[Sync]:
@@ -116,6 +126,9 @@ def import_sync_yaml(
 
     - import_yaml: The YAML string to parse.
     """
+
+    # Get contextual logger
+    log = request.state.log
 
     # Parse raw YAML into dictionary
     yaml_dict = parse_raw_yaml(import_yaml.yaml)
@@ -148,6 +161,7 @@ def import_sync_yaml(
 
 @import_router.post('/fonts', status_code=201)
 def import_fonts_yaml(
+        request: Request,
         import_yaml: ImportYaml = Body(...),
         db: Session = Depends(get_database)
     ) -> list[NamedFont]:
@@ -158,6 +172,9 @@ def import_fonts_yaml(
     - import_yaml: The YAML string to parse.
     import.
     """
+
+    # Get contextual logger
+    log = request.state.log
 
     # Parse raw YAML into dictionary
     yaml_dict = parse_raw_yaml(import_yaml.yaml)
@@ -188,6 +205,7 @@ def import_fonts_yaml(
 
 @import_router.post('/templates', status_code=201)
 def import_template_yaml(
+        request: Request,
         import_yaml: ImportYaml = Body(...),
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences)
@@ -197,6 +215,9 @@ def import_template_yaml(
 
     - import_yaml: The YAML string to parse.
     """
+
+    # Get contextual logger
+    log = request.state.log
 
     # Parse raw YAML into dictionary
     yaml_dict = parse_raw_yaml(import_yaml.yaml)
@@ -228,6 +249,7 @@ def import_template_yaml(
 @import_router.post('/series', status_code=201)
 def import_series_yaml(
         background_tasks: BackgroundTasks,
+        request: Request,
         import_yaml: ImportSeriesYaml = Body(...),
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
@@ -244,6 +266,9 @@ def import_series_yaml(
     - import_yaml: The YAML string and default library name to parse.
     """
 
+    # Get contextual logger
+    log = request.state.log
+
     # Parse raw YAML into dictionary
     yaml_dict = parse_raw_yaml(import_yaml.yaml)
     if len(yaml_dict) == 0:
@@ -252,7 +277,7 @@ def import_series_yaml(
     # Create NewSeries objects from the YAML dictionary
     try:
         new_series = parse_series(
-            db, preferences, yaml_dict, import_yaml.default_library,
+            db, preferences, yaml_dict, import_yaml.default_library, log=log,
         )
     except ValidationError as e:
         log.exception(f'Invalid YAML', e)
@@ -278,21 +303,21 @@ def import_series_yaml(
             set_series_database_ids,
             # Arguments
             series, db, emby_interface, jellyfin_interface, plex_interface,
-            sonarr_interface, tmdb_interface,
+            sonarr_interface, tmdb_interface, log=log,
         )
         background_tasks.add_task(
             # Function
             download_series_poster,
             # Arguments
             db, preferences, series, emby_interface, imagemagick_interface, 
-            jellyfin_interface, plex_interface, tmdb_interface,
+            jellyfin_interface, plex_interface, tmdb_interface, log=log,
         )
         background_tasks.add_task(
             # Function
             download_series_logo,
             # Arguments
             preferences, emby_interface, imagemagick_interface,
-            jellyfin_interface, tmdb_interface, series
+            jellyfin_interface, tmdb_interface, series, log=log,
         )
         all_series.append(series)
     db.commit()
@@ -304,6 +329,7 @@ def import_series_yaml(
                     tags=['Title Cards', 'Series'])
 def import_cards_for_series(
         series_id: int,
+        request: Request,
         card_directory: ImportCardDirectory = Body(...),
         preferences: Preferences = Depends(get_preferences),
         db: Session = Depends(get_database)
@@ -327,6 +353,7 @@ def import_cards_for_series(
         card_directory.directory,
         card_directory.image_extension,
         card_directory.force_reload,
+        log=request.state.log,
     )
 
 

@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
+from logging import Logger
 from typing import Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from requests import get as req_get
 from sqlalchemy.orm import Session
 
@@ -28,13 +29,25 @@ USER_CARD_TYPE_URL = 'https://raw.githubusercontent.com/CollinHeist/TitleCardMak
 
 
 _cache = {'content': [], 'expires': datetime.now()}
-def _get_remote_cards() -> list[RemoteCardType]:
+def _get_remote_cards(*, log: Logger = log) -> list[RemoteCardType]:
+    """
+    Get the list of available RemoteCardTypes. This will cache results
+    for 30 minutes. If the available data is older than 30 minutes, the
+    GitHub is re-queried.
+
+    Args:
+        log: (Keyword) Logger for all log messages.
+
+    Returns:
+        List of RemoteCardTypes.
+    """
+
     # If the cached content has expired, request and update cache
     if _cache['expires'] <= datetime.now():
         log.debug(f'Refreshing cached RemoteCardTypes')
         response = req_get(USER_CARD_TYPE_URL).json()
         _cache['content'] = response
-        _cache['expires'] = datetime.now() + timedelta(minutes=5)
+        _cache['expires'] = datetime.now() + timedelta(minutes=30)
     # Cache has not expired, use cached content
     else:
         response = _cache['content']
@@ -50,18 +63,19 @@ availablility_router = APIRouter(
 
 
 @availablility_router.get('/version', status_code=200)
-def get_latest_available_version() -> Optional[str]:
+def get_latest_available_version(request: Request) -> Optional[str]:
     """
     Get the latest version number for TitleCardMaker.
     """
 
-    return get_latest_version()
+    return get_latest_version(log=request.state.log)
 
 
 @availablility_router.get('/card-types', status_code=200, tags=['Title Cards'])
 def get_all_available_card_types(
+        request: Request,
         show_excluded: bool = Query(default=False),
-        preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences)
     ) -> list[CardType]:
     """
     Get a list of all available card types (local and remote).
@@ -70,12 +84,15 @@ def get_all_available_card_types(
     the returned list.
     """
 
-    all_cards = LocalCards + _get_remote_cards()
+    # Get contextual logger
+    log = request.state.log
+
+    all_cards = LocalCards + _get_remote_cards(log=log)
     if show_excluded:
         return all_cards
 
     return [
-        card for card in LocalCards + _get_remote_cards()
+        card for card in LocalCards + _get_remote_cards(log=log)
         if card.identifier not in preferences.excluded_card_types
     ]
 
@@ -90,13 +107,13 @@ def get_local_card_types() -> list[LocalCardType]:
 
 
 @availablility_router.get('/card-types/remote', status_code=200, tags=['Title Cards'])
-def get_remote_card_types() -> list[RemoteCardType]:
+def get_remote_card_types(request: Request) -> list[RemoteCardType]:
     """
     Get all available remote card types.
     """
     
     try:
-        return _get_remote_cards()
+        return _get_remote_cards(log=request.state.log)
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -133,7 +150,8 @@ def get_available_tmdb_translations() -> list[dict[str, str]]:
 
 @availablility_router.get('/episode-data-sources', status_code=200)
 def get_available_episode_data_sources(
-        preferences = Depends(get_preferences)) -> list[EpisodeDataSourceToggle]:
+        preferences: Preferences = Depends(get_preferences)
+    ) -> list[EpisodeDataSourceToggle]:
     """
     ...
     """
