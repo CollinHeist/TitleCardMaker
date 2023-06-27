@@ -1,6 +1,5 @@
 from pathlib import Path
 from re import match, sub, IGNORECASE
-from typing import Any
 
 from modules.BaseCardType import BaseCardType
 from modules.CleanPath import CleanPath
@@ -90,8 +89,9 @@ class TitleCard:
     def __init__(self,
             episode: 'Episode',
             profile: 'Profile',
-            title_characteristics: dict[str, Any],
-            **extra_characteristics: dict[str, Any]) -> None:
+            title_characteristics,
+            **extra_characteristics
+        ) -> None:
         """
         Constructs a new instance of this class.
 
@@ -126,7 +126,6 @@ class TitleCard:
             'blur': episode.blur,
             'grayscale': episode.grayscale,
             'watched': episode.watched,
-            'episode_tags': episode.tags,
         } | profile.font.get_attributes() \
           | self.episode.episode_info.indices \
           | extra_characteristics
@@ -146,7 +145,8 @@ class TitleCard:
             format_string: str,
             series_info: SeriesInfo, 
             episode_info: EpisodeInfo,
-            media_directory: Path) -> Path:
+            media_directory: Path
+        ) -> Path:
         """
         Get the output filename for a title card described by the given
         values.
@@ -192,7 +192,8 @@ class TitleCard:
             format_string: str,
             series_info: SeriesInfo,
             multi_episode: 'MultiEpisode',
-            media_directory: Path) -> Path:
+            media_directory: Path
+        ) -> Path:
         """
         Get the output filename for a title card described by the given
         values, and that represents a range of Episodes (not just one).
