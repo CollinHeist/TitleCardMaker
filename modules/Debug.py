@@ -1,9 +1,17 @@
-from logging import Logger, Formatter, getLogger, setLoggerClass, StreamHandler
+from logging import (
+    DEBUG, INFO, WARNING, ERROR, CRITICAL,
+    Logger, Formatter, LoggerAdapter, getLogger, setLoggerClass, StreamHandler
+)
 from logging.handlers import TimedRotatingFileHandler
-from logging import NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL
-
 from pathlib import Path
+from random import choices as random_choices
+from string import hexdigits
+from typing import Optional
+
 from tqdm import tqdm
+
+def generate_context_id() -> str:
+    return ''.join(random_choices(hexdigits, k=12)).lower()
 
 """Global tqdm arguments"""
 TQDM_KWARGS = {
@@ -35,7 +43,6 @@ class LogHandler(StreamHandler):
             self.flush()
         except Exception:
             self.handleError(record)
-
 
 # Formatter classes to handle exceptions
 class ErrorFormatterColor(Formatter):
@@ -77,7 +84,7 @@ class LogFormatterNoColor(Formatter):
         return self.FORMATTER.format(record)
 
 # Create global logger
-log = getLogger('TitleCardMaker')
+log = getLogger('tcm')
 log.setLevel(DEBUG)
 
 # Add TQDM handler and color formatter to the logger
@@ -88,14 +95,38 @@ log.addHandler(handler)
 
 # Add rotating file handler to the logger
 file_handler = TimedRotatingFileHandler(
-    filename=LOG_FILE, when='midnight', backupCount=7,
+    filename=LOG_FILE, when='midnight', backupCount=14,
 )
 file_handler.setFormatter(ErrorFormatterNoColor(
-    '[%(levelname)s] [%(asctime)s] %(message)s',
+    '[%(levelname)s] [%(asctime)s.%(msecs)03d] %(message)s',
     '%m-%d-%y %H:%M:%S'
 ))
 file_handler.setLevel(DEBUG)
 log.addHandler(file_handler)
+
+# Contextual logger which adds some context ID to all messages written with it
+class ContextLogger(LoggerAdapter):
+    def process(self, msg, kwargs):
+        return f'[{self.extra["context_id"]}] {msg}', kwargs
+
+# Helper function to easily create a ContextLogger
+def contextualize(
+        logger: Logger = log,
+        context_id: Optional[str] = None
+    ) -> ContextLogger:
+    """
+    Create a ContextLogger.
+
+    Args:
+        logger: Base Logger to initialize the ContextLogger with.
+        context_id: Context ID to utilize for logging. If not provided,
+            one is generated.
+    """
+
+    context_id = generate_context_id() if context_id is None else context_id
+
+    return ContextLogger(logger, extra={'context_id': context_id})
+
 
 def apply_no_color_formatter() -> None:
     """
