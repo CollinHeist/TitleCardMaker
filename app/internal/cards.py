@@ -59,7 +59,8 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                             db, get_preferences(), None, episode, log=log,
                         )
                     except HTTPException as e:
-                        log.warning(f'{series.log_str} {episode.log_str} - skipping Card')
+                        if e.status_code != 404:
+                            log.warning(f'{series.log_str} {episode.log_str} - skipping Card')
                     except OperationalError:
                         log.debug(f'Database is busy, sleeping..')
                         sleep(30)
@@ -415,7 +416,7 @@ def resolve_card_settings(
         log.debug(f'{series.log_str} {episode.log_str} Card source image '
                     f'({card_settings["source_file"]}) is missing')
         raise HTTPException(
-            status_code=400,
+            status_code=404,
             detail=f'Cannot create Card - missing source image',
         )
 
