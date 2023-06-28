@@ -413,6 +413,6 @@ def load_series_title_cards(
     # If any cards were (re)loaded, commit updates to database
     if changed or loaded_assets:
         db.commit()
-        log.info(f'{series.log_str} Loading {len(loaded_assets)} Cards into {media_server}')
+        log.info(f'{series.log_str} Loaded {len(loaded_assets)} Cards into {media_server}')
 
     return None

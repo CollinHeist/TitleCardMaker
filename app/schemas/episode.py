@@ -3,7 +3,9 @@ from typing import Any, Optional
 
 from pydantic import Field, PositiveFloat, root_validator, validator
 
-from app.schemas.base import Base, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
+from app.schemas.base import (
+    Base, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
+)
 from app.schemas.ids import EmbyID, IMDbID, JellyfinID, TMDbID, TVDbID, TVRageID
 from app.schemas.preferences import Style
 
