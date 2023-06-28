@@ -347,6 +347,7 @@ class Series(BaseSeries):
     id: int
     sync_id: Optional[int]
     full_name: str
+    sort_name: str
     poster_path: Optional[str]
     poster_url: str
     small_poster_url: Optional[str]
