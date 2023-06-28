@@ -4,10 +4,10 @@ PUID=${PUID:-100}
 PGID=${PGID:-99}
 UMASK=${UMASK:-002}
 
-# groupmod -o -g "$PGID" titlecardmaker
-# usermod -o -u "$PUID" titlecardmaker
+umask $UMASK
+groupmod -o -g "$PGID" titlecardmaker
+usermod -o -u "$PUID" titlecardmaker
 
 chown -R titlecardmaker:titlecardmaker /maker /config
 
-exec umask $UMASK && runuser -u $PUID -g $PGID -- "$@"
-# exec gosu titlecardmaker "$@"
+exec runuser -u titlecardmaker -g titlecardmaker -- "$@"
