@@ -383,7 +383,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def update_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
-            episodes: list['Episode'],
+            episodes: list['Episode'],                                          # type: ignore
             *,
             log: Logger = log,
         ) -> None:
@@ -634,10 +634,10 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def load_title_cards(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_and_cards: list[tuple['Episode', 'Card']],
+            episode_and_cards: list[tuple['Episode', 'Card']],                  # type: ignore
             *,
             log: Logger = log,
-        ) -> list[tuple['Episode', 'Card']]:
+        ) -> list[tuple['Episode', 'Card']]:                                    # type: ignore
         """
         Load the title cards for the given Series and Episodes.
 
@@ -697,10 +697,6 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 continue
             else:
                 loaded.append((episode, card))
-
-        # Log load operations to user
-        if loaded:
-            log.info(f'Loaded {len(loaded)} cards for "{series_info}"')
 
         return loaded
 
