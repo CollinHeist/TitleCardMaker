@@ -15,7 +15,7 @@ class Base(BaseModel):
 
 # Base class for all "update" models
 class UpdateBase(Base):
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def delete_unspecified_args(cls, values):
         delete_keys = [key for key, value in values.items() if value == UNSPECIFIED]
         for key in delete_keys:
