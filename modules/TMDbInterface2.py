@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
+from logging import Logger
 from tinydb import Query, where
-from typing import Any, Literal, Optional
+from typing import Any, Literal, Optional, Union
 
 from fastapi import HTTPException
 from tmdbapis import TMDbAPIs, NotFound, Unauthorized, TMDbException
-from tmdbapis.objs.reload import Episode as TMDbEpisode
+from tmdbapis.objs.reload import Episode as TMDbEpisode, Movie as TMDbMovie
 from tmdbapis.objs.image import Still as TMDbStill
 
 from modules.Debug import log
@@ -315,12 +316,17 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
 
     @catch_and_log('Error setting series ID')
-    def set_series_ids(self, series_info: SeriesInfo) -> None:
+    def set_series_ids(self,
+            series_info: SeriesInfo,
+            *,
+            log: Logger = log,
+        ) -> None:
         """
         Set all possible series ID's for the given SeriesInfo object.
 
         Args:
             series_info: SeriesInfo to update.
+            log: (Keyword) Logger for all log messages.
         """
 
         # If all possible ID's are defined
@@ -390,9 +396,14 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         else:
             log.warning(f'Series "{series_info}" not found on TMDb')
 
+        return None
+
 
     @catch_and_log('Error getting all episodes', default=[])
-    def get_all_episodes(self, series_info: SeriesInfo) -> list[EpisodeInfo]:
+    def get_all_episodes(self,
+            series_info: SeriesInfo, *,
+            log: Logger = log,
+        ) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that
         have  already aired are returned.
@@ -453,8 +464,9 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def __find_episode(self,
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
-            title_match: bool = True
-        ) -> TMDbEpisode:
+            title_match: bool = True, *,
+            log: Logger = log
+        ) -> Optional[Union[TMDbEpisode, TMDbMovie]]:
         """
         Finds the episode index for the given entry. Searching is done
         in the following priority:
@@ -521,7 +533,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
                 pass
 
         # Search for movie with this episode title
-        def _find_episode_as_movie(episode_info):
+        def _find_episode_as_movie(episode_info) -> Optional[TMDbMovie]:
             try:
                 # Search for movies with this title
                 results = self.api.movie_search(episode_info.title.full_title)
@@ -621,7 +633,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     @catch_and_log('Error setting episode IDs')
     def set_episode_ids(self,
             series_info: SeriesInfo,
-            episode_infos: list[EpisodeInfo]) -> None:
+            episode_infos: list[EpisodeInfo],
+        ) -> None:
         """
         Set all the episode ID's for the given list of EpisodeInfo
         objects. For TMDb, this does nothing, as TMDb cannot provide any
@@ -644,14 +657,15 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
                         if (getattr(old_episode_info, id_type) is None
                             and id_ is not None):
                             setattr(old_episode_info, id_type, id_)
-                            log.debug(f'[TMDb] Set {old_episode_info}.{id_type}={id_}')
                     break
+
+        return None
 
 
     def __determine_best_image(self,
             images: list[TMDbStill], *,
             is_source_image: bool = True,
-            skip_localized: bool = False
+            skip_localized: bool = False,
         ) -> Optional[dict[str, Any]]:
         """
         Determine the best image and return it's contents from within
@@ -705,7 +719,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             series_info: SeriesInfo,
             episode_info: EpisodeInfo, *,
             match_title: bool = True,
-            bypass_blacklist: bool = False,
+            bypass_blacklist: bool = False, 
+            log: Logger = log,
         ) -> Optional[list[TMDbStill]]:
         """
         Get all source images for the requested entry.
@@ -732,7 +747,9 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             return None
 
         # Get Episode object for this episode
-        episode = self.__find_episode(series_info, episode_info, match_title)
+        episode = self.__find_episode(
+            series_info, episode_info, match_title, log=log,
+        )
         if episode is None:
             self.__update_blacklist(series_info, episode_info, 'image')
             raise HTTPException(
@@ -753,7 +770,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             episode_info: EpisodeInfo, *,
             match_title: bool = True,
             skip_localized_images: bool = False,
-            raise_exc: bool = True
+            raise_exc: bool = True,
+            log: Logger = log,
         ) -> Optional[str]:
         """
         Get the best source image for the requested entry.
@@ -776,7 +794,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         # Get all images for this episode
         try:
             all_images = self.get_all_source_images(
-                series_info, episode_info, match_title=match_title,
+                series_info, episode_info, match_title=match_title, log=log,
             )
         # Some error occurred, raise if indicated, otherwise return None
         except HTTPException as e:
@@ -828,7 +846,6 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
         # Assume non-generic if the code isn't pre-mapped
         if not (generic := self.GENERIC_TITLE_FORMATS.get(language_code, None)):
-            log.debug(f'Unrecognized language code "{language_code}"')
             return False
 
         # Format with this episode, return whether this matches the translation
@@ -848,7 +865,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
             language_code: str = 'en-US',
-            bypass_blacklist: bool = False
+            bypass_blacklist: bool = False, *,
+            log: Logger = log,
         ) -> Optional[str]:
         """
         Get the episode title for the given entry for the given language.
@@ -869,7 +887,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             return None
 
         # Get episode
-        episode = self.__find_episode(series_info, episode_info)
+        episode = self.__find_episode(series_info, episode_info, log=log)
         if episode is None:
             self.__update_blacklist(series_info, episode_info, 'title')
             return None
@@ -893,6 +911,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
                     return None
 
                 return title
+            
+        return None
 
 
     @catch_and_log('Error getting series logo', default=None)
@@ -1017,12 +1037,17 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
 
     @catch_and_log('Error setting series poster', default=None)
-    def get_series_poster(self, series_info: SeriesInfo) -> Optional[str]:
+    def get_series_poster(self,
+            series_info: SeriesInfo,
+            *,
+            log: Logger = log,
+        ) -> Optional[str]:
         """
         Get the best poster for the given series.
 
         Args:
             series_info: Series to get the poster of.
+            log: (Keyword) Logger for all log messages.
 
         Returns:
             URL to the 'best' poster for the given series, and None if

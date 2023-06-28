@@ -1,5 +1,6 @@
 from base64 import b64encode
 from datetime import datetime
+from logging import Logger
 from typing import Optional, Union
 
 from fastapi import HTTPException
@@ -43,7 +44,10 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             api_key: str,
             username: str,
             verify_ssl: bool = True,
-            filesize_limit: Optional[int] = None) -> None:
+            filesize_limit: Optional[int] = None,
+            *,
+            log: Logger = log,
+        ) -> None:
         """
         Construct a new instance of an interface to an Emby server.
 
@@ -55,6 +59,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             verify_ssl: Whether to verify SSL requests.
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
+            log: (Keyword) Logger for all log messages.
 
         Raises:
             SystemExit: Invalid URL/API key provided.
@@ -166,13 +171,17 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     def set_series_ids(self,
             library_name: str,
-            series_info: SeriesInfo) -> None:
+            series_info: SeriesInfo,
+            *,
+            log: Logger = log,
+        ) -> None:
         """
         Set the series ID's for the given SeriesInfo object.
 
         Args:
             library_name: The name of the library containing the series.
             series_info: Series to set the ID of.
+            log: (Keyword) Logger for all log messages.
         """
 
         # If all possible ID's are defined
@@ -234,17 +243,21 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     def set_episode_ids(self,
             series_info: SeriesInfo,
-            episode_infos: list[EpisodeInfo]) -> None:
+            episode_infos: list[EpisodeInfo],
+            *,
+            log: Logger = log,
+        ) -> None:
         """
         Set the Episode ID's for the given EpisodeInfo objects.
 
         Args:
             series_info: Series to get the episodes of.
             infos: List of EpisodeInfo objects to set the ID's of.
+            log: (Keyword) Logger for all log messages.
         """
 
         # Get all episodes for this series
-        new_episode_infos = self.get_all_episodes(series_info)
+        new_episode_infos = self.get_all_episodes(series_info, log=log)
 
         # Match to existing info
         for old_episode_info in episode_infos:
@@ -255,7 +268,6 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                         if (getattr(old_episode_info, id_type) is None
                             and id_ is not None):
                             setattr(old_episode_info, id_type, id_)
-                            log.debug(f'Set {old_episode_info}.{id_type}={id_}')
                     break
 
         return None
@@ -299,7 +311,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             required_libraries: list[str] = [],
             excluded_libraries: list[str] = [],
             required_tags: list[str] = [], 
-            excluded_tags: list[str] = []
+            excluded_tags: list[str] = [],
+            *,
+            log: Logger = log,
         ) -> list[tuple[SeriesInfo, str]]: 
         """
         Get all series within Emby, as filtered by the given libraries.
@@ -317,6 +331,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             excluded_tags: Optional list of tags to filter return by. If
                 provided, series with any of the given tags are not
                 returned.
+            log: (Keyword) Logger for all log messages.
 
         Returns:
             List of tuples whose elements are the SeriesInfo and its
@@ -389,7 +404,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     def get_all_episodes(self,
-            series_info: SeriesInfo
+            series_info: SeriesInfo,
+            *,
+            log: Logger = log,
         ) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that
@@ -397,6 +414,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         Args:
             series_info: Series to get the episodes of.
+            log: (Keyword) Logger for all log messages.
 
         Returns:
             List of EpisodeInfo objects for this series.
@@ -505,6 +523,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             library_name: str,
             series_info: SeriesInfo,
             episode_and_cards: list[tuple['Episode', 'Card']],
+            *,
+            log: Logger = log,
         ) -> list[tuple['Episode', 'Card']]:
         """
         Load the title cards for the given Series and Episodes.
@@ -514,6 +534,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             series_info: SeriesInfo whose cards are being loaded.
             episode_and_cards: List of tuple of Episode and their
                 corresponding Card objects to load.
+            log: (Keyword) Logger for all log messages.
         """
 
         # If series has no Emby ID, or no episodes, exit
@@ -528,7 +549,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 continue
 
             # Shrink image if necessary, skip if cannot be compressed
-            if (image := self.compress_image(card.card_file)) is None:
+            if (image := self.compress_image(card.card_file, log=log)) is None:
                 continue
 
             # Submit POST request for image upload on Base64 encoded image
@@ -572,7 +593,11 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         ...
 
 
-    def get_source_image(self, episode_info: EpisodeInfo) -> SourceImage:
+    def get_source_image(self,
+            episode_info: EpisodeInfo,
+            *,
+            log: Logger = log,
+        ) -> SourceImage:
         """
         Get the source image for the given episode within Emby.
 
@@ -604,12 +629,17 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return response
     
 
-    def get_series_poster(self, series_info: SeriesInfo) -> SourceImage:
+    def get_series_poster(self,
+            series_info: SeriesInfo,
+            *,
+            log: Logger = log,
+        ) -> SourceImage:
         """
         Get the poster for the given Series.
 
         Args:
             series_info: The series to get the poster of.
+            log: (Keyword) Logger for all log messages.
 
         Returns:
             URL to the poster for the given series. None if the library,
@@ -634,6 +664,44 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         return response
 
+
+    def get_series_logo(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            *,
+            log: Logger = log,
+        ) -> SourceImage:
+        """
+        Get the logo for the given Series within Emby.
+
+        Args:
+            library_name: Name of the library containing the series.
+            series_info: The series to get the logo of.
+            log: (Keyword) Logger for all log messages.
+
+        Returns:
+            Bytes of the logo for given series. None if the series does
+            not exist in Emby, or no valid image was returned.
+        """
+
+        # Find this series
+        series_id = self.__get_series_id(library_name, series_info, log=log)
+        if series_id is None:
+            log.warning(f'Series not found in Emby {series_info!r}')
+            return None
+
+        # Get the source image for this episode
+        response = self.session.session.get(
+            f'{self.url}/Items/{series_id}/Images/Logo',
+            params={'Quality': 100} | self.__params,
+        ).content
+
+        # Check if valid content was returned
+        if b'does not have an image of type' in response:
+            log.warning(f'Series {series_info} has no logo')
+            return None 
+
+        return response
 
     def get_libraries(self) -> list[str]:
         """

@@ -448,7 +448,6 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             # Set Episode watched/spoil statuses
             episode.update_statuses(plex_episode.isWatched, style_set)
 
-
             # Get characteristics of this Episode's loaded card
             details = self._get_loaded_episode(loaded_series, episode)
             loaded = (details is not None)

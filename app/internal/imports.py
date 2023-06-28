@@ -1,3 +1,4 @@
+from logging import Logger
 from pathlib import Path
 from re import match, IGNORECASE
 from typing import Any, Callable, Literal, Optional, Union
@@ -104,7 +105,7 @@ def _get(yaml_dict: dict[str, Any],
         except Exception as e:
             raise HTTPException(
                 status_code=422,
-                detail=f'YAML is incorrectly formatted - {e}',
+                detail=f'YAML is incorrectly typed - {e}',
             )
     
     return value
@@ -861,7 +862,9 @@ def parse_series(
         db: Session,
         preferences: Preferences,
         yaml_dict: dict[str, Any],
-        default_library: Optional[str] = None
+        default_library: Optional[str] = None,
+        *,
+        log: Logger = log,
     ) -> list[NewSeries]:
     """
     Create NewSeries objects for any defined series in the given YAML.
@@ -874,6 +877,7 @@ def parse_series(
         yaml_dict: Dictionary of YAML attributes to parse.
         default_library: Optional default Library name to apply to the
             Series if one is not manually specified within YAML.
+        log: (Keyword) Logger for all log messages.
 
     Returns:
         List of NewSeries that match any defined YAML series.
@@ -1074,7 +1078,9 @@ def import_cards(
         series: Series,
         directory: Optional[Path],
         image_extension: CardExtension,
-        force_reload: bool
+        force_reload: bool,
+        *,
+        log: Logger = log,
     ) -> CardActions:
     """
     Import any existing Title Cards for the given Series. This finds
@@ -1144,7 +1150,7 @@ def import_cards(
                 actions.deleted += 1
 
         # Get finalized Card settings for this Episode, override card file
-        card_settings = resolve_card_settings(preferences, episode)
+        card_settings = resolve_card_settings(preferences, episode, log=log)
 
         # If a list of CardActions were returned, update actions and skip
         if isinstance(card_settings, list):

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scheduler - TitleCardMaker</title>
+
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/internal_assets/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/internal_assets/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/internal_assets/favicon/favicon-16x16.png">
+  <link rel="manifest" href="/internal_assets/favicon/site.webmanifest">
+
+  <!-- Formantic UI -->
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.js"></script>
+  
+  <!-- JS Files -->
+  <script type="text/javascript" src="/templates/loadStaticContent.js"></script>
+  <script type="text/javascript" src="/templates/theme.js"></script>
+  <script type="text/javascript" src="/templates/messages.js"></script>
+  <script type="text/javascript" src="/templates/helper.js"></script>
+  <script type="text/javascript" src="/templates/tablesort.js"></script>
+
+  <!-- Global styles -->
+  <link rel="stylesheet" type="text/css" href="/templates/style.css">
+  <style>
+    /* Limit super long messages to 3 lines */
+    #log-data td[data-value="message"] {
+      overflow: scroll;
+      display: -webkit-box;
+      line-clamp: 5; 
+      -webkit-line-clamp: 5;
+      -webkit-box-orient: vertical;
+    }
+  </style>
+
+  <!-- Templates -->
+  <template id="debug-message-template">
+    <tr class="left blue marked">
+      <td data-value="level" class="selectable center aligned">Debug</td>
+      <td data-value="time" class="selectable center aligned collapsing" data-tooltip="Add time as Filter">{time}</td>
+      <td data-value="context_id" class="selectable center aligned collapsing" data-tooltip="Add ID as Filter">{context_id}</td>
+      <td data-value="message">{message}</td>
+    </tr>
+  </template>
+
+  <template id="info-message-template">
+    <tr class="green.colored left green marked">
+      <td data-value="level" class="selectable center aligned">Info</td>
+      <td data-value="time" class="selectable center aligned collapsing" data-tooltip="Add time as Filter">{time}</td>
+      <td data-value="context_id" class="selectable center aligned collapsing" data-tooltip="Add ID as Filter">{context_id}</td>
+      <td data-value="message">{message}</td>
+    </tr>
+  </template>
+
+  <template id="warning-message-template">
+    <tr class="left yellow marked">
+      <td data-value="level" class="selectable center aligned">Warning</td>
+      <td data-value="time" class="selectable center aligned collapsing" data-tooltip="Add time as Filter">{time}</td>
+      <td data-value="context_id" class="selectable center aligned collapsing" data-tooltip="Add ID as Filter">{context_id}</td>
+      <td data-value="message">{message}</td>
+    </tr>
+  </template>
+
+  <template id="error-message-template">
+    <tr class="left red marked">
+      <td data-value="level" class="selectable center aligned">Error</td>
+      <td data-value="time" class="selectable center aligned collapsing" data-tooltip="Add time as Filter">{time}</td>
+      <td data-value="context_id" class="selectable center aligned collapsing" data-tooltip="Add ID as Filter">{context_id}</td>
+      <td data-value="message">{message}</td>
+    </tr>
+  </template>
+
+  <template id="critical-message-template">
+    <tr class="red colored left red marked">
+      <td data-value="level" class="selectable center aligned">Critical</td>
+      <td data-value="time" class="selectable center aligned collapsing" data-tooltip="Add time as Filter">{time}</td>
+      <td data-value="context_id" class="selectable center aligned collapsing" data-tooltip="Add ID as Filter">{context_id}</td>
+      <td data-value="message">{message}</td>
+    </tr>
+  </template>
+
+  <script>
+    function downloadTextFile(filename, text) {
+      var element = document.createElement('a');
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+      element.setAttribute('download', filename);
+
+      element.style.display = 'none';
+      document.body.appendChild(element);
+
+      element.click();
+
+      document.body.removeChild(element);
+    }
+
+    function downloadPage() {
+      // Get arrays of each value
+      const levels = $('#log-data [data-value="level"]').map(function() { return $(this).text(); }).get();
+      const times = $('#log-data [data-value="time"]').map(function() { return $(this).text(); }).get();
+      const context_ids = $('#log-data [data-value="context_id"]').map(function() { return $(this).text(); }).get();
+      const messages = $('#log-data [data-value="message"]').map(function() { return $(this).text(); }).get();
+      // Create combined string of all rows
+      let logStr = '';
+      for (let i = 0; i < levels.length; i++) {
+        logStr += `[${levels[i]}] [${times[i]}] [${context_ids[i]}] ${messages[i]}\n`;
+      }
+      // Download text 
+      downloadTextFile('tcm_log.txt', logStr);
+    }
+
+    function updateMessageLevel(level) {
+      // Uppercase first letter of level
+      const newLevel = level.charAt(0).toUpperCase() + level.slice(1)
+      $('.dropdown[data-value="level"]').dropdown('set text', newLevel);
+      $('.dropdown[data-value="level"]').dropdown('set selected', newLevel);
+      $('.dropdown[data-value="level"]').dropdown('set value', newLevel.toLowerCase());
+    }
+
+    function updateTimestamp(timestamp) {
+      // Get current values of before/after
+      const currentAfter = $('input[name="after"]').val();
+      const currentBefore = $('input[name="before"]').val();
+      // Populate after if blank, else before
+      if (currentAfter === '') {
+        $('input[name="after"]')[0].value = timestamp;
+      } else if (currentBefore === '') {
+        $('input[name="before"]')[0].value = timestamp;
+      } else {
+        //
+      }
+    }
+
+    function appendContextID(id) {
+      // Get current value
+      const currentVal = $('input[name="context_id"]').val();
+      // Only append if ID is not already listed
+      if (!currentVal.includes(id)) {
+        $('input[name="context_id"]')[0].value = currentVal === '' ? id : `${currentVal},${id}`;
+      }
+    }
+  </script>
+</head>
+
+<body onload="initAll();">
+  <script>
+    function resetForm() {
+      $('#log-filters').form('clear');
+    }
+
+    async function queryForLogs(page=1) {
+      // Prepare Form
+      const form = new FormData(document.getElementById('log-filters'));
+      // Remove blank values
+      for (let [key, value] of [...form.entries()]) {
+        if (value === '') { form.delete(key); }
+      }
+      // Create query param string
+      const queryString = [...form.entries()]
+        .map(x => `${encodeURIComponent(x[0])}=${encodeURIComponent(x[1])}`)
+        .join('&');
+      // Submit API request
+      const messageData = await fetch(`/api/logs/query?page=${page}&${queryString}`).then(resp => resp.json());
+      const allMessages = messageData.items;
+      
+      // Update table
+      const rows = allMessages.map(message => {
+        // Clone row template
+        const base = document.querySelector(`#${message.level}-message-template`).content.cloneNode(true);
+        // Update rows
+        const shortTime = message.time.match(/^(.[^\.]+\.\d{3}?)\d*$/m);
+        if (shortTime) {
+          base.querySelector('[data-value="time"]').innerText = shortTime[1];
+        } else {
+          base.querySelector('[data-value="time"]').innerText = message.time;
+        }
+        base.querySelector('[data-value="context_id"]').innerText = message.context_id;
+        base.querySelector('[data-value="message"]').innerText = message.message;
+
+        // On click of log level, update filter level
+        base.querySelector('[data-value="level"]').onclick = () => updateMessageLevel(message.level);
+        // On click of timestamp, update before/after fields
+        base.querySelector('[data-value="time"]').onclick = () => updateTimestamp(message.time);
+        // On click of context ID, append current ID to input
+        base.querySelector('[data-value="context_id"]').onclick = () => appendContextID(message.context_id);
+
+        return base;
+      });
+      document.getElementById('log-data').replaceChildren(...rows);
+
+      // Update pagination
+      updatePagination({
+        paginationElementId: 'pagination',
+        navigateFunction: queryForLogs,
+        page: messageData.page,
+        pages: messageData.pages,
+        amountVisible: 10,
+      });
+    }
+
+
+    function initAll() {
+      queryForLogs();
+    }
+  </script>
+
+  <div class="pusher">
+    <!-- Static header and sidebar loaded by external script -->
+    <div id="page-header"></div>
+    <div id="nav-menu"></div>
+
+    <!-- Actual page content -->
+    <div id="main-content" class="article">
+      <h1 class="ui header">Logs</h1>
+
+      <!-- Update logs -->
+      <button onclick="queryForLogs();" class="ui blue tertiary compact button">
+        <i class="redo icon"></i>
+        Refresh Logs
+      </button>
+      <!-- Copy to clipboard -->
+      <div onclick="downloadPage();" class="ui green tertiary compact button" data-tooltip="Download current page as text file">
+        <i class="ui arrow down icon"></i>
+        Download Page
+      </div>
+      <div onclick="resetForm();" class="ui red tertiary compact button" data-tooltip="Clear Log Filters">
+        <i class="eraser icon"></i>
+        Clear Filters
+      </div>
+
+      <!-- Log filters -->
+      <form id="log-filters" class="ui form">
+        <div class="fields">
+          <!-- Contains substring -->
+          <div class="ui field">
+            <label>Message Contains</label>
+            <input name="contains" type="text" placeholder="Text..">
+          </div>
+          <!-- Context ID -->
+          <div class="ui field">
+            <label data-tooltip="Comma separated list of Context IDs to filter by">Context IDs</label>
+            <input name="context_id" type="text" placeholder="ID..">
+          </div>
+          <!-- Start Date -->
+          <div class="ui field">
+            <label>Start Date</label>
+            <div class="ui calendar" id="date-after">
+              <div class="ui input left icon">
+                <i class="calendar icon"></i>
+                <input name="after" type="text" placeholder="Start">
+              </div>
+            </div>
+          </div>
+          <!-- End Date -->
+          <div class="ui field">
+            <label>End Date</label>
+            <div class="ui calendar" id="date-before">
+              <div class="ui input left icon">
+                <i class="calendar icon"></i>
+                <input name="before" type="text" placeholder="End">
+              </div>
+            </div>
+          </div>
+          <!-- Log level -->
+          <div class="ui field">
+            <label>Minimum Level</label>
+            <div data-value="level" class="ui compact selection dropdown">
+              <input name="level" type="hidden">
+              <i class="dropdown icon"></i>
+              <div class="default text">Info</div>
+              <div class="menu">
+                <div data-value="debug" class="item">Debug</div>
+                <div data-value="info" class="item">Info</div>
+                <div data-value="warning" class="item">Warning</div>
+                <div data-value="error" class="item">Error</div>
+                <div data-value="critical" class="item">Critical</div>
+              </div>
+            </div>
+          </div>
+          <!-- Lines per page -->
+          <div class="ui field">
+            <label>Page Size</label>
+            <div data-value="size" class="ui compact selection dropdown">
+              <input name="size" type="hidden">
+              <i class="dropdown icon"></i>
+              <div class="default text">250</div>
+              <div class="menu">
+                <div class="item">10</div>
+                <div class="item">25</div>
+                <div class="item">50</div>
+                <div class="item">100</div>
+                <div class="item">200</div>
+                <div class="item">250</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+     
+
+      <!-- Logs -->
+      <table class="ui striped celled compact table ">
+        <thead>
+          <tr>
+            <th class="center aligned collapsing">Level</th>
+            <th class="center aligned">Timestamp</th>
+            <th class="center aligned">Context ID</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody id="log-data"></tbody>
+      </table>
+      <!-- Pagination buttons -->
+      <div id="pagination" class="ui pagination menu"><!-- Added asynchrously --></div>
+    </div>
+  </div>
+
+  <script>
+    $('.ui.dropdown').dropdown();
+    $('#date-after').calendar({
+      type: 'datetime',
+      endCalendar: $('#date-before'),
+      maxDate: new Date(), // Cannot select dates after today
+      formatter: {
+        datetime: 'YYYY-MM-DDTHH:mm:ss', // ISO 8601
+      }
+    });
+    $('#date-before').calendar({
+      type: 'datetime',
+      startCalendar: $('#date-after'),
+      maxDate: new Date(), // Cannot select dates after today
+      formatter: {
+        datetime: 'YYYY-MM-DDTHH:mm:ss', // ISO 8601
+      }
+    });
+  </script>
+</body>
+</html>

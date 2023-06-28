@@ -1,4 +1,5 @@
 from collections import namedtuple
+from logging import Logger
 from pathlib import Path
 from shlex import split as command_split
 from subprocess import Popen, PIPE, TimeoutExpired
@@ -184,7 +185,7 @@ class ImageMagickInterface:
             image.unlink(missing_ok=True)
 
 
-    def print_command_history(self) -> None:
+    def print_command_history(self, *, log: Logger = log) -> None:
         """Print the command history of this Interface."""
 
         for command, stdout, stderr in self.__history:
@@ -214,10 +215,12 @@ class ImageMagickInterface:
 
     def resize_image(self,
             input_image: Path,
-            output_image: Path, *,
+            output_image: Path,
+            *,
             by: Literal['width', 'height'],
             width: Optional[int] = None,
-            height: Optional[int] = None) -> Path:
+            height: Optional[int] = None
+        ) -> Path:
         """
         Resize the given input image by a given width or height.
 

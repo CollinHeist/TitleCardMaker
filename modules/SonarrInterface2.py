@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta
+from logging import Logger
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
 from typing import Any, Literal, Optional
 
-from modules.Debug import log
 from fastapi import HTTPException
 
+from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.SeriesInfo import SeriesInfo
 from modules.SyncInterface import SyncInterface
@@ -40,7 +41,9 @@ class SonarrInterface(WebInterface, SyncInterface):
             url: str,
             api_key: str,
             verify_ssl: bool = True,
-            server_id: int = 0
+            server_id: int = 0,
+            *,
+            log: Logger = log,
         ) -> None:
         """
         Construct a new instance of an interface to Sonarr.
@@ -50,6 +53,7 @@ class SonarrInterface(WebInterface, SyncInterface):
             api_key: The API key for API requests.
             verify_ssl: Whether to verify SSL requests to Sonarr.
             server_id: Server ID of this server.
+            log: (Keyword) Logger for all log messages.
 
         Raises:
             SystemExit: Invalid Sonarr URL/API key provided.
@@ -110,7 +114,9 @@ class SonarrInterface(WebInterface, SyncInterface):
             downloaded_only: bool = False,
             required_series_type: Optional[SeriesType] = None,
             excluded_series_type: Optional[SeriesType] = None,
-            ) -> list[tuple[SeriesInfo, str]]:
+            *,
+            log: Logger = log,
+        ) -> list[tuple[SeriesInfo, str]]:
         """
         Get all the series within Sonarr, filtered by the given parameters.
 
@@ -124,6 +130,7 @@ class SonarrInterface(WebInterface, SyncInterface):
             downloaded_only: Whether to filter return to exclude series that do
                 not have any downloaded episodes.
             series_type: Optional series type to filter series by.
+            log: (Keyword) Logger for all log messages.
 
         Returns:
             List of tuples. Tuple contains the SeriesInfo object for the series,
@@ -241,14 +248,17 @@ class SonarrInterface(WebInterface, SyncInterface):
 
 
     def get_all_episodes(self,
-            series_info: SeriesInfo, *,
-            preferences: Optional['Preferences'] = None) -> list[EpisodeInfo]:
+            series_info: SeriesInfo,
+            *,
+            log: Logger = log,
+        ) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that
         have  already aired are returned.
 
         Args:
             series_info: SeriesInfo for the entry.
+            log: (Keyword) Logger for all log messages.
 
         Returns:
             List of EpisodeInfo objects for the given series.
@@ -321,7 +331,9 @@ class SonarrInterface(WebInterface, SyncInterface):
 
     def set_episode_ids(self,
             series_info: SeriesInfo,
-            episode_infos: list[EpisodeInfo]
+            episode_infos: list[EpisodeInfo],
+            *,
+            log: Logger = log,
         ) -> None:
         """
         Set all the episode ID's for the given list of EpisodeInfo
@@ -329,11 +341,12 @@ class SonarrInterface(WebInterface, SyncInterface):
 
         Args:
             series_info: SeriesInfo for the entry.
-            episode_infos: List of EpisodeInfo objects to update..
+            episode_infos: List of EpisodeInfo objects to update.
+            log: (Keyword) Logger for all log messages.
         """
 
         # Get all episodes for this series
-        new_episode_infos = self.get_all_episodes(series_info)
+        new_episode_infos = self.get_all_episodes(series_info, log=log)
 
         # Match to existing info
         for old_episode_info in episode_infos:

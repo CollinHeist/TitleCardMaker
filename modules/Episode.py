@@ -130,8 +130,10 @@ class Episode:
 
 
     def update_source(self,
-            new_source: Union[Path, str, None], *,
-            downloadable: bool) -> bool:
+            new_source: Union[Path, str, None],
+            *,
+            downloadable: bool,
+        ) -> bool:
         """
         Update the source image for this Episode, as well as the
         downloadable flag for the source.

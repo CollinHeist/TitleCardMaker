@@ -1,3 +1,4 @@
+from logging import Logger
 from typing import Optional
 
 from fastapi import HTTPException
@@ -5,13 +6,18 @@ from requests import get as req_get
 
 from modules.Debug import log
 
-def get_latest_version(raise_exc: bool = True) -> Optional[str]:
+def get_latest_version(
+        raise_exc: bool = True,
+        *,
+        log: Logger = log,
+    ) -> Optional[str]:
     """
     Get the latest version of TitleCardMaker available.
 
     Args:
         raise_exc: Whether to raise an HTTPException if getting the
             latest version fails for any reason.
+        log: (Keyword) Logger for all log messages.
 
     Returns:
         The string version number of the latest release. If unable to
