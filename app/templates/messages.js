@@ -17,23 +17,27 @@ $(document).ready(() => {
     // Get last 30sec of logs
     const last30s = encodeURIComponent(dateToISO8601(new Date(Date.now() - 1  * 1000 * 30)));
     const allMessages = await fetch(`/api/logs/query?page=1&after=${last30s}&level=info`).then(resp => resp.json());
-    // Add to list of logs to display
-    logs = logs.concat(allMessages.items);
+    // Add to list of logs to display, limit to 60 messages
+    logs = logs.concat(allMessages.items).slice(undefined, 60);
   }
 
   // Display the oldest pending log
   function displayLogs() {
     if (logs.length > 0) {
-      const message = logs.shift();
-      const isError = ['warning', 'error', 'critical'].includes(message.level);
-      $.toast({
-        class: isError ? 'right aligned red error' : 'right aligned blue info',
-        message: message.message,
-        displayTime: 5000,
-        position: 'bottom right',
-        showIcon: isError ? 'exclamation circle' : 'info circle',
-        showProgress: 'top',
-      })
+      for (let i = 0; i < 3 && logs.length > 0; i++) {
+        setTimeout(() => {
+          const message = logs.shift();
+          const isError = ['warning', 'error', 'critical'].includes(message.level);
+          $.toast({
+            class: isError ? 'right aligned red error' : 'right aligned blue info',
+            message: message.message,
+            displayTime: 5000,
+            position: 'bottom right',
+            showIcon: isError ? 'exclamation circle' : 'info circle',
+            showProgress: 'top',
+          });
+        }, 500 * i);
+      }
     }
   }
 
