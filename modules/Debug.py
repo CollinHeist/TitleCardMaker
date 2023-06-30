@@ -109,6 +109,10 @@ class ContextLogger(LoggerAdapter):
     def process(self, msg, kwargs):
         return f'[{self.extra["context_id"]}] {msg}', kwargs
 
+    def exception(self, msg: object, excpt: Exception, *args, **kwargs) -> None:
+        super().error(msg, *args, **kwargs)
+        super().debug(excpt, exc_info=True)
+
 # Helper function to easily create a ContextLogger
 def contextualize(
         logger: Logger = log,
