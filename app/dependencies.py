@@ -10,6 +10,7 @@ from app.database.session import (
 )
 from app.models.preferences import Preferences
 
+from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.JellyfinInterface2 import JellyfinInterface
@@ -44,7 +45,10 @@ def refresh_emby_interface() -> None:
 def get_emby_interface() -> EmbyInterface:
     preferences = get_preferences()
     if preferences.use_emby and not EmbyInterfaceLocal:
-        refresh_emby_interface()
+        try:
+            refresh_emby_interface()
+        except Exception as e:
+            log.exception(f'Error connecting to Emby', e)
 
     return EmbyInterfaceLocal
 
@@ -73,7 +77,10 @@ def refresh_jellyfin_interface() -> JellyfinInterface:
 def get_jellyfin_interface() -> JellyfinInterface:
     preferences = get_preferences()
     if preferences.use_jellyfin and not JellyfinInterfaceLocal:
-        refresh_jellyfin_interface()
+        try:
+            refresh_jellyfin_interface()
+        except Exception as e:
+            log.exception(f'Error connecting to Jellyfin', e)
 
     return JellyfinInterfaceLocal
 
@@ -89,7 +96,10 @@ def refresh_plex_interface() -> None:
 def get_plex_interface() -> PlexInterface:
     preferences = get_preferences()
     if preferences.use_plex and not PlexInterfaceLocal:
-        refresh_plex_interface()
+        try:
+            refresh_plex_interface()
+        except Exception as e:
+            log.exception(f'Error connecting to Plex', e)
 
     return PlexInterfaceLocal
 
@@ -107,7 +117,10 @@ def refresh_sonarr_interface() -> None:
 def get_sonarr_interface() -> SonarrInterface:
     preferences = get_preferences()
     if preferences.use_sonarr and not SonarrInterfaceLocal:
-        refresh_sonarr_interface()
+        try:
+            refresh_sonarr_interface()
+        except Exception as e:
+            log.exception(f'Error connecting to Sonarr', e)
 
     return SonarrInterfaceLocal
 
@@ -123,6 +136,9 @@ def refresh_tmdb_interface() -> None:
 def get_tmdb_interface() -> TMDbInterface:
     preferences = get_preferences()
     if preferences.use_tmdb and not TMDbInterfaceLocal:
-        refresh_tmdb_interface()
+        try:
+            refresh_tmdb_interface()
+        except Exception as e:
+            log.exception(f'Error connecting to TMDb', e)
 
     return TMDbInterfaceLocal

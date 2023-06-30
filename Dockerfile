@@ -36,7 +36,7 @@ ENV TCM_PREFERENCES=/config/preferences.yml \
 
 # Delete setup files
 # Create user and group to run the container
-# Install gosu, imagemagick
+# Install imagemagick
 # Clean up apt cache
 # Override default ImageMagick policy XML file
 RUN set -eux; \
@@ -44,7 +44,7 @@ RUN set -eux; \
     groupadd -g 314 titlecardmaker; \
     useradd -u 314 -g 314 titlecardmaker; \
     apt-get update; \
-    apt-get install -y --no-install-recommends gosu imagemagick libmagickcore-6.q16-6-extra; \
+    apt-get install -y --no-install-recommends imagemagick libmagickcore-6.q16-6-extra; \
     rm -rf /var/lib/apt/lists/*; \
     cp modules/ref/policy.xml /etc/ImageMagick-6/policy.xml
 

@@ -1,3 +1,4 @@
+from logging import Logger
 from pathlib import Path
 from time import sleep
 from typing import Optional, Union
@@ -26,7 +27,7 @@ from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
 
-def sync_all() -> None:
+def sync_all(*, log: Logger = log) -> None:
     """
     Schedule-able function to run all defined Syncs in the Database.
     """
@@ -41,15 +42,17 @@ def sync_all() -> None:
                         db, get_preferences(), sync, get_emby_interface(), 
                         get_imagemagick_interface(), get_jellyfin_interface(),
                         get_plex_interface(), get_sonarr_interface(),
-                        get_tmdb_interface(),
+                        get_tmdb_interface(), log=log,
                     )
                 except HTTPException as e:
-                    log.exception(f'Error Syncing Sync [{sync.id}] - {e.detail}', e)
+                    log.exception(f'{sync.log_str} Error Syncing - {e.detail}', e)
                 except OperationalError:
                     log.debug(f'Database is busy, sleeping..')
                     sleep(30)
     except Exception as e:
         log.exception(f'Failed to run all Syncs', e)
+
+    return None
 
 
 def add_sync(
@@ -86,7 +89,9 @@ def run_sync(
         plex_interface: Optional[PlexInterface],
         sonarr_interface: Optional[SonarrInterface],
         tmdb_interface: Optional[TMDbInterface],
-        background_tasks: Optional[BackgroundTasks] = None
+        background_tasks: Optional[BackgroundTasks] = None,
+        *,
+        log: Logger = log,
     ) -> list[Series]:
     """
     Run the given Sync. This adds any missing Series from the given Sync
@@ -118,7 +123,7 @@ def run_sync(
 
     # Sync depending on the associated interface
     added: list[Series] = []
-    log.debug(f'Starting to Sync[{sync.id}] from {sync.interface}')
+    log.debug(f'{sync.log_str} starting to query {sync.interface}')
     # Sync from Emby
     if sync.interface == 'Emby':
         # Get filtered list of series from Sonarr
@@ -127,6 +132,7 @@ def run_sync(
             excluded_libraries=sync.excluded_libraries,
             required_tags=sync.required_tags,
             excluded_tags=sync.excluded_tags,
+            log=log,
         )
         for series_info, library in all_series:
             # Look for existing series, add if DNE
@@ -152,6 +158,7 @@ def run_sync(
             excluded_libraries=sync.excluded_libraries,
             required_tags=sync.required_tags,
             excluded_tags=sync.excluded_tags,
+            log=log,
         )
         for series_info, library in all_series:
             # Look for existing series, add if DNE
@@ -177,6 +184,7 @@ def run_sync(
             excluded_libraries=sync.excluded_libraries,
             required_tags=sync.required_tags,
             excluded_tags=sync.excluded_tags,
+            log=log,
         )
 
         for series_info, library in all_series:
@@ -205,6 +213,7 @@ def run_sync(
             downloaded_only=sync.downloaded_only,
             required_series_type=sync.required_series_type,
             excluded_series_type=sync.excluded_series_type,
+            log=log,
         )
         for series_info, directory in all_series:
             # Look for existing series, add if DNE
@@ -230,21 +239,21 @@ def run_sync(
 
     # Process each newly added series
     for series in added:
-        log.info(f'Sync[{sync.id}] Added {series.name} ({series.year})')
+        log.info(f'{sync.log_str} Added {series.name} ({series.year})')
         Path(series.source_directory).mkdir(parents=True, exist_ok=True)
         # Set Series ID's, download poster and logo
         if background_tasks is None:
             set_series_database_ids(
                 series, db, emby_interface, jellyfin_interface, plex_interface,
-                sonarr_interface, tmdb_interface,
+                sonarr_interface, tmdb_interface, log=log,
             )
             download_series_poster(
                 db, preferences, series, emby_interface, imagemagick_interface,
-                jellyfin_interface, plex_interface, tmdb_interface,
+                jellyfin_interface, plex_interface, tmdb_interface, log=log,
             )
             download_series_logo(
                 preferences, emby_interface, imagemagick_interface,
-                jellyfin_interface, tmdb_interface, series,
+                jellyfin_interface, tmdb_interface, series, log=log,
             )
         else:
             background_tasks.add_task(
@@ -252,24 +261,24 @@ def run_sync(
                 set_series_database_ids,
                 # Arguments
                 series, db, emby_interface, jellyfin_interface, plex_interface,
-                sonarr_interface, tmdb_interface,
+                sonarr_interface, tmdb_interface, log=log,
             )
             background_tasks.add_task(
                 # Function
                 download_series_poster,
                 # Arguments
                 db, preferences, series, emby_interface, imagemagick_interface,
-                jellyfin_interface, plex_interface, tmdb_interface,
+                jellyfin_interface, plex_interface, tmdb_interface, log=log,
             )
             background_tasks.add_task(
                 # Function
                 download_series_logo, 
                 # Arguments
                 preferences, emby_interface, imagemagick_interface,
-                jellyfin_interface, tmdb_interface, series,
+                jellyfin_interface, tmdb_interface, series, log=log,
             )
 
     if not added:
-        log.info(f'Sync[{sync.id}] No new Series synced')
+        log.debug(f'{sync.log_str} No new Series synced')
 
     return added

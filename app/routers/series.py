@@ -181,7 +181,8 @@ def add_new_series(
 def delete_series(
         series_id: int,
         request: Request,
-        db: Session = Depends(get_database)) -> None:
+        db: Session = Depends(get_database)
+    ) -> None:
     """
     Delete the Series with the given ID. This also deletes the poster.
 

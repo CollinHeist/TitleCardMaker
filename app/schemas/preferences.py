@@ -151,12 +151,12 @@ class UpdateMediaServerBase(UpdateServerBase):
                 'terabytes': 'Terabytes',
             }[v.lower()]
 
-    @root_validator(pre=True)
+    @root_validator(skip_on_failure=True, pre=True)
     def validate_filesize(cls, values):
         if (values.get('filesize_limit_number', UNSPECIFIED) != UNSPECIFIED
             and not values.get('filesize_limit_unit',UNSPECIFIED) !=UNSPECIFIED):
             raise ValidationError(f'Filesize limit number requires unit')
-        
+
         return values
 
 class UpdateEmby(UpdateMediaServerBase):

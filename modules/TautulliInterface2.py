@@ -1,5 +1,5 @@
 from json import dumps
-from pathlib import Path
+from logging import Logger
 from typing import Optional
 
 from fastapi import HTTPException
@@ -26,7 +26,10 @@ class TautulliInterface(WebInterface):
             tautulli_url: str,
             api_key: str,
             use_ssl: bool = True,
-            agent_name: str = DEFAULT_AGENT_NAME) -> None:
+            agent_name: str = DEFAULT_AGENT_NAME,
+            *,
+            log: Logger = log,
+        ) -> None:
         """
         Construct a new instance of an interface to Sonarr.
 
@@ -37,6 +40,7 @@ class TautulliInterface(WebInterface):
             use_ssl: Whether to use SSL for the interface.
             agent_name: Name of the Notification Agent to check for and/
                 or create on Tautulli.
+            log: (Keyword) Logger for all log messages.
 
         Raises:
             HTTPException (401) if the URL or API Key is invalid.
@@ -116,9 +120,12 @@ class TautulliInterface(WebInterface):
         )
 
 
-    def __create_agent(self) -> Optional[int]:
+    def __create_agent(self, *, log: Logger = log,) -> Optional[int]:
         """
         Create a new Notification Agent.
+
+        Args:
+            log: (Keyword) Logger for all log messages.
 
         Returns:
             Notifier ID of created agent, None if agent was not created.
@@ -151,11 +158,14 @@ class TautulliInterface(WebInterface):
         return list(new_ids - existing_ids)[0]
 
 
-    def integrate(self) -> None:
+    def integrate(self, *, log: Logger = log) -> None:
         """
         Integrate this interface's instance of Tautulli with TCM. This
         configures a new notification agent if a valid one does not
         exist or cannot be identified.
+
+        Args:
+            log: (Keyword) Logger for all log messages.
         """
 
         # If already integrated, skip
@@ -164,7 +174,7 @@ class TautulliInterface(WebInterface):
             return None
 
         # Create Agent, raise if fails
-        if (created_id := self.__create_agent()) is None:
+        if (created_id := self.__create_agent(log=log)) is None:
             raise HTTPException(
                 status_code=400,
                 detail='Failed to create Notification Agent',

@@ -7,7 +7,6 @@ from modules.BaseCardType import (
 )
 from modules.Debug import log
 
-SeriesExtra = Optional
 BoxCoordinates = namedtuple('BoxCoordinates', ('x0', 'y0', 'x1', 'y1'))
 Position = Literal['left', 'center', 'right']
 
@@ -106,11 +105,12 @@ class TintedGlassTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-            episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
-            episode_text_position: SeriesExtra[Position] = 'center',
-            box_adjustments: SeriesExtra[str] = None,
+            episode_text_color: str = EPISODE_TEXT_COLOR,
+            episode_text_position: Position = 'center',
+            box_adjustments: str = None,
             preferences: 'Preferences' = None,
-            **unused) -> None:
+            **unused
+        ) -> None:
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
@@ -122,7 +122,7 @@ class TintedGlassTitleCard(BaseCardType):
         self.title_text = self.image_magick.escape_chars(title_text)
         self.__line_count = len(title_text.split('\n'))
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
-        self.hide_episode_text = hide_episode_text or len(episode_text) == 0
+        self.hide_episode_text = hide_episode_text
 
         self.font_file = font_file
         self.font_size = font_size
@@ -162,7 +162,8 @@ class TintedGlassTitleCard(BaseCardType):
 
     def blur_rectangle_command(self,
             coordinates: BoxCoordinates,
-            rounding_radius: int) -> ImageMagickCommands:
+            rounding_radius: int
+        ) -> ImageMagickCommands:
         """
         Get the commands necessary to blur and darken a rectangle
         encompassing the given coordinates.
@@ -266,7 +267,8 @@ class TintedGlassTitleCard(BaseCardType):
 
 
     def add_episode_text_command(self,
-            title_coordinates: BoxCoordinates) -> ImageMagickCommands:
+            title_coordinates: BoxCoordinates
+        ) -> ImageMagickCommands:
         """
         Get the list of ImageMagick commands to add episode text.
 
@@ -335,9 +337,10 @@ class TintedGlassTitleCard(BaseCardType):
 
     @staticmethod
     def modify_extras(
-            extras: dict[str, Any],
+            extras: dict,
             custom_font: bool,
-            custom_season_titles: bool) -> None:
+            custom_season_titles: bool
+        ) -> None:
         """
         Modify the given extras base on whether font or season titles
         are custom.
@@ -381,7 +384,9 @@ class TintedGlassTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str
+        ) -> bool:
         """
         Determine whether the given attributes constitute custom or
         generic season titles.

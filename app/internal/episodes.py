@@ -1,3 +1,4 @@
+from logging import Logger
 from time import sleep
 from typing import Optional
 
@@ -21,10 +22,13 @@ from modules.TieredSettings import TieredSettings
 from modules.TMDbInterface2 import TMDbInterface
 
 
-def refresh_all_episode_data() -> None:
+def refresh_all_episode_data(*, log: Logger = log) -> None:
     """
     Schedule-able function to refresh the episode data for all Series in
     the Database.
+
+    Args:
+        log: (Keyword) Logger for all log messages.
     """
 
     try:
@@ -42,7 +46,7 @@ def refresh_all_episode_data() -> None:
                     refresh_episode_data(
                         db, get_preferences(), series, get_emby_interface(),
                         get_jellyfin_interface(), get_plex_interface(),
-                        get_sonarr_interface(), get_tmdb_interface(),
+                        get_sonarr_interface(), get_tmdb_interface(), log=log,
                     )
                 except OperationalError:
                     log.debug(f'Database is busy, sleeping..')
@@ -61,7 +65,10 @@ def set_episode_ids(
         jellyfin_interface: Optional[JellyfinInterface],
         plex_interface: Optional[PlexInterface],
         sonarr_interface: Optional[SonarrInterface],
-        tmdb_interface: Optional[TMDbInterface]) -> None:
+        tmdb_interface: Optional[TMDbInterface],
+        *,
+        log: Logger = log,
+    ) -> None:
     """
     Set the database ID's of the given Episodes using the given
     Interfaces.
@@ -71,6 +78,7 @@ def set_episode_ids(
         series: Series of the Episodes whose ID's are being set.
         episodes: List of Episodes to set the ID's of.
         *_interface: Interface(s) to set ID's from.
+        log: (Keyword) Logger for all log messages.
     """
 
     # Get corresponding EpisodeInfo object for this Episode
@@ -78,15 +86,22 @@ def set_episode_ids(
 
     # Set ID's from all possible interfaces
     if emby_interface and series.emby_library_name:
-        emby_interface.set_episode_ids(series.as_series_info, episode_infos)
+        emby_interface.set_episode_ids(
+            series.as_series_info, episode_infos, log=log
+        )
     if jellyfin_interface and series.jellyfin_library_name:
-        jellyfin_interface.set_episode_ids(series.as_series_info, episode_infos)
+        jellyfin_interface.set_episode_ids(
+            series.as_series_info, episode_infos, log=log
+        )
     if plex_interface and series.plex_library_name:
         plex_interface.set_episode_ids(
-            series.plex_library_name, series.as_series_info, episode_infos
+            series.plex_library_name, series.as_series_info, episode_infos,
+            log=log
         )
     if sonarr_interface:
-        sonarr_interface.set_episode_ids(series.as_series_info, episode_infos)
+        sonarr_interface.set_episode_ids(
+            series.as_series_info, episode_infos, log=log
+        )
     if tmdb_interface:
         tmdb_interface.set_episode_ids(series.as_series_info, episode_infos)
 
@@ -99,6 +114,7 @@ def set_episode_ids(
                 setattr(episode, id_type, getattr(episode_info, id_type))
                 changed = True
 
+    # Write any changes to the DB
     if changed:
         db.commit()
 
@@ -114,7 +130,10 @@ def refresh_episode_data(
         plex_interface: Optional[PlexInterface],
         sonarr_interface: Optional[SonarrInterface],
         tmdb_interface: Optional[TMDbInterface],
-        background_tasks: Optional[BackgroundTasks] = None) -> None:
+        background_tasks: Optional[BackgroundTasks] = None,
+        *,
+        log: Logger = log,
+    ) -> None:
     """
     Refresh the episode data for the given Series. This adds any new
     Episodes on the associated episode data source to the Database, 
@@ -129,6 +148,7 @@ def refresh_episode_data(
         background_tasks: Optional BackgroundTasks queue to add the
             Episode ID assignment task to, if provided. If omitted then
             the assignment is done in a blocking manner.
+        log: (Keyword) Logger for all log messages.
 
     Raises:
         HTTPException (404) if the Series Template DNE.
@@ -177,21 +197,25 @@ def refresh_episode_data(
 
     # Create SeriesInfo for this object to use in querying
     if episode_data_source == 'Emby':
-        all_episodes = emby_interface.get_all_episodes(series.as_series_info)
+        all_episodes = emby_interface.get_all_episodes(
+            series.as_series_info, log=log
+        )
     elif episode_data_source == 'Jellyfin':
         all_episodes = jellyfin_interface.get_all_episodes(
-            series.jellyfin_library_name, series.as_series_info
+            series.jellyfin_library_name, series.as_series_info, log=log
         )
     elif episode_data_source == 'Plex':
         all_episodes = plex_interface.get_all_episodes(
-            series.plex_library_name, series.as_series_info,
+            series.plex_library_name, series.as_series_info, log=log
         )
     elif episode_data_source == 'Sonarr':
         all_episodes = sonarr_interface.get_all_episodes(
-            series.as_series_info, preferences=preferences
+            series.as_series_info, log=log
         )
     elif episode_data_source == 'TMDb':
-        all_episodes = tmdb_interface.get_all_episodes(series.as_series_info)
+        all_episodes = tmdb_interface.get_all_episodes(
+            series.as_series_info, log=log,
+        )
 
     # Filter episodes
     changed, episodes = False, []
@@ -216,7 +240,7 @@ def refresh_episode_data(
 
         # Episode does not exist, add
         if existing is None:
-            log.debug(f'{series.log_str} New episode "{episode_info.title.full_title}"')
+            log.info(f'{series.log_str} New Episode "{episode_info.title.full_title}"')
             episode = models.episode.Episode(
                 series=series,
                 title=episode_info.title.full_title,
@@ -254,14 +278,14 @@ def refresh_episode_data(
         set_episode_ids(
             db, series, episodes,
             emby_interface, jellyfin_interface, plex_interface,
-            sonarr_interface, tmdb_interface
+            sonarr_interface, tmdb_interface, log=log,
         )
     else:
         background_tasks.add_task(
             set_episode_ids,
             db, series, episodes,
             emby_interface, jellyfin_interface, plex_interface, sonarr_interface,
-            tmdb_interface
+            tmdb_interface, log=log
         )
 
     # Commit to database if changed

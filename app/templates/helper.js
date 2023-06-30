@@ -1,5 +1,5 @@
 function sortStandardizeStr(text) {
-  return text.toString().replace(/^(a|an|the)(\s)/i, '');
+  return text.toString().replace(/^(a|an|the)(\s)/i, '').toLowercase();
 }
 
 function formatBytes(bytes, decimals = 2) {

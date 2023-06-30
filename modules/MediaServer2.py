@@ -1,9 +1,11 @@
-from abc import ABC, abstractmethod, abstractproperty
-from typing import Any, Union
+from abc import ABC, abstractmethod
+from logging import Logger
+from typing import Optional, Union
 from pathlib import Path
 
 from modules.Debug import log
 from modules.ImageMaker import ImageMaker
+from modules.SeriesInfo import SeriesInfo
 
 SourceImage = Union[str, bytes, None]
 
@@ -33,12 +35,17 @@ class MediaServer(ABC):
         self.filesize_limit = filesize_limit
 
 
-    def compress_image(self, image: Path) -> Union[Path, None]:
+    def compress_image(self,
+            image: Path,
+            *,
+            log: Logger = log
+        ) -> Optional[Path]:
         """
         Compress the given image until below the filesize limit.
 
         Args:
             image: Path to the image to compress.
+            log: (Keyword) Logger for all log messages.
 
         Returns:
             Path to the compressed image, or None if the image could not

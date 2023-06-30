@@ -162,7 +162,7 @@ def create_cards_for_series(
                 db, preferences, background_tasks, episode, log=log
             )
         except HTTPException as e:
-            log.exception(f'{series.log_str} {episode.log_str} Card creation failed', e)
+            log.exception(f'{series.log_str} {episode.log_str} Card creation failed - {e.detail}', e)
             pass
 
     return None

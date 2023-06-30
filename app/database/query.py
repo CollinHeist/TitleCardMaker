@@ -150,7 +150,9 @@ def get_template(
 
 def get_all_templates(
         db: Session,
-        obj_dict: dict[str, Any]
+        obj_dict: dict,
+        *,
+        raise_exc: bool = True,
     ) -> list[Template]:
     """
     Get all Templates defined in the given Dictionaries "template_ids"
@@ -171,9 +173,7 @@ def get_all_templates(
     """
 
     # Parse all indicated Template ID's, removing key from dictionary
-    templates = []
-    if (template_ids := obj_dict.pop('template_ids', None)) is not None:
-        for template_id in template_ids:
-            templates.append(get_template(db, template_id, raise_exc=True))
-
-    return templates
+    return [
+        get_template(db, template_id, raise_exc=raise_exc)
+        for template_id in obj_dict.pop('template_ids', [])
+    ]

@@ -1,3 +1,4 @@
+from logging import Logger
 from pathlib import Path
 from typing import Optional
 
@@ -22,7 +23,7 @@ from modules.TieredSettings import TieredSettings
 from modules.WebInterface import WebInterface
 
 
-def download_all_source_images() -> None:
+def download_all_source_images(*, log: Logger = log) -> None:
     """
     Schedule-able function to attempt to download all source images for
     all monitored Series and Episodes in the Database.
@@ -44,10 +45,11 @@ def download_all_source_images() -> None:
                         download_episode_source_image(
                             db, get_preferences(), get_emby_interface(),
                             get_jellyfin_interface(), get_plex_interface(),
-                            get_tmdb_interface(), episode
+                            get_tmdb_interface(), episode, log=log,
                         )
                     except HTTPException as e:
-                        log.warning(f'{series.log_str} {episode.log_str} Skipping source selection')
+                        log.warning(f'{series.log_str} {episode.log_str} '
+                                    f'Skipping source selection')
                         continue
     except Exception as e:
         log.exception(f'Failed to download source images', e)
@@ -55,7 +57,7 @@ def download_all_source_images() -> None:
     return None
 
 
-def download_all_series_logos() -> None:
+def download_all_series_logos(*, log: Logger = log) -> None:
     """
     Schedule-able function to download all Logos for all monitored
     Series in the Database.
@@ -76,7 +78,7 @@ def download_all_series_logos() -> None:
                     download_series_logo(
                         get_preferences(), get_emby_interface(),
                         get_imagemagick_interface(), get_jellyfin_interface(),
-                        get_tmdb_interface(), series,
+                        get_tmdb_interface(), series, log=log,
                     )
                 except HTTPException as e:
                     log.warning(f'{series.log_str} Skipping logo selection')
@@ -161,7 +163,9 @@ def download_series_logo(
         imagemagick_interface: Optional[ImageMagickInterface],
         jellyfin_interface: Optional[JellyfinInterface],
         tmdb_interface: Optional[TMDbInterface],
-        series: Series
+        series: Series,
+        *,
+        log: Logger = log,
     ) -> Optional[str]:
     """
     Download the logo for the given Series.
@@ -193,13 +197,13 @@ def download_series_logo(
             and emby_interface is not None
             and series.emby_library_name is not None):
             logo = emby_interface.get_series_logo(
-                series.emby_library_name, series.as_series_info
+                series.emby_library_name, series.as_series_info, log=log,
             )
         elif (image_source == 'Jellyfin'
             and jellyfin_interface is not None
             and series.jellyfin_library_name is not None):
             logo = jellyfin_interface.get_series_logo(
-                series.jellyfin_library_name, series.as_series_info
+                series.jellyfin_library_name, series.as_series_info, log=log
             )
         elif image_source == 'TMDb' and tmdb_interface:
             logo = tmdb_interface.get_series_logo(series.as_series_info)
@@ -236,11 +240,11 @@ def download_series_logo(
                         detail=f'SVG logo conversion failed'
                     )
                 else:
-                    log.debug(f'{series.log_str} Converted SVG logo ({logo}) to PNG')
-                    log.info(f'{series.log_str} Downloaded {logo_file.resolve()} from {image_source}')
+                    log.debug(f'{series.log_str} Converted SVG logo to PNG')
+                    log.info(f'{series.log_str} Downloaded logo from {image_source}')
                     return f'/source/{series.path_safe_name}/{logo_file.name}'
-            else:
             # Download failed, raise 400
+            else:
                 raise HTTPException(
                     status_code=400,
                     detail=f'Unable to download logo'
@@ -248,7 +252,7 @@ def download_series_logo(
 
         # Logo is png and valid, download
         if WebInterface.download_image(logo, logo_file):
-            log.info(f'{series.log_str} Downloaded {logo_file.resolve()} from {image_source}')
+            log.info(f'{series.log_str} Downloaded logo from {image_source}')
             return f'/source/{series.path_safe_name}/{logo_file.name}'
         # Download failed, raise 400
         else:
@@ -269,7 +273,8 @@ def download_episode_source_image(
         plex_interface: Optional[PlexInterface],
         tmdb_interface: Optional[TMDbInterface],
         episode: Episode,
-        raise_exc: bool = False,
+        raise_exc: bool = False, *,
+        log: Logger = log,
     ) -> Optional[str]:
     """
     Download the source image for the given Episode.
@@ -330,7 +335,7 @@ def download_episode_source_image(
 
         if image_source == 'Emby' and emby_interface:
             source_image = emby_interface.get_source_image(
-                episode.as_episode_info
+                episode.as_episode_info, log=log,
             )
         elif image_source == 'Jellyfin' and jellyfin_interface:
             source_image = jellyfin_interface.get_source_image(
@@ -360,6 +365,7 @@ def download_episode_source_image(
                     episode.as_episode_info,
                     skip_localized_images=skip_localized_images,
                     raise_exc=raise_exc,
+                    log=log,
                 )
         else:
             log.warning(f'{series.log_str} {episode.log_str} Cannot source images from {image_source}')
@@ -373,7 +379,7 @@ def download_episode_source_image(
 
         # Source image is valid, download - error if download fails
         if WebInterface.download_image(source_image, source_file):
-            log.debug(f'{series.log_str} {episode.log_str} Downloaded {source_file.resolve()} from {image_source}')
+            log.debug(f'{series.log_str} {episode.log_str} Downloaded {source_file.name} from {image_source}')
             return f'/source/{series.path_safe_name}/{source_file.name}'
         else:
             if raise_exc:
@@ -383,6 +389,7 @@ def download_episode_source_image(
                 )
 
     # No image source returned a valid image, return None
+    log.debug(f'{series.log_str} {episode.log_str} No source images found')
     return None
 
 

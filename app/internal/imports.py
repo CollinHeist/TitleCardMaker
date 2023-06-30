@@ -1,3 +1,4 @@
+from logging import Logger
 from pathlib import Path
 from re import match, IGNORECASE
 from typing import Any, Callable, Literal, Optional, Union
@@ -106,7 +107,7 @@ def _get(yaml_dict: dict[str, Any],
         except Exception as e:
             raise HTTPException(
                 status_code=422,
-                detail=f'YAML is incorrectly formatted - {e}',
+                detail=f'YAML is incorrectly typed - {e}',
             )
     
     return value
@@ -237,6 +238,24 @@ def _parse_filesize_limit(
         )
 
 
+def _remove_unspecifed_args(**dict_kwargs: dict) -> dict:
+    """
+    Remove unspecified arguments.
+
+    Args:
+        dict_kwargs: (Keyword) Any number of keyword arguments to parse.
+
+    Returns:
+        `dict_kwargs` where any keys whose corresponding value was equal
+        to `UNSPECIFIED` are omitted.
+    """
+
+    return {
+        key: value for key, value in dict_kwargs.items()
+        if value != UNSPECIFIED
+    }
+
+
 def parse_preferences(
         preferences: Preferences,
         yaml_dict: dict[str, Any]
@@ -289,7 +308,7 @@ def parse_preferences(
         episode_data_source = UNSPECIFIED
 
     # Create UpdatePreferenes object from the YAML
-    update_preferences = UpdatePreferences(
+    update_preferences = UpdatePreferences(**_remove_unspecifed_args(
         source_directory=_get(options, 'source', default=unsp),
         card_width=_get(options, 'card_dimensions', type_=Width, default=unsp),
         card_height=_get(options, 'card_dimensions', type_=Height, default=unsp),
@@ -311,7 +330,7 @@ def parse_preferences(
             type_=str,
             default=unsp,
         ),
-    )
+    ))
 
     preferences.update_values(**update_preferences.dict())
     refresh_imagemagick_interface()
@@ -352,14 +371,14 @@ def parse_emby(
     # Get filesize limit
     limit_number, limit_unit = _parse_filesize_limit(emby)
 
-    update_emby = UpdateEmby(
+    update_emby = UpdateEmby(**_remove_unspecifed_args(
         url=_get(emby, 'url', type_=str, default=UNSPECIFIED),
         api_key=_get(emby, 'api_key', default=UNSPECIFIED),
         username=_get(emby, 'username', type_=str, default=UNSPECIFIED),
         use_ssl=_get(emby, 'verify_ssl', type_=bool, default=UNSPECIFIED),
         filesize_limit_number=limit_number,
         filesize_limit_unit=limit_unit,
-    )
+    ))
     preferences.use_emby = True
     preferences.commit()
 
@@ -444,7 +463,7 @@ def parse_plex(
     # Get filesize limit
     limit_number, limit_unit = _parse_filesize_limit(plex)
 
-    update_plex = UpdatePlex(
+    update_plex = UpdatePlex(**_remove_unspecifed_args(
         url=_get(plex, 'url', type_=str, default=UNSPECIFIED),
         token=_get(plex, 'token', default=UNSPECIFIED),
         use_ssl=_get(plex, 'verify_ssl', type_=bool, default=UNSPECIFIED),
@@ -454,7 +473,7 @@ def parse_plex(
             type_=bool, default=UNSPECIFIED,
         ), filesize_limit_number=limit_number,
         filesize_limit_unit=limit_unit,
-    )
+    ))
     preferences.use_plex = True
     preferences.commit()
 
@@ -490,11 +509,11 @@ def parse_sonarr(
     # Get sonarr options
     sonarr = _get(yaml_dict, 'sonarr', default={})
 
-    update_sonarr = UpdateSonarr(
+    update_sonarr = UpdateSonarr(**_remove_unspecifed_args(
         url=_get(sonarr, 'url', default=UNSPECIFIED),
         api_key=_get(sonarr, 'api_key', default=UNSPECIFIED),
         use_ssl=_get(sonarr, 'verify_ssl', default=UNSPECIFIED),
-    )
+    ))
     preferences.use_sonarr = True
     preferences.commit()
 
@@ -532,7 +551,7 @@ def parse_tmdb(
 
     SplitList = lambda s: str(s).lower().replace(' ', '').split(',')
 
-    update_tmdb = UpdateTMDb(
+    update_tmdb = UpdateTMDb(**_remove_unspecifed_args(
         api_key=_get(tmdb, 'api_key', default=UNSPECIFIED),
         minimum_width=_get(
             tmdb,
@@ -551,7 +570,7 @@ def parse_tmdb(
             'logo_language_priority',
             type_=SplitList, default=UNSPECIFIED,
         ),
-    )
+    ))
     preferences.use_tmdb = True
     preferences.commit()
 
@@ -623,13 +642,13 @@ def parse_syncs(
             ]
 
             # Add object to list
-            all_syncs.append(NewSyncClass(
+            all_syncs.append(NewSyncClass(**_remove_unspecifed_args(
                 name=f'Imported {media_server} Sync {sync_id+1}',
                 templates=_get_templates(sync),
                 required_tags=_get(sync, 'required_tags', type_=list, default=[]),
                 excluded_tags=excluded_tags,
                 required_libraries=_get(sync, 'libraries', type_=list, default=[]),
-            ))
+            )))
 
         return all_syncs
     
@@ -662,7 +681,7 @@ def parse_syncs(
             ]
 
             # Add object to list
-            all_syncs.append(NewSonarrSync(
+            all_syncs.append(NewSonarrSync(**_remove_unspecifed_args(
                 name=f'Imported Sonarr Sync {sync_id+1}',
                 template_ids=_get_templates(sync),
                 required_tags=_get(sync, 'required_tags', type_=list, default=[]),
@@ -670,7 +689,7 @@ def parse_syncs(
                 required_series_type=_get(sync, 'series_type'),
                 downloaded_only=_get(sync, 'downloaded_only', type_=bool, default=False),
                 monitored_only=_get(sync, 'monitored_only', type_=bool, default=False),
-            ))
+            )))
 
     return all_syncs
 
@@ -720,7 +739,7 @@ def parse_fonts(yaml_dict: dict[str, Any]) -> list[NewNamedFont]:
             )
 
         # Create NewTemplate with all indicated customization
-        fonts.append(NewNamedFont(
+        fonts.append(NewNamedFont(**_remove_unspecifed_args(
             name=str(font_name),
             color=_get(font_dict, 'color'),
             title_case=_get(font_dict, 'case'),
@@ -732,7 +751,7 @@ def parse_fonts(yaml_dict: dict[str, Any]) -> list[NewNamedFont]:
             delete_missing=_get(font_dict, 'delete_missing', default=True, type_=bool),
             replacements_in=list(replacements.keys()),
             replacements_out=list(replacements.values()),
-        ))
+        )))
 
     return fonts
 
@@ -832,7 +851,7 @@ def parse_templates(
             )
 
         # Create NewTemplate with all indicated customization
-        templates.append(NewTemplate(
+        templates.append(NewTemplate(**_remove_unspecifed_args(
             name=str(template_name),
             card_filename_format=_get(template_dict, 'filename_format'),
             episode_data_source=_parse_episode_data_source(template_dict),
@@ -854,7 +873,7 @@ def parse_templates(
             ),
             extra_keys=list(extras.keys()),
             extra_values=list(extras.values()),
-        ))
+        )))
 
     return templates
 
@@ -863,7 +882,9 @@ def parse_series(
         db: Session,
         preferences: Preferences,
         yaml_dict: dict[str, Any],
-        default_library: Optional[str] = None
+        default_library: Optional[str] = None,
+        *,
+        log: Logger = log,
     ) -> list[NewSeries]:
     """
     Create NewSeries objects for any defined series in the given YAML.
@@ -876,6 +897,7 @@ def parse_series(
         yaml_dict: Dictionary of YAML attributes to parse.
         default_library: Optional default Library name to apply to the
             Series if one is not manually specified within YAML.
+        log: (Keyword) Logger for all log messages.
 
     Returns:
         List of NewSeries that match any defined YAML series.
@@ -1014,7 +1036,7 @@ def parse_series(
             library = default_library
 
         # Create NewTemplate with all indicated customization
-        series.append(NewSeries(
+        series.append(NewSeries(**_remove_unspecifed_args(
             name=series_info.name,
             year=series_info.year,
             sync_specials=_get(series_dict, 'sync_specials', type_=bool),
@@ -1065,7 +1087,7 @@ def parse_series(
             hide_episode_text=_get(series_dict, 'hide_episode_text', type_=bool),
             extra_keys=list(extras.keys()),
             extra_values=list(extras.values()),
-        ))
+        )))
 
     return series
 
@@ -1076,7 +1098,9 @@ def import_cards(
         series: Series,
         directory: Optional[Path],
         image_extension: CardExtension,
-        force_reload: bool
+        force_reload: bool,
+        *,
+        log: Logger = log,
     ) -> CardActions:
     """
     Import any existing Title Cards for the given Series. This finds
@@ -1146,7 +1170,7 @@ def import_cards(
                 actions.deleted += 1
 
         # Get finalized Card settings for this Episode, override card file
-        card_settings = resolve_card_settings(preferences, episode)
+        card_settings = resolve_card_settings(preferences, episode, log=log)
 
         # If a list of CardActions were returned, update actions and skip
         if isinstance(card_settings, list):
