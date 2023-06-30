@@ -221,16 +221,19 @@ if ((hasattr(args, 'import_cards') or hasattr(args, 'revert_series'))
         if hasattr(args, 'import_series'):
             series_info = SeriesInfo(*args.import_series)
         else:
-            groups = match(
-                r'^(.*)\s+\((\d{4})\)(?:\s*[\{\[].*[\}\]])?$',
-                archive.parent.name
-            )
-            if groups:
-                series_info = SeriesInfo(*groups.groups())
-            else:
-                log.critical(f'Cannot identify series name/year; specify with '
-                            f'--import-series')
-                exit(1)
+            # Try and identify Series from folder name, then parent name 
+            for folder_name in (archive.name, archive.parent.name):
+                groups = match(
+                    r'^(.*)\s+\((\d{4})\)(?:\s*[\{\[].*[\}\]])?$',
+                    folder_name
+                )
+                if groups:
+                    series_info = SeriesInfo(*groups.groups())
+                    break
+                else:
+                    log.critical(f'Cannot identify series name/year; specify '
+                                 f'with --import-series')
+                    exit(1)
     else:
         series_info = SeriesInfo(args.revert_series[1], args.revert_series[2])
         archive = pp.source_directory / series_info.full_clean_name
