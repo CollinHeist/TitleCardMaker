@@ -221,6 +221,7 @@ def first_run():
 def read_update_list():
     # If the file doesn't exist (nothing to parse), exit
     if not args.tautulli_list.exists():
+        log.debug(f'Update list does not exist')
         return None
 
     # Re-read preferences
