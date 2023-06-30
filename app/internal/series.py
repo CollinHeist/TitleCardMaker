@@ -9,6 +9,8 @@ from sqlalchemy.orm import Session
 
 from app.dependencies import *
 import app.models as models
+from app.models.episode import Episode
+from app.schemas.blueprint import Blueprint
 from app.schemas.preferences import MediaServer, Preferences
 from app.schemas.series import Series
 
@@ -18,6 +20,7 @@ from modules.ImageMagickInterface import ImageMagickInterface
 from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
+from modules.TieredSettings import TieredSettings
 from modules.TMDbInterface2 import TMDbInterface
 
 
@@ -416,3 +419,114 @@ def load_series_title_cards(
         log.info(f'{series.log_str} Loaded {len(loaded_assets)} Cards into {media_server}')
 
     return None
+
+
+def generate_series_blueprint(
+        series: Series,
+        include_global_defaults: bool,
+        include_episode_overrides: bool,
+        preferences: Preferences
+    ) -> Blueprint:
+    """
+    Generate the Blueprint for the given Series. This Blueprint can be
+    imported to completely recreate a Series' (and all associated
+    Episodes') configuration. 
+
+    Args:
+        series: Series to generate the Blueprint of.
+        include_global_defaults: Whether to write global settings if the
+            Series has no corresponding override, primarily for the
+            card type.
+        include_episode_overrides: Whether to include Episode-level
+            overrides in the exported Blueprint. If True, then any
+            Episode Font and Template assignments are also included.
+        preferences: Global default Preferences.
+
+    Returns:
+        Blueprint that can be used to recreate the Series configuration.
+    """
+
+    # Get all Episodes if indicates
+    episodes: list[Episode] = series.episodes if include_episode_overrides else []
+
+    # Get all Templates
+    templates = list(set(
+        template for obj in [series] + episodes for template in obj.templates
+    ))
+
+    # Get all associated Fonts
+    fonts = list(set(
+        obj.font for obj in [series] + episodes + templates if obj.font
+    ))
+
+    # Create exported JSON object
+    export_obj = {'series': {}, 'episodes': {}, 'templates': [], 'fonts': []}
+
+    # Append Series config
+    if include_global_defaults:
+        export_obj['series'] =TieredSettings.new_settings(
+            preferences.export_properties,
+            series.export_properties,
+        )
+    else:
+        export_obj['series'] = series.export_properties
+    export_obj['series'] =  TieredSettings.filter(export_obj['series'])
+
+    # Add Episode configs
+    for episode in episodes:
+        # Skip Episodes with no customization
+        key = f's{episode.season_number}e{episode.episode_number}'
+        episode_properties =  TieredSettings.filter(episode.export_properties)
+        if not episode_properties:
+            continue
+
+        export_obj['episodes'][key] = episode_properties
+        # Assign Template indices
+        export_obj['episodes'][key]['template_ids'] = [
+            templates.index(template) for template in episode.templates
+        ]
+        # Assign Font index
+        if episode.font:
+            export_obj['episodes'][key]['font_id'] = fonts.index(episode.font)
+
+    # Assign correct Template indices to Series
+    export_obj['series']['template_ids'] = [
+        templates.index(template) for template in series.templates
+    ]
+
+    # Assign correct Font index to Series
+    if series.font:
+        export_obj['series']['font_id'] = fonts.index(series.font)
+
+    # Add list of exported Templates
+    export_obj['templates'] = [
+        {key: value for key, value in template.export_properties.items() if value}
+        for template in templates
+    ]
+
+    # Add list of exported Fonts
+    export_obj['fonts'] = [
+        {key: value for key, value in font.export_properties.items() if value}
+        for font in fonts
+    ]
+
+    # Add Font IDs to Templates if indicated
+    for index, template in enumerate(templates):
+        if template.font:
+            export_obj['templates'][index]['font_id'] = fonts.index(template.font)
+
+    return export_obj
+
+
+def import_blueprint(
+        db: Session,
+        series: Series,
+        blueprint: Blueprint,
+    ) -> Series:
+    """
+
+    """
+
+    # Import Fonts
+    for font in blueprint.fonts:
+        ...
