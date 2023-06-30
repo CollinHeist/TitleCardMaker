@@ -30,7 +30,6 @@ class Translation(Base):
     data_key: DictKey
 
 class BaseConfig(Base):
-    name: Optional[str] = Field(..., min_length=1)
     font_id: Optional[int] = Field(
         default=None,
         title='Font ID',
@@ -85,11 +84,6 @@ class BaseSeries(BaseConfig):
     match_titles: bool = Field(default=True)
     translations: Optional[list[Translation]] = Field(default=None)
 
-    font_id: Optional[int] = Field(
-        default=None,
-        title='Font ID',
-        description='ID of the Font applied to this series',
-    )
     font_color: Optional[str] = Field(default=None)
     font_title_case: Optional[TitleCase] = Field(default=None)
     font_size: Optional[float] = Field(default=None)
