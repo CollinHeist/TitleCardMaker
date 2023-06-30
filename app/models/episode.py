@@ -132,6 +132,7 @@ class Episode(Base):
             'episode_text': self.episode_text,
             'unwatched_style': self.unwatched_style,
             'watched_style': self.watched_style,
+            'font_id': self.font_id,
             'font_color': self.font_color,
             'font_size': self.font_size,
             'font_kerning': self.font_kerning,

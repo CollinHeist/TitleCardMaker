@@ -185,8 +185,6 @@ class Series(Base):
             'season_title_values': None if self.season_titles is None else list(self.season_titles.values()),
             'hide_episode_text': self.hide_episode_text,
             'episode_text_format': self.episode_text_format,
-            'unwatched_style': self.unwatched_style,
-            'watched_style': self.watched_style,
             'extra_keys': None if self.extras is None else list(self.extras.keys()),
             'extra_values': None if self.extras is None else list(self.extras.values()),
             'translations': self.translations,
