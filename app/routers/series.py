@@ -333,6 +333,40 @@ def export_series_blueprint(
         series, include_global_defaults, include_episode_overrides, preferences,
     )
 
+
+@series_router.get('/{series_id}/blueprint/files', status_code=200, tags=['Blueprints'])
+def export_series_blueprint_files(
+        series_id: int,
+        include_episode_overrides: bool = Query(default=True),
+        db: Session = Depends(get_database),
+    ) -> list[str]:
+    """
+    Get the URI's to the associated Blueprint's Font files so they can
+    be downloaded.
+
+    - series_id: ID of the Series to export the Blueprint of.
+    - include_episode_overrides: Whether to include Episode-level
+    overrides. If True, then any Episode Font are also included.
+    """
+
+    # Query for this Series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Get all Episodes if indicates
+    episodes = series.episodes if include_episode_overrides else []
+
+    # Get all Templates
+    templates = list(set(
+        template for obj in [series] + episodes for template in obj.templates
+    ))
+
+    return [
+        f'/assets/fonts/{font.id}/{Path(font.file).name}'
+        for font in set(obj.font for obj in [series] + episodes + templates
+                        if obj.font)
+    ]
+
+
 @series_router.post('/{series_id}/toggle-monitor', status_code=201)
 def toggle_series_monitored_status(
         series_id: int,
