@@ -834,11 +834,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             elif entry.type == 'season':
                 # Get series associated with this season
                 series = self.__server.fetchItem(entry.parentKey)
-                if series.year is None:
-                    raise ValueError
-
+                assert series.year is not None
                 series_info = self.info_set.get_series_info(
-                    entry.parentTitle, entry.year
+                    series.title, series.year
                 )
 
                 return [
@@ -852,7 +850,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 series = self.__server.fetchItem(entry.grandparentKey)
                 assert series.year is not None
                 series_info = self.info_set.get_series_info(
-                    entry.grandparentTitle, series.year
+                    series.title, series.year
                 )
 
                 return [(
