@@ -333,6 +333,14 @@ class Preferences:
         }
     
     @property
+    def export_properties(self) -> dict:
+        return {
+            'card_type': self.default_card_type,
+            'watched_style': self.default_watched_style,
+            'unwatched_style': self.default_unwatched_style,
+        }
+    
+    @property
     def card_dimensions(self) -> str:
         return f'{self.card_width}x{self.card_height}'
 

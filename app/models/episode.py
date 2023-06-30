@@ -120,7 +120,26 @@ class Episode(Base):
             'episode_tvdb_id': self.tvdb_id,
             'episode_tvrage_id': self.tvrage_id,
             **self.as_episode_info.characteristics,
-        } 
+        }
+    
+    @hybrid_property
+    def export_properties(self) -> dict[str, Any]:
+        return {
+            'card_type': self.card_type,
+            'hide_season_text': self.hide_season_text,
+            'season_text': self.season_text,
+            'hide_episode_text': self.hide_episode_text,
+            'episode_text': self.episode_text,
+            'unwatched_style': self.unwatched_style,
+            'watched_style': self.watched_style,
+            'font_color': self.font_color,
+            'font_size': self.font_size,
+            'font_kerning': self.font_kerning,
+            'font_stroke_width': self.font_stroke_width,
+            'font_interline_spacing': self.font_interline_spacing,
+            'font_vertical_shift': self.font_vertical_shift,
+            'extras': self.extras,
+        }
 
 
     @hybrid_property

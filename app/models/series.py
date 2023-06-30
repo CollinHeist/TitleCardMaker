@@ -168,6 +168,29 @@ class Series(Base):
             'series_tvdb_id': self.tvdb_id,
             'series_tvrage_id': self.tvrage_id,
         }
+    
+    @hybrid_property
+    def export_properties(self) -> dict[str, Any]:
+        return {
+            'font_color': self.font_color,
+            'font_title_case': self.font_title_case,
+            'font_size': self.font_size,
+            'font_kerning': self.font_kerning,
+            'font_stroke_width': self.font_stroke_width,
+            'font_interline_spacing': self.font_interline_spacing,
+            'font_vertical_shift': self.font_vertical_shift,
+            'card_type': self.card_type,
+            'hide_season_text': self.hide_season_text,
+            'season_title_ranges': None if self.season_titles is None else list(self.season_titles.keys()),
+            'season_title_values': None if self.season_titles is None else list(self.season_titles.values()),
+            'hide_episode_text': self.hide_episode_text,
+            'episode_text_format': self.episode_text_format,
+            'unwatched_style': self.unwatched_style,
+            'watched_style': self.watched_style,
+            'extra_keys': None if self.extras is None else list(self.extras.keys()),
+            'extra_values': None if self.extras is None else list(self.extras.values()),
+            'translations': self.translations,
+        }
 
     @hybrid_property
     def image_source_properties(self) -> dict[str, Any]:

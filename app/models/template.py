@@ -131,6 +131,23 @@ class Template(Base):
             'watched_style': self.watched_style,
             'extras': self.extras,
         }
+    
+    @hybrid_property
+    def export_properties(self) -> dict[str, Any]:
+        return {
+            'name': self.name,
+            'filters': self.filters,
+            'card_type': self.card_type,
+            'hide_season_text': self.hide_season_text,
+            'season_title_ranges': None if self.season_titles is None else list(self.season_titles.keys()),
+            'season_title_values': None if self.season_titles is None else list(self.season_titles.values()),
+            'hide_episode_text': self.hide_episode_text,
+            'episode_text_format': self.episode_text_format,
+            'unwatched_style': self.unwatched_style,
+            'watched_style': self.watched_style,
+            'extra_keys': None if self.extras is None else list(self.extras.keys()),
+            'extra_values': None if self.extras is None else list(self.extras.values()),
+        }
 
     @hybrid_property
     def image_source_properties(self) -> dict[str, bool]:
@@ -141,9 +158,9 @@ class Template(Base):
     
     @hybrid_method
     def meets_filter_criteria(self,
-            preferences: 'Preferences',
-            series: 'Series',
-            episode: Optional['Episode'] = None
+            preferences: 'Preferences',                                         # type: ignore
+            series: 'Series',                                                   # type: ignore
+            episode: Optional['Episode'] = None                                 # type: ignore
         ) -> bool:
         """
         Determine whether the given Series and Episode meet this
