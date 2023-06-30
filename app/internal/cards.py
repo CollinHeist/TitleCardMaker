@@ -10,10 +10,11 @@ from sqlalchemy.orm import Query, Session
 from app.dependencies import *
 from app.internal.templates import get_effective_templates
 import app.models as models
+from app.models.episode import Episode
 from app.schemas.font import DefaultFont
 from app.schemas.card import NewTitleCard, TitleCard
 from app.schemas.card_type import LocalCardTypeModels
-from app.schemas.episode import Episode
+# from app.schemas.episode import Episode
 from app.schemas.preferences import Preferences
 from app.schemas.series import Series
 from modules.BaseCardType import BaseCardType
@@ -403,12 +404,26 @@ def resolve_card_settings(
         card_settings['blur'] = False
         card_settings['grayscale'] = False 
     
-    # Add source and output keys
-    card_settings['source_file'] = episode.get_source_file(
-        preferences.source_directory,
-        series.path_safe_name,
-        card_settings['watched_style' if watched else 'unwatched_style'],
-    )
+    # Add source file
+    if card_settings.get('source_file', None) is None:
+        card_settings['source_file'] = episode.get_source_file(
+            preferences.source_directory,
+            series.path_safe_name,
+            card_settings['watched_style' if watched else 'unwatched_style'],
+        )
+    else:
+        try:
+            card_settings['source_file'] = preferences.source_directory \
+                / series.path_safe_name \
+                / card_settings['source_file'].format(**card_settings)
+        except KeyError as e:
+            log.exception(f'{series.log_str} {episode.log_str} Source File '
+                            f'Format is invalid - {e}', e)
+            raise HTTPException(
+                status_code=400,
+                detail=f'Cannot create Card - invalid source file format, '
+                        f'missing data {e}',
+            )
 
     # Exit if the source file does not exist
     if (CardClass.USES_UNIQUE_SOURCES
