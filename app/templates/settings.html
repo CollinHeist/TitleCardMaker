@@ -144,8 +144,9 @@
           {% if preferences.available_version is not none and preferences.available_version != preferences.current_version %}
           <div class="ui floating compact info message">
             <i class="info circle icon"></i>
-            A new version of TitleCardMaker (<a href="https://github.com/CollinHeist/TitleCardMaker/releases/tag/{{preferences.available_version}}" target="_blank">{{preferences.available_version}}</a>) is available (currently on {{preferences.current_version}}).
+            A new version of TitleCardMaker (<a href="https://github.com/CollinHeist/TitleCardMaker/releases/tag/{{preferences.available_version}}" target="_blank">{{preferences.available_version}}</a>) is available.
           </div>
+          <br>
           {% endif %}
 
           <form id="settings-form" class="ui fluid form">
