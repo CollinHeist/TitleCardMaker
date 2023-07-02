@@ -54,7 +54,7 @@ class PreferenceParser(YamlReader):
     VERSION_FILE = Path(__file__).parent / 'ref' / 'version'
 
 
-    def __init__(self, file: Path, is_docker: bool=False) -> None:
+    def __init__(self, file: Path, is_docker: bool = False) -> None:
         """
         Constructs a new instance of this object. This reads the given
         file, errors and exits if any required options are missing, and
