@@ -1,9 +1,12 @@
+from datetime import datetime
 from logging import (
     DEBUG, INFO, WARNING, ERROR, CRITICAL,
     Logger, Formatter, LoggerAdapter, getLogger, setLoggerClass, StreamHandler
 )
 from logging.handlers import TimedRotatingFileHandler
+from os import environ
 from pathlib import Path
+from pytz import timezone
 from random import choices as random_choices
 from string import hexdigits
 from typing import Optional
@@ -26,9 +29,13 @@ TQDM_KWARGS = {
 LOG_FILE = Path(__file__).parent.parent / 'logs' / 'maker.log'
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
-# Logger class that overrides exception calls to log message as error, and then
-# traceback as debug level of the exception only
+
 class BetterExceptionLogger(Logger):
+    """
+    Logger class that overrides `Logger.exception` to log as
+    `Logger.error`, and then print the traceback at the debug level.
+    """
+
     def exception(self, msg: object, excpt: Exception, *args, **kwargs) -> None:
         super().error(msg, *args, **kwargs)
         super().debug(excpt, exc_info=True)
@@ -44,18 +51,53 @@ class LogHandler(StreamHandler):
         except Exception:
             self.handleError(record)
 
-# Formatter classes to handle exceptions
+
+# Get local timezone
+tz = None
+if environ.get('TCM_IS_DOCKER', False) and environ.get('TZ', None) is not None:
+    tz = timezone(environ.get('TZ'))
+
+
+class Formatter(Formatter):
+    """
+    Overwrite the Formatter class to write the localized time on all log
+    messages.
+    """
+    
+    def formatTime(self, record, datefmt=None):
+        dt = datetime.fromtimestamp(record.created, tz)
+        if datefmt:
+            return dt.strftime(datefmt)
+        else:
+            return str(dt)
+
+
 class ErrorFormatterColor(Formatter):
+    """
+    Formatter class to handle exception traceback printing with color.
+    """
+
     def formatException(self, ei) -> str:
         return f'\x1b[1;30m[TRACEBACK] {super().formatException(ei)}\x1b[0m'
 
+
 class ErrorFormatterNoColor(Formatter):
+    """
+    Formatter class to handle exception traceback printing without
+    color.
+    """
+    
     def formatException(self, ei) -> str:
         return f'[TRACEBACK] {super().formatException(ei)}'
 
-# Formatter class containing ErrorFormatterColor objects instantiated with
-# different format strings for various colors depending on the log level
+
 class LogFormatterColor(Formatter):
+    """
+    Formatter containing ErrorFormatterColor objects instantiated with
+    different format strings for various colors depending on the log
+    level.
+    """
+
     """Color codes"""
     GRAY =     '\x1b[1;30m'
     CYAN =     '\033[96m'
@@ -76,6 +118,7 @@ class LogFormatterColor(Formatter):
 
     def format(self, record):
         return self.LEVEL_FORMATS[record.levelno].format(record)
+
 
 class LogFormatterNoColor(Formatter):
     FORMATTER = ErrorFormatterNoColor('[%(levelname)s] %(message)s')
