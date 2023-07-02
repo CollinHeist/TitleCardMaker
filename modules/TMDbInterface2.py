@@ -238,7 +238,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
                     'query': query_type,
                     'series': series_info.full_name,
                     'failures': 1,
-                    'next': later,    
+                    'next': later,
                 }, condition)
             else:
                 self.__blacklist.upsert({
@@ -717,9 +717,10 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     @catch_and_log('Error getting all source images', default=None)
     def get_all_source_images(self,
             series_info: SeriesInfo,
-            episode_info: EpisodeInfo, *,
+            episode_info: EpisodeInfo,
+            *,
             match_title: bool = True,
-            bypass_blacklist: bool = False, 
+            bypass_blacklist: bool = False,
             log: Logger = log,
         ) -> Optional[list[TMDbStill]]:
         """
@@ -758,8 +759,10 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             )
 
         # Episode found on TMDb, get images/backdrops based on episode/movie
-        if hasattr(episode, 'stills'): images = episode.stills
-        else: images = episode.backdrops
+        if hasattr(episode, 'stills'):
+            images = episode.stills
+        else:
+            images = episode.backdrops
 
         return images
 
@@ -829,7 +832,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def __is_generic_title(self,
             title: str,
             language_code: str,
-            episode_info: EpisodeInfo
+            episode_info: EpisodeInfo,
         ) -> bool:
         """
         Determine whether the given title is a generic translation of
@@ -865,7 +868,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
             language_code: str = 'en-US',
-            bypass_blacklist: bool = False, *,
+            bypass_blacklist: bool = False,
+            *,
             log: Logger = log,
         ) -> Optional[str]:
         """
@@ -911,7 +915,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
                     return None
 
                 return title
-            
+
         return None
 
 
@@ -983,7 +987,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
     @catch_and_log('Error setting series backdrop', default=None)
     def get_series_backdrop(self,
-            series_info: SeriesInfo, *,
+            series_info: SeriesInfo,
+            *,
             skip_localized_images: bool = False,
             raise_exc: bool = True
         ) -> Optional[str]:
