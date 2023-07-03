@@ -102,6 +102,7 @@ def resolve_source_settings(
         preferences: Preferences whose global style settings to use in
             Style resolution.
         episode: Episode being evaluated.
+        log: (Keyword) Logger for all log messages.
 
     Returns:
         Tuple of the effective Style and the Path to the source file for
@@ -124,8 +125,7 @@ def resolve_source_settings(
     unwatched_style = TieredSettings.resolve_singular_setting(
         preferences.default_unwatched_style,
         getattr(series_template, 'unwatched_style', None),
-        # getattr(series_template, 'extras', {}).get('unwatched_style', None),
-        series.watched_style,
+        series.unwatched_style,
         getattr(series.extras, 'unwatched_style', None),
         getattr(episode_template, 'unwatched_style', None),
         episode.unwatched_style,
