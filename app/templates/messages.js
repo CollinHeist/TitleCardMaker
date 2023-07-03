@@ -26,12 +26,16 @@ $(document).ready(() => {
     if (logs.length > 0) {
       for (let i = 0; i < 3 && logs.length > 0; i++) {
         setTimeout(() => {
+          // Get latest message, exit if none left
           const message = logs.shift();
+          if (message === undefined) { return; }
+
+          // Display toast of this message
           const isError = ['warning', 'error', 'critical'].includes(message.level);
           $.toast({
             class: isError ? 'right aligned red error' : 'right aligned blue info',
             message: message.message,
-            displayTime: 5000,
+            displayTime: isError ? 10000 : 5000,
             position: 'bottom right',
             showIcon: isError ? 'exclamation circle' : 'info circle',
             showProgress: 'top',
