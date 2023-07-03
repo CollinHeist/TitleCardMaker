@@ -16,32 +16,29 @@ $(document).ready(() => {
   async function getRecentLogs() {
     // Get last 30sec of logs
     const last30s = encodeURIComponent(dateToISO8601(new Date(Date.now() - 1  * 1000 * 30)));
-    const allMessages = await fetch(`/api/logs/query?page=1&after=${last30s}&level=info`).then(resp => resp.json());
+    const now = encodeURIComponent(dateToISO8601(new Date()));
+    const allMessages = await fetch(`/api/logs/query?page=1&after=${last30s}&before=${now}&level=info`).then(resp => resp.json());
     // Add to list of logs to display, limit to 60 messages
     logs = logs.concat(allMessages.items).slice(undefined, 60);
   }
 
   // Display the oldest pending log
   function displayLogs() {
-    if (logs.length > 0) {
-      for (let i = 0; i < 3 && logs.length > 0; i++) {
-        setTimeout(() => {
-          // Get latest message, exit if none left
-          const message = logs.shift();
-          if (message === undefined) { return; }
+    if (logs.length > 0 || document.getElementsByClassName('toast').length > 3) {
+      // Get latest message, exit if none left
+      const message = logs.shift();
+      if (message === undefined) { return; }
 
-          // Display toast of this message
-          const isError = ['warning', 'error', 'critical'].includes(message.level);
-          $.toast({
-            class: isError ? 'right aligned red error' : 'right aligned blue info',
-            message: message.message,
-            displayTime: isError ? 10000 : 5000,
-            position: 'bottom right',
-            showIcon: isError ? 'exclamation circle' : 'info circle',
-            showProgress: 'top',
-          });
-        }, 500 * i);
-      }
+      // Display toast of this message
+      const isError = ['warning', 'error', 'critical'].includes(message.level);
+      $.toast({
+        class: isError ? 'right aligned red error' : 'right aligned blue info',
+        message: message.message,
+        displayTime: 5000,
+        position: 'bottom right',
+        showIcon: isError ? 'exclamation circle' : 'info circle',
+        showProgress: 'top',
+      });
     }
   }
 
