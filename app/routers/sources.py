@@ -106,7 +106,7 @@ def download_series_backdrop(
             series.as_series_info,
             # TODO skip localized images
         )
-        if WebInterface.download_image(backdrop, backdrop_file):
+        if WebInterface.download_image(backdrop, backdrop_file, log=log):
             log.debug(f'{series.log_str} Downloaded {backdrop_file.resolve()} from TMDb')
             return f'/source/{series.path_safe_name}/backdrop.jpg'
         else:

@@ -68,7 +68,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         super().__init__(filesize_limit)
 
         # Create Session for caching HTTP responses
-        self.__session = WebInterface('Plex', verify_ssl).session
+        self.__session = WebInterface('Plex', verify_ssl, log=log).session
 
         # Create PlexServer object with these arguments
         try:
@@ -328,7 +328,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     @catch_and_log('Error getting all episodes', default=[])
     def get_all_episodes(self,
             library_name: str,
-            series_info: SeriesInfo, *,
+            series_info: SeriesInfo,
+            *,
             log: Logger = log,
         ) -> list[tuple[EpisodeInfo, bool]]:
         """
@@ -705,7 +706,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def load_season_posters(self,
             library_name: str,
             series_info: SeriesInfo,
-            season_poster_set: 'SeasonPosterSet',
+            season_poster_set: 'SeasonPosterSet',                               # type: ignore
             *,
             log: Logger = log,
         ) -> None:

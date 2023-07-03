@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from logging import Logger
 from tinydb import Query, where
-from typing import Any, Literal, Optional, Union
+from typing import Any, Callable, Literal, Optional, Union
 
 from fastapi import HTTPException
 from tmdbapis import TMDbAPIs, NotFound, Unauthorized, TMDbException
@@ -107,7 +107,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             api_key: The API key to communicate with TMDb.
         """
 
-        super().__init__('TMDb')
+        super().__init__('TMDb', log=log)
 
         # Store attributes
         self.minimum_source_width = minimum_source_width
@@ -137,8 +137,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
     def catch_and_log(
             message: str,
-            log_func=log.error, *,
-            default=None
+            log_func: Callable[[str], None]=log.error, *,
+            default: Any = None
         ) -> callable:
         """
         Return a decorator that logs (with the given log function) the
@@ -155,7 +155,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             Wrapped decorator that returns a wrapped callable.
         """
 
-        def decorator(function: callable) -> callable:
+        def decorator(function: Callable) -> Callable:
             def inner(*args, **kwargs):
                 try:
                     return function(*args, **kwargs)

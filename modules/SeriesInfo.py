@@ -247,7 +247,7 @@ class SeriesInfo(DatabaseInfoContainer):
     
 
     def filter_conditions(self,
-            SeriesModel: 'sqlachemy.Model' # type: ignore
+            SeriesModel: 'sqlachemy.Model'                                      # type: ignore
         ) -> Query:
         """
         Get the SQLAlchemy Query condition for this object.

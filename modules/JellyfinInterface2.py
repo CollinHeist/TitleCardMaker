@@ -58,7 +58,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         super().__init__(filesize_limit)
 
         # Store attributes of this Interface
-        self.session = WebInterface('Jellyfin', verify_ssl)
+        self.session = WebInterface('Jellyfin', verify_ssl, log=log)
         self.url = url[:-1] if url.endswith('/') else url
         self.__params = {'api_key': api_key}
         self.username = username
