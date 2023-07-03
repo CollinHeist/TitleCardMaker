@@ -384,8 +384,7 @@ def resolve_card_settings(
                               f' Format is invalid - {e}', e)
                 raise HTTPException(
                     status_code=400,
-                    detail=f'Cannot create Card - invalid episode text format -'
-                           f'missing data {e}',
+                    detail=f'Invalid episode text format - missing data {e}',
                 )
 
     # Turn styles into boolean style toggles
