@@ -5,12 +5,13 @@ from fastapi import HTTPException
 from requests import get as req_get
 
 from modules.Debug import log
+from modules.Version import Version
 
 def get_latest_version(
         raise_exc: bool = True,
         *,
         log: Logger = log,
-    ) -> Optional[str]:
+    ) -> Optional[Version]:
     """
     Get the latest version of TitleCardMaker available.
 
@@ -20,14 +21,15 @@ def get_latest_version(
         log: (Keyword) Logger for all log messages.
 
     Returns:
-        The string version number of the latest release. If unable to
-        determine, and raise_exc is False, then None is returned.
+        The Version of the latest release. If unable to determine, and
+        `raise_exc` is False, None is returned.
 
     Raises:
         HTTPException (500) if raise_exc is True and the version number
             cannot be determined.
     """
-
+    # TODO remove placeholder when repo is public
+    return Version(f'v2.0-alpha.2.2')
     try:
         response = req_get(
             'https://api.github.com/repos/CollinHeist/'
@@ -43,4 +45,4 @@ def get_latest_version(
             )
         return None
     
-    return response.json().get('name', '').strip()
+    return Version(response.json().get('name', '').strip())
