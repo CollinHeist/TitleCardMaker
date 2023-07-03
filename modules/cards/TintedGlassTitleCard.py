@@ -66,7 +66,7 @@ class TintedGlassTitleCard(BaseCardType):
 
     """Default episode text format for this class"""
     EPISODE_TEXT_FORMAT = '{series_name} | S{season_number} E{episode_number}'
-    EPISODE_TEXT_COLOR = 'SlateGray1' #'rgb(247, 209, 148)'
+    EPISODE_TEXT_COLOR = 'SlateGray1'
     EPISODE_TEXT_FONT = SW_REF_DIRECTORY / 'HelveticaNeue-Bold.ttf'
 
     """Whether this CardType uses season titles for archival purposes"""
@@ -85,7 +85,7 @@ class TintedGlassTitleCard(BaseCardType):
     TEXT_BLUR_PROFILE = '0x6'
 
     __slots__ = (
-        'source', 'output_file', 'title_text', '__line_count', 'episode_text', 
+        'source', 'output_file', 'title_text', '__line_count', 'episode_text',
         'hide_episode_text', 'font_file', 'font_size', 'font_color',
         'font_interline_spacing', 'font_kerning', 'font_vertical_shift',
         'episode_text_color', 'episode_text_position', 'box_adjustments',
@@ -97,18 +97,18 @@ class TintedGlassTitleCard(BaseCardType):
             title_text: str,
             episode_text: str,
             hide_episode_text: bool = False,
-            font_color: str = TITLE_COLOR, 
+            font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
             font_kerning: float = 1.0,
-            font_size: float = 1.0, 
+            font_size: float = 1.0,
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
             episode_text_color: str = EPISODE_TEXT_COLOR,
             episode_text_position: Position = 'center',
             box_adjustments: str = None,
-            preferences: 'Preferences' = None,
+            preferences: Optional['Preferences'] = None,                        # type: ignore
             **unused
         ) -> None:
 
@@ -145,6 +145,7 @@ class TintedGlassTitleCard(BaseCardType):
 
         # Parse box adjustments
         self.box_adjustments = (0, 0, 0, 0)
+         # TODO DELETE
         if box_adjustments:
             # Verify adjustments are properly provided
             try:
@@ -261,7 +262,7 @@ class TintedGlassTitleCard(BaseCardType):
         x_start -= self.box_adjustments[3]
         x_end += self.box_adjustments[1]
         y_start -= self.box_adjustments[0]
-        y_end +=self.box_adjustments[2]
+        y_end += self.box_adjustments[2]
 
         return BoxCoordinates(x_start, y_start, x_end, y_end)
 
@@ -361,7 +362,7 @@ class TintedGlassTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool:                                   # type: ignore
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
