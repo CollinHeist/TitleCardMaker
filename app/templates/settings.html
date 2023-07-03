@@ -31,22 +31,6 @@
     h1 {
       cursor: pointer;
     }
-    #about {
-      animation-name: growFadeIn;
-      animation-duration: 0.4s; /* Change the duration as desired */
-      animation-fill-mode: forwards; /* Keeps the final state after the animation ends */
-      transform-origin: top; 
-    }
-    @keyframes growFadeIn {
-      from {
-        transform: scaleY(0);
-        opacity: 0;
-      }
-      to {
-        transform: scaleY(1);
-        opacity: 1;
-      }
-    }
 
     /* Excluded card types have reduced opacity, strikethrough and italic effects */
     #excluded-card-types .menu .active.item {
@@ -65,7 +49,7 @@
       width: 450px; /* 400px */
     }
     /* Wrap long descriptions with scrollbar */
-    #title-card-preview >* .content {
+    #title-card-preview .content {
       overflow: auto;
       max-height: 253px;
     }
@@ -76,7 +60,7 @@
         width: 100%;
         max-height: none;
       }
-      #title-card-preview >* .image {
+      #title-card-preview .image {
         width: 100%;
       }
     }
@@ -165,7 +149,7 @@
           {% if preferences.available_version is not none and preferences.available_version != preferences.current_version %}
           <div class="ui floating compact info message">
             <i class="info circle icon"></i>
-            A new version of TitleCardMaker (<a href="https://github.com/CollinHeist/TitleCardMaker/releases/tag/{{preferences.available_version}}" target="_blank">{{preferences.available_version}}</a>) is available.
+            A new version of TitleCardMaker ({{preferences.available_version}}) is available.
           </div>
           <br>
           {% endif %}
