@@ -41,7 +41,7 @@
     .add-field.button {
       background: transparent;
     }
-    
+
     /* Inine fields need to flex and align content in the middle of their div */
     #new-episode-form .inline.field {
       display: flex;
@@ -314,6 +314,29 @@
     <br>
   </template>
 
+  <template id="blueprint-template">
+    <div class="ui card">
+      <div class="image">
+        <img src="">
+      </div>
+      <div class="content">
+        <div data-value="creator" class="header">{author}</div>
+        <div class="meta">
+          <span data-value="font-count"><b>{x}</b> Named Font</span>
+          <span data-value="template-count"><b>{x}</b> Template</span>
+          <span data-value="episode-count"><b>{x}</b> Episode Overrides</span>
+        </div>
+        <div data-value="description" class="description"><!-- <p>Description</p> --></div>
+      </div>
+      <div class="extra content">
+        <a data-action="import-blueprint" class="left floated">
+          <i class="cloud download alternate icon"></i>
+          Import
+        </a>
+      </div>
+    </div>
+  </template>
+
   <template id="file-template">
     <div class="ui card">
       <div class="content">
@@ -537,6 +560,111 @@
           $('#add-translations > i').toggleClass('loading', false);
         }
       });
+    }
+
+    function importBlueprint(blueprint) {
+      // Submit API request to import blueprint
+      $.ajax({
+        type: 'PUT',
+        // url: `/api/blueprints/{{series.id}}/${blueprint.id}`,
+        url: '/api/blueprints/{{series.id}}/import',
+        contentType: 'application/json',
+        data: JSON.stringify(blueprint),
+        success: response => {
+          $.toast({class: 'blue info', title: 'Blueprint Imported'});
+        }, error: response => {
+          $.toast({
+            class: 'error',
+            title: 'Error Importing Blueprint',
+            message: response.responseJSON.detail,
+            displayTime: 0,
+          });
+        }, complete: () => {}
+      });
+      // Get any URL's for Fonts to download
+      let fontsToDownload = [];
+      blueprint.fonts.forEach(font => {
+        if (font.file_download_url) {
+          fontsToDownload.push(font.file_download_url);
+        }
+      });
+      // If any Fonts need downloaded, show toast
+      if (fontsToDownload.length > 0) {
+        $.toast({
+          class: 'blue info',
+          title: 'Font Files',
+          message: 'This Blueprint specifies Named Fonts that require manually downloaded files.',
+          displayTime: 0,
+          classActions: 'basic left',
+          actions: [
+            {
+              text: 'Open Pages',
+              click: () => {
+                fontsToDownload.forEach(url => window.open(url, '_blank'));
+              }
+            }, {
+              icon: 'ban',
+              class: 'icon red',
+              click: () => {
+                $.toast({
+                  class: 'error',
+                  message: 'Blueprint Fonts will not be correct if files are not downloaded',
+                  displayTime: 10000,
+                })
+              }
+            }
+          ],
+        });
+      }
+    }
+
+    async function queryBlueprints() {
+      // Get template
+      const blueprintCards = document.getElementById('blueprint-cards');
+      const blueprintTemplate = document.getElementById('blueprint-template');
+      if (blueprintCards === null || blueprintTemplate === null) { return; }
+      // Show loading message
+      $('.tab[data-tab="blueprints"] .info.message').toggleClass('hidden', false);
+      // Query for Blueprints
+      const allBlueprints = await fetch(`/api/blueprints/{{series.id}}/query`).then(resp => resp.json());
+      $('.tab[data-tab="blueprints"] .info.message').toggleClass('hidden', true);
+      // No blueprints available, hide loading and show warning message
+      if (allBlueprints === null || allBlueprints.length === 0) {
+        $('.tab[data-tab="blueprints"] .warning.message').toggleClass('hidden', false);
+        $('.tab[data-tab="blueprints"] .button').toggleClass('disabled', true);
+        return;
+      }
+      // Blueprints available, create cards
+      const blueprints = allBlueprints.map((blueprint, blueprintId) => {
+        // Clone template
+        const card = blueprintTemplate.content.cloneNode(true);
+        // Fill out card
+        card.querySelector('img').src = blueprint.preview;
+        card.querySelector('[data-value="creator"]').innerText = blueprint.creator;
+        if (blueprint.fonts.length === 0) {
+          card.querySelector('[data-value="font-count"]').remove();
+        } else {
+          let text = `<b>${blueprint.fonts.length}</b> Named Font` + (blueprint.fonts.length > 1 ? 's' : '');
+          card.querySelector('[data-value="font-count"]').innerHTML = text;
+        }
+        if (blueprint.templates.length === 0) {
+          card.querySelector('[data-value="template-count"]').remove();
+        } else {
+          let text = `<b>${blueprint.templates.length}</b> Template` + (blueprint.templates.length > 1 ? 's' : '');
+          card.querySelector('[data-value="template-count"]').innerHTML = text;
+        }
+        if (Object.keys(blueprint.episodes).length === 0) {
+          card.querySelector('[data-value="episode-count"]').remove();
+        } else {
+          let text = `<b>${Object.keys(blueprint.episodes).length}</b> Episode Override` + (blueprint.templates.length > 1 ? 's' : '');
+          card.querySelector('[data-value="episode-count"]').innerHTML = text;
+        }
+        card.querySelector('[data-value="description"]').innerHTML = '<p>' + blueprint.description.join('</p><p>') + '</p>';
+        // Assign import to button
+        card.querySelector('a[data-action="import-blueprint"]').onclick = () => importBlueprint(blueprint);
+        return card;
+      });
+      blueprintCards.replaceChildren(...blueprints);
     }
 
     function selectTmdbImage(episodeId, url) {
@@ -1409,6 +1537,7 @@
           <div class="ui top attached stackable tabular menu">
             <a class="item active" data-tab="configuration">Configuration</a>
             <a class="item" data-tab="card-config">Card Configuration</a>
+            <a class="item" data-tab="blueprints">Blueprints</a>
             <a class="item" data-tab="episode-data">Episode Data</a>
             <a class="item" data-tab="files">Files</a>
             <a class="item" data-tab="database-ids">Database ID's</a>
@@ -1819,6 +1948,31 @@
                 </form>
               </div>
             </div>
+          </div>
+
+          <!-- Blueprints Tab -->
+          <div class="ui bottom attached tab segment" data-tab="blueprints">
+            <button onclick="queryBlueprints();" class="ui green tertiary button">
+              <i class="ui search icon"></i>
+              Search for Blueprints
+            </button>
+            <div class="ui floating hidden info icon message">
+              <i class="blue notched circle loading icon"></i>
+              <div class="content">
+                <div class="header">Searching for Blueprints</div>
+                <p>This may take a moment.</p>
+              </div>
+            </div>
+            <div class="ui floating hidden warning icon message">
+              <i class="exclamation icon"></i>
+              <div class="content">
+                <div class="header">No Blueprints Available</div>
+                <p>There are no Blueprints available on <a href="https://github.com/CollinHeist/TitleCardMaker-Blueprints/" target="_blank">GitHub</a>.</p>
+              </div>
+            </div>
+            <br>
+            <div id="blueprint-cards" class="ui two stackable raised cards"><!-- Added asynchrously --></div>
+            <br>
           </div>
 
           <!-- Episode Data Tab -->
