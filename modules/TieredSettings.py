@@ -61,6 +61,13 @@ class TieredSettings:
     
 
     @staticmethod
+    def filter(settings: dict[str, Any]) -> dict[str, Any]:
+        return {
+            key: value for key, value in settings.items() if value is not None
+        }
+    
+
+    @staticmethod
     def resolve_singular_setting(*values: Any) -> Any:
         """
         Get the highest priority (non-None) value of the given values.
