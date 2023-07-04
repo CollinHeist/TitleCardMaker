@@ -294,6 +294,10 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             log: (Keyword) Logger for all log messages.
         """
 
+        # If all possible ID's are defined
+        if series_info.has_ids(*self.SERIES_IDS):
+            return None
+
         # Find series 
         series = self.__get_series_id(
             library_name, series_info, raw_obj=True, log=log
