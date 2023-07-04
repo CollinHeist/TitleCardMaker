@@ -1,4 +1,6 @@
 from logging import Logger
+from re import compile as re_compile, IGNORECASE
+
 from fastapi import HTTPException
 from requests import get, JSONDecodeError
 from sqlalchemy.orm import Session
@@ -7,11 +9,19 @@ from app.models.episode import Episode
 from app.models.font import Font
 from app.models.preferences import Preferences
 from app.models.series import Series
+from app.models.template import Template
 from app.schemas.blueprint import Blueprint, RemoteBlueprint
+from app.schemas.font import NewNamedFont
+from app.schemas.series import NewTemplate, UpdateSeries
 
 from modules.Debug import log
 from modules.TieredSettings import TieredSettings
 
+
+EPISODE_REGEX = re_compile(
+    r'^s(?P<season_number>\d+)e(?P<episode_number>\d+)$',
+    IGNORECASE
+)
 
 BLUEPRINT_URL = (
     'https://github.com/CollinHeist/TitleCardMaker-Blueprints/'
@@ -176,13 +186,124 @@ def query_series_blueprints(
 
 def import_blueprint(
         db: Session,
+        preferences: Preferences,
         series: Series,
         blueprint: Blueprint,
+        *,
+        log: Logger = log,
     ) -> Series:
     """
 
     """
 
+    # Get subfolder for this Series
+    blueprint_folder = (
+        f'{BLUEPRINT_URL}/{series.sort_name.upper()[0]}/{series.full_name}/'
+        f'{blueprint.id}'
+    )
+
     # Import Fonts
-    for font in blueprint.fonts:
+    font_map: dict[int, Font] = {}
+    for font_id, font in enumerate(blueprint.fonts):
+        # TODO See if this Font matches an existing one?
+        # This Font has a file that can be directly downloaded
+        font_content = None
+        if getattr(font, 'file', None) is not None:
+            file_url = f'{blueprint_folder}/{font.file}'
+            response = get(file_url)
+            if response.status_code == 404:
+                log.error(f'Specified Font file does not exist at "{file_url}"')
+                raise HTTPException(
+                    status_code=404,
+                    detail=f'Blueprint Font file not found',
+                )
+            font_content = response.content
+
+        # Create new Font model, add to database and store in map
+        new_font = Font(**NewNamedFont(**font.dict()).dict())
+        font_map[font_id] = new_font
+        db.add(new_font)
+        db.commit()
+        log.info(f'Created Named Font "{new_font.name}"')
+
+        # Download Font file if provided
+        if font_content:
+            font_directory = preferences.asset_directory / 'fonts'
+            file_path = font_directory / str(new_font.id) / font.file
+            file_path.parent.mkdir(exist_ok=True, parents=True)
+            file_path.write_bytes(font_content)
+            log.info(f'{new_font.log_str} Downloaded File "{font.file}"')
+
+            # Update object and database
+            new_font.file = str(file_path)
+
+    # Commit Fonts to database so Font objects have ID's
+    if font_map:
+        db.commit()
+
+    # Import Templates
+    template_map: dict[int, Template] = {}
+    for template_id, template in enumerate(blueprint.templates):
+        # TODO see if this Template matches an existing one
+        # Update Font ID from Font map if indicated
+        if template.font_id is not None:
+            template.font_id = font_map[template.font_id].id
+
+        # Create new Template model, add to database and store in map
+        new_template = Template(**NewTemplate(**template.dict()).dict())
+        template_map[template_id] = new_template
+        db.add(new_template)
+        log.info(f'Created Template "{template.name}"')
+
+    # Commit Templates to database so Template objects have ID's
+    if template_map:
+        db.commit()
+
+    # Assign updated Fonts and Templates to Series
+    changed = False
+    series_blueprint = blueprint.series.dict()
+    if (new_font_id := series_blueprint.pop('font_id', None)) is not None:
+        log.debug(f'Series[{series.id}].font_id = {font_map[new_font_id].id}')
+        series.font = font_map[new_font_id]
+        changed = True
+
+    if (new_template_ids := series_blueprint.pop('template_ids', [])):
+        template_ids = [template_map[id_].id for id_ in new_template_ids]
+        log.debug(f'Series[{series.id}].template_ids = {template_ids}')
+        series.templates = [template_map[id_] for id_ in new_template_ids]
+        changed = True
+
+    # Update each attribute of the Series object based on import
+    update_series = UpdateSeries(**series_blueprint)
+    for attr, value in update_series.dict().items():
+        if getattr(series, attr) != value:
+            log.debug(f'Series[{series.id}].{attr} = {value}')
+            setattr(series, attr, value)
+            changed = True
+
+    # Import Episode overrides
+    for episode_key, episode_blueprint in blueprint.episodes.items():
+        # Identify indices for this override
+        if (indices := EPISODE_REGEX.match(episode_key)) is None:
+            log.error(f'Cannot identify index of Episode override "{episode_key}"')
+            continue
+
+        # Try and find Episode with this index
+        indices = indices.groupdict()
+        episode = db.query(Episode)\
+            .filter(Episode.season_number==indices['season_number'],
+                    Episode.episode_number==indices['episode_number'])\
+            .first()
+        
+        # Episode not found, skip
+        if episode is None:
+            log.warning(f'Cannot find matching Episode for override "{episode_key}"')
+            continue
+
+        # Episode found, update attributes
         ...
+
+    if changed:
+        db.commit()
+
+    return series

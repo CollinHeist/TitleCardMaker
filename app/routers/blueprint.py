@@ -103,3 +103,21 @@ def import_series_blueprint_by_id(
     ) -> None:
 
     ...
+
+
+@blueprint_router.put('/{series_id}/import', status_code=200)
+def import_series_blueprint_(
+        request: Request,
+        series_id: int,
+        blueprint: RemoteBlueprint = Body(...),
+        db: Session = Depends(get_database),
+        preferences: Preferences = Depends(get_preferences)
+    ) -> None:
+    """
+    
+    """    
+
+    # Query for this Series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    import_blueprint(db, preferences, series, blueprint, log=request.state.log)
