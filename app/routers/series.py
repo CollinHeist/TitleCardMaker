@@ -16,16 +16,14 @@ from app.database.query import get_all_templates, get_font, get_series
 import app.models as models
 from app.internal.cards import refresh_remote_card_types
 from app.internal.series import (
-    delete_series_and_episodes, download_series_poster, generate_series_blueprint, load_series_title_cards,
-    set_series_database_ids
+    delete_series_and_episodes, download_series_poster, load_series_title_cards,
+    set_series_database_ids,
 )
 from app.internal.sources import download_series_logo
 from app.schemas.base import UNSPECIFIED
-from app.schemas.blueprint import Blueprint
 from app.schemas.preferences import MediaServer
 from app.schemas.series import NewSeries, Series, UpdateSeries
 
-from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
 from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
@@ -303,68 +301,6 @@ def update_series(
     refresh_remote_card_types(db, log=log)
     
     return series
-
-
-@series_router.get('/{series_id}/blueprint/export', status_code=200, tags=['Blueprints'])
-def export_series_blueprint(
-        series_id: int,
-        include_global_defaults: bool = Query(default=True),
-        include_episode_overrides: bool = Query(default=True),
-        db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences),
-    ) -> Blueprint:
-    """
-    Generate the Blueprint for the given Series. This Blueprint can be
-    imported to completely recreate a Series' (and all associated
-    Episodes') configuration. 
-
-    - series_id: ID of the Series to export the Blueprint of.
-    - include_global_defaults: Whether to write global settings if the
-    Series has no corresponding override, primarily for the card type.
-    - include_episode_overrides: Whether to include Episode-level
-    overrides in the exported Blueprint. If True, then any Episode Font
-    and Template assignments are also included.
-    """
-
-    # Query for this Series, raise 404 if DNE
-    series = get_series(db, series_id, raise_exc=True)
-
-    return generate_series_blueprint(
-        series, include_global_defaults, include_episode_overrides, preferences,
-    )
-
-
-@series_router.get('/{series_id}/blueprint/files', status_code=200, tags=['Blueprints'])
-def export_series_blueprint_files(
-        series_id: int,
-        include_episode_overrides: bool = Query(default=True),
-        db: Session = Depends(get_database),
-    ) -> list[str]:
-    """
-    Get the URI's to the associated Blueprint's Font files so they can
-    be downloaded.
-
-    - series_id: ID of the Series to export the Blueprint of.
-    - include_episode_overrides: Whether to include Episode-level
-    overrides. If True, then any Episode Font are also included.
-    """
-
-    # Query for this Series, raise 404 if DNE
-    series = get_series(db, series_id, raise_exc=True)
-
-    # Get all Episodes if indicates
-    episodes = series.episodes if include_episode_overrides else []
-
-    # Get all Templates
-    templates = list(set(
-        template for obj in [series] + episodes for template in obj.templates
-    ))
-
-    return [
-        f'/assets/fonts/{font.id}/{Path(font.file).name}'
-        for font in set(obj.font for obj in [series] + episodes + templates
-                        if obj.font)
-    ]
 
 
 @series_router.post('/{series_id}/toggle-monitor', status_code=201)
