@@ -25,6 +25,9 @@ from app.schemas.schedule import NewJob, ScheduledTask, UpdateInterval
 from modules.Debug import contextualize, log
 
 
+# Do not allow tasks to be scheduled faster than this interval
+MINIMUM_TASK_INTERVAL = 1 * 60 * 10 # 10 minutes
+
 # Create sub router for all /schedule API requests
 schedule_router = APIRouter(
     prefix='/schedule',
@@ -290,8 +293,8 @@ def get_scheduled_task(
 
 @schedule_router.patch('/update/{task_id}', status_code=200)
 def reschedule_task(
-        task_id: TaskID,
         request: Request,
+        task_id: TaskID,
         update_interval: UpdateInterval = Body(...),
         scheduler: BackgroundScheduler = Depends(get_scheduler)
     ) -> ScheduledTask:
@@ -324,13 +327,19 @@ def reschedule_task(
     if new_interval == job.trigger.interval.total_seconds():
         log.debug(f'Task[{job.id}] Not rescheduling, interval unchanged')
         return _scheduled_task_from_job(job)
+    
+    # Ensure interval is not below minimum
+    if new_interval < MINIMUM_TASK_INTERVAL:
+        log.warning(f'Task[{job.id}] Cannot schedule task more frequently than '
+                    f'10 minutes')
+        update_interval.minutes = 10
 
     # Reschedule with modified interval
     log.debug(f'Task[{job.id}] rescheduled via {update_interval.dict()}')
     job = scheduler.reschedule_job(
         task_id,
         trigger='interval',
-        **update_interval.dict()
+        **update_interval.dict(),
     )
     
     return _scheduled_task_from_job(job)
