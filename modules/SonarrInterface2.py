@@ -60,7 +60,7 @@ class SonarrInterface(WebInterface, SyncInterface):
         """
 
         # Initialize parent WebInterface
-        super().__init__('Sonarr', verify_ssl)
+        super().__init__('Sonarr', verify_ssl, log=log)
 
         # Get correct URL
         url = url if url.endswith('/') else f'{url}/'

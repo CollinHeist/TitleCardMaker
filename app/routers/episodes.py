@@ -208,7 +208,6 @@ def update_multiple_episode_configs(
         get_font(db, getattr(update_episode, 'font_id', None), raise_exc=True)
 
         # Assign Templates if indicated
-        changed = False
         if ((template_ids := update_episode_dict.get('template_ids', None))
             not in (None, UNSPECIFIED)):
             if episode.template_ids != template_ids:

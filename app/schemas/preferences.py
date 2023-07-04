@@ -221,8 +221,7 @@ class Preferences(Base):
     specials_folder_format: str
     season_folder_format: str
     sync_specials: bool
-    # supported_language_codes = []
-
+    is_docker: bool
     default_card_type: CardTypeIdentifier
     excluded_card_types: list[CardTypeIdentifier]
     default_watched_style: Style

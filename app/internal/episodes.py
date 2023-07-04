@@ -3,8 +3,8 @@ from time import sleep
 from typing import Optional
 
 from fastapi import BackgroundTasks, HTTPException
-from sqlalchemy.orm import Session
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import Session
 
 from app.dependencies import *
 from app.internal.templates import get_effective_series_template
@@ -52,7 +52,7 @@ def refresh_all_episode_data(*, log: Logger = log) -> None:
                     log.debug(f'Database is busy, sleeping..')
                     sleep(30)
     except Exception as e:
-        log.exception(f'Failed to refresh all episode data', e)
+        log.exception(f'Failed to refresh all episode data - {e}', e)
 
     return None
 

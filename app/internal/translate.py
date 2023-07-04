@@ -1,4 +1,7 @@
 from logging import Logger
+from time import sleep
+
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_database, get_tmdb_interface
@@ -33,10 +36,14 @@ def translate_all_series(*, log: Logger = log) -> None:
                     continue
 
                 # Translate each Episode
-                for episode in series.episodes:
-                    translate_episode(db, episode, tmdb_interface, log=log)
+                try:
+                    for episode in series.episodes:
+                        translate_episode(db, episode, tmdb_interface, log=log)
+                except OperationalError:
+                    log.debug(f'Database is busy, sleeping..')
+                    sleep(30)
     except Exception as e:
-        log.exception(f'Failed to add translations', e)
+        log.exception(f'Failed to add translations - {e}', e)
 
     return None
 

@@ -1,3 +1,4 @@
+from logging import Logger
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
 from requests import get, Session
@@ -34,8 +35,11 @@ class WebInterface:
 
     def __init__(self,
             name: str,
-            verify_ssl: bool = True, *,
-            cache: bool = True) -> None:
+            verify_ssl: bool = True,
+            *,
+            cache: bool = True,
+            log: Logger = log,
+        ) -> None:
         """
         Construct a new instance of a WebInterface. This creates creates
         cached request and results lists, and establishes a session for
@@ -47,6 +51,7 @@ class WebInterface:
                 interface.
             cache: (Keyword only) Whether to cache requests with this
                 interface.
+            log: (Keyword) Logger for all log messages.
         """
 
         # Store name of this interface
@@ -135,7 +140,12 @@ class WebInterface:
 
 
     @staticmethod
-    def download_image(image: Union[str, bytes], destination: Path) -> bool:
+    def download_image(
+            image: Union[str, bytes],
+            destination: Path,
+            *,
+            log: Logger = log,
+        ) -> bool:
         """
         Download the provided image to the destination filepath.
 
@@ -143,6 +153,7 @@ class WebInterface:
             image: URL to the image to download, or bytes of the image
                 to write.
             destination: Destination path to download the image to.
+            log: (Keyword) Logger for all log messages.
 
         Returns:
             Whether the image was successfully downloaded.

@@ -11,6 +11,7 @@ from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.TitleCard import TitleCard
+from modules.Version import Version
 
 
 EpisodeDataSource = namedtuple('EpisodeDataSource', ('value', 'label'))
@@ -27,7 +28,7 @@ class Preferences:
     Class defining global Preferences.
     """
 
-    VERSION_FILE = TCM_ROOT / 'modules' / 'ref' / 'version'
+    VERSION_FILE = TCM_ROOT / 'modules' / 'ref' / 'version_webui'
     DEFAULT_CARD_FILENAME_FORMAT = (
         '{series_full_name} S{season_number:02}E{episode_number:02}'
     )
@@ -97,8 +98,8 @@ class Preferences:
         """
 
         # Set attributes not parsed from the object
-        self.current_version = self.VERSION_FILE.read_text().strip()
-        self.available_version = None
+        self.current_version = Version(self.VERSION_FILE.read_text().strip())
+        self.available_version: Optional[Version] = None
         self.is_docker = environ.get('TCM_IS_DOCKER', 'false').lower() == 'true'
 
         # Default arguments

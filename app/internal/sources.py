@@ -91,7 +91,9 @@ def download_all_series_logos(*, log: Logger = log) -> None:
 
 def resolve_source_settings(
         preferences: Preferences,
-        episode: Episode
+        episode: Episode,
+        *,
+        log: Logger = log,
     ) -> tuple[Style, Path]:
     """
     Get the Episode style and source file for the given Episode.
@@ -100,6 +102,7 @@ def resolve_source_settings(
         preferences: Preferences whose global style settings to use in
             Style resolution.
         episode: Episode being evaluated.
+        log: (Keyword) Logger for all log messages.
 
     Returns:
         Tuple of the effective Style and the Path to the source file for
@@ -114,24 +117,18 @@ def resolve_source_settings(
     watched_style = TieredSettings.resolve_singular_setting(
         preferences.default_watched_style,
         getattr(series_template, 'watched_style', None),
-        # getattr(series_template, 'extras', {}).get('watched_style', None),
         series.watched_style,
         getattr(series.extras, 'watched_style', None),
         getattr(episode_template, 'watched_style', None),
-        # getattr(episode_template, 'extras', {}).get('watched_style', None),
         episode.watched_style,
-        # getattr(episode.extras, 'watched_style', None),
     )
     unwatched_style = TieredSettings.resolve_singular_setting(
         preferences.default_unwatched_style,
         getattr(series_template, 'unwatched_style', None),
-        # getattr(series_template, 'extras', {}).get('unwatched_style', None),
-        series.watched_style,
+        series.unwatched_style,
         getattr(series.extras, 'unwatched_style', None),
         getattr(episode_template, 'unwatched_style', None),
-        # getattr(episode_template, 'extras', {}).get('unwatched_style', None),
         episode.unwatched_style,
-        # getattr(episode.extras, 'unwatched_style', None),
     )
 
     # Styles are the same, Episode watch status does not matter
@@ -225,7 +222,7 @@ def download_series_logo(
 
             # Download to temporary location pre-conversion
             success = WebInterface.download_image(
-                logo, imagemagick_interface.TEMPORARY_SVG_FILE
+                logo, imagemagick_interface.TEMPORARY_SVG_FILE, log=log,
             )
 
             # Downloaded, convert svg -> png
@@ -251,7 +248,7 @@ def download_series_logo(
                 )
 
         # Logo is png and valid, download
-        if WebInterface.download_image(logo, logo_file):
+        if WebInterface.download_image(logo, logo_file, log=log):
             log.info(f'{series.log_str} Downloaded logo from {image_source}')
             return f'/source/{series.path_safe_name}/{logo_file.name}'
         # Download failed, raise 400
@@ -273,7 +270,8 @@ def download_episode_source_image(
         plex_interface: Optional[PlexInterface],
         tmdb_interface: Optional[TMDbInterface],
         episode: Episode,
-        raise_exc: bool = False, *,
+        raise_exc: bool = False,
+        *,
         log: Logger = log,
     ) -> Optional[str]:
     """
@@ -296,7 +294,7 @@ def download_episode_source_image(
     """
 
     # Determine Episode style and source file
-    style, source_file = resolve_source_settings(preferences, episode)
+    style, source_file = resolve_source_settings(preferences, episode, log=log)
 
     # If source already exists, return that
     series: Series = episode.series
@@ -368,7 +366,8 @@ def download_episode_source_image(
                     log=log,
                 )
         else:
-            log.warning(f'{series.log_str} {episode.log_str} Cannot source images from {image_source}')
+            log.warning(f'{series.log_str} {episode.log_str} Cannot source '
+                        f'images from {image_source}')
             continue
 
         # If no source image was returned, increment attempts counter
@@ -378,8 +377,9 @@ def download_episode_source_image(
             continue
 
         # Source image is valid, download - error if download fails
-        if WebInterface.download_image(source_image, source_file):
-            log.debug(f'{series.log_str} {episode.log_str} Downloaded {source_file.name} from {image_source}')
+        if WebInterface.download_image(source_image, source_file, log=log):
+            log.info(f'{series.log_str} {episode.log_str} Downloaded '
+                      f'"{source_file.name}" from {image_source}')
             return f'/source/{series.path_safe_name}/{source_file.name}'
         else:
             if raise_exc:
@@ -396,7 +396,9 @@ def download_episode_source_image(
 def get_source_image(
         preferences: Preferences,
         imagemagick_interface: Optional[ImageMagickInterface],
-        episode: Episode
+        episode: Episode,
+        *,
+        log: Logger = log,
     ) -> SourceImage:
     """
     Get the SourceImage details for the given objects.
@@ -407,10 +409,11 @@ def get_source_image(
         imagemagick_interface: ImageMagickInterface to query the image
             dimensions from.
         episode: Episode of the SourceImage.
+        log: (Keyword) Logger for all log messages.
     """
 
     # Determine Episode (style not used) source file
-    _, source_file = resolve_source_settings(preferences, episode)
+    _, source_file = resolve_source_settings(preferences, episode, log=log)
 
     # All sources have these details
     source = {
