@@ -77,3 +77,16 @@ Update classes
 """
 Return classes
 """
+class RemoteBlueprintFont(BlueprintFont):
+    file: Optional[str] = Field(default=None)
+    file_download_url: Optional[str] = Field(default=None)
+
+class RemoteBlueprint(Base):
+    id: int
+    description: list[str]
+    preview: str
+    creator: str
+    series: BlueprintSeries
+    episodes: dict[str, BlueprintEpisode] = Field(default={})
+    templates: list[BlueprintTemplate] = Field(default=[])
+    fonts: list[RemoteBlueprintFont] = Field(default=[])

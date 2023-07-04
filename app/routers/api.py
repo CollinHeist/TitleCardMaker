@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.routers.availability import availablility_router
+from app.routers.blueprint import blueprint_router
 from app.routers.cards import card_router
 from app.routers.connection import connection_router
 from app.routers.episodes import episodes_router
@@ -21,6 +22,7 @@ api_router = APIRouter(prefix='/api')
 
 # Include sub-routers
 api_router.include_router(availablility_router)
+api_router.include_router(blueprint_router)
 api_router.include_router(card_router)
 api_router.include_router(connection_router)
 api_router.include_router(episodes_router)
