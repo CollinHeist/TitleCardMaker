@@ -562,11 +562,12 @@
       });
     }
 
-    function importBlueprint(blueprint) {
+    function importBlueprint(cardId, blueprint) {
+      // Turn on loading
+      $(`#${cardId}`).toggleClass('slow double blue loading', true);
       // Submit API request to import blueprint
       $.ajax({
         type: 'PUT',
-        // url: `/api/blueprints/{{series.id}}/${blueprint.id}`,
         url: '/api/blueprints/{{series.id}}/import',
         contentType: 'application/json',
         data: JSON.stringify(blueprint),
@@ -579,7 +580,9 @@
             message: response.responseJSON.detail,
             displayTime: 0,
           });
-        }, complete: () => {}
+        }, complete: () => {
+          $(`#${cardId}`).toggleClass('slow double blue loading', false);
+        }
       });
       // Get any URL's for Fonts to download
       let fontsToDownload = [];
@@ -639,6 +642,7 @@
         // Clone template
         const card = blueprintTemplate.content.cloneNode(true);
         // Fill out card
+        card.querySelector('.card').id = `blueprint-id${blueprintId}`;
         card.querySelector('img').src = blueprint.preview;
         card.querySelector('[data-value="creator"]').innerText = blueprint.creator;
         if (blueprint.fonts.length === 0) {
@@ -661,7 +665,7 @@
         }
         card.querySelector('[data-value="description"]').innerHTML = '<p>' + blueprint.description.join('</p><p>') + '</p>';
         // Assign import to button
-        card.querySelector('a[data-action="import-blueprint"]').onclick = () => importBlueprint(blueprint);
+        card.querySelector('a[data-action="import-blueprint"]').onclick = () => importBlueprint(`blueprint-id${blueprintId}`, blueprint);
         return card;
       });
       blueprintCards.replaceChildren(...blueprints);
