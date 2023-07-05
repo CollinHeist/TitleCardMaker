@@ -127,8 +127,8 @@ def get_title_card(
 @card_router.post('/series/{series_id}', status_code=201, tags=['Series'])
 def create_cards_for_series(
         background_tasks: BackgroundTasks,
-        series_id: int,
         request: Request,
+        series_id: int,
         preferences = Depends(get_preferences),
         db: Session = Depends(get_database),
         emby_interface = Depends(get_emby_interface),

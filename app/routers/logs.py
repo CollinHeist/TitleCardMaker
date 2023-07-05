@@ -3,7 +3,7 @@ from typing import Any, Optional
 from warnings import simplefilter
 
 from re import IGNORECASE, compile as re_compile
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
 from fastapi_pagination import paginate
 from fastapi_pagination.utils import FastAPIPaginationWarning
 
@@ -29,7 +29,7 @@ LOG_REGEX = re_compile(
     IGNORECASE
 )
 
-from fastapi import Request
+
 @log_router.get('/query', status_code=201)
 def query_logs(
         level: LogLevel = Query(default='info'),

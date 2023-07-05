@@ -321,11 +321,11 @@
           <div class="ui grid">
             <div class="ten wide required field">
               <label>Series Title</label>
-              <input type="text" name="name">
+              <input type="text" name="name" tabindex="0">
             </div>
             <div class="six wide required field">
               <label>Year</label>
-              <input type="number" name="year" min="1900" placeholder="2023">
+              <input type="number" name="year" min="1900" placeholder="2023" tabindex="1">
             </div>
           </div>
 
@@ -333,7 +333,7 @@
           <div class="compact field">
             <label>Templates</label>
             <div id="templates" class="ui multiple selection clearable dropdown">
-              <input name="template_ids" type="hidden">
+              <input name="template_ids" type="hidden" tabindex="2">
               <i class="dropdown icon"></i>
               <div class="default text">None</div>
               <div class="menu"><!-- Added asynchronously --></div>
@@ -347,7 +347,7 @@
             <div class="column field">
               <label>Emby Library</label>
               <div id="emby-library" class="ui clearable selection dropdown">
-                <input name="emby_library_name" type="hidden">
+                <input name="emby_library_name" type="hidden" tabindex="3">
                 <i class="dropdown icon"></i>
                 <div class="default text">None</div>
                 <div class="menu"><!-- Added asynchronously --></div>
@@ -358,7 +358,7 @@
             <div class="column field">
               <label>Jellyfin Library</label>
               <div id="jellyfin-library" class="ui clearable selection dropdown">
-                <input name="jellyfin_library_name" type="hidden">
+                <input name="jellyfin_library_name" type="hidden" tabindex="4">
                 <i class="dropdown icon"></i>
                 <div class="default text">None</div>
                 <div class="menu"><!-- Added asynchronously --></div>
@@ -369,7 +369,7 @@
             <div class="column field">
               <label>Plex Library</label>
               <div id="plex-library" class="ui clearable selection dropdown">
-                <input name="plex_library_name" type="hidden">
+                <input name="plex_library_name" type="hidden" tabindex="5">
                 <i class="dropdown icon"></i>
                 <div class="default text">None</div>
                 <div class="menu"><!-- Added asynchronously --></div>
