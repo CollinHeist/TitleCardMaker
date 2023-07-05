@@ -11,6 +11,7 @@ from app.models.preferences import Preferences
 from app.models.series import Series
 from app.models.template import Template
 from app.schemas.blueprint import Blueprint, RemoteBlueprint
+from app.schemas.episode import UpdateEpisode
 from app.schemas.font import NewNamedFont
 from app.schemas.series import NewTemplate, UpdateSeries
 
@@ -310,8 +311,29 @@ def import_blueprint(
             continue
 
         # Episode found, update attributes
-        ...
+        episode_dict = episode_blueprint.dict()
 
+        # Assign Font and Templates
+        if (new_font_id := episode_dict.pop('font_id', None)) is not None:
+            log.debug(f'Episode[{episode.id}].font_id = {font_map[new_font_id].id}')
+            episode.font = font_map[new_font_id]
+            changed = True
+
+        if (new_template_ids := episode_dict.pop('template_ids', [])):
+            template_ids = [template_map[id_].id for id_ in new_template_ids]
+            log.debug(f'Episode[{episode.id}].template_ids = {template_ids}')
+            episode.templates = [template_map[id_] for id_ in new_template_ids]
+            changed = True
+
+        # All other attributes
+        update_episode = UpdateEpisode(**episode_dict)
+        for attr, value in update_episode.dict().items():
+            if getattr(episode, attr) != value:
+                log.debug(f'Episode[{episode.id}].{attr} = {value}')
+                setattr(episode, attr, value)
+                changed = True
+
+    # Commit changes to Database
     if changed:
         db.commit()
 
