@@ -1343,48 +1343,48 @@
             <div class="ui vertical labeled icon fluid buttons">
               {% if preferences.use_emby and series.emby_library_name %}
               <button class="ui labeled icon button" onclick="loadCards('Emby');">
-                <i class="server icon"></i>
+                <i class="hdd outline icon"></i>
                 Load Cards into Emby
               </button>
               <button class="ui labeled icon button" onclick="loadCards('Emby', true);">
-                <i class="server icon"></i>
+                <i class="hdd outline icon"></i>
                 Force Reload Cards into Emby
               </button>
               {% elif (preferences.use_emby and not series.emby_library_name) or (not preferences.use_emby and series.emby_library_name) %}
               <button class="ui disabled labeled icon button">
-                <i class="server icon"></i>
+                <i class="hdd outline icon"></i>
                 Reload Emby
               </button>
               {% endif %}
                 
               {% if preferences.use_jellyfin and series.jellyfin_library_name %}
               <button class="ui labeled icon button" onclick="loadCards('Jellyfin');">
-                <i class="server icon"></i>
+                <i class="hdd outline icon"></i>
                 Load Cards into Jellyfin
               </button>
               <button class="ui labeled icon button" onclick="loadCards('Jellyfin', true);">
-                <i class="server icon"></i>
+                <i class="hdd outline icon"></i>
                 Force Reload Cards into Jellyfin
               </button>
               {% elif (preferences.use_jellyfin and not series.jellyfin_library_name) or (not preferences.use_jellyfin and series.jellyfin_library_name) %}
               <button class="ui disabled labeled icon button">
-                <i class="server icon"></i>
+                <i class="hdd outline icon"></i>
                 Load Cards into Jellyfin
               </button>
               {% endif %}
 
               {% if preferences.use_plex and series.plex_library_name %}
               <button class="ui labeled icon button" onclick="loadCards('Plex');">
-                <i class="server icon"></i>
+                <i class="hdd outline icon"></i>
                 Load Cards into Plex
               </button>
               <button class="ui labeled icon button" onclick="loadCards('Plex', true);">
-                <i class="server icon"></i>
+                <i class="hdd outline icon"></i>
                 Force Reload Cards into Plex
               </button>
               {% elif (preferences.use_plex and not series.plex_library_name) or (not preferences.use_plex and series.plex_library_name) %}
               <button class="ui disabled labeled icon button">
-                <i class="server icon"></i>
+                <i class="hdd outline icon"></i>
                 Load Cards into Plex
               </button>
               {% endif %}
