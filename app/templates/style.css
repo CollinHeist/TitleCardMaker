@@ -131,18 +131,12 @@ input ~ input {
 #support-button {
   /* Add glow effect */
   border-radius: 0.25em;
-  box-shadow: 0 0 1.1em 0 var(--support-button-color); /* 1.1 */
-  animation: glowPulse 6s infinite;
+  box-shadow: 0 0 1.1em 0 var(--support-button-color);
 }
 /* Don't leave any additional margin */
 #support-button .button {
   margin: 0;
 }
-@keyframes glowPulse {
-  0%, 100% { box-shadow: 0 0 0.3em 1px var(--support-button-color); }
-  50% { box-shadow: 0 0 1.5em 3px var(--support-button-color); }
-}
-
 
 html.ios {
   overflow-x: hidden;
