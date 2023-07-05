@@ -191,9 +191,17 @@ def import_blueprint(
         blueprint: Blueprint,
         *,
         log: Logger = log,
-    ) -> Series:
+    ) -> None:
     """
+    Import the given Blueprint into the given Series.
 
+    Args:
+        db: Database to add any imported Fonts, and Templates, and to
+            query for existing Episodes.
+        preferences: Preferences to use for the asset directory.
+        series: Series the imported Blueprint is affecting.
+        blueprint: Blueprint to parse for imported settings.
+        log: (Keyword) Logger for all log messages.
     """
 
     # Get subfolder for this Series
@@ -291,7 +299,8 @@ def import_blueprint(
         # Try and find Episode with this index
         indices = indices.groupdict()
         episode = db.query(Episode)\
-            .filter(Episode.season_number==indices['season_number'],
+            .filter(Episode.series_id==series.id,
+                    Episode.season_number==indices['season_number'],
                     Episode.episode_number==indices['episode_number'])\
             .first()
         
@@ -306,4 +315,4 @@ def import_blueprint(
     if changed:
         db.commit()
 
-    return series
+    return None
