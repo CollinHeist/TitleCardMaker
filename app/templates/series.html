@@ -41,7 +41,7 @@
     .add-field.button {
       background: transparent;
     }
-    
+
     /* Inine fields need to flex and align content in the middle of their div */
     #new-episode-form .inline.field {
       display: flex;
@@ -2323,10 +2323,10 @@
         },
         season_title_ranges: {
           optional: true,
-          rules: [{type: 'regExp', value: /^(\d+-\d+)|^(\d+)|^(s\d+e\d+-s\d+e\d+)$/i}]
+          rules: [{type: 'regExp', value: /^(\d+-\d+)|^(\d+)|^(s\d+e\d+-s\d+e\d+)|^$/i}]
         }, season_title_values: {
           depends: 'season_title_ranges',
-          rules: [{type: 'minLength[1]'}],
+          // rules: [{type: 'minLength[1]'}],
         }, language_code: {
           optional: true,
         }, data_key: {
