@@ -209,6 +209,7 @@ class OlivierCardType(BaseCardTypeCustomFontNoText):
     font_file: FilePath = Field(default=OlivierTitleCard.TITLE_FONT)
     episode_text_color: BetterColor = Field(default=OlivierTitleCard.EPISODE_TEXT_COLOR)
     stroke_color: BetterColor = Field(default=OlivierTitleCard.STROKE_COLOR)
+    interword_spacing: int = Field(default=0)
 
 class PosterCardType(BaseCardType):
     title_text: str 
