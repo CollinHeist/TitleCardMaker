@@ -78,6 +78,7 @@ class FrameTitleCard(BaseCardType):
         'episode_text', 'hide_season', 'hide_episode', 'font_color',
         'font_file', 'font_interline_spacing', 'font_kerning', 'font_size',
         'font_vertical_shift', 'episode_text_color', 'episode_text_position',
+        'interword_spacing',
     )
 
     def __init__(self, *,
@@ -98,6 +99,7 @@ class FrameTitleCard(BaseCardType):
             grayscale: bool = False,
             episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
             episode_text_position: Position = 'surround',
+            interword_spacing: int = 0,
             preferences: 'Preferences' = None,
             **unused) -> None:
         """
@@ -129,12 +131,8 @@ class FrameTitleCard(BaseCardType):
 
         # Verify/store extras
         self.episode_text_color = episode_text_color
-        if episode_text_position.lower() not in ('left', 'surround', 'right'):
-            log.error(f'episode_text_position must be "left", "surround", or '
-                      f'"right"')
-            self.valid = False
-        else:
-            self.episode_text_position = episode_text_position.lower()
+        self.episode_text_position = episode_text_position
+        self.interword_spacing = interword_spacing
 
 
     @property
@@ -148,6 +146,7 @@ class FrameTitleCard(BaseCardType):
 
         title_size = 125 * self.font_size
         interline_spacing = -45 + self.font_interline_spacing
+        interword_spacing = 0 + self.interword_spacing
         kerning = 5 * self.font_kerning
 
         return [
@@ -155,6 +154,7 @@ class FrameTitleCard(BaseCardType):
             f'-fill "{self.font_color}"',
             f'-pointsize {title_size}',
             f'-interline-spacing {interline_spacing}',
+            f'-interword-spacing {interword_spacing}',
             f'-kerning {kerning}',
             f'-gravity center',
         ]
