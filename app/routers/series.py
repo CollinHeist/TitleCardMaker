@@ -17,14 +17,13 @@ import app.models as models
 from app.internal.cards import refresh_remote_card_types
 from app.internal.series import (
     delete_series_and_episodes, download_series_poster, load_series_title_cards,
-    set_series_database_ids
+    set_series_database_ids,
 )
 from app.internal.sources import download_series_logo
 from app.schemas.base import UNSPECIFIED
 from app.schemas.preferences import MediaServer
 from app.schemas.series import NewSeries, Series, UpdateSeries
 
-from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
 from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface

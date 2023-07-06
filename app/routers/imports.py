@@ -333,7 +333,7 @@ def import_cards_for_series(
         card_directory: ImportCardDirectory = Body(...),
         preferences: Preferences = Depends(get_preferences),
         db: Session = Depends(get_database)
-    ) -> CardActions:
+    ) -> None:
     """
     Import any existing Title Cards for the given Series. This finds
     card files by filename, and makes the assumption that each file
@@ -346,7 +346,7 @@ def import_cards_for_series(
     # Get this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    return import_cards(
+    import_cards(
         db,
         preferences,
         series, 
@@ -355,6 +355,8 @@ def import_cards_for_series(
         card_directory.force_reload,
         log=request.state.log,
     )
+
+    return None
 
 
 @import_router.post('/series/cards', status_code=200,
