@@ -1,6 +1,6 @@
 from collections import namedtuple
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Literal, Optional
 
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
@@ -107,7 +107,7 @@ class TintedGlassTitleCard(BaseCardType):
             grayscale: bool = False,
             episode_text_color: str = EPISODE_TEXT_COLOR,
             episode_text_position: Position = 'center',
-            box_adjustments: str = None,
+            box_adjustments: tuple[int, int, int, int] = (0, 0, 0, 0),
             preferences: Optional['Preferences'] = None,                        # type: ignore
             **unused
         ) -> None:
@@ -133,32 +133,8 @@ class TintedGlassTitleCard(BaseCardType):
 
         # Store and validate extras
         self.episode_text_color = episode_text_color
-
-        # Validate episode text position
-        position = episode_text_position.lower().strip()
-        if position not in ('left', 'center', 'right'):
-            log.warning(f'episode_text_position "{position}" is invalid - must '
-                        f'be "left", "center", or "right"')
-            self.valid = False
-        else:
-            self.episode_text_position = position
-
-        # Parse box adjustments
-        self.box_adjustments = (0, 0, 0, 0)
-         # TODO DELETE
-        if box_adjustments:
-            # Verify adjustments are properly provided
-            try:
-                adjustments = box_adjustments.split(' ')
-                self.box_adjustments = tuple(map(float, adjustments))
-                error = ('must provide numeric adjustments for all sides like '
-                         '"top right bottom left", e.g. "20 0 40 0"')
-                assert len(self.box_adjustments) == 4, error
-            # Invalid adjustments, log and mark invalid
-            except Exception as e:
-                log.error(f'Invalid box adjustments "{box_adjustments}" - {e}')
-                self.box_adjustments = (0, 0, 0, 0)
-                self.valid = False
+        self.episode_text_position = episode_text_position
+        self.box_adjustments = box_adjustments
 
 
     def blur_rectangle_command(self,
