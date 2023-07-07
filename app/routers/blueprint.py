@@ -1,6 +1,10 @@
+from json import dump
 from pathlib import Path
+from shutil import copy as copy_file, make_archive as zip_directory
+from typing import Union
 
 from fastapi import APIRouter, Body, Depends, Query, Request
+from fastapi.responses import FileResponse
 from fastapi_pagination import paginate
 from sqlalchemy.orm import Session
 from app.database.query import get_series
@@ -88,6 +92,78 @@ def get_series_blueprint_font_files(
     ]
 
 
+@blueprint_router.get('/export/series/{series_id}/zip', status_code=200)
+async def export_series_blueprint_as_zip(
+        request: Request,
+        series_id: int,
+        include_global_defaults: bool = Query(default=True),
+        include_episode_overrides: bool = Query(default=True),
+        db: Session = Depends(get_database),
+        preferences: Preferences = Depends(get_preferences),
+    ) -> FileResponse:
+    """
+    Export a zipped file of the given Series' Blueprint (as JSON), any
+    associated Font files, and a preview image.
+
+    - series_id: ID of the Series to export the Blueprint of.
+    - include_global_defaults: Whether to write global settings if the
+    Series has no corresponding override, primarily for the card type.
+    - include_episode_overrides: Whether to include Episode-level
+    overrides in the exported Blueprint. If True, then any Episode Font
+    and Template assignments are also included.
+    """
+
+    # Get contextual logger
+    log = request.state.log
+
+    # Query for this Series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Generate Blueprint
+    blueprint = generate_series_blueprint(
+        series, include_global_defaults, include_episode_overrides, preferences,
+    )
+    blueprint = BlankBlueprint(**blueprint).dict()
+
+    # Get list of Font files for this Series' Blueprint
+    font_files = get_blueprint_font_files(
+        series,
+        series.episodes if include_episode_overrides else [],
+    )
+
+    # Get preview image for this Series - use first non-stylized existing Card
+    cards = db.query(models.card.Card)\
+        .filter_by(series_id=series_id, blur=False, grayscale=False)\
+        .order_by(models.card.Card.season_number,
+                  models.card.Card.episode_number)\
+        .all()
+
+    card_file = None
+    for card in cards:
+        if (this_card_file := Path(card.card_file)).exists():
+            card_file = this_card_file
+            break
+
+    # Get directory for zipping
+    zip_dir = preferences.TEMPORARY_DIRECTORY / 'zips' / log.extra['context_id']
+
+    # Copy all files into the directory to be zipped
+    zip_dir.mkdir(parents=True, exist_ok=True)
+    for file in font_files:
+        copy_file(file, zip_dir / file.name)
+        log.debug(f'Copied "{file}" into zip directory "{zip_dir}"')
+    if card_file:
+        copy_file(card_file, zip_dir / f'preview{card_file.suffix}')
+        blueprint['preview'] = f'preview{card_file.suffix}'
+
+    # Write Blueprint as JSON into zip directory
+    blueprint_file = zip_dir / 'blueprint.json'
+    with blueprint_file.open('w') as file_handle:
+        dump(blueprint, file_handle, indent=2)
+    log.debug(f'Dumped Blueprint JSON into "{blueprint_file}"')
+
+    # Zip directory, return zipped file
+    return FileResponse(zip_directory(zip_dir, 'zip', zip_dir))
 
 
 @blueprint_router.get('/query/all', status_code=200)
