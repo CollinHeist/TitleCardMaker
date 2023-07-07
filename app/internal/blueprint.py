@@ -298,6 +298,33 @@ def query_series_blueprints(
     return [blueprint for blueprint in blueprints if blueprint]
 
 
+def get_blueprint_by_id(
+        series: Series,
+        blueprint_id: int,
+        *,
+        log: Logger = log,
+    ) -> RemoteBlueprint:
+    """
+    Get the Blueprint with the given ID for the given Series.
+
+    Args:
+        series: Series whose Blueprints to query.
+        blueprint_id: ID of the Blueprint to return.
+        log: (Keyword) Logger for all log messages.
+    """
+
+    # Get all available Blueprints, return only one with matching ID
+    for blueprint in query_series_blueprints(series, log=log):
+        if blueprint['id'] == blueprint_id:
+            return blueprint
+        
+    # No Blueprint with this ID, raise 404
+    raise HTTPException(
+        status_code=404,
+        detail=f'No Blueprint with ID {blueprint_id} exits for Series {series.full_name}'
+    )
+
+
 def import_blueprint(
         db: Session,
         preferences: Preferences,
