@@ -6,6 +6,7 @@ from apscheduler.job import Job
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 
+from app.database.session import backup_database
 from app.dependencies import get_scheduler
 from app.internal.availability import get_latest_version
 from app.internal.cards import (
@@ -44,6 +45,7 @@ JOB_DOWNLOAD_SOURCE_IMAGES: str = 'DownloadSourceImages'
 JOB_LOAD_MEDIA_SERVERS: str = 'LoadMediaServers'
 JOB_REFRESH_EPISODE_DATA: str = 'RefreshEpisodeData'
 JOB_SYNC_INTERFACES: str = 'SyncInterfaces'
+JOB_BACKUP_DATABASE: str = 'BackupDatabase'
 # Internal Job ID's
 INTERNAL_JOB_CHECK_FOR_NEW_RELEASE: str = 'CheckForNewRelease'
 INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES: str = 'RefreshRemoteCardTypes'
@@ -52,7 +54,7 @@ INTERNAL_JOB_SET_SERIES_IDS: str = 'SetSeriesIDs'
 TaskID = Literal[
     JOB_REFRESH_EPISODE_DATA, JOB_SYNC_INTERFACES, JOB_DOWNLOAD_SOURCE_IMAGES,  # type: ignore
     JOB_CREATE_TITLE_CARDS, JOB_LOAD_MEDIA_SERVERS, JOB_ADD_TRANSLATIONS,       # type: ignore
-    JOB_DOWNLOAD_SERIES_LOGOS, JOB_DOWNLOAD_SERIES_POSTERS,                     # type: ignore
+    JOB_DOWNLOAD_SERIES_LOGOS, JOB_DOWNLOAD_SERIES_POSTERS, JOB_BACKUP_DATABASE,# type: ignore
     # Internal jobs
     INTERNAL_JOB_CHECK_FOR_NEW_RELEASE, INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES, # type: ignore
     INTERNAL_JOB_SET_SERIES_IDS,                                                # type: ignore
@@ -138,6 +140,12 @@ def wrapped_set_series_ids(log: Optional[Logger] = None):
     set_all_series_ids(log=log)
     _wrap_after(INTERNAL_JOB_SET_SERIES_IDS, log=log)
 
+def wrapped_backup_database(log: Optional[Logger] = None):
+    log = log or contextualize()
+    _wrap_before(JOB_BACKUP_DATABASE, log=log)
+    backup_database(log=log)
+    _wrap_after(JOB_BACKUP_DATABASE, log=log)
+
 """
 Dictionary of Job ID's to NewJob objects that contain the default Job
 attributes for all major functions.
@@ -184,6 +192,11 @@ BaseJobs = {
         function=wrapped_download_all_series_posters,
         seconds=60 * 60 * 24,
         description='Download Posters for all Series',
+    ), JOB_BACKUP_DATABASE: NewJob(
+        id=JOB_BACKUP_DATABASE,
+        function=wrapped_backup_database,
+        seconds=60 * 60 * 24,
+        description='Backup the primary database',
     ),
     # Internal (private) jobs
     INTERNAL_JOB_CHECK_FOR_NEW_RELEASE: NewJob(
