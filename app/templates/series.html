@@ -638,7 +638,7 @@
       // Show loading message
       $('.tab[data-tab="blueprints"] .info.message').toggleClass('hidden', false);
       // Query for Blueprints
-      const allBlueprints = await fetch(`/api/blueprints/{{series.id}}/query`).then(resp => resp.json());
+      const allBlueprints = await fetch(`/api/blueprints/query/series/{{series.id}}`).then(resp => resp.json());
       $('.tab[data-tab="blueprints"] .info.message').toggleClass('hidden', true);
       // Disable query button
       $('.tab[data-tab="blueprints"] .button[data-action="search"]').toggleClass('disabled', true);
@@ -679,6 +679,30 @@
         return card;
       });
       blueprintCards.replaceChildren(...blueprints);
+    }
+
+    async function exportBlueprint() {
+      $.ajax({
+        type: 'GET',
+        url: '/api/blueprints/export/series/{{series.id}}/zip',
+        xhrFields: {responseType: 'blob'},
+        success: zipBlob => {
+          // Download zip file
+          downloadFileBlob('{{series.full_name}} Blueprint.zip', zipBlob);
+          $.toast({
+            class: 'warning',
+            title: 'Font Files',
+            message: 'Please verify that any Font licenses permit them to be shared.',
+            displayTime: 15000,
+          });
+        }, error: response => {
+          $.toast({
+            class: 'error',
+            title: 'Error Exporting Blueprint',
+            message: response.responseJSON.detail,
+          });
+        }, complete: () => {},
+      })
     }
 
     function selectTmdbImage(episodeId, url) {
@@ -1972,6 +1996,10 @@
               <i class="search icon"></i>
               Search for Blueprints
             </button>
+            <button data-action="export" onclick="exportBlueprint();" class="ui blue tertiary button" data-tooltip="Export a zip file with this Series' Blueprint">
+              <i class="file export icon"></i>
+              Export Blueprint
+            </button>
             <div class="ui floating hidden info icon message">
               <i class="blue notched circle loading icon"></i>
               <div class="content">
@@ -1983,7 +2011,8 @@
               <i class="exclamation icon"></i>
               <div class="content">
                 <div class="header">No Blueprints Available</div>
-                <p>There are no Blueprints available on <a href="https://github.com/CollinHeist/TitleCardMaker-Blueprints/" target="_blank">GitHub</a>.</p>
+                <span>There are no Blueprints available on <a href="https://github.com/CollinHeist/TitleCardMaker-Blueprints/" target="_blank">GitHub</a>.</span>
+                <span>Feel free to submit your own.</span>
               </div>
             </div>
             <br>

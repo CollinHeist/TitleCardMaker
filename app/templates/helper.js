@@ -126,3 +126,52 @@ function initializeNullableBoolean(args) {
     ],
   });
 }
+
+function downloadTextFile(filename, text) {
+  // Create download element, add to document
+  var element = document.createElement('a');
+  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+  element.setAttribute('download', filename);
+  element.style.display = 'none';
+  document.body.appendChild(element);
+
+  // "Click" element to initiate download, remove from document
+  element.click();
+  document.body.removeChild(element);
+}
+
+async function downloadFile(filename, url) {
+  // Fetch contents from URL
+  const response = await fetch(url);
+  if (response.status !== 200 ) {
+    $.toast({class: 'error', title: 'Error Downloading File'});
+    return;
+  }
+
+  // Get file contents
+  const blob = await response.blob();
+
+  // Create download element, add to document
+  const downloadLink = document.createElement('a');
+  downloadLink.setAttribute('href', URL.createObjectURL(blob));
+  downloadLink.setAttribute('download', filename);
+  downloadLink.style.display = 'none';
+  document.body.appendChild(downloadLink);
+
+  // "Click" element to initiate download, remove from document
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
+}
+
+async function downloadFileBlob(filename, blob) {
+  // Create download element, add to document
+  const downloadLink = document.createElement('a');
+  downloadLink.setAttribute('href', URL.createObjectURL(blob));
+  downloadLink.setAttribute('download', filename);
+  downloadLink.style.display = 'none';
+  document.body.appendChild(downloadLink);
+
+  // "Click" element to initiate download, remove from document
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
+}
