@@ -497,8 +497,8 @@
         switch (sortState) {
           case 'id-asc': return $(a).data('series-id')-$(b).data('series-id');
           case 'id-desc': return $(b).data('series-id')-$(a).data('series-id');
-          case 'a-z': return $(a).data('series-sort-name').localeCompare($(b).data('series-sort-name'));
-          case 'z-a': return $(b).data('series-sort-name').localeCompare($(a).data('series-sort-name'));
+          case 'a-z': return String($(a).data('series-sort-name')).localeCompare(String($(b).data('series-sort-name')));
+          case 'z-a': return String($(b).data('series-sort-name')).localeCompare(String($(a).data('series-sort-name')));
           case 'year-asc': return $(a).data('series-year')-$(b).data('series-year');
           case 'year-desc': return $(b).data('series-year')-$(a).data('series-year');
           default: return 0;
