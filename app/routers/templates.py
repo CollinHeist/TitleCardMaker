@@ -20,6 +20,7 @@ template_router = APIRouter(
 
 @template_router.post('/new', status_code=201)
 def create_template(
+        request: Request,
         new_template: NewTemplate = Body(...),
         db: Session = Depends(get_database)
     ) -> Template:
@@ -37,13 +38,15 @@ def create_template(
     db.commit()
 
     # Refresh card types in case new remote type was specified
-    refresh_remote_card_types(db)
+    refresh_remote_card_types(db, log=request.state.log)
 
     return template
 
 
 @template_router.get('/all', status_code=200)
-def get_all_templates(db: Session = Depends(get_database)) -> list[Template]:
+def get_all_templates(
+        db: Session = Depends(get_database)
+    ) -> list[Template]:
     """
     Get all defined Templates.
     """    
@@ -67,8 +70,8 @@ def get_template_by_id(
 
 @template_router.patch('/{template_id}', status_code=200)
 def update_template(
-        template_id: int,
         request: Request,
+        template_id: int,
         update_template: UpdateTemplate = Body(...),
         db: Session = Depends(get_database)
     ) -> Template:
@@ -110,7 +113,8 @@ def update_template(
 @template_router.delete('/{template_id}', status_code=204)
 def delete_template(
         template_id: int,
-        db: Session = Depends(get_database)) -> None:
+        db: Session = Depends(get_database)
+    ) -> None:
     """
     Delete the given Template.
 

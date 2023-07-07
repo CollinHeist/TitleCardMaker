@@ -86,7 +86,8 @@ def get_episode_by_id(
 def delete_episode(
         request: Request,
         episode_id: int,
-        db: Session = Depends(get_database)) -> None:
+        db: Session = Depends(get_database)
+    ) -> None:
     """
     Delete the Episode with the ID.
 
