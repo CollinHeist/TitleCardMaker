@@ -329,7 +329,7 @@ def import_blueprint(
         db: Session,
         preferences: Preferences,
         series: Series,
-        blueprint: Blueprint,
+        blueprint: Union[Blueprint, RemoteBlueprint],
         *,
         log: Logger = log,
     ) -> None:
@@ -346,10 +346,8 @@ def import_blueprint(
     """
 
     # Get subfolder for this Series
-    blueprint_folder = (
-        f'{BLUEPRINT_URL}/{series.sort_name.upper()[0]}/{series.full_name}/'
-        f'{blueprint.id}'
-    )
+    letter, path_name = get_blueprint_folders(series.full_name)
+    blueprint_folder = f'{BLUEPRINTS_URL}/{letter}/{path_name}/{blueprint.id}'
 
     # Import Fonts
     font_map: dict[int, Font] = {}
