@@ -57,8 +57,9 @@ def get_effective_episode_template(
     """
 
     # Evaluate each Episode Template
+    preferences = get_preferences()
     for template in episode.templates:
-        if template.meets_filter_criteria(series, episode):
+        if template.meets_filter_criteria(preferences, series, episode):
             return template
 
     return None

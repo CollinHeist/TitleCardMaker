@@ -1,5 +1,8 @@
+from datetime import datetime, timedelta
+from logging import Logger
 from os import environ
 from pathlib import Path
+from shutil import copy as file_copy
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -12,6 +15,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
 from app.models.preferences import Preferences
+
+from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.JellyfinInterface2 import JellyfinInterface
@@ -31,6 +36,37 @@ else:
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={'check_same_thread': False}
 )
+
+# Function to back up the SQL database
+def backup_database(*, log: Logger = log) -> Path:
+    # Determine file to back up database to
+    now = datetime.now().strftime('%Y.%m.%d_%H.%M.%S')
+    if IS_DOCKER:
+        database = Path('/config/source/db.sqlite')
+        backup_file = Path(f'/config/backups/db.sqlite.{now}')
+    else:
+        database = Path('./db.sqlite')
+        backup_file = Path(f'./backups/db.sqlite.{now}')
+
+    # Remove databases older than 4 weeks
+    for prior_backup in backup_file.parent.glob('db.sqlite.*'):
+        try:
+            date = datetime.strptime(
+                prior_backup.name, 'db.sqlite.%Y.%m.%d_%H.%M.%S'
+            )
+        except ValueError:
+            log.warning(f'Cannot identify date of backup "{prior_backup}"')
+            continue
+
+        if date < datetime.now() - timedelta(days=28):
+            prior_backup.unlink(missing_ok=True)
+            log.debug(f'Deleted old database backup file "{prior_backup}"')
+
+    # Backup database
+    if database.exists():
+        backup_file.parent.mkdir(exist_ok=True, parents=True)
+        file_copy(database, backup_file)
+        log.info(f'Performed database backup')
 
 # Register regex replacement function
 from re import sub as re_sub

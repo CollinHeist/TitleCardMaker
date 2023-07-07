@@ -1,9 +1,9 @@
 from collections import namedtuple
-from typing import Any
 
 from re import IGNORECASE, compile as re_compile
 
 from modules.Debug import log
+from modules.EpisodeInfo2 import EpisodeInfo
 
 AbsoluteRange = namedtuple('AbsoluteRange', ('start', 'end'))
 EpisodeRange = namedtuple(
@@ -13,14 +13,21 @@ EpisodeRange = namedtuple(
 Season = namedtuple('Season', ('season_number'))
 
 class SeasonTitleRanges:
+    """
+    Class definining ranges over which custom season titles are applied.
+    These ranges take the form of an AbsoluteRange, EpisodeRange, or
+    Season.
+    """
 
+    """Regex to identify which type of range is specified"""
     ABSOLUTE_RANGE_REGEX = re_compile(r'^(\d+)-(\d+)$', IGNORECASE)
     EPISODE_RANGE_REGEX = re_compile(r'^s(\d+)e(\d+)-s(\d+)e(\d+)$', IGNORECASE)
     SEASON_REGEX = re_compile(r'^(\d+)$', IGNORECASE)
 
     __slots__ = ('titles')
 
-    def __init__(self, ranges: dict[str, str]) -> None:
+
+    def __init__(self, ranges: dict) -> None:
         """
         Create a SeasonTitleRanges object with the given ranges.
 
@@ -42,10 +49,13 @@ class SeasonTitleRanges:
             else:
                 log.warning(f'Unrecognized season title "{key}": "{title}"')
 
+        return None
+
 
     def get_season_text(self,
-            episode_info: 'EpisodeInfo',
-            card_settings: dict[str, Any]) -> str:
+            episode_info: EpisodeInfo,
+            card_settings: dict
+        ) -> str:
         """
         Get the season text for the given Episode.
 

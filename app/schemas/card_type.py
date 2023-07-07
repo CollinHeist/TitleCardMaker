@@ -164,6 +164,7 @@ class FrameCardType(BaseCardTypeCustomFontAllText):
     font_file: FilePath = Field(default=FrameTitleCard.TITLE_FONT)
     episode_text_color: BetterColor = Field(default=FrameTitleCard.EPISODE_TEXT_COLOR)
     episode_text_position: Literal['left', 'right', 'surround'] = Field(default='surround')
+    interword_spacing: int = Field(default=0)
 
 BoxAdjustmentRegex = r'^([-+]?\d+)\s+([-+]?\d+)\s+([-+]?\d+)\s+([-+]?\d+)$'
 BoxAdjustments = constr(regex=BoxAdjustmentRegex)
@@ -208,6 +209,7 @@ class OlivierCardType(BaseCardTypeCustomFontNoText):
     font_file: FilePath = Field(default=OlivierTitleCard.TITLE_FONT)
     episode_text_color: BetterColor = Field(default=OlivierTitleCard.EPISODE_TEXT_COLOR)
     stroke_color: BetterColor = Field(default=OlivierTitleCard.STROKE_COLOR)
+    interword_spacing: int = Field(default=0)
 
 class PosterCardType(BaseCardType):
     title_text: str 

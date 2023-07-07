@@ -77,8 +77,8 @@ class OlivierTitleCard(BaseCardType):
         'source_file', 'output_file', 'title_text', 'hide_episode_text', 
         'episode_prefix', 'episode_text', 'font_color', 'font_file', 
         'font_interline_spacing', 'font_kerning', 'font_size',
-        'font_stroke_width',  'font_vertical_shift', 'stroke_color',
-        'episode_text_color', 
+        'font_stroke_width', 'font_vertical_shift', 'stroke_color',
+        'episode_text_color', 'interword_spacing',
     )
 
     def __init__(self,
@@ -98,6 +98,7 @@ class OlivierTitleCard(BaseCardType):
             grayscale: bool = False,
             episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
             stroke_color: SeriesExtra[str] = STROKE_COLOR,
+            interword_spacing: int = 0,
             preferences: 'Preferences' = None, # type: ignore
             **unused
         ) -> None:
@@ -138,6 +139,7 @@ class OlivierTitleCard(BaseCardType):
         # Optional extras
         self.episode_text_color = episode_text_color
         self.stroke_color = stroke_color
+        self.interword_spacing = interword_spacing
 
 
     @property
@@ -154,6 +156,7 @@ class OlivierTitleCard(BaseCardType):
         stroke_width = 8.0 * self.font_stroke_width
         kerning = 0.5 * self.font_kerning
         interline_spacing = -20 + self.font_interline_spacing
+        interword_spacing = 0 + self.interword_spacing
         vertical_shift = 785 + self.font_vertical_shift
 
         return [
@@ -162,6 +165,7 @@ class OlivierTitleCard(BaseCardType):
             f'-pointsize {font_size}',
             f'-kerning {kerning}',
             f'-interline-spacing {interline_spacing}',
+            f'-interword-spacing {interword_spacing}',
             f'-fill "{self.stroke_color}"',
             f'-stroke "{self.stroke_color}"',
             f'-strokewidth {stroke_width}',

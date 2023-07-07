@@ -28,7 +28,10 @@ class Preferences:
     Class defining global Preferences.
     """
 
+    """Path to the version file for the Web UI"""
     VERSION_FILE = TCM_ROOT / 'modules' / 'ref' / 'version_webui'
+
+    """Default values for global settings"""
     DEFAULT_CARD_FILENAME_FORMAT = (
         '{series_full_name} S{season_number:02}E{episode_number:02}'
     )
@@ -37,13 +40,12 @@ class Preferences:
     DEFAULT_EPISODE_DATA_SOURCE = 'Sonarr'
     VALID_IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp')
 
+    """Directory to all internal assets"""
     INTERNAL_ASSET_DIRECTORY = TCM_ROOT / 'app' / 'assets'
 
-    PRIVATE_ATTRIBUTES = (
-        'emby_url', 'emby_api_key', 'jellyfin_url', 'jellyfin_api_key',
-        'plex_url', 'plex_token', 'sonarr_url', 'sonarr_api_key', 'tmdb_api_key'
-    )
-    
+    """Directory for all temporary file operations"""
+    TEMPORARY_DIRECTORY = TCM_ROOT / 'modules' / '.objects'
+
 
     def __init__(self, file: Path) -> None:
         """
