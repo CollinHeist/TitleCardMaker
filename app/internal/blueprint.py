@@ -73,8 +73,8 @@ def generate_series_blueprint(
         series: Series,
         include_global_defaults: bool,
         include_episode_overrides: bool,
-        preferences: Preferences
-    ) -> Blueprint:
+        preferences: Preferences,
+    ) -> dict:
     """
     Generate the Blueprint for the given Series. This Blueprint can be
     imported to completely recreate a Series' (and all associated
@@ -112,7 +112,7 @@ def generate_series_blueprint(
 
     # Append Series config
     if include_global_defaults:
-        export_obj['series'] =TieredSettings.new_settings(
+        export_obj['series'] = TieredSettings.new_settings(
             preferences.export_properties,
             series.export_properties,
         )
