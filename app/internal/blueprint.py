@@ -168,6 +168,36 @@ def generate_series_blueprint(
     return export_obj
 
 
+def get_blueprint_font_files(
+        series: Series,
+        episodes: list[Episode],
+    ) -> list[Path]:
+    """
+    Get Paths to all the Font files for the given Series' Blueprint.
+
+    Args:
+        series: Series whose associated Font files to return.
+        episodes: Any number of Episodes whose associated Font files to
+            return.
+
+    Returns:
+        List of Paths to the Font files for any Fonts associated with
+        the given Series, Episodes, or their linked Templates.
+    """
+
+    # Get all Templates
+    templates = list(set(
+        template for obj in [series] + episodes for template in obj.templates
+    ))
+
+    # Get list of files for the Series, all Episodes, and all Templates
+    all_fonts = set(
+        obj.font for obj in [series] + episodes + templates if obj.font
+    )
+
+    return [Path(font.file) for font in all_fonts if font.file]
+
+
 def query_series_blueprints(
         series: Series,
         *,
