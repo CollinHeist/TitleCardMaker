@@ -640,10 +640,11 @@
       // Query for Blueprints
       const allBlueprints = await fetch(`/api/blueprints/{{series.id}}/query`).then(resp => resp.json());
       $('.tab[data-tab="blueprints"] .info.message').toggleClass('hidden', true);
+      // Disable query button
+      $('.tab[data-tab="blueprints"] .button[data-action="search"]').toggleClass('disabled', true);
       // No blueprints available, hide loading and show warning message
       if (allBlueprints === null || allBlueprints.length === 0) {
         $('.tab[data-tab="blueprints"] .warning.message').toggleClass('hidden', false);
-        $('.tab[data-tab="blueprints"] .button').toggleClass('disabled', true);
         return;
       }
       // Blueprints available, create cards
@@ -1967,8 +1968,8 @@
 
           <!-- Blueprints Tab -->
           <div class="ui bottom attached tab segment" data-tab="blueprints">
-            <button onclick="queryBlueprints();" class="ui green tertiary button">
-              <i class="ui search icon"></i>
+            <button data-action="search" onclick="queryBlueprints();" class="ui green tertiary button" data-tooltip="Search for any existing Blueprints">
+              <i class="search icon"></i>
               Search for Blueprints
             </button>
             <div class="ui floating hidden info icon message">
