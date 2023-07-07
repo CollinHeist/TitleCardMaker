@@ -37,6 +37,11 @@
       min-height: 200px;
     }
 
+    /* Remove minimum width on progress bar */
+    #card-progress .bar {
+      min-width: 0;
+    }
+
     /* Add field buttons appear transparent */
     .add-field.button {
       background: transparent;
@@ -339,6 +344,10 @@
       const cardStat = statistics[0],
             episodeStat = statistics[1];
       $('#card-count')[0].innerHTML = `<i class="image outline icon"></i><span class="ui text">${cardStat.value} Cards / ${episodeStat.value} Episodes</span>`;
+      let cardVal = Math.min(cardStat.value, episodeStat.value);
+      $('#card-progress')[0].dataset.total = episodeStat.value;
+      $('#card-progress')[0].dataset.value = `${cardVal},${episodeStat.value-cardVal}`;
+      $('#card-progress').progress();
     }
 
     async function getLibraries() {
@@ -1299,9 +1308,7 @@
                 <span class="date">{{series.year}}</span>
               </div>
             </div>
-            <div id="card-count" class="extra content">
-              <!-- Added asynchronously -->
-            </div>
+            <div id="card-count" class="extra content"><!-- Added asynchronously --></div>
             <div id="monitor-status" class="extra content">
               <a onclick="toggleMonitorStatus();" data-tooltip="Monitored Series are automatically updated via the Scheduler">
                 {% if series.monitored %}
@@ -1315,6 +1322,10 @@
                 {% endif %}
                 </span>
               </a>
+            </div>
+            <div id="card-progress" class="ui bottom attached progress">
+              <div class="green bar"></div>
+              <div class="red bar"></div>
             </div>
           </div>
           <!-- Series action bottons -->
