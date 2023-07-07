@@ -91,9 +91,11 @@ def generate_series_blueprint(
 
         # Assign Template indices
         export_obj['episodes'][key] = episode_properties
-        export_obj['episodes'][key]['template_ids'] = [
-            templates.index(template) for template in episode.templates
-        ]
+        if episode.templates:
+            export_obj['episodes'][key]['template_ids'] = [
+                templates.index(template) for template in episode.templates
+            ]
+
         # Assign Font index
         if episode.font:
             export_obj['episodes'][key]['font_id'] = fonts.index(episode.font)
