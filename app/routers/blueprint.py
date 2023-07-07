@@ -7,8 +7,15 @@ from app.database.query import get_series
 
 from app.database.session import Page
 from app.dependencies import *
-from app.internal.blueprint import generate_series_blueprint, import_blueprint, query_series_blueprints
-from app.schemas.blueprint import Blueprint, RemoteBlueprint
+from app.internal.blueprint import (
+    generate_series_blueprint, get_blueprint_by_id, get_blueprint_font_files,
+    import_blueprint, query_all_blueprints, query_series_blueprints
+)
+import app.models as models
+from app.schemas.blueprint import (
+    Blueprint, BlankBlueprint, DownloadableFile, RemoteBlueprint,
+    RemoteMasterBlueprint
+)
 
 
 # Create sub router for all /blueprints API requests
@@ -18,14 +25,14 @@ blueprint_router = APIRouter(
 )
 
 
-@blueprint_router.get('/{series_id}/export', status_code=200)
+@blueprint_router.get('/export/series/{series_id}', status_code=200)
 def export_series_blueprint(
         series_id: int,
         include_global_defaults: bool = Query(default=True),
         include_episode_overrides: bool = Query(default=True),
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-    ) -> Blueprint:
+    ) -> BlankBlueprint:
     """
     Generate the Blueprint for the given Series. This Blueprint can be
     imported to completely recreate a Series' (and all associated
@@ -47,12 +54,12 @@ def export_series_blueprint(
     )
 
 
-@blueprint_router.get('/{series_id}/files', status_code=200)
-def export_series_blueprint_files(
+@blueprint_router.get('/export/series/{series_id}/font-files', status_code=200)
+def get_series_blueprint_font_files(
         series_id: int,
         include_episode_overrides: bool = Query(default=True),
         db: Session = Depends(get_database),
-    ) -> list[str]:
+    ) -> list[DownloadableFile]:
     """
     Get the URI's to the associated Blueprint's Font files so they can
     be downloaded.
@@ -65,29 +72,32 @@ def export_series_blueprint_files(
     # Query for this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    # Get all Episodes if indicates
-    episodes = series.episodes if include_episode_overrides else []
+    # Get list of Font files for this Series' Blueprint
+    font_files = get_blueprint_font_files(
+        series,
+        series.episodes if include_episode_overrides else [],
+    )
 
-    # Get all Templates
-    templates = list(set(
-        template for obj in [series] + episodes for template in obj.templates
-    ))
-
+    # Return downloadable files for these
     return [
-        f'/assets/fonts/{font.id}/{Path(font.file).name}'
-        for font in set(obj.font for obj in [series] + episodes + templates
-                        if obj.font)
+        {
+            'url': f'/assets/fonts/{font_file.parent.name}/{font_file.name}',
+            'filename': font_file.name
+        }
+        for font_file in font_files
     ]
 
 
-@blueprint_router.get('/{series_id}/query', status_code=200)
+@blueprint_router.get('/query/series/{series_id}', status_code=200)
 def query_series_blueprints_(
         request: Request,
         series_id: int,
         db: Session = Depends(get_database),
     ) -> list[RemoteBlueprint]:
     """
-    
+    Search for any Blueprints for the given Series.
+
+    - series_id: ID of the Series to search for Blueprints of.
     """
 
     # Query for this Series, raise 404 if DNE
@@ -96,28 +106,53 @@ def query_series_blueprints_(
     return query_series_blueprints(series, log=request.state.log)
 
 
-@blueprint_router.put('/{series_id}/import/{blueprint_id}', status_code=200)
+@blueprint_router.put('/import/series/{series_id}/blueprint/{blueprint_id}', status_code=200)
 def import_series_blueprint_by_id(
+        request: Request,
         series_id: int,
+        blueprint_id: int,
         db: Session = Depends(get_database),
+        preferences: Preferences = Depends(get_preferences),
     ) -> None:
+    """
+    Import the Blueprint with the given ID to the given Series.
 
-    ...
+    - series_id: ID of the Series to query for Blueprints of and to
+    import into.
+    - blueprint_id: ID of the Blueprint to import.
+    """
+
+    # Query for this Series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Get Blueprint with this ID, raise 404 if DNE
+    blueprint = get_blueprint_by_id(series, blueprint_id, log=request.state.log)
+
+    # Import Blueprint
+    import_blueprint(db, preferences, series, blueprint, log=request.state.log)
+
+    return None
 
 
-@blueprint_router.put('/{series_id}/import', status_code=200)
+@blueprint_router.put('/import/series/{series_id}', status_code=200)
 def import_series_blueprint_(
         request: Request,
         series_id: int,
-        blueprint: RemoteBlueprint = Body(...),
+        blueprint: Union[Blueprint, RemoteBlueprint] = Body(...),
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences)
     ) -> None:
     """
-    
+    Import the given Blueprint into the given Series.
+
+    - series_id: ID of the Series to import the given Blueprint into.
+    - blueprint: Blueprint object to import.
     """    
 
     # Query for this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
+    # Import Blueprint
     import_blueprint(db, preferences, series, blueprint, log=request.state.log)
+
+    return None
