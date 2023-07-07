@@ -16,7 +16,7 @@ class CleanPath(_Path_):
     """
 
     """Mapping of illegal filename characters and their replacements"""
-    __ILLEGAL_FILE_CHARACTERS = {
+    ILLEGAL_FILE_CHARACTERS = {
         '?': '!',
         '<': '',
         '>': '',
@@ -61,7 +61,7 @@ class CleanPath(_Path_):
             Sanitized filename.
         """
 
-        replacements = CleanPath.__ILLEGAL_FILE_CHARACTERS
+        replacements = CleanPath.ILLEGAL_FILE_CHARACTERS
 
         return filename.translate(str.maketrans(replacements))
 

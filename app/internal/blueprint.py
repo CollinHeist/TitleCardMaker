@@ -1,5 +1,7 @@
 from logging import Logger
-from re import compile as re_compile, IGNORECASE
+from pathlib import Path
+from re import compile as re_compile, sub as re_sub, IGNORECASE
+from typing import Union
 
 from fastapi import HTTPException
 from requests import get, JSONDecodeError
@@ -10,24 +12,61 @@ from app.models.font import Font
 from app.models.preferences import Preferences
 from app.models.series import Series
 from app.models.template import Template
-from app.schemas.blueprint import Blueprint, RemoteBlueprint
+from app.schemas.blueprint import (
+    Blueprint, RemoteBlueprint, RemoteMasterBlueprint
+)
 from app.schemas.episode import UpdateEpisode
 from app.schemas.font import NewNamedFont
 from app.schemas.series import NewTemplate, UpdateSeries
 
+from modules.CleanPath import CleanPath
 from modules.Debug import log
 from modules.TieredSettings import TieredSettings
 
-
+"""
+Regex to extract the season and episode number from an Episode override
+key.
+"""
 EPISODE_REGEX = re_compile(
     r'^s(?P<season_number>\d+)e(?P<episode_number>\d+)$',
     IGNORECASE
 )
 
-BLUEPRINT_URL = (
-    'https://github.com/CollinHeist/TitleCardMaker-Blueprints/'
-    'raw/master/blueprints'
-)
+"""Root URL of the Blueprint Repository"""
+REPO_URL = 'https://github.com/CollinHeist/TitleCardMaker-Blueprints/raw/master'
+
+"""URL under which all Blueprint subdirectories are located"""
+BLUEPRINTS_URL = f'{REPO_URL}/blueprints'
+
+"""URL to the master Blueprint file"""
+MASTER_BLUEPRINT_FILE = f'{REPO_URL}/master_blueprints.json'
+
+
+def get_blueprint_folders(series_name: str) -> tuple[str, str]:
+    """
+    Get the parent folders for the given Series name. This does any name
+    cleaning. For example:
+
+    >>> get_blueprint_folders('The Expanse (2015)')
+    ('E', 'The Expanse (2015)')
+    >>> get_blueprint_folders('Demon Slayer: Kimetsu no Yaiba (2018)')
+    ('D', 'Demon Slayer - Kimetsu no Yaiba (2018)')
+
+    Args:
+        series_name: Name of the Series to get the folders of.
+
+    Returns:
+        Tuple of the name of the letter subfolder and series name
+        subfolder for the given Series name.
+    """
+
+    # Remove illegal path characters
+    clean_name = CleanPath.sanitize_name(series_name)
+
+    # Remove prefix words like A/An/The
+    sort_name = re_sub(r'^(a|an|the)(\s)', '', clean_name, flags=IGNORECASE)
+
+    return sort_name[0].upper(), clean_name
 
 
 def generate_series_blueprint(
@@ -145,15 +184,16 @@ def query_series_blueprints(
         List of RemoteBlueprints found for the given Series.
 
     Raises:
-        HTTPException (500) if the blueprints JSON file cannot be
-            decoded.
+        HTTPException (500) if the Blueprint file cannot be decoded as
+            JSON.
     """
 
     # Get subfolder for this Series
-    subfolder = f'{series.sort_name.upper()[0]}/{series.full_name}'
+    letter, path_name = get_blueprint_folders(series.full_name)
+    subfolder = f'{letter}/{path_name}'
 
     # Read the JSON file of Blueprint definitions
-    blueprint_url = f'{BLUEPRINT_URL}/{subfolder}/blueprints.json'
+    blueprint_url = f'{BLUEPRINTS_URL}/{subfolder}/blueprints.json'
     response = get(blueprint_url)
 
     # If no file was found, there are no Blueprints for this Series, return
@@ -180,7 +220,7 @@ def query_series_blueprints(
         blueprints[blueprint_id]['id'] = blueprint_id
         preview_filename = blueprints[blueprint_id]['preview']
         blueprints[blueprint_id]['preview'] = (
-            f'{BLUEPRINT_URL}/{subfolder}/{blueprint_id}/{preview_filename}'
+            f'{BLUEPRINTS_URL}/{subfolder}/{blueprint_id}/{preview_filename}'
         )
 
     # Return all Blueprints, omitting nulls
