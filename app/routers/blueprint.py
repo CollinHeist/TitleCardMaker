@@ -88,6 +88,19 @@ def get_series_blueprint_font_files(
     ]
 
 
+
+
+@blueprint_router.get('/query/all', status_code=200)
+def query_all_blueprints_(
+        request: Request,
+    ) -> Page[RemoteMasterBlueprint]:
+    """
+    Query for all Blueprints for all Series on GitHub.
+    """
+
+    return paginate(query_all_blueprints(log=request.state.log))
+
+
 @blueprint_router.get('/query/series/{series_id}', status_code=200)
 def query_series_blueprints_(
         request: Request,
