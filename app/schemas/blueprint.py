@@ -45,27 +45,28 @@ class BlueprintEpisode(BlueprintSeries):
     episode_text: Optional[str] = Field(default=None)
 
 class BlueprintFont(BlueprintBase):
-    name: str = Field(...)
+    name: str
     color: Optional[str] = Field(default=None)
-    title_case: Optional[TitleCase] = Field(default=None)
-    size: float = Field(default=None)
-    kerning: float = Field(default=None)
-    stroke_width: float = Field(default=None)
-    interline_spacing: int = Field(default=None)
-    vertical_shift: int = Field(default=None)
     delete_missing: bool = Field(default=None)
+    file: Optional[str] = Field(default=None)
+    kerning: float = Field(default=None)
+    interline_spacing: int = Field(default=None)
     replacements_in: list[str] = Field(default=None)
     replacements_out: list[str] = Field(default=None)
+    size: float = Field(default=None)
+    stroke_width: float = Field(default=None)
+    title_case: Optional[TitleCase] = Field(default=None)
+    vertical_shift: int = Field(default=None)
 
 class BlueprintTemplate(SeriesBase):
-    name: str = Field(..., min_length=1, title='Template name')
+    name: str
     filters: list[Condition] = Field(default=[])
 
 """
 Creation classes
 """
 class Blueprint(Base):
-    series: BlueprintSeries = Field(...)
+    series: BlueprintSeries
     episodes: dict[str, BlueprintEpisode] = Field(default={})
     templates: list[BlueprintTemplate] = Field(default=[])
     fonts: list[BlueprintFont] = Field(default=[])
@@ -77,16 +78,23 @@ Update classes
 """
 Return classes
 """
+class DownloadableFile(Base):
+    url: str
+    filename: str
+
+class BlankBlueprint(Blueprint):
+    description: list[str] = Field(default=['Descriptive information about this Blueprint'])
+    creator: str = Field(default='Your (user)name here')
+    preview: str = Field(default='Name of preview file here')
+
 class RemoteBlueprintFont(BlueprintFont):
-    file: Optional[str] = Field(default=None)
     file_download_url: Optional[str] = Field(default=None)
 
-class RemoteBlueprint(Base):
+class RemoteBlueprint(Blueprint):
     id: int
     description: list[str]
     preview: str
     creator: str
-    series: BlueprintSeries
-    episodes: dict[str, BlueprintEpisode] = Field(default={})
-    templates: list[BlueprintTemplate] = Field(default=[])
-    fonts: list[RemoteBlueprintFont] = Field(default=[])
+    
+class RemoteMasterBlueprint(RemoteBlueprint):
+    series_full_name: str
