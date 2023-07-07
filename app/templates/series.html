@@ -669,7 +669,7 @@
         if (Object.keys(blueprint.episodes).length === 0) {
           card.querySelector('[data-value="episode-count"]').remove();
         } else {
-          let text = `<b>${Object.keys(blueprint.episodes).length}</b> Episode Override` + (blueprint.templates.length > 1 ? 's' : '');
+          let text = `<b>${Object.keys(blueprint.episodes).length}</b> Episode Override` + (blueprint.episodes.length > 1 ? 's' : '');
           card.querySelector('[data-value="episode-count"]').innerHTML = text;
         }
         card.querySelector('[data-value="description"]').innerHTML = '<p>' + blueprint.description.join('</p><p>') + '</p>';
