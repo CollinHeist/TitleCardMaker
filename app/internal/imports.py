@@ -12,7 +12,7 @@ from app.internal.cards import add_card_to_database, resolve_card_settings
 from app.internal.connection import update_connection
 import app.models as models
 from app.schemas.base import UNSPECIFIED
-from app.schemas.card import CardActions, NewTitleCard
+from app.schemas.card import NewTitleCard
 from app.schemas.font import NewNamedFont
 from app.schemas.preferences import (
     CardExtension, EpisodeDataSource, Preferences, UpdateEmby, UpdateJellyfin,
@@ -1099,7 +1099,7 @@ def import_cards(
         force_reload: bool,
         *,
         log: Logger = log,
-    ) -> CardActions:
+    ) -> None:
     """
     Import any existing Title Cards for the given Series. This finds
     card files by filename, and makes the assumption that each file
@@ -1114,9 +1114,6 @@ def import_cards(
         image_extension: Extension of images to search for.
         force_reload: Whether to replace any existing Card entries for
             Episodes identified while importing.
-
-    Returns:
-        CardActions describing the taken actions.
     """
 
     # If explicit directory was not provided, use Series default
@@ -1129,16 +1126,13 @@ def import_cards(
     # No images to import, return empty actions
     if len(all_images) == 0:
         log.debug(f'No Cards identified within "{directory}" to import')
-        return CardActions()
 
     # For each image, identify associated Episode
-    actions = CardActions()
     for image in all_images:
         if (groups := match(r'.*s(\d+).*e(\d+)', image.name, IGNORECASE)):
             season_number, episode_number = map(int, groups.groups())
         else:
             log.warning(f'Cannot identify index of {image.resolve()} - skipping')
-            actions.invalid += 1
             continue
 
         # Find associated Episode
@@ -1151,13 +1145,11 @@ def import_cards(
         # No associated Episode, skip
         if episode is None:
             log.warning(f'{series.log_str} No associated Episode for {image.resolve()} - skipping')
-            actions.invalid += 1
             continue
 
         # Episode has an existing Card, skip if not forced
         if episode.card and not force_reload:
-            log.info(f'{series.log_str} {episode.log_str} has an associated Card - skipping')
-            actions.existing += 1
+            log.debug(f'{series.log_str} {episode.log_str} has an associated Card - skipping')
             continue
         # Episode has card, delete if reloading
         elif episode.card and force_reload:
@@ -1165,15 +1157,13 @@ def import_cards(
                 log.debug(f'{card.log_str} deleting record')
                 db.query(models.card.Card).filter_by(id=card.id).delete()
                 log.debug(f'{series.log_str} {episode.log_str} has associated Card - reloading')
-                actions.deleted += 1
 
         # Get finalized Card settings for this Episode, override card file
-        card_settings = resolve_card_settings(preferences, episode, log=log)
-
-        # If a list of CardActions were returned, update actions and skip
-        if isinstance(card_settings, list):
-            for action in card_settings:
-                setattr(actions, action, getattr(actions, action)+1)
+        try:
+            card_settings = resolve_card_settings(preferences, episode, log=log)
+        except HTTPException as e:
+            log.exception(f'{series.log_str} {episode.log_str} Cannot import '
+                          f'Card - settings are invalid {e}', e)
             continue
 
         # Card is valid, create and add to Database
@@ -1186,6 +1176,5 @@ def import_cards(
 
         card = add_card_to_database(db, title_card, card_settings['card_file'])
         log.debug(f'{series.log_str} {episode.log_str} Imported {image.resolve()}')
-        actions.imported += 1
 
-    return actions
+    return None

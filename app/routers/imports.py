@@ -66,8 +66,8 @@ def import_global_options_yaml(
 
 @import_router.post('/preferences/connection/{connection}', status_code=201)
 def import_connection_yaml(
-        connection: Literal['all', 'emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
         request: Request,
+        connection: Literal['all', 'emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
         import_yaml: ImportYaml = Body(...),
         preferences = Depends(get_preferences)
     ) -> Preferences:
@@ -328,8 +328,8 @@ def import_series_yaml(
 @import_router.post('/series/{series_id}/cards', status_code=200,
                     tags=['Title Cards', 'Series'])
 def import_cards_for_series(
-        series_id: int,
         request: Request,
+        series_id: int,
         card_directory: ImportCardDirectory = Body(...),
         preferences: Preferences = Depends(get_preferences),
         db: Session = Depends(get_database)
@@ -362,10 +362,11 @@ def import_cards_for_series(
 @import_router.post('/series/cards', status_code=200,
                     tags=['Title Cards', 'Series'])
 def import_cards_for_multiple_series(
+        request: Request,
         card_import: MultiCardImport = Body(...),
         preferences = Depends(get_preferences),
         db: Session = Depends(get_database)
-    ) -> CardActions:
+    ) -> None:
     """
     Import any existing Title Cards for all the given Series. This finds
     card files by filename, and makes the assumption that each file
@@ -375,23 +376,19 @@ def import_cards_for_multiple_series(
     """
 
     # Import Card for each identified Series
-    card_actions = CardActions()
     for series_id in card_import.series_ids:
         # Get this Series, raise 404 if DNE
         series = get_series(db, series_id, raise_exc=True)
 
         # Import Cards for this Series
-        actions = import_cards(
+        import_cards(
             db,
             preferences,
             series, 
             None,
             card_import.image_extension,
             card_import.force_reload,
+            log=request.state.log,
         )
 
-        # Add Action flags
-        for flag, count in actions.dict().items():
-            setattr(card_actions, flag, getattr(card_actions, flag)+count)
-
-    return card_actions
+    return None
