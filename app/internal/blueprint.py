@@ -198,6 +198,47 @@ def get_blueprint_font_files(
     return [Path(font.file) for font in all_fonts if font.file]
 
 
+# TODO utilize caching
+def query_all_blueprints(
+        *,
+        log: Logger = log,
+    ) -> list[RemoteMasterBlueprint]:
+    """
+    Query for all Blueprints for all Series on GitHub.
+
+    Args:
+        log: (Keyword) Logger for all log messages.
+
+    Returns:
+        List of RemoteMasterBlueprints for all Series.
+
+    Raises:
+        HTTPException (500) if the mater Blueprint file cannot be
+            decoded as JSON.
+    """
+
+    # Read the master Blueprints JSON file
+    response = get(MASTER_BLUEPRINT_FILE)
+
+    # If no file was found, raise 404
+    if response.status_code == 404:
+        log.error(f'No Master Blueprint file found')
+        raise HTTPException(
+            status_code=404,
+            detail=f'No master Blueprint file found'
+        )
+    
+    # Find found, parse as JSON
+    try:
+        return response.json()
+    except JSONDecodeError as e:
+        log.exception(f'Error prasing master Blueprint file - {e}', e)
+        raise HTTPException(
+            status_code=500,
+            detail=f'Unable to parse master Blueprint file'
+        )
+
+
 def query_series_blueprints(
         series: Series,
         *,
