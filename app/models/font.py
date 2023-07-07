@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy import Boolean, Column, Integer, Float, String, JSON
@@ -46,13 +47,14 @@ class Font(Base):
         return {
             'name': self.name,
             'color': self.color,
-            'title_case': self.title_case,
-            'size': None if self.size == 1.0 else self.size,
-            'kerning': None if self.kerning == 1.0 else self.kerning,
-            'stroke_width': None if self.stroke_width == 1.0 else self.stroke_width,
-            'interline_spacing': None if self.interline_spacing == 0 else self.interline_spacing,
-            'vertical_shift': None if self.vertical_shift == 0 else self.vertical_shift,
             'delete_missing': self.delete_missing,
+            'file': None if self.file is None else Path(self.file).name,
+            'interline_spacing': None if self.interline_spacing == 0 else self.interline_spacing,
+            'kerning': None if self.kerning == 1.0 else self.kerning,
             'replacements_in': list(self.replacements.keys()),
             'replacements_out': list(self.replacements.values()),
+            'size': None if self.size == 1.0 else self.size,
+            'stroke_width': None if self.stroke_width == 1.0 else self.stroke_width,
+            'title_case': self.title_case,
+            'vertical_shift': None if self.vertical_shift == 0 else self.vertical_shift,
         }
