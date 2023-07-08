@@ -351,7 +351,7 @@ def resolve_card_settings(
             **CardClass.TITLE_CHARACTERISTICS
         ))
     else:
-        card_settings['title_text'] = card_settings['title']
+        card_settings['title_text'] = card_settings['title'].replace('\\n','\n')
 
     # Apply title text case function
     if card_settings.get('font_title_case', None) is None:
@@ -444,6 +444,7 @@ def resolve_card_settings(
     # If an explicit card file was indicated, use it vs. default
     try:
         if card_settings.get('card_file', None) is None:
+            card_settings['title'] = card_settings['title'].replace('\\n', '')
             card_settings['card_file'] = series_directory \
                 / preferences.get_folder_format(episode_info) \
                 / card_settings['card_filename_format'].format(**card_settings)
