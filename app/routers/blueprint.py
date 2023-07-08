@@ -227,7 +227,7 @@ def import_series_blueprint_by_id(
 def import_series_blueprint_(
         request: Request,
         series_id: int,
-        blueprint: Union[Blueprint, RemoteBlueprint] = Body(...),
+        blueprint: RemoteBlueprint = Body(...),
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences)
     ) -> None:

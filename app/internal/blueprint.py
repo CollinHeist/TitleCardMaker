@@ -329,7 +329,7 @@ def import_blueprint(
         db: Session,
         preferences: Preferences,
         series: Series,
-        blueprint: Union[Blueprint, RemoteBlueprint],
+        blueprint: RemoteBlueprint,
         *,
         log: Logger = log,
     ) -> None:
