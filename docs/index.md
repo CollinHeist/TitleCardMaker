@@ -60,9 +60,8 @@ clone the repository with:
 will now be downloaded into that directory.
 
 ## Running TitleCardMaker
-1. After the zipped code has been downloaded, unzip it wherever you'd like the
-installation to live. Open the unzipped folder.
-2. Navigate to the installation directory within the command line.
+
+1. Navigate to the installation directory within the command line.
 
     ??? example "Example"
 
@@ -102,7 +101,7 @@ installation to live. Open the unzipped folder.
             1. Replace `~/Your/Install/Directory` with the path to the directory
             from the above Step 2.
 
-3. Within the main installation directory, create the required folders for
+2. Within the main installation directory, create the required folders for
 TCM - these are the `assets`, `cards`, `logs`, and `source` directories - by
 executing the following command(s):
 
@@ -130,7 +129,7 @@ executing the following command(s):
         mkdir assets; mkdir cards; mkdir logs; mkdir source;
         ```
 
-6. We now need to make sure these directories have the correct permissions
+3. We now need to make sure these directories have the correct permissions
 assigned to them. 
 
     === ":material-linux: Linux"
@@ -165,183 +164,220 @@ assigned to them.
 
         Changing the permissions is not necessary on Windows.
 
-    !!! info "Choice of Installation"
+!!! info "Choice of Installation"
 
-        You now have the choice of building and running the Docker container
-        yourself, or launching the Python script directly. Those who wish to (or
-        must) use a Docker container, continue
-        [here](#building-the-docker-container). The Python steps continue below.
+    You now have the choice of building and running the Docker container
+    yourself, or launching the Python script directly.
 
-7. Run the following command to install the required Python packages and launch
-the TCM interface.
+    The Docker container is the recommended method.
 
-    === ":material-linux: Linux"
+=== ":material-docker: Docker"
 
-        ```bash
-        pipenv install; # (1)!
-        pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 # (2)!
+    1. Build the Docker container by executing the following command:
+
+        === ":material-linux: Linux"
+
+            ```bash
+            docker build -t "titlecardmaker" . # (1)!
+            ```
+
+            1. This will label the built container `titlecardmaker`.
+
+        === ":material-apple: MacOS"
+
+            ```bash
+            docker build -t "titlecardmaker" . # (1)!
+            ```
+
+            1. This will label the built container `titlecardmaker`.
+
+        === ":material-powershell: Windows (Powershell)"
+
+            ```bash
+            docker build -t "titlecardmaker" . <#(1)#>
+            ```
+
+            1. This will label the built container `titlecardmaker`.
+
+        === ":material-microsoft-windows: Windows (Non-Powershell)"
+
+            ```bash
+            docker build -t "titlecardmaker" . # (1)!
+            ```
+
+            1. This will label the built container `titlecardmaker`.
+
+    2. Determine your timezone, a full list is available
+    [here](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). You
+    will want to take note of the text in the _TZ Identifer_ column - e.g.
+    `America/Los_Angeles`. Store this in a variable called `TZ` like so (using
+    _your_ timezone, not the example below):
+
+        === ":material-linux: Linux"
+
+            ```bash
+            TZ="America/Los_Angeles"
+            ```
+
+        === ":material-apple: MacOS"
+
+            ```bash
+            TZ="America/Los_Angeles"
+            ```
+
+        === ":material-powershell: Windows (Powershell)"
+
+            ```bash
+            $env:TZ = "America/Los_Angeles"
+            ```
+
+        === ":material-microsoft-windows: Windows (Non-Powershell)"
+
+            ```bash
+            set TZ="America/Los_Angeles"
+            ```
+
+    3. Launch the Docker container by executing the following command:
+
+        === ":material-linux: Linux"
+
+            ```bash
+            docker run -itd \
+                --net="bridge" \
+                -v "$(pwd)/logs/":"/maker/logs/" \
+                -v "$(pwd)/assets/":"/config/assets/" \
+                -v "$(pwd)/source/":"/config/source/" \
+                -v "$(pwd)/cards/":"/config/cards/" \
+                -e TZ="$TZ" \
+                -p 4242:4242 \
+                titlecardmaker
+            ```
+
+        === ":material-apple: MacOS"
+
+            ```bash
+            docker run -itd \
+                --net="bridge" \
+                -v "$(pwd)/logs/":"/maker/logs/" \
+                -v "$(pwd)/assets/":"/config/assets/" \
+                -v "$(pwd)/source/":"/config/source/" \
+                -v "$(pwd)/cards/":"/config/cards/" \
+                -e TZ="$TZ" \
+                -p 4242:4242 \
+                titlecardmaker
+            ```
+
+        === ":material-powershell: Windows (Powershell)"
+
+            ```bash
+            docker run -itd `
+                --net="bridge" `
+                -v "$(pwd)\logs":"/maker/logs/" `
+                -v "$(pwd)\assets":"/config/assets/" `
+                -v "$(pwd)\source":"/config/source/" `
+                -v "$(pwd)\cards":"/config/cards/" `
+                -e TZ="$env:TZ" `
+                -p 4242:4242 `
+                titlecardmaker
+            ```
+
+        === ":material-microsoft-windows: Windows (Non-Powershell)"
+
+            ```bash
+            docker run -itd ^
+                --net="bridge" ^
+                -v "$(pwd)\logs":"/maker/logs/" ^
+                -v "$(pwd)\assets":"/config/assets/" ^
+                -v "$(pwd)\source":"/config/source/" ^
+                -v "$(pwd)\cards":"/config/cards/" ^
+                -e TZ="$TZ" ^
+                -p 4242:4242 ^
+                titlecardmaker
+            ```
+
+        ??? question "What does this command do?"
+
+            This does a few things:
+
+            1. Launches the container in the background.
+            2. Makes the TCM ports available to other Docker containers.
+            3. The `-v` commands make your directories accessible inside the
+            container.
+            4. The `-e TZ..` command defines your timezone inside the container.
+            5. Exposes the _internal_ `4242` port outside the container, so that you
+            can access it on your machine.
+
+    !!! success "Success"
+
+        TitleCardMaker is now accessible at the `http://0.0.0.0:4242` or
+        `http://localhost:4242/` URL.
+
+=== ":material-language-python: Non-Docker"
+
+    4. Run the following command to install the required Python packages and launch
+    the TCM interface.
+
+        === ":material-linux: Linux"
+
+            ```bash
+            pipenv install; # (1)!
+            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 # (2)!
+            ```
+
+            1. This installs the required Python dependencies
+            2. This launches a webserver at your `{your IP}:4242` which the TCM Web
+            UI is accessible at.
+
+        === ":material-apple: MacOS"
+
+            ```bash
+            pipenv install; # (1)!
+            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 # (2)!
+            ```
+
+            1. This installs the required Python dependencies
+            2. This launches a webserver at your `{your IP}:4242` which the TCM Web
+            UI is accessible at.
+
+        === ":material-powershell: Windows (Powershell)"
+
+            ```bash
+            pipenv install; <#(1)#>
+            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 <#(2)#>
+            ```
+
+            1. This installs the required Python dependencies
+            2. This launches a webserver at your `{your IP}:4242` which the TCM Web
+            UI is accessible at.
+
+        === ":material-microsoft-windows: Windows (Non-Powershell)"
+
+            ```bash
+            pipenv install; # (1)!
+            pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 --workers 4 # (2)!
+            ```
+
+            1. This installs the required Python dependencies
+            2. This launches a webserver at your `{your IP}:4242` which the TCM Web
+            UI is accessible at.
+
+    !!! success "Success"
+
+        TitleCardMaker is now accessible at the `http://0.0.0.0:4242` or
+        `http://localhost:4242/` URL.
+
+    ??? failure "Interface not accessible?"
+
+        If your log shows
+
+        ```log
+        INFO:     Application startup complete.
         ```
-
-        1. This installs the required Python dependencies
-        2. This launches a webserver at your `{your IP}:4242` which the TCM Web
-        UI is accessible at.
-
-    === ":material-apple: MacOS"
-
-        ```bash
-        pipenv install; # (1)!
-        pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 # (2)!
-        ```
-
-        1. This installs the required Python dependencies
-        2. This launches a webserver at your `{your IP}:4242` which the TCM Web
-        UI is accessible at.
-
-    === ":material-powershell: Windows (Powershell)"
-
-        ```bash
-        pipenv install; <#(1)#>
-        pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 <#(2)#>
-        ```
-
-        1. This installs the required Python dependencies
-        2. This launches a webserver at your `{your IP}:4242` which the TCM Web
-        UI is accessible at.
-
-    === ":material-microsoft-windows: Windows (Non-Powershell)"
-
-        ```bash
-        pipenv install; # (1)!
-        pipenv run uvicorn app-main:app --host "0.0.0.0" --port 4242 --workers 4 # (2)!
-        ```
-
-        1. This installs the required Python dependencies
-        2. This launches a webserver at your `{your IP}:4242` which the TCM Web
-        UI is accessible at.
-
-!!! success "Success"
-
-    TitleCardMaker is now accessible at the `http://0.0.0.0:4242` or
-    `http://localhost:4242/` URL.
-
-??? failure "Interface not accessible?"
-
-    If your log shows
-
-    ```log
-    INFO:     Application startup complete.
-    ```
-    
-    And neither the `http://0.0.0.0:4242` or `http://localhost:4242/` URL loads
-    into the TCM UI, then replace the `0.0.0.0` part of the previous command
-    with your _local_ IP address - e.g. `192.168.0.10`. If you still have
-    issues, reach out on the Discord.
-
-## Building the Docker Container
-
-1. Build the Docker container by executing the following command:
-
-    === ":material-linux: Linux"
-
-        ```bash
-        docker build -t "titlecardmaker" . # (1)!
-        ```
-
-        1. This will label the built container `titlecardmaker`.
-
-    === ":material-apple: MacOS"
-
-        ```bash
-        docker build -t "titlecardmaker" . # (1)!
-        ```
-
-        1. This will label the built container `titlecardmaker`.
-
-    === ":material-powershell: Windows (Powershell)"
-
-        ```bash
-        docker build -t "titlecardmaker" . <#(1)#>
-        ```
-
-        1. This will label the built container `titlecardmaker`.
-
-    === ":material-microsoft-windows: Windows (Non-Powershell)"
-
-        ```bash
-        docker build -t "titlecardmaker" . # (1)!
-        ```
-
-        1. This will label the built container `titlecardmaker`.
-
-2. Launch the Docker container by executing the following command:
-
-    === ":material-linux: Linux"
-
-        ```bash
-        docker run -itd \
-            --net="bridge" \
-            -v "$(pwd)/logs/":"/maker/logs/" \
-            -v "$(pwd)/assets/":"/config/assets/" \
-            -v "$(pwd)/source/":"/config/source/" \
-            -v "$(pwd)/cards/":"/config/cards/" \
-            -p 4242:4242 \
-            titlecardmaker
-        ```
-
-    === ":material-apple: MacOS"
-
-        ```bash
-        docker run -itd \
-            --net="bridge" \
-            -v "$(pwd)/logs/":"/maker/logs/" \
-            -v "$(pwd)/assets/":"/config/assets/" \
-            -v "$(pwd)/source/":"/config/source/" \
-            -v "$(pwd)/cards/":"/config/cards/" \
-            -p 4242:4242 \
-            titlecardmaker
-        ```
-
-    === ":material-powershell: Windows (Powershell)"
-
-        ```bash
-        docker run -itd `
-            --net="bridge" `
-            -v "$(pwd)\logs":"/maker/logs/" `
-            -v "$(pwd)\assets":"/config/assets/" `
-            -v "$(pwd)\source":"/config/source/" `
-            -v "$(pwd)\cards":"/config/cards/" `
-            -p 4242:4242 `
-            titlecardmaker
-        ```
-
-    === ":material-microsoft-windows: Windows (Non-Powershell)"
-
-        ```bash
-        docker run -itd ^
-            --net="bridge" ^
-            -v "$(pwd)\logs":"/maker/logs/" ^
-            -v "$(pwd)\assets":"/config/assets/" ^
-            -v "$(pwd)\source":"/config/source/" ^
-            -v "$(pwd)\cards":"/config/cards/" ^
-            -p 4242:4242 ^
-            titlecardmaker
-        ```
-
-    ??? question "What does this command do?"
-
-        This does a few things:
-
-        1. Launches the container in the background.
-        2. Makes the TCM ports available to other Docker containers.
-        3. The `-v` commands make your directories accessible inside the
-        container.
-        4. Exposes the _internal_ `4242` port outside the container, so that you
-        can access it on your machine.
-
-!!! success "Success"
-
-    TitleCardMaker is now accessible at the `http://0.0.0.0:4242` or
-    `http://localhost:4242/` URL.
+        
+        And neither the `http://0.0.0.0:4242` or `http://localhost:4242/` URL loads
+        into the TCM UI, then replace the `0.0.0.0` part of the previous command
+        with your _local_ IP address - e.g. `192.168.0.10`. If you still have
+        issues, reach out on the Discord.
 
 # Getting Started
 !!! info "Detailed Tutorial"
