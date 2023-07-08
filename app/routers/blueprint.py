@@ -134,6 +134,7 @@ async def export_series_blueprint_as_zip(
     # Get preview image for this Series - use first non-stylized existing Card
     cards = db.query(models.card.Card)\
         .filter_by(series_id=series_id, blur=False, grayscale=False)\
+        .filter(models.card.Card.season_number>0)\
         .order_by(models.card.Card.season_number,
                   models.card.Card.episode_number)\
         .all()
