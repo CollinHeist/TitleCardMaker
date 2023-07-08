@@ -104,6 +104,9 @@ markdown_extensions:
   # - pymdownx.snippets
   - pymdownx.superfences
 
+  # Footnotes
+  - footnotes
+
   # Markdown extensions
   # - pymdownx.superfences
   - pymdownx.tabbed:
@@ -150,6 +153,7 @@ nav:
       - Sonarr: getting_started/first_sync/sonarr.md
     - Rescheduling Tasks: getting_started/scheduler.md
     - Creating Title Cards: getting_started/creating_cards.md
+  - Blueprints: blueprints.md
   - User Guide:
     - user_guide/index.md
     - Series: user_guide/series.md
@@ -178,7 +182,6 @@ nav:
       - Textless: card_types/local/textless.md
       - Tinted Frame: card_types/local/tinted_frame.md
       - Tinted Glass: card_types/local/tinted_glass.md
-    # - User
   - Development:
     - Contributing: development/contributing.md
     - The API: development/api.md
