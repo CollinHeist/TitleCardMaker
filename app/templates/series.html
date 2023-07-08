@@ -577,7 +577,7 @@
       // Submit API request to import blueprint
       $.ajax({
         type: 'PUT',
-        url: '/api/blueprints/{{series.id}}/import',
+        url: '/api/blueprints/import/series/{{series.id}}',
         contentType: 'application/json',
         data: JSON.stringify(blueprint),
         success: response => {
@@ -692,7 +692,7 @@
           $.toast({
             class: 'warning',
             title: 'Font Files',
-            message: 'Please verify that any Font licenses permit them to be shared.',
+            message: 'Verify any applicable Font licenses allow the Fonts to be shared. If you are not sure, a link to where the Font can be obtained should be used instead.',
             displayTime: 15000,
           });
         }, error: response => {
