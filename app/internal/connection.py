@@ -44,6 +44,10 @@ def update_connection(
         if (value != UNSPECIFIED
             and value != getattr(preferences, f'{connection}_{attribute}')):
             setattr(preferences, f'{connection}_{attribute}', value)
+            if f'{connection}_{attribute}' in preferences.PRIVATE_ATTRIBUTES:
+                log.debug(f'Preferences.{connection}_{attribute} = *****')
+            else:
+                log.debug(f'Preferences.{connection}_{attribute} = {value}')
             changed = True
 
     # Commit changes
@@ -52,10 +56,15 @@ def update_connection(
 
     # Refresh interface if changed
     if changed and getattr(preferences, f'use_{connection}'):
-        if   connection == 'emby':     refresh_emby_interface(log=log)
-        elif connection == 'jellyfin': refresh_jellyfin_interface(log=log)
-        elif connection == 'plex':     refresh_plex_interface(log=log)
-        elif connection == 'sonarr':   refresh_sonarr_interface(log=log)
-        elif connection == 'tmdb':     refresh_tmdb_interface(log=log)
+        if connection == 'emby':
+            refresh_emby_interface(log=log)
+        elif connection == 'jellyfin':
+            refresh_jellyfin_interface(log=log)
+        elif connection == 'plex':
+            refresh_plex_interface(log=log)
+        elif connection == 'sonarr':
+            refresh_sonarr_interface(log=log)
+        elif connection == 'tmdb':
+            refresh_tmdb_interface(log=log)
 
     return preferences

@@ -11,11 +11,11 @@ from app.dependencies import *
 from app.internal.templates import get_effective_templates
 import app.models as models
 from app.models.episode import Episode
+from app.models.preferences import Preferences
 from app.schemas.font import DefaultFont
 from app.schemas.card import NewTitleCard, TitleCard
 from app.schemas.card_type import LocalCardTypeModels
 # from app.schemas.episode import Episode
-from app.schemas.preferences import Preferences
 from app.schemas.series import Series
 from modules.BaseCardType import BaseCardType
 
@@ -168,6 +168,8 @@ def add_card_to_database(
 def validate_card_type_model(
         preferences: Preferences,
         card_settings: dict,
+        *,
+        log: Logger = log,
     ) -> tuple[Any, Any]:
     """
     Validate the given Card settings into the associated Pydantic model
@@ -176,6 +178,7 @@ def validate_card_type_model(
     Args:
         preferences: Preferences to query the BaseCardType class from.
         card_settings: Dictionary of Card settings.
+        log: (Keyword) Logger for all log messages.
 
     Returns:
         Tuple of the `BaseCardType` class (which can be used to create
@@ -183,7 +186,9 @@ def validate_card_type_model(
     """
 
     # Initialize class of the card type being created
-    CardClass = preferences.get_card_type_class(card_settings['card_type'])
+    CardClass = preferences.get_card_type_class(
+        card_settings['card_type'], log=log
+    )
     if CardClass is None:
         raise HTTPException(
             status_code=400,
@@ -331,7 +336,9 @@ def resolve_card_settings(
         )
 
     # Get the effective card class
-    CardClass = preferences.get_card_type_class(card_settings['card_type'])
+    CardClass = preferences.get_card_type_class(
+        card_settings['card_type'], log=log
+    )
     if CardClass is None:
         raise HTTPException(
             status_code=400,
@@ -504,7 +511,7 @@ def create_episode_card(
 
     # Get a validated card class, and card type Pydantic model
     CardClass, CardTypeModel = validate_card_type_model(
-        preferences, card_settings
+        preferences, card_settings, log=log,
     )
 
     # Create Card parent directories if needed

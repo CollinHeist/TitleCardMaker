@@ -11,15 +11,18 @@ from app.dependencies import refresh_imagemagick_interface
 from app.internal.cards import add_card_to_database, resolve_card_settings
 from app.internal.connection import update_connection
 import app.models as models
+from app.models.preferences import Preferences
 from app.schemas.base import UNSPECIFIED
 from app.schemas.card import NewTitleCard
 from app.schemas.font import NewNamedFont
 from app.schemas.preferences import (
-    CardExtension, EpisodeDataSource, Preferences, UpdateEmby, UpdateJellyfin,
+    CardExtension, EpisodeDataSource, UpdateEmby, UpdateJellyfin,
     UpdatePlex, UpdatePreferences, UpdateSonarr, UpdateTMDb
 )
 from app.schemas.series import NewSeries, NewTemplate, Series, Translation
-from app.schemas.sync import NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync
+from app.schemas.sync import (
+    NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync
+)
 
 from modules.Debug import log
 from modules.EpisodeMap import EpisodeMap
@@ -256,7 +259,9 @@ def _remove_unspecifed_args(**dict_kwargs: dict) -> dict:
 
 def parse_preferences(
         preferences: Preferences,
-        yaml_dict: dict[str, Any]
+        yaml_dict: dict,
+        *,
+        log: Logger = log,
     ) -> Preferences:
     """
     Modify the preferences for the given YAML.
@@ -264,6 +269,7 @@ def parse_preferences(
     Args:
         preferences: Preferences to modify.
         yaml_dict: Dictionary of YAML attributes to parse.
+        log: (Keyword) Logger for all log messages.
 
     Returns:
         Modified Preferences.
@@ -330,16 +336,18 @@ def parse_preferences(
         ),
     ))
 
-    preferences.update_values(**update_preferences.dict())
-    refresh_imagemagick_interface()
-    preferences.determine_imagemagick_prefix()
+    preferences.update_values(log=log, **update_preferences.dict())
+    refresh_imagemagick_interface(log=log)
+    preferences.determine_imagemagick_prefix(log=log)
 
     return preferences
 
 
 def parse_emby(
         preferences: Preferences,
-        yaml_dict: dict[str, Any]
+        yaml_dict: dict,
+        *,
+        log: Logger = log,
     ) -> Preferences:
     """
     Update the Emby connection preferences for the given YAML.
@@ -348,6 +356,7 @@ def parse_emby(
         preferences: Preferences whose connection details are being
             modified.
         yaml_dict: Dictionary of YAML attributes to parse.
+        log: (Keyword) Logger for all log messages.
     
     Returns:
         Modified Preferences object. If no changes are made, the object
@@ -378,14 +387,16 @@ def parse_emby(
         filesize_limit_unit=limit_unit,
     ))
     preferences.use_emby = True
-    preferences.commit()
+    preferences.commit(log=log)
 
-    return update_connection(preferences, update_emby, 'emby')
+    return update_connection(preferences, update_emby, 'emby', log=log)
 
 
 def parse_jellyfin(
         preferences: Preferences,
-        yaml_dict: dict[str, Any]
+        yaml_dict: dict,
+        *,
+        log: Logger = log,
     ) -> Preferences:
     """
     Update the Jellyfin connection preferences for the given YAML.
@@ -394,6 +405,7 @@ def parse_jellyfin(
         preferences: Preferences whose connection details are being
             modified.
         yaml_dict: Dictionary of YAML attributes to parse.
+        log: (Keyword) Logger for all log messages.
     
     Returns:
         Modified Preferences object. If no changes are made, the object
@@ -424,14 +436,16 @@ def parse_jellyfin(
         filesize_limit_unit=limit_unit,
     )
     preferences.use_jellyfin = True
-    preferences.commit()
+    preferences.commit(log=log)
 
-    return update_connection(preferences, update_jellyfin, 'jellyfin')
+    return update_connection(preferences, update_jellyfin, 'jellyfin', log=log)
 
 
 def parse_plex(
         preferences: Preferences,
-        yaml_dict: dict[str, Any]
+        yaml_dict: dict,
+        *,
+        log: Logger = log,
     ) -> Preferences:
     """
     Update the Plex connection preferences for the given YAML.
@@ -440,6 +454,7 @@ def parse_plex(
         preferences: Preferences whose connection details are being
             modified.
         yaml_dict: Dictionary of YAML attributes to parse.
+        log: (Keyword) Logger for all log messages.
     
     Returns:
         Modified Preferences object. If no changes are made, the object
@@ -473,14 +488,16 @@ def parse_plex(
         filesize_limit_unit=limit_unit,
     ))
     preferences.use_plex = True
-    preferences.commit()
+    preferences.commit(log=log)
 
-    return update_connection(preferences, update_plex, 'plex')
+    return update_connection(preferences, update_plex, 'plex', log=log)
 
 
 def parse_sonarr(
         preferences: Preferences,
-        yaml_dict: dict[str, Any]
+        yaml_dict: dict,
+        *,
+        log: Logger = log,
     ) -> Preferences:
     """
     Update the Sonarr connection preferences for the given YAML.
@@ -489,6 +506,7 @@ def parse_sonarr(
         preferences: Preferences whose connection details are being
             modified.
         yaml_dict: Dictionary of YAML attributes to parse.
+        log: (Keyword) Logger for all log messages.
     
     Returns:
         Modified Preferences object. If no changes are made, the object
@@ -513,14 +531,16 @@ def parse_sonarr(
         use_ssl=_get(sonarr, 'verify_ssl', default=UNSPECIFIED),
     ))
     preferences.use_sonarr = True
-    preferences.commit()
+    preferences.commit(log=log)
 
-    return update_connection(preferences, update_sonarr, 'sonarr')
+    return update_connection(preferences, update_sonarr, 'sonarr', log=log)
 
 
 def parse_tmdb(
         preferences: Preferences,
-        yaml_dict: dict[str, Any]
+        yaml_dict: dict,
+        *,
+        log: Logger = log,
     ) -> Preferences:
     """
     Update the TMDb connection preferences for the given YAML.
@@ -529,6 +549,7 @@ def parse_tmdb(
         preferences: Preferences whose connection details are being
             modified.
         yaml_dict: Dictionary of YAML attributes to parse.
+        log: (Keyword) Logger for all log messages.
     
     Returns:
         Modified Preferences object. If no changes are made, the object
@@ -570,9 +591,9 @@ def parse_tmdb(
         ),
     ))
     preferences.use_tmdb = True
-    preferences.commit()
+    preferences.commit(log=log)
 
-    return update_connection(preferences, update_tmdb, 'tmdb')
+    return update_connection(preferences, update_tmdb, 'tmdb', log=log)
 
 
 def parse_syncs(
@@ -1114,6 +1135,7 @@ def import_cards(
         image_extension: Extension of images to search for.
         force_reload: Whether to replace any existing Card entries for
             Episodes identified while importing.
+        log: (Keyword) Logger for all log messages.
     """
 
     # If explicit directory was not provided, use Series default

@@ -34,6 +34,7 @@ card_router = APIRouter(
 
 @card_router.post('/preview', status_code=201)
 def create_preview_card(
+        request: Request,
         card: PreviewTitleCard = Body(...),
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences)
@@ -92,7 +93,7 @@ def create_preview_card(
     card_settings['title_text'] = case_func(card_settings['title_text'])
 
     CardClass, CardTypeModel = validate_card_type_model(
-        preferences, card_settings
+        preferences, card_settings, log=request.state.log
     )
 
     # Delete output if it exists, then create Card
@@ -129,11 +130,11 @@ def create_cards_for_series(
         background_tasks: BackgroundTasks,
         request: Request,
         series_id: int,
-        preferences = Depends(get_preferences),
+        preferences: Preferences = Depends(get_preferences),
         db: Session = Depends(get_database),
-        emby_interface = Depends(get_emby_interface),
-        jellyfin_interface = Depends(get_jellyfin_interface),
-        plex_interface = Depends(get_plex_interface),
+        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
+        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
+        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
     ) -> None:
     """
     Create the Title Cards for the given Series. This deletes and

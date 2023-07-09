@@ -1,6 +1,8 @@
 from typing import Literal, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request
+from fastapi import (
+    APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request
+)
 from pydantic.error_wrappers import ValidationError
 from sqlalchemy.orm import Session
 
@@ -14,7 +16,6 @@ from app.internal.imports import (
 from app.internal.series import download_series_poster, set_series_database_ids
 from app.internal.sources import download_series_logo
 import app.models as models
-from app.schemas.card import CardActions
 from app.schemas.font import NamedFont
 from app.schemas.imports import (
     ImportCardDirectory, ImportSeriesYaml, ImportYaml, MultiCardImport
@@ -36,7 +37,7 @@ import_router = APIRouter(
 def import_global_options_yaml(
         request: Request,
         import_yaml: ImportYaml = Body(...),
-        preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences)
     ) -> Preferences:
     """
     Import the global options from the preferences defined in the given
@@ -55,7 +56,7 @@ def import_global_options_yaml(
     
     # Modify the preferences  from the YAML dictionary
     try:
-        return parse_preferences(preferences, yaml_dict)
+        return parse_preferences(preferences, yaml_dict, log=log)
     except ValidationError as e:
         log.exception(f'Invalid YAML', e)
         raise HTTPException(
@@ -69,7 +70,7 @@ def import_connection_yaml(
         request: Request,
         connection: Literal['all', 'emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
         import_yaml: ImportYaml = Body(...),
-        preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences)
     ) -> Preferences:
     """
     Import the connection preferences defined in the given YAML. This
@@ -106,7 +107,7 @@ def import_connection_yaml(
     }[connection]
 
     try:
-        return parse_function(preferences, yaml_dict)
+        return parse_function(preferences, yaml_dict, log=log)
     except ValidationError as e:
         log.exception(f'Invalid YAML', e)
         raise HTTPException(

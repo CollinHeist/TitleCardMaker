@@ -1,4 +1,5 @@
 from collections import namedtuple
+from logging import Logger
 from os import environ
 from pathlib import Path
 from typing import Any, Optional
@@ -45,6 +46,12 @@ class Preferences:
 
     """Directory for all temporary file operations"""
     TEMPORARY_DIRECTORY = TCM_ROOT / 'modules' / '.objects'
+
+    """Attributes that should not be explicitly logged"""
+    PRIVATE_ATTRIBUTES = (
+        'emby_url', 'emby_api_key', 'jellyfin_url', 'jellyfin_api_key',
+        'plex_url', 'plex_token', 'sonarr_url', 'sonarr_api_key', 'tmdb_api_key'
+    )
 
 
     def __init__(self, file: Path) -> None:
@@ -174,9 +181,12 @@ class Preferences:
         self.commit()
 
 
-    def commit(self) -> None:
+    def commit(self, *, log: Logger = log) -> None:
         """
         Commit the changes to this object to file.
+
+        Args:
+            log: (Keyword) Logger for all log messages.
         """
 
         # Open the file, dump this object's contents
@@ -186,7 +196,11 @@ class Preferences:
         log.debug(f'Dumped Preferences to "{self.file.resolve()}"..')
 
 
-    def update_values(self, **update_kwargs: dict[str, Any]) -> None:
+    def update_values(self,
+            *,
+            log: Logger = log,
+            **update_kwargs: dict
+        ) -> None:
         """
         Update multiple values at once, and commit the changes
         afterwards.
@@ -199,8 +213,15 @@ class Preferences:
         for name, value in update_kwargs.items():
             if value != UNSPECIFIED:
                 setattr(self, name, value)
+                if name in self.PRIVATE_ATTRIBUTES:
+                    log.debug(f'Preferences.{name} = *****')
+                else:
+                    log.debug(f'Preferences.{name} = {value}')
 
-        self.commit()
+        # Commit changes
+        self.commit(log=log)
+
+        return None
 
 
     def determine_imagemagick_prefix(self) -> None:
@@ -210,7 +231,7 @@ class Preferences:
         """
 
         # Try variations of the font list command with/out the "magick " prefix
-        for prefix, use_magick in zip(('', 'magick '), (False, True)):
+        for prefix, use_magick in zip(('magick ', ''), (True, False)):
             # Create ImageMagickInterface and verify validity
             interface = ImageMagickInterface(use_magick)
             if interface.validate_interface():
@@ -467,8 +488,10 @@ class Preferences:
     
 
     def get_card_type_class(self,
-            card_type_identifier: str
-        ) -> Optional['CardType']:
+            card_type_identifier: str,
+            *,
+            log: Logger = log,
+        ) -> Optional['CardType']: # type: ignore
         """
         Get the CardType class for the given card type identifier.
 
