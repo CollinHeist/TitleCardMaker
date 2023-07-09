@@ -172,7 +172,10 @@ def get_all_templates(
         exist.
     """
 
+    if not (template_ids := obj_dict.pop('template_ids', [])):
+        return []
+
     return [
         get_template(db, template_id, raise_exc=raise_exc)
-        for template_id in obj_dict.pop('template_ids', [])
+        for template_id in template_ids
     ]
