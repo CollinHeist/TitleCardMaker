@@ -529,6 +529,7 @@
     }
 
     function refreshEpisodeData() {
+      $('#refresh').toggleClass('disabled', true);
       $('#refresh > i').toggleClass('loading', true);
       $.ajax({
         type: 'POST',
@@ -546,6 +547,7 @@
             displayTime: 0,
           });
         }, complete: () => {
+          $('#refresh').toggleClass('disabled', false);
           $('#refresh > i').toggleClass('loading', false);
         }
       });
