@@ -25,7 +25,10 @@ from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
 # URL for user card types
-USER_CARD_TYPE_URL = 'https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/web-ui/cards.json'
+USER_CARD_TYPE_URL = (
+    'https://raw.githubusercontent.com/CollinHeist/TitleCardMaker-CardTypes/'
+    'web-ui/cards.json'
+)
 
 
 _cache = {'content': [], 'expires': datetime.now()}

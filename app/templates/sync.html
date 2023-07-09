@@ -310,6 +310,7 @@
           <div id="next-sync" class="ui compact raised segment"></div>
 
           <!-- Emby -->
+          {% if preferences.use_emby %}
           <h3 class="ui horizontal divider left aligned header">Emby</h3>
           <div id="emby-syncs" class="ui raised cards">
             <div class="ui add card">
@@ -326,8 +327,10 @@
             </div>
             <!-- Other sync cards added asynchronously -->
           </div>
+          {% endif %}
 
           <!-- Jellyfin -->
+          {% if preferences.use_jellyfin %}
           <h3 class="ui horizontal divider left aligned header">Jellyfin</h3>
           <div id="jellyfin-syncs" class="ui raised cards">
             <div class="ui add card">
@@ -344,8 +347,10 @@
             </div>
             <!-- Other sync cards added asynchronously -->
           </div>
+          {% endif %}
 
           <!-- Plex -->
+          {% if preferences.use_plex %}
           <h3 class="ui horizontal divider left aligned header">Plex</h3>
           <div id="plex-syncs" class="ui raised cards">
             <div class="ui add card">
@@ -362,8 +367,10 @@
             </div>
             <!-- Other sync cards added asynchronously -->
           </div>
+          {% endif %}
 
           <!-- Sonarr -->
+          {% if preferences.use_sonarr %}
           <h3 class="ui horizontal divider left aligned header">Sonarr</h3>
           <div id="sonarr-syncs" class="ui raised cards">
             <div class="ui add card">
@@ -380,6 +387,7 @@
             </div>
             <!-- Other sync cards added asynchronously -->
           </div>
+          {% endif %}
         </div>
       </div>
     </div>
