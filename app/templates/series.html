@@ -1517,7 +1517,7 @@
                 Load Cards into Emby
               </button>
               <button class="ui labeled icon button" onclick="loadCards('Emby', true);">
-                <i class="hdd outline icon"></i>
+                <i class="orange hdd outline icon"></i>
                 Force Reload Cards into Emby
               </button>
               {% elif (preferences.use_emby and not series.emby_library_name) or (not preferences.use_emby and series.emby_library_name) %}
@@ -1533,7 +1533,7 @@
                 Load Cards into Jellyfin
               </button>
               <button class="ui labeled icon button" onclick="loadCards('Jellyfin', true);">
-                <i class="hdd outline icon"></i>
+                <i class="orange hdd outline icon"></i>
                 Force Reload Cards into Jellyfin
               </button>
               {% elif (preferences.use_jellyfin and not series.jellyfin_library_name) or (not preferences.use_jellyfin and series.jellyfin_library_name) %}
@@ -1549,7 +1549,7 @@
                 Load Cards into Plex
               </button>
               <button class="ui labeled icon button" onclick="loadCards('Plex', true);">
-                <i class="hdd outline icon"></i>
+                <i class="orange hdd outline icon"></i>
                 Force Reload Cards into Plex
               </button>
               {% elif (preferences.use_plex and not series.plex_library_name) or (not preferences.use_plex and series.plex_library_name) %}
