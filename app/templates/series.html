@@ -528,6 +528,28 @@
       });
     }
 
+    function processSeries() {
+      $('#action-buttons .button[data-action="process"] i').toggleClass('loading', true);
+      $('#action-buttons .button').toggleClass('disabled', true);
+      $.ajax({
+        type: 'POST',
+        url: '/api/series/{{series.id}}/process',
+        success: response => {
+          $.toast({class: 'blue info', title: 'Started Processing Series'});
+        }, error: response => {
+          $.toast({
+            class: 'error',
+            title: 'Error Processing Series',
+            message: response.responseJSON.detail,
+            displayTime: 0,
+          });
+        }, complete: () => {
+          $('#action-buttons .button[data-action="process"] i').toggleClass('loading', false);
+          $('#action-buttons .button').toggleClass('disabled', false);
+        }
+      });
+    }
+
     function refreshEpisodeData() {
       $('#refresh').toggleClass('disabled', true);
       $('#refresh > i').toggleClass('loading', true);
@@ -1489,6 +1511,11 @@
           </div>
           <!-- Series action bottons -->
           <div id="action-buttons">
+            <button data-action="process" class="ui vertical labeled fluid icon blue button" onclick="processSeries();" data-tooltip="Refresh Episodes, query translations, download source images, create and load Cards">
+              <i class="sitemap icon"></i>
+              Process Series
+            </button>
+            <div class="ui divider"></div>
             <div class="ui vertical labeled icon fluid buttons">
               <button id="refresh" class="ui labeled icon button" onclick="refreshEpisodeData()" data-tooltip="Look for new, and update any existing Episodes">
                 <i class="sync icon"></i>
@@ -1559,6 +1586,8 @@
               </button>
               {% endif %}
             </div>
+          </div>
+          <div>
             <div class="ui divider"></div>
             <div class="ui vertical labeled icon fluid buttons">
               <button class="ui labeled icon negative button" onclick="deleteTitleCards();">
