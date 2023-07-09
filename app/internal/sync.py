@@ -237,6 +237,8 @@ def run_sync(
     # If anything was added, commit updates to database
     if added:
         db.commit()
+    else:
+        log.debug(f'{sync.log_str} No new Series synced')
 
     # Process each newly added series
     for series in added:
@@ -289,8 +291,5 @@ def run_sync(
                 db, preferences, series, emby_interface, jellyfin_interface,
                 plex_interface, sonarr_interface, tmdb_interface, log=log
             )
-
-    if not added:
-        log.debug(f'{sync.log_str} No new Series synced')
 
     return added

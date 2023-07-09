@@ -29,8 +29,8 @@ source_router = APIRouter(
 @source_router.post('/series/{series_id}', status_code=200)
 def download_series_source_images(
         background_tasks: BackgroundTasks,
-        series_id: int,
         request: Request,
+        series_id: int,
         ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
@@ -50,12 +50,11 @@ def download_series_source_images(
     the associated Episode has been internally blacklisted. 
     """
 
-    # Get all Episodes for this Series
-    all_episodes = db.query(models.episode.Episode)\
-        .filter_by(series_id=series_id).all()
+    # Query for this Series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
 
     # Add task to download source image for each Episode
-    for episode in all_episodes:
+    for episode in series.episodes:
         background_tasks.add_task(
             # Function
             download_episode_source_image,
