@@ -165,6 +165,10 @@
           </div>
 
           <div class="eight wide column">
+            <button data-action="refresh" class="ui blue tertiary compact button">
+              <i class="redo icon"></i>
+              Refresh Preview
+            </button>
             <form data-value="preview-form" class="ui form">
               <div class="two fields">
                 <div class="eight wide field">
@@ -417,13 +421,12 @@
           });
         };
 
-        // Add on change event to reload card preview
+        // Reload preview when button is pressed
         const previewCard = template.querySelector('.ui.card');
         const previewImage = template.querySelector('img');
         const fontForm = template.querySelector('form[data-value="font-form"]');
         const previewForm =  template.querySelector('form[data-value="preview-form"]');
-        fontForm.onchange = () => reloadPreview(fontObj.id, fontForm, previewForm, previewCard, previewImage);
-        previewForm.onchange = () => reloadPreview(fontObj.id, fontForm, previewForm, previewCard, previewImage);
+        template.querySelector('.button[data-action="refresh"]').onclick = () => reloadPreview(fontObj.id, fontForm, previewForm, previewCard, previewImage);
 
         return template;
       });
