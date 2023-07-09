@@ -3,6 +3,7 @@ from typing import Literal, Optional
 from pydantic import Field, validator, root_validator
 
 from app.schemas.base import Base, UpdateBase, validate_argument_lists_to_dict
+from app.schemas.font import TitleCase
 from app.schemas.preferences import Style
 
 LocalCardIdentifiers = Literal[
@@ -99,13 +100,14 @@ class PreviewTitleCard(UpdateBase):
     season_text: str = Field(default='Season 1')
     episode_text: str = Field(default='Episode 1')
     style: Style = Field(default='unique')
-    font_color: Optional[str] = Field(default=None)
-    font_size: Optional[float] = Field(default=None)
-    font_kerning: Optional[float] = Field(default=None)
-    font_stroke_width: Optional[float] = Field(default=None)
-    font_interline_spacing: Optional[int] = Field(default=None)
-    font_vertical_shift: Optional[int] = Field(default=None)
     font_id: Optional[int] = Field(default=None)
+    font_color: Optional[str] = Field(default=None)
+    font_interline_spacing: Optional[int] = Field(default=None)
+    font_kerning: Optional[float] = Field(default=None)
+    font_size: Optional[float] = Field(default=None)
+    font_stroke_width: Optional[float] = Field(default=None)
+    font_title_case: Optional[TitleCase] = Field(default=None)
+    font_vertical_shift: Optional[int] = Field(default=None)
     extra_keys: Optional[list[str]] = Field(default=None)
     extra_values: Optional[list[str]] = Field(default=None)
 
