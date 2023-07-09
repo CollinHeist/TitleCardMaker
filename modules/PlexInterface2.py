@@ -800,6 +800,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
             # Show, return all episodes in series
             if entry.type == 'show':
+                entry: PlexShow
                 series_info = SeriesInfo.from_plex_show(entry)
                 return [EpisodeDetails(
                     series_info,
@@ -808,7 +809,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 ) for ep in entry.episodes()]
             # Season, return all episodes in season
             elif entry.type == 'season':
-                series: PlexShow = self.__server.fetchItem(entry.parentKey)
+                entry: PlexSeason
+                series: PlexShow = self.__server.fetchItem(entry.parentRatingKey)
                 series_info = SeriesInfo.from_plex_show(series)
                 return [EpisodeDetails(
                     series_info,
@@ -817,7 +819,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 ) for ep in entry.episodes()]
             # Episode, return just that
             elif entry.type == 'episode':
-                series: PlexShow = self.__server.fetchItem(entry.grandparentKey)
+                entry: PlexEpisode
+                series: PlexShow = self.__server.fetchItem(entry.grandparentRatingKey)
                 series_info = SeriesInfo.from_plex_show(series)
                 return [EpisodeDetails(
                     series_info,
