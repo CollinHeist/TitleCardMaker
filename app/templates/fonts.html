@@ -271,7 +271,7 @@
         const name = template.querySelector('input[name="name"]');
         name.placeholder = fontObj.name; name.value = fontObj.name;
         const file = template.querySelector('label[data-value="file"]');
-        file.innerText = fontObj.file_path === null ? 'Font' : `Font (${fontObj.file_path})`;
+        file.innerText = fontObj.file_name === null ? 'Font' : `Font (${fontObj.file_name})`;
         if (fontObj.color !== null) {
           const color = template.querySelector('input[name="color"]');
           color.placeholder = fontObj.color; color.value = fontObj.color;

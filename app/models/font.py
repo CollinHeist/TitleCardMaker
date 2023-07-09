@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from sqlalchemy import Boolean, Column, Integer, Float, String, JSON
 
@@ -31,6 +31,13 @@ class Font(Base):
     replacements = Column(JSON, default=None)
 
     @hybrid_property
+    def file_name(self) -> Optional[str]:
+        if self.file is None or not (file := Path(self.file)).exists():
+            return None
+
+        return file.name
+
+    @hybrid_property
     def log_str(self) -> str:
         return f'Font[{self.id}] "{self.name}"'
 
@@ -48,7 +55,7 @@ class Font(Base):
             'name': self.name,
             'color': self.color,
             'delete_missing': self.delete_missing,
-            'file': None if self.file is None else Path(self.file).name,
+            'file': self.file_name,
             'interline_spacing': None if self.interline_spacing == 0 else self.interline_spacing,
             'kerning': None if self.kerning == 1.0 else self.kerning,
             'replacements_in': list(self.replacements.keys()),

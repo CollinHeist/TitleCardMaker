@@ -4,7 +4,8 @@ from shutil import copy as file_copy
 from typing import Literal, Optional
 
 from fastapi import (
-    APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, Query, Request, UploadFile
+    APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, Query,
+    Request, UploadFile
 )
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
@@ -16,7 +17,10 @@ from app.database.query import get_all_templates, get_font, get_series
 from app.internal.episodes import refresh_episode_data
 from app.internal.translate import translate_episode
 import app.models as models
-from app.internal.cards import create_episode_card, refresh_remote_card_types, update_episode_watch_statuses
+from app.internal.cards import (
+    create_episode_card, refresh_remote_card_types,
+    update_episode_watch_statuses
+)
 from app.internal.series import (
     delete_series_and_episodes, download_series_poster, load_series_title_cards,
     set_series_database_ids,
