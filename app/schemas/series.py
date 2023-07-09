@@ -5,9 +5,7 @@ from pydantic import constr, Field, root_validator, validator
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.base import Base, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
 from app.schemas.font import TitleCase
-from app.schemas.ids import (
-    EmbyID, IMDbID, JellyfinID, SonarrID, TMDbID, TVDbID, TVRageID
-)
+from app.schemas.ids import *
 from app.schemas.preferences import EpisodeDataSource, Style, LanguageCode
 
 # Match absolute ranges (1-10), season numbers (1), episode ranges (s1e1-s1e10)
@@ -354,3 +352,11 @@ class Series(BaseSeries):
     font_vertical_shift: Optional[int]
     season_titles: Optional[dict[SeasonTitleRange, str]]
     extras: Optional[dict[str, Any]]
+    # Don't error on ID validation errors
+    emby_id: Any
+    imdb_id: Any
+    jellyfin_id: Any
+    sonarr_id: Any
+    tmdb_id: Any
+    tvdb_id: Any
+    tvrage_id: Any
