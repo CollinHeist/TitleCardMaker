@@ -4,7 +4,7 @@ from shutil import copy as file_copy
 from typing import Literal, Optional
 
 from fastapi import (
-    APIRouter, Body, Depends, Form, HTTPException, Query, Request, UploadFile
+    APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, Query, Request, UploadFile
 )
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
@@ -13,13 +13,15 @@ from sqlalchemy import func
 from app.dependencies import *
 from app.database.session import Page
 from app.database.query import get_all_templates, get_font, get_series
+from app.internal.episodes import refresh_episode_data
+from app.internal.translate import translate_episode
 import app.models as models
-from app.internal.cards import refresh_remote_card_types
+from app.internal.cards import create_episode_card, refresh_remote_card_types, update_episode_watch_statuses
 from app.internal.series import (
     delete_series_and_episodes, download_series_poster, load_series_title_cards,
     set_series_database_ids,
 )
-from app.internal.sources import download_series_logo
+from app.internal.sources import download_episode_source_image, download_series_logo
 from app.schemas.base import UNSPECIFIED
 from app.schemas.preferences import MediaServer
 from app.schemas.series import NewSeries, Series, UpdateSeries
@@ -383,6 +385,89 @@ def reload_title_cards_into_media_server(
         series, media_server, db, emby_interface, jellyfin_interface,
         plex_interface, force_reload=True, log=request.state.log,
     )
+
+
+@series_router.post('/{series_id}/process', status_code=200)
+def process_series(
+        background_tasks: BackgroundTasks,
+        request: Request,
+        series_id: int,
+        db: Session = Depends(get_database),
+        preferences = Depends(get_preferences),
+        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
+        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
+        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
+        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
+    ) -> None:
+    """
+    Completely process the given Series. This does all major "tasks,"
+    including:
+
+    1. Refreshing Episode data.
+    2. Downloading Source images
+    3. Adding any Episode translations
+    4. Updating Episode watch statuses
+    5. Create Title Cards for all Episodes
+
+    - series_id: ID of the Series to process.
+    """
+
+    # Get contextual logger
+    log = request.state.log
+
+    # Query for this Series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Begin processing the Series
+    # Refresh episode data, use BackgroundTasks for ID assignment
+    log.debug(f'{series.log_str} Started refreshing Episode data')
+    refresh_episode_data(
+        db, preferences, 
+        series,
+        emby_interface, jellyfin_interface, plex_interface, sonarr_interface,
+        tmdb_interface, log=log,
+    )
+
+    # Begin downloading Source images - use BackgroundTasks
+    log.debug(f'{series.log_str} Started downloading source images')
+    for episode in series.episodes:
+        background_tasks.add_task(
+            # Function
+            download_episode_source_image,
+            # Arguments
+            db, preferences, emby_interface, jellyfin_interface, plex_interface,
+            tmdb_interface, episode, raise_exc=False, log=log,
+        )
+
+    # Begin Episode translation - use BackgroundTasks
+    log.debug(f'{series.log_str} Started adding translations')
+    for episode in series.episodes:
+        background_tasks.add_task(
+            # Function
+            translate_episode,
+            # Arguments
+            db, episode, tmdb_interface, log=log,
+        )
+    
+    # Update watch statuses
+    update_episode_watch_statuses(
+        emby_interface, jellyfin_interface, plex_interface,
+        series, series.episodes, log=log,
+    )
+    db.commit()
+
+    # Begin Card creation - use BackgroundTasks
+    for episode in series.episodes:
+        try:
+            create_episode_card(
+                db, preferences, background_tasks, episode, log=log
+            )
+        except HTTPException as e:
+            log.exception(f'{series.log_str} {episode.log_str} Card creation failed - {e.detail}', e)
+            pass
+
+    return None
 
 
 @series_router.delete('/{series_id}/plex-labels', status_code=204)
