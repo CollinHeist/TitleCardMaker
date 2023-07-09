@@ -82,7 +82,7 @@ class WebInterface:
            wait=wait_fixed(5)+wait_exponential(min=1, max=16),
            before_sleep=lambda _:log.warning('Failed to submit GET request, retrying..'),
            reraise=True)
-    def __retry_get(self, url: str, params: dict[str, Any]) -> dict[str, Any]:
+    def __retry_get(self, url: str, params: dict) -> dict:
         """
         Retry the given GET request until successful (or really fails).
 
@@ -101,7 +101,7 @@ class WebInterface:
         ).json()
 
 
-    def _get(self, url: str, params: dict[str, Any]) -> dict[str, Any]:
+    def _get(self, url: str, params: dict, *, cache: bool = True) -> dict:
         """
         Wrapper for getting the JSON return of the specified GET
         request. If the provided URL and parameters are identical to the
@@ -111,6 +111,8 @@ class WebInterface:
         Args:
             url: URL to pass to GET.
             Parameters to pass to GET.
+            cache: (Keyword) Whether to utilized cached results for this
+                request.
 
         Returns:
             Dict made from the JSON return of the specified GET request.
@@ -121,10 +123,11 @@ class WebInterface:
             return self.__retry_get(url=url, params=params)
 
         # Look through all cached results for this exact URL+params; if found,
-        # skip the request and return that result
-        for cache, result in zip(self.__cache, self.__cached_results):
-            if cache['url'] == url and cache['params'] == str(params):
-                return result
+        # skip the request and return that result - if caching
+        if cache:
+            for cached, result in zip(self.__cache, self.__cached_results):
+                if cached['url'] == url and cached['params'] == str(params):
+                    return result
 
         # Make new request, add to cache
         self.__cached_results.append(self.__retry_get(url=url, params=params))
