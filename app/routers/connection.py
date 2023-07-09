@@ -23,6 +23,7 @@ connection_router = APIRouter(
 
 @connection_router.put('/{connection}/{status}', status_code=204)
 def enable_or_disable_connection(
+        request: Request,
         connection: Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
         status: Literal['enable', 'disable'],
         preferences: Preferences = Depends(get_preferences)
@@ -34,23 +35,31 @@ def enable_or_disable_connection(
     - status: Whether to enable or disable the given connection.
     """
 
+    # Get contextual logger
+    log = request.state.log
+
     if connection == 'emby':
         preferences.use_emby = (status == 'enable')
-        if preferences.use_emby: refresh_emby_interface()
+        if preferences.use_emby:
+            refresh_emby_interface(log=log)
     elif connection == 'jellyfin':
         preferences.use_jellyfin = (status == 'enable')
-        if preferences.use_emby: refresh_jellyfin_interface()
+        if preferences.use_emby:
+            refresh_jellyfin_interface(log=log)
     elif connection == 'plex':
         preferences.use_plex = (status == 'enable')
-        if preferences.use_emby: refresh_plex_interface()
+        if preferences.use_emby:
+            refresh_plex_interface(log=log)
     elif connection == 'sonarr':
         preferences.use_sonarr = (status == 'enable')
-        if preferences.use_emby: refresh_sonarr_interface()
+        if preferences.use_emby:
+            refresh_sonarr_interface(log=log)
     elif connection == 'tmdb':
         preferences.use_tmdb = (status == 'enable')
-        if preferences.use_emby: refresh_tmdb_interface()
+        if preferences.use_emby:
+            refresh_tmdb_interface(log=log)
 
-    preferences.commit()
+    preferences.commit(log=log)
 
     return None
 
@@ -112,6 +121,7 @@ def get_tmdb_connection_details(
 
 @connection_router.patch('/emby', status_code=200)
 def update_emby_connection(
+        request: Request,
         update_emby: UpdateEmby = Body(...),
         preferences: Preferences = Depends(get_preferences)
     ) -> EmbyConnection:
@@ -121,11 +131,14 @@ def update_emby_connection(
     - update_emby: Emby connection details to modify.
     """
 
-    return update_connection(preferences, update_emby, 'emby')
+    return update_connection(
+        preferences, update_emby, 'emby', log=request.state.log,
+    )
 
 
 @connection_router.patch('/jellyfin', status_code=200)
 def update_jellyfin_connection(
+        request: Request,
         update_jellyfin: UpdateJellyfin = Body(...),
         preferences: Preferences = Depends(get_preferences)
     ) -> JellyfinConnection:
@@ -135,11 +148,14 @@ def update_jellyfin_connection(
     - update_jellyfin: Jellyfin connection details to modify.
     """
 
-    return update_connection(preferences, update_jellyfin, 'jellyfin')
+    return update_connection(
+        preferences, update_jellyfin, 'jellyfin', log=request.state.log,
+    )
 
 
 @connection_router.patch('/plex', status_code=200)
 def update_plex_connection(
+        request: Request,
         update_plex: UpdatePlex = Body(...),
         preferences: Preferences = Depends(get_preferences)
     ) -> PlexConnection:
@@ -149,11 +165,14 @@ def update_plex_connection(
     - update_plex: Plex connection details to modify.
     """
 
-    return update_connection(preferences, update_plex, 'plex')
+    return update_connection(
+        preferences, update_plex, 'plex', log=request.state.log,
+    )
 
 
 @connection_router.patch('/sonarr', status_code=200)
 def update_sonarr_connection(
+        request: Request,
         update_sonarr: UpdateSonarr = Body(...), 
         preferences: Preferences = Depends(get_preferences)
     ) -> SonarrConnection:
@@ -163,11 +182,14 @@ def update_sonarr_connection(
     - update_sonarr: Sonarr connection details to modify.
     """
 
-    return update_connection(preferences, update_sonarr, 'sonarr')
+    return update_connection(
+        preferences, update_sonarr, 'sonarr', log=request.state.log
+    )
 
 
 @connection_router.patch('/tmdb', status_code=200)
 def update_tmdb_connection(
+        request: Request,
         update_tmdb: UpdateTMDb = Body(...),
         preferences: Preferences = Depends(get_preferences)
     ) -> TMDbConnection:
@@ -177,7 +199,9 @@ def update_tmdb_connection(
     - update_tmdb: TMDb connection details to modify.
     """
 
-    return update_connection(preferences, update_tmdb, 'tmdb')
+    return update_connection(
+        preferences, update_tmdb, 'tmdb', log=request.state.log
+    )
 
 
 @connection_router.get('/sonarr/libraries', status_code=200, tags=['Sonarr'])
@@ -253,4 +277,4 @@ def add_tautulli_integration(
         log=request.state.log,
     )
 
-    interface.integrate(log=log)
+    interface.integrate(log=request.state.log)

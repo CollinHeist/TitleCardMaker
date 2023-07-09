@@ -1,3 +1,4 @@
+from logging import Logger
 from typing import Iterator
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -37,10 +38,10 @@ def get_preferences() -> Preferences:
 """
 Emby interface
 """
-def refresh_emby_interface() -> None:
+def refresh_emby_interface(*, log: Logger = log) -> None:
     preferences = get_preferences()
     global EmbyInterfaceLocal
-    EmbyInterfaceLocal = EmbyInterface(**preferences.emby_arguments)
+    EmbyInterfaceLocal = EmbyInterface(**preferences.emby_arguments, log=log)
 
 def get_emby_interface() -> EmbyInterface:
     preferences = get_preferences()
@@ -55,11 +56,11 @@ def get_emby_interface() -> EmbyInterface:
 """
 ImageMagick interface
 """
-def refresh_imagemagick_interface() -> None:
+def refresh_imagemagick_interface(*, log: Logger = log) -> None:
     preferences = get_preferences()
     global ImageMagickInterfaceLocal
     ImageMagickInterfaceLocal = ImageMagickInterface(
-        **preferences.imagemagick_arguments
+        **preferences.imagemagick_arguments, log=log
     )
 
 def get_imagemagick_interface() -> ImageMagickInterface:
@@ -69,10 +70,12 @@ def get_imagemagick_interface() -> ImageMagickInterface:
 JellyFin interface
 """
 
-def refresh_jellyfin_interface() -> JellyfinInterface:
+def refresh_jellyfin_interface(*, log: Logger = log) -> JellyfinInterface:
     preferences = get_preferences()
     global JellyfinInterfaceLocal
-    JellyfinInterfaceLocal = JellyfinInterface(**preferences.jellyfin_arguments)
+    JellyfinInterfaceLocal = JellyfinInterface(
+        **preferences.jellyfin_arguments, log=log
+    )
 
 def get_jellyfin_interface() -> JellyfinInterface:
     preferences = get_preferences()
@@ -88,10 +91,10 @@ def get_jellyfin_interface() -> JellyfinInterface:
 Plex interface
 """
 
-def refresh_plex_interface() -> None:
+def refresh_plex_interface(*, log: Logger = log) -> None:
     preferences = get_preferences()
     global PlexInterfaceLocal
-    PlexInterfaceLocal = PlexInterface(**preferences.plex_arguments)
+    PlexInterfaceLocal = PlexInterface(**preferences.plex_arguments, log=log)
 
 def get_plex_interface() -> PlexInterface:
     preferences = get_preferences()
@@ -107,11 +110,13 @@ def get_plex_interface() -> PlexInterface:
 Sonarr interface
 """
 
-def refresh_sonarr_interface() -> None:
+def refresh_sonarr_interface(*, log: Logger = log) -> None:
     preferences = get_preferences()
     global SonarrInterfaceLocal
     SonarrInterface.REQUEST_TIMEOUT = 15
-    SonarrInterfaceLocal = SonarrInterface(**preferences.sonarr_arguments)
+    SonarrInterfaceLocal = SonarrInterface(
+        **preferences.sonarr_arguments, log=log
+    )
     SonarrInterface.REQUEST_TIMEOUT = 600
 
 def get_sonarr_interface() -> SonarrInterface:
@@ -128,10 +133,10 @@ def get_sonarr_interface() -> SonarrInterface:
 TMDb interface
 """
 
-def refresh_tmdb_interface() -> None:
+def refresh_tmdb_interface(*, log: Logger = log) -> None:
     preferences = get_preferences()
     global TMDbInterfaceLocal
-    TMDbInterfaceLocal = TMDbInterface(**preferences.tmdb_arguments)
+    TMDbInterfaceLocal = TMDbInterface(**preferences.tmdb_arguments, log=log)
 
 def get_tmdb_interface() -> TMDbInterface:
     preferences = get_preferences()
