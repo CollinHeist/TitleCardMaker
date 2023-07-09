@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates
 from app.dependencies import *
+from app.internal.episodes import refresh_episode_data
 from app.internal.series import download_series_poster, set_series_database_ids
 from app.internal.sources import download_series_logo
 from app.schemas.sync import (
@@ -233,7 +234,7 @@ def run_sync(
                 db.add(series)
                 added.append(series)
 
-    # If anything was added, update DB and return list
+    # If anything was added, commit updates to database
     if added:
         db.commit()
 
@@ -254,6 +255,10 @@ def run_sync(
             download_series_logo(
                 preferences, emby_interface, imagemagick_interface,
                 jellyfin_interface, tmdb_interface, series, log=log,
+            )
+            refresh_episode_data(
+                db, preferences, series, emby_interface, jellyfin_interface,
+                plex_interface, sonarr_interface, tmdb_interface, log=log
             )
         else:
             background_tasks.add_task(
@@ -276,6 +281,13 @@ def run_sync(
                 # Arguments
                 preferences, emby_interface, imagemagick_interface,
                 jellyfin_interface, tmdb_interface, series, log=log,
+            )
+            background_tasks.add_task(
+                # Function
+                refresh_episode_data,
+                # Arguments
+                db, preferences, series, emby_interface, jellyfin_interface,
+                plex_interface, sonarr_interface, tmdb_interface, log=log
             )
 
     if not added:
