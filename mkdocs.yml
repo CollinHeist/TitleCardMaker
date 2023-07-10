@@ -86,6 +86,10 @@ markdown_extensions:
   - md_in_html
   - pymdownx.superfences
 
+  # Checklists
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
   # Definition lists https://squidfunk.github.io/mkdocs-material/reference/lists/#using-definition-lists
   - def_list
 

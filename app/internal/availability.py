@@ -29,7 +29,7 @@ def get_latest_version(
             cannot be determined.
     """
     # TODO remove placeholder when repo is public
-    return Version(f'v2.0-alpha.2.2')
+    return Version(f'v2.0-alpha.4.0')
     try:
         response = req_get(
             'https://api.github.com/repos/CollinHeist/'

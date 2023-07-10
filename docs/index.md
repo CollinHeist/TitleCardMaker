@@ -53,7 +53,7 @@ retrieve the TCM code from git. Copy this code.
 clone the repository with:
 
     ```bash
-    git clone https://github.com/CollinHeist/TitleCardMaker-WebUI.git
+    git clone hhttps://github.com/TitleCardMaker/TitleCardMaker-WebUI.git
     ```
 
 4. Enter your account Username and the PAT from Step 2. The TCM code
