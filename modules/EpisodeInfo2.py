@@ -235,6 +235,11 @@ class EpisodeInfo(DatabaseInfoContainer):
                 episode_info.set_tvdb_id(int(guid.id[len('tvdb://'):]))
 
         return episode_info
+    
+
+    @property
+    def key(self) -> str:
+        return f's{self.season_number}e{self.episode_number}'
 
 
     @property
