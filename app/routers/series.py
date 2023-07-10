@@ -25,7 +25,9 @@ from app.internal.series import (
     delete_series_and_episodes, download_series_poster, load_series_title_cards,
     set_series_database_ids,
 )
-from app.internal.sources import download_episode_source_image, download_series_logo
+from app.internal.sources import (
+    download_episode_source_image, download_series_logo
+)
 from app.schemas.base import UNSPECIFIED
 from app.schemas.preferences import MediaServer
 from app.schemas.series import NewSeries, Series, UpdateSeries

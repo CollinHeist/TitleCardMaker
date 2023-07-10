@@ -21,6 +21,7 @@ from app.schemas.series import NewTemplate, UpdateSeries
 
 from modules.CleanPath import CleanPath
 from modules.Debug import log
+from modules.EpisodeInfo2 import EpisodeInfo
 from modules.TieredSettings import TieredSettings
 
 """
@@ -71,6 +72,7 @@ def get_blueprint_folders(series_name: str) -> tuple[str, str]:
 
 def generate_series_blueprint(
         series: Series,
+        raw_episode_data: list[EpisodeInfo],
         include_global_defaults: bool,
         include_episode_overrides: bool,
         preferences: Preferences,
@@ -98,7 +100,7 @@ def generate_series_blueprint(
     episodes: list[Episode]=series.episodes if include_episode_overrides else []
 
     # Get all Templates
-    templates = list(set(
+    templates: list[Template] = list(set(
         template for obj in [series] + episodes for template in obj.templates
     ))
 
@@ -120,11 +122,23 @@ def generate_series_blueprint(
         export_obj['series'] = series.export_properties
     export_obj['series'] =  TieredSettings.filter(export_obj['series'])
 
+    # Get Episode titles for comparison
+    episode_titles: dict[str, str] = {
+        episode_info.key: episode_info.title.full_title
+        for episode_info in raw_episode_data
+    }
+
     # Add Episode configs
     for episode in episodes:
-        # Skip Episodes with no customization
+        # Get filtered exportable properties for this Episode
         key = f's{episode.season_number}e{episode.episode_number}'
         episode_properties =  TieredSettings.filter(episode.export_properties)
+
+        # Add title if customized
+        if key in episode_titles and episode_titles[key] != episode.title:
+            episode_properties['title'] = episode.title
+
+        # Skip Episodes without customization
         if not episode_properties and not episode.templates:
             continue
 

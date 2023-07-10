@@ -14,7 +14,6 @@ from app.schemas.sync import (
 from app.schemas.series import Series
 import app.models as models
 
-from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
 from modules.ImageMagickInterface import ImageMagickInterface
 from modules.JellyfinInterface2 import JellyfinInterface
@@ -149,7 +148,9 @@ def delete_sync(
     # If deleting Series, iterate and delete Series and all Episodes
     if delete_series:
         for series in sync.series:
-            delete_series_and_episodes(db, series, commit_changes=False,log=log)
+            delete_series_and_episodes(
+                db, series, commit_changes=False, log=request.state.log
+            )
 
     db.delete(sync)
     db.commit()

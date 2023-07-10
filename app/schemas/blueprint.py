@@ -41,6 +41,8 @@ class BlueprintSeries(SeriesBase):
     font_vertical_shift: Optional[int] = Field(default=None)
     
 class BlueprintEpisode(BlueprintSeries):
+    title: Optional[str] = Field(default=None)
+    match_title: Optional[bool] = Field(default=None)
     season_text: Optional[str] = Field(default=None)
     episode_text: Optional[str] = Field(default=None)
 
