@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 from app.dependencies import get_preferences
 from app.schemas.episode import Episode
@@ -11,7 +11,7 @@ def get_effective_series_template(
         series: Series,
         episode: Optional[Episode] = None, *,
         as_dict: bool = False
-    ) -> Optional[Template]:
+    ) -> Union[dict, Optional[Template]]:
     """
     Get the effective Series Template for the given Series and optional
     Episode. This evaluates all Template conditions.
