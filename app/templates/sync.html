@@ -21,6 +21,7 @@
   <script type="text/javascript" src="/templates/loadStaticContent.js"></script>
   <script type="text/javascript" src="/templates/loadCardTypes.js"></script>
   <script type="text/javascript" src="/templates/theme.js"></script>
+  <script type="text/javascript" src="/templates/helper.js"></script>
   <script type="text/javascript" src="/templates/messages.js"></script>
   
   <!-- Global styles -->
@@ -34,7 +35,6 @@
     /* Custom add card */
     .add.card {
       display: inline-block !important;
-      /* padding: 0; */
       position: absolute;
       background: transparent !important;
       box-shadow: none !important;
@@ -49,9 +49,20 @@
       width: 500px !important;
     }
 
+    /* Show hover icon on all Sync buttons */
+    .card .content i.icon {
+      cursor: pointer;
+    }
+
+    /* Color edit Sync icon on hover  */
+    .card .content i.edit.icon:hover {
+      color: #2ecc40;
+    }
+
+    /* Color Sync now icon on hover */
     i.sync.icon:hover {
       color: #2185d0;
-      size: 110%;
+      /* size: 110%; */
     }
   </style>
 
@@ -60,6 +71,7 @@
       <div class="content">
         <i class="ui right floated trash alternate outline like icon" title="Delete this sync"></i>
         <i class="ui right floated sync icon" title="Sync Immediately"></i>
+        <i class="ui right floated edit icon" title="Edit Sync"></i>
         <div class="header">{TEMPLATE NAME}</div>
         <div class="meta">
           <div class="sync-meta">Sync ID {TEMPLATE ID}</div>
@@ -134,6 +146,70 @@
       })
     }
 
+    async function showEditModel(sync, allTemplates) {
+      // Get reference New Sync modal to edit
+      const refModalId = `add-${sync.interface}-sync-modal`.toLowerCase();
+      const editModal = document.getElementById(refModalId).cloneNode(true);
+      editModal.id = `edit-sync${sync.id}`;
+      editModal.querySelector('form').id =  `edit-sync${sync.id}-form`;
+      document.querySelector('body').append(editModal);
+      $('.ui.dropdown[dropdown-type="server-tags"]').dropdown({allowAdditions: true});
+      $('.ui.checkbox').checkbox();
+      // Fill out existing data
+      $(`#edit-sync${sync.id} .header`)[0].innerText = `Editing Sync "${sync.name}"`;
+      $(`#edit-sync${sync.id} input[name="name"]`)[0].value = sync.name;
+      $(`#edit-sync${sync.id} .dropdown[data-value="template_ids"]`).dropdown('set selected', sync.template_ids);
+      $(`#edit-sync${sync.id} .dropdown[data-value="required_tags"]`).dropdown('set selected', sync.required_tags);
+      $(`#edit-sync${sync.id} .dropdown[data-value="required_libraries"]`).dropdown('set selected', sync.required_libraries);
+      $(`#edit-sync${sync.id} .dropdown[data-value="required_series_type"]`).dropdown('set selected', sync.required_series_type);
+      $(`#edit-sync${sync.id} .dropdown[data-value="excluded_tags"]`).dropdown('set selected', sync.excluded_tags);
+      $(`#edit-sync${sync.id} .dropdown[data-value="excluded_libraries"]`).dropdown('set selected', sync.excluded_libraries);
+      $(`#edit-sync${sync.id} .dropdown[data-value="excluded_series_type"]`).dropdown('set selected', sync.excluded_series_type);
+      const downloadedCheckbox = $(`#edit-sync${sync.id} input[name="downloaded_only"]`);
+      if (downloadedCheckbox.length) { downloadedCheckbox[0].checked = sync.downloaded_only; }
+      const monitoredCheckbox = $(`#edit-sync${sync.id} input[name="monitored_only"]`);
+      if (monitoredCheckbox.length) { monitoredCheckbox[0].checked = sync.monitored_only; }
+      // Change "save" button text
+      $(`#edit-sync${sync.id} [data-value="primary-button"]`)[0].innerText = 'Save Changes';
+      // Delete form assignment
+      $(`#edit-sync${sync.id} button`)[0].setAttribute('form', `edit-sync${sync.id}-form`);
+      // Submit API request on button press
+      $(`#edit-sync${sync.id} button`).on('click', (event) => {
+        event.preventDefault();
+        // Turn form into object, turning multi selects into arrays
+        let form = new FormData(document.getElementById(`edit-sync${sync.id}-form`));
+        let dataObj = {downloaded_only: false, monitored_only: false};
+        for (let [name, value] of [...form.entries()]) {
+          if (name.includes('_tags') || name.includes('_libraries') || name === 'template_ids') {
+            if (value !== '') { dataObj[name] = value.split(',');
+            } else { dataObj[name] = []; }
+          } else if (value !== '') { dataObj[name] = value; }
+        }
+
+        $.ajax({
+          type: 'PATCH',
+          url: `/api/sync/${sync.id}`,
+          data: JSON.stringify(dataObj),
+          contentType: 'application/json',
+          success: response => {
+            $.toast({class: 'blue info', title: `Updated Sync "${response.name}"`});
+            getAllSyncs();
+          }, error: response => {
+            $.toast({
+              class: 'error',
+              title: 'Error Editing Sync',
+              message: response.responseJSON.detail,
+            });
+          }, complete: () => {
+            $(`#edit-sync${sync.id}`).modal('hide');
+            $(`#edit-sync${sync.id}`).remove();
+          }
+        });
+      });
+
+      $(`#edit-sync${sync.id}`).modal('show');
+    }
+
     async function showDeleteSyncModal(syncId) {
       // Get list of Series associated with this Sync
       const allSeriesResponse = await fetch(`/api/series/search?sync_id=${syncId}&size=25`).then(resp => resp.json());
@@ -189,15 +265,19 @@
       ];
       const embyLibraries = await fetch('/api/available/libraries/emby').then(resp => resp.json());
       const plexLibraries = await fetch('/api/available/libraries/plex').then(resp => resp.json());
+      const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
 
       syncElements.forEach(async ({source, elementID}) => {
-        const syncs = await fetch(`/api/sync/${source}/all`).then(resp => resp.json());
+        // Skip if this element is not present, e.g. interface is disabled
         const syncElement = document.getElementById(elementID);
-        const templateElement = document.querySelector('#sync-card-template');
-        const newChildren = syncs.map(({id, name, template, required_tags,
-            excluded_tags, required_libraries, excluded_libraries,
-            downloaded_only, monitored_only}) => {
+        if (!syncElement) { return; }
 
+        const syncs = await fetch(`/api/sync/${source}/all`).then(resp => resp.json());
+        const templateElement = document.querySelector('#sync-card-template');
+        const newChildren = syncs.map(syncObject => {
+          const {id, name, template, required_tags, excluded_tags,
+                 required_libraries, excluded_libraries, downloaded_only,
+                 monitored_only} = syncObject;
           // Clone the card template, adjust header and meta text
           const clone = templateElement.content.cloneNode(true);
           const card = clone.querySelector('.card');
@@ -211,6 +291,9 @@
               (source === 'sonarr' && !{{ preferences.use_sonarr|tojson }})) {
             card.className = 'ui disabled card';
           }
+
+          // Edit sync if clicked
+          clone.querySelector('i.edit').onclick = () => showEditModel(syncObject, allTemplates);
 
           // Launch delete sync modal on click of the delete icon
           clone.querySelector('i.trash').onclick = () => showDeleteSyncModal(id);
@@ -264,21 +347,24 @@
       const nextRun = new Date(next_run);
       const nextRunStr = nextRun.toLocaleString();
 
-      // Get current time, 
-      const now = new Date();
-      const timeDifferenceSeconds = Math.floor((nextRun - now) / 1000);
-      const timeDifferenceMinutes = Math.floor(timeDifferenceSeconds / 60);
-      const timeDifferenceHours = Math.floor(timeDifferenceMinutes / 60);
-      const timeDifferenceDays = Math.floor(timeDifferenceHours / 24);
-
-      // Create string for next run time, only show up to two time units
-      const timeUnits = [];
-      if (timeDifferenceDays > 0) { timeUnits.push(`${timeDifferenceDays} days`); }
-      if (timeDifferenceHours % 24 > 0) { timeUnits.push(`${timeDifferenceHours%24} hours`); }
-      if (timeDifferenceMinutes % 60 > 0) { timeUnits.push(`${timeDifferenceMinutes%60} minutes`); }
-      if (timeDifferenceSeconds % 60 > 0) { timeUnits.push(`${timeDifferenceSeconds%60} seconds`); }
-      const inStr = timeUnits.slice(0, 2).join(', ');
-      $('#next-sync')[0].innerHTML = `<span>All Syncs will run in <span class="ui blue text">${inStr}</span>, at <span class="ui red text">${nextRunStr}</span></span>`;
+      // Get current time
+      const updatePreview = () => {
+        const now = new Date();
+        const timeDifferenceSeconds = Math.floor((nextRun - now) / 1000);
+        const timeDifferenceMinutes = Math.floor(timeDifferenceSeconds / 60);
+        const timeDifferenceHours = Math.floor(timeDifferenceMinutes / 60);
+        const timeDifferenceDays = Math.floor(timeDifferenceHours / 24);
+  
+        // Create string for next run time, only show up to two time units
+        const timeUnits = [];
+        if (timeDifferenceDays > 0) { timeUnits.push(`${timeDifferenceDays} days`); }
+        if (timeDifferenceHours % 24 > 0) { timeUnits.push(`${timeDifferenceHours%24} hours`); }
+        if (timeDifferenceMinutes % 60 > 0) { timeUnits.push(`${timeDifferenceMinutes%60} minutes`); }
+        if (timeDifferenceSeconds % 60 > 0) { timeUnits.push(`${timeDifferenceSeconds%60} seconds`); }
+        const inStr = timeUnits.slice(0, 2).join(', ');
+        $('#next-sync')[0].innerHTML = `<span>All Syncs will run in <span class="ui blue text">${inStr}</span>, at <span class="ui red text">${nextRunStr}</span></span>`;
+      }
+      setInterval(updatePreview, 1000);
     }
 
     async function initAll() {
@@ -289,8 +375,6 @@
       getTemplates();
       getSonarrTags();
       getScheduledSyncs();
-      // Update next run text every minute
-      setInterval(getScheduledSyncs, 60 * 1000);
     }
   </script>
   
@@ -392,7 +476,7 @@
       </div>
     </div>
 
-    <!-- Modals -->
+    <!-- New Sync Modals -->
 
     <!-- Emby -->
     <div id="add-emby-sync-modal" class="ui mini sync modal">
@@ -422,7 +506,7 @@
 
           <div class="field" title="Tags required for the series to be synced">
             <label>Tags</label>
-            <div dropdown-type="server-tags" class="ui multiple search selection dropdown additions">
+            <div data-value="required_tags" dropdown-type="server-tags" class="ui multiple search selection dropdown additions">
               <input name="required_tags" type="hidden">
               <div class="default text">None</div>
             </div>
@@ -430,7 +514,7 @@
 
           <div class="field">
             <label>Libraries</label>
-            <div id="emby-required-library" class="ui clearable multiple selection dropdown" data-value="reqlib">
+            <div data-value="required_libraries" id="emby-required-library" class="ui clearable multiple selection dropdown" data-value="reqlib">
               <input name="required_libraries" type="hidden">
               <i class="dropdown icon"></i>
               <div class="default text">Libraries</div>
@@ -445,7 +529,7 @@
 
           <div class="field" title="Tags to exclude from this sync">
             <label>Tags</label>
-            <div dropdown-type="server-tags" class="ui multiple search selection dropdown additions">
+            <div data-value="excluded_tags" dropdown-type="server-tags" class="ui multiple search selection dropdown additions">
               <input name="excluded_tags" type="hidden">
               <div class="default text">None</div>
             </div>
@@ -453,7 +537,7 @@
 
           <div class="field">
             <label>Libraries</label>
-            <div id="emby-excluded-library" class="ui clearable multiple selection dropdown">
+            <div data-value="excluded_libraries" id="emby-excluded-library" class="ui clearable multiple selection dropdown">
               <input type="hidden" name="excluded_libraries">
               <i class="dropdown icon"></i>
               <div class="default text">Libraries</div>
@@ -500,7 +584,7 @@
 
           <div class="field" title="Tags required for the series to be synced">
             <label>Tags</label>
-            <div dropdown-type="server-tags" class="ui multiple search selection dropdown additions">
+            <div data-value="required_tags" dropdown-type="server-tags" class="ui multiple search selection dropdown additions">
               <input name="required_tags" type="hidden">
               <div class="default text">None</div>
             </div>
@@ -508,7 +592,7 @@
 
           <div class="field">
             <label>Libraries</label>
-            <div data-value="jellyfin_libraries" class="ui clearable multiple selection dropdown">
+            <div data-value="required_libraries" data-value="jellyfin_libraries" class="ui clearable multiple selection dropdown">
               <input type="hidden" name="required_libraries">
               <i class="dropdown icon"></i>
               <div class="default text">Libraries</div>
@@ -523,7 +607,7 @@
 
           <div class="field" title="Tags to exclude from this sync">
             <label>Tags</label>
-            <div dropdown-type="server-tags" class="ui multiple search selection dropdown additions">
+            <div data-value="excluded_tags" dropdown-type="server-tags" class="ui multiple search selection dropdown additions">
               <input name="excluded_tags" type="hidden">
               <div class="default text">None</div>
             </div>
@@ -531,7 +615,7 @@
 
           <div class="field">
             <label>Libraries</label>
-            <div data-value="jellyfin_libraries" class="ui clearable multiple selection dropdown">
+            <div data-value="excluded_libraries" data-value="jellyfin_libraries" class="ui clearable multiple selection dropdown">
               <input type="hidden" name="excluded_libraries">
               <i class="dropdown icon"></i>
               <div class="default text">Libraries</div>
@@ -578,7 +662,7 @@
 
           <div class="field" title="Tags required for the series to be synced">
             <label>Tags</label>
-            <div dropdown-type="server-tags" class="ui multiple search selection dropdown additions">
+            <div data-value="required_tags" dropdown-type="server-tags" class="ui multiple search selection dropdown additions">
               <input name="required_tags" type="hidden">
               <div class="default text">None</div>
             </div>
@@ -586,7 +670,7 @@
 
           <div class="field">
             <label>Libraries</label>
-            <div id="plex-required-library" class="ui clearable multiple selection dropdown" data-value="reqlib">
+            <div data-value="required_libraries" id="plex-required-library" class="ui clearable multiple selection dropdown" data-value="reqlib">
               <input type="hidden" name="required_libraries">
               <i class="dropdown icon"></i>
               <div class="default text">Libraries</div>
@@ -601,7 +685,7 @@
 
           <div class="field" title="Tags to exclude from this sync">
             <label>Tags</label>
-            <div dropdown-type="server-tags" class="ui multiple search selection dropdown additions">
+            <div data-value="excluded_tags" dropdown-type="server-tags" class="ui multiple search selection dropdown additions">
               <input name="excluded_tags" type="hidden">
               <div class="default text">None</div>
             </div>
@@ -609,7 +693,7 @@
 
           <div class="field">
             <label>Libraries</label>
-            <div id="plex-excluded-library" class="ui clearable multiple selection dropdown">
+            <div data-value="excluded_libraries" id="plex-excluded-library" class="ui clearable multiple selection dropdown">
               <input type="hidden" name="excluded_libraries" tabindex="5">
               <i class="dropdown icon"></i>
               <div class="default text">Libraries</div>
@@ -658,7 +742,7 @@
 
           <div class="field" title="Tags required for the series to be synced">
             <label>Tags</label>
-            <div dropdown-type="sonarr-tags" class="ui fluid multiple search selection dropdown additions">
+            <div data-value="required_tags" dropdown-type="sonarr-tags" class="ui fluid multiple search selection dropdown additions">
               <input name="required_tags" type="hidden">
               <i class="dropdown icon"></i>
               <div class="default text">None</div>
@@ -668,7 +752,7 @@
 
           <div class="field" title="Only include series of the specified type">
             <label>Series Type</label>
-            <div dropdown-type="series-type" class="ui selection clearable dropdown">
+            <div data-value="required_series_type" dropdown-type="series-type" class="ui selection clearable dropdown">
               <input name="required_series_type" type="hidden">
               <i class="dropdown icon"></i>
               <div class="default text">None</div>
@@ -699,7 +783,7 @@
 
           <div class="field" title="Tags to exclude from this sync">
             <label>Tags</label>
-            <div dropdown-type="sonarr-tags" class="ui fluid multiple search selection dropdown">
+            <div data-value="excluded_tags" dropdown-type="sonarr-tags" class="ui fluid multiple search selection dropdown">
               <input name="excluded_tags" type="hidden">
               <i class="dropdown icon"></i>
               <div class="default text">None</div>
@@ -709,7 +793,7 @@
 
           <div class="field" title="Exclude series of the specified type">
             <label>Series Type</label>
-            <div dropdown-type="series-type" class="ui selection clearable dropdown">
+            <div data-value="excluded_series_type" dropdown-type="series-type" class="ui selection clearable dropdown">
               <input name="excluded_series_type" type="hidden">
               <i class="dropdown icon"></i>
               <div class="default text">None</div>
@@ -723,7 +807,7 @@
         </form>
       </div>
 
-      <div class="center aligned actions" data-value="action-buttons">
+      <div class="center aligned actions">
         <button class="ui animated green button" form="sonarr-sync-form">
           <div class="visible content" data-value="primary-button">Create</div>
           <div class="hidden content">
@@ -791,7 +875,7 @@
         let form = new FormData(event.target);
         let dataObj = {};
         for (let [name, value] of [...form.entries()]) {
-          if (name.includes('_tags') || name.includes('_libraries') || name == 'template_ids') {
+          if (name.includes('_tags') || name.includes('_libraries') || name === 'template_ids') {
             if (value !== '') {
               dataObj[name] = value.split(',');
             }

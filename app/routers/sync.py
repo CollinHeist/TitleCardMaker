@@ -86,8 +86,9 @@ def create_new_sonarr_sync(
     return add_sync(db, new_sync)
 
 
-@sync_router.patch('/edit/{sync_id}', status_code=200)
+@sync_router.patch('/{sync_id}', status_code=201)
 def edit_sync(
+        request: Request,
         sync_id: int,
         update_sync: UpdateSync = Body(...),
         db: Session = Depends(get_database)
@@ -99,6 +100,9 @@ def edit_sync(
     - update_sync: UpdateSync containing fields to update.
     """
 
+    # Get contextual logger
+    log = request.state.log
+
     # Get existing Sync, raise 404 if DNE
     sync = get_sync(db, sync_id, raise_exc=True)
     update_sync_dict = update_sync.dict()
@@ -108,15 +112,17 @@ def edit_sync(
     if (template_ids := getattr(update_sync, 'template_ids', None)) is not None:
         if template_ids != sync.template_ids:
             sync.templates = get_all_templates(db, update_sync_dict)
+            log.debug(f'Sync[{sync.id}].template_ids = {template_ids}')
             changed = True
 
-    # Update Sync
+    # Update Sync itself
     for attribute, value in update_sync_dict.items():
         if value is not None and getattr(sync, attribute) != value:
             setattr(sync, attribute, value)
+            log.debug(f'Sync[{sync.id}].{attribute} = {value}')
             changed = True
 
-    # If Sync was changed, update DB
+    # If Sync was changed, update database
     if changed:
         db.commit()
 
