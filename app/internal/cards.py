@@ -62,6 +62,7 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                     except HTTPException as e:
                         if e.status_code != 404:
                             log.warning(f'{series.log_str} {episode.log_str} - skipping Card')
+                            log.debug(f'Exception: {e}')
                     except OperationalError:
                         log.debug(f'Database is busy, sleeping..')
                         sleep(30)
