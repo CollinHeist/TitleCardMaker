@@ -368,9 +368,11 @@
             episodeStat = statistics[1];
       $('#card-count')[0].innerHTML = `<i class="image outline icon"></i><span class="ui text">${cardStat.value} Cards / ${episodeStat.value} Episodes</span>`;
       let cardVal = Math.min(cardStat.value, episodeStat.value);
-      $('#card-progress')[0].dataset.total = episodeStat.value;
-      $('#card-progress')[0].dataset.value = `${cardVal},${episodeStat.value-cardVal}`;
-      $('#card-progress').progress();
+      $('#card-progress').progress({
+        total: episodeStat.value,
+        value: `${cardVal},${episodeStat.value-cardVal}`,
+        duration: 1500
+      });
     }
 
     async function getLibraries() {
@@ -802,7 +804,7 @@
     }
 
     function getSourceImages() {
-      $('#download-source-images > i').toggleClass('loading', true);
+      $('.button[data-action="download-source-images"]').toggleClass('disabled', true);
       $.toast({class: 'blue info', title: 'Starting to Download Source Images'});
       $.ajax({
         type: 'POST',
@@ -817,16 +819,18 @@
             displayTime: 0,
           });
         }, complete: () => {
-          $('#download-source-images > i').toggleClass('loading', false);
+          $('.button[data-action="download-source-images"]').toggleClass('disabled', false);
         }
       });
     }
 
     function createTitleCards() {
+      $('.button[data-action="create-title-cards"]').toggleClass('disabled', true);
       $.ajax({
         type: 'POST',
         url: '/api/cards/series/{{series.id}}',
         success: response => {
+          $.toast({class: 'blue info', title: 'Starting to Create Title Cards'});
           getEpisodeData();
           getStatistics();
         }, error: response => {
@@ -836,7 +840,9 @@
             message: response.responseJSON.detail,
             displayTime: 0,
           });
-        }, 
+        }, complete: () => {
+          $('.button[data-action="create-title-cards"]').toggleClass('disabled', false);
+        }
       });
     }
 
@@ -1527,11 +1533,11 @@
                 Add Translations
               </button>
               {% endif %}
-              <button id="download-source-images" class="ui labeled icon button" onclick="getSourceImages()" data-tooltip="Search for and download any missing source images">
+              <button data-action="download-source-images" class="ui labeled icon button" onclick="getSourceImages()" data-tooltip="Search for and download any missing source images">
                 <i class="cloud download alternate icon"></i>
                 Download Source Images
               </button>
-              <button class="ui labeled icon button" onclick="createTitleCards()" data-tooltip="Create missing or outdated Title Cards">
+              <button data-action="create-title-cards" class="ui labeled icon button" onclick="createTitleCards()" data-tooltip="Create missing or outdated Title Cards">
                 <i class="images outline icon"></i>
                 Create Title Cards
               </button>
