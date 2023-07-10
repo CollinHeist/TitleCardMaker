@@ -465,13 +465,12 @@ def process_series(
 
     # Begin Card creation - use BackgroundTasks
     for episode in series.episodes:
-        try:
-            create_episode_card(
-                db, preferences, background_tasks, episode, log=log
-            )
-        except HTTPException as e:
-            log.exception(f'{series.log_str} {episode.log_str} Card creation failed - {e.detail}', e)
-            pass
+        background_tasks.add_task(
+            # Function
+            create_episode_card,
+            # Arguments
+            db, preferences, background_tasks, episode, raise_exc=False, log=log
+        )
 
     return None
 

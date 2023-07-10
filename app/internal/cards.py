@@ -15,7 +15,6 @@ from app.models.preferences import Preferences
 from app.schemas.font import DefaultFont
 from app.schemas.card import NewTitleCard, TitleCard
 from app.schemas.card_type import LocalCardTypeModels
-# from app.schemas.episode import Episode
 from app.schemas.series import Series
 from modules.BaseCardType import BaseCardType
 
@@ -484,6 +483,7 @@ def create_episode_card(
         background_tasks: Optional[BackgroundTasks],
         episode: Episode,
         *,
+        raise_exc: bool = True,
         log: Logger = log,
     ) -> None:
     """
@@ -496,12 +496,19 @@ def create_episode_card(
         background_tasks: Optional BackgroundTasks to queue card
             creation within.
         episode: Episode whose Card is being created.
+        raise_exc: (Keyword) Whether to raise or ignore any
+            HTTPExceptions.
         log: (Keyword) Logger for all log messages.
     """
 
     # Resolve Card settings
     series = episode.series
-    card_settings = resolve_card_settings(preferences, episode, log=log)
+    try:
+        card_settings = resolve_card_settings(preferences, episode, log=log)
+    except HTTPException as e:
+        if raise_exc:
+            raise e
+        return None
 
     # Create NewTitleCard object for these settings
     card = NewTitleCard(
