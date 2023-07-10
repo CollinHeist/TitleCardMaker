@@ -98,13 +98,24 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             minimum_source_width: int = 0,
             minimum_source_height: int = 0,
             blacklist_threshold: int = BLACKLIST_THRESHOLD,
-            logo_language_priority: list[LANGUAGE_CODES] = ['en']
+            logo_language_priority: list[LANGUAGE_CODES] = ['en'],
+            *,
+            log: Logger = log,
         ) -> None:
         """
         Construct a new instance of an interface to TMDb.
 
         Args:
             api_key: The API key to communicate with TMDb.
+            minimum_source_width: Minimum width (in pixels) required for
+                source images.
+            minimum_source_height: Minimum height (in pixels) required
+                for source images.
+            blacklist_threshold: Threshold for permanently blacklisting
+                a request.
+            logo_language_priority: Priority which logos should be
+                evaluated at.
+            log: (Keyword) Logger for all log messages.
         """
 
         super().__init__('TMDb', log=log)
@@ -401,7 +412,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
     @catch_and_log('Error getting all episodes', default=[])
     def get_all_episodes(self,
-            series_info: SeriesInfo, *,
+            series_info: SeriesInfo,
+            *,
             log: Logger = log,
         ) -> list[EpisodeInfo]:
         """
@@ -464,7 +476,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def __find_episode(self,
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
-            title_match: bool = True, *,
+            title_match: bool = True,
+            *,
             log: Logger = log
         ) -> Optional[Union[TMDbEpisode, TMDbMovie]]:
         """
@@ -486,6 +499,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             episode_info: The episode information.
             title_match: Whether to require the title within
                 episode_info to match the title on TMDb.
+            log: (Keyword) Logger for all log messages.
 
         Returns:
             Dictionary of the index for the given entry. This dictionary
@@ -663,7 +677,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
 
     def __determine_best_image(self,
-            images: list[TMDbStill], *,
+            images: list[TMDbStill],
+            *,
             is_source_image: bool = True,
             skip_localized: bool = False,
         ) -> Optional[dict[str, Any]]:
@@ -729,9 +744,10 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         Args:
             series_info: SeriesInfo for this entry.
             episode_info: EpisodeInfo for this entry.
-            match_title:  (Keyword only) Whether to require the episode
-                title to match when querying TMDb.
-            bypass_blacklist: Whether to bypass the blacklist.
+            match_title:  (Keyword) Whether to require the episode title
+                to match when querying TMDb.
+            bypass_blacklist: (Keyword) Whether to bypass the blacklist.
+            log: (Keyword) Logger for all log messages.
 
         Returns:
             List of tmdbapis.objs.image.Still objects. If the episode is
@@ -770,7 +786,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     @catch_and_log('Error getting source image', default=None)
     def get_source_image(self,
             series_info: SeriesInfo,
-            episode_info: EpisodeInfo, *,
+            episode_info: EpisodeInfo,
+            *,
             match_title: bool = True,
             skip_localized_images: bool = False,
             raise_exc: bool = True,
@@ -782,12 +799,13 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         Args:
             series_info: SeriesInfo for this entry.
             episode_info: EpisodeInfo for this entry.
-            match_title:  (Keyword only) Whether to require the episode
-                title to match when querying TMDb.
-            skip_localized_images: (Keyword only) Whether to skip images
-                with a non-null language code - i.e. skipping localized
+            match_title:  (Keyword) Whether to require the episode title
+                to match when querying TMDb.
+            skip_localized_images: (Keyword) Whether to skip images with
+                a non-null language code - i.e. skipping localized
                 images.
             raise_exc: Whether to raise any HTTPExceptions that arise.
+            log: (Keyword) Logger for all log messages.
 
         Returns:
             URL to the 'best' source image for the requested entry. None
@@ -880,6 +898,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             episode_info: EpisodeInfo for the entry.
             language_code: The language code for the desired title.
             bypass_blacklist: Whether to bypass the blacklist check.
+            log: (Keyword) Logger for all log messages.
 
         Args:
             The episode title, None if it cannot be found.
