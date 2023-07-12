@@ -159,6 +159,7 @@ class Preferences:
             'sonarr_url': '',
             'sonarr_api_key': '',
             'sonarr_use_ssl': True,
+            'sonarr_downloaded_only': True,
             'sonarr_libraries': {},
             'use_tmdb': False,
             'tmdb_api_key': '',
@@ -308,6 +309,7 @@ class Preferences:
             'url': self.sonarr_url,
             'api_key': self.sonarr_api_key,
             'verify_ssl': self.sonarr_use_ssl,
+            'downloaded_only': self.sonarr_downloaded_only,
         }
 
     @property

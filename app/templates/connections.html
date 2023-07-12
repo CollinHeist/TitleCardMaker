@@ -466,6 +466,16 @@
             <label>Use SSL</label>
           </div>
           <br>
+          {% if preferences.sonarr_downloaded_only %}
+          <div class="ui left aligned disabled checked checkbox field" data-tooltip="Whether to ignore Episodes that are not downloaded">
+            <input name="downloaded_only" type="checkbox" checked="">
+          {% else %}
+          <div class="ui left aligned disabled checkbox field" data-tooltip="Whether to ignore Episodes that are not downloaded">                  
+            <input name="downloaded_only" type="checkbox">
+          {% endif %}
+            <label>Query Downloaded Episodes Only</label>
+          </div>
+          <br>
 
           <div id="sonarr-libraries" class="ui disabled field">
             <label>Library Paths</label>

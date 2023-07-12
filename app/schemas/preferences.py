@@ -174,6 +174,7 @@ class UpdatePlex(UpdateMediaServerBase):
 class UpdateSonarr(UpdateServerBase):
     api_key: Hexstring = Field(default=UNSPECIFIED)
     use_ssl: bool = Field(default=UNSPECIFIED)
+    downloaded_only: bool = UNSPECIFIED
     library_names: list[str] = Field(default=UNSPECIFIED)
     library_paths: list[str] = Field(default=UNSPECIFIED)
 
