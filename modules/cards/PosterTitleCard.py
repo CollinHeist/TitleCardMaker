@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.CleanPath import CleanPath
@@ -89,8 +89,9 @@ class PosterTitleCard(BaseCardType):
             episode_number: int = 1,
             logo: SeriesExtra[str] = None,
             episode_text_color: Optional[str] = None,
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            preferences: 'Preferences' = None, # type: ignore
+            **unused,
+        ) -> None:
         """
         Construct a new instance of this card.
         """
@@ -145,9 +146,10 @@ class PosterTitleCard(BaseCardType):
 
     @staticmethod
     def modify_extras(
-            extras: dict[str, Any],
+            extras: dict,
             custom_font: bool,
-            custom_season_titles: bool) -> None:
+            custom_season_titles: bool
+        ) -> None:
         """
         Modify the given extras based on whether font or season titles
         are custom.
@@ -164,9 +166,11 @@ class PosterTitleCard(BaseCardType):
                 extras['episode_text_color'] =\
                     PosterTitleCard.EPISODE_TEXT_COLOR
 
+        return None
+
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determines whether the given arguments represent a custom font
         for this card. This CardType does not use custom fonts, so this
@@ -186,7 +190,9 @@ class PosterTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> bool:
         """
         Determines whether the given attributes constitute custom or
         generic season titles.
