@@ -84,6 +84,7 @@ class StandardTitleCard(BaseCardType):
             season_text: str,
             episode_text: str,
             hide_season_text: bool = False,
+            hide_episode_text: bool = False,
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
@@ -93,11 +94,13 @@ class StandardTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-            separator: SeriesExtra[str] = '•',
-            stroke_color: SeriesExtra[str] = 'black',
-            omit_gradient: SeriesExtra[bool] = False,
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            separator: str = '•',
+            stroke_color: str = 'black',
+            episode_text_color: str = SERIES_COUNT_TEXT_COLOR,
+            omit_gradient: bool = False,
+            preferences: 'Preferences' = None, # type: ignore
+            **unused
+        ) -> None:
         """
         Construct a new instance of this card.
         """
@@ -127,10 +130,11 @@ class StandardTitleCard(BaseCardType):
         self.separator = separator
         self.omit_gradient = omit_gradient
         self.stroke_color = stroke_color
+        self.episode_text_color = episode_text_color
 
 
     @property
-    def index_command(self) -> list[str]:
+    def index_command(self) -> ImageMagickCommands:
         """
         Subcommand for adding the index text to the source image.
 
@@ -150,8 +154,8 @@ class StandardTitleCard(BaseCardType):
                 f'-stroke black',
                 f'-strokewidth 6',
                 f'-annotate +0+697.2 "{self.episode_text}"',
-                f'-fill "{self.SERIES_COUNT_TEXT_COLOR}"',
-                f'-stroke "{self.SERIES_COUNT_TEXT_COLOR}"',
+                f'-fill "{self.episode_text_color}"',
+                f'-stroke "{self.episode_text_color}"',
                 f'-strokewidth 0.75',
                 f'-annotate +0+697.2 "{self.episode_text}"',
             ]
@@ -196,7 +200,7 @@ class StandardTitleCard(BaseCardType):
 
 
     @property
-    def black_title_command(self) -> list[str]:
+    def black_title_command(self) -> ImageMagickCommands:
         """
         Subcommand for adding the black stroke behind the title text.
 
@@ -208,8 +212,8 @@ class StandardTitleCard(BaseCardType):
         if self.font_stroke_width == 0:
             return []
 
-        vertical_shift = 245 + self.font_vertical_shift
         stroke_width = 3.0 * self.font_stroke_width
+        vertical_shift = 245 + self.font_vertical_shift
 
         return [
             f'-fill "{self.stroke_color}"',
@@ -220,8 +224,11 @@ class StandardTitleCard(BaseCardType):
 
 
     @staticmethod
-    def modify_extras(extras: dict[str, Any], custom_font: bool,
-                      custom_season_titles: bool) -> None:
+    def modify_extras(
+            extras: dict[str, Any],
+            custom_font: bool,
+            custom_season_titles: bool
+        ) -> None:
         """
         Modify the given extras based on whether font or season titles
         are custom.
@@ -234,12 +241,15 @@ class StandardTitleCard(BaseCardType):
 
         # Generic font, reset custom episode text color
         if not custom_font:
+            if 'episode_text_color' in extras:
+                extras['episode_text_color'] = \
+                    StandardTitleCard.SERIES_COUNT_TEXT_COLOR
             if 'stroke_color' in extras:
                 extras['stroke_color'] = 'black'
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
@@ -263,7 +273,9 @@ class StandardTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str
+        ) -> bool:
         """
         Determine whether the given attributes constitute custom or
         generic season titles.
@@ -289,10 +301,10 @@ class StandardTitleCard(BaseCardType):
         """
 
         # Font customizations
-        vertical_shift = 245 + self.font_vertical_shift
         font_size = 157.41 * self.font_size
         interline_spacing = -22 + self.font_interline_spacing
         kerning = -1.25 * self.font_kerning
+        vertical_shift = 245 + self.font_vertical_shift
 
         # Sub-command to optionally add gradient
         gradient_command = []
