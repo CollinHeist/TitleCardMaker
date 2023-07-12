@@ -83,7 +83,8 @@ class EpisodeInfo(DatabaseInfoContainer):
             title: Union[str, Title],
             season_number: int,
             episode_number: int,
-            abs_number: Optional[int] = None, *,
+            abs_number: Optional[int] = None,
+            *,
             emby_id: Optional[int] = None,
             imdb_id: Optional[str] = None,
             jellyfin_id: Optional[str] = None,
@@ -95,7 +96,8 @@ class EpisodeInfo(DatabaseInfoContainer):
             queried_jellyfin: bool = False,
             queried_plex: bool = False,
             queried_sonarr: bool = False,
-            queried_tmdb: bool = False) -> None:
+            queried_tmdb: bool = False
+        ) -> None:
         """
         Initialize this object with the given title, indices, database
         ID's, airdate, and queried statuses.
@@ -322,7 +324,8 @@ class EpisodeInfo(DatabaseInfoContainer):
             queried_jellyfin: bool = False,
             queried_plex: bool = False,
             queried_sonarr: bool = False,
-            queried_tmdb: bool = False) -> None:
+            queried_tmdb: bool = False
+        ) -> None:
         """
         Update the queried attributes of this object to reflect the
         given arguments. Only updates an attribute from False to True.

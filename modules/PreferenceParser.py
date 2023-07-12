@@ -63,6 +63,10 @@ class PreferenceParser(YamlReader):
         Args:
             file: The file to parse for preferences.
             is_docker: Whether executing within a Docker container.
+
+        Raises:
+            SystemExit (1) if any required YAML options are missing from
+                `file`.
         """
 
         # Initialize parent YamlReader object - errors are critical
@@ -819,7 +823,8 @@ class PreferenceParser(YamlReader):
 
     def __validate_libraries(self,
             library_yaml: dict[str, str],
-            file: Path) -> bool:
+            file: Path,
+        ) -> bool:
         """
         Validate the given libraries YAML.
 
@@ -868,7 +873,8 @@ class PreferenceParser(YamlReader):
 
     def __validate_fonts(self,
             font_yaml: dict[str, Union[str, float]],
-            file: Path) -> bool:
+            file: Path
+        ) -> bool:
         """
         Validate the given font YAML.
 
@@ -1219,7 +1225,7 @@ class PreferenceParser(YamlReader):
         }
 
 
-    def parse_image_source_priority(self, value: str) -> Union[list[str], None]:
+    def parse_image_source_priority(self, value: str) -> Optional[list[str]]:
         """
         Parse the given image source priority value into a list of
         sources.
@@ -1314,8 +1320,10 @@ class PreferenceParser(YamlReader):
         if filesize is None:
             return None
 
-        units = {'B': 1, 'KB':  2**10, 'MB':  2**20, 'GB':  2**30, 'TB':  2**40,
-                  '': 1, 'KIB': 10**3, 'MIB': 10**6, 'GIB': 10**9, 'TIB':10**12}
+        units = {
+            'B': 1, 'KB':  2**10, 'MB':  2**20, 'GB':  2**30, 'TB':  2**40,
+            '': 1, 'KIB': 10**3, 'MIB': 10**6, 'GIB': 10**9, 'TIB':10**12
+        }
 
         number, unit = map(str.strip, filesize.split())
         value, unit_scale = float(number), units[unit.upper()]

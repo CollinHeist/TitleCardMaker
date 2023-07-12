@@ -231,8 +231,8 @@ if ((hasattr(args, 'import_cards') or hasattr(args, 'revert_series'))
                     series_info = SeriesInfo(*groups.groups())
                     break
                 else:
-                    log.critical(f'Cannot identify series name/year; specify '
-                                 f'with --import-series')
+                    log.critical(f'Cannot identify series name/year; specify with '
+                                f'--import-series')
                     exit(1)
     else:
         series_info = SeriesInfo(args.revert_series[1], args.revert_series[2])

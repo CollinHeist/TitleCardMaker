@@ -198,7 +198,8 @@ class EpisodeMap:
 
 
     def __parse_absolute_episode_ranges(self,
-            episode_ranges: dict[str, Any]) -> None:
+            episode_ranges: dict[str, Any]
+        ) -> None:
         """
         Parse the given episode range map, filling this object's title,
         source, and applies dictionaries. Also update's object validity.

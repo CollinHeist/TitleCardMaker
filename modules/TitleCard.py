@@ -1,6 +1,5 @@
 from pathlib import Path
 from re import match, sub, IGNORECASE
-from typing import Any
 
 from modules.BaseCardType import BaseCardType
 from modules.CleanPath import CleanPath
@@ -86,10 +85,11 @@ class TitleCard:
 
 
     def __init__(self,
-            episode: 'Episode',
-            profile: 'Profile',
-            title_characteristics: dict[str, Any],
-            **extra_characteristics: dict[str, Any]) -> None:
+            episode: 'Episode',                                                 # type: ignore
+            profile: 'Profile',                                                 # type: ignore
+            title_characteristics,
+            **extra_characteristics,
+        ) -> None:
         """
         Constructs a new instance of this class.
 
@@ -111,7 +111,7 @@ class TitleCard:
         # Apply the given profile to the Title
         self.converted_title = episode.episode_info.title.apply_profile(
             profile, **title_characteristics
-        )   
+        )
 
         # Initialize this episode's CardType instance
         kwargs = {
@@ -143,7 +143,8 @@ class TitleCard:
             format_string: str,
             series_info: SeriesInfo, 
             episode_info: EpisodeInfo,
-            media_directory: Path) -> Path:
+            media_directory: Path
+        ) -> Path:
         """
         Get the output filename for a title card described by the given
         values.
@@ -188,8 +189,9 @@ class TitleCard:
     def get_multi_output_filename(
             format_string: str,
             series_info: SeriesInfo,
-            multi_episode: 'MultiEpisode',
-            media_directory: Path) -> Path:
+            multi_episode: 'MultiEpisode',                                      # type: ignore
+            media_directory: Path
+        ) -> Path:
         """
         Get the output filename for a title card described by the given
         values, and that represents a range of Episodes (not just one).
@@ -207,7 +209,7 @@ class TitleCard:
 
         # If there is an episode key to modify, do so
         if '{episode' in format_string:
-            # Replace existing episode number reference with episode start number
+            # Replace existing episode number reference with start number
             mod_format_string=format_string.replace('{episode','{episode_start')
 
             # Episode number formatting with prefix

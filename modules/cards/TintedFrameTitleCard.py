@@ -8,7 +8,6 @@ SeriesExtra = Optional
 Element = Literal['index', 'logo', 'omit', 'title']
 MiddleElement = Literal['logo', 'omit']
 
-
 class Coordinate:
     __slots__ = ('x', 'y')
 

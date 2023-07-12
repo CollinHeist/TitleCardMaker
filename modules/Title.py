@@ -42,7 +42,8 @@ class Title:
 
     def __init__(self,
             title: Union[str, list[str]], *,
-            original_title: Optional[str] = None) -> None:
+            original_title: Optional[str] = None
+        ) -> None:
         """
         Constructs a new instance of a Title from either a full, unsplit
         title, or a list of title lines.
@@ -116,7 +117,8 @@ class Title:
     def split(self,
             max_line_width: int,
             max_line_count: int,
-            top_heavy: bool) -> list[str]:
+            top_heavy: bool
+        ) -> list[str]:
         """
         Split this title's text into multiple lines. If the title cannot
         fit into the given parameters, line width might not be
@@ -223,7 +225,8 @@ class Title:
 
     def apply_profile(self,
             profile: 'Profile', # type: ignore
-            **title_characteristics) -> str:
+            **title_characteristics: dict
+        ) -> str:
         """
         Apply the given profile to this title. If this object was
         created with manually specified title lines, then the profile is

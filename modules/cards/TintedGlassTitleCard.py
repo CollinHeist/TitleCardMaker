@@ -252,13 +252,14 @@ class TintedGlassTitleCard(BaseCardType):
         x_start -= self.box_adjustments[3]
         x_end += self.box_adjustments[1]
         y_start -= self.box_adjustments[0]
-        y_end +=self.box_adjustments[2]
+        y_end += self.box_adjustments[2]
 
         return BoxCoordinates(x_start, y_start, x_end, y_end)
 
 
     def add_episode_text_command(self,
-            title_coordinates: BoxCoordinates) -> ImageMagickCommands:
+            title_coordinates: BoxCoordinates
+        ) -> ImageMagickCommands:
         """
         Get the list of ImageMagick commands to add episode text.
 
@@ -327,9 +328,10 @@ class TintedGlassTitleCard(BaseCardType):
 
     @staticmethod
     def modify_extras(
-            extras: dict[str, Any],
+            extras: dict,
             custom_font: bool,
-            custom_season_titles: bool) -> None:
+            custom_season_titles: bool
+        ) -> None:
         """
         Modify the given extras base on whether font or season titles
         are custom.
@@ -350,7 +352,7 @@ class TintedGlassTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool:                                   # type: ignore
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
@@ -373,7 +375,9 @@ class TintedGlassTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str
+        ) -> bool:
         """
         Determine whether the given attributes constitute custom or
         generic season titles.

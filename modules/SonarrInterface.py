@@ -185,7 +185,7 @@ class SonarrInterface(WebInterface, SyncInterface):
             monitored_only: bool = False,
             downloaded_only: bool = False,
             series_type: Optional[str] = None,
-            ) -> list[tuple[SeriesInfo, str]]:
+        ) -> list[tuple[SeriesInfo, str]]:
         """
         Get all the series within Sonarr, filtered by the given
         parameters.
@@ -320,10 +320,10 @@ class SonarrInterface(WebInterface, SyncInterface):
     def get_all_episodes(self,
             series_info: SeriesInfo,
             episode_infos: Optional[list[EpisodeInfo]] = None
-            ) -> list[EpisodeInfo]:
+        ) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that
-        have  already aired are returned.
+        have already aired are returned.
 
         Args:
             series_info: SeriesInfo for the entry.
@@ -410,10 +410,11 @@ class SonarrInterface(WebInterface, SyncInterface):
 
 
     def set_episode_ids(self,
-            library_name: Optional[str],
+            library_name: Any,
             series_info: SeriesInfo,
             episode_infos: list[EpisodeInfo],
-            inplace: bool = False) -> None:
+            inplace: bool = False
+        ) -> None:
         """
         Set all the episode ID's for the given list of EpisodeInfo
         objects. This sets the TVDb ID for each episode.
@@ -429,7 +430,7 @@ class SonarrInterface(WebInterface, SyncInterface):
             self.get_all_episodes(series_info)
 
 
-    def get_all_tags(self) -> list[dict[str, 'str | int']]:
+    def get_all_tags(self) -> list[dict]:
         """
         Get all tags present in Sonarr.
 

@@ -19,7 +19,7 @@ class Template:
     MAX_TEMPLATE_DEPTH = 10
 
 
-    def __init__(self, name: str, template: dict[str: str]) -> None:
+    def __init__(self, name: str, template: dict[str, str]) -> None:
         """
         Construct a new Template object with the given name, and with
         the given template dictionary. Keys of the form <<{key}>> are
@@ -55,7 +55,10 @@ class Template:
         return f'<Template {self.name=}, {self.keys=}, {self.template=}>'
 
 
-    def __identify_template_keys(self, template: dict, keys: set) -> set:
+    def __identify_template_keys(self,
+            template: dict,
+            keys: set[str]
+        ) -> set[str]:
         """
         Identify the required template keys to use this template. This
         looks for all unique values like "<<{key}>>". This is a
@@ -86,7 +89,11 @@ class Template:
         return keys
 
 
-    def __apply_value_to_key(self, template: dict, key: str, value: Any) -> None:
+    def __apply_value_to_key(self,
+            template: dict,
+            key: str,
+            value: Any,
+        ) -> None:
         """
         Apply the given value to all instances of the given key in the
         template. This looks for <<{key}>>, and puts value in place.

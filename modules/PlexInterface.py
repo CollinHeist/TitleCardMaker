@@ -448,7 +448,6 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             # Set Episode watched/spoil statuses
             episode.update_statuses(plex_episode.isWatched, style_set)
 
-
             # Get characteristics of this Episode's loaded card
             details = self._get_loaded_episode(loaded_series, episode)
             loaded = (details is not None)
@@ -834,9 +833,11 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             elif entry.type == 'season':
                 # Get series associated with this season
                 series = self.__server.fetchItem(entry.parentKey)
-                assert series.year is not None
+                if series.year is None:
+                    raise ValueError
+
                 series_info = self.info_set.get_series_info(
-                    series.title, series.year
+                    entry.parentTitle, entry.year
                 )
 
                 return [
@@ -850,7 +851,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 series = self.__server.fetchItem(entry.grandparentKey)
                 assert series.year is not None
                 series_info = self.info_set.get_series_info(
-                    series.title, series.year
+                    entry.grandparentTitle, series.year
                 )
 
                 return [(

@@ -100,8 +100,10 @@ class BaseCardType(ImageMaker):
     @abstractmethod
     def __init__(self,
             blur: bool = False,
-            grayscale: bool = False, *,
-            preferences: Optional['Preferences'] = None) -> None: # type: ignore
+            grayscale: bool = False,
+            *,
+            preferences: Optional['Preferences'] = None,                        # type: ignore
+        ) -> None:
         """
         Construct a new CardType. Must call super().__init__() to
         initialize the parent ImageMaker class (for PreferenceParser and
@@ -138,7 +140,8 @@ class BaseCardType(ImageMaker):
     def modify_extras(
             extras: dict[str, Any],
             custom_font: bool,
-            custom_season_titles: bool) -> None:
+            custom_season_titles: bool
+        ) -> None:
         """
         Modify the given extras base on whether font or season titles
         are custom. The default behavior is to not modify the extras at

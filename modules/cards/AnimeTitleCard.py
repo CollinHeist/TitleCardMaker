@@ -4,7 +4,6 @@ from typing import Any, Optional
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
-SeriesExtra = Optional
 
 class AnimeTitleCard(BaseCardType):
     """
@@ -105,13 +104,13 @@ class AnimeTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-            kanji: SeriesExtra[str] = None,
-            episode_text_color: SeriesExtra[str] = SERIES_COUNT_TEXT_COLOR,
-            separator: SeriesExtra[str] = '·',
-            omit_gradient: SeriesExtra[bool] = False,
-            require_kanji: SeriesExtra[bool] = False,
-            kanji_vertical_shift: SeriesExtra[float] = 0,
-            stroke_color: SeriesExtra[str] = 'black',
+            kanji: Optional[str] = None,
+            episode_text_color: str = SERIES_COUNT_TEXT_COLOR,
+            separator: str = '·',
+            omit_gradient: bool = False,
+            require_kanji: bool = False,
+            kanji_vertical_shift: float = 0.0,
+            stroke_color: str = 'black',
             preferences: 'Preferences' = None,
             **unused) -> None:
 

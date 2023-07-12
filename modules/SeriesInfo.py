@@ -31,7 +31,8 @@ class SeriesInfo(DatabaseInfoContainer):
             tmdb_id: Optional[int] = None,
             tvdb_id: Optional[int] = None,
             tvrage_id: Optional[int] = None,
-            match_titles: Optional[bool] = True) -> None:
+            match_titles: Optional[bool] = True
+        ) -> None:
         """
         Create a SeriesInfo object that defines a series described by
         all of  these attributes.
@@ -52,7 +53,8 @@ class SeriesInfo(DatabaseInfoContainer):
                 episodes for this series.
 
         Raises:
-            ValueError: If no year is provided.
+            ValueError: If no year is provided or one cannot be
+                determined.
         """
 
         # Parse arguments into attributes
