@@ -179,7 +179,10 @@ class MediaInfoSet:
 
 
     def __set_series_id(self,
-            id_type: str, series_info: SeriesInfo, id_: Any) -> None:
+            id_type: str,
+            series_info: SeriesInfo,
+            id_: Any
+        ) -> None:
         """
         Set the series ID within this object's database and on the given
         SeriesInfo object.
@@ -274,7 +277,8 @@ class MediaInfoSet:
             title: str,
             season_number: int,
             episode_number: int,
-            abs_number: Optional[int] = None, *,
+            abs_number: Optional[int] = None,
+            *,
             emby_id: Optional[str] = None,
             imdb_id: Optional[str] = None,
             jellyfin_id: Optional[str] = None,
@@ -283,7 +287,8 @@ class MediaInfoSet:
             tvrage_id: Optional[int] = None,
             airdate: Optional[datetime] = None,
             title_match: bool = True,
-            **queried_kwargs: dict[str, bool]) -> EpisodeInfo:
+            **queried_kwargs: dict[str, bool]
+        ) -> EpisodeInfo:
         """
         Get the EpisodeInfo object indicated by the given attributes.
 
