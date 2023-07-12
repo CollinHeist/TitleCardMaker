@@ -446,22 +446,22 @@
         </div>
 
         <form id="sonarr-settings" class="ui fluid form">
-          <div id="sonarr-url" class="ui disabled required eight wide field" title="Host URL to communicate with Sonarr">
+          <div id="sonarr-url" class="ui disabled required eight wide field" data-tooltip="Host URL to communicate with Sonarr">
             <label>URL</label>
             <input type="text" name="url" value="{{preferences.sonarr_url}}">
           </div>
 
-          <div id="sonarr-api-key" class="ui disabled required eight wide field" title="API Key to authenticate communication with Sonarr">
+          <div id="sonarr-api-key" class="ui disabled required eight wide field" tidata-tooltiptle="API Key to authenticate communication with Sonarr">
             <label>API Key <a href="https://github.com/CollinHeist/TitleCardMaker/wiki/Sonarr-Attributes#sonarr-api-key" target="_blank"><i class="external alternate small icon"></i></a></label>
             <input name="api_key" type="text" class="private" value="{{preferences.sonarr_api_key}}">
           </div>
 
           {% if preferences.sonarr_use_ssl %}
-          <div id="sonarr-use-ssl" class="ui left aligned disabled checked checkbox field" title="Connect with HTTPS instead of HTTP">
+          <div class="ui left aligned disabled checked checkbox field" data-tooltip="Connect with HTTPS instead of HTTP">
             <input name="use_ssl" id="sonarr-use-ssl-checkbox" type="checkbox" checked="">
           {% else %}
-          <div id="sonarr-use-ssl" class="ui left aligned disabled checkbox field" title="Connect with HTTPS instead of HTTP">                  
-            <input name="use_ssl" id="sonarr-use-ssl-checkbox" type="checkbox">
+          <div class="ui left aligned disabled checkbox field" data-tooltip="Connect with HTTPS instead of HTTP">                  
+            <input name="use_ssl" type="checkbox">
             {% endif %}
             <label>Use SSL</label>
           </div>

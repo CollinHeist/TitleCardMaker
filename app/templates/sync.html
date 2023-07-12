@@ -735,12 +735,12 @@
             </div>
           </div>
 
-          <h4 class="ui horizontal divider header" title="Filter which series are synced">
+          <h4 class="ui horizontal divider header" title="Filter which Series are synced">
             <i class="filter icon"></i>
             Filters
           </h4>
 
-          <div class="field" title="Tags required for the series to be synced">
+          <div class="field" data-tooltip="Tags required for the Series to be synced">
             <label>Tags</label>
             <div data-value="required_tags" dropdown-type="sonarr-tags" class="ui fluid multiple search selection dropdown additions">
               <input name="required_tags" type="hidden">
@@ -750,7 +750,7 @@
             </div>
           </div>
 
-          <div class="field" title="Only include series of the specified type">
+          <div class="field" data-tooltip="Only include Series of the specified type">
             <label>Series Type</label>
             <div data-value="required_series_type" dropdown-type="series-type" class="ui selection clearable dropdown">
               <input name="required_series_type" type="hidden">
@@ -765,23 +765,23 @@
           </div>
 
           <div class="two fields">
-            <div class="ui checkbox field" title="Whether to only include series that have at least one downloaded episode">
+            <div class="ui checkbox field" data-tooltip="Whether to only include Series that have at least one downloaded episode">
               <input name="downloaded_only" type="checkbox">
               <label>Downloaded Only</label>
             </div>
   
-            <div class="ui checkbox field" title="Whether to only include series that are 'Monitored' in Sonarr">
+            <div class="ui checkbox field" data-tooltip="Whether to exclude Unmonitored Series">
               <input name="monitored_only" type="checkbox">
               <label>Monitored Only</label>
             </div>
           </div>
 
-          <h4 class="ui horizontal divider header" title="Elements to Exclude from this sync">
+          <h4 class="ui horizontal divider header" title="Elements to Exclude from this Sync">
             <i class="times circle outline icon"></i>
             Exclusions
           </h4>
 
-          <div class="field" title="Tags to exclude from this sync">
+          <div class="field" data-tooltip="Tags to exclude from this Sync">
             <label>Tags</label>
             <div data-value="excluded_tags" dropdown-type="sonarr-tags" class="ui fluid multiple search selection dropdown">
               <input name="excluded_tags" type="hidden">
@@ -791,7 +791,7 @@
             </div>
           </div>
 
-          <div class="field" title="Exclude series of the specified type">
+          <div class="field" data-tooltip="Exclude Series of the specified type">
             <label>Series Type</label>
             <div data-value="excluded_series_type" dropdown-type="series-type" class="ui selection clearable dropdown">
               <input name="excluded_series_type" type="hidden">
