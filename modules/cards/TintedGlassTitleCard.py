@@ -154,7 +154,8 @@ class TintedGlassTitleCard(BaseCardType):
 
     def blur_rectangle_command(self,
             coordinates: BoxCoordinates,
-            rounding_radius: int) -> ImageMagickCommands:
+            rounding_radius: int
+        ) -> ImageMagickCommands:
         """
         Get the commands necessary to blur and darken a rectangle
         encompassing the given coordinates.
