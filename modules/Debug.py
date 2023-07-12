@@ -39,16 +39,31 @@ class LogHandler(StreamHandler):
 
 # Formatter classes to handle exceptions
 class ErrorFormatterColor(Formatter):
+    """
+    Formatter class to handle exception traceback printing with color.
+    """
+
     def formatException(self, ei) -> str:
         return f'\x1b[1;30m[TRACEBACK] {super().formatException(ei)}\x1b[0m'
 
+
 class ErrorFormatterNoColor(Formatter):
+    """
+    Formatter class to handle exception traceback printing without
+    color.
+    """
+    
     def formatException(self, ei) -> str:
         return f'[TRACEBACK] {super().formatException(ei)}'
 
-# Formatter class containing ErrorFormatterColor objects instantiated with
-# different format strings for various colors depending on the log level
+
 class LogFormatterColor(Formatter):
+    """
+    Formatter containing ErrorFormatterColor objects instantiated with
+    different format strings for various colors depending on the log
+    level.
+    """
+
     """Color codes"""
     GRAY =     '\x1b[1;30m'
     CYAN =     '\033[96m'
@@ -70,6 +85,7 @@ class LogFormatterColor(Formatter):
     def format(self, record):
         return self.LEVEL_FORMATS[record.levelno].format(record)
 
+
 class LogFormatterNoColor(Formatter):
     FORMATTER = ErrorFormatterNoColor('[%(levelname)s] %(message)s')
 
@@ -77,7 +93,7 @@ class LogFormatterNoColor(Formatter):
         return self.FORMATTER.format(record)
 
 # Create global logger
-log = getLogger('TitleCardMaker')
+log = getLogger('tcm')
 log.setLevel(DEBUG)
 
 # Add TQDM handler and color formatter to the logger
@@ -88,7 +104,7 @@ log.addHandler(handler)
 
 # Add rotating file handler to the logger
 file_handler = TimedRotatingFileHandler(
-    filename=LOG_FILE, when='midnight', backupCount=7,
+    filename=LOG_FILE, when='midnight', backupCount=14,
 )
 file_handler.setFormatter(ErrorFormatterNoColor(
     '[%(levelname)s] [%(asctime)s] %(message)s',
