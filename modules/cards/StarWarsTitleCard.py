@@ -1,8 +1,5 @@
 from pathlib import Path
-from re import match
 from typing import Optional
-
-from num2words import num2words
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
@@ -82,7 +79,7 @@ class StarWarsTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             episode_text_color: str = EPISODE_TEXT_COLOR,
-            preferences: 'Preferences' = None,
+            preferences: 'Preferences' = None, # type: ignore
             **unused) -> None:
         """
         Initialize the CardType object.
@@ -183,9 +180,10 @@ class StarWarsTitleCard(BaseCardType):
 
     @staticmethod
     def modify_extras(
-            extras: dict[str, Any],
+            extras: dict,
             custom_font: bool,
-            custom_season_titles: bool) -> None:
+            custom_season_titles: bool,
+        ) -> None:
         """
         Modify the given extras based on whether font or season titles
         are custom.
@@ -204,7 +202,7 @@ class StarWarsTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determines whether the given arguments represent a custom font
         for this card.
@@ -225,7 +223,9 @@ class StarWarsTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> bool:
         """
         Determines whether the given attributes constitute custom or
         generic season titles.
