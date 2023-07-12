@@ -68,7 +68,9 @@ class PosterTitleCard(BaseCardType):
     __GRADIENT_OVERLAY = REF_DIRECTORY / 'stars-overlay.png'
 
     __slots__ = (
-        'source_file', 'output_file', 'logo', 'title_text', 'episode_text'
+        'source_file', 'output_file', 'logo', 'title_text', 'episode_text',
+        'font_color', 'font_file', 'font_interline_spacing', 'font_size',
+        'episode_text_color',
     )
 
 
@@ -77,11 +79,16 @@ class PosterTitleCard(BaseCardType):
             card_file: Path,
             title_text: str,
             episode_text: str,
+            font_color: str = TITLE_COLOR,
+            font_file: str = TITLE_FONT,
+            font_interline_spacing: int = 0,
+            font_size: float = 1.0,
             blur: bool = False,
             grayscale: bool = False,
             season_number: int = 1,
             episode_number: int = 1,
             logo: SeriesExtra[str] = None,
+            episode_text_color: Optional[str] = None,
             preferences: 'Preferences' = None,
             **unused) -> None:
         """
@@ -91,7 +98,7 @@ class PosterTitleCard(BaseCardType):
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
 
-        # Store source and output file
+        # Store indicated files
         self.source_file = source_file
         self.output_file = card_file
 
@@ -123,6 +130,40 @@ class PosterTitleCard(BaseCardType):
         self.title_text = self.image_magick.escape_chars(title_text.upper())
         self.episode_text = self.image_magick.escape_chars(episode_text)
 
+        # Font characteristics
+        self.font_color = font_color
+        self.font_file = font_file
+        self.font_interline_spacing = font_interline_spacing
+        self.font_size = font_size
+
+        # Extras
+        if episode_text_color is None:
+            self.episode_text_color = font_color
+        else:
+            self.episode_text_color = episode_text_color
+
+
+    @staticmethod
+    def modify_extras(
+            extras: dict[str, Any],
+            custom_font: bool,
+            custom_season_titles: bool) -> None:
+        """
+        Modify the given extras based on whether font or season titles
+        are custom.
+
+        Args:
+            extras: Dictionary to modify.
+            custom_font: Whether the font are custom.
+            custom_season_titles: Whether the season titles are custom.
+        """
+
+        # Generic font, reset custom episode text color
+        if not custom_font:
+            if 'episode_text_color' in extras:
+                extras['episode_text_color'] =\
+                    PosterTitleCard.EPISODE_TEXT_COLOR
+
 
     @staticmethod
     def is_custom_font(font: 'Font') -> bool:
@@ -138,7 +179,9 @@ class PosterTitleCard(BaseCardType):
             False, as fonts are not customizable with this card.
         """
 
-        return False
+        return ((font.color != PosterTitleCard.TITLE_COLOR)
+            or (font.size != 1.0)
+        )
 
 
     @staticmethod
@@ -207,14 +250,15 @@ class PosterTitleCard(BaseCardType):
             *logo_command,
             # Add episode text
             f'-gravity south',
-            f'-font "{self.TITLE_FONT}"',
-            f'-pointsize 75',
-            f'-fill "#FFFFFF"',
+            f'-font "{self.font_file}"',
+            f'-pointsize {75 * self.font_size}',
+            f'-fill "{self.episode_text_color}"',
             f'-annotate +649+50 "{self.episode_text}"',
             # Add title text
             f'-gravity center',                         
-            f'-pointsize 165',
-            f'-interline-spacing -40', 
+            f'-pointsize {165 * self.font_size}',
+            f'-interline-spacing {-40 + self.font_interline_spacing}',
+            f'-fill "{self.font_color}"',
             f'-annotate +649+{title_offset} "{self.title_text}"',
             # Create card
             *self.resize_output,
