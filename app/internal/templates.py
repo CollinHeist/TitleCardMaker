@@ -1,15 +1,17 @@
 from typing import Optional, Union
 
 from app.dependencies import get_preferences
-from app.schemas.episode import Episode
-from app.schemas.series import Series, Template
+from app.models.episode import Episode
+from app.models.series import Series
+from app.models.template import Template
 
 from modules.Debug import log
 
 
 def get_effective_series_template(
         series: Series,
-        episode: Optional[Episode] = None, *,
+        episode: Optional[Episode] = None,
+        *,
         as_dict: bool = False
     ) -> Union[dict, Optional[Template]]:
     """
@@ -20,12 +22,12 @@ def get_effective_series_template(
         series: Series whose Templates are being evaluated.
         episode: Episode that can be used in the Template Condition
             evaluation.
-        as_dict: Whether to return the dictionary of the given Template.
-            If None would be returned, then an empty dict is returned.
+        as_dict: (Keyword) Whether to return the dictionary of the given
+            Template.
 
     Returns:
         The first Template of the given Series whose Conditions are all
-        met. None (or an empty dictionary if as_dict is True) if no
+        met. None (or an empty dictionary if `as_dict` is True) if no
         Template criteria are satisfied, or no Templates are defined.
     """
 

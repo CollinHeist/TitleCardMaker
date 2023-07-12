@@ -24,7 +24,6 @@ class SeriesBase(BlueprintBase):
     hide_season_text: Optional[bool] = Field(default=None)
     hide_episode_text: Optional[bool] = Field(default=None)
     episode_text_format: Optional[str] = Field(default=None)
-    template_ids: Optional[list[int]] = Field(default=None)
     translations: Optional[list[Translation]] = Field(default=None)
     season_title_ranges: Optional[list[SeasonTitleRange]] = Field(default=None)
     season_title_values: Optional[list[str]] = Field(default=None)
@@ -32,6 +31,7 @@ class SeriesBase(BlueprintBase):
     extra_values: Optional[list[Any]] = Field(default=None)
 
 class BlueprintSeries(SeriesBase):
+    template_ids: Optional[list[int]] = Field(default=None)
     font_color: Optional[str] = Field(default=None)
     font_title_case: Optional[TitleCase] = Field(default=None)
     font_size: Optional[float] = Field(default=None)
