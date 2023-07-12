@@ -71,10 +71,10 @@ class StandardTitleCard(BaseCardType):
 
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'season_text',
-        'episode_text', 'hide_season_text', 'font_color', 'font_file',
-        'font_interline_spacing', 'font_kerning', 'font_size',
-        'font_stroke_width', 'font_vertical_shift', 'omit_gradient',
-        'stroke_color', 'separator', 
+        'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
+        'font_file', 'font_interline_spacing', 'font_kerning', 'font_size',
+        'font_stroke_width', 'font_vertical_shift', 'episode_text_color',
+        'omit_gradient', 'stroke_color', 'separator', 
     )
 
     def __init__(self,
@@ -115,7 +115,8 @@ class StandardTitleCard(BaseCardType):
         self.title_text = self.image_magick.escape_chars(title_text)
         self.season_text = self.image_magick.escape_chars(season_text.upper())
         self.episode_text = self.image_magick.escape_chars(episode_text.upper())
-        self.hide_season_text = hide_season_text or len(season_text) == 0
+        self.hide_season_text = hide_season_text
+        self.hide_episode_text = hide_episode_text
 
         # Font/card customizations
         self.font_color = font_color
@@ -142,6 +143,9 @@ class StandardTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
+        if self.hide_season_text and self.hide_episode_text:
+            return []
+
         # Sub-command for adding season/episode text
         if self.hide_season_text:
             return [
@@ -159,7 +163,8 @@ class StandardTitleCard(BaseCardType):
                 f'-strokewidth 0.75',
                 f'-annotate +0+697.2 "{self.episode_text}"',
             ]
-        else:
+
+        if self.hide_episode_text:
             return [
                 # Global text effects
                 f'-background transparent',
@@ -168,35 +173,57 @@ class StandardTitleCard(BaseCardType):
                 f'-pointsize 67.75',
                 f'-interword-spacing 14.5',
                 # Black stroke behind primary text
-                f'\( -fill black',
+                f'-fill black',
                 f'-stroke black',
                 f'-strokewidth 6',
                 # Add season text
                 f'-font "{self.SEASON_COUNT_FONT.resolve()}"',
-                f'label:"{self.season_text} {self.separator}"',
-                # Add episode text
-                f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
-                f'label:"{self.episode_text}"',
-                # Combine season+episode text into one "image"
-                f'+smush 25 \)',
-                # Add season+episode text "image" to source image
-                f'-geometry +0+697.2',
-                f'-composite',
+                f'-annotate +0+697.2 "{self.season_text}"',
                 # Primary text
-                f'\( -fill "{self.SERIES_COUNT_TEXT_COLOR}"',
-                f'-stroke "{self.SERIES_COUNT_TEXT_COLOR}"',
+                f'-fill "{self.episode_text_color}"',
+                f'-stroke "{self.episode_text_color}"',
                 f'-strokewidth 0.75',
                 # Add season text
-                f'-font "{self.SEASON_COUNT_FONT.resolve()}"',
-                f'label:"{self.season_text} {self.separator}"',
-                # Add episode text
-                f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
-                f'label:"{self.episode_text}"',
-                f'+smush 30 \)',
-                # Add text to source image
-                f'-geometry +0+697.2',
-                f'-composite',
+                f'-annotate +0+697.2 "{self.season_text}"',
             ]
+
+        return [
+            # Global text effects
+            f'-background transparent',
+            f'-gravity center',                     
+            f'-kerning 5.42',       
+            f'-pointsize 67.75',
+            f'-interword-spacing 14.5',
+            # Black stroke behind primary text
+            f'\( -fill black',
+            f'-stroke black',
+            f'-strokewidth 6',
+            # Add season text
+            f'-font "{self.SEASON_COUNT_FONT.resolve()}"',
+            f'label:"{self.season_text} {self.separator}"',
+            # Add episode text
+            f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
+            f'label:"{self.episode_text}"',
+            # Combine season+episode text into one "image"
+            f'+smush 25 \)',
+            # Add season+episode text "image" to source image
+            f'-geometry +0+697.2',
+            f'-composite',
+            # Primary text
+            f'\( -fill "{self.episode_text_color}"',
+            f'-stroke "{self.episode_text_color}"',
+            f'-strokewidth 0.75',
+            # Add season text
+            f'-font "{self.SEASON_COUNT_FONT.resolve()}"',
+            f'label:"{self.season_text} {self.separator}"',
+            # Add episode text
+            f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
+            f'label:"{self.episode_text}"',
+            f'+smush 30 \)',
+            # Add text to source image
+            f'-geometry +0+697.2',
+            f'-composite',
+        ]
 
 
     @property
