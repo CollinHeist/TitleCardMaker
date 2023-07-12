@@ -12,6 +12,8 @@ TQDM_KWARGS = {
                    '[{elapsed}]'),
     # Progress bars should disappear when finished
     'leave': False,
+    # Progress bars can not be used if no TTY is present
+    'disable': None,
 }
 
 """Log file"""
