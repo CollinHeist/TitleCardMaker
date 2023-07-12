@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from re import IGNORECASE, compile as re_compile
-from typing import Optional
+from typing import Any, Optional
 
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
@@ -36,7 +36,9 @@ class SonarrInterface(WebInterface, SyncInterface):
             url: str,
             api_key: str,
             verify_ssl: bool = True,
-            server_id: int = 0) -> None:
+            downloaded_only: bool = True,
+            server_id: int = 0
+        ) -> None:
         """
         Construct a new instance of an interface to Sonarr.
 
@@ -44,6 +46,8 @@ class SonarrInterface(WebInterface, SyncInterface):
             url: The API url communicating with Sonarr.
             api_key: The API key for API requests.
             verify_ssl: Whether to verify SSL requests to Sonarr.
+            downloaded_only: Whether to ignore Episode that are not
+                downloaded when querying Sonarr for Episode data.
             server_id: Server ID of this server.
 
         Raises:
@@ -70,6 +74,7 @@ class SonarrInterface(WebInterface, SyncInterface):
         self.__api_key = api_key
         self.__standard_params = {'apikey': api_key}
         self.server_id = server_id
+        self.downloaded_only = downloaded_only
 
         # Query system status to verify connection to Sonarr
         try:
@@ -351,6 +356,10 @@ class SonarrInterface(WebInterface, SyncInterface):
         # Go through each episode and get its season/episode number, and title
         has_bad_ids = False
         for episode in all_episodes:
+            # Skip if not downloaded and ignoring non-downloaded Episodes
+            if self.downloaded_only and not episode['hasFile']:
+                continue
+
             # Get airdate of this episode
             air_datetime = None
             if (ep_airdate := episode.get('airDateUtc')) is not None:

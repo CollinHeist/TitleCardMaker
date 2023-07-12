@@ -1,6 +1,6 @@
 from collections import namedtuple
 from pathlib import Path
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Iterator, Optional, Union
 
 from num2words import CONVERTER_CLASSES as SUPPORTED_LANGUAGE_CODES
 from tqdm import tqdm
@@ -678,8 +678,12 @@ class PreferenceParser(YamlReader):
                 self.valid = False
             else:
                 verify_ssl = reader._get('verify_ssl', type_=bool, default=True)
+                downloaded_only = reader._get(
+                    'downloaded_only', type_=bool, default=False
+                )
                 self.sonarr_kwargs.append({
-                    'url': url, 'api_key': api_key, 'verify_ssl': verify_ssl
+                    'url': url, 'api_key': api_key, 'verify_ssl': verify_ssl,
+                    'downloaded_only': downloaded_only,
                 })
 
         # If multiple servers were specified, parse all specificiations
@@ -1053,7 +1057,7 @@ class PreferenceParser(YamlReader):
         log.info(f'Read preference file "{self.file.resolve()}"')
 
 
-    def iterate_series_files(self) -> Iterable[Show]:
+    def iterate_series_files(self) -> Iterator[Show]:
         """
         Iterate through all series file listed in the preferences. For
         each series encountered in each file, yield a Show object. Files
