@@ -114,7 +114,6 @@ class SeriesInfo(DatabaseInfoContainer):
 
     @property
     def characteristics(self) -> dict[str, Union[str, int]]:
-        
         return {
             'series_name': self.name,
             'series_year': self.year,

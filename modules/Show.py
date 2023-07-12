@@ -703,6 +703,7 @@ class Show(YamlReader):
 
                 # If failed to download, skip
                 if not success:
+                    log.error(f'Error downloading .svg logo for {self}')
                     return None
 
                 # Convert temporary SVG to PNG at logo filepath
