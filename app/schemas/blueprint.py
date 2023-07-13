@@ -1,3 +1,4 @@
+# pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from typing import Any, Optional
 
 from pydantic import Field, root_validator
@@ -19,59 +20,59 @@ class BlueprintBase(Base):
         return values
 
 class SeriesBase(BlueprintBase):
-    font_id: Optional[int] = Field(default=None)
-    card_type: Optional[str] = Field(default=None)
-    hide_season_text: Optional[bool] = Field(default=None)
-    hide_episode_text: Optional[bool] = Field(default=None)
-    episode_text_format: Optional[str] = Field(default=None)
-    translations: Optional[list[Translation]] = Field(default=None)
-    season_title_ranges: Optional[list[SeasonTitleRange]] = Field(default=None)
-    season_title_values: Optional[list[str]] = Field(default=None)
-    extra_keys: Optional[list[str]] = Field(default=None)
-    extra_values: Optional[list[Any]] = Field(default=None)
+    font_id: Optional[int] = None
+    card_type: Optional[str] = None
+    hide_season_text: Optional[bool] = None
+    hide_episode_text: Optional[bool] = None
+    episode_text_format: Optional[str] = None
+    translations: Optional[list[Translation]] = None
+    season_title_ranges: Optional[list[SeasonTitleRange]] = None
+    season_title_values: Optional[list[str]] = None
+    extra_keys: Optional[list[str]] = None
+    extra_values: Optional[list[Any]] = None
 
 class BlueprintSeries(SeriesBase):
-    template_ids: Optional[list[int]] = Field(default=None)
-    font_color: Optional[str] = Field(default=None)
-    font_title_case: Optional[TitleCase] = Field(default=None)
-    font_size: Optional[float] = Field(default=None)
-    font_kerning: Optional[float] = Field(default=None)
-    font_stroke_width: Optional[float] = Field(default=None)
-    font_interline_spacing: Optional[int] = Field(default=None)
-    font_vertical_shift: Optional[int] = Field(default=None)
-    
+    template_ids: Optional[list[int]] = None
+    font_color: Optional[str] = None
+    font_title_case: Optional[TitleCase] = None
+    font_size: Optional[float] = None
+    font_kerning: Optional[float] = None
+    font_stroke_width: Optional[float] = None
+    font_interline_spacing: Optional[int] = None
+    font_vertical_shift: Optional[int] = None
+
 class BlueprintEpisode(BlueprintSeries):
-    title: Optional[str] = Field(default=None)
-    match_title: Optional[bool] = Field(default=None)
-    season_text: Optional[str] = Field(default=None)
-    episode_text: Optional[str] = Field(default=None)
+    title: Optional[str] = None
+    match_title: Optional[bool] = None
+    season_text: Optional[str] = None
+    episode_text: Optional[str] = None
 
 class BlueprintFont(BlueprintBase):
     name: str
-    color: Optional[str] = Field(default=None)
-    delete_missing: bool = Field(default=None)
-    file: Optional[str] = Field(default=None)
-    kerning: float = Field(default=None)
-    interline_spacing: int = Field(default=None)
-    replacements_in: list[str] = Field(default=None)
-    replacements_out: list[str] = Field(default=None)
-    size: float = Field(default=None)
-    stroke_width: float = Field(default=None)
-    title_case: Optional[TitleCase] = Field(default=None)
-    vertical_shift: int = Field(default=None)
+    color: Optional[str] = None
+    delete_missing: bool = None
+    file: Optional[str] = None
+    kerning: float = None
+    interline_spacing: int = None
+    replacements_in: list[str] = None
+    replacements_out: list[str] = None
+    size: float = None
+    stroke_width: float = None
+    title_case: Optional[TitleCase] = None
+    vertical_shift: int = None
 
 class BlueprintTemplate(SeriesBase):
     name: str
-    filters: list[Condition] = Field(default=[])
+    filters: list[Condition] = []
 
 """
 Creation classes
 """
 class Blueprint(Base):
     series: BlueprintSeries
-    episodes: dict[str, BlueprintEpisode] = Field(default={})
-    templates: list[BlueprintTemplate] = Field(default=[])
-    fonts: list[BlueprintFont] = Field(default=[])
+    episodes: dict[str, BlueprintEpisode] = {}
+    templates: list[BlueprintTemplate] = []
+    fonts: list[BlueprintFont] = []
 
 """
 Update classes
@@ -85,18 +86,18 @@ class DownloadableFile(Base):
     filename: str
 
 class BlankBlueprint(Blueprint):
-    description: list[str] = Field(default=['Descriptive information about this Blueprint'])
-    creator: str = Field(default='Your (user)name here')
-    preview: str = Field(default='Name of preview file here')
+    description: list[str] = ['Descriptive information about this Blueprint']
+    creator: str = 'Your (user)name here'
+    preview: str = 'Name of preview file here'
 
 class RemoteBlueprintFont(BlueprintFont):
-    file_download_url: Optional[str] = Field(default=None)
+    file_download_url: Optional[str] = None
 
 class RemoteBlueprint(Blueprint):
     id: int
     description: list[str]
     preview: str
     creator: str
-    
+
 class RemoteMasterBlueprint(RemoteBlueprint):
     series_full_name: str

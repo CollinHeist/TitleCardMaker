@@ -1,3 +1,4 @@
+# pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from pathlib import Path
 from random import uniform
 from re import match as re_match
@@ -23,7 +24,6 @@ from modules.cards.StandardTitleCard import StandardTitleCard
 from modules.cards.StarWarsTitleCard import StarWarsTitleCard
 from modules.cards.TintedFrameTitleCard import TintedFrameTitleCard
 from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
-from modules.Debug import log
 
 LocalCardIdentifiers = Literal[
     'anime', 'comic book', 'cutout', 'divider', 'fade', 'frame', 'generic',
@@ -125,7 +125,7 @@ class ComicBookCardType(BaseCardTypeCustomFontAllText):
             return uniform(lower, upper)
 
         return val
-    
+
     @root_validator(skip_on_failure=True)
     def assign_unassigned_color(cls, values):
         # None means match font color
@@ -133,7 +133,7 @@ class ComicBookCardType(BaseCardTypeCustomFontAllText):
             values['text_box_edge_color'] = values['font_color']
 
         return values
-            
+
 class CutoutCardType(BaseCardType):
     title_text: str
     episode_text: str
@@ -183,7 +183,7 @@ class LandscapeCardType(BaseCardType):
     @validator('box_adjustments')
     def parse_box_adjustments(cls, val):
         return tuple(map(int, re_match(BoxAdjustmentRegex, val).groups()))
-    
+
 class LogoCardType(BaseCardTypeCustomFontAllText):
     source_file: Path
     font_color: BetterColor = Field(default=LogoTitleCard.TITLE_COLOR)
@@ -198,7 +198,7 @@ class LogoCardType(BaseCardTypeCustomFontAllText):
     def validate_source_file(cls, values):
         if values['use_background_image'] and not values['source_file'].exists():
             raise ValueError(f'Source file indicated and does not exist')
-        
+
         return values
 
 class OlivierCardType(BaseCardTypeCustomFontNoText):
@@ -212,7 +212,7 @@ class OlivierCardType(BaseCardTypeCustomFontNoText):
     interword_spacing: int = Field(default=0)
 
 class PosterCardType(BaseCardType):
-    title_text: str 
+    title_text: str
     episode_text: str
     font_color: BetterColor = Field(default=PosterTitleCard.TITLE_COLOR)
     font_file: FilePath = Field(default=PosterTitleCard.TITLE_FONT)
@@ -262,7 +262,7 @@ class StarWarsCardType(BaseCardType):
     font_interline_spacing: int = Field(default=0)
     font_size: PositiveFloat = Field(default=1.0)
     episode_text_color: BetterColor = Field(default=StarWarsTitleCard.EPISODE_TEXT_COLOR)
-    
+
     @root_validator(skip_on_failure=True)
     def toggle_text_hiding(cls, values):
         values['hide_episode_text'] |= (len(values['episode_text']) == 0)
@@ -302,7 +302,7 @@ class TintedFrameCardType(BaseCardTypeAllText):
             raise ValueError(f'Logo file indicated and does not exist')
 
         # Verify no two elements are the same
-        if ((top != 'omit' and (top == middle or top == bottom))
+        if ((top != 'omit' and top in (middle, bottom))
             or (middle != 'omit' and (middle == bottom))):
             raise ValueError(f'Top/middle/bottom elements cannot be the same')
 
@@ -344,7 +344,7 @@ LocalCardTypeModels = {
     'comic book': ComicBookCardType,
     'cutout': CutoutCardType,
     'divider': DividerCardType,
-    'fade': FadeCardType, 
+    'fade': FadeCardType,
     'frame': FrameCardType,
     'generic': StandardCardType,
     'gundam': PosterCardType,

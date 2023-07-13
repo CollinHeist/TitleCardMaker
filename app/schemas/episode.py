@@ -1,7 +1,8 @@
+# pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from datetime import datetime
 from typing import Any, Optional
 
-from pydantic import Field, PositiveFloat, root_validator, validator
+from pydantic import PositiveFloat, root_validator, validator
 
 from app.schemas.base import (
     Base, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
@@ -12,27 +13,26 @@ from app.schemas.preferences import Style
 """
 Base classes
 """
-...
 
 """
 Creation classes
 """
 class NewEpisode(Base):
-    series_id: int = Field(..., description='ID of the Series this Episode belongs to')
-    template_ids: list[int] = Field(default=[], description='ID of the Template for this Episode')
-    font_id: Optional[int] = Field(default=None, description='ID of the Font of this Episode')
+    series_id: int
+    template_ids: list[int] = []
+    font_id: Optional[int] = None
 
-    source_file: Optional[str] = Field(description='Path to the source image for this episode card')
-    card_file: Optional[str] = Field(description='Path to the card for this episode')
-    watched: Optional[bool] = Field(default=None, description='Whether this episode has been watched')
+    source_file: Optional[str] = None
+    card_file: Optional[str] = None
+    watched: Optional[bool] = None
 
-    season_number: int = Field(default=1)
-    episode_number: int = Field(default=1)
-    absolute_number: Optional[int] = Field(default=None)
+    season_number: int = 1
+    episode_number: int = 1
+    absolute_number: Optional[int] = None
 
-    title: str = Field(...)
-    match_title: Optional[bool] = Field(default=None)
-    auto_split_title: bool = Field(default=True)
+    title: str
+    match_title: Optional[bool] = None
+    auto_split_title: bool = True
 
     card_type: Optional[str]
     hide_season_text: Optional[bool]
@@ -42,69 +42,69 @@ class NewEpisode(Base):
     unwatched_style: Optional[Style]
     watched_style: Optional[Style]
 
-    font_color: Optional[str] = Field(default=None)
-    font_size: Optional[PositiveFloat] = Field(default=None)
-    font_kerning: Optional[float] = Field(default=None)
-    font_stroke_width: Optional[float] = Field(default=None)
-    font_interline_spacing: Optional[int] = Field(default=None)
-    font_vertical_shift: Optional[int] = Field(default=None)
+    font_color: Optional[str] = None
+    font_size: Optional[PositiveFloat] = None
+    font_kerning: Optional[float] = None
+    font_stroke_width: Optional[float] = None
+    font_interline_spacing: Optional[int] = None
+    font_vertical_shift: Optional[int] = None
 
-    airdate: Optional[datetime] = Field(default=None)
-    emby_id: EmbyID = Field(default=None)
-    imdb_id: IMDbID = Field(default=None)
-    jellyfin_id: JellyfinID = Field(default=None)
-    tmdb_id: TMDbID = Field(default=None)
-    tvdb_id: TVDbID = Field(default=None)
-    tvrage_id: TVRageID = Field(default=None)
+    airdate: Optional[datetime] = None
+    emby_id: EmbyID = None
+    imdb_id: IMDbID = None
+    jellyfin_id: JellyfinID = None
+    tmdb_id: TMDbID = None
+    tvdb_id: TVDbID = None
+    tvrage_id: TVRageID = None
 
-    extras: Optional[dict[str, Any]] = Field(default=None)
-    translations: dict[str, str] = Field(default={})
+    extras: Optional[dict[str, Any]] = None
+    translations: dict[str, str] = {}
 
 """
 Update classes
 """
 class UpdateEpisode(UpdateBase):
-    template_ids: list[int] = Field(default=UNSPECIFIED)
-    font_id: Optional[int] = Field(default=UNSPECIFIED)
+    template_ids: list[int] = UNSPECIFIED
+    font_id: Optional[int] = UNSPECIFIED
 
-    source_file: Optional[str] = Field(default=UNSPECIFIED)
-    card_file: Optional[str] = Field(default=UNSPECIFIED)
-    watched: Optional[bool] = Field(default=UNSPECIFIED)
+    source_file: Optional[str] = UNSPECIFIED
+    card_file: Optional[str] = UNSPECIFIED
+    watched: Optional[bool] = UNSPECIFIED
 
-    season_number: int = Field(default=UNSPECIFIED)
-    episode_number: int = Field(default=UNSPECIFIED)
-    absolute_number: Optional[int] = Field(default=UNSPECIFIED)
+    season_number: int = UNSPECIFIED
+    episode_number: int = UNSPECIFIED
+    absolute_number: Optional[int] = UNSPECIFIED
 
-    title: str = Field(default=UNSPECIFIED)
-    match_title: Optional[bool] = Field(default=UNSPECIFIED)
-    auto_split_title: bool = Field(default=UNSPECIFIED)
+    title: str = UNSPECIFIED
+    match_title: Optional[bool] = UNSPECIFIED
+    auto_split_title: bool = UNSPECIFIED
 
-    card_type: Optional[str] = Field(default=UNSPECIFIED)
-    hide_season_text: Optional[bool] = Field(default=UNSPECIFIED)
-    season_text: Optional[str] = Field(default=UNSPECIFIED)
-    hide_episode_text: Optional[bool] = Field(default=UNSPECIFIED)
-    episode_text: Optional[str] = Field(default=UNSPECIFIED)
-    unwatched_style: Optional[Style] = Field(default=UNSPECIFIED)
-    watched_style: Optional[Style] = Field(default=UNSPECIFIED)
+    card_type: Optional[str] = UNSPECIFIED
+    hide_season_text: Optional[bool] = UNSPECIFIED
+    season_text: Optional[str] = UNSPECIFIED
+    hide_episode_text: Optional[bool] = UNSPECIFIED
+    episode_text: Optional[str] = UNSPECIFIED
+    unwatched_style: Optional[Style] = UNSPECIFIED
+    watched_style: Optional[Style] = UNSPECIFIED
 
-    font_color: Optional[str] = Field(default=UNSPECIFIED)
-    font_size: Optional[PositiveFloat] = Field(default=UNSPECIFIED)
-    font_kerning: Optional[float] = Field(default=UNSPECIFIED)
-    font_stroke_width: Optional[float] = Field(default=UNSPECIFIED)
-    font_interline_spacing: Optional[int] = Field(default=UNSPECIFIED)
-    font_vertical_shift: Optional[int] = Field(default=UNSPECIFIED)
+    font_color: Optional[str] = UNSPECIFIED
+    font_size: Optional[PositiveFloat] = UNSPECIFIED
+    font_kerning: Optional[float] = UNSPECIFIED
+    font_stroke_width: Optional[float] = UNSPECIFIED
+    font_interline_spacing: Optional[int] = UNSPECIFIED
+    font_vertical_shift: Optional[int] = UNSPECIFIED
 
-    airdate: Optional[datetime] = Field(default=UNSPECIFIED)
-    emby_id: EmbyID = Field(default=UNSPECIFIED)
-    imdb_id: IMDbID = Field(default=UNSPECIFIED)
-    jellyfin_id: JellyfinID = Field(default=UNSPECIFIED)
-    tmdb_id: TMDbID = Field(default=UNSPECIFIED)
-    tvdb_id: TVDbID = Field(default=UNSPECIFIED)
-    tvrage_id: TVRageID = Field(default=UNSPECIFIED)
+    airdate: Optional[datetime] = UNSPECIFIED
+    emby_id: EmbyID = UNSPECIFIED
+    imdb_id: IMDbID = UNSPECIFIED
+    jellyfin_id: JellyfinID = UNSPECIFIED
+    tmdb_id: TMDbID = UNSPECIFIED
+    tvdb_id: TVDbID = UNSPECIFIED
+    tvrage_id: TVRageID = UNSPECIFIED
 
-    extra_keys: Optional[list[str]] = Field(default=UNSPECIFIED)
-    extra_values: Optional[list[Any]] = Field(default=UNSPECIFIED)
-    translations: dict[str, str] = Field(default=UNSPECIFIED)
+    extra_keys: Optional[list[str]] = UNSPECIFIED
+    extra_values: Optional[list[Any]] = UNSPECIFIED
+    translations: dict[str, str] = UNSPECIFIED
 
     @validator('*', pre=True)
     def validate_arguments(cls, v):
@@ -121,7 +121,7 @@ class UpdateEpisode(UpdateBase):
             'extra_keys', 'extra_values',
             output_key='extras',
         )
-    
+
 class BatchUpdateEpisode(Base):
     episode_id: int
     update_episode: UpdateEpisode
