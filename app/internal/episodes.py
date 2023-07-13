@@ -6,9 +6,9 @@ from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
-from app.dependencies import *
+from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.templates import get_effective_series_template
-import app.models as models
+from app import models
 from app.models.series import Series
 from app.models.preferences import Preferences
 from app.schemas.episode import Episode
@@ -136,7 +136,7 @@ def get_all_episode_data(
     ) -> list[EpisodeInfo]:
     """
     Get all EpisodeInfo for the given Series from it's indicated Episode
-    data source. 
+    data source.
 
     Args:
         preferences: Global Preferences to use for setting resolution.
@@ -179,8 +179,7 @@ def get_all_episode_data(
                 status_code=409,
                 detail=f'Unable to communicate with {episode_data_source}'
             )
-        else:
-            return []
+        return []
 
     # Verify Series has an associated Library
     library_attribute = f'{episode_data_source.lower()}_library_name'
@@ -191,25 +190,24 @@ def get_all_episode_data(
                 status_code=409,
                 detail=f'Series does not have an associated {episode_data_source} library'
             )
-        else:
-            return []
+        return []
 
     # Query the Episode data source for Episodes
     if episode_data_source == 'Emby':
         return emby_interface.get_all_episodes(series.as_series_info, log=log)
-    elif episode_data_source == 'Jellyfin':
+    if episode_data_source == 'Jellyfin':
         return jellyfin_interface.get_all_episodes(
             series.jellyfin_library_name, series.as_series_info, log=log
         )
-    elif episode_data_source == 'Plex':
+    if episode_data_source == 'Plex':
         return plex_interface.get_all_episodes(
             series.plex_library_name, series.as_series_info, log=log
         )
-    elif episode_data_source == 'Sonarr':
+    if episode_data_source == 'Sonarr':
         return sonarr_interface.get_all_episodes(series.as_series_info, log=log)
-    elif episode_data_source == 'TMDb':
+    if episode_data_source == 'TMDb':
         return tmdb_interface.get_all_episodes(series.as_series_info, log=log)
-    
+
     return []
 
 
@@ -281,7 +279,7 @@ def refresh_episode_data(
                 series_id=series.id,
                 season_number=episode_info.season_number,
                 episode_number=episode_info.episode_number,
-            ).first() 
+            ).first()
 
         # Episode does not exist, add
         if existing is None:
@@ -336,5 +334,3 @@ def refresh_episode_data(
     # Commit to database if changed
     if changed:
         db.commit()
-
-    return None
