@@ -19,31 +19,69 @@ from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
-"""
-Miscellaneous global dependencies
-"""
+
 def get_database() -> Iterator[Session]:
+    """
+    Dependency to get a Session to the SQLite database.
+
+    Returns:
+        Iterator that yields a Session to the database then closes the
+        connection.
+    """
+
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
 
+
 def get_scheduler() -> BackgroundScheduler:
+    """
+    Dependency to get the global task Scheduler.
+
+    Returns:
+        Scheduler responsible for all task scheduling.
+    """
+
     return Scheduler
 
+
 def get_preferences() -> Preferences:
+    """
+    Dependency to get the global Preferences.
+
+    Returns:
+        Preferences object.
+    """
+
     return PreferencesLocal
 
-"""
-Emby interface
-"""
+
+# pylint: disable=global-statement
 def refresh_emby_interface(*, log: Logger = log) -> None:
+    """
+    Refresh the global interface to Emby. This reinitializes and
+    overrides the object.
+
+    Args:
+        log: (Keyword) Logger for all log messages.
+    """
+
     preferences = get_preferences()
     global EmbyInterfaceLocal
     EmbyInterfaceLocal = EmbyInterface(**preferences.emby_arguments, log=log)
 
+
 def get_emby_interface() -> EmbyInterface:
+    """
+    Dependency to get the global interface to Emby. This refreshes the
+    connection if it is enabled but not initialized.
+
+    Returns:
+        Global EmbyInterface.
+    """
+
     preferences = get_preferences()
     if preferences.use_emby and not EmbyInterfaceLocal:
         try:
@@ -53,31 +91,59 @@ def get_emby_interface() -> EmbyInterface:
 
     return EmbyInterfaceLocal
 
-"""
-ImageMagick interface
-"""
-def refresh_imagemagick_interface(*, log: Logger = log) -> None:
+
+def refresh_imagemagick_interface() -> None:
+    """
+    Refresh the global interface to ImageMagick. This reinitializes and
+    overrides the object.
+
+    Args:
+        log: (Keyword) Logger for all log messages.
+    """
+
     preferences = get_preferences()
     global ImageMagickInterfaceLocal
     ImageMagickInterfaceLocal = ImageMagickInterface(
-        **preferences.imagemagick_arguments, log=log
+        **preferences.imagemagick_arguments,
     )
 
+
 def get_imagemagick_interface() -> ImageMagickInterface:
+    """
+    Dependency to get the global interface to ImageMagick.
+
+    Returns:
+        Global ImageMagickInterface.
+    """
+
     return ImageMagickInterfaceLocal
 
-"""
-JellyFin interface
-"""
 
 def refresh_jellyfin_interface(*, log: Logger = log) -> JellyfinInterface:
+    """
+    Refresh the global interface to Jellyfin. This reinitializes and
+    overrides the object.
+
+    Args:
+        log: (Keyword) Logger for all log messages.
+    """
+
     preferences = get_preferences()
     global JellyfinInterfaceLocal
     JellyfinInterfaceLocal = JellyfinInterface(
         **preferences.jellyfin_arguments, log=log
     )
 
+
 def get_jellyfin_interface() -> JellyfinInterface:
+    """
+    Dependency to get the global interface to Jellyfin. This refreshes
+    the connection if it is enabled but not initialized.
+
+    Returns:
+        Global JellyfinInterface.
+    """
+
     preferences = get_preferences()
     if preferences.use_jellyfin and not JellyfinInterfaceLocal:
         try:
@@ -87,16 +153,30 @@ def get_jellyfin_interface() -> JellyfinInterface:
 
     return JellyfinInterfaceLocal
 
-"""
-Plex interface
-"""
 
 def refresh_plex_interface(*, log: Logger = log) -> None:
+    """
+    Refresh the global interface to Plex. This reinitializes and
+    overrides the object.
+
+    Args:
+        log: (Keyword) Logger for all log messages.
+    """
+
     preferences = get_preferences()
     global PlexInterfaceLocal
     PlexInterfaceLocal = PlexInterface(**preferences.plex_arguments, log=log)
 
+
 def get_plex_interface() -> PlexInterface:
+    """
+    Dependency to get the global interface to Plex. This refreshes the
+    connection if it is enabled but not initialized.
+
+    Returns:
+        Global PlexInterface.
+    """
+
     preferences = get_preferences()
     if preferences.use_plex and not PlexInterfaceLocal:
         try:
@@ -106,11 +186,16 @@ def get_plex_interface() -> PlexInterface:
 
     return PlexInterfaceLocal
 
-"""
-Sonarr interface
-"""
 
 def refresh_sonarr_interface(*, log: Logger = log) -> None:
+    """
+    Refresh the global interface to Sonarr. This reinitializes and
+    overrides the object.
+
+    Args:
+        log: (Keyword) Logger for all log messages.
+    """
+
     preferences = get_preferences()
     global SonarrInterfaceLocal
     SonarrInterface.REQUEST_TIMEOUT = 15
@@ -120,6 +205,14 @@ def refresh_sonarr_interface(*, log: Logger = log) -> None:
     SonarrInterface.REQUEST_TIMEOUT = 600
 
 def get_sonarr_interface() -> SonarrInterface:
+    """
+    Dependency to get the global interface to Sonarr. This refreshes the
+    connection if it is enabled but not initialized.
+
+    Returns:
+        Global SonarrInterface.
+    """
+
     preferences = get_preferences()
     if preferences.use_sonarr and not SonarrInterfaceLocal:
         try:
@@ -129,16 +222,30 @@ def get_sonarr_interface() -> SonarrInterface:
 
     return SonarrInterfaceLocal
 
-"""
-TMDb interface
-"""
 
 def refresh_tmdb_interface(*, log: Logger = log) -> None:
+    """
+    Refresh the global interface to TMDb. This reinitializes and
+    overrides the object.
+
+    Args:
+        log: (Keyword) Logger for all log messages.
+    """
+
     preferences = get_preferences()
     global TMDbInterfaceLocal
     TMDbInterfaceLocal = TMDbInterface(**preferences.tmdb_arguments, log=log)
 
+
 def get_tmdb_interface() -> TMDbInterface:
+    """
+    Dependency to get the global interface to TMDb. This refreshes the
+    connection if it is enabled but not initialized.
+
+    Returns:
+        Global TMDbInterface.
+    """
+
     preferences = get_preferences()
     if preferences.use_tmdb and not TMDbInterfaceLocal:
         try:
