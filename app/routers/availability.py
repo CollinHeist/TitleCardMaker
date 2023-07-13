@@ -12,7 +12,7 @@ import app.models as models
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.card import CardType, LocalCardType, RemoteCardType
 from app.schemas.preferences import (
-    EpisodeDataSourceToggle, ImageSourceToggle, Preferences, StyleOption
+    EpisodeDataSourceToggle, Preferences, StyleOption
 )
 from app.schemas.sync import Tag
 
@@ -48,7 +48,7 @@ def _get_remote_cards(*, log: Logger = log) -> list[RemoteCardType]:
     # If the cached content has expired, request and update cache
     if _cache['expires'] <= datetime.now():
         log.debug(f'Refreshing cached RemoteCardTypes')
-        response = req_get(USER_CARD_TYPE_URL).json()
+        response = req_get(USER_CARD_TYPE_URL, timeout=10).json()
         _cache['content'] = response
         _cache['expires'] = datetime.now() + timedelta(minutes=30)
     # Cache has not expired, use cached content
@@ -105,7 +105,7 @@ def get_local_card_types() -> list[LocalCardType]:
     """
     Get all locally defined card types.
     """
-    
+
     return LocalCards
 
 
@@ -114,14 +114,14 @@ def get_remote_card_types(request: Request) -> list[RemoteCardType]:
     """
     Get all available remote card types.
     """
-    
+
     try:
         return _get_remote_cards(log=request.state.log)
     except Exception as e:
         raise HTTPException(
             status_code=500,
             detail=f'Error encountered while getting remote card types'
-        )
+        ) from e
 
 
 @availablility_router.get('/template-filters', status_code=200, tags=['Templates'])
@@ -156,9 +156,9 @@ def get_available_episode_data_sources(
         preferences: Preferences = Depends(get_preferences)
     ) -> list[EpisodeDataSourceToggle]:
     """
-    ...
+    Get all available (enabled) Episode data sources.
     """
-    
+
     return [
         {'name': source,
          'value': source,
@@ -167,16 +167,14 @@ def get_available_episode_data_sources(
     ]
 
 
-@availablility_router.get('/image-source-priority',
-        status_code=200,
-        response_model=list[ImageSourceToggle])
+@availablility_router.get('/image-source-priority', status_code=200)
 def get_image_source_priority(
         preferences: Preferences = Depends(get_preferences)
     ) -> list[EpisodeDataSourceToggle]:
     """
-    ...
+    Get the global image source priority.
     """
-    
+
     return [
         {
             'name': source,
@@ -207,11 +205,11 @@ def get_server_libraries(
         if preferences.use_emby and emby_interface:
             return emby_interface.get_libraries()
         return []
-    elif media_server == 'jellyfin':
+    if media_server == 'jellyfin':
         if preferences.use_jellyfin and jellyfin_interface:
             return jellyfin_interface.get_libraries()
         return []
-    elif media_server == 'plex':
+    if media_server == 'plex':
         if preferences.use_plex and plex_interface:
             return plex_interface.get_libraries()
         return []
@@ -292,16 +290,21 @@ def get_available_templates(db: Session = Depends(get_database)) -> list[str]:
 @availablility_router.get('/styles', status_code=200)
 def get_available_styles() -> list[StyleOption]:
     """
-    ...
+    Get all supported Styles.
     """
 
     return [
         {'name': 'Art', 'value': 'art', 'style_type': 'art'},
         {'name': 'Blurred Art', 'value': 'art blur', 'style_type': 'art'},
-        {'name': 'Grayscale Art', 'value': 'art grayscale', 'style_type': 'art'},
-        {'name': 'Blurred Grayscale Art', 'value': 'art blur grayscale', 'style_type': 'art'},
+        {'name': 'Grayscale Art', 'value': 'art grayscale',
+         'style_type': 'art'},
+        {'name': 'Blurred Grayscale Art', 'value': 'art blur grayscale',
+         'style_type': 'art'},
         {'name': 'Unique', 'value': 'unique', 'style_type': 'unique'},
-        {'name': 'Blurred Unique', 'value': 'blur unique', 'style_type': 'unique'},
-        {'name': 'Grayscale Unique', 'value': 'grayscale unique', 'style_type': 'unique'},
-        {'name': 'Blurred Grayscale Unique', 'value': 'blur grayscale unique', 'style_type': 'unique'},
+        {'name': 'Blurred Unique', 'value': 'blur unique',
+         'style_type': 'unique'},
+        {'name': 'Grayscale Unique', 'value': 'grayscale unique',
+         'style_type': 'unique'},
+        {'name': 'Blurred Grayscale Unique', 'value': 'blur grayscale unique',
+         'style_type': 'unique'},
     ]
