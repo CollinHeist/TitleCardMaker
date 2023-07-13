@@ -7,7 +7,7 @@ from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Query, Session
 
-from app.dependencies import *
+from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.templates import get_effective_templates
 import app.models as models
 from app.models.episode import Episode
@@ -86,8 +86,6 @@ def refresh_all_remote_card_types(*, log: Logger = log) -> None:
     except Exception as e:
         log.exception(f'Failed to refresh RemoteCardTypes', e)
 
-    return None
-
 
 def refresh_remote_card_types(
         db: Session,
@@ -135,8 +133,6 @@ def refresh_remote_card_types(
             if remote_card_type.valid and remote_card_type is not None:
                 preferences.remote_card_types[card_identifier] =\
                     remote_card_type.card_class
-
-    return None
 
 
 def add_card_to_database(
@@ -203,11 +199,11 @@ def validate_card_type_model(
 
     try:
         return CardClass, CardTypeModel(**card_settings)
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=400,
-            detail=f'Cannot create Card - invalid card settings - {e}',
-        )
+            detail=f'Cannot create Card - invalid card settings - {exc}',
+        ) from exc
 
 
 def create_card(
@@ -244,8 +240,6 @@ def create_card(
     else:
         log.warning(f'Card creation failed')
         card_maker.image_magick.print_command_history(log=log)
-    
-    return None
 
 
 def resolve_card_settings(
@@ -333,7 +327,7 @@ def resolve_card_settings(
             status_code=400,
             detail=f'Cannot create Card - invalid logo filename format - '
                    f'missing data {e}',
-        )
+        ) from e
 
     # Get the effective card class
     CardClass = preferences.get_card_type_class(
@@ -376,7 +370,7 @@ def resolve_card_settings(
         card_settings['season_text'] = ranges.get_season_text(
             episode_info, card_settings,
         )
-    
+
     # If no episode text was indicated, determine
     if card_settings.get('episode_text', None) is None:
         if card_settings.get('episode_text_format', None) is None:
@@ -392,7 +386,7 @@ def resolve_card_settings(
                 raise HTTPException(
                     status_code=400,
                     detail=f'Invalid episode text format - missing data {e}',
-                )
+                ) from e
 
     # Turn styles into boolean style toggles
     if (watched := card_settings.get('watched', None)) is not None:
@@ -408,8 +402,8 @@ def resolve_card_settings(
     # Indeterminate watch status, cannot determine styles
     else:
         card_settings['blur'] = False
-        card_settings['grayscale'] = False 
-    
+        card_settings['grayscale'] = False
+
     # Add source file
     if card_settings.get('source_file', None) is None:
         card_settings['source_file'] = episode.get_source_file(
@@ -429,7 +423,7 @@ def resolve_card_settings(
                 status_code=400,
                 detail=f'Cannot create Card - invalid source file format, '
                         f'missing data {e}',
-            )
+            ) from e
 
     # Exit if the source file does not exist
     if (CardClass.USES_UNIQUE_SOURCES
@@ -465,7 +459,7 @@ def resolve_card_settings(
         raise HTTPException(
             status_code=400,
             detail=f'Cannot create Card - invalid filename format',
-        )
+        ) from e
 
     # Add extension if needed
     card_file_name = card_settings['card_file'].name
@@ -540,10 +534,10 @@ def create_episode_card(
     if not existing_card:
         _start_card_creation()
         return None
-    
+
     # Existing card doesn't match, delete and remake
     existing_card: TitleCard = existing_card[0]
-    if any(str(val) != str(getattr(card, attr)) 
+    if any(str(val) != str(getattr(card, attr))
             for attr, val in existing_card.comparison_properties.items()):
         # TODO delete temporary logging
         for attr, val in existing_card.comparison_properties.items():
@@ -555,11 +549,11 @@ def create_episode_card(
         db.delete(existing_card)
         db.commit()
 
-        # Create new card 
+        # Create new card
         _start_card_creation()
         return None
 
-    # Existing card file doesn't exist anymore
+    # Existing card file doesn't exist anymore, create
     if not Path(existing_card.card_file).exists():
         # Remove existing card from database
         log.debug(f'{series.log_str} {episode.log_str} Card not found - creating')
@@ -568,10 +562,6 @@ def create_episode_card(
 
         # Create new card
         _start_card_creation()
-        return None
-
-    # Existing card matches, do nothing
-    return None
 
 
 def update_episode_watch_statuses(
