@@ -15,6 +15,10 @@ from modules.Debug import log
 """Format of all refrence dates for before and after operations"""
 DATETIME_FORMAT = '%Y-%m-%d'
 
+"""
+Dictionary of Operation keywords to the corresponding Operation function
+"""
+lower_str = lambda v: str(v).lower()
 OPERATIONS = {
     'is true': lambda v, r: bool(v),
     'is false': lambda v, r: not bool(v),
@@ -22,10 +26,10 @@ OPERATIONS = {
     'is not null': lambda v, r: v is not None,
     'equals': lambda v, r: str(v) == str(r),
     'does not equal': lambda v, r: str(v) != str(r),
-    'starts with': lambda v, r: str(v).lower().startswith(str(r).lower()),
-    'does not start with': lambda v, r: not str(v).lower().startswith(str(r).lower()),
-    'ends with': lambda v, r: str(v).lower().endswith(str(r).lower()),
-    'does not end with': lambda v, r: not str(v).lower().endswith(str(r).lower()),
+    'starts with': lambda v, r: lower_str(v).startswith(lower_str(r)),
+    'does not start with': lambda v, r: not lower_str(v).startswith(lower_str(r)),
+    'ends with': lambda v, r: lower_str(v).endswith(lower_str(r)),
+    'does not end with': lambda v, r: not lower_str(v).endswith(lower_str(r)),
     'contains': lambda v, r: r in v,
     'matches': lambda v, r: bool(re_match(r, v)),
     'does not match': lambda v, r: not bool(re_match(r, v)),
@@ -37,6 +41,8 @@ OPERATIONS = {
     'is after': lambda v, r: v > datetime.strptime(r, DATETIME_FORMAT),
     'file exists': lambda v, r: Path(v).exists(),
 }
+
+"""Supported Argument keywords."""
 ARGUMENT_KEYS = (
     'Series Name', 'Series Year', 'Number of Seasons',
     'Series Library Name (Emby)', 'Series Library Name (Jellyfin)',
@@ -48,6 +54,8 @@ ARGUMENT_KEYS = (
 # Tables for many <-> many Template relationships
 
 class SeriesTemplates(Base):
+    """SQL Relationship table for Series:Template relationships"""
+
     __tablename__ = 'series_templates'
 
     id = Column(Integer, primary_key=True, index=True)
@@ -55,6 +63,8 @@ class SeriesTemplates(Base):
     series_id = Column(Integer, ForeignKey('series.id'))
 
 class EpisodeTemplates(Base):
+    """SQL Relationship table for Episode:Template relationships"""
+
     __tablename__ = 'episode_templates'
 
     id = Column(Integer, primary_key=True, index=True)
@@ -62,6 +72,8 @@ class EpisodeTemplates(Base):
     episode_id = Column(Integer, ForeignKey('episode.id'))
 
 class SyncTemplates(Base):
+    """SQL Relationship table for Sync:Template relationships"""
+
     __tablename__ = 'sync_templates'
 
     id = Column(Integer, primary_key=True, index=True)
@@ -70,6 +82,12 @@ class SyncTemplates(Base):
 
 # Template table
 class Template(Base):
+    """
+    SQL Table that defines a Template. This contains Filters, Card
+    customizations, as well as relational objects to linked Episodes,
+    Series, and Syncs.
+    """
+
     __tablename__ = 'template'
 
     # Referencial arguments
@@ -99,11 +117,19 @@ class Template(Base):
     episode_data_source = Column(String, default=None)
     sync_specials = Column(Boolean, default=None)
     skip_localized_images = Column(Boolean, default=None)
-    translations = Column(MutableList.as_mutable(JSON), default=None, nullable=False)
+    translations = Column(
+        MutableList.as_mutable(JSON),
+        default=None,
+        nullable=False,
+    )
 
     card_type = Column(String, default=None)
     hide_season_text = Column(Boolean, default=None)
-    season_titles = Column(MutableDict.as_mutable(JSON), default={}, nullable=False)
+    season_titles = Column(
+        MutableDict.as_mutable(JSON),
+        default={},
+        nullable=False,
+    )
     hide_episode_text = Column(Boolean, default=None)
     episode_text_format = Column(String, default=None)
     unwatched_style = Column(String, default=None)
@@ -111,12 +137,25 @@ class Template(Base):
 
     extras = Column(MutableDict.as_mutable(JSON), default={}, nullable=False)
 
+
     @hybrid_property
     def log_str(self) -> str:
+        """
+        Loggable string that defines this object (i.e. `__repr__`).
+        """
+
         return f'Template[{self.id}] "{self.name}"'
+
 
     @hybrid_property
     def card_properties(self) -> dict[str, Any]:
+        """
+        Properties to utilize and merge in Title Card creation.
+
+        Returns:
+            Dictionary of properties.
+        """
+
         return {
             'template_id': self.id,
             'template_name': self.name,
@@ -131,44 +170,72 @@ class Template(Base):
             'watched_style': self.watched_style,
             'extras': self.extras,
         }
-    
+
     @hybrid_property
     def export_properties(self) -> dict[str, Any]:
+        """
+        Properties to export in Blueprints.
+
+        Returns:
+            Dictionary of the properties that can be used in a
+            NewTemplate model to recreate this object.
+        """
+
+        if self.season_titles is None:
+            st_ranges, st_values = None, None
+        else:
+            st_ranges = list(self.season_titles.keys())
+            st_values = list(self.season_titles.values())
+
+        if self.extras is None:
+            ex_ranges, ex_values = None, None
+        else:
+            ex_ranges = list(self.extras.keys())
+            ex_values = list(self.extras.values())
+
         return {
             'name': self.name,
             'filters': self.filters,
             'card_type': self.card_type,
             'hide_season_text': self.hide_season_text,
-            'season_title_ranges': None if self.season_titles is None else list(self.season_titles.keys()),
-            'season_title_values': None if self.season_titles is None else list(self.season_titles.values()),
+            'season_title_ranges': st_ranges,
+            'season_title_values': st_values,
             'hide_episode_text': self.hide_episode_text,
             'episode_text_format': self.episode_text_format,
             'translations': self.translations,
-            'extra_keys': None if self.extras is None else list(self.extras.keys()),
-            'extra_values': None if self.extras is None else list(self.extras.values()),
+            'extra_keys': ex_ranges,
+            'extra_values': ex_values,
         }
+
 
     @hybrid_property
     def image_source_properties(self) -> dict[str, bool]:
+        """
+        Properties to use in image source setting evaluations.
+
+        Returns:
+            Dictionary of properties.
+        """
+
         return {
             'skip_localized_images': self.skip_localized_images,
         }
-    
-    
+
+
     @hybrid_method
     def meets_filter_criteria(self,
-            preferences: 'Preferences',
-            series: 'Series',
-            episode: Optional['Episode'] = None
+            preferences: 'Preferences',                                         # type: ignore
+            series: 'Series',                                                   # type: ignore
+            episode: Optional['Episode'] = None                                 # type: ignore
         ) -> bool:
         """
         Determine whether the given Series and Episode meet this
         Template's filter criteria.
-        
+
         Args:
             series: Series whose arguments can be evaluated.
             episode: Episode whose arguments can be evaluated.
-            
+
         Returns:
             True if the given objects meet all of Template's filter
             conditions, or if there are no filters. False otherwise.
@@ -205,22 +272,27 @@ class Template(Base):
         # Evaluate each condition of this Template's filter
         for condition in self.filters:
             # If operation and argument are valid, evalute condition
-            if (condition['operation'] in OPERATIONS
-                and condition['argument'] in ARGUMENTS):
-                # Return False if the condition evalutes to False
+            operation = condition['operation']
+            argument = condition['argument']
+            if operation in OPERATIONS and argument in ARGUMENTS:
+                # Return False if the condition evaluates to False
                 try:
-                    meets_condition = OPERATIONS[condition['operation']](
-                        ARGUMENTS[condition['argument']],
+                    meets_condition = OPERATIONS[operation](
+                        ARGUMENTS[argument],
                         condition['reference'],
                     )
+                    if not meets_condition:
+                        return False
+                # Evaluation raised an error, log and return False
                 except Exception as e:
                     log.exception(f'{series.log_str} {episode.log_str} '
                                   f'Condition evaluation raised an error', e)
                     return False
-                if not meets_condition:
-                    return False
+            # Operation or Argument are invalid, log and skip
             else:
-                log.debug(f'{self.log_str} [{condition["argument"]}] [{condition["operation"]}] [{condition["reference"]}] is unevaluatable')
+                log.debug(f'{self.log_str} [{argument}] [{operation}] '
+                          f'[{condition["reference"]}] is unevaluatable')
                 continue
 
+        # All Filter criteria met
         return True

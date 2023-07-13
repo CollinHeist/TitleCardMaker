@@ -5,6 +5,12 @@ from sqlalchemy.orm import relationship
 from app.database.session import Base
 
 class Loaded(Base):
+    """
+    SQL Table that defines a Loaded asset. This contains which media
+    server the asset was loaded into, the file size of the asset, as
+    well as relational objects to the parent Series, Episode, and Card.
+    """
+
     __tablename__ = 'loaded'
 
     # Referencial arguments
@@ -21,4 +27,8 @@ class Loaded(Base):
 
     @hybrid_property
     def log_str(self) -> str:
+        """
+        Loggable string that defines this object (i.e. `__repr__`).
+        """
+
         return f'Loaded[{self.id}] Card[{self.card_id}] in {self.media_server}'

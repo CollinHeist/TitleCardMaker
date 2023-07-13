@@ -15,15 +15,23 @@ from app.dependencies import get_preferences
 from app.models.template import SeriesTemplates
 
 from modules.CleanPath import CleanPath
-from modules.Debug import log
 from modules.SeriesInfo import SeriesInfo
 
 INTERNAL_ASSET_DIRECTORY = Path(__file__).parent.parent / 'assets'
 
+
+"""Perform a Regex replacement for the given arguments"""
 def regex_replace(pattern, replacement, string):
     return re_sub(pattern, replacement, string, IGNORECASE)
 
+
 class Series(Base):
+    """
+    SQL Table that defines a Series. This contains any Series-level
+    customizations, as well as relational objects to a linked Font, or
+    Sync; as well as any Cards, Loaded assets, Episodes, or Templates.
+    """
+
     __tablename__ = 'series'
 
     # Referencial arguments
@@ -91,54 +99,118 @@ class Series(Base):
     watched_style = Column(String, default=None)
     extras = Column(MutableDict.as_mutable(JSON), default=None)
 
+
     # Columns from relationships
     @hybrid_property
     def episode_ids(self) -> list[int]:
+        """
+        ID's of any Episodes associated with this Series (rather than
+        the ORM objects themselves).
+
+        Returns:
+            List of ID's for associated Episodes.
+        """
+
         return [episode.id for episode in self.episodes]
+
 
     @hybrid_property
     def template_ids(self) -> list[int]:
+        """
+        ID's of any Templates associated with this Series (rather than
+        the ORM objects themselves).
+
+        Returns:
+            List of ID's for associated Templates.
+        """
+
         return [template.id for template in self.templates]
+
 
     @hybrid_property
     def full_name(self) -> str:
+        """The full name of this Series formatted as Name (Year)"""
+
         return f'{self.name} ({self.year})'
+
 
     @hybrid_property
     def sort_name(self) -> str:
+        """
+        The sort-friendly name of this Series.
+        
+        Returns:
+            Sortable name. This is lowercase with any prefix a/an/the
+            removed.
+        """
+
         return regex_replace(r'^(a|an|the)(\s)', '', self.name.lower())
-    
+
     @sort_name.expression
-    def sort_name(cls: 'Series'):
+    def sort_name(cls: 'Series'): # pylint: disable=no-self-argument
+        """Class-expression of `sort_name` property."""
+
         return func.regex_replace(r'^(a|an|the)(\s)', '', func.lower(cls.name))
+
 
     @hybrid_property
     def small_poster_url(self) -> str:
+        """URI to the small poster URL of this Series."""
+
         return f'/assets/{self.id}/poster-750.jpg'
+
 
     @hybrid_property
     def number_of_seasons(self) -> int:
+        """Number of unique seasons in this Series' linked Episodes."""
+
         return len(set(episode.season_number for episode in self.episodes))
+
 
     @hybrid_property
     def path_safe_name(self) -> str:
+        """Name of this Series to be utilized in Path operations"""
+
         return str(CleanPath.sanitize_name(self.full_name))
-    
+
+
     @hybrid_property
     def card_directory(self) -> Path:
-        directory = self.path_safe_name if self.directory is None else self.directory
+        """Path-safe Card subdirectory for this Series."""
+
+        if self.directory is None:
+            directory = self.path_safe_name
+        else:
+            directory = self.directory
+
         return CleanPath(get_preferences().card_directory) / directory
+
 
     @hybrid_property
     def source_directory(self) -> str:
+        """Path-safe source subdirectory for this Series."""
+
         return str(CleanPath(get_preferences().source_directory) / self.path_safe_name)
+
 
     @hybrid_property
     def log_str(self) -> str:
+        """
+        Loggable string that defines this object (i.e. `__repr__`).
+        """
+
         return f'Series[{self.id}] "{self.full_name}"'
+
 
     @hybrid_property
     def card_properties(self) -> dict[str, Any]:
+        """
+        Properties to utilize and merge in Title Card creation.
+
+        Returns:
+            Dictionary of properties.
+        """
+
         return {
             'series_name': self.name,
             'series_full_name': self.full_name,
@@ -168,9 +240,29 @@ class Series(Base):
             'series_tvdb_id': self.tvdb_id,
             'series_tvrage_id': self.tvrage_id,
         }
-    
+
     @hybrid_property
     def export_properties(self) -> dict[str, Any]:
+        """
+        Properties to export in Blueprints.
+
+        Returns:
+            Dictionary of the properties that can be used in an
+            UpdateSeries model to modify this object.
+        """
+
+        if self.season_titles is None:
+            st_ranges, st_values = None, None
+        else:
+            st_ranges = list(self.season_titles.keys())
+            st_values = list(self.season_titles.values())
+
+        if self.extras is None:
+            ex_keys, ex_values = None, None
+        else:
+            ex_keys = list(self.extras.keys())
+            ex_values = list(self.extras.values())
+
         return {
             'font_color': self.font_color,
             'font_title_case': self.font_title_case,
@@ -181,24 +273,37 @@ class Series(Base):
             'font_vertical_shift': self.font_vertical_shift,
             'card_type': self.card_type,
             'hide_season_text': self.hide_season_text,
-            'season_title_ranges': None if self.season_titles is None else list(self.season_titles.keys()),
-            'season_title_values': None if self.season_titles is None else list(self.season_titles.values()),
+            'season_title_ranges': st_ranges,
+            'season_title_values': st_values,
             'hide_episode_text': self.hide_episode_text,
             'episode_text_format': self.episode_text_format,
-            'extra_keys': None if self.extras is None else list(self.extras.keys()),
-            'extra_values': None if self.extras is None else list(self.extras.values()),
+            'extra_keys': ex_keys,
+            'extra_values': ex_values,
             'translations': self.translations,
         }
 
+
     @hybrid_property
     def image_source_properties(self) -> dict[str, Any]:
+        """
+        Properties to use in image source setting evaluations.
+
+        Returns:
+            Dictionary of properties.        
+        """
+
         return {
-            # 'image_source_priority': self.image_source_priority,
             'skip_localized_images': self.skip_localized_images,
         }
 
+
     @hybrid_property
     def as_series_info(self) -> SeriesInfo:
+        """
+        Represent this Series as a SeriesInfo object, including any
+        database ID's.
+        """
+
         return SeriesInfo(
             name=self.name,
             year=self.year,
@@ -210,22 +315,42 @@ class Series(Base):
             tvdb_id=self.tvdb_id,
             tvrage_id=self.tvrage_id,
         )
-    
+
 
     @hybrid_method
     def comes_before(self, name: str) -> bool:
+        """
+        Whether the given name comes before this Series.
+
+        Returns:
+            True if the given `name` comes before this Series'
+            alphabetically. False otherwise
+        """
+
         return self.sort_name < name
-    
-    @comes_before.expression
+
+    @comes_before.expression # pylint: disable=no-self-argument
     def comes_before(cls, name: str) -> bool:
+        """Class expression of the `comes_before()` method."""
+
         return cls.sort_name < name
-    
+
     @hybrid_method
     def comes_after(self, name: str) -> bool:
+        """
+        Whether the given name comes after this Series.
+
+        Returns:
+            True if the given `name` comes after this Series'
+            alphabetically. False otherwise.
+        """
+
         return self.sort_name > name
-    
-    @comes_after.expression
+
+    @comes_after.expression # pylint: disable=no-self-argument
     def comes_after(cls, name: str) -> bool:
+        """Class expression of the `comes_after()` method."""
+
         return cls.sort_name > name
 
 

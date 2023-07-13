@@ -15,6 +15,12 @@ from app.schemas.preferences import Style
 from modules.EpisodeInfo2 import EpisodeInfo
 
 class Episode(Base):
+    """
+    SQL Table that defines an Episode. This contains any Episode-level
+    customizations, as well as relational objects to the parent Series,
+    as well as any linked Font, Cards, Loaded records, or Templates.
+    """
+
     __tablename__ = 'episode'
 
     # Referencial arguments
@@ -30,7 +36,7 @@ class Episode(Base):
         secondary=EpisodeTemplates.__table__,
         back_populates='episodes'
     )
-    
+
     source_file = Column(String, default=None)
     card_file = Column(String, default=None)
     watched = Column(Boolean, default=None)
@@ -45,13 +51,13 @@ class Episode(Base):
 
     card_type = Column(String, default=None)
     hide_season_text = Column(Boolean, default=None)
-    season_text = Column(String, default=None) 
+    season_text = Column(String, default=None)
     hide_episode_text = Column(Boolean, default=None)
     episode_text = Column(String, default=None)
     unwatched_style = Column(String, default=None)
     watched_style = Column(String, default=None)
 
-    font_color = Column(String, default=None) 
+    font_color = Column(String, default=None)
     font_size = Column(Float, default=None)
     font_kerning = Column(Float, default=None)
     font_stroke_width = Column(Float, default=None)
@@ -74,24 +80,48 @@ class Episode(Base):
         default={'Emby': 0, 'Jellyfin': 0, 'Plex': 0, 'TMDb': 0}
     )
 
+
     # Relationship column properties
     @hybrid_property
     def template_ids(self) -> list[int]:
+        """
+        ID's of any Templates associated with this Episode (rather than
+        the ORM objects themselves).
+
+        Returns:
+            List of ID's for associated Templates.
+        """
+
         return [template.id for template in self.templates]
 
 
     @hybrid_property
     def index_str(self) -> str:
+        """
+        Index string as sXeY for this Episode.
+        """
+
         return f'S{self.season_number:02}E{self.episode_number:02}'
 
 
     @hybrid_property
     def log_str(self) -> str:
+        """
+        Loggable string that defines this object (i.e. `__repr__`).
+        """
+
         return f'Episode[{self.id}] {self.as_episode_info}'
 
 
     @hybrid_property
     def card_properties(self) -> dict[str, Any]:
+        """
+        Properties to utilize and merge in Title Card creation.
+
+        Returns:
+            Dictionary of properties.
+        """
+
         return {
             'source_file': self.source_file,
             'card_file': self.card_file,
@@ -121,9 +151,18 @@ class Episode(Base):
             'episode_tvrage_id': self.tvrage_id,
             **self.as_episode_info.characteristics,
         }
-    
+
+
     @hybrid_property
     def export_properties(self) -> dict[str, Any]:
+        """
+        Properties to export in Blueprints.
+
+        Returns:
+            Dictionary of the properties that can be used in an
+            UpdateEpisode model to modify this object.
+        """
+
         return {
             'card_type': self.card_type,
             'match_title': self.match_title,
@@ -146,6 +185,14 @@ class Episode(Base):
 
     @hybrid_property
     def as_episode_info(self) -> EpisodeInfo:
+        """
+        The EpisodeInfo representation of this Episode.
+
+        Returns:
+            EpisodeInfo created with this Episode's data - e.g. title,
+            indices, database ID's, and airdate.
+        """
+
         return EpisodeInfo(
             title=self.title,
             season_number=self.season_number,
@@ -165,7 +212,7 @@ class Episode(Base):
     def get_source_file(self,
             source_directory: str,
             series_directory: str,
-            style: Style
+            style: Style,
         ) -> Path:
         """
         Get the source file for this Episode based on the given
@@ -182,11 +229,12 @@ class Episode(Base):
         """
 
         # No manually specified source, use default based on style
-        if (source_file := self.source_file) is None:
+        if (source_name := self.source_file) is None:
             if 'art' in style:
-                source_file = 'backdrop.jpg'
+                source_name = 'backdrop.jpg'
             else:
-                source_file = f's{self.season_number}e{self.episode_number}.jpg'
+                source_name = f's{self.season_number}e{self.episode_number}.jpg'
 
         # Return full path for this source base and Series
-        return (Path(source_directory) / series_directory / source_file).resolve()
+        source_file = Path(source_directory) / series_directory / source_name
+        return source_file.resolve()

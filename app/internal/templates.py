@@ -5,8 +5,6 @@ from app.models.episode import Episode
 from app.models.series import Series
 from app.models.template import Template
 
-from modules.Debug import log
-
 
 def get_effective_series_template(
         series: Series,
@@ -36,7 +34,7 @@ def get_effective_series_template(
     for template in series.templates:
         if template.meets_filter_criteria(preferences, series, episode):
             return template.__dict__ if as_dict else template
-        
+
     return {} if as_dict else None
 
 

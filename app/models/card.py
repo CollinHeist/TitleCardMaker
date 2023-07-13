@@ -9,6 +9,12 @@ from app.database.session import Base
 from app.models.loaded import Loaded
 
 class Card(Base):
+    """
+    SQL Table that defines a Title Card. This contains all the details
+    used in the Card creation, as well as relational objects to the
+    associated Series, Episode, and Loaded instances.
+    """
+
     __tablename__ = 'card'
 
     # Referencial arguments
@@ -41,7 +47,7 @@ class Card(Base):
     font_stroke_width = Column(Float, nullable=False)
     font_interline_spacing = Column(Integer, nullable=False)
     font_vertical_shift = Column(Integer, nullable=False)
-    
+
     blur = Column(Boolean, nullable=False)
     grayscale = Column(Boolean, nullable=False)
 
@@ -53,13 +59,17 @@ class Card(Base):
 
     @hybrid_property
     def log_str(self) -> str:
+        """
+        Loggable string that defines this object (i.e. `__repr__`).
+        """
+
         return f'Card[{self.id}] "{self.card_file}"'
 
     @hybrid_property
     def comparison_properties(self) -> dict[str, Any]:
         """
-        Get a dictionary of properties that should be used to compare
-        whether a Card has been changed or not.
+        Properties that should be used to compare whether a Card has
+        been changed or not.
 
         Because comparison is done with the any() operator, the most
         frequently changed attributes should come first, to speed up
