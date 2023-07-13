@@ -17,7 +17,7 @@ $(document).ready(() => {
     // Get last 30sec of logs
     const last30s = encodeURIComponent(dateToISO8601(new Date(Date.now() - 1  * 1000 * 30)));
     const now = encodeURIComponent(dateToISO8601(new Date()));
-    const allMessages = await fetch(`/api/logs/query?page=1&after=${last30s}&before=${now}&level=info`).then(resp => resp.json());
+    const allMessages = await fetch(`/api/logs/query?page=1&after=${last30s}&before=${now}&level=info&shallow=true`).then(resp => resp.json());
     // Add to list of logs to display, limit to 60 messages
     logs = logs.concat(allMessages.items).slice(undefined, 60);
   }

@@ -3,7 +3,7 @@ from typing import Any, Optional
 from warnings import simplefilter
 
 from re import IGNORECASE, compile as re_compile
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Query
 from fastapi_pagination import paginate
 from fastapi_pagination.utils import FastAPIPaginationWarning
 
@@ -37,6 +37,7 @@ def query_logs(
         before: Optional[datetime] = Query(default=None),
         context_id: Optional[str] = Query(default=None, min_length=1),
         contains: Optional[str] = Query(default=None, min_length=1),
+        shallow: bool = Query(default=True),
     ) -> Page[LogEntry]:
     """
     Query all log entries for the given criteria.
@@ -45,14 +46,23 @@ def query_logs(
     - after: Earliest date of logs to return. ISO 8601 format.
     - before: Latest date of logs to return. ISO 8601 format.
     - context_id: Comma separated list of contexts to filter by.
-    - contains: Required substring. Case insensitive. 
+    - contains: Required substring. Case insensitive.
+    - shallow: Whether to only do a "shallow" query, which will only
+    evaluate the most recent (active) log file.
     """
 
     # Read all associated log files from the rotated files
     logs = []
-    for log_file in LOG_FILE.parent.glob(f'{LOG_FILE.name}*'):
-        with log_file.open('r') as file_handle:
+
+    # Only read the active log file
+    if shallow:
+        with LOG_FILE.open('r') as file_handle:
             logs.extend(file_handle.readlines())
+    # Read all log files
+    else:
+        for log_file in LOG_FILE.parent.glob(f'{LOG_FILE.name}*'):
+            with log_file.open('r') as file_handle:
+                logs.extend(file_handle.readlines())
 
     # Function to filter log results by
     level_no = {'debug': 0, 'info': 1, 'warning': 2, 'error': 3, 'critical': 4}
@@ -61,11 +71,11 @@ def query_logs(
         # Level criteria
         if level_no[data['level']] < level_no[level]:
             return False
-        
+
         # Context
         if context_id is not None and data['context_id'] not in context_id:
             return False
-        
+
         # Before/After
         if ((before is not None and data['time'] > before)
             or (after is not None and data['time'] < after)):
@@ -83,7 +93,7 @@ def query_logs(
             data['level'] = data['level'].lower()
             try:
                 data['time'] = datetime.strptime(data['time'], '%m-%d-%y %H:%M:%S.%f')
-            except Exception:
+            except ValueError:
                 continue
         # Cannot parse data, append content to last entry's message (if valid)
         else:
