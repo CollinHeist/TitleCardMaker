@@ -3,12 +3,11 @@ from typing import Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
-from app.database.query import get_episode, get_series, get_template
+from app.database.query import get_episode, get_series
 from app.dependencies import get_database, get_tmdb_interface
 from app.internal.translate import translate_episode
 from app.schemas.episode import Episode
 
-from modules.Debug import log
 from modules.TMDbInterface2 import TMDbInterface
 
 translation_router = APIRouter(
@@ -30,7 +29,6 @@ def add_series_translations(
     Get all translations for all Episodes of the given Series.
 
     - series_id: ID of the Series whose Episodes are being translated.
-    # - force_refresh: Whether to 
     """
 
     # Exit if no valid interface to TMDb
@@ -51,8 +49,6 @@ def add_series_translations(
             # Arguments
             db, episode, tmdb_interface, log=request.state.log,
         )
-
-    return None
 
 
 @translation_router.post('/episode/{episode_id}', status_code=200)
@@ -79,8 +75,6 @@ def add_episode_translations(
     episode = get_episode(db, episode_id, raise_exc=True)
 
     # Translating this Episode
-    translate_episode(
-        db, episode.series, episode, tmdb_interface, log=request.state.log
-    )
+    translate_episode(db, episode, tmdb_interface, log=request.state.log)
 
     return episode
