@@ -54,8 +54,6 @@ def download_all_source_images(*, log: Logger = log) -> None:
     except Exception as e:
         log.exception(f'Failed to download source images', e)
 
-    return None
-
 
 def download_all_series_logos(*, log: Logger = log) -> None:
     """
@@ -85,8 +83,6 @@ def download_all_series_logos(*, log: Logger = log) -> None:
                     continue
     except Exception as e:
         log.exception(f'Failed to download series logos', e)
-
-    return None
 
 
 def resolve_source_settings(
@@ -240,23 +236,23 @@ def download_series_logo(
                     log.debug(f'{series.log_str} Converted SVG logo to PNG')
                     log.info(f'{series.log_str} Downloaded logo from {image_source}')
                     return f'/source/{series.path_safe_name}/{logo_file.name}'
+
             # Download failed, raise 400
-            else:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f'Unable to download logo'
-                )
+            raise HTTPException(
+                status_code=400,
+                detail=f'Unable to download logo'
+            )
 
         # Logo is png and valid, download
         if WebInterface.download_image(logo, logo_file, log=log):
             log.info(f'{series.log_str} Downloaded logo from {image_source}')
             return f'/source/{series.path_safe_name}/{logo_file.name}'
+
         # Download failed, raise 400
-        else:
-            raise HTTPException(
-                status_code=400,
-                detail=f'Unable to download logo'
-            )
+        raise HTTPException(
+            status_code=400,
+            detail=f'Unable to download logo'
+        )
 
     # No logo returned
     return None
@@ -390,7 +386,6 @@ def download_episode_source_image(
 
     # No image source returned a valid image, return None
     log.debug(f'{series.log_str} {episode.log_str} No source images found')
-    return None
 
 
 def get_source_image(
