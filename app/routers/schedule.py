@@ -58,12 +58,13 @@ TaskID = Literal[
     # Internal jobs
     INTERNAL_JOB_CHECK_FOR_NEW_RELEASE, INTERNAL_JOB_REFRESH_REMOTE_CARD_TYPES, # type: ignore
     INTERNAL_JOB_SET_SERIES_IDS,                                                # type: ignore
-] 
+]
 
 """
 Wrap all periodically called functions to set the runnin attributes when
 the job is started and finished.
 """
+# pylint: disable=missing-function-docstring,redefined-outer-name
 def _wrap_before(job_id, *, log: Logger = log):
     log.info(f'Task[{job_id}] Started execution')
     BaseJobs[job_id].previous_start_time = datetime.now()
@@ -145,6 +146,7 @@ def wrapped_backup_database(log: Optional[Logger] = None):
     _wrap_before(JOB_BACKUP_DATABASE, log=log)
     backup_database(log=log)
     _wrap_after(JOB_BACKUP_DATABASE, log=log)
+# pylint: enable=missing-function-docstring,redefined-outer-name
 
 """
 Dictionary of Job ID's to NewJob objects that contain the default Job
@@ -223,6 +225,11 @@ BaseJobs = {
 
 # Initialize scheduler with starting jobs
 def initialize_scheduler() -> None:
+    """
+    Initialize the Scheduler by creating any Jobs in BaseJobs that do
+    not already exist.
+    """
+
     scheduler = get_scheduler()
     for job in BaseJobs.values():
         # If Job is not already scheduled, add
@@ -340,7 +347,7 @@ def reschedule_task(
     if new_interval == job.trigger.interval.total_seconds():
         log.debug(f'Task[{job.id}] Not rescheduling, interval unchanged')
         return _scheduled_task_from_job(job)
-    
+
     # Ensure interval is not below minimum
     if new_interval < MINIMUM_TASK_INTERVAL:
         log.warning(f'Task[{job.id}] Cannot schedule task more frequently than '
@@ -354,7 +361,7 @@ def reschedule_task(
         trigger='interval',
         **update_interval.dict(),
     )
-    
+
     return _scheduled_task_from_job(job)
 
 
