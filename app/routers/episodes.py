@@ -17,8 +17,6 @@ from app.schemas.episode import (
     BatchUpdateEpisode, Episode, NewEpisode, UpdateEpisode
 )
 
-from modules.Debug import log
-
 
 episodes_router = APIRouter(
     prefix='/episodes',
@@ -99,7 +97,7 @@ def delete_episode(
 
     # Delete card files, Card objects, and Loaded objects
     delete_cards(
-        db, 
+        db,
         db.query(models.card.Card).filter_by(episode_id=episode_id),
         db.query(models.loaded.Loaded).filter_by(episode_id=episode_id),
         log=request.state.log,
@@ -108,8 +106,6 @@ def delete_episode(
     # Delete Episode itself
     db.delete(episode)
     db.commit()
-
-    return None
 
 
 @episodes_router.delete('/series/{series_id}', status_code=200, tags=['Series'])
@@ -169,23 +165,21 @@ def refresh_episode_data_(
 
     # Refresh episode data, use BackgroundTasks for ID assignment
     refresh_episode_data(
-        db, preferences, 
+        db, preferences,
         series,
         emby_interface, jellyfin_interface, plex_interface, sonarr_interface,
         tmdb_interface, background_tasks, log=request.state.log,
     )
-    
-    return None
 
 
 @episodes_router.patch('/batch', status_code=200)
 def update_multiple_episode_configs(
         request: Request,
         update_episodes: list[BatchUpdateEpisode] = Body(...),
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> list[Episode]:
     """
-    Update all the Epiodes with the given IDs. Only provided fields are 
+    Update all the Epiodes with the given IDs. Only provided fields are
     updated.
 
     - update_episodes: List of BatchUpdateEpisode containing fields to
@@ -244,7 +238,7 @@ def update_episode_config(
         db: Session = Depends(get_database)
     ) -> Episode:
     """
-    Update the Epiode with the given ID. Only provided fields are 
+    Update the Epiode with the given ID. Only provided fields are
     updated.
 
     - episode_id: ID of the Episode to update.
@@ -260,7 +254,7 @@ def update_episode_config(
 
     # If any reference ID's were indicated, verify referenced object exists
     get_font(db, getattr(update_episode, 'font_id', None), raise_exc=True)
-    
+
     # Assign Templates if indicated
     changed = False
     if ((template_ids := update_episode_dict.get('template_ids', None))
@@ -289,7 +283,7 @@ def update_episode_config(
 @episodes_router.get('/{series_id}/all', status_code=200, tags=['Series'])
 def get_all_series_episodes(
         series_id: int,
-        order_by: Literal['index', 'absolute', 'id'] = 'index', 
+        order_by: Literal['index', 'absolute', 'id'] = 'index',
         db: Session = Depends(get_database)
     ) -> Page[Episode]:
     """
@@ -310,5 +304,5 @@ def get_all_series_episodes(
         sorted_query = query.order_by(models.episode.Episode.absolute_number)
     elif order_by == 'id':
         sorted_query = query
-    
+
     return paginate(sorted_query)
