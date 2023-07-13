@@ -8,8 +8,6 @@ import app.models as models
 from app.schemas.base import UNSPECIFIED
 from app.schemas.series import NewTemplate, Template, UpdateTemplate
 
-from modules.Debug import log
-
 
 # Create sub router for all /templates API requests
 template_router = APIRouter(
@@ -49,7 +47,7 @@ def get_all_templates(
     ) -> list[Template]:
     """
     Get all defined Templates.
-    """    
+    """
 
     return db.query(models.template.Template).all()
 
@@ -69,7 +67,7 @@ def get_template_by_id(
 
 
 @template_router.patch('/{template_id}', status_code=200)
-def update_template(
+def update_template_(
         request: Request,
         template_id: int,
         update_template: UpdateTemplate = Body(...),
@@ -116,7 +114,7 @@ def delete_template(
         db: Session = Depends(get_database)
     ) -> None:
     """
-    Delete the given Template.
+    Delete the specified Template.
 
     - template_id: ID of the Template to delete.
     """
@@ -124,5 +122,3 @@ def delete_template(
     # Delete Template, update database
     db.delete(get_template(db, template_id, raise_exc=True))
     db.commit()
-
-    return None

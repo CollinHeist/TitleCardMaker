@@ -7,7 +7,7 @@ from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Query, Session
 
-from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.dependencies import *                                                  # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.templates import get_effective_templates
 import app.models as models
 from app.models.episode import Episode
