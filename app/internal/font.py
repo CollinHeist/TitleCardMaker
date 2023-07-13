@@ -4,12 +4,10 @@ from app.schemas.episode import Episode
 from app.schemas.font import NamedFont
 from app.schemas.series import Series
 
-from modules.Debug import log
-
 
 def get_effective_fonts(
         series: Series,
-        episode: Optional[Episode] = None
+        episode: Optional[Episode] = None,
     ) -> tuple[Optional[NamedFont], Optional[NamedFont]]:
     """
     Get the effective Series and Episode Fonts for the given Series and
