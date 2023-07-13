@@ -1,7 +1,6 @@
 from logging import Logger
 from pathlib import Path
 from re import compile as re_compile, sub as re_sub, IGNORECASE
-from typing import Union
 
 from fastapi import HTTPException
 from requests import get, JSONDecodeError
@@ -12,9 +11,7 @@ from app.models.font import Font
 from app.models.preferences import Preferences
 from app.models.series import Series
 from app.models.template import Template
-from app.schemas.blueprint import (
-    Blueprint, RemoteBlueprint, RemoteMasterBlueprint
-)
+from app.schemas.blueprint import RemoteBlueprint, RemoteMasterBlueprint
 from app.schemas.episode import UpdateEpisode
 from app.schemas.font import NewNamedFont
 from app.schemas.series import NewTemplate, UpdateSeries
@@ -80,7 +77,7 @@ def generate_series_blueprint(
     """
     Generate the Blueprint for the given Series. This Blueprint can be
     imported to completely recreate a Series' (and all associated
-    Episodes') configuration. 
+    Episodes') configuration.
 
     Args:
         series: Series to generate the Blueprint of.
@@ -232,7 +229,7 @@ def query_all_blueprints(
     """
 
     # Read the master Blueprints JSON file
-    response = get(MASTER_BLUEPRINT_FILE)
+    response = get(MASTER_BLUEPRINT_FILE, timeout=30)
 
     # If no file was found, raise 404
     if response.status_code == 404:
@@ -241,7 +238,7 @@ def query_all_blueprints(
             status_code=404,
             detail=f'No master Blueprint file found'
         )
-    
+
     # Find found, parse as JSON
     try:
         return response.json()
@@ -250,7 +247,7 @@ def query_all_blueprints(
         raise HTTPException(
             status_code=500,
             detail=f'Unable to parse master Blueprint file'
-        )
+        ) from e
 
 
 def query_series_blueprints(
@@ -279,7 +276,7 @@ def query_series_blueprints(
 
     # Read the JSON file of Blueprint definitions
     blueprint_url = f'{BLUEPRINTS_URL}/{subfolder}/blueprints.json'
-    response = get(blueprint_url)
+    response = get(blueprint_url, timeout=30)
 
     # If no file was found, there are no Blueprints for this Series, return
     if response.status_code == 404:
@@ -294,7 +291,7 @@ def query_series_blueprints(
         raise HTTPException(
             status_code=500,
             detail=f'Unable to parse Blueprints JSON',
-        )
+        ) from e
 
     # Blueprints found, transform preview URLs and add ID
     for blueprint_id, blueprint in enumerate(blueprints):
@@ -331,7 +328,7 @@ def get_blueprint_by_id(
     for blueprint in query_series_blueprints(series, log=log):
         if blueprint['id'] == blueprint_id:
             return blueprint
-        
+
     # No Blueprint with this ID, raise 404
     raise HTTPException(
         status_code=404,
@@ -371,7 +368,7 @@ def import_blueprint(
         font_content = None
         if getattr(font, 'file', None) is not None:
             file_url = f'{blueprint_folder}/{font.file}'
-            response = get(file_url)
+            response = get(file_url, timeout=30)
             if response.status_code == 404:
                 log.error(f'Specified Font file does not exist at "{file_url}"')
                 raise HTTPException(
@@ -456,7 +453,7 @@ def import_blueprint(
                     Episode.season_number==indices['season_number'],
                     Episode.episode_number==indices['episode_number'])\
             .first()
-        
+
         # Episode not found, skip
         if episode is None:
             log.warning(f'Cannot find matching Episode for override "{episode_key}"')
@@ -488,5 +485,3 @@ def import_blueprint(
     # Commit changes to Database
     if changed:
         db.commit()
-
-    return None
