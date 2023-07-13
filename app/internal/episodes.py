@@ -92,7 +92,8 @@ def set_episode_ids(
         )
     if jellyfin_interface and series.jellyfin_library_name:
         jellyfin_interface.set_episode_ids(
-            series.as_series_info, episode_infos, log=log
+            series.jellyfin_library_name, series.as_series_info, episode_infos,
+            log=log
         )
     if plex_interface and series.plex_library_name:
         plex_interface.set_episode_ids(
