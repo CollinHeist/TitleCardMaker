@@ -32,10 +32,12 @@ from modules.Template import Template as YamlTemplate
 from modules.TieredSettings import TieredSettings
 
 
+# pylint: disable=unnecessary-lambda-assignment
 Extension = lambda s: str(s) if s.startswith('.') else f'.{s}'
-Percentage = lambda s: float(str(s).split('%')[0]) / 100.0
-Width = lambda dims: int(str(dims).lower().split('x')[0])
+Percentage = lambda s: float(str(s).split('%', maxsplit=1)[0]) / 100.0
+Width = lambda dims: int(str(dims).lower().split('x', maxsplit=1)[0])
 Height = lambda dims: int(str(dims).lower().split('x')[1])
+# pylint: enable=unnecessary-lambda-assignment
 
 
 def parse_raw_yaml(yaml: str) -> dict[str, Any]:
@@ -61,7 +63,7 @@ def parse_raw_yaml(yaml: str) -> dict[str, Any]:
         raise HTTPException(
             status_code=422,
             detail=f'YAML cannot be parsed',
-        )
+        ) from e
 
 
 def _get(yaml_dict: dict[str, Any],
@@ -109,8 +111,8 @@ def _get(yaml_dict: dict[str, Any],
             raise HTTPException(
                 status_code=422,
                 detail=f'YAML is incorrectly typed - {e}',
-            )
-    
+            ) from e
+
     return value
 
 
@@ -135,7 +137,7 @@ def _parse_translations(
     # No translations, return default
     if (translations := yaml_dict.get('translation', None)) is None:
         return default
-    
+
     def _parse_single_translation(translation: dict[str, Any]) -> dict[str, str]:
         if (not isinstance(translation, dict)
             or set(translation.keys()) > {'language', 'key'}):
@@ -143,7 +145,7 @@ def _parse_translations(
                 status_code=422,
                 detail=f'Invalid translations - "language" and "key" are required',
             )
-        
+
         return {
             'language_code': str(translation['language']),
             'data_key': str(translation['key']),
@@ -201,11 +203,11 @@ def _parse_episode_data_source(
 
     try:
         return mapping[eds.lower()]
-    except KeyError:
+    except KeyError as e:
         raise HTTPException(
             status_code=422,
             detail=f'Invalid episode data source "{eds}"',
-        )
+        ) from e
 
 
 def _parse_filesize_limit(
@@ -228,7 +230,7 @@ def _parse_filesize_limit(
     if (not isinstance(yaml_dict, dict)
         or (limit := yaml_dict.get('filesize_limit', None)) is None):
         return UNSPECIFIED, UNSPECIFIED
-    
+
     try:
         number, unit = limit.split(' ')
         return int(number), unit
@@ -236,7 +238,7 @@ def _parse_filesize_limit(
         raise HTTPException(
             status_code=422,
             detail=f'Invalid filesize limit',
-        )
+        ) from e
 
 
 def _remove_unspecifed_args(**dict_kwargs: dict) -> dict:
@@ -301,7 +303,7 @@ def parse_preferences(
             'emby': 'Emby', 'jellyfin': 'Jellyfin', 'plex': 'Plex', 'tmdb': 'TMDb'
         }
         image_source_priority = [
-            mapping[source] 
+            mapping[source]
             for source in isp.lower().replace(' ', '').split(',')
             if source in mapping
         ]
@@ -337,7 +339,7 @@ def parse_preferences(
     ))
 
     preferences.update_values(log=log, **update_preferences.dict())
-    refresh_imagemagick_interface(log=log)
+    refresh_imagemagick_interface()
     preferences.determine_imagemagick_prefix(log=log)
 
     return preferences
@@ -357,14 +359,14 @@ def parse_emby(
             modified.
         yaml_dict: Dictionary of YAML attributes to parse.
         log: (Keyword) Logger for all log messages.
-    
+
     Returns:
         Modified Preferences object. If no changes are made, the object
         is returned unmodified.
 
     Raises:
         HTTPException (422) if there are any YAML formatting errors.
-        Pydantic ValidationError if an UpdateEmby object cannot be 
+        Pydantic ValidationError if an UpdateEmby object cannot be
             created from the given YAML.
     """
 
@@ -406,14 +408,14 @@ def parse_jellyfin(
             modified.
         yaml_dict: Dictionary of YAML attributes to parse.
         log: (Keyword) Logger for all log messages.
-    
+
     Returns:
         Modified Preferences object. If no changes are made, the object
         is returned unmodified.
 
     Raises:
         HTTPException (422) if there are any YAML formatting errors.
-        Pydantic ValidationError if an UpdateJellyfin object cannot be 
+        Pydantic ValidationError if an UpdateJellyfin object cannot be
             created from the given YAML.
     """
 
@@ -455,7 +457,7 @@ def parse_plex(
             modified.
         yaml_dict: Dictionary of YAML attributes to parse.
         log: (Keyword) Logger for all log messages.
-    
+
     Returns:
         Modified Preferences object. If no changes are made, the object
         is returned unmodified.
@@ -507,7 +509,7 @@ def parse_sonarr(
             modified.
         yaml_dict: Dictionary of YAML attributes to parse.
         log: (Keyword) Logger for all log messages.
-    
+
     Returns:
         Modified Preferences object. If no changes are made, the object
         is returned unmodified.
@@ -550,7 +552,7 @@ def parse_tmdb(
             modified.
         yaml_dict: Dictionary of YAML attributes to parse.
         log: (Keyword) Logger for all log messages.
-    
+
     Returns:
         Modified Preferences object. If no changes are made, the object
         is returned unmodified.
@@ -637,9 +639,18 @@ def parse_syncs(
             yaml_dict: dict[str, Any],
             media_server: Literal['Emby', 'Jellyfin', 'Plex'],
             NewSyncClass: Union[NewEmbySync, NewJellyfinSync, NewPlexSync]
-        ) -> Union[NewEmbySync, NewJellyfinSync, NewPlexSync]:
+        ) -> Union[list[NewEmbySync], list[NewJellyfinSync], list[NewPlexSync]]:
         """
-        
+        Inner function to parse the Sync definition of a media server.
+
+        Args:
+            yaml_dict: Dictionary of YAML attributes to parse.
+            media_server: Which media server this Sync corresponds do.
+            NewSyncClass: Class to instantiate with the parsed arguments
+
+        Returns:
+            List of instantiated NewSyncClass objects for all Syncs
+            defined in the given YAML.
         """
 
         # Create New*Sync object for each defined sync
@@ -670,7 +681,7 @@ def parse_syncs(
             )))
 
         return all_syncs
-    
+
     # Add Syncs for each defined section
     all_syncs = []
     if (emby := _get(yaml_dict, 'emby', 'sync')) is not None:
@@ -691,7 +702,7 @@ def parse_syncs(
 
             # Merge the first sync settings into this one
             TieredSettings(sync, syncs[0], sync)
-            
+
             # Get excluded tags
             excluded_tags = [
                 list(exclusion.values())[0] for exclusion in _get(
@@ -726,7 +737,7 @@ def parse_fonts(yaml_dict: dict[str, Any]) -> list[NewNamedFont]:
 
     Raises:
         HTTPException (422) if there are any YAML formatting errors.
-        Pydantic ValidationError if a NewTemplate object cannot be 
+        Pydantic ValidationError if a NewTemplate object cannot be
             created from the given YAML.
     """
 
@@ -797,7 +808,7 @@ def parse_templates(
         HTTPException (404) if an indicated Font name cannot be found in
             the database.
         HTTPException (422) if there are any YAML formatting errors.
-        Pydantic ValidationError if a NewTemplate object cannot be 
+        Pydantic ValidationError if a NewTemplate object cannot be
             created from the given YAML.
     """
 
@@ -925,7 +936,7 @@ def parse_series(
         HTTPException (404) if an indicated Font or Template name cannot
             be found in the database.
         HTTPException (422) if there are any YAML formatting errors.
-        Pydantic ValidationError if a NewSeries object cannot be 
+        Pydantic ValidationError if a NewSeries object cannot be
             created from the given YAML.
     """
 
@@ -968,7 +979,7 @@ def parse_series(
                 status_code=422,
                 detail=f'Invalid Series "{series_name}"',
             )
-        
+
         # Finalize with PreferenceParser
         series_dict = PreferenceParser.finalize_show_yaml(
             _get(series_dict, 'name', type_=str, default=series_name),
@@ -1000,11 +1011,11 @@ def parse_series(
                 tvdb_id=_get(series_dict, 'tvdb_id', default=None),
                 tvrage_id=_get(series_dict, 'tvrage_id', default=None),
             )
-        except ValueError:
+        except ValueError as e:
             raise HTTPException(
                 status_code=422,
                 detail=f'Series "{series_name}" is missing the required year',
-            )
+            ) from e
 
         # Parse custom Font
         series_font = _get(series_dict, 'font', default={})
@@ -1014,7 +1025,7 @@ def parse_series(
                 status_code=422,
                 detail=f'Unrecognized Font in Series "{series_info}"',
             )
-        elif isinstance(series_font, str):
+        if isinstance(series_font, str):
             # Get Font ID of this Font (if indicated)
             font = db.query(models.font.Font)\
                 .filter_by(name=series_font).first()
@@ -1049,7 +1060,7 @@ def parse_series(
             for k, v in extras.items()
             if k != 'logo' and not str(v).endswith('logo.png')
         }
-        
+
         # Use default library if a manual one was not specified
         if (library := _get(series_dict, 'library', 'name')) is None:
             library = default_library
@@ -1198,5 +1209,3 @@ def import_cards(
 
         card = add_card_to_database(db, title_card, card_settings['card_file'])
         log.debug(f'{series.log_str} {episode.log_str} Imported {image.resolve()}')
-
-    return None
