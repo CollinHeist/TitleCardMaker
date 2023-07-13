@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from logging import Logger
 from os import environ
 from pathlib import Path
+from re import sub as re_sub
 from shutil import copy as file_copy
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -37,8 +38,18 @@ engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={'check_same_thread': False}
 )
 
-# Function to back up the SQL database
+
 def backup_database(*, log: Logger = log) -> Path:
+    """
+    Perform a backup of the SQL database.
+
+    Args:
+        log: (Keyword) Logger for all log messages.
+
+    Returns:
+        Path to the newly created backup file.
+    """
+
     # Determine file to back up database to
     now = datetime.now().strftime('%Y.%m.%d_%H.%M.%S')
     if IS_DOCKER:
@@ -68,14 +79,22 @@ def backup_database(*, log: Logger = log) -> Path:
         file_copy(database, backup_file)
         log.info(f'Performed database backup')
 
-# Register regex replacement function
-from re import sub as re_sub
+    return backup_file
+
+
+"""
+Register a custom Regex replacement function that can be used on this
+database.
+"""
 def regex_replace(pattern, replacement, string):
+    """Wrapper for `re_sub()`"""
     return re_sub(pattern, replacement, string)
 
 @listens_for(engine, 'connect')
 def register_custom_functions(dbapi_connection, connection_record):
+    """When the engine is connected, register the `regex_replace` function"""
     dbapi_connection.create_function('regex_replace', 3, regex_replace)
+
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
@@ -92,13 +111,16 @@ Scheduler = BackgroundScheduler(
 if IS_DOCKER:
     preferences_file = Path('/config/source/prefs.json')
 else:
-    preferences_file = Path(__file__).parent.parent.parent / 'modules' / '.objects' / 'prefs.json'
+    preferences_file = Path(__file__).parent.parent.parent / 'modules'\
+        / '.objects' / 'prefs.json'
 PreferencesLocal = Preferences(preferences_file)
 
-# Page used for all paginated returns
+
+# Default Page arguments used for paginated returns
 Page = Page.with_custom_options(
     size=Field(250, ge=1),
 )
+
 
 # Initialize all interfaces
 ImageMagickInterfaceLocal = None
@@ -107,14 +129,14 @@ try:
         **PreferencesLocal.imagemagick_arguments
     )
 except Exception as e:
-    ...
+    pass
 
 EmbyInterfaceLocal = None
 if PreferencesLocal.use_emby:
     try:
         EmbyInterfaceLocal = EmbyInterface(**PreferencesLocal.emby_arguments)
     except Exception as e:
-        ...
+        pass
 
 JellyfinInterfaceLocal = None
 if PreferencesLocal.use_jellyfin:
@@ -123,14 +145,14 @@ if PreferencesLocal.use_jellyfin:
             **PreferencesLocal.jellyfin_arguments
         )
     except Exception as e:
-        ...
+        pass
 
 PlexInterfaceLocal = None
 if PreferencesLocal.use_plex:
     try:
         PlexInterfaceLocal = PlexInterface(**PreferencesLocal.plex_arguments)
     except Exception as e:
-        ...
+        pass
 
 SonarrInterfaceLocal = None
 if PreferencesLocal.use_sonarr:
@@ -141,11 +163,11 @@ if PreferencesLocal.use_sonarr:
         )
         SonarrInterfaceLocal.REQUEST_TIMEOUT = 600
     except Exception as e:
-        ...
+        pass
 
 TMDbInterfaceLocal = None
 if PreferencesLocal.use_tmdb:
     try:
         TMDbInterfaceLocal = TMDbInterface(**PreferencesLocal.tmdb_arguments)
     except Exception as e:
-        ...
+        pass
