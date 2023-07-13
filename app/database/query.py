@@ -27,32 +27,36 @@ def _get_obj(
         model: SQL model to filter the SQL Database Table by.
         model_name: Name of the Model for logging.
         object_id: ID of the Object to query for.
-        raise_exc: Whether to raise 404 if the given object does not 
+        raise_exc: Whether to raise 404 if the given object does not
             exist. If False, then only an error message is logged.
 
     Returns:
-        Object with the given ID. If one cannot be found and raise_exc
-        is False, or if the given ID is None, then None is returned.
+        Object with the given ID. If one cannot be found and `raise_exc`
+        is False, None is returned. None is also returned if `object_id`
+        is None.
 
     Raises:
-        HTTPException with a 404 status code if the Object cannot be
-        found and raise_exc is True.
+        HTTPException (404) if the Object cannot be found and
+        `raise_exc` is True.
     """
 
     # No ID provided, return immediately
     if object_id is None:
         return None
 
+    # Query for object, raise or return None if not found
     if (obj := db.query(model).filter_by(id=object_id).first()) is None:
+        # Object not found and raising exception, raise
         if raise_exc:
             raise HTTPException(
                 status_code=404,
                 detail=f'{model_name} {object_id} not found',
             )
-        else:
-            log.error(f'{model_name} {object_id} not found')
-            return None
 
+        log.error(f'{model_name} {object_id} not found')
+        return None
+
+    # Object found, return it
     return obj
 
 
@@ -65,7 +69,7 @@ def get_card(
     """
     Get the Card with the given ID from the given Database.
 
-    See _get_obj docstring for all details.
+    See `_get_obj` for all details.
     """
 
     return _get_obj(db, models.card.Card, 'Card', card_id, raise_exc)
@@ -80,7 +84,7 @@ def get_episode(
     """
     Get the Episode with the given ID from the given Database.
 
-    See _get_obj docstring for all details.
+    See `_get_obj` for all details.
     """
 
     return _get_obj(db, models.episode.Episode, 'Episode', episode_id,raise_exc)
@@ -95,7 +99,7 @@ def get_font(
     """
     Get the Font with the given ID from the given Database.
 
-    See _get_obj docstring for all details.
+    See `_get_obj` docstring for all details.
     """
 
     return _get_obj(db, models.font.Font, 'Font', font_id, raise_exc)
@@ -110,7 +114,7 @@ def get_series(
     """
     Get the Series with the given ID from the given Database.
 
-    See _get_obj docstring for all details.
+    See `_get_obj` for all details.
     """
 
     return _get_obj(db, models.series.Series, 'Series', series_id, raise_exc)
@@ -125,7 +129,7 @@ def get_sync(
     """
     Get the Sync with the given ID from the given Database.
 
-    See _get_obj docstring for all details.
+    See `_get_obj` for all details.
     """
 
     return _get_obj(db, models.sync.Sync, 'Sync', sync_id, raise_exc)
@@ -140,7 +144,7 @@ def get_template(
     """
     Get the Template with the given ID from the given Database.
 
-    See _get_obj docstring for all details.
+    See `_get_obj` for all details.
     """
 
     return _get_obj(
@@ -169,7 +173,7 @@ def get_all_templates(
 
     Raises:
         HTTPException (404) if any of the indicated Templates do not
-        exist.
+        exist and `raise_exc` is True.
     """
 
     if not (template_ids := obj_dict.pop('template_ids', [])):
