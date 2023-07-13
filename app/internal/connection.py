@@ -18,7 +18,7 @@ UpdateConnection = Union[
 
 def update_connection(
         preferences: Preferences,
-        update_connection: UpdateConnection,
+        update_object: UpdateConnection,
         connection: Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
         *,
         log: Logger = log,
@@ -29,7 +29,7 @@ def update_connection(
 
     Args:
         preferences: Preferences to update the connection attributes of.
-        update_connection: Update object with attributes to update.
+        update_object: Update object with attributes to update.
         connection: Name of the connection being updated. Used as the
             prefix for the updated attributes, e.g. emby_*.
         log: (Keyword) Logger for all log messages.
@@ -40,7 +40,7 @@ def update_connection(
 
     # Change any attributes that are specified and different
     changed = False
-    for attribute, value in update_connection.dict().items():
+    for attribute, value in update_object.dict().items():
         if (value != UNSPECIFIED
             and value != getattr(preferences, f'{connection}_{attribute}')):
             setattr(preferences, f'{connection}_{attribute}', value)
