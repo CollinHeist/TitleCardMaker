@@ -150,7 +150,7 @@
         .map(x => `${encodeURIComponent(x[0])}=${encodeURIComponent(x[1])}`)
         .join('&');
       // Submit API request
-      const messageData = await fetch(`/api/logs/query?page=${page}&${queryString}`).then(resp => resp.json());
+      const messageData = await fetch(`/api/logs/query?page=${page}&shallow=false&${queryString}`).then(resp => resp.json());
       const allMessages = messageData.items;
       
       // Update table
