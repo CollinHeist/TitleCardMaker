@@ -1,7 +1,8 @@
+# pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from pathlib import Path
 from typing import Literal, Optional
 
-from pydantic import (
+from pydantic import ( # pylint: disable=no-name-in-module
     AnyUrl, DirectoryPath, Field, NonNegativeInt, PositiveInt, SecretStr,
     constr, root_validator, validator
 )
@@ -11,15 +12,14 @@ from app.schemas.base import (
     Base, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
 )
 
-from modules.Debug import log
 
 """
 Match local identifiers (A-Z and space), remote card types (a-z/a-z, no space),
 and local card types (any character .py).
-""" 
+"""
 CardTypeIdentifier = constr(regex=r'^([a-zA-Z ]+|[a-zA-Z]+\/[a-zA-Z]+|.+\.py)$')
 """
-Match hexstrings of A-F and 0-9 
+Match hexstrings of A-F and 0-9.
 """
 Hexstring = constr(regex=r'^[a-fA-F0-9]+$')
 
@@ -69,35 +69,35 @@ class LanguageToggle(ToggleOption):
 EpisodeDataSource = Literal['Emby', 'Jellyfin', 'Plex', 'Sonarr', 'TMDb']
 ImageSource = Literal['Emby', 'Jellyfin', 'Plex', 'TMDb']
 MediaServer = Literal['Emby', 'Jellyfin', 'Plex']
-    
+
 """
 Base classes
 """
 class TautulliConnection(Base):
-    tautulli_url: AnyUrl = Field(...)
+    tautulli_url: AnyUrl
     tautulli_api_key: SecretStr = Field(..., min_length=1)
-    tautulli_use_ssl: bool = Field(default=True)
+    tautulli_use_ssl: bool = True
     tautulli_agent_name: str = Field(..., min_length=1)
 
 """
 Update classes
 """
 class UpdatePreferences(UpdateBase):
-    card_directory: DirectoryPath = Field(default=UNSPECIFIED)
-    source_directory: DirectoryPath = Field(default=UNSPECIFIED)
-    card_width: PositiveInt = Field(default=UNSPECIFIED)
-    card_height: PositiveInt = Field(default=UNSPECIFIED)
-    card_filename_format: str = Field(default=UNSPECIFIED)
-    card_extension: CardExtension = Field(default=UNSPECIFIED)
-    image_source_priority: list[ImageSource] = Field(default=UNSPECIFIED)
-    episode_data_source: EpisodeDataSource = Field(default=UNSPECIFIED)
-    specials_folder_format: str = Field(default=UNSPECIFIED)
-    season_folder_format: str = Field(default=UNSPECIFIED)
-    sync_specials: bool = Field(default=UNSPECIFIED)
-    default_card_type: CardTypeIdentifier = Field(default=UNSPECIFIED)
-    excluded_card_types: list[CardTypeIdentifier] = Field(default=UNSPECIFIED)
-    default_watched_style: Style = Field(default=UNSPECIFIED)
-    default_unwatched_style: Style = Field(default=UNSPECIFIED)
+    card_directory: DirectoryPath = UNSPECIFIED
+    source_directory: DirectoryPath = UNSPECIFIED
+    card_width: PositiveInt = UNSPECIFIED
+    card_height: PositiveInt = UNSPECIFIED
+    card_filename_format: str = UNSPECIFIED
+    card_extension: CardExtension = UNSPECIFIED
+    image_source_priority: list[ImageSource] = UNSPECIFIED
+    episode_data_source: EpisodeDataSource = UNSPECIFIED
+    specials_folder_format: str = UNSPECIFIED
+    season_folder_format: str = UNSPECIFIED
+    sync_specials: bool = UNSPECIFIED
+    default_card_type: CardTypeIdentifier = UNSPECIFIED
+    excluded_card_types: list[CardTypeIdentifier] = UNSPECIFIED
+    default_watched_style: Style = UNSPECIFIED
+    default_unwatched_style: Style = UNSPECIFIED
 
     @validator('card_filename_format', pre=True)
     def validate_card_filename_format(cls, v):
@@ -116,7 +116,7 @@ class UpdatePreferences(UpdateBase):
     @validator('image_source_priority', 'excluded_card_types', pre=True)
     def validate_list(cls, v):
         return [v] if isinstance(v, str) else v
-    
+
     @validator('specials_folder_format', 'season_folder_format', pre=True)
     def validate_folder_formats(cls, v):
         try:
@@ -126,17 +126,17 @@ class UpdatePreferences(UpdateBase):
                              f'"episode_numer" and/or "absolute_number"')
 
         return v
-    
+
 class UpdateServerBase(UpdateBase):
-    url: AnyUrl = Field(default=UNSPECIFIED)
+    url: AnyUrl = UNSPECIFIED
 
 class UpdateMediaServerBase(UpdateServerBase):
-    use_ssl: bool = Field(default=UNSPECIFIED)
+    use_ssl: bool = UNSPECIFIED
     filesize_limit_number: int = Field(gt=0, default=UNSPECIFIED)
-    filesize_limit_unit: FilesizeUnit = Field(default=UNSPECIFIED)
+    filesize_limit_unit: FilesizeUnit = UNSPECIFIED
 
     @validator('filesize_limit_unit', pre=False)
-    def validate_list(cls, v): 
+    def validate_list(cls, v):
         if isinstance(v, str):
             return {
                 'b':         'Bytes',
@@ -160,29 +160,29 @@ class UpdateMediaServerBase(UpdateServerBase):
         return values
 
 class UpdateEmby(UpdateMediaServerBase):
-    api_key: Hexstring = Field(default=UNSPECIFIED)
-    username: Optional[str] = Field(default=UNSPECIFIED)
+    api_key: Hexstring = UNSPECIFIED
+    username: Optional[str] = UNSPECIFIED
 
 class UpdateJellyfin(UpdateMediaServerBase):
-    api_key: Hexstring = Field(default=UNSPECIFIED)
+    api_key: Hexstring = UNSPECIFIED
     username: Optional[str] = Field(default=UNSPECIFIED, min_length=1)
 
 class UpdatePlex(UpdateMediaServerBase):
-    token: str = Field(default=UNSPECIFIED)
-    integrate_with_pmm: bool = Field(default=UNSPECIFIED)
+    token: str = UNSPECIFIED
+    integrate_with_pmm: bool = UNSPECIFIED
 
 class UpdateSonarr(UpdateServerBase):
-    api_key: Hexstring = Field(default=UNSPECIFIED)
-    use_ssl: bool = Field(default=UNSPECIFIED)
+    api_key: Hexstring = UNSPECIFIED
+    use_ssl: bool = UNSPECIFIED
     downloaded_only: bool = UNSPECIFIED
-    library_names: list[str] = Field(default=UNSPECIFIED)
-    library_paths: list[str] = Field(default=UNSPECIFIED)
+    library_names: list[str] = UNSPECIFIED
+    library_paths: list[str] = UNSPECIFIED
 
     @validator('library_names', 'library_paths', pre=True)
     def validate_list(cls, v):
         # Filter out empty strings - all arguments can accept empty lists
         return [val for val in ([v] if isinstance(v, str) else v) if val != '']
-    
+
     @root_validator
     def validate_paired_lists(cls, values):
         return validate_argument_lists_to_dict(
@@ -192,12 +192,12 @@ class UpdateSonarr(UpdateServerBase):
         )
 
 class UpdateTMDb(UpdateBase):
-    api_key: Hexstring = Field(default=UNSPECIFIED)
-    minimum_width: NonNegativeInt = Field(default=UNSPECIFIED)
-    minimum_height: NonNegativeInt = Field(default=UNSPECIFIED)
-    skip_localized: bool = Field(default=UNSPECIFIED)
-    download_logos: bool = Field(default=UNSPECIFIED)
-    logo_language_priority: list[LanguageCode] = Field(default=UNSPECIFIED)
+    api_key: Hexstring = UNSPECIFIED
+    minimum_width: NonNegativeInt = UNSPECIFIED
+    minimum_height: NonNegativeInt = UNSPECIFIED
+    skip_localized: bool = UNSPECIFIED
+    download_logos: bool = UNSPECIFIED
+    logo_language_priority: list[LanguageCode] = UNSPECIFIED
 
     @validator('logo_language_priority', pre=True)
     def validate_list(cls, v):
@@ -231,14 +231,14 @@ class Preferences(Base):
 class EmbyConnection(Base):
     use_emby: bool
     emby_url: AnyUrl
-    emby_api_key: SecretStr #Hexstring
+    emby_api_key: SecretStr
     emby_username: Optional[str]
     emby_filesize_limit: Optional[int]
 
 class JellyfinConnection(Base):
     use_jellyfin: bool
     jellyfin_url: AnyUrl
-    jellyfin_api_key: SecretStr #Hexstring
+    jellyfin_api_key: SecretStr
     jellyfin_username: Optional[str]
     jellyfin_filesize_limit: Optional[int]
 
@@ -256,12 +256,12 @@ class SonarrLibrary(Base):
 class SonarrConnection(Base):
     use_sonarr: bool
     sonarr_url: AnyUrl
-    sonarr_api_key: SecretStr #Hexstring
+    sonarr_api_key: SecretStr
     sonarr_libraries: dict[str, str]
 
 class TMDbConnection(Base):
     use_tmdb: bool
-    tmdb_api_key: SecretStr #Hexstring
+    tmdb_api_key: SecretStr
     tmdb_minimum_width: NonNegativeInt
     tmdb_minimum_height: NonNegativeInt
     tmdb_skip_localized: bool

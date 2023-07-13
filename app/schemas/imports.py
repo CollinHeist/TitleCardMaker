@@ -1,3 +1,4 @@
+# pylint: disable=missing-class-docstring,missing-function-docstring
 from typing import Optional
 
 from pydantic import DirectoryPath, Field
@@ -21,11 +22,11 @@ class ImportSeriesYaml(ImportBase):
     default_library: Optional[str] = Field(default=None, min_length=1)
 
 class ImportCardDirectory(Base):
-    directory: Optional[DirectoryPath] = Field(default=None)
-    image_extension: CardExtension = Field(default='.jpg')
-    force_reload: bool = Field(default=False)
+    directory: Optional[DirectoryPath] = None
+    image_extension: CardExtension = '.jpg'
+    force_reload: bool = False
 
 class MultiCardImport(Base):
     series_ids: list[int]
-    image_extension: CardExtension = Field(default='.jpg')
-    force_reload: bool = Field(default=False)
+    image_extension: CardExtension = '.jpg'
+    force_reload: bool = False

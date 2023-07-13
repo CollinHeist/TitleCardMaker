@@ -1,3 +1,4 @@
+# pylint: disable=missing-class-docstring,missing-function-docstring
 from app.schemas.base import Base
 
 class Statistic(Base):

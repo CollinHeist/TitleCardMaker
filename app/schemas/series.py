@@ -1,11 +1,14 @@
+# pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from typing import Any, Literal, Optional
 
-from pydantic import constr, Field, root_validator, validator
+from pydantic import constr, Field, root_validator, validator  # pylint: disable=no-name-in-module
 
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
-from app.schemas.base import Base, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
+from app.schemas.base import (
+    Base, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
+)
 from app.schemas.font import TitleCase
-from app.schemas.ids import *
+from app.schemas.ids import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.schemas.preferences import EpisodeDataSource, Style, LanguageCode
 
 # Match absolute ranges (1-10), season numbers (1), episode ranges (s1e1-s1e10)
@@ -28,42 +31,22 @@ class Translation(Base):
     data_key: DictKey
 
 class BaseConfig(Base):
-    font_id: Optional[int] = Field(
-        default=None,
-        title='Font ID',
-        description='ID of the Font to apply',
-    )
-    sync_specials: Optional[bool] = Field(
-        default=None,
-        title='Sync specials toggle',
-        description='Whether to sync specials of this series'
-    )
-    skip_localized_images: Optional[bool] = Field(default=None)
-    card_filename_format: Optional[str] = Field(default=None)
-    episode_data_source: Optional[EpisodeDataSource] = Field(default=None)
-    card_type: Optional[str] = Field(
-        default=None,
-        title='Title card type',
-        description='Type of title cards to create',
-    )
-    unwatched_style: Optional[Style] = Field(
-        default=None,
-        title='Unwatched episode style',
-        description='How to style unwatched episodes of this series',
-    )
-    watched_style: Optional[Style] = Field(
-        default=None,
-        title='Watched episode style',
-        description='How to style watched episodes of this series',
-    )
-    hide_season_text: Optional[bool] = Field(default=None)
-    hide_episode_text: Optional[bool] = Field(default=None)
-    episode_text_format: Optional[str] = Field(default=None)
+    font_id: Optional[int] = None
+    sync_specials: Optional[bool] = None
+    skip_localized_images: Optional[bool] = None
+    card_filename_format: Optional[str] = None
+    episode_data_source: Optional[EpisodeDataSource] = None
+    card_type: Optional[str] = None
+    unwatched_style: Optional[Style] = None
+    watched_style: Optional[Style] = None
+    hide_season_text: Optional[bool] = None
+    hide_episode_text: Optional[bool] = None
+    episode_text_format: Optional[str] = None
 
 class BaseTemplate(BaseConfig):
     name: str = Field(..., min_length=1, title='Template name')
-    filters: list[Condition] = Field(default=[])
-    translations: Optional[list[Translation]] = Field(default=None)
+    filters: list[Condition] = []
+    translations: Optional[list[Translation]] = None
 
 class BaseSeries(BaseConfig):
     name: str = Field(..., min_length=1, title='Series name')
@@ -73,73 +56,65 @@ class BaseSeries(BaseConfig):
         title='Series year',
         description='Year the series first aired'
     )
-    monitored: bool = Field(default=True)
-    template_ids: Optional[list[int]] = Field(
-        default=None,
-        title='Template ID',
-        description='ID of the Template applied to this series',
-    )
-    match_titles: bool = Field(default=True)
-    translations: Optional[list[Translation]] = Field(default=None)
+    monitored: bool = True
+    template_ids: Optional[list[int]] = None
+    match_titles: bool = True
+    translations: Optional[list[Translation]] = None
 
-    font_color: Optional[str] = Field(default=None)
-    font_title_case: Optional[TitleCase] = Field(default=None)
-    font_size: Optional[float] = Field(default=None)
-    font_kerning: Optional[float] = Field(default=None)
-    font_stroke_width: Optional[float] = Field(default=None)
-    font_interline_spacing: Optional[int] = Field(default=None)
-    font_vertical_shift: Optional[int] = Field(default=None)
+    font_color: Optional[str] = None
+    font_title_case: Optional[TitleCase] = None
+    font_size: Optional[float] = None
+    font_kerning: Optional[float] = None
+    font_stroke_width: Optional[float] = None
+    font_interline_spacing: Optional[int] = None
+    font_vertical_shift: Optional[int] = None
 
     emby_library_name: Optional[str] = Field(
         default=None,
-        min_length=1, 
+        min_length=1,
         title='Emby library name',
         description='Library within Emby with this series',
     )
     jellyfin_library_name: Optional[str] = Field(
         default=None,
-        min_length=1, 
+        min_length=1,
         title='Jellyfin library name',
         description='Library within Jellyfin with this series',
     )
     plex_library_name: Optional[str] = Field(
         default=None,
-        min_length=1, 
+        min_length=1,
         title='Plex library name',
         description='Library within Plex with this series',
     )
-    emby_id: EmbyID = Field(default=None, title='Emby server ID')
-    imdb_id: IMDbID = Field(default=None, title='IMDb database ID')
-    jellyfin_id: JellyfinID = Field(default=None, title='Jellyfin server ID')
-    sonarr_id: SonarrID = Field(default=None, title='Sonarr server ID')
-    tmdb_id: TMDbID = Field(default=None, title='TMDb database ID')
-    tvdb_id: TVDbID = Field(default=None, title='TVDb database ID')
-    tvrage_id: TVRageID = Field(default=None, title='TVRage database ID')
-    directory: Optional[str] = Field(
-        default=None,
-        title='Card directory',
-        description='Top-level directory for all title cards of this series'
-    )
+    emby_id: EmbyID = None
+    imdb_id: IMDbID = None
+    jellyfin_id: JellyfinID = None
+    sonarr_id: SonarrID = None
+    tmdb_id: TMDbID = None
+    tvdb_id: TVDbID = None
+    tvrage_id: TVRageID = None
+    directory: Optional[str] = None
 
 class BaseUpdate(UpdateBase):
     name: Optional[str] = Field(default=UNSPECIFIED, min_length=1)
-    monitored: bool = Field(default=UNSPECIFIED)
-    font_id: Optional[int] = Field(default=UNSPECIFIED)
-    sync_specials: Optional[bool] = Field(default=UNSPECIFIED)
-    skip_localized_images: Optional[bool] = Field(default=UNSPECIFIED)
-    card_filename_format: Optional[str] = Field(default=UNSPECIFIED)
-    episode_data_source: Optional[EpisodeDataSource] = Field(default=UNSPECIFIED)
-    translations: Optional[list[Translation]] = Field(default=UNSPECIFIED)
-    card_type: Optional[str] = Field(default=UNSPECIFIED)
-    hide_season_text: Optional[bool] = Field(default=UNSPECIFIED)
-    season_title_ranges: Optional[list[SeasonTitleRange]] = Field(default=UNSPECIFIED)
-    season_title_values: Optional[list[str]] = Field(default=UNSPECIFIED)
-    hide_episode_text: Optional[bool] = Field(default=UNSPECIFIED)
-    unwatched_style: Optional[Style] = Field(default=UNSPECIFIED)
-    watched_style: Optional[Style] = Field(default=UNSPECIFIED)
-    episode_text_format: Optional[str] = Field(default=UNSPECIFIED)
-    extra_keys: Optional[list[DictKey]] = Field(default=UNSPECIFIED)
-    extra_values: Optional[list[Any]] = Field(default=UNSPECIFIED)
+    monitored: bool = UNSPECIFIED
+    font_id: Optional[int] = UNSPECIFIED
+    sync_specials: Optional[bool] = UNSPECIFIED
+    skip_localized_images: Optional[bool] = UNSPECIFIED
+    card_filename_format: Optional[str] = UNSPECIFIED
+    episode_data_source: Optional[EpisodeDataSource] = UNSPECIFIED
+    translations: Optional[list[Translation]] = UNSPECIFIED
+    card_type: Optional[str] = UNSPECIFIED
+    hide_season_text: Optional[bool] = UNSPECIFIED
+    season_title_ranges: Optional[list[SeasonTitleRange]] = UNSPECIFIED
+    season_title_values: Optional[list[str]] = UNSPECIFIED
+    hide_episode_text: Optional[bool] = UNSPECIFIED
+    unwatched_style: Optional[Style] = UNSPECIFIED
+    watched_style: Optional[Style] = UNSPECIFIED
+    episode_text_format: Optional[str] = UNSPECIFIED
+    extra_keys: Optional[list[DictKey]] = UNSPECIFIED
+    extra_values: Optional[list[Any]] = UNSPECIFIED
 
     @validator('*', pre=True)
     def validate_arguments(cls, v):
@@ -170,10 +145,10 @@ Creation classes
 """
 class NewTemplate(BaseTemplate):
     name: str = Field(..., min_length=1, title='Template name')
-    season_title_ranges: list[SeasonTitleRange] = Field(default=[])
-    season_title_values: list[str] = Field(default=[])
-    extra_keys: list[str] = Field(default=[])
-    extra_values: list[Any] = Field(default=[])
+    season_title_ranges: list[SeasonTitleRange] = []
+    season_title_values: list[str] = []
+    extra_keys: list[str] = []
+    extra_values: list[Any] = []
 
     @validator('season_title_ranges', 'season_title_values',
                'extra_keys', 'extra_values', pre=True)
@@ -196,10 +171,10 @@ class NewTemplate(BaseTemplate):
         )
 
 class NewSeries(BaseSeries):
-    season_title_ranges: Optional[list[SeasonTitleRange]] = Field(default=None)
-    season_title_values: Optional[list[str]] = Field(default=None)
-    extra_keys: Optional[list[str]] = Field(default=None)
-    extra_values: Optional[list[Any]] = Field(default=None)
+    season_title_ranges: Optional[list[SeasonTitleRange]] = None
+    season_title_values: Optional[list[str]] = None
+    extra_keys: Optional[list[str]] = None
+    extra_values: Optional[list[Any]] = None
 
     @validator('season_title_ranges', 'season_title_values',
                'extra_keys', 'extra_values', pre=True)
@@ -226,11 +201,11 @@ Update classes
 """
 class UpdateTemplate(BaseUpdate):
     name: str = Field(default=UNSPECIFIED, min_length=1)
-    filters: list[Condition] = Field(default=UNSPECIFIED)
-    season_title_ranges: list[SeasonTitleRange] = Field(default=UNSPECIFIED)
-    season_title_values: list[str] = Field(default=UNSPECIFIED)
-    extra_keys: list[DictKey] = Field(default=UNSPECIFIED)
-    extra_values: list[Any] = Field(default=UNSPECIFIED)
+    filters: list[Condition] = UNSPECIFIED
+    season_title_ranges: list[SeasonTitleRange] = UNSPECIFIED
+    season_title_values: list[str] = UNSPECIFIED
+    extra_keys: list[DictKey] = UNSPECIFIED
+    extra_values: list[Any] = UNSPECIFIED
 
     @validator('*', pre=True)
     def validate_arguments(cls, v):
@@ -262,45 +237,44 @@ class UpdateSeries(BaseUpdate):
     name: str = Field(default=UNSPECIFIED, min_length=1)
     year: int = Field(default=UNSPECIFIED, ge=1900)
 
-    template_ids: Optional[list[int]] = Field(default=UNSPECIFIED)
-    font_id: Optional[int] = Field(default=UNSPECIFIED)
-    sync_specials: Optional[bool] = Field(default=UNSPECIFIED)
-    skip_localized_images: Optional[bool] = Field(default=UNSPECIFIED)
-    card_filename_format: Optional[str] = Field(default=UNSPECIFIED)
-    episode_data_source: Optional[EpisodeDataSource] = Field(default=UNSPECIFIED)
-    match_titles: bool = Field(default=UNSPECIFIED)
-    translations: Optional[list[Translation]] = Field(default=UNSPECIFIED)
-    card_type: Optional[str] = Field(default=UNSPECIFIED)
-    hide_season_text: Optional[bool] = Field(default=UNSPECIFIED)
-    season_title_ranges: Optional[list[SeasonTitleRange]] = Field(default=UNSPECIFIED)
-    season_title_values: Optional[list[str]] = Field(default=UNSPECIFIED)
-    hide_episode_text: Optional[bool] = Field(default=UNSPECIFIED)
-    unwatched_style: Optional[Style] = Field(default=UNSPECIFIED)
-    watched_style: Optional[Style] = Field(default=UNSPECIFIED)
-    episode_text_format: Optional[str] = Field(default=UNSPECIFIED)
-    extra_keys: Optional[list[DictKey]] = Field(default=UNSPECIFIED)
-    extra_values: Optional[list[Any]] = Field(default=UNSPECIFIED)
+    template_ids: Optional[list[int]] = UNSPECIFIED
+    font_id: Optional[int] = UNSPECIFIED
+    sync_specials: Optional[bool] = UNSPECIFIED
+    skip_localized_images: Optional[bool] = UNSPECIFIED
+    card_filename_format: Optional[str] = UNSPECIFIED
+    episode_data_source: Optional[EpisodeDataSource] = UNSPECIFIED
+    match_titles: bool = UNSPECIFIED
+    translations: Optional[list[Translation]] = UNSPECIFIED
+    card_type: Optional[str] = UNSPECIFIED
+    hide_season_text: Optional[bool] = UNSPECIFIED
+    season_title_ranges: Optional[list[SeasonTitleRange]] = UNSPECIFIED
+    season_title_values: Optional[list[str]] = UNSPECIFIED
+    hide_episode_text: Optional[bool] = UNSPECIFIED
+    unwatched_style: Optional[Style] = UNSPECIFIED
+    watched_style: Optional[Style] = UNSPECIFIED
+    episode_text_format: Optional[str] = UNSPECIFIED
+    extra_keys: Optional[list[DictKey]] = UNSPECIFIED
+    extra_values: Optional[list[Any]] = UNSPECIFIED
 
-    font_color: Optional[str] = Field(default=UNSPECIFIED)
-    font_title_case: Optional[TitleCase] = Field(default=UNSPECIFIED)
-    font_size: Optional[float] = Field(default=UNSPECIFIED)
-    font_kerning: Optional[float] = Field(default=UNSPECIFIED)
-    font_stroke_width: Optional[float] = Field(default=UNSPECIFIED)
-    font_interline_spacing: Optional[int] = Field(default=UNSPECIFIED)
-    font_vertical_shift: Optional[int] = Field(default=UNSPECIFIED)
+    font_color: Optional[str] = UNSPECIFIED
+    font_title_case: Optional[TitleCase] = UNSPECIFIED
+    font_size: Optional[float] = UNSPECIFIED
+    font_kerning: Optional[float] = UNSPECIFIED
+    font_stroke_width: Optional[float] = UNSPECIFIED
+    font_interline_spacing: Optional[int] = UNSPECIFIED
+    font_vertical_shift: Optional[int] = UNSPECIFIED
 
-    emby_library_name: Optional[str] = Field(default=UNSPECIFIED)
-    jellyfin_library_name: Optional[str] = Field(default=UNSPECIFIED)
-    plex_library_name: Optional[str] = Field(default=UNSPECIFIED)
-    emby_id: EmbyID = Field(default=UNSPECIFIED)
-    imdb_id: IMDbID = Field(default=UNSPECIFIED)
-    jellyfin_id: JellyfinID = Field(default=UNSPECIFIED)
-    sonarr_id: SonarrID = Field(default=UNSPECIFIED)
-    tmdb_id: TMDbID = Field(default=UNSPECIFIED)
-    tvdb_id: TVDbID = Field(default=UNSPECIFIED)
-    tvrage_id: TVRageID = Field(default=UNSPECIFIED)
-    
-    directory: Optional[str] = Field(default=UNSPECIFIED)
+    emby_library_name: Optional[str] = UNSPECIFIED
+    jellyfin_library_name: Optional[str] = UNSPECIFIED
+    plex_library_name: Optional[str] = UNSPECIFIED
+    emby_id: EmbyID = UNSPECIFIED
+    imdb_id: IMDbID = UNSPECIFIED
+    jellyfin_id: JellyfinID = UNSPECIFIED
+    sonarr_id: SonarrID = UNSPECIFIED
+    tmdb_id: TMDbID = UNSPECIFIED
+    tvdb_id: TVDbID = UNSPECIFIED
+    tvrage_id: TVRageID = UNSPECIFIED
+    directory: Optional[str] = UNSPECIFIED
 
     @validator('*', pre=True)
     def validate_arguments(cls, v):

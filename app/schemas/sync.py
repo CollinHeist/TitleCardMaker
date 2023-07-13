@@ -1,3 +1,4 @@
+# pylint: disable=missing-class-docstring,missing-function-docstring
 from typing import Literal, Optional
 
 from pydantic import Field
@@ -13,29 +14,13 @@ class Tag(Base):
 
 class NewBaseSync(Base):
     name: str = Field(..., min_length=1, title='Sync name')
-    template_ids: list[int] = Field(
-        default=[],
-        title='Template IDs',
-        description='IDs of the Templates to apply to all synced Series',
-    )
-    required_tags: list[str] = Field(
-        default=[],
-        description='List of tags required for this Sync',
-    )
-    excluded_tags: list[str] = Field(
-        default=[],
-        description='List of tags to exclude from this Sync',
-    )
+    template_ids: list[int] = []
+    required_tags: list[str] = []
+    excluded_tags: list[str] = []
 
 class NewMediaServerSync(NewBaseSync):
-    required_libraries: list[str] = Field(
-        default=[],
-        description='List of libraries required for this Sync',
-    )
-    excluded_libraries: list[str] = Field(
-        default=[],
-        description='List of libraries to exclude from this Sync',
-    )
+    required_libraries: list[str] = []
+    excluded_libraries: list[str] = []
 
 class NewEmbySync(NewMediaServerSync):
     interface = 'Emby'
@@ -48,22 +33,10 @@ class NewPlexSync(NewMediaServerSync):
 
 class NewSonarrSync(NewBaseSync):
     interface = 'Sonarr'
-    downloaded_only: bool = Field(
-        default=False,
-        description='Whether to only sync downloaded Series',
-    )
-    monitored_only: bool = Field(
-        default=False,
-        description='Whether to only sync monitored Series',
-    )
-    required_series_type: Optional[SonarrSeriesType] = Field(
-        default=None,
-        description='Series type to include in this Sync',
-    )
-    excluded_series_type: Optional[SonarrSeriesType] = Field(
-        default=None,
-        description='Series type to exclude from this Sync',
-    )
+    downloaded_only: bool = False
+    monitored_only: bool = False
+    required_series_type: Optional[SonarrSeriesType] = None
+    excluded_series_type: Optional[SonarrSeriesType] = None
 
 class ExistingBaseSync(NewBaseSync):
     id: int = Field(..., title='Sync ID')
@@ -86,12 +59,12 @@ class Sync(ExistingBaseSync, NewSonarrSync):
 
 class UpdateSync(UpdateBase):
     name: Optional[str] = Field(default=UNSPECIFIED, min_length=1)
-    template_ids: list[int] = Field(default=UNSPECIFIED)
-    required_tags: list[str] = Field(default=UNSPECIFIED)
-    excluded_tags: list[str] = Field(default=UNSPECIFIED)
-    required_libraries: list[str] = Field(default=UNSPECIFIED)
-    excluded_libraries: list[str] = Field(default=UNSPECIFIED)
-    downloaded_only: bool = Field(default=UNSPECIFIED)
-    monitored_only: bool = Field(default=UNSPECIFIED)
-    required_series_type: Optional[SonarrSeriesType] = Field(default=UNSPECIFIED)
-    excluded_series_type: Optional[SonarrSeriesType] = Field(default=UNSPECIFIED)
+    template_ids: list[int] = UNSPECIFIED
+    required_tags: list[str] = UNSPECIFIED
+    excluded_tags: list[str] = UNSPECIFIED
+    required_libraries: list[str] = UNSPECIFIED
+    excluded_libraries: list[str] = UNSPECIFIED
+    downloaded_only: bool = UNSPECIFIED
+    monitored_only: bool = UNSPECIFIED
+    required_series_type: Optional[SonarrSeriesType] = UNSPECIFIED
+    excluded_series_type: Optional[SonarrSeriesType] = UNSPECIFIED
