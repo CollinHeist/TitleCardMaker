@@ -1,7 +1,7 @@
 from json import dump
 from pathlib import Path
 from shutil import copy as copy_file, make_archive as zip_directory
-from typing import Optional, Union
+from typing import Optional
 
 from fastapi import APIRouter, Body, Depends, Query, Request
 from fastapi.responses import FileResponse
@@ -16,10 +16,9 @@ from app.internal.blueprint import (
     import_blueprint, query_all_blueprints, query_series_blueprints
 )
 from app.internal.episodes import get_all_episode_data
-import app.models as models
+from app import models
 from app.schemas.blueprint import (
-    Blueprint, BlankBlueprint, DownloadableFile, RemoteBlueprint,
-    RemoteMasterBlueprint
+    BlankBlueprint, DownloadableFile, RemoteBlueprint, RemoteMasterBlueprint
 )
 
 
@@ -47,7 +46,7 @@ def export_series_blueprint(
     """
     Generate the Blueprint for the given Series. This Blueprint can be
     imported to completely recreate a Series' (and all associated
-    Episodes') configuration. 
+    Episodes') configuration.
 
     - series_id: ID of the Series to export the Blueprint of.
     - include_global_defaults: Whether to write global settings if the
@@ -152,7 +151,8 @@ async def export_series_blueprint_as_zip(
 
     # Generate Blueprint
     blueprint = generate_series_blueprint(
-        series, episode_data, include_global_defaults, include_episode_overrides, preferences,
+        series, episode_data, include_global_defaults,
+        include_episode_overrides, preferences,
     )
     blueprint = BlankBlueprint(**blueprint).dict()
 
@@ -252,8 +252,6 @@ def import_series_blueprint_by_id(
     # Import Blueprint
     import_blueprint(db, preferences, series, blueprint, log=request.state.log)
 
-    return None
-
 
 @blueprint_router.put('/import/series/{series_id}', status_code=200)
 def import_series_blueprint_(
@@ -268,12 +266,10 @@ def import_series_blueprint_(
 
     - series_id: ID of the Series to import the given Blueprint into.
     - blueprint: Blueprint object to import.
-    """    
+    """
 
     # Query for this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
     # Import Blueprint
     import_blueprint(db, preferences, series, blueprint, log=request.state.log)
-
-    return None
