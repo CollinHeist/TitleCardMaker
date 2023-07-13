@@ -28,12 +28,13 @@ def get_latest_version(
         HTTPException (500) if raise_exc is True and the version number
             cannot be determined.
     """
-    # TODO remove placeholder when repo is public
+    # TODO remove placeholder when repo is public [pylint: disable=unreachable]
     return Version(f'v2.0-alpha.4.0')
     try:
         response = req_get(
             'https://api.github.com/repos/CollinHeist/'
-            'TitleCardMaker/releases/latest'
+            'TitleCardMaker/releases/latest',
+            timeout=10,
         )
         assert response.ok
     except Exception as e:
@@ -42,7 +43,7 @@ def get_latest_version(
             raise HTTPException(
                 status_code=500,
                 detail=f'Error checking for new release',
-            )
+            ) from e
         return None
-    
+
     return Version(response.json().get('name', '').strip())
