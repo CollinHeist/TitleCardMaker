@@ -647,6 +647,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
         """
 
         plex_object.uploadPoster(filepath=filepath)
+        plex_object.addLabel(['TCM'])
 
 
     @catch_and_log('Error uploading title cards')
