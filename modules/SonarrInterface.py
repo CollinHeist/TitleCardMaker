@@ -4,13 +4,14 @@ from sys import exit as sys_exit
 from typing import Any, Optional
 
 from modules.Debug import log
+from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo import EpisodeInfo
 from modules import global_objects
 from modules.SeriesInfo import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
 
-class SonarrInterface(WebInterface, SyncInterface):
+class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface):
     """
     This class describes a Sonarr interface, which is a type of
     WebInterface and SyncInterface object.
@@ -289,11 +290,12 @@ class SonarrInterface(WebInterface, SyncInterface):
         return series
 
 
-    def set_series_ids(self, series_info: SeriesInfo) -> None:
+    def set_series_ids(self, library_name: Any, series_info: SeriesInfo) -> None:
         """
         Set the TVDb ID for the given SeriesInfo object.
 
         Args:
+            library_name: Unused argument.
             series_info: SeriesInfo to update.
         """
 
@@ -328,6 +330,7 @@ class SonarrInterface(WebInterface, SyncInterface):
 
 
     def get_all_episodes(self,
+            library_name: Any,
             series_info: SeriesInfo,
             episode_infos: Optional[list[EpisodeInfo]] = None
         ) -> list[EpisodeInfo]:
@@ -336,7 +339,9 @@ class SonarrInterface(WebInterface, SyncInterface):
         have already aired are returned.
 
         Args:
+            library_name: Unused argument.
             series_info: SeriesInfo for the entry.
+            episode_infos: Optional EpisodeInfos to update.
 
         Returns:
             List of EpisodeInfo objects for the given series.
@@ -427,6 +432,7 @@ class SonarrInterface(WebInterface, SyncInterface):
             library_name: Any, # pylint: disable=unused-argument
             series_info: SeriesInfo,
             episode_infos: list[EpisodeInfo],
+            *,
             inplace: bool = False
         ) -> None:
         """
@@ -439,9 +445,9 @@ class SonarrInterface(WebInterface, SyncInterface):
         """
 
         if inplace:
-            self.get_all_episodes(series_info, episode_infos)
+            self.get_all_episodes(library_name, series_info, episode_infos)
         else:
-            self.get_all_episodes(series_info)
+            self.get_all_episodes(library_name, series_info, episode_infos=None)
 
 
     def get_all_tags(self) -> list[dict]:

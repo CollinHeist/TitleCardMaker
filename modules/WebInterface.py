@@ -1,12 +1,14 @@
+from logging import Logger
 from pathlib import Path
+from typing import Union
+
 from re import IGNORECASE, compile as re_compile
 from requests import get, Session
-from typing import Any, Union
+from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 import urllib3
 
-from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
-
 from modules.Debug import log
+
 
 class WebInterface:
     """

@@ -304,12 +304,16 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
 
     @catch_and_log('Error setting series ID')
-    def set_series_ids(self, series_info: SeriesInfo) -> None:
+    def set_series_ids(self,
+            library_name: Optional[str],
+            series_info: SeriesInfo,
+        ) -> None:
         """
         Set all possible series ID's for the given SeriesInfo object.
 
         Args:
-            series_info: SeriesInfo to update.
+            library_name: Unused argument.
+            series_info: SeriesInfo object to update.
         """
 
         # If all possible ID's are defined
@@ -383,15 +387,18 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
     @catch_and_log('Error getting all episodes', default=[])
     def get_all_episodes(self,
+            library_name: str,
             series_info: SeriesInfo,
-            episode_infos: Optional[list[EpisodeInfo]] = None
+            episode_infos: Optional[list[EpisodeInfo]] = None,
         ) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that
         have already aired are returned.
 
         Args:
-            series_info: SeriesInfo for the entry.
+            library_name: Unused argument.
+            series_info: Series to get the episodes of.
+            episode_infos: Unused argument.
 
         Returns:
             List of EpisodeInfo objects for this series.
@@ -632,17 +639,10 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             library_name: Optional[str],
             series_info: SeriesInfo,
             episode_infos: list[EpisodeInfo],
+            *,
             inplace: bool = False,
         ) -> None:
-        """
-        Set all the episode ID's for the given list of EpisodeInfo
-        objects. For TMDb, this does nothing, as TMDb cannot provide any
-        useful episode ID's.
-
-        Args:
-            series_info: SeriesInfo for the entry.
-            infos: List of EpisodeInfo objects to update.
-        """
+        """Unused, as TMDb cannot provide useful ID's."""
 
         return None
 
@@ -990,7 +990,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
         # Create SeriesInfo for the series
         si = SeriesInfo(title, year)
-        self.set_series_ids(si)
+        self.set_series_ids(None, si)
 
         # Go through each episode in the given range
         for episode_number in episode_range:

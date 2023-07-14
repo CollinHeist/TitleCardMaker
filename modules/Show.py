@@ -1,6 +1,6 @@
 from copy import copy
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal, Optional, Union
 
 from tqdm import tqdm
 
@@ -445,10 +445,10 @@ class Show(YamlReader):
                 )
         def set_sonarr():
             if self.sonarr_interface:
-                self.sonarr_interface.set_series_ids(self.series_info)
+                self.sonarr_interface.set_series_ids(None, self.series_info)
         def set_tmdb():
             if self.tmdb_interface:
-                self.tmdb_interface.set_series_ids(self.series_info)
+                self.tmdb_interface.set_series_ids(None, self.series_info)
 
         # Identify interface order for ID gathering based on primary episode
         # data source
@@ -517,27 +517,24 @@ class Show(YamlReader):
         object's datafile, and an Episode object is created.
         """
 
-        # Get episodes from indicated data source
-        if self.episode_data_source == 'emby' and self.emby_interface:
-            all_episodes =self.emby_interface.get_all_episodes(self.series_info)
-        elif self.episode_data_source == 'jellyfin' and self.jellyfin_interface:
-            all_episodes = self.jellyfin_interface.get_all_episodes(
-                self.series_info
-            )
-        elif self.episode_data_source == 'plex' and self.plex_interface:
-            all_episodes = self.plex_interface.get_all_episodes(
-                self.library_name, self.series_info
-            )
-        elif self.episode_data_source == 'sonarr' and self.sonarr_interface:
-            all_episodes = self.sonarr_interface.get_all_episodes(
-                self.series_info
-            )
-        elif self.episode_data_source == 'tmdb' and self.tmdb_interface:
-            all_episodes =self.tmdb_interface.get_all_episodes(self.series_info)
-        else:
+        # Get all episodes from indicated data source
+        interface = {
+            'emby': self.emby_interface,
+            'jellyfin': self.jellyfin_interface,
+            'plex': self.plex_interface,
+            'sonarr': self.sonarr_interface,
+            'tmdb': self.tmdb_interface,
+        }.get(self.episode_data_source, None)
+        if not interface :
             log.warning(f'Cannot source episodes for {self} from '
                         f'{self.episode_data_source}')
             return None
+        interface: Union[EmbyInterface, JellyfinInterface, PlexInterface,
+                         SonarrInterface, TMDbInterface] = interface
+
+        all_episodes = interface.get_all_episodes(
+            self.library_name, self.series_info, episode_infos=None,
+        )
 
         # No episodes found by data source
         if not all_episodes:
@@ -568,6 +565,7 @@ class Show(YamlReader):
         # If any new episodes remain, add to datafile and create Episode object
         self.file_interface.add_many_entries(new_episodes)
         self.read_source()
+        return None
 
 
     def set_episode_ids(self) -> None:
@@ -882,11 +880,13 @@ class Show(YamlReader):
                 image = None
                 if source_interface == 'emby' and check_emby:
                     image = self.emby_interface.get_source_image(
-                        episode.episode_info
+                        self.library_name,
+                        self.series_info,
+                        episode.episode_info,
                     )
                 elif source_interface == 'jellyfin' and check_jellyfin:
                     image = self.jellyfin_interface.get_source_image(
-                        episode.episode_info
+                        episode.episode_info,
                     )
                 elif source_interface == 'plex' and check_plex:
                     image = self.plex_interface.get_source_image(
@@ -1063,6 +1063,7 @@ class Show(YamlReader):
             return None
 
         # Set title cards and season posters in media interface
+        media_interface: Union[EmbyInterface, JellyfinInterface, PlexInterface]
         media_interface.set_title_cards(
             self.library_name, self.series_info, self.episodes,
         )
