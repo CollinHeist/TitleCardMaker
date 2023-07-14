@@ -1,7 +1,9 @@
 from collections import namedtuple
 from pathlib import Path
+from sys import exit as sys_exit
 from typing import Any, Iterator, Optional, Union
 
+from fastapi import HTTPException
 from num2words import CONVERTER_CLASSES as SUPPORTED_LANGUAGE_CODES
 from tqdm import tqdm
 
@@ -71,6 +73,7 @@ class PreferenceParser(YamlReader):
 
         # Initialize parent YamlReader object - errors are critical
         super().__init__(log_function=log.critical)
+        self.valid = True
         self.version = self.VERSION_FILE.read_text().strip()
         self.is_docker = is_docker
 
@@ -90,7 +93,7 @@ class PreferenceParser(YamlReader):
         if (value := self._get('options', 'source', type_=str)) is None:
             log.critical(f'Preference file missing required options/source '
                          f'attribute')
-            exit(1)
+            sys_exit(1)
         self.source_directory = CleanPath(value).sanitize()
 
         # Setup default values that can be overwritten by YAML
@@ -237,6 +240,7 @@ class PreferenceParser(YamlReader):
         # If none of the font commands worked, IM might not be installed
         log.critical(f"ImageMagick doesn't appear to be installed")
         self.valid = False
+        return None
 
 
     def __parse_sync(self) -> None:
@@ -281,16 +285,16 @@ class PreferenceParser(YamlReader):
 
             # Parse args applicable only to specific interfaces
             if sync_type in ('emby', 'jellyfin', 'plex'):
-                if (value := sync_yaml._get('libraries', type_=list)) != None:
+                if (value := sync_yaml._get('libraries', type_=list)) is not None:
                     update_args['filter_libraries'] = value
             elif sync_type == 'sonarr':
-                if (value := sync_yaml._get('plex_libraries', type_=dict)) != None:
+                if (value := sync_yaml._get('plex_libraries', type_=dict)) is not None:
                     update_args['plex_libraries'] = value
-                if (value := sync_yaml._get('monitored_only', type_=bool)) != None:
+                if (value := sync_yaml._get('monitored_only', type_=bool)) is not None:
                     update_args['monitored_only'] = value
-                if (value := sync_yaml._get('downloaded_only', type_=bool)) != None:
+                if (value := sync_yaml._get('downloaded_only', type_=bool)) is not None:
                     update_args['downloaded_only'] = value
-                if (value := sync_yaml._get('series_type', type_=str)) != None:
+                if (value := sync_yaml._get('series_type', type_=str)) is not None:
                     if value in SonarrInterface.VALID_SERIES_TYPES:
                         update_args['series_type'] = value
                     else:
@@ -388,6 +392,8 @@ class PreferenceParser(YamlReader):
                                 'sonarr', interface_id, sub_sync, base_sync
                             )
 
+        return None
+
 
     def __parse_yaml_options(self) -> None:
         """
@@ -400,7 +406,7 @@ class PreferenceParser(YamlReader):
             return None
 
         if (value := self._get('options', 'execution_mode',
-                               type_=self.TYPE_LOWER_STR)) != None:
+                               type_=self.TYPE_LOWER_STR)) is not None:
             if value in Manager.VALID_EXECUTION_MODES:
                 self.execution_mode = value
             else:
@@ -419,7 +425,7 @@ class PreferenceParser(YamlReader):
         if (value := self._get('options', 'card_type', type_=str)) is not None:
             self._parse_card_type(value)
 
-        if (value := self._get('options', 'card_extension', type_=str)) != None:
+        if (value := self._get('options', 'card_extension', type_=str)) is not None:
             extension = ('' if value[0] == '.' else '.') + value
             if extension in ImageMaker.VALID_IMAGE_EXTENSIONS:
                 self.card_extension = extension
@@ -427,11 +433,11 @@ class PreferenceParser(YamlReader):
                 log.critical(f'Card extension "{extension}" is invalid')
                 self.valid = False
 
-        if (value := self._get('options', 'card_dimensions', type_=str)) !=None:
+        if (value := self._get('options', 'card_dimensions', type_=str)) is not None:
             try:
                 width, height = map(int, value.lower().split('x'))
                 assert width > 0 and height > 0
-                if not ((16/9-0.1) <= width / height <= (16/9+0.1)):
+                if not (16 / 9 - 0.1) <= width / height <= (16 / 9 + 0.1):
                     log.warning(f'Card dimensions aspect ratio is not 16:9')
                 if width < 200 or height < 200:
                     log.warning(f'Card dimensions are very small')
@@ -444,7 +450,7 @@ class PreferenceParser(YamlReader):
                              f'be larger than 0px')
                 self.valid = False
 
-        if (value := self._get('options', 'filename_format', type_=str)) !=None:
+        if (value := self._get('options', 'filename_format', type_=str)) is not None:
             if TitleCard.validate_card_format_string(value):
                 self.card_filename_format = value
             else:
@@ -466,7 +472,7 @@ class PreferenceParser(YamlReader):
                 log.critical(f'Episode data source "{value}" is invalid')
                 self.valid = False
 
-        if (value := self._get('options', 'validate_fonts', type_=bool)) !=None:
+        if (value := self._get('options', 'validate_fonts', type_=bool)) is not None:
             self.validate_fonts = value
 
         if (value := self._get('options', 'season_folder_format',
@@ -474,17 +480,19 @@ class PreferenceParser(YamlReader):
             self.season_folder_format = value
             self.get_season_folder(1)
 
-        if (value := self._get('options', 'sync_specials', type_=bool)) != None:
+        if (value := self._get('options', 'sync_specials', type_=bool)) is not None:
             self.sync_specials = value
 
-        if (value := self._get('options', 'language_codes', type_=list)) !=None:
-            if all(code in SUPPORTED_LANGUAGE_CODES.keys() for code in value):
+        if (value := self._get('options', 'language_codes', type_=list)) is not None:
+            if all(code in SUPPORTED_LANGUAGE_CODES for code in value):
                 self.supported_language_codes = value
             else:
                 codes = ', '.join(SUPPORTED_LANGUAGE_CODES)
                 log.critical(f'Not all language codes are recognized')
                 log.info(f'Must be one of {codes}')
                 self.valid = False
+
+        return None
 
 
     def __parse_yaml_archive(self) -> None:
@@ -501,7 +509,7 @@ class PreferenceParser(YamlReader):
             self.archive_directory = value
             self.create_archive = True
 
-        if (value := self._get('archive', 'all_variations', type_=bool)) !=None:
+        if (value := self._get('archive', 'all_variations', type_=bool)) is not None:
             self.archive_all_variations = value
 
         if (value := self._get('archive', 'summary', 'create',
@@ -537,6 +545,8 @@ class PreferenceParser(YamlReader):
                                type_=bool)) is not None:
             self.summary_ignore_specials = value
 
+        return None
+
 
     def __parse_yaml_emby(self) -> None:
         """
@@ -567,7 +577,7 @@ class PreferenceParser(YamlReader):
         if (value := self._get('emby', 'verify_ssl', type_=bool)) is not None:
             self.emby_verify_ssl = value
 
-        if (value := self._get('emby', 'filesize_limit', 
+        if (value := self._get('emby', 'filesize_limit',
                                type_=self.filesize_as_bytes)) is not None:
             self.emby_filesize_limit = value
 
@@ -576,6 +586,8 @@ class PreferenceParser(YamlReader):
             self._get('emby', 'unwatched_style', type_=str, default='unique'),
         )
         self.valid &= self.emby_style_set.valid
+
+        return None
 
 
     def __parse_yaml_jellyfin(self) -> None:
@@ -608,7 +620,7 @@ class PreferenceParser(YamlReader):
         if (value := self._get('jellyfin', 'verify_ssl', type_=bool)) is not None:
             self.jellyfin_verify_ssl = value
 
-        if (value := self._get('jellyfin', 'filesize_limit', 
+        if (value := self._get('jellyfin', 'filesize_limit',
                                type_=self.filesize_as_bytes)) is not None:
             self.jellyfin_filesize_limit = value
 
@@ -617,6 +629,8 @@ class PreferenceParser(YamlReader):
             self._get('jellyfin', 'unwatched_style', type_=str, default='unique'),
         )
         self.valid &= self.jellyfin_style_set.valid
+
+        return None
 
 
     def __parse_yaml_plex(self) -> None:
@@ -643,7 +657,7 @@ class PreferenceParser(YamlReader):
                                type_=bool)) is not None:
             self.integrate_with_pmm_overlays = value
 
-        if (value := self._get('plex', 'filesize_limit', 
+        if (value := self._get('plex', 'filesize_limit',
                                type_=self.filesize_as_bytes)) is not None:
             self.plex_filesize_limit = value
 
@@ -655,6 +669,8 @@ class PreferenceParser(YamlReader):
             self._get('plex', 'unwatched_style', type_=str, default='unique'),
         )
         self.valid &= self.plex_style_set.valid
+
+        return None
 
 
     def __parse_yaml_sonarr(self) -> None:
@@ -688,13 +704,16 @@ class PreferenceParser(YamlReader):
 
         # If multiple servers were specified, parse all specificiations
         if isinstance(self._get('sonarr'), list):
-            [parse_server(server) for server in self._get('sonarr')]
+            for server in self._get('sonarr'):
+                parse_server(server)
         # Single server specification
         elif isinstance(self._get('sonarr'), dict):
             parse_server(self._get('sonarr'))
         else:
             log.critical(f'Invalid Sonarr preferences')
             self.valid = False
+
+        return None
 
 
     def __parse_yaml_tmdb(self) -> None:
@@ -718,7 +737,7 @@ class PreferenceParser(YamlReader):
             else:
                 self.tmdb_retry_count = value
 
-        if (value := self._get('tmdb', 'minimum_resolution', type_=str)) !=None:
+        if (value := self._get('tmdb', 'minimum_resolution', type_=str)) is not None:
             try:
                 width, height = map(int, value.lower().split('x'))
                 self.tmdb_minimum_resolution = {'width': width, 'height':height}
@@ -742,6 +761,8 @@ class PreferenceParser(YamlReader):
                              f'-separated list of any of the following: {opts}')
                 self.valid = False
 
+        return None
+
 
     def __parse_yaml_tautulli(self) -> None:
         """
@@ -754,10 +775,10 @@ class PreferenceParser(YamlReader):
             return None
 
         # Parse required attributes
-        if ((url := self._get('tautulli', 'url', type_=str)) != None
-            and (api_key := self._get('tautulli', 'api_key', type_=str)) != None
+        if ((url := self._get('tautulli', 'url', type_=str)) is not None
+            and (api_key := self._get('tautulli', 'api_key', type_=str)) is not None
             and (script := self._get('tautulli', 'update_script',
-                                     type_=Path)) != None):
+                                     type_=Path)) is not None):
             self.tautulli_url = url
             self.tautulli_api_key = api_key
             self.tautulli_update_script = script
@@ -767,17 +788,19 @@ class PreferenceParser(YamlReader):
                          f'and "update_script"')
             self.valid = False
 
-        if (value := self._get('tautulli', 'verify_ssl', type_=bool)) != None:
+        if (value := self._get('tautulli', 'verify_ssl', type_=bool)) is not None:
             self.tautulli_verify_ssl = value
 
-        if (value := self._get('tautulli', 'username', type_=str)) != None:
+        if (value := self._get('tautulli', 'username', type_=str)) is not None:
             self.tautulli_username = value
 
-        if (value := self._get('tautulli', 'agent_name', type_=str)) != None:
+        if (value := self._get('tautulli', 'agent_name', type_=str)) is not None:
             self.tautulli_agent_name = value
 
-        if (value := self._get('tautulli', 'script_timeout',type_=int)) != None:
+        if (value := self._get('tautulli', 'script_timeout',type_=int)) is not None:
             self.tautulli_script_timeout = value
+
+        return None
 
 
     def __parse_yaml_imagemagick(self) -> None:
@@ -802,6 +825,8 @@ class PreferenceParser(YamlReader):
         if (value := self._get('imagemagick', 'timeout',type_=int)) is not None:
             self.imagemagick_timeout = value
 
+        return None
+
 
     def __parse_yaml(self) -> None:
         """
@@ -822,7 +847,6 @@ class PreferenceParser(YamlReader):
         self.__parse_yaml_imagemagick()
 
         # Warn for renamed settings
-        pass
 
 
     def __validate_libraries(self,
@@ -1033,9 +1057,8 @@ class PreferenceParser(YamlReader):
                 log.info(f'Listed font names are {font_names}')
                 return None
             # Font identifer in map, merge YAML
-            else:
-                show_yaml['font'] = {}
-                Template.recurse_priority_union(show_yaml['font'], font_yaml)
+            show_yaml['font'] = {}
+            Template.recurse_priority_union(show_yaml['font'], font_yaml)
 
         return show_yaml
 
@@ -1050,9 +1073,9 @@ class PreferenceParser(YamlReader):
         if not self.file.exists():
             log.critical(f'Preference file "{self.file.resolve()}" does not '
                          f'exist')
-            exit(1)
+            sys_exit(1)
 
-        # Read file 
+        # Read file
         self._base_yaml = self._read_file(self.file, critical=True)
         log.info(f'Read preference file "{self.file.resolve()}"')
 
@@ -1065,7 +1088,7 @@ class PreferenceParser(YamlReader):
 
         Returns:
             An iterable of Show objects created by the entry listed in
-            all the known (valid) series files. 
+            all the known (valid) series files.
         """
 
         # Reach each file in the list of series YAML files
@@ -1178,10 +1201,15 @@ class PreferenceParser(YamlReader):
 
     @property
     def use_sonarr(self) -> bool:
+        """Whether Sonarr is in use."""
+
         return len(self.sonarr_kwargs) > 0
+
 
     @property
     def tautulli_interface_args(self) -> dict[str, Union[str, int]]:
+        """Arguments for initializing a TautulliInterface"""
+
         return {
             'url': self.tautulli_url,
             'api_key': self.tautulli_api_key,
@@ -1194,6 +1222,8 @@ class PreferenceParser(YamlReader):
 
     @property
     def emby_interface_kwargs(self) -> dict[str, Union[str, bool, int]]:
+        """Arguments for initializing a EmbyInterface"""
+
         return {
             'url': self.emby_url,
             'api_key': self.emby_api_key,
@@ -1204,6 +1234,8 @@ class PreferenceParser(YamlReader):
 
     @property
     def jellyfin_interface_kwargs(self) -> dict[str, Union[str, bool, int]]:
+        """Arguments for initializing a JellyfinInterface"""
+
         return {
             'url': self.jellyfin_url,
             'api_key': self.jellyfin_api_key,
@@ -1214,6 +1246,8 @@ class PreferenceParser(YamlReader):
 
     @property
     def plex_interface_kwargs(self) -> dict[str, Union[str, bool, int]]:
+        """Arguments for initializing a PlexInterfa"""
+
         return {
             'url': self.plex_url,
             'x_plex_token': self.plex_token,
@@ -1224,6 +1258,8 @@ class PreferenceParser(YamlReader):
 
     @property
     def tmdb_interface_kwargs(self) -> dict[str, str]:
+        """Arguments for initializing a TMDbInterface"""
+
         return {
             'api_key': self.tmdb_api_key,
         }
@@ -1293,7 +1329,7 @@ class PreferenceParser(YamlReader):
 
         # If season folders are hidden, return empty string
         if (self.season_folder_format is None
-            or len(self.season_folder_format.strip()) == 0): 
+            or len(self.season_folder_format.strip()) == 0):
             return ''
 
         # Season 0 is always Specials (never padded)
@@ -1305,7 +1341,7 @@ class PreferenceParser(YamlReader):
             return self.season_folder_format.format(season=season_number)
         except Exception as e:
             log.critical(f'Invalid season folder format - {e}')
-            exit(1)
+            sys_exit(1)
 
 
     def filesize_as_bytes(self, filesize: Optional[str]) -> Optional[int]:
@@ -1313,7 +1349,7 @@ class PreferenceParser(YamlReader):
         Convert the given filesize string to its integer byte equivalent.
 
         Args:
-            filesize: Filesize string to parse. Should be formatted like 
+            filesize: Filesize string to parse. Should be formatted like
                 '{integer} {unit}' - e.g. 2 KB, 4 GiB, 1 B, etc.
 
         Returns:

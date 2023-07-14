@@ -41,7 +41,7 @@ class MoviePosterMaker(ImageMaker):
             output: The output path to write the poster to.
             title: String to use on the created poster.
             subtitle: String to use for smaller title text.
-            top_subtitle: String to use for smaller subtitle text that 
+            top_subtitle: String to use for smaller subtitle text that
                 appears above the title text.
             movie_index: Optional (series) index to place behind the
                 movie title.
@@ -103,7 +103,7 @@ class MoviePosterMaker(ImageMaker):
     @property
     def index_command(self) -> list[str]:
         """
-        ImageMagick command(s) to add the underlying index text behind 
+        ImageMagick command(s) to add the underlying index text behind
         the title text.
 
         Returns:
@@ -237,7 +237,7 @@ class MoviePosterMaker(ImageMaker):
             log.error(f'Cannot create movie poster - "{self.source.resolve()}" '
                       f'does not exist.')
             return None
-        elif isinstance(self.logo, Path) and not self.logo.exists():
+        if isinstance(self.logo, Path) and not self.logo.exists():
             log.error(f'Cannot create movie poster - "{self.logo.resolve()}" '
                       f'does not exist.')
             return None
@@ -270,3 +270,4 @@ class MoviePosterMaker(ImageMaker):
         ])
 
         self.image_magick.run(command)
+        return None

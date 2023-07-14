@@ -1,6 +1,7 @@
-from yaml import dump
-from tqdm import tqdm
 from typing import Callable, Iterable
+
+from tqdm import tqdm
+from yaml import dump
 
 from modules.EmbyInterface import EmbyInterface
 from modules.Debug import log, TQDM_KWARGS
@@ -11,6 +12,30 @@ from modules.ShowArchive import ShowArchive
 from modules.SonarrInterface import SonarrInterface
 from modules.TautulliInterface import TautulliInterface
 from modules.TMDbInterface import TMDbInterface
+
+
+def notify(message: str) -> Callable:
+    """
+    Return a decorator that notifies the given message when the
+    decorated function starts executing. Only notify if the global
+    execution mode is batch. Logging is done in info level.
+
+    Args:
+        message: Message to log.
+
+    Returns:
+        Wrapped decorator.
+    """
+
+    def decorator(function: callable) -> callable:
+        def inner(*args, **kwargs):
+            if global_objects.pp.execution_mode == 'batch':
+                log.info(message)
+
+            return function(*args, **kwargs)
+        return inner
+    return decorator
+
 
 class Manager:
     """
@@ -87,29 +112,6 @@ class Manager:
         self.archives = []
 
 
-    def notify(message: str) -> Callable:
-        """
-        Return a decorator that notifies the given message when the
-        decorated function starts executing. Only notify if the global
-        execution mode is batch. Logging is done in info level.
-
-        Args:
-            message: Message to log.
-
-        Returns:
-            Wrapped decorator.
-        """
-
-        def decorator(function: callable) -> callable:
-            def inner(*args, **kwargs):
-                if global_objects.pp.execution_mode == 'batch':
-                    log.info(message)
-
-                return function(*args, **kwargs)
-            return inner
-        return decorator
-
-
     def sync_series_files(self) -> None:
         """Sync series YAML files from Emby/Jellyfin/Sonarr/Plex."""
 
@@ -151,6 +153,8 @@ class Manager:
                     self.sonarr_interfaces[interface_id], **args
                 )
 
+        return None
+
 
     @notify('Starting to read series YAML files..')
     def create_shows(self) -> None:
@@ -169,7 +173,7 @@ class Manager:
 
             self.shows.append(show)
 
-            # If archives are disabled globally, or for this show - skip 
+            # If archives are disabled globally, or for this show - skip
             if not self.preferences.create_archive or not show.archive:
                 continue
 
@@ -254,6 +258,8 @@ class Manager:
             pbar.set_description(f'Adding translations for {show}')
             show.add_translations()
 
+        return None
+
 
     @notify('Starting to download logos..')
     def download_logos(self) -> None:
@@ -267,6 +273,8 @@ class Manager:
         for show in (pbar := tqdm(self.shows + self.archives, **TQDM_KWARGS)):
             pbar.set_description(f'Downloading logo for {show}')
             show.download_logo()
+
+        return None
 
 
     @notify('Starting to select source images..')
@@ -317,6 +325,8 @@ class Manager:
             pbar.set_description(f'Updating Server for {show}')
             show.update_media_server()
 
+        return None
+
 
     @notify('Starting to update archives..')
     def update_archive(self) -> None:
@@ -330,6 +340,8 @@ class Manager:
         for show_archive in (pbar := tqdm(self.archives, **TQDM_KWARGS)):
             pbar.set_description(f'Updating archive for {show_archive}')
             show_archive.create_missing_title_cards()
+
+        return None
 
 
     @notify('Starting to create summaries..')
@@ -348,6 +360,8 @@ class Manager:
         for show_archive in (pbar := tqdm(self.archives, **TQDM_KWARGS)):
             pbar.set_description(f'Creating Summary for {show_archive}')
             show_archive.create_summary()
+
+        return None
 
 
     def __run(self, *, serial: bool = False) -> None:
@@ -461,7 +475,7 @@ class Manager:
                     is_found = True
                     break
 
-            # If an entry was found, delete from list 
+            # If an entry was found, delete from list
             if is_found:
                 del entry_list[index]
 
@@ -470,6 +484,8 @@ class Manager:
             log.warning(f'Cannot update card for "{series_info}" {episode_info}'
                         f' within library "{library_name}" - no matching YAML '
                         f'entry was found')
+
+        return None
 
 
     def report_missing(self, file: 'Path') -> None:

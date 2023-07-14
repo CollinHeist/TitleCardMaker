@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 from typing import Any, Optional, Union
 from pathlib import Path
 
@@ -27,7 +27,9 @@ class MediaServer(ABC):
     """Default filesize limit for all uploaded assets"""
     DEFAULT_FILESIZE_LIMIT = '10 MB'
 
-    @abstractproperty
+
+    @property
+    @abstractmethod
     def LOADED_DB(self) -> str:
         """
         Filename of the PersistentDatabase of loaded assets within this

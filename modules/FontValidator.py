@@ -27,7 +27,7 @@ class FontValidator:
 
     def __has_character(self, font_filepath: str, character: str) -> bool:
         """
-        Determines whether the given character exists in the given Font. 
+        Determines whether the given character exists in the given Font.
 
         Args:
             font_filepath: Filepath to the font being validated against

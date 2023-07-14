@@ -1,5 +1,6 @@
-from regex import compile as re_compile, match, IGNORECASE
 from typing import Any
+
+from re import compile as re_compile, match, IGNORECASE
 
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
@@ -30,7 +31,7 @@ class Profile:
             episode_text_format: str) -> None:
         """
         Construct a new instance of a Profile. All given arguments will
-        be applied through this Profile (and whether it's generic or 
+        be applied through this Profile (and whether it's generic or
         custom).
 
         Args:
@@ -62,6 +63,8 @@ class Profile:
 
     @property
     def custom_hash(self) -> str:
+        """Custom hash string for this Profile"""
+
         return (f'{self.hide_season_title}|{self.__use_custom_seasons}|'
                 f'{self.__use_custom_font}')
 
@@ -76,7 +79,7 @@ class Profile:
 
         Args:
             card_class: Implementation of CardType whose valid
-                subprofiles are requested. 
+                subprofiles are requested.
 
         Returns:
             The profiles that can be created as subprofiles from this
@@ -225,7 +228,7 @@ class Profile:
                     **self.__series_info.characteristics,
                     **episode.characteristics,
                 )
-            except Exception as e:
+            except Exception as e: # pylint: disable=broad-except
                 log.error(f'Cannot format episode text "{format_string}" for '
                           f'{episode} ({e})')
                 return f'EPISODES {episode.episode_range}'
@@ -236,7 +239,7 @@ class Profile:
                 **self.__series_info.characteristics,
                 **episode.characteristics
             )
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-except
             log.error(f'Cannot format episode text "{format_string}" for '
                       f'{episode} ({e})')
             return f'EPISODE {episode.episode_info.episode_number}'

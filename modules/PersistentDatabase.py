@@ -34,7 +34,7 @@ class PersistentDatabase:
         # Path to the file itself
         self.file: Path = global_objects.pp.database_directory / filename
         self.file.parent.mkdir(exist_ok=True, parents=True)
-       
+
         # Initialize TinyDB from file
         try:
             self.db = TinyDB(self.file)
@@ -71,7 +71,7 @@ class PersistentDatabase:
                 # If this function has been attempted too many times, just raise
                 if __retries > self.MAX_DB_RETRY_COUNT:
                     raise e
-                
+
                 # Log conflict, sleep, reset database, and try function again
                 log.exception(f'Database {self.file.resolve()} has conflict', e)
                 sleep(3)
