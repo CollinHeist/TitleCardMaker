@@ -324,6 +324,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def get_all_episodes(self,
             library_name: str,
             series_info: SeriesInfo,
+            episode_infos: Optional[list[EpisodeInfo]] = None,
         ) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that
@@ -332,6 +333,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         Args:
             library_name: The name of the library containing the series.
             series_info: Series to get the episodes of.
+            episode_infos: Unused argument.
 
         Returns:
             List of EpisodeInfo objects for this series.
@@ -537,7 +539,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             library_name: str,
             series_info: SeriesInfo,
             episode_infos: list[EpisodeInfo],
-            inplace: bool = False,
+            *,
+            inplace: bool = True,
         ) -> None:
         """
         Set all the episode ID's for the given list of EpisodeInfo
@@ -549,6 +552,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             library_name: Name of the library the series is under.
             series_info: SeriesInfo for the entry.
             episode_infos: List of EpisodeInfo objects to update.
+            inplace: Unused argument.
         """
 
         # If the given library cannot be found, exit
@@ -665,18 +669,19 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def set_title_cards(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_map: dict[str, 'Episode'],
+            episode_map: dict[str, Episode],
         ) -> None:
         """
-        Set the title cards for the given series. This only updates episodes
-        that have title cards, and those episodes whose card filesizes are
-        different than what has been set previously.
+        Set the title cards for the given series. This only updates
+        episodes that have title cards, and those episodes whose card
+        filesizes are different than what has been set previously.
 
         Args:
-            library_name: Name of the library containing the series to update.
+            library_name: Name of the library containing the series to
+                update.
             series_info: The series to update.
-            episode_map: Dictionary of episode keys to Episode objects to update
-                the cards of.
+            episode_map: Dictionary of episode keys to Episode objects
+                to update the cards of.
         """
 
         # Filter episodes without cards, or whose cards have not changed
