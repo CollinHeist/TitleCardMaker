@@ -7,7 +7,7 @@ from sqlalchemy.orm import Query
 
 from modules.CleanPath import CleanPath
 from modules.DatabaseInfoContainer import DatabaseInfoContainer
-from modules.Debug import log
+
 
 class SeriesInfo(DatabaseInfoContainer):
     """
@@ -35,7 +35,7 @@ class SeriesInfo(DatabaseInfoContainer):
             tmdb_id: Optional[int] = None,
             tvdb_id: Optional[int] = None,
             tvrage_id: Optional[int] = None,
-            match_titles: Optional[bool] = True
+            match_titles: Optional[bool] = True,
         ) -> None:
         """
         Create a SeriesInfo object that defines a series described by
@@ -146,14 +146,18 @@ class SeriesInfo(DatabaseInfoContainer):
 
     @property
     def characteristics(self) -> dict[str, Union[str, int]]:
+        """Characteristics of this info to be used in Card creation."""
+
         return {
             'series_name': self.name,
             'series_year': self.year,
         }
 
-    
+
     @property
     def ids(self) -> dict[str, Union[str, int]]:
+        """Dictionary of ID's for this object."""
+
         return {
             'emby_id': self.emby_id,
             'imdb_id': self.imdb_id,
@@ -193,24 +197,31 @@ class SeriesInfo(DatabaseInfoContainer):
 
 
     def set_emby_id(self, emby_id: int) -> None:
+        """Set this object's Emby ID - see `_update_attribute()`."""
         self._update_attribute('emby_id', emby_id, int)
 
     def set_imdb_id(self, imdb_id: str) -> None:
+        """Set this object's IMDb ID - see `_update_attribute()`."""
         self._update_attribute('imdb_id', imdb_id, str)
 
     def set_jellyfin_id(self, jellyfin_id: str) -> None:
+        """Set this object's Jellyfin ID - see `_update_attribute()`."""
         self._update_attribute('jellyfin_id', jellyfin_id, str)
 
     def set_sonarr_id(self, sonarr_id: str) -> None:
+        """Set this object's Sonarr ID - see `_update_attribute()`."""
         self._update_attribute('sonarr_id', sonarr_id, str)
 
     def set_tmdb_id(self, tmdb_id: int) -> None:
+        """Set this object's TMDb ID - see `_update_attribute()`."""
         self._update_attribute('tmdb_id', tmdb_id, int)
 
     def set_tvdb_id(self, tvdb_id: int) -> None:
+        """Set this object's TVDb ID - see `_update_attribute()`."""
         self._update_attribute('tvdb_id', tvdb_id, int)
 
     def set_tvrage_id(self, tvrage_id: int) -> None:
+        """Set this object's TVRage ID - see `_update_attribute()`."""
         self._update_attribute('tvrage_id', tvrage_id, int)
 
 

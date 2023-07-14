@@ -4,6 +4,7 @@ from typing import Optional
 from modules.Debug import log
 from modules.BaseSummary import BaseSummary
 
+
 class StylizedSummary(BaseSummary):
     """
     This class describes a type of Summary image maker. This is a more
@@ -24,9 +25,10 @@ class StylizedSummary(BaseSummary):
 
 
     def __init__(self,
-            show: 'Show',
-            background: str = BACKGROUND_COLOR,
-            created_by: Optional[str] = None) -> None:
+            show: 'Show', # type: ignore
+            background: str = BACKGROUND_COLOR, # pylint: disable=unused-argument
+            created_by: Optional[str] = None
+        ) -> None:
         """
         Construct a new instance of this object.
 
@@ -134,8 +136,8 @@ class StylizedSummary(BaseSummary):
             f'-append',
             # Create colored background
             f'-size {width+200}x{height+700}',
-            f'xc:"{self.BACKGROUND_COLOR}"',    
-            # Reverse reflection/montage(s)      
+            f'xc:"{self.BACKGROUND_COLOR}"',
+            # Reverse reflection/montage(s)
             f'+swap',
             # Put montage+reflection on background
             f'-gravity north',
@@ -171,3 +173,4 @@ class StylizedSummary(BaseSummary):
         else:
             images = [montage, created_by]
         self.image_magick.delete_intermediate_images(*images)
+        return None

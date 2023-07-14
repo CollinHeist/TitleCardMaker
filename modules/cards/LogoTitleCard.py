@@ -6,7 +6,6 @@ from modules.BaseCardType import (
 )
 from modules.Debug import log
 
-SeriesExtra = Optional
 
 class LogoTitleCard(BaseCardType):
     """
@@ -121,14 +120,15 @@ class LogoTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             logo_file: Optional[Path] = None,
-            background: SeriesExtra[str] = 'black',
-            separator: SeriesExtra[str] = '•', 
-            stroke_color: SeriesExtra[str] = 'black',
-            omit_gradient: SeriesExtra[bool] = True,
-            use_background_image: SeriesExtra[bool] = False,
-            blur_only_image: SeriesExtra[bool] = False,
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            background: str = 'black',
+            separator: str = '•', 
+            stroke_color: str = 'black',
+            omit_gradient: bool = True,
+            use_background_image: bool = False,
+            blur_only_image: bool = False,
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
+        ) -> None:
         """
         Construct a new instance of this card.
         """
@@ -281,7 +281,7 @@ class LogoTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determines whether the given font characteristics constitute a
         default or custom font.
@@ -347,7 +347,7 @@ class LogoTitleCard(BaseCardType):
 
         # Resize logo, get resized height to determine offset
         resized_logo = self.resize_logo()
-        _, height = self.get_image_dimensions(resized_logo)
+        _, height = self.image_magick.get_image_dimensions(resized_logo)
         offset = 60 + ((1030 - height) // 2)
 
         # Font customizations
@@ -407,7 +407,7 @@ class LogoTitleCard(BaseCardType):
             *style_command,
             # Global title text options
             f'-gravity south',
-            f'-font "{self.font_file}"',                     
+            f'-font "{self.font_file}"',
             f'-kerning {kerning}',
             f'-interword-spacing 50',
             f'-interline-spacing {interline_spacing}',

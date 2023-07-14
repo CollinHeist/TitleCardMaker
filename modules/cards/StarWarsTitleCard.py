@@ -4,9 +4,7 @@ from typing import Optional, Any
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
-from modules.Debug import log
 
-SeriesExtra = Optional
 
 class StarWarsTitleCard(BaseCardType):
     """
@@ -88,8 +86,9 @@ class StarWarsTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             episode_text_color: str = EPISODE_TEXT_COLOR,
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
+        ) -> None:
         """
         Initialize the CardType object.
         """
@@ -210,7 +209,30 @@ class StarWarsTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def modify_extras(
+            extras: dict,
+            custom_font: bool,
+            custom_season_titles: bool,
+        ) -> None:
+        """
+        Modify the given extras based on whether font or season titles
+        are custom.
+
+        Args:
+            extras: Dictionary to modify.
+            custom_font: Whether the font are custom.
+            custom_season_titles: Whether the season titles are custom.
+        """
+
+        # Generic font, reset episode text and box colors
+        if not custom_font:
+            if 'episode_text_color' in extras:
+                extras['episode_text_color'] =\
+                    StarWarsTitleCard.EPISODE_TEXT_COLOR
+
+
+    @staticmethod
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determines whether the given arguments represent a custom font
         for this card.
@@ -231,7 +253,9 @@ class StarWarsTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> bool:
         """
         Determines whether the given attributes constitute custom or
         generic season titles.

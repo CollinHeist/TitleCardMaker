@@ -3,6 +3,7 @@ from typing import Any, Callable, Optional
 
 from modules.Debug import log
 
+
 class DatabaseInfoContainer(ABC):
     """
     This class describes an abstract base class for all Info objects
@@ -53,7 +54,7 @@ class DatabaseInfoContainer(ABC):
 
     def _update_attribute(self,
             attribute: str,
-            value: Any, 
+            value: Any,
             type_: Optional[Callable] = None
         ) -> None:
         """

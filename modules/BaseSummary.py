@@ -7,6 +7,7 @@ from typing import Optional
 from modules.Debug import log
 from modules.ImageMaker import ImageMaker
 
+
 class BaseSummary(ImageMaker):
     """
     This class describes a type of ImageMaker that specializes in
@@ -36,7 +37,10 @@ class BaseSummary(ImageMaker):
 
 
     @abstractmethod
-    def __init__(self, show: 'Show', created_by: Optional[str] = None) -> None:
+    def __init__(self,
+            show: 'Show', # type: ignore
+            created_by: Optional[str] = None,
+        ) -> None:
         """
         Initialize this object.
 
@@ -111,8 +115,10 @@ class BaseSummary(ImageMaker):
         )
 
         # Get the full filepath for each of the selected images
-        get_destination = lambda e_key: self.show.episodes[e_key].destination
-        self.inputs = [str(get_destination(e).resolve()) for e in episode_keys]
+        self.inputs = [
+            str(self.show.episodes[e].destination.resolve())
+            for e in episode_keys
+        ]
 
         # The number of rows is necessary to determine how to scale y-values
         self.number_rows = ceil(len(episode_keys) / 3)

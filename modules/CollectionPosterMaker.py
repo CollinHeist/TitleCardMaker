@@ -3,6 +3,7 @@ from pathlib import Path
 from modules.Debug import log
 from modules.ImageMaker import ImageMaker
 
+
 class CollectionPosterMaker(ImageMaker):
     """
     This class defines a type of maker that creates collection posters.
@@ -22,7 +23,7 @@ class CollectionPosterMaker(ImageMaker):
 
     def __init__(self,
             source: Path,
-            output: Path, 
+            output: Path,
             title: str,
             font: Path = FONT,
             font_color: str = FONT_COLOR,
@@ -123,3 +124,5 @@ class CollectionPosterMaker(ImageMaker):
         ])
 
         self.image_magick.run(command)
+
+        return None

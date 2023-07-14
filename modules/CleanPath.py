@@ -1,7 +1,6 @@
 from pathlib import Path as _Path_, _windows_flavour, _posix_flavour
 import os
 
-from modules.Debug import log
 
 class CleanPath(_Path_):
     """
@@ -98,7 +97,7 @@ class CleanPath(_Path_):
         try:
             finalized_path = self.finalize()
         # If path resolution raises an error, clean and then re-resolve
-        except Exception as e:
+        except Exception: # pylint: disable=broad-except
             finalized_path =self._sanitize_parts(CleanPath.cwd()/self).resolve()
 
         return self._sanitize_parts(finalized_path)

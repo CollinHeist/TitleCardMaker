@@ -1,13 +1,14 @@
 from logging import Logger
 from pathlib import Path
+from typing import Union
+
 from re import IGNORECASE, compile as re_compile
 from requests import get, Session
-from typing import Any, Union
+from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 import urllib3
 
-from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
-
 from modules.Debug import log
+
 
 class WebInterface:
     """
@@ -101,7 +102,7 @@ class WebInterface:
         ).json()
 
 
-    def _get(self, url: str, params: dict, *, cache: bool = True) -> dict:
+    def get(self, url: str, params: dict, *, cache: bool = True) -> dict:
         """
         Wrapper for getting the JSON return of the specified GET
         request. If the provided URL and parameters are identical to the
@@ -174,7 +175,7 @@ class WebInterface:
         try:
             # Get content from URL
             error = lambda s: f'URL {image} returned {s} content'
-            image = get(image).content
+            image = get(image, timeout=30).content
             if len(image) == 0:
                 raise Exception(error('no'))
             if any(bad_content in image for bad_content in WebInterface.BAD_CONTENT):

@@ -1,12 +1,12 @@
 from pathlib import Path
 from re import match, sub, IGNORECASE
 
+from modules import global_objects
 from modules.BaseCardType import BaseCardType
 from modules.CleanPath import CleanPath
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
 from modules.SeriesInfo import SeriesInfo
-import modules.global_objects as global_objects
 
 # Built-in BaseCardType classes
 from modules.cards.AnimeTitleCard import AnimeTitleCard
@@ -74,7 +74,7 @@ class TitleCard:
         'reality tv': LogoTitleCard,
         'roman': RomanNumeralTitleCard,
         'roman numeral': RomanNumeralTitleCard,
-        'sherlock': TintedGlassTitleCard, 
+        'sherlock': TintedGlassTitleCard,
         'standard': StandardTitleCard,
         'star wars': StarWarsTitleCard,
         'textless': TextlessTitleCard,
@@ -143,7 +143,7 @@ class TitleCard:
     @staticmethod
     def get_output_filename(
             format_string: str,
-            series_info: SeriesInfo, 
+            series_info: SeriesInfo,
             episode_info: EpisodeInfo,
             media_directory: Path
         ) -> Path:

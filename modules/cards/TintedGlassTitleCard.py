@@ -5,10 +5,10 @@ from typing import Literal, Optional
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
-from modules.Debug import log
 
 BoxCoordinates = namedtuple('BoxCoordinates', ('x0', 'y0', 'x1', 'y1'))
 Position = Literal['left', 'center', 'right']
+
 
 class TintedGlassTitleCard(BaseCardType):
     """
@@ -108,7 +108,7 @@ class TintedGlassTitleCard(BaseCardType):
             episode_text_color: str = EPISODE_TEXT_COLOR,
             episode_text_position: Position = 'center',
             box_adjustments: tuple[int, int, int, int] = (0, 0, 0, 0),
-            preferences: Optional['Preferences'] = None,                        # type: ignore
+            preferences: Optional['Preferences'] = None, # type: ignore
             **unused
         ) -> None:
 
@@ -338,7 +338,7 @@ class TintedGlassTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:                                   # type: ignore
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
@@ -362,7 +362,7 @@ class TintedGlassTitleCard(BaseCardType):
     @staticmethod
     def is_custom_season_titles(
             custom_episode_map: bool,
-            episode_text_format: str
+            episode_text_format: str,
         ) -> bool:
         """
         Determine whether the given attributes constitute custom or

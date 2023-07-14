@@ -52,7 +52,9 @@ class MediaInfoSet:
         """
 
         # None indicates unquerable, do not filter out
-        if db_value is None or search_value is None: return True
+        if db_value is None or search_value is None:
+            return True
+
         # Both values are populated, filter on equality
         return db_value == search_value
 
@@ -101,7 +103,8 @@ class MediaInfoSet:
             tmdb_id: Optional[int] = None,
             tvdb_id: Optional[int] = None,
             tvrage_id: Optional[int] = None,
-            match_titles: bool = True) -> SeriesInfo:
+            match_titles: bool = True,
+        ) -> SeriesInfo:
         """
         Get the SeriesInfo object indicated by the given attributes.
         This looks for an existing object mapped under any of the given
@@ -109,9 +112,9 @@ class MediaInfoSet:
         the given details.
 
         Args:
-            name: The name of the series. Optional if the associated 
+            name: The name of the series. Optional if the associated
                 object already exists.
-            year: The year of the series. Optional if the associated 
+            year: The year of the series. Optional if the associated
                 object already exists.
             *_id: Optional database ID's.
 
@@ -141,7 +144,7 @@ class MediaInfoSet:
             })
 
             return series_info
-        
+
         # Info for this series already exists
         # Check if multiple matches were returned (somehow)
         if len(info) > 1:
@@ -164,7 +167,7 @@ class MediaInfoSet:
             update_data |= {'tvdb_id': tvdb_id}
         if info['tvrage_id'] is None and tvrage_id is not None:
             update_data |= {'tvrage_id': tvrage_id}
-            
+
         # Update database, re-query for finalized data
         if update_data:
             log.debug(f'Updating SeriesInfo database.. {update_data=}')
@@ -218,7 +221,7 @@ class MediaInfoSet:
                 'sonarr_id': series_info.sonarr_id,
                 'tmdb_id': series_info.tmdb_id,
                 'tvdb_id': series_info.tvdb_id,
-                'tvrage_id': series_info.tvrage_id, 
+                'tvrage_id': series_info.tvrage_id,
             },
             self.__series_info_condition(
                 series_info.full_name, series_info.emby_id, series_info.imdb_id,
@@ -227,26 +230,35 @@ class MediaInfoSet:
             )
         )
 
+        return None
+
 
     def set_emby_id(self, series_info: SeriesInfo, id_: str) -> None:
+        """Set the Emby ID on the given SeriesInfo and within this set."""
         self.__set_series_id('emby', series_info, id_)
 
     def set_imdb_id(self, series_info: SeriesInfo, id_: str) -> None:
+        """Set the IMDb ID on the given SeriesInfo and within this set."""
         self.__set_series_id('imdb', series_info, id_)
 
     def set_jellyfin_id(self, series_info: SeriesInfo, id_: str) -> None:
+        """Set the Jellyfin ID on the given SeriesInfo and within this set."""
         self.__set_series_id('jellyfin', series_info, id_)
 
     def set_sonarr_id(self, series_info: SeriesInfo, id_: str) -> None:
+        """Set the Sonarr ID on the given SeriesInfo and within this set."""
         self.__set_series_id('sonarr', series_info, id_)
 
     def set_tmdb_id(self, series_info: SeriesInfo, id_: str) -> None:
+        """Set the TMDb ID on the given SeriesInfo and within this set."""
         self.__set_series_id('tmdb', series_info, id_)
 
     def set_tvdb_id(self, series_info: SeriesInfo, id_: str) -> None:
+        """Set the TVDb ID on the given SeriesInfo and within this set."""
         self.__set_series_id('tvdb', series_info, id_)
 
     def set_tvrage_id(self, series_info: SeriesInfo, id_: str) -> None:
+        """Set the TVRage ID on the given SeriesInfo and within this set."""
         self.__set_series_id('tvrage', series_info, id_)
 
 
@@ -362,7 +374,7 @@ class MediaInfoSet:
             # Create new entries in EpisodeInfo map
             self.episode_info.update(dict.fromkeys(update_keys, info))
             return info
-        
+
         # Update existing EpisodeInfo object
         info.set_emby_id(emby_id)
         info.set_imdb_id(imdb_id)

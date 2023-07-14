@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
@@ -126,8 +126,9 @@ class AnimeTitleCard(BaseCardType):
             require_kanji: bool = False,
             kanji_vertical_shift: float = 0.0,
             stroke_color: str = 'black',
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
+        ) -> None:
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
@@ -145,7 +146,7 @@ class AnimeTitleCard(BaseCardType):
 
         # Store kanji, set bool for whether to use it or not
         self.kanji = self.image_magick.escape_chars(kanji)
-        self.use_kanji = (kanji is not None)
+        self.use_kanji = kanji is not None
         self.require_kanji = require_kanji
         self.kanji_vertical_shift = float(kanji_vertical_shift)
 
@@ -371,9 +372,10 @@ class AnimeTitleCard(BaseCardType):
 
     @staticmethod
     def modify_extras(
-            extras: dict[str, Any],
+            extras: dict,
             custom_font: bool,
-            custom_season_titles: bool) -> None:
+            custom_season_titles: bool,
+        ) -> None:
         """
         Modify the given extras base on whether font or season titles
         are custom.
@@ -391,7 +393,7 @@ class AnimeTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determines whether the given arguments represent a custom font
         for this card.
@@ -415,7 +417,9 @@ class AnimeTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> bool:
         """
         Determines whether the given attributes constitute custom or
         generic season titles.
@@ -439,12 +443,6 @@ class AnimeTitleCard(BaseCardType):
         Make the necessary ImageMagick and system calls to create this
         object's defined title card.
         """
-
-        # If kanji is required, and not given, error
-        if self.require_kanji and not self.use_kanji:
-            log.error(f'Kanji is required and not provided - skipping card '
-                      f'"{self.output_file.name}"')
-            return None
 
         # Sub-command to optionally add gradient
         gradient_command = []

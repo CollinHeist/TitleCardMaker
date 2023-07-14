@@ -23,6 +23,8 @@ TQDM_KWARGS = {
                    '[{elapsed}]'),
     # Progress bars should disappear when finished
     'leave': False,
+    # Progress bars can not be used if no TTY is present
+    'disable': None,
 }
 
 """Log file"""
@@ -41,8 +43,10 @@ class BetterExceptionLogger(Logger):
         super().debug(excpt, exc_info=True)
 setLoggerClass(BetterExceptionLogger)
 
-# StreamHandler to integrate log messages with TQDM
+
 class LogHandler(StreamHandler):
+    """Handler to integrate log messages with tqdm."""
+
     def emit(self, record):
         # Write after flushing buffer to integrate with tqdm
         try:
@@ -86,7 +90,7 @@ class ErrorFormatterNoColor(Formatter):
     Formatter class to handle exception traceback printing without
     color.
     """
-    
+
     def formatException(self, ei) -> str:
         return f'[TRACEBACK] {super().formatException(ei)}'
 
@@ -121,6 +125,8 @@ class LogFormatterColor(Formatter):
 
 
 class LogFormatterNoColor(Formatter):
+    """Colorless version of the `LogFormatterColor` class."""
+
     FORMATTER = ErrorFormatterNoColor('[%(levelname)s] %(message)s')
 
     def format(self, record):

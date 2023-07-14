@@ -1,15 +1,17 @@
 from datetime import datetime, timedelta
 from re import IGNORECASE, compile as re_compile
-from typing import Optional
+from sys import exit as sys_exit
+from typing import Any, Optional
 
 from modules.Debug import log
+from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo import EpisodeInfo
-import modules.global_objects as global_objects
+from modules import global_objects
 from modules.SeriesInfo import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
 
-class SonarrInterface(WebInterface, SyncInterface):
+class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface):
     """
     This class describes a Sonarr interface, which is a type of
     WebInterface and SyncInterface object.
@@ -36,7 +38,9 @@ class SonarrInterface(WebInterface, SyncInterface):
             url: str,
             api_key: str,
             verify_ssl: bool = True,
-            server_id: int = 0) -> None:
+            downloaded_only: bool = True,
+            server_id: int = 0,
+        ) -> None:
         """
         Construct a new instance of an interface to Sonarr.
 
@@ -44,6 +48,8 @@ class SonarrInterface(WebInterface, SyncInterface):
             url: The API url communicating with Sonarr.
             api_key: The API key for API requests.
             verify_ssl: Whether to verify SSL requests to Sonarr.
+            downloaded_only: Whether to ignore Episode that are not
+                downloaded when querying Sonarr for Episode data.
             server_id: Server ID of this server.
 
         Raises:
@@ -62,7 +68,7 @@ class SonarrInterface(WebInterface, SyncInterface):
             self.url = url
         elif (re_match := self._URL_REGEX.match(url)) is None:
             log.critical(f'Invalid Sonarr URL "{url}"')
-            exit(1)
+            sys_exit(1)
         else:
             self.url = f'{re_match.group(1)}/api/v3/'
 
@@ -70,16 +76,17 @@ class SonarrInterface(WebInterface, SyncInterface):
         self.__api_key = api_key
         self.__standard_params = {'apikey': api_key}
         self.server_id = server_id
+        self.downloaded_only = downloaded_only
 
         # Query system status to verify connection to Sonarr
         try:
-            status =self._get(f'{self.url}system/status',self.__standard_params)
+            status =self.get(f'{self.url}system/status',self.__standard_params)
             if status.get('appName') != 'Sonarr':
                 log.critical(f'Cannot get Sonarr status - invalid URL/API key')
-                exit(1)
+                sys_exit(1)
         except Exception as e:
             log.critical(f'Cannot connect to Sonarr - returned error: "{e}"')
-            exit(1)
+            sys_exit(1)
 
         # Parse all Sonarr series
         self.__series_data = {}
@@ -106,7 +113,7 @@ class SonarrInterface(WebInterface, SyncInterface):
         # Construct GET arguments
         url = f'{self.url}series'
         params = self.__standard_params
-        all_series = self._get(url, params)
+        all_series = self.get(url, params)
 
         # Go through each series in Sonarr
         for series in all_series:
@@ -136,9 +143,12 @@ class SonarrInterface(WebInterface, SyncInterface):
             ]
 
             # Also store under any provided database ID's
-            if series.get('imdbId'): keys.append(f'imdb:{series["imdbId"]}')
-            if series.get('tvdbId'): keys.append(f'tvdb:{series["tvdbId"]}')
-            if tvrage_id:            keys.append(f'tvrage:{tvrage_id}')
+            if series.get('imdbId'):
+                keys.append(f'imdb:{series["imdbId"]}')
+            if series.get('tvdbId'):
+                keys.append(f'tvdb:{series["tvdbId"]}')
+            if tvrage_id:
+                keys.append(f'tvrage:{tvrage_id}')
 
             # Also store series under any available alternative titles
             for alt_title in series['alternateTitles']:
@@ -163,16 +173,16 @@ class SonarrInterface(WebInterface, SyncInterface):
         # Check for series under any possible keys
         if self.__series_data.get(series_info.full_name):
             return True
-        elif (series_info.has_id('imdb_id')
+        if (series_info.has_id('imdb_id')
             and self.__series_data.get(f'imdb:{series_info.imdb_id}')):
             return True
-        elif (series_info.has_id('sonarr_id')
+        if (series_info.has_id('sonarr_id')
             and self.__series_data.get(f'sonarr:{series_info.sonarr_id}')):
             return True
-        elif (series_info.has_id('tvdb_id')
+        if (series_info.has_id('tvdb_id')
             and self.__series_data.get(f'tvdb:{series_info.tvdb_id}')):
             return True
-        elif (series_info.has_id('tvrage_id')
+        if (series_info.has_id('tvrage_id')
             and self.__series_data.get(f'tvrage_id:{series_info.tvrage_id}')):
             return True
 
@@ -180,12 +190,12 @@ class SonarrInterface(WebInterface, SyncInterface):
 
 
     def get_all_series(self,
-            required_tags: list[str] = [], 
+            required_tags: list[str] = [],
             excluded_tags: list[str] = [],
             monitored_only: bool = False,
             downloaded_only: bool = False,
             series_type: Optional[str] = None,
-            ) -> list[tuple[SeriesInfo, str]]:
+        ) -> list[tuple[SeriesInfo, str]]:
         """
         Get all the series within Sonarr, filtered by the given
         parameters.
@@ -210,7 +220,7 @@ class SonarrInterface(WebInterface, SyncInterface):
         """
 
         # Construct GET arguments
-        all_series = self._get(f'{self.url}series', self.__standard_params)
+        all_series = self.get(f'{self.url}series', self.__standard_params)
 
         # Get filtering tags if indicated
         required_tag_ids, excluded_tag_ids = [], []
@@ -218,7 +228,7 @@ class SonarrInterface(WebInterface, SyncInterface):
             # Request all Sonarr tags, create mapping of label -> ID
             all_tags = {
                 tag['label']: tag['id']
-                for tag in self._get(f'{self.url}tag', self.__standard_params)
+                for tag in self.get(f'{self.url}tag', self.__standard_params)
             }
 
             # Convert tag names to ID's
@@ -280,11 +290,12 @@ class SonarrInterface(WebInterface, SyncInterface):
         return series
 
 
-    def set_series_ids(self, series_info: SeriesInfo) -> None:
+    def set_series_ids(self, library_name: Any, series_info: SeriesInfo) -> None:
         """
         Set the TVDb ID for the given SeriesInfo object.
 
         Args:
+            library_name: Unused argument.
             series_info: SeriesInfo to update.
         """
 
@@ -315,18 +326,22 @@ class SonarrInterface(WebInterface, SyncInterface):
         series_info.set_sonarr_id(data['sonarr_id'])
         series_info.set_tvdb_id(data['tvdb_id'])
         series_info.set_tvrage_id(data['tvrage_id'])
+        return None
 
 
     def get_all_episodes(self,
+            library_name: Any,
             series_info: SeriesInfo,
             episode_infos: Optional[list[EpisodeInfo]] = None
-            ) -> list[EpisodeInfo]:
+        ) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that
-        have  already aired are returned.
+        have already aired are returned.
 
         Args:
+            library_name: Unused argument.
             series_info: SeriesInfo for the entry.
+            episode_infos: Optional EpisodeInfos to update.
 
         Returns:
             List of EpisodeInfo objects for the given series.
@@ -340,17 +355,21 @@ class SonarrInterface(WebInterface, SyncInterface):
         # Construct GET arguments
         url = f'{self.url}episode/'
         params = {
-            'apikey': self.__api_key, 
+            'apikey': self.__api_key,
             'seriesId': int(series_info.sonarr_id.split('-')[1])
         }
 
         # Query Sonarr to get JSON of all episodes for this series
-        all_episodes = self._get(url, params)
+        all_episodes = self.get(url, params)
         all_episode_info = []
 
         # Go through each episode and get its season/episode number, and title
         has_bad_ids = False
         for episode in all_episodes:
+            # Skip if not downloaded and ignoring non-downloaded Episodes
+            if self.downloaded_only and not episode['hasFile']:
+                continue
+
             # Get airdate of this episode
             air_datetime = None
             if (ep_airdate := episode.get('airDateUtc')) is not None:
@@ -410,10 +429,12 @@ class SonarrInterface(WebInterface, SyncInterface):
 
 
     def set_episode_ids(self,
-            library_name: Optional[str],
+            library_name: Any, # pylint: disable=unused-argument
             series_info: SeriesInfo,
             episode_infos: list[EpisodeInfo],
-            inplace: bool = False) -> None:
+            *,
+            inplace: bool = False
+        ) -> None:
         """
         Set all the episode ID's for the given list of EpisodeInfo
         objects. This sets the TVDb ID for each episode.
@@ -424,12 +445,12 @@ class SonarrInterface(WebInterface, SyncInterface):
         """
 
         if inplace:
-            self.get_all_episodes(series_info, episode_infos)
+            self.get_all_episodes(library_name, series_info, episode_infos)
         else:
-            self.get_all_episodes(series_info)
+            self.get_all_episodes(library_name, series_info, episode_infos=None)
 
 
-    def get_all_tags(self) -> list[dict[str, 'str | int']]:
+    def get_all_tags(self) -> list[dict]:
         """
         Get all tags present in Sonarr.
 
@@ -438,7 +459,7 @@ class SonarrInterface(WebInterface, SyncInterface):
             "label" for each tag.
         """
 
-        return self._get(f'{self.url}tag', self.__standard_params)
+        return self.get(f'{self.url}tag', self.__standard_params)
 
 
     def list_all_series_id(self) -> None:
@@ -447,7 +468,7 @@ class SonarrInterface(WebInterface, SyncInterface):
         # Construct GET arguments
         url = f'{self.url}series'
         params = self.__standard_params
-        all_series = self._get(url, params)
+        all_series = self.get(url, params)
 
         # Go through each series in Sonarr
         for show in all_series:

@@ -1,10 +1,11 @@
 from pathlib import Path
 from typing import Optional
 
-from modules.Debug import log
 from modules.ImageMaker import ImageMaker
 
+
 ImageMagickCommands = list[str]
+
 
 class SeasonPoster(ImageMaker):
     """
@@ -34,7 +35,7 @@ class SeasonPoster(ImageMaker):
 
     def __init__(self,
             source: Path,
-            destination: Path, 
+            destination: Path,
             logo: Optional[Path],
             season_text: str,
             font: Path = SEASON_TEXT_FONT,
@@ -43,7 +44,8 @@ class SeasonPoster(ImageMaker):
             font_kerning: float = 1.0,
             top_placement: bool = False,
             omit_gradient: bool = False,
-            omit_logo: bool = False) -> None:
+            omit_logo: bool = False,
+        ) -> None:
         """
         Initialize this SeasonPoster object.
 
@@ -120,7 +122,7 @@ class SeasonPoster(ImageMaker):
         if self.omit_gradient:
             return []
 
-        # Top placement, rotate gradient 
+        # Top placement, rotate gradient
         if self.top_placement:
             return [
                 f'\( "{self.GRADIENT_OVERLAY.resolve()}"',
@@ -218,3 +220,4 @@ class SeasonPoster(ImageMaker):
         ])
 
         self.image_magick.run(command)
+        return None

@@ -2,11 +2,12 @@ from pathlib import Path
 from typing import Any, Iterable
 from yaml import safe_load, dump
 
+from modules import global_objects
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
 from modules.SeriesInfo import SeriesInfo
-import modules.global_objects as global_objects
 from modules.Title import Title
+
 
 class DataFileInterface:
     """
@@ -59,11 +60,11 @@ class DataFileInterface:
         if not self.file.exists():
             return {}
 
-        # Read file 
+        # Read file
         with self.file.open('r', encoding='utf-8') as file_handle:
             try:
                 yaml = safe_load(file_handle)
-            except Exception as e:
+            except Exception as e: # pylint: disable=broad-except
                 log.error(f'Error reading datafile:\n{e}\n')
                 return {}
 
@@ -112,7 +113,7 @@ class DataFileInterface:
             # Skip season if number cannot be parsed
             try:
                 season_number = int(season.rsplit(' ', 1)[-1])
-            except Exception:
+            except (IndexError, ValueError):
                 log.error(f'Season {season} of the {self.series_info} datafile '
                           f'is invalid - must be like "Season 1"')
                 continue
@@ -149,7 +150,7 @@ class DataFileInterface:
                 # Ensure Title can be created
                 try:
                     title_obj = Title(title, original_title=original_title)
-                except Exception as e:
+                except TypeError as e:
                     log.exception(f'Title for S{season_number:02}E'
                                   f'{episode_number:02} of the '
                                   f'{self.series_info} datafile is invalid', e)
@@ -222,6 +223,7 @@ class DataFileInterface:
 
         # Write updated data
         self.__write_data(yaml)
+        return None
 
 
     def add_many_entries(self, new_episodes: Iterable[EpisodeInfo]) -> None:
@@ -261,10 +263,11 @@ class DataFileInterface:
         # If nothing was added, exit - otherwise log to user
         if (count := added['count']) == 0:
             return None
-        elif count > 1:
+        if count > 1:
             log.info(f'Added {count} episodes to "{self.file.parent.name}"')
         else:
             log.info(f'Added {added["info"]} to "{self.file.parent.name}"')
 
         # Write updated yaml
         self.__write_data(yaml)
+        return None
