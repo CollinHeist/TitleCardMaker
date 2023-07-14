@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import Any, Optional
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
-from modules.Debug import log
 
 
 class OlivierTitleCard(BaseCardType):
@@ -10,27 +9,6 @@ class OlivierTitleCard(BaseCardType):
     This class describes a type of ImageMaker that produces title cards
     in the style of those designed by Reddit user /u/Olivier_286.
     """
-
-    """API Parameters"""
-    API_DETAILS = {
-        'name': 'Olivier',
-        'example': '/assets/cards/olivier.jpg',
-        'creators': ['/u/Olivier_286', 'CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': True,
-        'supports_custom_seasons': True,
-        'supported_extras': [
-            {'name': 'Episode Text Color',
-             'identifier': 'episode_text_color',
-             'description': 'Color to utilize for the episode text'},
-            {'name': 'Stroke Text Color',
-             'identifier': 'stroke_color',
-             'description': 'Custom color to use for the stroke on the title text'},
-        ], 'description': [
-            'Title card with left-aligned title and episode text.',
-            'This card is structurally very similar to the StarWarsTitleCard, except it allows for custom fonts and does not feature the star gradient overlay.',
-        ],
-    }
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'olivier'

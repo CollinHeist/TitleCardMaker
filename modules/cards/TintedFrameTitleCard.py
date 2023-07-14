@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Literal, Optional, Union
+from typing import Literal, Optional
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
@@ -7,6 +7,7 @@ from modules.Debug import log
 SeriesExtra = Optional
 Element = Literal['index', 'logo', 'omit', 'title']
 MiddleElement = Literal['logo', 'omit']
+
 
 class Coordinate:
     __slots__ = ('x', 'y')
@@ -17,6 +18,7 @@ class Coordinate:
 
     def __str__(self) -> str:
         return f'{self.x:.0f},{self.y:.0f}'
+
 
 class Rectangle:
     __slots__ = ('start', 'end')

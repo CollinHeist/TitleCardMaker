@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import Optional
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
-from modules.Debug import log
 
 
 class AnimeTitleCard(BaseCardType):
@@ -12,39 +11,6 @@ class AnimeTitleCard(BaseCardType):
     cards support custom fonts, and optional kanji text.
     """
 
-    """API Parameters"""
-    API_DETAILS = {
-        'name': 'Anime',
-        'example': '/assets/cards/anime.jpg',
-        'creators': ['/u/Recker_Man', 'CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': True,
-        'supports_custom_seasons': True,
-        'supported_extras': [
-            {'name': 'Kanji Text',
-             'identifier': 'kanji',
-             'description': 'Japanese text to place above title text'},
-            {'name': 'Require Kanji Text',
-             'identifier': 'require_kanji',
-             'description': 'Whether to require kanji text for the card creation'},
-            {'name': 'Kanji Vertical Shift',
-             'identifier': 'kanji_vertical_shift',
-             'description': 'Additional vertical offset to apply only to the kanji text'},
-            {'name': 'Separator Character',
-             'identifier': 'separator',
-             'description': 'Character to separate season and episode text'},
-            {'name': 'Stroke Text Color',
-             'identifier': 'stroke_color',
-             'description': 'Custom color to use for the stroke on the title text'},
-            {'name': 'Gradient Omission',
-             'identifier': 'omit_gradient',
-             'description': 'Whether to omit the gradient overlay from the card'},
-        ], 'description': [
-            'Title card with all text aligned in the lower left of the image',
-            'Although it is referred to as the "anime" card style, there is '
-            'nothing preventing you from using it for any type of series.',
-        ],
-    }
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'anime'

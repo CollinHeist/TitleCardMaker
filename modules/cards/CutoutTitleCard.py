@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
-from modules.BaseCardType import BaseCardType, Extra, CardDescription
+from modules.BaseCardType import BaseCardType
 
 
 class CutoutTitleCard(BaseCardType):
@@ -11,27 +11,6 @@ class CutoutTitleCard(BaseCardType):
     solid color overlay with the episode text cutout to reveal the
     source image.
     """
-
-    """API Parameters"""
-    API_DETAILS = {
-        'name': 'Cutout',
-        'example': '/assets/cards/cutout.jpg',
-        'creators': ['/u/Phendrena', 'CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': True,
-        'supports_custom_seasons': False,
-        'supported_extras': [
-            {'name': 'Overlay Color',
-             'identifier': 'overlay_color',
-             'description': 'Color of the solid overlay to cut text out of'},
-            {'name': 'Edge Blurring',
-             'identifier': 'blur_edges',
-             'description': 'Whether to blur the edges of the number cutout'},
-        ], 'description': [
-            'Title cards featuring a solid color overlay overlaying the source image.',
-            'Written episode text cuts out the overlay to reveal the underlying source image.',
-        ],
-    }
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'cutout'

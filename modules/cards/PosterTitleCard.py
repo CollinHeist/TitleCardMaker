@@ -1,7 +1,7 @@
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
-from modules.BaseCardType import BaseCardType, ImageMagickCommands
+from modules.BaseCardType import BaseCardType
 from modules.CleanPath import CleanPath
 from modules.Debug import log
 
@@ -13,24 +13,6 @@ class PosterTitleCard(BaseCardType):
     the style of the Gundam series of cards produced by Reddit user
     /u/battleoflight.
     """
-
-    """API Parameters"""
-    API_DETAILS = {
-        'name': 'Poster',
-        'example': '/assets/cards/poster.jpg',
-        'creators': ['/u/battleoflight', 'CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': False,
-        'supports_custom_seasons': False,
-        'supported_extras': [
-            {'name': 'Logo File',
-             'identifier': 'logo',
-             'description': 'Logo file to place above the title text'},
-        ], 'description': [
-            'Title card featuring a vertical poster with a starry background, originally designed for the Gundam series.',
-            'This card is not designed for 16:9 content.',
-        ],
-    }
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'poster_card'

@@ -4,7 +4,9 @@ from typing import Literal, Optional
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
+
 Position = Literal['left', 'surround', 'right']
+
 
 class FrameTitleCard(BaseCardType):
     """
@@ -12,27 +14,6 @@ class FrameTitleCard(BaseCardType):
     a frame or polaroid layout. This is inspired from the official
     Adventure Time title cards from Season 8.
     """
-
-    """API Parameters"""
-    API_DETAILS = {
-        'name': 'Frame',
-        'example': '/assets/cards/frame.jpg',
-        'creators': ['CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': True,
-        'supports_custom_seasons': True,
-        'supported_extras': [
-            {'name': 'Episode Text Position',
-             'identifier': 'episode_text_position',
-             'description': 'Position of the episode text relative to the title text'},
-            {'name': 'Episode Text Color',
-             'identifier': 'episode_text_color',
-             'description': 'Color to use for the episode text'},
-        ], 'description': [
-            'Title card styled to look like a Polaroid photo.',
-            'Inspired by the official Adventure Time Season 8 title cards.'
-        ],
-    }
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'frame'

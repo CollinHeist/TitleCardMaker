@@ -5,9 +5,10 @@ from typing import Any, Literal, Optional, Union
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
-DarkenOption = Union[Literal['all', 'box'], bool]
 
+DarkenOption = Union[Literal['all', 'box'], bool]
 BoxCoordinates = namedtuple('BoxCoordinates', ('x0', 'y0', 'x1', 'y1'))
+
 
 class LandscapeTitleCard(BaseCardType):
     """
@@ -19,28 +20,6 @@ class LandscapeTitleCard(BaseCardType):
     image. A bounding box around the title can be added/adjusted via
     extras.
     """
-
-    """API Parameters"""
-    API_DETAILS = {
-        'name': 'Landscape',
-        'example': '/assets/cards/landscape.jpg',
-        'creators': ['CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': True,
-        'supports_custom_seasons': False,
-        'supported_extras': [
-            {'name': 'Bounding Box',
-             'identifier': 'add_bounding_box',
-             'description': 'Whether to add a bounding box around the title text'},
-            {'name': 'Bounding Box Adjustments',
-             'identifier': 'box_adjustments',
-             'description': 'Manual adjustments to the bounds of the bounding box'},
-        ], 'description': [
-            'Title-centric title cards that do not feature anything except a title.',
-            'These cards are intended for landscape-centric images as the centered title can cover faces.',
-            'A bounding box around the title text can be added and adjusted via extras.',
-        ],
-    }
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'landscape'

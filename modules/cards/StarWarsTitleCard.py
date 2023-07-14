@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import Optional
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
-from modules.Debug import log
 
 
 class StarWarsTitleCard(BaseCardType):
@@ -11,22 +10,6 @@ class StarWarsTitleCard(BaseCardType):
     in the theme of Star Wars cards as designed by Reddit user
     /u/Olivier_286.
     """
-
-    """API Parameters"""
-    API_DETAILS = {
-        'name': 'Star Wars',
-        'example': '/assets/cards/star wars.jpg',
-        'creators': ['/u/Olivier_286', 'CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': False,
-        'supports_custom_seasons': False,
-        'supported_extras': [
-        ], 'description': [
-            'Title cards intended for Star Wars (or more generically Space-themed) shows.',
-            'Similar to the Olivier title card, these cards feature left-aligned title and episode text',
-            'A star-filled gradient overlay is applied to the source image.',
-        ],
-    }
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'star_wars'

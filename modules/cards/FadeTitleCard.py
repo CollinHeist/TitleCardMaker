@@ -5,7 +5,6 @@ from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.CleanPath import CleanPath
 from modules.Debug import log
 
-SeriesExtra = Optional
 
 class FadeTitleCard(BaseCardType):
     """
@@ -13,26 +12,6 @@ class FadeTitleCard(BaseCardType):
     featuring a fade overlay showcasing a source image in 4:3 aspect
     ratio. The base idea for this card comes from Yozora.
     """
-
-    """API Parameters"""
-    API_DETAILS = {
-        'name': 'Fade',
-        'example': '/assets/cards/fade.jpg',
-        'creators': ['Yozora', 'CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': True,
-        'supports_custom_seasons': True,
-        'supported_extras': [
-            {'name': 'Logo File',
-             'identifier': 'logo',
-             'description': 'Logo file to place on the left of the card'},
-            {'name': 'Episode Text Color',
-             'identifier': 'episode_text_color',
-             'description': 'Color to use for the episode text'},
-        ], 'description': [
-            'Modification of the Standard style that is intended to be used for 4:3 aspect-ratio source images.',
-        ],
-    }
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'fade'
@@ -89,10 +68,11 @@ class FadeTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             logo_file: Optional[Path] = None,
-            episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
-            separator: SeriesExtra[str] = '•',
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            episode_text_color: str = EPISODE_TEXT_COLOR,
+            separator: str = '•',
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
+        ) -> None:
         """
         Construct a new instance of this Card.
         """
