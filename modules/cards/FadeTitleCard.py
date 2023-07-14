@@ -67,7 +67,7 @@ class FadeTitleCard(BaseCardType):
             episode_number: int = 1,
             blur: bool = False,
             grayscale: bool = False,
-            logo_file: Optional[Path] = None,
+            logo: Optional[Path] = None,
             episode_text_color: str = EPISODE_TEXT_COLOR,
             separator: str = '•',
             preferences: Optional['Preferences'] = None, # type: ignore

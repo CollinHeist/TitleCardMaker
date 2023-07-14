@@ -265,6 +265,10 @@ def read_update_list() -> None:
     # Remake all indicated cards
     Manager(check_tautulli=False).remake_cards(update_list)
 
+# Run immediately if specified
+if args.run:
+    log.info(f'Starting TitleCardMaker ({pp.version})')
+    run()
 
 # Sync if specified
 if args.sync:
