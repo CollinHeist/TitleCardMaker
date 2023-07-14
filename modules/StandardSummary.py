@@ -11,7 +11,7 @@ class StandardSummary(BaseSummary):
     a logo at the top.
 
     This type of Summary supports different background colors and
-    images. 
+    images.
     """
 
     """Default color for the background of the summary image"""
@@ -33,7 +33,7 @@ class StandardSummary(BaseSummary):
 
 
     def __init__(self,
-            show: 'Show',
+            show: 'Show', # type: ignore
             background: str = BACKGROUND_COLOR,
             created_by: Optional[str] = None) -> None:
         """
@@ -322,3 +322,4 @@ class StandardSummary(BaseSummary):
             images.append(self.__TRANSPARENT_MONTAGE)
 
         self.image_magick.delete_intermediate_images(*images)
+        return None

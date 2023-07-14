@@ -1,4 +1,5 @@
 from pathlib import Path
+from sys import exit as sys_exit
 from typing import Any, Callable, Optional
 
 from yaml import safe_load
@@ -16,8 +17,10 @@ class YamlReader:
 
 
     def __init__(self,
-            yaml: dict[str, Any] = {}, *,
-            log_function: Callable = log.error) -> None:
+            yaml: dict[str, Any] = {},
+            *,
+            log_function: Callable[[str], None] = log.error
+        ) -> None:
         """
         Initialize this object.
 
@@ -178,7 +181,7 @@ class YamlReader:
                 if critical:
                     log.exception(f'Error encountered while reading file', e)
                     log.critical(f'Error reading "{file.resolve()}"')
-                    exit(1)
+                    sys_exit(1)
                 else:
                     log.exception(f'Error reading "{file.resolve}"', e)
 

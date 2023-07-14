@@ -1,9 +1,9 @@
 from json import dumps
 from pathlib import Path
+from sys import exit as sys_exit
 from typing import Optional
 
 from modules.Debug import log
-import modules.global_objects as global_objects
 from modules.WebInterface import WebInterface
 
 class TautulliInterface(WebInterface):
@@ -42,7 +42,7 @@ class TautulliInterface(WebInterface):
             SystemExit: Invalid Sonarr URL/API key provided.
         """
 
-        # Initialize parent WebInterface 
+        # Initialize parent WebInterface
         super().__init__('Tautulli', verify_ssl, cache=False)
 
         # Get correct URL
@@ -51,7 +51,7 @@ class TautulliInterface(WebInterface):
             self.url = url
         elif (re_match := self._URL_REGEX.match(url)) is None:
             log.critical(f'Invalid Tautulli URL "{url}"')
-            exit(1)
+            sys_exit(1)
         else:
             self.url = f'{re_match.group(1)}/api/v2/'
 
@@ -63,10 +63,10 @@ class TautulliInterface(WebInterface):
             status = self._get(self.url, self.__params | {'cmd': 'status'})
             if status.get('response', {}).get('result') != 'success':
                 log.critical(f'Cannot get Tautulli status - invalid URL/API key')
-                exit(1)
+                sys_exit(1)
         except Exception as e:
             log.critical(f'Cannot connect to Tautulli - returned error: "{e}"')
-            exit(1)
+            sys_exit(1)
 
         # Store attributes
         self.update_script = update_script
@@ -96,7 +96,7 @@ class TautulliInterface(WebInterface):
         response = self._get(self.url, self.__params | {'cmd': 'get_notifiers'})
         notifiers = response['response']['data']
 
-        # Check each agent's name 
+        # Check each agent's name
         watched_integrated, created_integrated = False, False
         for agent in notifiers:
             # Exit loop if both agents found
@@ -236,3 +236,5 @@ class TautulliInterface(WebInterface):
             self._get(self.url, params)
             log.info(f'Created and configured Tautulli notification agent '
                      f'{created_id} ("{friendly_name}")')
+
+        return None

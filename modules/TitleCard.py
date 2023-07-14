@@ -72,7 +72,7 @@ class TitleCard:
         'reality tv': LogoTitleCard,
         'roman': RomanNumeralTitleCard,
         'roman numeral': RomanNumeralTitleCard,
-        'sherlock': TintedGlassTitleCard, 
+        'sherlock': TintedGlassTitleCard,
         'standard': StandardTitleCard,
         'star wars': StarWarsTitleCard,
         'textless': TextlessTitleCard,
@@ -141,7 +141,7 @@ class TitleCard:
     @staticmethod
     def get_output_filename(
             format_string: str,
-            series_info: SeriesInfo, 
+            series_info: SeriesInfo,
             episode_info: EpisodeInfo,
             media_directory: Path
         ) -> Path:
