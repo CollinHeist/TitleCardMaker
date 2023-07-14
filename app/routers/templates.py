@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Body, Depends, Request
+from fastapi_pagination import paginate
 from sqlalchemy.orm import Session
 
 from app.database.query import get_font, get_template
+from app.database.session import Page
 from app.dependencies import get_database
 from app.internal.cards import refresh_remote_card_types
 from app import models
@@ -44,12 +46,12 @@ def create_template(
 @template_router.get('/all', status_code=200)
 def get_all_templates(
         db: Session = Depends(get_database),
-    ) -> list[Template]:
+    ) -> Page[Template]:
     """
     Get all defined Templates.
     """
 
-    return db.query(models.template.Template).all()
+    return paginate(db.query(models.template.Template).all())
 
 
 @template_router.get('/{template_id}', status_code=200)
