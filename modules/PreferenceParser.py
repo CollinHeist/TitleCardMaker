@@ -3,7 +3,6 @@ from pathlib import Path
 from sys import exit as sys_exit
 from typing import Any, Iterator, Optional, Union
 
-from fastapi import HTTPException
 from num2words import CONVERTER_CLASSES as SUPPORTED_LANGUAGE_CODES
 from tqdm import tqdm
 
