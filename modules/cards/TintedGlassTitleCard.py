@@ -80,7 +80,8 @@ class TintedGlassTitleCard(BaseCardType):
             episode_text_position: SeriesExtra[Position] = 'center',
             box_adjustments: SeriesExtra[str] = None,
             preferences: 'Preferences' = None,
-            **unused) -> None:
+            **unused,
+        ) -> None:
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)

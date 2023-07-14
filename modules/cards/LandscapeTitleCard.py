@@ -76,7 +76,7 @@ class LandscapeTitleCard(BaseCardType):
             grayscale: bool = False,
             darken: DarkenOption = False,
             add_bounding_box: bool = False,
-            box_adjustments: tuple[int, int, int, int] = (0, 0, 0, 0),
+            box_adjustments: tuple[int, int, int, int] = None,
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
         ) ->None:
