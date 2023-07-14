@@ -55,8 +55,6 @@ def refresh_all_episode_data(*, log: Logger = log) -> None:
     except Exception as e:
         log.exception(f'Failed to refresh all episode data - {e}', e)
 
-    return None
-
 
 def set_episode_ids(
         db: Session,
@@ -119,8 +117,6 @@ def set_episode_ids(
     # Write any changes to the DB
     if changed:
         db.commit()
-
-    return None
 
 
 def get_all_episode_data(
@@ -227,7 +223,7 @@ def refresh_episode_data(
     ) -> None:
     """
     Refresh the episode data for the given Series. This adds any new
-    Episodes on the associated episode data source to the Database, 
+    Episodes on the associated episode data source to the Database,
     updates the titles of any existing Episodes (if indicated), and
     assigns the database ID's of all added/modified Episodes.
 

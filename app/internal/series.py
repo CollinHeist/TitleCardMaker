@@ -1,14 +1,14 @@
 from logging import Logger
 from pathlib import Path
-from requests import get
 from shutil import copy as file_copy
 from typing import Optional, Union
 
 from fastapi import HTTPException
+from requests import get
 from sqlalchemy.orm import Session
 
-from app.dependencies import *
-import app.models as models
+from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app import models
 from app.schemas.preferences import MediaServer, Preferences
 from app.schemas.series import Series
 
@@ -43,7 +43,7 @@ def set_all_series_ids(*, log: Logger = log) -> None:
                         get_sonarr_interface(), get_tmdb_interface(),
                         commit=False,
                     )
-                except HTTPException as e:
+                except HTTPException:
                     log.warning(f'{series.log_str} Skipping ID assignment')
                     continue
 
@@ -53,12 +53,10 @@ def set_all_series_ids(*, log: Logger = log) -> None:
     except Exception as e:
         log.exception(f'Failed to set Series IDs', e)
 
-    return None
-
 
 def load_all_media_servers(*, log: Logger = log) -> None:
     """
-    Schedule-able function to load all Title Cards in the Database to 
+    Schedule-able function to load all Title Cards in the Database to
     the media servers.
 
     Args:
@@ -88,13 +86,11 @@ def load_all_media_servers(*, log: Logger = log) -> None:
                         series, media_server, db, get_emby_interface(),
                         get_jellyfin_interface(), get_plex_interface(), log=log,
                     )
-                except HTTPException as e:
+                except HTTPException:
                     log.warning(f'{series.log_str} Skipping Title Card loading')
                     continue
     except Exception as e:
         log.exception(f'Failed to load Title Cards', e)
-
-    return None
 
 
 def download_all_series_posters(*, log: Logger = log) -> None:
@@ -117,23 +113,21 @@ def download_all_series_posters(*, log: Logger = log) -> None:
                         get_imagemagick_interface(), get_jellyfin_interface(),
                         get_plex_interface(), get_tmdb_interface(), log=log,
                     )
-                except HTTPException as e:
+                except HTTPException:
                     log.warning(f'{series.log_str} Skipping poster selection')
                     continue
     except Exception as e:
         log.exception(f'Failed to download Series posters', e)
 
-    return None
-
 
 def set_series_database_ids(
         series: Series,
         db: Session,
-        emby_interface: Optional[EmbyInterface],
-        jellyfin_interface: Optional[JellyfinInterface],
-        plex_interface: Optional[PlexInterface],
-        sonarr_interface: Optional[SonarrInterface],
-        tmdb_interface: Optional[TMDbInterface],
+        emby_interface: Optional[EmbyInterface] = None,
+        jellyfin_interface: Optional[JellyfinInterface] = None,
+        plex_interface: Optional[PlexInterface] = None,
+        sonarr_interface: Optional[SonarrInterface] = None,
+        tmdb_interface: Optional[TMDbInterface] = None,
         *,
         commit: bool = True,
         log: Logger = log,
@@ -189,11 +183,12 @@ def download_series_poster(
         db: Session,
         preferences: Preferences,
         series: Series,
-        emby_interface: Optional[EmbyInterface],
-        image_magick_interface: Optional[ImageMagickInterface],
-        jellyfin_interface: Optional[JellyfinInterface],
-        plex_interface: Optional[PlexInterface],
-        tmdb_interface: Optional[TMDbInterface], *,
+        emby_interface: Optional[EmbyInterface] = None,
+        image_magick_interface: Optional[ImageMagickInterface] = None,
+        jellyfin_interface: Optional[JellyfinInterface] = None,
+        plex_interface: Optional[PlexInterface] = None,
+        tmdb_interface: Optional[TMDbInterface] = None,
+        *,
         log: Logger = log,
     ) -> None:
     """
@@ -207,7 +202,7 @@ def download_series_poster(
         log: (Keyword) Logger for all log messages.
     """
 
-    # Exit if no interface 
+    # Exit if no interface
     if not any((emby_interface, jellyfin_interface, plex_interface,
                 tmdb_interface)):
         log.warning(f'{series.log_str} Cannot download poster')
@@ -222,7 +217,7 @@ def download_series_poster(
             db.commit()
             log.debug(f'Series[{series.id}] Poster already exists, using {path.resolve()}')
         return None
-    
+
     # Download poster from Media Server if possible
     series_info = series.as_series_info
     poster = None
@@ -237,7 +232,7 @@ def download_series_poster(
         poster = plex_interface.get_series_poster(
             series.plex_library_name, series_info, log=log,
         )
-    
+
     # If no poster was returned, download from TMDb
     if poster is None and tmdb_interface is not None:
         poster = tmdb_interface.get_series_poster(series_info, log=log)
@@ -255,13 +250,13 @@ def download_series_poster(
         if isinstance(poster, bytes):
             path.write_bytes(poster)
         else:
-            path.write_bytes(get(poster).content)
-        series.poster_file = str(path)
-        series.poster_url = f'/assets/{series.id}/poster.jpg'
-        db.commit()
+            path.write_bytes(get(poster, timeout=30).content)
     except Exception as e:
         log.error(f'{series.log_str} Error downloading poster', e)
         return None
+    series.poster_file = str(path)
+    series.poster_url = f'/assets/{series.id}/poster.jpg'
+    db.commit()
 
     # Create resized small poster
     resized_path = path.parent / 'poster-750.jpg'
@@ -302,25 +297,24 @@ def delete_series_and_episodes(
 
         log.debug(f'{series.log_str} Deleted poster(s)')
 
-    # Delete series and episodes from database
+    # Delete Series and Episodes from database
     log.info(f'Deleting {series.log_str}')
     db.delete(series)
-    [db.delete(episode) for episode in series.episodes]
+    for episode in series.episodes:
+        db.delete(episode)
 
     # Commit changes if indicated
     if commit_changes:
         db.commit()
-
-    return None
 
 
 def load_series_title_cards(
         series: Series,
         media_server: MediaServer,
         db: Session,
-        emby_interface: Optional[EmbyInterface],
-        jellyfin_interface: Optional[JellyfinInterface],
-        plex_interface: Optional[PlexInterface],
+        emby_interface: Optional[EmbyInterface] = None,
+        jellyfin_interface: Optional[JellyfinInterface] = None,
+        plex_interface: Optional[PlexInterface] = None,
         force_reload: bool = False,
         *,
         log: Logger = log,
@@ -343,7 +337,7 @@ def load_series_title_cards(
     # Get associated library for the indicated media server
     library = getattr(series, f'{media_server.lower()}_library_name', None)
     interface: Union[EmbyInterface, JellyfinInterface, PlexInterface] = {
-        'Emby': emby_interface, 
+        'Emby': emby_interface,
         'Jellyfin': jellyfin_interface,
         'Plex': plex_interface,
     }.get(media_server, None)
@@ -354,12 +348,12 @@ def load_series_title_cards(
             status_code=409,
             detail=f'{series.log_str} has no {media_server} Library',
         )
-    elif interface is None:
+    if interface is None:
         raise HTTPException(
             status_code=409,
             detail=f'Unable to communicate with {media_server}',
         )
-    
+
     # Get list of Episodes to reload
     episodes_to_load = []
     changed = False
@@ -414,5 +408,3 @@ def load_series_title_cards(
     if changed or loaded_assets:
         db.commit()
         log.info(f'{series.log_str} Loaded {len(loaded_assets)} Cards into {media_server}')
-
-    return None

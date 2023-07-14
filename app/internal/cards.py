@@ -68,8 +68,6 @@ def create_all_title_cards(*, log: Logger = log) -> None:
     except Exception as e:
         log.exception(f'Failed to create title cards', e)
 
-    return None
-
 
 def refresh_all_remote_card_types(*, log: Logger = log) -> None:
     """
@@ -562,6 +560,8 @@ def create_episode_card(
 
         # Create new card
         _start_card_creation()
+
+    return None
 
 
 def update_episode_watch_statuses(
