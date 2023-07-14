@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from os import environ
 from pathlib import Path
 from re import match, IGNORECASE
+from sys import exit as sys_exit
 
 try:
     from modules.Debug import log, LOG_FILE
@@ -18,7 +19,7 @@ try:
     from modules.TMDbInterface import TMDbInterface
 except ImportError:
     print(f'Required Python packages are missing - execute "pipenv install"')
-    exit(1)
+    sys_exit(1)
 
 # Environment Variables
 ENV_IS_DOCKER = 'TCM_IS_DOCKER'
@@ -148,7 +149,7 @@ is_docker = environ.get(ENV_IS_DOCKER, 'false').lower() == 'true'
 
 # Parse preference file for options that might need it
 if not (pp := PreferenceParser(args.preferences, is_docker)).valid:
-    exit(1)
+    sys_exit(1)
 set_preference_parser(pp)
 
 # Execute miscellaneous arguments
@@ -205,7 +206,7 @@ if ((hasattr(args, 'import_cards') or hasattr(args, 'revert_series'))
             media_interface = PlexInterface(**pp.plex_interface_kwargs)
     except Exception as e:
         log.critical(f'Cannot connect to "{args.media_server}" Media Server')
-        exit(1)
+        sys_exit(1)
 
     # Get series/name + year from archive directory if unspecified
     if hasattr(args, 'import_cards'):
@@ -223,10 +224,10 @@ if ((hasattr(args, 'import_cards') or hasattr(args, 'revert_series'))
                 if groups:
                     series_info = SeriesInfo(*groups.groups())
                     break
-                else:
-                    log.critical(f'Cannot identify series name/year; specify '
-                                 f'with --import-series')
-                    exit(1)
+
+                log.critical(f'Cannot identify series name/year; specify '
+                                f'with --import-series')
+                sys_exit(1)
     else:
         series_info = SeriesInfo(args.revert_series[1], args.revert_series[2])
         archive = pp.source_directory / series_info.full_clean_name
@@ -243,12 +244,12 @@ if ((hasattr(args, 'import_cards') or hasattr(args, 'revert_series'))
 
     # Forget cards associated with this series
     media_interface.remove_records(library, series_info)
-            
+
     # Get all images from import archive
     ext = args.import_extension
     if len(all_images := list(archive.glob(f'**/*{ext}'))) == 0:
         log.warning(f'No images to import')
-        exit(1)
+        sys_exit(1)
 
     # For each image, fill out episode map to load into server
     episode_infos, episode_map = [], {}
