@@ -380,7 +380,7 @@ class LogoTitleCard(BaseCardType):
             *style_command,
             # Global title text options
             f'-gravity south',
-            f'-font "{self.font_file}"',                     
+            f'-font "{self.font_file}"',
             f'-kerning {kerning}',
             f'-interword-spacing 50',
             f'-interline-spacing {interline_spacing}',

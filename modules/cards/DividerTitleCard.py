@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Literal, Optional
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
@@ -54,7 +54,7 @@ class DividerTitleCard(BaseCardType):
         'text_position', 'font_vertical_shift'
     )
 
-    def __init__(self, *,
+    def __init__(self,
             source_file: Path,
             card_file: Path,
             title_text: str,
@@ -141,6 +141,7 @@ class DividerTitleCard(BaseCardType):
                 f'-pointsize {100 * self.font_size}',
                 f'label:"{text}"',
             ]
+
         # Showing all text, add all text and divider
         return [
             f'-gravity {gravity}',

@@ -395,7 +395,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         all_episodes = []
         for episode in response['Items']:
             # Parse airdate for this episode
-            airdate=None
+            airdate = None
             try:
                 airdate = datetime.strptime(episode['PremiereDate'],
                                             self.AIRDATE_FORMAT)
@@ -526,7 +526,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def set_title_cards(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_map: dict[str, Episode]) -> None:
+            episode_map: dict[str, Episode],
+        ) -> None:
         """
         Set the title cards for the given series. This only updates
         episodes that have title cards, and those episodes whose card

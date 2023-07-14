@@ -353,7 +353,7 @@ class TintedGlassTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:                                   # type: ignore
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
@@ -377,7 +377,7 @@ class TintedGlassTitleCard(BaseCardType):
     @staticmethod
     def is_custom_season_titles(
             custom_episode_map: bool,
-            episode_text_format: str
+            episode_text_format: str,
         ) -> bool:
         """
         Determine whether the given attributes constitute custom or

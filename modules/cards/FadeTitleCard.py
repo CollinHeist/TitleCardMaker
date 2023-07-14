@@ -148,8 +148,6 @@ class FadeTitleCard(BaseCardType):
         self.font_kerning = font_kerning
         self.font_size = font_size
         self.font_vertical_shift = font_vertical_shift
-
-        # Extras
         self.episode_text_color = episode_text_color
 
 

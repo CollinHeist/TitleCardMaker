@@ -21,7 +21,8 @@ def catch_and_log(
         message: str,
         log_func: Callable[[str], None] = log.error,
         *,
-        default: Any = None) -> Callable[..., Any]:
+        default: Any = None,
+    ) -> Callable:
     """
     Return a decorator that logs (with the given log function) the given
     message if the decorated function raises an uncaught TMDbException.
@@ -702,7 +703,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             series_info: SeriesInfo,
             episode_info: EpisodeInfo, *,
             title_match: bool = True,
-            skip_localized_images: bool = False) -> Optional[str]:
+            skip_localized_images: bool = False,
+        ) -> Optional[str]:
         """
         Get the best source image for the requested entry. The URL of
         this image is returned.
@@ -800,7 +802,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def get_episode_title(self,
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
-            language_code: str = 'en-US') -> Optional[str]:
+            language_code: str = 'en-US',
+        ) -> Optional[str]:
         """
         Get the episode title for the given entry for the given language.
 

@@ -98,7 +98,7 @@ class StandardTitleCard(BaseCardType):
             stroke_color: str = 'black',
             episode_text_color: str = SERIES_COUNT_TEXT_COLOR,
             omit_gradient: bool = False,
-            preferences: 'Preferences' = None, # type: ignore
+            preferences: Optional['Preferences'] = None, # type: ignore
             **unused
         ) -> None:
         """
@@ -135,7 +135,7 @@ class StandardTitleCard(BaseCardType):
 
 
     @property
-    def index_command(self) -> ImageMagickCommands:
+    def index_commands(self) -> ImageMagickCommands:
         """
         Subcommand for adding the index text to the source image.
 
@@ -149,7 +149,7 @@ class StandardTitleCard(BaseCardType):
         # Sub-command for adding season/episode text
         if self.hide_season_text:
             return [
-                f'-kerning 5.42',       
+                f'-kerning 5.42',
                 f'-pointsize 67.75',
                 f'-interword-spacing 14.5',
                 f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
@@ -168,8 +168,8 @@ class StandardTitleCard(BaseCardType):
             return [
                 # Global text effects
                 f'-background transparent',
-                f'-gravity center',                     
-                f'-kerning 5.42',       
+                f'-gravity center',
+                f'-kerning 5.42',
                 f'-pointsize 67.75',
                 f'-interword-spacing 14.5',
                 # Black stroke behind primary text
@@ -190,8 +190,8 @@ class StandardTitleCard(BaseCardType):
         return [
             # Global text effects
             f'-background transparent',
-            f'-gravity center',                     
-            f'-kerning 5.42',       
+            f'-gravity center',
+            f'-kerning 5.42',
             f'-pointsize 67.75',
             f'-interword-spacing 14.5',
             # Black stroke behind primary text
@@ -227,7 +227,7 @@ class StandardTitleCard(BaseCardType):
 
 
     @property
-    def black_title_command(self) -> ImageMagickCommands:
+    def black_title_commands(self) -> ImageMagickCommands:
         """
         Subcommand for adding the black stroke behind the title text.
 
@@ -252,9 +252,9 @@ class StandardTitleCard(BaseCardType):
 
     @staticmethod
     def modify_extras(
-            extras: dict[str, Any],
+            extras: dict,
             custom_font: bool,
-            custom_season_titles: bool
+            custom_season_titles: bool,
         ) -> None:
         """
         Modify the given extras based on whether font or season titles
@@ -301,7 +301,7 @@ class StandardTitleCard(BaseCardType):
     @staticmethod
     def is_custom_season_titles(
             custom_episode_map: bool,
-            episode_text_format: str
+            episode_text_format: str,
         ) -> bool:
         """
         Determine whether the given attributes constitute custom or
@@ -349,18 +349,18 @@ class StandardTitleCard(BaseCardType):
             *gradient_command,
             # Global title text options
             f'-gravity south',
-            f'-font "{self.font_file}"',                     
+            f'-font "{self.font_file}"',
             f'-kerning {kerning}',
             f'-interword-spacing 50',
             f'-interline-spacing {interline_spacing}',
             f'-pointsize {font_size}',
             # Black stroke behind title text
-            *self.black_title_command,
+            *self.black_title_commands,
             # Title text
             f'-fill "{self.font_color}"',
             f'-annotate +0+{vertical_shift} "{self.title_text}"',
             # Add episode or season+episode "image"
-            *self.index_command,
+            *self.index_commands,
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

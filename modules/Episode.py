@@ -8,6 +8,7 @@ from modules.EpisodeInfo import EpisodeInfo
 from modules.StyleSet import StyleSet
 from modules.TitleCard import TitleCard
 
+
 class Episode:
     """
     This class defines an episode of a series that has a corresponding

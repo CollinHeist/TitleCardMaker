@@ -128,7 +128,7 @@ class PosterTitleCard(BaseCardType):
                 self.logo = logo
 
         # Store text
-        self.title_text = self.image_magick.escape_chars(title_text.upper())
+        self.title_text = self.image_magick.escape_chars(title_text)
         self.episode_text = self.image_magick.escape_chars(episode_text)
 
         # Font characteristics
@@ -148,7 +148,7 @@ class PosterTitleCard(BaseCardType):
     def modify_extras(
             extras: dict,
             custom_font: bool,
-            custom_season_titles: bool
+            custom_season_titles: bool,
         ) -> None:
         """
         Modify the given extras based on whether font or season titles
@@ -165,8 +165,6 @@ class PosterTitleCard(BaseCardType):
             if 'episode_text_color' in extras:
                 extras['episode_text_color'] =\
                     PosterTitleCard.EPISODE_TEXT_COLOR
-
-        return None
 
 
     @staticmethod
@@ -261,7 +259,7 @@ class PosterTitleCard(BaseCardType):
             f'-fill "{self.episode_text_color}"',
             f'-annotate +649+50 "{self.episode_text}"',
             # Add title text
-            f'-gravity center',                         
+            f'-gravity center',
             f'-pointsize {165 * self.font_size}',
             f'-interline-spacing {-40 + self.font_interline_spacing}',
             f'-fill "{self.font_color}"',
