@@ -75,8 +75,9 @@ class WebInterface:
 
     @retry(stop=stop_after_attempt(5),
            wait=wait_fixed(5)+wait_exponential(min=1, max=16),
-           before_sleep=lambda _:log.warning('Failed to submit GET request, retrying..'))
-    def __retry_get(self, url: str, params: dict[str, Any]) -> dict[str, Any]:
+           before_sleep=lambda _:log.warning('Failed to submit GET request, retrying..'),
+           reraise=True)
+    def __retry_get(self, url: str, params: dict) -> dict:
         """
         Retry the given GET request until successful (or really fails).
 
@@ -159,7 +160,7 @@ class WebInterface:
         try:
             # Get content from URL
             error = lambda s: f'URL {image} returned {s} content'
-            image = get(image).content
+            image = get(image, timeout=30).content
             if len(image) == 0:
                 raise Exception(error('no'))
             if any(bad_content in image for bad_content in WebInterface.BAD_CONTENT):

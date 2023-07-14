@@ -1,9 +1,15 @@
+from collections import namedtuple
+from logging import Logger
 from pathlib import Path
 from shlex import split as command_split
 from subprocess import Popen, PIPE, TimeoutExpired
 from typing import Literal, Optional
 
+from imagesize import get as im_get
+
 from modules.Debug import log
+
+Dimensions = namedtuple('Dimensions', ('width', 'height'))
 
 class ImageMagickInterface:
     """
@@ -22,7 +28,13 @@ class ImageMagickInterface:
     """
 
     """How long to wait before terminating a command as timed out"""
-    COMMAND_TIMEOUT_SECONDS = 240
+    COMMAND_TIMEOUT_SECONDS = 60
+
+    """Directory for all temporary images created during image creation"""
+    TEMP_DIR = Path(__file__).parent / '.objects'
+
+    """Temporary file location for svg -> png conversion"""
+    TEMPORARY_SVG_FILE = TEMP_DIR / 'temp_logo.svg'
 
     """Characters that must be escaped in commands"""
     __REQUIRED_ESCAPE_CHARACTERS = ('"', '`', '%')
@@ -34,9 +46,9 @@ class ImageMagickInterface:
 
 
     def __init__(self,
-            container: Optional[str] = None,
+            container: Optional[str] = 'ImageMagick',
             use_magick_prefix: bool = False,
-            timeout: int = COMMAND_TIMEOUT_SECONDS
+            timeout: int = COMMAND_TIMEOUT_SECONDS,
         ) -> None:
         """
         Construct a new instance. If container is falsey, then commands
@@ -126,6 +138,7 @@ class ImageMagickInterface:
         # Execute, capturing stdout and stderr
         stdout, stderr = b'', b''
         try:
+            # with Popen(cmd, stdout=PIPE, stderr=PIPE) as process:
             process = Popen(cmd, stdout=PIPE, stderr=PIPE)
             stdout, stderr = process.communicate(timeout=self.timeout)
         except TimeoutExpired:
@@ -183,6 +196,24 @@ class ImageMagickInterface:
                       f'{"-" * 60}')
 
 
+    def get_image_dimensions(self, image: Path) -> Dimensions:
+        """
+        Get the dimensions of the given image.
+
+        Args:
+            image: Path to the image to get the dimensions of.
+
+        Returns:
+            Namedtuple of dimensions.
+        """
+
+        # Return dimenions of zero if image DNE
+        if not image.exists():
+            return Dimensions(0, 0)
+
+        return im_get(image)
+
+
     def resize_image(self,
             input_image: Path,
             output_image: Path,
@@ -203,7 +234,7 @@ class ImageMagickInterface:
 
         Raises:
             ValueError if by is not "width" or "height".
-            ValueError if the indicated dimension is not provided or 
+            ValueError if the indicated dimension is not provided or
                 less than 0.
         """
 
@@ -269,6 +300,6 @@ class ImageMagickInterface:
         # Print command history if conversion failed
         if destination.exists():
             return destination
-        else:
-            self.print_command_history()
-            return None
+
+        self.print_command_history()
+        return None

@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from collections import namedtuple
 from pathlib import Path
-from re import findall, match
-from typing import Literal, Optional, Union
+from re import findall
+from typing import Literal, Optional
 
 from modules.Debug import log
 from modules.ImageMagickInterface import ImageMagickInterface
@@ -49,56 +49,28 @@ class ImageMaker(ABC):
         an ImageMagickInterface via the image_magick attribute.
         """
 
+        # No Preferences object, use global
         if preferences is None:
             self.preferences = global_objects.pp
+            self.image_magick = ImageMagickInterface(
+                self.preferences.imagemagick_container,
+                self.preferences.use_magick_prefix,
+                self.preferences.imagemagick_timeout,
+            )
+        # Preferences object provided, use directly
         else:
             self.preferences = preferences
-
-        # All ImageMakers have an instance of an ImageMagickInterface
-        self.image_magick = ImageMagickInterface(
-            self.preferences.imagemagick_container,
-            self.preferences.use_magick_prefix,
-            self.preferences.imagemagick_timeout,
-        )
-
-
-    def get_image_dimensions(self, image: Path) -> Dimensions:
-        """
-        Get the dimensions of the given image.
-
-        Args:
-            image: Path to the image to get the dimensions of.
-
-        Returns:
-            Namedtuple of dimensions.
-        """
-
-        # Return dimenions of zero if image DNE
-        if not image.exists():
-            return Dimensions(0, 0)
-
-        # Get the dimensions
-        command = ' '.join([
-            f'identify',
-            f'-format "%w %h"',
-            f'"{image.resolve()}"',
-        ])
-
-        output = self.image_magick.run_get_output(command)
-
-        # Get width/height from output
-        try:
-            return Dimensions(
-                *map(int, match(r'^(\d+)\s+(\d+)$', output).groups())
+            self.image_magick = ImageMagickInterface(
+                **preferences.imagemagick_arguments,
             )
-        except Exception as e:
-            log.debug(f'Cannot identify dimensions of {image.resolve()}')
-            return Dimensions(0, 0)
 
 
-    def get_text_dimensions(self, text_command: list[str], *,
-            width: Literal['sum', 'max'],
-            height: Literal['sum', 'max']) -> Dimensions:
+    def get_text_dimensions(self,
+            text_command: list[str],
+            *,
+            width: Literal['sum', 'max'] = 'max',
+            height: Literal['sum', 'max'] = 'sum',
+        ) -> Dimensions:
         """
         Get the dimensions of the text produced by the given text
         command. For 'width' and 'height' arguments, if 'max' then the
@@ -200,7 +172,8 @@ class ImageMaker(ABC):
     def convert_svg_to_png(
             image: Path,
             destination: Path,
-            min_dimension: int = 2500) -> Union[Path, None]:
+            min_dimension: int = 2500
+        ) -> Optional[Path]:
         """
         Convert the given SVG image to PNG format.
 
@@ -239,9 +212,9 @@ class ImageMaker(ABC):
         # Print command history if conversion failed
         if destination.exists():
             return destination
-        else:
-            image_magick_interface.print_command_history()
-            return None
+
+        image_magick_interface.print_command_history()
+        return None
 
 
     @abstractmethod

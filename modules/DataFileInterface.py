@@ -59,7 +59,7 @@ class DataFileInterface:
         if not self.file.exists():
             return {}
 
-        # Read file 
+        # Read file
         with self.file.open('r', encoding='utf-8') as file_handle:
             try:
                 yaml = safe_load(file_handle)
@@ -112,7 +112,7 @@ class DataFileInterface:
             # Skip season if number cannot be parsed
             try:
                 season_number = int(season.rsplit(' ', 1)[-1])
-            except Exception:
+            except (IndexError, ValueError):
                 log.error(f'Season {season} of the {self.series_info} datafile '
                           f'is invalid - must be like "Season 1"')
                 continue
@@ -149,7 +149,7 @@ class DataFileInterface:
                 # Ensure Title can be created
                 try:
                     title_obj = Title(title, original_title=original_title)
-                except Exception as e:
+                except TypeError as e:
                     log.exception(f'Title for S{season_number:02}E'
                                   f'{episode_number:02} of the '
                                   f'{self.series_info} datafile is invalid', e)
