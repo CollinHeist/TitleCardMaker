@@ -78,9 +78,6 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
     """Series ID's that can be set by TMDb"""
     SERIES_IDS = ('imdb_id', 'tmdb_id', 'tvdb_id')
 
-    """How many failed episodes result in skipping a series"""
-    SKIP_SERIES_THRESHOLD = 3
-
     """Episode titles that indicate a placeholder and are to be ignored"""
     __TEMP_IGNORE_REGEX = re_compile(r'^(tba|tbd|episode \d+)$', IGNORECASE)
 
@@ -677,14 +674,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
             return []
 
         # Go through each episode within Plex, set title cards
-        loaded, error_count = [], 0
+        loaded = []
         for plex_episode in series.episodes():
-            # If error count is too high, skip this series
-            if error_count >= self.SKIP_SERIES_THRESHOLD:
-                log.error(f'Failed to upload {error_count} episodes, skipping '
-                          f'"{series_info}"')
-                break
-
             # Skip episode if no associated episode was provided
             found = False
             for episode, card in episode_and_cards:
