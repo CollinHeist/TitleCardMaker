@@ -3,9 +3,10 @@ from typing import Any, Optional, Union
 
 from num2words import num2words
 
+from modules import global_objects
 from modules.DatabaseInfoContainer import DatabaseInfoContainer
-import modules.global_objects as global_objects
 from modules.Title import Title
+
 
 class WordSet(dict):
     """

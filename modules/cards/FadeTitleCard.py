@@ -78,7 +78,7 @@ class FadeTitleCard(BaseCardType):
             episode_text: str,
             hide_season_text: bool = False,
             hide_episode_text: bool = False,
-            font_color: str = TITLE_COLOR, 
+            font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
             font_kerning: float = 1.0,
@@ -88,7 +88,7 @@ class FadeTitleCard(BaseCardType):
             episode_number: int = 1,
             blur: bool = False,
             grayscale: bool = False,
-            logo: SeriesExtra[str] = None,
+            logo_file: Optional[Path] = None,
             episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
             separator: SeriesExtra[str] = '•',
             preferences: 'Preferences' = None,
@@ -100,7 +100,7 @@ class FadeTitleCard(BaseCardType):
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
 
-        # Store source and output file
+        # Store indicated files
         self.source_file = source_file
         self.output_file = card_file
         
@@ -228,7 +228,7 @@ class FadeTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determine whether the given arguments represent a custom font
         for this card.
@@ -251,7 +251,9 @@ class FadeTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> bool:
         """
         Determine whether the given attributes constitute custom or
         genericseason titles.

@@ -1,20 +1,19 @@
 from base64 import b64encode
 from datetime import datetime
 from sys import exit as sys_exit
-from typing import Optional, Union
+from typing import Optional
 
+from modules import global_objects
 from modules.Debug import log
 from modules.Episode import Episode
 from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo import EpisodeInfo
 from modules.SeasonPosterSet import SeasonPosterSet
-import modules.global_objects as global_objects
-from modules.MediaServer import MediaServer
+from modules.MediaServer import MediaServer, SourceImage
 from modules.SeriesInfo import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
 
-SourceImage = Union[bytes, None]
 
 class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
     """
@@ -75,15 +74,15 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # Authenticate with server
         try:
-            response = self.session._get(
+            response = self.session.get(
                 f'{self.url}/System/Info',
                 params=self.__params
             )
             if not set(response).issuperset({'ServerName', 'Version', 'Id'}):
-                raise Exception(f'Unable to authenticate with server')
-        except Exception as e: # pylint: disable=broad-except
-            log.critical(f'Cannot connect to Emby - returned error {e}')
-            log.exception(f'Bad Emby connection', e)
+                raise ConnectionError(f'Unable to authenticate with server')
+        except Exception as exc: # pylint: disable=broad-except
+            log.critical(f'Cannot connect to Emby - returned error {exc}')
+            log.exception(f'Bad Emby connection', exc)
             sys_exit(1)
 
         # Get user ID
@@ -110,7 +109,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         """
 
         # Query for list of all users on this server
-        response = self.session._get(
+        response = self.session.get(
             f'{self.url}/Users/Query',
             params=self.__params,
         )
@@ -134,7 +133,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         """
 
         # Get all library folders
-        libraries = self.session._get(
+        libraries = self.session.get(
             f'{self.url}/Library/SelectableMediaFolders',
             params=self.__params
         )
@@ -154,7 +153,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             List of usernames.
         """
 
-        users = self.session._get(
+        users = self.session.get(
             f'{self.url}/Users',
             params=self.__params
         )
@@ -205,13 +204,14 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # Look for this series in each library subfolder
         for parent_id in library_ids:
-            response = self.session._get(
+            response = self.session.get(
                 f'{self.url}/Items',
                 params=params | {'ParentId': parent_id}
             )
 
             # If no responses, skip
-            if response['TotalRecordCount'] == 0: continue
+            if response['TotalRecordCount'] == 0:
+                continue
 
             # Go through all items and match name and type, setting database IDs
             for result in response['Items']:
@@ -281,7 +281,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         """
 
         # Get all library folders
-        libraries = self.session._get(
+        libraries = self.session.get(
             f'{self.url}/Library/SelectableMediaFolders',
             params=self.__params
         )
@@ -347,7 +347,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 # Have to query year by year, for SOME stupid reason...
                 for year in self.YEAR_RANGE:
                     # Get all items (series) in this subfolder for this year
-                    response = self.session._get(
+                    response = self.session.get(
                         f'{self.url}/Items',
                         params=params | {'ParentId': parent_id, 'Years': year}
                     )
@@ -386,7 +386,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             return []
 
         # Get all episodes for this series
-        response = self.session._get(
+        response = self.session.get(
             f'{self.url}/Shows/{series_info.emby_id}/Episodes',
             params={'Fields': 'ProviderIds'} | self.__params
         )
@@ -487,7 +487,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         )
 
         # Query for all episodes of this series
-        response = self.session._get(
+        response = self.session.get(
             f'{self.url}/Shows/{series_info.emby_id}/Episodes',
             params={'UserId': self.user_id} | self.__params
         )
@@ -505,7 +505,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
             # Get characteristics of this Episode's loaded card
             details = self._get_loaded_episode(loaded_series, episode)
-            loaded = (details is not None)
+            loaded = details is not None
             spoiler_status = details['spoiler'] if loaded else None
 
             # Delete and reset card if current spoiler type doesn't match
@@ -599,7 +599,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def set_season_posters(self,
             library_name: str,
             series_info: SeriesInfo,
-            season_poster_set: SeasonPosterSet) -> None:
+            season_poster_set: SeasonPosterSet,
+        ) -> None:
         """
         Set the season posters from the given set within Emby.
 
@@ -611,7 +612,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 set.
         """
 
-        ...
+        return None
 
 
     def get_source_image(self, episode_info: EpisodeInfo) -> SourceImage:
