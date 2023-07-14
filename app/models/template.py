@@ -224,9 +224,9 @@ class Template(Base):
 
     @hybrid_method
     def meets_filter_criteria(self,
-            preferences: 'Preferences',                                         # type: ignore
-            series: 'Series',                                                   # type: ignore
-            episode: Optional['Episode'] = None                                 # type: ignore
+            preferences: 'Preferences', # type: ignore
+            series: 'Series', # type: ignore
+            episode: Optional['Episode'] = None # type: ignore
         ) -> bool:
         """
         Determine whether the given Series and Episode meet this

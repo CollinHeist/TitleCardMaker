@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.dependencies import get_database, get_tmdb_interface
 from app.internal.templates import get_effective_templates
-import app.models as models
+from app import models
 from app.schemas.episode import Episode
 
 from modules.Debug import log

@@ -7,7 +7,7 @@ from pydantic.error_wrappers import ValidationError
 from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_series
-from app.dependencies import *
+from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.imports import (
     import_cards, parse_emby, parse_fonts, parse_jellyfin, parse_plex,
     parse_preferences, parse_raw_yaml, parse_series, parse_sonarr, parse_syncs,
@@ -24,8 +24,6 @@ from app.schemas.preferences import Preferences
 from app.schemas.series import Series, Template
 from app.schemas.sync import Sync
 
-from modules.Debug import log
-
 
 import_router = APIRouter(
     prefix='/import',
@@ -37,7 +35,7 @@ import_router = APIRouter(
 def import_global_options_yaml(
         request: Request,
         import_yaml: ImportYaml = Body(...),
-        preferences: Preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences),
     ) -> Preferences:
     """
     Import the global options from the preferences defined in the given
@@ -53,7 +51,7 @@ def import_global_options_yaml(
     yaml_dict = parse_raw_yaml(import_yaml.yaml)
     if len(yaml_dict) == 0:
         return preferences
-    
+
     # Modify the preferences  from the YAML dictionary
     try:
         return parse_preferences(preferences, yaml_dict, log=log)
@@ -62,7 +60,7 @@ def import_global_options_yaml(
         raise HTTPException(
             status_code=422,
             detail=f'YAML is invalid - {e}'
-        )
+        ) from e
 
 
 @import_router.post('/preferences/connection/{connection}', status_code=201)
@@ -87,7 +85,7 @@ def import_connection_yaml(
     yaml_dict = parse_raw_yaml(import_yaml.yaml)
     if len(yaml_dict) == 0:
         return preferences
-    
+
     def _parse_all(*args, **kwargs):
         parse_emby(*args, **kwargs)
         parse_jellyfin(*args, **kwargs)
@@ -98,7 +96,7 @@ def import_connection_yaml(
         return preferences
 
     parse_function = {
-        'all': _parse_all, 
+        'all': _parse_all,
         'emby': parse_emby,
         'jellyfin': parse_jellyfin,
         'plex': parse_plex,
@@ -113,8 +111,8 @@ def import_connection_yaml(
         raise HTTPException(
             status_code=422,
             detail=f'YAML is invalid - {e}'
-        )
-    
+        ) from e
+
 
 @import_router.post('/preferences/sync', status_code=201)
 def import_sync_yaml(
@@ -135,7 +133,7 @@ def import_sync_yaml(
     yaml_dict = parse_raw_yaml(import_yaml.yaml)
     if len(yaml_dict) == 0:
         return []
-    
+
     # Create New*Sync objects from the YAML dictionary
     try:
         new_syncs = parse_syncs(db, yaml_dict)
@@ -144,7 +142,7 @@ def import_sync_yaml(
         raise HTTPException(
             status_code=422,
             detail=f'YAML is invalid - {e}'
-        )
+        ) from e
 
     # Add each defined Sync to the database
     all_syncs = []
@@ -181,7 +179,7 @@ def import_fonts_yaml(
     yaml_dict = parse_raw_yaml(import_yaml.yaml)
     if len(yaml_dict) == 0:
         return []
-    
+
     # Create NewNamedFont objects from the YAML dictionary
     try:
         new_fonts = parse_fonts(yaml_dict)
@@ -190,7 +188,7 @@ def import_fonts_yaml(
         raise HTTPException(
             status_code=422,
             detail=f'YAML is invalid - {e}'
-        )
+        ) from e
 
     # Add each defined Font to the database
     all_fonts = []
@@ -209,7 +207,7 @@ def import_template_yaml(
         request: Request,
         import_yaml: ImportYaml = Body(...),
         db: Session = Depends(get_database),
-        preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences)
     ) -> list[Template]:
     """
     Import all Templates defined in the given YAML.
@@ -233,7 +231,7 @@ def import_template_yaml(
         raise HTTPException(
             status_code=422,
             detail=f'YAML is invalid - {e}'
-        )
+        ) from e
 
     # Add each defined Template to the database
     all_templates = []
@@ -285,13 +283,13 @@ def import_series_yaml(
         raise HTTPException(
             status_code=422,
             detail=f'YAML is invalid - {e}'
-        )
+        ) from e
 
     # Add each defined Series to the database
     all_series = []
-    for new_series in new_series:
+    for series in new_series:
         # Add to batabase
-        new_series_dict = new_series.dict()
+        new_series_dict = series.dict()
         templates = get_all_templates(db, new_series_dict)
         series = models.series.Series(**new_series_dict, templates=templates)
         db.add(series)
@@ -310,7 +308,7 @@ def import_series_yaml(
             # Function
             download_series_poster,
             # Arguments
-            db, preferences, series, emby_interface, imagemagick_interface, 
+            db, preferences, series, emby_interface, imagemagick_interface,
             jellyfin_interface, plex_interface, tmdb_interface, log=log,
         )
         background_tasks.add_task(
@@ -348,16 +346,10 @@ def import_cards_for_series(
     series = get_series(db, series_id, raise_exc=True)
 
     import_cards(
-        db,
-        preferences,
-        series, 
-        card_directory.directory,
-        card_directory.image_extension,
-        card_directory.force_reload,
+        db, preferences, series, card_directory.directory,
+        card_directory.image_extension, card_directory.force_reload,
         log=request.state.log,
     )
-
-    return None
 
 
 @import_router.post('/series/cards', status_code=200,
@@ -365,7 +357,7 @@ def import_cards_for_series(
 def import_cards_for_multiple_series(
         request: Request,
         card_import: MultiCardImport = Body(...),
-        preferences = Depends(get_preferences),
+        preferences: Preferences = Depends(get_preferences),
         db: Session = Depends(get_database)
     ) -> None:
     """
@@ -383,13 +375,7 @@ def import_cards_for_multiple_series(
 
         # Import Cards for this Series
         import_cards(
-            db,
-            preferences,
-            series, 
-            None,
-            card_import.image_extension,
+            db, preferences, series, None, card_import.image_extension,
             card_import.force_reload,
             log=request.state.log,
         )
-
-    return None

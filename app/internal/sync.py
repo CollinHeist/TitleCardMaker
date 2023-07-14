@@ -8,16 +8,17 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates
-from app.dependencies import *
+from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.episodes import refresh_episode_data
 from app.internal.series import download_series_poster, set_series_database_ids
 from app.internal.sources import download_series_logo
+from app import models
 from app.schemas.sync import (
     NewEmbySync, NewJellyfinSync, NewPlexSync, NewSonarrSync, Sync
 )
 from app.schemas.series import Series
 from app.schemas.preferences import Preferences
-import app.models as models
+
 
 from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
@@ -40,7 +41,7 @@ def sync_all(*, log: Logger = log) -> None:
             for sync in db.query(models.sync.Sync).all():
                 try:
                     run_sync(
-                        db, get_preferences(), sync, get_emby_interface(), 
+                        db, get_preferences(), sync, get_emby_interface(),
                         get_imagemagick_interface(), get_jellyfin_interface(),
                         get_plex_interface(), get_sonarr_interface(),
                         get_tmdb_interface(), log=log,
@@ -52,8 +53,6 @@ def sync_all(*, log: Logger = log) -> None:
                     sleep(30)
     except Exception as e:
         log.exception(f'Failed to run all Syncs', e)
-
-    return None
 
 
 def add_sync(
@@ -279,7 +278,7 @@ def run_sync(
             )
             background_tasks.add_task(
                 # Function
-                download_series_logo, 
+                download_series_logo,
                 # Arguments
                 preferences, emby_interface, imagemagick_interface,
                 jellyfin_interface, tmdb_interface, series, log=log,

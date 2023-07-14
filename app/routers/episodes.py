@@ -8,7 +8,7 @@ from app.database.query import (
     get_all_templates, get_episode, get_font, get_series
 )
 from app.database.session import Page
-from app.dependencies import *
+from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 import app.models as models
 from app.internal.cards import delete_cards, refresh_remote_card_types
 from app.internal.episodes import set_episode_ids, refresh_episode_data

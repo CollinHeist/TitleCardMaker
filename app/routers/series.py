@@ -1,5 +1,4 @@
 from pathlib import Path
-from requests import get
 from shutil import copy as file_copy
 from typing import Literal, Optional
 
@@ -8,15 +7,16 @@ from fastapi import (
     Request, UploadFile
 )
 from fastapi_pagination.ext.sqlalchemy import paginate
+from requests import get
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from app.dependencies import *
+from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.database.session import Page
 from app.database.query import get_all_templates, get_font, get_series
 from app.internal.episodes import refresh_episode_data
 from app.internal.translate import translate_episode
-import app.models as models
+from app import models
 from app.internal.cards import (
     create_episode_card, refresh_remote_card_types,
     update_episode_watch_statuses
@@ -99,7 +99,8 @@ def get_previous_series(
 
     # Get the reference Series
     series = get_series(db, series_id, raise_exc=True)
-    
+
+    # pylint: disable=no-value-for-parameter,no-member
     return db.query(models.series.Series)\
         .filter(models.series.Series.comes_before(series.sort_name))\
         .order_by(models.series.Series.sort_name.desc())\
@@ -119,7 +120,7 @@ def get_next_series(
 
     # Get the reference Series
     series = get_series(db, series_id, raise_exc=True)
-    
+
     return db.query(models.series.Series)\
         .filter(models.series.Series.comes_after(series.sort_name))\
         .order_by(models.series.Series.sort_name)\
@@ -131,7 +132,7 @@ def add_new_series(
         request: Request,
         new_series: NewSeries = Body(...),
         db: Session = Depends(get_database),
-        preferences = Depends(get_preferences),
+        preferences: Preferences = Depends(get_preferences),
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
         imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
         jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
@@ -202,8 +203,6 @@ def delete_series(
     # Delete Series, poster, and associated Episodes
     delete_series_and_episodes(db, series, log=request.state.log)
 
-    return None
-
 
 @series_router.get('/search', status_code=200)
 def search_series(
@@ -261,7 +260,7 @@ def get_series_config(
 
 
 @series_router.patch('/{series_id}', status_code=200)
-def update_series(
+def update_series_(
         series_id: int,
         request: Request,
         update_series: UpdateSeries = Body(...),
@@ -307,7 +306,7 @@ def update_series(
 
     # Refresh card types in case new remote type was specified
     refresh_remote_card_types(db, log=log)
-    
+
     return series
 
 
@@ -361,8 +360,6 @@ def load_title_cards_into_media_server(
         plex_interface, force_reload=False, log=request.state.log,
     )
 
-    return None
-
 
 @series_router.post('/{series_id}/reload/{media_server}', status_code=201,
         tags=['Emby', 'Jellyfin', 'Plex'])
@@ -399,7 +396,7 @@ def process_series(
         request: Request,
         series_id: int,
         db: Session = Depends(get_database),
-        preferences = Depends(get_preferences),
+        preferences: Preferences = Depends(get_preferences),
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
         jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
         plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
@@ -429,7 +426,7 @@ def process_series(
     # Refresh episode data, use BackgroundTasks for ID assignment
     log.debug(f'{series.log_str} Started refreshing Episode data')
     refresh_episode_data(
-        db, preferences, 
+        db, preferences,
         series,
         emby_interface, jellyfin_interface, plex_interface, sonarr_interface,
         tmdb_interface, log=log,
@@ -455,7 +452,7 @@ def process_series(
             # Arguments
             db, episode, tmdb_interface, log=log,
         )
-    
+
     # Update watch statuses
     update_episode_watch_statuses(
         emby_interface, jellyfin_interface, plex_interface,
@@ -471,8 +468,6 @@ def process_series(
             # Arguments
             db, preferences, background_tasks, episode, raise_exc=False, log=log
         )
-
-    return None
 
 
 @series_router.delete('/{series_id}/plex-labels', status_code=204)
@@ -499,7 +494,7 @@ def remove_series_labels(
             status_code=409,
             detail=f'{series.log_str} has no Plex Library',
         )
-    elif plex_interface is None:
+    if plex_interface is None:
         raise HTTPException(
             status_code=409,
             detail=f'Unable to communicate with Plex',
@@ -509,8 +504,6 @@ def remove_series_labels(
     plex_interface.remove_series_labels(
         series.plex_library_name, series.as_series_info, labels,
     )
-    
-    return None
 
 
 @series_router.get('/{series_id}/poster', status_code=200)
@@ -518,7 +511,7 @@ def download_series_poster_(
         series_id: int,
         request: Request,
         db: Session = Depends(get_database),
-        preferences = Depends(get_preferences),
+        preferences: Preferences = Depends(get_preferences),
         imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
     ) -> None:
@@ -602,12 +595,12 @@ async def set_series_poster(
     # If only URL was required, attempt to download, error if unable
     if poster_url is not None:
         try:
-            poster_content = get(poster_url).content
+            poster_content = get(poster_url, timeout=30).content
         except Exception as e:
             raise HTTPException(
                 status_code=400,
                 detail=f'Unable to download poster - {e}'
-            )
+            ) from e
 
     # Valid poster provided, download into asset directory
     poster_path = preferences.asset_directory / str(series.id) / 'poster.jpg'
@@ -630,5 +623,5 @@ async def set_series_poster(
     # Update poster, commit to database
     series.poster_url = f'/assets/{series.id}/poster.jpg'
     db.commit()
-    
+
     return series.poster_url

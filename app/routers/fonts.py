@@ -4,13 +4,11 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Request, UploadFile
 from sqlalchemy.orm import Session
 
 from app.database.query import get_font
-from app.dependencies import get_database
-from app.dependencies import get_preferences
+from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 import app.models as models
 from app.schemas.font import NamedFont, NewNamedFont, UpdateNamedFont
 from app.schemas.preferences import Preferences
 
-from modules.Debug import log
 
 # Create sub router for all /fonts API requests
 font_router = APIRouter(
@@ -108,7 +106,7 @@ def delete_font_file(
             raise HTTPException(
                 status_code=500,
                 detail=f'Error deleting font file - {e}',
-            )
+            ) from e
 
     # Reset file path, update database
     font.file = None
@@ -205,9 +203,7 @@ def delete_font(
             raise HTTPException(
                 status_code=500,
                 detail=f'Error deleting font file - {e}',
-            )
+            ) from e
 
     db.delete(font)
     db.commit()
-
-    return None

@@ -2,14 +2,13 @@ from typing import Literal, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
 
-from app.dependencies import *
+from app.dependencies import * # pylint: disable=W0401,W0614,W0621
 from app.internal.connection import update_connection
 from app.schemas.preferences import (
     EmbyConnection, JellyfinConnection, PlexConnection, SonarrConnection,
     SonarrLibrary, TautulliConnection, TMDbConnection, UpdateEmby,
-    UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb, 
+    UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb,
 )
-from modules.Debug import log
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TautulliInterface2 import TautulliInterface
 
@@ -61,15 +60,13 @@ def enable_or_disable_connection(
 
     preferences.commit(log=log)
 
-    return None
-
 
 @connection_router.get('/emby', status_code=200)
 def get_emby_connection_details(
         preferences: Preferences = Depends(get_preferences)
     ) -> EmbyConnection:
     """
-    
+    Get the connection details for Emby.
     """
 
     return preferences
@@ -80,7 +77,7 @@ def get_jellyfin_connection_details(
         preferences: Preferences = Depends(get_preferences)
     ) -> JellyfinConnection:
     """
-    
+    Get the connection details for Jellyfin.
     """
 
     return preferences
@@ -91,7 +88,7 @@ def get_plex_connection_details(
         preferences: Preferences = Depends(get_preferences)
     ) -> PlexConnection:
     """
-    
+    Get the connection details for Plex.
     """
 
     return preferences
@@ -102,7 +99,7 @@ def get_sonarr_connection_details(
         preferences: Preferences = Depends(get_preferences)
     ) -> SonarrConnection:
     """
-    
+    Get the connection details for Sonarr.
     """
 
     return preferences
@@ -113,7 +110,7 @@ def get_tmdb_connection_details(
         preferences: Preferences = Depends(get_preferences)
     ) -> TMDbConnection:
     """
-    
+    Get the connection details for TMDb.
     """
 
     return preferences
@@ -173,7 +170,7 @@ def update_plex_connection(
 @connection_router.patch('/sonarr', status_code=200)
 def update_sonarr_connection(
         request: Request,
-        update_sonarr: UpdateSonarr = Body(...), 
+        update_sonarr: UpdateSonarr = Body(...),
         preferences: Preferences = Depends(get_preferences)
     ) -> SonarrConnection:
     """
@@ -218,11 +215,11 @@ def get_potential_sonarr_libraries(
             status_code=409,
             detail=f'Unable to communicate with Sonarr'
         )
-    
+
     # Function to parse a library name from a folder name
     def _guess_library_name(folder_name: str) -> str:
         return folder_name.replace('-', ' ').replace('_', ' ')
-    
+
     # Attempt to interpret library names from root folders
     return [
         SonarrLibrary(name=_guess_library_name(folder.name), path=str(folder))
@@ -243,7 +240,7 @@ def check_tautulli_integration(
     """
 
     interface = TautulliInterface(
-        tcm_url=str(request.url).split('/tautulli/check')[0],
+        tcm_url=str(request.url).split('/tautulli/check', maxsplit=1)[0],
         tautulli_url=tautulli_connection.tautulli_url,
         api_key=tautulli_connection.tautulli_api_key.get_secret_value(),
         use_ssl=tautulli_connection.tautulli_use_ssl,
@@ -268,8 +265,11 @@ def add_tautulli_integration(
     Notification Agent to search for or create.
     """
 
+    request_url = str(request.url)
+    url = request_url.split('/api/connection/tautulli/integrate', maxsplit=1)[0]
+
     interface = TautulliInterface(
-        tcm_url=str(request.url).split('/api/connection/tautulli/integrate')[0],
+        tcm_url=url,
         tautulli_url=tautulli_connection.tautulli_url,
         api_key=tautulli_connection.tautulli_api_key.get_secret_value(),
         use_ssl=tautulli_connection.tautulli_use_ssl,

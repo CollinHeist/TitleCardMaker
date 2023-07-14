@@ -6,7 +6,7 @@ from fastapi import (
 from sqlalchemy.orm import Session
 
 from app.database.query import get_card, get_episode, get_font, get_series
-from app.dependencies import *
+from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 import app.models as models
 from app.internal.cards import (
     create_episode_card, delete_cards, update_episode_watch_statuses,
@@ -19,7 +19,6 @@ from app.internal.translate import translate_episode
 from app.schemas.card import CardActions, TitleCard, PreviewTitleCard
 from app.schemas.font import DefaultFont
 
-from modules.Debug import log
 from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TieredSettings import TieredSettings
@@ -54,13 +53,13 @@ def create_preview_card(
             status_code=400,
             detail=f'Cannot create preview for card type "{card.card_type}"',
         )
-    
+
     # Get Font if indicated
     font_template_dict = {}
     if getattr(card, 'font_id', None) is not None:
         font = get_font(db, card.font_id, raise_exc=True)
         font_template_dict = font.card_properties
-    
+
     # Determine appropriate Source and Output file
     preview_dir = preferences.INTERNAL_ASSET_DIRECTORY / 'preview'
     source = preview_dir / (('art' if 'art' in card.style else 'unique') + '.jpg')
@@ -163,10 +162,8 @@ def create_cards_for_series(
                 db, preferences, background_tasks, episode, log=log
             )
         except HTTPException as e:
-            log.exception(f'{series.log_str} {episode.log_str} Card creation failed - {e.detail}', e)
-            pass
-
-    return None
+            log.exception(f'{series.log_str} {episode.log_str} Card creation '
+                          f'failed - {e.detail}', e)
 
 
 @card_router.get('/series/{series_id}', status_code=200, tags=['Series'])
@@ -280,8 +277,6 @@ def create_card_for_episode(
 
     # Create Card for this Episode
     create_episode_card(db, preferences, None, episode, log=request.state.log)
-
-    return None
 
 
 @card_router.get('/episode/{episode_id}', tags=['Episodes'])
@@ -404,5 +399,3 @@ def create_cards_for_plex_rating_keys(
             series, 'Plex', db, emby_interface=None, jellyfin_interface=None,
             plex_interface=plex_interface, force_reload=False, log=log,
         )
-
-    return None

@@ -327,7 +327,7 @@ def reschedule_task(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log = request.state.log # pylint: disable=redefined-outer-name
 
     # Verify job exists, raise 404 if DNE
     if (job := scheduler.get_job(task_id)) is None:
