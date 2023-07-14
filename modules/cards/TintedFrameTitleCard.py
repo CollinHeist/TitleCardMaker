@@ -219,7 +219,7 @@ class TintedFrameTitleCard(BaseCardType):
             *self.resize_and_style,
             f'-crop {crop_width}x{crop_height}+0+0',
             f'+repage \)',
-            # Overlay unblurred center area 
+            # Overlay unblurred center area
             f'-composite',
         ]
 
@@ -313,7 +313,7 @@ class TintedFrameTitleCard(BaseCardType):
             f'-composite',
         ]
 
-    
+
     @property
     def logo_commands(self) -> ImageMagickCommands:
         """
@@ -400,7 +400,9 @@ class TintedFrameTitleCard(BaseCardType):
             margin = 25
         # Element is logo
         elif self.top_element == 'logo':
-            element_width, logo_height = self.get_image_dimensions(self.logo)
+            element_width, logo_height = self.image_magick.get_image_dimensions(
+                self.logo
+            )
             element_width /= (logo_height / 150)
             margin = 25
         # Element is title text
@@ -447,7 +449,7 @@ class TintedFrameTitleCard(BaseCardType):
         # Coordinates used by multiple rectangles
         INSET = self.BOX_OFFSET
         BOX_WIDTH = self.BOX_WIDTH
-        BottomLeft = Coordinate(INSET + BOX_WIDTH, self.HEIGHT - INSET)
+        # BottomLeft = Coordinate(INSET + BOX_WIDTH, self.HEIGHT - INSET)
         BottomRight = Coordinate(self.WIDTH - INSET, self.HEIGHT - INSET)
 
         # This frame is uninterrupted, draw single rectangle
@@ -473,7 +475,9 @@ class TintedFrameTitleCard(BaseCardType):
             margin = 25
         # Element is logo
         elif self.bottom_element == 'logo':
-            element_width, logo_height = self.get_image_dimensions(self.logo)
+            element_width, logo_height = self.image_magick.get_image_dimensions(
+                self.logo
+            )
             element_width /= (logo_height / 150)
             margin = 25
         # Element is title
@@ -500,7 +504,7 @@ class TintedFrameTitleCard(BaseCardType):
             Coordinate(right_box_x, self.HEIGHT - INSET - BOX_WIDTH),
             BottomRight,
         )
-        
+
         return [
             bottom_left_rectangle.draw(),
             bottom_right_rectangle.draw(),
@@ -523,7 +527,7 @@ class TintedFrameTitleCard(BaseCardType):
         INSET = self.BOX_OFFSET
         BOX_WIDTH = self.BOX_WIDTH
         TopLeft = Coordinate(INSET, INSET)
-        TopRight = Coordinate(self.WIDTH - INSET, INSET + BOX_WIDTH)
+        # TopRight = Coordinate(self.WIDTH - INSET, INSET + BOX_WIDTH)
         BottomLeft = Coordinate(INSET + BOX_WIDTH, self.HEIGHT - INSET)
         BottomRight = Coordinate(self.WIDTH - INSET, self.HEIGHT - INSET)
 
@@ -559,9 +563,10 @@ class TintedFrameTitleCard(BaseCardType):
 
     @staticmethod
     def modify_extras(
-            extras: dict[str, Any],
+            extras: dict,
             custom_font: bool,
-            custom_season_titles: bool) -> None:
+            custom_season_titles: bool,
+        ) -> None:
         """
         Modify the given extras based on whether font or season titles
         are custom.
@@ -582,7 +587,7 @@ class TintedFrameTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
