@@ -1,8 +1,8 @@
 from pathlib import Path
+from re import compile as re_compile
 from typing import Any, Optional
 
 from num2words import num2words
-from re import compile as re_compile
 
 from modules.Debug import log
 import modules.global_objects as global_objects
@@ -78,6 +78,7 @@ class SeasonPosterSet(YamlReader):
 
         # Create SeasonPoster objects
         self.__prepare_posters(poster_config, episode_map)
+        return None
 
 
     def __read_font(self) -> None:
@@ -117,10 +118,13 @@ class SeasonPosterSet(YamlReader):
                 log.error(f'Font size "{size}" is invalid, specify as "x%"')
                 self.valid = False
 
+        return None
+
 
     def __prepare_posters(self,
-            poster_config: dict[str, Any],
-            episode_map: 'EpisodeMap') -> None:
+            poster_config: dict,
+            episode_map: 'EpisodeMap', # type: ignore
+        ) -> None:
         """
         Create SeasonPoster objects for all available season poster
         images, using the given config.

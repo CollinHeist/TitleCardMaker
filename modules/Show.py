@@ -187,6 +187,8 @@ class Show(YamlReader):
         self.tmdb_interface = None
         self.__is_archive = False
 
+        return None
+
 
     def __str__(self) -> str:
         """Returns a string representation of the object."""
@@ -272,7 +274,7 @@ class Show(YamlReader):
 
         if (value := self._get('tvdb_id', type_=int)) is not None:
             self.info_set.set_tvdb_id(self.series_info, value)
-        
+
         if (value := self._get('tvrage_id', type_=int)) is not None:
             self.info_set.set_tvrage_id(self.series_info, value)
 
@@ -469,7 +471,7 @@ class Show(YamlReader):
             show has no media directory.
         """
 
-        # If this entry should not be written to a media directory, return 
+        # If this entry should not be written to a media directory, return
         if not self.media_directory:
             return None
 
@@ -593,7 +595,7 @@ class Show(YamlReader):
 
         # Apply filter of only those needing ID's, get only EpisodeInfo objects
         infos = list(
-            ep.episode_info for ep in 
+            ep.episode_info for ep in
             filter(episode_needs_id, self.episodes.values())
         )
 
@@ -681,6 +683,8 @@ class Show(YamlReader):
         if modified:
             self.read_source()
 
+        return None
+
 
     def download_logo(self) -> None:
         """
@@ -722,6 +726,8 @@ class Show(YamlReader):
             if self.logo.exists():
                 log.debug(f'Downloaded logo for {self}')
 
+        return None
+
 
     def __apply_styles(self, select_only: Optional[Episode] = None) -> bool:
         """
@@ -747,12 +753,12 @@ class Show(YamlReader):
 
         # If this is an archive, assume all episodes are watched
         if self.__is_archive:
-            [episode.update_statuses(True, self.style_set)
-             for _, episode in self.episodes.items()]
+            for episode in self.episodes.values():
+                episode.update_statuses(True, self.style_set)
         # If no MediaServer interface, assume all episodes are unwatched
         elif media_interface is None:
-            [episode.update_statuses(False, self.style_set)
-             for _, episode in self.episodes.items()]
+            for episode in self.episodes.values():
+                episode.update_statuses(False, self.style_set)
         # Update watch statuses from Plex
         else:
             episode_map = self.episodes
@@ -780,7 +786,7 @@ class Show(YamlReader):
                 episode.update_source(self.backdrop, downloadable=False)
 
             # Override source if applies to all, or unwatched if ep is unwatched
-            if (applies_to == 'all' or 
+            if (applies_to == 'all' or
                 (applies_to == 'unwatched' and not episode.watched)):
                 episode.update_source(manual_source, downloadable=False)
 
@@ -837,7 +843,7 @@ class Show(YamlReader):
             and ('tmdb' in self.image_source_priority))
         always_check_plex = (
             bool(self.plex_interface)
-            and ('plex' in self.image_source_priority) 
+            and ('plex' in self.image_source_priority)
             and self.plex_interface.has_series(self.library_name,
                                                self.series_info))
 
@@ -864,7 +870,7 @@ class Show(YamlReader):
                     self.series_info, episode.episode_info
                 )
             )
-            
+
             # Go through each source interface indicated, try and get source
             for source_interface in self.image_source_priority:
                 image = None
@@ -893,8 +899,9 @@ class Show(YamlReader):
                         pb = self.tmdb_interface.is_permanently_blacklisted(
                             self.series_info, episode.episode_info
                         )
-                        if pb: continue
-                        else:  break
+                        if pb:
+                            continue
+                        break
 
                 # Attempt to download image, log status and exit loop
                 if image:
@@ -1020,6 +1027,7 @@ class Show(YamlReader):
 
         # Update record keeeper
         global_objects.show_record_keeper.add_config(self)
+        return None
 
 
     def create_season_posters(self) -> None:

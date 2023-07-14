@@ -20,7 +20,7 @@ class ShowRecordKeeper:
 
     Hashes are stored by the series' full name and associated media
     directory, so changes to the media directory will result in a NEW
-    hash, not a changed one. 
+    hash, not a changed one.
     """
 
     """Attributes of a Show object that should affect a shows record"""
@@ -96,7 +96,7 @@ class ShowRecordKeeper:
         hash_obj.update(str(record).encode('utf-8'))
 
 
-    def __get_show_hash(self, show: 'Show') -> int:
+    def __get_show_hash(self, show: 'Show') -> int: # type: ignore
         """
         Get the hash of the given config. This hash is deterministic,
         and is based only on attributes of the config that visually
@@ -129,7 +129,7 @@ class ShowRecordKeeper:
         return int.from_bytes(hash_obj.digest(), 'big')
 
 
-    def is_updated(self, show: 'Show') -> bool:
+    def is_updated(self, show: 'Show') -> bool: # type: ignore
         """
         Determine whether the given show is an update on the recorded
         config.
@@ -160,7 +160,7 @@ class ShowRecordKeeper:
         return False
 
 
-    def add_config(self, show: 'Show') -> None:
+    def add_config(self, show: 'Show') -> None: # type: ignore
         """
         Add the given show's hash to this object's record database.
 

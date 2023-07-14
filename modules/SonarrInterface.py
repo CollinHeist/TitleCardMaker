@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from re import IGNORECASE, compile as re_compile
+from sys import exit as sys_exit
 from typing import Any, Optional
 
 from modules.Debug import log
@@ -37,7 +38,7 @@ class SonarrInterface(WebInterface, SyncInterface):
             api_key: str,
             verify_ssl: bool = True,
             downloaded_only: bool = True,
-            server_id: int = 0
+            server_id: int = 0,
         ) -> None:
         """
         Construct a new instance of an interface to Sonarr.
@@ -66,7 +67,7 @@ class SonarrInterface(WebInterface, SyncInterface):
             self.url = url
         elif (re_match := self._URL_REGEX.match(url)) is None:
             log.critical(f'Invalid Sonarr URL "{url}"')
-            exit(1)
+            sys_exit(1)
         else:
             self.url = f'{re_match.group(1)}/api/v3/'
 
@@ -81,10 +82,10 @@ class SonarrInterface(WebInterface, SyncInterface):
             status =self._get(f'{self.url}system/status',self.__standard_params)
             if status.get('appName') != 'Sonarr':
                 log.critical(f'Cannot get Sonarr status - invalid URL/API key')
-                exit(1)
+                sys_exit(1)
         except Exception as e:
             log.critical(f'Cannot connect to Sonarr - returned error: "{e}"')
-            exit(1)
+            sys_exit(1)
 
         # Parse all Sonarr series
         self.__series_data = {}
@@ -141,9 +142,12 @@ class SonarrInterface(WebInterface, SyncInterface):
             ]
 
             # Also store under any provided database ID's
-            if series.get('imdbId'): keys.append(f'imdb:{series["imdbId"]}')
-            if series.get('tvdbId'): keys.append(f'tvdb:{series["tvdbId"]}')
-            if tvrage_id:            keys.append(f'tvrage:{tvrage_id}')
+            if series.get('imdbId'):
+                keys.append(f'imdb:{series["imdbId"]}')
+            if series.get('tvdbId'):
+                keys.append(f'tvdb:{series["tvdbId"]}')
+            if tvrage_id:
+                keys.append(f'tvrage:{tvrage_id}')
 
             # Also store series under any available alternative titles
             for alt_title in series['alternateTitles']:
@@ -168,16 +172,16 @@ class SonarrInterface(WebInterface, SyncInterface):
         # Check for series under any possible keys
         if self.__series_data.get(series_info.full_name):
             return True
-        elif (series_info.has_id('imdb_id')
+        if (series_info.has_id('imdb_id')
             and self.__series_data.get(f'imdb:{series_info.imdb_id}')):
             return True
-        elif (series_info.has_id('sonarr_id')
+        if (series_info.has_id('sonarr_id')
             and self.__series_data.get(f'sonarr:{series_info.sonarr_id}')):
             return True
-        elif (series_info.has_id('tvdb_id')
+        if (series_info.has_id('tvdb_id')
             and self.__series_data.get(f'tvdb:{series_info.tvdb_id}')):
             return True
-        elif (series_info.has_id('tvrage_id')
+        if (series_info.has_id('tvrage_id')
             and self.__series_data.get(f'tvrage_id:{series_info.tvrage_id}')):
             return True
 
@@ -185,7 +189,7 @@ class SonarrInterface(WebInterface, SyncInterface):
 
 
     def get_all_series(self,
-            required_tags: list[str] = [], 
+            required_tags: list[str] = [],
             excluded_tags: list[str] = [],
             monitored_only: bool = False,
             downloaded_only: bool = False,
@@ -320,6 +324,7 @@ class SonarrInterface(WebInterface, SyncInterface):
         series_info.set_sonarr_id(data['sonarr_id'])
         series_info.set_tvdb_id(data['tvdb_id'])
         series_info.set_tvrage_id(data['tvrage_id'])
+        return None
 
 
     def get_all_episodes(self,
@@ -345,7 +350,7 @@ class SonarrInterface(WebInterface, SyncInterface):
         # Construct GET arguments
         url = f'{self.url}episode/'
         params = {
-            'apikey': self.__api_key, 
+            'apikey': self.__api_key,
             'seriesId': int(series_info.sonarr_id.split('-')[1])
         }
 
@@ -419,7 +424,7 @@ class SonarrInterface(WebInterface, SyncInterface):
 
 
     def set_episode_ids(self,
-            library_name: Any,
+            library_name: Any, # pylint: disable=unused-argument
             series_info: SeriesInfo,
             episode_infos: list[EpisodeInfo],
             inplace: bool = False
