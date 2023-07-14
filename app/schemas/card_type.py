@@ -186,6 +186,7 @@ class LandscapeCardType(BaseCardType):
 
 class LogoCardType(BaseCardTypeCustomFontAllText):
     source_file: Path
+    logo_file: FilePath
     font_color: BetterColor = LogoTitleCard.TITLE_COLOR
     font_file: Path = LogoTitleCard.TITLE_FONT
     separator: str = '•'
@@ -196,8 +197,9 @@ class LogoCardType(BaseCardTypeCustomFontAllText):
 
     @root_validator(skip_on_failure=True)
     def validate_source_file(cls, values):
-        if values['use_background_image'] and not values['source_file'].exists():
-            raise ValueError(f'Source file indicated and does not exist')
+        if values['use_background_image']:
+            if not values['source_file'] or not values['source_file'].exists():
+                raise ValueError(f'Source file indicated and does not exist')
 
         return values
 
