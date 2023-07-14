@@ -119,6 +119,9 @@ def delete_template(
     - template_id: ID of the Template to delete.
     """
 
+    # Query for Template, raise 404 if DNE
+    get_template(db, template_id, raise_exc=True)
+
     # Delete Template, update database
     db.delete(get_template(db, template_id, raise_exc=True))
     db.commit()
