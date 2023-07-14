@@ -9,7 +9,9 @@ from imagesize import get as im_get
 
 from modules.Debug import log
 
+
 Dimensions = namedtuple('Dimensions', ('width', 'height'))
+
 
 class ImageMagickInterface:
     """
@@ -138,9 +140,8 @@ class ImageMagickInterface:
         # Execute, capturing stdout and stderr
         stdout, stderr = b'', b''
         try:
-            # with Popen(cmd, stdout=PIPE, stderr=PIPE) as process:
-            process = Popen(cmd, stdout=PIPE, stderr=PIPE)
-            stdout, stderr = process.communicate(timeout=self.timeout)
+            with Popen(cmd, stdout=PIPE, stderr=PIPE) as process:
+                stdout, stderr = process.communicate(timeout=self.timeout)
         except TimeoutExpired:
             log.error(f'ImageMagick command timed out')
             log.debug(command)

@@ -3,6 +3,7 @@ from pathlib import Path
 from modules.Debug import log
 from modules.ImageMaker import ImageMaker
 
+
 class GenreMaker(ImageMaker):
     """
     This class defines a type of maker that creates genre cards. These
