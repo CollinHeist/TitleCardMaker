@@ -3,19 +3,21 @@ from datetime import datetime
 from sys import exit as sys_exit
 from typing import Optional, Union
 
+from modules import global_objects
 from modules.Debug import log
 from modules.Episode import Episode
 from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo import EpisodeInfo
 from modules.SeasonPosterSet import SeasonPosterSet
-import modules.global_objects as global_objects
 from modules.MediaServer import MediaServer
 from modules.SeriesInfo import SeriesInfo
 from modules.StyleSet import StyleSet
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
 
+
 SourceImage = Union[bytes, None]
+
 
 class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
     """
@@ -70,16 +72,16 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # Authenticate with server
         try:
-            response = self.session._get(
+            response = self.session.get(
                 f'{self.url}/System/Info',
                 params=self.__params
             )
 
             if not set(response).issuperset({'ServerName', 'Version', 'Id'}):
-                raise Exception(f'Unable to authenticate with server')
-        except Exception as e:
-            log.critical(f'Cannot connect to Jellyfin - returned error {e}')
-            log.exception(f'Bad Jellyfin connection', e)
+                raise ConnectionError(f'Unable to authenticate with server')
+        except Exception as exc:
+            log.critical(f'Cannot connect to Jellyfin - returned error {exc}')
+            log.exception(f'Bad Jellyfin connection', exc)
             sys_exit(1)
 
         # Get user ID if indicated
@@ -106,7 +108,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         """
 
         # Query for list of all users on this server
-        response = self.session._get(
+        response = self.session.get(
             f'{self.url}/Users',
             params=self.__params,
         )
@@ -129,7 +131,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         """
 
         # Get all libraries in this server
-        libraries = self.session._get(
+        libraries = self.session.get(
             f'{self.url}/Items',
             params={
                 'recursive': True,
@@ -173,7 +175,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         } | self.__params
 
         # Look for this series in this library
-        response = self.session._get(f'{self.url}/Items', params=params)
+        response = self.session.get(f'{self.url}/Items', params=params)
 
         # If no responses, skip
         if response['TotalRecordCount'] > 0:
@@ -213,23 +215,20 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             library_name: Optional[str],
             series_info: SeriesInfo,
             episode_infos: list[EpisodeInfo],
+            *,
             inplace: bool = False,
         ) -> None:
         """
         Set the Episode ID's for the given EpisodeInfo objects.
 
         Args:
-            series_info: Series to get the episodes of.
-            episode_infos: List of EpisodeInfo objects to set the ID's
-                of.
-            inplace: Whether to modify episode_infos directly, or use
-                the global MediaInfoSet object.
+            library_name: Name of the library the series is under.
+            series_info: SeriesInfo for the entry.
+            episode_infos: List of EpisodeInfo objects to update.
+            inplace: Unused argument.
         """
 
-        if inplace:
-            self.get_all_episodes(series_info, episode_infos)
-        else:
-            self.get_all_episodes(series_info)
+        self.get_all_episodes(library_name, series_info, episode_infos)
 
 
     def get_library_paths(self,
@@ -249,7 +248,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         """
 
         # Get all library folders
-        libraries = self.session._get(
+        libraries = self.session.get(
             f'{self.url}/Library/VirtualFolders',
             params=self.__params
         )
@@ -311,7 +310,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             if filter_libraries and library not in filter_libraries:
                 continue
 
-            response = self.session._get(
+            response = self.session.get(
                 f'{self.url}/Items',
                 params=params | {'ParentId': library_id}
             )
@@ -340,6 +339,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     def get_all_episodes(self,
+            library_name: str,
             series_info: SeriesInfo,
             episode_infos: Optional[list[EpisodeInfo]] = None,
         ) -> list[EpisodeInfo]:
@@ -348,9 +348,9 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         have already aired are returned.
 
         Args:
+            library_name: Unused argument.
             series_info: Series to get the episodes of.
-            episode_infos: Optional EpisodeInfos. If provided, these are
-                updated instead of using the global MediaInfoSet object.
+            episode_infos: Optional EpisodeInfos to set the ID's of.
 
         Returns:
             List of EpisodeInfo objects for this series.
@@ -362,7 +362,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             return []
 
         # Get all episodes for this series
-        response = self.session._get(
+        response = self.session.get(
             f'{self.url}/Shows/{series_info.jellyfin_id}/Episodes',
             params={'Fields': 'ProviderIds'} | self.__params
         )
@@ -373,7 +373,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
             # Skip Episodes without episode or season numbers
             if (episode.get('IndexNumber', None) is None
                 or episode.get('ParentIndexNumber', None) is None):
-                log.debug(f'Series {series_info} episode is missing index data - {e}')
+                log.debug(f'Series {series_info} episode is missing index data')
                 continue
 
             # Parse airdate for this episode
@@ -425,7 +425,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return all_episodes
 
 
-    def has_series(self, series_info: SeriesInfo) -> bool:
+    def has_series(self, library_name: str, series_info: SeriesInfo) -> bool:
         """
         Determine whether the given series is present within Jellyfin.
 
@@ -472,7 +472,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         )
 
         # Query for all episodes of this series
-        response = self.session._get(
+        response = self.session.get(
             f'{self.url}/Shows/{series_info.jellyfin_id}/Episodes',
             params={'UserId': self.user_id} | self.__params
         )
@@ -493,7 +493,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
             # Get characteristics of this Episode's loaded card
             details = self._get_loaded_episode(loaded_series, episode)
-            loaded = (details is not None)
+            loaded = details is not None
             spoiler_status = details['spoiler'] if loaded else None
 
             # Delete and reset card if current spoiler type doesn't match
@@ -610,11 +610,16 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return None
 
 
-    def get_source_image(self, episode_info: EpisodeInfo) -> SourceImage:
+    def get_source_image(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_info: EpisodeInfo,
+        ) -> SourceImage:
         """
         Get the source image given episode within Jellyfin.
 
         Args:
+            library_name: Unused argument
             series_info: The series to get the source image of.
             episode_info: The episode to get the source image of.
 

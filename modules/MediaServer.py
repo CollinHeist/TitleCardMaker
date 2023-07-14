@@ -243,13 +243,18 @@ class MediaServer(ABC):
             library_name: str,
             series_info: SeriesInfo,
             episode_map: dict[str, Episode],
-            style_set: StyleSet) -> None:
+            style_set: StyleSet,
+        ) -> None:
         """Abstract method to update watched statuses of Episode objects."""
         raise NotImplementedError
 
 
     @abstractmethod
-    def set_title_cards(self) -> None:
+    def set_title_cards(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_map: dict[str, Episode],
+        ) -> None:
         """Abstract method to load title cards within this MediaServer."""
         raise NotImplementedError
 
