@@ -302,7 +302,7 @@ if hasattr(args, 'unblacklist'):
     )
 
 if hasattr(args, 'delete_blacklist') and args.delete_blacklist:
-    TMDbInterface.delete_blacklist(**pp.tmdb_interface_kwargs)
+    TMDbInterface.delete_blacklist(pp.database_directory)
 
 if hasattr(args, 'tmdb_download_images') and pp.use_tmdb:
     for arg_set in args.tmdb_download_images:
