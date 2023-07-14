@@ -19,7 +19,7 @@ function getActiveTemplates(activeIds, allTemplates) {
   // Add all active Template values
   if (activeIds !== undefined && activeIds !== null) {
     activeIds.forEach(activeId => {
-      for (let {id, name} of allTemplates) {
+      for (let {id, name} of allTemplates.items) {
         // Found matching Template, add to values array
         if (activeId === id) {
           values.push({name: name, value: id, selected: true});
@@ -29,7 +29,7 @@ function getActiveTemplates(activeIds, allTemplates) {
     });
   }
   // Add all inactive Template values
-  allTemplates.forEach(({id, name}) => {
+  allTemplates.items.forEach(({id, name}) => {
     // Skip Templates already included
     if (activeIds === undefined || activeIds === null) {
       values.push({name: name, value: id, selected: false});
