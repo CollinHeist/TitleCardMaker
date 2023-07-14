@@ -108,6 +108,7 @@ class BaseCardType(ImageMaker):
             grayscale: bool = False,
             *,
             preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
         ) -> None:
         """
         Construct a new CardType. Must call super().__init__() to
@@ -163,7 +164,7 @@ class BaseCardType(ImageMaker):
 
     @staticmethod
     @abstractmethod
-    def is_custom_font() -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Abstract method to determine whether the given font
         characteristics indicate the use of a custom font or not.
@@ -176,7 +177,10 @@ class BaseCardType(ImageMaker):
 
     @staticmethod
     @abstractmethod
-    def is_custom_season_titles() -> bool:
+    def is_custom_season_titles(
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> bool:
         """
         Abstract method to determine whether the given season
         characteristics indicate the use of a custom season title or not.

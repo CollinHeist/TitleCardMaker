@@ -4,6 +4,7 @@ from typing import Literal
 from modules.Debug import log
 from modules.ImageMaker import ImageMaker
 
+
 class AspectRatioFixer(ImageMaker):
     """
     This class describes a type of ImageMaker that corrects the aspect

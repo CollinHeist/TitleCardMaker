@@ -7,6 +7,7 @@ from typing import Optional
 from modules.Debug import log
 from modules.ImageMaker import ImageMaker
 
+
 class BaseSummary(ImageMaker):
     """
     This class describes a type of ImageMaker that specializes in
@@ -36,7 +37,10 @@ class BaseSummary(ImageMaker):
 
 
     @abstractmethod
-    def __init__(self, show: 'Show', created_by: Optional[str] = None) -> None:
+    def __init__(self,
+            show: 'Show', # type: ignore
+            created_by: Optional[str] = None,
+        ) -> None:
         """
         Initialize this object.
 
