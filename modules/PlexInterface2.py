@@ -17,7 +17,6 @@ from requests.exceptions import (
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 
 from modules.Debug import log
-from modules.Episode import Episode
 from modules.EpisodeDataSource2 import EpisodeDataSource
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
@@ -559,12 +558,21 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
         if not (series := self.__get_series(library, series_info, log=log)):
             return None
 
+        # Labels that will result in source skip
+        bad_labels = ('Overlay', 'TCM') if self.integrate_with_pmm else ('TCM',)
+
         # Get Episode from within Plex
         try:
             plex_episode = series.episode(
                 season=episode_info.season_number,
                 episode=episode_info.episode_number
             )
+
+            # Verify this Episode does not have the PMM overlay label
+            if any(label.tag in bad_labels for label in plex_episode.labels):
+                log.warning(f'{series_info} {episode_info} Cannot use Plex '
+                            f'thumbnail, has existing Overlay or Title Card')
+                return None
 
             return (
                 f'{self.__server._baseurl}{plex_episode.thumb}' # pylint: disable=protected-access
