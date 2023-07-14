@@ -1,11 +1,10 @@
-from pathlib import Path
-
 from fastapi import APIRouter, Body, Depends
 
-from app.dependencies import get_preferences, refresh_imagemagick_interface
-from app.schemas.preferences import EpisodeDataSourceToggle, LanguageToggle, Preferences, UpdatePreferences
+from app.dependencies import * # pylint: disable=W0401,W0614
+from app.schemas.preferences import (
+    EpisodeDataSourceToggle, LanguageToggle, Preferences, UpdatePreferences
+)
 
-from modules.Debug import log
 from modules.TMDbInterface2 import TMDbInterface
 
 
@@ -44,7 +43,11 @@ def update_global_settings(
 
 @settings_router.get('/sonarr-libraries', tags=['Sonarr'])
 def get_sonarr_libraries(
-        preferences = Depends(get_preferences)) -> list[dict[str, str]]:
+        preferences: Preferences = Depends(get_preferences)
+    ) -> list[dict[str, str]]:
+    """
+    Get the global Sonarr library mappings.
+    """
 
     return [
         {'name': library, 'path': path}
@@ -54,8 +57,12 @@ def get_sonarr_libraries(
 
 @settings_router.get('/image-source-priority')
 def get_image_source_priority(
-        preferences = Depends(get_preferences)) -> list[EpisodeDataSourceToggle]:
-    
+        preferences: Preferences = Depends(get_preferences)
+    ) -> list[EpisodeDataSourceToggle]:
+    """
+    Get the global image source priority.
+    """
+
     sources = []
     for source in preferences.image_source_priority:
         sources.append({'name': source, 'value': source, 'selected': True})
@@ -68,7 +75,11 @@ def get_image_source_priority(
 
 @settings_router.get('/logo-language-priority')
 def get_tmdb_logo_language_priority(
-        preferences = Depends(get_preferences)) -> list[LanguageToggle]:
+        preferences: Preferences = Depends(get_preferences),
+    ) -> list[LanguageToggle]:
+    """
+    Get the global TMDb logo language priority setting.
+    """
 
     languages = []
     for code in preferences.tmdb_logo_language_priority:

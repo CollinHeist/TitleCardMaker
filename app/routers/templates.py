@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.database.query import get_font, get_template
 from app.dependencies import get_database
 from app.internal.cards import refresh_remote_card_types
-import app.models as models
+from app import models
 from app.schemas.base import UNSPECIFIED
 from app.schemas.series import NewTemplate, Template, UpdateTemplate
 
@@ -20,7 +20,7 @@ template_router = APIRouter(
 def create_template(
         request: Request,
         new_template: NewTemplate = Body(...),
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> Template:
     """
     Create a new Template. Any referenced font_id must exist.
@@ -43,7 +43,7 @@ def create_template(
 
 @template_router.get('/all', status_code=200)
 def get_all_templates(
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> list[Template]:
     """
     Get all defined Templates.
@@ -55,7 +55,7 @@ def get_all_templates(
 @template_router.get('/{template_id}', status_code=200)
 def get_template_by_id(
         template_id: int,
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> Template:
     """
     Get the Template with the given ID.
@@ -71,7 +71,7 @@ def update_template_(
         request: Request,
         template_id: int,
         update_template: UpdateTemplate = Body(...),
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> Template:
     """
     Update the Template with the given ID. Only provided fields are
@@ -111,7 +111,7 @@ def update_template_(
 @template_router.delete('/{template_id}', status_code=204)
 def delete_template(
         template_id: int,
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> None:
     """
     Delete the specified Template.

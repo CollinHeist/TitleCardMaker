@@ -5,7 +5,7 @@ from re import match as re_match
 from typing import Literal, Optional, Union
 
 from pydantic import (
-    Field, FilePath, PositiveFloat, conint, constr, root_validator, validator
+    FilePath, PositiveFloat, conint, constr, root_validator, validator
 )
 
 from app.schemas.base import Base, BetterColor
@@ -38,15 +38,15 @@ Base classes
 class BaseCardType(Base):
     source_file: FilePath
     card_file: Path
-    blur: bool = Field(default=False)
-    grayscale: bool = Field(default=False)
+    blur: bool = False
+    grayscale: bool = False
 
 class BaseCardTypeAllText(BaseCardType):
     title_text: str
     season_text: str
     episode_text: str
-    hide_season_text: bool = Field(default=False)
-    hide_episode_text: bool = Field(default=False)
+    hide_season_text: bool = False
+    hide_episode_text: bool = False
 
     @root_validator(skip_on_failure=True)
     def toggle_text_hiding(cls, values):
@@ -58,58 +58,51 @@ class BaseCardTypeAllText(BaseCardType):
 class BaseCardTypeCustomFontNoText(BaseCardType):
     font_color: BetterColor
     font_file: FilePath
-    font_interline_spacing: int = Field(default=0)
-    font_kerning: float = Field(default=1.0)
-    font_size: PositiveFloat = Field(default=1.0)
-    font_stroke_width: float = Field(default=1.0)
-    font_vertical_shift: int = Field(default=0)
+    font_interline_spacing: int = 0
+    font_kerning: float = 1.0
+    font_size: PositiveFloat = 1.0
+    font_stroke_width: float = 1.0
+    font_vertical_shift: int = 0
 
 class BaseCardTypeCustomFontAllText(BaseCardTypeAllText):
     font_color: BetterColor
     font_file: FilePath
-    font_interline_spacing: int = Field(default=0)
-    font_kerning: float = Field(default=1.0)
-    font_size: PositiveFloat = Field(default=1.0)
-    font_stroke_width: float = Field(default=1.0)
-    font_vertical_shift: int = Field(default=0)
+    font_interline_spacing: int = 0
+    font_kerning: float = 1.0
+    font_size: PositiveFloat = 1.0
+    font_stroke_width: float = 1.0
+    font_vertical_shift: int = 0
 
 """
 Creation classes
 """
 class AnimeCardType(BaseCardTypeCustomFontAllText):
-    font_color: BetterColor = Field(default=AnimeTitleCard.TITLE_COLOR)
-    font_file: FilePath = Field(
-        default=AnimeTitleCard.REF_DIRECTORY / 'Flanker Griffo.otf'
-    )
-
-    kanji: Optional[str] = Field(default=None)
-    require_kanji: bool = Field(default=False)
-    kanji_vertical_shift: int = Field(default=0)
-    separator: str = Field(default='·')
-    omit_gradient: bool = Field(default=False)
-    stroke_color: BetterColor = Field(default='black')
-    episode_text_color: BetterColor = Field(
-        default=AnimeTitleCard.SERIES_COUNT_TEXT_COLOR
-    )
+    font_color: BetterColor = AnimeTitleCard.TITLE_COLOR
+    font_file: FilePath = AnimeTitleCard.REF_DIRECTORY / 'Flanker Griffo.otf'
+    kanji: Optional[str] = None
+    require_kanji: bool = False
+    kanji_vertical_shift: int = 0
+    separator: str = '·'
+    omit_gradient: bool = False
+    stroke_color: BetterColor = 'black'
+    episode_text_color: BetterColor = AnimeTitleCard.SERIES_COUNT_TEXT_COLOR
 
 RandomAngleRegex = r'random\[([+-]?\d+.?\d*),\s*([+-]?\d+.?\d*)\]'
 RandomAngle = constr(regex=RandomAngleRegex)
 class ComicBookCardType(BaseCardTypeCustomFontAllText):
-    font_color: BetterColor = Field(default=ComicBookTitleCard.TITLE_COLOR)
-    font_file: FilePath = Field(default=ComicBookTitleCard.TITLE_FONT)
-    episode_text_color: BetterColor = Field(default='black')
-    index_text_position: Literal['left', 'middle', 'right'] = Field(
-        default='left'
-    )
-    text_box_fill_color: BetterColor = Field(default='white')
-    text_box_edge_color: Optional[BetterColor] = Field(default=None)
-    title_text_rotation_angle: Union[float, RandomAngle] = Field(default=-4.0)
-    index_text_rotation_angle: Union[float, RandomAngle] = Field(default=-4.0)
-    banner_fill_color: BetterColor = Field(default='rgba(235,73,69,0.6)')
-    title_banner_shift: int = Field(default=0)
-    index_banner_shift: int = Field(default=0)
-    hide_title_banner: bool = Field(default=None)
-    hide_index_banner: bool = Field(default=None)
+    font_color: BetterColor = ComicBookTitleCard.TITLE_COLOR
+    font_file: FilePath = ComicBookTitleCard.TITLE_FONT
+    episode_text_color: BetterColor = 'black'
+    index_text_position: Literal['left', 'middle', 'right'] = 'left'
+    text_box_fill_color: BetterColor = 'white'
+    text_box_edge_color: Optional[BetterColor] = None
+    title_text_rotation_angle: Union[float, RandomAngle] = -4.0
+    index_text_rotation_angle: Union[float, RandomAngle] = -4.0
+    banner_fill_color: BetterColor = 'rgba(235,73,69,0.6)'
+    title_banner_shift: int = 0
+    index_banner_shift: int = 0
+    hide_title_banner: bool = None
+    hide_index_banner: bool = None
 
     @validator('title_text_rotation_angle', 'index_text_rotation_angle')
     def validate_random_angle(cls, val):
@@ -137,48 +130,48 @@ class ComicBookCardType(BaseCardTypeCustomFontAllText):
 class CutoutCardType(BaseCardType):
     title_text: str
     episode_text: str
-    font_color: BetterColor = Field(default=CutoutTitleCard.TITLE_COLOR)
-    font_file: FilePath = Field(default=CutoutTitleCard.TITLE_FONT)
-    overlay_color: BetterColor = Field(default='black')
-    blur_edges: bool = Field(default=False)
+    font_color: BetterColor = CutoutTitleCard.TITLE_COLOR
+    font_file: FilePath = CutoutTitleCard.TITLE_FONT
+    overlay_color: BetterColor = 'black'
+    blur_edges: bool = False
 
 TextPosition = Literal[
     'upper left', 'upper right', 'right', 'lower right', 'lower left', 'left'
 ]
 class DividerCardType(BaseCardTypeCustomFontAllText):
-    font_color: BetterColor = Field(default=DividerTitleCard.TITLE_COLOR)
-    font_file: FilePath = Field(default=DividerTitleCard.TITLE_FONT)
-    stroke_color: BetterColor = Field(default='black')
-    title_text_position: Literal['left', 'right'] = Field(default='left')
-    text_position: TextPosition = Field(default='lower right')
+    font_color: BetterColor = DividerTitleCard.TITLE_COLOR
+    font_file: FilePath = DividerTitleCard.TITLE_FONT
+    stroke_color: BetterColor = 'black'
+    title_text_position: Literal['left', 'right'] = 'left'
+    text_position: TextPosition = 'lower right'
 
 class FadeCardType(BaseCardTypeCustomFontAllText):
-    font_color: BetterColor = Field(default=FadeTitleCard.TITLE_COLOR)
-    font_file: FilePath = Field(default=FadeTitleCard.TITLE_FONT)
-    logo: Optional[FilePath] = Field(default=None)
-    episode_text_color: BetterColor = Field(default=FadeTitleCard.EPISODE_TEXT_COLOR)
-    separator: str = Field(default='•')
+    font_color: BetterColor = FadeTitleCard.TITLE_COLOR
+    font_file: FilePath = FadeTitleCard.TITLE_FONT
+    logo: Optional[FilePath] = None
+    episode_text_color: BetterColor = FadeTitleCard.EPISODE_TEXT_COLOR
+    separator: str = '•'
 
 class FrameCardType(BaseCardTypeCustomFontAllText):
-    font_color: BetterColor = Field(default=FrameTitleCard.TITLE_COLOR)
-    font_file: FilePath = Field(default=FrameTitleCard.TITLE_FONT)
-    episode_text_color: BetterColor = Field(default=FrameTitleCard.EPISODE_TEXT_COLOR)
-    episode_text_position: Literal['left', 'right', 'surround'] = Field(default='surround')
-    interword_spacing: int = Field(default=0)
+    font_color: BetterColor = FrameTitleCard.TITLE_COLOR
+    font_file: FilePath = FrameTitleCard.TITLE_FONT
+    episode_text_color: BetterColor = FrameTitleCard.EPISODE_TEXT_COLOR
+    episode_text_position: Literal['left', 'right', 'surround'] = 'surround'
+    interword_spacing: int = 0
 
 BoxAdjustmentRegex = r'^([-+]?\d+)\s+([-+]?\d+)\s+([-+]?\d+)\s+([-+]?\d+)$'
 BoxAdjustments = constr(regex=BoxAdjustmentRegex)
 class LandscapeCardType(BaseCardType):
     title_text: str
-    font_color: BetterColor = Field(default=LandscapeTitleCard.TITLE_COLOR)
-    font_file: FilePath = Field(default=LandscapeTitleCard.TITLE_FONT)
-    font_interline_spacing: int = Field(default=0)
-    font_kerning: float = Field(default=1.0)
-    font_size: PositiveFloat = Field(default=1.0)
-    font_vertical_shift: int = Field(default=0)
-    darken: Union[Literal['all', 'box'], bool] = Field(default=False)
-    add_bounding_box: bool = Field(default=False)
-    box_adjustments: BoxAdjustments = Field(default=(0, 0, 0, 0))
+    font_color: BetterColor = LandscapeTitleCard.TITLE_COLOR
+    font_file: FilePath = LandscapeTitleCard.TITLE_FONT
+    font_interline_spacing: int = 0
+    font_kerning: float = 1.0
+    font_size: PositiveFloat = 1.0
+    font_vertical_shift: int = 0
+    darken: Union[Literal['all', 'box'], bool] = False
+    add_bounding_box: bool = False
+    box_adjustments: BoxAdjustments = (0, 0, 0, 0)
 
     @validator('box_adjustments')
     def parse_box_adjustments(cls, val):
@@ -186,13 +179,13 @@ class LandscapeCardType(BaseCardType):
 
 class LogoCardType(BaseCardTypeCustomFontAllText):
     source_file: Path
-    font_color: BetterColor = Field(default=LogoTitleCard.TITLE_COLOR)
-    font_file: Path = Field(default=LogoTitleCard.TITLE_FONT)
-    separator: str = Field(default='•')
-    stroke_color: BetterColor = Field(default='black')
-    omit_gradient: bool = Field(default=True)
-    use_background_image: bool = Field(default=False)
-    blur_only_image: bool = Field(default=False)
+    font_color: BetterColor = LogoTitleCard.TITLE_COLOR
+    font_file: Path = LogoTitleCard.TITLE_FONT
+    separator: str = '•'
+    stroke_color: BetterColor = 'black'
+    omit_gradient: bool = True
+    use_background_image: bool = False
+    blur_only_image: bool = False
 
     @root_validator(skip_on_failure=True)
     def validate_source_file(cls, values):
@@ -204,22 +197,22 @@ class LogoCardType(BaseCardTypeCustomFontAllText):
 class OlivierCardType(BaseCardTypeCustomFontNoText):
     title_text: str
     episode_text: str
-    hide_episode_text: bool = Field(default=False)
-    font_color: BetterColor = Field(default=OlivierTitleCard.TITLE_COLOR)
-    font_file: FilePath = Field(default=OlivierTitleCard.TITLE_FONT)
-    episode_text_color: BetterColor = Field(default=OlivierTitleCard.EPISODE_TEXT_COLOR)
-    stroke_color: BetterColor = Field(default=OlivierTitleCard.STROKE_COLOR)
-    interword_spacing: int = Field(default=0)
+    hide_episode_text: bool = False
+    font_color: BetterColor = OlivierTitleCard.TITLE_COLOR
+    font_file: FilePath = OlivierTitleCard.TITLE_FONT
+    episode_text_color: BetterColor = OlivierTitleCard.EPISODE_TEXT_COLOR
+    stroke_color: BetterColor = OlivierTitleCard.STROKE_COLOR
+    interword_spacing: int = 0
 
 class PosterCardType(BaseCardType):
     title_text: str
     episode_text: str
-    font_color: BetterColor = Field(default=PosterTitleCard.TITLE_COLOR)
-    font_file: FilePath = Field(default=PosterTitleCard.TITLE_FONT)
-    font_interline_spacing: int = Field(default=0)
-    font_size: PositiveFloat = Field(default=1.0)
-    logo_file: Optional[FilePath] = Field(default=None)
-    episode_text_color: Optional[BetterColor] = Field(default=None)
+    font_color: BetterColor = PosterTitleCard.TITLE_COLOR
+    font_file: FilePath = PosterTitleCard.TITLE_FONT
+    font_interline_spacing: int = 0
+    font_size: PositiveFloat = 1.0
+    logo_file: Optional[FilePath] = None
+    episode_text_color: Optional[BetterColor] = None
 
     @root_validator(skip_on_failure=True)
     def assign_episode_text_color(cls, values):
@@ -233,35 +226,29 @@ RomanNumeralValue = conint(gt=0, le=RomanNumeralTitleCard.MAX_ROMAN_NUMERAL)
 class RomanNumeralCardType(BaseCardTypeAllText):
     card_file: Path
     episode_number: RomanNumeralValue
-    font_color: BetterColor = Field(default=RomanNumeralTitleCard.TITLE_COLOR)
-    font_size: PositiveFloat = Field(default=1.0)
-    background: BetterColor = Field(default=RomanNumeralTitleCard.BACKGROUND_COLOR)
-    roman_numeral_color: BetterColor = Field(
-        default=RomanNumeralTitleCard.ROMAN_NUMERAL_TEXT_COLOR
-    )
-    season_text_color: BetterColor = Field(
-        default=RomanNumeralTitleCard.SEASON_TEXT_COLOR
-    )
+    font_color: BetterColor = RomanNumeralTitleCard.TITLE_COLOR
+    font_size: PositiveFloat = 1.0
+    background: BetterColor = RomanNumeralTitleCard.BACKGROUND_COLOR
+    roman_numeral_color: BetterColor = RomanNumeralTitleCard.ROMAN_NUMERAL_TEXT_COLOR
+    season_text_color: BetterColor = RomanNumeralTitleCard.SEASON_TEXT_COLOR
 
 class StandardCardType(BaseCardTypeCustomFontAllText):
-    font_color: BetterColor = Field(default=StandardTitleCard.TITLE_COLOR)
-    font_file: FilePath = Field(default=StandardTitleCard.TITLE_FONT)
-    omit_gradient: bool = Field(default=False)
-    separator: str = Field(default='•')
-    stroke_color: BetterColor = Field(default='black')
-    episode_text_color: BetterColor = Field(
-        default=StandardTitleCard.SERIES_COUNT_TEXT_COLOR
-    )
+    font_color: BetterColor = StandardTitleCard.TITLE_COLOR
+    font_file: FilePath = StandardTitleCard.TITLE_FONT
+    omit_gradient: bool = False
+    separator: str = '•'
+    stroke_color: BetterColor = 'black'
+    episode_text_color: BetterColor = StandardTitleCard.SERIES_COUNT_TEXT_COLOR
 
 class StarWarsCardType(BaseCardType):
     title_text: str
     episode_text: str
-    hide_episode_text: bool = Field(default=False)
-    font_color: BetterColor = Field(default=StarWarsTitleCard.TITLE_COLOR)
-    font_file: FilePath = Field(default=StarWarsTitleCard.TITLE_FONT)
-    font_interline_spacing: int = Field(default=0)
-    font_size: PositiveFloat = Field(default=1.0)
-    episode_text_color: BetterColor = Field(default=StarWarsTitleCard.EPISODE_TEXT_COLOR)
+    hide_episode_text: bool = False
+    font_color: BetterColor = StarWarsTitleCard.TITLE_COLOR
+    font_file: FilePath = StarWarsTitleCard.TITLE_FONT
+    font_interline_spacing: int = 0
+    font_size: PositiveFloat = 1.0
+    episode_text_color: BetterColor = StarWarsTitleCard.EPISODE_TEXT_COLOR
 
     @root_validator(skip_on_failure=True)
     def toggle_text_hiding(cls, values):
@@ -276,20 +263,20 @@ OuterElement = Literal['index', 'logo', 'omit', 'title']
 MiddleElement = Literal['logo', 'omit']
 class TintedFrameCardType(BaseCardTypeAllText):
     logo_file: Path
-    font_color: BetterColor = Field(default=TintedFrameTitleCard.TITLE_COLOR)
-    font_file: FilePath = Field(default=TintedFrameTitleCard.TITLE_FONT)
-    font_interline_spacing: int = Field(default=0)
-    font_kerning: float = Field(default=1.0)
-    font_size: PositiveFloat = Field(default=1.0)
-    font_vertical_shift: int = Field(default=0)
-    separator: str = Field(default='-')
-    episode_text_color: Optional[BetterColor] = Field(default=None)
-    frame_color: Optional[BetterColor] = Field(default=None)
-    top_element: OuterElement = Field(default='title')
-    middle_element: MiddleElement = Field(default='omit')
-    bottom_element: OuterElement = Field(default='index')
-    logo_size: PositiveFloat = Field(default=1.0)
-    blur_edges: bool = Field(default=True)
+    font_color: BetterColor = TintedFrameTitleCard.TITLE_COLOR
+    font_file: FilePath = TintedFrameTitleCard.TITLE_FONT
+    font_interline_spacing: int = 0
+    font_kerning: float = 1.0
+    font_size: PositiveFloat = 1.0
+    font_vertical_shift: int = 0
+    separator: str = '-'
+    episode_text_color: Optional[BetterColor] = None
+    frame_color: Optional[BetterColor] = None
+    top_element: OuterElement = 'title'
+    middle_element: MiddleElement = 'omit'
+    bottom_element: OuterElement = 'index'
+    logo_size: PositiveFloat = 1.0
+    blur_edges: bool = True
 
     @root_validator(skip_on_failure=True)
     def validate_extras(cls, values):
@@ -318,14 +305,12 @@ EpisodeTextPosition = Literal['left', 'center', 'right']
 class TintedGlassCardType(BaseCardTypeCustomFontNoText):
     title_text: str
     episode_text: str
-    hide_episode_text: bool = Field(default=False)
-    font_color: BetterColor = Field(default=TintedGlassTitleCard.TITLE_COLOR)
-    font_file: FilePath = Field(default=TintedGlassTitleCard.TITLE_FONT)
-    episode_text_color: BetterColor = Field(
-        default=TintedGlassTitleCard.EPISODE_TEXT_COLOR
-    )
-    episode_text_position: EpisodeTextPosition = Field(default='center')
-    box_adjustments: BoxAdjustments = Field(default=(0, 0, 0, 0))
+    hide_episode_text: bool = False
+    font_color: BetterColor = TintedGlassTitleCard.TITLE_COLOR
+    font_file: FilePath = TintedGlassTitleCard.TITLE_FONT
+    episode_text_color: BetterColor = TintedGlassTitleCard.EPISODE_TEXT_COLOR
+    episode_text_position: EpisodeTextPosition = 'center'
+    box_adjustments: BoxAdjustments = (0, 0, 0, 0)
 
     @validator('box_adjustments')
     def parse_box_adjustments(cls, val):

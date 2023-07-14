@@ -108,8 +108,10 @@ class UpdatePreferences(UpdateBase):
                 emby_id='abc123', imdb_id='tt1234', jellyfin_id='abc123',
                 tmdb_id=123, tvdb_id=123, tvrage_id=123,
             )
-        except KeyError as e:
-            raise ValueError(f'Invalid Card filename format - missing data {e}')
+        except KeyError as exc:
+            raise ValueError(
+                f'Invalid Card filename format - missing data {exc}'
+            ) from exc
 
         return v
 
@@ -121,9 +123,11 @@ class UpdatePreferences(UpdateBase):
     def validate_folder_formats(cls, v):
         try:
             v.format(season_number=1, episode_number=1, absolute_number=1)
-        except KeyError:
-            raise ValueError(f'Invalid folder format - use "season_number", '
-                             f'"episode_numer" and/or "absolute_number"')
+        except KeyError as exc:
+            raise ValueError(
+                f'Invalid folder format - use "season_number", "episode_numer" '
+                f'and/or "absolute_number"'
+            ) from exc
 
         return v
 
