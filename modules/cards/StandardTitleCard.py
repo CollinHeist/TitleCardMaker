@@ -4,7 +4,6 @@ from typing import Optional
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
-from modules.Debug import log
 
 
 class StandardTitleCard(BaseCardType):
@@ -109,7 +108,7 @@ class StandardTitleCard(BaseCardType):
             episode_text_color: str = SERIES_COUNT_TEXT_COLOR,
             omit_gradient: bool = False,
             preferences: Optional['Preferences'] = None, # type: ignore
-            **unused,
+            **unused
         ) -> None:
         """
         Construct a new instance of this card.
@@ -123,8 +122,8 @@ class StandardTitleCard(BaseCardType):
 
         # Ensure characters that need to be escaped are
         self.title_text = self.image_magick.escape_chars(title_text)
-        self.season_text = self.image_magick.escape_chars(season_text.upper())
-        self.episode_text = self.image_magick.escape_chars(episode_text.upper())
+        self.season_text = self.image_magick.escape_chars(season_text)
+        self.episode_text = self.image_magick.escape_chars(episode_text)
         self.hide_season_text = hide_season_text
         self.hide_episode_text = hide_episode_text
 

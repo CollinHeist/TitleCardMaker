@@ -1,13 +1,26 @@
 from typing import Any
 
+
 class TieredSettings:
     """
-    
+    Class defining some multi-itered Setting dictionaries. All methods
+    and functions relate to finding the highest-priority non-None value
+    of any number of dictionaries.
+
+    For example:
+    >>> settings = TieredSettings.new_settings(
+        {'a': 123, 'b': 234, 'c': None},
+        {'a': None, 'b': 999, 'c': None},
+        {'a': None, 'b': None, 'c': 'test'}
+    )
+    >>> print(settings)
+    {'a': 123, 'b': 999, 'c': 'test'}
     """
 
-    def __init__(self,  
-            merge_base: dict[str, Any],
-            *dicts: tuple[dict[str, Any]]) -> None:
+    def __init__(self,
+            merge_base: dict,
+            *dicts: tuple[dict]
+        ) -> None:
         """
         Initialize a new TieredSettings object. This merges the given
         dictionaries into the given merge_base dictionary.
@@ -24,7 +37,8 @@ class TieredSettings:
         # Merge each provided dictionary (in order)
         for dict_ in dicts:
             # Skip non-Dictionaries
-            if dict_ is None: continue
+            if dict_ is None:
+                continue
 
             # Iterate through all items of the dictionary being merged
             for key, value in dict_.items():
@@ -58,14 +72,26 @@ class TieredSettings:
 
         # Return modified base
         return base
-    
+
 
     @staticmethod
-    def filter(settings: dict[str, Any]) -> dict[str, Any]:
+    def filter(settings: dict) -> dict:
+        """
+        Filter the given settings dictionary any remove any key-value
+        pairs whose value is None.
+
+        Args:
+            settings: Input dictionary to filter.
+
+        Returns:
+            Dictionary identical to `settings` but with all None values
+            removed.
+        """
+
         return {
             key: value for key, value in settings.items() if value is not None
         }
-    
+
 
     @staticmethod
     def resolve_singular_setting(*values: Any) -> Any:

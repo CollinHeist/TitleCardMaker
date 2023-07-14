@@ -1,6 +1,6 @@
 from logging import Logger
 from time import sleep
-from typing import Optional
+from typing import Optional, Union
 
 from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy.exc import OperationalError
@@ -86,7 +86,8 @@ def set_episode_ids(
     # Set ID's from all possible interfaces
     if emby_interface and series.emby_library_name:
         emby_interface.set_episode_ids(
-            series.as_series_info, episode_infos, log=log
+            series.emby_library_name, series.as_series_info, episode_infos,
+            log=log
         )
     if jellyfin_interface and series.jellyfin_library_name:
         jellyfin_interface.set_episode_ids(
@@ -100,10 +101,12 @@ def set_episode_ids(
         )
     if sonarr_interface:
         sonarr_interface.set_episode_ids(
-            series.as_series_info, episode_infos, log=log
+            None, series.as_series_info, episode_infos, log=log
         )
     if tmdb_interface:
-        tmdb_interface.set_episode_ids(series.as_series_info, episode_infos)
+        tmdb_interface.set_episode_ids(
+            None, series.as_series_info, episode_infos, log=log
+        )
 
     # Update database if new ID's are available
     changed = False
@@ -181,7 +184,7 @@ def get_all_episode_data(
     # Verify Series has an associated Library
     library_attribute = f'{episode_data_source.lower()}_library_name'
     if (episode_data_source in ('Emby', 'Jellyfin', 'Plex')
-        and getattr(series, library_attribute, None) is None):
+        and (library := getattr(series, library_attribute, None)) is None):
         if raise_exc:
             raise HTTPException(
                 status_code=409,
@@ -189,23 +192,9 @@ def get_all_episode_data(
             )
         return []
 
-    # Query the Episode data source for Episodes
-    if episode_data_source == 'Emby':
-        return emby_interface.get_all_episodes(series.as_series_info, log=log)
-    if episode_data_source == 'Jellyfin':
-        return jellyfin_interface.get_all_episodes(
-            series.jellyfin_library_name, series.as_series_info, log=log
-        )
-    if episode_data_source == 'Plex':
-        return plex_interface.get_all_episodes(
-            series.plex_library_name, series.as_series_info, log=log
-        )
-    if episode_data_source == 'Sonarr':
-        return sonarr_interface.get_all_episodes(series.as_series_info, log=log)
-    if episode_data_source == 'TMDb':
-        return tmdb_interface.get_all_episodes(series.as_series_info, log=log)
-
-    return []
+    interface: Union[EmbyInterface, JellyfinInterface, PlexInterface,
+                     SonarrInterface, TMDbInterface] = interface
+    return interface.get_all_episodes(library, series.as_series_info, log=log)
 
 
 def refresh_episode_data(

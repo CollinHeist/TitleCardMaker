@@ -4,7 +4,6 @@ from typing import Optional
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
-from modules.Debug import log
 
 
 class AnimeTitleCard(BaseCardType):

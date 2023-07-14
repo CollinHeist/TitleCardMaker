@@ -9,7 +9,6 @@ from modules.BaseCardType import (
 )
 from modules.Debug import log
 
-SeriesExtra = Optional
 
 Position = namedtuple('Position', ('location', 'offset', 'rotation'))
 
@@ -216,7 +215,6 @@ class RomanNumeralTitleCard(BaseCardType):
             'the episode or absolute episode number just behind the title.',
             'Season text, if enabled, is placed at deterministic, but randomly '
             'selected locations around the roman numerals.',
-            # 'This style of title card is based off the official Devilman Crybaby title cards.',
         ]
     )
 
@@ -277,7 +275,7 @@ class RomanNumeralTitleCard(BaseCardType):
     def __init__(self,
             card_file: Path,
             title_text: str,
-            season_text: str, 
+            season_text: str,
             hide_season_text: bool = False,
             hide_episode_text: bool = False,
             font_color: str = TITLE_COLOR,
@@ -285,9 +283,9 @@ class RomanNumeralTitleCard(BaseCardType):
             episode_number: int = 1,
             blur: bool = False,
             grayscale: bool = False,
-            background: SeriesExtra[str] = BACKGROUND_COLOR, 
-            roman_numeral_color: SeriesExtra[str] = ROMAN_NUMERAL_TEXT_COLOR,
-            season_text_color: SeriesExtra[str] = SEASON_TEXT_COLOR,
+            background: str = BACKGROUND_COLOR,
+            roman_numeral_color: str = ROMAN_NUMERAL_TEXT_COLOR,
+            season_text_color: str = SEASON_TEXT_COLOR,
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
         ) -> None:
@@ -311,7 +309,7 @@ class RomanNumeralTitleCard(BaseCardType):
         self.__assign_roman_numeral(episode_number)
 
         # Select roman numeral for season text
-        self.season_text = season_text.strip().upper()
+        self.season_text = season_text
         self.hide_season_text = hide_season_text
         self.hide_episode_text = hide_episode_text
 
@@ -357,6 +355,7 @@ class RomanNumeralTitleCard(BaseCardType):
             roman_text = [numeral]
 
         # Update scalar for this text
+        self.__roman_text_scalar = 1.0
         self.__assign_roman_scalar(roman_text)
 
         # Assign combined roman numeral text
@@ -388,8 +387,6 @@ class RomanNumeralTitleCard(BaseCardType):
         # Scale roman numeral text if line width is larger than card (+margin)
         if max_width > (card_width - 100):
             self.__roman_text_scalar = (card_width - 100) / max_width
-        else:
-            self.__roman_text_scalar = 1.0
 
 
     def create_roman_numeral_command(self,
@@ -476,7 +473,7 @@ class RomanNumeralTitleCard(BaseCardType):
             f'-pointsize {font_size}',
             f'-interword-spacing 40',
             f'-interline-spacing 0',
-            f'-fill "{self.font_color}"',            
+            f'-fill "{self.font_color}"',
             f'-annotate +0+0 "{self.title_text}"',
         ]
 
@@ -493,7 +490,8 @@ class RomanNumeralTitleCard(BaseCardType):
 
         # Select random roman numeral and position on that numeral
         random_index = choice(range(len(self.roman_numeral)))
-        if self.roman_numeral[random_index] == '\n': random_index -= 1
+        if self.roman_numeral[random_index] == '\n':
+            random_index -= 1
         random_letter = self.roman_numeral[random_index]
         random_position = choice(POSITIONS[random_letter])
 

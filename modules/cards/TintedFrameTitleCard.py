@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Optional
 
@@ -5,33 +6,31 @@ from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
 
-
 Element = Literal['index', 'logo', 'omit', 'title']
 MiddleElement = Literal['logo', 'omit']
 
 
+@dataclass(repr=False)
 class Coordinate:
-    __slots__ = ('x', 'y')
-
-    def __init__(self, x: float, y: float) -> None:
-        self.x = x
-        self.y = y
+    """Class that defines a single Coordinate on an x/y plane."""
+    x: float
+    y: float
 
     def __str__(self) -> str:
         return f'{self.x:.0f},{self.y:.0f}'
 
 
+@dataclass(repr=False)
 class Rectangle:
-    __slots__ = ('start', 'end')
-
-    def __init__(self, start: Coordinate, end: Coordinate) -> None:
-        self.start = start
-        self.end = end
+    """Class that defines movable SVG rectangle."""
+    start: Coordinate
+    end: Coordinate
 
     def __str__(self) -> str:
         return f'rectangle {str(self.start)},{str(self.end)}'
 
     def draw(self) -> str:
+        """Draw this Rectangle"""
         return f'-draw "{str(self)}"'
 
 
@@ -159,8 +158,9 @@ class TintedFrameTitleCard(BaseCardType):
             logo_file: Optional[Path] = None,
             logo_size: float = 1.0,
             blur_edges: bool = True,
-            preferences: Optional['Preferences'] = None,                        # type: ignore
-            **unused) -> None:
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
+        ) -> None:
         """
         Construct a new instance of this Card.
         """

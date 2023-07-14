@@ -9,7 +9,6 @@ from modules.BaseCardType import (
 BoxCoordinates = namedtuple('BoxCoordinates', ('x0', 'y0', 'x1', 'y1'))
 Position = Literal['left', 'center', 'right']
 
-
 class TintedGlassTitleCard(BaseCardType):
     """
     This class describes a type of CardType that produces title cards
@@ -19,6 +18,7 @@ class TintedGlassTitleCard(BaseCardType):
     """
 
     """API Parameters"""
+    # pylint: disable=line-too-long
     API_DETAILS = CardDescription(
         name='Tinted Glass',
         identifier='tinted glass',
@@ -47,6 +47,7 @@ class TintedGlassTitleCard(BaseCardType):
             'By default, these cards also feature the name of the series in the episode text.',
         ]
     )
+    # pylint: enable=line-too-long
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'darkened'
@@ -109,7 +110,7 @@ class TintedGlassTitleCard(BaseCardType):
             episode_text_position: Position = 'center',
             box_adjustments: tuple[int, int, int, int] = (0, 0, 0, 0),
             preferences: Optional['Preferences'] = None, # type: ignore
-            **unused
+            **unused,
         ) -> None:
 
         # Initialize the parent class - this sets up an ImageMagickInterface

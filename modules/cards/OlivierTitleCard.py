@@ -72,8 +72,8 @@ class OlivierTitleCard(BaseCardType):
     ARCHIVE_NAME = 'Olivier Style'
 
     __slots__ = (
-        'source_file', 'output_file', 'title_text', 'hide_episode_text', 
-        'episode_prefix', 'episode_text', 'font_color', 'font_file', 
+        'source_file', 'output_file', 'title_text', 'hide_episode_text',
+        'episode_prefix', 'episode_text', 'font_color', 'font_file',
         'font_interline_spacing', 'font_kerning', 'font_size',
         'font_stroke_width', 'font_vertical_shift', 'stroke_color',
         'episode_text_color', 'interword_spacing',
@@ -121,9 +121,7 @@ class OlivierTitleCard(BaseCardType):
             prefix, number = episode_text.split(' ', 1)
             self.episode_prefix = prefix.upper()
             episode_text = number
-        else:
-            episode_text = episode_text
-        self.episode_text = self.image_magick.escape_chars(episode_text.upper())
+        self.episode_text = self.image_magick.escape_chars(episode_text)
 
         # Font customizations
         self.font_color = font_color

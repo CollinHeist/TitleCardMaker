@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Any
+from typing import Optional
 
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
@@ -14,6 +14,7 @@ class StarWarsTitleCard(BaseCardType):
     """
 
     """API Parameters"""
+    # pylint: disable=line-too-long
     API_DETAILS = CardDescription(
         name='Star Wars',
         identifier='star wars',
@@ -27,7 +28,7 @@ class StarWarsTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color of the season and episode text',
-            ), 
+            ),
         ], description=[
             'Title cards intended for Star Wars (or more generically Space-themed) shows.',
             'Similar to the Olivier title card, these cards feature left-aligned title and episode text',
@@ -35,6 +36,7 @@ class StarWarsTitleCard(BaseCardType):
             'This card is not very customizable.',
         ]
     )
+    # pylint: enable=line-too-long
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'star_wars'
@@ -184,28 +186,6 @@ class StarWarsTitleCard(BaseCardType):
             f'-geometry +325-140',
             f'-composite',
         ]
-    
-
-    @staticmethod
-    def modify_extras(
-            extras: dict[str, Any],
-            custom_font: bool,
-            custom_season_titles: bool) -> None:
-        """
-        Modify the given extras based on whether font or season titles
-        are custom.
-
-        Args:
-            extras: Dictionary to modify.
-            custom_font: Whether the font are custom.
-            custom_season_titles: Whether the season titles are custom.
-        """
-
-        # Generic font, reset episode text and box colors
-        if not custom_font:
-            if 'episode_text_color' in extras:
-                extras['episode_text_color'] =\
-                    StarWarsTitleCard.EPISODE_TEXT_COLOR
 
 
     @staticmethod

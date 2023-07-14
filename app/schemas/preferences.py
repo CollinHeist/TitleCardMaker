@@ -143,17 +143,13 @@ class UpdateMediaServerBase(UpdateServerBase):
     def validate_list(cls, v):
         if isinstance(v, str):
             return {
-                'b':         'Bytes',
-                'bytes':     'Bytes',
-                'kb':        'Kilobytes',
-                'kilobytes': 'Kilobytes',
-                'mb':        'Megabytes',
-                'megabytes': 'Megabytes',
-                'gb':        'Gigabytes',
-                'gigabytes': 'Gigabytes',
-                'tb':        'Terabytes',
-                'terabytes': 'Terabytes',
+                'b':         'Bytes',     'bytes':     'Bytes',
+                'kb':        'Kilobytes', 'kilobytes': 'Kilobytes',
+                'mb':        'Megabytes', 'megabytes': 'Megabytes',
+                'gb':        'Gigabytes', 'gigabytes': 'Gigabytes',
+                'tb':        'Terabytes', 'terabytes': 'Terabytes',
             }[v.lower()]
+        return v
 
     @root_validator(skip_on_failure=True, pre=True)
     def validate_filesize(cls, values):

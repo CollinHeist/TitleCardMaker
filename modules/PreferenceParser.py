@@ -943,7 +943,8 @@ class PreferenceParser(YamlReader):
             templates: dict[str, Template],
             series_yaml: dict[str, Any],
             series_name: str, *,
-            raise_exc: bool = False) -> bool:
+            raise_exc: bool = False
+        ) -> bool:
         """
         Apply the correct Template object (if indicated) to the given
         series YAML. This effectively "fill out" the indicated template,
@@ -1000,7 +1001,7 @@ class PreferenceParser(YamlReader):
                 raise HTTPException(
                     status_code=422,
                     detail=f'Error identifying series info of {series_name}',
-                )
+                ) from e
             log.exception(f'Error identifying series info of {series_name}', e)
             log.debug(f'Series YAML: {series_yaml}')
             series_info = None
@@ -1019,7 +1020,8 @@ class PreferenceParser(YamlReader):
             library_map: dict[str, Any],
             font_map: dict[str, Any], *,
             default_media_server: str = 'plex',
-            raise_exc: bool = False) -> Optional[dict]:
+            raise_exc: bool = False
+        ) -> Optional[dict]:
         """
         Apply the indicated template, and merge the specified
         library/font to the given show YAML.

@@ -1,7 +1,7 @@
 from typing import Optional
 
 from fastapi import (
-    APIRouter, BackgroundTasks, Depends, Form, HTTPException, Query, Request,
+    APIRouter, BackgroundTasks, Depends, Form, HTTPException, Request,
     UploadFile,
 )
 from requests import get
@@ -13,7 +13,7 @@ from app.internal.cards import delete_cards
 from app.internal.sources import (
     get_source_image, download_episode_source_image, download_series_logo
 )
-import app.models as models
+from app import models
 from app.schemas.card import SourceImage, TMDbImage
 
 from modules.Debug import log
@@ -31,7 +31,7 @@ def download_series_source_images(
         background_tasks: BackgroundTasks,
         request: Request,
         series_id: int,
-        ignore_blacklist: bool = Query(default=False),
+        # ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
@@ -63,14 +63,12 @@ def download_series_source_images(
             tmdb_interface, episode, raise_exc=False, log=request.state.log,
         )
 
-    return None
-
 
 @source_router.post('/series/{series_id}/backdrop', status_code=200)
 def download_series_backdrop(
         series_id: int,
         request: Request,
-        ignore_blacklist: bool = Query(default=False),
+        # ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
         # emby_interface = Depends(get_emby_interface),
@@ -122,7 +120,7 @@ def download_series_backdrop(
 def download_series_logo_(
         series_id: int,
         request: Request,
-        ignore_blacklist: bool = Query(default=False),
+        # ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
@@ -153,7 +151,7 @@ def download_series_logo_(
 def download_episode_source_image_(
         episode_id: int,
         request: Request,
-        ignore_blacklist: bool = Query(default=False),
+        # ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
@@ -275,8 +273,8 @@ async def set_source_image(
         source_url: Optional[str] = Form(default=None),
         source_file: Optional[UploadFile] = None,
         db: Session = Depends(get_database),
-        preferences = Depends(get_preferences),
-        imagemagick_interface = Depends(get_imagemagick_interface),
+        preferences: Preferences = Depends(get_preferences),
+        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
     ) -> SourceImage:
     """
     Set the Source Image for the given Episode. If there is an existing

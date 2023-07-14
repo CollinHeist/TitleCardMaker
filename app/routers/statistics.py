@@ -3,7 +3,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_database, get_preferences
-import app.models as models
+from app import models
 from app.models.preferences import Preferences
 from app.schemas.statistic import (
     Statistic, CardCount, EpisodeCount, SeriesCount, AssetSize

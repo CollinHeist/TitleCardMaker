@@ -1,20 +1,22 @@
 from abc import abstractmethod
-from typing import Any, Literal, Optional, Union
+from typing import Literal, Optional, Union
 
 from titlecase import titlecase
 
-from modules.Debug import log
+from app.schemas.base import Base
 from modules.ImageMaker import ImageMaker
+
 
 ImageMagickCommands = list[str]
 
-from app.schemas.base import Base
-class Extra(Base):
+
+class Extra(Base): # pylint: disable=missing-class-docstring
     name: str
     identifier: str
     description: str
 
-class CardDescription(Base):
+
+class CardDescription(Base): # pylint: disable=missing-class-docstring
     name: str
     identifier: str
     example: str

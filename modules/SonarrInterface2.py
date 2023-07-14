@@ -7,14 +7,16 @@ from typing import Any, Literal, Optional
 from fastapi import HTTPException
 
 from modules.Debug import log
+from modules.EpisodeDataSource2 import EpisodeDataSource
 from modules.EpisodeInfo2 import EpisodeInfo
+from modules.Interface import Interface
 from modules.SeriesInfo import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
 
 SeriesType = Literal['anime', 'daily', 'standard']
 
-class SonarrInterface(WebInterface, SyncInterface):
+class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface):
     """
     This class describes a Sonarr interface, which is a type of
     WebInterface and SyncInterface object.
@@ -59,8 +61,9 @@ class SonarrInterface(WebInterface, SyncInterface):
             log: (Keyword) Logger for all log messages.
 
         Raises:
-            HTTPException (401) if an invalid URL or API key are
-                provided.
+            HTTPException (401) if the Sonarr system status cannot be
+                pinged.
+            HTTPException (422) if an invalid URL is provided.
         """
 
         # Initialize parent WebInterface
@@ -72,6 +75,10 @@ class SonarrInterface(WebInterface, SyncInterface):
             self.url = url
         elif (re_match := self._URL_REGEX.match(url)) is None:
             log.critical(f'Invalid Sonarr URL "{url}"')
+            raise HTTPException(
+                status_code=422,
+                detail=f'Invalid Sonarr URL',
+            )
         else:
             self.url = f'{re_match.group(1)}/api/v3/'
 
@@ -82,7 +89,7 @@ class SonarrInterface(WebInterface, SyncInterface):
 
         # Query system status to verify connection to Sonarr
         try:
-            status = self._get(
+            status = self.get(
                 f'{self.url}system/status',
                 self.__standard_params,
             )
@@ -95,7 +102,7 @@ class SonarrInterface(WebInterface, SyncInterface):
             log.critical(f'Cannot connect to Sonarr - returned error: "{e}"')
             raise e
 
-        return None
+        self.activate()
 
 
     def get_root_folders(self) -> list[Path]:
@@ -107,13 +114,13 @@ class SonarrInterface(WebInterface, SyncInterface):
         """
 
         return [
-            Path(folder['path']) for folder in 
-            self._get(f'{self.url}rootfolder', self.__standard_params)
+            Path(folder['path']) for folder in
+            self.get(f'{self.url}rootfolder', self.__standard_params)
         ]
 
 
     def get_all_series(self,
-            required_tags: list[str] = [], 
+            required_tags: list[str] = [],
             excluded_tags: list[str] = [],
             monitored_only: bool = False,
             downloaded_only: bool = False,
@@ -143,7 +150,7 @@ class SonarrInterface(WebInterface, SyncInterface):
         """
 
         # Construct GET arguments
-        all_series = self._get(f'{self.url}series', self.__standard_params)
+        all_series = self.get(f'{self.url}series', self.__standard_params)
 
         # Get filtering tags if indicated
         required_tag_ids, excluded_tag_ids = [], []
@@ -151,7 +158,7 @@ class SonarrInterface(WebInterface, SyncInterface):
             # Request all Sonarr tags, create mapping of label -> ID
             all_tags = {
                 tag['label']: tag['id']
-                for tag in self._get(f'{self.url}tag', self.__standard_params)
+                for tag in self.get(f'{self.url}tag', self.__standard_params)
             }
 
             # Convert tag names to ID's
@@ -212,20 +219,26 @@ class SonarrInterface(WebInterface, SyncInterface):
         return series
 
 
-    def set_series_ids(self, series_info: SeriesInfo) -> None:
+    def set_series_ids(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            *,
+            log: Logger = log,
+        ) -> None:
         """
         Set the TVDb ID for the given SeriesInfo object.
 
         Args:
+            library_name: Unused argument.
             series_info: SeriesInfo to update.
         """
 
         # If all possible ID's are defined, exit
         if series_info.has_ids(*self.SERIES_IDS):
             return None
-        
+
         # Search for Series
-        search_results = self._get(
+        search_results = self.get(
             url=f'{self.url}series/lookup',
             params={'term': series_info.name} | self.__standard_params,
         )
@@ -233,7 +246,7 @@ class SonarrInterface(WebInterface, SyncInterface):
         # No results, nothing to set
         if len(search_results) == 0:
             return None
-        
+
         # Find matching Series
         for series in search_results:
             reference_series_info = SeriesInfo(
@@ -253,6 +266,7 @@ class SonarrInterface(WebInterface, SyncInterface):
 
 
     def get_all_episodes(self,
+            library_name: str,
             series_info: SeriesInfo,
             *,
             log: Logger = log,
@@ -262,6 +276,7 @@ class SonarrInterface(WebInterface, SyncInterface):
         have  already aired are returned.
 
         Args:
+            library_name: Unused argument.
             series_info: SeriesInfo for the entry.
             log: (Keyword) Logger for all log messages.
 
@@ -281,7 +296,7 @@ class SonarrInterface(WebInterface, SyncInterface):
         } | self.__standard_params
 
         # Query Sonarr to get JSON of all episodes for this series
-        all_episodes = self._get(url, params)
+        all_episodes = self.get(url, params)
         all_episode_info = []
 
         # Go through each episode and get its season/episode number, and title
@@ -339,6 +354,7 @@ class SonarrInterface(WebInterface, SyncInterface):
 
 
     def set_episode_ids(self,
+            library_name: Optional[str],
             series_info: SeriesInfo,
             episode_infos: list[EpisodeInfo],
             *,
@@ -349,13 +365,16 @@ class SonarrInterface(WebInterface, SyncInterface):
         objects. This sets the TVDb ID for each episode.
 
         Args:
+            library_name: Unused argument.
             series_info: SeriesInfo for the entry.
             episode_infos: List of EpisodeInfo objects to update.
             log: (Keyword) Logger for all log messages.
         """
 
         # Get all episodes for this series
-        new_episode_infos = self.get_all_episodes(series_info, log=log)
+        new_episode_infos = self.get_all_episodes(
+            library_name, series_info, log=log
+        )
 
         # Match to existing info
         for old_episode_info in episode_infos:
@@ -368,8 +387,6 @@ class SonarrInterface(WebInterface, SyncInterface):
                             setattr(old_episode_info, id_type, id_)
                     break
 
-        return None
-
 
     def get_all_tags(self) -> list[dict[str, Any]]:
         """
@@ -380,4 +397,4 @@ class SonarrInterface(WebInterface, SyncInterface):
             "label" for each tag.
         """
 
-        return self._get(f'{self.url}tag', self.__standard_params)
+        return self.get(f'{self.url}tag', self.__standard_params)

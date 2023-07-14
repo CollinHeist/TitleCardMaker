@@ -1,5 +1,6 @@
 from re import compile as re_compile
 
+
 class Version:
     """
     A class describing some semantic version number. This class parses
@@ -11,7 +12,7 @@ class Version:
     >>> v2 = Version('v1.14.2')
     >>> v1 < v2, v1 == v2, v1 > v2
     (True, False, False)
-    
+
     This also works for development-branch tagged versions, such as:
     >>> v3 = Version('v2.0-alpha3.0-webui10')
     >>> v4 = Version('v2.0-alpha3.0-webui3')
@@ -33,7 +34,7 @@ class Version:
     WEB_UI_DEFAULTS = {
         'branch': 'master', 'sub_sub_version': 0, 'branch_iteration': 0
     }
-            
+
 
     def __init__(self, /, version_str: str) -> None:
         """
@@ -49,7 +50,7 @@ class Version:
         # Store raw version string
         self.version_str = version_str
 
-        # Extract version data from regex, merging defaults 
+        # Extract version data from regex, merging defaults
         if (data_match := self.PRIMARY_REGEX.match(version_str)) is not None:
             version_data = self.PRIMARY_DEFAULTS | data_match.groupdict()
         elif (data_match := self.WEB_UI_REGEX.match(version_str)) is not None:
@@ -78,7 +79,7 @@ class Version:
         """Get an unambigious string representation of the object."""
 
         return f'<Version {self.version} on {self.branch} branch>'
-    
+
 
     def __str__(self) -> str:
         """Get a printable string representation of this object."""
@@ -157,11 +158,14 @@ class Version:
         Returns:
             True if this object represents an older version than the
             other object. Otherwise False.
+
+        Raises:
+            TypeError if `other` is not a `Version` object.
         """
 
         if not isinstance(other, Version):
             raise TypeError(f'Can only compare Version objects')
-        
+
         # Compare each like-version
         for this_v, other_v in zip(self.version, other.version):
             # Equal, skip
@@ -182,12 +186,20 @@ class Version:
 
     @property
     def sub_version(self) -> int:
+        """Subversion of this object - i.e. 1.{x}.3"""
+
         return self.version[1]
-    
+
+
     @property
     def sub_sub_version(self) -> int:
+        """Subversion of this object - i.e. 1.2.{x}"""
+
         return self.version[2]
-    
+
+
     @property
     def branch_iteration(self) -> int:
+        """Subversion of this object - i.e. 1.2.3-branch{x}"""
+
         return self.version[3]

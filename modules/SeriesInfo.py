@@ -114,7 +114,7 @@ class SeriesInfo(DatabaseInfoContainer):
         """Returns a string representation of the object."""
 
         return self.full_name
-    
+
 
     @staticmethod
     def from_plex_show(plex_show: PlexShow) -> 'SeriesInfo':
@@ -255,7 +255,7 @@ class SeriesInfo(DatabaseInfoContainer):
         matching_names = map(self.get_matching_title, names)
 
         return any(name == self.match_name for name in matching_names)
-    
+
 
     def filter_conditions(self,
             SeriesModel: 'sqlachemy.Model'                                      # type: ignore

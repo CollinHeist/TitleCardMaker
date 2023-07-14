@@ -6,10 +6,9 @@ from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
 
-
 DarkenOption = Union[Literal['all', 'box'], bool]
-BoxCoordinates = namedtuple('BoxCoordinates', ('x0', 'y0', 'x1', 'y1'))
 
+BoxCoordinates = namedtuple('BoxCoordinates', ('x0', 'y0', 'x1', 'y1'))
 
 class LandscapeTitleCard(BaseCardType):
     """
@@ -23,6 +22,7 @@ class LandscapeTitleCard(BaseCardType):
     """
 
     """API Parameters"""
+    # pylint: disable=line-too-long
     API_DETAILS = CardDescription(
         name='Landscape',
         identifier='landscape',
@@ -48,6 +48,7 @@ class LandscapeTitleCard(BaseCardType):
             'The color of the bounding box matches the font color.',
         ]
     )
+    # pylint: enable=line-too-long
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'landscape'

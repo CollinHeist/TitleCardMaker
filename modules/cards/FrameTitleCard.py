@@ -2,12 +2,10 @@ from pathlib import Path
 from typing import Literal, Optional
 
 from modules.BaseCardType import (
-    BaseCardType, ImageMagickCommands, Extra, CardDescription
+    BaseCardType, CardDescription, Extra, ImageMagickCommands
 )
 
-
 Position = Literal['left', 'surround', 'right']
-
 
 class FrameTitleCard(BaseCardType):
     """
@@ -115,12 +113,11 @@ class FrameTitleCard(BaseCardType):
         self.output_file = card_file
 
         # Escape title, season, and episode text
-        prep = lambda s: s.upper().strip()
         self.title_text = self.image_magick.escape_chars(title_text)
-        self.season_text = self.image_magick.escape_chars(prep(season_text))
-        self.episode_text = self.image_magick.escape_chars(prep(episode_text))
-        self.hide_season = hide_season_text or len(self.season_text) == 0
-        self.hide_episode = hide_episode_text or len(self.episode_text) == 0
+        self.season_text = self.image_magick.escape_chars(season_text)
+        self.episode_text = self.image_magick.escape_chars(episode_text)
+        self.hide_season = hide_season_text
+        self.hide_episode = hide_episode_text
 
         # Font customizations
         self.font_color = font_color

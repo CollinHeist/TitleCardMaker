@@ -163,7 +163,7 @@ def set_series_database_ids(
     if sonarr_interface:
         sonarr_interface.set_series_ids(series_info)
     if tmdb_interface:
-        tmdb_interface.set_series_ids(series_info, log=log)
+        tmdb_interface.set_series_ids(None, series_info, log=log)
 
     # Update database if new ID's are available
     changed = False
@@ -221,20 +221,21 @@ def download_series_poster(
     # Download poster from Media Server if possible
     series_info = series.as_series_info
     poster = None
-    if series.emby_library_name is not None and emby_interface is not None:
-        poster = emby_interface.get_series_poster(series_info, log=log)
-    elif (series.jellyfin_library_name is not None
-        and jellyfin_interface is not None):
+    if series.emby_library_name and emby_interface:
+        poster = emby_interface.get_series_poster(
+            series.emby_library_name, series_info, log=log
+        )
+    elif series.jellyfin_library_name and jellyfin_interface:
         poster = jellyfin_interface.get_series_poster(
             series.jellyfin_library_name, series_info, log=log,
         )
-    elif series.plex_library_name is not None and plex_interface is not None:
+    elif series.plex_library_name and plex_interface:
         poster = plex_interface.get_series_poster(
             series.plex_library_name, series_info, log=log,
         )
 
     # If no poster was returned, download from TMDb
-    if poster is None and tmdb_interface is not None:
+    if poster is None and tmdb_interface:
         poster = tmdb_interface.get_series_poster(series_info, log=log)
 
     # If no posters were returned, log and exit

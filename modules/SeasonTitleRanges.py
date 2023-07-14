@@ -24,7 +24,7 @@ class SeasonTitleRanges:
     EPISODE_RANGE_REGEX = re_compile(r'^s(\d+)e(\d+)-s(\d+)e(\d+)$', IGNORECASE)
     SEASON_REGEX = re_compile(r'^(\d+)$', IGNORECASE)
 
-    __slots__ = ('titles')
+    __slots__ = ('titles', )
 
 
     def __init__(self, ranges: dict) -> None:
@@ -48,8 +48,6 @@ class SeasonTitleRanges:
                 self.titles[Season(*map(int, match.groups()))] = title
             else:
                 log.warning(f'Unrecognized season title "{key}": "{title}"')
-
-        return None
 
 
     def get_season_text(self,

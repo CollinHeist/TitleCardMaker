@@ -14,6 +14,7 @@ class FadeTitleCard(BaseCardType):
     """
 
     """API Parameters"""
+    # pylint: disable=line-too-long
     API_DETAILS = CardDescription(
         name='Fade',
         identifier='fade',
@@ -33,6 +34,7 @@ class FadeTitleCard(BaseCardType):
             'A logo can also be placed above the title text.',
         ]
     )
+    # pylint: enable=line-too-long
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'fade'
@@ -106,16 +108,15 @@ class FadeTitleCard(BaseCardType):
 
         # Store attributes of the text
         self.title_text = self.image_magick.escape_chars(title_text)
-        if ((hide_season_text or len(season_text) == 0)
-            and (hide_episode_text or len(episode_text) == 0)):
+        if hide_season_text and hide_episode_text:
             index_text = ''
-        elif hide_season_text or len(season_text) == 0:
+        elif hide_season_text:
             index_text = episode_text
-        elif hide_episode_text or len(episode_text) == 0:
+        elif hide_episode_text:
             index_text = season_text
         else:
             index_text = f'{season_text} {separator} {episode_text}'
-        self.index_text = self.image_magick.escape_chars(index_text.upper())
+        self.index_text = self.image_magick.escape_chars(index_text)
 
         # Font customizations
         self.font_color = font_color

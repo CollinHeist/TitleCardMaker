@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.database.query import get_font
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
-import app.models as models
+from app import models
 from app.schemas.font import NamedFont, NewNamedFont, UpdateNamedFont
 from app.schemas.preferences import Preferences
 

@@ -4,7 +4,6 @@ from typing import Optional
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
-from modules.Debug import log
 
 
 class LogoTitleCard(BaseCardType):
@@ -14,6 +13,7 @@ class LogoTitleCard(BaseCardType):
     """
 
     """API Parameters"""
+    # pylint: disable=line-too-long
     API_DETAILS = CardDescription(
         name='Logo',
         identifier='logo',
@@ -55,6 +55,7 @@ class LogoTitleCard(BaseCardType):
             'If a background image is desired, it is recommended to use an Art Un/Watched Style.',
         ]
     )
+    # pylint: enable=line-too-long
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY
@@ -121,7 +122,7 @@ class LogoTitleCard(BaseCardType):
             grayscale: bool = False,
             logo_file: Optional[Path] = None,
             background: str = 'black',
-            separator: str = '•', 
+            separator: str = '•',
             stroke_color: str = 'black',
             omit_gradient: bool = True,
             use_background_image: bool = False,
@@ -141,19 +142,14 @@ class LogoTitleCard(BaseCardType):
         self.blur_only_image = blur_only_image
         self.logo = logo_file
         self.source_file = source_file
-        if self.use_background_image and self.source_file is None:
-            log.error(f'Source file must be provided if using a background '
-                      f'image')
-            self.valid = False
-
         self.output_file = card_file
 
         # Ensure characters that need to be escaped are
         self.title_text = self.image_magick.escape_chars(title_text)
-        self.season_text = self.image_magick.escape_chars(season_text.upper())
-        self.episode_text = self.image_magick.escape_chars(episode_text.upper())
-        self.hide_season_text = hide_season_text or len(season_text) == 0
-        self.hide_episode_text = hide_episode_text or len(episode_text) == 0
+        self.season_text = self.image_magick.escape_chars(season_text)
+        self.episode_text = self.image_magick.escape_chars(episode_text)
+        self.hide_season_text = hide_season_text
+        self.hide_episode_text = hide_episode_text
 
         # Font attributes
         self.font_color = font_color
@@ -193,7 +189,7 @@ class LogoTitleCard(BaseCardType):
 
 
     @property
-    def index_command(self) -> ImageMagickCommands:
+    def index_commands(self) -> ImageMagickCommands:
         """
         Subcommand for adding the index text to the source image.
 
@@ -204,11 +200,11 @@ class LogoTitleCard(BaseCardType):
         # All index text is disabled, return blank command
         if self.hide_season_text and self.hide_episode_text:
             return []
-        
+
         # Only add season text
         if self.hide_episode_text:
             return [
-                f'-kerning 5.42',       
+                f'-kerning 5.42',
                 f'-pointsize 67.75',
                 f'-interword-spacing 14.5',
                 f'-font "{self.SEASON_COUNT_FONT.resolve()}"',
@@ -226,7 +222,7 @@ class LogoTitleCard(BaseCardType):
         # Only add episode text
         if self.hide_season_text:
             return [
-                f'-kerning 5.42',       
+                f'-kerning 5.42',
                 f'-pointsize 67.75',
                 f'-interword-spacing 14.5',
                 f'-font "{self.EPISODE_COUNT_FONT.resolve()}"',
@@ -240,12 +236,12 @@ class LogoTitleCard(BaseCardType):
                 f'-strokewidth 0.75',
                 f'-annotate +0+697.2 "{self.episode_text}"',
             ]
-        
+
         return [
             # Global text effects
             f'-background transparent',
-            f'-gravity center',                     
-            f'-kerning 5.42',       
+            f'-gravity center',
+            f'-kerning 5.42',
             f'-pointsize 67.75',
             f'-interword-spacing 14.5',
             # Black stroke behind primary text
@@ -306,7 +302,7 @@ class LogoTitleCard(BaseCardType):
     @staticmethod
     def is_custom_season_titles(
             custom_episode_map: bool,
-            episode_text_format: str
+            episode_text_format: str,
         ) -> bool:
         """
         Determines whether the given attributes constitute custom or
@@ -331,19 +327,6 @@ class LogoTitleCard(BaseCardType):
         Make the necessary ImageMagick and system calls to create this
         object's defined title card.
         """
-
-        # Skip card if logo doesn't exist
-        if self.logo is None:
-            log.error(f'Logo file not specified')
-            return None
-        elif not self.logo.exists():
-            log.error(f'Logo file "{self.logo.resolve()}" does not exist')
-            return None
-
-        # Skip if source is indicated and does not exist
-        if self.use_background_image and not self.source_file.exists():
-            log.warning(f'Source "{self.source_file.resolve()}" does not exist')
-            return None
 
         # Resize logo, get resized height to determine offset
         resized_logo = self.resize_logo()
@@ -421,7 +404,7 @@ class LogoTitleCard(BaseCardType):
             f'-fill "{self.font_color}"',
             f'-annotate +0+{vertical_shift} "{self.title_text}"',
             # Add episode or season+episode "image"
-            *self.index_command,
+            *self.index_commands,
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

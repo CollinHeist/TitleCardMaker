@@ -1,10 +1,8 @@
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 from modules.BaseCardType import BaseCardType, Extra, CardDescription
-from modules.Debug import log
 
-SeriesExtra = Optional
 
 class PosterTitleCard(BaseCardType):
     """
@@ -90,7 +88,7 @@ class PosterTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             logo_file: Optional[Path] = None,
-            episode_text_color: Optional[str] = None,
+            episode_text_color: str = None,
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
         ) -> None:
@@ -115,12 +113,7 @@ class PosterTitleCard(BaseCardType):
         self.font_file = font_file
         self.font_interline_spacing = font_interline_spacing
         self.font_size = font_size
-
-        # Extras
-        if episode_text_color is None:
-            self.episode_text_color = font_color
-        else:
-            self.episode_text_color = episode_text_color
+        self.episode_text_color = episode_text_color
 
 
     @staticmethod
@@ -193,11 +186,8 @@ class PosterTitleCard(BaseCardType):
         if self.logo is None:
             title_offset = 0
             logo_command = ''
-        # Logo specified, create command to resize and add image
+        # Logo specified and exists, create command to resize and add image
         else:
-            # Adjust title offset to center in smaller space (due to logo)
-            title_offset = (450 / 2) - (50 / 2)
-
             logo_command = [
                 f'-gravity north',
                 f'\( "{self.logo.resolve()}"',
@@ -206,6 +196,9 @@ class PosterTitleCard(BaseCardType):
                 f'-geometry +649+50',
                 f'-composite',
             ]
+
+            # Adjust title offset to center in smaller space (due to logo)
+            title_offset = (450 / 2) - (50 / 2)
 
         # Single command to create card
         command = ' '.join([

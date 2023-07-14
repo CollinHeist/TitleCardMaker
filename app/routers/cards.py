@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.database.query import get_card, get_episode, get_font, get_series
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
-import app.models as models
+from app import models
 from app.internal.cards import (
     create_episode_card, delete_cards, update_episode_watch_statuses,
     validate_card_type_model

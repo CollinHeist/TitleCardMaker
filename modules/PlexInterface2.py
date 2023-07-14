@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from logging import Logger
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
-from typing import Optional, Union
+from typing import Any, Callable, Optional, Union
 
 from fastapi import HTTPException
 from plexapi.exceptions import PlexApiException
@@ -11,24 +11,68 @@ from plexapi.library import Library as PlexLibrary
 from plexapi.video import Episode as PlexEpisode, Season as PlexSeason
 from plexapi.server import PlexServer, NotFound, Unauthorized
 from plexapi.video import Show as PlexShow
-from requests.exceptions import ReadTimeout, ConnectionError
+from requests.exceptions import (
+    ReadTimeout, ConnectionError as PlexConnectionError
+)
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
-from tinydb import where
 
 from modules.Debug import log
-from modules.EpisodeDataSource import EpisodeDataSource
+from modules.Episode import Episode
+from modules.EpisodeDataSource2 import EpisodeDataSource
 from modules.EpisodeInfo2 import EpisodeInfo
-from modules.MediaServer2 import MediaServer
+from modules.Interface import Interface
+from modules.MediaServer2 import MediaServer, SourceImage
 from modules.SeriesInfo import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
+
 
 EpisodeDetails = namedtuple(
     'EpisodeDetails',
     ('series_info', 'episode_info', 'watched_status')
 )
 
-class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
+
+def catch_and_log(
+        message: str,
+        *,
+        default: Any = None,
+    ) -> Callable:
+    """
+    Return a decorator that logs (with the given log function) the
+    given message if the decorated function raises an uncaught
+    PlexApiException.
+
+    Args:
+        message: Message to log upon uncaught exception.
+        default: (Keyword) Value to return if decorated function raises
+            an uncaught exception.
+
+    Returns:
+        Wrapped decorator that returns a wrapped callable.
+    """
+
+    def decorator(function: Callable) -> Callable:
+        def inner(*args, **kwargs):
+            # Get contextual logger if provided as argument to function
+            if 'log' in kwargs and isinstance(kwargs['log'], Logger):
+                log = kwargs['log']
+            try:
+                return function(*args, **kwargs)
+            except PlexApiException as e:
+                log.exception(message, e)
+                return default
+            except (ReadTimeout, PlexConnectionError) as e:
+                log.exception(f'Plex API has timed out, DB might be busy',e)
+                raise e
+            except Exception as e:
+                log.exception(f'Uncaught exception', e)
+                raise e
+        return inner
+    return decorator
+
+
+class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
     """This class describes an interface to Plex."""
 
     """Series ID's that can be set by TMDb"""
@@ -74,56 +118,25 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         try:
             self.__token = token
             self.__server = PlexServer(url, token, self.__session)
-        except Unauthorized:
+        except Unauthorized as e:
             log.critical(f'Invalid Plex Token "{token}"')
             raise HTTPException(
                 status_code=401,
                 detail=f'Invalid Plex Token',
-            )
+            ) from e
         except Exception as e:
             log.critical(f'Cannot connect to Plex - returned error: "{e}"')
             raise HTTPException(
                 status_code=400,
                 detail=f'Cannot connect to Plex - {e}',
-            )
+            ) from e
 
         # Store integration
         self.integrate_with_pmm = integrate_with_pmm
 
         # List of "not found" warned series
         self.__warned = set()
-
-
-    def catch_and_log(message: str, *, default=None) -> callable:
-        """
-        Return a decorator that logs (with the given log function) the
-        given message if the decorated function raises an uncaught
-        PlexApiException.
-
-        Args:
-            message: Message to log upon uncaught exception.
-            default: (Keyword only) Value to return if decorated
-                function raises an uncaught exception.
-
-        Returns:
-            Wrapped decorator that returns a wrapped callable.
-        """
-
-        def decorator(function: callable) -> callable:
-            def inner(*args, **kwargs):
-                try:
-                    return function(*args, **kwargs)
-                except PlexApiException as e:
-                    log.exception(message, e)
-                    return default
-                except (ReadTimeout, ConnectionError) as e:
-                    log.exception(f'Plex API has timed out, DB might be busy',e)
-                    raise e
-                except Exception as e:
-                    log.exception(f'Uncaught exception', e)
-                    raise e
-            return inner
-        return decorator
+        self.activate()
 
 
     @retry(stop=stop_after_attempt(5),
@@ -254,11 +267,11 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def get_all_series(self,
             required_libraries: list[str] = [],
             excluded_libraries: list[str] = [],
-            required_tags: list[str] = [], 
+            required_tags: list[str] = [],
             excluded_tags: list[str] = [],
             *,
             log: Logger = log,
-        ) -> list[tuple[SeriesInfo, str]]: 
+        ) -> list[tuple[SeriesInfo, str]]:
         """
         Get all series within Plex, as filtered by the given arguments.
 
@@ -333,8 +346,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             log: Logger = log,
         ) -> list[tuple[EpisodeInfo, bool]]:
         """
-        Gets all episode info for the given series. Only episodes that have 
-        already aired are returned.
+        Gets all episode info for the given series. Only episodes that
+        have  already aired are returned.
 
         Args:
             library_name: The name of the library containing the series.
@@ -384,13 +397,13 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def update_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
-            episodes: list['Episode'],                                          # type: ignore
+            episodes: list['Episode'], # type: ignore
             *,
             log: Logger = log,
         ) -> None:
         """
         Modify the Episodes' watched attribute according to the watched
-        status of the corresponding episodes within Plex. 
+        status of the corresponding episodes within Plex.
 
         Args:
             library_name: The name of the library containing the Series.
@@ -517,7 +530,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                     episode_info.set_tvdb_id(int(guid.id[len('tvdb://'):]))
 
         return None
-            
+
 
     @catch_and_log('Error getting source image')
     def get_source_image(self,
@@ -557,7 +570,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             )
 
             return (
-                f'{self.__server._baseurl}{plex_episode.thumb}'
+                f'{self.__server._baseurl}{plex_episode.thumb}' # pylint: disable=protected-access
                 f'?X-Plex-Token={self.__token}'
             )
         # Episode DNE in Plex, return
@@ -571,7 +584,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
             series_info: SeriesInfo,
             *,
             log: Logger = log,
-        ) -> Optional[str]:
+        ) -> SourceImage:
         """
         Get the poster for the given Series.
 
@@ -592,7 +605,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
         # If the given series cannot be found in this library, exit
         if not (series := self.__get_series(library, series_info, log=log)):
             return None
-        
+
         return series.thumbUrl
 
 
@@ -635,10 +648,10 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def load_title_cards(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_and_cards: list[tuple['Episode', 'Card']],                  # type: ignore
+            episode_and_cards: list[tuple['Episode', 'Card']], # type: ignore
             *,
             log: Logger = log,
-        ) -> list[tuple['Episode', 'Card']]:                                    # type: ignore
+        ) -> list[tuple['Episode', 'Card']]: # type: ignore
         """
         Load the title cards for the given Series and Episodes.
 
@@ -683,6 +696,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 continue
 
             # Shrink image if necessary, skip if cannot be compressed
+            # pylint: disable=undefined-loop-variable
             if (image := self.compress_image(card.card_file, log=log)) is None:
                 continue
 
@@ -700,75 +714,6 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 loaded.append((episode, card))
 
         return loaded
-
-
-    @catch_and_log('Error uploading season posters')
-    def load_season_posters(self,
-            library_name: str,
-            series_info: SeriesInfo,
-            season_poster_set: 'SeasonPosterSet',                               # type: ignore
-            *,
-            log: Logger = log,
-        ) -> None:
-        """
-        Set the season posters from the given set within Plex.
-
-        Args:
-            library_name: Name of the library containing the series to update.
-            series_info: The series to update.
-            season_poster_set: SeasonPosterSet with season posters to set.
-            log: (Keyword) Logger for all log messages.
-        """
-
-        # If no posters to upload, skip
-        if not season_poster_set.has_posters:
-            return None
-
-        # If the given library cannot be found, exit
-        if not (library := self.__get_library(library_name, log=log)):
-            return None
-
-        # If the given series cannot be found in this library, exit
-        if not (series := self.__get_series(library, series_info, log=log)):
-            return None
-
-        # Condition for this series
-        loaded_count = 0
-        for season in series.seasons():
-            # Skip if no season poster for this seasons
-            if (poster := season_poster_set.get_poster(season.index)) is None:
-                continue
-
-            # Get the loaded details for this season
-            condition = (
-                (where('library') == library_name) &
-                (where('series') == series_info.full_name) &
-                (where('season') == season.index)
-            )
-            details = self.__posters.get(condition)
-
-            # Skip if this exact poster has been loaded 
-            if (details is not None
-                and details['filesize'] == poster.stat().st_size):
-                continue
-
-            # Shrink image if necessary
-            if (resized_poster := self.compress_image(poster, log=log)) is None:
-                continue
-
-            # Upload this poster
-            try:
-                self.__retry_upload(season, resized_poster)
-            except Exception:
-                continue
-            else:
-                loaded_count += 1
-
-        # Log load operations to user
-        if loaded_count > 0:
-            log.info(f'Loaded {loaded_count} season posters for "{series_info}"')
-
-        return None
 
 
     @catch_and_log('Error getting rating key details')
@@ -807,8 +752,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                     EpisodeInfo.from_plex_episode(ep),
                     ep.isWatched
                 ) for ep in entry.episodes()]
+
             # Season, return all episodes in season
-            elif entry.type == 'season':
+            if entry.type == 'season':
                 entry: PlexSeason
                 series: PlexShow = self.__server.fetchItem(entry.parentRatingKey)
                 series_info = SeriesInfo.from_plex_show(series)
@@ -817,8 +763,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                     EpisodeInfo.from_plex_episode(ep),
                     ep.isWatched
                 ) for ep in entry.episodes()]
+
             # Episode, return just that
-            elif entry.type == 'episode':
+            if entry.type == 'episode':
                 entry: PlexEpisode
                 series: PlexShow = self.__server.fetchItem(entry.grandparentRatingKey)
                 series_info = SeriesInfo.from_plex_show(series)
@@ -827,9 +774,9 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                     EpisodeInfo.from_plex_episode(entry),
                     entry.isWatched,
                 )]
-            else:
-                log.warning(f'Item with rating key {rating_key} has no episodes')
-                return []
+
+            log.warning(f'Item with rating key {rating_key} has no episodes')
+            return []
         except NotFound:
             log.error(f'No item with rating key {rating_key} exists')
         except (ValueError, AssertionError):
@@ -839,3 +786,42 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # Error occurred, return empty list
         return []
+
+
+    @catch_and_log('Error removing Series labels')
+    def remove_series_labels(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            labels: list[str] = ['Overlay'],
+            *,
+            log: Logger = log,
+        ) -> None:
+        """
+        Remove the given labels from all Episodes of the associated
+        Series.
+
+        Args:
+            library_name: Name of the library containing the series.
+            series_info: SeriesInfo whose Episodes' labels are being
+                removed.
+            labels: List of labels to remove.
+            log: (Keyword) Logger for all log messages.
+        """
+
+        # Exit if no labels to remove
+        if len(labels) == 0:
+            return None
+
+        # If the given library cannot be found, exit
+        if not (library := self.__get_library(library_name, log=log)):
+            return None
+
+        # If the given series cannot be found in this library, exit
+        if not (series := self.__get_series(library, series_info, log=log)):
+            return None
+
+        # Remove labels from all Episodes
+        for plex_episode in series.episodes():
+            plex_episode.removeLabel(labels)
+
+        return None
