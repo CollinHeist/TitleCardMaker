@@ -131,6 +131,7 @@ class FrameTitleCard(BaseCardType):
             self.valid = False
         else:
             self.episode_text_position = episode_text_position.lower()
+        self.interword_spacing = interword_spacing
 
 
     @property

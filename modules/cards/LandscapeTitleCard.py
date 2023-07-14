@@ -5,8 +5,7 @@ from typing import Any, Literal, Optional, Union
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
-SeriesExtra = Optional
-DarkenOption = SeriesExtra[Union[Literal['all', 'box'], bool]]
+DarkenOption = Union[Literal['all', 'box'], bool]
 
 BoxCoordinates = namedtuple('BoxCoordinates', ('x0', 'y0', 'x1', 'y1'))
 
@@ -97,8 +96,8 @@ class LandscapeTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             darken: DarkenOption = False,
-            add_bounding_box: SeriesExtra[bool] = False,
-            box_adjustments: SeriesExtra[str] = None,
+            add_bounding_box: bool = False,
+            box_adjustments: tuple[int, int, int, int] = (0, 0, 0, 0),
             preferences: 'Preferences' = None,
             **unused) ->None:
         """
