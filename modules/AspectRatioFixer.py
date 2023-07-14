@@ -91,7 +91,9 @@ class AspectRatioFixer(ImageMaker):
             self.image_magick.run(resize_command)
 
             # Get dimensions of resized image, exit if too narrow for stretching
-            width, height = self.get_image_dimensions(self.__RESIZED_TEMP)
+            width, height = self.image_magick.get_image_dimensions(
+                self.__RESIZED_TEMP
+            )
             if width < 400 or height < 1800:
                 log.error(f'Image too narrow for correcting with "stretch" style')
                 return None
