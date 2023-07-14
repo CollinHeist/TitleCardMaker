@@ -5,7 +5,7 @@ from typing import Any, Optional
 
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
-import modules.global_objects as global_objects
+from modules import global_objects
 from modules.SeriesInfo import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
@@ -79,7 +79,7 @@ class SonarrInterface(WebInterface, SyncInterface):
 
         # Query system status to verify connection to Sonarr
         try:
-            status =self._get(f'{self.url}system/status',self.__standard_params)
+            status =self.get(f'{self.url}system/status',self.__standard_params)
             if status.get('appName') != 'Sonarr':
                 log.critical(f'Cannot get Sonarr status - invalid URL/API key')
                 sys_exit(1)
@@ -112,7 +112,7 @@ class SonarrInterface(WebInterface, SyncInterface):
         # Construct GET arguments
         url = f'{self.url}series'
         params = self.__standard_params
-        all_series = self._get(url, params)
+        all_series = self.get(url, params)
 
         # Go through each series in Sonarr
         for series in all_series:
@@ -219,7 +219,7 @@ class SonarrInterface(WebInterface, SyncInterface):
         """
 
         # Construct GET arguments
-        all_series = self._get(f'{self.url}series', self.__standard_params)
+        all_series = self.get(f'{self.url}series', self.__standard_params)
 
         # Get filtering tags if indicated
         required_tag_ids, excluded_tag_ids = [], []
@@ -227,7 +227,7 @@ class SonarrInterface(WebInterface, SyncInterface):
             # Request all Sonarr tags, create mapping of label -> ID
             all_tags = {
                 tag['label']: tag['id']
-                for tag in self._get(f'{self.url}tag', self.__standard_params)
+                for tag in self.get(f'{self.url}tag', self.__standard_params)
             }
 
             # Convert tag names to ID's
@@ -355,7 +355,7 @@ class SonarrInterface(WebInterface, SyncInterface):
         }
 
         # Query Sonarr to get JSON of all episodes for this series
-        all_episodes = self._get(url, params)
+        all_episodes = self.get(url, params)
         all_episode_info = []
 
         # Go through each episode and get its season/episode number, and title
@@ -453,7 +453,7 @@ class SonarrInterface(WebInterface, SyncInterface):
             "label" for each tag.
         """
 
-        return self._get(f'{self.url}tag', self.__standard_params)
+        return self.get(f'{self.url}tag', self.__standard_params)
 
 
     def list_all_series_id(self) -> None:
@@ -462,7 +462,7 @@ class SonarrInterface(WebInterface, SyncInterface):
         # Construct GET arguments
         url = f'{self.url}series'
         params = self.__standard_params
-        all_series = self._get(url, params)
+        all_series = self.get(url, params)
 
         # Go through each series in Sonarr
         for show in all_series:

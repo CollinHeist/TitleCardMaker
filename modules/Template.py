@@ -5,6 +5,7 @@ from typing import Any
 from modules.Debug import log
 from modules.SeriesInfo import SeriesInfo
 
+
 class Template:
     """
     This class describes a template. A Template is a fallback YAML

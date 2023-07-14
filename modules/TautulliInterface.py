@@ -6,6 +6,7 @@ from typing import Optional
 from modules.Debug import log
 from modules.WebInterface import WebInterface
 
+
 class TautulliInterface(WebInterface):
     """
     This class describes an interface to Tautulli. This interface can
@@ -60,7 +61,7 @@ class TautulliInterface(WebInterface):
 
         # Query system status to verify connection to Tautulli
         try:
-            status = self._get(self.url, self.__params | {'cmd': 'status'})
+            status = self.get(self.url, self.__params | {'cmd': 'status'})
             if status.get('response', {}).get('result') != 'success':
                 log.critical(f'Cannot get Tautulli status - invalid URL/API key')
                 sys_exit(1)
@@ -93,7 +94,7 @@ class TautulliInterface(WebInterface):
         """
 
         # Get all notifiers
-        response = self._get(self.url, self.__params | {'cmd': 'get_notifiers'})
+        response = self.get(self.url, self.__params | {'cmd': 'get_notifiers'})
         notifiers = response['response']['data']
 
         # Check each agent's name
@@ -109,7 +110,7 @@ class TautulliInterface(WebInterface):
                 # Get the config of this agent, check action flags
                 params = self.__params | {'cmd': 'get_notifier_config',
                                           'notifier_id': agent['id']}
-                response = self._get(self.url, params)['response']['data']
+                response = self.get(self.url, params)['response']['data']
                 if response['actions']['on_watched'] == 1:
                     watched_integrated = True
                 if response['actions']['on_created'] == 1:
@@ -127,15 +128,15 @@ class TautulliInterface(WebInterface):
         """
 
         # Get all existing notifier ID's
-        response = self._get(self.url, self.__params | {'cmd': 'get_notifiers'})
+        response = self.get(self.url, self.__params | {'cmd': 'get_notifiers'})
         existing_ids = {agent['id'] for agent in response['response']['data']}
 
         # Create new notifier
         params = {'cmd': 'add_notifier_config', 'agent_id': self.AGENT_ID}
-        self._get(self.url,  self.__params | params)
+        self.get(self.url,  self.__params | params)
 
         # Get notifier ID's after adding new one
-        response = self._get(self.url, self.__params | {'cmd': 'get_notifiers'})
+        response = self.get(self.url, self.__params | {'cmd': 'get_notifiers'})
         new_ids = {agent['id'] for agent in response['response']['data']}
 
         # If no new ID's are returned
@@ -199,7 +200,7 @@ class TautulliInterface(WebInterface):
                 # Arguments
                 'on_watched_subject': '{rating_key}',
             }
-            self._get(self.url, params)
+            self.get(self.url, params)
             log.info(f'Creatd and configured Tautulli notification agent '
                      f'{watched_id} ("{friendly_name}")')
 
@@ -233,7 +234,7 @@ class TautulliInterface(WebInterface):
                 # Arguments
                 'on_created_subject': '{rating_key}',
             }
-            self._get(self.url, params)
+            self.get(self.url, params)
             log.info(f'Created and configured Tautulli notification agent '
                      f'{created_id} ("{friendly_name}")')
 

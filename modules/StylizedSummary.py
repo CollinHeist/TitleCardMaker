@@ -4,6 +4,7 @@ from typing import Optional
 from modules.Debug import log
 from modules.BaseSummary import BaseSummary
 
+
 class StylizedSummary(BaseSummary):
     """
     This class describes a type of Summary image maker. This is a more

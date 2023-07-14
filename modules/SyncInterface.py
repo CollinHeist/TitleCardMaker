@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+
 class SyncInterface(ABC):
     """
     This class describes an abstract SyncInterface. This is some

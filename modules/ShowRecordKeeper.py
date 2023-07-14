@@ -6,8 +6,9 @@ from tinydb import where
 
 from modules.BaseCardType import BaseCardType
 from modules.Debug import log
-import modules.global_objects as global_objects
+from modules import global_objects
 from modules.PersistentDatabase import PersistentDatabase
+
 
 class ShowRecordKeeper:
     """

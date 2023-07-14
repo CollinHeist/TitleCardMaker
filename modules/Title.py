@@ -3,6 +3,7 @@ from typing import Optional, Union
 
 from modules.Debug import log
 
+
 class Title:
     """
     This class describes a title. A Title can either be initialized with

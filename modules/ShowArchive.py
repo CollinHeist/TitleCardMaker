@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Callable
 
 from modules.Debug import log
-import modules.global_objects as global_objects
+from modules import global_objects
 
 
 class ShowArchive:

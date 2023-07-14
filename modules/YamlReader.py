@@ -8,12 +8,13 @@ from modules.Debug import log
 from modules.RemoteCardType import RemoteCardType
 from modules.TitleCard import TitleCard
 
+
 class YamlReader:
     """
     This class describes an object capable of reading and parsing YAML.
     """
 
-    __slots__ = ('_base_yaml', 'valid', '__log')
+    __slots__ = ('card_class', '_base_yaml', 'valid', '__log')
 
 
     def __init__(self,
@@ -50,10 +51,11 @@ class YamlReader:
         return str(value).lower().strip()
 
 
-    def _get(self,
+    def get(self,
             *attributes: tuple[str],
             type_: Optional[Callable] = None,
-            default: Any = None):
+            default: Any = None,
+        ):
         """
         Get the value specified by the given attributes/sub-attributes
         of YAML, optionally converting to the given type. Log invalidity

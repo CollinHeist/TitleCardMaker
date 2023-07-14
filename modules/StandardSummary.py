@@ -4,6 +4,7 @@ from typing import Optional
 from modules.Debug import log
 from modules.BaseSummary import BaseSummary
 
+
 class StandardSummary(BaseSummary):
     """
     This class describes a show summary. The StandardSummary is a type
@@ -35,7 +36,8 @@ class StandardSummary(BaseSummary):
     def __init__(self,
             show: 'Show', # type: ignore
             background: str = BACKGROUND_COLOR,
-            created_by: Optional[str] = None) -> None:
+            created_by: Optional[str] = None,
+        ) -> None:
         """
         Construct a new instance of this object.
 

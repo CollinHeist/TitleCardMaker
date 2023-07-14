@@ -8,10 +8,10 @@ from tmdbapis import TMDbAPIs, NotFound, Unauthorized, TMDbException
 from tmdbapis.objs.reload import Episode as TMDbEpisode
 from tmdbapis.objs.image import Still as TMDbStill
 
+from modules import global_objects
 from modules.Debug import log
 from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo import EpisodeInfo
-import modules.global_objects as global_objects
 from modules.PersistentDatabase import PersistentDatabase
 from modules.SeriesInfo import SeriesInfo
 from modules.WebInterface import WebInterface
