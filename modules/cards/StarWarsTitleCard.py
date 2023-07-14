@@ -4,7 +4,6 @@ from typing import Optional
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
-SeriesExtra = Optional
 
 class StarWarsTitleCard(BaseCardType):
     """
@@ -79,8 +78,9 @@ class StarWarsTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             episode_text_color: str = EPISODE_TEXT_COLOR,
-            preferences: 'Preferences' = None, # type: ignore
-            **unused) -> None:
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
+        ) -> None:
         """
         Initialize the CardType object.
         """
@@ -176,7 +176,7 @@ class StarWarsTitleCard(BaseCardType):
             f'-geometry +325-140',
             f'-composite',
         ]
-    
+
 
     @staticmethod
     def modify_extras(

@@ -1,10 +1,9 @@
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
-SeriesExtra = Optional
 
 class StandardTitleCard(BaseCardType):
     """
@@ -74,7 +73,7 @@ class StandardTitleCard(BaseCardType):
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
         'font_file', 'font_interline_spacing', 'font_kerning', 'font_size',
         'font_stroke_width', 'font_vertical_shift', 'episode_text_color',
-        'omit_gradient', 'stroke_color', 'separator', 
+        'omit_gradient', 'stroke_color', 'separator',
     )
 
     def __init__(self,

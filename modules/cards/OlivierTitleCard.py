@@ -4,7 +4,6 @@ from typing import Any, Optional
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
-SeriesExtra = Optional
 
 class OlivierTitleCard(BaseCardType):
     """
@@ -85,8 +84,8 @@ class OlivierTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-            episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
-            stroke_color: SeriesExtra[str] = STROKE_COLOR,
+            episode_text_color: str = EPISODE_TEXT_COLOR,
+            stroke_color: str = STROKE_COLOR,
             interword_spacing: int = 0,
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
