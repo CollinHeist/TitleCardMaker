@@ -5,7 +5,7 @@ from typing import Any
 
 from modules.EpisodeInfo import WordSet
 from modules.Title import Title
-import modules.global_objects as global_objects
+from modules import global_objects
 
 class MultiEpisode:
     """

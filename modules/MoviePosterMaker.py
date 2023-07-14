@@ -4,6 +4,7 @@ from typing import Optional
 from modules.Debug import log
 from modules.ImageMaker import ImageMaker
 
+
 class MoviePosterMaker(ImageMaker):
     """This class defines a type of maker that creates movie posters."""
 

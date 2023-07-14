@@ -3,11 +3,11 @@ from typing import Callable, Iterable
 from tqdm import tqdm
 from yaml import dump
 
+from modules import global_objects
 from modules.EmbyInterface import EmbyInterface
 from modules.Debug import log, TQDM_KWARGS
 from modules.JellyfinInterface import JellyfinInterface
 from modules.PlexInterface import PlexInterface
-import modules.global_objects as global_objects
 from modules.ShowArchive import ShowArchive
 from modules.SonarrInterface import SonarrInterface
 from modules.TautulliInterface import TautulliInterface
@@ -477,7 +477,7 @@ class Manager:
 
             # If an entry was found, delete from list
             if is_found:
-                del entry_list[index]
+                del entry_list[index] # pylint: disable=undefined-loop-variable
 
         # Warn for all entries not found
         for series_info, episode_info, library_name in entry_list:

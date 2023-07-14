@@ -21,8 +21,8 @@ from modules.Debug import log, TQDM_KWARGS
 from modules.Episode import Episode
 from modules.EpisodeDataSource import EpisodeDataSource
 from modules.EpisodeInfo import EpisodeInfo
-import modules.global_objects as global_objects
-from modules.MediaServer import MediaServer
+from modules import global_objects
+from modules.MediaServer import MediaServer, SourceImage
 from modules.PersistentDatabase import PersistentDatabase
 from modules.SeasonPosterSet import SeasonPosterSet
 from modules.SeriesInfo import SeriesInfo
@@ -464,7 +464,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
             # Get characteristics of this Episode's loaded card
             details = self._get_loaded_episode(loaded_series, episode)
-            loaded = (details is not None)
+            loaded = details is not None
             spoiler_status = details['spoiler'] if loaded else None
 
             # Delete and reset card if current spoiler type doesn't match
@@ -591,7 +591,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def get_source_image(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_info: EpisodeInfo) -> Optional[str]:
+            episode_info: EpisodeInfo,
+        ) -> SourceImage:
         """
         Get the source image for the given episode within Plex.
 
@@ -619,7 +620,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
                 episode=episode_info.episode_number
             )
 
-            return (f'{self.__server._baseurl}{plex_episode.thumb}'
+            return (f'{self.__server._baseurl}{plex_episode.thumb}' # pylint: disable=protected-access
                     f'?X-Plex-Token={self.__token}')
         except NotFound:
             # Episode DNE in Plex, return

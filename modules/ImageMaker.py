@@ -4,11 +4,13 @@ from pathlib import Path
 from re import findall
 from typing import Literal, Optional
 
+from modules import global_objects
 from modules.Debug import log
 from modules.ImageMagickInterface import ImageMagickInterface
-import modules.global_objects as global_objects
+
 
 Dimensions = namedtuple('Dimensions', ('width', 'height'))
+
 
 class ImageMaker(ABC):
     """
