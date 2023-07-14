@@ -249,6 +249,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             library_name: Optional[str],
             series_info: SeriesInfo,
             episode_infos: list[EpisodeInfo],
+            *,
             inplace: bool = False,
         ) -> None:
         """
@@ -260,13 +261,13 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         """
 
         if inplace:
-            self.get_all_episodes(series_info, episode_infos)
+            self.get_all_episodes(library_name, series_info, episode_infos)
         else:
-            self.get_all_episodes(series_info)
+            self.get_all_episodes(library_name, series_info)
 
 
     def get_library_paths(self,
-            filter_libraries: list[str] = [], # pylint: disable=dangerous-default-value
+            filter_libraries: list[str] = [],
         ) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
@@ -364,17 +365,18 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     def get_all_episodes(self,
+            library_name: str,
             series_info: SeriesInfo,
-            episode_infos: Optional[list[EpisodeInfo]] = None
+            episode_infos: Optional[list[EpisodeInfo]] = None,
         ) -> list[EpisodeInfo]:
         """
         Gets all episode info for the given series. Only episodes that
         have already aired are returned.
 
         Args:
+            library_name: The name of the library containing the series.
             series_info: Series to get the episodes of.
-            episode_infos: Optional EpisodeInfos. If provided, these are
-                updated instead of using the global MediaInfoSet object.
+            episode_infos: List of EpisodeInfos to modify.
 
         Returns:
             List of EpisodeInfo objects for this series.
@@ -438,15 +440,24 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                         all_episodes.append(episode_info)
                         break
 
+            # Add to list
+            if episode_info is not None:
+                all_episodes.append(episode_info)
+
         return all_episodes
 
 
-    def has_series(self, series_info: SeriesInfo) -> bool:
+    def has_series(self,
+            library_name: str,
+            series_info: SeriesInfo,
+        ) -> bool:
         """
         Determine whether the given series is present within Emby.
 
         Args:
-            series_info: The series being evaluated.
+            library_name: The name of the library potentially containing
+                the series.
+            series_info: The series to being evaluated.
 
         Returns:
             True if the series is present within Emby. False otherwise.
@@ -534,6 +545,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         filesizes are different than what has been set previously.
 
         Args:
+            library_name: Name of the library containing the series to
+                update.
             series_info: The series to update.
             episode_map: Dictionary of episode keys to Episode objects
                 to update the cards of.
@@ -616,11 +629,16 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return None
 
 
-    def get_source_image(self, episode_info: EpisodeInfo) -> SourceImage:
+    def get_source_image(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_info: EpisodeInfo,
+        ) -> SourceImage:
         """
         Get the source image given episode within Emby.
 
         Args:
+            library_name: Name of the library the series is under.
             series_info: The series to get the source image of.
             episode_info: The episode to get the source image of.
 
