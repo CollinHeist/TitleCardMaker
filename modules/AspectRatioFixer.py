@@ -21,8 +21,11 @@ class AspectRatioFixer(ImageMaker):
     __slots__ = ('source', 'destination', 'style')
 
 
-    def __init__(self, source: Path, destination: Path,
-            style: Literal['copy', 'stretch'] = DEFAULT_STYLE) -> None:
+    def __init__(self,
+            source: Path,
+            destination: Path,
+            style: Literal['copy', 'stretch'] = DEFAULT_STYLE,
+        ) -> None:
         """
         Initialize this object. This stores attributes, and initialzies
         the  parent ImageMaker object.
@@ -121,3 +124,4 @@ class AspectRatioFixer(ImageMaker):
             self.image_magick.delete_intermediate_images(self.__RESIZED_TEMP)
 
         log.debug(f'Created "{self.destination.resolve()}"')
+        return None

@@ -1,5 +1,6 @@
 from base64 import b64encode
 from datetime import datetime
+from sys import exit as sys_exit
 from typing import Optional, Union
 
 from modules.Debug import log
@@ -44,7 +45,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             api_key: str,
             username: str,
             verify_ssl: bool = True,
-            filesize_limit: Optional[int] = None) -> None:
+            filesize_limit: Optional[int] = None,
+        ) -> None:
         """
         Construct a new instance of an interface to an Emby server.
 
@@ -79,15 +81,15 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             )
             if not set(response).issuperset({'ServerName', 'Version', 'Id'}):
                 raise Exception(f'Unable to authenticate with server')
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-except
             log.critical(f'Cannot connect to Emby - returned error {e}')
             log.exception(f'Bad Emby connection', e)
-            exit(1)
+            sys_exit(1)
 
         # Get user ID
         if (user_id := self._get_user_id(username)) is None:
             log.critical(f'Cannot identify ID of user "{username}"')
-            exit(1)
+            sys_exit(1)
         else:
             self.user_id = user_id
 
@@ -131,7 +133,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             libraries.
         """
 
-        # Get all library folders 
+        # Get all library folders
         libraries = self.session._get(
             f'{self.url}/Library/SelectableMediaFolders',
             params=self.__params
@@ -160,7 +162,10 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         return [user['Name'] for user in users]
 
 
-    def set_series_ids(self, library_name: str, series_info: SeriesInfo) ->None:
+    def set_series_ids(self,
+            library_name: str,
+            series_info: SeriesInfo,
+        ) ->None:
         """
         Set the series ID's for the given SeriesInfo object.
 
@@ -180,9 +185,12 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # Generate provider ID query string
         ids = []
-        if series_info.has_id('imdb_id'): ids += [f'imdb.{series_info.imdb_id}']
-        if series_info.has_id('tmdb_id'): ids += [f'tmdb.{series_info.tmdb_id}']
-        if series_info.has_id('tvdb_id'): ids += [f'tvdb.{series_info.tvdb_id}']
+        if series_info.has_id('imdb_id'):
+            ids += [f'imdb.{series_info.imdb_id}']
+        if series_info.has_id('tmdb_id'):
+            ids += [f'tmdb.{series_info.tmdb_id}']
+        if series_info.has_id('tvdb_id'):
+            ids += [f'tvdb.{series_info.tvdb_id}']
         provider_id_str = ','.join(ids)
 
         # Base params for all requests
@@ -228,20 +236,21 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                         self.info_set.set_tmdb_id(
                             series_info, ids.get('Tvdb', None)
                         )
-                        
+
                     return None
 
         # Not found on server
         log.warning(f'Series "{series_info}" was not found under library '
                     f'"{library_name}" in Emby')
-        return None 
+        return None
 
 
     def set_episode_ids(self,
             library_name: Optional[str],
             series_info: SeriesInfo,
             episode_infos: list[EpisodeInfo],
-            inplace: bool=False) -> None:
+            inplace: bool = False,
+        ) -> None:
         """
         Set the Episode ID's for the given EpisodeInfo objects.
 
@@ -257,7 +266,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
 
     def get_library_paths(self,
-            filter_libraries: list[str] = []) -> dict[str, list[str]]:
+            filter_libraries: list[str] = [], # pylint: disable=dangerous-default-value
+        ) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
 
@@ -270,7 +280,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             directories.
         """
 
-        # Get all library folders 
+        # Get all library folders
         libraries = self.session._get(
             f'{self.url}/Library/SelectableMediaFolders',
             params=self.__params
@@ -278,7 +288,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # Inner function on whether to include this library in the return
         def include_library(emby_library) -> bool:
-            if len(filter_libraries) == 0: return True
+            if len(filter_libraries) == 0:
+                return True
             return emby_library in filter_libraries
 
         # Parse each library name into tuples of parent ID's
@@ -291,7 +302,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     def get_all_series(self,
             filter_libraries: list[str] = [],
-            required_tags: list[str] = []) -> list[tuple[SeriesInfo, str, str]]: 
+            required_tags: list[str] = [],
+        ) -> list[tuple[SeriesInfo, str, str]]:
         """
         Get all series within Emby, as filtered by the given libraries.
 
@@ -387,7 +399,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
             try:
                 airdate = datetime.strptime(episode['PremiereDate'],
                                             self.AIRDATE_FORMAT)
-            except Exception as e:
+            except ValueError as e:
                 log.exception(f'Cannot parse airdate', e)
                 log.debug(f'Episode data: {episode}')
 
@@ -446,8 +458,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
     def update_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_map: dict[str, 'Episode'],
-            style_set: 'StyleSet') -> None:
+            episode_map: dict[str, Episode],
+            style_set: 'StyleSet', # type: ignore
+        ) -> None:
         """
         Modify the Episode objects according to the watched status of
         the corresponding episodes within Emby, and the spoil status of
@@ -506,6 +519,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
                     {'filesize': 0},
                     self._get_condition(library_name, series_info, episode)
                 )
+
+        return None
 
 
     def set_title_cards(self,
@@ -578,6 +593,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         if loaded_count > 0:
             log.info(f'Loaded {loaded_count} cards for "{series_info}"')
 
+        return None
+
 
     def set_season_posters(self,
             library_name: str,
@@ -625,7 +642,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface):
         # Check if valid content was returned
         if b'does not have an image of type' in response:
             log.warning(f'Episode {episode_info} has no source images')
-            return None 
+            return None
 
         return response
 

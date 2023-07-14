@@ -59,11 +59,13 @@ class BaseCardType(ImageMaker):
         """
         raise NotImplementedError(f'All CardType objects must implement this')
 
+
     @property
     @abstractmethod
     def ARCHIVE_NAME(self) -> str:
         """How to name archive directories for this type of card"""
         raise NotImplementedError(f'All CardType objects must implement this')
+
 
     @property
     @abstractmethod
@@ -74,17 +76,20 @@ class BaseCardType(ImageMaker):
         """
         raise NotImplementedError(f'All CardType objects must implement this')
 
+
     @property
     @abstractmethod
     def TITLE_COLOR(self) -> str:
         """Standard color to use for the episode title text"""
         raise NotImplementedError(f'All CardType objects must implement this')
 
+
     @property
     @abstractmethod
     def FONT_REPLACEMENTS(self) -> dict:
         """Standard font replacements for the episode title font"""
         raise NotImplementedError(f'All CardType objects must implement this')
+
 
     @property
     @abstractmethod
@@ -102,7 +107,7 @@ class BaseCardType(ImageMaker):
             blur: bool = False,
             grayscale: bool = False,
             *,
-            preferences: Optional['Preferences'] = None,                        # type: ignore
+            preferences: Optional['Preferences'] = None, # type: ignore
         ) -> None:
         """
         Construct a new CardType. Must call super().__init__() to
@@ -133,14 +138,14 @@ class BaseCardType(ImageMaker):
                                for attr in self.__slots__
                                if not attr.startswith('__'))
 
-        return (f'<{self.__class__.__name__} {attributes}>')
+        return f'<{self.__class__.__name__} {attributes}>'
 
 
     @staticmethod
-    def modify_extras(
-            extras: dict[str, Any],
+    def modify_extras( # pylint: disable=unused-argument
+            extras: dict,
             custom_font: bool,
-            custom_season_titles: bool
+            custom_season_titles: bool,
         ) -> None:
         """
         Modify the given extras base on whether font or season titles
@@ -153,7 +158,7 @@ class BaseCardType(ImageMaker):
             custom_season_titles: Whether the season titles are custom.
         """
 
-        pass
+        return None
 
 
     @staticmethod
@@ -264,7 +269,7 @@ class BaseCardType(ImageMaker):
             f'-set colorspace sRGB',
         ]
 
-    
+
     @property
     def resize_output(self) -> ImageMagickCommands:
         """

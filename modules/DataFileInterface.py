@@ -222,6 +222,7 @@ class DataFileInterface:
 
         # Write updated data
         self.__write_data(yaml)
+        return None
 
 
     def add_many_entries(self, new_episodes: Iterable[EpisodeInfo]) -> None:
@@ -261,10 +262,11 @@ class DataFileInterface:
         # If nothing was added, exit - otherwise log to user
         if (count := added['count']) == 0:
             return None
-        elif count > 1:
+        if count > 1:
             log.info(f'Added {count} episodes to "{self.file.parent.name}"')
         else:
             log.info(f'Added {added["info"]} to "{self.file.parent.name}"')
 
         # Write updated yaml
         self.__write_data(yaml)
+        return None

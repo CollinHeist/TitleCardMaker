@@ -22,7 +22,7 @@ class CollectionPosterMaker(ImageMaker):
 
     def __init__(self,
             source: Path,
-            output: Path, 
+            output: Path,
             title: str,
             font: Path = FONT,
             font_color: str = FONT_COLOR,
@@ -123,3 +123,5 @@ class CollectionPosterMaker(ImageMaker):
         ])
 
         self.image_magick.run(command)
+
+        return None

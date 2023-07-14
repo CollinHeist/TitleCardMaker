@@ -1,7 +1,6 @@
 from pathlib import Path as _Path_, _windows_flavour, _posix_flavour
 import os
 
-from modules.Debug import log
 
 class CleanPath(_Path_):
     """

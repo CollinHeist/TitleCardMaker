@@ -20,16 +20,22 @@ TQDM_KWARGS = {
 LOG_FILE = Path(__file__).parent.parent / 'logs' / 'maker.log'
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
-# Logger class that overrides exception calls to log message as error, and then
-# traceback as debug level of the exception only
+
 class BetterExceptionLogger(Logger):
+    """
+    Logger class that overrides `Logger.exception` to log as
+    `Logger.error`, and then print the traceback at the debug level.
+    """
+
     def exception(self, msg: object, excpt: Exception, *args, **kwargs) -> None:
         super().error(msg, *args, **kwargs)
         super().debug(excpt, exc_info=True)
 setLoggerClass(BetterExceptionLogger)
 
-# StreamHandler to integrate log messages with TQDM
+
 class LogHandler(StreamHandler):
+    """Handler to integrate log messages with tqdm."""
+
     def emit(self, record):
         # Write after flushing buffer to integrate with tqdm
         try:
@@ -54,7 +60,7 @@ class ErrorFormatterNoColor(Formatter):
     Formatter class to handle exception traceback printing without
     color.
     """
-    
+
     def formatException(self, ei) -> str:
         return f'[TRACEBACK] {super().formatException(ei)}'
 
@@ -89,6 +95,8 @@ class LogFormatterColor(Formatter):
 
 
 class LogFormatterNoColor(Formatter):
+    """Colorless version of the `LogFormatterColor` class."""
+
     FORMATTER = ErrorFormatterNoColor('[%(levelname)s] %(message)s')
 
     def format(self, record):
@@ -109,7 +117,7 @@ file_handler = TimedRotatingFileHandler(
     filename=LOG_FILE, when='midnight', backupCount=14,
 )
 file_handler.setFormatter(ErrorFormatterNoColor(
-    '[%(levelname)s] [%(asctime)s] %(message)s',
+    '[%(levelname)s] [%(asctime)s.%(msecs)03d] %(message)s',
     '%m-%d-%y %H:%M:%S'
 ))
 file_handler.setLevel(DEBUG)
