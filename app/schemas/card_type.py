@@ -87,6 +87,13 @@ class AnimeCardType(BaseCardTypeCustomFontAllText):
     stroke_color: BetterColor = 'black'
     episode_text_color: BetterColor = AnimeTitleCard.SERIES_COUNT_TEXT_COLOR
 
+    @root_validator(skip_on_failure=True)
+    def validate_source_file(cls, values):
+        if values['require_kanji'] and not values['kanji']:
+            raise ValueError(f'Kanji is required and not specified')
+
+        return values
+
 RandomAngleRegex = r'random\[([+-]?\d+.?\d*),\s*([+-]?\d+.?\d*)\]'
 RandomAngle = constr(regex=RandomAngleRegex)
 class ComicBookCardType(BaseCardTypeCustomFontAllText):
