@@ -48,7 +48,7 @@ class ImageMagickInterface:
 
 
     def __init__(self,
-            container: Optional[str] = 'ImageMagick',
+            container: Optional[str] = None,
             use_magick_prefix: bool = False,
             timeout: int = COMMAND_TIMEOUT_SECONDS,
         ) -> None:
