@@ -98,6 +98,9 @@ class Preferences:
         self.parse_file(self.read_file())
 
         # Initialize paths
+        self.asset_directory = Path(self.asset_directory)
+        self.card_directory = Path(self.card_directory)
+        self.source_directory = Path(self.source_directory)
         for folder in (self.asset_directory, self.card_directory,
                        self.source_directory):
             folder.mkdir(parents=True, exist_ok=True)
