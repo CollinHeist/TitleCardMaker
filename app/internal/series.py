@@ -161,7 +161,7 @@ def set_series_database_ids(
             series.plex_library_name, series_info, log=log,
         )
     if sonarr_interface:
-        sonarr_interface.set_series_ids(series_info)
+        sonarr_interface.set_series_ids(None, series_info, log=log)
     if tmdb_interface:
         tmdb_interface.set_series_ids(None, series_info, log=log)
 
