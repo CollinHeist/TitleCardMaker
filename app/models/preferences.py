@@ -107,9 +107,9 @@ class Preferences:
         """Initialize this object with all default values."""
 
         if self.is_docker:
-            self.asset_directory = '/config/assets'
-            self.card_directory = '/config/cards'
-            self.source_directory = '/config/source'
+            self.asset_directory = Path('/config/assets')
+            self.card_directory = Path('/config/cards')
+            self.source_directory = Path('/config/source')
         else:
             self.asset_directory = TCM_ROOT / 'assets'
             self.card_directory = TCM_ROOT / 'cards'
