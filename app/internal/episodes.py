@@ -182,9 +182,8 @@ def get_all_episode_data(
         return []
 
     # Verify Series has an associated Library
-    library_attribute = f'{episode_data_source.lower()}_library_name'
-    if (episode_data_source in ('Emby', 'Jellyfin', 'Plex')
-        and (library := getattr(series, library_attribute, None)) is None):
+    library = getattr(series,f'{episode_data_source.lower()}_library_name',None)
+    if episode_data_source in ('Emby', 'Jellyfin', 'Plex') and library is None:
         if raise_exc:
             raise HTTPException(
                 status_code=409,
