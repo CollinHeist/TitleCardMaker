@@ -86,8 +86,8 @@ class DownloadableFile(Base):
     filename: str
 
 class BlankBlueprint(Blueprint):
-    description: list[str] = ['Descriptive information about this Blueprint']
-    creator: str = 'Your (user)name here'
+    # description: list[str] = ['Descriptive information about this Blueprint']
+    # creator: str = 'Your (user)name here'
     preview: str = 'Name of preview file here'
 
 class RemoteBlueprintFont(BlueprintFont):
