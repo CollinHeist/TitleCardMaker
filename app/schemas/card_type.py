@@ -43,8 +43,8 @@ class BaseCardType(Base):
 
 class BaseCardTypeAllText(BaseCardType):
     title_text: str
-    season_text: str
-    episode_text: str
+    season_text: constr(to_upper=True)
+    episode_text: constr(to_upper=True)
     hide_season_text: bool = False
     hide_episode_text: bool = False
 
@@ -88,7 +88,7 @@ class AnimeCardType(BaseCardTypeCustomFontAllText):
     episode_text_color: BetterColor = AnimeTitleCard.SERIES_COUNT_TEXT_COLOR
 
     @root_validator(skip_on_failure=True)
-    def validate_source_file(cls, values):
+    def validate_kanji(cls, values):
         if values['require_kanji'] and not values['kanji']:
             raise ValueError(f'Kanji is required and not specified')
 
@@ -136,7 +136,7 @@ class ComicBookCardType(BaseCardTypeCustomFontAllText):
 
 class CutoutCardType(BaseCardType):
     title_text: str
-    episode_text: str
+    episode_text: constr(to_upper=True)
     font_color: BetterColor = CutoutTitleCard.TITLE_COLOR
     font_file: FilePath = CutoutTitleCard.TITLE_FONT
     overlay_color: BetterColor = 'black'
@@ -205,7 +205,7 @@ class LogoCardType(BaseCardTypeCustomFontAllText):
 
 class OlivierCardType(BaseCardTypeCustomFontNoText):
     title_text: str
-    episode_text: str
+    episode_text: constr(to_upper=True)
     hide_episode_text: bool = False
     font_color: BetterColor = OlivierTitleCard.TITLE_COLOR
     font_file: FilePath = OlivierTitleCard.TITLE_FONT
@@ -215,7 +215,7 @@ class OlivierCardType(BaseCardTypeCustomFontNoText):
 
 class PosterCardType(BaseCardType):
     title_text: str
-    episode_text: str
+    episode_text: constr(to_upper=True)
     font_color: BetterColor = PosterTitleCard.TITLE_COLOR
     font_file: FilePath = PosterTitleCard.TITLE_FONT
     font_interline_spacing: int = 0
@@ -251,7 +251,7 @@ class StandardCardType(BaseCardTypeCustomFontAllText):
 
 class StarWarsCardType(BaseCardType):
     title_text: str
-    episode_text: str
+    episode_text: constr(to_upper=True)
     hide_episode_text: bool = False
     font_color: BetterColor = StarWarsTitleCard.TITLE_COLOR
     font_file: FilePath = StarWarsTitleCard.TITLE_FONT
@@ -313,7 +313,7 @@ class TintedFrameCardType(BaseCardTypeAllText):
 EpisodeTextPosition = Literal['left', 'center', 'right']
 class TintedGlassCardType(BaseCardTypeCustomFontNoText):
     title_text: str
-    episode_text: str
+    episode_text: constr(to_upper=True)
     hide_episode_text: bool = False
     font_color: BetterColor = TintedGlassTitleCard.TITLE_COLOR
     font_file: FilePath = TintedGlassTitleCard.TITLE_FONT
