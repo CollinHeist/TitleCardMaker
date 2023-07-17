@@ -1,0 +1,21 @@
+[MASTER]
+ignore = archives, assets, docs, fonts, logs, source, title_cards
+init-hook='import sys; sys.path.append("/mnt/user/Media/TitleCardMaker")'
+
+[MESSAGES CONTROL]
+disable = logging-fstring-interpolation,
+          f-string-without-interpolation,
+          redefined-outer-name,
+          broad-except,
+          pointless-string-statement,
+          invalid-name,
+          missing-module-docstring,
+          duplicate-code,
+          too-many-lines,
+          too-few-public-methods,
+          too-many-locals,
+          too-many-statements,
+          too-many-arguments,
+          too-many-instance-attributes,
+          anomalous-backslash-in-string,
+          dangerous-default-value
