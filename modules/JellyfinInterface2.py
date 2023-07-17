@@ -158,12 +158,14 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface
         Args:
             library_name: Name of the library containing the series.
             series_info: The series being evaluated.
+            raw_obj: Whether to return the raw object rather than just
+                the dictionary.
             log: (Keyword) Logger for all log messages.
 
         Returns:
             None if the series is not found. The Jellyfin ID of the
-            series if raw_obj is False, otherwise the series dictionary
-            itself.
+            series if `raw_obj` is False, otherwise the series
+            dictionary itself.
         """
 
         # Get ID of this library

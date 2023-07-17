@@ -90,7 +90,9 @@ class DatabaseInfoContainer(ABC):
             object. False otherwise.
         """
 
-        return getattr(self, id_) is not None
+        id_name = id_ if id_.endswith('_id') else f'{id_}_id'
+
+        return getattr(self, id_name) is not None
 
 
     def has_ids(self, *ids: tuple[str]) -> bool:

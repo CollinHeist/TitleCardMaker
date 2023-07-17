@@ -220,7 +220,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
 
 
     def set_series_ids(self,
-            library_name: str,
+            library_name: Any,
             series_info: SeriesInfo,
             *,
             log: Logger = log,
@@ -231,6 +231,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
         Args:
             library_name: Unused argument.
             series_info: SeriesInfo to update.
+            log: (Keyword) Logger for all log messages.
         """
 
         # If all possible ID's are defined, exit
@@ -253,10 +254,17 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
                 series['title'],
                 series['year'],
                 imdb_id=series.get('imdbId'),
-                sonarr_id=f'{self.server_id}-{series.get("id")}',
                 tvdb_id=series.get('tvdbId'),
                 tvrage_id=series.get('tvRageId'),
             )
+
+            # Add Sonarr ID if added to this server
+            if (sonarr_id := series.get('id')) is not None:
+                reference_series_info.set_sonarr_id(
+                    f'{self.server_id}-{sonarr_id}'
+                )
+            else:
+                log.debug(f'Found {series_info} via Sonarr, but not in server')
 
             if series_info == reference_series_info:
                 series_info.copy_ids(reference_series_info)
@@ -285,7 +293,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
         """
 
         # If no ID was returned, error and return an empty list
-        if series_info.sonarr_id is None:
+        if not series_info.has_id('sonarr_id'):
             log.warning(f'Series "{series_info}" not found in Sonarr')
             return []
 
