@@ -1,7 +1,7 @@
 from base64 import b64encode
 from datetime import datetime
 from logging import Logger
-from typing import Optional
+from typing import Optional, Union
 
 from fastapi import HTTPException
 
@@ -155,41 +155,33 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
         }
 
 
-    def get_usernames(self) -> list[str]:
-        """
-        Get all the usernames for this interface's Emby server.
-
-        Returns:
-            List of usernames.
-        """
-
-        return [
-            user['Name'] for user in
-            self.session.get(f'{self.url}/Users', params=self.__params)
-        ]
-
-
-    def set_series_ids(self,
+    def __get_series_id(self,
             library_name: str,
             series_info: SeriesInfo,
             *,
+            raw_obj: bool = False,
             log: Logger = log,
-        ) -> None:
+        ) -> Optional[Union[str, dict]]:
         """
-        Set the series ID's for the given SeriesInfo object.
+        Get the Jellyfin ID for the given series.
 
         Args:
-            library_name: The name of the library containing the series.
-            series_info: Series to set the ID of.
+            library_name: Name of the library containing the series.
+            series_info: The series being evaluated.
             log: (Keyword) Logger for all log messages.
+
+        Returns:
+            None if the series is not found. The Jellyfin ID of the
+            series if raw_obj is False, otherwise the series dictionary
+            itself.
         """
 
-        # If all possible ID's are defined
-        if series_info.has_ids(*self.SERIES_IDS):
-            return None
+        # TODO evaluate whether Emby cycles object ID's
+        if series_info.has_id('emby_id'):
+            return series_info.emby_id
 
-        # If library not mapped, error and exit
-        if (library_ids := self.libraries.get(library_name)) is None:
+        # Get ID of this library
+        if (library_ids := self.libraries.get(library_name, None)) is None:
             log.error(f'Library "{library_name}" not found in Emby')
             return None
 
@@ -228,20 +220,63 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
             for result in response['Items']:
                 if (result['Type'] == 'Series'
                     and series_info.matches(result['Name'])):
-                    # Set Emby, IMDb, TMDb, or TVDb
-                    series_info.set_emby_id(int(result['Id']))
-                    if (imdb_id := result['ProviderIds'].get('IMDB')):
-                        series_info.set_imdb_id(imdb_id)
-                    if (tmdb_id := result['ProviderIds'].get('Tmdb')):
-                        series_info.set_tmdb_id(int(tmdb_id))
-                    if (tvdb_id := result['ProviderIds'].get('Tvdb')):
-                        series_info.set_tvdb_id(int(tvdb_id))
-
-                    return None
+                    return result if raw_obj else result['Id']
 
         # Not found on server
-        log.warning(f'Series "{series_info}" was not found under library '
-                    f'"{library_name}" in Emby')
+        return None
+
+
+    def get_usernames(self) -> list[str]:
+        """
+        Get all the usernames for this interface's Emby server.
+
+        Returns:
+            List of usernames.
+        """
+
+        return [
+            user['Name'] for user in
+            self.session.get(f'{self.url}/Users', params=self.__params)
+        ]
+
+
+    def set_series_ids(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            *,
+            log: Logger = log,
+        ) -> None:
+        """
+        Set the series ID's for the given SeriesInfo object.
+
+        Args:
+            library_name: The name of the library containing the series.
+            series_info: Series to set the ID of.
+            log: (Keyword) Logger for all log messages.
+        """
+
+        # If all possible ID's are defined
+        if series_info.has_ids(*self.SERIES_IDS):
+            return None
+
+        # Find series
+        series = self.__get_series_id(
+            library_name, series_info, raw_obj=True, log=log
+        )
+        if series is None:
+            log.warning(f'Series "{series_info}" was not found under library '
+                        f'"{library_name}" in Emby')
+            return None
+
+        # Set database ID's
+        series_info.set_emby_id(int(series['Id']))
+        if (imdb_id := series['ProviderIds'].get('IMDB')):
+            series_info.set_imdb_id(imdb_id)
+        if (tmdb_id := series['ProviderIds'].get('Tmdb')):
+            series_info.set_tmdb_id(int(tmdb_id))
+        if (tvdb_id := series['ProviderIds'].get('Tvdb')):
+            series_info.set_tvdb_id(int(tvdb_id))
+
         return None
 
 
@@ -280,7 +315,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
 
 
     def get_library_paths(self,
-            filter_libraries: list[str] = []
+            filter_libraries: list[str] = [],
         ) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
@@ -429,14 +464,15 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
             List of EpisodeInfo objects for this series.
         """
 
-        # If series has no Emby ID, cannot query episodes
-        if not series_info.has_id('emby_id'):
+        # Find series
+        emby_id = self.__get_series_id(library_name, series_info, log=log)
+        if emby_id is None:
             log.warning(f'Series not found in Emby {series_info!r}')
             return []
 
         # Get all episodes for this series
         response = self.session.get(
-            f'{self.url}/Shows/{series_info.emby_id}/Episodes',
+            f'{self.url}/Shows/{emby_id}/Episodes',
             params={'Fields': 'ProviderIds'} | self.__params
         )
 
@@ -478,20 +514,6 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
         return all_episodes
 
 
-    def has_series(self, series_info: SeriesInfo) -> bool:
-        """
-        Determine whether the given series is present within Emby.
-
-        Args:
-            series_info: The series being evaluated.
-
-        Returns:
-            True if the series is present within Emby. False otherwise.
-        """
-
-        return series_info.has_id('emby_id')
-
-
     def update_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
@@ -507,13 +529,18 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
             episodes: List of Episode objects to update.
         """
 
-        # If no episodes, or series has no Emby ID, exit
-        if len(episodes) == 0 or not series_info.has_id('emby_id'):
+        # If no episodes, exit
+        if len(episodes) == 0:
+            return None
+
+        # Find series, exit if not found
+        emby_id = self.__get_series_id(library_name, series_info, log=log)
+        if emby_id is None:
             return None
 
         # Query for all episodes of this series
         response = self.session.get(
-            f'{self.url}/Shows/{series_info.emby_id}/Episodes',
+            f'{self.url}/Shows/{emby_id}/Episodes',
             params={'UserId': self.user_id} | self.__params
         )
 
@@ -547,12 +574,12 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
         """
 
         # If series has no Emby ID, or no episodes, exit
-        if not series_info.has_id('emby_id') or len(episode_and_cards) == 0:
+        if len(episode_and_cards) == 0:
             return None
 
         # Load each episode and card
         loaded = []
-        for episode, card in episode_and_cards.items():
+        for episode, card in episode_and_cards:
             # Skip episodes without Emby ID's (e.g. not in Emby)
             if (emby_id := episode.emby_id) is None:
                 continue
@@ -605,14 +632,15 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
             returned.
         """
 
-        # If series has no Emby ID, cannot query episodes
-        if not episode_info.has_id('emby_id'):
+        # Find series, exit if not found
+        emby_id = self.__get_series_id(library_name, series_info, log=log)
+        if emby_id is None:
             log.warning(f'Episode {episode_info} not found in Emby')
             return None
 
         # Get the source image for this episode
         response = self.session.session.get(
-            f'{self.url}/Items/{episode_info.emby_id}/Images/Primary',
+            f'{self.url}/Items/{emby_id}/Images/Primary',
             params={'Quality': 100} | self.__params,
         ).content
 
@@ -642,14 +670,15 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
             series, or thumbnail cannot be found.
         """
 
-        # If series has no Emby ID, cannot get poster
-        if not series_info.has_id('emby_id'):
+        # Find series, exit if not found
+        emby_id = self.__get_series_id(library_name, series_info, log=log)
+        if emby_id is None:
             log.warning(f'Series not found in Emby {series_info!r}')
-            return []
+            return None
 
         # Get the poster image for this Series
         response = self.session.session.get(
-            f'{self.url}/Items/{series_info.emby_id}/Images/Primary',
+            f'{self.url}/Items/{emby_id}/Images/Primary',
             params={'Quality': 100} | self.__params,
         ).content
 
@@ -680,15 +709,15 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
             not exist in Emby, or no valid image was returned.
         """
 
-        # Find this series
-        series_id = self.__get_series_id(library_name, series_info, log=log)
-        if series_id is None:
+        # Find series, exit if not found
+        emby_id = self.__get_series_id(library_name, series_info, log=log)
+        if emby_id is None:
             log.warning(f'Series not found in Emby {series_info!r}')
             return None
 
         # Get the source image for this episode
         response = self.session.session.get(
-            f'{self.url}/Items/{series_id}/Images/Logo',
+            f'{self.url}/Items/{emby_id}/Images/Logo',
             params={'Quality': 100} | self.__params,
         ).content
 
@@ -698,6 +727,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
             return None
 
         return response
+
 
     def get_libraries(self) -> list[str]:
         """
