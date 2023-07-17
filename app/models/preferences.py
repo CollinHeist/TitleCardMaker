@@ -35,7 +35,7 @@ class Preferences:
 
     """Default values for global settings"""
     DEFAULT_CARD_FILENAME_FORMAT = (
-        '{series_full_name} S{season_number:02}E{episode_number:02}'
+        '{series_full_name} - S{season_number:02}E{episode_number:02}'
     )
     DEFAULT_CARD_EXTENSION = '.jpg'
     DEFAULT_IMAGE_SOURCE_PRIORITY = ['TMDb', 'Plex', 'Jellyfin', 'Emby']
