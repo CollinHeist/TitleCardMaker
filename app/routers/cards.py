@@ -184,7 +184,7 @@ def get_series_cards(
 def delete_series_title_cards(
         series_id: int,
         request: Request,
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> CardActions:
     """
     Delete all TitleCards for the given Series. Return a list of the
@@ -207,7 +207,7 @@ def delete_series_title_cards(
 def delete_episode_title_cards(
         episode_id: int,
         request: Request,
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> CardActions:
     """
     Delete all TitleCards for the given Episode. Return a list of the
@@ -254,10 +254,10 @@ def create_card_for_episode(
         episode_id: int,
         request: Request,
         db: Session = Depends(get_database),
-        preferences = Depends(get_preferences),
-        emby_interface = Depends(get_emby_interface),
-        jellyfin_interface = Depends(get_jellyfin_interface),
-        plex_interface = Depends(get_plex_interface)
+        preferences: Preferences = Depends(get_preferences),
+        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
+        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
+        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
     ) -> None:
     """
     Create the Title Cards for the given Episode. This deletes and
@@ -282,7 +282,8 @@ def create_card_for_episode(
 @card_router.get('/episode/{episode_id}', tags=['Episodes'])
 def get_episode_card(
         episode_id: int,
-        db: Session = Depends(get_database)) -> list[TitleCard]:
+        db: Session = Depends(get_database),
+    ) -> list[TitleCard]:
     """
     Get all TitleCards for the given Episode.
 
