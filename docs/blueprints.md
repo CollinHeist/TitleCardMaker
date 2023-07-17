@@ -67,13 +67,23 @@ as easy as possible.
 
     - [x] Export your Blueprint within the TCM UI.
     - [x] Choose an effective preview image.
-    - [x] Enter your name/username in the `creator` field of the `blueprint.json` file.
-    - [x] Enter a description of the Blueprint in the `description` field.
-    - [x] Verify any Font licenses permit the files to be shared.
-        -  [x] If not, remove the Font file, update the `blueprint.json` file,
-        add a link to the Font under the `file_download_url` field.
-    - [x] Create a subfolder for the Series and its Blueprint, put the data inside.
-    - [x] Submit a Pull Request with this Blueprint to the `staging` branch of the Repository.
+    - [x] [Create an issue](https://github.com/CollinHeist/TitleCardMaker-Blueprints/issues/new?assignees=CollinHeist&labels=blueprint&projects=&template=new_blueprint.yml&title=%5BBlueprint%5D+)
+    on the Blueprints repository.
+    - [x] Fill out the issue form's required data:
+        - [x] Series name, year, your username, and the blueprint description
+        - [x] Copy/paste the contents of the exported `blueprint.json` file in
+        the _Blueprint File_ field.
+        - [x] Upload any associated files.
+        
+            !!! tip "Uploading Multiple Files"
+
+                If you have more than one file to upload - i.e. a preview image
+                _and_ 1+ Font files - then compress/zip these files and only
+                upload the zipped file.
+
+
+            - [x] Verify any Font licenses permit the files to be shared - if
+            not, [see below](#editing-the-blueprint).
 
 ### Exporting the Data
 
@@ -113,25 +123,6 @@ the Blueprint.
 2. Verify the filename of the preview image is reflected in the `blueprint.json`
 file. The default is `preview.jpg`, but you can change this if you wish.
 
-    ```json title="blueprint.json" hl_lines="10"
-    {
-        "series": {}, // (1)
-        "episodes": {},
-        "templates": [],
-        "fonts": [],
-        "description": [
-            "..."
-        ],
-        "creator": "CollinHeist",
-        "preview": "preview.jpg"
-    }
-    ```
-
-    1.  Customization not shown.
-
-3. Put your name/username in the `creator` field of the `blueprint.json` file.
-If you do not want your name listed in the UI, feel free to put mine instead.
-
     ```json title="blueprint.json" hl_lines="9"
     {
         "series": {}, // (1)
@@ -141,33 +132,11 @@ If you do not want your name listed in the UI, feel free to put mine instead.
         "description": [
             "..."
         ],
-        "creator": "CollinHeist",
         "preview": "preview.jpg"
     }
     ```
 
     1.  Customization not shown.
-
-4. Enter a general description of the Blueprint in the `description` field. This
-is a _list_, with each separate line being a separate paragraph in the UI.
-
-    ```json title="blueprint.json" hl_lines="6-9"
-    {
-        "series": {}, // (1)
-        "episodes": {},
-        "templates": [],
-        "fonts": [],
-        "description": [
-            "Bla bla card type that changes (x) thing and uses the (y) font.",
-            "This is another paragraph of text" // (2)
-        ],
-        "creator": "CollinHeist",
-        "preview": "preview.jpg"
-    }
-    ```
-
-    1.  Customization not shown.
-    2.  Note that there is **not** a trailing comma (`,`) after the last line.
 
 5. Verify the actual contents of the Blueprint. Any customizations can be
 edited, removed, or adjusted. But to prevent any errors, it's best to edit these
@@ -181,7 +150,7 @@ if the author's license is listed as open and/or free for public
 
         If the Font is public, then you are free to include the Font file itself
         inside the Blueprint. Please take note (either the URL or a screenshot)
-        of the License to be included in the Pull Request.
+        of the License to be included in the Issue if needed.
 
     === ":octicons-x-16: Font is Not Public"
 
@@ -201,12 +170,7 @@ if the author's license is listed as open and/or free for public
                     "file": "script-casual-normal.ttf", // (1)
                     "file_download_url": "https://www.google.com/" // (2)
                 }
-            ],
-            "description": [
-                "..."
-            ],
-            "creator": "CollinHeist",
-            "preview": "preview.jpg"
+            ]
         }
         ```
 
@@ -223,60 +187,36 @@ if the author's license is listed as open and/or free for public
 With this Blueprint, the next (and final) step is to submit it to the Blueprints
 repository.
 
-#### Forking the Repository
+1. Open a [new issue](https://github.com/CollinHeist/TitleCardMaker-Blueprints/issues/new?assignees=CollinHeist&labels=blueprint&projects=&template=new_blueprint.yml&title=%5BBlueprint%5D+)
+on the Blueprints GitHub repository.
 
-1. Open [the repository](https://github.com/CollinHeist/TitleCardMaker-Blueprints/).
+2. Fill out the form with the relevant information.
 
-2. Log into (or create) your GitHub account.
+3. Paste the contents of the exported `blueprint.json` file into the _Blueprint
+File_ field.
 
-3. _Fork_ the main repository by clicking the :octicons-repo-forked-16: `Fork`
-button in the top right (next to the :star: `Star` - *wink wink*). Hit
-`Create Fork`.
+4. The final step changes depending on how many files you have to upload:
 
-4. Once forked, clone the forked repository:
+    === "1 File (Preview Image)"
 
-    ```bash
-    git clone ... # (1)!
-    ```
+        If the only file you have to attach is the preview Title Card, then
+        you can just drag/drop or attach that file into the _Zip of Files_
+        field and you are done.
 
-    1.  Using _your_ Repository name here.
+    === "2+ Files (Preview Image and Fonts)"
 
-#### Adding your Blueprint
+        If you have 2+ files - i.e. a preview Title Card and at least one Font
+        File - then you need to compress/zip these files into one zip file and
+        drag/drop or attach that zipped file into the _Zip of Files_ field.
 
-5. Use the `helper.py` file to create the required Series subfolder for the
-Series whose Blueprint you are contributing. Enter the full name of the Series 
-as the `Title (year)`.
+5. Click the _Submit new issue_ button.
 
-    !!! example "Example"
+!!! success "Success"
 
-        If I were contributing a Blueprint for _Breaking Bad (2008)_, I'd run
-        the following:
-
-        ```bash
-        python3 helper.py "Breaking Bad (2008)"
-        ```
-
-        And this would make sure the folders under
-        `blueprints/B/Breaking Bad (2008)/` existed.
-
-6. Open this folder, and then create another subfolder for your Blueprint. This
-will need to be numbered starting from 0, so if it's the first Blueprint for
-that Series, create `0`, then `1`, `2`, etc.
-
-    !!! example "Example"
-
-        For the prior example, this would be the folder at
-        `blueprints/B/Breaking Bad (2008)/0/` (if it were the first Blueprint).
-
-7. Copy the contents of the zipped Blueprint folder from TCM into this
-subfolder.
-
-8. Commit your files to your Repository, then submit a Pull Request to merge
-your repository into the `staging` branch of the Blueprints repository.
-
-9. TitleCardMaker will then run various tests on your submission to verify that
-it is a valid Blueprint, that you didn't add any unnecessary files, etc. If it
-passes, your Blueprint has been submitted and your part is finished!
+    After the issue is created, there is an automated action that will validate
+    your submission (check for syntax errors, bad file uploads, missing preview,
+    etc.). If this passes, then your work is done and the Blueprint will be
+    available within TCM shortly.
 
 [^1]: TCM will only grab Title Cards that are not blurred or grayscale, and not
 any Cards from Specials (season 0).
