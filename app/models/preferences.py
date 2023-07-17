@@ -319,7 +319,7 @@ class Preferences:
         """Arguments for initializing a EmbyInterface"""
 
         return {
-            'url': self.emby_url,
+            'url': str(self.emby_url),
             'api_key': self.emby_api_key,
             'username': self.emby_username,
             'verify_ssl': self.emby_use_ssl,
@@ -341,7 +341,7 @@ class Preferences:
         """Arguments for initializing a JellyfinInterface"""
 
         return {
-            'url': self.jellyfin_url,
+            'url': str(self.jellyfin_url),
             'api_key': self.jellyfin_api_key,
             'username': self.jellyfin_username,
             'verify_ssl': self.jellyfin_use_ssl,
@@ -354,7 +354,7 @@ class Preferences:
         """Arguments for initializing a PlexInterface"""
 
         return {
-            'url': self.plex_url,
+            'url': str(self.plex_url),
             'token': self.plex_token,
             'verify_ssl': self.plex_use_ssl,
             'integrate_with_pmm': self.plex_integrate_with_pmm,
@@ -367,7 +367,7 @@ class Preferences:
         """Arguments for initializing a SonarrInterface"""
 
         return {
-            'url': self.sonarr_url,
+            'url': str(self.sonarr_url),
             'api_key': self.sonarr_api_key,
             'verify_ssl': self.sonarr_use_ssl,
             'downloaded_only': self.sonarr_downloaded_only,
@@ -379,7 +379,7 @@ class Preferences:
         """Arguments for initializing a TMDbInterface"""
 
         return {
-            'api_key': self.tmdb_api_key,
+            'api_key': str(self.tmdb_api_key),
             'minimum_source_width': self.tmdb_minimum_width,
             'minimum_source_height': self.tmdb_minimum_height,
             'blacklist_threshold': 3, # TODO add variable
