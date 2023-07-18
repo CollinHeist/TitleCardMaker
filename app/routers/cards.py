@@ -340,13 +340,13 @@ def create_cards_for_plex_rating_keys(
     # Process each set of details
     series_to_load = []
     for series_info, episode_info, watched_status in details:
-        # Find Episode
-        episode = db.query(models.episode.Episode)\
+        # Find all matching Episodes
+        episodes = db.query(models.episode.Episode)\
             .filter(episode_info.filter_conditions(models.episode.Episode))\
-            .first()
+            .all()
 
         # Episode does not exist, refresh episode data and try again
-        if episode is None:
+        if not episodes:
             # Try and find associated Series, skip if DNE
             series = db.query(models.series.Series)\
                 .filter(series_info.filter_conditions(models.series.Series))\
@@ -362,12 +362,24 @@ def create_cards_for_plex_rating_keys(
                 sonarr_interface=sonarr_interface,tmdb_interface=tmdb_interface,
                 log=log,
             )
-            episode = db.query(models.episode.Episode)\
+            episodes = db.query(models.episode.Episode)\
                 .filter(episode_info.filter_conditions(models.episode.Episode))\
-                .first()
-            if episode is None:
+                .all()
+            if not episodes:
                 log.error(f'Cannot find Episode for {series_info} {episode_info}')
                 continue
+
+        # Get first Episode that matches this Series
+        episode, found = None, False
+        for episode in episodes:
+            if episode.series.as_series_info == series_info:
+                found = True
+                break
+
+        # If no match, exit
+        if not found:
+            log.error(f'Cannot find Episode for {series_info} {episode_info}')
+            continue
 
         # Update Episode watched status
         if episode.watched != watched_status:
