@@ -3,6 +3,7 @@ from typing import Optional, Union
 
 from modules.Debug import log
 
+
 class Title:
     """
     This class describes a title. A Title can either be initialized with
@@ -66,8 +67,8 @@ class Title:
                 self.full_title = str(title)
                 self.__title_lines = []
                 self.__manually_specified = False
-            except Exception:
-                raise TypeError(f'Cannot create Title with {title!r}')
+            except Exception as e:
+                raise TypeError(f'Cannot create Title with {title!r}') from e
 
         # This title as represented in YAML
         self.title_yaml = title
@@ -125,7 +126,7 @@ class Title:
         respected, but the maximum number of lines will be.
 
         Args:
-            max_line_width: Maximum line width to base splitting on. 
+            max_line_width: Maximum line width to base splitting on.
             max_line_count: The maximum line count to split the title
                 into.
             top_heavy: Whether to split the title in a top-heavy style.
@@ -181,7 +182,7 @@ class Title:
                 all_lines += [top, bottom]
 
             # Strip every line, delete blank entries
-            all_lines = list(filter(lambda l: len(l), map(str.strip,all_lines)))
+            all_lines = list(filter(len, map(str.strip,all_lines)))
 
             # If misformatted, combine overflow lines
             if len(all_lines) > max_line_count:
@@ -213,7 +214,7 @@ class Title:
             all_lines += [bottom, top]
 
         # Reverse order, strip every line, delete blank entries
-        all_lines = list(filter(lambda l:len(l),map(str.strip,all_lines[::-1])))
+        all_lines = list(filter(len, map(str.strip,all_lines[::-1])))
 
         # If misformatted, combine overflow lines
         if len(all_lines) > max_line_count:

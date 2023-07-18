@@ -8,6 +8,7 @@ from modules.EpisodeInfo import EpisodeInfo
 from modules.StyleSet import StyleSet
 from modules.TitleCard import TitleCard
 
+
 class Episode:
     """
     This class defines an episode of a series that has a corresponding
@@ -18,7 +19,7 @@ class Episode:
     __slots__ = (
         'episode_info', 'card_class', '_base_source', 'source', 'destination',
         'downloadable_source', 'extra_characteristics', 'given_keys', 'watched',
-        'blur', 'grayscale', 'spoil_type', 
+        'blur', 'grayscale', 'spoil_type',
     )
 
 
@@ -189,7 +190,7 @@ class Episode:
         if self.destination.exists():
             self.destination.unlink()
 
-            # Log deletion 
+            # Log deletion
             message = f'Deleted "{self.destination.resolve()}"'
             if reason is not None:
                 message += f' [{reason}]'

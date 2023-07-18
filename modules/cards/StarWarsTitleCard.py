@@ -1,12 +1,10 @@
 from pathlib import Path
-from typing import Optional, Any
+from typing import Optional
 
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
-from modules.Debug import log
 
-SeriesExtra = Optional
 
 class StarWarsTitleCard(BaseCardType):
     """
@@ -16,6 +14,7 @@ class StarWarsTitleCard(BaseCardType):
     """
 
     """API Parameters"""
+    # pylint: disable=line-too-long
     API_DETAILS = CardDescription(
         name='Star Wars',
         identifier='star wars',
@@ -29,7 +28,7 @@ class StarWarsTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color of the season and episode text',
-            ), 
+            ),
         ], description=[
             'Title cards intended for Star Wars (or more generically Space-themed) shows.',
             'Similar to the Olivier title card, these cards feature left-aligned title and episode text',
@@ -37,6 +36,7 @@ class StarWarsTitleCard(BaseCardType):
             'This card is not very customizable.',
         ]
     )
+    # pylint: enable=line-too-long
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'star_wars'
@@ -88,8 +88,9 @@ class StarWarsTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             episode_text_color: str = EPISODE_TEXT_COLOR,
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
+        ) -> None:
         """
         Initialize the CardType object.
         """
@@ -185,13 +186,14 @@ class StarWarsTitleCard(BaseCardType):
             f'-geometry +325-140',
             f'-composite',
         ]
-    
+
 
     @staticmethod
     def modify_extras(
-            extras: dict[str, Any],
+            extras: dict,
             custom_font: bool,
-            custom_season_titles: bool) -> None:
+            custom_season_titles: bool,
+        ) -> None:
         """
         Modify the given extras based on whether font or season titles
         are custom.
@@ -210,7 +212,7 @@ class StarWarsTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determines whether the given arguments represent a custom font
         for this card.
@@ -231,7 +233,9 @@ class StarWarsTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> bool:
         """
         Determines whether the given attributes constitute custom or
         generic season titles.

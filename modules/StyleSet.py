@@ -2,7 +2,7 @@ from modules.Debug import log
 
 class StyleSet:
     """
-    Set of watched and unwatched styles. 
+    Set of watched and unwatched styles.
     """
 
     """Default spoil type for all episodes without explicit watch statuses"""
@@ -110,13 +110,18 @@ class StyleSet:
 
     @property
     def watched_style_is_art(self) -> bool:
+        """Whether the watched style is an art style."""
+
         return 'art' in self.watched
 
     @property
     def unwatched_style_is_art(self) -> bool:
+        """Whether the unwatched style is an art style."""
+
         return 'art' in self.unwatched
 
 
+    # pylint: disable=missing-function-docstring
     def effective_style_is_art(self, watch_status: bool) -> bool:
         return 'art' in (self.watched if watch_status else self.unwatched)
 

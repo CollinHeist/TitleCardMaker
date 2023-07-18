@@ -420,7 +420,7 @@
       const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
       const allEpisodeDataSources = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
       const allTranslations = await fetch('/api/available/translations').then(resp => resp.json());
-      const elements = allTemplates.map(templateObj => {
+      const elements = allTemplates.items.map(templateObj => {
         // Clone template
         const base = document.querySelector('#template').content.cloneNode(true);
         base.querySelector('.accordion').id = `template-id${templateObj.id}`;
@@ -492,7 +492,7 @@
       $('.ui.checkbox').checkbox();
 
       // Fill in fancy values
-      allTemplates.forEach(templateObj => {
+      allTemplates.items.forEach(templateObj => {
         // Filters
         if (templateObj.filters.length > 0) {
           const conditionsDiv = $(`#template-id${templateObj.id} [data-value="conditions"]`);

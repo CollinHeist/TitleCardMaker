@@ -15,5 +15,6 @@ jobs:
           webhook_token: ${{ secrets.RELEASE_WEBHOOK_TOKEN }}
           release: true
           title: TitleCardMaker VERSION
+          message: "<@&1111000623261958234> - A new version of TitleCardMaker has been released."
           username: MakerBot
           avatar_url: https://raw.githubusercontent.com/CollinHeist/TitleCardMaker/master/.github/logo.png

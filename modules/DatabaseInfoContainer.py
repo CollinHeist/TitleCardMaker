@@ -1,7 +1,8 @@
-from abc import ABC, abstractproperty
+from abc import ABC, abstractmethod
 from typing import Any, Callable, Optional
 
 from modules.Debug import log
+
 
 class DatabaseInfoContainer(ABC):
     """
@@ -14,10 +15,10 @@ class DatabaseInfoContainer(ABC):
     __slots__ = ()
 
 
-    @abstractproperty
+    @abstractmethod
     def __repr__(self) -> str:
         raise NotImplementedError(f'All DatabaseInfoContainers must define this')
-    
+
 
     def __eq__(self, other: 'DatabaseInfoContainer') -> bool:
         """
@@ -53,7 +54,7 @@ class DatabaseInfoContainer(ABC):
 
     def _update_attribute(self,
             attribute: str,
-            value: Any, 
+            value: Any,
             type_: Optional[Callable] = None
         ) -> None:
         """
@@ -89,7 +90,9 @@ class DatabaseInfoContainer(ABC):
             object. False otherwise.
         """
 
-        return getattr(self, id_) is not None
+        id_name = id_ if id_.endswith('_id') else f'{id_}_id'
+
+        return getattr(self, id_name) is not None
 
 
     def has_ids(self, *ids: tuple[str]) -> bool:
@@ -105,7 +108,7 @@ class DatabaseInfoContainer(ABC):
         """
 
         return all(getattr(self, id_) is not None for id_ in ids)
-    
+
 
     def copy_ids(self, other: 'DatabaseInfoContainer') -> None:
         """
@@ -123,8 +126,6 @@ class DatabaseInfoContainer(ABC):
             if (attr.endswith('_id')
                 and not getattr(self, attr)
                 and getattr(other, attr)):
-                # Transfer ID 
+                # Transfer ID
                 log.debug(f'Copied {attr}[{getattr(other, attr)}] into {self!r}')
                 setattr(self, attr, getattr(other, attr))
-
-        return None

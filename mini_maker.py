@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from os import environ
 from pathlib import Path
 from re import match, IGNORECASE
+from sys import exit
 
 try:
     from modules.AspectRatioFixer import AspectRatioFixer
@@ -13,12 +14,10 @@ try:
     from modules.MoviePosterMaker import MoviePosterMaker
     from modules.PreferenceParser import PreferenceParser
     from modules.global_objects import set_preference_parser
-    from modules.RemoteCardType import RemoteCardType
     from modules.RemoteFile import RemoteFile
     from modules.SeasonPoster import SeasonPoster
     from modules.StandardSummary import StandardSummary
     from modules.StylizedSummary import StylizedSummary
-    from modules.TitleCard import TitleCard
 except ImportError:
     print(f'Required Python packages are missing - execute "pipenv install"')
     exit(1)
@@ -106,7 +105,7 @@ title_card_group.add_argument(
     help='A font scale (as percentage) for this card')
 title_card_group.add_argument(
     '--font-color', '--color',
-    type=str, 
+    type=str,
     default='__default',
     metavar='#HEX',
     help='A custom font color for this card')
@@ -134,7 +133,7 @@ title_card_group.add_argument(
     default='100%',
     metavar='SCALE%',
     help='Specify the font black stroke scale (as percentage)')
-    
+
 # Argument group for aspect ratio fixing
 aspect_ratio_group = parser.add_argument_group(
     'Aspect Ratio Correction',
@@ -223,7 +222,7 @@ movie_poster_group.add_argument(
     type=str,
     default='',
     metavar='TOP_SUBTITLE',
-    help='Top subtitle line for the movie poster')    
+    help='Top subtitle line for the movie poster')
 movie_poster_group.add_argument(
     '--movie-subtitle',
     type=str,
@@ -279,7 +278,7 @@ genre_group.add_argument(
     metavar=('SOURCE_DIRECTORY'),
     help='Create all genre cards for images in the given directory based on '
          'their file names')
-         
+
 # Argument group for show summaries
 show_summary_group = parser.add_argument_group(
     'Show Summaries',
@@ -361,7 +360,7 @@ season_poster_group.add_argument(
     '--top-placement',
     action='store_true',
     help='Create the season poster with the logo and season text at the top')
-         
+
 # Parse given arguments
 args, unknown = parser.parse_known_args()
 is_docker = environ.get(ENV_IS_DOCKER, 'false').lower() == 'true'
@@ -369,7 +368,7 @@ is_docker = environ.get(ENV_IS_DOCKER, 'false').lower() == 'true'
 # Create dictionary of unknown arguments
 arbitrary_data = {}
 if len(unknown) % 2 == 0 and len(unknown) > 1:
-    arbitrary_data = {key: val for key, val in zip(unknown[::2], unknown[1::2])}
+    arbitrary_data = dict(zip(unknown[::2], unknown[1::2]))
     log.info(f'Extras Identified:')
 
 # Print unknown arguments
@@ -393,7 +392,7 @@ if hasattr(args, 'title_card'):
         args.font_file = Path(str(CardClass.TITLE_FONT))
     if args.font_color == '__default':
         args.font_color = CardClass.TITLE_COLOR
-    
+
     # Create the given card
     output_file = CleanPath(args.title_card[1]).sanitize()
     output_file.unlink(missing_ok=True)
@@ -496,7 +495,7 @@ if hasattr(args, 'genre_card_batch'):
                 borderless=args.borderless,
                 omit_gradient=args.no_gradient,
             ).create()
-            
+
 # Create show summaries
 if hasattr(args, 'show_summary'):
     # Temporary classes
@@ -528,7 +527,7 @@ if hasattr(args, 'show_summary'):
             info = EpisodeInfo(season, episode)
             episodes[f'{season}-{episode}'] = Episode(info, file)
             episode += 1
-    
+
     # Create pseudo "show" of these episodes
     show = Show(args.show_summary[1], args.show_summary[0], episodes)
 

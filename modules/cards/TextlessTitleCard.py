@@ -1,9 +1,8 @@
 from pathlib import Path
+from typing import Optional
 
-from modules.BaseCardType import (
-    BaseCardType, ImageMagickCommands, Extra, CardDescription
-)
-from modules.Debug import log
+from modules.BaseCardType import BaseCardType, CardDescription
+
 
 class TextlessTitleCard(BaseCardType):
     """
@@ -62,8 +61,9 @@ class TextlessTitleCard(BaseCardType):
             card_file: Path,
             blur: bool = False,
             grayscale: bool = False,
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
+        ) -> None:
         """
         Construct a new instance of this card.
         """
@@ -77,7 +77,7 @@ class TextlessTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determines whether the given font characteristics constitute a
         default or custom font.

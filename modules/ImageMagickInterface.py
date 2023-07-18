@@ -9,7 +9,9 @@ from imagesize import get as im_get
 
 from modules.Debug import log
 
+
 Dimensions = namedtuple('Dimensions', ('width', 'height'))
+
 
 class ImageMagickInterface:
     """
@@ -48,7 +50,7 @@ class ImageMagickInterface:
     def __init__(self,
             container: Optional[str] = None,
             use_magick_prefix: bool = False,
-            timeout: int = COMMAND_TIMEOUT_SECONDS
+            timeout: int = COMMAND_TIMEOUT_SECONDS,
         ) -> None:
         """
         Construct a new instance. If container is falsey, then commands
@@ -138,8 +140,8 @@ class ImageMagickInterface:
         # Execute, capturing stdout and stderr
         stdout, stderr = b'', b''
         try:
-            process = Popen(cmd, stdout=PIPE, stderr=PIPE)
-            stdout, stderr = process.communicate(timeout=self.timeout)
+            with Popen(cmd, stdout=PIPE, stderr=PIPE) as process:
+                stdout, stderr = process.communicate(timeout=self.timeout)
         except TimeoutExpired:
             log.error(f'ImageMagick command timed out')
             log.debug(command)
@@ -233,7 +235,7 @@ class ImageMagickInterface:
 
         Raises:
             ValueError if by is not "width" or "height".
-            ValueError if the indicated dimension is not provided or 
+            ValueError if the indicated dimension is not provided or
                 less than 0.
         """
 
@@ -299,6 +301,6 @@ class ImageMagickInterface:
         # Print command history if conversion failed
         if destination.exists():
             return destination
-        else:
-            self.print_command_history()
-            return None
+
+        self.print_command_history()
+        return None

@@ -54,17 +54,21 @@ class WordSet(dict):
             try:
                 cardinal = num2words(number, to='cardinal', lang=lang)
                 self.update({f'{label}_cardinal_{lang}': cardinal})
-            except NotImplementedError: pass
+            except NotImplementedError:
+                pass
             try:
                 ordinal = num2words(number, to='ordinal', lang=lang)
                 self.update({f'{label}_ordinal_{lang}': ordinal})
-            except NotImplementedError: pass
+            except NotImplementedError:
+                pass
         # No language indicated, convert using base language
         else:
             self.update({
                 f'{label}_cardinal': num2words(number, to='cardinal'),
                 f'{label}_ordinal': num2words(number, to='ordinal'),
             })
+
+        return None
 
 
 class EpisodeInfo(DatabaseInfoContainer):
@@ -94,7 +98,6 @@ class EpisodeInfo(DatabaseInfoContainer):
             tvdb_id: Optional[int] = None,
             tvrage_id: Optional[int] = None,
             airdate: Optional[datetime] = None,
-            preferences: 'Preferences' = None, # type: ignore
         ) -> None:
         """
         Initialize this object with the given title, indices, database
@@ -139,13 +142,13 @@ class EpisodeInfo(DatabaseInfoContainer):
             self.__word_set.add_numeral(label, number)
 
         # Add translated word variations for each globally enabled language
-        if preferences is not None:
-            for lang in preferences.supported_language_codes:
-                for label, number in (
-                    ('season_number', self.season_number),
-                    ('episode_number', self.episode_number),
-                    ('absolute_number', self.absolute_number)):
-                    self.__word_set.add_numeral(label, number, lang)
+        # if preferences is not None:
+        #     for lang in preferences.supported_language_codes:
+        #         for label, number in (
+        #             ('season_number', self.season_number),
+        #             ('episode_number', self.episode_number),
+        #             ('absolute_number', self.absolute_number)):
+        #             self.__word_set.add_numeral(label, number, lang)
 
 
     def __repr__(self) -> str:
@@ -191,7 +194,8 @@ class EpisodeInfo(DatabaseInfoContainer):
                 return id_ == getattr(info, id_type)
 
         # TODO temporary to see if title match is useful
-        if self.season_number == info.season_number and self.episode_number == info.episode_number:
+        if (self.season_number == info.season_number
+            and self.episode_number == info.episode_number):
             if self.title.matches(info.title):
                 log.info(f'Title matches on {self}')
             else:
@@ -235,10 +239,12 @@ class EpisodeInfo(DatabaseInfoContainer):
                 episode_info.set_tvdb_id(int(guid.id[len('tvdb://'):]))
 
         return episode_info
-    
+
 
     @property
     def key(self) -> str:
+        """Index key for this EpisodeInfo - i.e. s1e1"""
+
         return f's{self.season_number}e{self.episode_number}'
 
 
@@ -294,26 +300,32 @@ class EpisodeInfo(DatabaseInfoContainer):
         }
 
 
-    """Functions for setting database ID's on this object"""
     def set_emby_id(self, emby_id) -> None:
+        """Set the Emby ID of this object. See `_update_attribute()`."""
         self._update_attribute('emby_id', emby_id, int)
 
     def set_imdb_id(self, imdb_id) -> None:
+        """Set the IMDb ID of this object. See `_update_attribute()`."""
         self._update_attribute('imdb_id', imdb_id, str)
 
     def set_jellyfin_id(self, jellyfin_id) -> None:
+        """Set the Jellyfin ID of this object. See `_update_attribute()`."""
         self._update_attribute('jellyfin_id', jellyfin_id, str)
 
     def set_tmdb_id(self, tmdb_id) -> None:
+        """Set the TMDb ID of this object. See `_update_attribute()`."""
         self._update_attribute('tmdb_id', tmdb_id, int)
 
     def set_tvdb_id(self, tvdb_id) -> None:
+        """Set the TVDb ID of this object. See `_update_attribute()`."""
         self._update_attribute('tvdb_id', tvdb_id, int)
 
     def set_tvrage_id(self, tvrage_id) -> None:
+        """Set the TVRage ID of this object. See `_update_attribute()`."""
         self._update_attribute('tvrage_id', tvrage_id, int)
 
-    def set_airdate(self, airdate: 'datetime') -> None:
+    def set_airdate(self, airdate: datetime) -> None:
+        """Set the airdate of this object. See `_update_attribute()`."""
         self._update_attribute('airdate', airdate)
 
 

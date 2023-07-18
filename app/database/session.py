@@ -91,7 +91,7 @@ def regex_replace(pattern, replacement, string):
     return re_sub(pattern, replacement, string)
 
 @listens_for(engine, 'connect')
-def register_custom_functions(dbapi_connection, connection_record):
+def register_custom_functions(dbapi_connection, connection_record): # pylint: disable=unused-argument
     """When the engine is connected, register the `regex_replace` function"""
     dbapi_connection.create_function('regex_replace', 3, regex_replace)
 

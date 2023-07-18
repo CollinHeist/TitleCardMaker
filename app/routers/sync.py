@@ -3,16 +3,16 @@ from fastapi import APIRouter, BackgroundTasks, Body, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_sync
-from app.dependencies import *
+from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.series import delete_series_and_episodes
 from app.internal.sync import add_sync, run_sync
+from app import models
 from app.models.preferences import Preferences
 from app.schemas.sync import (
     EmbySync, JellyfinSync, PlexSync, SonarrSync, Sync, NewEmbySync,
     NewJellyfinSync, NewPlexSync, NewSonarrSync, UpdateSync,
 )
 from app.schemas.series import Series
-import app.models as models
 
 from modules.EmbyInterface2 import EmbyInterface
 from modules.ImageMagickInterface import ImageMagickInterface
@@ -32,7 +32,7 @@ sync_router = APIRouter(
 @sync_router.post('/emby/new', tags=['Emby'], status_code=201)
 def create_new_emby_sync(
         new_sync: NewEmbySync = Body(...),
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> EmbySync:
     """
     Create a new Sync that interfaces with Emby.
@@ -46,7 +46,7 @@ def create_new_emby_sync(
 @sync_router.post('/jellyfin/new', tags=['Jellyfin'], status_code=201)
 def create_new_jellyfin_sync(
         new_sync: NewJellyfinSync = Body(...),
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> JellyfinSync:
     """
     Create a new Sync that interfaces with Jellyfin.
@@ -60,7 +60,7 @@ def create_new_jellyfin_sync(
 @sync_router.post('/plex/new', tags=['Plex'], status_code=201)
 def create_new_plex_sync(
         new_sync: NewPlexSync = Body(...),
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> PlexSync:
     """
     Create a new Sync that interfaces with Plex.
@@ -74,7 +74,7 @@ def create_new_plex_sync(
 @sync_router.post('/sonarr/new', tags=['Sonarr'], status_code=201)
 def create_new_sonarr_sync(
         new_sync: NewSonarrSync = Body(...),
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> SonarrSync:
     """
     Create a new Sync that interfaces with Sonarr.
@@ -90,7 +90,7 @@ def edit_sync(
         request: Request,
         sync_id: int,
         update_sync: UpdateSync = Body(...),
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> Sync:
     """
     Update the Sync with the given ID. Only provided fields are updated.
@@ -133,7 +133,8 @@ def delete_sync(
         request: Request,
         sync_id: int,
         delete_series: bool = False,
-        db: Session = Depends(get_database)) -> None:
+        db: Session = Depends(get_database),
+    ) -> None:
     """
     Delete the Sync with the given ID.
 
@@ -155,12 +156,11 @@ def delete_sync(
     db.delete(sync)
     db.commit()
 
-    return None
-
 
 @sync_router.get('/all', status_code=200)
 def get_all_syncs(
-        db: Session = Depends(get_database)) -> list[Sync]:
+        db: Session = Depends(get_database),
+    ) -> list[Sync]:
     """
     Get all defined Syncs.
     """
@@ -170,7 +170,8 @@ def get_all_syncs(
 
 @sync_router.get('/emby/all', tags=['Emby'], status_code=200)
 def get_all_emby_syncs(
-        db: Session = Depends(get_database)) -> list[EmbySync]:
+        db: Session = Depends(get_database),
+    ) -> list[EmbySync]:
     """
     Get all defined Syncs that interface with Emby.
     """
@@ -180,7 +181,8 @@ def get_all_emby_syncs(
 
 @sync_router.get('/jellyfin/all', tags=['Jellyfin'], status_code=200)
 def get_all_jellyfin_syncs(
-        db: Session = Depends(get_database)) -> list[JellyfinSync]:
+        db: Session = Depends(get_database),
+    ) -> list[JellyfinSync]:
     """
     Get all defined Syncs that interface with Jellyfin.
     """
@@ -190,7 +192,8 @@ def get_all_jellyfin_syncs(
 
 @sync_router.get('/plex/all', tags=['Plex'], status_code=200)
 def get_all_plex_syncs(
-        db: Session = Depends(get_database)) -> list[PlexSync]:
+        db: Session = Depends(get_database),
+    ) -> list[PlexSync]:
     """
     Get all defined Syncs that interface with Plex.
     """
@@ -200,7 +203,8 @@ def get_all_plex_syncs(
 
 @sync_router.get('/sonarr/all', tags=['Sonarr'], status_code=200)
 def get_all_sonarr_syncs(
-        db: Session = Depends(get_database)) -> list[SonarrSync]:
+        db: Session = Depends(get_database),
+    ) -> list[SonarrSync]:
     """
     Get all defined Syncs that interface with Sonarr.
     """
@@ -211,7 +215,8 @@ def get_all_sonarr_syncs(
 @sync_router.get('/{sync_id}', status_code=200)
 def get_sync_by_id(
         sync_id: int,
-        db: Session = Depends(get_database)) -> Sync:
+        db: Session = Depends(get_database),
+    ) -> Sync:
     """
     Get the Sync with the given ID.
 
@@ -222,10 +227,10 @@ def get_sync_by_id(
 
 
 @sync_router.post('/{sync_id}', status_code=201)
-def sync(
-        sync_id: int,
+def run_sync_(
         background_tasks: BackgroundTasks,
         request: Request,
+        sync_id: int,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),

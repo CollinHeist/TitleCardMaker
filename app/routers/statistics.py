@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+from app.database.query import get_series
 
 from app.dependencies import get_database, get_preferences
-import app.models as models
+from app import models
 from app.models.preferences import Preferences
 from app.schemas.statistic import (
     Statistic, CardCount, EpisodeCount, SeriesCount, AssetSize
@@ -69,6 +70,9 @@ def get_series_statistics(
 
     - series_id: ID of the Series to get the statistics of.
     """
+
+    # Verify Series exists
+    get_series(db, series_id, raise_exc=True)
 
     # Count the Episodes, Cards, and total asset size
     episode_count = db.query(models.episode.Episode)\

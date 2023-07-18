@@ -4,9 +4,7 @@ from typing import Optional
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
-from modules.Debug import log
 
-SeriesExtra = Optional
 
 class FadeTitleCard(BaseCardType):
     """
@@ -16,6 +14,7 @@ class FadeTitleCard(BaseCardType):
     """
 
     """API Parameters"""
+    # pylint: disable=line-too-long
     API_DETAILS = CardDescription(
         name='Fade',
         identifier='fade',
@@ -35,6 +34,7 @@ class FadeTitleCard(BaseCardType):
             'A logo can also be placed above the title text.',
         ]
     )
+    # pylint: enable=line-too-long
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'fade'
@@ -80,7 +80,7 @@ class FadeTitleCard(BaseCardType):
             episode_text: str,
             hide_season_text: bool = False,
             hide_episode_text: bool = False,
-            font_color: str = TITLE_COLOR, 
+            font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
             font_kerning: float = 1.0,
@@ -89,10 +89,11 @@ class FadeTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             logo_file: Optional[Path] = None,
-            episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
-            separator: SeriesExtra[str] = '•',
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            episode_text_color: str = EPISODE_TEXT_COLOR,
+            separator: str = '•',
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
+        ) -> None:
         """
         Construct a new instance of this Card.
         """
@@ -107,16 +108,15 @@ class FadeTitleCard(BaseCardType):
 
         # Store attributes of the text
         self.title_text = self.image_magick.escape_chars(title_text)
-        if ((hide_season_text or len(season_text) == 0)
-            and (hide_episode_text or len(episode_text) == 0)):
+        if hide_season_text and hide_episode_text:
             index_text = ''
-        elif hide_season_text or len(season_text) == 0:
+        elif hide_season_text:
             index_text = episode_text
-        elif hide_episode_text or len(episode_text) == 0:
+        elif hide_episode_text:
             index_text = season_text
         else:
             index_text = f'{season_text} {separator} {episode_text}'
-        self.index_text = self.image_magick.escape_chars(index_text.upper())
+        self.index_text = self.image_magick.escape_chars(index_text)
 
         # Font customizations
         self.font_color = font_color
@@ -125,8 +125,6 @@ class FadeTitleCard(BaseCardType):
         self.font_kerning = font_kerning
         self.font_size = font_size
         self.font_vertical_shift = font_vertical_shift
-
-        # Extras
         self.episode_text_color = episode_text_color
 
 
@@ -205,7 +203,7 @@ class FadeTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determine whether the given arguments represent a custom font
         for this card.
@@ -228,7 +226,9 @@ class FadeTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> bool:
         """
         Determine whether the given attributes constitute custom or
         genericseason titles.

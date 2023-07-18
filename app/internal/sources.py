@@ -5,9 +5,9 @@ from typing import Optional
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app.dependencies import *
+from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.templates import get_effective_templates
-import app.models as models
+from app import models
 from app.schemas.card import SourceImage
 from app.schemas.episode import Episode
 from app.schemas.preferences import Preferences, Style
@@ -47,12 +47,12 @@ def download_all_source_images(*, log: Logger = log) -> None:
                             get_jellyfin_interface(), get_plex_interface(),
                             get_tmdb_interface(), episode, log=log,
                         )
-                    except HTTPException as e:
+                    except HTTPException:
                         log.warning(f'{series.log_str} {episode.log_str} '
                                     f'Skipping source selection')
                         continue
-    except Exception as e:
-        log.exception(f'Failed to download source images', e)
+    except Exception as exc:
+        log.exception(f'Failed to download source images', exc)
 
 
 def download_all_series_logos(*, log: Logger = log) -> None:
@@ -78,18 +78,16 @@ def download_all_series_logos(*, log: Logger = log) -> None:
                         get_imagemagick_interface(), get_jellyfin_interface(),
                         get_tmdb_interface(), series, log=log,
                     )
-                except HTTPException as e:
+                except HTTPException:
                     log.warning(f'{series.log_str} Skipping logo selection')
                     continue
-    except Exception as e:
-        log.exception(f'Failed to download series logos', e)
+    except Exception as exc:
+        log.exception(f'Failed to download series logos', exc)
 
 
 def resolve_source_settings(
         preferences: Preferences,
         episode: Episode,
-        *,
-        log: Logger = log,
     ) -> tuple[Style, Path]:
     """
     Get the Episode style and source file for the given Episode.
@@ -98,7 +96,6 @@ def resolve_source_settings(
         preferences: Preferences whose global style settings to use in
             Style resolution.
         episode: Episode being evaluated.
-        log: (Keyword) Logger for all log messages.
 
     Returns:
         Tuple of the effective Style and the Path to the source file for
@@ -134,12 +131,12 @@ def resolve_source_settings(
             preferences.source_directory, series.path_safe_name, watched_style
         )
     # Episode watch status is unset, use unwatched style
-    elif episode.watched is None:
+    if episode.watched is None:
         return unwatched_style, episode.get_source_file(
             preferences.source_directory, series.path_safe_name, unwatched_style
         )
     # Episode is watched, use watched style
-    elif episode.watched:
+    if episode.watched:
         return watched_style, episode.get_source_file(
             preferences.source_directory, series.path_safe_name, watched_style
         )
@@ -184,7 +181,7 @@ def download_series_logo(
     if logo_file.exists():
         return f'/source/{series.path_safe_name}/logo.png'
 
-    # Go through all image sources    
+    # Go through all image sources
     for image_source in preferences.image_source_priority:
         if (image_source == 'Emby'
             and emby_interface is not None
@@ -232,10 +229,10 @@ def download_series_logo(
                         status_code=400,
                         detail=f'SVG logo conversion failed'
                     )
-                else:
-                    log.debug(f'{series.log_str} Converted SVG logo to PNG')
-                    log.info(f'{series.log_str} Downloaded logo from {image_source}')
-                    return f'/source/{series.path_safe_name}/{logo_file.name}'
+
+                log.debug(f'{series.log_str} Converted SVG logo to PNG')
+                log.info(f'{series.log_str} Downloaded logo from {image_source}')
+                return f'/source/{series.path_safe_name}/{logo_file.name}'
 
             # Download failed, raise 400
             raise HTTPException(
@@ -290,7 +287,7 @@ def download_episode_source_image(
     """
 
     # Determine Episode style and source file
-    style, source_file = resolve_source_settings(preferences, episode, log=log)
+    style, source_file = resolve_source_settings(preferences, episode)
 
     # If source already exists, return that
     series: Series = episode.series
@@ -308,7 +305,7 @@ def download_episode_source_image(
         getattr(episode_template, 'skip_localized_images', None),
     )
 
-    # Go through all image sources    
+    # Go through all image sources
     for image_source in preferences.image_source_priority:
         # Skip and do not warn if this interface is outright disabled
         if not getattr(preferences, f'use_{image_source.lower()}', False):
@@ -329,7 +326,10 @@ def download_episode_source_image(
 
         if image_source == 'Emby' and emby_interface:
             source_image = emby_interface.get_source_image(
-                episode.as_episode_info, log=log,
+                series.emby_library_name,
+                series.as_series_info,
+                episode.as_episode_info,
+                log=log,
             )
         elif image_source == 'Jellyfin' and jellyfin_interface:
             source_image = jellyfin_interface.get_source_image(
@@ -342,6 +342,7 @@ def download_episode_source_image(
                 series.plex_library_name,
                 series.as_series_info,
                 episode.as_episode_info,
+                log=log,
             )
         elif image_source == 'TMDb' and tmdb_interface:
             # TODO implement blacklist bypassing
@@ -377,23 +378,22 @@ def download_episode_source_image(
             log.info(f'{series.log_str} {episode.log_str} Downloaded '
                       f'"{source_file.name}" from {image_source}')
             return f'/source/{series.path_safe_name}/{source_file.name}'
-        else:
-            if raise_exc:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f'Unable to download source image'
-                )
+
+        if raise_exc:
+            raise HTTPException(
+                status_code=400,
+                detail=f'Unable to download source image'
+            )
 
     # No image source returned a valid image, return None
     log.debug(f'{series.log_str} {episode.log_str} No source images found')
+    return None
 
 
 def get_source_image(
         preferences: Preferences,
         imagemagick_interface: Optional[ImageMagickInterface],
         episode: Episode,
-        *,
-        log: Logger = log,
     ) -> SourceImage:
     """
     Get the SourceImage details for the given objects.
@@ -404,11 +404,13 @@ def get_source_image(
         imagemagick_interface: ImageMagickInterface to query the image
             dimensions from.
         episode: Episode of the SourceImage.
-        log: (Keyword) Logger for all log messages.
+
+    Returns:
+        Details of the Source Image for the given Episode.
     """
 
     # Determine Episode (style not used) source file
-    _, source_file = resolve_source_settings(preferences, episode, log=log)
+    _, source_file = resolve_source_settings(preferences, episode)
 
     # All sources have these details
     source = {

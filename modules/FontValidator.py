@@ -4,6 +4,7 @@ from tinydb import where
 from modules.Debug import log
 from modules.PersistentDatabase import PersistentDatabase
 
+
 class FontValidator:
     """
     This class describes a font validator. A FontValidator takes font
@@ -27,7 +28,7 @@ class FontValidator:
 
     def __has_character(self, font_filepath: str, character: str) -> bool:
         """
-        Determines whether the given character exists in the given Font. 
+        Determines whether the given character exists in the given Font.
 
         Args:
             font_filepath: Filepath to the font being validated against
@@ -112,8 +113,10 @@ class FontValidator:
         """
 
         # Get all missing entries
-        missing = self.__db.search((where('file') == font_filepath) &
-                                   (where('status') == False))
+        missing = self.__db.search(
+            (where('file') == font_filepath)
+            & (where('status') == False) # pylint: disable=singleton-comparison
+        )
 
         # Return set of just characters from entries
         return {entry['character'] for entry in missing}

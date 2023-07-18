@@ -4,6 +4,7 @@ from typing import Optional
 from modules.Debug import log
 from modules.BaseSummary import BaseSummary
 
+
 class StandardSummary(BaseSummary):
     """
     This class describes a show summary. The StandardSummary is a type
@@ -11,7 +12,7 @@ class StandardSummary(BaseSummary):
     a logo at the top.
 
     This type of Summary supports different background colors and
-    images. 
+    images.
     """
 
     """Default color for the background of the summary image"""
@@ -33,9 +34,10 @@ class StandardSummary(BaseSummary):
 
 
     def __init__(self,
-            show: 'Show',
+            show: 'Show', # type: ignore
             background: str = BACKGROUND_COLOR,
-            created_by: Optional[str] = None) -> None:
+            created_by: Optional[str] = None,
+        ) -> None:
         """
         Construct a new instance of this object.
 
@@ -181,7 +183,7 @@ class StandardSummary(BaseSummary):
             Path to the created images.
         """
 
-        _, height = self.get_image_dimensions(logo)
+        _, height = self.image_magick.get_image_dimensions(logo)
 
         command = ' '.join([
             f'composite',
@@ -257,7 +259,9 @@ class StandardSummary(BaseSummary):
         self.image_magick.run(command)
 
         # Get dimensions of transparent montage to fit background
-        width, height = self.get_image_dimensions(self.__TRANSPARENT_MONTAGE)
+        width, height = self.image_magick.get_image_dimensions(
+            self.__TRANSPARENT_MONTAGE
+        )
 
         # Add background behind transparent montage
         command = ' '.join([
@@ -322,3 +326,4 @@ class StandardSummary(BaseSummary):
             images.append(self.__TRANSPARENT_MONTAGE)
 
         self.image_magick.delete_intermediate_images(*images)
+        return None

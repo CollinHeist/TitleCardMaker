@@ -20,8 +20,9 @@ from modules.SeriesInfo import SeriesInfo
 INTERNAL_ASSET_DIRECTORY = Path(__file__).parent.parent / 'assets'
 
 
-"""Perform a Regex replacement for the given arguments"""
 def regex_replace(pattern, replacement, string):
+    """Perform a Regex replacement with the given arguments"""
+
     return re_sub(pattern, replacement, string, IGNORECASE)
 
 
@@ -138,7 +139,7 @@ class Series(Base):
     def sort_name(self) -> str:
         """
         The sort-friendly name of this Series.
-        
+
         Returns:
             Sortable name. This is lowercase with any prefix a/an/the
             removed.
@@ -289,7 +290,7 @@ class Series(Base):
         Properties to use in image source setting evaluations.
 
         Returns:
-            Dictionary of properties.        
+            Dictionary of properties.
         """
 
         return {

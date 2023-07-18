@@ -1,4 +1,5 @@
 from collections import namedtuple
+from logging import Logger
 
 from re import IGNORECASE, compile as re_compile
 
@@ -24,10 +25,14 @@ class SeasonTitleRanges:
     EPISODE_RANGE_REGEX = re_compile(r'^s(\d+)e(\d+)-s(\d+)e(\d+)$', IGNORECASE)
     SEASON_REGEX = re_compile(r'^(\d+)$', IGNORECASE)
 
-    __slots__ = ('titles')
+    __slots__ = ('titles', )
 
 
-    def __init__(self, ranges: dict) -> None:
+    def __init__(self,
+            ranges: dict,
+            *,
+            log: Logger = log,
+        ) -> None:
         """
         Create a SeasonTitleRanges object with the given ranges.
 
@@ -35,6 +40,7 @@ class SeasonTitleRanges:
             ranges: Dictionary of season titles. Keys must be either
                 absolute, episode, or season ranges. Values are
                 format strings for the season titles.
+            log: (Keyword) Logger for all log messages.
         """
 
         # Parse ranges into objects
@@ -49,12 +55,12 @@ class SeasonTitleRanges:
             else:
                 log.warning(f'Unrecognized season title "{key}": "{title}"')
 
-        return None
-
 
     def get_season_text(self,
             episode_info: EpisodeInfo,
-            card_settings: dict
+            card_settings: dict,
+            *,
+            log: Logger = log,
         ) -> str:
         """
         Get the season text for the given Episode.
@@ -63,6 +69,7 @@ class SeasonTitleRanges:
             episode_info: EpisodeInfo of the Episode to get the text of.
             card_settings: Arbitrary dictionary of card settings to use
                 in the indicated season text format string.
+            log: (Keyword) Logger for all log messages.
 
         Returns:
             Season text for the given Episode.

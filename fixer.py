@@ -3,10 +3,10 @@ from dataclasses import dataclass
 from os import environ
 from pathlib import Path
 from re import match, IGNORECASE
+from sys import exit as sys_exit
 
 try:
     from modules.Debug import log, LOG_FILE
-    from modules.DataFileInterface import DataFileInterface
     from modules.EmbyInterface import EmbyInterface
     from modules.EpisodeInfo import EpisodeInfo
     from modules.ImageMaker import ImageMaker
@@ -19,7 +19,7 @@ try:
     from modules.TMDbInterface import TMDbInterface
 except ImportError:
     print(f'Required Python packages are missing - execute "pipenv install"')
-    exit(1)
+    sys_exit(1)
 
 # Environment Variables
 ENV_IS_DOCKER = 'TCM_IS_DOCKER'
@@ -28,7 +28,7 @@ ENV_PREFERENCE_FILE = 'TCM_PREFERENCES'
 # Default values
 DEFAULT_PREFERENCE_FILE = Path(__file__).parent / 'preferences.yml'
 
-# Create ArgumentParser object 
+# Create ArgumentParser object
 parser = ArgumentParser(description='Manual fixes for the TitleCardMaker')
 parser.add_argument(
     '-p', '--preferences', '--preference-file',
@@ -142,12 +142,6 @@ tmdb_group.add_argument(
     '--delete-blacklist',
     action='store_true',
     help='Delete the existing TMDb blacklist file')
-tmdb_group.add_argument(
-    '--add-translation',
-    nargs=5,
-    default=SUPPRESS,
-    metavar=('TITLE', 'YEAR', 'DATAFILE', 'LANGUAGE_CODE', 'LABEL'),
-    help='Add title translations from TMDb to the given datafile')
 
 # Parse given arguments
 args = parser.parse_args()
@@ -155,7 +149,7 @@ is_docker = environ.get(ENV_IS_DOCKER, 'false').lower() == 'true'
 
 # Parse preference file for options that might need it
 if not (pp := PreferenceParser(args.preferences, is_docker)).valid:
-    exit(1)
+    sys_exit(1)
 set_preference_parser(pp)
 
 # Execute miscellaneous arguments
@@ -197,11 +191,11 @@ if ((hasattr(args, 'import_cards') or hasattr(args, 'revert_series'))
     and any((pp.use_emby, pp.use_jellyfin, pp.use_plex))):
     # Temporary classes
     @dataclass
-    class Episode:
+    class Episode: # pylint: disable=missing-class-docstring
         destination: Path
         episode_info: EpisodeInfo
         spoil_type: str
-        
+
     # Create MediaServer Interface
     try:
         if args.media_server == 'emby':
@@ -212,7 +206,7 @@ if ((hasattr(args, 'import_cards') or hasattr(args, 'revert_series'))
             media_interface = PlexInterface(**pp.plex_interface_kwargs)
     except Exception as e:
         log.critical(f'Cannot connect to "{args.media_server}" Media Server')
-        exit(1)
+        sys_exit(1)
 
     # Get series/name + year from archive directory if unspecified
     if hasattr(args, 'import_cards'):
@@ -221,12 +215,19 @@ if ((hasattr(args, 'import_cards') or hasattr(args, 'revert_series'))
         if hasattr(args, 'import_series'):
             series_info = SeriesInfo(*args.import_series)
         else:
-            if (groups := match(r'^(.*)\s+\((\d{4})\)$', archive.parent.name)):
-                series_info = SeriesInfo(*groups.groups())
-            else:
-                log.critical(f'Cannot identify series name/year; specify with '
-                            f'--import-series')
-                exit(1)
+            # Try and identify Series from folder name, then parent name
+            for folder_name in (archive.name, archive.parent.name):
+                groups = match(
+                    r'^(.*)\s+\((\d{4})\)(?:\s*[\{\[].*[\}\]])?$',
+                    folder_name
+                )
+                if groups:
+                    series_info = SeriesInfo(*groups.groups())
+                    break
+
+                log.critical(f'Cannot identify series name/year; specify '
+                                f'with --import-series')
+                sys_exit(1)
     else:
         series_info = SeriesInfo(args.revert_series[1], args.revert_series[2])
         archive = pp.source_directory / series_info.full_clean_name
@@ -243,12 +244,12 @@ if ((hasattr(args, 'import_cards') or hasattr(args, 'revert_series'))
 
     # Forget cards associated with this series
     media_interface.remove_records(library, series_info)
-            
+
     # Get all images from import archive
     ext = args.import_extension
     if len(all_images := list(archive.glob(f'**/*{ext}'))) == 0:
         log.warning(f'No images to import')
-        exit(1)
+        sys_exit(1)
 
     # For each image, fill out episode map to load into server
     episode_infos, episode_map = [], {}
@@ -302,7 +303,7 @@ if hasattr(args, 'unblacklist'):
     )
 
 if hasattr(args, 'delete_blacklist') and args.delete_blacklist:
-    TMDbInterface.delete_blacklist(**pp.tmdb_interface_kwargs)
+    TMDbInterface.delete_blacklist(pp.database_directory)
 
 if hasattr(args, 'tmdb_download_images') and pp.use_tmdb:
     for arg_set in args.tmdb_download_images:
@@ -322,24 +323,3 @@ if hasattr(args, 'tmdb_download_images') and pp.use_tmdb:
             episode_range=episode_range,
             directory=Path(arg_set[4]),
         )
-
-if hasattr(args, 'add_translation') and pp.use_tmdb:
-    dfi = DataFileInterface(Path(args.add_translation[2]))
-    tmdbi = TMDbInterface(**pp.tmdb_interface_kwargs)
-
-    for entry in dfi.read():
-        if args.add_translation[4] in entry:
-            continue
-
-        new_title = tmdbi.get_episode_title(
-            title=args.add_translation[0],
-            year=args.add_translation[1],
-            season=entry['season_number'],
-            episode=entry['episode_number'],
-            language_code=args.add_translation[3],
-        )
-
-        if new_title == None:
-            continue
-
-        dfi.modify_entry(**entry, **{args.add_translation[4]: new_title})

@@ -3,7 +3,7 @@ from typing import Any, Optional
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-import app.models as models
+from app import models
 from app.schemas.card import TitleCard
 from app.schemas.episode import Episode
 from app.schemas.font import NamedFont

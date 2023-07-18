@@ -1,5 +1,7 @@
+# pylint: disable=dangerous-default-value
 from pathlib import Path
-from typing import Literal, Optional
+from sys import exit as sys_exit
+from typing import Iterable, Literal, Optional
 
 from ruamel.yaml import YAML, round_trip_dump, comments
 from ruamel.yaml.constructor import DuplicateKeyError
@@ -36,7 +38,7 @@ class SeriesYamlWriter:
             card_directory: Optional[CleanPath] = None
         ) -> None:
         """
-        Initialize an instance of a SeriesYamlWrite object.
+        Initialize an instance of a SeriesYamlWriter object.
 
         Args:
             file: File to read/write series YAML.
@@ -60,8 +62,9 @@ class SeriesYamlWriter:
         # Convert volume map to string of sanitized paths
         self.volume_map = {}
         try:
-            std = lambda p: str(CleanPath(p).sanitize())
-            self.volume_map = {std(source): std(tcm) 
+            def standardize(p: str) -> str:
+                return str(CleanPath(p).sanitize())
+            self.volume_map = {standardize(source): standardize(tcm)
                                for source, tcm in volume_map.items()}
         except Exception as e:
             log.exception(f'Invalid "volumes" - must all be valid paths', e)
@@ -86,10 +89,11 @@ class SeriesYamlWriter:
 
         # Add representer for compact YAML writing
         # Pseudo-class for a flow map - i.e. dictionary
-        class flowmap(dict): pass
+        class flowmap(dict): # pylint: disable=missing-class-docstring
+            pass
         def flowmap_rep(dumper, data):
             return dumper.represent_mapping(
-                u'tag:yaml.org,2002:map', data, flow_style=True
+                'tag:yaml.org,2002:map', data, flow_style=True
             )
         add_representer(flowmap, flowmap_rep)
         self.__compact_flowmap = flowmap
@@ -128,9 +132,8 @@ class SeriesYamlWriter:
             if media:
                 clean_name = CleanPath(path).sanitize().name
                 return str(self.card_directory / clean_name)
-            # Non-media, override entire directory 
-            else:
-                return str(self.card_directory)
+            # Non-media, override entire directory
+            return str(self.card_directory)
 
         # Use volume map to convert (standardized) path to TCM path
         standard_path = str(CleanPath(path).sanitize())
@@ -266,7 +269,7 @@ class SeriesYamlWriter:
             self.__write(yaml)
             return None
 
-        # If series or libraries are empty, set to empty dictionary 
+        # If series or libraries are empty, set to empty dictionary
         if existing_yaml.get('series') is None:
             existing_yaml['series'] = {}
         if existing_yaml.get('libraries') is None:
@@ -316,6 +319,8 @@ class SeriesYamlWriter:
         with self.file.open('w', encoding='utf-8') as file_handle:
             round_trip_dump(existing_yaml, file_handle, **self.__WRITE_OPTIONS)
 
+        return None
+
 
     def __match(self, yaml: SeriesYaml) -> None:
         """
@@ -359,6 +364,8 @@ class SeriesYamlWriter:
         # Write YAML to file
         with self.file.open('w', encoding='utf-8') as file_handle:
             round_trip_dump(existing_yaml, file_handle)
+
+        return None
 
 
     def __get_yaml_from_sonarr(self,
@@ -498,7 +505,7 @@ class SeriesYamlWriter:
         # Create libraries YAML
         libraries_yaml = {}
         for library, paths in libraries.items():
-            # If this library has multiple directories, create entry for 
+            # If this library has multiple directories, create entry for
             # each if no override card directory is provided
             if len(paths) > 1 and self.card_directory is None:
                 for index, path in enumerate(paths):
@@ -523,7 +530,7 @@ class SeriesYamlWriter:
             # If part of a multi-directory library, use adjusted library name
             if libraries_yaml.get(library) is None:
                 for library_key, library_yaml in libraries_yaml.items():
-                    # Find matching library 
+                    # Find matching library
                     if (library_yaml.get('library_name') == library
                         and series_path.startswith(library_yaml['path'])):
                         library = library_key
@@ -570,7 +577,7 @@ class SeriesYamlWriter:
 
         Args:
             sonarr_interface: SonarrInterface to sync from.
-            plex_libraries: Dictionary of TCM paths to their 
+            plex_libraries: Dictionary of TCM paths to their
                 corresponding libraries.
             required_tags: List of tags to filter the Sonarr sync from.
             exclusions: List of labeled exclusions to apply to sync.
@@ -582,7 +589,7 @@ class SeriesYamlWriter:
 
         # Get complete file YAML from Sonarr
         yaml = self.__get_yaml_from_sonarr(
-            sonarr_interface, plex_libraries, required_tags, 
+            sonarr_interface, plex_libraries, required_tags,
             monitored_only, downloaded_only, series_type, exclusions,
         )
 
@@ -597,7 +604,7 @@ class SeriesYamlWriter:
 
     def update_from_plex(self,
             plex_interface: PlexInterface,
-            filter_libraries: list[str] = [],
+            filter_libraries: Iterable[str] = [],
             required_tags: list[str] = [],
             exclusions: list[dict[str, str]] = [],
         ) -> None:
@@ -609,11 +616,14 @@ class SeriesYamlWriter:
             filter_libraries: List of libraries to filter Plex sync from.
             required_tags: List of tags to filter the sync with.
             exclusions: List of labeled exclusions to apply to sync.
+
+        Raises:
+            SystemExit if `filter_libraries` is not an Iterable.
         """
 
         if not isinstance(filter_libraries, (list, tuple)):
             log.critical(f'Invalid Plex library filter list')
-            exit(1)
+            sys_exit(1)
 
         # Get complete file YAML from Plex
         yaml = self.__get_yaml_from_interface(
@@ -648,7 +658,7 @@ class SeriesYamlWriter:
 
         if not isinstance(filter_libraries, (list, tuple)):
             log.critical(f'Invalid Emby library filter list')
-            exit(1)
+            sys_exit(1)
 
         yaml = self.__get_yaml_from_interface(
             emby_interface, 'emby', 'emby_id', filter_libraries,
@@ -682,7 +692,7 @@ class SeriesYamlWriter:
 
         if not isinstance(filter_libraries, (list, tuple)):
             log.critical(f'Invalid Jellyfin library filter list')
-            exit(1)
+            sys_exit(1)
 
         # Get complete file YAML from Jellyfin
         yaml = self.__get_yaml_from_interface(

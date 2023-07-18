@@ -1,14 +1,15 @@
 from math import cos, sin, pi as PI
 from pathlib import Path
-from typing import Any, Literal, Optional, Union
+from typing import Literal, Optional
 
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
-from modules.Debug import log
 
 
 class Coordinate:
+    """Class that defines a single Coordinate on an x/y plane."""
+
     def __init__(self, x: float, y: float) -> None:
         """
         Create a object with the given X/Y coordinates.
@@ -29,10 +30,14 @@ class Coordinate:
 
     @property
     def as_svg(self) -> str:
+        """SVG representation of this Coordinate."""
+
         return f'{self.x:.1f} {self.y:.1f}'
 
 
 class SvgRectangle:
+    """Class that defines movable SVG rectangle."""
+
     def __init__(self, width: int, height: int) -> None:
         """
         Initialize this Rectangle object for a rectangle of the given
@@ -49,6 +54,7 @@ class SvgRectangle:
         self.rotation = 0
         self.offset = Coordinate(0, 0)
 
+
     def rotate(self, angle_degrees: float=0.0) -> 'SvgRectangle':
         """
         Set the rotation of this rectangle.
@@ -63,6 +69,7 @@ class SvgRectangle:
         self.rotation = angle_degrees
 
         return self
+
 
     def shift_origin(self, origin: Coordinate) -> 'SvgRectangle':
         """
@@ -79,6 +86,7 @@ class SvgRectangle:
         self.center = origin
 
         return self
+
 
     @property
     def draw_commands(self) -> ImageMagickCommands:
@@ -111,6 +119,7 @@ class ComicBookTitleCard(BaseCardType):
     """
 
     """API Parameters"""
+    # pylint: disable=line-too-long
     API_DETAILS = CardDescription(
         name='Comic Book',
         identifier='comic book',
@@ -164,20 +173,21 @@ class ComicBookTitleCard(BaseCardType):
                 name='Hide Index Banner',
                 identifier='hide_index_banner',
                 description='Whether to hide the index text banner',
-            ), 
+            ),
         ], description=[
             'Title card styled after a comic book page.',
             'The top and bottom of the card can each be individually colored, '
             'toggled, and angled.'
         ]
     )
+    # pylint: enable=line-too-long
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'comic_book'
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
-        'max_line_width': 32,   # Character count to begin splitting titles TODO
+        'max_line_width': 32,   # Character count to begin splitting titles
         'max_line_count': 2,    # Maximum number of lines a title can take up
         'top_heavy': True,      # This class uses top heavy titling
     }
@@ -206,7 +216,7 @@ class ComicBookTitleCard(BaseCardType):
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'season_text',
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
-        'font_interline_spacing', 'font_file', 'font_kerning', 'font_size', 
+        'font_interline_spacing', 'font_file', 'font_kerning', 'font_size',
         'font_vertical_shift', 'episode_text_color', 'index_text_position',
         'text_box_fill_color', 'text_box_edge_color',
         'title_text_rotation_angle', 'index_text_rotation_angle',
@@ -241,8 +251,8 @@ class ComicBookTitleCard(BaseCardType):
             index_banner_shift: int = 0,
             hide_title_banner: bool = False,
             hide_index_banner: bool = False,
-            preferences: 'Preferences' = None,
-            **unused
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
         ) -> None:
         """
         Construct a new instance of this Card.
@@ -282,8 +292,6 @@ class ComicBookTitleCard(BaseCardType):
         self.hide_title_banner = hide_title_banner
         self.hide_index_banner = hide_index_banner
 
-        return None
-
 
     @property
     def title_text_commands(self) -> ImageMagickCommands:
@@ -318,7 +326,7 @@ class ComicBookTitleCard(BaseCardType):
             f'+stroke',
             f'-annotate {rotation}+0+{y_coordinate} "{self.title_text}"',
         ]
-    
+
 
     @property
     def title_text_box_commands(self) -> ImageMagickCommands:
@@ -416,7 +424,7 @@ class ComicBookTitleCard(BaseCardType):
         # No index text, return empty commands
         if self.hide_season_text and self.hide_episode_text:
             return []
-        
+
         # Determine index text
         if self.hide_season_text:
             index_text = self.episode_text
@@ -455,7 +463,7 @@ class ComicBookTitleCard(BaseCardType):
             f'+stroke',
             f'-annotate {rotation}+{x_coordinate}+{y_coordinate} "{index_text}"',
         ]
-    
+
 
     @property
     def index_text_box_commands(self) -> ImageMagickCommands:
@@ -569,9 +577,10 @@ class ComicBookTitleCard(BaseCardType):
 
     @staticmethod
     def modify_extras(
-            extras: dict[str, Any],
+            extras: dict,
             custom_font: bool,
-            custom_season_titles: bool) -> None:
+            custom_season_titles: bool,
+        ) -> None:
         """
         Modify the given extras based on whether font or season titles
         are custom.
@@ -595,7 +604,7 @@ class ComicBookTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
@@ -618,7 +627,9 @@ class ComicBookTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> bool:
         """
         Determine whether the given attributes constitute custom or
         generic season titles.

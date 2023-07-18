@@ -4,6 +4,7 @@ from typing import Optional, Union
 from pathlib import Path
 
 from modules.Debug import log
+from modules.EpisodeInfo2 import EpisodeInfo
 from modules.ImageMaker import ImageMaker
 from modules.SeriesInfo import SeriesInfo
 
@@ -26,11 +27,7 @@ class MediaServer(ABC):
 
     @abstractmethod
     def __init__(self, filesize_limit: int) -> None:
-        """
-        Initialize an instance of this object. This stores creates an
-        attribute loaded_db that is a PersistentDatabase of the
-        LOADED_DB file.
-        """
+        """Initialize an instance of this object."""
 
         self.filesize_limit = filesize_limit
 
@@ -78,36 +75,60 @@ class MediaServer(ABC):
         log.debug(f'Compressed "{image.resolve()}" with {quality}% quality')
         return small_image
 
+
     @abstractmethod
     def update_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
-            episodes: list['Episode'],
+            episodes: list['Episode'], # type: ignore
         ) -> None:
         """Abstract method to update watched statuses of Episode objects."""
-        raise NotImplementedError('All MediaServer objects must implement this')
+        raise NotImplementedError
+
 
     @abstractmethod
-    def load_title_cards(self) -> None:
+    def load_title_cards(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_and_cards: list[tuple['Episode', 'Card']], # type: ignore
+            *,
+            log: Logger = log,
+        ) -> None:
         """Abstract method to load title cards within this MediaServer."""
-        raise NotImplementedError('All MediaServer objects must implement this')
+        raise NotImplementedError
+
 
     @abstractmethod
-    def load_season_posters(self) -> None:
-        """Abstract method to load title cards within this MediaServer."""
-        raise NotImplementedError('All MediaServer objects must implement this')
-
-    @abstractmethod
-    def get_source_image(self) -> SourceImage:
+    def get_source_image(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_info: EpisodeInfo,
+            *,
+            log: Logger = log,
+        ) -> SourceImage:
         """
         Abstract method to get textless source images from this
         MediaServer.
         """
-        raise NotImplementedError('All MediaServer objects must implement this')
+        raise NotImplementedError
+
+
+    @abstractmethod
+    def get_series_poster(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            *,
+            log: Logger = log,
+        ) -> SourceImage:
+        """
+        Abstract method to get a Series poster from this MediaServer.
+        """
+        raise NotImplementedError
+
 
     @abstractmethod
     def get_libraries(self) -> list[str]:
         """
         Abstract method to get all libraries from this MediaServer.
         """
-        raise NotImplementedError('All MediaServer objects must implement this')
+        raise NotImplementedError

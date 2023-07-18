@@ -1,16 +1,18 @@
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Literal, Optional
 
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
 from modules.Debug import log
 
+
 SeriesExtra = Optional
 TitleTextPosition = Literal['left', 'right']
 TextPosition = Literal[
     'upper left', 'upper right', 'right', 'lower right', 'lower left', 'left',
 ]
+
 
 class DividerTitleCard(BaseCardType):
     """
@@ -22,6 +24,7 @@ class DividerTitleCard(BaseCardType):
     """
 
     """API Parameters"""
+    # pylint: disable=line-too-long
     API_DETAILS = CardDescription(
         name='Divider',
         identifier='divider',
@@ -50,6 +53,7 @@ class DividerTitleCard(BaseCardType):
             'Text on this image is unobtrusive, and is intended for shorter titles.',
         ]
     )
+    # pylint: enable=line-too-long
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'anime'
@@ -84,7 +88,7 @@ class DividerTitleCard(BaseCardType):
         'text_position', 'font_vertical_shift'
     )
 
-    def __init__(self, *,
+    def __init__(self,
             source_file: Path,
             card_file: Path,
             title_text: str,
@@ -104,8 +108,9 @@ class DividerTitleCard(BaseCardType):
             stroke_color: str = 'black',
             title_text_position: TitleTextPosition = 'left',
             text_position: TextPosition = 'lower right',
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
+        ) -> None:
         """
         Construct a new instance of this Card.
         """
@@ -161,21 +166,22 @@ class DividerTitleCard(BaseCardType):
         # Hiding all index text, return empty command
         if self.hide_season_text and self.hide_episode_text:
             return []
+
         # Hiding season or episode text, only add that and divider bar
-        elif self.hide_season_text or self.hide_episode_text:
+        if self.hide_season_text or self.hide_episode_text:
             text = self.episode_text if self.hide_season_text else self.season_text
             return [
                 f'-gravity {gravity}',
                 f'-pointsize {100 * self.font_size}',
                 f'label:"{text}"',
             ]
+
         # Showing all text, add all text and divider
-        else:
-            return [
-                f'-gravity {gravity}',
-                f'-pointsize {100 * self.font_size}',
-                f'label:"{self.season_text}\n{self.episode_text}"',
-            ]
+        return [
+            f'-gravity {gravity}',
+            f'-pointsize {100 * self.font_size}',
+            f'label:"{self.season_text}\n{self.episode_text}"',
+        ]
 
 
     @property
@@ -291,9 +297,10 @@ class DividerTitleCard(BaseCardType):
 
     @staticmethod
     def modify_extras(
-            extras: dict[str, Any],
+            extras: dict,
             custom_font: bool,
-            custom_season_titles: bool) -> None:
+            custom_season_titles: bool,
+        ) -> None:
         """
         Modify the given extras based on whether font or season titles
         are custom.
@@ -311,7 +318,7 @@ class DividerTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
@@ -362,7 +369,7 @@ class DividerTitleCard(BaseCardType):
         interline_spacing = -20 + self.font_interline_spacing
         kerning = 0 * self.font_kerning
         stroke_width = 8 * self.font_stroke_width
-        
+
         # The gravity of the text composition is based on the text position
         gravity = {
             'upper left':  'northwest',
@@ -394,7 +401,7 @@ class DividerTitleCard(BaseCardType):
             # Add border so the blurred text doesn't get sharply cut off
             f'-border 50x{50+self.font_vertical_shift}',
             f'-blur 0x5 \)',
-            # Overlay blurred text in correct position 
+            # Overlay blurred text in correct position
             f'-gravity {gravity}',
             f'-composite',
             # Add title text
@@ -404,7 +411,7 @@ class DividerTitleCard(BaseCardType):
             *self.text_command(divider_height, self.font_color),
             f'+smush 25',
             f'-border 50x{50+self.font_vertical_shift} \)',
-            # Overlay title text in correct position 
+            # Overlay title text in correct position
             f'-gravity {gravity}',
             f'-composite',
             # Create card

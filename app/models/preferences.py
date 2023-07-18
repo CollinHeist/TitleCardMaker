@@ -24,6 +24,7 @@ TMDb = EpisodeDataSource('tmdb', 'TMDb')
 
 TCM_ROOT = Path(__file__).parent.parent.parent
 
+
 class Preferences:
     """
     Class defining global Preferences.
@@ -34,7 +35,7 @@ class Preferences:
 
     """Default values for global settings"""
     DEFAULT_CARD_FILENAME_FORMAT = (
-        '{series_full_name} S{season_number:02}E{episode_number:02}'
+        '{series_full_name} - S{season_number:02}E{episode_number:02}'
     )
     DEFAULT_CARD_EXTENSION = '.jpg'
     DEFAULT_IMAGE_SOURCE_PRIORITY = ['TMDb', 'Plex', 'Jellyfin', 'Emby']
@@ -54,6 +55,29 @@ class Preferences:
     )
 
 
+    __slots__ = (
+        'is_docker', 'asset_directory', 'card_directory', 'source_directory',
+        'file', 'card_width', 'card_height', 'card_filename_format',
+        'card_extension', 'image_source_priority', 'episode_data_source',
+        'valid_image_extensions', 'specials_folder_format',
+        'season_folder_format', 'sync_specials', 'remote_card_types',
+        'default_card_type', 'excluded_card_types', 'default_watched_style',
+        'default_unwatched_style', 'use_emby', 'emby_url', 'emby_api_key',
+        'emby_username', 'emby_use_ssl', 'emby_filesize_limit_number',
+        'emby_filesize_limit_unit', 'use_jellyfin', 'jellyfin_url',
+        'jellyfin_api_key', 'jellyfin_username', 'jellyfin_use_ssl',
+        'jellyfin_filesize_limit_number', 'jellyfin_filesize_limit_unit',
+        'use_plex', 'plex_url', 'plex_token', 'plex_use_ssl',
+        'plex_integrate_with_pmm', 'plex_filesize_limit_number',
+        'plex_filesize_limit_unit', 'use_sonarr', 'sonarr_url',
+        'sonarr_api_key', 'sonarr_use_ssl', 'sonarr_downloaded_only',
+        'sonarr_libraries', 'use_tmdb', 'tmdb_api_key', 'tmdb_minimum_width',
+        'tmdb_minimum_height', 'tmdb_skip_localized', 'tmdb_download_logos',
+        'tmdb_logo_language_priority', 'supported_language_codes',
+        'use_magick_prefix', 'current_version', 'available_version',
+    )
+
+
     def __init__(self, file: Path) -> None:
         """
         Initialize this object with the arguments from the given file.
@@ -62,20 +86,98 @@ class Preferences:
             file: Path to the file to parse for existing preferences.
         """
 
+        # Set initial values
+        self.is_docker = environ.get('TCM_IS_DOCKER', 'false').lower() == 'true'
+        self.__initialize_defaults()
+
         # Get preferences from file
         self.file = file
         self.file.parent.mkdir(exist_ok=True)
-        obj = self.read_file()
 
-        # Initialize object based on parsed file
-        self.parse_file(obj)
+        # Pars file
+        self.parse_file(self.read_file())
 
-        # Override fixed attributes
+        # Initialize paths
+        self.asset_directory = Path(self.asset_directory)
+        self.card_directory = Path(self.card_directory)
+        self.source_directory = Path(self.source_directory)
+        for folder in (self.asset_directory, self.card_directory,
+                       self.source_directory):
+            folder.mkdir(parents=True, exist_ok=True)
+
+
+    def __initialize_defaults(self) -> None:
+        """Initialize this object with all default values."""
+
         if self.is_docker:
             self.asset_directory = Path('/config/assets')
+            self.card_directory = Path('/config/cards')
+            self.source_directory = Path('/config/source')
         else:
             self.asset_directory = TCM_ROOT / 'assets'
-        self.asset_directory.mkdir(parents=True, exist_ok=True)
+            self.card_directory = TCM_ROOT / 'cards'
+            self.source_directory = TCM_ROOT / 'source'
+
+        self.card_width = TitleCard.DEFAULT_WIDTH
+        self.card_height = TitleCard.DEFAULT_HEIGHT
+        self.card_filename_format = self.DEFAULT_CARD_FILENAME_FORMAT
+        self.card_extension = self.DEFAULT_CARD_EXTENSION
+
+        self.image_source_priority = self.DEFAULT_IMAGE_SOURCE_PRIORITY
+        self.episode_data_source = self.DEFAULT_EPISODE_DATA_SOURCE
+        self.valid_image_extensions = self.VALID_IMAGE_EXTENSIONS
+
+        self.specials_folder_format = 'Specials'
+        self.season_folder_format = 'Season {season_number}'
+
+        self.sync_specials = True
+        self.remote_card_types = {}
+        self.default_card_type = 'standard'
+        self.excluded_card_types = []
+        self.default_watched_style = 'unique'
+        self.default_unwatched_style = 'unique'
+
+        self.use_emby = False
+        self.emby_url = ''
+        self.emby_api_key = ''
+        self.emby_username = None
+        self.emby_use_ssl = True
+        self.emby_filesize_limit_number = None
+        self.emby_filesize_limit_unit = None
+
+        self.use_jellyfin = False
+        self.jellyfin_url = ''
+        self.jellyfin_api_key = ''
+        self.jellyfin_username = None
+        self.jellyfin_use_ssl = True
+        self.jellyfin_filesize_limit_number = None
+        self.jellyfin_filesize_limit_unit = None
+
+        self.use_plex = False
+        self.plex_url = ''
+        self.plex_token = ''
+        self.plex_use_ssl = True
+        self.plex_integrate_with_pmm = False
+        self.plex_filesize_limit_number = 10
+        self.plex_filesize_limit_unit = 'Megabytes'
+
+        self.use_sonarr = False
+        self.sonarr_url = ''
+        self.sonarr_api_key = ''
+        self.sonarr_use_ssl = True
+        self.sonarr_downloaded_only = True
+        self.sonarr_libraries = {}
+
+        self.use_tmdb = False
+        self.tmdb_api_key = ''
+        self.tmdb_minimum_width = 0
+        self.tmdb_minimum_height = 0
+        self.tmdb_skip_localized = False
+        self.tmdb_download_logos = True
+        self.tmdb_logo_language_priority = ['en']
+
+        self.supported_language_codes = []
+        self.use_magick_prefix = False
 
 
     def read_file(self) -> Optional[object]:
@@ -95,8 +197,8 @@ class Preferences:
         try:
             with self.file.open('rb') as file_handle:
                 return load(file_handle)
-        except Exception as e:
-            log.exception(f'Error occured while loading Preferences', e)
+        except Exception as exc:
+            log.exception(f'Error occured while loading Preferences', exc)
 
         return None
 
@@ -109,75 +211,11 @@ class Preferences:
         # Set attributes not parsed from the object
         self.current_version = Version(self.VERSION_FILE.read_text().strip())
         self.available_version: Optional[Version] = None
-        self.is_docker = environ.get('TCM_IS_DOCKER', 'false').lower() == 'true'
-
-        # Default arguments
-        default_asset_directory = '/config/assets' if self.is_docker else TCM_ROOT / 'assets'
-        default_card_directory = '/config/cards' if self.is_docker else TCM_ROOT / 'cards'
-        default_source_directory = '/config/source' if self.is_docker else TCM_ROOT / 'source'
-        DEFAULTS = {
-            'asset_directory':  default_asset_directory,
-            'card_directory': default_card_directory,
-            'source_directory': default_source_directory,
-            'card_width': TitleCard.DEFAULT_WIDTH,
-            'card_height': TitleCard.DEFAULT_HEIGHT,
-            'card_filename_format': self.DEFAULT_CARD_FILENAME_FORMAT,
-            'card_extension': self.DEFAULT_CARD_EXTENSION,
-            'image_source_priority': self.DEFAULT_IMAGE_SOURCE_PRIORITY,
-            'episode_data_source': self.DEFAULT_EPISODE_DATA_SOURCE,
-            'valid_image_extensions': self.VALID_IMAGE_EXTENSIONS,
-            'specials_folder_format': 'Specials',
-            'season_folder_format': 'Season {season_number}',
-            'sync_specials': True,
-            'remote_card_types': {},
-            'default_card_type': 'standard',
-            'excluded_card_types': [],
-            'default_watched_style': 'unique',
-            'default_unwatched_style': 'unique',
-            'use_emby': False,
-            'emby_url': '',
-            'emby_api_key': '',
-            'emby_username': None,
-            'emby_use_ssl': True,
-            'emby_filesize_limit_number': None,
-            'emby_filesize_limit_unit': None,
-            'use_jellyfin': False,
-            'jellyfin_url': '',
-            'jellyfin_api_key': '',
-            'jellyfin_username': None,
-            'jellyfin_use_ssl': True,
-            'jellyfin_filesize_limit_number': None,
-            'jellyfin_filesize_limit_unit': None,
-            'use_plex': False,
-            'plex_url': '',
-            'plex_token': '',
-            'plex_use_ssl': True,
-            'plex_integrate_with_pmm': False,
-            'plex_filesize_limit_number': 10,
-            'plex_filesize_limit_unit': 'Megabytes',
-            'use_sonarr': False,
-            'sonarr_url': '',
-            'sonarr_api_key': '',
-            'sonarr_use_ssl': True,
-            'sonarr_downloaded_only': True,
-            'sonarr_libraries': {},
-            'use_tmdb': False,
-            'tmdb_api_key': '',
-            'tmdb_minimum_width': 0,
-            'tmdb_minimum_height': 0,
-            'tmdb_skip_localized': False,
-            'tmdb_download_logos': True,
-            'tmdb_logo_language_priority': ['en'],
-            'supported_language_codes': [],
-            'use_magick_prefix': False,
-        }
 
         # Update each attribute known to this object
-        for attribute, value in DEFAULTS.items():
+        for attribute in self.__slots__:
             if hasattr(obj, attribute):
                 setattr(self, attribute, getattr(obj, attribute))
-            else:
-                setattr(self, attribute, value)
 
         self.commit()
 
@@ -222,19 +260,20 @@ class Preferences:
         # Commit changes
         self.commit(log=log)
 
-        return None
 
-
-    def determine_imagemagick_prefix(self) -> None:
+    def determine_imagemagick_prefix(self, log: Logger = log) -> None:
         """
         Determine whether to use the "magick " prefix for ImageMagick
         commands.
+
+        Args:
+            log: (Keyword) Logger for all log messages.
         """
 
         # Try variations of the font list command with/out the "magick " prefix
         for prefix, use_magick in zip(('magick ', ''), (True, False)):
             # Create ImageMagickInterface and verify validity
-            interface = ImageMagickInterface(use_magick)
+            interface = ImageMagickInterface(use_magick_prefix=use_magick)
             if interface.validate_interface():
                 self.use_magick_prefix = use_magick
                 log.debug(f'Using "{prefix}" ImageMagick command prefix')
@@ -247,20 +286,28 @@ class Preferences:
 
     @property
     def emby_filesize_limit(self) -> int:
+        """Get the integer filesize limit for Emby."""
+
         return self.get_filesize(
             self.emby_filesize_limit_number,
             self.emby_filesize_limit_unit,
         )
 
+
     @property
     def jellyfin_filesize_limit(self) -> int:
+        """Get the integer filesize limit for Jellyfin."""
+
         return self.get_filesize(
             self.jellyfin_filesize_limit_number,
             self.jellyfin_filesize_limit_unit,
         )
 
+
     @property
     def plex_filesize_limit(self) -> int:
+        """Get the integer filesize limit for Plex."""
+
         return self.get_filesize(
             self.plex_filesize_limit_number,
             self.plex_filesize_limit_unit,
@@ -269,104 +316,151 @@ class Preferences:
 
     @property
     def emby_arguments(self) -> dict[str, Any]:
+        """Arguments for initializing a EmbyInterface"""
+
         return {
-            'url': self.emby_url,
+            'url': str(self.emby_url),
             'api_key': self.emby_api_key,
             'username': self.emby_username,
             'verify_ssl': self.emby_use_ssl,
             'filesize_limit': self.emby_filesize_limit,
         }
 
+
     @property
     def imagemagick_arguments(self) -> dict[str, bool]:
+        """Arguments for initializing a ImageMagickInterface"""
+
         return {
             'use_magick_prefix': self.use_magick_prefix,
         }
 
+
     @property
     def jellyfin_arguments(self) -> dict[str, Any]:
+        """Arguments for initializing a JellyfinInterface"""
+
         return {
-            'url': self.jellyfin_url,
+            'url': str(self.jellyfin_url),
             'api_key': self.jellyfin_api_key,
             'username': self.jellyfin_username,
             'verify_ssl': self.jellyfin_use_ssl,
             'filesize_limit': self.jellyfin_filesize_limit,
         }
 
+
     @property
     def plex_arguments(self) -> dict[str, Any]:
+        """Arguments for initializing a PlexInterface"""
+
         return {
-            'url': self.plex_url,
+            'url': str(self.plex_url),
             'token': self.plex_token,
             'verify_ssl': self.plex_use_ssl,
             'integrate_with_pmm': self.plex_integrate_with_pmm,
             'filesize_limit': self.plex_filesize_limit,
         }
 
+
     @property
     def sonarr_arguments(self) -> dict[str, Any]:
+        """Arguments for initializing a SonarrInterface"""
+
         return {
-            'url': self.sonarr_url,
+            'url': str(self.sonarr_url),
             'api_key': self.sonarr_api_key,
             'verify_ssl': self.sonarr_use_ssl,
             'downloaded_only': self.sonarr_downloaded_only,
         }
 
+
     @property
     def tmdb_arguments(self) -> dict[str, Any]:
+        """Arguments for initializing a TMDbInterface"""
+
         return {
-            'api_key': self.tmdb_api_key,
+            'api_key': str(self.tmdb_api_key),
             'minimum_source_width': self.tmdb_minimum_width,
             'minimum_source_height': self.tmdb_minimum_height,
             'blacklist_threshold': 3, # TODO add variable
             'logo_language_priority': self.tmdb_logo_language_priority,
         }
 
+
     @property
     def valid_image_sources(self) -> set[str]:
-        return set(
-            (['Emby'] if self.use_emby else [])
-            + (['Jellyfin'] if self.use_jellyfin else [])
-            + (['Plex'] if self.use_plex else [])
-            + (['TMDb'] if self.use_tmdb else [])
-        )
+        """Set of valid image sources"""
+
+        return set(filter(None, [
+            'Emby' * self.use_emby,
+            'Jellyfin' * self.use_jellyfin,
+            'Plex' * self.use_plex,
+            'TMDb' * self.use_tmdb,
+        ]))
+
 
     @property
     def valid_episode_data_sources(self) -> list[str]:
-        return (
-            (['Emby'] if self.use_emby else [])
-            + (['Jellyfin'] if self.use_jellyfin else [])
-            + (['Plex'] if self.use_plex else [])
-            + (['TMDb'] if self.use_tmdb else [])
-            + (['Sonarr'] if self.use_sonarr else [])
-        )
+        """List of valid Episode data sources"""
+
+        return list(filter(None, [
+            'Emby' * self.use_emby,
+            'Jellyfin' * self.use_jellyfin,
+            'Plex' * self.use_plex,
+            'TMDb' * self.use_tmdb,
+            'Sonarr' * self.use_sonarr,
+        ]))
+
 
     @property
     def enabled_media_servers(self) -> list[str]:
-        return (
-            (['Emby'] if self.use_emby else [])
-            + (['Jellyfin'] if self.use_jellyfin else [])
-            + (['Plex'] if self.use_plex else [])
-        )
+        """List of enabled Media Servers"""
+
+        return list(filter(None, [
+            'Emby' * self.use_emby,
+            'Jellyfin' * self.use_jellyfin,
+            'Plex' * self.use_plex,
+        ]))
+
 
     @property
     def card_properties(self) -> dict[str, str]:
+        """
+        Properties to utilize and merge in Title Card creation.
+
+        Returns:
+            Dictionary of properties.
+        """
+
         return {
             'card_type': self.default_card_type,
             'watched_style': self.default_watched_style,
             'unwatched_style': self.default_unwatched_style,
             'card_filename_format': self.card_filename_format,
         }
-    
+
+
     @property
-    def export_properties(self) -> dict:
+    def export_properties(self) -> dict[str, str]:
+        """
+        Properties to export in Blueprints.
+
+        Returns:
+            Dictionary of the properties that can be used in a
+            NewNamedFont model to recreate this object.
+        """
+
         return {
             'card_type': self.default_card_type,
         }
-    
+
+
     @property
     def card_dimensions(self) -> str:
+        """Card dimensions as a formatted dimensional string."""
+
         return f'{self.card_width}x{self.card_height}'
+
 
     @staticmethod
     def get_filesize(value: int, unit: str) -> Optional[int]:
@@ -442,7 +536,7 @@ class Preferences:
                 return library
 
         return None
-    
+
 
     def standardize_style(self, style: str) -> str:
         """
@@ -468,7 +562,7 @@ class Preferences:
 
         # All other styles get typical standardization.
         return ' '.join(sorted(standardized.split(' ')))
-    
+
 
     def get_folder_format(self, episode_info: EpisodeInfo) -> str:
         """
@@ -485,9 +579,9 @@ class Preferences:
         # Format Specials differently
         if episode_info.season_number == 0:
             return self.specials_folder_format.format(**episode_info.indices)
-        
+
         return self.season_folder_format.format(**episode_info.indices)
-    
+
 
     def get_card_type_class(self,
             card_type_identifier: str,
@@ -499,6 +593,7 @@ class Preferences:
 
         Args:
             card_type_identifier: Identifier of the CardType class.
+            log: (Keyword) Logger for all log messages.
 
         Returns:
             CardType subclass of the given identifier. If this is an
@@ -508,7 +603,7 @@ class Preferences:
         # Get the effective card class
         if card_type_identifier in TitleCard.CARD_TYPES:
             return TitleCard.CARD_TYPES[card_type_identifier]
-        elif card_type_identifier in self.remote_card_types:
+        if card_type_identifier in self.remote_card_types:
             return self.remote_card_types[card_type_identifier]
 
         log.error(f'Unable to identify card type "{card_type_identifier}"')

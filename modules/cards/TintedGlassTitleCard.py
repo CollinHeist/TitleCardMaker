@@ -5,7 +5,6 @@ from typing import Literal, Optional
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
-from modules.Debug import log
 
 BoxCoordinates = namedtuple('BoxCoordinates', ('x0', 'y0', 'x1', 'y1'))
 Position = Literal['left', 'center', 'right']
@@ -19,6 +18,7 @@ class TintedGlassTitleCard(BaseCardType):
     """
 
     """API Parameters"""
+    # pylint: disable=line-too-long
     API_DETAILS = CardDescription(
         name='Tinted Glass',
         identifier='tinted glass',
@@ -47,6 +47,7 @@ class TintedGlassTitleCard(BaseCardType):
             'By default, these cards also feature the name of the series in the episode text.',
         ]
     )
+    # pylint: enable=line-too-long
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'darkened'
@@ -108,8 +109,8 @@ class TintedGlassTitleCard(BaseCardType):
             episode_text_color: str = EPISODE_TEXT_COLOR,
             episode_text_position: Position = 'center',
             box_adjustments: tuple[int, int, int, int] = (0, 0, 0, 0),
-            preferences: Optional['Preferences'] = None,                        # type: ignore
-            **unused
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
         ) -> None:
 
         # Initialize the parent class - this sets up an ImageMagickInterface
@@ -338,7 +339,7 @@ class TintedGlassTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:                                   # type: ignore
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
@@ -362,7 +363,7 @@ class TintedGlassTitleCard(BaseCardType):
     @staticmethod
     def is_custom_season_titles(
             custom_episode_map: bool,
-            episode_text_format: str
+            episode_text_format: str,
         ) -> bool:
         """
         Determine whether the given attributes constitute custom or

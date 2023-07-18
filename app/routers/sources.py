@@ -1,19 +1,19 @@
-from requests import get
 from typing import Optional
 
 from fastapi import (
-    APIRouter, BackgroundTasks, Depends, Form, HTTPException, Query, Request,
+    APIRouter, BackgroundTasks, Depends, Form, HTTPException, Request,
     UploadFile,
 )
+from requests import get
 from sqlalchemy.orm import Session
 
 from app.database.query import get_episode, get_series
-from app.dependencies import *
+from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.cards import delete_cards
 from app.internal.sources import (
     get_source_image, download_episode_source_image, download_series_logo
 )
-import app.models as models
+from app import models
 from app.schemas.card import SourceImage, TMDbImage
 
 from modules.Debug import log
@@ -31,7 +31,7 @@ def download_series_source_images(
         background_tasks: BackgroundTasks,
         request: Request,
         series_id: int,
-        ignore_blacklist: bool = Query(default=False),
+        # ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
@@ -47,7 +47,7 @@ def download_series_source_images(
     - series_id: ID of the Series whose Episodes to download Source
     images for.
     - ignore_blacklist: Whether to force a download from TMDb, even if
-    the associated Episode has been internally blacklisted. 
+    the associated Episode has been internally blacklisted.
     """
 
     # Query for this Series, raise 404 if DNE
@@ -63,14 +63,12 @@ def download_series_source_images(
             tmdb_interface, episode, raise_exc=False, log=request.state.log,
         )
 
-    return None
-
 
 @source_router.post('/series/{series_id}/backdrop', status_code=200)
 def download_series_backdrop(
         series_id: int,
         request: Request,
-        ignore_blacklist: bool = Query(default=False),
+        # ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
         # emby_interface = Depends(get_emby_interface),
@@ -108,11 +106,11 @@ def download_series_backdrop(
         if WebInterface.download_image(backdrop, backdrop_file, log=log):
             log.debug(f'{series.log_str} Downloaded {backdrop_file.resolve()} from TMDb')
             return f'/source/{series.path_safe_name}/backdrop.jpg'
-        else:
-            raise HTTPException(
-                status_code=400,
-                detail=f'Unable to download backdrop'
-            )
+
+        raise HTTPException(
+            status_code=400,
+            detail=f'Unable to download backdrop'
+        )
 
     # No backdrop returned
     return None
@@ -122,7 +120,7 @@ def download_series_backdrop(
 def download_series_logo_(
         series_id: int,
         request: Request,
-        ignore_blacklist: bool = Query(default=False),
+        # ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
@@ -153,7 +151,7 @@ def download_series_logo_(
 def download_episode_source_image_(
         episode_id: int,
         request: Request,
-        ignore_blacklist: bool = Query(default=False),
+        # ignore_blacklist: bool = Query(default=False),
         db: Session = Depends(get_database),
         preferences = Depends(get_preferences),
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
@@ -169,7 +167,7 @@ def download_episode_source_image_(
 
     - episode_id: ID of the Episode to download a Source image of.
     - ignore_blacklist: Whether to force a download from TMDb, even if
-    the Episode has been internally blacklisted. 
+    the Episode has been internally blacklisted.
     """
 
     # Get the Episode with this ID, raise 404 if DNE
@@ -275,8 +273,8 @@ async def set_source_image(
         source_url: Optional[str] = Form(default=None),
         source_file: Optional[UploadFile] = None,
         db: Session = Depends(get_database),
-        preferences = Depends(get_preferences),
-        imagemagick_interface = Depends(get_imagemagick_interface),
+        preferences: Preferences = Depends(get_preferences),
+        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
     ) -> SourceImage:
     """
     Set the Source Image for the given Episode. If there is an existing
@@ -312,13 +310,13 @@ async def set_source_image(
     # If only URL was required, attempt to download, error if unable
     if source_url is not None:
         try:
-            content = get(source_url).content
+            content = get(source_url, timeout=30).content
         except Exception as e:
             log.exception(f'Download failed', e)
             raise HTTPException(
                 status_code=400,
                 detail=f'Unable to download image - {e}'
-            )
+            ) from e
     # Use uploaded file if provided
     else:
         content = uploaded_file

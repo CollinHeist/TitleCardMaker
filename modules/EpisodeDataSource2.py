@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
+from logging import Logger
 from typing import Optional
 
+from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
 from modules.SeriesInfo import SeriesInfo
 
@@ -21,8 +23,10 @@ class EpisodeDataSource(ABC):
 
     @abstractmethod
     def set_series_ids(self,
-            library_name: Optional[str],
+            library_name: str,
             series_info: SeriesInfo,
+            *,
+            log: Logger = log,
         ) -> None:
         """Set the series ID's for the given SeriesInfo object."""
 
@@ -35,7 +39,7 @@ class EpisodeDataSource(ABC):
             series_info: SeriesInfo,
             episode_infos: list[EpisodeInfo],
             *,
-            inplace: bool = False,
+            log: Logger = log,
         ) -> None:
         """Set the episode ID's for the given EpisodeInfo objects."""
 
@@ -46,7 +50,8 @@ class EpisodeDataSource(ABC):
     def get_all_episodes(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_infos: Optional[list[EpisodeInfo]] = None,
+            *,
+            log: Logger = log,
         ) -> list[EpisodeInfo]:
         """Get all the EpisodeInfo objects associated with the given series."""
 

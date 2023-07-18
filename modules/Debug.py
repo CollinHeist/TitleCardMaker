@@ -6,15 +6,19 @@ from logging import (
 from logging.handlers import TimedRotatingFileHandler
 from os import environ
 from pathlib import Path
-from pytz import timezone
 from random import choices as random_choices
 from string import hexdigits
 from typing import Optional
 
+from pytz import timezone
 from tqdm import tqdm
 
+
 def generate_context_id() -> str:
+    """Generate a unique (pseudo)random string for contextual logging"""
+
     return ''.join(random_choices(hexdigits, k=12)).lower()
+
 
 """Global tqdm arguments"""
 TQDM_KWARGS = {
@@ -23,6 +27,8 @@ TQDM_KWARGS = {
                    '[{elapsed}]'),
     # Progress bars should disappear when finished
     'leave': False,
+    # Progress bars can not be used if no TTY is present
+    'disable': None,
 }
 
 """Log file"""
@@ -41,8 +47,10 @@ class BetterExceptionLogger(Logger):
         super().debug(excpt, exc_info=True)
 setLoggerClass(BetterExceptionLogger)
 
-# StreamHandler to integrate log messages with TQDM
+
 class LogHandler(StreamHandler):
+    """Handler to integrate log messages with tqdm."""
+
     def emit(self, record):
         # Write after flushing buffer to integrate with tqdm
         try:
@@ -63,13 +71,12 @@ class Formatter(Formatter):
     Overwrite the Formatter class to write the localized time on all log
     messages.
     """
-    
+
     def formatTime(self, record, datefmt=None):
         dt = datetime.fromtimestamp(record.created, tz)
         if datefmt:
             return dt.strftime(datefmt)
-        else:
-            return str(dt)
+        return str(dt)
 
 
 class ErrorFormatterColor(Formatter):
@@ -86,7 +93,7 @@ class ErrorFormatterNoColor(Formatter):
     Formatter class to handle exception traceback printing without
     color.
     """
-    
+
     def formatException(self, ei) -> str:
         return f'[TRACEBACK] {super().formatException(ei)}'
 
@@ -121,6 +128,8 @@ class LogFormatterColor(Formatter):
 
 
 class LogFormatterNoColor(Formatter):
+    """Colorless version of the `LogFormatterColor` class."""
+
     FORMATTER = ErrorFormatterNoColor('[%(levelname)s] %(message)s')
 
     def format(self, record):
@@ -147,8 +156,12 @@ file_handler.setFormatter(ErrorFormatterNoColor(
 file_handler.setLevel(DEBUG)
 log.addHandler(file_handler)
 
-# Contextual logger which adds some context ID to all messages written with it
+
 class ContextLogger(LoggerAdapter):
+    """
+    Logger that adds a prefix context ID to all emitted messages.
+    """
+
     def process(self, msg, kwargs):
         return f'[{self.extra["context_id"]}] {msg}', kwargs
 
@@ -156,7 +169,7 @@ class ContextLogger(LoggerAdapter):
         super().error(msg, *args, **kwargs)
         super().debug(excpt, exc_info=True)
 
-# Helper function to easily create a ContextLogger
+
 def contextualize(
         logger: Logger = log,
         context_id: Optional[str] = None

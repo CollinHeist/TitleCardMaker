@@ -5,7 +5,6 @@ from typing import Any, Literal, Optional, Union
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
-from modules.Debug import log
 
 DarkenOption = Union[Literal['all', 'box'], bool]
 
@@ -23,6 +22,7 @@ class LandscapeTitleCard(BaseCardType):
     """
 
     """API Parameters"""
+    # pylint: disable=line-too-long
     API_DETAILS = CardDescription(
         name='Landscape',
         identifier='landscape',
@@ -48,6 +48,7 @@ class LandscapeTitleCard(BaseCardType):
             'The color of the bounding box matches the font color.',
         ]
     )
+    # pylint: enable=line-too-long
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'landscape'
@@ -105,8 +106,9 @@ class LandscapeTitleCard(BaseCardType):
             darken: DarkenOption = False,
             add_bounding_box: bool = False,
             box_adjustments: tuple[int, int, int, int] = (0, 0, 0, 0),
-            preferences: 'Preferences' = None,
-            **unused) ->None:
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
+        ) ->None:
         """
         Construct a new instance of this Card.
         """
@@ -234,7 +236,7 @@ class LandscapeTitleCard(BaseCardType):
         return BoxCoordinates(x_start, y_start, x_end, y_end)
 
 
-    def add_bounding_box_command(self,
+    def add_bounding_box_commands(self,
             coordinates: BoxCoordinates) -> ImageMagickCommands:
         """
         Subcommand to add the bounding box around the title text.
@@ -254,7 +256,7 @@ class LandscapeTitleCard(BaseCardType):
         x_start, y_start, x_end, y_end = coordinates
 
         return [
-            # Create blank image 
+            # Create blank image
             f'\( -size 3200x1800',
             f'xc:None',
             # Create bounding box
@@ -266,7 +268,7 @@ class LandscapeTitleCard(BaseCardType):
             f'\( +clone',
             f'-background None',
             f'-shadow 80x3+10+10 \)',
-            # Underlay drop shadow 
+            # Underlay drop shadow
             f'+swap',
             f'-background None',
             f'-layers merge',
@@ -298,7 +300,7 @@ class LandscapeTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
@@ -320,7 +322,9 @@ class LandscapeTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> bool:
         """
         Determine whether the given attributes constitute custom or
         generic season titles.
@@ -343,7 +347,7 @@ class LandscapeTitleCard(BaseCardType):
         """
 
         # If title is 0-length, just stylize
-        if len(self.title_text.strip()) == 0:
+        if len(self.title_text) == 0:
             self.__add_no_title()
             return None
 
@@ -377,7 +381,7 @@ class LandscapeTitleCard(BaseCardType):
             f'\( +clone',
             f'-background None',
             f'-shadow 80x3+10+10 \)',
-            # Underlay drop shadow 
+            # Underlay drop shadow
             f'+swap',
             f'-background None',
             f'-layers merge',
@@ -387,10 +391,11 @@ class LandscapeTitleCard(BaseCardType):
             f'-geometry +0+{self.font_vertical_shift}',
             f'-composite',
             # Optionally add bounding box
-            *self.add_bounding_box_command(bounding_box),
+            *self.add_bounding_box_commands(bounding_box),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
         ])
 
         self.image_magick.run(command)
+        return None

@@ -243,7 +243,7 @@
           type: 'DELETE',
           url: `/api/sync/delete/${syncId}?delete_series=true`,
           success: response => {
-            $.toast({class: 'blue info', title: `Deleted Sync and ${allSeriesResponse.total_count} Series`});
+            $.toast({class: 'blue info', title: 'Deleted Sync and associated Series'});
             getAllSyncs();
           },
           error: response => {

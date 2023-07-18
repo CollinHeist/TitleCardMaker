@@ -1,13 +1,8 @@
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
-from modules.BaseCardType import (
-    BaseCardType, ImageMagickCommands, Extra, CardDescription
-)
-from modules.CleanPath import CleanPath
-from modules.Debug import log
+from modules.BaseCardType import BaseCardType, Extra, CardDescription
 
-SeriesExtra = Optional
 
 class PosterTitleCard(BaseCardType):
     """
@@ -93,9 +88,10 @@ class PosterTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             logo_file: Optional[Path] = None,
-            episode_text_color: Optional[str] = None,
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            episode_text_color: str = None,
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
+        ) -> None:
         """
         Construct a new instance of this card.
         """
@@ -109,7 +105,7 @@ class PosterTitleCard(BaseCardType):
         self.logo = logo_file
 
         # Store text
-        self.title_text = self.image_magick.escape_chars(title_text.upper())
+        self.title_text = self.image_magick.escape_chars(title_text)
         self.episode_text = self.image_magick.escape_chars(episode_text)
 
         # Font characteristics
@@ -117,19 +113,15 @@ class PosterTitleCard(BaseCardType):
         self.font_file = font_file
         self.font_interline_spacing = font_interline_spacing
         self.font_size = font_size
-
-        # Extras
-        if episode_text_color is None:
-            self.episode_text_color = font_color
-        else:
-            self.episode_text_color = episode_text_color
+        self.episode_text_color = episode_text_color
 
 
     @staticmethod
     def modify_extras(
-            extras: dict[str, Any],
+            extras: dict,
             custom_font: bool,
-            custom_season_titles: bool) -> None:
+            custom_season_titles: bool,
+        ) -> None:
         """
         Modify the given extras based on whether font or season titles
         are custom.
@@ -148,7 +140,7 @@ class PosterTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determines whether the given arguments represent a custom font
         for this card. This CardType does not use custom fonts, so this
@@ -168,7 +160,9 @@ class PosterTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> bool:
         """
         Determines whether the given attributes constitute custom or
         generic season titles.
@@ -188,19 +182,10 @@ class PosterTitleCard(BaseCardType):
     def create(self) -> None:
         """Create the title card as defined by this object."""
 
-        # Source DNE, error and exit
-        if not self.source_file.exists():
-            log.error(f'Poster "{self.source_file.resolve()}" does not exist')
-            return None
-
         # If no logo is specified, create empty logo command
         if self.logo is None:
             title_offset = 0
             logo_command = ''
-        # Logo specified but does not exist - error and exit
-        elif not self.logo.exists():
-            log.error(f'Logo file "{self.logo.resolve()}" does not exist')
-            return None
         # Logo specified and exists, create command to resize and add image
         else:
             logo_command = [
@@ -237,7 +222,7 @@ class PosterTitleCard(BaseCardType):
             f'-fill "{self.episode_text_color}"',
             f'-annotate +649+50 "{self.episode_text}"',
             # Add title text
-            f'-gravity center',                         
+            f'-gravity center',
             f'-pointsize {165 * self.font_size}',
             f'-interline-spacing {-40 + self.font_interline_spacing}',
             f'-fill "{self.font_color}"',

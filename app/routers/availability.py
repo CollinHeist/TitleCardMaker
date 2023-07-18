@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from requests import get as req_get
 from sqlalchemy.orm import Session
 
-from app.dependencies import *
+from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.availability import get_latest_version
-import app.models as models
+from app import models
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.card import CardType, LocalCardType, RemoteCardType
 from app.schemas.preferences import (

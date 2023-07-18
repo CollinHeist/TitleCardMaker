@@ -1,7 +1,7 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from typing import Any, Optional
 
-from pydantic import Field, root_validator
+from pydantic import root_validator
 
 from app.schemas.base import Base
 from app.schemas.font import TitleCase
@@ -86,8 +86,8 @@ class DownloadableFile(Base):
     filename: str
 
 class BlankBlueprint(Blueprint):
-    description: list[str] = ['Descriptive information about this Blueprint']
-    creator: str = 'Your (user)name here'
+    # description: list[str] = ['Descriptive information about this Blueprint']
+    # creator: str = 'Your (user)name here'
     preview: str = 'Name of preview file here'
 
 class RemoteBlueprintFont(BlueprintFont):

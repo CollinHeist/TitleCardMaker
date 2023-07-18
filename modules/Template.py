@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from modules.Debug import log
 from modules.SeriesInfo import SeriesInfo
 
+
 class Template:
     """
     This class describes a template. A Template is a fallback YAML
@@ -110,7 +111,7 @@ class Template:
         {'year': 1234, 'b': {'b1': False, 'b2': 'Hey 1234'}}
 
         Args:
-            template: The dictionary to modify any instances of 
+            template: The dictionary to modify any instances of
                 <<{key}>> within. Modified in-place.
             key: The key to search/replace for.
             value: The value to replace the key with.

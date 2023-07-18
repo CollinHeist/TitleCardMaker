@@ -5,9 +5,11 @@ from typing import Optional
 from fastapi import HTTPException
 
 from modules.Debug import log
+from modules.Interface import Interface
 from modules.WebInterface import WebInterface
 
-class TautulliInterface(WebInterface):
+
+class TautulliInterface(WebInterface, Interface):
     """
     This class describes an interface to Tautulli. This interface can
     configure notification agents within Tautulli to enable fast card
@@ -43,11 +45,12 @@ class TautulliInterface(WebInterface):
             log: (Keyword) Logger for all log messages.
 
         Raises:
-            HTTPException (401) if the URL or API Key is invalid.
             HTTPException (400) if Tautulli cannot be connected to.
+            HTTPException (401) if Tautulli's status cannot be queried.
+            HTTPException (422) if the URL is invalid.
         """
 
-        # Initialize parent WebInterface 
+        # Initialize parent classes
         super().__init__('Tautulli', use_ssl, cache=False)
 
         # Get correct TCM URL
@@ -71,7 +74,7 @@ class TautulliInterface(WebInterface):
 
         # Query system status to verify connection to Tautulli
         try:
-            status = self._get(
+            status = self.get(
                 self.tautulli_url,
                 self.__params | {'cmd': 'status'}
             )
@@ -85,14 +88,11 @@ class TautulliInterface(WebInterface):
             raise HTTPException(
                 status_code=400,
                 detail=f'Cannot connect to Tautulli',
-            )
+            ) from e
 
         # Store attributes
         self.agent_name = agent_name
-
-
-    def __bool__(self) -> bool:
-        return True
+        self.activate()
 
 
     def is_integrated(self) -> bool:
@@ -105,7 +105,7 @@ class TautulliInterface(WebInterface):
         """
 
         # Get all notifiers
-        response = self._get(
+        response = self.get(
             self.tautulli_url,
             self.__params | {'cmd': 'get_notifiers'}
         )
@@ -132,7 +132,7 @@ class TautulliInterface(WebInterface):
         """
 
         # Get all existing notifier ID's
-        response = self._get(
+        response = self.get(
             self.tautulli_url,
             self.__params | {'cmd': 'get_notifiers'}
         )['response']['data']
@@ -140,10 +140,10 @@ class TautulliInterface(WebInterface):
 
         # Create new notifier
         params = {'cmd': 'add_notifier_config', 'agent_id': self.AGENT_ID}
-        self._get(self.tautulli_url,  self.__params | params)
+        self.get(self.tautulli_url,  self.__params | params)
 
         # Get notifier ID's after adding new one
-        response = self._get(
+        response = self.get(
             self.tautulli_url,
             self.__params | {'cmd': 'get_notifiers'}
         )['response']['data']
@@ -207,6 +207,7 @@ class TautulliInterface(WebInterface):
             'on_created_body': '"{rating_key}"',
             'on_watched_body': '"{rating_key}"',
         }
-        self._get(self.tautulli_url, params)
+        self.get(self.tautulli_url, params)
         log.info(f'Created and configured Tautulli notification agent '
                  f'{created_id} ("{self.agent_name}")')
+        return None

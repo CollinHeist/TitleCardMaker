@@ -1,12 +1,10 @@
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
-from modules.Debug import log
 
-SeriesExtra = Optional
 
 class OlivierTitleCard(BaseCardType):
     """
@@ -74,8 +72,8 @@ class OlivierTitleCard(BaseCardType):
     ARCHIVE_NAME = 'Olivier Style'
 
     __slots__ = (
-        'source_file', 'output_file', 'title_text', 'hide_episode_text', 
-        'episode_prefix', 'episode_text', 'font_color', 'font_file', 
+        'source_file', 'output_file', 'title_text', 'hide_episode_text',
+        'episode_prefix', 'episode_text', 'font_color', 'font_file',
         'font_interline_spacing', 'font_kerning', 'font_size',
         'font_stroke_width', 'font_vertical_shift', 'stroke_color',
         'episode_text_color', 'interword_spacing',
@@ -96,11 +94,11 @@ class OlivierTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-            episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
-            stroke_color: SeriesExtra[str] = STROKE_COLOR,
+            episode_text_color: str = EPISODE_TEXT_COLOR,
+            stroke_color: str = STROKE_COLOR,
             interword_spacing: int = 0,
-            preferences: 'Preferences' = None, # type: ignore
-            **unused
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
         ) -> None:
         """
         Construct a new instance of this card.
@@ -123,9 +121,7 @@ class OlivierTitleCard(BaseCardType):
             prefix, number = episode_text.split(' ', 1)
             self.episode_prefix = prefix.upper()
             episode_text = number
-        else:
-            episode_text = episode_text
-        self.episode_text = self.image_magick.escape_chars(episode_text.upper())
+        self.episode_text = self.image_magick.escape_chars(episode_text)
 
         # Font customizations
         self.font_color = font_color
@@ -225,7 +221,7 @@ class OlivierTitleCard(BaseCardType):
         text_offset = {'EPISODE': 425, 'CHAPTER': 425, 'PART': 275}
         if self.episode_prefix is None:
             offset = 0
-        elif self.episode_prefix in text_offset.keys():
+        elif self.episode_prefix in text_offset:
             offset = text_offset[self.episode_prefix]
         else:
             offset_per_char = text_offset['EPISODE'] / len('EPISODE')
@@ -249,9 +245,10 @@ class OlivierTitleCard(BaseCardType):
 
     @staticmethod
     def modify_extras(
-            extras: dict[str, Any],
+            extras: dict,
             custom_font: bool,
-            custom_season_titles: bool) -> None:
+            custom_season_titles: bool,
+        ) -> None:
         """
         Modify the given extras based on whether font or season titles
         are custom.
@@ -272,7 +269,7 @@ class OlivierTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determine whether the given arguments represent a custom font
         for this card.

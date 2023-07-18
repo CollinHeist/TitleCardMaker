@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.dependencies import refresh_imagemagick_interface
 from app.internal.cards import add_card_to_database, resolve_card_settings
 from app.internal.connection import update_connection
-import app.models as models
+from app import models
 from app.models.preferences import Preferences
 from app.schemas.base import UNSPECIFIED
 from app.schemas.card import NewTitleCard
@@ -300,7 +300,8 @@ def parse_preferences(
     image_source_priority = unsp
     if (isp := _get(options, 'image_source_priority')) is not None:
         mapping = {
-            'emby': 'Emby', 'jellyfin': 'Jellyfin', 'plex': 'Plex', 'tmdb': 'TMDb'
+            'emby': 'Emby', 'jellyfin': 'Jellyfin',
+            'plex': 'Plex', 'tmdb': 'TMDb'
         }
         image_source_priority = [
             mapping[source]
@@ -688,7 +689,9 @@ def parse_syncs(
         all_syncs += _parse_media_server_sync(emby, 'Emby', NewEmbySync)
 
     if (jellyfin := _get(yaml_dict, 'jellyfin', 'sync')) is not None:
-        all_syncs += _parse_media_server_sync(jellyfin, 'Jellyfin', NewJellyfinSync)
+        all_syncs += _parse_media_server_sync(
+            jellyfin, 'Jellyfin', NewJellyfinSync
+        )
 
     if (plex := _get(yaml_dict, 'plex', 'sync')) is not None:
         all_syncs += _parse_media_server_sync(plex, 'Plex', NewPlexSync)
@@ -1185,7 +1188,7 @@ def import_cards(
             log.debug(f'{series.log_str} {episode.log_str} has an associated Card - skipping')
             continue
         # Episode has card, delete if reloading
-        elif episode.card and force_reload:
+        if episode.card and force_reload:
             for card in episode.card:
                 log.debug(f'{card.log_str} deleting record')
                 db.query(models.card.Card).filter_by(id=card.id).delete()

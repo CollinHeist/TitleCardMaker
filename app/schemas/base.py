@@ -72,6 +72,7 @@ def validate_argument_lists_to_dict(
     # Both specified as None, set output to None
     if list0 is None and list1 is None:
         values[output_key] = None
+        return values
     # Both unspecified
     elif ((list0 == UNSPECIFIED and list1 == UNSPECIFIED)
         or (list0 == [UNSPECIFIED] and list1 == [UNSPECIFIED])):

@@ -1,21 +1,61 @@
 from datetime import datetime, timedelta
 from logging import Logger
-from tinydb import Query, where
 from typing import Any, Callable, Literal, Optional, Union
 
 from fastapi import HTTPException
+from tinydb import Query, where
 from tmdbapis import TMDbAPIs, NotFound, Unauthorized, TMDbException
 from tmdbapis.objs.reload import Episode as TMDbEpisode, Movie as TMDbMovie
 from tmdbapis.objs.image import Still as TMDbStill
 
 from modules.Debug import log
-from modules.EpisodeDataSource import EpisodeDataSource
+from modules.EpisodeDataSource2 import EpisodeDataSource
 from modules.EpisodeInfo2 import EpisodeInfo
+from modules.Interface import Interface
 from modules.PersistentDatabase import PersistentDatabase
 from modules.SeriesInfo import SeriesInfo
 from modules.WebInterface import WebInterface
 
-class TMDbInterface(EpisodeDataSource, WebInterface):
+
+def catch_and_log(
+        message: str,
+        *,
+        default: Any = None
+    ) -> Callable:
+    """
+    Return a decorator that logs the given message if the decorated
+    function raises an uncaught TMDbException. This utilizes the
+    wrapped function's contextual logger if that's provided as the
+    `log` keyword.
+
+    Args:
+        message: Message to log upon uncaught exception.
+        default: (Keyword) Value to return if decorated function
+            raises an uncaught exception.
+
+    Returns:
+        Wrapped decorator that returns a wrapped callable.
+    """
+
+    def decorator(function: Callable) -> Callable:
+        def inner(*args, **kwargs):
+            try:
+                return function(*args, **kwargs)
+            except TMDbException as e:
+                # Get contextual logger if provided as argument to function
+                if 'log' in kwargs and isinstance(kwargs['log'], Logger):
+                    log = kwargs['log']
+
+                # Log message and exception
+                log.error(message)
+                log.exception(f'TMDbException from {function.__name__}'
+                                f'({args}, {kwargs})', e)
+                return default
+        return inner
+    return decorator
+
+
+class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
     """
     This class defines an interface to TheMovieDatabase (TMDb). Once
     initialized  with a valid API key, the primary purpose of this class
@@ -116,6 +156,9 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             logo_language_priority: Priority which logos should be
                 evaluated at.
             log: (Keyword) Logger for all log messages.
+
+        Raises:
+            HTTPException (401) if the API key is invalid.
         """
 
         super().__init__('TMDb', log=log)
@@ -132,57 +175,19 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         # Create API object, validate key
         try:
             self.api = TMDbAPIs(api_key, self.session)
-        except Unauthorized:
-            log.critical(f'TMDb API key "{api_key}" is invalid')
+        except Unauthorized as e:
+            log.critical(f'TMDb API key is invalid')
             raise HTTPException(
                 status_code=401,
                 detail=f'Invalid API Key'
-            )
-
-
-    def __repr__(self) -> str:
-        """Returns an unambiguous string representation of the object."""
-
-        return f'<TMDbInterface>'
-
-
-    def catch_and_log(
-            message: str,
-            log_func: Callable[[str], None]=log.error, *,
-            default: Any = None
-        ) -> callable:
-        """
-        Return a decorator that logs (with the given log function) the
-        given message if the decorated function raises an uncaught
-        TMDbException.
-
-        Args:
-            message: Message to log upon uncaught exception.
-            log_func: Log function to call upon uncaught exception.
-            default: (Keyword only) Value to return if decorated
-                function raises an uncaught exception.
-
-        Returns:
-            Wrapped decorator that returns a wrapped callable.
-        """
-
-        def decorator(function: Callable) -> Callable:
-            def inner(*args, **kwargs):
-                try:
-                    return function(*args, **kwargs)
-                except TMDbException as e:
-                    log_func(message)
-                    log.exception(f'TMDbException from {function.__name__}'
-                                  f'({args}, {kwargs})', e)
-                    return default
-            return inner
-        return decorator
+            ) from e
+        self.activate()
 
 
     def __get_condition(self,
             query_type: Literal['backdrop', 'image', 'logo', 'title'],
             series_info: SeriesInfo,
-            episode_info: Optional[EpisodeInfo] = None
+            episode_info: Optional[EpisodeInfo] = None,
         ) -> Query:
         """
         Get the tinydb query condition for the given query.
@@ -265,7 +270,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def __is_blacklisted(self,
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
-            query_type: str
+            query_type: str,
         ) -> bool:
         """
         Determines if the specified entry is in the blacklist (e.g.
@@ -300,7 +305,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
     def is_permanently_blacklisted(self,
             series_info: SeriesInfo,
             episode_info: EpisodeInfo,
-            query_type: str = 'image'
+            query_type: Literal['backdrop', 'image', 'logo', 'title'] = 'image',
         ) -> bool:
         """
         Determines if permanently blacklisted.
@@ -328,6 +333,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
     @catch_and_log('Error setting series ID')
     def set_series_ids(self,
+            library_name: Any,
             series_info: SeriesInfo,
             *,
             log: Logger = log,
@@ -336,6 +342,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         Set all possible series ID's for the given SeriesInfo object.
 
         Args:
+            library_name: Unused argument.
             series_info: SeriesInfo to update.
             log: (Keyword) Logger for all log messages.
         """
@@ -412,6 +419,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
     @catch_and_log('Error getting all episodes', default=[])
     def get_all_episodes(self,
+            library_name: str,
             series_info: SeriesInfo,
             *,
             log: Logger = log,
@@ -421,13 +429,15 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         have  already aired are returned.
 
         Args:
-            series_info: SeriesInfo for the entry.
+            library_name: Unused argument.
+            series_info: Series to get the episodes of.
+            log: (Keyword) Logger for all log messages.
 
         Returns:
             List of EpisodeInfo objects for this series.
         """
 
-        # Cannot query TMDb if no series TMDb ID 
+        # Cannot query TMDb if no series TMDb ID
         if series_info.tmdb_id is None:
             log.error(f'Cannot source episodes from TMDb for {series_info}')
             return []
@@ -646,8 +656,11 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
 
     @catch_and_log('Error setting episode IDs')
     def set_episode_ids(self,
+            library_name: Any,
             series_info: SeriesInfo,
             episode_infos: list[EpisodeInfo],
+            *,
+            log: Logger = log,
         ) -> None:
         """
         Set all the episode ID's for the given list of EpisodeInfo
@@ -655,12 +668,16 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         useful episode ID's.
 
         Args:
+            library_name: Unused argument.
             series_info: SeriesInfo for the entry.
             infos: List of EpisodeInfo objects to update.
+            log: (Keyword) Logger for all log messages.
         """
 
         # Get all episodes for this series
-        new_episode_infos = self.get_all_episodes(series_info)
+        new_episode_infos = self.get_all_episodes(
+            library_name, series_info, log=log
+        )
 
         # Match to existing info
         for old_episode_info in episode_infos:
@@ -672,8 +689,6 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
                             and id_ is not None):
                             setattr(old_episode_info, id_type, id_)
                     break
-
-        return None
 
 
     def __determine_best_image(self,
@@ -854,7 +869,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         ) -> bool:
         """
         Determine whether the given title is a generic translation of
-        "Episode (x)" for the indicated language. 
+        "Episode (x)" for the indicated language.
 
         Args:
             title: The translated title.
@@ -982,7 +997,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
             if priority > best_priority:
                 continue
             # New logo is higher priority, use always
-            elif priority < best_priority:
+            if priority < best_priority:
                 best = logo
                 best_priority = priority
             # Same priority, compare sizes
@@ -1032,13 +1047,13 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         # Get the series for this backdrop, exit if series or backdrop DNE
         try:
             series = self.api.tv_show(series_info.tmdb_id)
-        except NotFound:
+        except NotFound as e:
             self.__update_blacklist(series_info, None, 'backdrop')
             if raise_exc:
                 raise HTTPException(
                     status_code=404,
                     detail=f'"{series_info}" not found on TMDb'
-                )
+                ) from e
             return None
 
         # Blacklist if there are no backdrops
@@ -1092,7 +1107,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface):
         valid = [poster for poster in series.posters if poster.iso_639_1 == 'en']
         if len(valid) == 0:
             return None
-        
+
         # Find best (valid) poster by pixel count, starting with the first one
         best = valid[0]
         for poster in valid:

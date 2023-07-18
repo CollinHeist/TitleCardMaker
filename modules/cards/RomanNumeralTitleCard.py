@@ -2,16 +2,16 @@ from collections import namedtuple
 from pathlib import Path
 from random import choice
 from re import compile as re_compile
-from typing import Any, Optional
+from typing import Optional
 
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
 from modules.Debug import log
 
-SeriesExtra = Optional
 
 Position = namedtuple('Position', ('location', 'offset', 'rotation'))
+
 
 class Offset:
     """
@@ -23,9 +23,11 @@ class Offset:
     OFFSET_REGEX = re_compile(r'([-+]\d+.?\d*)([-+]\d+.?\d*)')
 
     def __init__(self,
-            offset_str: Optional[str] = None, *,
+            offset_str: Optional[str] = None,
+            *,
             x: Optional[float] = None,
-            y: Optional[float] = None) -> None:
+            y: Optional[float] = None,
+        ) -> None:
         """
         Initialize an Offset object with the given ImageMagick offset
         string. For example, Offset('+20-10') indicates a 20 pixel
@@ -47,11 +49,14 @@ class Offset:
         else:
             self.x, self.y = float(x), float(y)
 
+
     def __repr__(self) -> str:
         return f'<Offset {self.x=}, {self.y=}>'
 
+
     def __str__(self) -> str:
         return f'{self.x:+}{self.y:+}'
+
 
     def __add__(self, other: 'Offset') -> None:
         """
@@ -62,6 +67,7 @@ class Offset:
         """
 
         return Offset(x=self.x + other.x, y=self.y + other.y)
+
 
     def __iadd__(self, other: 'Offset') -> 'Offset':
         """
@@ -81,6 +87,7 @@ class Offset:
 
         return self
 
+
     def __mul__(self, scalar: float) -> 'Offset':
         """
         Scale this object's offsets by the given scalar, returning a new
@@ -91,6 +98,7 @@ class Offset:
         """
 
         return Offset(x=self.x*scalar, y=self.y*scalar)
+
 
     def __imul__(self, scalar: float) -> 'Offset':
         """
@@ -109,6 +117,7 @@ class Offset:
         self.y *= scalar
 
         return self
+
 
 """
 Lists of all possible Positions for season text around each possible
@@ -175,7 +184,7 @@ class RomanNumeralTitleCard(BaseCardType):
     inspired from the official Devilman Crybaby title cards.
 
     If enabled, season text is randomly placed around fixed positions on
-    the roman numerals. 
+    the roman numerals.
     """
 
     """API Parameters"""
@@ -206,7 +215,6 @@ class RomanNumeralTitleCard(BaseCardType):
             'the episode or absolute episode number just behind the title.',
             'Season text, if enabled, is placed at deterministic, but randomly '
             'selected locations around the roman numerals.',
-            # 'This style of title card is based off the official Devilman Crybaby title cards.',
         ]
     )
 
@@ -267,7 +275,7 @@ class RomanNumeralTitleCard(BaseCardType):
     def __init__(self,
             card_file: Path,
             title_text: str,
-            season_text: str, 
+            season_text: str,
             hide_season_text: bool = False,
             hide_episode_text: bool = False,
             font_color: str = TITLE_COLOR,
@@ -275,11 +283,12 @@ class RomanNumeralTitleCard(BaseCardType):
             episode_number: int = 1,
             blur: bool = False,
             grayscale: bool = False,
-            background: SeriesExtra[str] = BACKGROUND_COLOR, 
-            roman_numeral_color: SeriesExtra[str] = ROMAN_NUMERAL_TEXT_COLOR,
-            season_text_color: SeriesExtra[str] = SEASON_TEXT_COLOR,
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            background: str = BACKGROUND_COLOR,
+            roman_numeral_color: str = ROMAN_NUMERAL_TEXT_COLOR,
+            season_text_color: str = SEASON_TEXT_COLOR,
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
+        ) -> None:
         """
         Construct a new instance of this Card.
         """
@@ -300,7 +309,7 @@ class RomanNumeralTitleCard(BaseCardType):
         self.__assign_roman_numeral(episode_number)
 
         # Select roman numeral for season text
-        self.season_text = season_text.strip().upper()
+        self.season_text = season_text
         self.hide_season_text = hide_season_text
         self.hide_episode_text = hide_episode_text
 
@@ -346,6 +355,7 @@ class RomanNumeralTitleCard(BaseCardType):
             roman_text = [numeral]
 
         # Update scalar for this text
+        self.__roman_text_scalar = 1.0
         self.__assign_roman_scalar(roman_text)
 
         # Assign combined roman numeral text
@@ -377,12 +387,11 @@ class RomanNumeralTitleCard(BaseCardType):
         # Scale roman numeral text if line width is larger than card (+margin)
         if max_width > (card_width - 100):
             self.__roman_text_scalar = (card_width - 100) / max_width
-        else:
-            self.__roman_text_scalar = 1.0
 
 
     def create_roman_numeral_command(self,
-            roman_numeral: str) -> ImageMagickCommands:
+            roman_numeral: str
+        ) -> ImageMagickCommands:
         """
         Subcommand to add roman numerals to the image.
 
@@ -408,7 +417,9 @@ class RomanNumeralTitleCard(BaseCardType):
 
 
     def create_season_text_command(self,
-            rotation: str, offset: str) -> ImageMagickCommands:
+            rotation: str,
+            offset: str
+        ) -> ImageMagickCommands:
         """
         Generate the ImageMagick commands necessary to create season
         text at the given rotation and offset.
@@ -462,7 +473,7 @@ class RomanNumeralTitleCard(BaseCardType):
             f'-pointsize {font_size}',
             f'-interword-spacing 40',
             f'-interline-spacing 0',
-            f'-fill "{self.font_color}"',            
+            f'-fill "{self.font_color}"',
             f'-annotate +0+0 "{self.title_text}"',
         ]
 
@@ -479,7 +490,8 @@ class RomanNumeralTitleCard(BaseCardType):
 
         # Select random roman numeral and position on that numeral
         random_index = choice(range(len(self.roman_numeral)))
-        if self.roman_numeral[random_index] == '\n': random_index -= 1
+        if self.roman_numeral[random_index] == '\n':
+            random_index -= 1
         random_letter = self.roman_numeral[random_index]
         random_position = choice(POSITIONS[random_letter])
 
@@ -627,7 +639,7 @@ class RomanNumeralTitleCard(BaseCardType):
                 or box1['end_y'] < 0 or box1['end_y'] > 1800):
                 return True
 
-            # Return whether the bounds of the season text overlap the title 
+            # Return whether the bounds of the season text overlap the title
             return (box0['start_x'] < box1['end_x']  # Box0 left before Box1 right
                 and box0['end_x'] > box1['start_x']  # Box0 right after Box1 left
                 and box0['start_y'] < box1['end_y']  # Box0 top before Box1 bottom
@@ -635,14 +647,16 @@ class RomanNumeralTitleCard(BaseCardType):
 
         # Attempt position selection until not overlapping, or out of attemps
         attempts_left = self.SEASON_TEXT_PLACEMENT_ATTEMPS
-        while (attempts_left := attempts_left-1) > 0 and select_position(): pass
+        while (attempts_left := attempts_left-1) > 0 and select_position():
+            pass
 
 
     @staticmethod
     def modify_extras(
-            extras: dict[str, Any],
+            extras: dict,
             custom_font: bool,
-            custom_season_titles: bool) -> None:
+            custom_season_titles: bool
+        ) -> None:
         """
         Modify the given extras base on whether font or season titles
         are custom.
@@ -666,7 +680,7 @@ class RomanNumeralTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
@@ -685,7 +699,9 @@ class RomanNumeralTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> bool:
         """
         Determine whether the given attributes constitute custom or
         generic season titles.
@@ -701,7 +717,7 @@ class RomanNumeralTitleCard(BaseCardType):
 
         standard_etfs = RomanNumeralTitleCard.GENERIC_EPISODE_TEXT_FORMATS
 
-        return (custom_episode_map 
+        return (custom_episode_map
                 or episode_text_format not in standard_etfs)
 
 

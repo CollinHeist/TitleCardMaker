@@ -61,20 +61,17 @@ class BaseTitleCard(Base):
 Creation classes
 """
 class PreviewTitleCard(UpdateBase):
-    card_type: str = Field(title='Card type identifier')
-    title_text: str
-    season_text: str
+    card_type: str
+    title_text: str = 'Example Title'
+    season_text: str = 'Season 1'
     hide_season_text: bool = False
-    episode_text: str
+    episode_text: str = 'Season 1'
     hide_episode_text: bool = False
     blur: bool = False
     grayscale: bool = False
     season_number: int = 1
     episode_number: int = 1
     absolute_number: int = 1
-    title_text: str
-    season_text: str
-    episode_text: str
     style: Style = 'unique'
     font_id: Optional[int] = None
     font_color: Optional[str] = None
