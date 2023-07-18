@@ -20,7 +20,7 @@ font_router = APIRouter(
 @font_router.post('/new', status_code=201)
 def create_font(
         new_font: NewNamedFont = Body(...),
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> NamedFont:
     """
     Create a new Font.
@@ -41,7 +41,7 @@ async def add_font_file(
         font_id: int,
         file: UploadFile,
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences),
     ) -> NamedFont:
     """
     Add a custom font file to the specified Font.
@@ -78,7 +78,7 @@ async def add_font_file(
 def delete_font_file(
         font_id: int,
         request: Request,
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> NamedFont:
     """
     Delete the font file associated with the given Font.
@@ -120,7 +120,7 @@ def update_font(
         font_id: int,
         request: Request,
         update_font: UpdateNamedFont = Body(...),
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> NamedFont:
     """
     Update the Font with the given ID. Only provided fields are updated.
@@ -152,7 +152,7 @@ def update_font(
 
 @font_router.get('/all', status_code=200)
 def get_all_fonts(
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> list[NamedFont]:
     """
     Get all defined Fonts.
@@ -164,7 +164,7 @@ def get_all_fonts(
 @font_router.get('/{font_id}', status_code=200)
 def get_font_by_id(
         font_id: int,
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> NamedFont:
     """
     Get the Font with the given ID.
@@ -179,7 +179,7 @@ def get_font_by_id(
 def delete_font(
         font_id: int,
         request: Request,
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> None:
     """
     Delete the Font with the given ID. This also deletes the font's
