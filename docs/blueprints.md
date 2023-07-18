@@ -120,24 +120,6 @@ the Blueprint.
         TCM only automatically chooses a Card for you in order to be helpful.
         You can pick any Card you'd like for the preview.
 
-2. Verify the filename of the preview image is reflected in the `blueprint.json`
-file. The default is `preview.jpg`, but you can change this if you wish.
-
-    ```json title="blueprint.json" hl_lines="9"
-    {
-        "series": {}, // (1)
-        "episodes": {},
-        "templates": [],
-        "fonts": [],
-        "description": [
-            "..."
-        ],
-        "preview": "preview.jpg"
-    }
-    ```
-
-    1.  Customization not shown.
-
 5. Verify the actual contents of the Blueprint. Any customizations can be
 edited, removed, or adjusted. But to prevent any errors, it's best to edit these
 values within TCM itself and then just re-export the Blueprint.
@@ -195,19 +177,25 @@ on the Blueprints GitHub repository.
 3. Paste the contents of the exported `blueprint.json` file into the _Blueprint
 File_ field.
 
-4. The final step changes depending on how many files you have to upload:
+4. Upload a preview Title Card into the _Preview Title Card_ section of the form.
 
-    === "1 File (Preview Image)"
+5. The last step is only applicable to Blueprints _with_ custom Font files:
 
-        If the only file you have to attach is the preview Title Card, then
-        you can just drag/drop or attach that file into the _Zip of Files_
-        field and you are done.
+    === "No Font Files"
 
-    === "2+ Files (Preview Image and Fonts)"
+        If your Blueprint does not have any custom Font files, you can skip this
+        step.
 
-        If you have 2+ files - i.e. a preview Title Card and at least one Font
-        File - then you need to compress/zip these files into one zip file and
-        drag/drop or attach that zipped file into the _Zip of Files_ field.
+    === "Font Files"
+
+        If you have at least one Font file - then you need to compress/zip all
+        Font Files into one zip file and drag/drop or attach that zipped file
+        into the _Zip of Font Files_ field.
+
+        ??? question "Why is this necessary?"
+
+            This is required because GitHub only allows directly uploading files
+            of specific extensions, and Font extensions are not on that list.
 
 5. Click the _Submit new issue_ button.
 
