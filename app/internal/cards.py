@@ -303,7 +303,7 @@ def resolve_card_settings(
     )
 
     # Override settings with extras, and merge translations into extras
-    TieredSettings(card_extras, episode.translations) # TODO maybe swap?
+    TieredSettings(card_extras, episode.translations)
     TieredSettings(card_settings, card_extras)
     card_settings['extras'] = card_extras | episode.translations
 
@@ -364,9 +364,11 @@ def resolve_card_settings(
 
     # If no season text was indicated, determine
     if card_settings.get('season_text', None) is None:
-        ranges = SeasonTitleRanges(card_settings.get('season_titles', {}))
+        ranges = SeasonTitleRanges(
+            card_settings.get('season_titles', {}), log=log
+        )
         card_settings['season_text'] = ranges.get_season_text(
-            episode_info, card_settings,
+            episode_info, card_settings, log=log
         )
 
     # If no episode text was indicated, determine
@@ -537,10 +539,10 @@ def create_episode_card(
     existing_card: TitleCard = existing_card[0]
     if any(str(val) != str(getattr(card, attr))
             for attr, val in existing_card.comparison_properties.items()):
-        # TODO delete temporary logging
         for attr, val in existing_card.comparison_properties.items():
             if str(val) != str(getattr(card, attr)):
                 log.debug(f'Card[{existing_card.id}].{attr} | {val} -> {getattr(card, attr)}')
+                break
         log.debug(f'{series.log_str} {episode.log_str} Card config changed - recreating')
         # Delete existing card file, remove from database
         Path(existing_card.card_file).unlink(missing_ok=True)
