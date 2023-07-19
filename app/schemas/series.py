@@ -304,6 +304,21 @@ class UpdateSeries(BaseUpdate):
 """
 Return classes
 """
+class SearchResult(Base):
+    title: str
+    year: int
+    overview: list[str] = ['No overview available']
+    poster: Optional[str] = None
+    ongoing: Optional[bool] = None
+    emby_id: Any = None
+    imdb_id: Any = None
+    jellyfin_id: Any = None
+    sonarr_id: Any = None
+    tmdb_id: Any = None
+    tvdb_id: Any = None
+    tvrage_id: Any = None
+    added: bool = False
+
 class Template(BaseTemplate):
     id: int
     season_titles: dict[SeasonTitleRange, str]

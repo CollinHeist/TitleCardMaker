@@ -1,10 +1,27 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 from logging import Logger
-from typing import Optional
+from typing import Any, Optional
 
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
 from modules.SeriesInfo import SeriesInfo
+
+
+@dataclass
+class SearchResult: # pylint: disable=missing-class-docstring
+    title: str
+    year: int
+    poster: Optional[str] = None
+    overview: list[str] = field(default_factory=lambda: ['No overview available'])
+    ongoing: Optional[bool] = None
+    emby_id: Any = None
+    imdb_id: Any = None
+    jellyfin_id: Any = None
+    sonarr_id: Any = None
+    tmdb_id: Any = None
+    tvdb_id: Any = None
+    tvrage_id: Any = None
 
 
 class EpisodeDataSource(ABC):
@@ -54,5 +71,16 @@ class EpisodeDataSource(ABC):
             log: Logger = log,
         ) -> list[EpisodeInfo]:
         """Get all the EpisodeInfo objects associated with the given series."""
+
+        raise NotImplementedError
+
+
+    @abstractmethod
+    def query_series(self,
+            query: str,
+            *,
+            log: Logger = log,
+        ) -> list[SearchResult]:
+        """Query for a Series on this interface."""
 
         raise NotImplementedError
