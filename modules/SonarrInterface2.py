@@ -7,7 +7,7 @@ from typing import Any, Literal, Optional
 from fastapi import HTTPException
 
 from modules.Debug import log
-from modules.EpisodeDataSource2 import EpisodeDataSource
+from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
 from modules.SeriesInfo import SeriesInfo
@@ -271,6 +271,36 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
                 break
 
         return None
+
+
+    def query_series(self,
+            query: str,
+            *,
+            log: Logger = log,
+        ) -> list[SearchResult]:
+        """
+        
+        """
+
+        # Search for Series
+        search_results = self.get(
+            url=f'{self.url}series/lookup',
+            params={'term': query} | self.__standard_params,
+        )
+
+        return [
+            SearchResult(
+                title=result['title'],
+                year=result['year'],
+                ongoing=not result['ended'],
+                overview=result.get('overview', 'No overview available').splitlines(),
+                poster=result.get('remotePoster', None),
+                imdb_id=result.get('imdbId', None),
+                sonarr_id=result.get('id', None),
+                tvdb_id=result.get('tvdbId', None),
+                tvrage_id=result.get('tvRageId', None) or None,
+            ) for result in search_results if result['year']
+        ]
 
 
     def get_all_episodes(self,

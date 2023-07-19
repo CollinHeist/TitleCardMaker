@@ -9,7 +9,7 @@ from tmdbapis.objs.reload import Episode as TMDbEpisode, Movie as TMDbMovie
 from tmdbapis.objs.image import Still as TMDbStill
 
 from modules.Debug import log
-from modules.EpisodeDataSource2 import EpisodeDataSource
+from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
 from modules.PersistentDatabase import PersistentDatabase
@@ -417,6 +417,34 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
         return None
 
 
+    @catch_and_log('Error querying for series', default=[])
+    def query_series(self,
+            query: str,
+            *,
+            log: Logger = log,
+        ) -> list[SearchResult]:
+        """"""
+
+        try:
+            results = self.api.tv_search(query).results
+        except NotFound:
+            log.debug(f'No results found for {query}')
+            return []
+
+        return [
+            SearchResult(
+                title=result.name,
+                year=result.first_air_date.year,
+                poster=result.poster_url,
+                overview=result.overview.splitlines(),
+                ongoing=result.in_production,
+                imdb_id=result.imdb_id,
+                tmdb_id=result.id,
+                tvdb_id=result.tvdb_id,
+            ) for result in results if result.first_air_date
+        ]
+
+
     @catch_and_log('Error getting all episodes', default=[])
     def get_all_episodes(self,
             library_name: str,
@@ -796,6 +824,53 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             images = episode.backdrops
 
         return images
+    
+
+    @catch_and_log('Error getting all logos', default=None)
+    def get_all_logos(self,
+            series_info: SeriesInfo,
+            *,
+            bypass_blacklist: bool = False,
+            log: Logger = log,
+        ) -> Optional[list[TMDbStill]]:
+        """
+        Get all logos for the requested series.
+
+        Args:
+            series_info: SeriesInfo for this entry.
+            bypass_blacklist: (Keyword) Whether to bypass the blacklist.
+            log: (Keyword) Logger for all log messages.
+
+        Returns:
+            List of `tmdbapis.objs.image.Still` objects. If the series
+            is blacklisted or not found on TMDb, then None is returned.
+
+        Raises:
+            HTTPException (404) if the given Series is not found on TMDb
+        """
+
+        # Don't query the database if this episode is in the blacklist
+        if (not bypass_blacklist
+            and self.__is_blacklisted(series_info, None, 'logo')):
+            log.debug(f'Series {series_info} logo is blacklisted')
+            return None
+
+        # Get the series for this logo, exit if series or logos DNE
+        try:
+            series = self.api.tv_show(series_info.tmdb_id)
+        except NotFound:
+            self.__update_blacklist(series_info, None, 'logo')
+            log.debug(f'Series {series_info} not found on TMDb')
+            return None
+
+        # Blacklist if there are no logos
+        if len(series.logos) == 0:
+            self.__update_blacklist(series_info, None, 'logo')
+            log.info(f'Series {series_info} has no logos')
+            return None
+
+        # Series found on TMDb, return all logos
+        return series.logos
 
 
     @catch_and_log('Error getting source image', default=None)
