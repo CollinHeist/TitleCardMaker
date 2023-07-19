@@ -125,11 +125,7 @@
     async function getTemplates() {
       const templates = await fetch('/api/templates/all').then(resp => resp.json());
       $('.dropdown[data-value="template_ids"]').dropdown({
-        placeholder: 'None',
-        clearable: true,
-        values: templates.map(({id, name}) => {
-          return {name: name, value: id};
-        }),
+        values: getActiveTemplates(null, templates),
       });
     }
 
@@ -146,7 +142,7 @@
       })
     }
 
-    async function showEditModel(sync, allTemplates) {
+    async function showEditModel(sync) {
       // Get reference New Sync modal to edit
       const refModalId = `add-${sync.interface}-sync-modal`.toLowerCase();
       const editModal = document.getElementById(refModalId).cloneNode(true);
@@ -265,7 +261,7 @@
       ];
       const embyLibraries = await fetch('/api/available/libraries/emby').then(resp => resp.json());
       const plexLibraries = await fetch('/api/available/libraries/plex').then(resp => resp.json());
-      const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
+      // const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
 
       syncElements.forEach(async ({source, elementID}) => {
         // Skip if this element is not present, e.g. interface is disabled
@@ -293,7 +289,7 @@
           }
 
           // Edit sync if clicked
-          clone.querySelector('i.edit').onclick = () => showEditModel(syncObject, allTemplates);
+          clone.querySelector('i.edit').onclick = () => showEditModel(syncObject);
 
           // Launch delete sync modal on click of the delete icon
           clone.querySelector('i.trash').onclick = () => showDeleteSyncModal(id);

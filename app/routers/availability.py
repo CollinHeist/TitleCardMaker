@@ -78,7 +78,7 @@ def get_latest_available_version(request: Request) -> Optional[str]:
 def get_all_available_card_types(
         request: Request,
         show_excluded: bool = Query(default=False),
-        preferences: Preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences),
     ) -> list[CardType]:
     """
     Get a list of all available card types (local and remote).
@@ -169,7 +169,7 @@ def get_available_episode_data_sources(
 
 @availablility_router.get('/image-source-priority', status_code=200)
 def get_image_source_priority(
-        preferences: Preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences),
     ) -> list[EpisodeDataSourceToggle]:
     """
     Get the global image source priority.
@@ -193,7 +193,7 @@ def get_server_libraries(
         preferences: Preferences = Depends(get_preferences),
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
         jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface)
+        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
     ) -> list[str]:
     """
     Get all available TV library names on the given media server.
@@ -223,7 +223,7 @@ def get_server_libraries(
 @availablility_router.get('/usernames/emby', status_code=200, tags=['Emby'])
 def get_emby_usernames(
         preferences: Preferences = Depends(get_preferences),
-        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface)
+        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
     ) -> list[str]:
     """
     Get all the public usernames in Emby. Returns an empty list if
@@ -239,7 +239,7 @@ def get_emby_usernames(
 @availablility_router.get('/usernames/jellyfin', status_code=200, tags=['Jellyfin'])
 def get_jellyfin_usernames(
         preferences: Preferences = Depends(get_preferences),
-        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface)
+        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
     ) -> list[str]:
     """
     Get all the public usernames in Jellyfin. Returns an empty list if
