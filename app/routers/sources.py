@@ -180,11 +180,11 @@ def download_episode_source_image_(
 
 
 @source_router.get('/episode/{episode_id}/browse', status_code=200)
-def get_all_tmdb_episode_source_images(
-        episode_id: int,
+def get_all_episode_source_images_on_tmdb(
         request: Request,
+        episode_id: int,
         db: Session = Depends(get_database),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> list[TMDbImage]:
     """
     Get all Source Images on TMDb for the given Episode.
@@ -217,6 +217,36 @@ def get_all_tmdb_episode_source_images(
         log=request.state.log,
     )
     return [] if source_images is None else source_images
+
+
+@source_router.get('/series/{series_id}/logo/browse', status_code=200)
+def get_all_series_logos_on_tmdb(
+        request: Request,
+        series_id: int,
+        db: Session = Depends(get_database),
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+    ) -> list[TMDbImage]:
+    """
+    
+    """
+
+    # If no TMDb connection, raise 409
+    if tmdb_interface is None:
+        raise HTTPException(
+            status_code=409,
+            detail=f'No connection to TMDb'
+        )
+
+    # Get the Series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Get all logos
+    logos = tmdb_interface.get_all_logos(
+        series.as_series_info,
+        bypass_blacklist=True,
+        log=request.state.log,
+    )
+    return [] if logos is None else logos
 
 
 @source_router.get('/series/{series_id}', status_code=200)
@@ -268,10 +298,11 @@ def get_existing_episode_source_images(
 
 
 @source_router.post('/episode/{episode_id}/upload', status_code=201)
-async def set_source_image(
+async def set_episode_source_image(
+        request: Request,
         episode_id: int,
-        source_url: Optional[str] = Form(default=None),
-        source_file: Optional[UploadFile] = None,
+        url: Optional[str] = Form(default=None),
+        file: Optional[UploadFile] = None,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
         imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
@@ -281,36 +312,39 @@ async def set_source_image(
     Title Card associated with this Episode, it is deleted.
 
     - episode_id: ID of the Episode to set the Source Image of.
-    - source_url: URL to the Source Image to download and utilize.
-    - source_file: Source Image file content to utilize.
+    - url: URL to the Source Image to download and utilize.
+    - file: Source Image file content to utilize.
     """
+
+    # Get contextual logger
+    log = request.state.log
 
     # Get Episode with this ID, raise 404 if DNE
     episode = get_episode(db, episode_id, raise_exc=True)
 
     # Get image contents
     uploaded_file = b''
-    if source_file is not None:
-        uploaded_file = await source_file.read()
+    if file is not None:
+        uploaded_file = await file.read()
 
     # Send error if both a URL and file were provided
-    if source_url is not None and len(uploaded_file) > 0:
+    if url is not None and len(uploaded_file) > 0:
         raise HTTPException(
             status_code=422,
             detail='Cannot provide multiple sources'
         )
 
     # Send error if neither were provided
-    if source_url is None and len(uploaded_file) == 0:
+    if url is None and len(uploaded_file) == 0:
         raise HTTPException(
             status_code=422,
             detail='URL or file are required',
         )
 
     # If only URL was required, attempt to download, error if unable
-    if source_url is not None:
+    if url is not None:
         try:
-            content = get(source_url, timeout=30).content
+            content = get(url, timeout=30).content
         except Exception as e:
             log.exception(f'Download failed', e)
             raise HTTPException(
@@ -322,19 +356,19 @@ async def set_source_image(
         content = uploaded_file
 
     # Get Episode source file
-    source_file = episode.get_source_file(
+    file = episode.get_source_file(
         preferences.source_directory,
         episode.series.path_safe_name,
         'unique',
     )
 
     # If file already exists, warn about overwriting
-    if source_file.exists():
-        log.warning(f'{episode.series.log_str} {episode.log_str} source file '
-                    f'"{source_file.resolve()}" exists - replacing')
+    if file.exists():
+        log.info(f'{episode.series.log_str} {episode.log_str} source file '
+                 f'"{file.resolve()}" exists - replacing')
 
     # Write new file to the disk
-    source_file.write_bytes(content)
+    file.write_bytes(content)
 
     # Delete associated Card and Loaded entry to initiate future reload
     delete_cards(
@@ -345,3 +379,71 @@ async def set_source_image(
 
     # Return created SourceImage
     return get_source_image(preferences, imagemagick_interface, episode)
+
+
+@source_router.post('/series/{series_id}/logo/upload', status_code=201)
+async def set_series_logo(
+        request: Request,
+        series_id: int,
+        url: Optional[str] = Form(default=None),
+        file: Optional[UploadFile] = None,
+        db: Session = Depends(get_database),
+        preferences: Preferences = Depends(get_preferences),
+    ) -> None:
+    """
+    Set the logo for the given Series. If there is an existing logo
+    associated with this Series, it is deleted.
+
+    - series_id: ID of the Series to set the logo of.
+    - url: URL to the logo to download and utilize.
+    - file: Logo file content to utilize.
+    """
+
+    # Get contextual logger
+    log = request.state.log
+
+    # Get Series with this ID, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Get image contents
+    uploaded_file = b''
+    if file is not None:
+        uploaded_file = await file.read()
+
+    # Send error if both a URL and file were provided
+    if url is not None and len(uploaded_file) > 0:
+        raise HTTPException(
+            status_code=422,
+            detail='Cannot provide multiple images'
+        )
+
+    # Send error if neither were provided
+    if url is None and len(uploaded_file) == 0:
+        raise HTTPException(
+            status_code=422,
+            detail='URL or file are required',
+        )
+
+    # If only URL was required, attempt to download, error if unable
+    if url is not None:
+        try:
+            content = get(url, timeout=30).content
+        except Exception as e:
+            log.exception(f'Download failed', e)
+            raise HTTPException(
+                status_code=400,
+                detail=f'Unable to download image - {e}'
+            ) from e
+    # Use uploaded file if provided
+    else:
+        content = uploaded_file
+
+    # Get Series logo file
+    file = series.get_logo_file(preferences.source_directory)
+
+    # If file already exists, warn about overwriting
+    if file.exists():
+        log.info(f'{series.log_str} logo file exists - replacing')
+
+    # Write new file to the disk
+    file.write_bytes(content)

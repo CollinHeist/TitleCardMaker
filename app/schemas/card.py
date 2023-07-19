@@ -142,10 +142,16 @@ Update classes
 """
 Return classes
 """
+class TMDbLanguage(Base):
+    english_name: str
+    iso_639_1: str
+    name: str
+
 class TMDbImage(Base):
     url: str
     width: int
     height: int
+    language: Optional[TMDbLanguage] = None
 
 class SourceImage(Base):
     episode_id: int
