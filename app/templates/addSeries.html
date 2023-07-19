@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Series - TitleCardMaker</title>
+
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/internal_assets/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/internal_assets/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/internal_assets/favicon/favicon-16x16.png">
+  <link rel="manifest" href="/internal_assets/favicon/site.webmanifest">
+
+  <!-- Formantic UI -->
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/fomantic-ui@2.9.2/dist/semantic.min.js"></script>
+  
+  <!-- JS Files -->
+  <script type="text/javascript" src="/templates/loadStaticContent.js"></script>
+  <script type="text/javascript" src="/templates/theme.js"></script>
+  <script type="text/javascript" src="/templates/messages.js" defer></script>
+  <script type="text/javascript" src="/templates/helper.js"></script>
+
+  <!-- Global styles -->
+  <link rel="stylesheet" type="text/css" href="/templates/style.css">
+  <style>
+    #search-results .card {
+      /* Cap height at poster height */
+      max-height: 225px;
+      /* Scroll very long descriptions */
+      overflow: scroll;
+    }
+  </style>
+
+  <template id="search-result-template">
+    <div class="ui horizontal fluid link card">
+      <div class="image">
+        <img onerror="this.onerror=null; this.src='/internal_assets/placeholder.jpg'" loading="lazy">
+      </div>
+      <div class="content">
+        <div data-value="name" class="header">{Series Name}</div>
+        <div class="meta">
+          <span data-value="year">{Year}</span>
+          <span data-value="ongoing">{Ongoing}</span>
+        </div>
+        <div data-value="overview" class="description">
+          <p>{description}</p>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    async function initializeSearchSource() {
+        const eds = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
+        $('#search-source').dropdown({
+            values: eds,
+        })
+    }
+
+    function initAll() {
+        initializeSearchSource();
+    }
+
+    async function querySeries() {
+      const resultTemplate = document.getElementById('search-result-template');
+      const resultSegment = document.getElementById('search-results');
+      if (resultTemplate === null || resultSegment === null) { return; }
+      $('#search-results').toggleClass('loading', true);
+      const query = $('#search-query').val();
+      const interface = $('#search-interface').val();
+      const allResults = await fetch(`/api/series/lookup?name=${query}&interface=${interface}`).then(resp => resp.json());
+      const results = allResults.items.map((result) => {
+        // Clone template
+        const card = resultTemplate.content.cloneNode(true);
+        // Fill out content
+        card.querySelector('img').src = result.poster;
+        card.querySelector('[data-value="name"]').innerText = result.title;
+        card.querySelector('[data-value="year"]').innerText = result.year;
+        if (result.ongoing === null) {
+          card.querySelector('[data-value="ongoing"]').remove();
+        } else {
+          card.querySelector('[data-value="ongoing"]').innerText = result.ongoing ? 'Ongoing' : 'Ended';
+        }
+        card.querySelector('[data-value="overview"]').innerHTML = '<p>' + result.overview.join('</p><p>') + '</p>';
+        // Disable card if already added
+        if (result.added) { card.querySelector('.card').classList.add('disabled'); }
+
+        return card;
+      });
+      resultSegment.replaceChildren(...results);
+      $('#search-results').toggleClass('loading', false);
+      refreshTheme();
+    }
+  </script>
+</head>
+
+<body onload="initAll();">
+  <script>
+    
+  </script>
+
+  <div class="pusher">
+    <!-- Static header and sidebar loaded by external script -->
+    <div id="page-header"></div>
+    <div id="nav-menu"></div>
+
+    <!-- Actual page content -->
+    <div id="main-content" class="article">
+      <h1 class="ui header">Add Series</h1>
+      <div class="ui blue right action left icon input">
+        <i class="search icon"></i>
+        <input id="search-query" type="text" placeholder="Search">
+        <div id="search-source" class="ui basic floating dropdown button">
+          <input id="search-interface" type="hidden">
+          <div class="default text"></div>
+          <i class="dropdown icon"></i>
+          <div class="menu"><!-- Added asynchronously --></div>
+        </div>
+      </div>
+      <button id="startSearch" class="ui primary button">Search</button>
+
+      <div id="search-results" class="ui raised segment"><!-- Added on button press --></div>
+  </div>
+
+  <script>
+    $('.ui.dropdown').dropdown();
+    $('#startSearch').on('click', () => querySeries());
+  </script>
+</body>
+</html>

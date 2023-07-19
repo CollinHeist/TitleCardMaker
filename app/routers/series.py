@@ -1,12 +1,13 @@
 from pathlib import Path
 from shutil import copy as file_copy
-from typing import Literal, Optional
+from typing import Literal, Optional, Union
 
 from fastapi import (
     APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException, Query,
     Request, UploadFile
 )
 from fastapi_pagination.ext.sqlalchemy import paginate
+from fastapi_pagination import paginate as paginate_sequence
 from requests import get
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -29,12 +30,13 @@ from app.internal.sources import (
     download_episode_source_image, download_series_logo
 )
 from app.schemas.base import UNSPECIFIED
-from app.schemas.preferences import MediaServer
-from app.schemas.series import NewSeries, Series, UpdateSeries
+from app.schemas.preferences import EpisodeDataSource, MediaServer
+from app.schemas.series import NewSeries, SearchResult, Series, UpdateSeries
 
 from modules.EmbyInterface2 import EmbyInterface
 from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
+from modules.SeriesInfo import SeriesInfo
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
@@ -205,7 +207,7 @@ def delete_series(
 
 
 @series_router.get('/search', status_code=200)
-def search_series(
+def search_existing_series(
         name: Optional[str] = None,
         year: Optional[int] = None,
         monitored: Optional[bool] = None,
@@ -243,6 +245,63 @@ def search_series(
         db.query(models.series.Series).filter(*conditions)\
             .order_by(func.lower(models.series.Series.name))
     )
+
+
+@series_router.get('/lookup', status_code=200)
+def lookup_series(
+        request: Request,
+        name: str = Query(...),
+        interface: EpisodeDataSource = Query(...),
+        # year: Optional[int] = None,
+        db: Session = Depends(get_database),
+        # emby
+        # jellyfin
+        # plex
+        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
+    ) -> Page[SearchResult]:
+    """
+    
+    """
+
+    # Get associated Interface to query
+    interface_obj = {
+        # 'Emby': 
+        'Sonarr': sonarr_interface,
+        'TMDb': tmdb_interface,
+    }.get(interface, None)
+    if not interface_obj:
+        raise HTTPException(
+            status_code=409,
+            detail=f'Cannot connect to {interface}',
+        )
+    interface_obj: Union[EmbyInterface, JellyfinInterface, PlexInterface,
+                         SonarrInterface, TMDbInterface] = interface_obj
+    
+    # Query Interface, only return max of 25 results TODO temporary?
+    results: list[SearchResult] = interface_obj.query_series(
+        name, log=request.state.log,
+    )[:25]
+
+    # Update `added` attributes
+    for result in results:
+        # Create SeriesInfo for this result
+        series_info = SeriesInfo(
+            result.title, year=result.year, emby_id=result.emby_id,
+            imdb_id=result.imdb_id, jellyfin_id=result.jellyfin_id,
+            sonarr_id=result.sonarr_id, tmdb_id=result.tmdb_id,
+            tvdb_id=result.tvdb_id,
+        )
+
+        # Query database for this result
+        existing = db.query(models.series.Series)\
+            .filter(series_info.filter_conditions(models.series.Series))\
+            .first()
+
+        # Result has been added if there is an existing Series
+        result.added = existing is not None
+
+    return paginate_sequence(results)
 
 
 @series_router.get('/{series_id}', status_code=200)
