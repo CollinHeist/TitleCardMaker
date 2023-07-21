@@ -53,6 +53,7 @@ class TitleCard:
     """Mapping of card type identifiers to CardType classes"""
     DEFAULT_CARD_TYPE = 'standard'
     CARD_TYPES = {
+        '4x3': FadeTitleCard,
         'anime': AnimeTitleCard,
         'blurred border': TintedFrameTitleCard,
         'comic book': ComicBookTitleCard,
@@ -80,7 +81,6 @@ class TitleCard:
         'textless': TextlessTitleCard,
         'tinted frame': TintedFrameTitleCard,
         'tinted glass': TintedGlassTitleCard,
-        '4x3': FadeTitleCard,
     }
 
     __slots__ = ('episode', 'profile', 'converted_title', 'maker', 'file')

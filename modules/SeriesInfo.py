@@ -27,7 +27,8 @@ class SeriesInfo(DatabaseInfoContainer):
 
     def __init__(self,
             name: str,
-            year: Optional[int] = None, *,
+            year: Optional[int] = None,
+            *,
             emby_id: Optional[int] = None,
             imdb_id: Optional[str] = None,
             jellyfin_id: Optional[str] = None,
@@ -258,7 +259,7 @@ class SeriesInfo(DatabaseInfoContainer):
 
 
     def filter_conditions(self,
-            SeriesModel: 'sqlachemy.Model'                                      # type: ignore
+            SeriesModel: 'sqlachemy.Model' # type: ignore
         ) -> Query:
         """
         Get the SQLAlchemy Query condition for this object.
