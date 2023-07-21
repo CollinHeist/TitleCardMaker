@@ -227,6 +227,20 @@ def query_series_blueprints_(
     return query_series_blueprints(series.full_name, log=request.state.log)
 
 
+@blueprint_router.get('/query/series', status_code=200)
+def query_blueprints_by_name(
+        request: Request,
+        name: str = Query(..., min_length=1),
+        year: int = Query(..., min=1900),
+    ) -> list[RemoteBlueprint]:
+    """
+    Search for any Blueprints for the given Series not yet added to TCM.
+
+    - name: Name of the Series to look up Blueprints for.
+    - year: Year of the Series to look up Blueprints for.
+    """
+
+    return query_series_blueprints(f'{name} ({year})', log=request.state.log)
 
 
 @blueprint_router.put('/import/series/{series_id}/blueprint/{blueprint_id}', status_code=200)
