@@ -423,7 +423,16 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             *,
             log: Logger = log,
         ) -> list[SearchResult]:
-        """"""
+        """
+        Search TMDb for any Series matching the given query.
+
+        Args:
+            query: Series name or substring to look up.
+            log: (Keyword) Logger for all log messages.
+
+        Returns:
+            List of SearchResults for the given query.
+        """
 
         try:
             results = self.api.tv_search(query).results
@@ -433,10 +442,10 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
 
         return [
             SearchResult(
-                title=result.name,
+                name=result.name,
                 year=result.first_air_date.year,
                 poster=result.poster_url,
-                overview=result.overview.splitlines(),
+                overview=result.overview,
                 ongoing=result.in_production,
                 imdb_id=result.imdb_id,
                 tmdb_id=result.id,
@@ -824,7 +833,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             images = episode.backdrops
 
         return images
-    
+
 
     @catch_and_log('Error getting all logos', default=None)
     def get_all_logos(self,
