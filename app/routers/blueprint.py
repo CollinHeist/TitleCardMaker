@@ -224,7 +224,9 @@ def query_series_blueprints_(
     # Query for this Series, raise 404 if DNE
     series = get_series(db, series_id, raise_exc=True)
 
-    return query_series_blueprints(series, log=request.state.log)
+    return query_series_blueprints(series.full_name, log=request.state.log)
+
+
 
 
 @blueprint_router.put('/import/series/{series_id}/blueprint/{blueprint_id}', status_code=200)
