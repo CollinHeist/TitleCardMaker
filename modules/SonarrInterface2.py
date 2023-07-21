@@ -290,7 +290,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
 
         return [
             SearchResult(
-                title=result['title'],
+                name=result['title'],
                 year=result['year'],
                 ongoing=not result['ended'],
                 overview=result.get('overview', 'No overview available').splitlines(),
