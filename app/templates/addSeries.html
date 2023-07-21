@@ -22,6 +22,7 @@
   <script type="text/javascript" src="/templates/theme.js"></script>
   <script type="text/javascript" src="/templates/messages.js" defer></script>
   <script type="text/javascript" src="/templates/helper.js"></script>
+  <script type="text/javascript" defer src="/templates/addSeries.js"></script>
 
   <!-- Global styles -->
   <link rel="stylesheet" type="text/css" href="/templates/style.css">
@@ -31,6 +32,10 @@
       max-height: 225px;
       /* Scroll very long descriptions */
       overflow: scroll;
+    }
+
+    #search-results .disabled.card img {
+      filter: grayscale(50%) blur(0.8px);
     }
   </style>
 
@@ -44,6 +49,12 @@
         <div class="meta">
           <span data-value="year">{Year}</span>
           <span data-value="ongoing">{Ongoing}</span>
+          <span class="right floated">
+            <button data-action="quick-add" class="ui compact green button">
+              <i class="plus icon"></i>
+              Quick-Add
+            </button>
+          </span>
         </div>
         <div data-value="overview" class="description">
           <p>{description}</p>
@@ -52,56 +63,65 @@
     </div>
   </template>
 
-  <script>
-    async function initializeSearchSource() {
-        const eds = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
-        $('#search-source').dropdown({
-            values: eds,
-        })
-    }
+  <template id="result-placeholder-template">
+    <div class="ui fluid placeholder">
+      <div class="image header">
+        <div class="line"></div>
+        <div class="line"></div>
+      </div>
+      <div class="paragraph">
+        <div class="medium line"></div>
+        <div class="short line"></div>
+      </div>
+    </div>
+  </template>
 
-    function initAll() {
-        initializeSearchSource();
-    }
+  <template id="blueprint-placeholder-template">
+    <div class="ui horizontal card">
+      <div class="image">
+        <div class="ui placeholder">
+          <div class="square image"></div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="ui placeholder">
+          <div class="header">
+            <div class="very short line"></div>
+            <div class="medium line"></div>
+          </div>
+          <div class="paragraph">
+            <div class="short line"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
 
-    async function querySeries() {
-      const resultTemplate = document.getElementById('search-result-template');
-      const resultSegment = document.getElementById('search-results');
-      if (resultTemplate === null || resultSegment === null) { return; }
-      $('#search-results').toggleClass('loading', true);
-      const query = $('#search-query').val();
-      const interface = $('#search-interface').val();
-      const allResults = await fetch(`/api/series/lookup?name=${query}&interface=${interface}`).then(resp => resp.json());
-      const results = allResults.items.map((result) => {
-        // Clone template
-        const card = resultTemplate.content.cloneNode(true);
-        // Fill out content
-        card.querySelector('img').src = result.poster;
-        card.querySelector('[data-value="name"]').innerText = result.title;
-        card.querySelector('[data-value="year"]').innerText = result.year;
-        if (result.ongoing === null) {
-          card.querySelector('[data-value="ongoing"]').remove();
-        } else {
-          card.querySelector('[data-value="ongoing"]').innerText = result.ongoing ? 'Ongoing' : 'Ended';
-        }
-        card.querySelector('[data-value="overview"]').innerHTML = '<p>' + result.overview.join('</p><p>') + '</p>';
-        // Disable card if already added
-        if (result.added) { card.querySelector('.card').classList.add('disabled'); }
-
-        return card;
-      });
-      resultSegment.replaceChildren(...results);
-      $('#search-results').toggleClass('loading', false);
-      refreshTheme();
-    }
-  </script>
+  <template id="blueprint-template">
+    <div class="ui raised card">
+      <div class="image">
+        <img src="">
+      </div>
+      <div class="content">
+        <div data-value="creator" class="header">{author}</div>
+        <div class="meta">
+          <span data-value="font-count"><b>{x}</b> Named Font</span>
+          <span data-value="template-count"><b>{x}</b> Template</span>
+          <span data-value="episode-count"><b>{x}</b> Episode Overrides</span>
+        </div>
+        <div data-value="description" class="description"><!-- <p>Description</p> --></div>
+      </div>
+      <div class="extra content">
+        <a data-action="import-blueprint" class="left floated">
+          <i class="cloud download alternate icon"></i>
+          Import
+        </a>
+      </div>
+    </div>
+  </template>
 </head>
 
 <body onload="initAll();">
-  <script>
-    
-  </script>
-
   <div class="pusher">
     <!-- Static header and sidebar loaded by external script -->
     <div id="page-header"></div>
@@ -113,21 +133,109 @@
       <div class="ui blue right action left icon input">
         <i class="search icon"></i>
         <input id="search-query" type="text" placeholder="Search">
-        <div id="search-source" class="ui basic floating dropdown button">
+        <div id="search-source" class="ui basic floating dropdown button" data-tooltip="Which connection to search">
           <input id="search-interface" type="hidden">
           <div class="default text"></div>
           <i class="dropdown icon"></i>
           <div class="menu"><!-- Added asynchronously --></div>
         </div>
       </div>
-      <button id="startSearch" class="ui primary button">Search</button>
+      <button id="startSearch" class="ui primary button" onclick="querySeries();">Search</button>
 
-      <div id="search-results" class="ui raised segment"><!-- Added on button press --></div>
+      <div id="search-results" class="ui raised segment"><!-- Added asynchronously --></div>
+      <div class="ui info message">
+        <div class="header">Quick-Adding</div>
+        Quick-adding a Series uses the <i>last selected</i> Library and Templates.
+      </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="add-series-modal" class="ui large scrolling modal">
+      <i class="close icon"></i>
+      <div data-value="series-name-header" class="header">Add Series</div>
+      <div class="scrolling content">
+        <form class="ui form">
+          <h4 class="ui dividing header">Library</h4>
+          <div class="three fields">
+            {% if preferences.use_emby %}
+            <div class="ui field">
+              <label>Emby Library</label>
+              <div data-value="emby_library_name" class="ui selection clearable dropdown">
+                <input data-value="emby_library_name" name="emby_library_name" type="hidden">
+                <div class="default text">None</div>
+                <i class="dropdown icon"></i>
+                <div class="menu"><!-- Added asynchronously --></div>
+              </div>
+            </div>
+            {% endif %}
+
+            {% if preferences.use_jellyfin %}
+            <div class="ui field">
+              <label>Jellyfin Library</label>
+              <div data-value="jellyfin_library_name" class="ui selection clearable dropdown">
+                <input data-value="jellyfin_library_name" name="jellyfin_library_name" type="hidden">
+                <div class="default text">None</div>
+                <i class="dropdown icon"></i>
+                <div class="menu"><!-- Added asynchronously --></div>
+              </div>
+            </div>
+            {% endif %}
+
+            {% if preferences.use_plex %}
+            <div class="ui field">
+              <label>Plex Library</label>
+              <div data-value="plex_library_name" class="ui selection clearable dropdown">
+                <input data-value="plex_library_name" name="plex_library_name" type="hidden">
+                <div class="default text">None</div>
+                <i class="dropdown icon"></i>
+                <div class="menu"><!-- Added asynchronously --></div>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+
+          <h4 class="ui dividing header">Card Configuration</h4>
+          <div class="field">
+            <label>Templates</label>
+            <div data-value="template_ids" class="ui compact clearable search selection multiple dropdown">
+              <input data-value="template_ids" name="template_ids" type="hidden">
+              <i class="dropdown icon"></i>
+              <div class="default text">None</div>
+              <div class="menu"><!-- Added asynchrously --></div>
+            </div>
+          </div>
+
+          <h4 class="ui dividing header">Blueprints</h4>
+          <button data-action="search-blueprints" class="ui green tertiary button">
+            <i class="search icon"></i>
+            Search for Blueprints
+          </button>
+          <div class="ui floating hidden warning icon message">
+            <i class="exclamation icon"></i>
+            <div class="content">
+              <div class="header">No Blueprints Available</div>
+              <span>There are no Blueprints available on <a href="https://github.com/CollinHeist/TitleCardMaker-Blueprints/" target="_blank">GitHub</a>.</span>
+              <span>Feel free to submit your own.</span>
+            </div>
+          </div>
+          <div id="blueprint-results" class="ui two stackable raised cards">
+            <!-- Added asynchrously -->
+          </div>
+        </form>
+      </div>
+      <div class="actions">
+        <button class="ui cancel button">Cancel</button>
+        <button data-action="add-series" class="ui green right labeled icon button">
+          <i class="plus icon"></i>
+          Add
+        </button>
+      </div>
+    </div>
   </div>
 
   <script>
+    // Initialize elements
     $('.ui.dropdown').dropdown();
-    $('#startSearch').on('click', () => querySeries());
   </script>
 </body>
 </html>
