@@ -36,7 +36,6 @@ from app.schemas.series import NewSeries, SearchResult, Series, UpdateSeries
 from modules.EmbyInterface2 import EmbyInterface
 from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
-from modules.SeriesInfo import SeriesInfo
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
@@ -250,7 +249,7 @@ def search_existing_series(
 @series_router.get('/lookup', status_code=200)
 def lookup_series(
         request: Request,
-        name: str = Query(...),
+        name: str = Query(..., min_length=1),
         interface: EpisodeDataSource = Query(...),
         # year: Optional[int] = None,
         db: Session = Depends(get_database),
@@ -261,7 +260,12 @@ def lookup_series(
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Page[SearchResult]:
     """
-    
+    Look up the given series name on the indicated interface. Returned
+    results are not necessary already added to TCM - use the `/search`
+    endpoint for that.
+
+    - name: Series name or substring to look up.
+    - interface: Which Episode data interface to look up on.
     """
 
     # Get associated Interface to query
@@ -277,7 +281,7 @@ def lookup_series(
         )
     interface_obj: Union[EmbyInterface, JellyfinInterface, PlexInterface,
                          SonarrInterface, TMDbInterface] = interface_obj
-    
+
     # Query Interface, only return max of 25 results TODO temporary?
     results: list[SearchResult] = interface_obj.query_series(
         name, log=request.state.log,
