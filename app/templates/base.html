@@ -161,12 +161,12 @@
         hideIfSinglePage: true,
       });
 
+      // Refresh theme for any newly added HTML
+      refreshTheme();
+      // Dim Series posters on hover
       $('.ui.cards .image').dimmer({
         on: 'ontouchstart' in document.documentElement ? 'click' : 'hover'
       });
-
-      // Refresh theme for any newly added HTML
-      refreshTheme();
     }
 
     // Get all statistics and load them into HTML
@@ -246,7 +246,7 @@
             </div>
           </div>
         </div>
-        <img loading="lazy">
+        <img loading="lazy" onerror="this.onerror=null; this.src='/internal_assets/placeholder.jpg'">
       </div>
       <div class="content">
         <a>
@@ -272,12 +272,12 @@
 
     <!-- Actual page content -->
     <div id="main-content" class="article">
-      <div id="statistics" class="ui small statistics"><!-- Added asynchrously --></div>
+      <div id="statistics" class="ui small statistics"><!-- Added asynchronously --></div>
 
       <div id="toolbar">
         <!-- Add new Series -->
-        <div id="add-series" class="ui compact blue inverted menu" title="Add a new series">
-          <a class="blue item">
+        <div id="add-series" class="ui compact blue inverted menu">
+          <a class="blue item" href="/add">
             <i class="plus icon"></i>
             New Series
           </a>
@@ -302,174 +302,12 @@
 
       <div id="pagination" class="ui centered pagination menu"><!-- Pagination added later --></div>
     </div>
-
-    <!-- Add series modal -->
-    <div id="add-series-modal" class="ui mini modal">
-      <i class="close icon"></i>
-      <div class="header">Add New Series</div>
-      <div class="content">
-        <form id="new-series-form" class="ui form">
-          <!-- Series name/year -->
-          <div class="ui grid">
-            <div class="ten wide required field">
-              <label>Series Title</label>
-              <input type="text" name="name" tabindex="0">
-            </div>
-            <div class="six wide required field">
-              <label>Year</label>
-              <input type="number" name="year" min="1900" placeholder="2023" tabindex="1">
-            </div>
-          </div>
-
-          <!-- Templates -->
-          <div class="compact field">
-            <label>Templates</label>
-            <div id="templates" class="ui multiple selection clearable dropdown">
-              <input name="template_ids" type="hidden" tabindex="2">
-              <i class="dropdown icon"></i>
-              <div class="default text">None</div>
-              <div class="menu"><!-- Added asynchronously --></div>
-            </div>
-          </div>
-
-          <!-- Libraries -->
-          {% if preferences.enabled_media_servers %}
-          <div class="ui equal width grid">
-            {% if 'Emby' in preferences.enabled_media_servers %}
-            <div class="column field">
-              <label>Emby Library</label>
-              <div id="emby-library" class="ui clearable selection dropdown">
-                <input name="emby_library_name" type="hidden" tabindex="3">
-                <i class="dropdown icon"></i>
-                <div class="default text">None</div>
-                <div class="menu"><!-- Added asynchronously --></div>
-              </div>
-            </div>
-            {% endif %}
-            {% if 'Jellyfin' in preferences.enabled_media_servers %}
-            <div class="column field">
-              <label>Jellyfin Library</label>
-              <div id="jellyfin-library" class="ui clearable selection dropdown">
-                <input name="jellyfin_library_name" type="hidden" tabindex="4">
-                <i class="dropdown icon"></i>
-                <div class="default text">None</div>
-                <div class="menu"><!-- Added asynchronously --></div>
-              </div>
-            </div>
-            {% endif %}
-            {% if 'Plex' in preferences.enabled_media_servers %}
-            <div class="column field">
-              <label>Plex Library</label>
-              <div id="plex-library" class="ui clearable selection dropdown">
-                <input name="plex_library_name" type="hidden" tabindex="5">
-                <i class="dropdown icon"></i>
-                <div class="default text">None</div>
-                <div class="menu"><!-- Added asynchronously --></div>
-              </div>
-            </div>
-            {% endif %}
-          </div>
-          {% endif %}
-
-          <!-- Error message shown on form validation -->
-          <div class="ui error message"></div>
-        </form>
-      </div>
-      <div class="center aligned actions">
-        <button id="new-series-button" class="ui green right labeled icon button" type="submit" form="new-series-form">
-          Add
-          <i class="plus icon"></i>
-        </button>
-      </div>
-    </div>
-    
   </div>
 
   <script>
-    $('.ui.modal')
-      .modal({blurring: true})                        // Blur background when shown
-      .modal('attach events', '#add-series', 'show')  // Show modal on add buton press
-      .modal('setting', 'transition', 'fade up')      // Fade up modal on reveal
-
-    // Dim series posters on hover
+    // Dim Series posters on hover
     $('.ui.cards .image').dimmer({
       on: 'ontouchstart' in document.documentElement ? 'click' : 'hover'
-    });
-
-    // Validate new series form
-    $('#new-series-form')
-      .form({
-        on: 'blur',
-        fields: {
-          name: {
-            identifier: 'name',
-            rules: [{type: 'minLength[1]', prompt: 'Series title is required'}]
-          }, year: {
-            identifier: 'year',
-            rules: [{type: 'integer[1900..2050]', prompt: 'Valid year is required'}]
-          },
-        }
-      });
-      
-    // Handle form submission
-    $('#new-series-form').on('submit', (event) => {
-      // Prevent default event form handler
-      event.preventDefault();
-      if (!$('#new-series-form').form('is valid')) { return; }
-      // Change button to loading while submitting request
-      $('#new-series-button').toggleClass('loading', true);
-
-      // Get form data, remove blanks
-      let form = new FormData(event.target);
-      let template_ids = [];
-      for (const [key, value] of [...form.entries()]) {
-        if (key === 'template_ids' && value !== '') { template_ids = value.split(','); }
-        if (value === '') { form.delete(key); }
-      }
-
-      // Submit API request to add series
-      $.ajax({
-        type: 'POST',
-        url: '/api/series/new',
-        data: JSON.stringify({...Object.fromEntries(form.entries()), template_ids: template_ids}),
-        contentType: "application/json",
-        success: (response) => {
-          getAllSeries();
-          $.toast({
-            class: 'blue info',
-            title: `Added series "${response.name}"`,
-            showDuration: 'auto',
-          });
-          // Refresh episode data for the newly added series
-          $.ajax({
-            type: 'POST',
-            url: `/api/episodes/${response.id}/refresh`,
-            success: () => {
-              $.toast({
-                class: 'blue info',
-                title: `Refreshed episode data for "${response.name}"`,
-                showDuration: 'auto',
-              });
-            }, error: (response2) => {
-              $.toast({
-                class: 'error',
-                title: `Error refreshing episode data for "${response.name}"`,
-                message: response2.responseJSON.message,
-                showDuration: 'auto',
-              })
-            }
-          });
-        }, error: (response) => {
-          $.toast({
-            class: 'error',
-            title: `Error Adding series`,
-            message: response,
-            showDuration: 'auto',
-          });
-        }, complete: () => {
-          setTimeout(() => $('#new-series-button').toggleClass('loading', false), 750);
-        },
-      });
     });
 
     // Sort series different ways
