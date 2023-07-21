@@ -255,7 +255,7 @@ def lookup_series(
         db: Session = Depends(get_database),
         # emby
         # jellyfin
-        # plex
+        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
         sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Page[SearchResult]:
@@ -270,7 +270,9 @@ def lookup_series(
 
     # Get associated Interface to query
     interface_obj = {
-        # 'Emby': 
+        # 'Emby':
+        # Jellyfin
+        'Plex': plex_interface,
         'Sonarr': sonarr_interface,
         'TMDb': tmdb_interface,
     }.get(interface, None)

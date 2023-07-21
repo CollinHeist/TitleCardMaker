@@ -17,7 +17,7 @@ from requests.exceptions import (
 from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 
 from modules.Debug import log
-from modules.EpisodeDataSource2 import EpisodeDataSource
+from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
 from modules.MediaServer2 import MediaServer, SourceImage
@@ -526,6 +526,62 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
                     episode_info.set_tvdb_id(int(guid.id[len('tvdb://'):]))
 
         return None
+
+
+    @catch_and_log('Error querying for Series')
+    def query_series(self,
+            query: str,
+            *,
+            log: Logger = log,
+        ) -> list[SearchResult]:
+        """
+        Search Plex for any Series matching the given query.
+
+        Args:
+            query: Series name or substring to look up.
+            log: (Keyword) Logger for all log messages.
+
+        Returns:
+            List of SearchResults for the given query. Results are from
+            any library. All returned poster URL's utilize the Plex
+            proxy API endpoint to obfuscate this Server's token.
+        """
+
+        # Search Plex for this query.
+        results: list[PlexShow] = self.__server.search(
+            query, mediatype='show', limit=25
+        )
+
+        def parse_ids(show: PlexShow) -> dict:
+            """
+            Parse any database IDs from the given object.
+
+            Args:
+                show: Show object whose GUIDs are being parsed.
+
+            Returns:
+                Dictionary of DB ID's. Each ID is set, or None.
+            """
+
+            ids = {'imdb_id': None, 'tmdb_id': None, 'tvdb_id': None}
+            for guid in show.guids:
+                if 'imdb://' in guid.id:
+                    ids['imdb_id'] = guid.id[len('imdb://'):]
+                elif 'tmdb://' in guid.id:
+                    ids['tmdb_id'] = int(guid.id[len('tmdb://'):])
+                elif 'tvdb://' in guid.id:
+                    ids['tvdb_id'] = int(guid.id[len('tvdb://'):])
+            return ids
+
+        # Return results, use proxy endpoint for poster URL
+        return [
+            SearchResult(
+                name=result.title, year=result.year,
+                poster=f'/api/proxy/plex?url={result.thumb}',
+                overview=result.summary,
+                **parse_ids(result),
+            ) for result in results
+        ]
 
 
     @catch_and_log('Error getting source image')
