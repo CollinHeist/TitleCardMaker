@@ -289,17 +289,9 @@ def lookup_series(
 
     # Update `added` attributes
     for result in results:
-        # Create SeriesInfo for this result
-        series_info = SeriesInfo(
-            result.title, year=result.year, emby_id=result.emby_id,
-            imdb_id=result.imdb_id, jellyfin_id=result.jellyfin_id,
-            sonarr_id=result.sonarr_id, tmdb_id=result.tmdb_id,
-            tvdb_id=result.tvdb_id,
-        )
-
         # Query database for this result
         existing = db.query(models.series.Series)\
-            .filter(series_info.filter_conditions(models.series.Series))\
+            .filter(result.series_info.filter_conditions(models.series.Series))\
             .first()
 
         # Result has been added if there is an existing Series
