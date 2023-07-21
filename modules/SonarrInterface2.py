@@ -279,27 +279,64 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             log: Logger = log,
         ) -> list[SearchResult]:
         """
-        
+        Search Sonarr for any Series matching the given query.
+
+        Args:
+            query: Series name or substring to look up.
+            log: (Keyword) Logger for all log messages.
+
+        Returns:
+            List of SearchResults for the given query. Results include
+            Series not added to this Server. All returned poster URL's
+            utilize the Sonarr proxy API endpoint to to (1) obfuscate
+            this server's API, and so the local `SonarrAuth` cookie can
+            be sent when querying for the poster.
         """
 
-        # Search for Series
+        # Perform query
         search_results = self.get(
             url=f'{self.url}series/lookup',
             params={'term': query} | self.__standard_params,
         )
+
+        def get_poster_proxy(images: list[dict[str, str]]) -> Optional[str]:
+            """
+            Get the proxy URL of for the poster indicated in the given
+            set of images.
+
+            Args:
+                images: List of image types/URL's to parse for a poster.
+
+            Returns:
+                Proxied URL for the poster, if provided. If no images
+                are provided or available, then `None` is returned.
+            """
+
+            if len(images) == 0:
+                return None
+
+            for image in images:
+                if image['coverType'] == 'poster':
+                    url = image['url'].rsplit('?', maxsplit=1)[0]
+                    return f'/api/proxy/sonarr?url={url}'
+
+            return None
+
+        def get_sonarr_id(id_: Optional[int]) -> Optional[str]:
+            return None if id_ is None else f'{self.server_id}-{id_}'
 
         return [
             SearchResult(
                 name=result['title'],
                 year=result['year'],
                 ongoing=not result['ended'],
-                overview=result.get('overview', 'No overview available').splitlines(),
-                poster=result.get('remotePoster', None),
+                overview=result.get('overview', 'No overview available'),
+                poster=get_poster_proxy(result.get('images', [])),
                 imdb_id=result.get('imdbId', None),
-                sonarr_id=result.get('id', None),
+                sonarr_id=get_sonarr_id(result.get('id', None)),
                 tvdb_id=result.get('tvdbId', None),
                 tvrage_id=result.get('tvRageId', None) or None,
-            ) for result in search_results if result['year']
+            ) for result in search_results[:25] if result['year']
         ]
 
 
