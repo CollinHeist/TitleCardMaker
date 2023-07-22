@@ -130,6 +130,7 @@ def get_next_series(
 
 @series_router.post('/new', status_code=201)
 def add_new_series(
+        background_tasks: BackgroundTasks,
         request: Request,
         new_series: NewSeries = Body(...),
         db: Session = Depends(get_database),
@@ -182,6 +183,16 @@ def add_new_series(
 
     # Refresh card types in case new remote type was specified
     refresh_remote_card_types(db, log=log)
+
+    # Refresh Episode data
+    background_tasks.add_task(
+        # Function
+        refresh_episode_data,
+        # Arguments
+        db, preferences, series, emby_interface, jellyfin_interface,
+        plex_interface, sonarr_interface, tmdb_interface, background_tasks,
+        log=request.state.log,
+    )
 
     return series
 
@@ -483,10 +494,9 @@ def process_series(
     # Refresh episode data, use BackgroundTasks for ID assignment
     log.debug(f'{series.log_str} Started refreshing Episode data')
     refresh_episode_data(
-        db, preferences,
-        series,
-        emby_interface, jellyfin_interface, plex_interface, sonarr_interface,
-        tmdb_interface, log=log,
+        db, preferences, series, emby_interface, jellyfin_interface,
+        plex_interface, sonarr_interface, tmdb_interface,
+        log=log,
     )
 
     # Begin downloading Source images - use BackgroundTasks
