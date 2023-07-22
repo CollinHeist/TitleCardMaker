@@ -23,7 +23,8 @@ class SeriesInfo(DatabaseInfoContainer):
 
     def __init__(self,
             name: str,
-            year: Optional[int] = None, *,
+            year: Optional[int] = None,
+            *,
             emby_id: Optional[int] = None,
             imdb_id: Optional[str] = None,
             jellyfin_id: Optional[str] = None,
