@@ -17,7 +17,7 @@ tinydb = "==4.7.1"
 schedule = "==1.2.0"
 tmdbapis = "==1.2.0"
 "ruamel.yaml" = "==0.17.21"
-imagesize = "*"
+imagesize = "==1.4.1"
 
 [dev-packages]
 
