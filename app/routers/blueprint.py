@@ -5,7 +5,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Body, Depends, Query, Request
 from fastapi.responses import FileResponse
-from fastapi_pagination import paginate
+from fastapi_pagination import paginate as paginate_sequence
 from sqlalchemy.orm import Session
 from app.database.query import get_series
 
@@ -198,15 +198,47 @@ async def export_series_blueprint_as_zip(
     return FileResponse(zip_directory(zip_dir, 'zip', zip_dir))
 
 
+@blueprint_router.put('/query/blacklist')
+def blacklist_blueprint(
+        request: Request,
+        series_full_name: str = Query(..., min_length=8),
+        blueprint_id: int = Query(...),
+        preferences: Preferences = Depends(get_preferences),
+    ) -> None:
+    """
+    Blacklist the indicated Blueprint. Once blacklisted, this Blueprint
+    should not by returned by the `/query/all` endpoint.
+
+    - series_full_name: Full name of the Series associated with this
+    Blueprint.
+    - blueprint_id: Unique ID of the Blueprint.
+    """
+
+    # Get contextual logger
+    log = request.state.log
+
+    # Add to blacklist, commit changes
+    preferences.blacklisted_blueprints.add((series_full_name, blueprint_id))
+    preferences.commit(log=log)
+
+    log.debug(f'Blacklisted Blueprint[{series_full_name}, {blueprint_id}]')
+
+
 @blueprint_router.get('/query/all', status_code=200)
 def query_all_blueprints_(
         request: Request,
+        preferences: Preferences = Depends(get_preferences),
     ) -> Page[RemoteMasterBlueprint]:
     """
-    Query for all Blueprints for all Series on GitHub.
+    Query for all available Blueprints for all Series. Blacklisted
+    Blueprints are excluded from the return.
     """
 
-    return paginate(query_all_blueprints(log=request.state.log))
+    blacklist = preferences.blacklisted_blueprints
+    return paginate_sequence([
+        blueprint for blueprint in query_all_blueprints(log=request.state.log)
+        if (blueprint['series_full_name'], blueprint['id']) not in blacklist
+    ])
 
 
 @blueprint_router.get('/query/series/{series_id}', status_code=200)
