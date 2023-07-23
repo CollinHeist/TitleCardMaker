@@ -343,7 +343,6 @@ async function initializeSearchSource() {
 async function initializeLibraryDropdowns() {
   if ($('.dropdown[data-value="emby_library_name"]').length) {
     const embyLibraries = await fetch('/api/available/libraries/emby').then(resp => resp.json());
-    const values = 
     $('.dropdown[data-value="emby_library_name"]').dropdown({
       values: embyLibraries.map(name => {
         return {name: name, value: name};
@@ -353,8 +352,7 @@ async function initializeLibraryDropdowns() {
 
   if ($('.dropdown[data-value="jellyfin_library_name"]').length) {
     const jellyfinLibraries = await fetch('/api/available/libraries/jellyfin').then(resp => resp.json());
-    const values = 
-    $('.dropdown[data-value="emby_library_name"]').dropdown({
+    $('.dropdown[data-value="jellyfin_library_name"]').dropdown({
       values: jellyfinLibraries.map(name => {
         return {name: name, value: name};
       }),
