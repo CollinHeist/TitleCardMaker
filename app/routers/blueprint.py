@@ -3,7 +3,7 @@ from pathlib import Path
 from shutil import copy as copy_file, make_archive as zip_directory
 from typing import Optional
 
-from fastapi import APIRouter, Body, Depends, Query, Request
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 from fastapi_pagination import paginate as paginate_sequence
 from sqlalchemy.orm import Session
@@ -16,10 +16,13 @@ from app.internal.blueprint import (
     import_blueprint, query_all_blueprints, query_series_blueprints
 )
 from app.internal.episodes import get_all_episode_data
+from app.internal.series import add_series
 from app import models
 from app.schemas.blueprint import (
     BlankBlueprint, DownloadableFile, RemoteBlueprint, RemoteMasterBlueprint
 )
+from app.schemas.series import NewSeries, Series
+from modules.SeriesInfo import SeriesInfo
 
 
 # Create sub router for all /blueprints API requests
@@ -273,6 +276,59 @@ def query_blueprints_by_name(
     """
 
     return query_series_blueprints(f'{name} ({year})', log=request.state.log)
+
+
+@blueprint_router.put('/import/blueprint', status_code=200)
+def import_blueprint_and_series(
+        background_tasks: BackgroundTasks,
+        request: Request,
+        blueprint: RemoteMasterBlueprint = Body(...),
+        db: Session = Depends(get_database),
+        preferences: Preferences = Depends(get_preferences),
+        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
+        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
+        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
+        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
+        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
+    ) -> Series:
+    """
+    Import the given Blueprint - creating the associated Series if it
+    does not already exist.
+
+    - blueprint: Blueprint to import.
+    """
+
+    # Get contextual logger
+    log = request.state.log
+
+    try:
+        series_info = SeriesInfo(blueprint.series_full_name)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail=f'Cannot identify Series associated with Blueprint'
+        ) from exc
+
+    # Determine if this Series already exists
+    series = db.query(models.series.Series)\
+        .filter(series_info.filter_conditions(models.series.Series))\
+        .first()
+
+    # Series does not exist, create and add to database
+    if not series:
+        log.debug(f'Blueprint Series {series_info} not found - adding to database')
+        series = add_series(
+            NewSeries(name=series_info.name, year=series_info.year),
+            background_tasks, db, preferences, emby_interface,
+            imagemagick_interface, jellyfin_interface, plex_interface,
+            sonarr_interface, tmdb_interface, log=log,
+        )
+
+    # Import Blueprint
+    import_blueprint(db, preferences, series, blueprint, log=log)
+
+    return series
 
 
 @blueprint_router.put('/import/series/{series_id}/blueprint/{blueprint_id}', status_code=200)
