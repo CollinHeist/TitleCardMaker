@@ -3,14 +3,18 @@ from pathlib import Path
 from shutil import copy as file_copy
 from typing import Optional, Union
 
-from fastapi import HTTPException
+from fastapi import BackgroundTasks, HTTPException
 from requests import get
 from sqlalchemy.orm import Session
+from app.database.query import get_all_templates, get_font
 
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app import models
+from app.internal.cards import refresh_remote_card_types
+from app.internal.episodes import refresh_episode_data
+from app.internal.sources import download_series_logo
 from app.schemas.preferences import MediaServer, Preferences
-from app.schemas.series import Series
+from app.schemas.series import NewSeries, Series
 
 from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
@@ -409,3 +413,66 @@ def load_series_title_cards(
     if changed or loaded_assets:
         db.commit()
         log.info(f'{series.log_str} Loaded {len(loaded_assets)} Cards into {media_server}')
+
+
+def add_series(
+        new_series: NewSeries,
+        background_tasks: BackgroundTasks,
+        db: Session,
+        preferences: Preferences,
+        emby_interface: Optional[EmbyInterface] = None,
+        imagemagick_interface: Optional[ImageMagickInterface] = None,
+        jellyfin_interface: Optional[JellyfinInterface] = None,
+        plex_interface: Optional[PlexInterface] = None,
+        sonarr_interface: Optional[SonarrInterface] = None,
+        tmdb_interface: Optional[TMDbInterface] = None,
+        *,
+        log: Logger = log,
+    ) -> Series:
+    """
+    
+    """
+    
+    # Convert object to dictionary
+    new_series_dict = new_series.dict()
+
+    # If a Font or any Templates were indicated, verify they exist
+    get_font(db, getattr(new_series, 'font_id', None), raise_exc=True)
+    templates = get_all_templates(db, new_series_dict)
+
+    # Add to database
+    series = models.series.Series(**new_series_dict, templates=templates)
+    db.add(series)
+    db.commit()
+
+    # Create source directory if DNE
+    Path(series.source_directory).mkdir(parents=True, exist_ok=True)
+
+    # Set Series ID's, download poster and logo
+    set_series_database_ids(
+        series, db, emby_interface, jellyfin_interface, plex_interface,
+        sonarr_interface, tmdb_interface, log=log,
+    )
+    download_series_poster(
+        db, preferences, series, emby_interface, imagemagick_interface,
+        jellyfin_interface, plex_interface, tmdb_interface, log=log
+    )
+    download_series_logo(
+        preferences, emby_interface, imagemagick_interface, jellyfin_interface,
+        tmdb_interface, series, log=log,
+    )
+
+    # Refresh card types in case new remote type was specified
+    refresh_remote_card_types(db, log=log)
+
+    # Refresh Episode data
+    background_tasks.add_task(
+        # Function
+        refresh_episode_data,
+        # Arguments
+        db, preferences, series, emby_interface, jellyfin_interface,
+        plex_interface, sonarr_interface, tmdb_interface, background_tasks,
+        log=log,
+    )
+
+    return series

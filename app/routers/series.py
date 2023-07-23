@@ -1,4 +1,3 @@
-from pathlib import Path
 from shutil import copy as file_copy
 from typing import Literal, Optional, Union
 
@@ -23,12 +22,10 @@ from app.internal.cards import (
     update_episode_watch_statuses
 )
 from app.internal.series import (
-    delete_series_and_episodes, download_series_poster, load_series_title_cards,
-    set_series_database_ids,
+    add_series, delete_series_and_episodes, download_series_poster,
+    load_series_title_cards,
 )
-from app.internal.sources import (
-    download_episode_source_image, download_series_logo
-)
+from app.internal.sources import download_episode_source_image
 from app.schemas.base import UNSPECIFIED
 from app.schemas.preferences import EpisodeDataSource, MediaServer
 from app.schemas.series import NewSeries, SearchResult, Series, UpdateSeries
@@ -140,7 +137,7 @@ def add_new_series(
         jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
         plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
         sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Series:
     """
     Create a new Series. This also creates background tasks to set the
@@ -149,52 +146,11 @@ def add_new_series(
     - new_series: Series definition to create.
     """
 
-    # Get contextual logger
-    log = request.state.log
-
-    # Convert object to dictionary
-    new_series_dict = new_series.dict()
-
-    # If a Font or any Templates were indicated, verify they exist
-    get_font(db, getattr(new_series, 'font_id', None), raise_exc=True)
-    templates = get_all_templates(db, new_series_dict)
-
-    # Add to database
-    series = models.series.Series(**new_series_dict, templates=templates)
-    db.add(series)
-    db.commit()
-
-    # Create source directory if DNE
-    Path(series.source_directory).mkdir(parents=True, exist_ok=True)
-
-    # Set Series ID's, download poster and logo
-    set_series_database_ids(
-        series, db, emby_interface, jellyfin_interface, plex_interface,
-        sonarr_interface, tmdb_interface, log=log,
+    return add_series(
+        new_series, background_tasks, db, preferences, emby_interface,
+        imagemagick_interface, jellyfin_interface, plex_interface,
+        sonarr_interface, tmdb_interface, log=request.state.log,
     )
-    download_series_poster(
-        db, preferences, series, emby_interface, imagemagick_interface,
-        jellyfin_interface, plex_interface, tmdb_interface, log=log
-    )
-    download_series_logo(
-        preferences, emby_interface, imagemagick_interface, jellyfin_interface,
-        tmdb_interface, series, log=log,
-    )
-
-    # Refresh card types in case new remote type was specified
-    refresh_remote_card_types(db, log=log)
-
-    # Refresh Episode data
-    background_tasks.add_task(
-        # Function
-        refresh_episode_data,
-        # Arguments
-        db, preferences, series, emby_interface, jellyfin_interface,
-        plex_interface, sonarr_interface, tmdb_interface, background_tasks,
-        log=request.state.log,
-    )
-
-    return series
 
 
 @series_router.delete('/{series_id}', status_code=204)
