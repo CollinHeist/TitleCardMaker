@@ -6,7 +6,7 @@ from typing import Optional, Union
 from fastapi import HTTPException
 
 from modules.Debug import log
-from modules.EpisodeDataSource2 import EpisodeDataSource
+from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
 from modules.MediaServer2 import MediaServer, SourceImage
@@ -362,6 +362,55 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface
                             setattr(old_episode_info, id_type, id_)
                             log.debug(f'Set {old_episode_info}.{id_type}={id_}')
                     break
+
+
+    def query_series(self,
+            query: str,
+            *,
+            log: Logger = log,
+        ) -> list[SearchResult]:
+        """
+        Search Jellyfin for any Series matching the given query.
+
+        Args:
+            query: Series name or substring to look up.
+            log: (Keyword) Logger for all log messages.
+
+        Returns:
+            List of SearchResults for the given query. Results are from
+            any library.
+        """
+
+        # Perform query
+        search_results = self.session.get(
+            f'{self.url}/Items',
+            params=self.__params | {
+                'recursive': True,
+                'includeItemTypes': 'Series',
+                'searchTerm': query,
+                'fields': 'ProviderIds,Overview',
+                'enableImages': False,
+            },
+        )
+
+        # def get_year(premire_date: str) -> int:
+        #     return datetime.strptime(premire_date, self.AIRDATE_FORMAT).year
+
+        return [
+            SearchResult(
+                name=result['Name'],
+                year=result['ProductionYear'], # get_year(result['PremiereDate'])
+                ongoing=result['Status'] == 'Continuing',
+                overview=result.get('Overview', 'No overview available'),
+                poster=f'{self.url}/Items/{result["Id"]}/Images/Primary?quality=90',
+                imdb_id=result.get('ProviderIds', {}).get('Imdb'),
+                jellyfin_id=result['Id'],
+                tmdb_id=result.get('ProviderIds', {}).get('Tmdb'),
+                tvdb_id=result.get('ProviderIds', {}).get('Tvdb'),
+                tvrage_id=result.get('ProviderIds', {}).get('TvRage'),
+            ) for result in search_results['Items'][:25]
+            if 'PremiereDate' in result
+        ]
 
 
     def get_all_series(self,
