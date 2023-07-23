@@ -34,8 +34,12 @@
       overflow: scroll;
     }
 
-    #search-results .disabled.card img {
+    .disabled.card img {
       filter: grayscale(50%) blur(0.8px);
+    }
+
+    .card [data-action="blacklist-blueprint"]:hover {
+      color: #db2828 !important;
     }
   </style>
 
@@ -100,7 +104,7 @@
   <template id="blueprint-template">
     <div class="ui raised card">
       <div class="image">
-        <img src="">
+        <img loading="lazy">
       </div>
       <div class="content">
         <div data-value="creator" class="header">{author}</div>
@@ -114,7 +118,35 @@
       <div class="extra content">
         <a data-action="import-blueprint" class="left floated">
           <i class="cloud download alternate icon"></i>
-          Import
+          Import Series and Blueprint
+        </a>
+      </div>
+    </div>
+  </template>
+
+  <template id="all-blueprint-template">
+    <div class="ui raised card">
+      <div class="image">
+        <img loading="lazy">
+      </div>
+      <div class="content">
+        <div data-value="series_full_name" class="header">{series_name} ({series_year})</div>
+        <div class="meta">
+          <span>Created by</span><span data-value="creator">{author}</span>
+          <span data-value="font-count"><b>{x}</b> Named Font</span>
+          <span data-value="template-count"><b>{x}</b> Template</span>
+          <span data-value="episode-count"><b>{x}</b> Episode Overrides</span>
+        </div>
+        <div data-value="description" class="description"><!-- <p>Description</p> --></div>
+      </div>
+      <div class="extra content">
+        <a data-action="import-blueprint" class="left floated">
+          <i class="cloud download alternate icon"></i>
+          Import Series and Blueprint
+        </a>
+        <a data-action="blacklist-blueprint" class="right floated" data-tooltip="Do not show this Blueprint on this Page">
+          <i class="eye slash outline icon"></i>
+          Hide Blueprint
         </a>
       </div>
     </div>
@@ -130,6 +162,13 @@
     <!-- Actual page content -->
     <div id="main-content" class="article">
       <h1 class="ui header">Add Series</h1>
+
+      <!-- Series Name -->
+      <h4 class="ui horizontal left aligned divider header">
+        <i class="search icon"></i>
+        Browse Series
+      </h4>
+
       <div class="ui blue right action left icon input">
         <i class="search icon"></i>
         <input id="search-query" type="text" placeholder="Search">
@@ -147,6 +186,21 @@
         <div class="header">Quick-Adding</div>
         Quick-adding a Series uses the <i>last selected</i> Library and Templates.
       </div>
+
+      <!-- Blueprints -->
+      <h4 class="ui horizontal left aligned divider header">
+        <i class="sitemap icon"></i>
+        Browse Available Blueprints
+      </h4>
+
+      <button class="ui green tertiary button" onclick="queryAllBlueprints();">
+        <i class="search icon"></i>
+        Search for Blueprints
+      </button>
+      <div class="ui raised segment">
+        <div id="all-blueprint-results" class="ui three stackable raised cards"><!-- Added asynchronously --></div>
+      </div>
+      <div id="blueprint-pagination" class="ui centered pagination menu"><!-- Pagination added later --></div>
     </div>
 
     <!-- Modals -->
@@ -201,7 +255,7 @@
               <input data-value="template_ids" name="template_ids" type="hidden">
               <i class="dropdown icon"></i>
               <div class="default text">None</div>
-              <div class="menu"><!-- Added asynchrously --></div>
+              <div class="menu"><!-- Added asynchronously --></div>
             </div>
           </div>
 
@@ -218,9 +272,7 @@
               <span>Feel free to submit your own.</span>
             </div>
           </div>
-          <div id="blueprint-results" class="ui two stackable raised cards">
-            <!-- Added asynchrously -->
-          </div>
+          <div id="blueprint-results" class="ui two stackable raised cards"><!-- Added asynchronously --></div>
         </form>
       </div>
       <div class="actions">
