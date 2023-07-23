@@ -26,6 +26,8 @@ from modules.cards.TextlessTitleCard import TextlessTitleCard
 from modules.cards.TintedFrameTitleCard import TintedFrameTitleCard
 from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
 
+from app.schemas.card_type import LocalCardTypeModels
+
 class TitleCard:
     """
     This class describes a title card. This class is responsible for
@@ -87,9 +89,9 @@ class TitleCard:
 
 
     def __init__(self,
-            episode: 'Episode',                                                 # type: ignore
-            profile: 'Profile',                                                 # type: ignore
-            title_characteristics,
+            episode: 'Episode', # type: ignore
+            profile: 'Profile', # type: ignore
+            title_characteristics: dict,
             **extra_characteristics,
         ) -> None:
         """
@@ -130,8 +132,16 @@ class TitleCard:
           | self.episode.episode_info.indices \
           | extra_characteristics
 
+        # Initialize model
+        inverse_mappings = {CardClass: identifier for identifier, CardClass in self.CARD_TYPES.items()}
+        CardModel = LocalCardTypeModels[inverse_mappings[self.episode.card_class]](
+            logo_file=episode.source.parent / 'logo.png',
+            **kwargs,
+        )
+
         try:
-            self.maker = self.episode.card_class(**kwargs)
+            self.maker = self.episode.card_class(**CardModel.dict())
+            # self.maker = self.episode.card_class(**kwargs)
         except Exception as e:
             log.exception(f'Cannot initialize Card for {self.episode} - {e}', e)
             self.maker = None
