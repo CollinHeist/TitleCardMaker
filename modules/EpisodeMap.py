@@ -86,6 +86,7 @@ class EpisodeMap:
 
         # Determine unique set of specified season titles
         self.unique_season_titles = set(val for _, val in self.__titles.items())
+        return None
 
 
     def __repr__(self) -> str:
@@ -146,7 +147,7 @@ class EpisodeMap:
 
 
     def __parse_index_episode_range(self,
-            episode_ranges: dict[str, Any]
+            episode_ranges: dict[str, Any],
         ) -> None:
         """
         Parse the given episode range map, filling this object's title,
@@ -206,7 +207,7 @@ class EpisodeMap:
 
 
     def __parse_absolute_episode_ranges(self,
-            episode_ranges: dict[str, Any]
+            episode_ranges: dict[str, Any],
         ) -> None:
         """
         Parse the given episode range map, filling this object's title,
@@ -263,7 +264,7 @@ class EpisodeMap:
 
     def get_generic_season_title(self, *,
             season_number: Optional[int] = None,
-            episode_info: Optional[EpisodeInfo] = None
+            episode_info: Optional[EpisodeInfo] = None,
         ) -> str:
         """
         Get the generic season title for the given entry.
@@ -305,7 +306,7 @@ class EpisodeMap:
     def __get_value(self,
             episode_info: EpisodeInfo,
             which: Literal['season_titles', 'source', 'applies_to'],
-            default: Callable[[EpisodeInfo], str]
+            default: Callable[[EpisodeInfo], str],
         ) -> str:
         """
         Get the value for the given Episode from the target associated with
