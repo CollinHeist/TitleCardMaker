@@ -52,8 +52,10 @@ class TitleCard:
     DEFAULT_HEIGHT = BaseCardType.HEIGHT
     DEFAULT_CARD_DIMENSIONS = BaseCardType.TITLE_CARD_SIZE
 
-    """Mapping of card type identifiers to CardType classes"""
+    """Default card type identifier to utilize if unspecified"""
     DEFAULT_CARD_TYPE = 'standard'
+
+    """Mapping of card type identifiers to CardType classes"""
     CARD_TYPES = {
         '4x3': FadeTitleCard,
         'anime': AnimeTitleCard,
