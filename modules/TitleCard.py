@@ -24,6 +24,7 @@ from modules.cards.StarWarsTitleCard import StarWarsTitleCard
 from modules.cards.TextlessTitleCard import TextlessTitleCard
 from modules.cards.TintedFrameTitleCard import TintedFrameTitleCard
 from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
+from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
 
 class TitleCard:
     """
@@ -49,8 +50,10 @@ class TitleCard:
     DEFAULT_HEIGHT = BaseCardType.HEIGHT
     DEFAULT_CARD_DIMENSIONS = BaseCardType.TITLE_CARD_SIZE
 
-    """Mapping of card type identifiers to CardType classes"""
+    """Default card type identifier to utilize if unspecified"""
     DEFAULT_CARD_TYPE = 'standard'
+
+    """Mapping of card type identifiers to CardType classes"""
     CARD_TYPES = {
         '4x3': FadeTitleCard,
         'anime': AnimeTitleCard,
@@ -65,6 +68,7 @@ class TitleCard:
         'ishalioh': OlivierTitleCard,
         'landscape': LandscapeTitleCard,
         'logo': LogoTitleCard,
+        'musikmann': WhiteBorderTitleCard,
         'olivier': OlivierTitleCard,
         'phendrena': CutoutTitleCard,
         'photo': FrameTitleCard,
@@ -79,6 +83,7 @@ class TitleCard:
         'textless': TextlessTitleCard,
         'tinted frame': TintedFrameTitleCard,
         'tinted glass': TintedGlassTitleCard,
+        'white border': WhiteBorderTitleCard,
     }
 
     __slots__ = ('episode', 'profile', 'converted_title', 'maker', 'file')
