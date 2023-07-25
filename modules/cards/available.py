@@ -14,6 +14,7 @@ from modules.cards.StarWarsTitleCard import StarWarsTitleCard
 from modules.cards.TextlessTitleCard import TextlessTitleCard
 from modules.cards.TintedFrameTitleCard import TintedFrameTitleCard
 from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
+from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
 
 LocalCards = [
     AnimeTitleCard.API_DETAILS,
@@ -32,4 +33,5 @@ LocalCards = [
     TextlessTitleCard.API_DETAILS,
     TintedFrameTitleCard.API_DETAILS,
     TintedGlassTitleCard.API_DETAILS,
+    WhiteBorderTitleCard.API_DETAILS,
 ]

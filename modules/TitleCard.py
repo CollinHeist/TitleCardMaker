@@ -25,6 +25,7 @@ from modules.cards.StarWarsTitleCard import StarWarsTitleCard
 from modules.cards.TextlessTitleCard import TextlessTitleCard
 from modules.cards.TintedFrameTitleCard import TintedFrameTitleCard
 from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
+from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
 
 from app.schemas.card_type import LocalCardTypeModels
 
@@ -71,6 +72,7 @@ class TitleCard:
         'ishalioh': OlivierTitleCard,
         'landscape': LandscapeTitleCard,
         'logo': LogoTitleCard,
+        'musikmann': WhiteBorderTitleCard,
         'olivier': OlivierTitleCard,
         'phendrena': CutoutTitleCard,
         'photo': FrameTitleCard,
@@ -85,6 +87,7 @@ class TitleCard:
         'textless': TextlessTitleCard,
         'tinted frame': TintedFrameTitleCard,
         'tinted glass': TintedGlassTitleCard,
+        'white border': WhiteBorderTitleCard,
     }
 
     __slots__ = ('episode', 'profile', 'converted_title', 'maker', 'file')
