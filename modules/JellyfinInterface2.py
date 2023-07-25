@@ -402,7 +402,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface
                 year=result['ProductionYear'], # get_year(result['PremiereDate'])
                 ongoing=result['Status'] == 'Continuing',
                 overview=result.get('Overview', 'No overview available'),
-                poster=f'{self.url}/Items/{result["Id"]}/Images/Primary?quality=90',
+                poster=f'{self.url}/Items/{result["Id"]}/Images/Primary?quality=75',
                 imdb_id=result.get('ProviderIds', {}).get('Imdb'),
                 jellyfin_id=result['Id'],
                 tmdb_id=result.get('ProviderIds', {}).get('Tmdb'),
