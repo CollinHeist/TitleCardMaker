@@ -40,8 +40,8 @@ class OlivierTitleCard(BaseCardType):
     ARCHIVE_NAME = 'Olivier Style'
 
     __slots__ = (
-        'source_file', 'output_file', 'title_text', 'hide_episode_text', 
-        'episode_prefix', 'episode_text', 'font_color', 'font_file', 
+        'source_file', 'output_file', 'title_text', 'hide_episode_text',
+        'episode_prefix', 'episode_text', 'font_color', 'font_file',
         'font_interline_spacing', 'font_kerning', 'font_size',
         'font_stroke_width', 'font_vertical_shift', 'stroke_color',
         'episode_text_color', 'interword_spacing',

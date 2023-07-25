@@ -122,7 +122,7 @@ class CutoutTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
