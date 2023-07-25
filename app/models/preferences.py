@@ -210,15 +210,16 @@ class Preferences:
         Initialize this object with the defaults for each attribute.
         """
 
-        # Set attributes not parsed from the object
-        self.current_version = Version(self.VERSION_FILE.read_text().strip())
-        self.available_version: Optional[Version] = None
-
         # Update each attribute known to this object
         for attribute in self.__slots__:
             if hasattr(obj, attribute):
                 setattr(self, attribute, getattr(obj, attribute))
 
+        # Set attributes not parsed from the object
+        self.current_version = Version(self.VERSION_FILE.read_text().strip())
+        self.available_version: Optional[Version] = None
+
+        # Write object to file
         self.commit()
 
 
