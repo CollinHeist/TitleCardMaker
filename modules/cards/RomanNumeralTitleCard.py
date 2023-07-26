@@ -247,14 +247,16 @@ class RomanNumeralTitleCard(BaseCardType):
             episode_text: str,
             hide_season_text: bool = False,
             font_color: str = TITLE_COLOR,
+            font_size: float = 1.0,
             episode_number: int = 1,
             blur: bool = False,
             grayscale: bool = False,
-            background: SeriesExtra[str] = BACKGROUND_COLOR, 
-            roman_numeral_color: SeriesExtra[str] = ROMAN_NUMERAL_TEXT_COLOR,
-            season_text_color: SeriesExtra[str] = SEASON_TEXT_COLOR,
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            background: str = BACKGROUND_COLOR,
+            roman_numeral_color: str = ROMAN_NUMERAL_TEXT_COLOR,
+            season_text_color: str = SEASON_TEXT_COLOR,
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
+        ) -> None:
         """
         Construct a new instance of this Card.
         """
@@ -266,6 +268,7 @@ class RomanNumeralTitleCard(BaseCardType):
         self.output_file = card_file
         self.title_text = self.image_magick.escape_chars(title_text)
         self.font_color = font_color
+        self.font_size = font_size
         self.background = background
         self.roman_numeral_color = roman_numeral_color
         self.season_text_color = season_text_color
@@ -429,12 +432,14 @@ class RomanNumeralTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
+        font_size = 150 * self.font_size
+
         return [
             f'-font "{self.TITLE_FONT}"',
-            f'-pointsize 150',
+            f'-pointsize {font_size}',
             f'-interword-spacing 40',
             f'-interline-spacing 0',
-            f'-fill "{self.font_color}"',            
+            f'-fill "{self.font_color}"',
             f'-annotate +0+0 "{self.title_text}"',
         ]
 
