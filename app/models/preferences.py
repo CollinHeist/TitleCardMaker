@@ -254,7 +254,7 @@ class Preferences:
 
         # Iterate through updated attributes, set dictionary directly
         for name, value in update_kwargs.items():
-            if value != UNSPECIFIED:
+            if value != UNSPECIFIED and value != getattr(self, name, '*'):
                 setattr(self, name, value)
                 if name in self.PRIVATE_ATTRIBUTES:
                     log.debug(f'Preferences.{name} = *****')
@@ -265,7 +265,7 @@ class Preferences:
         self.commit(log=log)
 
 
-    def determine_imagemagick_prefix(self, log: Logger = log) -> None:
+    def determine_imagemagick_prefix(self, *, log: Logger = log) -> None:
         """
         Determine whether to use the "magick " prefix for ImageMagick
         commands.
