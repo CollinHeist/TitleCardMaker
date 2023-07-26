@@ -1,4 +1,3 @@
-from pathlib import Path
 from shutil import copy as file_copy
 from typing import Literal, Optional, Union
 
@@ -23,12 +22,10 @@ from app.internal.cards import (
     update_episode_watch_statuses
 )
 from app.internal.series import (
-    delete_series_and_episodes, download_series_poster, load_series_title_cards,
-    set_series_database_ids,
+    add_series, delete_series_and_episodes, download_series_poster,
+    load_series_title_cards,
 )
-from app.internal.sources import (
-    download_episode_source_image, download_series_logo
-)
+from app.internal.sources import download_episode_source_image
 from app.schemas.base import UNSPECIFIED
 from app.schemas.preferences import EpisodeDataSource, MediaServer
 from app.schemas.series import NewSeries, SearchResult, Series, UpdateSeries
@@ -36,7 +33,6 @@ from app.schemas.series import NewSeries, SearchResult, Series, UpdateSeries
 from modules.EmbyInterface2 import EmbyInterface
 from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
-from modules.SeriesInfo import SeriesInfo
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
 
@@ -131,6 +127,7 @@ def get_next_series(
 
 @series_router.post('/new', status_code=201)
 def add_new_series(
+        background_tasks: BackgroundTasks,
         request: Request,
         new_series: NewSeries = Body(...),
         db: Session = Depends(get_database),
@@ -140,7 +137,7 @@ def add_new_series(
         jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
         plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
         sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Series:
     """
     Create a new Series. This also creates background tasks to set the
@@ -149,42 +146,11 @@ def add_new_series(
     - new_series: Series definition to create.
     """
 
-    # Get contextual logger
-    log = request.state.log
-
-    # Convert object to dictionary
-    new_series_dict = new_series.dict()
-
-    # If a Font or any Templates were indicated, verify they exist
-    get_font(db, getattr(new_series, 'font_id', None), raise_exc=True)
-    templates = get_all_templates(db, new_series_dict)
-
-    # Add to database
-    series = models.series.Series(**new_series_dict, templates=templates)
-    db.add(series)
-    db.commit()
-
-    # Create source directory if DNE
-    Path(series.source_directory).mkdir(parents=True, exist_ok=True)
-
-    # Set Series ID's, download poster and logo
-    set_series_database_ids(
-        series, db, emby_interface, jellyfin_interface, plex_interface,
-        sonarr_interface, tmdb_interface, log=log,
+    return add_series(
+        new_series, background_tasks, db, preferences, emby_interface,
+        imagemagick_interface, jellyfin_interface, plex_interface,
+        sonarr_interface, tmdb_interface, log=request.state.log,
     )
-    download_series_poster(
-        db, preferences, series, emby_interface, imagemagick_interface,
-        jellyfin_interface, plex_interface, tmdb_interface, log=log
-    )
-    download_series_logo(
-        preferences, emby_interface, imagemagick_interface, jellyfin_interface,
-        tmdb_interface, series, log=log,
-    )
-
-    # Refresh card types in case new remote type was specified
-    refresh_remote_card_types(db, log=log)
-
-    return series
 
 
 @series_router.delete('/{series_id}', status_code=204)
@@ -250,23 +216,30 @@ def search_existing_series(
 @series_router.get('/lookup', status_code=200)
 def lookup_series(
         request: Request,
-        name: str = Query(...),
+        name: str = Query(..., min_length=1),
         interface: EpisodeDataSource = Query(...),
         # year: Optional[int] = None,
         db: Session = Depends(get_database),
         # emby
-        # jellyfin
-        # plex
+        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
+        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
         sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Page[SearchResult]:
     """
-    
+    Look up the given series name on the indicated interface. Returned
+    results are not necessary already added to TCM - use the `/search`
+    endpoint for that.
+
+    - name: Series name or substring to look up.
+    - interface: Which Episode data interface to look up on.
     """
 
     # Get associated Interface to query
     interface_obj = {
-        # 'Emby': 
+        # 'Emby':
+        'Jellyfin': jellyfin_interface,
+        'Plex': plex_interface,
         'Sonarr': sonarr_interface,
         'TMDb': tmdb_interface,
     }.get(interface, None)
@@ -277,7 +250,7 @@ def lookup_series(
         )
     interface_obj: Union[EmbyInterface, JellyfinInterface, PlexInterface,
                          SonarrInterface, TMDbInterface] = interface_obj
-    
+
     # Query Interface, only return max of 25 results TODO temporary?
     results: list[SearchResult] = interface_obj.query_series(
         name, log=request.state.log,
@@ -285,17 +258,9 @@ def lookup_series(
 
     # Update `added` attributes
     for result in results:
-        # Create SeriesInfo for this result
-        series_info = SeriesInfo(
-            result.title, year=result.year, emby_id=result.emby_id,
-            imdb_id=result.imdb_id, jellyfin_id=result.jellyfin_id,
-            sonarr_id=result.sonarr_id, tmdb_id=result.tmdb_id,
-            tvdb_id=result.tvdb_id,
-        )
-
         # Query database for this result
         existing = db.query(models.series.Series)\
-            .filter(series_info.filter_conditions(models.series.Series))\
+            .filter(result.series_info.filter_conditions(models.series.Series))\
             .first()
 
         # Result has been added if there is an existing Series
@@ -485,10 +450,9 @@ def process_series(
     # Refresh episode data, use BackgroundTasks for ID assignment
     log.debug(f'{series.log_str} Started refreshing Episode data')
     refresh_episode_data(
-        db, preferences,
-        series,
-        emby_interface, jellyfin_interface, plex_interface, sonarr_interface,
-        tmdb_interface, log=log,
+        db, preferences, series, emby_interface, jellyfin_interface,
+        plex_interface, sonarr_interface, tmdb_interface,
+        log=log,
     )
 
     # Begin downloading Source images - use BackgroundTasks

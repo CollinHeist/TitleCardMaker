@@ -7,6 +7,7 @@ from app.schemas.base import (
     Base, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
 )
 
+
 TitleCase = Literal['blank', 'lower', 'source', 'title', 'upper']
 
 DefaultFont = {

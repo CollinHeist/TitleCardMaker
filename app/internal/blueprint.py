@@ -251,7 +251,7 @@ def query_all_blueprints(
 
 
 def query_series_blueprints(
-        series: Series,
+        series_full_name: str,
         *,
         log: Logger = log,
     ) -> list[RemoteBlueprint]:
@@ -259,7 +259,8 @@ def query_series_blueprints(
     Query for all RemoteBlueprints on GitHub for the given Series.
 
     Args:
-        series: Series whose Blueprints are being queried.
+        series_full_name: Full name of the Series whose Blueprints are
+            being queried.
         log: (Keyword) Logger for all log messages.
 
     Returns:
@@ -271,7 +272,7 @@ def query_series_blueprints(
     """
 
     # Get subfolder for this Series
-    letter, path_name = get_blueprint_folders(series.full_name)
+    letter, path_name = get_blueprint_folders(series_full_name)
     subfolder = f'{letter}/{path_name}'
 
     # Read the JSON file of Blueprint definitions

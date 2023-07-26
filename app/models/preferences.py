@@ -75,6 +75,7 @@ class Preferences:
         'tmdb_minimum_height', 'tmdb_skip_localized', 'tmdb_download_logos',
         'tmdb_logo_language_priority', 'supported_language_codes',
         'use_magick_prefix', 'current_version', 'available_version',
+        'blacklisted_blueprints', 'advanced_scheduling',
     )
 
 
@@ -178,6 +179,8 @@ class Preferences:
 
         self.supported_language_codes = []
         self.use_magick_prefix = False
+        self.blacklisted_blueprints = set()
+        self.advanced_scheduling = False
 
 
     def read_file(self) -> Optional[object]:
@@ -208,15 +211,16 @@ class Preferences:
         Initialize this object with the defaults for each attribute.
         """
 
-        # Set attributes not parsed from the object
-        self.current_version = Version(self.VERSION_FILE.read_text().strip())
-        self.available_version: Optional[Version] = None
-
         # Update each attribute known to this object
         for attribute in self.__slots__:
             if hasattr(obj, attribute):
                 setattr(self, attribute, getattr(obj, attribute))
 
+        # Set attributes not parsed from the object
+        self.current_version = Version(self.VERSION_FILE.read_text().strip())
+        self.available_version: Optional[Version] = None
+
+        # Write object to file
         self.commit()
 
 
@@ -250,7 +254,7 @@ class Preferences:
 
         # Iterate through updated attributes, set dictionary directly
         for name, value in update_kwargs.items():
-            if value != UNSPECIFIED:
+            if value != UNSPECIFIED and value != getattr(self, name, '*'):
                 setattr(self, name, value)
                 if name in self.PRIVATE_ATTRIBUTES:
                     log.debug(f'Preferences.{name} = *****')
@@ -261,7 +265,7 @@ class Preferences:
         self.commit(log=log)
 
 
-    def determine_imagemagick_prefix(self, log: Logger = log) -> None:
+    def determine_imagemagick_prefix(self, *, log: Logger = log) -> None:
         """
         Determine whether to use the "magick " prefix for ImageMagick
         commands.

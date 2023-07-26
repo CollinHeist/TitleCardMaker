@@ -25,6 +25,9 @@ from modules.cards.StarWarsTitleCard import StarWarsTitleCard
 from modules.cards.TextlessTitleCard import TextlessTitleCard
 from modules.cards.TintedFrameTitleCard import TintedFrameTitleCard
 from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
+from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
+
+from app.schemas.card_type import LocalCardTypeModels
 
 class TitleCard:
     """
@@ -50,9 +53,12 @@ class TitleCard:
     DEFAULT_HEIGHT = BaseCardType.HEIGHT
     DEFAULT_CARD_DIMENSIONS = BaseCardType.TITLE_CARD_SIZE
 
-    """Mapping of card type identifiers to CardType classes"""
+    """Default card type identifier to utilize if unspecified"""
     DEFAULT_CARD_TYPE = 'standard'
+
+    """Mapping of card type identifiers to CardType classes"""
     CARD_TYPES = {
+        '4x3': FadeTitleCard,
         'anime': AnimeTitleCard,
         'blurred border': TintedFrameTitleCard,
         'comic book': ComicBookTitleCard,
@@ -66,6 +72,7 @@ class TitleCard:
         'ishalioh': OlivierTitleCard,
         'landscape': LandscapeTitleCard,
         'logo': LogoTitleCard,
+        'musikmann': WhiteBorderTitleCard,
         'olivier': OlivierTitleCard,
         'phendrena': CutoutTitleCard,
         'photo': FrameTitleCard,
@@ -80,16 +87,16 @@ class TitleCard:
         'textless': TextlessTitleCard,
         'tinted frame': TintedFrameTitleCard,
         'tinted glass': TintedGlassTitleCard,
-        '4x3': FadeTitleCard,
+        'white border': WhiteBorderTitleCard,
     }
 
     __slots__ = ('episode', 'profile', 'converted_title', 'maker', 'file')
 
 
     def __init__(self,
-            episode: 'Episode',                                                 # type: ignore
-            profile: 'Profile',                                                 # type: ignore
-            title_characteristics,
+            episode: 'Episode', # type: ignore
+            profile: 'Profile', # type: ignore
+            title_characteristics: dict,
             **extra_characteristics,
         ) -> None:
         """
@@ -130,8 +137,16 @@ class TitleCard:
           | self.episode.episode_info.indices \
           | extra_characteristics
 
+        # Initialize model
+        inverse_mappings = {CardClass: identifier for identifier, CardClass in self.CARD_TYPES.items()}
+        CardModel = LocalCardTypeModels[inverse_mappings[self.episode.card_class]](
+            logo_file=episode.source.parent / 'logo.png',
+            **kwargs,
+        )
+
         try:
-            self.maker = self.episode.card_class(**kwargs)
+            self.maker = self.episode.card_class(**CardModel.dict())
+            # self.maker = self.episode.card_class(**kwargs)
         except Exception as e:
             log.exception(f'Cannot initialize Card for {self.episode} - {e}', e)
             self.maker = None

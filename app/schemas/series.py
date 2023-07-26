@@ -276,7 +276,7 @@ class UpdateSeries(BaseUpdate):
 Return classes
 """
 class SearchResult(Base):
-    title: str
+    name: str
     year: int
     overview: list[str] = ['No overview available']
     poster: Optional[str] = None

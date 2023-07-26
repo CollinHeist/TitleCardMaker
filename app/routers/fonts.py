@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, UploadFile
 from sqlalchemy.orm import Session
@@ -155,13 +156,17 @@ def update_font(
 
 @font_router.get('/all', status_code=200)
 def get_all_fonts(
+        order_by: Literal['id', 'name'] = 'name',
         db: Session = Depends(get_database),
     ) -> list[NamedFont]:
     """
     Get all defined Fonts.
     """
 
-    return db.query(models.font.Font).all()
+    if order_by == 'id':
+        return db.query(models.font.Font).all()
+    
+    return db.query(models.font.Font).order_by(models.font.Font.name).all()
 
 
 @font_router.get('/{font_id}', status_code=200)

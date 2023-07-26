@@ -9,6 +9,7 @@ from app.schemas.base import Base
 """
 Base classes
 """
+
 class NewJob(Base):
     id: str = Field(description='Unique ID of the Job')
     function: Callable[..., None] = Field(
@@ -17,6 +18,7 @@ class NewJob(Base):
     seconds: PositiveInt = Field(
         description='How often (in seconds) to run this Job'
     )
+    crontab: str
     description: str = Field(description='Description of the Job')
     internal: bool = Field(
         default=False,
@@ -38,12 +40,13 @@ class NewJob(Base):
 """
 Update classes
 """
-class UpdateInterval(Base):
+class UpdateSchedule(Base):
     seconds: PositiveInt = 0
     minutes: PositiveInt = 0
     hours: PositiveInt = 0
     days: PositiveInt = 0
     weeks: PositiveInt = 0
+    crontab: Optional[str] = '*/10 * * * *'
 
 """
 Return classes
@@ -51,9 +54,11 @@ Return classes
 class ScheduledTask(Base):
     id: str = Field(description='Unique ID of the Task')
     description: str = Field(description='Description of the Task')
-    frequency: PositiveInt = Field(
+    frequency: Optional[PositiveInt] = Field(
+        default=None,
         description='How often (in seconds) the Task runs'
     )
+    crontab: Optional[str] = None
     next_run: str = Field(description='Next runtime for the Task')
     previous_duration: Optional[timedelta] = Field(
         default=None,

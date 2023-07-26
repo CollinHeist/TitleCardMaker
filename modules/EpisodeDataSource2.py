@@ -1,27 +1,72 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
 from logging import Logger
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
 from modules.SeriesInfo import SeriesInfo
 
 
-@dataclass
-class SearchResult: # pylint: disable=missing-class-docstring
-    title: str
-    year: int
-    poster: Optional[str] = None
-    overview: list[str] = field(default_factory=lambda: ['No overview available'])
-    ongoing: Optional[bool] = None
-    emby_id: Any = None
-    imdb_id: Any = None
-    jellyfin_id: Any = None
-    sonarr_id: Any = None
-    tmdb_id: Any = None
-    tvdb_id: Any = None
-    tvrage_id: Any = None
+class SearchResult:
+    """
+    Class that defines a SearchResult as returned by an
+    EpisodeDataSource. This is essentially a `SeriesInfo` object, with
+    additional attributes for a poster, overview, whether it's airing,
+    and whether it's been added to TCM.
+    """
+
+    __slots__ = ('series_info', 'poster', 'ongoing', 'overview', 'added')
+
+
+    def __init__(self,
+            name: str,
+            year: Optional[int] = None,
+            poster: Optional[str] = None,
+            overview: Union[str, list[str]] = ['No overview available'],
+            ongoing: Optional[bool] = None,
+            *,
+            emby_id: Optional[int] = None,
+            imdb_id: Optional[str] = None,
+            jellyfin_id: Optional[str] = None,
+            sonarr_id: Optional[str]  =None,
+            tmdb_id: Optional[int] = None,
+            tvdb_id: Optional[int] = None,
+            tvrage_id: Optional[int] = None,
+            added: bool = False,
+        ) -> None:
+        """
+        Initialize this object. See `SeriesInfo.__init__()` for details.
+        Other arguments are self-explanatory.
+        """
+
+        # Initialize SeriesInfo for the base Series attributes
+        self.series_info = SeriesInfo(
+            name=name, year=year, emby_id=emby_id, imdb_id=imdb_id,
+            jellyfin_id=jellyfin_id, sonarr_id=sonarr_id, tmdb_id=tmdb_id,
+            tvdb_id=tvdb_id, tvrage_id=tvrage_id,
+        )
+
+        # Store result-specific attributes
+        self.added = added
+        self.poster = poster
+        self.ongoing = ongoing
+        if isinstance(overview, str):
+            self.overview = overview.splitlines()
+        else:
+            self.overview = overview
+
+
+    def __getattr__(self, attribute: str) -> Any:
+        """
+        Get an attribute from this object. These can be attributes
+        defined in `SearchResult.__slots__`, or an attribute of the
+        contained `SeriesInfo` object.
+        """
+
+        if attribute in self.__slots__:
+            return self.__dict__[attribute]
+
+        return getattr(self.series_info, attribute)
 
 
 class EpisodeDataSource(ABC):

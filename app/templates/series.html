@@ -152,6 +152,17 @@
       border: 2px dashed #ffffff3d;
       padding: 10px;
     }
+
+    /* Limit height of logo */
+    /* #logoImage {
+      max-height: 400px;
+    } */
+    #logoImage img {
+      /* height: 100%;
+      width: auto; */
+      object-fit: contain;
+      max-height: 500px;
+    }
   </style>
 
   <!-- Templates -->
@@ -665,7 +676,7 @@
     }
 
     async function queryBlueprints() {
-      // Get template
+      // Get templates
       const blueprintCards = document.getElementById('blueprint-cards');
       const blueprintTemplate = document.getElementById('blueprint-template');
       if (blueprintCards === null || blueprintTemplate === null) { return; }
@@ -1802,7 +1813,7 @@
                 </div>
 
                 <form id="card-config-form" class="ui compact form">
-                  <!-- Template ID -->
+                  <!-- Templates -->
                   <div class="field">
                     <label>Templates</label>
                     <div data-value="template_ids" class="ui long compact clearable search selection multiple dropdown">
@@ -2648,11 +2659,11 @@
           rules: [{type: 'regExp', value: /^$|^[a-z]+[^ ]*$/i}],
         }, extra_keys: {
           optional: true,
-          rules: [{type: 'regExp', value: /^[a-z]+[^ ]*$/i}],
+          rules: [{type: 'regExp', value: /^([a-z]+[^ ]*|)$/i}],
         }, extra_values: {
           optional: true,
           depends: 'extra_keys',
-          rules: [{type: 'minLength[1]'}],
+          // rules: [{type: 'minLength[1]'}],
         },
       },
     });

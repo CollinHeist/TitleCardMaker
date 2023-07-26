@@ -24,12 +24,14 @@ from modules.cards.StandardTitleCard import StandardTitleCard
 from modules.cards.StarWarsTitleCard import StarWarsTitleCard
 from modules.cards.TintedFrameTitleCard import TintedFrameTitleCard
 from modules.cards.TintedGlassTitleCard import TintedGlassTitleCard
+from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
 
 LocalCardIdentifiers = Literal[
     'anime', 'comic book', 'cutout', 'divider', 'fade', 'frame', 'generic',
-    'gundam', 'ishalioh', 'landscape', 'logo', 'olivier', 'phendrena', 'photo',
-    'polymath', 'poster', 'reality tv', 'roman', 'roman numeral', 'sherlock',
-    'standard', 'star wars', 'textless', 'tinted glass', '4x3',
+    'gundam', 'ishalioh', 'landscape', 'logo', 'musikmann', 'olivier',
+    'phendrena', 'photo', 'polymath', 'poster', 'reality tv', 'roman',
+    'roman numeral', 'sherlock', 'standard', 'star wars', 'textless',
+    'tinted glass', '4x3', 'white border',
 ]
 
 """
@@ -331,6 +333,15 @@ class TintedGlassCardType(BaseCardTypeCustomFontNoText):
 
         return values
 
+class WhiteBorderCardType(BaseCardTypeCustomFontAllText):
+    font_color: BetterColor = WhiteBorderTitleCard.TITLE_COLOR
+    font_file: FilePath = WhiteBorderTitleCard.TITLE_FONT
+    omit_gradient: bool = False
+    separator: str = '•'
+    stroke_color: BetterColor = WhiteBorderTitleCard.STROKE_COLOR
+    episode_text_color: BetterColor = WhiteBorderTitleCard.TITLE_COLOR
+    interword_spacing: float = 0.0
+
 LocalCardTypeModels = {
     '4x3': FadeCardType,
     'anime': AnimeCardType,
@@ -345,6 +356,7 @@ LocalCardTypeModels = {
     'ishalioh': OlivierCardType,
     'landscape': LandscapeCardType,
     'logo': LogoCardType,
+    'musikmann': WhiteBorderCardType,
     'olivier': OlivierCardType,
     'phendrena': CutoutCardType,
     'photo': FrameCardType,
@@ -359,4 +371,5 @@ LocalCardTypeModels = {
     'textless': TextlessCardType,
     'tinted glass': TintedGlassCardType,
     'tinted frame': TintedFrameCardType,
+    'white border': WhiteBorderCardType,
 }

@@ -21,6 +21,7 @@
   <script type="text/javascript" src="/templates/loadStaticContent.js"></script>
   <script type="text/javascript" src="/templates/theme.js"></script>
   <script type="text/javascript" src="/templates/messages.js"></script>
+  <script type="text/javascript" src="/templates/scheduler.js"></script>
 
   <!-- Global styles -->
   <link rel="stylesheet" type="text/css" href="/templates/style.css">
@@ -40,145 +41,15 @@
         <a><i class="sync icon"></i></a>
       </td>
       <td data-column="description" class="left aligned"></td>
+      {% if preferences.advanced_scheduling %}
+      <td data-column="schedule" class="center aligned" data-tooltip="Edit and Save to Reschedule"></td>
+      {% else %}
       <td data-column="frequency" class="center aligned" data-tooltip="Edit and Save to Reschedule"></td>
+      {% endif %}
       <td data-column="previous_duration" class="center aligned"></td>
       <td data-column="next_run" class="left aligned"></td>
     </tr>
   </template>
-
-  <script>
-    function timeDiffString(next_run) {
-      const nextRun = new Date(next_run);
-      const nextRunStr = nextRun.toLocaleString();
-
-      // Get current time, 
-      const now = new Date();
-      const diffSeconds = Math.floor((nextRun - now) / 1000);
-      const diffMinutes = Math.floor(diffSeconds / 60);
-      const diffHours = Math.floor(diffMinutes / 60);
-      const diffDays = Math.floor(diffHours / 24);
-
-      // Create string for next run time, only show up to two time units
-      const timeUnits = [];
-      if (diffDays > 1) { timeUnits.push(`<span class="ui red text">${diffDays}</span> days`); }
-      else if (diffDays > 0) { timeUnits.push(`<span class="ui red text">${diffDays}</span> day`); }
-      if (diffHours % 24 > 1) { timeUnits.push(`<span class="ui green text">${diffHours%24}</span> hours`); }
-      else if (diffHours % 24 > 0) { timeUnits.push(`<span class="ui green text">${diffHours%24}</span> hour`); }
-      if (diffMinutes % 60 > 1) { timeUnits.push(`<span class="ui blue text">${diffMinutes%60}</span> minutes`); }
-      else if (diffMinutes % 60 > 0) { timeUnits.push(`<span class="ui blue text">${diffMinutes%60}</span> minute`); }
-      if (diffSeconds % 60 > 1) { timeUnits.push(`<span class="ui teal text">${diffSeconds%60}</span> seconds`); }
-      else if (diffSeconds % 60 > 0) { timeUnits.push(`<span class="ui teal text">${diffSeconds%60}</span> second`); }
-      // return inStr = timeUnits.join(', ');
-      return inStr = timeUnits.slice(0, 2).join(', ');
-    }
-
-    function timeFreqString(freq, top=-1) {
-      const seconds = Math.floor(freq);
-      const minutes = Math.floor(seconds / 60);
-      const hours = Math.floor(minutes / 60);
-      const days = Math.floor(hours / 24);
-      const timeUnits = [];
-      if (days > 0) { timeUnits.push(`${days} days`); }
-      if (hours % 24 > 0) { timeUnits.push(`${hours%24} hours`); }
-      if (minutes % 60 > 0) { timeUnits.push(`${minutes%60} minutes`); }
-      if (seconds % 60 > 0 || timeUnits.length === 0) { timeUnits.push(`${seconds%60} seconds`); }
-      
-      if (top > 0) { return timeUnits.slice(0, top).join(', '); }
-      else { return timeUnits.join(', '); }
-    }
-
-    async function updateScheduledTasks() {
-      $('#task-table tr').each((index, row) => {
-        const taskId = row.dataset.id;
-        const frequencyText = $(`tr[data-id="${taskId}"] > td[data-column="frequency"]`)[0].innerText
-
-        const intervalRegex = /(\d+) (week|day|hour|minute|second)s?/g;
-        const allMatches = [...frequencyText.matchAll(intervalRegex)];
-
-        // Create UpdateInterval object based on this frequency text
-        const updateInterval = {};
-        allMatches.forEach(([_, interval, unit]) => updateInterval[`${unit}s`] = interval);
-        
-        // Submit API request to reschedule this task
-        $.ajax({
-          type: 'PATCH',
-          url: `/api/schedule/update/${taskId}`,
-          data: JSON.stringify(updateInterval),
-          contentType: 'application/json',
-          success: response => {
-            $.toast({class: 'blue info', title: `Rescheduled Task ${taskId}`});
-          }, error: response => {
-            $.toast({
-              class: 'error',
-              title: 'Error Rescheduling Task',
-              message: response.responseJSON.detail,
-              displayTime: 0,
-            });
-          }, complete: () => {initAll();}
-        });
-      });
-    }
-
-    async function runTask(taskId) {
-      // If task is already running, do not re-run
-      if ($(`tr[data-id="${taskId}"] td[data-column="runTask"] i`)[0].classList.contains('loading')) {
-        $.toast({class: 'blue info', title: `Task ${taskId} is already running`});
-        return; 
-      }
-      $(`tr[data-id="${taskId}"] td[data-column="runTask"] i`).toggleClass('blue loading', true);
-      $.toast({class: 'blue info', title: `Running Task ${taskId}`});
-      $.ajax({
-        type: 'POST',
-        url: `/api/schedule/${taskId}`,
-        success: response => {
-          $.toast({class: 'blue info', title: `Task ${taskId} Completed`});
-          $(`tr[data-id="${taskId}"] td[data-column="previous_duration"]`)[0].innerHTML = timeFreqString(response.previous_duration, 2);
-        }, error: response => {
-          $.toast({
-            class: 'error',
-            title: 'Error Running Task',
-            message: response.responseJSON.detail,
-            displayTime: 0,
-          });
-        }, complete: () => {
-          // Turn off loading indication
-          $(`tr[data-id="${taskId}"] td[data-column="runTask"] i`).toggleClass('blue loading', false);
-        }
-      });
-    }
-
-    async function initAll() {
-      const taskTable = document.getElementById('task-table');
-      const rowTemplate = document.getElementById('task-template');
-      if (taskTable === null || rowTemplate === null) { return; }
-
-      const allTasks = await fetch('/api/schedule/scheduled').then(resp => resp.json());
-      const rows = allTasks.map(task => {
-        const row = rowTemplate.content.cloneNode(true);
-        row.querySelector('tr').dataset.id = task.id;
-        if (task.running) {
-          // Do not make this column selectable
-          row.querySelector('td[data-column="runTask"]').className = 'center aligned';
-          // Put icon in loading state
-          row.querySelector('td[data-column="runTask"] i').className = 'blue loading sync icon';
-        } else {
-          // Task is not currently running, allow it to be run via click
-          row.querySelector('td[data-column="runTask"] a').onclick = () => runTask(task.id);
-        }
-        row.querySelector('td[data-column="description"]').innerHTML = task.description;
-        row.querySelector('td[data-column="frequency"]').innerHTML = `<span contenteditable="true">${timeFreqString(task.frequency)}</span>`;
-        if (task.previous_duration === null) {
-          row.querySelector('td[data-column="previous_duration"]').innerHTML = '-';
-        } else {
-          row.querySelector('td[data-column="previous_duration"]').innerHTML = timeFreqString(task.previous_duration, 2);
-        }
-        row.querySelector('td[data-column="next_run"]').innerHTML = `in ${timeDiffString(task.next_run)}`;
-
-        return row;
-      });
-      taskTable.replaceChildren(...rows);
-    }
-  </script>
 </head>
 
 <body onload="initAll()">
@@ -190,27 +61,69 @@
     <!-- Actual page content -->
     <div id="main-content" class="article">
       <h1 class="ui header">Scheduler</h1>
-      <div class="ui item">
-        <table class="ui stackable collapsing table">
-          <thead>
-            <tr>
-              <th></th>
-              <th class="left aligned">Task Description</th>
-              <th class="center aligned" data-tooltip="How often to run this Task - enter times as seconds, minutes, hours, days, or weeks">Frequency</th>
-              <th class="center aligned" data-tooltip="How long this Task's last run took">Last Duration</th>
-              <th class="left aligned">Next Run</th>                
-            </tr>
-          </thead>
-          <tbody id="task-table"><!-- Add asynchronously --></tbody>
-        </table>
-      </div>
-      <br>
+
+      <table class="ui stackable collapsing table">
+        <thead>
+          <tr>
+            <th></th>
+            <th class="left aligned">Task Description</th>
+            {% if preferences.advanced_scheduling %}
+            <th class="center aligned" data-tooltip="Cron Schedule for this Task">Schedule</th>
+            {% else %}
+            <th class="center aligned" data-tooltip="How often to run this Task - enter times as seconds, minutes, hours, days, or weeks">Frequency</th>
+            {% endif %}
+            <th class="center aligned" data-tooltip="How long this Task's last run took">Last Duration</th>
+            <th class="left aligned">Next Run</th>                
+          </tr>
+        </thead>
+        <tbody id="task-table"><!-- Add asynchronously --></tbody>
+      </table>
+
       <button class="ui animated blue button" onclick="updateScheduledTasks();">
         <div class="visible content">Save Changes</div>
         <div class="hidden content">
           <i class="right arrow icon"></i>
         </div>
       </button>
+      {% if preferences.advanced_scheduling %}
+      <button id="toggle-button" class="ui green button" onclick="$('#toggleScheduleTypeModal').modal('show');">
+        Enable Basic Scheduler
+      </button>
+      {% else %}
+      <button id="toggle-button" class="ui green button" onclick="$('#toggleScheduleTypeModal').modal('show');">
+        Enable Advanced Scheduler
+      </button>
+      {% endif %}
+
+      {% if preferences.advanced_scheduling %}
+      <br>
+      <div class="ui compact floating info message">
+        <div class="header">Scheduling</div>
+        <p>If <b>Advanced</b> Scheduling is enabled, Task schedules are entered as <i>Cron</i> expressions. See <a href="https://crontab.guru/">here</a> for help entering these.</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Modals -->
+    <div id="toggleScheduleTypeModal" class="ui basic modal">
+      <div class="ui center aligned icon header">
+        <i class="stopwatch icon"></i>
+        Change Scheduler Type?
+      </div>
+      <div class="center aligned content">
+        <p>Changing this will reset your existing Schedules.</p>
+        <p>Do you want to continue?</p.>
+      </div>
+      <div class="center aligned actions">
+        <div class="ui red basic cancel inverted button">
+          <i class="remove icon"></i>
+          No
+        </div>
+        <div class="ui green ok inverted button" onclick="toggleScheduleType();">
+          <i class="checkmark icon"></i>
+          Yes
+        </div>
+      </div>
     </div>
   </div>
 </body>

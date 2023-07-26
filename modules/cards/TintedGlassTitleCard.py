@@ -122,7 +122,7 @@ class TintedGlassTitleCard(BaseCardType):
 
         self.title_text = self.image_magick.escape_chars(title_text)
         self.__line_count = len(title_text.split('\n'))
-        self.episode_text = self.image_magick.escape_chars(episode_text.upper())
+        self.episode_text = self.image_magick.escape_chars(episode_text)
         self.hide_episode_text = hide_episode_text
 
         self.font_file = font_file
