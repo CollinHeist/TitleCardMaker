@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, Body, Depends, Request
 from fastapi_pagination import paginate
 from sqlalchemy.orm import Session
@@ -45,13 +47,18 @@ def create_template(
 
 @template_router.get('/all', status_code=200)
 def get_all_templates(
+        order_by: Literal['id', 'name'] = 'name',
         db: Session = Depends(get_database),
     ) -> Page[Template]:
     """
     Get all defined Templates.
     """
 
-    return paginate(db.query(models.template.Template).all())
+    query = db.query(models.template.Template)
+    if order_by == 'id':
+        return paginate(query.all())
+
+    return paginate(query.order_by(models.template.Template.name).all())
 
 
 @template_router.get('/{template_id}', status_code=200)
