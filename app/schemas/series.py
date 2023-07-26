@@ -120,10 +120,12 @@ class BaseUpdate(UpdateBase):
     def validate_arguments(cls, v):
         return None if v == '' else v
 
-    @validator('season_title_ranges', 'season_title_values',
+    @validator('translations',
+               'season_title_ranges', 'season_title_values',
                'extra_keys', 'extra_values', pre=True)
     def validate_list(cls, v):
-        return [v] if isinstance(v, str) else v
+        # Filter out empty strings - all arguments can accept empty lists
+        return [val for val in ([v] if isinstance(v, str) else v) if val != '']
 
     @root_validator
     def validate_paired_lists(cls, values):
@@ -180,6 +182,12 @@ class NewSeries(BaseSeries):
                'extra_keys', 'extra_values', pre=True)
     def validate_list(cls, v):
         return [v] if isinstance(v, str) else v
+    
+    @validator('template_ids', pre=False)
+    def validate_unique_template_ids(cls, val):
+        if len(val) != len(set(val)):
+            raise ValueError('Template IDs must be unique')
+        return val
 
     @root_validator
     def validate_paired_lists(cls, values):
@@ -207,31 +215,9 @@ class UpdateTemplate(BaseUpdate):
     extra_keys: list[DictKey] = UNSPECIFIED
     extra_values: list[Any] = UNSPECIFIED
 
-    @validator('*', pre=True)
-    def validate_arguments(cls, v):
-        return None if v == '' else v
-
-    @validator('translations',
-               'season_title_ranges', 'season_title_values',
-               'extra_keys', 'extra_values', pre=True)
-    def validate_list(cls, v):
-        # Filter out empty strings - all arguments can accept empty lists
-        return [val for val in ([v] if isinstance(v, str) else v) if val != '']
-
-    @root_validator
-    def validate_paired_lists(cls, values):
-        # Season title ranges
-        values = validate_argument_lists_to_dict(
-            values, 'season titles',
-            'season_title_ranges', 'season_title_values',
-            output_key='season_titles'
-        )
-        # Extras
-        return validate_argument_lists_to_dict(
-            values, 'extras',
-            'extra_keys', 'extra_values',
-            output_key='extras',
-        )
+    # @validator('*', pre=True)
+    # def validate_arguments(cls, v):
+    #     return None if v == '' else v
 
 class UpdateSeries(BaseUpdate):
     name: str = Field(default=UNSPECIFIED, min_length=1)
@@ -276,30 +262,15 @@ class UpdateSeries(BaseUpdate):
     tvrage_id: TVRageID = UNSPECIFIED
     directory: Optional[str] = UNSPECIFIED
 
-    @validator('*', pre=True)
-    def validate_arguments(cls, v):
-        return None if v == '' else v
-
-    @validator('translations',
-               'season_title_ranges', 'season_title_values',
-               'extra_keys', 'extra_values', pre=True)
-    def validate_list(cls, v):
-        return [v] if isinstance(v, str) else v
-
-    @root_validator
-    def validate_paired_lists(cls, values):
-        # Season title ranges
-        values = validate_argument_lists_to_dict(
-            values, 'season titles',
-            'season_title_ranges', 'season_title_values',
-            output_key='season_titles'
-        )
-        # Extras
-        return validate_argument_lists_to_dict(
-            values, 'extras',
-            'extra_keys', 'extra_values',
-            output_key='extras',
-        )
+    # @validator('*', pre=True)
+    # def validate_arguments(cls, v):
+    #     return None if v == '' else v
+    
+    @validator('template_ids', pre=False)
+    def validate_unique_template_ids(cls, val):
+        if len(val) != len(set(val)):
+            raise ValueError('Template IDs must be unique')
+        return val
 
 """
 Return classes
