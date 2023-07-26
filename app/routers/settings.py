@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Body, Depends
+from fastapi import APIRouter, Body, Depends, Request
 
-from app.dependencies import * # pylint: disable=W0401,W0614
+from app.dependencies import *
+from app.models.preferences import Preferences as PreferencesModel
 from app.schemas.preferences import (
     EpisodeDataSourceToggle, LanguageToggle, Preferences, UpdatePreferences
 )
@@ -16,7 +17,9 @@ settings_router = APIRouter(
 
 
 @settings_router.get('/version', status_code=200)
-def get_current_version(preferences = Depends(get_preferences)) -> str:
+def get_current_version(
+        preferences: PreferencesModel = Depends(get_preferences),
+    ) -> str:
     """
     Get the current version of TitleCardMaker.
     """
@@ -26,24 +29,29 @@ def get_current_version(preferences = Depends(get_preferences)) -> str:
 
 @settings_router.patch('/update', status_code=200)
 def update_global_settings(
+        request: Request,
         update_preferences: UpdatePreferences = Body(...),
-        preferences = Depends(get_preferences)) -> Preferences:
+        preferences: PreferencesModel = Depends(get_preferences),
+    ) -> Preferences:
     """
     Update all global settings.
 
     - update_preferences: UpdatePreferences containing fields to update.
     """
 
-    preferences.update_values(**update_preferences.dict())
+    # Get contextual logger
+    log = request.state.log
+
+    preferences.update_values(**update_preferences.dict(), log=log)
     refresh_imagemagick_interface()
-    preferences.determine_imagemagick_prefix()
+    preferences.determine_imagemagick_prefix(log=log)
 
     return preferences
 
 
 @settings_router.get('/sonarr-libraries', tags=['Sonarr'])
 def get_sonarr_libraries(
-        preferences: Preferences = Depends(get_preferences)
+        preferences: PreferencesModel = Depends(get_preferences),
     ) -> list[dict[str, str]]:
     """
     Get the global Sonarr library mappings.
@@ -57,7 +65,7 @@ def get_sonarr_libraries(
 
 @settings_router.get('/image-source-priority')
 def get_image_source_priority(
-        preferences: Preferences = Depends(get_preferences)
+        preferences: PreferencesModel = Depends(get_preferences),
     ) -> list[EpisodeDataSourceToggle]:
     """
     Get the global image source priority.
@@ -75,7 +83,7 @@ def get_image_source_priority(
 
 @settings_router.get('/logo-language-priority')
 def get_tmdb_logo_language_priority(
-        preferences: Preferences = Depends(get_preferences),
+        preferences: PreferencesModel = Depends(get_preferences),
     ) -> list[LanguageToggle]:
     """
     Get the global TMDb logo language priority setting.
