@@ -346,7 +346,7 @@ class RomanNumeralTitleCard(BaseCardType):
 
         numeral = (thousands + hundreds + tens + ones).strip()
 
-        # Split roman numerals that are longer than 6 chars into two lines
+        # Split roman numerals that are longer than 4 chars into two lines
         if len(numeral) >= 5:
             self.__roman_numeral_lines = 2
             roman_text = [numeral[:len(numeral)//2], numeral[len(numeral)//2:]]
@@ -523,8 +523,9 @@ class RomanNumeralTitleCard(BaseCardType):
             )
 
         # Get width of whole line
-        total_width, _ = self.get_text_dimensions(numeral_command,
-                                                  width='sum', height='max')
+        total_width, _ = self.get_text_dimensions(
+            numeral_command, width='sum', height='max'
+        )
 
         # Get width of line to the left of the selected numeral
         left_width = 0
@@ -655,7 +656,7 @@ class RomanNumeralTitleCard(BaseCardType):
     def modify_extras(
             extras: dict,
             custom_font: bool,
-            custom_season_titles: bool
+            custom_season_titles: bool,
         ) -> None:
         """
         Modify the given extras base on whether font or season titles
