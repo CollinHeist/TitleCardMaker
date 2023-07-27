@@ -6,7 +6,7 @@ from typing import Optional, Union
 from fastapi import HTTPException
 
 from modules.Debug import log
-from modules.EpisodeDataSource2 import EpisodeDataSource
+from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
 from modules.MediaServer2 import MediaServer, SourceImage
@@ -312,6 +312,53 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
                             and id_ is not None):
                             setattr(old_episode_info, id_type, id_)
                     break
+
+
+    def query_series(self,
+            query: str,
+            *,
+            log: Logger = log,
+        ) -> list[SearchResult]:
+        """
+        Search Emby for any Series matching the given query.
+
+        Args:
+            query: Series name or substring to look up.
+            log: (Keyword) Logger for all log messages.
+
+        Returns:
+            List of SearchResults for the given query. Results are from
+            any library.
+        """
+
+        # Perform query
+        search_results = self.session.get(
+            f'{self.url}/Items',
+            params=self.__params | {
+                'Recursive': True,
+                'IncludeItemTypes': 'Series',
+                'SearchTerm': query,
+                'Fields': 'ProviderIds,Overview,ProductionYear,Status',
+                'EnableImages': True,
+                'ImageTypes': 'Primary',
+            },
+        )
+
+        return [
+            SearchResult(
+                name=result['Name'],
+                year=result['ProductionYear'], # get_year(result['PremiereDate'])
+                ongoing=result['Status'] == 'Continuing',
+                overview=result.get('Overview', 'No overview available'),
+                poster=f'{self.url}/Items/{result["Id"]}/Images/Primary?quality=75',
+                imdb_id=result.get('ProviderIds', {}).get('IMDB'),
+                jellyfin_id=result['Id'],
+                tmdb_id=result.get('ProviderIds', {}).get('Tmdb'),
+                tvdb_id=result.get('ProviderIds', {}).get('Tvdb'),
+                tvrage_id=result.get('ProviderIds', {}).get('TvRage'),
+            ) for result in search_results['Items'][:25]
+            if 'ProductionYear' in result
+        ]
 
 
     def get_library_paths(self,

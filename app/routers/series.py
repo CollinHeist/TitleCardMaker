@@ -220,7 +220,7 @@ def lookup_series(
         interface: EpisodeDataSource = Query(...),
         # year: Optional[int] = None,
         db: Session = Depends(get_database),
-        # emby
+        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
         jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
         plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
         sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
@@ -237,7 +237,7 @@ def lookup_series(
 
     # Get associated Interface to query
     interface_obj = {
-        # 'Emby':
+        'Emby': emby_interface,
         'Jellyfin': jellyfin_interface,
         'Plex': plex_interface,
         'Sonarr': sonarr_interface,
