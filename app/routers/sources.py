@@ -375,6 +375,7 @@ async def set_episode_source_image(
         db,
         db.query(models.card.Card).filter_by(episode_id=episode_id),
         db.query(models.loaded.Loaded).filter_by(episode_id=episode_id),
+        log=log,
     )
 
     # Return created SourceImage
