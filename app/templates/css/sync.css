@@ -1,0 +1,37 @@
+/* Override width of all sync cards */
+.ui.card {
+  max-width: 250px !important;
+}
+
+/* Custom add card */
+.add.card {
+  display: inline-block !important;
+  position: absolute;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.add.card > .content {
+  top: 50%;
+  position: relative;
+  transform: translateY(-50%);
+}
+
+.sync.modal {
+  width: 500px !important;
+}
+
+/* Show hover icon on all Sync buttons */
+.card .content i.icon {
+  cursor: pointer;
+}
+
+/* Color edit Sync icon on hover  */
+.card .content i.edit.icon:hover {
+  color: #2ecc40;
+}
+
+/* Color Sync now icon on hover */
+i.sync.icon:hover {
+  color: #2185d0;
+  /* size: 110%; */
+}

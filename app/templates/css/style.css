@@ -1,0 +1,207 @@
+:root {
+  --background-color-light: #f5f7fa;
+  --background-color-dark: #2a2a2a;
+  --sidebar-color-light: #1b1c1d;
+
+  --theme-light-color: rgba(152, 152, 152, 0.3);
+  --tcm-blue-color: rgb(99,145,210);
+
+  /* Same as fomantic ui red */
+  --support-button-color: #db2828;
+}
+
+/* Fix header in place, lock window positioning */
+body > div:first-of-type {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+}
+
+#main-content {
+  /* Ensure main content is scrollable */
+  overflow-x: hidden;
+  /* Add margin for main content to space from header and sidebar */
+  padding: 15px 15px 15px 135px;
+}
+
+/* Header element alignment */
+#page-header {
+  align-items: center;
+  display: flex;
+  height: 70px;
+  flex: 0 0 auto;
+  /* Drop shadow so header is separated from rest of page */
+  box-shadow: 1px 1px 10px -3px rgba(252, 252, 252, 0.8);
+}
+#page-header >* {
+  display: flex;
+}
+/* Remove extra margin from header button */
+#page-header .ui.button > .icon {
+  margin: unset;
+}
+/* Right aligned header elements */
+#page-header > [data-position="right"] {
+  justify-content: flex-end;
+  flex-grow: 1;
+  margin-right: 25px;
+}
+#page-header > [data-position="right"] >* {
+  margin-right: 10px;
+}
+#tcm-logo {
+  /* Pad the entire width of the sidebar */
+  flex: 0 0 109px;
+  /* Center logo horizontally */
+  justify-content: center;
+}
+
+/* Global background gradient */
+body {
+  background-image: linear-gradient(to bottom right, var(--background-color-light), #d9d9d9);
+}
+
+/* Don't put any scrollbars in the sidebar */
+#nav-menu > .sidebar {
+  overflow: hidden;
+}
+
+/* Style for the header on all pages */
+#page-header {
+  /* height: 70px; */
+  background-color: var(--sidebar-color-light);
+  z-index: 99; /* Position above all elements */
+}
+
+/* Remove outline from logo */
+#tcm-logo img {
+  max-height: 50px;
+}
+#tcm-logo, #tcm-logo:hover {
+  box-shadow: none;
+}
+
+/* Position sidebar below header */
+#nav-menu .sidebar {
+  top: 70px;
+}
+
+/* Format for the search results */
+.search.content {
+  display: inline-block;
+  vertical-align: middle;
+  /* Cut off any long series name */
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+}
+.search.content > img {
+  height: 50px;
+  width: 35px;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+.search.result {
+  padding: 7px !important;
+}
+
+/* Format right aligned fields and inputs */
+.right.aligned.field,
+.right.aligned.field input {
+  text-align: right;
+}
+/* Adjacent input fields need additional top margin */
+input ~ input {
+  margin-top: 4px !important;
+}
+
+/* Dropdown headers are red */
+.ui.dropdown >* .header {
+  color: crimson !important;
+}
+
+/* Add shadow around search input when selected */
+#search-bar input:focus {
+  box-shadow: 0 0 1.1em 0 var(--tcm-blue-color) !important;
+}
+
+/* Support button */
+#support-button {
+  /* Add glow effect */
+  border-radius: 0.25em;
+  box-shadow: 0 0 1.1em 0 var(--support-button-color);
+}
+/* Don't leave any additional margin */
+#support-button .button {
+  margin: 0;
+}
+
+html.ios {
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+html.ios,
+html.ios body {
+  height: initial !important;
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+  width: 0.5em;
+}
+::-webkit-scrollbar-track {
+  background: rgba(12, 12, 12, 0.2);
+  border-radius: 100vw;
+  margin-block: 0.5em;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--tcm-blue-color);
+  border-radius: 100vw;
+  border: 0.25em solid var(--tcm-blue-color);
+}
+
+/* Firefox support */
+@supports (scrollbar-color: red blue) {
+  * {
+    scrollbar-color: var(--tcm-blue-color) rgba(12,12,12, 0.2);
+    /* scrollbar-width: thin; */ /* Use auto */
+  }
+}
+
+/* Mobile formatting */
+@media (max-width: 768px) {
+  /* Remove fixed width on logo */
+  #tcm-logo {
+    width: unset;
+    flex: 0 0 70px;
+  }
+
+  /* Do not use absolute positioning, let items stack themselves */
+  #page-header > div {
+    position: unset;
+  }
+
+  /* Shrink search input */
+  #header-search input {
+    width: 100px;
+  }
+
+  /* Hide icons */
+  #nav-menu i {
+    display: none;
+  }
+
+  /* Use reduced padding */
+  #main-content {
+    padding-left: 95px;
+  }
+  #nav-menu .item {
+    padding: 0.5em 0.1em;
+  }
+  #nav-menu .sidebar {
+    top: 70px;
+  }
+}
+

@@ -1,0 +1,13 @@
+/* Align the label and text to the right */
+.right.aligned.field, .right.aligned.field > input {
+  text-align: right;
+}
+
+/* Limit image preview dimensions */
+img {
+  max-width: 100%;
+}
+/* Make sure card loader is below the search bar and dropdown */
+.ui.loading.card::before {
+  z-index: 10;
+}

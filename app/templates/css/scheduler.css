@@ -1,0 +1,6 @@
+/* Center align table on mobile */
+@media (max-width: 768px) {
+  table th, table td {
+    text-align: center !important;
+  }
+}

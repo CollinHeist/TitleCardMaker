@@ -1,0 +1,37 @@
+/* Add hover effect to header to indicate about section toggle */
+h1 {
+  cursor: pointer;
+}
+
+/* Excluded card types have reduced opacity, strikethrough and italic effects */
+#excluded-card-types .menu .active.item {
+  opacity: 30%;
+  text-decoration: line-through;
+  font-style: italic;
+}
+
+/* Formatting for the title card prevew */
+#title-card-preview .card {
+  width: 900px; /* 800px */
+  min-width: 253px; /* 225px */
+  max-height: 253px; /* 225px */
+}
+#title-card-preview .image {
+  width: 450px; /* 400px */
+}
+/* Wrap long descriptions with scrollbar */
+#title-card-preview .content {
+  overflow: auto;
+  max-height: 253px;
+}
+
+/* Mobile formatting for the title card preview */
+@media (max-width: 768px) {
+  #title-card-preview .card {
+    width: 100%;
+    max-height: none;
+  }
+  #title-card-preview .image {
+    width: 100%;
+  }
+}

@@ -1,0 +1,19 @@
+/* Ensure preview card images don't overflow their div */
+img {
+  max-width: 100%;
+}
+
+/* Make sure card loader is below the search bar */
+.ui.loading.card::before {
+  z-index: 10;
+}
+
+/* Add field buttons appear transparent */
+.add-field.button {
+  background: transparent;
+}
+
+/* Reduce bottom margin between filter condition fields */
+[data-value="conditions"] .fields {
+  margin-bottom: 0.3em !important;
+}
