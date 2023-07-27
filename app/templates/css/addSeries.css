@@ -1,0 +1,14 @@
+#search-results .card {
+  /* Cap height at poster height */
+  max-height: 225px;
+  /* Scroll very long descriptions */
+  overflow: scroll;
+}
+
+.disabled.card img {
+  filter: grayscale(50%) blur(0.8px);
+}
+
+.card [data-action="blacklist-blueprint"]:hover {
+  color: #db2828 !important;
+}

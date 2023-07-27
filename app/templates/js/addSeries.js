@@ -380,6 +380,7 @@ async function initAll() {
   $('.dropdown[data-value="template_ids"]').dropdown({
     values: await getActiveTemplates(undefined, allTemplates),
   });
+  $('.ui.dropdown').dropdown();
 }
 
 /*
