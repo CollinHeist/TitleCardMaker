@@ -1,0 +1,24 @@
+/* Limit the width of the YAML textarea inputs, set font to monospace */
+textarea {
+  width: 50% !important;
+  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace !important;
+}
+
+/* Override width on mobile */
+@media (max-width: 768px) {
+  textarea {
+    width: 100% !important;
+  }
+}
+
+.ui.compact.visible.message {
+  display: inline-block !important;
+}
+
+/* Add green checkbox before the name of active items in dropdowns */
+#import-cards-form .dropdown .active.item .text::before {
+  content: "\f00c";
+  color: #21ba45;
+  margin-right: 0.2em;
+  font-family: icons;
+}
