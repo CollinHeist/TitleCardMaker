@@ -60,6 +60,12 @@ class NewEpisode(Base):
     extras: Optional[dict[str, Any]] = None
     translations: dict[str, str] = {}
 
+    @validator('template_ids', pre=False)
+    def validate_unique_template_ids(cls, val):
+        if len(val) != len(set(val)):
+            raise ValueError('Template IDs must be unique')
+        return val
+
 """
 Update classes
 """
@@ -109,6 +115,12 @@ class UpdateEpisode(UpdateBase):
     @validator('*', pre=True)
     def validate_arguments(cls, v):
         return None if v == '' else v
+    
+    @validator('template_ids', pre=False)
+    def validate_unique_template_ids(cls, val):
+        if len(val) != len(set(val)):
+            raise ValueError('Template IDs must be unique')
+        return val
 
     @validator('extra_keys', 'extra_values', pre=True)
     def validate_list(cls, v):

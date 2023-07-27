@@ -47,7 +47,7 @@ async def add_font_file(
     """
     Add a custom font file to the specified Font.
 
-    - font_id: ID of the font to upload the font file to.
+    - font_id: ID of the Font to upload the font file to.
     - file: Font file to attach to the specified font.
     """
 
@@ -77,8 +77,8 @@ async def add_font_file(
 
 @font_router.delete('/{font_id}/file', status_code=200)
 def delete_font_file(
-        font_id: int,
         request: Request,
+        font_id: int,
         db: Session = Depends(get_database),
     ) -> NamedFont:
     """
@@ -93,9 +93,12 @@ def delete_font_file(
     # Get existing font object, raise 404 if DNE
     font = get_font(db, font_id, raise_exc=True)
 
-    # Font has no file, return unmodified
+    # Font has no file, raise 404
     if font.file is None:
-        return font
+        raise HTTPException(
+            status_code=404,
+            detail=f'Font {font.name} has no font file',
+        )
 
     # If file exists, delete
     if Path(font.file).exists():
@@ -118,8 +121,8 @@ def delete_font_file(
 
 @font_router.patch('/{font_id}', status_code=200)
 def update_font(
-        font_id: int,
         request: Request,
+        font_id: int,
         update_font: UpdateNamedFont = Body(...),
         db: Session = Depends(get_database),
     ) -> NamedFont:
@@ -182,8 +185,8 @@ def get_font_by_id(
 
 @font_router.delete('/{font_id}', status_code=204)
 def delete_font(
-        font_id: int,
         request: Request,
+        font_id: int,
         db: Session = Depends(get_database),
     ) -> None:
     """

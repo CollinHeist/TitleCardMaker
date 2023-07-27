@@ -1,7 +1,7 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring
 from typing import Literal, Optional
 
-from pydantic import Field
+from pydantic import Field, validator
 
 from app.schemas.base import Base, UpdateBase, UNSPECIFIED
 
@@ -17,6 +17,11 @@ class NewBaseSync(Base):
     template_ids: list[int] = []
     required_tags: list[str] = []
     excluded_tags: list[str] = []
+
+    @validator('template_ids', pre=False)
+    def validate_unique_template_ids(cls, val):
+        assert len(val) == len(set(val)), 'Template IDs must be unique'
+        return val
 
 class NewMediaServerSync(NewBaseSync):
     required_libraries: list[str] = []
@@ -68,3 +73,9 @@ class UpdateSync(UpdateBase):
     monitored_only: bool = UNSPECIFIED
     required_series_type: Optional[SonarrSeriesType] = UNSPECIFIED
     excluded_series_type: Optional[SonarrSeriesType] = UNSPECIFIED
+
+    @validator('template_ids', pre=False)
+    def validate_unique_template_ids(cls, val):
+        if len(val) != len(set(val)):
+            raise ValueError('Template IDs must be unique')
+        return val
