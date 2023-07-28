@@ -1255,7 +1255,7 @@ function selectTmdbImage(episodeId, url) {
     cache: false,
     contentType: false,
     processData: false,
-    success: response => {
+    success: () => {
       $.toast({class: 'blue info', title: 'Updated source image'});
       getFileData();
     }, error: response => {
@@ -1264,10 +1264,14 @@ function selectTmdbImage(episodeId, url) {
         title: 'Error updating source image',
         message: response.responseJSON.detail,
       });
-    }, complete: () => {},
+    },
   });
 }
 
+/*
+ * Submit an API request to download the Series logo at the specified
+ * URL.
+ */
 function downloadSeriesLogo(url) {
   // Create psuedo form for this URL
   const form = new FormData();
@@ -1280,7 +1284,7 @@ function downloadSeriesLogo(url) {
     cache: false,
     contentType: false,
     processData: false,
-    success: response => {
+    success: () => {
       $.toast({class: 'blue info', title: 'Downloaded Logo'});
     }, error: response => {
       $.toast({
@@ -1289,7 +1293,7 @@ function downloadSeriesLogo(url) {
         message: response.responseJSON.detail,
         displayTime: 0,
       });
-    }, complete: () => {}
+    },
   });
 }
 
