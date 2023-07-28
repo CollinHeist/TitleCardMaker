@@ -79,6 +79,7 @@ class TautulliInterface(WebInterface, Interface):
                 self.__params | {'cmd': 'status'}
             )
             if status.get('response', {}).get('result') != 'success':
+                log.debug(f'Tautulli returned response: {status}')
                 raise HTTPException(
                     status_code=401,
                     detail=f'Invalid Tautulli URL or API key'
