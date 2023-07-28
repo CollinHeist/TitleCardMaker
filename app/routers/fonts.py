@@ -47,7 +47,7 @@ async def add_font_file(
     """
     Add a custom font file to the specified Font.
 
-    - font_id: ID of the Font to upload the font file to.
+    - font_id: ID of the font to upload the font file to.
     - file: Font file to attach to the specified font.
     """
 
@@ -97,7 +97,7 @@ def delete_font_file(
     if font.file is None:
         raise HTTPException(
             status_code=404,
-            detail=f'Font {font.name} has no font file',
+            detail=f'Font {font.name} has no file',
         )
 
     # If file exists, delete

@@ -1,0 +1,130 @@
+/* Override card width for poster */
+.ui.card {
+  width: auto;
+}
+
+#poster {
+  min-height: 200px;
+}
+
+/* Remove minimum width on progress bar */
+#card-progress .bar {
+  min-width: 0;
+}
+
+/* Add field buttons appear transparent */
+.add-field.button {
+  background: transparent;
+}
+
+/* Inine fields need to flex and align content in the middle of their div */
+#new-episode-form .inline.field {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+#new-episode-form .number.input {
+  width: 85px;
+}
+#new-episode-form .text.input {
+  width: 100%;
+  overflow-wrap: break-word;
+}
+
+/* Add top padding above the delete button for each episode */
+.tab[data-tab="episode-data"] .negative.button {
+  margin-top: 5px;
+}
+
+/* Fix width of new episode modal */
+#new-episode-modal {
+  width: 500px !important;
+}
+/* Use right-aligned inline labels */
+#new-episode-form label {
+  flex: 0 0 125px;
+  display: flex;
+  margin-right: 10px;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+/* Position table header below page header drop shadow */
+.table thead {
+  z-index: 3;
+}
+
+/* Fade any indetermine status icons */
+.table .question.icon {
+  opacity: 30%;
+}
+
+/* Show the icon is clickable by changing the cursor on hover */
+.table .ui.icon:hover {
+  cursor: pointer;
+}
+.table td.center.aligned input {
+  text-align: center !important;
+}
+
+/* Set default width of input fields */
+.table .transparent.id.input input,
+.table .transparent.number.input input,
+.table .transparent.short.input input {
+  width: 8ch;
+}
+/* IMDB ID inputs are slightly larger */
+.table .transparent.id.input input[name="imdb_id"] {
+  width: 10ch;
+}
+
+#episode-data-table .ui.multiple.dropdown {
+  padding: unset;
+}
+
+/* Limit card size to 33% */
+#files-list .card {
+  max-width: calc(33% - 1em);
+}
+
+/* Show cursor on all file card icons, and images in tmdb modal */
+#files-list .card .icon,
+#browse-tmdb-modal .image.content .images a,
+#browse-tmdb-logo-modal .image.content .images a {
+  cursor: pointer;
+}
+
+/* File search icon should color semantic blue on hover */
+#files-list .card i[data-action="search"]:hover {
+  color: #2185d0;
+}
+
+/* Upload file icon should color semantic green on hover */
+#files-list .card i[data-action="upload"]:hover {
+  color: #21ba45;
+}
+
+/* The TMDb logo should be 14px high */
+#files-list .card img {
+  height: 14px;
+  padding-right: 3px;
+}
+
+/* Add padding between images on TMDb image browser */
+#browse-tmdb-modal .image.content .images a,
+#browse-tmdb-logo-modal .image.content .images a {
+  display: inline-block;
+  margin: 0 .25rem 0.5rem;
+}
+
+/* Add border around TMDb logos */
+#browse-tmdb-logo-modal .image.content .images a {
+  border: 2px dashed #ffffff3d;
+  padding: 10px;
+}
+
+/* Limit height of logo */
+#logoImage img {
+  object-fit: contain;
+  max-height: 500px;
+}
