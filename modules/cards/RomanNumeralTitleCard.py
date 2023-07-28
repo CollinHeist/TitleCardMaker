@@ -235,17 +235,18 @@ class RomanNumeralTitleCard(BaseCardType):
 
     __slots__ = (
         'output_file', 'title_text', 'season_text', 'hide_season_text',
-        'font_color', 'background', 'roman_numeral_color', 'roman_numeral',
-        '__roman_text_scalar', '__roman_numeral_lines', 'rotation', 'offset',
-        'season_text_color',
+        'hide_episode_text', 'font_color', 'font_size', 'background',
+        'roman_numeral_color', 'roman_numeral', '__roman_text_scalar',
+        '__roman_numeral_lines', 'rotation', 'offset', 'season_text_color',
     )
 
     def __init__(self,
             card_file: Path,
             title_text: str,
-            season_text: str, 
             episode_text: str,
+            season_text: str,
             hide_season_text: bool = False,
+            hide_episode_text: bool = False,
             font_color: str = TITLE_COLOR,
             font_size: float = 1.0,
             episode_number: int = 1,
@@ -281,6 +282,7 @@ class RomanNumeralTitleCard(BaseCardType):
         # Select roman numeral for season text
         self.season_text = season_text.strip().upper()
         self.hide_season_text = hide_season_text or len(self.season_text) == 0
+        self.hide_episode_text = hide_episode_text
 
         # Rotation and offset attributes to be determined later
         self.rotation, self.offset = None, None
@@ -368,6 +370,9 @@ class RomanNumeralTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
+        if self.hide_episode_text:
+            return []
+
         # Scale font size and interline spacing of roman text
         font_size = 1250 * self.__roman_text_scalar
         interline_spacing = -400 * self.__roman_text_scalar
@@ -400,7 +405,8 @@ class RomanNumeralTitleCard(BaseCardType):
             List of ImageMagick commands.
         """
 
-        if self.hide_season_text or rotation is None or offset is None:
+        if (self.hide_season_text or self.hide_episode_text
+            or rotation is None or offset is None):
             return []
 
         # Override font color only if a custom background color was specified
@@ -535,8 +541,8 @@ class RomanNumeralTitleCard(BaseCardType):
         attributes are set.
         """
 
-        # If season titles are hidden, exit
-        if self.hide_season_text:
+        # If text is hidden, exit
+        if self.hide_season_text or self.hide_episode_text:
             return None
 
         # Get boundaries of title text
