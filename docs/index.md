@@ -33,7 +33,7 @@ into your GitHub account).
 
 2. Follow [these](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#creating-a-personal-access-token-classic)
 instructions to get a __classic__ personal access token (PAT) so that you can
-retrieve the TCM code from git. Copy this code.
+retrieve the TCM code from git. Check the `repo` scope section. Copy this code.
 
     ??? question "Why is this necessary?"
 
@@ -138,7 +138,7 @@ assigned to them.
         the following command:
 
         ```bash
-        sudo chown -R {group}:{user} ./assets/ ./cards ./logs ./source # (1)!
+        sudo chown -R {group}:{user} ./assets ./cards ./logs ./source # (1)!
         ```
 
         1. Replace `{group}` and `{user}` with the actual group and user (or
