@@ -190,7 +190,7 @@ async function initalizeSeriesConfig() {
       ...allStyles.filter(({style_type}) => style_type === 'unique').map(({name, value}) => {
         return {name: name, value: value, selected: value === '{{series.unwatched_style}}'};
       }),
-    ]//, placeholder: 'Global Default',
+    ]
   });
   // Fonts
   const fonts = await fetch('/api/fonts/all').then(resp => resp.json());
@@ -990,12 +990,8 @@ function deleteListValues(attribute) {
         class: 'blue info',
         title: 'Deleted Values',
       });
-    }, error: (response) => {
-      $.toast({
-        class: 'error',
-        title: 'Error Deleting Values',
-        detail: response.responseText,
-      });
+    }, error: response => {
+      showErrorToast({title: 'Error Deleting Values', response: response});
     }
   })
 }
@@ -1044,12 +1040,7 @@ function processSeries() {
     success: () => {
       $.toast({class: 'blue info', title: 'Started Processing Series'});
     }, error: response => {
-      $.toast({
-        class: 'error',
-        title: 'Error Processing Series',
-        message: response.responseJSON.detail,
-        displayTime: 0,
-      });
+      showErrorToast({title: 'Error Processing Series', response: response});
     }, complete: () => {
       $('#action-buttons .button[data-action="process"] i').toggleClass('loading', false);
       $('#action-buttons .button').toggleClass('disabled', false);
@@ -1057,26 +1048,25 @@ function processSeries() {
   });
 }
 
+/*
+ * Submit an API request to refresh Episode data for this Series. If
+ * successful, then the Episode, file, and statistics data are refreshed.
+ */
 function refreshEpisodeData() {
-  $('#refresh').toggleClass('disabled', true);
+  document.getElementById('refresh').classList.add('disabled');
   $('#refresh > i').toggleClass('loading', true);
   $.ajax({
     type: 'POST',
     url: '/api/episodes/{{series.id}}/refresh',
     success: () => {
-      $.toast({class: 'blue info', title: `Refreshed Episode Data`});
+      $.toast({class: 'blue info', title: 'Refreshed Episode Data'});
       getEpisodeData();
       getFileData();
       getStatistics();
     }, error: response => {
-      $.toast({
-        class: 'error',
-        title: 'Error Refreshing Data',
-        message: response.responseJSON.detail,
-        displayTime: 0,
-      });
+      showErrorToast({title: 'Error Refreshing Data', response: response});
     }, complete: () => {
-      $('#refresh').toggleClass('disabled', false);
+      document.getElementById('refresh').classList.remove('disabled');
       $('#refresh > i').toggleClass('loading', false);
     }
   });
@@ -1094,12 +1084,7 @@ function addTranslations() {
     success: () => {
       $.toast({class: 'blue info', title: `Adding Translations`});
     }, error: response => {
-      $.toast({
-        class: 'error',
-        title: 'Error Adding Translations',
-        message: response.responseJSON.detail,
-        displayTime: 0,
-      });
+      showErrorToast({title: 'Error Adding Translations', response: response});
     }, complete: () => {
       $('#add-translations > i').toggleClass('loading', false);
     }
@@ -1114,7 +1099,6 @@ function addTranslations() {
 function importBlueprint(cardId, blueprint) {
   // Turn on loading
   document.getElementById(cardId).classList.add('slow', 'double', 'blue', 'loading');
-  // $(`#${cardId}`).toggleClass('slow double blue loading', true);
   // Submit API request to import blueprint
   $.ajax({
     type: 'PUT',
@@ -1127,7 +1111,6 @@ function importBlueprint(cardId, blueprint) {
       showErrorToast({title: 'Error Importing Blueprint', response: response});
     }, complete: () => {
       document.getElementById(cardId).classList.remove('slow', 'double', 'blue', 'loading');
-      // $(`#${cardId}`).toggleClass('slow double blue loading', false);
     }
   });
   // Get any URL's for Fonts to download
