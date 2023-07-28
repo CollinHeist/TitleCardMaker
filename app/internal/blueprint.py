@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from logging import Logger
 from pathlib import Path
 from re import compile as re_compile, sub as re_sub, IGNORECASE
@@ -209,7 +210,7 @@ def get_blueprint_font_files(
     return [Path(font.file) for font in all_fonts if font.file]
 
 
-# TODO utilize caching
+_cache = {'content': [], 'expires': datetime.now()}
 def query_all_blueprints(
         *,
         log: Logger = log,
@@ -228,26 +229,36 @@ def query_all_blueprints(
             decoded as JSON.
     """
 
-    # Read the master Blueprints JSON file
-    response = get(MASTER_BLUEPRINT_FILE, timeout=30)
+    # If cached content has expired, re-request and update cache
+    if _cache['expires'] <= datetime.now():
+        # Read the master Blueprints JSON file
+        response = get(MASTER_BLUEPRINT_FILE, timeout=30)
 
-    # If no file was found, raise 404
-    if response.status_code == 404:
-        log.error(f'No Master Blueprint file found')
-        raise HTTPException(
-            status_code=404,
-            detail=f'No master Blueprint file found'
-        )
+        # If no file was found, raise 404
+        if response.status_code == 404:
+            log.error(f'No Master Blueprint file found')
+            raise HTTPException(
+                status_code=404,
+                detail=f'No master Blueprint file found'
+            )
 
-    # Find found, parse as JSON
-    try:
-        return response.json()
-    except JSONDecodeError as e:
-        log.exception(f'Error prasing master Blueprint file - {e}', e)
-        raise HTTPException(
-            status_code=500,
-            detail=f'Unable to parse master Blueprint file'
-        ) from e
+        # Find found, parse as JSON
+        try:
+            response_json = response.json()
+        except JSONDecodeError as e:
+            log.exception(f'Error prasing master Blueprint file - {e}', e)
+            raise HTTPException(
+                status_code=500,
+                detail=f'Unable to parse master Blueprint file'
+            ) from e
+
+        _cache['content'] = response_json
+        _cache['expires'] = datetime.now() + timedelta(hours=3)
+    else:
+        log.debug(f'Using cached Master Blueprint content')
+        response_json = _cache['content']
+
+    return response_json
 
 
 def query_series_blueprints(
