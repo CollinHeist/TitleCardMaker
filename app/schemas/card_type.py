@@ -178,13 +178,22 @@ class LandscapeCardType(BaseCardType):
     font_kerning: float = 1.0
     font_size: PositiveFloat = 1.0
     font_vertical_shift: int = 0
-    darken: Union[Literal['all', 'box'], bool] = False
     add_bounding_box: bool = False
     box_adjustments: BoxAdjustments = (0, 0, 0, 0)
+    box_color: BetterColor = None
+    darken: Union[Literal['all', 'box'], bool] = False
 
     @validator('box_adjustments')
     def parse_box_adjustments(cls, val):
         return tuple(map(int, re_match(BoxAdjustmentRegex, val).groups()))
+    
+    @root_validator(skip_on_failure=True)
+    def assign_unassigned_color(cls, values):
+        # None means match font color
+        if values['box_color'] is None:
+            values['box_color'] = values['font_color']
+
+        return values
 
 class LogoCardType(BaseCardTypeCustomFontAllText):
     source_file: Path

@@ -6,9 +6,10 @@ from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
 
-DarkenOption = Union[Literal['all', 'box'], bool]
 
+DarkenOption = Union[Literal['all', 'box'], bool]
 BoxCoordinates = namedtuple('BoxCoordinates', ('x0', 'y0', 'x1', 'y1'))
+
 
 class LandscapeTitleCard(BaseCardType):
     """
@@ -37,15 +38,23 @@ class LandscapeTitleCard(BaseCardType):
                 identifier='add_bounding_box',
                 description='Whether to add a bounding box around the title text',
             ), Extra(
+                name='Bounding Box Color',
+                identifier='box_color',
+                description='Color of the bound box. Defaults to match the title text',
+            ), Extra(
                 name='Bounding Box Adjustments',
                 identifier='box_adjustments',
                 description='Manual adjustments to the bounds of the bounding box',
+            ), Extra(
+                name='Image Darkening',
+                identifier='darken',
+                description='Whether to darken all of the image or the area inside the bounding box',
             ),
         ], description=[
             'Title-centric title cards that do not feature any text except a title.',
-            'These cards are intended for landscape-centric images as the centered title can easily faces.',
-            'A bounding box around the title text can be added and adjusted via extras.',
-            'The color of the bounding box matches the font color.',
+            'These cards are intended for landscape-centric images.',
+            'A bounding box around the title text can be added and adjusted via'
+            ' extras. By default, the color of the bounding box matches the font color.',
         ]
     )
     # pylint: enable=line-too-long
@@ -87,7 +96,7 @@ class LandscapeTitleCard(BaseCardType):
 
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'font_color', 'font_file',
-        'font_interline_spacing', 'font_kerning', 'font_size',
+        'font_interline_spacing', 'font_kerning', 'font_size', 'box_color',
         'font_vertical_shift', 'darken', 'add_bounding_box', 'box_adjustments'
     )
 
@@ -103,9 +112,10 @@ class LandscapeTitleCard(BaseCardType):
             font_vertical_shift: float = 0,
             blur: bool = False,
             grayscale: bool = False,
-            darken: DarkenOption = False,
             add_bounding_box: bool = False,
             box_adjustments: tuple[int, int, int, int] = (0, 0, 0, 0),
+            box_color: str = TITLE_COLOR,
+            darken: DarkenOption = False,
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
         ) ->None:
@@ -128,8 +138,9 @@ class LandscapeTitleCard(BaseCardType):
         self.font_vertical_shift = font_vertical_shift
 
         # Store extras
-        self.box_adjustments = box_adjustments
         self.add_bounding_box = add_bounding_box
+        self.box_adjustments = box_adjustments
+        self.box_color = box_color
         self.darken = darken
 
 
@@ -184,7 +195,8 @@ class LandscapeTitleCard(BaseCardType):
     def get_bounding_box_coordinates(self,
             font_size: float,
             interline_spacing: float,
-            kerning: float) -> BoxCoordinates:
+            kerning: float,
+        ) -> BoxCoordinates:
         """
         Get the coordinates of the bounding box around the title.
 
@@ -237,7 +249,8 @@ class LandscapeTitleCard(BaseCardType):
 
 
     def add_bounding_box_commands(self,
-            coordinates: BoxCoordinates) -> ImageMagickCommands:
+            coordinates: BoxCoordinates,
+        ) -> ImageMagickCommands:
         """
         Subcommand to add the bounding box around the title text.
 
@@ -262,7 +275,7 @@ class LandscapeTitleCard(BaseCardType):
             # Create bounding box
             f'-fill transparent',
             f'-strokewidth 10',
-            f'-stroke "{self.font_color}"',
+            f'-stroke "{self.box_color}"',
             f'-draw "rectangle {x_start},{y_start},{x_end},{y_end}"',
             # Create shadow of the bounding box
             f'\( +clone',
@@ -282,7 +295,8 @@ class LandscapeTitleCard(BaseCardType):
     def modify_extras(
             extras: dict[str, Any],
             custom_font: bool,
-            custom_season_titles: bool) -> None:
+            custom_season_titles: bool,
+        ) -> None:
         """
         Modify the given extras base on whether font or season titles
         are custom.
@@ -293,10 +307,12 @@ class LandscapeTitleCard(BaseCardType):
             custom_season_titles: Whether the season titles are custom.
         """
 
-        # Generic font, reset box adjustments
+        # Generic font, reset box adjustments and coloring
         if not custom_font:
             if 'box_adjustments' in extras:
                 extras['box_adjustments'] = '0 0 0 0'
+            if 'box_color' in extras:
+                extras['box_color'] = LandscapeTitleCard.TITLE_COLOR
 
 
     @staticmethod
