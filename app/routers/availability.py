@@ -47,10 +47,10 @@ def _get_remote_cards(*, log: Logger = log) -> list[RemoteCardType]:
 
     # If the cached content has expired, request and update cache
     if _cache['expires'] <= datetime.now():
-        log.debug(f'Refreshing cached RemoteCardTypes')
-        response = req_get(USER_CARD_TYPE_URL, timeout=10).json()
+        log.debug(f'Refreshing cached RemoteCardTypes..')
+        response = req_get(USER_CARD_TYPE_URL, timeout=30).json()
         _cache['content'] = response
-        _cache['expires'] = datetime.now() + timedelta(minutes=30)
+        _cache['expires'] = datetime.now() + timedelta(hours=6)
     # Cache has not expired, use cached content
     else:
         response = _cache['content']
