@@ -49,14 +49,14 @@ class WhiteBorderTitleCard(BaseCardType):
     }
 
     """Characteristics of the default title font"""
-    TITLE_FONT = str((REF_DIRECTORY / 'Arial-Bold.ttf').resolve())
+    TITLE_FONT = str((REF_DIRECTORY / 'Arial_Bold.ttf').resolve())
     TITLE_COLOR = 'white'
     DEFAULT_FONT_CASE = 'upper'
     FONT_REPLACEMENTS = {}
 
     """Characteristics of the episode text"""
     EPISODE_TEXT_COLOR = TITLE_COLOR
-    EPISODE_TEXT_FONT = REF_DIRECTORY / 'Arial.TTF'
+    EPISODE_TEXT_FONT = REF_DIRECTORY / 'Arial.ttf'
 
     """Default stroke color"""
     STROKE_COLOR = 'black'
@@ -237,6 +237,10 @@ class WhiteBorderTitleCard(BaseCardType):
             if 'episode_text_color' in extras:
                 extras['episode_text_color'] =\
                     WhiteBorderTitleCard.EPISODE_TEXT_COLOR
+            if 'stroke_color' in extras:
+                extras['stroke_color'] = WhiteBorderTitleCard.STROKE_COLOR
+            if 'interword_spacing' in extras:
+                del extras['interword_spacing']
 
 
     @staticmethod
