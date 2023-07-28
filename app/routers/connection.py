@@ -25,7 +25,7 @@ def enable_or_disable_connection(
         request: Request,
         connection: Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
         status: Literal['enable', 'disable'],
-        preferences: Preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences),
     ) -> None:
     """
     Set the enabled/disabled status of the given connection.
@@ -63,7 +63,7 @@ def enable_or_disable_connection(
 
 @connection_router.get('/emby', status_code=200)
 def get_emby_connection_details(
-        preferences: Preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences),
     ) -> EmbyConnection:
     """
     Get the connection details for Emby.
@@ -74,7 +74,7 @@ def get_emby_connection_details(
 
 @connection_router.get('/jellyfin', status_code=200)
 def get_jellyfin_connection_details(
-        preferences: Preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences),
     ) -> JellyfinConnection:
     """
     Get the connection details for Jellyfin.
@@ -85,7 +85,7 @@ def get_jellyfin_connection_details(
 
 @connection_router.get('/plex', status_code=200)
 def get_plex_connection_details(
-        preferences: Preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences),
     ) -> PlexConnection:
     """
     Get the connection details for Plex.
@@ -96,7 +96,7 @@ def get_plex_connection_details(
 
 @connection_router.get('/sonarr', status_code=200)
 def get_sonarr_connection_details(
-        preferences: Preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences),
     ) -> SonarrConnection:
     """
     Get the connection details for Sonarr.
@@ -107,7 +107,7 @@ def get_sonarr_connection_details(
 
 @connection_router.get('/tmdb', status_code=200)
 def get_tmdb_connection_details(
-        preferences: Preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences),
     ) -> TMDbConnection:
     """
     Get the connection details for TMDb.
@@ -120,7 +120,7 @@ def get_tmdb_connection_details(
 def update_emby_connection(
         request: Request,
         update_emby: UpdateEmby = Body(...),
-        preferences: Preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences),
     ) -> EmbyConnection:
     """
     Update the connection details for Emby.
@@ -137,7 +137,7 @@ def update_emby_connection(
 def update_jellyfin_connection(
         request: Request,
         update_jellyfin: UpdateJellyfin = Body(...),
-        preferences: Preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences),
     ) -> JellyfinConnection:
     """
     Update the connection details for Jellyfin.
@@ -154,7 +154,7 @@ def update_jellyfin_connection(
 def update_plex_connection(
         request: Request,
         update_plex: UpdatePlex = Body(...),
-        preferences: Preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences),
     ) -> PlexConnection:
     """
     Update the connection details for Plex.
@@ -171,7 +171,7 @@ def update_plex_connection(
 def update_sonarr_connection(
         request: Request,
         update_sonarr: UpdateSonarr = Body(...),
-        preferences: Preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences),
     ) -> SonarrConnection:
     """
     Update the connection details for Sonarr.
@@ -188,7 +188,7 @@ def update_sonarr_connection(
 def update_tmdb_connection(
         request: Request,
         update_tmdb: UpdateTMDb = Body(...),
-        preferences: Preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences),
     ) -> TMDbConnection:
     """
     Update the connection details for TMDb.
@@ -203,7 +203,7 @@ def update_tmdb_connection(
 
 @connection_router.get('/sonarr/libraries', status_code=200, tags=['Sonarr'])
 def get_potential_sonarr_libraries(
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface)
+        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
     ) -> list[SonarrLibrary]:
     """
     Get the potential library names and paths from Sonarr.
@@ -230,7 +230,7 @@ def get_potential_sonarr_libraries(
 @connection_router.post('/tautulli/check', status_code=200, tags=['Tautulli'])
 def check_tautulli_integration(
         request: Request,
-        tautulli_connection: TautulliConnection = Body(...)
+        tautulli_connection: TautulliConnection = Body(...),
     ) -> bool:
     """
     Check whether Tautulli is integrated with TCM.
@@ -254,7 +254,7 @@ def check_tautulli_integration(
 @connection_router.post('/tautulli/integrate', status_code=201, tags=['Tautulli'])
 def add_tautulli_integration(
         request: Request,
-        tautulli_connection: TautulliConnection = Body(...)
+        tautulli_connection: TautulliConnection = Body(...),
     ) -> None:
     """
     Integrate Tautulli with TitleCardMaker by creating a Notification

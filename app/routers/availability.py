@@ -153,7 +153,7 @@ def get_available_tmdb_translations() -> list[dict[str, str]]:
 
 @availablility_router.get('/episode-data-sources', status_code=200)
 def get_available_episode_data_sources(
-        preferences: Preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences),
     ) -> list[EpisodeDataSourceToggle]:
     """
     Get all available (enabled) Episode data sources.
