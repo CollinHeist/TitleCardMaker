@@ -31,6 +31,7 @@ class Rectangle:
         return f'rectangle {str(self.start)},{str(self.end)}'
 
     def draw(self) -> str:
+        """Draw this Rectangle"""
         return f'-draw "{str(self)}"'
 
 

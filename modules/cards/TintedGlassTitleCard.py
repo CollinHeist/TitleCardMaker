@@ -10,7 +10,6 @@ SeriesExtra = Optional
 BoxCoordinates = namedtuple('BoxCoordinates', ('x0', 'y0', 'x1', 'y1'))
 Position = Literal['left', 'center', 'right']
 
-
 class TintedGlassTitleCard(BaseCardType):
     """
     This class describes a type of CardType that produces title cards

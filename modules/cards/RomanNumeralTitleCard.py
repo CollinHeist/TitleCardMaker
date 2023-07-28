@@ -315,7 +315,7 @@ class RomanNumeralTitleCard(BaseCardType):
 
         numeral = (thousands + hundreds + tens + ones).strip()
 
-        # Split roman numerals that are longer than 6 chars into two lines
+        # Split roman numerals that are longer than 4 chars into two lines
         if len(numeral) >= 5:
             self.__roman_numeral_lines = 2
             roman_text = [numeral[:len(numeral)//2], numeral[len(numeral)//2:]]
@@ -324,6 +324,7 @@ class RomanNumeralTitleCard(BaseCardType):
             roman_text = [numeral]
 
         # Update scalar for this text
+        self.__roman_text_scalar = 1.0
         self.__assign_roman_scalar(roman_text)
 
         # Assign combined roman numeral text
@@ -355,8 +356,6 @@ class RomanNumeralTitleCard(BaseCardType):
         # Scale roman numeral text if line width is larger than card (+margin)
         if max_width > (card_width - 100):
             self.__roman_text_scalar = (card_width - 100) / max_width
-        else:
-            self.__roman_text_scalar = 1.0
 
 
     def create_roman_numeral_command(self,
@@ -456,7 +455,8 @@ class RomanNumeralTitleCard(BaseCardType):
 
         # Select random roman numeral and position on that numeral
         random_index = choice(range(len(self.roman_numeral)))
-        if self.roman_numeral[random_index] == '\n': random_index -= 1
+        if self.roman_numeral[random_index] == '\n':
+            random_index -= 1
         random_letter = self.roman_numeral[random_index]
         random_position = choice(POSITIONS[random_letter])
 
@@ -488,8 +488,9 @@ class RomanNumeralTitleCard(BaseCardType):
             )
 
         # Get width of whole line
-        total_width, _ = self.get_text_dimensions(numeral_command,
-                                                  width='sum', height='max')
+        total_width, _ = self.get_text_dimensions(
+            numeral_command, width='sum', height='max'
+        )
 
         # Get width of line to the left of the selected numeral
         left_width = 0
@@ -620,7 +621,7 @@ class RomanNumeralTitleCard(BaseCardType):
     def modify_extras(
             extras: dict,
             custom_font: bool,
-            custom_season_titles: bool
+            custom_season_titles: bool,
         ) -> None:
         """
         Modify the given extras base on whether font or season titles
