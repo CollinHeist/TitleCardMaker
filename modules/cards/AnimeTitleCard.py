@@ -1,10 +1,8 @@
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
-from modules.Debug import log
 
-SeriesExtra = Optional
 
 class AnimeTitleCard(BaseCardType):
     """
@@ -13,39 +11,6 @@ class AnimeTitleCard(BaseCardType):
     cards support custom fonts, and optional kanji text.
     """
 
-    """API Parameters"""
-    API_DETAILS = {
-        'name': 'Anime',
-        'example': '/assets/cards/anime.jpg',
-        'creators': ['/u/Recker_Man', 'CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': True,
-        'supports_custom_seasons': True,
-        'supported_extras': [
-            {'name': 'Kanji Text',
-             'identifier': 'kanji',
-             'description': 'Japanese text to place above title text'},
-            {'name': 'Require Kanji Text',
-             'identifier': 'require_kanji',
-             'description': 'Whether to require kanji text for the card creation'},
-            {'name': 'Kanji Vertical Shift',
-             'identifier': 'kanji_vertical_shift',
-             'description': 'Additional vertical offset to apply only to the kanji text'},
-            {'name': 'Separator Character',
-             'identifier': 'separator',
-             'description': 'Character to separate season and episode text'},
-            {'name': 'Stroke Text Color',
-             'identifier': 'stroke_color',
-             'description': 'Custom color to use for the stroke on the title text'},
-            {'name': 'Gradient Omission',
-             'identifier': 'omit_gradient',
-             'description': 'Whether to omit the gradient overlay from the card'},
-        ], 'description': [
-            'Title card with all text aligned in the lower left of the image',
-            'Although it is referred to as the "anime" card style, there is '
-            'nothing preventing you from using it for any type of series.',
-        ],
-    }
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'anime'
@@ -105,15 +70,16 @@ class AnimeTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-            kanji: SeriesExtra[str] = None,
-            episode_text_color: SeriesExtra[str] = SERIES_COUNT_TEXT_COLOR,
-            separator: SeriesExtra[str] = '·',
-            omit_gradient: SeriesExtra[bool] = False,
-            require_kanji: SeriesExtra[bool] = False,
-            kanji_vertical_shift: SeriesExtra[float] = 0,
-            stroke_color: SeriesExtra[str] = 'black',
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            kanji: Optional[str] = None,
+            episode_text_color: str = SERIES_COUNT_TEXT_COLOR,
+            separator: str = '·',
+            omit_gradient: bool = False,
+            require_kanji: bool = False,
+            kanji_vertical_shift: float = 0.0,
+            stroke_color: str = 'black',
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
+        ) -> None:
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
@@ -131,7 +97,7 @@ class AnimeTitleCard(BaseCardType):
 
         # Store kanji, set bool for whether to use it or not
         self.kanji = self.image_magick.escape_chars(kanji)
-        self.use_kanji = (kanji is not None)
+        self.use_kanji = kanji is not None
         self.require_kanji = require_kanji
         self.kanji_vertical_shift = float(kanji_vertical_shift)
 
@@ -357,9 +323,10 @@ class AnimeTitleCard(BaseCardType):
 
     @staticmethod
     def modify_extras(
-            extras: dict[str, Any],
+            extras: dict,
             custom_font: bool,
-            custom_season_titles: bool) -> None:
+            custom_season_titles: bool,
+        ) -> None:
         """
         Modify the given extras base on whether font or season titles
         are custom.
@@ -377,7 +344,7 @@ class AnimeTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determines whether the given arguments represent a custom font
         for this card.
@@ -401,7 +368,9 @@ class AnimeTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> bool:
         """
         Determines whether the given attributes constitute custom or
         generic season titles.
@@ -425,12 +394,6 @@ class AnimeTitleCard(BaseCardType):
         Make the necessary ImageMagick and system calls to create this
         object's defined title card.
         """
-
-        # If kanji is required, and not given, error
-        if self.require_kanji and not self.use_kanji:
-            log.error(f'Kanji is required and not provided - skipping card '
-                      f'"{self.output_file.name}"')
-            return None
 
         # Sub-command to optionally add gradient
         gradient_command = []

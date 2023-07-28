@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 from typing import Any, Optional, Union
 from pathlib import Path
 
@@ -6,8 +6,10 @@ from tinydb import where, Query
 
 from modules.Debug import log
 from modules.Episode import Episode
+from modules.EpisodeInfo import EpisodeInfo
 from modules.ImageMaker import ImageMaker
 from modules.PersistentDatabase import PersistentDatabase
+from modules.SeasonPosterSet import SeasonPosterSet
 from modules.SeriesInfo import SeriesInfo
 from modules.StyleSet import StyleSet
 
@@ -27,7 +29,9 @@ class MediaServer(ABC):
     """Default filesize limit for all uploaded assets"""
     DEFAULT_FILESIZE_LIMIT = '10 MB'
 
-    @abstractproperty
+
+    @property
+    @abstractmethod
     def LOADED_DB(self) -> str:
         """
         Filename of the PersistentDatabase of loaded assets within this
@@ -94,7 +98,8 @@ class MediaServer(ABC):
     def _get_condition(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode: Episode = None) -> Query:
+            episode: Episode = None,
+        ) -> Query:
         """
         Get the tinydb Query condition for the given entry.
 
@@ -222,43 +227,64 @@ class MediaServer(ABC):
 
 
     @abstractmethod
-    def has_series(self) -> bool:
+    def has_series(self,
+            library_name: str,
+            series_info: SeriesInfo,
+        ) -> bool:
         """
         Determine whether the given series is present within this
         MediaServer.
         """
-        raise NotImplementedError('All MediaServer objects must implement this')
+        raise NotImplementedError
+
 
     @abstractmethod
     def update_watched_statuses(self,
             library_name: str,
             series_info: SeriesInfo,
             episode_map: dict[str, Episode],
-            style_set: StyleSet) -> None:
+            style_set: StyleSet,
+        ) -> None:
         """Abstract method to update watched statuses of Episode objects."""
-        raise NotImplementedError('All MediaServer objects must implement this')
+        raise NotImplementedError
+
 
     @abstractmethod
-    def set_title_cards(self) -> None:
+    def set_title_cards(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_map: dict[str, Episode],
+        ) -> None:
         """Abstract method to load title cards within this MediaServer."""
-        raise NotImplementedError('All MediaServer objects must implement this')
+        raise NotImplementedError
+
 
     @abstractmethod
-    def set_season_posters(self) -> None:
+    def set_season_posters(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            season_poster_set: SeasonPosterSet,
+        ) -> None:
         """Abstract method to load title cards within this MediaServer."""
-        raise NotImplementedError('All MediaServer objects must implement this')
+        raise NotImplementedError
+
 
     @abstractmethod
-    def get_source_image(self) -> SourceImage:
+    def get_source_image(self,
+            library_name: str,
+            series_info: SeriesInfo,
+            episode_info: EpisodeInfo,
+        ) -> SourceImage:
         """
         Abstract method to get textless source images from this
         MediaServer.
         """
-        raise NotImplementedError('All MediaServer objects must implement this')
+        raise NotImplementedError
+
 
     @abstractmethod
     def get_libraries(self) -> list[str]:
         """
         Abstract method to get all libraries from this MediaServer.
         """
-        raise NotImplementedError('All MediaServer objects must implement this')
+        raise NotImplementedError

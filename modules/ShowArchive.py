@@ -1,7 +1,9 @@
 from pathlib import Path
-from typing import Any, Callable
+from typing import Callable
+
 from modules.Debug import log
-import modules.global_objects as global_objects
+from modules import global_objects
+
 
 class ShowArchive:
     """
@@ -40,7 +42,10 @@ class ShowArchive:
     __slots__ = ('series_info', 'shows', 'summaries')
 
 
-    def __init__(self, archive_directory: Path, base_show: 'Show') -> None:
+    def __init__(self,
+            archive_directory: Path,
+            base_show: 'Show', # type: ignore
+        ) -> None:
         """
         Constructs a new instance of this class. Creates a list of all
         applicable Show objects for later us.

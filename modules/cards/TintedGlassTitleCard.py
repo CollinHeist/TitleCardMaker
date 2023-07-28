@@ -1,9 +1,10 @@
 from collections import namedtuple
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Literal, Optional
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
+
 
 SeriesExtra = Optional
 BoxCoordinates = namedtuple('BoxCoordinates', ('x0', 'y0', 'x1', 'y1'))
@@ -16,30 +17,6 @@ class TintedGlassTitleCard(BaseCardType):
     title and index text. This card is inspired by Reddit user
     /u/RaceDebriefF1's Lucky! (2022) title cards.
     """
-
-    """API Parameters"""
-    API_DETAILS = {
-        'name': 'Tinted Glass',
-        'example': '/assets/cards/tinted glass.jpg',
-        'creators': ['/u/RaceDebriefF1', 'CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': True,
-        'supports_custom_seasons': True,
-        'supported_extras': [
-            {'name': 'Episode Text Color',
-             'identifier': 'episode_text_color',
-             'description': 'Color to utilize for the episode text'},
-            {'name': 'Episode Text Position',
-             'identifier': 'episode_text_position',
-             'description': 'Position of the episode text relative to the title text'},
-            {'name': 'Episode Text Position',
-             'identifier': 'box_adjustments',
-             'description': 'Manual adjustments to the bounds of the bounding box'},
-        ], 'description': [
-            'Card type featuring a darkened and blurred rounded rectangle surrounding the title and episode text.',
-            'By default, these cards also feature the name of the series in the episode text.',
-        ],
-    }
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'darkened'
@@ -59,7 +36,7 @@ class TintedGlassTitleCard(BaseCardType):
 
     """Default episode text format for this class"""
     EPISODE_TEXT_FORMAT = '{series_name} | S{season_number} E{episode_number}'
-    EPISODE_TEXT_COLOR = 'SlateGray1' #'rgb(247, 209, 148)'
+    EPISODE_TEXT_COLOR = 'SlateGray1'
     EPISODE_TEXT_FONT = SW_REF_DIRECTORY / 'HelveticaNeue-Bold.ttf'
 
     """Whether this CardType uses season titles for archival purposes"""
@@ -78,7 +55,7 @@ class TintedGlassTitleCard(BaseCardType):
     TEXT_BLUR_PROFILE = '0x6'
 
     __slots__ = (
-        'source', 'output_file', 'title_text', '__line_count', 'episode_text', 
+        'source', 'output_file', 'title_text', '__line_count', 'episode_text',
         'hide_episode_text', 'font_file', 'font_size', 'font_color',
         'font_interline_spacing', 'font_kerning', 'font_vertical_shift',
         'episode_text_color', 'episode_text_position', 'box_adjustments',
@@ -90,11 +67,11 @@ class TintedGlassTitleCard(BaseCardType):
             title_text: str,
             episode_text: str,
             hide_episode_text: bool = False,
-            font_color: str = TITLE_COLOR, 
+            font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
             font_kerning: float = 1.0,
-            font_size: float = 1.0, 
+            font_size: float = 1.0,
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
@@ -102,7 +79,8 @@ class TintedGlassTitleCard(BaseCardType):
             episode_text_position: SeriesExtra[Position] = 'center',
             box_adjustments: SeriesExtra[str] = None,
             preferences: 'Preferences' = None,
-            **unused) -> None:
+            **unused,
+        ) -> None:
 
         # Initialize the parent class - this sets up an ImageMagickInterface
         super().__init__(blur, grayscale, preferences=preferences)
@@ -154,7 +132,8 @@ class TintedGlassTitleCard(BaseCardType):
 
     def blur_rectangle_command(self,
             coordinates: BoxCoordinates,
-            rounding_radius: int) -> ImageMagickCommands:
+            rounding_radius: int
+        ) -> ImageMagickCommands:
         """
         Get the commands necessary to blur and darken a rectangle
         encompassing the given coordinates.
@@ -252,13 +231,14 @@ class TintedGlassTitleCard(BaseCardType):
         x_start -= self.box_adjustments[3]
         x_end += self.box_adjustments[1]
         y_start -= self.box_adjustments[0]
-        y_end +=self.box_adjustments[2]
+        y_end += self.box_adjustments[2]
 
         return BoxCoordinates(x_start, y_start, x_end, y_end)
 
 
     def add_episode_text_command(self,
-            title_coordinates: BoxCoordinates) -> ImageMagickCommands:
+            title_coordinates: BoxCoordinates
+        ) -> ImageMagickCommands:
         """
         Get the list of ImageMagick commands to add episode text.
 
@@ -327,9 +307,10 @@ class TintedGlassTitleCard(BaseCardType):
 
     @staticmethod
     def modify_extras(
-            extras: dict[str, Any],
+            extras: dict,
             custom_font: bool,
-            custom_season_titles: bool) -> None:
+            custom_season_titles: bool
+        ) -> None:
         """
         Modify the given extras base on whether font or season titles
         are custom.
@@ -350,7 +331,7 @@ class TintedGlassTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
@@ -373,7 +354,9 @@ class TintedGlassTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> bool:
         """
         Determine whether the given attributes constitute custom or
         generic season titles.

@@ -4,6 +4,7 @@ from typing import Literal
 from modules.Debug import log
 from modules.ImageMaker import ImageMaker
 
+
 class AspectRatioFixer(ImageMaker):
     """
     This class describes a type of ImageMaker that corrects the aspect
@@ -21,8 +22,11 @@ class AspectRatioFixer(ImageMaker):
     __slots__ = ('source', 'destination', 'style')
 
 
-    def __init__(self, source: Path, destination: Path,
-            style: Literal['copy', 'stretch'] = DEFAULT_STYLE) -> None:
+    def __init__(self,
+            source: Path,
+            destination: Path,
+            style: Literal['copy', 'stretch'] = DEFAULT_STYLE,
+        ) -> None:
         """
         Initialize this object. This stores attributes, and initialzies
         the  parent ImageMaker object.
@@ -88,7 +92,9 @@ class AspectRatioFixer(ImageMaker):
             self.image_magick.run(resize_command)
 
             # Get dimensions of resized image, exit if too narrow for stretching
-            width, height = self.get_image_dimensions(self.__RESIZED_TEMP)
+            width, height = self.image_magick.get_image_dimensions(
+                self.__RESIZED_TEMP
+            )
             if width < 400 or height < 1800:
                 log.error(f'Image too narrow for correcting with "stretch" style')
                 return None
@@ -121,3 +127,4 @@ class AspectRatioFixer(ImageMaker):
             self.image_magick.delete_intermediate_images(self.__RESIZED_TEMP)
 
         log.debug(f'Created "{self.destination.resolve()}"')
+        return None

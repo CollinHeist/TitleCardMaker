@@ -2,36 +2,13 @@ from pathlib import Path
 from typing import Any, Optional
 
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
-from modules.Debug import log
 
-SeriesExtra = Optional
 
 class OlivierTitleCard(BaseCardType):
     """
     This class describes a type of ImageMaker that produces title cards
     in the style of those designed by Reddit user /u/Olivier_286.
     """
-
-    """API Parameters"""
-    API_DETAILS = {
-        'name': 'Olivier',
-        'example': '/assets/cards/olivier.jpg',
-        'creators': ['/u/Olivier_286', 'CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': True,
-        'supports_custom_seasons': True,
-        'supported_extras': [
-            {'name': 'Episode Text Color',
-             'identifier': 'episode_text_color',
-             'description': 'Color to utilize for the episode text'},
-            {'name': 'Stroke Text Color',
-             'identifier': 'stroke_color',
-             'description': 'Custom color to use for the stroke on the title text'},
-        ], 'description': [
-            'Title card with left-aligned title and episode text.',
-            'This card is structurally very similar to the StarWarsTitleCard, except it allows for custom fonts and does not feature the star gradient overlay.',
-        ],
-    }
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'olivier'
@@ -54,6 +31,7 @@ class OlivierTitleCard(BaseCardType):
     EPISODE_TEXT_COLOR = 'white'
     EPISODE_PREFIX_FONT = SW_REF_DIRECTORY / 'HelveticaNeue.ttc'
     EPISODE_NUMBER_FONT = SW_REF_DIRECTORY / 'HelveticaNeue-Bold.ttf'
+    STROKE_COLOR = 'black'
 
     """Whether this class uses season titles for the purpose of archives"""
     USES_SEASON_TITLE = False
@@ -62,11 +40,11 @@ class OlivierTitleCard(BaseCardType):
     ARCHIVE_NAME = 'Olivier Style'
 
     __slots__ = (
-        'source_file', 'output_file', 'title_text', 'hide_episode_text', 
-        'episode_prefix', 'episode_text', 'font_color', 'font_file', 
+        'source_file', 'output_file', 'title_text', 'hide_episode_text',
+        'episode_prefix', 'episode_text', 'font_color', 'font_file',
         'font_interline_spacing', 'font_kerning', 'font_size',
-        'font_stroke_width',  'font_vertical_shift', 'stroke_color',
-        'episode_text_color', 
+        'font_stroke_width', 'font_vertical_shift', 'stroke_color',
+        'episode_text_color', 'interword_spacing',
     )
 
     def __init__(self,
@@ -78,16 +56,18 @@ class OlivierTitleCard(BaseCardType):
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
+            font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_stroke_width: float = 1.0,
             font_vertical_shift: int = 0,
-            font_kerning: float = 1.0,
             blur: bool = False,
             grayscale: bool = False,
-            episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
-            stroke_color: SeriesExtra[str] = 'black',
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            episode_text_color: str = EPISODE_TEXT_COLOR,
+            stroke_color: str = STROKE_COLOR,
+            interword_spacing: int = 0,
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
+        ) -> None:
         """
         Construct a new instance of this card.
         """
@@ -125,6 +105,7 @@ class OlivierTitleCard(BaseCardType):
         # Optional extras
         self.episode_text_color = episode_text_color
         self.stroke_color = stroke_color
+        self.interword_spacing = interword_spacing
 
 
     @property
@@ -141,6 +122,7 @@ class OlivierTitleCard(BaseCardType):
         stroke_width = 8.0 * self.font_stroke_width
         kerning = 0.5 * self.font_kerning
         interline_spacing = -20 + self.font_interline_spacing
+        interword_spacing = 0 + self.interword_spacing
         vertical_shift = 785 + self.font_vertical_shift
 
         return [
@@ -149,6 +131,7 @@ class OlivierTitleCard(BaseCardType):
             f'-pointsize {font_size}',
             f'-kerning {kerning}',
             f'-interline-spacing {interline_spacing}',
+            f'-interword-spacing {interword_spacing}',
             f'-fill "{self.stroke_color}"',
             f'-stroke "{self.stroke_color}"',
             f'-strokewidth {stroke_width}',
@@ -208,7 +191,7 @@ class OlivierTitleCard(BaseCardType):
         text_offset = {'EPISODE': 425, 'CHAPTER': 425, 'PART': 275}
         if self.episode_prefix is None:
             offset = 0
-        elif self.episode_prefix in text_offset.keys():
+        elif self.episode_prefix in text_offset:
             offset = text_offset[self.episode_prefix]
         else:
             offset_per_char = text_offset['EPISODE'] / len('EPISODE')
@@ -232,9 +215,10 @@ class OlivierTitleCard(BaseCardType):
 
     @staticmethod
     def modify_extras(
-            extras: dict[str, Any],
+            extras: dict,
             custom_font: bool,
-            custom_season_titles: bool) -> None:
+            custom_season_titles: bool,
+        ) -> None:
         """
         Modify the given extras based on whether font or season titles
         are custom.
@@ -255,7 +239,7 @@ class OlivierTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determine whether the given arguments represent a custom font
         for this card.

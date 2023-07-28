@@ -1,6 +1,6 @@
 from copy import copy
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal, Optional, Union
 
 from tqdm import tqdm
 
@@ -12,7 +12,7 @@ from modules.Episode import Episode
 from modules.EpisodeInfo import EpisodeInfo
 from modules.EpisodeMap import EpisodeMap
 from modules.Font import Font
-import modules.global_objects as global_objects
+from modules import global_objects
 from modules.JellyfinInterface import JellyfinInterface
 from modules.MultiEpisode import MultiEpisode
 from modules.PlexInterface import PlexInterface
@@ -43,8 +43,8 @@ class Show(YamlReader):
 
     __slots__ = (
         'preferences', 'info_set', 'series_info', 'card_filename_format',
-        'card_class', 'episode_text_format', 'library_name', 'library',
-        'media_directory', 'archive', 'archive_name', 'archive_all_variations',
+        'episode_text_format', 'library_name', 'library', 'media_directory',
+        'archive', 'archive_name', 'archive_all_variations',
         'episode_data_source', 'refresh_titles', 'sonarr_sync', 'sync_specials',
         'tmdb_sync', 'tmdb_skip_localized_images', 'style_set', 'hide_seasons',
         'title_languages', 'extras', '__episode_map', 'font','source_directory',
@@ -87,10 +87,10 @@ class Show(YamlReader):
         self.series_info = SeriesInfo(name, 0)
         try:
             self.series_info = self.info_set.get_series_info(
-                self._get('name', type_=str, default=name),
-                self._get('year', type_=int)
+                self.get('name', type_=str, default=name),
+                self.get('year', type_=int)
             )
-        except Exception as e:
+        except ValueError as e:
             log.exception(f'Series "{name}" is missing the required "year"', e)
             self.valid = False
             return None
@@ -129,18 +129,18 @@ class Show(YamlReader):
         # Update StyleSet
         if self._is_specified('watched_style'):
             self.style_set.update_watched_style(
-                self._get('watched_style', type_=str)
+                self.get('watched_style', type_=str)
             )
         if self._is_specified('unwatched_style'):
             self.style_set.update_unwatched_style(
-                self._get('unwatched_style', type_=str)
+                self.get('unwatched_style', type_=str)
             )
         self.valid &= self.style_set.valid
 
         # Construct EpisodeMap on seasons/episode ranges specification
         self.__episode_map = EpisodeMap(
-            self._get('seasons', type_=dict),
-            self._get('episode_ranges', type_=dict)
+            self.get('seasons', type_=dict),
+            self.get('episode_ranges', type_=dict)
         )
         self.valid &= self.__episode_map.valid
 
@@ -175,7 +175,7 @@ class Show(YamlReader):
             self.__episode_map,
             self.source_directory,
             self.media_directory,
-            self._get('season_posters'),
+            self.get('season_posters'),
         )
 
         # Attributes to be filled/modified later
@@ -186,6 +186,8 @@ class Show(YamlReader):
         self.sonarr_interface = None
         self.tmdb_interface = None
         self.__is_archive = False
+
+        return None
 
 
     def __str__(self) -> str:
@@ -218,7 +220,7 @@ class Show(YamlReader):
         modified_base['media_directory'] = str(media_directory.resolve())
 
         # Set watched_style to archive style (if set)
-        if (value := self._get('archive_style', type_=str)) is not None:
+        if (value := self.get('archive_style', type_=str)) is not None:
             modified_base['watched_style'] = value
 
         # Recreate Show object with modified YAML
@@ -238,62 +240,62 @@ class Show(YamlReader):
         on any invalid attributes.
         """
 
-        if (value := self._get('library', type_=dict)) is not None:
+        if (value := self.get('library', type_=dict)) is not None:
             self.library_name = value['name']
             self.library = value['path']
             self.media_directory = self.library/self.series_info.full_clean_name
             self.media_server = value['media_server']
 
-        if (value := self._get('media_directory', type_=str)) is not None:
+        if (value := self.get('media_directory', type_=str)) is not None:
             self.media_directory = CleanPath(value).sanitize()
 
-        if (value := self._get('filename_format', type_=str)) is not None:
+        if (value := self.get('filename_format', type_=str)) is not None:
             if TitleCard.validate_card_format_string(value):
                 self.card_filename_format = value
             else:
                 self.valid = False
 
-        if (value := self._get('emby_id', type_=int)) is not None:
+        if (value := self.get('emby_id', type_=int)) is not None:
             emby_id = value if '-' in str(value) else f'0-{value}'
             self.info_set.set_emby_id(self.series_info, emby_id)
 
-        if (value := self._get('imdb_id', type_=str)) is not None:
+        if (value := self.get('imdb_id', type_=str)) is not None:
             self.info_set.set_imdb_id(self.series_info, value)
 
-        if (value := self._get('jellyfin_id', type_=str)) is not None:
+        if (value := self.get('jellyfin_id', type_=str)) is not None:
             self.info_set.set_jellyfin_id(self.series_info, value)
 
-        if (value := self._get('sonarr_id', type_=int)) is not None:
+        if (value := self.get('sonarr_id', type_=int)) is not None:
             sonarr_id = value if '-' in str(value) else f'0-{value}'
             self.info_set.set_sonarr_id(self.series_info, sonarr_id)
 
-        if (value := self._get('tmdb_id', type_=int)) is not None:
+        if (value := self.get('tmdb_id', type_=int)) is not None:
             self.info_set.set_tmdb_id(self.series_info, value)
 
-        if (value := self._get('tvdb_id', type_=int)) is not None:
+        if (value := self.get('tvdb_id', type_=int)) is not None:
             self.info_set.set_tvdb_id(self.series_info, value)
-        
-        if (value := self._get('tvrage_id', type_=int)) is not None:
+
+        if (value := self.get('tvrage_id', type_=int)) is not None:
             self.info_set.set_tvrage_id(self.series_info, value)
 
-        if (value := self._get('card_type', type_=str)) is not None:
+        if (value := self.get('card_type', type_=str)) is not None:
             self._parse_card_type(value)
             self.episode_text_format = self.card_class.EPISODE_TEXT_FORMAT
 
-        if (value := self._get('episode_text_format', type_=str)) is not None:
+        if (value := self.get('episode_text_format', type_=str)) is not None:
             self.episode_text_format = value
 
-        if (value := self._get('archive', type_=bool)) is not None:
+        if (value := self.get('archive', type_=bool)) is not None:
             self.archive = value
 
-        if (value :=self._get('archive_all_variations',type_=bool)) is not None:
+        if (value :=self.get('archive_all_variations',type_=bool)) is not None:
             self.archive_all_variations = value
 
-        if (value := self._get('archive_name', type_=str)) is not None:
+        if (value := self.get('archive_name', type_=str)) is not None:
             self.archive_name = value
             self.archive_all_variations = False
 
-        if (value := self._get('episode_data_source',
+        if (value := self.get('episode_data_source',
                                type_=self.TYPE_LOWER_STR)) is not None:
             if value in self.preferences.VALID_EPISODE_DATA_SOURCES:
                 self.episode_data_source = value
@@ -302,7 +304,7 @@ class Show(YamlReader):
                           f'{self}')
                 self.valid = False
 
-        if (value := self._get('image_source_priority',
+        if (value := self.get('image_source_priority',
                                type_=self.TYPE_LOWER_STR)) is not None:
             if (sources := self.preferences.parse_image_source_priority(value)):
                 self.image_source_priority = sources
@@ -310,27 +312,33 @@ class Show(YamlReader):
                 log.error(f'Image source priority "{value}" is invalid')
                 self.valid = False
 
-        if (value := self._get('refresh_titles', type_=bool)) is not None:
+        if (value := self.get('refresh_titles', type_=bool)) is not None:
             self.refresh_titles = value
             self.series_info.match_titles = value
 
-        if (value := self._get('sonarr_sync', type_=bool)) is not None:
+        if (value := self.get('sonarr_sync', type_=bool)) is not None:
             self.sonarr_sync = value
 
-        if (value := self._get('sync_specials', type_=bool)) is not None:
+        if (value := self.get('sync_specials', type_=bool)) is not None:
             self.sync_specials = value
 
-        if (value := self._get('tmdb_sync', type_=bool)) is not None:
+        if (value := self.get('tmdb_sync', type_=bool)) is not None:
             self.tmdb_sync = value
 
-        if (value := self._get('tmdb_skip_localized_images',
+        if (value := self.get('tmdb_skip_localized_images',
                                type_=bool)) is not None:
             self.tmdb_skip_localized_images = value
 
-        if (value := self._get('seasons', 'hide', type_=bool)) is not None:
-            self.hide_seasons = value
+        if (value := self.get('seasons', 'hide')) is not None:
+            if isinstance(value, bool):
+                self.hide_seasons = value
+            elif isinstance(value, str) and value.lower() == 'auto':
+                self.__auto_hide_seasons = True
+            else:
+                log.error(f'Season hiding must be "true", "false" or "auto"')
+                self.valid = False
 
-        if (value := self._get('translation')) is not None:
+        if (value := self.get('translation')) is not None:
             # Single translation
             if isinstance(value, dict) and value.keys() == {'language', 'key'}:
                 self.title_languages = [value]
@@ -346,7 +354,7 @@ class Show(YamlReader):
 
         # Read all extras
         if self._is_specified('extras'):
-            self.extras = self._get('extras', type_=dict)
+            self.extras = self.get('extras', type_=dict)
 
 
     def assign_interfaces(self,
@@ -394,7 +402,7 @@ class Show(YamlReader):
             if len(sonarr_interfaces) == 1:
                 self.sonarr_interface = sonarr_interfaces[0]
             # Multiple interfaces, interface ID was manually specified
-            elif (index := self._get('sonarr_server_id',type_=int)) is not None:
+            elif (index := self.get('sonarr_server_id',type_=int)) is not None:
                 if index > len(sonarr_interfaces)-1:
                     log.error(f'No Sonarr server associated with ID {index}')
                     self.valid = False
@@ -437,10 +445,10 @@ class Show(YamlReader):
                 )
         def set_sonarr():
             if self.sonarr_interface:
-                self.sonarr_interface.set_series_ids(self.series_info)
+                self.sonarr_interface.set_series_ids(None, self.series_info)
         def set_tmdb():
             if self.tmdb_interface:
-                self.tmdb_interface.set_series_ids(self.series_info)
+                self.tmdb_interface.set_series_ids(None, self.series_info)
 
         # Identify interface order for ID gathering based on primary episode
         # data source
@@ -469,7 +477,7 @@ class Show(YamlReader):
             show has no media directory.
         """
 
-        # If this entry should not be written to a media directory, return 
+        # If this entry should not be written to a media directory, return
         if not self.media_directory:
             return None
 
@@ -509,27 +517,24 @@ class Show(YamlReader):
         object's datafile, and an Episode object is created.
         """
 
-        # Get episodes from indicated data source
-        if self.episode_data_source == 'emby' and self.emby_interface:
-            all_episodes =self.emby_interface.get_all_episodes(self.series_info)
-        elif self.episode_data_source == 'jellyfin' and self.jellyfin_interface:
-            all_episodes = self.jellyfin_interface.get_all_episodes(
-                self.series_info
-            )
-        elif self.episode_data_source == 'plex' and self.plex_interface:
-            all_episodes = self.plex_interface.get_all_episodes(
-                self.library_name, self.series_info
-            )
-        elif self.episode_data_source == 'sonarr' and self.sonarr_interface:
-            all_episodes = self.sonarr_interface.get_all_episodes(
-                self.series_info
-            )
-        elif self.episode_data_source == 'tmdb' and self.tmdb_interface:
-            all_episodes =self.tmdb_interface.get_all_episodes(self.series_info)
-        else:
+        # Get all episodes from indicated data source
+        interface = {
+            'emby': self.emby_interface,
+            'jellyfin': self.jellyfin_interface,
+            'plex': self.plex_interface,
+            'sonarr': self.sonarr_interface,
+            'tmdb': self.tmdb_interface,
+        }.get(self.episode_data_source, None)
+        if not interface :
             log.warning(f'Cannot source episodes for {self} from '
                         f'{self.episode_data_source}')
             return None
+        interface: Union[EmbyInterface, JellyfinInterface, PlexInterface,
+                         SonarrInterface, TMDbInterface] = interface
+
+        all_episodes = interface.get_all_episodes(
+            self.library_name, self.series_info, episode_infos=None,
+        )
 
         # No episodes found by data source
         if not all_episodes:
@@ -560,6 +565,7 @@ class Show(YamlReader):
         # If any new episodes remain, add to datafile and create Episode object
         self.file_interface.add_many_entries(new_episodes)
         self.read_source()
+        return None
 
 
     def set_episode_ids(self) -> None:
@@ -593,7 +599,7 @@ class Show(YamlReader):
 
         # Apply filter of only those needing ID's, get only EpisodeInfo objects
         infos = list(
-            ep.episode_info for ep in 
+            ep.episode_info for ep in
             filter(episode_needs_id, self.episodes.values())
         )
 
@@ -681,6 +687,8 @@ class Show(YamlReader):
         if modified:
             self.read_source()
 
+        return None
+
 
     def download_logo(self) -> None:
         """
@@ -703,6 +711,7 @@ class Show(YamlReader):
 
                 # If failed to download, skip
                 if not success:
+                    log.error(f'Error downloading .svg logo for {self}')
                     return None
 
                 # Convert temporary SVG to PNG at logo filepath
@@ -720,6 +729,8 @@ class Show(YamlReader):
             # Log to user
             if self.logo.exists():
                 log.debug(f'Downloaded logo for {self}')
+
+        return None
 
 
     def __apply_styles(self, select_only: Optional[Episode] = None) -> bool:
@@ -746,12 +757,12 @@ class Show(YamlReader):
 
         # If this is an archive, assume all episodes are watched
         if self.__is_archive:
-            [episode.update_statuses(True, self.style_set)
-             for _, episode in self.episodes.items()]
+            for episode in self.episodes.values():
+                episode.update_statuses(True, self.style_set)
         # If no MediaServer interface, assume all episodes are unwatched
         elif media_interface is None:
-            [episode.update_statuses(False, self.style_set)
-             for _, episode in self.episodes.items()]
+            for episode in self.episodes.values():
+                episode.update_statuses(False, self.style_set)
         # Update watch statuses from Plex
         else:
             episode_map = self.episodes
@@ -779,7 +790,7 @@ class Show(YamlReader):
                 episode.update_source(self.backdrop, downloadable=False)
 
             # Override source if applies to all, or unwatched if ep is unwatched
-            if (applies_to == 'all' or 
+            if (applies_to == 'all' or
                 (applies_to == 'unwatched' and not episode.watched)):
                 episode.update_source(manual_source, downloadable=False)
 
@@ -836,7 +847,7 @@ class Show(YamlReader):
             and ('tmdb' in self.image_source_priority))
         always_check_plex = (
             bool(self.plex_interface)
-            and ('plex' in self.image_source_priority) 
+            and ('plex' in self.image_source_priority)
             and self.plex_interface.has_series(self.library_name,
                                                self.series_info))
 
@@ -863,17 +874,19 @@ class Show(YamlReader):
                     self.series_info, episode.episode_info
                 )
             )
-            
+
             # Go through each source interface indicated, try and get source
             for source_interface in self.image_source_priority:
                 image = None
                 if source_interface == 'emby' and check_emby:
                     image = self.emby_interface.get_source_image(
-                        episode.episode_info
+                        self.library_name,
+                        self.series_info,
+                        episode.episode_info,
                     )
                 elif source_interface == 'jellyfin' and check_jellyfin:
                     image = self.jellyfin_interface.get_source_image(
-                        episode.episode_info
+                        episode.episode_info,
                     )
                 elif source_interface == 'plex' and check_plex:
                     image = self.plex_interface.get_source_image(
@@ -892,8 +905,9 @@ class Show(YamlReader):
                         pb = self.tmdb_interface.is_permanently_blacklisted(
                             self.series_info, episode.episode_info
                         )
-                        if pb: continue
-                        else:  break
+                        if pb:
+                            continue
+                        break
 
                 # Attempt to download image, log status and exit loop
                 if image:
@@ -1019,6 +1033,7 @@ class Show(YamlReader):
 
         # Update record keeeper
         global_objects.show_record_keeper.add_config(self)
+        return None
 
 
     def create_season_posters(self) -> None:
@@ -1048,6 +1063,7 @@ class Show(YamlReader):
             return None
 
         # Set title cards and season posters in media interface
+        media_interface: Union[EmbyInterface, JellyfinInterface, PlexInterface]
         media_interface.set_title_cards(
             self.library_name, self.series_info, self.episodes,
         )

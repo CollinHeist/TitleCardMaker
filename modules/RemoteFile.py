@@ -66,14 +66,18 @@ class RemoteFile:
         try:
             self.download()
             log.debug(f'Downloaded RemoteFile "{username}/{filename}"')
-            try:
-                self.loaded.insert({'remote': self.remote_source})
-            except Exception:
-                pass
         except Exception as e:
             self.valid = False
             log.exception(f'Could not download RemoteFile '
                           f'"{username}/{filename}"', e)
+            return None
+
+        try:
+            self.loaded.insert({'remote': self.remote_source})
+        except Exception:
+            pass
+
+        return None
 
 
     def __str__(self) -> str:
@@ -113,7 +117,7 @@ class RemoteFile:
             Response object from this object's remote source.
         """
 
-        return get(self.remote_source)
+        return get(self.remote_source, timeout=30)
 
 
     def download(self) -> None:
@@ -135,8 +139,6 @@ class RemoteFile:
         # Write content to file
         with self.local_file.open('wb') as file_handle:
             file_handle.write(content.content)
-
-        return None
 
 
     @staticmethod

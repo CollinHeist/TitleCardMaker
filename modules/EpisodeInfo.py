@@ -3,10 +3,10 @@ from typing import Any, Optional, Union
 
 from num2words import num2words
 
-from modules.Debug import log
+from modules import global_objects
 from modules.DatabaseInfoContainer import DatabaseInfoContainer
-import modules.global_objects as global_objects
 from modules.Title import Title
+
 
 class WordSet(dict):
     """
@@ -51,17 +51,21 @@ class WordSet(dict):
             try:
                 cardinal = num2words(number, to='cardinal', lang=lang)
                 self.update({f'{label}_cardinal_{lang}': cardinal})
-            except NotImplementedError: pass
+            except NotImplementedError:
+                pass
             try:
                 ordinal = num2words(number, to='ordinal', lang=lang)
                 self.update({f'{label}_ordinal_{lang}': ordinal})
-            except NotImplementedError: pass
+            except NotImplementedError:
+                pass
         # No language indicated, convert using base language
         else:
             self.update({
                 f'{label}_cardinal': num2words(number, to='cardinal'),
                 f'{label}_ordinal': num2words(number, to='ordinal'),
             })
+
+        return None
 
 
 class EpisodeInfo(DatabaseInfoContainer):
@@ -83,7 +87,8 @@ class EpisodeInfo(DatabaseInfoContainer):
             title: Union[str, Title],
             season_number: int,
             episode_number: int,
-            abs_number: Optional[int] = None, *,
+            abs_number: Optional[int] = None,
+            *,
             emby_id: Optional[int] = None,
             imdb_id: Optional[str] = None,
             jellyfin_id: Optional[str] = None,
@@ -95,7 +100,8 @@ class EpisodeInfo(DatabaseInfoContainer):
             queried_jellyfin: bool = False,
             queried_plex: bool = False,
             queried_sonarr: bool = False,
-            queried_tmdb: bool = False) -> None:
+            queried_tmdb: bool = False
+        ) -> None:
         """
         Initialize this object with the given title, indices, database
         ID's, airdate, and queried statuses.
@@ -184,12 +190,13 @@ class EpisodeInfo(DatabaseInfoContainer):
 
         Returns:
             The key for count many episodes after this one.
+
+        Raises:
+            TypeError if `count` is not an integer.
         """
 
         if not isinstance(count, int):
-            raise TypeError(
-                f'Can only add integers to EpisodeInfo objects'
-            )
+            raise TypeError(f'Can only add integers to EpisodeInfo objects')
 
         return f'{self.season_number}-{self.episode_number+count}'
 
@@ -218,7 +225,7 @@ class EpisodeInfo(DatabaseInfoContainer):
                 and self.episode_number == other_info.episode_number
             )
         # If a tuple of indices, compare
-        elif (isinstance(other_info, tuple) and len(other_info) == 2
+        if (isinstance(other_info, tuple) and len(other_info) == 2
             and all(isinstance(entry, int) for entry in other_info)):
             return (
                 self.season_number == other_info[0]
@@ -294,26 +301,32 @@ class EpisodeInfo(DatabaseInfoContainer):
         return f's{self.season_number}e{self.episode_number}'
 
 
-    """Functions for setting database ID's on this object"""
     def set_emby_id(self, emby_id) -> None:
+        """Set the Emby ID of this object. See `_update_attribute()`."""
         self._update_attribute('emby_id', emby_id, int)
 
     def set_imdb_id(self, imdb_id) -> None:
+        """Set the IMDb ID of this object. See `_update_attribute()`."""
         self._update_attribute('imdb_id', imdb_id, str)
 
     def set_jellyfin_id(self, jellyfin_id) -> None:
+        """Set the Jellyfin ID of this object. See `_update_attribute()`."""
         self._update_attribute('jellyfin_id', jellyfin_id, str)
 
     def set_tmdb_id(self, tmdb_id) -> None:
+        """Set the TMDb ID of this object. See `_update_attribute()`."""
         self._update_attribute('tmdb_id', tmdb_id, int)
 
     def set_tvdb_id(self, tvdb_id) -> None:
+        """Set the TVDb ID of this object. See `_update_attribute()`."""
         self._update_attribute('tvdb_id', tvdb_id, int)
 
     def set_tvrage_id(self, tvrage_id) -> None:
+        """Set the TVRage ID of this object. See `_update_attribute()`."""
         self._update_attribute('tvrage_id', tvrage_id, int)
 
     def set_airdate(self, airdate: datetime) -> None:
+        """Set the airdate of this object. See `_update_attribute()`."""
         self._update_attribute('airdate', airdate)
 
 
@@ -322,7 +335,8 @@ class EpisodeInfo(DatabaseInfoContainer):
             queried_jellyfin: bool = False,
             queried_plex: bool = False,
             queried_sonarr: bool = False,
-            queried_tmdb: bool = False) -> None:
+            queried_tmdb: bool = False
+        ) -> None:
         """
         Update the queried attributes of this object to reflect the
         given arguments. Only updates an attribute from False to True.
@@ -337,8 +351,13 @@ class EpisodeInfo(DatabaseInfoContainer):
             queried_tmdb: Whether this object has been queried on TMDb.
         """
 
-        if queried_emby:     self.queried_emby = True
-        if queried_jellyfin: self.queried_jellyfin = True
-        if queried_plex:     self.queried_plex = True
-        if queried_sonarr:   self.queried_sonarr = True
-        if queried_tmdb:     self.queried_tmdb = True
+        if queried_emby:
+            self.queried_emby = True
+        if queried_jellyfin:
+            self.queried_jellyfin = True
+        if queried_plex:
+            self.queried_plex = True
+        if queried_sonarr:
+            self.queried_sonarr = True
+        if queried_tmdb:
+            self.queried_tmdb = True

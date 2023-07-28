@@ -3,10 +3,11 @@ from re import compile as re_compile
 from typing import Any, Optional
 from modules.BaseCardType import BaseCardType
 
+from modules import global_objects
 from modules.Debug import log
 from modules.SeriesInfo import SeriesInfo
-import modules.global_objects as global_objects
 from modules.YamlReader import YamlReader
+
 
 class Font(YamlReader):
     """
@@ -104,11 +105,11 @@ class Font(YamlReader):
         """Parse this object's YAML and update the validity and attributes."""
 
         # Whether to validate for this font
-        if (value := self._get('validate', type_=bool)) is not None:
+        if (value := self.get('validate', type_=bool)) is not None:
             self.__validate = value
 
         # Case
-        if (value := self._get('case', type_=self.TYPE_LOWER_STR)) is not None:
+        if (value := self.get('case', type_=self.TYPE_LOWER_STR)) is not None:
             if value in self.__card_class.CASE_FUNCTIONS:
                 self.case_name = value
                 self.case = self.__card_class.CASE_FUNCTIONS[value]
@@ -116,11 +117,11 @@ class Font(YamlReader):
                 self.__error('case', value, 'unrecognized value')
 
         # Color
-        if (value := self._get('color', type_=str)) is not None:
+        if (value := self.get('color', type_=str)) is not None:
             self.color = value
 
         # File
-        if (value := self._get('file', type_=Path)) is not None:
+        if (value := self.get('file', type_=Path)) is not None:
             # If specified as direct path, check for existance
             if value.exists():
                 self.file = str(value.resolve())
@@ -133,7 +134,7 @@ class Font(YamlReader):
                 self.__error('file', value, 'no font file found')
 
         # Replacements and delete_missing
-        if (value := self._get('replacements', type_=dict)) is not None:
+        if (value := self.get('replacements', type_=dict)) is not None:
             # Convert each replacement to string, exit if impossible
             self.delete_missing = bool(value.pop('delete_missing', True))
             self.replacements = {}
@@ -145,35 +146,35 @@ class Font(YamlReader):
                                 f'bad replacement for "{in_}"')
 
         # Size
-        if (value := self._get('size', type_=str)) is not None:
+        if (value := self.get('size', type_=str)) is not None:
             if bool(self._PERCENT_REGEX_POSITIVE.match(value)):
                 self.size = float(value[:-1]) / 100.0
             else:
-                self.__error('size', value, 'specify as "x%')                
+                self.__error('size', value, 'specify as "x%')
 
         # Vertical shift
-        if (value := self._get('vertical_shift', type_=int)) is not None:
+        if (value := self.get('vertical_shift', type_=int)) is not None:
             if isinstance(value, int):
                 self.vertical_shift = value
             else:
                 self.__error('vertical_shift', value, 'must be integer')
 
         # Interline spacing
-        if (value := self._get('interline_spacing', type_=int)) is not None:
+        if (value := self.get('interline_spacing', type_=int)) is not None:
             if isinstance(value, int):
                 self.interline_spacing = value
             else:
                 self.__error('interline_spacing', value, 'must be integer')
 
         # Kerning
-        if (value := self._get('kerning', type_=str)) is not None:
+        if (value := self.get('kerning', type_=str)) is not None:
             if bool(self._PERCENT_REGEX.match(value)):
                 self.kerning = float(value[:-1]) / 100.0
             else:
                 self.__error('kerning', value, 'specify as "x%"')
 
         # Stroke width
-        if (value := self._get('stroke_width', type_=str)) is not None:
+        if (value := self.get('stroke_width', type_=str)) is not None:
             if bool(self._PERCENT_REGEX_POSITIVE.match(value)):
                 self.stroke_width = float(value[:-1]) / 100.0
             else:

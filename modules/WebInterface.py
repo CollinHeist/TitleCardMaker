@@ -1,12 +1,14 @@
+from logging import Logger
 from pathlib import Path
+from typing import Union
+
 from re import IGNORECASE, compile as re_compile
 from requests import get, Session
-from typing import Any, Union
+from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
 import urllib3
 
-from tenacity import retry, stop_after_attempt, wait_fixed, wait_exponential
-
 from modules.Debug import log
+
 
 class WebInterface:
     """
@@ -75,8 +77,9 @@ class WebInterface:
 
     @retry(stop=stop_after_attempt(5),
            wait=wait_fixed(5)+wait_exponential(min=1, max=16),
-           before_sleep=lambda _:log.warning('Failed to submit GET request, retrying..'))
-    def __retry_get(self, url: str, params: dict[str, Any]) -> dict[str, Any]:
+           before_sleep=lambda _:log.warning('Failed to submit GET request, retrying..'),
+           reraise=True)
+    def __retry_get(self, url: str, params: dict) -> dict:
         """
         Retry the given GET request until successful (or really fails).
 
@@ -95,7 +98,7 @@ class WebInterface:
         ).json()
 
 
-    def _get(self, url: str, params: dict[str, Any]) -> dict[str, Any]:
+    def get(self, url: str, params: dict, *, cache: bool = True) -> dict:
         """
         Wrapper for getting the JSON return of the specified GET
         request. If the provided URL and parameters are identical to the
@@ -158,12 +161,11 @@ class WebInterface:
         # Attempt to download the image, if an error happens log to user
         try:
             # Get content from URL
-            error = lambda s: f'URL {image} returned {s} content'
-            image = get(image).content
+            image = get(image, timeout=30).content
             if len(image) == 0:
-                raise Exception(error('no'))
+                raise Exception(f'URL {image} returned no content error')
             if any(bad_content in image for bad_content in WebInterface.BAD_CONTENT):
-                raise Exception(error('bad (malformed)'))
+                raise Exception(f'URL {image} returned (bad) malormed content')
 
             # Write content to file, return success
             destination.write_bytes(image)

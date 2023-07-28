@@ -1,7 +1,8 @@
 from pathlib import Path
+from typing import Optional
 
-from modules.BaseCardType import BaseCardType, ImageMagickCommands
-from modules.Debug import log
+from modules.BaseCardType import BaseCardType
+
 
 class TextlessTitleCard(BaseCardType):
     """
@@ -9,21 +10,6 @@ class TextlessTitleCard(BaseCardType):
     source image in anyway, only optionally blurring it. No text of any
     kind is added.
     """
-
-    """API Parameters"""
-    API_DETAILS = {
-        'name': 'Textless',
-        'example': '/assets/cards/textless.jpg',
-        'creators': ['CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': False,
-        'supports_custom_seasons': False,
-        'supported_extras': [
-        ], 'description': [
-            'A "card type" completely devoid of all title, season, and episode text.',
-            'This card is intended to allow users to have TCM manage non-TCM-created cards, as well as apply style modifiers to source images',
-        ],
-    }
 
     """Characteristics for title splitting by this class"""
     TITLE_CHARACTERISTICS = {
@@ -57,8 +43,9 @@ class TextlessTitleCard(BaseCardType):
             card_file: Path,
             blur: bool = False,
             grayscale: bool = False,
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
+        ) -> None:
         """
         Construct a new instance of this card.
         """
@@ -72,7 +59,7 @@ class TextlessTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determines whether the given font characteristics constitute a
         default or custom font.

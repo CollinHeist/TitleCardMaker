@@ -4,36 +4,16 @@ from typing import Literal, Optional
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
 from modules.Debug import log
 
-SeriesExtra = Optional
-Position = SeriesExtra[Literal['left', 'surround', 'right']]
+
+Position = Literal['left', 'surround', 'right']
+
 
 class FrameTitleCard(BaseCardType):
     """
     This class describes a type of CardType that produces title cards in
     a frame or polaroid layout. This is inspired from the official
-    Adventure Time title cards from Season 8. 
+    Adventure Time title cards from Season 8.
     """
-
-    """API Parameters"""
-    API_DETAILS = {
-        'name': 'Frame',
-        'example': '/assets/cards/frame.jpg',
-        'creators': ['CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': True,
-        'supports_custom_seasons': True,
-        'supported_extras': [
-            {'name': 'Episode Text Position',
-             'identifier': 'episode_text_position',
-             'description': 'Position of the episode text relative to the title text'},
-            {'name': 'Episode Text Color',
-             'identifier': 'episode_text_color',
-             'description': 'Color to use for the episode text'},
-        ], 'description': [
-            'Title card styled to look like a Polaroid photo.',
-            'Inspired by the official Adventure Time Season 8 title cards.'
-        ],
-    }
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'frame'
@@ -72,12 +52,13 @@ class FrameTitleCard(BaseCardType):
         'episode_text', 'hide_season', 'hide_episode', 'font_color',
         'font_file', 'font_interline_spacing', 'font_kerning', 'font_size',
         'font_vertical_shift', 'episode_text_color', 'episode_text_position',
+        'interword_spacing',
     )
 
     def __init__(self, *,
             source_file: Path,
             card_file: Path,
-            title_text: str, 
+            title_text: str,
             season_text: str,
             episode_text: str,
             hide_season_text: bool = False,
@@ -90,10 +71,12 @@ class FrameTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-            episode_text_color: SeriesExtra[str] = EPISODE_TEXT_COLOR,
+            episode_text_color: str = EPISODE_TEXT_COLOR,
             episode_text_position: Position = 'surround',
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            interword_spacing: int = 0,
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
+        ) -> None:
         """
         Construct a new instance of this Card.
         """
@@ -129,6 +112,7 @@ class FrameTitleCard(BaseCardType):
             self.valid = False
         else:
             self.episode_text_position = episode_text_position.lower()
+        self.interword_spacing = interword_spacing
 
 
     @property
@@ -142,6 +126,7 @@ class FrameTitleCard(BaseCardType):
 
         title_size = 125 * self.font_size
         interline_spacing = -45 + self.font_interline_spacing
+        interword_spacing = 0 + self.interword_spacing
         kerning = 5 * self.font_kerning
 
         return [
@@ -149,6 +134,7 @@ class FrameTitleCard(BaseCardType):
             f'-fill "{self.font_color}"',
             f'-pointsize {title_size}',
             f'-interline-spacing {interline_spacing}',
+            f'-interword-spacing {interword_spacing}',
             f'-kerning {kerning}',
             f'-gravity center',
         ]
@@ -172,7 +158,7 @@ class FrameTitleCard(BaseCardType):
 
 
     @property
-    def text_command(self) -> list[str]:
+    def text_commands(self) -> ImageMagickCommands:
         """
         Subcommand for adding all text. This includes the title, season,
         and episode text.
@@ -195,7 +181,7 @@ class FrameTitleCard(BaseCardType):
             return title_only_command
 
         # If adding season and/or episode text and title..
-        # Get width of title text for positioning 
+        # Get width of title text for positioning
         width, _ = self.get_text_dimensions(
             title_only_command, width='max', height='sum'
         )
@@ -203,7 +189,7 @@ class FrameTitleCard(BaseCardType):
 
         # Add index text to left or right
         if self.episode_text_position in ('left', 'right'):
-            gravity = 'east' if self.episode_text_position == 'left' else 'west'            
+            gravity = 'east' if self.episode_text_position == 'left' else 'west'
 
             return [
                 # Align text and image based on positioning
@@ -254,7 +240,7 @@ class FrameTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determines whether the given arguments represent a custom font
         for this card. This CardType only uses custom font cases.
@@ -271,14 +257,15 @@ class FrameTitleCard(BaseCardType):
             or (font.kerning != 1.0)
             or (font.interline_spacing != 0)
             or (font.size != 1.0)
-            or (font.stroke_width != 1.0)
             or (font.vertical_shift != 0)
         )
 
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> bool:
         """
         Determines whether the given attributes constitute custom or
         generic season titles.
@@ -321,7 +308,7 @@ class FrameTitleCard(BaseCardType):
             f'"{self.__FRAME_IMAGE.resolve()}"',
             f'-composite',
             # Add all index/title text
-            *self.text_command,
+            *self.text_commands,
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

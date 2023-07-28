@@ -3,10 +3,9 @@ from pathlib import Path
 from re import compile as re_compile
 from typing import Any
 
-from modules.Debug import log
 from modules.EpisodeInfo import WordSet
 from modules.Title import Title
-import modules.global_objects as global_objects
+from modules import global_objects
 
 class MultiEpisode:
     """
@@ -26,7 +25,10 @@ class MultiEpisode:
     )
 
 
-    def __init__(self, episodes: list['Episode'], title: Title) -> None:
+    def __init__(self,
+            episodes: list['Episode'], # type: ignore
+            title: Title,
+        ) -> None:
         """
         Constructs a new instance of a MultiEpisode that represents the
         given list of Episode objects, and has the given (modified)

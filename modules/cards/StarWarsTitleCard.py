@@ -1,13 +1,8 @@
 from pathlib import Path
-from re import match
 from typing import Optional
 
-from num2words import num2words
-
 from modules.BaseCardType import BaseCardType, ImageMagickCommands
-from modules.Debug import log
 
-SeriesExtra = Optional
 
 class StarWarsTitleCard(BaseCardType):
     """
@@ -15,22 +10,6 @@ class StarWarsTitleCard(BaseCardType):
     in the theme of Star Wars cards as designed by Reddit user
     /u/Olivier_286.
     """
-
-    """API Parameters"""
-    API_DETAILS = {
-        'name': 'Star Wars',
-        'example': '/assets/cards/star wars.jpg',
-        'creators': ['/u/Olivier_286', 'CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': False,
-        'supports_custom_seasons': False,
-        'supported_extras': [
-        ], 'description': [
-            'Title cards intended for Star Wars (or more generically Space-themed) shows.',
-            'Similar to the Olivier title card, these cards feature left-aligned title and episode text',
-            'A star-filled gradient overlay is applied to the source image.',
-        ],
-    }
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'star_wars'
@@ -65,7 +44,8 @@ class StarWarsTitleCard(BaseCardType):
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'episode_text',
         'hide_episode_text', 'font_color', 'font_file',
-        'font_interline_spacing', 'font_size', 'episode_prefix',
+        'font_interline_spacing', 'font_size', 'episode_text_color',
+        'episode_prefix',
     )
 
     def __init__(self,
@@ -80,8 +60,10 @@ class StarWarsTitleCard(BaseCardType):
             font_size: float = 1.0,
             blur: bool = False,
             grayscale: bool = False,
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            episode_text_color: str = EPISODE_TEXT_COLOR,
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
+        ) -> None:
         """
         Initialize the CardType object.
         """
@@ -118,6 +100,9 @@ class StarWarsTitleCard(BaseCardType):
                 self.episode_prefix = self.image_magick.escape_chars(
                     episode_text
                 )
+
+        # Extras
+        self.episode_text_color = episode_text_color
 
 
     @property
@@ -161,7 +146,7 @@ class StarWarsTitleCard(BaseCardType):
             f'-gravity west',
             f'-pointsize 53',
             f'-kerning 19',
-            f'-fill "{self.EPISODE_TEXT_COLOR}"',
+            f'-fill "{self.episode_text_color}"',
             f'-background transparent',
             # Create prefix text
             f'\( -font "{self.EPISODE_TEXT_FONT.resolve()}"',
@@ -178,7 +163,30 @@ class StarWarsTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def modify_extras(
+            extras: dict,
+            custom_font: bool,
+            custom_season_titles: bool,
+        ) -> None:
+        """
+        Modify the given extras based on whether font or season titles
+        are custom.
+
+        Args:
+            extras: Dictionary to modify.
+            custom_font: Whether the font are custom.
+            custom_season_titles: Whether the season titles are custom.
+        """
+
+        # Generic font, reset episode text and box colors
+        if not custom_font:
+            if 'episode_text_color' in extras:
+                extras['episode_text_color'] =\
+                    StarWarsTitleCard.EPISODE_TEXT_COLOR
+
+
+    @staticmethod
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determines whether the given arguments represent a custom font
         for this card.
@@ -199,7 +207,9 @@ class StarWarsTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> bool:
         """
         Determines whether the given attributes constitute custom or
         generic season titles.

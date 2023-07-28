@@ -1,5 +1,5 @@
 # Create pipenv image to convert Pipfile to requirements.txt
-FROM python:3.9-slim as pipenv
+FROM python:3.11-slim as pipenv
 
 # Copy Pipfile and Pipfile.lock
 COPY Pipfile Pipfile.lock ./
@@ -8,7 +8,7 @@ COPY Pipfile Pipfile.lock ./
 RUN pip3 install --no-cache-dir --upgrade pipenv; \
     pipenv requirements > requirements.txt
 
-FROM python:3.9-slim as python-reqs
+FROM python:3.11-slim as python-reqs
 
 # Copy requirements.txt from pipenv stage
 COPY --from=pipenv /requirements.txt requirements.txt
@@ -19,7 +19,7 @@ RUN apt-get update; \
     pip3 install --no-cache-dir -r requirements.txt
 
 # Set base image for running TCM
-FROM python:3.9-slim
+FROM python:3.11-slim
 LABEL maintainer="CollinHeist" \
       description="Automated title card maker for Plex"
 
@@ -28,7 +28,7 @@ WORKDIR /maker
 COPY . /maker
 
 # Copy python packages from python-reqs
-COPY --from=python-reqs /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
+COPY --from=python-reqs /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 
 # Script environment variables
 ENV TCM_PREFERENCES=/config/preferences.yml \
@@ -36,15 +36,15 @@ ENV TCM_PREFERENCES=/config/preferences.yml \
 
 # Delete setup files
 # Create user and group to run the container
-# Install gosu, imagemagick
+# Install imagemagick
 # Clean up apt cache
 # Override default ImageMagick policy XML file
 RUN set -eux; \
     rm -f Pipfile Pipfile.lock; \
-    groupadd -g 314 titlecardmaker; \
-    useradd -u 314 -g 314 titlecardmaker; \
+    groupadd -g 99 titlecardmaker; \
+    useradd -u 100 -g 99 titlecardmaker; \
     apt-get update; \
-    apt-get install -y --no-install-recommends gosu imagemagick libmagickcore-6.q16-6-extra; \
+    apt-get install -y --no-install-recommends imagemagick libmagickcore-6.q16-6-extra; \
     rm -rf /var/lib/apt/lists/*; \
     cp modules/ref/policy.xml /etc/ImageMagick-6/policy.xml
 

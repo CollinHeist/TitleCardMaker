@@ -3,6 +3,7 @@ from pathlib import Path
 from modules.Debug import log
 from modules.ImageMaker import ImageMaker
 
+
 class GenreMaker(ImageMaker):
     """
     This class defines a type of maker that creates genre cards. These
@@ -64,7 +65,7 @@ class GenreMaker(ImageMaker):
                       f'does not exist.')
             return None
 
-        # Create the output directory and any necessary parents 
+        # Create the output directory and any necessary parents
         self.output.parent.mkdir(parents=True, exist_ok=True)
 
         # Gradient command to either add/omit gradient
@@ -101,3 +102,4 @@ class GenreMaker(ImageMaker):
         ])
 
         self.image_magick.run(command)
+        return None

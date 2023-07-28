@@ -1,11 +1,11 @@
 from pathlib import Path
+from re import compile as re_compile
 from typing import Any, Optional
 
 from num2words import num2words
-from re import compile as re_compile
 
 from modules.Debug import log
-import modules.global_objects as global_objects
+from modules import global_objects
 from modules.SeasonPoster import SeasonPoster
 from modules.YamlReader import YamlReader
 
@@ -24,9 +24,9 @@ class SeasonPosterSet(YamlReader):
     __SEASON_NUMBER_REGEX = re_compile(r'^season(\d+).jpg$')
 
     __slots__ = (
-        'valid', 'font_file', 'font_color', 'font_kerning', 'posters',
-        'font_size', '__source_directory', '__logo', 'has_posters',
-        '__media_directory', 'logo_is_optional',
+        'font_file', 'font_color', 'font_kerning', 'posters', 'font_size',
+        '__source_directory', '__logo', 'has_posters', '__media_directory',
+        'logo_is_optional',
     )
 
 
@@ -78,6 +78,7 @@ class SeasonPosterSet(YamlReader):
 
         # Create SeasonPoster objects
         self.__prepare_posters(poster_config, episode_map)
+        return None
 
 
     def __read_font(self) -> None:
@@ -90,37 +91,37 @@ class SeasonPosterSet(YamlReader):
         if not self._is_specified('font'):
             return None
 
-        if (file := self._get('font', 'file', type_=Path)) is not None:
+        if (file := self.get('font', 'file', type_=Path)) is not None:
             if file.exists():
                 self.font_file = file
             else:
                 log.error(f'Font file "{file}" is invalid, no font file found.')
                 self.valid = False
 
-        if (color := self._get('font', 'color',
-                               type_=self.TYPE_LOWER_STR)) is not None:
+        if (color := self.get('font', 'color', type_=self.TYPE_LOWER_STR)) is not None:
             self.font_color = color
 
-        if (kerning := self._get('font', 'kerning',
-                                 type_=self.TYPE_LOWER_STR)) is not None:
+        if (kerning := self.get('font', 'kerning', type_=self.TYPE_LOWER_STR)) is not None:
             if bool(self.__PERCENT_REGEX.match(kerning)):
                 self.font_kerning = float(kerning[:-1]) / 100.0
             else:
                 log.error(f'Font kerning "{kerning}" is invalid, specify as "x%')
                 self.valid = False
 
-        if (size := self._get('font', 'size',
-                              type_=self.TYPE_LOWER_STR)) is not None:
+        if (size := self.get('font', 'size', type_=self.TYPE_LOWER_STR)) is not None:
             if bool(self.__PERCENT_REGEX_POSITIVE.match(size)):
                 self.font_size = float(size[:-1]) / 100.0
             else:
                 log.error(f'Font size "{size}" is invalid, specify as "x%"')
                 self.valid = False
 
+        return None
+
 
     def __prepare_posters(self,
-            poster_config: dict[str, Any],
-            episode_map: 'EpisodeMap') -> None:
+            poster_config: dict,
+            episode_map: 'EpisodeMap', # type: ignore
+        ) -> None:
         """
         Create SeasonPoster objects for all available season poster
         images, using the given config.

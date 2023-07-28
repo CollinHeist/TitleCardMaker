@@ -1,10 +1,8 @@
 from pathlib import Path
 from typing import Optional
 
-from modules.BaseCardType import BaseCardType, ImageMagickCommands
-from modules.Debug import log
+from modules.BaseCardType import BaseCardType
 
-SeriesExtra = Optional
 
 class CutoutTitleCard(BaseCardType):
     """
@@ -13,27 +11,6 @@ class CutoutTitleCard(BaseCardType):
     solid color overlay with the episode text cutout to reveal the
     source image.
     """
-
-    """API Parameters"""
-    API_DETAILS = {
-        'name': 'Cutout',
-        'example': '/assets/cards/cutout.jpg',
-        'creators': ['/u/Phendrena', 'CollinHeist'],
-        'source': 'local',
-        'supports_custom_fonts': True,
-        'supports_custom_seasons': False,
-        'supported_extras': [
-            {'name': 'Overlay Color',
-             'identifier': 'overlay_color',
-             'description': 'Color of the solid overlay to cut text out of'},
-            {'name': 'Edge Blurring',
-             'identifier': 'blur_edges',
-             'description': 'Whether to blur the edges of the number cutout'},
-        ], 'description': [
-            'Title cards featuring a solid color overlay overlaying the source image.',
-            'Written episode text cuts out the overlay to reveal the underlying source image.',
-        ],
-    }
 
     """Directory where all reference files used by this card are stored"""
     REF_DIRECTORY = BaseCardType.BASE_REF_DIRECTORY / 'cutout'
@@ -83,10 +60,11 @@ class CutoutTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-            overlay_color: SeriesExtra[str] = 'black',
-            blur_edges: SeriesExtra[bool] = False,
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            overlay_color: str = 'black',
+            blur_edges: bool = False,
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
+        ) -> None:
         """
         Construct a new instance of this Card.
         """
@@ -98,8 +76,8 @@ class CutoutTitleCard(BaseCardType):
         self.output_file = card_file
 
         # Ensure characters that need to be escaped are
-        # Format episode text to split into 1/2 lines depending on word count
         self.title_text = self.image_magick.escape_chars(title_text)
+        # Format episode text to split into 1/2 lines depending on word count
         self.episode_text = self.image_magick.escape_chars(
             self._format_episode_text(episode_text).upper()
         )
@@ -131,8 +109,9 @@ class CutoutTitleCard(BaseCardType):
         if ' and ' in episode_text:
             top, bottom = episode_text.split(' and ')
             return f'{top}\nand {bottom}'
+
         # Has more than three words, split in half
-        elif len(episode_text.split(' ')) > 3:
+        if len(episode_text.split(' ')) > 3:
             words = episode_text.split(' ')
             top, bottom = words[:len(words)//2], words[len(words)//2:]
             top, bottom = ' '.join(top), ' '.join(bottom)
@@ -143,7 +122,7 @@ class CutoutTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determine whether the given font characteristics constitute a
         default or custom font.
@@ -164,7 +143,9 @@ class CutoutTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> bool:
         """
         Determine whether the given attributes constitute custom or
         generic season titles.

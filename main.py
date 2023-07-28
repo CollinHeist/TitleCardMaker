@@ -1,12 +1,13 @@
 from argparse import ArgumentParser, ArgumentTypeError, SUPPRESS
+from datetime import datetime
 from pathlib import Path
 from os import environ
+from sys import exit as sys_exit
 from re import match
-from requests import get
 from time import sleep
 
 try:
-    from datetime import datetime
+    from requests import get
     import schedule
 
     from modules.Debug import log, apply_no_color_formatter
@@ -21,7 +22,7 @@ try:
 except ImportError as e:
     print(f'Required Python packages are missing - execute "pipenv install"')
     print(f'  Specific Error: {e}')
-    exit(1)
+    sys_exit(1)
 
 # Version information
 REPO_URL = ('https://api.github.com/repos/'
@@ -45,14 +46,16 @@ DEFAULT_TAUTULLI_FREQUENCY = '4m'
 
 # Pseudo-type functions for argument runtime and frequency
 def runtime(arg: str) -> dict:
+    """Validate the given argument is a valid runtime (e.g. HH:MM)"""
     try:
         hour, minute = map(int, arg.split(':'))
         assert hour in range(0, 24) and minute in range(0, 60)
         return arg
-    except Exception:
-        raise ArgumentTypeError(f'Invalid time, specify as HH:MM')
+    except Exception as exc:
+        raise ArgumentTypeError(f'Invalid time, specify as HH:MM') from exc
 
 def frequency(arg: str) -> dict:
+    """Get the frequency dictionary of the given frequency string."""
     try:
         interval, unit = match(r'(\d+)(s|m|h|d|w)', arg).groups()
         interval, unit = int(interval), unit.lower()
@@ -62,9 +65,9 @@ def frequency(arg: str) -> dict:
             'unit': {'s': 'seconds', 'm':'minutes', 'h':'hours', 'd':'days',
                      'w':'weeks'}[unit],
         }
-    except Exception:
+    except Exception as exc:
         raise ArgumentTypeError(f'Invalid frequency, specify as FREQUENCY[unit]'
-                                f', i.e. 12h -> 12 hours, 1d -> 1 day')
+                                f', i.e. 12h -> 12 hours, 1d -> 1 day') from exc
 
 # Set up argument parser
 parser = ArgumentParser(description='Start the TitleCardMaker')
@@ -150,22 +153,24 @@ for arg, value in vars(args).items():
 # Check if preference file exists
 if not args.preferences.exists():
     log.critical(f'Preference file "{args.preferences.resolve()}" does not exist')
-    exit(1)
+    sys_exit(1)
 
 # Store objects in global namespace
 if not (pp := PreferenceParser(args.preferences, is_docker)).valid:
     log.critical(f'Preference file is invalid')
-    exit(1)
+    sys_exit(1)
 set_preference_parser(pp)
 set_font_validator(FontValidator())
 set_media_info_set(MediaInfoSet())
 set_show_record_keeper(ShowRecordKeeper(pp.database_directory))
 
-# Function to check for new version of TCM
+
 def check_for_update():
+    """Check for a new version of TCM."""
+
     # Make API call to get latest version
     try:
-        response = get(REPO_URL)
+        response = get(REPO_URL, timeout=30)
         assert response.ok
     except Exception:
         log.debug(f'Failed to check for new version')
@@ -181,16 +186,26 @@ def check_for_update():
         else:
             log.debug(f'Latest remote version is {available_version}')
 
-# Function to re-read preference file
+
 def read_preferences():
+    """
+    Read the indicated Preferences file, and then update the global
+    `PreferenceParser` object.
+    """
+
     # Read the preference file, verify it is valid and exit if not
     if (pp := PreferenceParser(args.preferences, is_docker)).valid:
         set_preference_parser(pp)
     else:
         log.critical(f'Preference file is invalid, not updating preferences')
-    
-# Function to create and run Manager object
+
+
 def run():
+    """
+    Create and run the Manager object's main loop - e.g.
+    `Manager.run()`. This also checks for a new version of TCM.
+    """
+
     # Check for new version
     check_for_update()
 
@@ -199,7 +214,7 @@ def run():
 
     # Reset previously loaded assets
     RemoteFile.reset_loaded_database()
-    
+
     # Create Manager, run, and write missing report
     try:
         tcm = Manager()
@@ -207,20 +222,28 @@ def run():
         tcm.report_missing(args.missing)
     except PermissionError as error:
         log.critical(f'Invalid permissions - {error}')
-        exit(1)
+        sys_exit(1)
 
-# First Manager run that schedules subsequent runs and then cancels itself
-def first_run():
+
+def first_run() -> schedule.CancelJob:
+    """
+    First Manager run that schedules subsequent runs and then cancels
+    itself.
+    """
+
     run()
     interval, unit = args.frequency['interval'], args.frequency['unit']
     getattr(schedule.every(interval), unit).do(run)
     log.debug(f'Scheduled run() every {interval} {unit}')
     return schedule.CancelJob
 
-# Function to read the Tautulli update list
-def read_update_list():
+
+def read_update_list() -> None:
+    """Read the Tautull update list."""
+
     # If the file doesn't exist (nothing to parse), exit
     if not args.tautulli_list.exists():
+        log.debug(f'Update list does not exist')
         return None
 
     # Re-read preferences
@@ -235,7 +258,7 @@ def read_update_list():
         log.error(f'Error reading update list, skipping and deleting')
         args.tautulli_list.unlink(missing_ok=True)
         return None
-        
+
     # Delete (clear) update list
     args.tautulli_list.unlink(missing_ok=True)
 
@@ -251,7 +274,7 @@ if args.run:
 if args.sync:
     # Re-read preferences
     read_preferences()
-    
+
     # Create Manager, run, and write missing report
     Manager(check_tautulli=False).sync_series_files()
 

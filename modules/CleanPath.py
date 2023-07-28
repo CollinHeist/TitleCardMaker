@@ -1,7 +1,6 @@
 from pathlib import Path as _Path_, _windows_flavour, _posix_flavour
 import os
 
-from modules.Debug import log
 
 class CleanPath(_Path_):
     """
@@ -16,7 +15,7 @@ class CleanPath(_Path_):
     """
 
     """Mapping of illegal filename characters and their replacements"""
-    __ILLEGAL_FILE_CHARACTERS = {
+    ILLEGAL_FILE_CHARACTERS = {
         '?': '!',
         '<': '',
         '>': '',
@@ -61,7 +60,7 @@ class CleanPath(_Path_):
             Sanitized filename.
         """
 
-        replacements = CleanPath.__ILLEGAL_FILE_CHARACTERS
+        replacements = CleanPath.ILLEGAL_FILE_CHARACTERS
 
         return filename.translate(str.maketrans(replacements))
 
@@ -98,7 +97,7 @@ class CleanPath(_Path_):
         try:
             finalized_path = self.finalize()
         # If path resolution raises an error, clean and then re-resolve
-        except Exception as e:
+        except Exception: # pylint: disable=broad-except
             finalized_path =self._sanitize_parts(CleanPath.cwd()/self).resolve()
 
         return self._sanitize_parts(finalized_path)

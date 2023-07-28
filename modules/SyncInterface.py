@@ -1,18 +1,16 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+
 class SyncInterface(ABC):
     """
     This class describes an abstract SyncInterface. This is some
     Interface which can be synced (e.g. series can be grabbed) from.
     """
 
-    def __bool__(self) -> bool:
-        return True
-
 
     def get_library_paths(self,
-            filter_libraries: list[str] = []
+            filter_libraries: list[str] = [], # pylint: disable=unused-argument
         ) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
@@ -31,6 +29,7 @@ class SyncInterface(ABC):
 
 
     @abstractmethod
-    def get_all_series(self) -> Any: 
+    def get_all_series(self) -> Any:
         """Abstract method to get all series within this Interface."""
+
         raise NotImplementedError('All SyncInterfaces must implement this')

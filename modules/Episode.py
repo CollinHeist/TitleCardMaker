@@ -8,6 +8,7 @@ from modules.EpisodeInfo import EpisodeInfo
 from modules.StyleSet import StyleSet
 from modules.TitleCard import TitleCard
 
+
 class Episode:
     """
     This class defines an episode of a series that has a corresponding
@@ -18,7 +19,7 @@ class Episode:
     __slots__ = (
         'episode_info', 'card_class', '_base_source', 'source', 'destination',
         'downloadable_source', 'extra_characteristics', 'given_keys', 'watched',
-        'blur', 'grayscale', 'spoil_type', 
+        'blur', 'grayscale', 'spoil_type',
     )
 
 
@@ -28,7 +29,8 @@ class Episode:
             base_source: Path,
             destination: Path,
             given_keys: set[str],
-            **extras: dict) -> None:
+            **extras: dict
+        ) -> None:
         """
         Construct a new instance of an Episode.
 
@@ -129,8 +131,10 @@ class Episode:
 
 
     def update_source(self,
-            new_source: Union[Path, str, None], *,
-            downloadable: bool) -> bool:
+            new_source: Union[Path, str, None],
+            *,
+            downloadable: bool,
+        ) -> bool:
         """
         Update the source image for this Episode, as well as the
         downloadable flag for the source.
@@ -141,7 +145,7 @@ class Episode:
                 this Episode's base source directory - if that file DNE
                 then it's taken as a Path and converted; if None,
                 nothing happens.
-            downloadable: (Keyword only) Whether the new source is
+            downloadable: (Keyword) Whether the new source is
                 downloadable or not.
 
         Returns:
@@ -171,8 +175,8 @@ class Episode:
         Delete the title card for this Episode.
 
         Args:
-            reason: (Keyword only) Optional string to log why the card
-                is being deleted.
+            reason: (Keyword) String to log why the card is being
+                deleted.
 
         Returns:
             True if card was deleted, False otherwise.
@@ -186,7 +190,7 @@ class Episode:
         if self.destination.exists():
             self.destination.unlink()
 
-            # Log deletion 
+            # Log deletion
             message = f'Deleted "{self.destination.resolve()}"'
             if reason is not None:
                 message += f' [{reason}]'

@@ -1,7 +1,8 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Any, Callable, Optional
 
 from modules.Debug import log
+
 
 class DatabaseInfoContainer(ABC):
     """
@@ -11,10 +12,51 @@ class DatabaseInfoContainer(ABC):
     within an objct.
     """
 
+    __slots__ = ()
+
+
+    @abstractmethod
+    def __repr__(self) -> str:
+        raise NotImplementedError(f'All DatabaseInfoContainers must define this')
+
+
+    def __eq__(self, other: 'DatabaseInfoContainer') -> bool:
+        """
+        Compare the equality of two like objects. This compares all
+        `_id` attributes of the objects.
+
+        Args:
+            other: Reference object to compare equality of.
+
+        Returns:
+            True if any of the `_id` attributes of these objects are
+            equal (and not None). False otherwise.
+
+        Raises:
+            TypeError if `other` is not of the same class as `self`.
+        """
+
+        # Verify class comparison
+        if not isinstance(other, self.__class__):
+            raise TypeError(f'Can only compare like DatabaseInfoContainer objects')
+
+        # Compare each ID attribute in slots
+        for attr in self.__slots__:
+            if attr.endswith('_id'):
+                # ID is defined, non-None, and matches
+                if (getattr(self, attr, None) is not None
+                    and getattr(self, attr, None) == getattr(other, attr, None)):
+                    return True
+
+        # No matches, inequality
+        return False
+
+
     def _update_attribute(self,
             attribute: str,
-            value: Any, 
-            type_: Optional[Callable] = None) -> None:
+            value: Any,
+            type_: Optional[Callable] = None
+        ) -> None:
         """
         Set the given attribute to the given value with the given type.
 
@@ -48,7 +90,9 @@ class DatabaseInfoContainer(ABC):
             object. False otherwise.
         """
 
-        return getattr(self, id_) is not None
+        id_name = id_ if id_.endswith('_id') else f'{id_}_id'
+
+        return getattr(self, id_name) is not None
 
 
     def has_ids(self, *ids: tuple[str]) -> bool:
@@ -64,3 +108,24 @@ class DatabaseInfoContainer(ABC):
         """
 
         return all(getattr(self, id_) is not None for id_ in ids)
+
+
+    def copy_ids(self, other: 'DatabaseInfoContainer') -> None:
+        """
+        Copy the database ID's from another DatabaseInfoContainer into
+        this object. Only updating the more precise ID's (e.g. this
+        object's ID must be None and the other ID must be non-None).
+
+        Args:
+            other: Container whose ID's are being copied over.
+        """
+
+        # Go through all attributes of this object
+        for attr in self.__slots__:
+            # Attribute is ID, this container doesn't have, other does
+            if (attr.endswith('_id')
+                and not getattr(self, attr)
+                and getattr(other, attr)):
+                # Transfer ID
+                log.debug(f'Copied {attr}[{getattr(other, attr)}] into {self!r}')
+                setattr(self, attr, getattr(other, attr))

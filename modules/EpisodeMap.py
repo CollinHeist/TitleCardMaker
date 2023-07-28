@@ -4,6 +4,7 @@ from typing import Any, Callable, Literal, Optional
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
 
+
 class EpisodeMap:
     """
     This class describes an EpisodeMap. In particular a mapping of
@@ -65,7 +66,7 @@ class EpisodeMap:
         if isinstance(seasons, dict):
             seasons.pop('hide', None)
 
-        # If both mappings are provided, invalidate 
+        # If both mappings are provided, invalidate
         if seasons and episode_ranges:
             log.error(f'Cannot specify both seasons and episode ranges')
             self.valid = False
@@ -85,6 +86,7 @@ class EpisodeMap:
 
         # Determine unique set of specified season titles
         self.unique_season_titles = set(val for _, val in self.__titles.items())
+        return None
 
 
     def __repr__(self) -> str:
@@ -96,6 +98,8 @@ class EpisodeMap:
 
     @property
     def custom_hash(self) -> str:
+        """Custom hash string for this object."""
+
         return f'{self.__titles}|{self.__sources}|{self.__applies}'
 
 
@@ -141,7 +145,8 @@ class EpisodeMap:
 
 
     def __parse_index_episode_range(self,
-            episode_ranges: dict[str, Any]) -> None:
+            episode_ranges: dict[str, Any],
+        ) -> None:
         """
         Parse the given episode range map, filling this object's title,
         source, and applies dictionaries. Also update's object validity.
@@ -198,7 +203,8 @@ class EpisodeMap:
 
 
     def __parse_absolute_episode_ranges(self,
-            episode_ranges: dict[str, Any]) -> None:
+            episode_ranges: dict[str, Any],
+        ) -> None:
         """
         Parse the given episode range map, filling this object's title,
         source, and applies dictionaries. Also update's object validity.
@@ -252,7 +258,7 @@ class EpisodeMap:
 
     def get_generic_season_title(self, *,
             season_number: Optional[int] = None,
-            episode_info: Optional[EpisodeInfo] = None
+            episode_info: Optional[EpisodeInfo] = None,
         ) -> str:
         """
         Get the generic season title for the given entry.
@@ -293,8 +299,8 @@ class EpisodeMap:
 
     def __get_value(self,
             episode_info: EpisodeInfo,
-            which: Literal['season_titles', 'source', 'applies_to'], 
-            default: Callable[[EpisodeInfo], str]
+            which: Literal['season_titles', 'source', 'applies_to'],
+            default: Callable[[EpisodeInfo], str],
         ) -> str:
         """
         Get the value for the given Episode from the target associated with
@@ -326,25 +332,25 @@ class EpisodeMap:
 
             return default(episode_info=episode_info)
         # Index by index
-        elif self.__index_by == 'index':
+        if self.__index_by == 'index':
             if episode_info.index in target:
                 base_title = target[episode_info.index]
                 return base_title.format(**episode_info.characteristics)
 
             return default(episode_info=episode_info)
+
         # Index by absolute episode number
-        else:
-            # If there's no absolute number, use episode number instead
-            if (index_number := episode_info.abs_number) is None:
-                index_number = episode_info.episode_number
+        # If there's no absolute number, use episode number instead
+        if (index_number := episode_info.abs_number) is None:
+            index_number = episode_info.episode_number
 
-            # Return custom from target
-            if index_number in target:
-                base_title = target[index_number]
-                return base_title.format(**episode_info.characteristics)
+        # Return custom from target
+        if index_number in target:
+            base_title = target[index_number]
+            return base_title.format(**episode_info.characteristics)
 
-            # Use default if index doesn't fall into specified target
-            return default(episode_info=episode_info)
+        # Use default if index doesn't fall into specified target
+        return default(episode_info=episode_info)
 
 
     def get_season_title(self, episode_info: EpisodeInfo) -> str:
@@ -419,5 +425,7 @@ class EpisodeMap:
             or 'unwatched'.
         """
 
-        return self.__get_value(episode_info, 'applies_to',
-                                lambda *_, **__: self.DEFAULT_APPLIES_TO)
+        return self.__get_value(
+            episode_info, 'applies_to',
+            lambda *_, **__: self.DEFAULT_APPLIES_TO
+        )

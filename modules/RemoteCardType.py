@@ -59,8 +59,8 @@ class RemoteCardType:
             file_name = str(file.resolve())
         else:
             # Get username and class name from the remote specification
-            username = remote.split('/')[0]
-            class_name = remote.split('/')[-1]  
+            username = remote.split('/', maxsplit=1)[0]
+            class_name = remote.split('/')[-1]
 
             # Download and write the CardType class into a temporary file
             file_name = self.TEMP_DIR / f'{username}-{class_name}.py'
@@ -70,7 +70,7 @@ class RemoteCardType:
             if (not self.loaded.get(where('remote') == url)
                 or not file_name.exists()):
                 # Make GET request for the contents of the specified value
-                if (response := get(url)).status_code >= 400:
+                if (response := get(url, timeout=30)).status_code >= 400:
                     log.error(f'Cannot identify remote Card Type "{remote}"')
                     self.valid = False
                     return None
@@ -108,3 +108,4 @@ class RemoteCardType:
             log.error(f'Cannot load CardType "{remote}", returned "{e}"')
             self.card_class = None
             self.valid = False
+        return None

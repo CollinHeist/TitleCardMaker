@@ -1,4 +1,5 @@
 from pathlib import Path
+from sys import exit as sys_exit
 from typing import Any, Callable, Optional
 
 from yaml import safe_load
@@ -7,17 +8,20 @@ from modules.Debug import log
 from modules.RemoteCardType import RemoteCardType
 from modules.TitleCard import TitleCard
 
+
 class YamlReader:
     """
     This class describes an object capable of reading and parsing YAML.
     """
 
-    __slots__ = ('_base_yaml', 'valid', '__log')
+    __slots__ = ('card_class', '_base_yaml', 'valid', '__log')
 
 
     def __init__(self,
-            yaml: dict[str, Any] = {}, *,
-            log_function: Callable = log.error) -> None:
+            yaml: dict[str, Any] = {},
+            *,
+            log_function: Callable[[str], None] = log.error
+        ) -> None:
         """
         Initialize this object.
 
@@ -47,10 +51,11 @@ class YamlReader:
         return str(value).lower().strip()
 
 
-    def _get(self,
+    def get(self,
             *attributes: tuple[str],
             type_: Optional[Callable] = None,
-            default: Any = None):
+            default: Any = None,
+        ):
         """
         Get the value specified by the given attributes/sub-attributes
         of YAML, optionally converting to the given type. Log invalidity
@@ -178,7 +183,7 @@ class YamlReader:
                 if critical:
                     log.exception(f'Error encountered while reading file', e)
                     log.critical(f'Error reading "{file.resolve()}"')
-                    exit(1)
+                    sys_exit(1)
                 else:
                     log.exception(f'Error reading "{file.resolve}"', e)
 
