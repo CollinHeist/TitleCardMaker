@@ -484,7 +484,7 @@ async function getFileData() {
           cache: false,
           contentType: false,
           processData: false,
-          success: response => {
+          success: () => {
             $.toast({class: 'blue info', title: 'Updated source image'});
             getFileData();
           }, error: response => {
@@ -964,7 +964,7 @@ async function initAll() {
     for (const [key, value] of [...form.entries()]) {
       if (value === '') { form.delete(key); }
     }
-    form.append('series_id', {{series.id}});
+    form.append('series_id', '{{series.id}}');
 
     $.ajax({
       type: 'POST',
@@ -1005,8 +1005,9 @@ async function initAll() {
 
 /*
  * Submit an API request to toggle the monitored status of this Series.
+ * If successful, this updates the HTML of the monitored icon.
  */
-async function toggleMonitorStatus() {
+function toggleMonitorStatus() {
   $.ajax({
     type: 'POST',
     url: '/api/series/{{series.id}}/toggle-monitor',
@@ -1021,6 +1022,7 @@ async function toggleMonitorStatus() {
         $('#monitor-status span').toggleClass('red', true).toggleClass('green', false);
         $('#monitor-status span')[0].innerHTML = '<i class="ui eye slash outline red icon"></i>Unmonitored';
       }
+      refreshTheme();
     }, error: response => {
       $.toast({
         class: 'error',
@@ -1028,9 +1030,7 @@ async function toggleMonitorStatus() {
         message: response.responseJSON.detail,
         displayTime: 0,
       });
-    }, complete: () => {
-      refreshTheme();
-    }
+    },
   });
 }
 
