@@ -1,0 +1,27 @@
+/* For library path inputs, align the library name/label to the right */
+.library.field,
+.library.field > input {
+  text-align: right;
+}
+
+/* Blur private input fields when not selected or hovered */
+input.private:not(:hover,:focus) {
+  color: transparent !important;
+  text-shadow: 0 0 8px rgba(0,0,0,0.5);
+  
+}
+
+/* The first (enable) checkbox needs additional margin */
+.connection-form .checkbox:first-child {
+  margin-bottom: 1em;
+}
+
+/* Ensure the Sonarr libraries info message is compact */
+.visible.compact.message {
+  display: inline-block !important;
+}
+
+/* Ensure there is a newline before the submit buttons */
+.button[type="submit"] {
+  display: block;
+}

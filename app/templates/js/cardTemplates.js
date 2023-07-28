@@ -76,7 +76,7 @@ async function showDeleteModal(templateId) {
 
 async function getAllTemplates() {
   const allFilterOptions = await fetch('/api/available/template-filters').then(resp => resp.json());
-  const allCardTypes = await fetch('/api/available/card-types').then(resp => resp.json());
+  // const allCardTypes = await fetch('/api/available/card-types').then(resp => resp.json());
   const allFonts = await fetch('/api/fonts/all').then(resp => resp.json());
   const allStyles = await fetch('/api/available/styles').then(resp => resp.json());
   const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
