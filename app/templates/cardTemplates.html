@@ -96,23 +96,25 @@
               
               <h4 class="ui horizontal middle aligned divider header">Card Settings</h4>
 
-              <div class="field">
-                <label>Card Type</label>
-                <div data-value="card-types" class="ui long compact selection clearable dropdown">
-                  <input name="card_type" type="hidden">
-                  <i class="dropdown icon"></i>
-                  <div class="default text">Global Default</div>
-                  <div class="down menu"><!-- Options added asynchronously --></div>
+              <div class="two fluid fields">
+                <div class="field">
+                  <label>Card Type</label>
+                  <div data-value="card-types" class="ui long selection search clearable dropdown">
+                    <input name="card_type" type="hidden">
+                    <i class="dropdown icon"></i>
+                    <div class="default text">Global Default</div>
+                    <div class="down menu"><!-- Options added asynchronously --></div>
+                  </div>
                 </div>
-              </div>
-
-              <div class="field">
-                <label>Font</label>
-                <div data-value="font-dropdown" class="ui very long compact clearable selection dropdown">
-                  <input name="font_id" type="hidden">
-                  <i class="dropdown icon"></i>
-                  <div class="default text">Card Default</div>
-                  <div class="menu"><!-- Elements added asynchrously --></div>
+  
+                <div class="field">
+                  <label>Font</label>
+                  <div data-value="font-dropdown" class="ui long selection search clearable dropdown">
+                    <input name="font_id" type="hidden">
+                    <i class="dropdown icon"></i>
+                    <div class="default text">Card Default</div>
+                    <div class="menu"><!-- Elements added asynchrously --></div>
+                  </div>
                 </div>
               </div>
 
@@ -306,7 +308,6 @@
     <div id="main-content" class="article">
       <!-- Page title -->
       <h1 class="ui header">Templates</h1>
-
       <button id="new-template" class="ui primary tertiary button">Create New Template</button>
 
       <div id="templates">
