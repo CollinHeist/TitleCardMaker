@@ -227,7 +227,10 @@ def get_all_series_logos_on_tmdb(
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
     ) -> list[TMDbImage]:
     """
-    
+    Get a list of all the Logos available for the specified Series on
+    TMDb.
+
+    - series_id: ID of the Series whose logos are being requested.
     """
 
     # If no TMDb connection, raise 409
