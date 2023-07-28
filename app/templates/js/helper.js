@@ -14,6 +14,25 @@ function formatBytes(bytes, decimals = 2) {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }
 
+function showErrorToast(args) {
+  const {title, response, displayTime=0} = args;
+  if (response.responseJSON === undefined) {
+    $.toast({
+      class: 'error',
+      title: title,
+      displayTime: displayTime,
+    });
+  } else {
+    $.toast({
+      class: 'error',
+      title: title,
+      message: response.responseJSON.detail,
+      displayTime: displayTime,
+    });
+  }
+  console.log(response.message);
+}
+
 function getActiveTemplates(activeIds, allTemplates) {
   let values = [];
   // Add all active Template values

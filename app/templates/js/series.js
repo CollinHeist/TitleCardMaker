@@ -1,3 +1,5 @@
+let editedEpisodeIds = [];
+
 /*
  * Submit an API request to get updated Series statistics. If successful,
  * then the card stats text and progress bar are updated.
@@ -94,14 +96,10 @@ function saveEpisodeConfig(episodeId) {
     url: `/api/episodes/${episodeId}`,
     contentType: 'application/json',
     data: JSON.stringify(updateEpisodeObject),
-    success: response => {
+    success: () => {
       $.toast({ class: 'blue info', title: 'Updated Episode'});
     }, error: response => {
-      $.toast({
-        class: 'error',
-        title: 'Error Updating Episode',
-        message: response.message,
-      })
+      showErrorToast({title: 'Error Updating Episode', response: response});
     }
   });
 }
@@ -121,17 +119,12 @@ function saveAllEpisodes() {
     url: '/api/episodes/batch',
     contentType: 'application/json',
     data: JSON.stringify(updateEpisodeObjects),
-    success: response => {
+    success: () => {
       // Updated successfully, show toast and reset list
       $.toast({ class: 'blue info', title: `Updated ${updateEpisodeObjects.length} Episodes`});
       editedEpisodeIds = [];
     }, error: response => {
-      $.toast({
-        class: 'error',
-        title: `Error Updating ${updateEpisodeObjects.length} Episodes`,
-        message: response.message,
-        displayTime: 0,
-      })
+      showErrorToast({title: 'Error Updating Episodes', response: response});
     }
   });
 }
@@ -302,7 +295,11 @@ async function initalizeSeriesConfig() {
   });
 }
 
-async function queryTMDbPoster() {
+/*
+ * Submit an API request to query TPDb for this Series' poster. If
+ * successful, the URL field of the edit poster modal is populated.
+ */
+function queryTMDbPoster() {
   $.ajax({
     type: 'PUT',
     url: '/api/series/{{series.id}}/poster/query',
@@ -312,9 +309,9 @@ async function queryTMDbPoster() {
       } else {
         $('#edit-poster-modal input[name="poster_url"]').val(response);
       }
-    }, error: response => {
+    }, error: () => {
       $.ajax({class: 'error', title: 'TMDb returned no images'});
-    }, complete: () => {},
+    },
   });
 }
 
@@ -674,6 +671,7 @@ async function initAll() {
   getEpisodeData();
   getFileData();
   initStyles();
+
   // Schedule recurring statistics query
   setInterval(getStatistics, 30000); // Refresh stats every 30s
 
@@ -830,45 +828,6 @@ async function initAll() {
     $(`#episode-extras-modal .field[data-value="extra-value"]`).append(newValue);
   });
 
-  // Delete season titles/translations/extras on button press
-  function deleteListValues(attribute) {
-    let data;
-    if (attribute === 'season_titles') {
-      data = {season_title_ranges: null, season_title_values: null};
-    } else if (attribute === 'translations') {
-      data = {translations: null};
-    } else if (attribute === 'extras') {
-      data = {extra_keys: null, extra_values: null};
-    } else { data = {}; }
-    $.ajax({
-      type: 'PATCH',
-      url: '/api/series/{{series.id}}',
-      data: JSON.stringify(data),
-      contentType: 'application/json',
-      success: (response) => {
-        if (attribute === 'season_titles') {
-          $('.field[data-value="season-title-range"] input').remove();
-          $('.field[data-value="season-title-value"] input').remove();
-        } else if (attribute === 'translations') {
-          $('.field [data-value="translations"] >*').remove();
-        } else if (attribute === 'extras') {
-          $('.field[data-value="extra-key"] input').remove();
-          $('.field[data-value="extra-value"] input').remove();
-        }
-        $.toast({
-          class: 'blue info',
-          title: 'Deleted Values',
-        });
-      }, error: (response) => {
-        $.toast({
-          class: 'error',
-          title: 'Error Deleting Values',
-          detail: response.responseText,
-        });
-      }
-    })
-  }
-
   // Submit the updated series config
   $('#series-config-form, #card-config-form, #series-ids-form').on('submit', event => {
     event.preventDefault();
@@ -991,7 +950,6 @@ async function initAll() {
   });
 
   // Update list of Episode ID's when the input is changed
-  let editedEpisodeIds = [];
   $('#episode-data-table')
     .on('change', 'tr input', (e) => {
       const episodeId = $(e.target).closest('tr').data('episode-id')*1;
@@ -1001,6 +959,45 @@ async function initAll() {
       const episodeId = $(e.target).closest('tr').data('episode-id')*1;
       if (!editedEpisodeIds.includes(episodeId*1)) { editedEpisodeIds.push(episodeId*1); }
     });
+}
+
+// Delete season titles/translations/extras on button press
+function deleteListValues(attribute) {
+  let data;
+  if (attribute === 'season_titles') {
+    data = {season_title_ranges: null, season_title_values: null};
+  } else if (attribute === 'translations') {
+    data = {translations: null};
+  } else if (attribute === 'extras') {
+    data = {extra_keys: null, extra_values: null};
+  } else { data = {}; }
+  $.ajax({
+    type: 'PATCH',
+    url: '/api/series/{{series.id}}',
+    data: JSON.stringify(data),
+    contentType: 'application/json',
+    success: () => {
+      if (attribute === 'season_titles') {
+        $('.field[data-value="season-title-range"] input').remove();
+        $('.field[data-value="season-title-value"] input').remove();
+      } else if (attribute === 'translations') {
+        $('.field [data-value="translations"] >*').remove();
+      } else if (attribute === 'extras') {
+        $('.field[data-value="extra-key"] input').remove();
+        $('.field[data-value="extra-value"] input').remove();
+      }
+      $.toast({
+        class: 'blue info',
+        title: 'Deleted Values',
+      });
+    }, error: (response) => {
+      $.toast({
+        class: 'error',
+        title: 'Error Deleting Values',
+        detail: response.responseText,
+      });
+    }
+  })
 }
 
 /*
@@ -1066,7 +1063,7 @@ function refreshEpisodeData() {
   $.ajax({
     type: 'POST',
     url: '/api/episodes/{{series.id}}/refresh',
-    success: response => {
+    success: () => {
       $.toast({class: 'blue info', title: `Refreshed Episode Data`});
       getEpisodeData();
       getFileData();
@@ -1109,26 +1106,28 @@ function addTranslations() {
   });
 }
 
+/*
+ * Submit an API request to import the given Blueprint for this Series.
+ * While processing, the card element with the given ID is marked as
+ * loading.
+ */
 function importBlueprint(cardId, blueprint) {
   // Turn on loading
-  $(`#${cardId}`).toggleClass('slow double blue loading', true);
+  document.getElementById(cardId).classList.add('slow', 'double', 'blue', 'loading');
+  // $(`#${cardId}`).toggleClass('slow double blue loading', true);
   // Submit API request to import blueprint
   $.ajax({
     type: 'PUT',
     url: '/api/blueprints/import/series/{{series.id}}',
     contentType: 'application/json',
     data: JSON.stringify(blueprint),
-    success: response => {
+    success: () => {
       $.toast({class: 'blue info', title: 'Blueprint Imported'});
     }, error: response => {
-      $.toast({
-        class: 'error',
-        title: 'Error Importing Blueprint',
-        message: response.responseJSON.detail,
-        displayTime: 0,
-      });
+      showErrorToast({title: 'Error Importing Blueprint', response: response});
     }, complete: () => {
-      $(`#${cardId}`).toggleClass('slow double blue loading', false);
+      document.getElementById(cardId).classList.remove('slow', 'double', 'blue', 'loading');
+      // $(`#${cardId}`).toggleClass('slow double blue loading', false);
     }
   });
   // Get any URL's for Fonts to download
@@ -1160,7 +1159,7 @@ function importBlueprint(cardId, blueprint) {
               class: 'error',
               message: 'Blueprint Fonts will not be correct if files are not downloaded',
               displayTime: 10000,
-            })
+            });
           }
         }
       ],
@@ -1219,6 +1218,10 @@ async function queryBlueprints() {
   blueprintCards.replaceChildren(...blueprints);
 }
 
+/*
+ * Submit an API request to export the Blueprint for this Series. If
+ * successful, the Blueprint zip file is downloaded.
+ */
 async function exportBlueprint() {
   $.ajax({
     type: 'GET',
@@ -1230,19 +1233,20 @@ async function exportBlueprint() {
       $.toast({
         class: 'warning',
         title: 'Font Files',
-        message: 'Verify any applicable Font licenses allow the Fonts to be shared. If you are not sure, a link to where the Font can be obtained should be used instead.',
+        message: 'Verify any applicable Font licenses allow the Fonts to be shared.',
         displayTime: 15000,
       });
     }, error: response => {
-      $.toast({
-        class: 'error',
-        title: 'Error Exporting Blueprint',
-        message: response.responseJSON.detail,
-      });
-    }, complete: () => {},
+      showErrorToast({title: 'Error Exporting Blueprint', response: response});
+    },
   })
 }
 
+/*
+ * Submit an API request to download the given source image URL for the
+ * Episode with the given ID. If successful, the Series file data is
+ * refreshed.
+ */
 function selectTmdbImage(episodeId, url) {
   // Create psuedo form for this URL
   const form = new FormData();
@@ -1297,48 +1301,57 @@ function downloadSeriesLogo(url) {
   });
 }
 
-async function browseTmdbImages(episodeId, cardElementId) {
-  // Get all source images for this Episode
-  $(`#${cardElementId}`).toggleClass('loading', true);
-  const images = await fetch(`/api/sources/episode/${episodeId}/browse`).then(resp => resp.json());
-  $(`#${cardElementId}`).toggleClass('loading', false);
-  // If null, no images were returned
-  if (images === null) {
-    $.toast({class: 'error', title: 'Unable to Query TMDb'});
-    return;
-  } else if (images.detail !== undefined) {
-    $.toast({class: 'error', title: 'Unable to Query TMDb', message: images.detail});
-    return;
-  }
-
-  // Images returned, add to browse modal
-  const imageElements = images.map(({url, width, height}, index) => {
-    const location = index % 2 ? 'right' : 'left';
-    return `<a class="ui image" onclick="selectTmdbImage(${episodeId}, '${url}')"><div class="ui blue ${location} ribbon label">${width}x${height}</div><img src="${url}"/></a>`;
+/*
+ * Submit an API request to browse the available TMDb images for the
+ * given Episode. 
+ */
+function browseTmdbImages(episodeId, cardElementId) {
+  document.getElementById(cardElementId).classList.add('loading');
+  $.ajax({
+    type: 'GET',
+    url: `/api/sources/episode/${episodeId}/browse`,
+    success: images => {
+      if (images === null) {
+        $.toast({class: 'error', title: 'Unable to Query TMDb'});
+      } else {
+        // Images returned, add to browse modal
+        const imageElements = images.map(({url, width, height}, index) => {
+          const location = index % 2 ? 'right' : 'left';
+          return `<a class="ui image" onclick="selectTmdbImage(${episodeId}, '${url}')"><div class="ui blue ${location} ribbon label">${width}x${height}</div><img src="${url}"/></a>`;
+        });
+        $('#browse-tmdb-modal .content .images')[0].innerHTML = imageElements.join('');
+        $('#browse-tmdb-modal').modal('show');
+      }
+    }, error: response => {
+      showErrorToast({title: 'Unable to Query TMDb', response: response});
+    }, complete: () => {
+      document.getElementById(cardElementId).classList.remove('loading');
+    }
   });
-  $('#browse-tmdb-modal .content .images')[0].innerHTML = imageElements.join('');
-  $('#browse-tmdb-modal').modal('show');
 }
 
-async function browseTmdbLogos() {
-  // Get all logos for this Episode
-  const images = await fetch('/api/sources/series/{{series.id}}/logo/browse').then(resp => resp.json());
-  // If null, no images were returned
-  if (images === null) {
-    $.toast({class: 'error', title: 'Unable to Query TMDb'});
-    return;
-  } else if (images.detail !== undefined) {
-    $.toast({class: 'error', title: 'Unable to Query TMDb', message: images.detail});
-    return;
-  }
-  
-  // Images returned, add to browse modal
-  const imageElements = images.map(({url, width, height}, index) => {
-    const location = index % 2 ? 'right' : 'left';
-    return `<a class="ui image" onclick="downloadSeriesLogo('${url}')"><img src="${url}"/></a>`;
+/*
+ * Submit an API request to browse the available TMDb logos for this
+ * Series. If successful, the relevant modal is shown.
+ */
+function browseTmdbLogos() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/sources/series/{{series.id}}/logo/browse',
+    success: images => {
+      if (images.length === 0) {
+        $.toast({class: 'error', title: 'TMDb has no logos'});
+      } else {
+        const imageElements = images.map(({url}) => {
+          return `<a class="ui image" onclick="downloadSeriesLogo('${url}')"><img src="${url}"/></a>`;
+        });
+        $('#browse-tmdb-logo-modal .content .images')[0].innerHTML = imageElements.join('');
+        $('#browse-tmdb-logo-modal').modal('show');
+      }
+    }, error: response => {
+      showErrorToast({title: 'Unable to Query TMDb', response: response});
+    },
   });
-  $('#browse-tmdb-logo-modal .content .images')[0].innerHTML = imageElements.join('');
-  $('#browse-tmdb-logo-modal').modal('show');
 }
 
 /*
@@ -1346,7 +1359,7 @@ async function browseTmdbLogos() {
  * This marks the given cardElementId as loading while processing.
  */
 function getEpisodeSourceImage(episodeId, cardElementId) {
-  $(`#${cardElementId}`).toggleClass('loading', true);
+  document.getElementById(cardElementId).classList.add('loading');
   $.ajax({
     type: 'POST',
     url: `/api/sources/episode/${episodeId}`,
@@ -1357,14 +1370,9 @@ function getEpisodeSourceImage(episodeId, cardElementId) {
         $.toast({class: 'blue info', title: 'Downloaded Image'});
       }
     }, error: response => {
-      $.toast({
-        class: 'error',
-        title: 'Error Download Source Image',
-        message: response.responseJSON.detail,
-        displayTime: 0,
-      });
+      showErrorToast({title: 'Error Downloading Source Image', response: response});
     }, complete: () => {
-      $(`#${cardElementId}`).toggleClass('loading', false);
+      document.getElementById(cardElementId).classList.remove('loading');
     }
   });
 }
@@ -1427,7 +1435,7 @@ function createTitleCards() {
  * statistics are re-queried if successful.
  */
 function loadCards(mediaServer, reload) {
-  const endpoint = (reload ? 'reload' : 'load') + `/${mediaServer}`;
+  const endpoint = (reload ? 'reload/' : 'load/') + mediaServer;
   $.ajax({
     type: 'POST',
     url:`/api/series/{{series.id}}/${endpoint}`,
@@ -1531,25 +1539,31 @@ function deleteEpisode(id) {
       getFileData();
       getStatistics();
     }, error: response => {
-      $.toast({
-        class: 'error',
-        title: 'Error Deleting Episode',
-        message: response.responseJSON.detail,
-        displayTime: 0,
-      });
+      showErrorToast({title: 'Error Deleting Episode', response: response});
     },
   });
 }
 
+/*
+ * Submit an API request to navigate to the next or previous Series. If
+ * successful (and there is a Series to navigate to), then the page is
+ * redirected. If successful but there is no next/previous Series, the
+ * appropriate nav button is disabled.
+ */
 async function navigateSeries(next_or_previous) {
-  // Get the associated Series
-  const navSeries = await fetch(`/api/series/{{series.id}}/${next_or_previous}`).then(resp => resp.json());
-
-  // No Series to navigate to, disable nav button
-  if (navSeries === null) {
-    $(`i[data-action="${next_or_previous}-series"]`).toggleClass('disabled', true);
-  } else {
-    window.location.href = `/series/${navSeries.id}`;
-  }
+  $.ajax({
+    type: 'GET',
+    url: `/api/series/{{series.id}}/${next_or_previous}`,
+    success: series => {
+      // No Series to navigate, disable button
+      if (series === null) {
+        $(`i[data-action="${next_or_previous}-series"]`).toggleClass('disabled', true);
+      } else {
+        window.location.href = `/series/${navSeries.id}`;
+      }
+    }, error: response => {
+      showErrorToast({title: 'Navigation Failed', response: response});
+    },
+  });
 }
 

@@ -19,7 +19,7 @@ $(document).ready(function() {
   $.get('/templates/sidebar.html')
     .done(data => {
       // Inject the sidebar HTML into the nev-menu element
-      $('#nav-menu').html(data)
+      $('#nav-menu').html(data);
     })
     .fail(($xhr, errorMsg) => $content.text(`Error: ${errorMsg}`));
 

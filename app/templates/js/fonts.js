@@ -214,7 +214,7 @@ async function getAllFonts() {
             message: response.responseJSON.detail,
             displayTime: 0,
           });
-        }, complete: () => {}
+        }
       });
     };
 
