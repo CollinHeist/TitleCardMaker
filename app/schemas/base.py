@@ -31,7 +31,7 @@ def validate_argument_lists_to_dict(
         label: str,
         key0: str,
         key1: str,
-        output_key: str
+        output_key: str,
     ) -> dict:
     """
     Validation function to join two paired lists into a dictionary.

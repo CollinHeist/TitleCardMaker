@@ -220,14 +220,16 @@ async function initAll() {
 
       // Merge multiple form inputs into list values
       let form = new FormData(event.target);
-      let listData = {library_names: [], library_paths: []};
+      let libraryNames = [],
+          libraryPaths = [];
       for (const [key, value] of [...form.entries()]) {
         if (connection === 'sonarr') {
-          if (key === 'library_names') { listData.library_names.push(value); }
-          if (key === 'library_paths') { listData.library_paths.push(value); }
+          if (key === 'library_names') { libraryNames.push(value); }
+          if (key === 'library_paths') { libraryPaths.push(value); }
         }
         if (value === '') { form.delete(key); }
       }
+      let sonarr_libraries = libraryNames.map((name, index) => ({ name, path: libraryPaths[index] }));
       // Add checkbox status as true/false
       $.each($(formId).find('input[type=checkbox]'), (key, val) => {
         form.append($(val).attr('name'), $(val).is(':checked'))
@@ -238,7 +240,7 @@ async function initAll() {
       $.ajax({
         type: 'PATCH',
         url: `/api/connection/${connection}`,
-        data: JSON.stringify({...Object.fromEntries(form.entries()), ...listData}),
+        data: JSON.stringify({...Object.fromEntries(form.entries()), libraries: sonarr_libraries}),
         contentType: 'application/json',
         success: response => {
           if (successCallback !== undefined ) { successCallback(); }

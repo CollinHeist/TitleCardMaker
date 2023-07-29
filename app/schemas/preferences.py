@@ -73,6 +73,10 @@ MediaServer = Literal['Emby', 'Jellyfin', 'Plex']
 """
 Base classes
 """
+class SonarrLibrary(Base):
+    name: str
+    path: str
+
 class TautulliConnection(Base):
     tautulli_url: AnyUrl
     tautulli_api_key: SecretStr = Field(..., min_length=1)
@@ -175,21 +179,12 @@ class UpdateSonarr(UpdateServerBase):
     api_key: Hexstring = UNSPECIFIED
     use_ssl: bool = UNSPECIFIED
     downloaded_only: bool = UNSPECIFIED
-    library_names: list[str] = UNSPECIFIED
-    library_paths: list[str] = UNSPECIFIED
+    libraries: list[SonarrLibrary] = UNSPECIFIED
 
-    @validator('library_names', 'library_paths', pre=True)
+    @validator('libraries', pre=False)
     def validate_list(cls, v):
         # Filter out empty strings - all arguments can accept empty lists
-        return [val for val in ([v] if isinstance(v, str) else v) if val != '']
-
-    @root_validator
-    def validate_paired_lists(cls, values):
-        return validate_argument_lists_to_dict(
-            values, 'library names and paths',
-            'library_names', 'library_paths',
-            output_key='libraries'
-        )
+        return [library for library in v if library.name and library.path]
 
 class UpdateTMDb(UpdateBase):
     api_key: Hexstring = UNSPECIFIED
@@ -257,7 +252,7 @@ class SonarrConnection(Base):
     use_sonarr: bool
     sonarr_url: AnyUrl
     sonarr_api_key: SecretStr
-    sonarr_libraries: list[dict[str, str]]
+    sonarr_libraries: list[SonarrLibrary]
 
 class TMDbConnection(Base):
     use_tmdb: bool

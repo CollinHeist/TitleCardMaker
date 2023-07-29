@@ -3,7 +3,7 @@ from fastapi import APIRouter, Body, Depends, Request
 from app.dependencies import *
 from app.models.preferences import Preferences as PreferencesModel
 from app.schemas.preferences import (
-    EpisodeDataSourceToggle, LanguageToggle, Preferences, UpdatePreferences
+    EpisodeDataSourceToggle, LanguageToggle, Preferences, SonarrLibrary, UpdatePreferences
 )
 
 from modules.TMDbInterface2 import TMDbInterface
@@ -52,7 +52,7 @@ def update_global_settings(
 @settings_router.get('/sonarr-libraries', tags=['Sonarr'])
 def get_sonarr_libraries(
         preferences: PreferencesModel = Depends(get_preferences),
-    ) -> list[dict[str, str]]:
+    ) -> list[SonarrLibrary]:
     """
     Get the global Sonarr library mappings.
     """
