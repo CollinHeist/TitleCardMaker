@@ -179,9 +179,19 @@ html.ios body {
     flex: 0 0 70px;
   }
 
+  /* Remove extra right margin for header buttons */
+  #page-header > [data-position="right"] {
+    margin-right: unset;
+  }
+
   /* Do not use absolute positioning, let items stack themselves */
   #page-header > div {
     position: unset;
+  }
+
+  /* Hide support button on mobile */
+  #support-button {
+    display: none;
   }
 
   /* Shrink search input */
