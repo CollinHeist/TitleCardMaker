@@ -30,7 +30,6 @@ function showErrorToast(args) {
       displayTime: displayTime,
     });
   }
-  console.log(response.message);
 }
 
 function getActiveTemplates(activeIds, allTemplates) {
