@@ -82,9 +82,12 @@
   padding: unset;
 }
 
-/* Limit card size to 33% */
-#files-list .card {
-  max-width: calc(33% - 1em);
+/* Desktop only formatting */
+@media (min-width: 768px) {
+  /* Limit card size to 33% */
+  #files-list .card {
+    max-width: calc(33% - 1em);
+  }
 }
 
 /* Show cursor on all file card icons, and images in tmdb modal */
