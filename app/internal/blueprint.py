@@ -216,7 +216,8 @@ def query_all_blueprints(
         log: Logger = log,
     ) -> list[RemoteMasterBlueprint]:
     """
-    Query for all Blueprints for all Series on GitHub.
+    Query for all Blueprints for all Series on GitHub. The content is
+    cached for up to 3 hours.
 
     Args:
         log: (Keyword) Logger for all log messages.
