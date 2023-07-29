@@ -73,6 +73,245 @@ async function initAll() {
   getSonarrLibraries();
   getLanguagePriorities();
   initializeFilesizeDropdown();
+
+  // Enable dropdowns, checkboxes
+  $('.ui.dropdown').dropdown();
+
+  // Attach Tautlli modal to button
+  $('#tautulli-agent-modal')
+    .modal({blurring: true})
+    .modal('attach events', '#tautulli-agent-button', 'show')
+    .modal('setting', 'transition', 'fade up')
+
+  // Fields to enable/disable on button presses
+  const toggleFields = [
+    {title: 'Emby',     toggleAPI: '/api/connection/emby',     buttonId: '#enable-emby'},
+    {title: 'Jellyfin', toggleAPI: '/api/connection/jellyfin', buttonId: '#enable-jellyfin'},
+    {title: 'Plex',     toggleAPI: '/api/connection/plex',     buttonId: '#enable-plex'},
+    {title: 'Sonarr',   toggleAPI: '/api/connection/sonarr',   buttonId: '#enable-sonarr'},
+    {title: 'TMDb',     toggleAPI: '/api/connection/tmdb',     buttonId: '#enable-tmdb'},
+  ];
+  toggleFields.forEach(({title, buttonId, fields, toggleAPI}) => {
+    $(buttonId).checkbox({
+      onChecked: () => {
+        $(`#${title.toLowerCase()}-settings .field`).toggleClass('disabled', false);
+        $.ajax({
+          type: 'PUT',
+          url: `${toggleAPI}/enable`,
+          success: () => {
+            $.toast({
+              class: 'blue info',
+              title: `Enabled Connection to ${title}`,
+            });
+          }, error: response => {
+            $.toast({
+              class: 'error',
+              title: `Error Enabling Connection to ${title}`,
+              message: response.responseJSON.detail,
+              displayTime: 0,
+            });
+          }, complete: () => {}
+        });
+      }, onUnchecked: () => {
+        $(`#${title.toLowerCase()}-settings .field`).toggleClass('disabled', true);
+        $.ajax({
+          type: 'PUT',
+          url: `${toggleAPI}/disable`,
+          success: () => {
+            $.toast({
+              class: 'warning',
+              title: `Disabled Connection to ${title}`,
+            });
+          }, error: response => {
+            $.toast({
+              class: 'error',
+              title: `Error Disabling Connection to ${title}`,
+              message: response.responseJSON.detail,
+              displayTime: 0,
+            });
+          },
+        });
+      },
+    })
+  });
+
+  // Initialize enabled/disabled states of form fields
+  toggleFields.forEach(({title, buttonId}) => {
+    $(`#${title.toLowerCase()}-settings .field`).toggleClass('disabled', !$(buttonId)[0].classList.contains('checked'));
+  });
+
+  // Show filesize warning in Plex if >10 MB
+  $('.field[data-value="plex_filesize_limit"]').on('change', event => {
+    const number = $('.field[data-value="plex_filesize_limit"] input[name="filesize_limit_number"]').val() * 1;
+    const unit = $('.field[data-value="plex_filesize_limit"] input[name="filesize_limit_unit"]').val();
+    const unitValues = {
+      'Bytes': 1, 'Kilobytes':  2**10, 'Megabytes':  2**20, 'Gigabytes':  2**30, 'Terabytes':  2**40
+    };
+    let current = unitValues[unit] * number,
+        limit   = 10 * unitValues['Megabytes'];
+    $('#plex-filesize-warning').toggleClass('visible', current > limit);
+  })
+
+  // Add form validation
+  $('#emby-settings').form({
+    on: 'blur',
+    inline: true,
+    fields: {
+      url: ['empty'],
+      api_key: ['empty', 'regExp[/^[a-f0-9]+$/gi]'],
+      filesize_limit_number: {
+        optional: true,
+        rules: [{type: 'integer[0..]'}], 
+      },
+    },
+  });
+  $('#jellyfin-settings').form({
+    on: 'blur',
+    inline: true,
+    fields: {
+      url: ['empty'],
+      api_key: ['empty', 'regExp[/^[a-f0-9]+$/gi]'],
+      filesize_limit_number: {
+        optional: true,
+        rules: [{type: 'integer[0..]'}], 
+      },
+    },
+  });
+  $('#plex-settings').form({
+    on: 'blur',
+    inline: true,
+    fields: {
+      url: ['empty'],
+      filesize_limit_number: ['integer[0..]'],
+    },
+  });
+  $('#sonarr-settings').form({
+    on: 'blur',
+    inline: true,
+    fields: {
+      url: ['empty'],
+      api_key: ['empty', 'regExp[/^[a-f0-9]+$/gi]'],
+    },
+  });
+  $('#tmdb-settings').form({
+    on: 'blur',
+    inline: true,
+    fields: {
+      api_key: ['empty', 'regExp[/^[a-f0-9]+$/gi]'],
+      minimum_width: ['integer[0..]'],
+      minimum_height: ['integer[0..]'],
+      logo_language_priority: ['empty', 'minLength[1]'],
+    },
+  });
+
+  // Connection submit button handling
+  const connections = [
+    {connection: 'emby', title: 'Emby', formId: '#emby-settings', submitButtonId: '#submit-emby', successCallback: getEmbyUsernames},
+    {connection: 'jellyfin', title: 'Jellyfin', formId: '#jellyfin-settings', submitButtonId: '#submit-jellyfin', successCallback: getJellyfinUsernames},
+    {connection: 'plex', title: 'Plex', formId: '#plex-settings', submitButtonId: '#submit-plex'},
+    {connection: 'sonarr', title: 'Sonarr', formId: '#sonarr-settings', submitButtonId: '#submit-sonarr'},
+    {connection: 'tmdb', title: 'TMDb', formId: '#tmdb-settings', submitButtonId: '#submit-tmdb'},
+  ]
+  connections.forEach(({connection, title, formId, submitButtonId, successCallback}) => {
+    $(formId).on('submit', (event) => {
+      // Prevent default event form handler
+      event.preventDefault();
+      if (!$(formId).form('is valid')) { return; }
+
+      // Merge multiple form inputs into list values
+      let form = new FormData(event.target);
+      let listData = {library_names: [], library_paths: []};
+      for (const [key, value] of [...form.entries()]) {
+        if (connection === 'sonarr') {
+          if (key === 'library_names') { listData.library_names.push(value); }
+          if (key === 'library_paths') { listData.library_paths.push(value); }
+        }
+        if (value === '') { form.delete(key); }
+      }
+      // Add checkbox status as true/false
+      $.each($(formId).find('input[type=checkbox]'), (key, val) => {
+        form.append($(val).attr('name'), $(val).is(':checked'))
+      });
+
+      // Submit API request
+      $(submitButtonId).toggleClass('disabled loading', true);
+      $.ajax({
+        type: 'PATCH',
+        url: `/api/connection/${connection}`,
+        data: JSON.stringify({...Object.fromEntries(form.entries()), ...listData}),
+        contentType: 'application/json',
+        success: response => {
+          if (successCallback !== undefined ) { successCallback(); }
+          $.toast({
+            class: 'blue info',
+            title: `Updated Connection to ${title}`,
+          });
+          getEmbyUsernames();
+          getJellyfinUsernames();
+          $(formId).toggleClass('error', false);
+        }, error: response => {
+          $.toast({
+            class: 'error',
+            title: `Invalid ${title} Connection`,
+            message: response.responseJSON.detail,
+            displayTime: 0,
+          });
+          $(formId).toggleClass('error', true);
+          $(`${formId} .error.message`)[0].innerHTML = `<div class="header">${response.statusText}</div><p>${response.responseText}</p>`;
+        }, complete: () => {
+          $(submitButtonId).toggleClass('disabled loading', false);
+        }
+      });
+    });
+  });
+
+  // Tautulli agent form validation and submission
+  $('#tautulli-agent-form').form({
+    on: 'blur',
+    inline: true,
+    fields: {
+      tautulli_url: ['empty'],
+      tautulli_api_key: ['empty'],
+      tautulli_agent_name: {
+        optional: true,
+        value: ['minLength[1]']
+      },
+    },
+  }).on('submit', event => {
+    // Prevent default event form handler, validate form
+    event.preventDefault();
+    if (!$('#tautulli-agent-form').form('is valid')) { return; }
+
+    // Create JSON from form
+    const data = Object.fromEntries(new FormData(event.target));
+
+    // Submit API request
+    $('#tautulli-agent-modal button').toggleClass('loading', true);
+    $.ajax({
+      type: 'POST',
+      url: '/api/connection/tautulli/integrate',
+      data: JSON.stringify(data),
+      contentType: 'application/json',
+      success: response => {
+        // Show toast, disable 
+        $.toast({
+          class: 'blue info',
+          title: `Created "${data.tautulli_agent_name}" Notification Agent`,
+          displayTime: 5000,
+        });
+        $('#tautulli-agent-modal button').toggleClass('disabled', true);
+      }, error: response => {
+        $.toast({
+          class: 'error',
+          title: 'Error Creating Notification Agent',
+          message: response.responseJSON.detail,
+          displayTime: 0,
+        });
+      }, complete: () => {
+        $('#tautulli-agent-modal button').toggleClass('loading', false);
+      }
+    });
+  });
 }
 
 // Add new library path
@@ -120,242 +359,3 @@ async function querySonarrLibraries() {
   $('#sonarr-settings').toggleClass('warning', true);
   $('#submit-sonarr').toggleClass('loading', false);
 }
-
-// Enable dropdowns, checkboxes
-$('.ui.dropdown').dropdown();
-
-// Attach Tautlli modal to button
-$('#tautulli-agent-modal')
-  .modal({blurring: true})
-  .modal('attach events', '#tautulli-agent-button', 'show')
-  .modal('setting', 'transition', 'fade up')
-
-// Fields to enable/disable on button presses
-const toggleFields = [
-  {title: 'Emby',     toggleAPI: '/api/connection/emby',     buttonId: '#enable-emby'},
-  {title: 'Jellyfin', toggleAPI: '/api/connection/jellyfin', buttonId: '#enable-jellyfin'},
-  {title: 'Plex',     toggleAPI: '/api/connection/plex',     buttonId: '#enable-plex'},
-  {title: 'Sonarr',   toggleAPI: '/api/connection/sonarr',   buttonId: '#enable-sonarr'},
-  {title: 'TMDb',     toggleAPI: '/api/connection/tmdb',     buttonId: '#enable-tmdb'},
-];
-toggleFields.forEach(({title, buttonId, fields, toggleAPI}) => {
-  $(buttonId).checkbox({
-    onChecked: () => {
-      $(`#${title.toLowerCase()}-settings .field`).toggleClass('disabled', false);
-      $.ajax({
-        type: 'PUT',
-        url: `${toggleAPI}/enable`,
-        success: () => {
-          $.toast({
-            class: 'blue info',
-            title: `Enabled Connection to ${title}`,
-          });
-        }, error: response => {
-          $.toast({
-            class: 'error',
-            title: `Error Enabling Connection to ${title}`,
-            message: response.responseJSON.detail,
-            displayTime: 0,
-          });
-        }, complete: () => {}
-      });
-    }, onUnchecked: () => {
-      $(`#${title.toLowerCase()}-settings .field`).toggleClass('disabled', true);
-      $.ajax({
-        type: 'PUT',
-        url: `${toggleAPI}/disable`,
-        success: () => {
-          $.toast({
-            class: 'warning',
-            title: `Disabled Connection to ${title}`,
-          });
-        }, error: response => {
-          $.toast({
-            class: 'error',
-            title: `Error Disabling Connection to ${title}`,
-            message: response.responseJSON.detail,
-            displayTime: 0,
-          });
-        },
-      });
-    },
-  })
-});
-
-// Initialize enabled/disabled states of form fields
-toggleFields.forEach(({title, buttonId}) => {
-  $(`#${title.toLowerCase()}-settings .field`).toggleClass('disabled', !$(buttonId)[0].classList.contains('checked'));
-});
-
-// Show filesize warning in Plex if >10 MB
-$('.field[data-value="plex_filesize_limit"]').on('change', event => {
-  const number = $('.field[data-value="plex_filesize_limit"] input[name="filesize_limit_number"]').val() * 1;
-  const unit = $('.field[data-value="plex_filesize_limit"] input[name="filesize_limit_unit"]').val();
-  const unitValues = {
-    'Bytes': 1, 'Kilobytes':  2**10, 'Megabytes':  2**20, 'Gigabytes':  2**30, 'Terabytes':  2**40
-  };
-  let current = unitValues[unit] * number,
-      limit   = 10 * unitValues['Megabytes'];
-  $('#plex-filesize-warning').toggleClass('visible', current > limit);
-})
-
-// Add form validation
-$('#emby-settings').form({
-  on: 'blur',
-  inline: true,
-  fields: {
-    url: ['empty'],
-    api_key: ['empty', 'regExp[/^[a-f0-9]+$/gi]'],
-    filesize_limit_number: {
-      optional: true,
-      rules: [{type: 'integer[0..]'}], 
-    },
-  },
-});
-$('#jellyfin-settings').form({
-  on: 'blur',
-  inline: true,
-  fields: {
-    url: ['empty'],
-    api_key: ['empty', 'regExp[/^[a-f0-9]+$/gi]'],
-    filesize_limit_number: {
-      optional: true,
-      rules: [{type: 'integer[0..]'}], 
-    },
-  },
-});
-$('#plex-settings').form({
-  on: 'blur',
-  inline: true,
-  fields: {
-    url: ['empty'],
-    filesize_limit_number: ['integer[0..]'],
-  },
-});
-$('#sonarr-settings').form({
-  on: 'blur',
-  inline: true,
-  fields: {
-    url: ['empty'],
-    api_key: ['empty', 'regExp[/^[a-f0-9]+$/gi]'],
-  },
-});
-$('#tmdb-settings').form({
-  on: 'blur',
-  inline: true,
-  fields: {
-    api_key: ['empty', 'regExp[/^[a-f0-9]+$/gi]'],
-    minimum_width: ['integer[0..]'],
-    minimum_height: ['integer[0..]'],
-    logo_language_priority: ['empty', 'minLength[1]'],
-  },
-});
-
-// Connection submit button handling
-const connections = [
-  {connection: 'emby', title: 'Emby', formId: '#emby-settings', submitButtonId: '#submit-emby', successCallback: getEmbyUsernames},
-  {connection: 'jellyfin', title: 'Jellyfin', formId: '#jellyfin-settings', submitButtonId: '#submit-jellyfin', successCallback: getJellyfinUsernames},
-  {connection: 'plex', title: 'Plex', formId: '#plex-settings', submitButtonId: '#submit-plex'},
-  {connection: 'sonarr', title: 'Sonarr', formId: '#sonarr-settings', submitButtonId: '#submit-sonarr'},
-  {connection: 'tmdb', title: 'TMDb', formId: '#tmdb-settings', submitButtonId: '#submit-tmdb'},
-]
-connections.forEach(({connection, title, formId, submitButtonId, successCallback}) => {
-  $(formId).on('submit', (event) => {
-    // Prevent default event form handler
-    event.preventDefault();
-    if (!$(formId).form('is valid')) { return; }
-
-    // Merge multiple form inputs into list values
-    let form = new FormData(event.target);
-    let listData = {library_names: [], library_paths: []};
-    for (const [key, value] of [...form.entries()]) {
-      if (connection === 'sonarr') {
-        if (key === 'library_names') { listData.library_names.push(value); }
-        if (key === 'library_paths') { listData.library_paths.push(value); }
-      }
-      if (value === '') { form.delete(key); }
-    }
-    // Add checkbox status as true/false
-    $.each($(formId).find('input[type=checkbox]'), (key, val) => {
-      form.append($(val).attr('name'), $(val).is(':checked'))
-    });
-
-    // Submit API request
-    $(submitButtonId).toggleClass('disabled loading', true);
-    $.ajax({
-      type: 'PATCH',
-      url: `/api/connection/${connection}`,
-      data: JSON.stringify({...Object.fromEntries(form.entries()), ...listData}),
-      contentType: 'application/json',
-      success: response => {
-        if (successCallback !== undefined ) { successCallback(); }
-        $.toast({
-          class: 'blue info',
-          title: `Updated Connection to ${title}`,
-        });
-        getEmbyUsernames();
-        getJellyfinUsernames();
-        $(formId).toggleClass('error', false);
-      }, error: response => {
-        $.toast({
-          class: 'error',
-          title: `Invalid ${title} Connection`,
-          message: response.responseJSON.detail,
-          displayTime: 0,
-        });
-        $(formId).toggleClass('error', true);
-        $(`${formId} .error.message`)[0].innerHTML = `<div class="header">${response.statusText}</div><p>${response.responseText}</p>`;
-      }, complete: () => {
-        $(submitButtonId).toggleClass('disabled loading', false);
-      }
-    });
-  });
-});
-
-// Tautulli agent form validation and submission
-$('#tautulli-agent-form').form({
-  on: 'blur',
-  inline: true,
-  fields: {
-    tautulli_url: ['empty'],
-    tautulli_api_key: ['empty'],
-    tautulli_agent_name: {
-      optional: true,
-      value: ['minLength[1]']
-    },
-  },
-}).on('submit', event => {
-  // Prevent default event form handler, validate form
-  event.preventDefault();
-  if (!$('#tautulli-agent-form').form('is valid')) { return; }
-
-  // Create JSON from form
-  const data = Object.fromEntries(new FormData(event.target));
-
-  // Submit API request
-  $('#tautulli-agent-modal button').toggleClass('loading', true);
-  $.ajax({
-    type: 'POST',
-    url: '/api/connection/tautulli/integrate',
-    data: JSON.stringify(data),
-    contentType: 'application/json',
-    success: response => {
-      // Show toast, disable 
-      $.toast({
-        class: 'blue info',
-        title: `Created "${data.tautulli_agent_name}" Notification Agent`,
-        displayTime: 5000,
-      });
-      $('#tautulli-agent-modal button').toggleClass('disabled', true);
-    }, error: response => {
-      $.toast({
-        class: 'error',
-        title: 'Error Creating Notification Agent',
-        message: response.responseJSON.detail,
-        displayTime: 0,
-      });
-    }, complete: () => {
-      $('#tautulli-agent-modal button').toggleClass('loading', false);
-    }
-  });
-});
