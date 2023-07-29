@@ -348,8 +348,7 @@ async function getAllTemplates() {
         language_code: [], data_key: [],
       };
       for (const [key, value] of [...form.entries()]) {
-        if (Object.keys(listData).includes(key)) { listData[key].push(value); }
-        // if (value === '') { form.delete(key); }
+        if (Object.keys(listData).includes(key) && value !== '') { listData[key].push(value); }
       }
       // Parse array of Filters
       let filters = [];
