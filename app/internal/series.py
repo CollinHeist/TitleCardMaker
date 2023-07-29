@@ -430,7 +430,24 @@ def add_series(
         log: Logger = log,
     ) -> Series:
     """
-    
+    Add the given NewSeries object to the database, and then perform all
+    the initial Series processing - e.g. setting Series ID's,
+    downloading a poster and logo, and refreshing Episode data.
+
+    Args:
+        new_series: NewSeries to add to the Database.
+        background_tasks: BackgroundTasks to add the Episode data refresh
+            task to.
+        db: Database to add the Series to.
+        preferences: Global Preferences for setting resolution.
+        *_interface: Interface to query.
+        log: (Keyword) Logger for all log messages.
+
+    Returns:
+        The Created Series.
+
+    Raises:
+        HTTPException (404) if any specified linked objects do not exist.
     """
     
     # Convert object to dictionary
