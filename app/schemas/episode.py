@@ -115,16 +115,16 @@ class UpdateEpisode(UpdateBase):
     @validator('*', pre=True)
     def validate_arguments(cls, v):
         return None if v == '' else v
-    
+
+    @validator('extra_keys', 'extra_values', pre=True)
+    def validate_list(cls, v):
+        return [v] if isinstance(v, str) else v
+
     @validator('template_ids', pre=False)
     def validate_unique_template_ids(cls, val):
         if len(val) != len(set(val)):
             raise ValueError('Template IDs must be unique')
         return val
-
-    @validator('extra_keys', 'extra_values', pre=True)
-    def validate_list(cls, v):
-        return [v] if isinstance(v, str) else v
 
     @root_validator
     def validate_paired_lists(cls, values):

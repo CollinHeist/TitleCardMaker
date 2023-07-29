@@ -125,6 +125,9 @@ class BaseUpdate(UpdateBase):
                'extra_keys', 'extra_values', pre=True)
     def validate_list(cls, v):
         # Filter out empty strings - all arguments can accept empty lists
+        if v is None:
+            return None
+
         return [val for val in ([v] if isinstance(v, str) else v) if val != '']
 
     @root_validator
@@ -182,7 +185,7 @@ class NewSeries(BaseSeries):
                'extra_keys', 'extra_values', pre=True)
     def validate_list(cls, v):
         return [v] if isinstance(v, str) else v
-    
+
     @validator('template_ids', pre=False)
     def validate_unique_template_ids(cls, val):
         if len(val) != len(set(val)):
@@ -214,10 +217,6 @@ class UpdateTemplate(BaseUpdate):
     season_title_values: list[str] = UNSPECIFIED
     extra_keys: list[DictKey] = UNSPECIFIED
     extra_values: list[Any] = UNSPECIFIED
-
-    # @validator('*', pre=True)
-    # def validate_arguments(cls, v):
-    #     return None if v == '' else v
 
 class UpdateSeries(BaseUpdate):
     name: str = Field(default=UNSPECIFIED, min_length=1)
@@ -262,10 +261,6 @@ class UpdateSeries(BaseUpdate):
     tvrage_id: TVRageID = UNSPECIFIED
     directory: Optional[str] = UNSPECIFIED
 
-    # @validator('*', pre=True)
-    # def validate_arguments(cls, v):
-    #     return None if v == '' else v
-    
     @validator('template_ids', pre=False)
     def validate_unique_template_ids(cls, val):
         if len(val) != len(set(val)):
