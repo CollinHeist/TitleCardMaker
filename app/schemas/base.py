@@ -74,7 +74,7 @@ def validate_argument_lists_to_dict(
         values[output_key] = None
         return values
     # Both unspecified
-    elif ((list0 == UNSPECIFIED and list1 == UNSPECIFIED)
+    if ((list0 == UNSPECIFIED and list1 == UNSPECIFIED)
         or (list0 == [UNSPECIFIED] and list1 == [UNSPECIFIED])):
         pass
     # Only one was provided
