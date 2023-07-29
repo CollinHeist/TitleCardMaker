@@ -140,18 +140,17 @@ const toggleFields = [
 ];
 toggleFields.forEach(({title, buttonId, fields, toggleAPI}) => {
   $(buttonId).checkbox({
-    onChecked: response => {
+    onChecked: () => {
       $(`#${title.toLowerCase()}-settings .field`).toggleClass('disabled', false);
       $.ajax({
         type: 'PUT',
         url: `${toggleAPI}/enable`,
-        success: response => {
+        success: () => {
           $.toast({
             class: 'blue info',
             title: `Enabled Connection to ${title}`,
           });
         }, error: response => {
-          console.log(response);
           $.toast({
             class: 'error',
             title: `Error Enabling Connection to ${title}`,
@@ -165,20 +164,19 @@ toggleFields.forEach(({title, buttonId, fields, toggleAPI}) => {
       $.ajax({
         type: 'PUT',
         url: `${toggleAPI}/disable`,
-        success: response => {
+        success: () => {
           $.toast({
             class: 'warning',
             title: `Disabled Connection to ${title}`,
           });
         }, error: response => {
-          console.log(response);
           $.toast({
             class: 'error',
             title: `Error Disabling Connection to ${title}`,
             message: response.responseJSON.detail,
             displayTime: 0,
           });
-        }, complete: function() {}
+        },
       });
     },
   })

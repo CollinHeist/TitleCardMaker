@@ -4,7 +4,8 @@ $(document).ready(function() {
   $.get('/templates/header.html')
     .done(data => {
       // Inject the header HTML into the page-header element
-      $('#page-header').html(data)
+      $('#page-header').html(data);
+      
       // Search bar uses the search API 
       $('#search-bar').search({
         apiSettings: {
