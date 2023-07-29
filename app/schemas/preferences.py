@@ -257,7 +257,7 @@ class SonarrConnection(Base):
     use_sonarr: bool
     sonarr_url: AnyUrl
     sonarr_api_key: SecretStr
-    sonarr_libraries: dict[str, str]
+    sonarr_libraries: list[dict[str, str]]
 
 class TMDbConnection(Base):
     use_tmdb: bool

@@ -186,7 +186,7 @@ class LandscapeCardType(BaseCardType):
     @validator('box_adjustments')
     def parse_box_adjustments(cls, val):
         return tuple(map(int, re_match(BoxAdjustmentRegex, val).groups()))
-    
+
     @root_validator(skip_on_failure=True)
     def assign_unassigned_color(cls, values):
         # None means match font color

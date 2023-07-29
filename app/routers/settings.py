@@ -57,10 +57,7 @@ def get_sonarr_libraries(
     Get the global Sonarr library mappings.
     """
 
-    return [
-        {'name': library, 'path': path}
-        for library, path in preferences.sonarr_libraries.items()
-    ]
+    return preferences.sonarr_libraries
 
 
 @settings_router.get('/image-source-priority')

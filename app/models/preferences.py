@@ -106,6 +106,14 @@ class Preferences:
                        self.source_directory):
             folder.mkdir(parents=True, exist_ok=True)
 
+        # Migrate old settings
+        if isinstance(self.sonarr_libraries, dict):
+            self.sonarr_libraries = [
+                {'name': name, 'path': path}
+                for name, path in self.sonarr_libraries.items()
+            ]
+            self.commit()
+
 
     def __initialize_defaults(self) -> None:
         """Initialize this object with all default values."""
@@ -167,7 +175,7 @@ class Preferences:
         self.sonarr_api_key = ''
         self.sonarr_use_ssl = True
         self.sonarr_downloaded_only = True
-        self.sonarr_libraries = {}
+        self.sonarr_libraries = []
 
         self.use_tmdb = False
         self.tmdb_api_key = ''
@@ -535,8 +543,8 @@ class Preferences:
             can be determined.
         """
 
-        for library, path in self.sonarr_libraries.items():
-            if directory.startswith(path):
+        for library in self.sonarr_libraries:
+            if directory.startswith(library['path']):
                 return library
 
         return None
