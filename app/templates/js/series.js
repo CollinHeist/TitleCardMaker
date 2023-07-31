@@ -1447,11 +1447,7 @@ function deleteSeries() {
     success: () => {
       window.location.href = '/';
     }, error: response => {
-      $.toast({
-        class: 'error',
-        title: 'Error Deleting Series',
-        message: response.responseJSON.detail,
-      });
+      showErrorToast({title: 'Error Deleting Series', response: response});
     },
   });
 }
@@ -1460,7 +1456,7 @@ function deleteSeries() {
  * Submit an API request to delete this Series' Title Cards. Series
  * statistics are re-queried after calling this.
  */
-function deleteTitleCards() {
+function deleteTitleCards(onSuccess) {
   $.ajax({
     type: 'DELETE',
     url: '/api/cards/series/{{series.id}}',
@@ -1468,13 +1464,12 @@ function deleteTitleCards() {
       $.toast({
         class: 'blue info',
         title: `Deleted ${response.deleted} Cards`,
-      })
-    }, error: response => {
-      $.toast({
-        class: 'error',
-        title: 'Error Deleting Title Cards',
-        message: response.responseJSON.detail,
       });
+      if (onSuccess !== undefined) {
+        onSuccess();
+      }
+    }, error: response => {
+      showErrorToast({title: 'Error Deleting Title Cards', response: response});
     }, complete: () => {
       getStatistics();
     },
@@ -1542,7 +1537,7 @@ async function navigateSeries(next_or_previous) {
       if (series === null) {
         $(`i[data-action="${next_or_previous}-series"]`).toggleClass('disabled', true);
       } else {
-        window.location.href = `/series/${navSeries.id}`;
+        window.location.href = `/series/${series.id}`;
       }
     }, error: response => {
       showErrorToast({title: 'Navigation Failed', response: response});
