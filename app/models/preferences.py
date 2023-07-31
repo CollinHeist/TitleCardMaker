@@ -545,7 +545,7 @@ class Preferences:
 
         for library in self.sonarr_libraries:
             if directory.startswith(library['path']):
-                return library
+                return library['name']
 
         return None
 
