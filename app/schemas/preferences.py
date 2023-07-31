@@ -8,9 +8,7 @@ from pydantic import ( # pylint: disable=no-name-in-module
 )
 from pydantic.error_wrappers import ValidationError
 
-from app.schemas.base import (
-    Base, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
-)
+from app.schemas.base import Base, UpdateBase, UNSPECIFIED
 
 
 """
@@ -243,10 +241,6 @@ class PlexConnection(Base):
     plex_token: SecretStr
     plex_integrate_with_pmm: bool
     plex_filesize_limit: Optional[int]
-
-class SonarrLibrary(Base):
-    name: str
-    path: str
 
 class SonarrConnection(Base):
     use_sonarr: bool
