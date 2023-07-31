@@ -166,6 +166,20 @@ class Series(Base):
         """Number of unique seasons in this Series' linked Episodes."""
 
         return len(set(episode.season_number for episode in self.episodes))
+    
+
+    @hybrid_property
+    def episode_count(self) -> int:
+        """Number of Episodes linked to this Series."""
+
+        return len(self.episodes)
+    
+
+    @hybrid_property
+    def card_count(self) -> int:
+        """Number of Title Cards linked to this Series."""
+
+        return len(self.cards)
 
 
     @hybrid_property

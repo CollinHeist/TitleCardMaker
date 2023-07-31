@@ -298,6 +298,8 @@ class Series(BaseSeries):
     poster_path: Optional[str]
     poster_url: str
     small_poster_url: Optional[str]
+    episode_count: int
+    card_count: int
     font_color: Optional[str]
     font_title_case: Optional[TitleCase]
     font_size: Optional[float]
