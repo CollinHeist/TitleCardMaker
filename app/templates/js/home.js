@@ -20,21 +20,32 @@ async function getAllSeries(page=1) {
   let allSeriesCards = allSeries.map(series => {
     const clone = template.content.cloneNode(true);
     const topDiv = clone.querySelector('div');
+    // Set sorting attributes
     topDiv.setAttribute('data-series-id', series.id);
     topDiv.setAttribute('data-series-sort-name', series.sort_name);
     topDiv.setAttribute('data-series-year', series.year);
+    // Poster
     const img = clone.querySelector('img');
     img.src = series.small_poster_url; img.alt = `Poster for ${series.name}`;
+    // Link name and poster to the Series page
     const as = clone.querySelectorAll('a');
     as[0].href = `/series/${series.id}`;
     as[1].href = `/series/${series.id}`;
+    // Populate title
     const title = clone.querySelector('.series-name');
     title.setAttribute('title', `${series.name} (${series.year})`);
     title.innerText = series.name;
+    // title.setAttribute('data-tooltip', `${series.name}\n${series.card_count} Title Cards\n${series.episode_count} Episodes`);
+    // Progress bar
+    const progressBar = clone.querySelector('.progress');
+    const cardVal = Math.min(series.card_count, series.episode_count);
+    progressBar.setAttribute('data-value', `${cardVal},${series.episode_count-cardVal}`);
+    progressBar.setAttribute('data-total', series.episode_count);
 
     return clone;
   });
   document.getElementById('series-list').replaceChildren(...allSeriesCards);
+  $('.progress').progress({duration: 2000});
 
   // Update pagination
   updatePagination({

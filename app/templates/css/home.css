@@ -12,8 +12,20 @@
   width: 10%;
   max-width: 150px
 }
+
+/* Force the aspect ratio for all posters */
 .card img {
   aspect-ratio: 1 / 1.5;
+}
+
+/* Do not round edges of progress bars */
+.card .ui.progress {
+  border-radius: 0;
+}
+
+/* Remove minimum width on progress bar */
+.card .ui.progress .bar {
+  min-width: 0;
 }
 
 /* On mobile, show 3 cards/row */
