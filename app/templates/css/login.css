@@ -1,0 +1,115 @@
+:root {
+  --background-color-light: #f5f7fa;
+  --background-color-dark: #2a2a2a;
+  --sidebar-color-light: #1b1c1d;
+
+  --theme-light-color: rgba(152, 152, 152, 0.3);
+  --tcm-blue-color: rgb(99,145,210);
+
+  /* Same as fomantic ui red */
+  --support-button-color: #db2828;
+}
+
+html {
+  height: 100%;
+}
+
+/* Global background gradient */
+body {
+  margin: 0;
+  padding: 0;
+  background-image: linear-gradient(to bottom right, var(--background-color-dark), #313131);
+}
+
+#login {
+  /* Center on page */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  /* width: 400px; */
+  padding: 40px;
+
+  /* background: linear-gradient(20deg, rgba(25, 25, 25, 20%), rgb(53 203 227 / 20%)); */
+  background: linear-gradient(20deg, rgba(25, 25, 25, 20%), rgba(99, 145, 210, 20%));
+  box-sizing: border-box;
+  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.6);
+  border-radius: 10px;
+}
+
+#login h2 {
+  margin: 0 0 30px;
+  padding: 0;
+  color: white;
+  text-align: center;
+}
+
+#login .segment {
+  background: unset;
+}
+
+#login .field {
+  position: relative;
+}
+
+#login .field input {
+  width: 100%;
+  padding: 10px 0%;
+  font-size: 16px;
+  color: white;
+  margin-bottom: 30px;
+  border: none;
+  border-bottom: 1px solid white;
+  outline: none;
+  background: transparent;
+}
+
+#login .field label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 10px 0;
+  font-size: 16px;
+  color: white;
+  pointer-events: none;
+  transition: 0.3s;
+}
+
+#login .text.field input:focus ~ label,
+#login .text.field input:valid ~ label {
+  top: -20px;
+  left: 0;
+  color: var(--tcm-blue-color);
+  font-size: 12px;
+}
+
+#login form a {
+  /* Center */
+  left: 50%;
+  transform: translate(-50%);
+  cursor: pointer;
+
+  position: relative;
+  display: inline-block;
+  padding: 10px 20px;
+  color: var(--tcm-blue-color);
+  font-size: 16px;
+  text-decoration: none;
+  text-transform: uppercase;
+  overflow: hidden;
+  transition: 0.5s;
+  margin-top: 40px;
+  letter-spacing: 4px;
+}
+
+#login form a:hover,
+#login form a:focus {
+  background: var(--tcm-blue-color);
+  color: white;
+  border-radius: 5px;
+  box-shadow: 0 0 5px var(--tcm-blue-color)
+              0 0 25px var(--tcm-blue-color)
+              0 0 50px var(--tcm-blue-color)
+              0 0 100px var(--tcm-blue-color);
+}

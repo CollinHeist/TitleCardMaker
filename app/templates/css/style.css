@@ -61,6 +61,7 @@ body > div:first-of-type {
 /* Global background gradient */
 body {
   background-image: linear-gradient(to bottom right, var(--background-color-light), #d9d9d9);
+  /* linear-gradient(to bottom right, var(--background-color-dark), #313131) */ 
 }
 
 /* Don't put any scrollbars in the sidebar */
