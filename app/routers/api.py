@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.routers.auth import auth_router
 from app.routers.availability import availablility_router
 from app.routers.blueprint import blueprint_router
 from app.routers.cards import card_router
@@ -22,6 +23,7 @@ from app.routers.translate import translation_router
 api_router = APIRouter(prefix='/api')
 
 # Include sub-routers
+api_router.include_router(auth_router)
 api_router.include_router(availablility_router)
 api_router.include_router(blueprint_router)
 api_router.include_router(card_router)

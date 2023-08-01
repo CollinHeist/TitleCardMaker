@@ -75,7 +75,7 @@ class Preferences:
         'tmdb_minimum_height', 'tmdb_skip_localized', 'tmdb_download_logos',
         'tmdb_logo_language_priority', 'supported_language_codes',
         'use_magick_prefix', 'current_version', 'available_version',
-        'blacklisted_blueprints', 'advanced_scheduling',
+        'blacklisted_blueprints', 'advanced_scheduling', 'require_auth',
     )
 
 
@@ -189,6 +189,7 @@ class Preferences:
         self.use_magick_prefix = False
         self.blacklisted_blueprints = set()
         self.advanced_scheduling = False
+        self.require_auth = False
 
 
     def read_file(self) -> Optional[object]:
