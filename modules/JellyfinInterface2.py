@@ -516,7 +516,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface
         series_id = self.__get_series_id(library_name, series_info, log=log)
         if series_id is None:
             log.warning(f'Series {series_info!r} not found in Jellyfin')
-            return None
+            return []
 
         # Get all episodes for this series
         response = self.session.get(
@@ -607,8 +607,10 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface
             for episode in episodes:
                 if (jellyfin_episode['ParentIndexNumber']==episode.season_number
                     and jellyfin_episode["IndexNumber"]==episode.episode_number):
-                    episode.watched = jellyfin_episode['UserData']['Played']
-                    break
+                    if (jellyfin_episode.get('UserData', {}).get('Played', None)
+                        is not None):
+                        episode.watched = jellyfin_episode['UserData']['Played']
+                        break
 
         return None
 
