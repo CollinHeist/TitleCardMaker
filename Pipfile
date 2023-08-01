@@ -28,6 +28,8 @@ imagesize = "==1.4.1"
 alembic = "==1.11.1"
 tzdata = "==2023.3"
 fastapi-pagination = "==0.12.5"
+python-jose = {version = "==3.3.0", extras = ["cryptography"]}
+passlib = {version = "==1.7.4", extras = ["bcrypt"]}
 
 [dev-packages]
 mkdocs = "*"
