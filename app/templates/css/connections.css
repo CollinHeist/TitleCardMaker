@@ -1,3 +1,14 @@
+/* Add vertical padding around button */
+form > *:last-child {
+  padding-top: 1em !important;
+}
+
+/* Reduce margin between adjacent user fields */
+#auth-settings .fields {
+  margin-top: 0.3em;
+  margin-bottom: 0.3em;
+}
+
 /* For library path inputs, align the library name/label to the right */
 .library.field,
 .library.field > input {
