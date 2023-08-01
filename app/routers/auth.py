@@ -121,6 +121,31 @@ def add_new_user(
     return user
 
 
+@auth_router.delete('/user', dependencies=[Depends(get_current_user)])
+def delete_user(
+        request: Request,
+        username: str = Query(...),
+        db: Session = Depends(get_database),
+    ) -> None:
+    """
+    Delete the User with the given Username.
+
+    - username: Username of the User to delete.
+    """
+
+    # Find this User
+    user = db.query(models.user.User).filter_by(username=username).first()
+    if user is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f'User "{username}" does not exist',
+        )
+
+    db.delete(user)
+    db.commit()
+    request.state.log.info(f'Deleted User({username})')
+
+
 @auth_router.post('/authenticate')
 def login_for_access_token(
         request: Request,
