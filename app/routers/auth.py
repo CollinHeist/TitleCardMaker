@@ -1,4 +1,6 @@
 from datetime import timedelta
+from typing import Optional
+
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -7,10 +9,10 @@ from sqlalchemy.orm import Session
 from app import models
 from app.dependencies import get_database, get_preferences
 from app.internal.auth import (
-    authenticate_user, create_access_token, get_current_user, get_password_hash
+    authenticate_user, create_access_token, get_current_user, get_password_hash, get_user
 )
 from app.models.preferences import Preferences
-from app.schemas.auth import NewUser, Token, User
+from app.schemas.auth import NewUser, Token, UpdateUser, User
 
 
 EXPIRATION_TIME = timedelta(hours=1) # timedelta(days=14)
@@ -109,10 +111,9 @@ def add_new_user(
         )
 
     # Hash this Password, add to database
-    hashed_password = get_password_hash(new_user.password)
     user = models.user.User(
         username=new_user.username,
-        hashed_password=hashed_password
+        hashed_password=get_password_hash(new_user.password)
     )
     db.add(user)
     db.commit()
@@ -126,12 +127,18 @@ def delete_user(
         request: Request,
         username: str = Query(...),
         db: Session = Depends(get_database),
+        preferences: Preferences = Depends(get_preferences),
     ) -> None:
     """
-    Delete the User with the given Username.
+    Delete the User with the given Username. If there are no remaining
+    Users, authentication is globally disabled to prevent accidental
+    lockout.
 
     - username: Username of the User to delete.
     """
+
+    # Get contextual logger
+    log = request.state.log
 
     # Find this User
     user = db.query(models.user.User).filter_by(username=username).first()
@@ -143,7 +150,76 @@ def delete_user(
 
     db.delete(user)
     db.commit()
-    request.state.log.info(f'Deleted User({username})')
+    log.info(f'Deleted User({username})')
+
+    # If there are no more active users, disable authentication to avoid L/O
+    if len(db.query(models.user.User).all()) == 0:
+        log.warning(f'No remaining active users - disabling authentication')
+        preferences.require_auth = False
+        preferences.commit()
+
+
+@auth_router.get('/all', dependencies=[Depends(get_current_user)])
+def get_all_usernames(db: Session = Depends(get_database)) -> list[str]:
+    """
+    Get the usernames of all Users in the database.
+    """
+
+    return [user.username for user in db.query(models.user.User).all()]
+
+
+@auth_router.get('/active')
+def get_active_username(
+        user: User = Depends(get_current_user),
+    ) -> Optional[str]:
+    """
+    Get the username of the active User.
+    """
+
+    return None if user is True else user.username
+
+
+@auth_router.post('/edit')
+def update_user_credentials(
+        request: Request,
+        update_user: UpdateUser = Body(...),
+        db: Session = Depends(get_database),
+        user: User = Depends(get_current_user),
+    ) -> User:
+    """
+    Update the credentials of the current User.
+
+    - update_user: New credentials to utilize for this User.
+    """
+
+    # Authorization is disabled, cannot edit credentials
+    if user is True:
+        raise HTTPException(
+            status_code=401,
+            detail='Cannot edit credentials while unauthorized'
+        )
+
+    # Get user
+    user = get_user(db, user.username)
+
+    # Verify new username does not conflict with existing user
+    existing_user = db.query(models.user.User)\
+        .filter_by(username=update_user.username)\
+        .first()
+    if existing_user and existing_user != user:
+        raise HTTPException(
+            status_code=422,
+            detail='Username taken',
+        )
+
+    # Change username/password
+    request.state.log.warning(f'Modified credentials for User({user.username})')
+    user.username = update_user.username
+    user.hashed_password = get_password_hash(update_user.password)
+    request.state.log.info(f'{update_user=!r}')
+    db.commit()
+
+    return user
 
 
 @auth_router.post('/authenticate')
@@ -170,7 +246,7 @@ def login_for_access_token(
 
     # Create new access token for this User
     access_token = create_access_token(
-        data={'sub': user.username},
+        data={'sub': user.username, 'uid': user.hashed_password},
         expires_delta=EXPIRATION_TIME,
     )
     request.state.log.info(f'Authenticated User({user.username}) for {EXPIRATION_TIME}')

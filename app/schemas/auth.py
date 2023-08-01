@@ -3,6 +3,12 @@ from pydantic import constr
 
 from app.schemas.base import Base
 
+"""
+Update classes
+"""
+class UpdateUser(Base):
+    username: constr(min_length=1)
+    password: constr(min_length=1)
 
 """
 Return classes

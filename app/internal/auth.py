@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from secrets import token_hex
-from typing import Optional
+from typing import Literal, Optional, Union
 
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
@@ -79,11 +79,12 @@ def get_user(db: Session, username: str) -> Optional[User]:
     return db.query(models.user.User).filter_by(username=username).first()
 
 
+_creds = {}
 def get_current_user(
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
         token: str = Depends(oath2_scheme),
-    ) -> User:
+    ) -> Union[User, Literal[True]]:
     """
     Dependency to get the User whose username matches the given token.
     If Authorization is globally disabled, then no validation is
@@ -118,17 +119,27 @@ def get_current_user(
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get('sub')
+        uid: str = payload.get('uid')
     except JWTError as exc:
         raise credential_exception from exc
 
-    # If no username is present, raise 401
-    if username is None:
+    # If username or UID are missing, raise 401
+    if username is None or uid is None:
         raise credential_exception
 
-    # If no User exists with this username, raise 401
-    if (user := get_user(db, username)) is None:
-        raise credential_exception
+    # If credentials are not cached or don't match, query DB
+    if ((user := _creds.get(username)) is None
+        or user.hashed_password != uid):
+        # User not cached, nor in database, raise 401
+        if (user := get_user(db, username)) is None:
+            raise credential_exception
 
+        # Add User to cache, verify phash
+        _creds[username] = user
+        if user.hashed_password != uid:
+            raise credential_exception
+
+    # Credentials are cached and match
     return user
 
 
