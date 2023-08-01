@@ -31,7 +31,7 @@ class StandardTitleCard(BaseCardType):
             ), Extra(
                 name='Stroke Text Color',
                 identifier='stroke_color',
-                description='Color to use for the text stroke',
+                description='Color to use for the title text stroke',
             ), Extra(
                 name='Separator Character',
                 identifier='separator',
@@ -39,7 +39,7 @@ class StandardTitleCard(BaseCardType):
             ), Extra(
                 name='Gradient Omission',
                 identifier='omit_gradient',
-                description='Whether to omit the gradient overlay from the card',
+                description='Whether to omit the gradient overlay',
             )
         ], description=[
             'The most "generic" type of title card.',
@@ -108,7 +108,7 @@ class StandardTitleCard(BaseCardType):
             episode_text_color: str = SERIES_COUNT_TEXT_COLOR,
             omit_gradient: bool = False,
             preferences: Optional['Preferences'] = None, # type: ignore
-            **unused
+            **unused,
         ) -> None:
         """
         Construct a new instance of this card.

@@ -32,21 +32,21 @@ class LogoTitleCard(BaseCardType):
                 identifier='background',
                 description='Background color or image to use behind the logo',
             ), Extra(
+                name='Background Image Enabling',
+                identifier='use_background_image',
+                description='Whether the background is an image (not a color)',
+            ), Extra(
                 name='Stroke Text Color',
                 identifier='stroke_color',
                 description='Color to use for the text stroke',
             ), Extra(
                 name='Gradient Omission',
                 identifier='omit_gradient',
-                description='Whether to omit the gradient overlay from the card',
-            ), Extra(
-                name='Background Image Enabling',
-                identifier='use_background_image',
-                description='Whether "background" is an image (instead of a color)',
+                description='Whether to omit the gradient overlay',
             ), Extra(
                 name='Blur Image Only',
                 identifier='blur_only_image',
-                description='Whether to only blur the background image - and not the logo - when blurring and using a background image',
+                description='Whether to only blur the background image (not the logo)',
             ),
         ], description=[
             'Variation of the Standard title card featuring a central logo.',

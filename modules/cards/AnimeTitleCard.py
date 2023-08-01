@@ -50,7 +50,7 @@ class AnimeTitleCard(BaseCardType):
             ), Extra(
                 name='Gradient Omission',
                 identifier='omit_gradient',
-                description='Whether to omit the gradient overlay from the card',
+                description='Whether to omit the gradient overlay',
             ),
         ], description=[
             'Title card with all text aligned in the lower left of the image.',
