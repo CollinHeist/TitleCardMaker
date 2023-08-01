@@ -837,11 +837,13 @@ class Show(YamlReader):
         always_check_emby = (
             bool(self.emby_interface)
             and ('emby' in self.image_source_priority)
-            and self.emby_interface.has_series(self.series_info))
+            and self.emby_interface.has_series(self.library_name,
+                                               self.series_info))
         always_check_jellyfin = (
             bool(self.jellyfin_interface)
             and ('jellyfin' in self.image_source_priority)
-            and self.jellyfin_interface.has_series(self.series_info))
+            and self.jellyfin_interface.has_series(self.library_name,
+                                                   self.series_info))
         always_check_tmdb = (
             bool(self.tmdb_interface)
             and ('tmdb' in self.image_source_priority))
