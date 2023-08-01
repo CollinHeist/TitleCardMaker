@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Response
 from requests import get
+from requests.exceptions import Timeout
 
 from app.dependencies import get_preferences
 from app.internal.auth import get_current_user
@@ -44,7 +45,7 @@ def redirect_plex_url(
         f'{preferences.plex_url[:-1]}{url}?X-Plex-Token={preferences.plex_token}'
     )
 
-    return Response(content=get(redirected_url, timeout=3).content)
+    return Response(content=get(redirected_url, timeout=10).content)
 
 
 @proxy_router.get(
@@ -75,10 +76,17 @@ def redirect_sonarr_url(
 
     # Query for content, ensure the local `SonarrAuth` cookies are
     # utilized in the request
-    return Response(
-        content=get(
+    try:
+        content = get(
             redirected_url,
             cookies={'SonarrAuth': SonarrAuth},
-            timeout=3,
-        ).content,
-    )
+            timeout=10,
+        ).content
+    except Timeout as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=f'Sonarr redirect timed out'
+        ) from exc
+
+    # Return Response of this content
+    return Response(content)
