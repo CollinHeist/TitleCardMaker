@@ -32,8 +32,6 @@ IS_DOCKER = environ.get('TCM_IS_DOCKER', 'false').lower() == 'true'
 SQLALCHEMY_DATABASE_URL = 'sqlite:///./db.sqlite'
 if IS_DOCKER:
     SQLALCHEMY_DATABASE_URL = 'sqlite:////config/source/db.sqlite'
-else:
-    SQLALCHEMY_DATABASE_URL = 'sqlite:///./db.sqlite'
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={'check_same_thread': False}
 )
@@ -108,11 +106,9 @@ Scheduler = BackgroundScheduler(
 )
 
 # Preference file/object
+preferences_file = Path(__file__).parent.parent.parent / 'modules' / '.objects' / 'prefs.json'
 if IS_DOCKER:
-    preferences_file = Path('/config/source/prefs.json')
-else:
-    preferences_file = Path(__file__).parent.parent.parent / 'modules'\
-        / '.objects' / 'prefs.json'
+    preferences_file = Path('/config/source/prefs.json')    
 PreferencesLocal = Preferences(preferences_file)
 
 
