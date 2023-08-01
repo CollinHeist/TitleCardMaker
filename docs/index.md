@@ -286,11 +286,11 @@ assigned to them.
             ```bash
             docker run -itd ^
                 --net="bridge" ^
-                -v "$(pwd)\logs":"/maker/logs/" ^
-                -v "$(pwd)\assets":"/config/assets/" ^
-                -v "$(pwd)\source":"/config/source/" ^
-                -v "$(pwd)\cards":"/config/cards/" ^
-                -e TZ="$TZ" ^
+                -v "%cd%\logs":"/maker/logs/" ^
+                -v "%cd%\assets":"/config/assets/" ^
+                -v "%cd%\source":"/config/source/" ^
+                -v "%cd%\cards":"/config/cards/" ^
+                -e TZ=%TZ% ^
                 -p 4242:4242 ^
                 titlecardmaker
             ```
