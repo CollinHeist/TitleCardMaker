@@ -26,6 +26,7 @@ from app.internal.series import (
     load_series_title_cards,
 )
 from app.internal.sources import download_episode_source_image
+from app.internal.auth import get_current_user
 from app.schemas.base import UNSPECIFIED
 from app.schemas.preferences import EpisodeDataSource, MediaServer
 from app.schemas.series import NewSeries, SearchResult, Series, UpdateSeries
@@ -40,6 +41,7 @@ from modules.TMDbInterface2 import TMDbInterface
 series_router = APIRouter(
     prefix='/series',
     tags=['Series'],
+    dependencies=[Depends(get_current_user)],
 )
 
 

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.database.query import get_card, get_episode, get_font, get_series
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app import models
+from app.internal.auth import get_current_user
 from app.internal.cards import (
     create_episode_card, delete_cards, update_episode_watch_statuses,
     validate_card_type_model
@@ -24,6 +25,7 @@ from modules.SonarrInterface2 import SonarrInterface
 from modules.TieredSettings import TieredSettings
 from modules.TMDbInterface2 import TMDbInterface
 
+
 # Create sub router for all /cards API requests
 card_router = APIRouter(
     prefix='/cards',
@@ -31,7 +33,8 @@ card_router = APIRouter(
 )
 
 
-@card_router.post('/preview', status_code=201)
+@card_router.post('/preview', status_code=201,
+                  dependencies=[Depends(get_current_user)])
 def create_preview_card(
         request: Request,
         card: PreviewTitleCard = Body(...),
@@ -110,7 +113,8 @@ def create_preview_card(
     )
 
 
-@card_router.get('/{card_id}', status_code=200)
+@card_router.get('/{card_id}', status_code=200,
+                 dependencies=[Depends(get_current_user)])
 def get_title_card(
         card_id: int,
         db: Session = Depends(get_database)
@@ -124,7 +128,8 @@ def get_title_card(
     return get_card(db, card_id, raise_exc=True)
 
 
-@card_router.post('/series/{series_id}', status_code=201, tags=['Series'])
+@card_router.post('/series/{series_id}', status_code=201, tags=['Series'],
+                  dependencies=[Depends(get_current_user)])
 def create_cards_for_series(
         background_tasks: BackgroundTasks,
         request: Request,
@@ -166,7 +171,8 @@ def create_cards_for_series(
                           f'failed - {e.detail}', e)
 
 
-@card_router.get('/series/{series_id}', status_code=200, tags=['Series'])
+@card_router.get('/series/{series_id}', status_code=200, tags=['Series'],
+                 dependencies=[Depends(get_current_user)])
 def get_series_cards(
         series_id: int,
         db: Session = Depends(get_database)
@@ -180,7 +186,8 @@ def get_series_cards(
     return db.query(models.card.Card).filter_by(series_id=series_id).all()
 
 
-@card_router.delete('/series/{series_id}', status_code=200, tags=['Series'])
+@card_router.delete('/series/{series_id}', status_code=200, tags=['Series'],
+                    dependencies=[Depends(get_current_user)])
 def delete_series_title_cards(
         series_id: int,
         request: Request,
@@ -203,7 +210,8 @@ def delete_series_title_cards(
     return CardActions(deleted=len(deleted))
 
 
-@card_router.delete('/episode/{episode_id}', status_code=200, tags=['Episodes'])
+@card_router.delete('/episode/{episode_id}', status_code=200, tags=['Episodes'],
+                    dependencies=[Depends(get_current_user)])
 def delete_episode_title_cards(
         episode_id: int,
         request: Request,
@@ -226,7 +234,8 @@ def delete_episode_title_cards(
     return CardActions(deleted=len(deleted))
 
 
-@card_router.delete('/card/{card_id}', status_code=200)
+@card_router.delete('/card/{card_id}', status_code=200,
+                    dependencies=[Depends(get_current_user)])
 def delete_title_card(
         card_id: int,
         request: Request,
@@ -249,7 +258,8 @@ def delete_title_card(
     return CardActions(deleted=len(deleted))
 
 
-@card_router.post('/episode/{episode_id}', status_code=200, tags=['Episodes'])
+@card_router.post('/episode/{episode_id}', status_code=200, tags=['Episodes'],
+                  dependencies=[Depends(get_current_user)])
 def create_card_for_episode(
         episode_id: int,
         request: Request,
@@ -279,7 +289,8 @@ def create_card_for_episode(
     create_episode_card(db, preferences, None, episode, log=request.state.log)
 
 
-@card_router.get('/episode/{episode_id}', tags=['Episodes'])
+@card_router.get('/episode/{episode_id}', tags=['Episodes'],
+                 dependencies=[Depends(get_current_user)])
 def get_episode_card(
         episode_id: int,
         db: Session = Depends(get_database),

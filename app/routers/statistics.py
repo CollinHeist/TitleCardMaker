@@ -5,20 +5,24 @@ from app.database.query import get_series
 
 from app.dependencies import get_database, get_preferences
 from app import models
+from app.internal.auth import get_current_user
 from app.models.preferences import Preferences
 from app.schemas.statistic import (
     Statistic, CardCount, EpisodeCount, SeriesCount, AssetSize
 )
 
+
 statistics_router = APIRouter(
     prefix='/statistics',
     tags=['Statistics'],
+    dependencies=[Depends(get_current_user)],
 )
+
 
 @statistics_router.get('/', status_code=200)
 def get_all_statistics(
         db: Session = Depends(get_database),
-        preferences: Preferences = Depends(get_preferences)
+        preferences: Preferences = Depends(get_preferences),
     ) -> list[Statistic]:
     """
     Get all statistics.
@@ -49,7 +53,7 @@ def get_all_statistics(
 
 @statistics_router.get('/series-count', status_code=200)
 def get_series_count(
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> SeriesCount:
     """
     Get the statistics for the number of series.

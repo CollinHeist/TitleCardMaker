@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.database.query import get_font, get_template
 from app.database.session import Page
 from app.dependencies import get_database
+from app.internal.auth import get_current_user
 from app.internal.cards import refresh_remote_card_types
 from app import models
 from app.schemas.base import UNSPECIFIED
@@ -17,6 +18,7 @@ from app.schemas.series import NewTemplate, Template, UpdateTemplate
 template_router = APIRouter(
     prefix='/templates',
     tags=['Templates'],
+    dependencies=[Depends(get_current_user)],
 )
 
 

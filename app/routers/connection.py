@@ -3,6 +3,7 @@ from typing import Literal, Optional
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
 
 from app.dependencies import * # pylint: disable=W0401,W0614,W0621
+from app.internal.auth import get_current_user
 from app.internal.connection import update_connection
 from app.schemas.preferences import (
     EmbyConnection, JellyfinConnection, PlexConnection, SonarrConnection,
@@ -17,6 +18,7 @@ from modules.TautulliInterface2 import TautulliInterface
 connection_router = APIRouter(
     prefix='/connection',
     tags=['Connections'],
+    dependencies=[Depends(get_current_user)],
 )
 
 

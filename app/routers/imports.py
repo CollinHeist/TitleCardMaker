@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.database.query import get_all_templates, get_series
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.internal.auth import get_current_user
 from app.internal.imports import (
     import_cards, parse_emby, parse_fonts, parse_jellyfin, parse_plex,
     parse_preferences, parse_raw_yaml, parse_series, parse_sonarr, parse_syncs,
@@ -28,6 +29,7 @@ from app.schemas.sync import Sync
 import_router = APIRouter(
     prefix='/import',
     tags=['Import'],
+    dependencies=[Depends(get_current_user)],
 )
 
 

@@ -10,6 +10,7 @@ from app.database.query import (
 from app.database.session import Page
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app import models
+from app.internal.auth import get_current_user
 from app.internal.cards import delete_cards, refresh_remote_card_types
 from app.internal.episodes import set_episode_ids, refresh_episode_data
 from app.schemas.base import UNSPECIFIED
@@ -21,6 +22,7 @@ from app.schemas.episode import (
 episodes_router = APIRouter(
     prefix='/episodes',
     tags=['Episodes'],
+    dependencies=[Depends(get_current_user)],
 )
 
 
@@ -33,7 +35,7 @@ def add_new_episode(
         jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
         plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
         sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Episode:
     """
     Add a new episode to the given series.
@@ -69,7 +71,7 @@ def add_new_episode(
 @episodes_router.get('/{episode_id}', status_code=200)
 def get_episode_by_id(
         episode_id: int,
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> Episode:
     """
     Get the Episode with the given ID.
@@ -84,7 +86,7 @@ def get_episode_by_id(
 def delete_episode(
         request: Request,
         episode_id: int,
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> None:
     """
     Delete the Episode with the ID.
@@ -112,7 +114,7 @@ def delete_episode(
 def delete_all_series_episodes(
         request: Request,
         series_id: int,
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> list[int]:
     """
     Delete all Episodes for the Series with the given ID.
@@ -150,7 +152,7 @@ def refresh_episode_data_(
         jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
         plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
         sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> None:
     """
     Refresh the episode data associated with the given series. This
@@ -235,7 +237,7 @@ def update_episode_config(
         request: Request,
         episode_id: int,
         update_episode: UpdateEpisode = Body(...),
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> Episode:
     """
     Update the Epiode with the given ID. Only provided fields are
@@ -284,7 +286,7 @@ def update_episode_config(
 def get_all_series_episodes(
         series_id: int,
         order_by: Literal['index', 'absolute', 'id'] = 'index',
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> Page[Episode]:
     """
     Get all the episodes associated with the given series.

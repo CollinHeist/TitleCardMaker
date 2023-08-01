@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.database.query import get_font
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.internal.auth import get_current_user
 from app import models
 from app.schemas.font import NamedFont, NewNamedFont, UpdateNamedFont
 from app.schemas.preferences import Preferences
@@ -14,7 +15,8 @@ from app.schemas.preferences import Preferences
 # Create sub router for all /fonts API requests
 font_router = APIRouter(
     prefix='/fonts',
-    tags=['Fonts']
+    tags=['Fonts'],
+    dependencies=[Depends(get_current_user)],
 )
 
 

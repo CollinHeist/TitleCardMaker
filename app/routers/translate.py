@@ -5,14 +5,17 @@ from sqlalchemy.orm import Session
 
 from app.database.query import get_episode, get_series
 from app.dependencies import get_database, get_tmdb_interface
+from app.internal.auth import get_current_user
 from app.internal.translate import translate_episode
 from app.schemas.episode import Episode
 
 from modules.TMDbInterface2 import TMDbInterface
 
+
 translation_router = APIRouter(
     prefix='/translate',
     tags=['Translations'],
+    dependencies=[Depends(get_current_user)],
 )
 
 

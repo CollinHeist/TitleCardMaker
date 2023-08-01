@@ -2,6 +2,7 @@ from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Response
 from requests import get
 
 from app.dependencies import get_preferences
+from app.internal.auth import get_current_user
 from app.models.preferences import Preferences
 
 
@@ -9,6 +10,7 @@ from app.models.preferences import Preferences
 proxy_router = APIRouter(
     prefix='/proxy',
     tags=['Proxy'],
+    dependencies=[Depends(get_current_user)],
 )
 
 

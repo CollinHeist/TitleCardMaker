@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.database.query import get_episode, get_series
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.internal.auth import get_current_user
 from app.internal.cards import delete_cards
 from app.internal.sources import (
     get_source_image, download_episode_source_image, download_series_logo
@@ -16,12 +17,13 @@ from app.internal.sources import (
 from app import models
 from app.schemas.card import SourceImage, TMDbImage
 
-from modules.Debug import log
 from modules.WebInterface import WebInterface
+
 
 source_router = APIRouter(
     prefix='/sources',
     tags=['Source Images'],
+    dependencies=[Depends(get_current_user)],
 )
 
 
@@ -37,7 +39,7 @@ def download_series_source_images(
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
         jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
         plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> None:
     """
     Download a Source image for all Episodes in the given Series. This
@@ -74,7 +76,7 @@ def download_series_backdrop(
         # emby_interface = Depends(get_emby_interface),
         # jellyfin_interface = Depends(get_jellyfin_interface),
         # plex_interface = Depends(get_plex_interface),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Optional[str]:
     """
     Download a backdrop (art image) for the given Series. This only uses
@@ -126,7 +128,7 @@ def download_series_logo_(
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
         imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
         jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Optional[str]:
     """
     Download a logo for the given Series. This uses the most relevant
@@ -157,7 +159,7 @@ def download_episode_source_image_(
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
         jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
         plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Optional[str]:
     """
     Download a Source image for the given Episode. This uses the most
@@ -224,7 +226,7 @@ def get_all_series_logos_on_tmdb(
         request: Request,
         series_id: int,
         db: Session = Depends(get_database),
-        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface)
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> list[TMDbImage]:
     """
     Get a list of all the Logos available for the specified Series on
@@ -257,7 +259,7 @@ def get_existing_series_source_images(
         series_id: int,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface)
+        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
     ) -> list[SourceImage]:
     """
     Get the SourceImage details for the given Series.
@@ -286,7 +288,7 @@ def get_existing_episode_source_images(
         episode_id: int,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
-        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface)
+        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
     ) -> SourceImage:
     """
     Get the SourceImage details for the given Episode.

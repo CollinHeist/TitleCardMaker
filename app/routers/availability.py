@@ -7,10 +7,12 @@ from requests import get as req_get
 from sqlalchemy.orm import Session
 
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.internal.auth import get_current_user
 from app.internal.availability import get_latest_version
 from app import models
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.card import CardType, LocalCardType, RemoteCardType
+from app.schemas.card_type import Extra
 from app.schemas.preferences import (
     EpisodeDataSourceToggle, Preferences, StyleOption
 )
@@ -23,6 +25,7 @@ from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TMDbInterface2 import TMDbInterface
+
 
 # URL for user card types
 USER_CARD_TYPE_URL = (
@@ -62,6 +65,7 @@ def _get_remote_cards(*, log: Logger = log) -> list[RemoteCardType]:
 availablility_router = APIRouter(
     prefix='/available',
     tags=['Availability'],
+    dependencies=[Depends(get_current_user)],
 )
 
 

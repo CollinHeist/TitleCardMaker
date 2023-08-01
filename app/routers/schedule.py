@@ -9,6 +9,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 
 from app.database.session import backup_database
 from app.dependencies import get_preferences, get_scheduler
+from app.internal.auth import get_current_user
 from app.internal.availability import get_latest_version
 from app.internal.cards import (
     create_all_title_cards, refresh_all_remote_card_types
@@ -31,10 +32,12 @@ from modules.Debug import contextualize, log
 # Do not allow tasks to be scheduled faster than this interval
 MINIMUM_TASK_INTERVAL = 1 * 60 * 10 # 10 minutes
 
+
 # Create sub router for all /schedule API requests
 schedule_router = APIRouter(
     prefix='/schedule',
     tags=['Scheduler'],
+    dependencies=[Depends(get_current_user)],
 )
 
 

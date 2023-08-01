@@ -3,11 +3,12 @@ from typing import Any, Optional
 from warnings import simplefilter
 
 from re import IGNORECASE, compile as re_compile
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 from fastapi_pagination import paginate
 from fastapi_pagination.utils import FastAPIPaginationWarning
 
 from app.database.session import Page
+from app.internal.auth import get_current_user
 from app.schemas.logs import LogEntry, LogLevel
 
 from modules.Debug import LOG_FILE
@@ -19,6 +20,7 @@ simplefilter('ignore', FastAPIPaginationWarning)
 log_router = APIRouter(
     prefix='/logs',
     tags=['Logs'],
+    dependencies=[Depends(get_current_user)],
 )
 
 """

@@ -11,6 +11,7 @@ from app.database.query import get_series
 
 from app.database.session import Page
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
+from app.internal.auth import get_current_user
 from app.internal.blueprint import (
     generate_series_blueprint, get_blueprint_by_id, get_blueprint_font_files,
     import_blueprint, query_all_blueprints, query_series_blueprints
@@ -29,6 +30,7 @@ from modules.SeriesInfo import SeriesInfo
 blueprint_router = APIRouter(
     prefix='/blueprints',
     tags=['Blueprints'],
+    dependencies=[Depends(get_current_user)],
 )
 
 
