@@ -50,10 +50,6 @@ def update_connection(
                 log.debug(f'Preferences.{connection}_{attribute} = {value}')
             changed = True
 
-    # Commit changes
-    if changed:
-        preferences.commit(log=log)
-
     # Refresh interface if changed
     if changed and getattr(preferences, f'use_{connection}'):
         if connection == 'emby':
@@ -66,5 +62,9 @@ def update_connection(
             refresh_sonarr_interface(log=log)
         elif connection == 'tmdb':
             refresh_tmdb_interface(log=log)
+
+    # Commit changes
+    if changed:
+        preferences.commit(log=log)
 
     return preferences
