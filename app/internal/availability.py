@@ -7,6 +7,7 @@ from requests import get as req_get
 from modules.Debug import log
 from modules.Version import Version
 
+
 def get_latest_version(
         raise_exc: bool = True,
         *,

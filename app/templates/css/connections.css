@@ -8,7 +8,6 @@
 input.private:not(:hover,:focus) {
   color: transparent !important;
   text-shadow: 0 0 8px rgba(0,0,0,0.5);
-  
 }
 
 /* The first (enable) checkbox needs additional margin */

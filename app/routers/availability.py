@@ -12,7 +12,6 @@ from app.internal.availability import get_latest_version
 from app import models
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.card import CardType, LocalCardType, RemoteCardType
-from app.schemas.card_type import Extra
 from app.schemas.preferences import (
     EpisodeDataSourceToggle, Preferences, StyleOption
 )
