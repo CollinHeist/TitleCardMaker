@@ -277,15 +277,11 @@ async function initAll() {
         $.ajax({
           type: 'PUT',
           url: `${toggleAPI}/disable`,
-          success: () => {
-            $.toast({
-              class: 'warning',
-              title: `Disabled ${title} Connection`,
-            });
-          }, error: response => showErrorToast({title: `Error Disabling ${title} Connection`, response})
+          success: () => $.toast({class: 'warning', title: `Disabled ${title} Connection`}),
+          error: response => showErrorToast({title: `Error Disabling ${title} Connection`, response}),
         });
       },
-    });
+    })
   });
 
   // Initialize enabled/disabled states of form fields
@@ -294,7 +290,7 @@ async function initAll() {
   });
 
   // Show filesize warning in Plex if >10 MB
-  $('.field[data-value="plex_filesize_limit"]').on('change', event => {
+  $('.field[data-value="plex_filesize_limit"]').on('change', () => {
     const number = $('.field[data-value="plex_filesize_limit"] input[name="filesize_limit_number"]').val() * 1;
     const unit = $('.field[data-value="plex_filesize_limit"] input[name="filesize_limit_unit"]').val();
     const unitValues = {
@@ -347,7 +343,7 @@ async function initAll() {
           if (successCallback !== undefined ) { successCallback(); }
           $.toast({
             class: 'blue info',
-            title: `Updated ${title} Connection`,
+            title: `Updated Connection to ${title}`,
           });
           getEmbyUsernames();
           getJellyfinUsernames();
@@ -399,9 +395,7 @@ async function initAll() {
         });
         $('#tautulli-agent-modal button').toggleClass('disabled', true);
       }, error: response => showErrorToast({title: 'Error Creating Notification Agent', response}),
-      complete: () => {
-        $('#tautulli-agent-modal button').toggleClass('loading', false);
-      }
+      complete: () => $('#tautulli-agent-modal button').toggleClass('loading', false)
     });
   });
 }
