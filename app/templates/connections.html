@@ -35,6 +35,7 @@
       <!-- Page title -->
       <h1 class="ui header">Connections</h1>
 
+      <!-- Authentication -->
       <h3 class="ui dividing header">Authentication</h3>
       <div class="connection-form">
         <!-- Enable button -->
@@ -49,7 +50,7 @@
               <label>Username</label>
               <input name="username" type="text">
             </div>
-          
+
             <div class="ui four wide field">
               <label>Password</label>
               <input name="password" type="password">
@@ -67,6 +68,8 @@
           </div>
         </form>
       </div>
+
+
 
       <!-- Emby Connections -->
       <h3 class="ui dividing header">Emby Media Server</h3>
@@ -242,7 +245,7 @@
           <div class="ui left aligned disabled checked checkbox field" data-tooltip="Connect with HTTPS instead of HTTP">
             <input name="use_ssl" type="checkbox" checked="">
           {% else %}
-          <div id="plex-use-ssl" class="ui left aligned disabled checkbox field" data-tooltip="Connect with HTTPS instead of HTTP">                  
+          <div class="ui left aligned disabled checkbox field" data-tooltip="Connect with HTTPS instead of HTTP">                  
             <input name="use_ssl" type="checkbox">
           {% endif %}
             <label>Use SSL</label>

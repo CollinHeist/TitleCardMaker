@@ -607,7 +607,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface
             for episode in episodes:
                 if (jellyfin_episode['ParentIndexNumber']==episode.season_number
                     and jellyfin_episode["IndexNumber"]==episode.episode_number):
-                    if (jellyfin_episode.get('UserData', {}).get('Played', None)
+                    if (jellyfin_episode.get('UserData', {}).get('Played')
                         is not None):
                         episode.watched = jellyfin_episode['UserData']['Played']
                         break
