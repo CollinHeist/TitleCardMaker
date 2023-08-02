@@ -106,9 +106,10 @@ Scheduler = BackgroundScheduler(
 )
 
 # Preference file/object
-preferences_file = Path(__file__).parent.parent.parent / 'modules' / '.objects' / 'prefs.json'
+preferences_file = Path(__file__).parent.parent.parent / 'modules' / '.objects'\
+    / 'prefs.json'
 if IS_DOCKER:
-    preferences_file = Path('/config/source/prefs.json')    
+    preferences_file = Path('/config/source/prefs.json')
 PreferencesLocal = Preferences(preferences_file)
 
 

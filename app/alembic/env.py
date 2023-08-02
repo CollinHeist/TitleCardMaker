@@ -28,6 +28,7 @@ from app.models.card import Card
 from app.models.episode import Episode
 from app.models.font import Font
 from app.models.loaded import Loaded
+from app.models.preferences import Preferences
 from app.models.series import Series
 from app.models.sync import Sync
 from app.models.template import Template

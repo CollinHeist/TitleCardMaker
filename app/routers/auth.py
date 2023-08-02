@@ -1,6 +1,5 @@
 from datetime import timedelta
 from typing import Optional
-
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -113,7 +112,7 @@ def add_new_user(
     # Hash this Password, add to database
     user = models.user.User(
         username=new_user.username,
-        hashed_password=get_password_hash(new_user.password)
+        hashed_password=get_password_hash(new_user.password),
     )
     db.add(user)
     db.commit()
@@ -148,11 +147,12 @@ def delete_user(
             detail=f'User "{username}" does not exist',
         )
 
+    # Delete User
     db.delete(user)
     db.commit()
     log.info(f'Deleted User({username})')
 
-    # If there are no more active users, disable authentication to avoid L/O
+    # If there are no more active Users, disable authentication to avoid L/O
     if len(db.query(models.user.User).all()) == 0:
         log.warning(f'No remaining active users - disabling authentication')
         preferences.require_auth = False
@@ -188,7 +188,6 @@ def update_user_credentials(
     ) -> User:
     """
     Update the credentials of the current User.
-
     - update_user: New credentials to utilize for this User.
     """
 

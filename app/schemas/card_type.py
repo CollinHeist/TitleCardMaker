@@ -157,7 +157,7 @@ class DividerCardType(BaseCardTypeCustomFontAllText):
 class FadeCardType(BaseCardTypeCustomFontAllText):
     font_color: BetterColor = FadeTitleCard.TITLE_COLOR
     font_file: FilePath = FadeTitleCard.TITLE_FONT
-    logo: Optional[FilePath] = None
+    logo_file: Optional[FilePath] = None
     episode_text_color: BetterColor = FadeTitleCard.EPISODE_TEXT_COLOR
     separator: str = '•'
 
