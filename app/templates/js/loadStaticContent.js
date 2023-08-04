@@ -16,6 +16,16 @@ $(document).ready(function() {
     })
     .fail(($xhr, errorMsg) => $content.text(`Error: ${errorMsg}`));
 
+  // Trigger events on keypresses
+  $(document).keypress((event) => {
+    if (event.target.tagName !== 'INPUT' && event.target.tagName !== 'TEXTAREA' && !event.target.isContentEditable) {
+      // 'f' sets focus to search bar - e.g. "find"
+      if (event.key === 'f' || event.key === 's') { $('#search-bar input').focus(); }
+      // Shift + 'h' takes to home page
+      else if (event.key === 'H' && event.shiftKey) { window.location.href = '/'; }
+    }
+  });
+
   // Load the sidebar.html file
   $.get('/templates/sidebar.html')
     .done(data => {
