@@ -181,6 +181,7 @@ async function queryAllBlueprints(page=1) {
     card.querySelector('[data-action="import-blueprint"]').onclick = () => importBlueprint(blueprint, `blueprint-id${blueprintId}`);
     // Assign blacklist function to hide button
     card.querySelector('[data-action="blacklist-blueprint"]').onclick = () => {
+      $(`#blueprint-id${blueprintId}`).transition({animation: 'fade', duration: 1000});
       $.ajax({
         type: 'PUT',
         url: `/api/blueprints/query/blacklist?series_full_name=${blueprint.series_full_name}&blueprint_id=${blueprint.id}`,
