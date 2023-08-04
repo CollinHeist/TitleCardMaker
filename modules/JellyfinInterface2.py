@@ -641,7 +641,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface
         series_id = self.__get_series_id(library_name, series_info, log=log)
         if series_id is None:
             log.warning(f'Series not found in Jellyfin {series_info!r}')
-            return None
+            return []
 
         # Load each episode and card
         loaded = []
