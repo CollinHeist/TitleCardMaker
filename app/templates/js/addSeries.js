@@ -45,16 +45,8 @@ function addSeries(result, resultElementId) {
     success: series => {
       $(`#${resultElementId}`).toggleClass('disabled', true);
       $.toast({class: 'blue info', title: `Added Series "${series.name}"`});
-    }, error: response => {
-      $.toast({
-        class: 'error',
-        title: 'Error Adding series',
-        message: response,
-        showDuration: 0,
-      });
-    }, complete: () => {
-      $('#add-series-modal').modal('hide');
-    },
+    }, error: response => showErrorToast({title: 'Error Adding Series', response}),
+    complete: () => $('#add-series-modal').modal('hide'),
   });
 }
 
@@ -81,25 +73,10 @@ function addSeriesImportBlueprint(result, blueprint, resultElementId) {
         data: JSON.stringify(blueprint),
         success: () => {
           $.toast({class: 'blue info', title: 'Blueprint Imported'});
-        }, error: response => {
-          $.toast({
-            class: 'error',
-            title: 'Error Importing Blueprint',
-            message: response.responseJSON.detail,
-            displayTime: 0,
-          });
-        },
+        }, error: response => showErrorToast({title: 'Error Importing Blueprint', response}),
       });
-    }, error: response => {
-      $.toast({
-        class: 'error',
-        title: 'Error adding Series',
-        message: response,
-        showDuration: 0,
-      });
-    }, complete: () => {
-      $('#add-series-modal').modal('hide');
-    },
+    }, error: response => showErrorToast({title: 'Error adding Series', response}),
+    complete: () => $('#add-series-modal').modal('hide'),
   });
 }
 
@@ -117,16 +94,7 @@ function importBlueprint(blueprint, elementId) {
     success: series => {
       $.toast({class: 'blue info', title: `Imported Blueprint to "${series.full_name}"`});
       document.getElementById(elementId).classList.add('disabled');
-    }, error: response => {
-      $.toast({
-        class: 'error',
-        title: 'Error Importing Blueprint',
-        message: response.responseJSON.text,
-        showDuration: 0,
-      });
-    }, complete: () => {
-      
-    },
+    }, error: response => showErrorToast({title: 'Error Importing Blueprint', response}),
   });
 }
 
@@ -218,17 +186,13 @@ async function queryAllBlueprints(page=1) {
         url: `/api/blueprints/query/blacklist?series_full_name=${blueprint.series_full_name}&blueprint_id=${blueprint.id}`,
         success: () => {
           // Remove Blueprint card from display
-          document.getElementById(`blueprint-id${blueprintId}`).remove();
-          $.toast({class: 'blue info', title: 'Blueprint Hidden'});
-        }, error: response => {
-          $.toast({
-            class: 'error',
-            title: 'Error Blacklisting Blueprint',
-            message: response,
-            showDuration: 0,
-          });
-        },
-      })
+          $(`#blueprint-id${blueprintId}`).transition({animation: 'fade', duration: 1000});
+          setTimeout(() => {
+            document.getElementById(`blueprint-id${blueprintId}`).remove();
+            $.toast({class: 'blue info', title: 'Blueprint Hidden'});
+          }, 1000);
+        }, error: response => howErrorToast({title: 'Error Blacklisting Blueprint', response}),
+      });
     }
     return card;
   });
@@ -288,7 +252,6 @@ function showAddSeriesModal(result, resultElementId) {
 async function quickAddSeries(result, resultElementId) {
   let resultElement = document.getElementById(resultElementId)
   resultElement.classList.add('loading');
-  console.log(generateNewSeriesObject(result));
   $.ajax({
     type: 'POST',
     url: '/api/series/new',
@@ -305,24 +268,11 @@ async function quickAddSeries(result, resultElementId) {
         success: () => {
           $.toast({class: 'blue info', title: `Refreshed Episode data for "${series.name}"`});
         }, error: response2 => {
-          $.toast({
-            class: 'error',
-            title: `Error refreshing Episode data for "${response2.name}"`,
-            message: response2.responseJSON.message,
-            showDuration: 0,
-          });
+          showErrorToast({title: `Error refreshing Episode data for "${response2.name}"`, response2});
         }
       });
-    }, error: response => {
-      $.toast({
-        class: 'error',
-        title: 'Error adding Series',
-        message: response,
-        showDuration: 0,
-      });
-    }, complete: () => {
-      resultElement.classList.remove('loading');
-    },
+    }, error: response => showErrorToast({title: 'Error adding Series', response}),
+    complete: () => resultElement.classList.remove('loading')
   });
 }
 
