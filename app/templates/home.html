@@ -43,7 +43,7 @@
           <div class="red bar"></div>
         </div>
       </div>
-      <div class="content">
+      <div class="text content" tabindex="0">
         <a>
           <div class="series-name ui tiny header"></div>
         </a>
@@ -71,7 +71,7 @@
 
       <div id="toolbar">
         <!-- Add new Series -->
-        <div id="add-series" class="ui compact blue inverted menu">
+        <div id="add-series" class="ui compact blue inverted menu" tabindex="0" onkeypress="if(event.key == 'Enter') {window.location.href = '/add'}">
           <a class="blue item" href="/add">
             <i class="plus icon"></i>
             New Series
@@ -93,7 +93,7 @@
         </div> -->
 
         <!-- Sort buttons -->
-        <div class="ui compact blue inverted menu">
+        <div class="ui compact blue inverted menu" tabindex="0">
           <a class="item" title="Sort titles by ID" onclick="sortSeries(this, 'id')">
             <i id="sort-by-id" class="sort icon"></i>
           </a>
