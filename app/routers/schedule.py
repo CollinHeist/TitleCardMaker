@@ -299,11 +299,14 @@ def _scheduled_task_from_job(
     if preferences.advanced_scheduling:
         crontab = base_job.crontab
     else:
-        frequency = job.trigger.interval.total_seconds()
+        try:
+            frequency = job.trigger.interval.total_seconds()
+        except AttributeError:
+            # Using basic scheduling, but job was created in advanced mode
+            crontab = base_job.crontab
 
     return ScheduledTask(
         id=str(job.id),
-        # frequency=job.trigger.interval.total_seconds(),
         frequency=frequency,
         crontab=crontab,
         next_run=str(job.next_run_time),
