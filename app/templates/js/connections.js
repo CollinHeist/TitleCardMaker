@@ -1,20 +1,44 @@
-// Function to grab list of usernames from Emby
-async function getEmbyUsernames() {
-  const usernames = await fetch('/api/available/usernames/emby').then(resp => resp.json());
-  $('.dropdown[data-value="emby_username"]').dropdown({
-    values: usernames.map(username => {
-      return {name: username, value: username, selected: username === '{{preferences.emby_username}}'};
-    }),
+/*
+ * Submit the API request to get any available Emby usernames. If
+ * successful, the Emby usernames dropdown is populated.
+ */
+function getEmbyUsernames() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/available/usernames/emby',
+    success: usernames => {
+      $('.dropdown[data-value="emby_username"]').dropdown({
+        values: usernames.map(username => {
+          return {
+            name: username,
+            value: username,
+            selected: username === '{{preferences.emby_username}}'
+          };
+        }),
+      });
+    }, error: response => showErrorToast({title: 'Error Querying emby Usernames', response}),
   });
 }
 
-// Function to grab list of usernames from Jellyfin
-async function getJellyfinUsernames() {
-  const usernames = await fetch('/api/available/usernames/jellyfin').then(resp => resp.json());
-  $('.dropdown[data-value="jellyfin_username"]').dropdown({
-    values: usernames.map(username => {
-      return {name: username, value: username, selected: username === '{{preferences.jellyfin_username}}'};
-    }),
+/*
+ * Submit the API request to get any available Jellyfin usernames. If
+ * successful, the Jellyfin usernames dropdown is populated.
+ */
+function getJellyfinUsernames() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/available/usernames/jellyfin',
+    success: usernames => {
+      $('.dropdown[data-value="jellyfin_username"]').dropdown({
+        values: usernames.map(username => {
+          return {
+            name: username,
+            value: username,
+            selected: username === '{{preferences.jellyfin_username}}'
+          };
+        }),
+      });
+    }, error: response => showErrorToast({title: 'Error Querying Jellyfin Usernames', response}),
   });
 }
 
@@ -43,6 +67,9 @@ async function getLanguagePriorities() {
   });
 }
 
+/*
+ * Initialize all the media server filesize limit dropdowns.
+ */
 function initializeFilesizeDropdown() {
   // Emby
   $('.dropdown[data-value="emby_filesize_limit_unit"]').dropdown({
@@ -67,6 +94,11 @@ function initializeFilesizeDropdown() {
   });
 }
 
+/*
+ * Submit the API request to enable authentication. If successful the page
+ * is redirected to the login page with a callback to redirect back here
+ * if the subsequent login is successful.
+ */
 function enableAuthentication() {
   $.ajax({
     type: 'POST',
@@ -88,6 +120,10 @@ function enableAuthentication() {
   });
 }
 
+/*
+ * Submit the API request to disable authentication. If successful the
+ * authentication section is disabled.
+ */
 function disableAuthentication() {
   $.ajax({
     type: 'POST',
@@ -106,8 +142,12 @@ function disableAuthentication() {
   });
 }
 
+/*
+ * Submit the API request to edit the current active User's credentials.
+ * If successful, the TCM token cookie is cleared, and the page is
+ * redirected to the login page with a callback to redirect back here.
+ */
 function editUserAuth() {
-  // Submit API request to update user credentials
   $.ajax({
     type: 'POST',
     url: '/api/auth/edit',
@@ -137,7 +177,7 @@ function editUserAuth() {
 
 /*
  * Initialize the Authorization form/section. This populates the current
- * user's username (if applicable), enabled/disables fields, and assigns
+ * User's username (if applicable), enabled/disables fields, and assigns
  * functions to all events/presses.
  */
 function initializeAuthForm() {
