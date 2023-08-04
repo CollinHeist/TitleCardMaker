@@ -309,9 +309,7 @@ function queryTMDbPoster() {
       } else {
         $('#edit-poster-modal input[name="poster_url"]').val(response);
       }
-    }, error: () => {
-      $.ajax({class: 'error', title: 'TMDb returned no images'});
-    },
+    }, error: () => $.ajax({class: 'error', title: 'TMDb returned no images'}),
   });
 }
 
@@ -743,15 +741,8 @@ async function initAll() {
         $.toast({class: 'blue info', title: 'Updated poster'});
         // Reload image
         $('#poster-image')[0].src = `${response}?${new Date().getTime()}`;
-      }, error: (response) => {
-        $.toast({
-          class: 'error',
-          title: 'Error updating poster',
-          message: response.responseJSON.detail,
-        });
-      }, complete: () => {
-        setTimeout(() => $('#submit-poster-button').toggleClass('loading', false), 750);
-      },
+      }, error: response => showErrorToast({title: 'Error updating poster', response}),
+      complete: () =>  setTimeout(() => $('#submit-poster-button').toggleClass('loading', false), 750),
     });
   });
 
@@ -1273,14 +1264,10 @@ function downloadSeriesLogo(url) {
     processData: false,
     success: () => {
       $.toast({class: 'blue info', title: 'Downloaded Logo'});
-    }, error: response => {
-      $.toast({
-        class: 'error',
-        title: 'Error Download Logo',
-        message: response.responseJSON.detail,
-        displayTime: 0,
-      });
+      // Update logo source to force refresh
+      $('#logoImage img')[0].src = `/source/{{series.path_safe_name}}/logo.png?${new Date().getTime()}`;
     },
+    error: response => showErrorToast({title: 'Error Downloading Logo', response}),
   });
 }
 
@@ -1331,9 +1318,7 @@ function browseTmdbLogos() {
         $('#browse-tmdb-logo-modal .content .images')[0].innerHTML = imageElements.join('');
         $('#browse-tmdb-logo-modal').modal('show');
       }
-    }, error: response => {
-      showErrorToast({title: 'Unable to Query TMDb', response: response});
-    },
+    }, error: response => showErrorToast({title: 'Unable to Query TMDb', response: response}),
   });
 }
 
