@@ -31,6 +31,11 @@ async function getAllSeries(page=1) {
     const as = clone.querySelectorAll('a');
     as[0].href = `/series/${series.id}`;
     as[1].href = `/series/${series.id}`;
+    // Go to Series page on Enter event for keyboard navigation
+      clone.querySelector('.text.content').addEventListener('keydown', event => {
+      // Check if the pressed key is Enter (key code 13)
+      if (event.keyCode === 13) { window.location.href = `/series/${series.id}`; }
+    });
     // Populate title
     const title = clone.querySelector('.series-name');
     title.setAttribute('title', `${series.name} (${series.year})`);
