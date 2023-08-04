@@ -115,6 +115,37 @@ class Preferences:
             self.commit()
 
 
+    def __getstate__(self) -> dict:
+        """
+        Get the state definition of this object for pickling. This
+        is all attributes except `remote_card_types`.
+
+        Returns:
+            Dictionary representation of this object with any un-
+            pickleable attributes excluded.
+        """
+
+        # Exclude the remote card types dictionary because the types
+        # might not be loaded at runtime; which could cause an error
+        # when unpickling
+        return {
+            attr: getattr(self, attr) for attr in self.__slots__
+            if attr not in ('remote_card_types', )
+        }
+
+
+    def __setstate__(self, state: dict) -> None:
+        """
+        Set the state of this object from the pickled representation.
+
+        Args:
+            state: Dictionary representation of the object.
+        """
+
+        for attr, value in state.items():
+            setattr(self, attr, value)
+
+
     def __initialize_defaults(self) -> None:
         """Initialize this object with all default values."""
 
