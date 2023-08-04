@@ -215,7 +215,6 @@ def update_user_credentials(
     request.state.log.warning(f'Modified credentials for User({user.username})')
     user.username = update_user.username
     user.hashed_password = get_password_hash(update_user.password)
-    request.state.log.info(f'{update_user=!r}')
     db.commit()
 
     return user
