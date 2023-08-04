@@ -43,6 +43,7 @@ def catch_and_log(
                 return function(*args, **kwargs)
             except TMDbException as e:
                 # Get contextual logger if provided as argument to function
+                log = log
                 if 'log' in kwargs and isinstance(kwargs['log'], Logger):
                     log = kwargs['log']
 
