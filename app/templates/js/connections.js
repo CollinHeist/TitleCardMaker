@@ -59,11 +59,20 @@ async function getSonarrLibraries() {
   });
 }
 
+/*
+ * Get the global logo language priority, and initialize the dropdown
+ * with those values.
+ */
 async function getLanguagePriorities() {
-  const languages = await fetch('/api/settings/logo-language-priority').then(resp => resp.json());
-  $('.dropdown[data-value="tmdb_logo_language_priority"]').dropdown({
-    values: languages,
-    clearable: true,
+  $.ajax({
+    type: 'GET',
+    url: '/api/settings/logo-language-priority',
+    success: languages => {
+      $('.dropdown[data-value="tmdb_logo_language_priority"]').dropdown({
+        values: languages,
+        clearable: true,
+      });
+    }, error: response => showErrorToast({title: 'Error Querying Language Priority', response}),
   });
 }
 
@@ -148,6 +157,7 @@ function disableAuthentication() {
  * redirected to the login page with a callback to redirect back here.
  */
 function editUserAuth() {
+  // Submit API request to update user credentials
   $.ajax({
     type: 'POST',
     url: '/api/auth/edit',
@@ -216,6 +226,55 @@ function initializeAuthForm() {
   });
 }
 
+/*
+ * Initialize the enable/disable connection toggles for all the non-auth
+ * forms. This assigns the /enable API request to the checkbox checking,
+ * and /disable to the unchecking. It then initializes the form enabled/
+ * disabled statuses themselves.
+ */
+function initializeFormToggles() {
+  // Fields to enable/disable on button presses
+  const toggleFields = [
+    {title: 'Emby',     toggleAPI: '/api/connection/emby',     buttonId: '#enable-emby'},
+    {title: 'Jellyfin', toggleAPI: '/api/connection/jellyfin', buttonId: '#enable-jellyfin'},
+    {title: 'Plex',     toggleAPI: '/api/connection/plex',     buttonId: '#enable-plex'},
+    {title: 'Sonarr',   toggleAPI: '/api/connection/sonarr',   buttonId: '#enable-sonarr'},
+    {title: 'TMDb',     toggleAPI: '/api/connection/tmdb',     buttonId: '#enable-tmdb'},
+  ];
+  toggleFields.forEach(({title, buttonId, toggleAPI}) => {
+    $(buttonId).checkbox({
+      onChecked: () => {
+        // Enable connection
+        $(`#${title.toLowerCase()}-settings .field`).toggleClass('disabled', false);
+        $.ajax({
+          type: 'PUT',
+          url: `${toggleAPI}/enable`,
+          success: () => $.toast({class: 'blue info', title: `Enabled ${title} Connection`}),
+          error: response => showErrorToast({title: `Error Enabling ${title} Connection`, response})
+        });
+      }, onUnchecked: () => {
+        // Disable connection
+        $(`#${title.toLowerCase()}-settings .field`).toggleClass('disabled', true);
+        $.ajax({
+          type: 'PUT',
+          url: `${toggleAPI}/disable`,
+          success: () => $.toast({class: 'warning', title: `Disabled ${title} Connection`}),
+          error: response => showErrorToast({title: `Error Disabling ${title} Connection`, response}),
+        });
+      },
+    })
+  });
+
+  // Initialize enabled/disabled states of form fields
+  toggleFields.forEach(({title, buttonId}) => {
+    $(`#${title.toLowerCase()}-settings .field`).toggleClass('disabled', !$(buttonId)[0].classList.contains('checked'));
+  });
+}
+
+/*
+ * Add form validation for all the non-Auth and Tautulli connection
+ * forms.
+ */
 function addFormValidation() {
   // Add form validation
   $('#emby-settings').form({
@@ -270,6 +329,68 @@ function addFormValidation() {
   });
 }
 
+/*
+ * Add form validation to the Tautulli integration form, and assign the
+ * API request to the form submission.
+ */
+function initializeTautulliForm() {
+  // Add form validation
+  $('#tautulli-agent-form').form({
+    on: 'blur',
+    inline: true,
+    fields: {
+      tautulli_url: ['empty'],
+      tautulli_api_key: ['empty'],
+      tautulli_agent_name: {
+        optional: true,
+        value: ['minLength[1]'],
+      },
+    },
+  }).on('submit', event => {
+    // Prevent default event form handler
+    event.preventDefault();
+    // If the form is not valid, exit
+    if (!$('#tautulli-agent-form').form('is valid')) { return; }
+
+    // Submit API request
+    const data = Object.fromEntries(new FormData(event.target));
+    $('#tautulli-agent-modal button').toggleClass('loading', true);
+    $.ajax({
+      type: 'POST',
+      url: '/api/connection/tautulli/integrate',
+      data: JSON.stringify(data),
+      contentType: 'application/json',
+      success: () => {
+        // Show toast, disable 
+        $.toast({
+          class: 'blue info',
+          title: `Created "${data.tautulli_agent_name}" Notification Agent`,
+          displayTime: 5000,
+        });
+        $('#tautulli-agent-modal button').toggleClass('disabled', true);
+      }, error: response => showErrorToast({title: 'Error Creating Notification Agent', response}),
+      complete: () => $('#tautulli-agent-modal button').toggleClass('loading', false)
+    });
+  });
+}
+
+/*
+ * Add an onChange event to the Plex filesize limit field that displays
+ * the filesize limit warning if a size >10 MB is entered.
+ */
+function enablePlexFilesizeWarning() {
+  $('.field[data-value="plex_filesize_limit"]').on('change', () => {
+    const number = $('.field[data-value="plex_filesize_limit"] input[name="filesize_limit_number"]').val() * 1;
+    const unit = $('.field[data-value="plex_filesize_limit"] input[name="filesize_limit_unit"]').val();
+    const unitValues = {
+      'Bytes': 1, 'Kilobytes':  2**10, 'Megabytes':  2**20, 'Gigabytes':  2**30, 'Terabytes':  2**40
+    };
+    let current = unitValues[unit] * number,
+        limit   = 10 * unitValues['Megabytes'];
+    $('#plex-filesize-warning').toggleClass('visible', current > limit);
+  });
+}
+
 async function initAll() {
   {% if preferences.use_emby %}
   getEmbyUsernames();
@@ -284,6 +405,9 @@ async function initAll() {
   getLanguagePriorities();
   initializeFilesizeDropdown();
   initializeAuthForm();
+  initializeFormToggles();
+  enablePlexFilesizeWarning();
+  initializeTautulliForm();
 
   // Enable dropdowns, checkboxes
   $('.ui.dropdown').dropdown();
@@ -293,53 +417,6 @@ async function initAll() {
     .modal({blurring: true})
     .modal('attach events', '#tautulli-agent-button', 'show')
     .modal('setting', 'transition', 'fade up')
-
-  // Fields to enable/disable on button presses
-  const toggleFields = [
-    {title: 'Emby',     toggleAPI: '/api/connection/emby',     buttonId: '#enable-emby'},
-    {title: 'Jellyfin', toggleAPI: '/api/connection/jellyfin', buttonId: '#enable-jellyfin'},
-    {title: 'Plex',     toggleAPI: '/api/connection/plex',     buttonId: '#enable-plex'},
-    {title: 'Sonarr',   toggleAPI: '/api/connection/sonarr',   buttonId: '#enable-sonarr'},
-    {title: 'TMDb',     toggleAPI: '/api/connection/tmdb',     buttonId: '#enable-tmdb'},
-  ];
-  toggleFields.forEach(({title, buttonId, toggleAPI}) => {
-    $(buttonId).checkbox({
-      onChecked: () => {
-        $(`#${title.toLowerCase()}-settings .field`).toggleClass('disabled', false);
-        $.ajax({
-          type: 'PUT',
-          url: `${toggleAPI}/enable`,
-          success: () => $.toast({class: 'blue info', title: `Enabled ${title} Connection`}),
-          error: response => showErrorToast({title: `Error Enabling ${title} Connection`, response})
-        });
-      }, onUnchecked: () => {
-        $(`#${title.toLowerCase()}-settings .field`).toggleClass('disabled', true);
-        $.ajax({
-          type: 'PUT',
-          url: `${toggleAPI}/disable`,
-          success: () => $.toast({class: 'warning', title: `Disabled ${title} Connection`}),
-          error: response => showErrorToast({title: `Error Disabling ${title} Connection`, response}),
-        });
-      },
-    })
-  });
-
-  // Initialize enabled/disabled states of form fields
-  toggleFields.forEach(({title, buttonId}) => {
-    $(`#${title.toLowerCase()}-settings .field`).toggleClass('disabled', !$(buttonId)[0].classList.contains('checked'));
-  });
-
-  // Show filesize warning in Plex if >10 MB
-  $('.field[data-value="plex_filesize_limit"]').on('change', () => {
-    const number = $('.field[data-value="plex_filesize_limit"] input[name="filesize_limit_number"]').val() * 1;
-    const unit = $('.field[data-value="plex_filesize_limit"] input[name="filesize_limit_unit"]').val();
-    const unitValues = {
-      'Bytes': 1, 'Kilobytes':  2**10, 'Megabytes':  2**20, 'Gigabytes':  2**30, 'Terabytes':  2**40
-    };
-    let current = unitValues[unit] * number,
-        limit   = 10 * unitValues['Megabytes'];
-    $('#plex-filesize-warning').toggleClass('visible', current > limit);
-  });
 
   // Connection submit button handling
   const connections = [
@@ -396,46 +473,6 @@ async function initAll() {
           $(submitButtonId).toggleClass('disabled loading', false);
         }
       });
-    });
-  });
-
-  // Tautulli agent form validation and submission
-  $('#tautulli-agent-form').form({
-    on: 'blur',
-    inline: true,
-    fields: {
-      tautulli_url: ['empty'],
-      tautulli_api_key: ['empty'],
-      tautulli_agent_name: {
-        optional: true,
-        value: ['minLength[1]']
-      },
-    },
-  }).on('submit', event => {
-    // Prevent default event form handler, validate form
-    event.preventDefault();
-    if (!$('#tautulli-agent-form').form('is valid')) { return; }
-
-    // Create JSON from form
-    const data = Object.fromEntries(new FormData(event.target));
-
-    // Submit API request
-    $('#tautulli-agent-modal button').toggleClass('loading', true);
-    $.ajax({
-      type: 'POST',
-      url: '/api/connection/tautulli/integrate',
-      data: JSON.stringify(data),
-      contentType: 'application/json',
-      success: () => {
-        // Show toast, disable 
-        $.toast({
-          class: 'blue info',
-          title: `Created "${data.tautulli_agent_name}" Notification Agent`,
-          displayTime: 5000,
-        });
-        $('#tautulli-agent-modal button').toggleClass('disabled', true);
-      }, error: response => showErrorToast({title: 'Error Creating Notification Agent', response}),
-      complete: () => $('#tautulli-agent-modal button').toggleClass('loading', false)
     });
   });
 }
