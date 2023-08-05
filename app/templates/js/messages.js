@@ -13,13 +13,23 @@ $(document).ready(() => {
 
   // List of logs to display
   var logs = [];
+  let getLogId, displayLogId;
   async function getRecentLogs() {
     // Get last 30sec of logs
     const last30s = encodeURIComponent(dateToISO8601(new Date(Date.now() - 1  * 1000 * 30)));
     const now = encodeURIComponent(dateToISO8601(new Date()));
-    const allMessages = await fetch(`/api/logs/query?page=1&after=${last30s}&before=${now}&level=info&shallow=true`).then(resp => resp.json());
-    // Add to list of logs to display, limit to 60 messages
-    logs = logs.concat(allMessages.items).slice(undefined, 60);
+    $.ajax({
+      type: 'GET',
+      url: `/api/logs/query?page=1&after=${last30s}&before=${now}&level=info&shallow=true`,
+      success: allMessages => logs = logs.concat(allMessages.items).slice(undefined, 60),
+      error: response => {
+        // If unauthorized, cancel recurrent requests
+        if (response.status === 401) {
+          clearInterval(getLogId);
+          clearInterval(displayLogId);
+        }
+      },
+    });
   }
 
   // Display the oldest pending log
@@ -43,7 +53,7 @@ $(document).ready(() => {
   }
 
   // Query for new logs every 30 seconds
-  setInterval(getRecentLogs, 1 * 1000 * 30);
+  getLogId = setInterval(getRecentLogs, 1 * 1000 * 30);
   // Display any pending logs every 5 seconds
-  setInterval(displayLogs, 1 * 1000 * 5);
+  displayLogId = setInterval(displayLogs, 1 * 1000 * 5);
 });
