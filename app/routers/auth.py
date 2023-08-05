@@ -8,7 +8,8 @@ from sqlalchemy.orm import Session
 from app import models
 from app.dependencies import get_database, get_preferences
 from app.internal.auth import (
-    authenticate_user, create_access_token, get_current_user, get_password_hash, get_user
+    authenticate_user, create_access_token, get_current_user, get_password_hash,
+    get_user
 )
 from app.models.preferences import Preferences
 from app.schemas.auth import NewUser, Token, UpdateUser, User

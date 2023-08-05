@@ -1159,9 +1159,10 @@ def import_cards(
     # Glob directory for images to import
     all_images = list(directory.glob(f'**/*{image_extension}'))
 
-    # No images to import, return empty actions
+    # No images to import, return
     if len(all_images) == 0:
         log.debug(f'No Cards identified within "{directory}" to import')
+        return None
 
     # For each image, identify associated Episode
     for image in all_images:
@@ -1187,6 +1188,7 @@ def import_cards(
         if episode.card and not force_reload:
             log.debug(f'{series.log_str} {episode.log_str} has an associated Card - skipping')
             continue
+
         # Episode has card, delete if reloading
         if episode.card and force_reload:
             for card in episode.card:
@@ -1212,3 +1214,5 @@ def import_cards(
 
         card = add_card_to_database(db, title_card, card_settings['card_file'])
         log.debug(f'{series.log_str} {episode.log_str} Imported {image.resolve()}')
+
+    return None

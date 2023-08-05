@@ -363,7 +363,7 @@ def create_cards_for_plex_rating_keys(
                 .filter(series_info.filter_conditions(models.series.Series))\
                 .first()
             if series is None:
-                log.error(f'Cannot find Series for {series_info}')
+                log.info(f'Cannot find Series for {series_info}')
                 continue
 
             # Series found, refresh data and look for Episode again
@@ -377,7 +377,7 @@ def create_cards_for_plex_rating_keys(
                 .filter(episode_info.filter_conditions(models.episode.Episode))\
                 .all()
             if not episodes:
-                log.error(f'Cannot find Episode for {series_info} {episode_info}')
+                log.info(f'Cannot find Episode for {series_info} {episode_info}')
                 continue
 
         # Get first Episode that matches this Series
@@ -389,7 +389,7 @@ def create_cards_for_plex_rating_keys(
 
         # If no match, exit
         if not found:
-            log.error(f'Cannot find Episode for {series_info} {episode_info}')
+            log.info(f'Cannot find Episode for {series_info} {episode_info}')
             continue
 
         # Update Episode watched status
