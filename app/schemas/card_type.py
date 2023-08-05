@@ -304,7 +304,7 @@ class TintedFrameCardType(BaseCardTypeAllText):
         top = values['top_element']
         middle = values['middle_element']
         bottom = values['bottom_element']
-        if (top == 'logo' or middle == 'logo' or bottom == 'logo'
+        if ((top == 'logo' or middle == 'logo' or bottom == 'logo')
             and not values['logo_file'].exists()):
             raise ValueError(f'Logo file indicated and does not exist')
 
