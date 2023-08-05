@@ -28,6 +28,7 @@ def enable_or_disable_connection(
         connection: Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
         status: Literal['enable', 'disable'],
         preferences: Preferences = Depends(get_preferences),
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
     ) -> None:
     """
     Set the enabled/disabled status of the given connection.
@@ -40,24 +41,24 @@ def enable_or_disable_connection(
     log = request.state.log
 
     if connection == 'emby':
-        preferences.use_emby = (status == 'enable')
+        preferences.use_emby = status == 'enable'
         if preferences.use_emby:
             refresh_emby_interface(log=log)
     elif connection == 'jellyfin':
-        preferences.use_jellyfin = (status == 'enable')
-        if preferences.use_emby:
+        preferences.use_jellyfin = status == 'enable'
+        if preferences.use_jellyfin:
             refresh_jellyfin_interface(log=log)
     elif connection == 'plex':
-        preferences.use_plex = (status == 'enable')
-        if preferences.use_emby:
+        preferences.use_plex = status == 'enable'
+        if preferences.use_plex:
             refresh_plex_interface(log=log)
     elif connection == 'sonarr':
-        preferences.use_sonarr = (status == 'enable')
-        if preferences.use_emby:
+        preferences.use_sonarr = status == 'enable'
+        if preferences.use_sonarr:
             refresh_sonarr_interface(log=log)
     elif connection == 'tmdb':
-        preferences.use_tmdb = (status == 'enable')
-        if preferences.use_emby:
+        preferences.use_tmdb = status == 'enable'
+        if preferences.use_tmdb:
             refresh_tmdb_interface(log=log)
 
     preferences.commit(log=log)
