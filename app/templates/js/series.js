@@ -1487,23 +1487,21 @@ function deleteAllEpisodes() {
 
 /*
  * Submit an API request to delete the Episode with the given ID. If
- * successful, then the Episode, file, and statistics data are re-queried.
+ * successful, then the statistics are re-queried and the Episode and
+ * file associated with this Episode are removed from the DOM.
  */
 function deleteEpisode(id) {
   $.ajax({
     type: 'DELETE',
     url: `/api/episodes/${id}`,
     success: () => {
-      $.toast({
-        class: 'blue info',
-        title: `Deleted Episode`,
-      });
-      getEpisodeData();
-      getFileData();
+      $.toast({class: 'blue info', title: `Deleted Episode`});
+      // Remove this Episode's data row and file
+      $(`#episode-id${id}`).transition({animation: 'slide down', duration: 1000});
+      setTimeout(() => document.getElementById(`episode-id${id}`).remove(), 1000);
+      document.getElementById(`file-episode${id}`).remove();
       getStatistics();
-    }, error: response => {
-      showErrorToast({title: 'Error Deleting Episode', response: response});
-    },
+    }, error: response => showErrorToast({title: 'Error Deleting Episode', response: response}),
   });
 }
 
