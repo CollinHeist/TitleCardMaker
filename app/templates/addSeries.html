@@ -12,7 +12,7 @@
   <link rel="stylesheet" type="text/css" href="/templates/css/addSeries.css"/>
 
   <template id="search-result-template">
-    <div class="ui horizontal fluid link card">
+    <div class="ui horizontal fluid link card transition hidden"> <!-- Start hidden so object can be transitioned in -->
       <div class="image">
         <img onerror="this.onerror=null; this.src='/internal_assets/placeholder.jpg'" loading="lazy">
       </div>
@@ -93,7 +93,7 @@
   </template>
 
   <template id="all-blueprint-template">
-    <div class="ui raised card">
+    <div class="ui raised card transition hidden"> <!-- Start hidden so object can be transitioned in -->
       <div class="image">
         <img loading="lazy">
       </div>
