@@ -12,7 +12,7 @@ async function getAllSeries(page=1) {
   }[sortState];
 
   // Get this page of Series data
-  let allSeriesData = await fetch(`/api/series/all?order_by=${sortParam}&size=27&page=${page}`).then(resp => resp.json());
+  let allSeriesData = await fetch(`/api/series/all?order_by=${sortParam}&size=100&page=${page}`).then(resp => resp.json());
   let allSeries = allSeriesData.items;
 
   // Create Series cards
@@ -40,7 +40,6 @@ async function getAllSeries(page=1) {
     const title = clone.querySelector('.series-name');
     title.setAttribute('title', `${series.name} (${series.year})`);
     title.innerText = series.name;
-    // title.setAttribute('data-tooltip', `${series.name}\n${series.card_count} Title Cards\n${series.episode_count} Episodes`);
     // Progress bar
     const progressBar = clone.querySelector('.progress');
     const cardVal = Math.min(series.card_count, series.episode_count);
@@ -50,6 +49,7 @@ async function getAllSeries(page=1) {
     return clone;
   });
   document.getElementById('series-list').replaceChildren(...allSeriesCards);
+  $('#series-list .card').transition({animation: 'scale', interval: 20});
   $('.progress').progress({duration: 2000});
 
   // Update pagination
