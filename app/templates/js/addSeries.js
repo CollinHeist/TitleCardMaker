@@ -211,6 +211,8 @@ async function queryAllBlueprints(page=1) {
     amountVisible: 5,
     hideIfSinglePage: true,
   });
+  // Transition elements in
+  $('#all-blueprint-results .card').transition({animation: 'scale', interval: 40});
   refreshTheme();
 }
 
@@ -379,5 +381,6 @@ async function querySeries() {
     return card;
   });
   resultSegment.replaceChildren(...results);
+  $('#search-results .card').transition({animation: 'fade', interval: 75});
   refreshTheme();
 }
