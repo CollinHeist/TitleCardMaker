@@ -72,3 +72,11 @@ If you'd like to contribute - whether that's a suggested feature, a bug fix, or 
 
 ## Support
 This has taken a pretty substantial amount of effort, so if you find this project useful you can support me on [BuyMeACoffee](https://www.buymeacoffee.com/CollinHeist), or become a [GitHub sponsor](https://github.com/sponsors/CollinHeist) - I would really appreciate it!
+
+A _huge_ thank you to my current and past sponsors.
+
+<p align="center">
+  <a href="https://cdn.jsdelivr.net/gh/CollinHeist/static/sponsorkit/sponsors.svg/sponsors.svg">
+    <img src="https://cdn.jsdelivr.net/gh/CollinHeist/static/sponsorkit/sponsors.svg/sponsors.svg"/>
+  </a>
+</p>
