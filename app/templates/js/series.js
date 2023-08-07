@@ -1215,6 +1215,11 @@ async function exportBlueprint() {
         message: 'Verify any applicable Font licenses allow the Fonts to be shared.',
         displayTime: 15000,
       });
+      // Open window for Blueprint submission
+      window.open(
+        'https://github.com/CollinHeist/TitleCardMaker-Blueprints/issues/new?assignees=CollinHeist&labels=blueprint&projects=&template=new_blueprint.yml&title=[Blueprint] {{series.name}}&series_name={{series.name}}&series_year={{series.year}}',
+        '_blank'
+      );
     }, error: response => {
       showErrorToast({title: 'Error Exporting Blueprint', response: response});
     },
