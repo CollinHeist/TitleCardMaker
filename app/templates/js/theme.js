@@ -1,5 +1,6 @@
 function refreshTheme() {
-  const inverted = (window.localStorage.getItem('site-theme') === 'dark');
+  const siteTheme = window.localStorage.getItem('site-theme') || 'dark';
+  const inverted = (siteTheme === 'dark');
   $('#main-content .ui:not(.uninvertible)').toggleClass('inverted', inverted);
   $('.modal:not(.basic):not(.uninvertible), .modal:not(.basic):not(.uninvertible) .ui, .accordion, .accordion .ui').toggleClass('inverted', inverted);
 }
@@ -26,5 +27,6 @@ function toggleTheme() {
 
 // Default theme is LIGHT, so if dark is indicated, toggle
 $(document).ready(() => {
-  if (window.localStorage.getItem('site-theme') === 'dark') { toggleTheme(); }
+  const siteTheme = window.localStorage.getItem('site-theme') || 'dark';
+  if (siteTheme === 'dark') { toggleTheme(); }
 });
