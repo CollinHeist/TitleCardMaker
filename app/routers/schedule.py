@@ -251,11 +251,14 @@ def initialize_scheduler(override: bool = False) -> None:
     preferences: Preferences = get_preferences()
 
     # Schedule all defined Jobs
+    changed = False
     for job in BaseJobs.values():
         # If Job is not already scheduled, add
         if override or scheduler.get_job(job.id) is None:
-        # if True:
             if preferences.advanced_scheduling:
+                changed = True
+                # Store crontab in Preferences
+                preferences.task_crontabs[job.id] = job.crontab
                 scheduler.add_job(
                     job.function,
                     CronTrigger.from_crontab(job.crontab),
@@ -272,6 +275,9 @@ def initialize_scheduler(override: bool = False) -> None:
                     replace_existing=True,
                     misfire_grace_time=60 * 10,
                 )
+
+    if changed:
+        preferences.commit()
 
 
 def _scheduled_task_from_job(
@@ -297,13 +303,13 @@ def _scheduled_task_from_job(
 
     frequency, crontab = None, None
     if preferences.advanced_scheduling:
-        crontab = base_job.crontab
+        crontab = preferences.task_crontabs.get(job.id, base_job.crontab)
     else:
         try:
             frequency = job.trigger.interval.total_seconds()
         except AttributeError:
             # Using basic scheduling, but job was created in advanced mode
-            crontab = base_job.crontab
+            crontab = preferences.task_crontabs.get(job.id, base_job.crontab)
 
     return ScheduledTask(
         id=str(job.id),
@@ -426,7 +432,11 @@ def reschedule_task(
         # Reschedule with modified interval
         log.debug(f'Task[{job.id}] rescheduling to "{update_schedule.crontab}"')
         BaseJobs[task_id].crontab = update_schedule.crontab
-        job = scheduler.reschedule_job(task_id, trigger=new_trigger,)
+        job = scheduler.reschedule_job(task_id, trigger=new_trigger)
+
+        # Write are updated crontab to preferences, commit
+        preferences.task_crontabs[task_id] = update_schedule.crontab
+        preferences.commit()
     # Basic scheduling
     else:
         # If new interval is the same as old interval, skip
