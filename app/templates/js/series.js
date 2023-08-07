@@ -4,6 +4,7 @@ let editedEpisodeIds = [];
  * Submit an API request to get updated Series statistics. If successful,
  * then the card stats text and progress bar are updated.
  */
+let getStatisticsId;
 function getStatistics() {
   $.ajax({
     type: 'GET',
@@ -20,6 +21,10 @@ function getStatistics() {
         value: `${cardVal},${episodeStat.value-cardVal}`,
         duration: 1500,
       });
+    }, error: response => {
+      if (response.status === 401) {
+        clearInterval(getStatisticsId);
+      }
     },
   });
 }
@@ -671,7 +676,7 @@ async function initAll() {
   initStyles();
 
   // Schedule recurring statistics query
-  setInterval(getStatistics, 30000); // Refresh stats every 30s
+  getStatisticsId = setInterval(getStatistics, 30000); // Refresh stats every 30s
 
   // Enable all dropdowns, menus, and accordians
   $('.ui.dropdown').dropdown();
@@ -1527,4 +1532,3 @@ async function navigateSeries(next_or_previous) {
     },
   });
 }
-
