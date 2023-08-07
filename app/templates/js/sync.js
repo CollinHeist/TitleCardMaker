@@ -1,41 +1,60 @@
-async function getEmbyLibraries() {
-  const libraries = await fetch('/api/available/libraries/emby').then(resp => resp.json());
-  const values = libraries.map(name => {
-    return {name: name, value: name, selected: false}
-  });
-  $('#emby-required-library').dropdown({
-    placeholder: 'None',
-    values: values
-  });
-  $('#emby-excluded-library').dropdown({
-    placeholder: 'None',
-    values: values
+function getEmbyLibraries() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/available/libraries/emby',
+    success: libraries => {
+      const values = libraries.map(name => {
+        return {name: name, value: name, selected: false}
+      });
+      $('#emby-sync-form .dropdown[data-value="required_libraries"]').dropdown({
+        placeholder: 'None',
+        values: values
+      });
+      $('#emby-sync-form .dropdown[data-value="excluded_libraries"]').dropdown({
+        placeholder: 'None',
+        values: values
+      });
+    }, error: response => showErrorToast({title: 'Error Querying Emby Libraries', response}),
   });
 }
 
-async function getJellyfinLibraries() {
-  const libraries = await fetch('/api/available/libraries/jellyfin').then(resp => resp.json());
-  const values = libraries.map(name => {
-    return {name: name, value: name, selected: false}
-  });
-  $('.dropdown[data-value="jellyfin_libraries"]').dropdown({
-    placeholder: 'None',
-    values: values
+function getJellyfinLibraries() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/available/libraries/jellyfin',
+    success: libraries => {
+      const values = libraries.map(name => {
+        return {name: name, value: name, selected: false}
+      });
+      $('#jellyfin-sync-form .dropdown[data-value="required_libraries"]').dropdown({
+        placeholder: 'None',
+        values: values
+      });
+      $('#jellyfin-sync-form .dropdown[data-value="excluded_libraries"]').dropdown({
+        placeholder: 'None',
+        values: values
+      });
+    }, error: response => showErrorToast({title: 'Error Querying Jellyfin Libraries', response}),
   });
 }
 
 async function getPlexLibraries() {
-  const libraries = await fetch('/api/available/libraries/plex').then(resp => resp.json());
-  const values = libraries.map(name => {
-    return {name: name, value: name, selected: false}
-  });
-  $('#plex-required-library').dropdown({
-    placeholder: 'None',
-    values: values
-  });
-  $('#plex-excluded-library').dropdown({
-    placeholder: 'None',
-    values: values
+  $.ajax({
+    type: 'GET',
+    url: '/api/available/libraries/plex',
+    success: libraries => {
+      const values = libraries.map(name => {
+        return {name: name, value: name, selected: false}
+      });
+      $('#plex-sync-form .dropdown[data-value="required_libraries"]').dropdown({
+        placeholder: 'None',
+        values: values
+      });
+      $('#plex-sync-form .dropdown[data-value="excluded_libraries"]').dropdown({
+        placeholder: 'None',
+        values: values
+      });
+    }, error: response => showErrorToast({title: 'Error Querying Plex Libraries', response}),
   });
 }
 
@@ -50,7 +69,7 @@ async function getTemplates() {
 async function getSonarrTags() {
   // Add tag options to add tag dropdowns
   const tags = await fetch('/api/available/tags/sonarr').then(resp => resp.json());
-  $('.ui.dropdown[dropdown-type="sonarr-tags"]').dropdown({
+  $('.dropdown[dropdown-type="sonarr-tags"]').dropdown({
     placeholder: 'None',
     allowAdditions: true,
     values: tags.map(({id, label}) => {
@@ -107,13 +126,8 @@ async function showEditModel(sync) {
       success: response => {
         $.toast({class: 'blue info', title: `Updated Sync "${response.name}"`});
         getAllSyncs();
-      }, error: response => {
-        $.toast({
-          class: 'error',
-          title: 'Error Editing Sync',
-          message: response.responseJSON.detail,
-        });
-      }, complete: () => {
+      }, error: response => showErrorToast({title: 'Error Editing Sync', response}),
+      complete: () => {
         $(`#edit-sync${sync.id}`).modal('hide');
         $(`#edit-sync${sync.id}`).remove();
       }
@@ -140,12 +154,12 @@ async function showDeleteSyncModal(syncId) {
     $.ajax({
       type: 'DELETE',
       url: `/api/sync/delete/${syncId}?delete_series=false`,
-      success: response => {
+      success: () => {
         $.toast({class: 'blue info', title: 'Deleted Sync'});
         getAllSyncs();
       },
       error: response => {
-        $.toast({class: 'error', title: 'Error Deleting Sync'});
+        showErrorToast({title: 'Error Deleting Sync', response});
         $(`#card-sync${syncId}`).toggleClass('red double loading', false);
       }, complete: () => {}
     });
@@ -155,14 +169,14 @@ async function showDeleteSyncModal(syncId) {
     $.ajax({
       type: 'DELETE',
       url: `/api/sync/delete/${syncId}?delete_series=true`,
-      success: response => {
+      success: () => {
         $.toast({class: 'blue info', title: 'Deleted Sync and associated Series'});
         getAllSyncs();
       },
       error: response => {
-        $.toast({class: 'error', title: 'Error Deleting Sync'});
+        showErrorToast({title: 'Error Deleting Sync', response});
         $(`#card-sync${syncId}`).toggleClass('red double loading', false);
-      }, complete: () => {}
+      },
     });
   });
 
@@ -176,9 +190,6 @@ async function getAllSyncs() {
     {source: 'plex', elementID: 'plex-syncs'},
     {source: 'sonarr', elementID: 'sonarr-syncs'},
   ];
-  // const embyLibraries = await fetch('/api/available/libraries/emby').then(resp => resp.json());
-  // const plexLibraries = await fetch('/api/available/libraries/plex').then(resp => resp.json());
-  // const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
 
   syncElements.forEach(async ({source, elementID}) => {
     // Skip if this element is not present, e.g. interface is disabled
@@ -195,13 +206,6 @@ async function getAllSyncs() {
       card.id = `card-sync${id}`;
       clone.querySelector('.header').innerText = name;
       clone.querySelector('.sync-meta').innerText = `Sync ID ${id}`;
-
-      // Disable card if interface is disabled
-      if ((source === 'emby' && !{{ preferences.use_emby|tojson }}) ||
-          (source === 'plex' && !{{ preferences.use_plex|tojson }}) ||
-          (source === 'sonarr' && !{{ preferences.use_sonarr|tojson }})) {
-        card.className = 'ui disabled card';
-      }
 
       // Edit sync if clicked
       clone.querySelector('i.edit').onclick = () => showEditModel(syncObject);
@@ -234,15 +238,8 @@ async function getAllSyncs() {
               classProgress: 'black',
             });
           },
-          error: response => {
-            $.toast({
-              class: 'error',
-              title: 'Error encountered while Syncing',
-              message: response.responseJSON.message,
-            });
-          }, complete: () => {
-            $(`#card-sync${id} >* i.sync`).toggleClass('loading blue', false);
-          }
+          error: response => showErrorToast({title: 'Error encountered while Syncing', response}),
+          complete: () => $(`#card-sync${id} >* i.sync`).toggleClass('loading blue', false),
         });
       }
 
@@ -280,11 +277,19 @@ async function getScheduledSyncs() {
 
 async function initAll() {
   getAllSyncs();
+  {% if preferences.use_emby %}
   getEmbyLibraries();
+  {% endif %}
+  {% if preferences.use_jellyfin %}
   getJellyfinLibraries();
+  {% endif %}
+  {% if preferences.use_plex %}
   getPlexLibraries();
+  {% endif %}
   getTemplates();
+  {% if preferences.use_sonarr %}
   getSonarrTags();
+  {% endif %}
   getScheduledSyncs();
 
   // Enable elements
@@ -344,13 +349,7 @@ async function initAll() {
           });
           getAllSyncs();
           $(`#${modalID}`).modal('hide');
-        }, error: response => {
-          $.toast({
-            class: 'error',
-            title: 'Error Creating Sync',
-            message: response.responseJSON.detail,
-          });
-        }, complete: () => {}
+        }, error: response => showErrorToast({title: 'Error Creating Sync', response}),
       });
     });
   });
