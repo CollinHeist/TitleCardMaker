@@ -163,6 +163,12 @@ class Episode(Base):
             UpdateEpisode model to modify this object.
         """
 
+        if self.extras is None:
+            ex_keys, ex_values = None, None
+        else:
+            ex_keys = list(self.extras.keys())
+            ex_values = list(self.extras.values())
+
         return {
             'card_type': self.card_type,
             'match_title': self.match_title,
@@ -177,7 +183,8 @@ class Episode(Base):
             'font_stroke_width': self.font_stroke_width,
             'font_interline_spacing': self.font_interline_spacing,
             'font_vertical_shift': self.font_vertical_shift,
-            'extras': self.extras,
+            'extra_keys': ex_keys,
+            'extra_values': ex_values,
         }
 
 
