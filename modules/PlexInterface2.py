@@ -504,19 +504,21 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
         if not (series := self.__get_series(library, series_info, log=log)):
             return None
 
-        # Go through each provided EpisodeInfo and update the ID's
-        for episode_info in episode_infos:
-            # Skip if EpisodeInfo already has all the possible ID's
-            if episode_info.has_ids(*self.SERIES_IDS):
-                continue
+        # Filter EpisodeInfo's with all ID's
+        filtered_episode_infos = {
+            episode_info.key: episode_info
+            for episode_info in episode_infos
+            if not episode_info.has_ids(*self.SERIES_IDS)
+        }
 
-            # Get episode from Plex
-            try:
-                plex_episode = series.episode(
-                    season=episode_info.season_number,
-                    episode=episode_info.episode_number,
-                )
-            except NotFound:
+        # Go through all of this Series' Episodes
+        for plex_episode in series.episodes(container_size=500):
+            # Find matching EpisodeInfo, skip if not found
+            plex_episode: PlexEpisode
+            episode_info = filtered_episode_infos.get(
+                f's{plex_episode.seasonNumber}e{plex_episode.episodeNumber}'
+            )
+            if episode_info is None:
                 continue
 
             # Set the ID's for this object
