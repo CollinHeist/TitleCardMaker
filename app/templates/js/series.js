@@ -663,7 +663,7 @@ async function getEpisodeData(page=1) {
     navigateFunction: getEpisodeData,
     page: episodeData.page,
     pages: episodeData.pages,
-    amountVisible: 5,
+    amountVisible: isSmallScreen() ? 4 : 15,
   });
 }
 

@@ -2,6 +2,10 @@ function sortStandardizeStr(text) {
   return text.toString().replace(/^(a|an|the)(\s)/i, '').toLowercase();
 }
 
+function isSmallScreen() {
+  return window.screen.availHeight < 768;
+}
+
 function formatBytes(bytes, decimals = 2) {
   if (!+bytes) return '0 B'
 
