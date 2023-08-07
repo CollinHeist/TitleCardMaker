@@ -76,7 +76,5 @@ This has taken a pretty substantial amount of effort, so if you find this projec
 A _huge_ thank you to my current and past sponsors.
 
 <p align="center">
-  <a href="https://cdn.jsdelivr.net/gh/CollinHeist/static/sponsorkit/sponsors.svg/sponsors.svg">
-    <img src="https://cdn.jsdelivr.net/gh/CollinHeist/static/sponsorkit/sponsors.svg/sponsors.svg"/>
-  </a>
+  <img src="https://raw.githubusercontent.com/CollinHeist/static/main/sponsorkit/sponsors.svg/sponsors.svg"/>
 </p>
