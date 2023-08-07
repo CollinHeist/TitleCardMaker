@@ -367,7 +367,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
 
         # Create list of all episodes in Plex
         all_episodes = []
-        for plex_episode in series.episodes():
+        for plex_episode in series.episodes(container_size=500):
             # Skip if episode has no season or episode number
             if (plex_episode.parentIndex is None
                 or plex_episode.index is None):
@@ -426,7 +426,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
             return None
 
         # Go through each episode within Plex and update Episode spoiler status
-        for plex_episode in series.episodes():
+        for plex_episode in series.episodes(container_size=500):
             for episode in episodes:
                 if (plex_episode.parentIndex == episode.season_number
                     and plex_episode.index == episode.episode_number):
@@ -743,7 +743,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
 
         # Go through each episode within Plex, set title cards
         loaded = []
-        for plex_episode in series.episodes():
+        for plex_episode in series.episodes(container_size=500):
             # Skip episode if no associated episode was provided
             found = False
             for episode, card in episode_and_cards:
@@ -880,7 +880,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
             return None
 
         # Remove labels from all Episodes
-        for plex_episode in series.episodes():
+        for plex_episode in series.episodes(container_size=500):
             plex_episode.removeLabel(labels)
 
         return None
