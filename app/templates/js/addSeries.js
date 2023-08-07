@@ -299,6 +299,7 @@ async function initializeLibraryDropdowns() {
   if ($('.dropdown[data-value="emby_library_name"]').length) {
     const embyLibraries = await fetch('/api/available/libraries/emby').then(resp => resp.json());
     $('.dropdown[data-value="emby_library_name"]').dropdown({
+      placeholder: 'None',
       values: embyLibraries.map(name => {
         return {name: name, value: name};
       }),
@@ -308,6 +309,7 @@ async function initializeLibraryDropdowns() {
   if ($('.dropdown[data-value="jellyfin_library_name"]').length) {
     const jellyfinLibraries = await fetch('/api/available/libraries/jellyfin').then(resp => resp.json());
     $('.dropdown[data-value="jellyfin_library_name"]').dropdown({
+      placeholder: 'None',
       values: jellyfinLibraries.map(name => {
         return {name: name, value: name};
       }),
@@ -317,6 +319,7 @@ async function initializeLibraryDropdowns() {
   if ($('.dropdown[data-value="plex_library_name"]').length) {
     const plexLibraries = await fetch('/api/available/libraries/plex').then(resp => resp.json());
     $('.dropdown[data-value="plex_library_name"]').dropdown({
+      placeholder: 'None',
       values: plexLibraries.map(name => {
         return {name: name, value: name};
       }),
@@ -333,6 +336,7 @@ async function initAll() {
 
   const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
   $('.dropdown[data-value="template_ids"]').dropdown({
+    placeholder: 'None',
     values: await getActiveTemplates(undefined, allTemplates),
   });
   $('.ui.dropdown').dropdown();
