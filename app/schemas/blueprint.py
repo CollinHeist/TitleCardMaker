@@ -1,4 +1,5 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
+from datetime import datetime
 from typing import Any, Optional
 
 from pydantic import root_validator
@@ -86,8 +87,6 @@ class DownloadableFile(Base):
     filename: str
 
 class BlankBlueprint(Blueprint):
-    # description: list[str] = ['Descriptive information about this Blueprint']
-    # creator: str = 'Your (user)name here'
     preview: str = 'Name of preview file here'
 
 class RemoteBlueprintFont(BlueprintFont):
@@ -98,6 +97,7 @@ class RemoteBlueprint(Blueprint):
     description: list[str]
     preview: str
     creator: str
+    created: datetime
 
 class RemoteMasterBlueprint(RemoteBlueprint):
     series_full_name: str

@@ -1,7 +1,7 @@
 from json import dump
 from pathlib import Path
 from shutil import copy as copy_file, make_archive as zip_directory
-from typing import Optional
+from typing import Literal, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse
@@ -232,18 +232,29 @@ def blacklist_blueprint(
 @blueprint_router.get('/query/all', status_code=200)
 def query_all_blueprints_(
         request: Request,
+        order_by: Literal['date', 'name'] = Query(default='date'),
         preferences: Preferences = Depends(get_preferences),
     ) -> Page[RemoteMasterBlueprint]:
     """
     Query for all available Blueprints for all Series. Blacklisted
     Blueprints are excluded from the return.
+
+    - order_by: How to order the returned Blueprints.
     """
 
+    log = request.state.log
     blacklist = preferences.blacklisted_blueprints
-    return paginate_sequence([
-        blueprint for blueprint in query_all_blueprints(log=request.state.log)
-        if (blueprint['series_full_name'], blueprint['id']) not in blacklist
-    ])
+    if order_by == 'date':
+        order_func = lambda blueprint: blueprint['created']
+    else:
+        order_func = lambda blueprint: blueprint['series_full_name'].lower()
+
+    return paginate_sequence(
+        sorted([
+            blueprint for blueprint in query_all_blueprints(log=log)
+            if (blueprint['series_full_name'], blueprint['id']) not in blacklist
+        ], key=order_func, reverse=order_by == 'date')
+    )
 
 
 @blueprint_router.get('/query/series/{series_id}', status_code=200)

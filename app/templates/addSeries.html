@@ -161,10 +161,21 @@
         Browse Available Blueprints
       </h4>
 
-      <button class="ui green tertiary button" onclick="queryAllBlueprints();">
+      <div class="ui action input">
+        <select data-value="order_by" class="ui compact selection dropdown">
+          <option value="date" selected="">Order by Date</option>
+          <option value="name">Order by Name</option>
+        </select>
+        <button class="ui green button" onclick="queryAllBlueprints();">
+          <!-- <i class="search icon"></i> -->
+          Browse Blueprints
+        </button>
+      </div>
+
+      <!-- <button class="ui green tertiary button" onclick="queryAllBlueprints();">
         <i class="search icon"></i>
         Search for Blueprints
-      </button>
+      </button> -->
       <div class="ui raised segment">
         <div id="all-blueprint-results" class="ui three stackable raised cards"><!-- Added asynchronously --></div>
       </div>

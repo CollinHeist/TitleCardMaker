@@ -168,52 +168,54 @@ async function queryBlueprints(result, resultElementId) {
 async function queryAllBlueprints(page=1) {
   const blueprintResults = document.getElementById('all-blueprint-results');
   const blueprintTemplate = document.getElementById('all-blueprint-template');
+  const orderBy = $('[data-value="order_by"]').val();
   // Only add placeholders if on page 1 (first load)
   if (page === 1) {
     addPlaceholders(blueprintResults, 9, 'blueprint-placeholder-template');
   }
-  const allBlueprints = await fetch(`/api/blueprints/query/all?page=${page}&size=15`).then(resp => resp.json());
-  const blueprintCards = allBlueprints.items.map((blueprint, blueprintId) => {
-    // Clone template, fill out basic info
-    let card = blueprintTemplate.content.cloneNode(true);
-    card = populateBlueprintCard(card, blueprint, `blueprint-id${blueprintId}`);
-    // Assign function to import button
-    card.querySelector('[data-action="import-blueprint"]').onclick = () => importBlueprint(blueprint, `blueprint-id${blueprintId}`);
-    // Assign blacklist function to hide button
-    card.querySelector('[data-action="blacklist-blueprint"]').onclick = () => {
-      $(`#blueprint-id${blueprintId}`).transition({animation: 'fade', duration: 1000});
-      $.ajax({
-        type: 'PUT',
-        url: `/api/blueprints/query/blacklist?series_full_name=${blueprint.series_full_name}&blueprint_id=${blueprint.id}`,
-        success: () => {
-          // Remove Blueprint card from display
+  $.ajax({
+    type: 'GET',
+    url: `/api/blueprints/query/all?page=${page}&size=15&order_by=${orderBy}`,
+    success: allBlueprints => {
+      const blueprintCards = allBlueprints.items.map((blueprint, blueprintId) => {
+        // Clone template, fill out basic info
+        let card = blueprintTemplate.content.cloneNode(true);
+        card = populateBlueprintCard(card, blueprint, `blueprint-id${blueprintId}`);
+        // Assign function to import button
+        card.querySelector('[data-action="import-blueprint"]').onclick = () => importBlueprint(blueprint, `blueprint-id${blueprintId}`);
+        // Assign blacklist function to hide button
+        card.querySelector('[data-action="blacklist-blueprint"]').onclick = () => {
           $(`#blueprint-id${blueprintId}`).transition({animation: 'fade', duration: 1000});
-          setTimeout(() => {
-            document.getElementById(`blueprint-id${blueprintId}`).remove();
-            $.toast({class: 'blue info', title: 'Blueprint Hidden'});
-          }, 1000);
-        }, error: response => howErrorToast({title: 'Error Blacklisting Blueprint', response}),
+          $.ajax({
+            type: 'PUT',
+            url: `/api/blueprints/query/blacklist?series_full_name=${blueprint.series_full_name}&blueprint_id=${blueprint.id}`,
+            success: () => {
+              // Remove Blueprint card from display
+              $(`#blueprint-id${blueprintId}`).transition({animation: 'fade', duration: 1000});
+              setTimeout(() => {
+                document.getElementById(`blueprint-id${blueprintId}`).remove();
+                $.toast({class: 'blue info', title: 'Blueprint Hidden'});
+              }, 1000);
+            }, error: response => howErrorToast({title: 'Error Blacklisting Blueprint', response}),
+          });
+        }
+        return card;
       });
-    }
-    return card;
+      // Add Blueprints to page
+      blueprintResults.replaceChildren(...blueprintCards);
+      updatePagination({
+        paginationElementId: 'blueprint-pagination',
+        navigateFunction: queryAllBlueprints,
+        page: allBlueprints.page,
+        pages: allBlueprints.pages,
+        amountVisible: 5,
+        hideIfSinglePage: true,
+      });
+      // Transition elements in
+      $('#all-blueprint-results .card').transition({animation: 'scale', interval: 40});
+      refreshTheme();
+    }, error: response => showErrorToast({title: 'Unable to Query Blueprints', response}),
   });
-  if (allBlueprints === null || allBlueprints.length === 0) {
-    $('#add-series-modal .warning.message').toggleClass('hidden', false).toggleClass('visible', true);
-    return;
-  }
-  // Add Blueprints to page
-  blueprintResults.replaceChildren(...blueprintCards);
-  updatePagination({
-    paginationElementId: 'blueprint-pagination',
-    navigateFunction: queryAllBlueprints,
-    page: allBlueprints.page,
-    pages: allBlueprints.pages,
-    amountVisible: 5,
-    hideIfSinglePage: true,
-  });
-  // Transition elements in
-  $('#all-blueprint-results .card').transition({animation: 'scale', interval: 40});
-  refreshTheme();
 }
 
 /*
