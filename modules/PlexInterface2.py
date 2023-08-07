@@ -55,17 +55,20 @@ def catch_and_log(
         def inner(*args, **kwargs):
             # Get contextual logger if provided as argument to function
             if 'log' in kwargs and isinstance(kwargs['log'], Logger):
-                log = kwargs['log']
+                clog = kwargs['log']
+            else:
+                clog = log
+
             try:
                 return function(*args, **kwargs)
             except PlexApiException as e:
-                log.exception(message, e)
+                clog.exception(message, e)
                 return default
             except (ReadTimeout, PlexConnectionError) as e:
-                log.exception(f'Plex API has timed out, DB might be busy',e)
+                clog.exception(f'Plex API has timed out, DB might be busy',e)
                 raise e
             except Exception as e:
-                log.exception(f'Uncaught exception', e)
+                clog.exception(f'Uncaught exception', e)
                 raise e
         return inner
     return decorator
