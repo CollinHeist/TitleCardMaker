@@ -94,7 +94,9 @@ def register_custom_functions(dbapi_connection, connection_record): # pylint: di
     dbapi_connection.create_function('regex_replace', 3, regex_replace)
 
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(
+    bind=engine, expire_on_commit=False, autocommit=False, autoflush=False, 
+)
 Base = declarative_base()
 
 # Scheduler
