@@ -16,10 +16,6 @@
   transform: translateY(-50%);
 }
 
-.sync.modal {
-  width: 500px !important;
-}
-
 /* Show hover icon on all Sync buttons */
 .card .content i.icon {
   cursor: pointer;
