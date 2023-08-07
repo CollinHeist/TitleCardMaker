@@ -148,6 +148,8 @@ TextPosition = Literal[
     'upper left', 'upper right', 'right', 'lower right', 'lower left', 'left'
 ]
 class DividerCardType(BaseCardTypeCustomFontAllText):
+    season_text: str
+    episode_text: str
     font_color: BetterColor = DividerTitleCard.TITLE_COLOR
     font_file: FilePath = DividerTitleCard.TITLE_FONT
     stroke_color: BetterColor = 'black'
