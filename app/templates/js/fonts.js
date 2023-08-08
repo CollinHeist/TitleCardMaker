@@ -6,19 +6,24 @@ function addFont() {
     url: '/api/fonts/new',
     data: JSON.stringify(data),
     contentType: 'application/json',
-    success: (response) => {
-      $.toast({
-        class: 'blue info',
-        title: `Created Font #${response.id}`,
-      });
+    success: (font) => {
+      $.toast({class: 'blue info', title: `Created Font #${font.id}`});
       getAllFonts();
     },
-    error: (response) => {
-      $.toast({
-        class: 'error',
-        title: 'Error Creating Font',
-      });
-    }, complete: () => {}
+    error: (response) => showErrorToast({title: 'Error Creating Font', response}),
+  });
+}
+
+function deleteFont(font) {
+  $.ajax({
+    type: 'DELETE',
+    url: `/api/fonts/${font.id}`,
+    success: () => {
+      $.toast({class: 'blue info', title: `Deleted Font "${font.name}"`});
+      $('.ui.accordion').accordion('close');
+      getAllFonts();
+    },
+    error: response => showErrorToast({title: 'Error Deleting Font', response}),
   });
 }
 
@@ -43,7 +48,7 @@ function reloadPreview(fontId, fontForm, previewForm, cardElement, imageElement)
   };
 
   // Submit API request
-  cardElement.className = 'ui fluid loading raised card';
+  cardElement.classList.add('loading');
   $.ajax({
     type: 'POST',
     url: '/api/cards/preview',
@@ -53,13 +58,8 @@ function reloadPreview(fontId, fontForm, previewForm, cardElement, imageElement)
       // Update source, use current time to force reload
       imageElement.src = `${response}?${new Date().getTime()}`;
     },
-    error: (response) => {
-      $.toast({
-        class: 'error',
-        title: 'Error Creating Preview Card',
-        message: response.responseJSON.detail,
-      });
-    }, complete: () => {cardElement.className = 'ui fluid raised card'; }
+    error: response => showErrorToast({title: 'Error Creating Preview Card', response}),
+    complete: () => {cardElement.classList.remove('loading'); }
   });
 }
 
@@ -137,19 +137,8 @@ async function getAllFonts() {
         url: `/api/fonts/${fontObj.id}`,
         data: JSON.stringify({...Object.fromEntries(form.entries()), ...listData}),
         contentType: 'application/json',
-        success: (response) => {
-          $.toast({
-            class: 'blue info',
-            title: `Updated Font "${response.name}"`,
-          });
-        }, error: (response) => {
-          $.toast({
-            class: 'error',
-            title: 'Error Updating Font',
-            message: response.responseJSON.detail,
-            displayTime: 0,
-          });
-        }, complete: () => {}
+        success: font => $.toast({class: 'blue info', title: `Updated Font "${font.name}"`}),
+        error: response => showErrorToast({title: 'Error Updating Font', response}),
       });
 
       // Submit separate API request to upload font file
@@ -162,60 +151,15 @@ async function getAllFonts() {
         data: fileForm,
         processData: false,
         contentType: false,
-        success: (response) => {
-          $.toast({
-            class: 'blue info',
-            title: `Uploaded Font File`,
-          });
-        }, error: (response) => {
-          $.toast({
-            class: 'error',
-            title: 'Error Uploading Font File',
-            message: response.responseJSON.detail,
-            displayTime: 0,
-          });
-        }, complete: () => {}
+        success: () => $.toast({class: 'blue info', title: 'Uploaded Font File'}),
+        error: response => showErrorToast({title: 'Error Uploading Font File', response}),
       });
     };
 
     // Set delete button to submit DELETE API request
-    template.querySelector('.negative.button').onclick = (event) => {
+    template.querySelector('.negative.button').onclick = event => {
       event.preventDefault();
-      // Delete font file first
-      $.ajax({
-        type: 'DELETE',
-        url: `/api/fonts/${fontObj.id}/file`,
-        success: () => {
-          // Delete font object
-          $.ajax({
-            type: 'DELETE',
-            url: `/api/fonts/${fontObj.id}`,
-            success: () => {
-              $.toast({
-                class: 'blue info',
-                title: `Deleted Font "${fontObj.name}"`,
-              });
-              $('.ui.accordion').accordion('close');
-              getAllFonts();
-            }, error: (response) => {
-              $.toast({
-                class: 'error',
-                title: 'Error Deleting Font',
-                message: response.responseJSON.detail,
-                displayTime: 0,
-              });
-            },
-          });
-        },
-        error: (response) => {
-          $.toast({
-            class: 'error',
-            title: 'Error Deleting Font File',
-            message: response.responseJSON.detail,
-            displayTime: 0,
-          });
-        }
-      });
+      deleteFont(fontObj);
     };
 
     // Reload preview when button is pressed
