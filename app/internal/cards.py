@@ -359,6 +359,18 @@ def resolve_card_settings(
         case_func = CardClass.CASE_FUNCTIONS[card_settings['font_title_case']]
     card_settings['title_text'] = case_func(card_settings['title_text'])
 
+    # Apply title text format if indicated
+    if (title_format := card_settings.get('title_text_format')) is not None:
+        try:
+            card_settings['title_text'] = title_format.format(**card_settings)
+        except KeyError as exc:
+            log.exception(f'{series.log_str} {episode.log_str} Title Text '
+                          f'Format is invalid - {exc}', exc)
+            raise HTTPException(
+                status_code=400,
+                detail=f'Invalid title text format - missing data {exc}'
+            ) from exc
+
     # Get EpisodeInfo for this Episode
     episode_info = episode.as_episode_info
 
