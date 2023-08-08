@@ -14,7 +14,9 @@ from modules.SeriesInfo import SeriesInfo
 from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
 
+
 SeriesType = Literal['anime', 'daily', 'standard']
+
 
 class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface):
     """

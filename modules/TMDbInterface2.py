@@ -43,13 +43,14 @@ def catch_and_log(
                 return function(*args, **kwargs)
             except TMDbException as e:
                 # Get contextual logger if provided as argument to function
-                log = log
                 if 'log' in kwargs and isinstance(kwargs['log'], Logger):
-                    log = kwargs['log']
+                    clog = kwargs['log']
+                else:
+                    clog = log
 
                 # Log message and exception
-                log.error(message)
-                log.exception(f'TMDbException from {function.__name__}'
+                clog.error(message)
+                clog.exception(f'TMDbException from {function.__name__}'
                                 f'({args}, {kwargs})', e)
                 return default
         return inner
