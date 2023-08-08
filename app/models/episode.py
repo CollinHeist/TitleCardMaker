@@ -172,6 +172,7 @@ class Episode(Base):
         return {
             'card_type': self.card_type,
             'match_title': self.match_title,
+            'auto_split_title': False if not self.auto_split_title else None,
             'hide_season_text': self.hide_season_text,
             'season_text': self.season_text,
             'hide_episode_text': self.hide_episode_text,

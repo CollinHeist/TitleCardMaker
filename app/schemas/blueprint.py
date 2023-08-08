@@ -45,6 +45,7 @@ class BlueprintSeries(SeriesBase):
 class BlueprintEpisode(BlueprintSeries):
     title: Optional[str] = None
     match_title: Optional[bool] = None
+    auto_split_title: Optional[bool] = None
     season_text: Optional[str] = None
     episode_text: Optional[str] = None
 
