@@ -353,7 +353,7 @@ def resolve_card_settings(
         card_settings['title_text'] = card_settings['title'].replace('\\n','\n')
 
     # Apply title text case function
-    if card_settings.get('font_title_case', None) is None:
+    if card_settings.get('font_title_case') is None:
         case_func = CardClass.CASE_FUNCTIONS[CardClass.DEFAULT_FONT_CASE]
     else:
         case_func = CardClass.CASE_FUNCTIONS[card_settings['font_title_case']]
@@ -363,7 +363,7 @@ def resolve_card_settings(
     episode_info = episode.as_episode_info
 
     # If no season text was indicated, determine
-    if card_settings.get('season_text', None) is None:
+    if card_settings.get('season_text') is None:
         ranges = SeasonTitleRanges(
             card_settings.get('season_titles', {}), log=log
         )
@@ -372,8 +372,8 @@ def resolve_card_settings(
         )
 
     # If no episode text was indicated, determine
-    if card_settings.get('episode_text', None) is None:
-        if card_settings.get('episode_text_format', None) is None:
+    if card_settings.get('episode_text') is None:
+        if card_settings.get('episode_text_format') is None:
             card_settings['episode_text'] =\
                 CardClass.EPISODE_TEXT_FORMAT.format(**card_settings)
         else:
@@ -389,7 +389,7 @@ def resolve_card_settings(
                 ) from e
 
     # Turn styles into boolean style toggles
-    if (watched := card_settings.get('watched', None)) is not None:
+    if (watched := card_settings.get('watched')) is not None:
         prefix = 'watched' if watched else 'unwatched'
         style = card_settings[f'{prefix}_style']
         card_settings['blur'] = 'blur' in style
