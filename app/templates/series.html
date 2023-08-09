@@ -476,7 +476,11 @@
                 <label>Card Directory</label>
                 <div class="ui left icon fluid input">
                   {% if series.directory is none %}
-                  <input name="directory" type="text" placeholder="{{preferences.card_directory}}{{series.path_safe_name}}">
+                  {% if '/' in preferences.card_directory|string %}
+                  <input name="directory" type="text" placeholder="{{preferences.card_directory}}/{{series.path_safe_name}}">
+                  {% else %}
+                  <input name="directory" type="text" placeholder="{{preferences.card_directory}}\{{series.path_safe_name}}">
+                  {% endif %}
                   {% else %}
                   <input name="directory" type="text" value="{{series.directory}}">
                   {% endif %}
