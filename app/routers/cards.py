@@ -39,7 +39,7 @@ def create_preview_card(
         request: Request,
         card: PreviewTitleCard = Body(...),
         db: Session = Depends(get_database),
-        preferences = Depends(get_preferences)
+        preferences = Depends(get_preferences),
     ) -> str:
     """
     Create a preview title card. This uses a fixed source file and
@@ -317,10 +317,12 @@ def create_cards_for_plex_rating_keys(
     ) -> None:
     """
     Remake the Title Card for the item associated with the given Plex
-    Rating Key. This item can be a Show, Season, or Episode.
+    Rating Key. This item can be a Show, Season, or Episode. This
+    endpoint does NOT require an authenticated User so that Tautulli can
+    trigger this without any credentials.
 
     - plex_rating_keys: Unique keys within Plex that identifies the item
-        to remake the card of.
+    to remake the card of.
     """
 
     # Get contextual logger
