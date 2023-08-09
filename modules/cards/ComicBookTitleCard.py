@@ -227,12 +227,15 @@ class ComicBookTitleCard(BaseCardType):
         self.episode_text_color = episode_text_color
         self.index_text_position = index_text_position
         self.text_box_fill_color = text_box_fill_color
-        self.text_box_edge_color = text_box_edge_color
         self.banner_fill_color = banner_fill_color
         self.title_banner_shift = title_banner_shift
         self.index_banner_shift = index_banner_shift
         self.hide_title_banner = hide_title_banner
         self.hide_index_banner = hide_index_banner
+
+        # If edge color was omitted, use the font color
+        if text_box_edge_color is None:
+            self.text_box_edge_color = font_color
 
         # Randomize rotation angles if indicated
         def get_angle(angle: Union[float, str]) -> Optional[float]:
