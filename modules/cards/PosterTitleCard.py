@@ -183,7 +183,7 @@ class PosterTitleCard(BaseCardType):
         """Create the title card as defined by this object."""
 
         # If no logo is specified, create empty logo command
-        if self.logo is None:
+        if self.logo is None or not self.logo.exists():
             title_offset = 0
             logo_command = ''
         # Logo specified and exists, create command to resize and add image

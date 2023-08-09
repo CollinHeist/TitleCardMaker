@@ -159,7 +159,7 @@ class DividerCardType(BaseCardTypeCustomFontAllText):
 class FadeCardType(BaseCardTypeCustomFontAllText):
     font_color: BetterColor = FadeTitleCard.TITLE_COLOR
     font_file: FilePath = FadeTitleCard.TITLE_FONT
-    logo_file: Optional[FilePath] = None
+    logo_file: Optional[Path] = None
     episode_text_color: BetterColor = FadeTitleCard.EPISODE_TEXT_COLOR
     separator: str = '•'
 
@@ -233,7 +233,7 @@ class PosterCardType(BaseCardType):
     font_file: FilePath = PosterTitleCard.TITLE_FONT
     font_interline_spacing: int = 0
     font_size: PositiveFloat = 1.0
-    logo_file: Optional[FilePath] = None
+    logo_file: Optional[Path] = None
     episode_text_color: Optional[BetterColor] = None
 
     @root_validator(skip_on_failure=True)

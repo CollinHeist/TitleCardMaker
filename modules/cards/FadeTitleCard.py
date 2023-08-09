@@ -138,7 +138,7 @@ class FadeTitleCard(BaseCardType):
         """
 
         # No logo indicated, return blank command
-        if self.logo is None:
+        if self.logo is None or not self.logo.exists():
             return []
 
         return [
