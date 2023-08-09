@@ -41,8 +41,8 @@ ENV TCM_PREFERENCES=/config/preferences.yml \
 # Override default ImageMagick policy XML file
 RUN set -eux; \
     rm -f Pipfile Pipfile.lock; \
-    groupadd -g 314 titlecardmaker; \
-    useradd -u 314 -g 314 titlecardmaker; \
+    groupadd -g 99 titlecardmaker; \
+    useradd -u 100 -g 99 titlecardmaker; \
     apt-get update; \
     apt-get install -y --no-install-recommends imagemagick libmagickcore-6.q16-6-extra; \
     rm -rf /var/lib/apt/lists/*; \
