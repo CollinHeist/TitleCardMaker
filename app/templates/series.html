@@ -352,6 +352,10 @@
                 <i class="orange hdd outline icon"></i>
                 Force Reload Cards into Plex
               </button>
+              <button data-value="labels" class="ui labeled icon button" onclick="removePlexLabels(this);" data-tooltip="Remove any Episode labels which prevent TCM from grabbing Source Images from Plex">
+                <i class="tags icon"></i>
+                Remove Episode Labels
+              </button>
               {% elif (preferences.use_plex and not series.plex_library_name) or (not preferences.use_plex and series.plex_library_name) %}
               <button class="ui disabled labeled icon button">
                 <i class="hdd outline icon"></i>

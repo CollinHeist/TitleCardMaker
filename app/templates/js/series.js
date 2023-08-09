@@ -1401,8 +1401,11 @@ function deleteEpisode(id) {
  * successful (and there is a Series to navigate to), then the page is
  * redirected. If successful but there is no next/previous Series, the
  * appropriate nav button is disabled.
+ * 
+ * @param {string} next_or_previous - 'next' or 'previous'; where to navigate
+ * the page.
  */
-async function navigateSeries(next_or_previous) {
+function navigateSeries(next_or_previous) {
   $.ajax({
     type: 'GET',
     url: `/api/series/{{series.id}}/${next_or_previous}`,
@@ -1413,8 +1416,24 @@ async function navigateSeries(next_or_previous) {
       } else {
         window.location.href = `/series/${series.id}`;
       }
-    }, error: response => {
-      showErrorToast({title: 'Navigation Failed', response: response});
-    },
+    }, error: response => showErrorToast({title: 'Navigation Failed', response}),
+  });
+}
+
+/*
+ * Submit an API request to remove the TCM/PMM labels from this Series in Plex.
+ * 
+ * @param {HTMLElement} buttonElement - Element to disable to signify it's been
+ * clicked.
+ */
+function removePlexLabels(buttonElement) {  
+  // Submit API request
+  buttonElement.classList.add('disabled');
+  document.getElementById()
+  $.ajax({
+    type: 'DELETE',
+    url: `/api/series/{{series.id}}/plex-labels`,
+    success: () => showInfoToast('Removed Labels'),
+    error: response => showErrorToast({title: 'Error Updating Episode', response}),
   });
 }
