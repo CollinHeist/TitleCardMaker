@@ -9,7 +9,6 @@ from app.schemas.base import Base
 """
 Base classes
 """
-
 class NewJob(Base):
     id: str = Field(description='Unique ID of the Job')
     function: Callable[..., None] = Field(

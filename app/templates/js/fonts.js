@@ -1,16 +1,16 @@
 // Function to create a new empty font
 function addFont() {
-  const data = {name: 'Custom Font'};
+  const data = {name: '_Blank Custom Font'};
   $.ajax({
     type: 'POST',
     url: '/api/fonts/new',
     data: JSON.stringify(data),
     contentType: 'application/json',
-    success: (font) => {
-      $.toast({class: 'blue info', title: `Created Font #${font.id}`});
+    success: font => {
+      showInfoToast(`Created Font #${font.id}`);
       getAllFonts();
     },
-    error: (response) => showErrorToast({title: 'Error Creating Font', response}),
+    error: response => showErrorToast({title: 'Error Creating Font', response}),
   });
 }
 
