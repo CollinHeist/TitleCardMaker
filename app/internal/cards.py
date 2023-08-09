@@ -69,6 +69,42 @@ def create_all_title_cards(*, log: Logger = log) -> None:
         log.exception(f'Failed to create title cards', e)
 
 
+def remove_duplicate_cards(*, log: Logger = log) -> None:
+    """
+    Schedule-able function to remove any duplicate Card entries from the
+    Database.
+
+    Args:
+        log: (Keyword) Logger for all log messages.
+    """
+
+    try:
+        # Get the Database
+        with next(get_database()) as db:
+            # Get all Episodes
+            all_episodes: list[Episode] = db.query(Episode).all()
+
+            # Go through each Episode, find any duplicate cards
+            changed = False
+            for episode in all_episodes:
+                # Look for any Cards with this Episode ID
+                cards = db.query(models.card.Card)\
+                    .filter_by(episode_id=episode.id)\
+                    .all()
+                if len(cards) > 1:
+                    log.info(f'Identified duplicate Cards for {episode.log_str}')
+                    for delete_card in cards[:-1]:
+                        db.delete(delete_card)
+                        log.debug(f'Deleted duplicate {delete_card.log_str}')
+                        changed = True
+
+            # If any changes were made, commit to DB
+            if changed:
+                db.commit()
+    except Exception as exc:
+        log.exception(f'Failed to remove duplicate Cards', exc)
+
+
 def refresh_all_remote_card_types(*, log: Logger = log) -> None:
     """
     Schedule-able function to refresh all specified RemoteCardTypes.
