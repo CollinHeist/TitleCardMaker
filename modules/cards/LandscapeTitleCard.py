@@ -115,7 +115,8 @@ class LandscapeTitleCard(BaseCardType):
         else:
             self.darken = bool(darken)
 
-        # Parse box adjustments
+        # Parse box extras
+        self.box_color = box_color
         self.box_adjustments = (0, 0, 0, 0)
         if box_adjustments:
             # Verify adjustments are properly provided
@@ -132,8 +133,6 @@ class LandscapeTitleCard(BaseCardType):
                 self.valid = False
 
 
-    def darken_command(self, coordinates: BoxCoordinates) ->ImageMagickCommands:
-        self.box_color = box_color
     def darken_commands(self, coordinates: BoxCoordinates) ->ImageMagickCommands:
         """
         Subcommand to darken the image if indicated.
