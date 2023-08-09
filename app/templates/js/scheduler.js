@@ -49,7 +49,7 @@ function timeFreqString(freq, top=-1) {
  * each row of the table for the API request. A separate request is
  * submitted for each row.
  */
-async function updateScheduledTasks() {
+function updateScheduledTasks() {
   $('#task-table tr').each((index, row) => {
     const taskId = row.dataset.id;
     // Updating Cron schedule or frequency
@@ -72,18 +72,9 @@ async function updateScheduledTasks() {
       url: `/api/schedule/update/${taskId}`,
       data: JSON.stringify(updateObject),
       contentType: 'application/json',
-      success: response => {
-        $.toast({class: 'blue info', title: `Rescheduled Task ${taskId}`});
-      }, error: response => {
-        $.toast({
-          class: 'error',
-          title: 'Error Rescheduling Task',
-          message: response.responseJSON.detail,
-          displayTime: 0,
-        });
-      }, complete: () => {
-        initAll();
-      },
+      success: () => showInfoToast(`Rescheduled Task ${taskId}`),
+      error: response => showErrorToast({title: 'Error Recheduling Task', response}),
+      complete: () => initAll()
     });
   });
 }
@@ -92,22 +83,17 @@ async function updateScheduledTasks() {
  * Submit the API request to toggle the Scheduler type. If successful,
  * this reloads the page.
  */
-async function toggleScheduleType() {
+function toggleScheduleType() {
   document.getElementById('toggle-button').classList.add('loading');
   $.ajax({
     type: 'POST',
     url: '/api/schedule/type/toggle',
-    success: response => {
-      $.toast({class: 'blue info', title: 'Updated Scheduler'});
-      location.reload();
+    success: () => {
+      showInfoToast({title: 'Updated Scheduler', message: 'Reloading page..'});
+      setTimeout(() => location.reload(), 3000);
     }, error: response => {
       document.getElementById('toggle-button').classList.remove('loading');
-      $.toast({
-        class: 'error',
-        title: 'Error Changing Scheduler',
-        message: response.responseJSON.detail,
-        displayTime: 0,
-      });
+      showErrorToast({title: 'Error Changing Scheduler', response});
     },
   });
 }
@@ -115,31 +101,22 @@ async function toggleScheduleType() {
 /*
  * Submit the API request to run the Task with the given ID.
  */
-async function runTask(taskId) {
+function runTask(taskId) {
   // If task is already running, do not re-run
   if ($(`tr[data-id="${taskId}"] td[data-column="runTask"] i`)[0].classList.contains('loading')) {
-    $.toast({class: 'blue info', title: `Task ${taskId} is already running`});
+    showInfoToast(`Task ${taskId} is already running`);
     return; 
   }
   $(`tr[data-id="${taskId}"] td[data-column="runTask"] i`).toggleClass('blue loading', true);
-  $.toast({class: 'blue info', title: `Running Task ${taskId}`});
+  showInfoToast(`Running Task ${taskId}`);
   $.ajax({
     type: 'POST',
     url: `/api/schedule/${taskId}`,
     success: response => {
-      $.toast({class: 'blue info', title: `Task ${taskId} Completed`});
+      showInfoToast(`Task ${taskId} Completed`);
       $(`tr[data-id="${taskId}"] td[data-column="previous_duration"]`)[0].innerHTML = timeFreqString(response.previous_duration, 2);
-    }, error: response => {
-      $.toast({
-        class: 'error',
-        title: 'Error Running Task',
-        message: response.responseJSON.detail,
-        displayTime: 0,
-      });
-    }, complete: () => {
-      // Turn off loading indication
-      $(`tr[data-id="${taskId}"] td[data-column="runTask"] i`).toggleClass('blue loading', false);
-    }
+    }, error: response => showErrorToast({title: 'Error Running Task', response}),
+    complete: () => $(`tr[data-id="${taskId}"] td[data-column="runTask"] i`).toggleClass('blue loading', false),
   });
 }
 
