@@ -135,6 +135,7 @@ class SeriesFont(BaseFont):
 
 class NamedFont(BaseNamedFont):
     id: int
+    sort_name: str
     file: Optional[str]
     file_name: Optional[str]
     replacements: dict[str, str]

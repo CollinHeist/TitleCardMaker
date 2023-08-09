@@ -1,12 +1,20 @@
 from pathlib import Path
+from re import sub as re_sub, IGNORECASE
 from typing import Any, Optional
 
-from sqlalchemy import Boolean, Column, Integer, Float, String, JSON
+from sqlalchemy import Boolean, Column, Integer, Float, String, JSON, func
 
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
 from app.database.session import Base
+
+
+def regex_replace(pattern, replacement, string):
+    """Perform a Regex replacement with the given arguments"""
+
+    return re_sub(pattern, replacement, string, IGNORECASE)
+
 
 class Font(Base):
     """
@@ -51,6 +59,25 @@ class Font(Base):
             return None
 
         return file.name
+
+
+    @hybrid_property
+    def sort_name(self) -> str:
+        """
+        The sort-friendly name of this Font.
+
+        Returns:
+            Sortable name. This is lowercase with any prefix a/an/the
+            removed.
+        """
+
+        return regex_replace(r'^(a|an|the)(\s)', '', self.name.lower())
+
+    @sort_name.expression
+    def sort_name(cls: 'Font'): # pylint: disable=no-self-argument
+        """Class-expression of `sort_name` property."""
+
+        return func.regex_replace(r'^(a|an|the)(\s)', '', func.lower(cls.name))
 
 
     @hybrid_property

@@ -168,7 +168,7 @@ def get_all_fonts(
     if order_by == 'id':
         return db.query(models.font.Font).all()
 
-    return db.query(models.font.Font).order_by(models.font.Font.name).all()
+    return db.query(models.font.Font).order_by(models.font.Font.sort_name).all()
 
 
 @font_router.get('/{font_id}', status_code=200)
