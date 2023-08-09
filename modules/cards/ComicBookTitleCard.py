@@ -236,6 +236,8 @@ class ComicBookTitleCard(BaseCardType):
         # If edge color was omitted, use the font color
         if text_box_edge_color is None:
             self.text_box_edge_color = font_color
+        else:
+            self.text_box_edge_color = text_box_edge_color
 
         # Randomize rotation angles if indicated
         def get_angle(angle: Union[float, str]) -> Optional[float]:
