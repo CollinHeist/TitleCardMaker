@@ -254,8 +254,8 @@
             <!-- Series info (name, year, etc.) -->
             <div class="content">
               <div class="ui right floated">
-                <i data-action="previous-series" class="ui arrow alternate circle left outline link icon"></i>
-                <i data-action="next-series" class="ui arrow alternate circle right outline link icon"></i>
+                <i data-action="previous-series" class="ui arrow alternate circle left outline link icon" onclick="navigateSeries('previous');"></i>
+                <i data-action="next-series" class="ui arrow alternate circle right outline link icon" onclick="navigateSeries('next');"></i>
               </div>
               <div class="header">{{series.name}}</div>
               <div class="meta">

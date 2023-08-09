@@ -713,10 +713,6 @@ async function initAll() {
       }}
     );
 
-  // Previous/next series button
-  $('i[data-action="previous-series"]').on('click', () => navigateSeries('previous'));
-  $('i[data-action="next-series"]').on('click', () => navigateSeries('next'));
-
   // Delete series modal
   $('#delete-series-modal').modal('attach events', '#delete-series');
 
