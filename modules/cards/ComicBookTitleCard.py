@@ -136,7 +136,7 @@ class ComicBookTitleCard(BaseCardType):
     TITLE_FONT = str((REF_DIRECTORY /'cc-wild-words-bold-italic.ttf').resolve())
     TITLE_COLOR = 'black'
     DEFAULT_FONT_CASE = 'upper'
-    FONT_REPLACEMENTS = {'é': 'e', 'É': 'E'}
+    FONT_REPLACEMENTS = {'é': 'e', 'É': 'E', '/': '-'}
 
     """Characteristics of the episode text"""
     EPISODE_TEXT_COLOR = TITLE_COLOR
