@@ -496,9 +496,6 @@ class ComicBookTitleCard(BaseCardType):
                 (x * sin(angle) + y * cos(angle))/abs(self.index_text_rotation_angle),
             )
 
-        # Adjust offset by manually indicated shift
-        index_text_rectangle.offset += Coordinate(0, self.index_banner_shift)
-
         # Shift rectangle to placement of index text
         index_text_rectangle.shift_origin(index_text_origin)
 
@@ -534,6 +531,9 @@ class ComicBookTitleCard(BaseCardType):
                 self.WIDTH - 35,
                 y_coordinate,
             ))
+
+        # Adjust offset by manually indicated shift
+        index_fill_rectangle.offset += Coordinate(0, self.index_banner_shift)
 
         return [
             # Draw border rectangle
