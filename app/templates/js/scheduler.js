@@ -172,7 +172,7 @@ async function initAll() {
     } else {
       row.querySelector('td[data-column="frequency"]').innerHTML = `<span contenteditable="true">${timeFreqString(task.frequency)}</span>`;
     }
-    if (task.previous_duration === null) {
+    if (task.previous_duration === null || task.previous_duration < 0) {
       row.querySelector('td[data-column="previous_duration"]').innerHTML = '-';
     } else {
       row.querySelector('td[data-column="previous_duration"]').innerHTML = timeFreqString(task.previous_duration, 2);
