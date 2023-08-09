@@ -36,6 +36,20 @@ function showErrorToast(args) {
   }
 }
 
+function showInfoToast(args) {
+  if (typeof args === 'string') {
+    $.toast({class: 'blue info', title: args});
+  } else {
+    const {title, message, displayTime} = args;
+    $.toast({
+      class: 'blue info',
+      title: title,
+      message: message,
+      displayTime: displayTime,
+    });
+  }
+}
+
 function getActiveTemplates(activeIds, allTemplates) {
   let values = [];
   // Add all active Template values
