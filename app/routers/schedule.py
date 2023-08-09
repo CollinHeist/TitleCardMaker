@@ -360,6 +360,8 @@ def get_scheduled_tasks(
     - show_internal: Whether to show internal tasks.
     """
 
+    show_internal = show_internal | preferences.advanced_scheduling
+
     return [
         _scheduled_task_from_job(job, preferences)
         for job in scheduler.get_jobs()
