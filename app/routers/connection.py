@@ -28,7 +28,6 @@ def enable_or_disable_connection(
         connection: Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
         status: Literal['enable', 'disable'],
         preferences: Preferences = Depends(get_preferences),
-        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
     ) -> None:
     """
     Set the enabled/disabled status of the given connection.
