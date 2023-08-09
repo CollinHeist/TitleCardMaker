@@ -407,6 +407,7 @@ class TintedFrameTitleCard(BaseCardType):
                 self.logo
             )
             element_width /= (logo_height / 150)
+            element_width *= self.logo_size
             margin = 25
         # Element is title text
         elif self.top_element == 'title':
@@ -482,6 +483,7 @@ class TintedFrameTitleCard(BaseCardType):
                 self.logo
             )
             element_width /= (logo_height / 150)
+            element_width *= self.logo_size
             margin = 25
         # Element is title
         elif self.bottom_element == 'title':

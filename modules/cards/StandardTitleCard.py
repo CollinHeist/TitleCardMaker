@@ -73,7 +73,7 @@ class StandardTitleCard(BaseCardType):
             episode_text_color: str = SERIES_COUNT_TEXT_COLOR,
             omit_gradient: bool = False,
             preferences: Optional['Preferences'] = None, # type: ignore
-            **unused
+            **unused,
         ) -> None:
         """
         Construct a new instance of this card.
