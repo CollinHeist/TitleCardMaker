@@ -241,7 +241,7 @@ class ComicBookTitleCard(BaseCardType):
 
         # Randomize rotation angles if indicated
         def get_angle(angle: Union[float, str]) -> Optional[float]:
-            if isinstance(angle, float):
+            if isinstance(angle, (int, float)):
                 return angle
             try:
                 # Get bounds from the random range string
