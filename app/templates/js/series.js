@@ -1,5 +1,3 @@
-let editedEpisodeIds = [];
-
 /*
  * Submit an API request to get updated Series statistics. If successful,
  * then the card stats text and progress bar are updated.
@@ -58,6 +56,7 @@ async function getLibraries() {
   }
 }
 
+let editedEpisodeIds = [];
 function getUpdateEpisodeObject(episodeId) {
   // Get all inputs for this episode
   const episodeInputs = $(`#episode-id${episodeId} input`);
@@ -106,10 +105,18 @@ function saveEpisodeConfig(episodeId) {
     url: `/api/episodes/${episodeId}`,
     contentType: 'application/json',
     data: JSON.stringify(updateEpisodeObject),
-    success: () => $.toast({ class: 'blue info', title: 'Updated Episode'}),
-    error: response => showErrorToast({title: 'Error Updating Episode', response}),
+    success: () => {
+      $.toast({ class: 'blue info', title: 'Updated Episode'}),
+      // Remove this ID from the array of edited Episodes
+      editedEpisodeIds = editedEpisodeIds.filter(id => id !== episodeId);
+    }, error: response => showErrorToast({title: 'Error Updating Episode', response}),
   });
 }
+
+/*
+ * Submit an API request to batch save all modified Episode configurations. This
+ * uses the Episode ID's in the global `editedEpisodeIds` array.
+ */
 
 function saveAllEpisodes() {
   // Get update objects
@@ -328,7 +335,7 @@ function deleteObject(args) {
     success: () => {
       showInfoToast(`Deleted ${label}`);
       $(deleteElements).remove();
-    }, error: response => showErrorToast({title: `Error Deleting ${label}` response}),
+    }, error: response => showErrorToast({title: `Error Deleting ${label}`, response}),
   });
 }
 
