@@ -169,8 +169,8 @@ BaseJobs = {
     JOB_REFRESH_EPISODE_DATA: NewJob(
         id=JOB_REFRESH_EPISODE_DATA,
         function=wrapped_refresh_all_episode_data,
-        seconds=60 * 60 * 6,
-        crontab='0 */6 * * *',
+        seconds=60 * 60 * 8,
+        crontab='0 */8 * * *',
         description='Look for new episodes and update all existing episodes',
     ), JOB_SYNC_INTERFACES: NewJob(
         id=JOB_SYNC_INTERFACES,
@@ -374,7 +374,7 @@ def get_scheduled_tasks(
     - show_internal: Whether to show internal tasks.
     """
 
-    show_internal = show_internal | preferences.advanced_scheduling
+    show_internal |= preferences.advanced_scheduling
 
     return [
         _scheduled_task_from_job(job, preferences)
