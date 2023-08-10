@@ -241,6 +241,45 @@ def _parse_filesize_limit(
         ) from e
 
 
+def _parse_filename_format(yaml_dict: dict[str, Any]) -> str:
+    """
+    Parse the card filename format from the given YAML. This converts
+    any "old" filename variables (e.g. {season} or {episode}) into their
+    new equivalents.
+
+    Args:
+        yaml_dict: Dictionary of YAML to parse.
+
+    Returns:
+        The parsed (and converted) filename format. If the format is not
+        in the specified YAML, then UNSPECIFIED is returned.
+
+    Raises:
+        HTTPException (422) if the format cannot be parsed.
+    """
+
+    # If no YAML or no EDS indicated, return None
+    if (not isinstance(yaml_dict, dict)
+        or (filename_format := yaml_dict.get('filename_format')) is None):
+        return UNSPECIFIED
+
+    if not isinstance(filename_format, str):
+        raise HTTPException(
+            status_code=422,
+            detail=f'Invalid filename format',
+        )
+
+    return filename_format\
+        .replace('{name}', '{series_name}')\
+        .replace('{full_name}', '{series_full_name}')\
+        .replace('{season}', '{season_number}')\
+        .replace('{season:02}', '{season_number:02}')\
+        .replace('{episode}', '{episode_number}')\
+        .replace('{episode:02}', '{episode_number:02}')\
+        .replace('{abs_number}', '{absolute_number}')\
+        .replace('{abs_number:02}', '{absolute_number:02}')
+
+
 def _remove_unspecifed_args(**dict_kwargs: dict) -> dict:
     """
     Remove unspecified arguments.
@@ -319,7 +358,7 @@ def parse_preferences(
         source_directory=_get(options, 'source', default=unsp),
         card_width=_get(options, 'card_dimensions', type_=Width, default=unsp),
         card_height=_get(options, 'card_dimensions', type_=Height, default=unsp),
-        card_filename_format=_get(options, 'filename_format', default=unsp),
+        card_filename_format=_parse_filename_format(options),
         card_extension=_get(options, 'card_extension', type_=Extension, default=unsp),
         image_source_priority=image_source_priority,
         episode_data_source=episode_data_source,
@@ -676,9 +715,9 @@ def parse_syncs(
             all_syncs.append(NewSyncClass(**_remove_unspecifed_args(
                 name=f'Imported {media_server} Sync {sync_id+1}',
                 templates=_get_templates(sync),
-                required_tags=_get(sync, 'required_tags', type_=list, default=[]),
+                required_tags=_get(sync, 'required_tags',type_=list,default=[]),
                 excluded_tags=excluded_tags,
-                required_libraries=_get(sync, 'libraries', type_=list, default=[]),
+                required_libraries=_get(sync, 'libraries',type_=list,default=[])
             )))
 
         return all_syncs
