@@ -32,17 +32,17 @@ class Font(Base):
     templates = relationship('Template', back_populates='font')
 
     name = Column(String)
-    file = Column(String, default=None)
     color = Column(String, default=None)
-    title_case = Column(String, default=None)
-    size = Column(Float, default=1.0)
-    kerning = Column(Float, default=1.0)
-    stroke_width = Column(Float, default=1.0)
-    interline_spacing = Column(Integer, default=0)
-    vertical_shift = Column(Integer, default=0)
-    validate_characters = Column(Boolean, default=None)
     delete_missing = Column(Boolean, default=True)
+    file = Column(String, default=None)
+    kerning = Column(Float, default=1.0)
+    interline_spacing = Column(Integer, default=0)
     replacements = Column(JSON, default=None)
+    size = Column(Float, default=1.0)
+    stroke_width = Column(Float, default=1.0)
+    title_case = Column(String, default=None)
+    validate_characters = Column(Boolean, default=None)
+    vertical_shift = Column(Integer, default=0)
 
 
     @hybrid_property

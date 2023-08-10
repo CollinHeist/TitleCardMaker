@@ -32,6 +32,7 @@ def validate_argument_lists_to_dict(
         key0: str,
         key1: str,
         output_key: str,
+        allow_empty_strings: bool = False,
     ) -> dict:
     """
     Validation function to join two paired lists into a dictionary.
@@ -45,6 +46,7 @@ def validate_argument_lists_to_dict(
             use as the output ditionary values. Pared to key0.
         output_key: Output key to store the paired dictionary within
             values.
+        allow_empty_strings: Whether '' is permitted in `values[key1]`.
 
     Returns:
         Modified values dictionary with the merged dictionary added
@@ -82,8 +84,9 @@ def validate_argument_lists_to_dict(
         raise ValueError(f'{label} must both be lists or omitted')
 
     # Both provided as lists - filter out unspecified values
-    list0 = [in_ for in_ in list0 if in_ not in (UNSPECIFIED, '')]
-    list1 = [out_ for out_ in list1 if out_ not in (UNSPECIFIED, '')]
+    BAD_VALS = (UNSPECIFIED,) if allow_empty_strings else (UNSPECIFIED, '')
+    list0 = [in_ for in_ in list0 if in_ not in BAD_VALS]
+    list1 = [out_ for out_ in list1 if out_ not in BAD_VALS]
     # Verify lists are equal lengths
     if (isinstance(list0, list) and isinstance(list1, list)
         and len(list0) != len(list1)):

@@ -1,7 +1,7 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from typing import Literal, Optional
 
-from pydantic import Field, validator, root_validator
+from pydantic import Field, constr, validator, root_validator
 
 from app.schemas.base import (
     Base, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
@@ -61,7 +61,7 @@ class BaseNamedFont(BaseFont):
 Creation classes
 """
 class NewNamedFont(BaseNamedFont):
-    replacements_in: list[str] = Field(
+    replacements_in: list[constr(min_length=1)] = Field(
         default=[],
         title='Characters to replace',
     )
@@ -107,7 +107,7 @@ class UpdateNamedFont(UpdateBase):
     interline_spacing: int = UNSPECIFIED
     vertical_shift: int = UNSPECIFIED
     delete_missing: bool = UNSPECIFIED
-    replacements_in: list[str] = UNSPECIFIED
+    replacements_in: list[constr(min_length=1)] = UNSPECIFIED
     replacements_out: list[str] = UNSPECIFIED
 
     @validator('*', pre=True)
@@ -123,7 +123,8 @@ class UpdateNamedFont(UpdateBase):
         return validate_argument_lists_to_dict(
             values, 'character replacements',
             'replacements_in', 'replacements_out',
-            output_key='replacements'
+            output_key='replacements',
+            allow_empty_strings=True,
         )
 
 """
