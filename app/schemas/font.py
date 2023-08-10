@@ -100,15 +100,15 @@ Update classes
 class UpdateNamedFont(UpdateBase):
     name: str = Field(default=UNSPECIFIED, min_length=1)
     color: Optional[str] = Field(default=UNSPECIFIED, min_length=1)
-    title_case: Optional[TitleCase] = Field(default=UNSPECIFIED)
+    title_case: Optional[TitleCase] = UNSPECIFIED
     size: float = Field(default=UNSPECIFIED, gt=0.0)
-    kerning: float = Field(default=UNSPECIFIED)
-    stroke_width: float = Field(default=UNSPECIFIED)
-    interline_spacing: int = Field(default=UNSPECIFIED)
-    vertical_shift: int = Field(default=UNSPECIFIED)
-    delete_missing: bool = Field(default=UNSPECIFIED)
-    replacements_in: list[str] = Field(default=UNSPECIFIED)
-    replacements_out: list[str] = Field(default=UNSPECIFIED)
+    kerning: float = UNSPECIFIED
+    stroke_width: float = UNSPECIFIED
+    interline_spacing: int = UNSPECIFIED
+    vertical_shift: int = UNSPECIFIED
+    delete_missing: bool = UNSPECIFIED
+    replacements_in: list[str] = UNSPECIFIED
+    replacements_out: list[str] = UNSPECIFIED
 
     @validator('*', pre=True)
     def validate_arguments(cls, v):
