@@ -497,10 +497,11 @@ def process_series(
 
 @series_router.delete('/{series_id}/plex-labels', status_code=204)
 def remove_series_labels(
+        request: Request,
         series_id: int,
         labels: list[str] = Query(default=['TCM', 'Overlay']),
         db: Session = Depends(get_database),
-        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface)
+        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
     ) -> None:
     """
     Remove the given labels from the given Series' Episodes within Plex.
@@ -528,6 +529,7 @@ def remove_series_labels(
     # Remove labels
     plex_interface.remove_series_labels(
         series.plex_library_name, series.as_series_info, labels,
+        log=request.state.log,
     )
 
 

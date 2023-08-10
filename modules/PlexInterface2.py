@@ -853,7 +853,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
     def remove_series_labels(self,
             library_name: str,
             series_info: SeriesInfo,
-            labels: list[str] = ['Overlay'],
+            labels: list[str] = ['TCM', 'Overlay'],
             *,
             log: Logger = log,
         ) -> None:
@@ -883,6 +883,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
 
         # Remove labels from all Episodes
         for plex_episode in series.episodes(container_size=500):
+            plex_episode: PlexEpisode
             plex_episode.removeLabel(labels)
+            log.debug(f'Removed {labels} from {plex_episode.labels}')
 
         return None
