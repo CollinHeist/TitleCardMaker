@@ -633,6 +633,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
             if any(label.tag in bad_labels for label in plex_episode.labels):
                 log.warning(f'{series_info} {episode_info} Cannot use Plex '
                             f'thumbnail, has existing Overlay or Title Card')
+                log.debug(f'{plex_episode.labels=}')
                 return None
 
             return (
