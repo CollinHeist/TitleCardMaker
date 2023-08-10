@@ -1436,7 +1436,6 @@ function navigateSeries(next_or_previous) {
 function removePlexLabels(buttonElement) {  
   // Submit API request
   buttonElement.classList.add('disabled');
-  document.getElementById()
   $.ajax({
     type: 'DELETE',
     url: `/api/series/{{series.id}}/plex-labels`,
