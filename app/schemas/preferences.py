@@ -106,9 +106,9 @@ class UpdatePreferences(UpdateBase):
         try:
             v.format(
                 series_name='test', series_full_name='test (2000)',
-                year=2000, season_number=1, episode_number=1, absolute_number=1,
-                emby_id='abc123', imdb_id='tt1234', jellyfin_id='abc123',
-                tmdb_id=123, tvdb_id=123, tvrage_id=123,
+                year=2000, title='Test Title', season_number=1, episode_number=1,
+                absolute_number=1, emby_id='abc123', imdb_id='tt1234',
+                jellyfin_id='abc123', tmdb_id=123, tvdb_id=123, tvrage_id=123,
             )
         except KeyError as exc:
             raise ValueError(
