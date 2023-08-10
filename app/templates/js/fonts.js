@@ -182,14 +182,10 @@ async function getAllFonts() {
   // Apply form validations
   $('.form[data-value="font-form"]').form({
     on: 'blur',
+    inline: true,
     fields: {
-      name: {
-        identifier: 'name',
-        rules: [{type: 'minLength[1]', prompt: 'Font name is required'}]
-      }, size: {
-        identifier: 'size',
-        rules: [{type: 'integer[1..]', prompt: 'Size must be greater than 1%'}]
-      },
+      name: ['minLength[1]'],
+      size: ['integer[1..]'],
     },
   });
 
