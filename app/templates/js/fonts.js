@@ -19,7 +19,7 @@ function deleteFont(font) {
     type: 'DELETE',
     url: `/api/fonts/${font.id}`,
     success: () => {
-      $.toast({class: 'blue info', title: `Deleted Font "${font.name}"`});
+      showInfoToast(`Deleted Font "${font.name}"`);
       $('.ui.accordion').accordion('close');
       getAllFonts();
     },
@@ -60,6 +60,62 @@ function reloadPreview(fontId, fontForm, previewForm, cardElement, imageElement)
     },
     error: response => showErrorToast({title: 'Error Creating Preview Card', response}),
     complete: () => {cardElement.classList.remove('loading'); }
+  });
+}
+
+function saveFontForm(fontId, event) {
+  // Validate form, exit if invalid
+  if (!$(`#font-id${fontId}`).form('is valid')) {
+    return;
+  }
+
+  // Construct form
+  let form = new FormData(event.target);
+  let listData = {replacements_in: [], replacements_out: []};
+  for (let [key, value] of [...form.entries()]) {
+    if (key === 'size' || key === 'kerning' || key === 'stroke_width') {
+      form.set(key, value/100.0);
+    }
+    if (key === 'replacements_in') { listData.replacements_in.push(value); }
+    if (key === 'replacements_out') { listData.replacements_out.push(value); }
+  }
+  // Add boolean toggle(s)
+  $.each($(`#font-id${fontId}`).find('input[type=checkbox]'), (key, val) => {
+    form.append($(val).attr('name'), $(val).is(':checked'));
+  });
+
+  // Submit API request
+  $.ajax({
+    type: 'PATCH',
+    url: `/api/fonts/${fontId}`,
+    data: JSON.stringify({...Object.fromEntries(form.entries()), ...listData}),
+    contentType: 'application/json',
+    success: font => $.toast({class: 'blue info', title: `Updated Font "${font.name}"`}),
+    error: response => showErrorToast({title: 'Error Updating Font', response}),
+  });
+
+  // Submit separate API request to upload font file
+  if (form.get('font_file').size === 0) { return; }
+  let fileForm = new FormData();
+  fileForm.append('file', form.get('font_file'));
+  $.ajax({
+    type: 'PUT',
+    url: `/api/fonts/${fontObj.id}/file`,
+    data: fileForm,
+    processData: false,
+    contentType: false,
+    success: () => $.toast({class: 'blue info', title: 'Uploaded Font File'}),
+    error: response => showErrorToast({title: 'Error Uploading Font File', response}),
+  });
+}
+
+// Function to add dropdown card types
+async function initCardTypeDropdowns() {
+  loadCardTypes({
+    element: '.ui.card-type.dropdown',
+    isSelected: (identifier) => identifier === '{{preferences.default_card_type}}',
+    showExcluded: false,
+    dropdownArgs: {},
   });
 }
 
@@ -119,41 +175,9 @@ async function getAllFonts() {
 
     // Set submit form event to submit PATCH API request
     template.querySelector('form[data-value="font-form"]').id = `font-id${fontObj.id}`;
-    template.querySelector('form[data-value="font-form"]').onsubmit = (event) => {
+    template.querySelector('form[data-value="font-form"]').onsubmit = event => {
       event.preventDefault();
-      // Validate form, if invalid, exit
-      if (!$(`#font-id${fontObj.id}`).form('is valid')) { return; }
-      let form = new FormData(event.target);
-      let listData = {replacements_in: [], replacements_out: []};
-      for (let [key, value] of [...form.entries()]) {
-        if (key === 'size' || key === 'kerning' || key === 'stroke_width') {
-          form.set(key, value/100.0);
-        }
-        if (key === 'replacements_in') { listData.replacements_in.push(value); }
-        if (key === 'replacements_out') { listData.replacements_out.push(value); }
-      }
-      $.ajax({
-        type: 'PATCH',
-        url: `/api/fonts/${fontObj.id}`,
-        data: JSON.stringify({...Object.fromEntries(form.entries()), ...listData}),
-        contentType: 'application/json',
-        success: font => $.toast({class: 'blue info', title: `Updated Font "${font.name}"`}),
-        error: response => showErrorToast({title: 'Error Updating Font', response}),
-      });
-
-      // Submit separate API request to upload font file
-      if (form.get('font_file').size === 0) { return; }
-      let fileForm = new FormData();
-      fileForm.append('file', form.get('font_file'));
-      $.ajax({
-        type: 'PUT',
-        url: `/api/fonts/${fontObj.id}/file`,
-        data: fileForm,
-        processData: false,
-        contentType: false,
-        success: () => $.toast({class: 'blue info', title: 'Uploaded Font File'}),
-        error: response => showErrorToast({title: 'Error Uploading Font File', response}),
-      });
+      saveFontForm(fontObj.id, event);
     };
 
     // Set delete button to submit DELETE API request
@@ -194,14 +218,4 @@ async function getAllFonts() {
 
   // Refresh theme for any newly added HTML
   refreshTheme();
-}
-
-// Function to add dropdown card types
-async function initCardTypeDropdowns() {
-  loadCardTypes({
-    element: '.ui.card-type.dropdown',
-    isSelected: (identifier) => identifier === '{{preferences.default_card_type}}',
-    showExcluded: false,
-    dropdownArgs: {},
-  });
 }
