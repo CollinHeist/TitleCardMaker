@@ -252,13 +252,17 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
 
         # Find matching Series
         for series in search_results:
-            reference_series_info = SeriesInfo(
-                series['title'],
-                series['year'],
-                imdb_id=series.get('imdbId'),
-                tvdb_id=series.get('tvdbId'),
-                tvrage_id=series.get('tvRageId'),
-            )
+            try:
+                reference_series_info = SeriesInfo(
+                    series['title'],
+                    series['year'],
+                    imdb_id=series.get('imdbId'),
+                    tvdb_id=series.get('tvdbId'),
+                    tvrage_id=series.get('tvRageId'),
+                )
+            except TypeError:
+                log.warning(f'Error evaluating {series}')
+                continue
 
             # Add Sonarr ID if added to this server
             if (sonarr_id := series.get('id')) is not None:
