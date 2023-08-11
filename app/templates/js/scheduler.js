@@ -74,7 +74,7 @@ function updateScheduledTasks() {
       contentType: 'application/json',
       success: () => showInfoToast(`Rescheduled Task ${taskId}`),
       error: response => showErrorToast({title: 'Error Recheduling Task', response}),
-      complete: () => initAll()
+      complete: () => initAll(),
     });
   });
 }
@@ -90,7 +90,7 @@ function toggleScheduleType() {
     url: '/api/schedule/type/toggle',
     success: () => {
       showInfoToast({title: 'Updated Scheduler', message: 'Reloading page..'});
-      setTimeout(() => location.reload(), 3000);
+      setTimeout(() => location.reload(), 2000);
     }, error: response => {
       document.getElementById('toggle-button').classList.remove('loading');
       showErrorToast({title: 'Error Changing Scheduler', response});
