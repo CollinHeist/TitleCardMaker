@@ -87,6 +87,7 @@ def validate_argument_lists_to_dict(
     BAD_VALS = (UNSPECIFIED,) if allow_empty_strings else (UNSPECIFIED, '')
     list0 = [in_ for in_ in list0 if in_ not in BAD_VALS]
     list1 = [out_ for out_ in list1 if out_ not in BAD_VALS]
+
     # Verify lists are equal lengths
     if (isinstance(list0, list) and isinstance(list1, list)
         and len(list0) != len(list1)):

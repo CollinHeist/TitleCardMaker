@@ -32,43 +32,21 @@ class BaseFont(Base):
         gt=0.0,
         title='Font size (scalar)'
     )
-    kerning: float = Field(
-        default=1.0,
-        title='Font kerning (scalar)'
-    )
-    stroke_width: float = Field(
-        default=1.0,
-        title='Font stroke width (scalar)'
-    )
-    interline_spacing: int = Field(
-        default=0,
-        title='Interline spacing (pixels)',
-    )
-    vertical_shift: int = Field(
-        default=0,
-        title='Vertical shift (pixels)',
-    )
+    kerning: float = 1.0
+    stroke_width: float = 1.0
+    interline_spacing: int = 0
+    vertical_shift: int = 0
 
 class BaseNamedFont(BaseFont):
-    name: str = Field(..., min_length=1, title='Font name')
-    delete_missing: bool = Field(
-        default=True,
-        title='Delete mising characters toggle',
-        description='Whether to delete missing characters before creation',
-    )
+    name: constr(min_length=1)
+    delete_missing: bool = True
 
 """
 Creation classes
 """
 class NewNamedFont(BaseNamedFont):
-    replacements_in: list[constr(min_length=1)] = Field(
-        default=[],
-        title='Characters to replace',
-    )
-    replacements_out: list[str] = Field(
-        default=[],
-        title='Characters to substitute',
-    )
+    replacements_in: list[constr(min_length=1)] = []
+    replacements_out: list[str] = []
 
     @validator('*', pre=True)
     def validate_arguments(cls, v):
@@ -83,16 +61,17 @@ class NewNamedFont(BaseNamedFont):
         return validate_argument_lists_to_dict(
             values, 'character replacements',
             'replacements_in', 'replacements_out',
-            output_key='replacements'
+            output_key='replacements',
+            allow_empty_strings=True,
         )
 
 class PreviewFont(Base):
     color: Optional[str] = Field(default=None, min_length=1)
     size: Optional[float] = Field(default=None, gt=0.0)
-    kerning: Optional[float] = Field(default=None)
-    stroke_width: Optional[float] = Field(default=None)
-    interline_spacing: Optional[int] = Field(default=None)
-    vertical_shift: Optional[int] = Field(default=None)
+    kerning: Optional[float] = None
+    stroke_width: Optional[float] = None
+    interline_spacing: Optional[int] = None
+    vertical_shift: Optional[int] = None
 
 """
 Update classes
@@ -107,7 +86,7 @@ class UpdateNamedFont(UpdateBase):
     interline_spacing: int = UNSPECIFIED
     vertical_shift: int = UNSPECIFIED
     delete_missing: bool = UNSPECIFIED
-    replacements_in: list[constr(min_length=1)] = UNSPECIFIED
+    replacements_in: list[str] = UNSPECIFIED
     replacements_out: list[str] = UNSPECIFIED
 
     @validator('*', pre=True)
