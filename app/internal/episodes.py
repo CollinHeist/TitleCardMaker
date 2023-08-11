@@ -133,7 +133,7 @@ def get_all_episode_data(
         *,
         raise_exc: bool = True,
         log: Logger = log,
-    ) -> list[EpisodeInfo]:
+    ) -> list[tuple[EpisodeInfo, Optional[bool]]]:
     """
     Get all EpisodeInfo for the given Series from it's indicated Episode
     data source.
@@ -147,9 +147,10 @@ def get_all_episode_data(
         log: (Keyword) Logger for all log messages.
 
     Returns:
-        List of EpisodeInfo from the given Series' Episode data source.
-        If the data cannot be queried and `raise_exc` is False, then
-        an empty list is returned.
+        List of tuples of the EpisodeInfo from the given Series' Episode
+        data source and whether that Episode has been watched (or None
+        of that cannot be determined). If the data cannot be queried and
+        `raise_exc` is False, then an empty list is returned.
 
     Raises:
         HTTPException (404) if the Series Template DNE.
@@ -247,12 +248,7 @@ def refresh_episode_data(
 
     # Filter episodes
     changed, episodes = False, []
-    for episode_info in all_episodes:
-        # If a tuple, then it's a tuple of EpisodeInfo and watched status
-        watched = None
-        if isinstance(episode_info, tuple):
-            episode_info, watched = episode_info
-
+    for episode_info, watched in all_episodes:
         # Skip specials if indicated
         if not sync_specials and episode_info.season_number == 0:
             log.debug(f'{series.log_str} Skipping {episode_info} - not syncing specials')

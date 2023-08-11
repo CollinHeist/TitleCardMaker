@@ -153,6 +153,8 @@ async def export_series_blueprint_as_zip(
             plex_interface, sonarr_interface, tmdb_interface, raise_exc=False,
             log=request.state.log,
         )
+        # Get just the EpisodeInfo objects
+        episode_data = [data[0] for data in episode_data]
 
     # Generate Blueprint
     blueprint = generate_series_blueprint(

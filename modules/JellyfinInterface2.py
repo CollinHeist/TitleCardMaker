@@ -498,7 +498,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface
             series_info: SeriesInfo,
             *,
             log: Logger = log,
-        ) -> list[EpisodeInfo]:
+        ) -> list[tuple[EpisodeInfo, Optional[bool]]]:
         """
         Gets all episode info for the given series. Only episodes that
         have  already aired are returned.
@@ -509,7 +509,8 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface
             log: (Keyword) Logger for all log messages.
 
         Returns:
-            List of EpisodeInfo objects for this series.
+            List of tuples of the EpisodeInfo objects and the episode
+            watched statuses for this series.
         """
 
         # Find this series
@@ -521,7 +522,9 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface
         # Get all episodes for this series
         response = self.session.get(
             f'{self.url}/Shows/{series_id}/Episodes',
-            params={'Fields': 'ProviderIds'} | self.__params
+            params={
+                'UserId': self.user_id, 'Fields': 'ProviderIds'
+            } | self.__params
         )
 
         # Parse each returned episode into EpisodeInfo object
@@ -558,7 +561,9 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface
 
             # Add to list
             if episode_info is not None:
-                all_episodes.append(episode_info)
+                all_episodes.append(
+                    (episode_info, episode.get('UserData', {}).get('Played'))
+                )
 
         return all_episodes
 

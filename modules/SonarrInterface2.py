@@ -252,13 +252,17 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
 
         # Find matching Series
         for series in search_results:
-            reference_series_info = SeriesInfo(
-                series['title'],
-                series['year'],
-                imdb_id=series.get('imdbId'),
-                tvdb_id=series.get('tvdbId'),
-                tvrage_id=series.get('tvRageId'),
-            )
+            try:
+                reference_series_info = SeriesInfo(
+                    series['title'],
+                    series['year'],
+                    imdb_id=series.get('imdbId'),
+                    tvdb_id=series.get('tvdbId'),
+                    tvrage_id=series.get('tvRageId'),
+                )
+            except TypeError:
+                log.warning(f'Error evaluating {series}')
+                continue
 
             # Add Sonarr ID if added to this server
             if (sonarr_id := series.get('id')) is not None:
@@ -347,7 +351,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             series_info: SeriesInfo,
             *,
             log: Logger = log,
-        ) -> list[EpisodeInfo]:
+        ) -> list[tuple[EpisodeInfo, Optional[bool]]]:
         """
         Gets all episode info for the given series. Only episodes that
         have  already aired are returned.
@@ -358,7 +362,9 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             log: (Keyword) Logger for all log messages.
 
         Returns:
-            List of EpisodeInfo objects for the given series.
+            List of tuples of the EpisodeInfo objects and None (as the
+            Episode watched status cannot be determined) for the given
+            series.
         """
 
         # If no ID was returned, error and return an empty list
@@ -420,7 +426,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
 
             # Add to episode list
             if episode_info is not None:
-                all_episode_info.append(episode_info)
+                all_episode_info.append((episode_info, None))
 
         # If any episodes had TVDb ID's of 0, then warn user to refresh series
         if has_bad_ids:

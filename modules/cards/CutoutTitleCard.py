@@ -194,6 +194,9 @@ class CutoutTitleCard(BaseCardType):
         object's defined title card.
         """
 
+        # Masked Alpha Composition layers must be ordered as:
+        # [Replace Black Parts of Mask] | [Replace White Parts of Mask] | [Mask]
+
         command = ' '.join([
             f'convert',
             f'-set colorspace sRGB',

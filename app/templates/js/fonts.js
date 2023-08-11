@@ -1,6 +1,6 @@
 // Function to create a new empty font
 function addFont() {
-  const data = {name: '_Blank Custom Font'};
+  const data = {name: ' Blank Custom Font'};
   $.ajax({
     type: 'POST',
     url: '/api/fonts/new',
@@ -121,8 +121,30 @@ async function initCardTypeDropdowns() {
 
 // Function to get all fonts and add their elements to the page
 async function getAllFonts() {
+  // Query for all Fonts
   const fonts = await fetch('/api/fonts/all').then(resp => resp.json());
-  const fontElements = fonts.map((fontObj) => {
+  const hasManyFonts = fonts.length > 20; // Add headers if >10 Fonts
+
+  // Create array of elements
+  const fontElements = [];
+  let currentHeader = null;
+
+  fonts.forEach((fontObj) => {
+    // Add header element for this letter if needed
+    const letter = fontObj.sort_name[0].toUpperCase();
+    if (hasManyFonts && letter != currentHeader) {
+      currentHeader = letter;
+      const header = document.createElement('h2');
+      header.className = 'ui dividing header';
+      if (letter === ' ') {
+        header.innerText = 'Blank Fonts';
+      } else {
+        header.innerText = letter;
+      }
+      fontElements.push(header);
+    }
+
+    // Add Font accordion
     const template = document.querySelector('#font-template').content.cloneNode(true);
     template.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${fontObj.name}`;
     const name = template.querySelector('input[name="name"]');
@@ -193,7 +215,8 @@ async function getAllFonts() {
     const previewForm =  template.querySelector('form[data-value="preview-form"]');
     template.querySelector('.button[data-action="refresh"]').onclick = () => reloadPreview(fontObj.id, fontForm, previewForm, previewCard, previewImage);
 
-    return template;
+    fontElements.push(template);
+    // return template;
   });
   // Put new font elements on the page
   const fontsElement = document.getElementById('fonts');

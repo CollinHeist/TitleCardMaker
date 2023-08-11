@@ -114,7 +114,7 @@ class EpisodeDataSource(ABC):
             series_info: SeriesInfo,
             *,
             log: Logger = log,
-        ) -> list[EpisodeInfo]:
+        ) -> list[tuple[EpisodeInfo, Optional[bool]]]:
         """Get all the EpisodeInfo objects associated with the given series."""
 
         raise NotImplementedError
