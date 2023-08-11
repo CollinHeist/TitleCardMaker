@@ -497,7 +497,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
             series_info: SeriesInfo,
             *,
             log: Logger = log,
-        ) -> list[EpisodeInfo]:
+        ) -> list[tuple[EpisodeInfo, Optional[bool]]]:
         """
         Gets all episode info for the given series. Only episodes that
         have already aired are returned.
@@ -520,7 +520,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
         # Get all episodes for this series
         response = self.session.get(
             f'{self.url}/Shows/{emby_id}/Episodes',
-            params={'Fields': 'ProviderIds'} | self.__params
+            params={
+                'UserId': self.user_id, 'Fields': 'ProviderIds'
+            } | self.__params
         )
 
         # Parse each returned episode into EpisodeInfo object
@@ -556,7 +558,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
 
             # Add to list
             if episode_info is not None:
-                all_episodes.append(episode_info)
+                all_episodes.append(
+                    (episode_info, episode.get('UserData', {}).get('Played'))
+                )
 
         return all_episodes
 

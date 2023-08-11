@@ -462,7 +462,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             series_info: SeriesInfo,
             *,
             log: Logger = log,
-        ) -> list[EpisodeInfo]:
+        ) -> list[tuple[EpisodeInfo, Optional[bool]]]:
         """
         Gets all episode info for the given series. Only episodes that
         have  already aired are returned.
@@ -473,7 +473,8 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
             log: (Keyword) Logger for all log messages.
 
         Returns:
-            List of EpisodeInfo objects for this series.
+            List of EpisodeInfo objects and None (as watched statuses
+            cannot be determined) for this series.
         """
 
         # Cannot query TMDb if no series TMDb ID
@@ -517,7 +518,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
                 )
 
                 # Create EpisodeInfo for this episode, add to list
-                all_episodes.append(episode_info)
+                all_episodes.append((episode_info, None))
 
         return all_episodes
 

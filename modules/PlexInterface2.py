@@ -343,7 +343,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
             series_info: SeriesInfo,
             *,
             log: Logger = log,
-        ) -> list[tuple[EpisodeInfo, bool]]:
+        ) -> list[tuple[EpisodeInfo, Optional[bool]]]:
         """
         Gets all episode info for the given series. Only episodes that
         have  already aired are returned.
@@ -354,7 +354,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
             log: (Keyword) Logger for all log messages.
 
         Returns:
-            List of EpisodeInfo objects for this series.
+            List of tuples of the EpisodeInfos and that episode's
+            corresponding watched status for this series.
         """
 
         # If the given library cannot be found, exit
