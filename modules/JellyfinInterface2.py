@@ -561,7 +561,9 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface
 
             # Add to list
             if episode_info is not None:
-                all_episodes.append(episode_info)
+                all_episodes.append(
+                    (episode_info, episode.get('UserData', {}).get('Played'))
+                )
 
         return all_episodes
 
