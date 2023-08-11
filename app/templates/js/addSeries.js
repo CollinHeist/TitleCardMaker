@@ -208,7 +208,7 @@ async function queryAllBlueprints(page=1) {
         navigateFunction: queryAllBlueprints,
         page: allBlueprints.page,
         pages: allBlueprints.pages,
-        amountVisible: 5,
+        amountVisible: isSmallScreen() ? 5 : 15,
         hideIfSinglePage: true,
       });
       // Transition elements in
