@@ -270,6 +270,7 @@ class RomanNumeralTitleCard(BaseCardType):
         'hide_episode_text', 'font_color', 'font_size', 'background',
         'roman_numeral_color', 'roman_numeral', '__roman_text_scalar',
         '__roman_numeral_lines', 'rotation', 'offset', 'season_text_color',
+        'font_file',
     )
 
     def __init__(self,
@@ -279,6 +280,7 @@ class RomanNumeralTitleCard(BaseCardType):
             hide_season_text: bool = False,
             hide_episode_text: bool = False,
             font_color: str = TITLE_COLOR,
+            font_file: str = TITLE_FONT,
             font_size: float = 1.0,
             episode_number: int = 1,
             blur: bool = False,
@@ -300,6 +302,7 @@ class RomanNumeralTitleCard(BaseCardType):
         self.output_file = card_file
         self.title_text = self.image_magick.escape_chars(title_text)
         self.font_color = font_color
+        self.font_file = font_file
         self.font_size = font_size
         self.background = background
         self.roman_numeral_color = roman_numeral_color
@@ -469,7 +472,7 @@ class RomanNumeralTitleCard(BaseCardType):
         font_size = 150 * self.font_size
 
         return [
-            f'-font "{self.TITLE_FONT}"',
+            f'-font "{self.font_file}"',
             f'-pointsize {font_size}',
             f'-interword-spacing 40',
             f'-interline-spacing 0',
@@ -694,6 +697,7 @@ class RomanNumeralTitleCard(BaseCardType):
         """
 
         return ((font.color != RomanNumeralTitleCard.TITLE_COLOR)
+            or (font.file != RomanNumeralTitleCard.TITLE_FONT)
             or (font.size != 1.0)
         )
 

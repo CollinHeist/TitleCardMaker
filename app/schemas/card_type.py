@@ -249,6 +249,7 @@ class RomanNumeralCardType(BaseCardTypeAllText):
     card_file: Path
     episode_number: RomanNumeralValue
     font_color: BetterColor = RomanNumeralTitleCard.TITLE_COLOR
+    font_file: FilePath = RomanNumeralTitleCard.TITLE_FONT
     font_size: PositiveFloat = 1.0
     background: BetterColor = RomanNumeralTitleCard.BACKGROUND_COLOR
     roman_numeral_color: BetterColor = RomanNumeralTitleCard.ROMAN_NUMERAL_TEXT_COLOR
