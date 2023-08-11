@@ -229,8 +229,8 @@ class TintedGlassTitleCard(BaseCardType):
         y_start += 12
 
         # Shift y coordinates by vertical shift
-        y_start += self.font_vertical_shift
-        y_end += self.font_vertical_shift
+        y_start -= self.font_vertical_shift
+        y_end -= self.font_vertical_shift
 
         # Adjust upper bounds of box if title is multi-line
         y_start += (65 * (self.__line_count-1)) if self.__line_count > 1 else 0
