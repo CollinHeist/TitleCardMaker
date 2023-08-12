@@ -4,6 +4,7 @@ from time import sleep
 from typing import Any, Optional
 
 from fastapi import BackgroundTasks, HTTPException
+from sqlalchemy import or_
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Query, Session
 
@@ -71,8 +72,9 @@ def create_all_title_cards(*, log: Logger = log) -> None:
 
 def remove_duplicate_cards(*, log: Logger = log) -> None:
     """
-    Schedule-able function to remove any duplicate Card entries from the
-    Database.
+    Schedule-able function to remove any duplicate (e.g. Episodes with
+    >1 entry), and unlinked Card (Cards with no Series or Episode ID)
+    from the database.
 
     Args:
         log: (Keyword) Logger for all log messages.
@@ -97,6 +99,15 @@ def remove_duplicate_cards(*, log: Logger = log) -> None:
                         db.delete(delete_card)
                         log.debug(f'Deleted duplicate {delete_card.log_str}')
                         changed = True
+
+            # Delete any cards w/o Series or Episode IDs
+            unlinked_cards = db.query(models.card.Card)\
+                .filter(or_(models.card.Card.series_id == None,
+                            models.card.Card.episode_id == None))
+            if unlinked_cards.count():
+                log.info(f'Deleting {unlinked_cards.count()} unlinked Cards')
+                unlinked_cards.delete()
+                changed = True
 
             # If any changes were made, commit to DB
             if changed:
