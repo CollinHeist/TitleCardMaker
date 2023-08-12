@@ -57,6 +57,7 @@ class Card(Base):
     episode_number = Column(Integer, default=0, nullable=False)
     absolute_number = Column(Integer, default=0)
 
+
     @hybrid_property
     def log_str(self) -> str:
         """
@@ -64,6 +65,7 @@ class Card(Base):
         """
 
         return f'Card[{self.id}] "{self.card_file}"'
+
 
     @hybrid_property
     def comparison_properties(self) -> dict[str, Any]:

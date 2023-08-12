@@ -231,6 +231,33 @@ def blacklist_blueprint(
     log.debug(f'Blacklisted Blueprint[{series_full_name}, {blueprint_id}]')
 
 
+@blueprint_router.delete('/blacklist')
+def remove_blueprint_from_blacklist(
+        request: Request,
+        series_full_name: str = Query(..., min_length=8),
+        blueprint_id: int = Query(...),
+        preferences: Preferences = Depends(get_preferences),
+    ) -> None:
+    """
+    Un-blacklist the Blueprint for the indicated Series.
+
+    - series_full_name: Full name of the Series associated with this
+    Blueprint.
+    - blueprint_id: Unique ID of the Blueprint.
+    """
+
+    try:
+        preferences.blacklisted_blueprints.remove(
+            (series_full_name, blueprint_id)
+        )
+        preferences.commit(log=request.state.log)
+    except KeyError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=f'{series_full_name} Blueprint {blueprint_id} is not blacklisted',
+        ) from exc
+
+
 @blueprint_router.get('/query/all', status_code=200)
 def query_all_blueprints_(
         request: Request,
