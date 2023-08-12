@@ -215,6 +215,7 @@ class CutoutTitleCard(BaseCardType):
             f'-gravity center',
             f'-interline-spacing -300',
             f'-font "{self.EPISODE_TEXT_FONT.resolve()}"',
+            f'-fill white',
             f'+size',
             f'label:"{self.episode_text}"',
             # Resize with 100px margin on all sides
