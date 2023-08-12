@@ -889,6 +889,8 @@ class Show(YamlReader):
                     )
                 elif source_interface == 'jellyfin' and check_jellyfin:
                     image = self.jellyfin_interface.get_source_image(
+                        self.library_name,
+                        self.series_info,
                         episode.episode_info,
                     )
                 elif source_interface == 'plex' and check_plex:
