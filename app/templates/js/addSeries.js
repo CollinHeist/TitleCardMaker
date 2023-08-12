@@ -165,7 +165,7 @@ async function queryBlueprints(result, resultElementId) {
  * Query for all Blueprints defined for all Series - load the given page
  * number.
  */
-async function queryAllBlueprints(page=1) {
+function queryAllBlueprints(page=1) {
   const blueprintResults = document.getElementById('all-blueprint-results');
   const blueprintTemplate = document.getElementById('all-blueprint-template');
   const orderBy = $('[data-value="order_by"]').val();
@@ -196,7 +196,7 @@ async function queryAllBlueprints(page=1) {
                 document.getElementById(`blueprint-id${blueprintId}`).remove();
                 $.toast({class: 'blue info', title: 'Blueprint Hidden'});
               }, 1000);
-            }, error: response => howErrorToast({title: 'Error Blacklisting Blueprint', response}),
+            }, error: response => showErrorToast({title: 'Error Blacklisting Blueprint', response}),
           });
         }
         return card;
