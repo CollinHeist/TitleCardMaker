@@ -3,9 +3,11 @@ from typing import Optional, Union
 from fastapi import (
     APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request
 )
+from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 
 from app.database.query import get_card, get_episode, get_font, get_series
+from app.database.session import Page
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app import models
 from app.internal.auth import get_current_user
@@ -111,6 +113,18 @@ def create_preview_card(
         status_code=500,
         detail='Failed to create preview card'
     )
+
+
+@card_router.get('/all', status_code=200,
+                 dependencies=[Depends(get_current_user)])
+def get_all_title_cards(db: Session = Depends(get_database)) -> Page[TitleCard]:
+    """
+    Get all defined Title Cards.
+
+    - order_by: How to order the Cards in the returned list.
+    """
+
+    return paginate(db.query(models.card.Card))
 
 
 @card_router.get('/{card_id}', status_code=200,
