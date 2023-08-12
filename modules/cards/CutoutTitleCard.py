@@ -169,6 +169,9 @@ class CutoutTitleCard(BaseCardType):
         object's defined title card.
         """
 
+        # Masked Alpha Composition layers must be ordered as:
+        # [Replace Black Parts of Mask] | [Replace White Parts of Mask] | [Mask]
+
         command = ' '.join([
             f'convert',
             f'-set colorspace sRGB',
@@ -187,6 +190,7 @@ class CutoutTitleCard(BaseCardType):
             f'-gravity center',
             f'-interline-spacing -300',
             f'-font "{self.EPISODE_TEXT_FONT.resolve()}"',
+            f'-fill white',
             f'+size',
             f'label:"{self.episode_text}"',
             # Resize with 100px margin on all sides

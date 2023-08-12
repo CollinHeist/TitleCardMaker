@@ -804,7 +804,8 @@ class Show(YamlReader):
 
 
     def select_source_images(self,
-            select_only: Optional[Episode] = None) -> None:
+            select_only: Optional[Episode] = None,
+        ) -> None:
         """
         Modify this series' Episode source images based on their watch
         statuses, and how that style applies to this show's un/watched
