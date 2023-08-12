@@ -262,6 +262,7 @@ def remove_blueprint_from_blacklist(
 def query_all_blueprints_(
         request: Request,
         order_by: Literal['date', 'name'] = Query(default='date'),
+        include_blacklisted: bool = Query(default=False),
         preferences: Preferences = Depends(get_preferences),
     ) -> Page[RemoteMasterBlueprint]:
     """
@@ -269,19 +270,28 @@ def query_all_blueprints_(
     Blueprints are excluded from the return.
 
     - order_by: How to order the returned Blueprints.
+    include_blacklisted: Whether to include Blacklisted Blueprints in
+    the return.
     """
 
-    log = request.state.log
-    blacklist = preferences.blacklisted_blueprints
+    # pylint: disable=unnecessary-lambda-assignment
     if order_by == 'date':
         order_func = lambda blueprint: blueprint['created']
     else:
         order_func = lambda blueprint: blueprint['series_full_name'].lower()
 
+    def include(blueprint: RemoteMasterBlueprint) -> bool:
+        return (
+            include_blacklisted
+            or (blueprint['series_full_name'], blueprint['id'])
+                not in preferences.blacklisted_blueprints
+        )
+
     return paginate_sequence(
         sorted([
-            blueprint for blueprint in query_all_blueprints(log=log)
-            if (blueprint['series_full_name'], blueprint['id']) not in blacklist
+            blueprint
+            for blueprint in query_all_blueprints(log=request.state.log)
+            if include(blueprint)
         ], key=order_func, reverse=order_by == 'date')
     )
 
@@ -342,7 +352,7 @@ def import_blueprint_and_series(
     """
 
     # Get contextual logger
-    log = request.state.log
+    log: Logger = request.state.log
 
     try:
         series_info = SeriesInfo(blueprint.series_full_name)
