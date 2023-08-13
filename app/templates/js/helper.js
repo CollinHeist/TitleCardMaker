@@ -18,22 +18,38 @@ function formatBytes(bytes, decimals = 2) {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }
 
+function formatFastAPIError(errorResponse) {
+  if (!errorResponse || !errorResponse.detail || !Array.isArray(errorResponse.detail)) {
+    return undefined;
+  }
+
+  const formattedErrors = errorResponse.detail.map(detail => {
+    let errorMessage = "An error occurred.";
+
+    if (typeof detail === 'string') {
+      errorMessage = detail;
+    } else if (detail.msg) {
+      errorMessage = detail.msg;
+    }
+
+    if (detail.loc && Array.isArray(detail.loc)) {
+      errorMessage = `${detail.loc[1]}: ${errorMessage}`;
+    }
+
+    return errorMessage;
+  });
+
+  return formattedErrors.join('\n');
+}
+
 function showErrorToast(args) {
   const {title, response, displayTime=0} = args;
-  if (response.responseJSON === undefined) {
-    $.toast({
-      class: 'error',
-      title: title,
-      displayTime: displayTime,
-    });
-  } else {
-    $.toast({
-      class: 'error',
-      title: title,
-      message: response.responseJSON.detail,
-      displayTime: displayTime,
-    });
-  }
+  $.toast({
+    class: 'error',
+    title,
+    message: formatFastAPIError(response.responseJSON),
+    displayTime: displayTime,
+  });
 }
 
 function showInfoToast(args) {
