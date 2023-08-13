@@ -90,7 +90,7 @@ function saveFontForm(fontId, event) {
     url: `/api/fonts/${fontId}`,
     data: JSON.stringify({...Object.fromEntries(form.entries()), ...listData}),
     contentType: 'application/json',
-    success: font => $.toast({class: 'blue info', title: `Updated Font "${font.name}"`}),
+    success: font => showInfoToast(`Updated Font "${font.name}"`),
     error: response => showErrorToast({title: 'Error Updating Font', response}),
   });
 
@@ -100,11 +100,11 @@ function saveFontForm(fontId, event) {
   fileForm.append('file', form.get('font_file'));
   $.ajax({
     type: 'PUT',
-    url: `/api/fonts/${fontObj.id}/file`,
+    url: `/api/fonts/${fontId}/file`,
     data: fileForm,
     processData: false,
     contentType: false,
-    success: () => $.toast({class: 'blue info', title: 'Uploaded Font File'}),
+    success: () => showInfoToast('Uploaded Font File'),
     error: response => showErrorToast({title: 'Error Uploading Font File', response}),
   });
 }
