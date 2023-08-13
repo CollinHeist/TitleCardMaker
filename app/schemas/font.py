@@ -1,10 +1,10 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from typing import Literal, Optional
 
-from pydantic import Field, constr, validator, root_validator
+from pydantic import Field, PositiveFloat, constr, validator, root_validator
 
 from app.schemas.base import (
-    Base, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
+    Base, BetterColor, UpdateBase, UNSPECIFIED, validate_argument_lists_to_dict
 )
 
 
@@ -22,11 +22,8 @@ DefaultFont = {
 Base classes
 """
 class BaseFont(Base):
-    color: Optional[str] = Field(default=None, min_length=1, title='Font color')
-    title_case: Optional[TitleCase] = Field(
-        default=None,
-        description='Name of the case function to apply to the title text',
-    )
+    color: Optional[BetterColor] = None
+    title_case: Optional[TitleCase] = None
     size: float = Field(
         default=1.0,
         gt=0.0,
@@ -66,8 +63,8 @@ class NewNamedFont(BaseNamedFont):
         )
 
 class PreviewFont(Base):
-    color: Optional[str] = Field(default=None, min_length=1)
-    size: Optional[float] = Field(default=None, gt=0.0)
+    color: Optional[BetterColor] = None
+    size: Optional[PositiveFloat] = None
     kerning: Optional[float] = None
     stroke_width: Optional[float] = None
     interline_spacing: Optional[int] = None
@@ -78,7 +75,7 @@ Update classes
 """
 class UpdateNamedFont(UpdateBase):
     name: str = Field(default=UNSPECIFIED, min_length=1)
-    color: Optional[str] = Field(default=UNSPECIFIED, min_length=1)
+    color: Optional[BetterColor] = UNSPECIFIED
     title_case: Optional[TitleCase] = UNSPECIFIED
     size: float = Field(default=UNSPECIFIED, gt=0.0)
     kerning: float = UNSPECIFIED
