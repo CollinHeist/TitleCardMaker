@@ -878,32 +878,11 @@ async function initAll() {
       title: ['empty', 'minLength[1]'],
     },
   });
-  $('#new-episode-form').on('submit', (event) => {
+  $('#new-episode-form').on('submit', event => {
     // Prevent page reload, do not submit if form is invalid
     event.preventDefault();
     if (!$('#new-episode-form').form('is valid')) { return; }
-    // Prep form
-    let form = new FormData(event.target);
-    for (const [key, value] of [...form.entries()]) {
-      if (value === '') { form.delete(key); }
-    }
-    form.append('series_id', '{{series.id}}');
-
-    $.ajax({
-      type: 'POST',
-      url: '/api/episodes/new',
-      data: JSON.stringify(Object.fromEntries(form)),
-      contentType: 'application/json',
-      success: (episode) => {
-        const {season_number, episode_number} = episode;
-        $.toast({
-          class: 'blue info',
-          title: `Created Season ${season_number} Episode ${episode_number}`,
-        });
-        getEpisodeData();
-        getStatistics();
-      }, error: response => showErrorToast({title: 'Error Creating Episode', response}),
-    });
+    addEpisode(event);
   });
 
   // Update list of Episode ID's when the input is changed
@@ -918,7 +897,11 @@ async function initAll() {
     });
 }
 
-// Delete season titles/translations/extras on button press
+/*
+ * Submit an API request clear some list values (e.g. extras, titles, or
+ * translations) for this Series. If successful, the data is also removed from
+ * the DOM.
+ */
 function deleteListValues(attribute) {
   let data;
   if (attribute === 'season_titles') {
@@ -1011,13 +994,12 @@ function refreshEpisodeData() {
     type: 'POST',
     url: '/api/episodes/{{series.id}}/refresh',
     success: () => {
-      $.toast({class: 'blue info', title: 'Refreshed Episode Data'});
+      showInfoToast('Refreshed Episode Data');
       getEpisodeData();
       getFileData();
       getStatistics();
-    }, error: response => {
-      showErrorToast({title: 'Error Refreshing Data', response});
-    }, complete: () => {
+    }, error: response => showErrorToast({title: 'Error Refreshing Data', response}),
+    complete: () => {
       document.getElementById('refresh').classList.remove('disabled');
       $('#refresh > i').toggleClass('loading', false);
     }
@@ -1308,7 +1290,7 @@ function createTitleCards() {
     type: 'POST',
     url: '/api/cards/series/{{series.id}}',
     success: () => {
-      showInfoToast('Starting to Create Title Cards');
+      showInfoToast('Starting to create Title Cards');
       getEpisodeData();
       getStatistics();
     }, error: response => showErrorToast({title: 'Error creating Title Cards', response}),
@@ -1361,6 +1343,32 @@ function deleteTitleCards(onSuccess) {
       if (onSuccess !== undefined) { onSuccess(); }
     }, error: response => showErrorToast({title: 'Error Deleting Title Cards', response}),
     complete: () => getStatistics(),
+  });
+}
+
+/*
+ * Submit an API request to add/create the new Episode defined in the given
+ * event's target. 
+ */
+function addEpisode(event) {
+  // Prep form
+  let form = new FormData(event.target);
+  for (const [key, value] of [...form.entries()]) {
+    if (value === '') { form.delete(key); }
+  }
+  form.append('series_id', '{{series.id}}');
+
+  $.ajax({
+    type: 'POST',
+    url: '/api/episodes/new',
+    data: JSON.stringify(Object.fromEntries(form)),
+    contentType: 'application/json',
+    success: episode => {
+      const {season_number, episode_number} = episode;
+      showInfoToast(`Created Season ${season_number} Episode ${episode_number}`);
+      getEpisodeData();
+      getStatistics();
+    }, error: response => showErrorToast({title: 'Error Creating Episode', response}),
   });
 }
 
@@ -1440,6 +1448,6 @@ function removePlexLabels(buttonElement) {
     type: 'DELETE',
     url: `/api/series/{{series.id}}/plex-labels`,
     success: () => showInfoToast('Removed Labels'),
-    error: response => showErrorToast({title: 'Error Updating Episode', response}),
+    error: response => showErrorToast({title: 'Error Removing Labels', response}),
   });
 }
