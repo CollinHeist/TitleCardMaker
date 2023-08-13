@@ -886,7 +886,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
         # Remove labels from all Episodes
         for plex_episode in series.episodes(container_size=500):
             plex_episode: PlexEpisode
+            log.debug(f'Removed {labels} from {plex_episode.labels} of {plex_episode}')
             plex_episode.removeLabel(labels)
-            log.debug(f'Removed {labels} from {plex_episode.labels}')
 
         return None
