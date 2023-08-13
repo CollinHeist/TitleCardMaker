@@ -43,8 +43,14 @@ async function getAllSeries(page=1) {
     // Progress bar
     const progressBar = clone.querySelector('.progress');
     const cardVal = Math.min(series.card_count, series.episode_count);
-    progressBar.setAttribute('data-value', `${cardVal},${series.episode_count-cardVal}`);
-    progressBar.setAttribute('data-total', series.episode_count);
+    if (cardVal > 0) {
+      if (series.monitored) {
+        progressBar.setAttribute('data-value', `${cardVal},${series.episode_count-cardVal},0,0`);
+      } else {
+        progressBar.setAttribute('data-value', `0,0,${cardVal},${series.episode_count-cardVal}`);
+      }
+      progressBar.setAttribute('data-total', series.episode_count);
+    }
 
     return clone;
   });
