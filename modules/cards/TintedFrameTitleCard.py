@@ -198,7 +198,12 @@ class TintedFrameTitleCard(BaseCardType):
             log.warning(f'Logo file not provided')
             self.valid = False
 
-        self.episode_text_font = episode_text_font
+        try:
+            self.episode_text_font = Path(episode_text_font)
+        except Exception as exc:
+            log.exception(f'Invalid episode text font', exc)
+            self.valid = False
+
         self.episode_text_font_size = episode_text_font_size
         self.episode_text_vertical_shift = episode_text_vertical_shift
         self.frame_color = frame_color
