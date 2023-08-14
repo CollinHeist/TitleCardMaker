@@ -601,6 +601,13 @@ class TintedFrameTitleCard(BaseCardType):
             if 'episode_text_color' in extras:
                 extras['episode_text_color'] =\
                     TintedFrameTitleCard.EPISODE_TEXT_COLOR
+            if 'episode_text_font' in extras:
+                extras['episode_text_font'] =\
+                    TintedFrameTitleCard.EPISODE_TEXT_FONT
+            if 'episode_text_font_size' in extras:
+                extras['episode_text_font_size'] = 1.0
+            if 'episode_text_vertical_shift' in extras:
+                extras['episode_text_vertical_shift'] = 0
             if 'frame_color' in extras:
                 extras['frame_color'] = TintedFrameTitleCard.TITLE_COLOR
 
