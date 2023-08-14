@@ -5,7 +5,7 @@ from re import match as re_match
 from typing import Literal, Optional, Union
 
 from pydantic import (
-    FilePath, PositiveFloat, conint, constr, root_validator, validator
+    FilePath, PositiveFloat, PositiveInt, conint, constr, root_validator, validator
 )
 
 from app.schemas.base import Base, BetterColor
@@ -294,7 +294,11 @@ class TintedFrameCardType(BaseCardTypeAllText):
     font_vertical_shift: int = 0
     separator: str = '-'
     episode_text_color: Optional[BetterColor] = None
+    episode_text_font: FilePath = TintedFrameTitleCard.EPISODE_TEXT_FONT
+    episode_text_font_size: PositiveFloat = 1.0
+    episode_text_vertical_shift: int = 0
     frame_color: Optional[BetterColor] = None
+    frame_width: PositiveInt = TintedFrameTitleCard.BOX_WIDTH
     top_element: OuterElement = 'title'
     middle_element: MiddleElement = 'omit'
     bottom_element: OuterElement = 'index'
