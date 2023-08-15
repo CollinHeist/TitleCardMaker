@@ -213,6 +213,7 @@ class LogoCardType(BaseCardTypeCustomFontAllText):
     stroke_color: BetterColor = 'black'
     omit_gradient: bool = True
     use_background_image: bool = False
+    background: BetterColor = 'black'
     blur_only_image: bool = False
 
     @root_validator(skip_on_failure=True)
