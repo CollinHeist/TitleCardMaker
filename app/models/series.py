@@ -26,6 +26,7 @@ def regex_replace(pattern, replacement, string):
     return re_sub(pattern, replacement, string, IGNORECASE)
 
 
+# pylint: disable=no-self-argument,comparison-with-callable
 class Series(Base):
     """
     SQL Table that defines a Series. This contains any Series-level
@@ -148,7 +149,7 @@ class Series(Base):
         return regex_replace(r'^(a|an|the)(\s)', '', self.name.lower())
 
     @sort_name.expression
-    def sort_name(cls: 'Series'): # pylint: disable=no-self-argument
+    def sort_name(cls: 'Series'):
         """Class-expression of `sort_name` property."""
 
         return func.regex_replace(r'^(a|an|the)(\s)', '', func.lower(cls.name))
@@ -166,14 +167,14 @@ class Series(Base):
         """Number of unique seasons in this Series' linked Episodes."""
 
         return len(set(episode.season_number for episode in self.episodes))
-    
+
 
     @hybrid_property
     def episode_count(self) -> int:
         """Number of Episodes linked to this Series."""
 
         return len(self.episodes)
-    
+
 
     @hybrid_property
     def card_count(self) -> int:
@@ -344,11 +345,12 @@ class Series(Base):
 
         return self.sort_name < name
 
-    @comes_before.expression # pylint: disable=no-self-argument
+    @comes_before.expression
     def comes_before(cls, name: str) -> bool:
         """Class expression of the `comes_before()` method."""
 
         return cls.sort_name < name
+
 
     @hybrid_method
     def comes_after(self, name: str) -> bool:
