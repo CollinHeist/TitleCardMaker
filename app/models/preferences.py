@@ -77,6 +77,8 @@ class Preferences:
         'use_magick_prefix', 'current_version', 'available_version',
         'blacklisted_blueprints', 'advanced_scheduling', 'require_auth',
         'task_crontabs',
+
+        'sonarr_args',
     )
 
 
@@ -208,6 +210,7 @@ class Preferences:
         self.sonarr_use_ssl = True
         self.sonarr_downloaded_only = True
         self.sonarr_libraries = []
+        self.sonarr_args = {}
 
         self.use_tmdb = False
         self.tmdb_api_key = ''
