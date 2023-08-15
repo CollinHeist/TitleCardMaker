@@ -94,7 +94,7 @@ async function showDeleteModal(templateId) {
 /*
  * Parse the given Form and submit an API request to patch this Template.
  */
-function updateTemplate(form) {
+function updateTemplate(form, templateId) {
   let listData = {
     argument: [], operation: [], reference: [],
     extra_keys: [], extra_values: [],
@@ -130,7 +130,7 @@ function updateTemplate(form) {
 
   $.ajax({
     type: 'PATCH',
-    url: `/api/templates/${templateObj.id}`,
+    url: `/api/templates/${templateId}`,
     data: JSON.stringify({
       ...Object.fromEntries(form.entries()),
       ...listData,
@@ -414,7 +414,7 @@ async function getAllTemplates() {
     // Update via API
     $(`#template-id${templateObj.id} form`).on('submit', (event) => {
       event.preventDefault();
-      updateTemplate(new FormData(event.target));
+      updateTemplate(new FormData(event.target, templateObj.id));
     });
     // Delete via API
     $(`#template-id${templateObj.id} button[button-type="delete"]`).on('click', (event) => {

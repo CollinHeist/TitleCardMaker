@@ -449,7 +449,7 @@ def add_series(
     Raises:
         HTTPException (404) if any specified linked objects do not exist.
     """
-    
+
     # Convert object to dictionary
     new_series_dict = new_series.dict()
 

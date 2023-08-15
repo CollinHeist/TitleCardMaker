@@ -281,6 +281,7 @@ async function initializeExtraDropdowns(value, dropdownElements, popupHeaderElem
     clearable: true,
     allowAdditions: true,
     onChange: function(value, text, $selectedItem) {
+      if ($selectedItem === null) { return; }
       // Update the popup to the newly selected field
       $selectedItem.closest('.field').find('.popup .header').text(text);
       $selectedItem.closest('.field').find('.popup .description').html(popups[value]);
