@@ -47,9 +47,10 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             api_key: str,
             verify_ssl: bool = True,
             downloaded_only: bool = True,
-            server_id: int = 0,
+            interface_id: int = 0,
             *,
             log: Logger = log,
+            **_,
         ) -> None:
         """
         Construct a new instance of an interface to Sonarr.
@@ -60,7 +61,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             verify_ssl: Whether to verify SSL requests to Sonarr.
             downloaded_only: Whether to ignore Episode that are not
                 downloaded when querying Sonarr for Episode data.
-            server_id: Server ID of this server.
+            interface_id: Interface ID of this interface.
             log: (Keyword) Logger for all log messages.
 
         Raises:
@@ -87,7 +88,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
 
         # Base parameters for sending requests to Sonarr
         self.__standard_params = {'apikey': api_key}
-        self.server_id = server_id
+        self.server_id = interface_id
         self.downloaded_only = downloaded_only
 
         # Query system status to verify connection to Sonarr
@@ -472,7 +473,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
                     break
 
 
-    def get_all_tags(self) -> list[dict[str, Any]]:
+    def get_all_tags(self) -> list[dict[Literal['id', 'label'], Any]]:
         """
         Get all tags present in Sonarr.
 
