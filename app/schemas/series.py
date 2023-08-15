@@ -24,7 +24,7 @@ FilterArgument = Literal[tuple(ARGUMENT_KEYS)]
 class Condition(Base):
     argument: FilterArgument
     operation: FilterOperation
-    reference: str
+    reference: Optional[str] = None
 
 class Translation(Base):
     language_code: LanguageCode
