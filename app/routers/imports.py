@@ -16,7 +16,7 @@ from app.internal.imports import (
 )
 from app.internal.series import download_series_poster, set_series_database_ids
 from app.internal.sources import download_series_logo
-import app.models as models
+from app import models
 from app.schemas.font import NamedFont
 from app.schemas.imports import (
     ImportCardDirectory, ImportSeriesYaml, ImportYaml, MultiCardImport

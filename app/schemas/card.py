@@ -3,7 +3,7 @@ from typing import Literal, Optional
 
 from pydantic import Field, validator, root_validator
 
-from app.schemas.base import Base, UpdateBase, validate_argument_lists_to_dict
+from app.schemas.base import Base, DictKey, UpdateBase, validate_argument_lists_to_dict
 from app.schemas.font import TitleCase
 from app.schemas.preferences import Style
 
@@ -17,11 +17,11 @@ LocalCardIdentifiers = Literal[
 """
 Models of card types and series extras.
 """
-
-class Extra(Base):
+class CardExtra(Base):
     name: str
-    identifier: str
+    identifier: DictKey
     description: str
+    tooltip: Optional[str] = None
 
 class CardType(Base):
     name: str
@@ -31,7 +31,7 @@ class CardType(Base):
     source: Literal['local', 'remote']
     supports_custom_fonts: bool
     supports_custom_seasons: bool
-    supported_extras: list[Extra]
+    supported_extras: list[CardExtra]
     description: list[str]
 
 class LocalCardType(CardType):

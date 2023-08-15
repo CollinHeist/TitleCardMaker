@@ -8,7 +8,7 @@ from pydantic import (
     FilePath, PositiveFloat, PositiveInt, conint, constr, root_validator, validator
 )
 
-from app.schemas.base import Base, BetterColor
+from app.schemas.base import Base, BetterColor, DictKey
 from modules.cards.AnimeTitleCard import AnimeTitleCard
 from modules.cards.ComicBookTitleCard import ComicBookTitleCard
 from modules.cards.CutoutTitleCard import CutoutTitleCard
@@ -37,6 +37,13 @@ LocalCardIdentifiers = Literal[
 """
 Base classes
 """
+class Extra(Base):
+    name: str
+    identifier: DictKey
+    description: str
+    tooltip: Optional[str] = None
+    card_type: str
+
 class BaseCardType(Base):
     source_file: FilePath
     card_file: Path

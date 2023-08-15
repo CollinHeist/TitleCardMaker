@@ -1,11 +1,14 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from typing import Literal, Union
 
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel, constr, root_validator
 
 
 # Default value to use for arguments in Update objects that accept None
 UNSPECIFIED = '__unspecified_'
+
+# String that can be used as key in a dictionary
+DictKey = constr(regex=r'^[a-zA-Z]+[^ -]*$', min_length=1)
 
 # Pydantic base class
 class Base(BaseModel):
