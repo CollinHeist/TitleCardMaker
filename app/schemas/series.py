@@ -1,7 +1,7 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from typing import Any, Literal, Optional
 
-from pydantic import constr, Field, root_validator, validator  # pylint: disable=no-name-in-module
+from pydantic import conint, constr, Field, root_validator, validator  # pylint: disable=no-name-in-module
 
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.base import (
@@ -49,13 +49,8 @@ class BaseTemplate(BaseConfig):
     translations: Optional[list[Translation]] = None
 
 class BaseSeries(BaseConfig):
-    name: str = Field(..., min_length=1, title='Series name')
-    year: int = Field(
-        ...,
-        ge=1900,
-        title='Series year',
-        description='Year the series first aired'
-    )
+    name: constr(min_length=1)
+    year: conint(ge=1900)
     monitored: bool = True
     template_ids: Optional[list[int]] = None
     match_titles: bool = True
