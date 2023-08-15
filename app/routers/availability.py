@@ -12,6 +12,7 @@ from app.internal.availability import get_latest_version
 from app import models
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.card import CardType, LocalCardType, RemoteCardType
+from app.schemas.card_type import Extra
 from app.schemas.preferences import (
     EpisodeDataSourceToggle, Preferences, StyleOption
 )
@@ -125,6 +126,29 @@ def get_remote_card_types(request: Request) -> list[RemoteCardType]:
             status_code=500,
             detail=f'Error encountered while getting remote card types'
         ) from e
+
+
+@availablility_router.get('/extras')
+def get_all_supported_extras(
+        request: Request,
+        show_excluded: bool = Query(default=False),
+        preferences: Preferences = Depends(get_preferences),
+    ) -> list[Extra]:
+    """
+    Get details of all the available Extras for local and remote card
+    types.
+
+    - show_excluded: Whether to include globally excluded card types in
+    the returned list.
+    """
+
+    return [
+        {'card_type': card_type.identifier} | extra.dict()
+        for card_type in LocalCards + _get_remote_cards(log=request.state.log)
+        if (show_excluded
+            or card_type.identifier not in preferences.excluded_card_types)
+        for extra in card_type.supported_extras
+    ]
 
 
 @availablility_router.get('/template-filters', status_code=200, tags=['Templates'])
