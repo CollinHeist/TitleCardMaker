@@ -257,6 +257,7 @@ async function getAllTemplates() {
           return {name: operation, value: operation, selected: false};
         }),
       });
+      refreshTheme();
     });
     // Card type
     loadCardTypes({
@@ -414,7 +415,7 @@ async function getAllTemplates() {
     // Update via API
     $(`#template-id${templateObj.id} form`).on('submit', (event) => {
       event.preventDefault();
-      updateTemplate(new FormData(event.target, templateObj.id));
+      updateTemplate(new FormData(event.target), templateObj.id);
     });
     // Delete via API
     $(`#template-id${templateObj.id} button[button-type="delete"]`).on('click', (event) => {
