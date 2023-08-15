@@ -1,3 +1,20 @@
+/*
+ * Submit an API request to create a new Template. If successful, then all 
+ * Templates are reloaded.
+ */
+function addTemplate() {
+  $.ajax({
+    type: 'POST',
+    url: '/api/templates/new',
+    data: JSON.stringify({name: 'Blank Template'}),
+    contentType: 'application/json',
+    success: response => {
+      showInfoToast(`Created Template #${response.id}`);
+      getAllTemplates();
+    }, error: response => showErrorToast({title: 'Error Creating Template', response}),
+  });
+}
+
 async function reloadPreview(watchStatus, formElement, cardElement, imgElement) {
   let form = new FormData(formElement);
   let listData = {extra_keys: [], extra_values: []};
@@ -74,6 +91,58 @@ async function showDeleteModal(templateId) {
   $('#delete-template-modal').modal('show');
 }
 
+/*
+ * Parse the given Form and submit an API request to patch this Template.
+ */
+function updateTemplate(form) {
+  let listData = {
+    argument: [], operation: [], reference: [],
+    extra_keys: [], extra_values: [],
+    season_title_ranges: [], season_title_values: [],
+    language_code: [], data_key: [],
+  };
+  for (const [key, value] of [...form.entries()]) {
+    if (Object.keys(listData).includes(key) && value !== '') {
+      listData[key].push(value); 
+    }
+  }
+  // Parse array of Filters
+  let filters = [];
+  listData.argument.forEach((value, index) => {
+    if (value !== '') {
+      filters.push({
+        argument: value,
+        operation: listData.operation[index],
+        reference: listData.reference[index]
+      });
+    }
+  });
+  // Parse array of Translations
+  let translations = [];
+  listData.language_code.forEach((value, index) => {
+    if (value !== '') {
+      translations.push({
+        language_code: value,
+        data_key: listData.data_key[index]
+      });
+    }
+  });
+
+  $.ajax({
+    type: 'PATCH',
+    url: `/api/templates/${templateObj.id}`,
+    data: JSON.stringify({
+      ...Object.fromEntries(form.entries()),
+      ...listData,
+      translations: translations,
+      filters: filters,
+    }),
+    contentType: 'application/json',
+    success: updatedTemplate => showInfoToast(`Updated Template "${updatedTemplate.name}"`),
+    error: response => showErrorToast({title: 'Error Updating Template', response}),
+  });
+}
+
 async function getAllTemplates() {
   const allFilterOptions = await fetch('/api/available/template-filters').then(resp => resp.json());
   // const allCardTypes = await fetch('/api/available/card-types').then(resp => resp.json());
@@ -110,10 +179,6 @@ async function getAllTemplates() {
       }
     }
     // Hide episode text set later
-    // if (templateObj.hide_episode_text) {
-    //   base.querySelector('input[name="hide_episode_text"]').setAttribute('checked', '');
-    //   base.querySelector('.field[data-value="episode-text-format"]').className = 'ui disabled field';
-    // }
     // Episode text format
     base.querySelector('input[name="episode_text_format"]').value = templateObj.episode_text_format;
     // Ignore localized
@@ -126,15 +191,11 @@ async function getAllTemplates() {
     // Translations added later
     // Extras
     if (Object.entries(templateObj.extras).length > 0) {
-      const labelDiv = base.querySelector('.field[data-value="extra-key"]');
-      const inputDiv = base.querySelector('.field[data-value="extra-value"]');
+      const extraField = base.querySelector('.field[data-value="extras"]');
       for (const [key, value] of Object.entries(templateObj.extras)) {
-        const label = document.createElement('input');
-        label.name = 'extra_keys'; label.type = 'text'; label.value = key;
-        labelDiv.appendChild(label);
-        const valueElem = document.createElement('input');
-        valueElem.name = 'extra_values'; valueElem.type = 'text'; valueElem.value = value;
-        inputDiv.appendChild(valueElem)
+        const extra = document.getElementById('extra-template').content.cloneNode(true);
+        extra.querySelector('input[name="extra_values"]').value = value;
+        extraField.appendChild(extra);
       }
     }
     // Update card preview(s)
@@ -303,6 +364,18 @@ async function getAllTemplates() {
         });
       }
     }
+    // Extras
+    if (Object.entries(templateObj.extras).length > 0) {
+      for (const [index, [key, value]] of Object.entries(templateObj.extras).entries()) {
+        initializeExtraDropdowns(
+          key,
+          $(`#template-id${templateObj.id} .dropdown[data-value="extra_keys"]`).eq(index),
+          $(`#template-id${templateObj.id} .field[data-value="extras"] .popup .header`).eq(index),
+          $(`#template-id${templateObj.id} .field[data-value="extras"] .popup .description`).eq(index),
+        );
+      }
+    }
+    $('.field[data-value="extras"] .link.icon').popup({inline: true});
     // Add new field with add translation button
     $(`#template-id${templateObj.id} .button[data-add-field="translation"]`).on('click', () => {
       const newTranslation = document.querySelector('#translation-template').content.cloneNode(true);
@@ -328,69 +401,23 @@ async function getAllTemplates() {
     });
     // Add new fields with add extra button
     $(`#template-id${templateObj.id} .button[data-value="add-extra"]`).on('click', () => {
-      const newKey = document.createElement('input');
-      newKey.name = 'extra_keys'; newKey.type = 'text';
-      const newValue = document.createElement('input');
-      newValue.name = 'extra_values'; newValue.type = 'text';
-      $(`#template-id${templateObj.id} >* .field[data-value="extra-key"]`).append(newKey);
-      $(`#template-id${templateObj.id} >* .field[data-value="extra-value"]`).append(newValue);
+      const newExtra = document.getElementById('extra-template').content.cloneNode(true);
+      $(`#template-id${templateObj.id} .field[data-value="extras"]`).append(newExtra);
+      initializeExtraDropdowns(
+        null,
+        $(`#template-id${templateObj.id} .dropdown[data-value="extra_keys"]`).last(),
+      );
+      refreshTheme();
+      $('.field[data-value="extras"] .link.icon').popup({inline: true});
     });
     
     // Update via API
-    $(`#template-id${templateObj.id} >* form`).on('submit', (event) => {
+    $(`#template-id${templateObj.id} form`).on('submit', (event) => {
       event.preventDefault();
-      // Parse form
-      let form = new FormData(event.target);
-      let listData = {
-        argument: [], operation: [], reference: [],
-        extra_keys: [], extra_values: [],
-        season_title_ranges: [], season_title_values: [],
-        language_code: [], data_key: [],
-      };
-      for (const [key, value] of [...form.entries()]) {
-        if (Object.keys(listData).includes(key) && value !== '') { listData[key].push(value); }
-      }
-      // Parse array of Filters
-      let filters = [];
-      listData.argument.forEach((value, index) => {
-        if (value !== '') {
-          filters.push({argument: value, operation: listData.operation[index], reference: listData.reference[index]});
-        }
-      });
-      // Parse array of Translations
-      let translations = [];
-      listData.language_code.forEach((value, index) => {
-        if (value !== '') {
-          translations.push({language_code: value, data_key: listData.data_key[index]});
-        }
-      });
-
-      $.ajax({
-        type: 'PATCH',
-        url: `/api/templates/${templateObj.id}`,
-        data: JSON.stringify({
-          ...Object.fromEntries(form.entries()),
-          ...listData,
-          translations: translations,
-          filters: filters,
-        }),
-        contentType: 'application/json',
-        success: updatedTemplate => {
-          $.toast({
-            class: 'blue info',
-            title: `Updated Template "${updatedTemplate.name}"`,
-          });
-        }, error: response => {
-          $.toast({
-            class: 'error',
-            title: 'Error Updating Template',
-            message: response.responseJSON.detail,
-          });
-        }, complete: () => {}
-      });
+      updateTemplate(new FormData(event.target));
     });
     // Delete via API
-    $(`#template-id${templateObj.id} >* button[button-type="delete"]`).on('click', (event) => {
+    $(`#template-id${templateObj.id} button[button-type="delete"]`).on('click', (event) => {
       event.preventDefault();
       showDeleteModal(templateObj.id);
     });
@@ -409,27 +436,4 @@ async function getAllTemplates() {
 
 async function initAll() {
   getAllTemplates();
-
-  // Create new (blank) template on button click
-  $('#new-template').on('click', () => {
-    $.ajax({
-      type: 'POST',
-      url: '/api/templates/new',
-      data: JSON.stringify({name: 'Blank Template'}),
-      contentType: 'application/json',
-      success: (response) => {
-        $.toast({
-          class: 'blue info',
-          title: `Created Template #${response.id}`,
-        });
-        getAllTemplates();
-      }, error: (response) => {
-        $.toast({
-          class: 'error',
-          title: 'Error Creating Template',
-          message: response.responseJSON.detail,
-        });
-      }
-    });
-  });
 }

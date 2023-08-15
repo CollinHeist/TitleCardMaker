@@ -24,7 +24,7 @@
 }
 
 /* Remove minimum width on progress bar */
-.card .ui.progress .bar {
+.card .ui.progress.attached .bar {
   min-width: 0;
 }
 

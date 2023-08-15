@@ -263,6 +263,28 @@ async function initalizeSeriesConfig() {
     }
   }
   {% endif %}
+  // Extras
+  {% if series.extras is not none %}
+  if (Object.entries({{series.extras|safe}}).length > 0) {
+    // Add field for each extra
+    const extraField = document.querySelector('.field[data-value="extras"]');
+    for (const [key, value] of Object.entries({{series.extras|safe}})) {
+      const extra = document.getElementById('extra-template').content.cloneNode(true);
+      extra.querySelector('input[name="extra_values"]').value = value;
+      extraField.appendChild(extra);
+    }
+    // Initialize each extra dropdown
+    for (const [index, [key, value]] of Object.entries({{series.extras|safe}}).entries()) {
+      initializeExtraDropdowns(
+        key,
+        $(`#card-config-form .dropdown[data-value="extra_keys"]`).eq(index),
+        $(`#card-config-form .field[data-value="extras"] .popup .header`).eq(index),
+        $(`#card-config-form .field[data-value="extras"] .popup .description`).eq(index),
+      );
+    }
+    $('#card-config-form .field[data-value="extras"] .link.icon').popup({inline: true});
+  }
+  {% endif %}
   // Add season title on button press
   $('#card-config-form .button[data-value="addTitle"]').on('click', () => {
     const newRange = document.createElement('input');
@@ -769,13 +791,6 @@ async function initAll() {
         optional: true,
         depends: 'language_code',
         rules: [{type: 'regExp', value: /^$|^[a-z]+[^ ]*$/i}],
-      }, extra_keys: {
-        optional: true,
-        rules: [{type: 'regExp', value: /^([a-z]+[^ ]*|)$/i}],
-      }, extra_values: {
-        optional: true,
-        depends: 'extra_keys',
-        // rules: [{type: 'minLength[1]'}],
       },
     },
   });
@@ -795,6 +810,7 @@ async function initAll() {
       },
     }
   });
+
   // Add episode extra button press
   $('#episode-extras-modal .button[data-add-field="extras"]').on('click', () => {
     const newKey = document.createElement('input');
@@ -818,14 +834,15 @@ async function initAll() {
       language_code: [], data_key: [],
     };
     let template_ids = [];
+    console.log(form);
     for (const [key, value] of [...form.entries()]) {
       // Handle Templates
       if (key === 'template_ids' && value != '') {
         template_ids = value.split(',');
       }
       // Add list data fields to listData object
-      if (Object.keys(listData).includes(key)) {
-        if (value !== '') { listData[key].push(value);  }
+      if (Object.keys(listData).includes(key) && value !== '') {
+        listData[key].push(value); 
       }
       // Handle percentage values
       else if (value != '' && ['font_size', 'font_kerning', 'font_stroke_width'].includes(key)) {
@@ -901,6 +918,9 @@ async function initAll() {
  * Submit an API request clear some list values (e.g. extras, titles, or
  * translations) for this Series. If successful, the data is also removed from
  * the DOM.
+ * 
+ * @param {string} attribute - Name of the attribue being deleted. This should
+ * be 'season_titles', 'translations', or 'extras'.
  */
 function deleteListValues(attribute) {
   let data;
@@ -923,8 +943,7 @@ function deleteListValues(attribute) {
       } else if (attribute === 'translations') {
         $('.field [data-value="translations"] >*').remove();
       } else if (attribute === 'extras') {
-        $('.field[data-value="extra-key"] input').remove();
-        $('.field[data-value="extra-value"] input').remove();
+        $('.field[data-value="extras"] .field').remove();
       }
       showInfoToast('Deleted Values');
     }, error: response => showErrorToast({title: 'Error Deleting Values', response}),
@@ -1450,4 +1469,18 @@ function removePlexLabels(buttonElement) {
     success: () => showInfoToast('Removed Labels'),
     error: response => showErrorToast({title: 'Error Removing Labels', response}),
   });
+}
+
+/*
+ * Add a blank Series Extra to the card configuration form.
+ */
+function addBlankSeriesExtra() {
+  const newExtra = document.getElementById('extra-template').content.cloneNode(true);
+  $('#card-config-form .field[data-value="extras"]').append(newExtra);
+  initializeExtraDropdowns(
+    null,
+    $(`#card-config-form .dropdown[data-value="extra_keys"]`).last(),
+  );
+  refreshTheme();
+  $('#card-config-form .field[data-value="extras"] .link.icon').popup({inline: true});
 }

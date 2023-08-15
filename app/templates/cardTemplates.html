@@ -37,6 +37,27 @@
     </div>
   </template>
 
+  <template id="extra-template">
+    <div class="ui field">
+      <div class="ui left labeled action input">
+        <div class="ui dropdown long search scrolling label" data-value="extra_keys">
+          <input type="hidden" name="extra_keys">
+          <div class="default text">Extra</div>
+          <i class="dropdown icon"></i>
+          <div class="menu"></div>
+        </div>
+        <div class="ui icon input">
+          <input name="extra_values" type="text" placeholder="Extra Value..">
+          <i class="question circle outline link icon"></i>
+          <div class="ui fixed wide uninvertible popup">
+            <div class="header">{header}</div>
+            <div class="description">{description}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
   <template id="translation-template">
     <span class="ui text">
       Translate
@@ -189,6 +210,7 @@
               </div>
 
               <div class="ui visible floating warning message">
+                <i class="exclamation triangle icon"></i>
                 Custom season titles and episode text are not reflected in live preview.
               </div>
 
@@ -237,23 +259,15 @@
                 </div>
               </div>
 
-              <div class="ui field">
+              <div class="ui field" data-value="extras">
                 <label>Extras</label>
-                <div class="two fields">
-                  <div data-value="extra-key" class="four wide right aligned field">
-                    <label>Key</label>
-                    <!-- <input name="extra_keys" type="text"> -->
-                  </div>
-                  <div data-value="extra-value" class="four wide field">
-                    <label>Value</label>
-                    <!-- <input name="extra_values" type="text"> -->
-                  </div>
-                </div>
-                <div data-value="add-extra" class="ui circular mini icon add-field button">
-                  <i class="plus square outline icon"></i>
-                  Add Extra
-                </div>
+                <!-- Added later -->
               </div>
+              <div data-value="add-extra" class="ui circular mini icon add-field button">
+                <i class="plus square outline icon"></i>
+                Add Extra
+              </div>
+              <br>
 
               <!-- Buttons -->
               <button button-type="submit" class="ui primary animated button" type="submit">
@@ -308,7 +322,9 @@
     <div id="main-content" class="article">
       <!-- Page title -->
       <h1 class="ui header">Templates</h1>
-      <button id="new-template" class="ui primary tertiary button">Create New Template</button>
+      <button class="ui primary tertiary button" onlick="addTemplate();">
+        Create New Template
+      </button>
 
       <!-- Templates -->
       <div id="templates"><!-- Elements added asynchronously --></div>

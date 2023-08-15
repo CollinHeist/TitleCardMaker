@@ -1,4 +1,7 @@
-// Function to create a new empty font
+/*
+ * Submit an API request to create a new Font. If successful, then all Fonts
+ * are reloaded.
+ */
 function addFont() {
   const data = {name: ' Blank Custom Font'};
   $.ajax({

@@ -13,6 +13,27 @@
   <link rel="stylesheet" type="text/css" href="/templates/css/series.css"/>
 
   <!-- Templates -->
+  <template id="extra-template">
+    <div class="ui field">
+      <div class="ui left labeled action input">
+        <div class="ui dropdown long search scrolling label" data-value="extra_keys">
+          <input type="hidden" name="extra_keys">
+          <div class="default text">Extra</div>
+          <i class="dropdown icon"></i>
+          <div class="menu"></div>
+        </div>
+        <div class="ui icon input">
+          <input name="extra_values" type="text" placeholder="Extra Value..">
+          <i class="question circle outline link icon"></i>
+          <div class="ui fixed wide uninvertible popup">
+            <div class="header">{header}</div>
+            <div class="description">{description}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
   <template id="episode-row">
     <tr class="center aligned"> 
       <td data-column="edit" class="selectable">
@@ -760,35 +781,19 @@
                   </div>
 
                   <!-- Extras -->
-                  <div class="ui field">
+                  <div class="ui eight wide field" data-value="extras">
                     <label>Extras</label>
-                    <div class="two fields">
-                      <div data-value="extra-key" class="four wide right aligned field">
-                        <label>Key</label>
-                        {% if series.extras is not none %}
-                        {% for extra_key, _ in series.extras.items() %}
-                        <input name="extra_keys" type="text" value="{{extra_key}}">
-                        {% endfor %}
-                        {% endif %}
-                      </div>
-                      <div data-value="extra-value" class="four wide field">
-                        <label>Value</label>
-                        {% if series.extras is not none %}
-                        {% for _, extra_value in series.extras.items() %}
-                        <input name="extra_values" type="text" value="{{extra_value}}">
-                        {% endfor %}
-                        {% endif %}
-                      </div>
-                    </div>
-                    <div data-add-field="extra" class="ui circular mini icon add-field button">
-                      <i class="plus square outline icon"></i>
-                      Add Extra
-                    </div>
-                    <div class="ui circular mini icon add-field red button" onclick="deleteListValues('extras')">
-                      <i class="trash alternate outline icon"></i>
-                      Delete Extras
-                    </div>
+                    <!-- Added later -->
                   </div>
+                  <div onclick="addBlankSeriesExtra();" class="ui circular mini icon add-field button">
+                    <i class="plus square outline icon"></i>
+                    Add Extra
+                  </div>
+                  <div onclick="deleteListValues('extras')" class="ui circular mini icon add-field red button">
+                    <i class="trash alternate outline icon"></i>
+                    Delete Extras
+                  </div>
+                  <br>
 
                   <!-- Submit changes button -->
                   <button id="submit-changes" class="ui animated primary button" type="submit">

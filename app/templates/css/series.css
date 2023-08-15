@@ -12,6 +12,11 @@
   min-width: 0;
 }
 
+/* Reduce margin between extra fields */
+.field[data-value="extras"] .field {
+  margin-bottom: 0.3em;
+}
+
 /* Add field buttons appear transparent */
 .add-field.button {
   background: transparent;

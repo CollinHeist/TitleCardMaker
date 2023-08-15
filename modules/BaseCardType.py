@@ -14,6 +14,7 @@ class Extra(Base): # pylint: disable=missing-class-docstring
     name: str
     identifier: str
     description: str
+    tooltip: Optional[str] = None
 
 
 class CardDescription(Base): # pylint: disable=missing-class-docstring

@@ -114,7 +114,7 @@ function populateBlueprintCard(card, blueprint, blueprintId) {
   if (blueprint.fonts.length === 0) {
     card.querySelector('[data-value="font-count"]').remove();
   } else {
-    let text = `<b>${blueprint.fonts.length}</b> Named Font` + (blueprint.fonts.length > 1 ? 's' : '');
+    let text = `<b>${blueprint.fonts.length}</b> Font` + (blueprint.fonts.length > 1 ? 's' : '');
     card.querySelector('[data-value="font-count"]').innerHTML = text;
   }
   if (blueprint.templates.length === 0) {

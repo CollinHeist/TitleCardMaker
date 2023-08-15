@@ -227,3 +227,63 @@ async function downloadFileBlob(filename, blob) {
   downloadLink.click();
   document.body.removeChild(downloadLink);
 }
+
+/*
+ * Initialize the extra key dropdowns with all available options.
+ */
+let allExtras, cardTypeSet, cardTypes;
+let popups = {};
+async function initializeExtraDropdowns(value, dropdownElements, popupHeaderElement, popupDescriptionElement) {
+  // Only re-query for extras if not initialized
+  if (allExtras === undefined) {
+    allExtras = await fetch('/api/available/extras').then(resp => resp.json());
+    // Get list of all unique card types
+    cardTypeSet = new Set();
+    allExtras.forEach(extra => cardTypeSet.add(extra.card_type));
+    cardTypes = Array.from(cardTypeSet);
+  }
+
+  // Create list of values for the dropdown
+  let dropdownValues = [];
+  cardTypes.forEach(card_type => {
+    // Add dividing header for each card type
+    dropdownValues.push({name: card_type, type: 'header', divider: true});
+
+    // Add each extra
+    allExtras.forEach(extra => {
+      // Store the popup data for this identifier
+      popups[extra.identifier] = (extra.tooltip || extra.description)
+        .replaceAll('<v>', '<span class="ui blue text">')
+        .replaceAll('</v>', '</span>');
+
+      if (extra.card_type === card_type) {
+        dropdownValues.push({
+          name: extra.name,
+          text: extra.name,
+          value: extra.identifier,
+          description: extra.description,
+          descriptionVertical: true,
+          selected: extra.identifier === value,
+        });
+        // Initialize popup
+        if (extra.identifier === value && popupHeaderElement && popupDescriptionElement) {
+          popupHeaderElement[0].innerText = extra.name;
+          popupDescriptionElement[0].innerHTML = popups[extra.identifier];
+        }
+      }
+    });
+  });
+
+  // Initialize dropdown
+  dropdownElements.dropdown({
+    placeholder: 'Extra',
+    values: dropdownValues,
+    clearable: true,
+    allowAdditions: true,
+    onChange: function(value, text, $selectedItem) {
+      // Update the popup to the newly selected field
+      $selectedItem.closest('.field').find('.popup .header').text(text);
+      $selectedItem.closest('.field').find('.popup .description').html(popups[value]);
+    }
+  });
+}
