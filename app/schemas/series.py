@@ -64,24 +64,9 @@ class BaseSeries(BaseConfig):
     font_interline_spacing: Optional[int] = None
     font_vertical_shift: Optional[int] = None
 
-    emby_library_name: Optional[str] = Field(
-        default=None,
-        min_length=1,
-        title='Emby library name',
-        description='Library within Emby with this series',
-    )
-    jellyfin_library_name: Optional[str] = Field(
-        default=None,
-        min_length=1,
-        title='Jellyfin library name',
-        description='Library within Jellyfin with this series',
-    )
-    plex_library_name: Optional[str] = Field(
-        default=None,
-        min_length=1,
-        title='Plex library name',
-        description='Library within Plex with this series',
-    )
+    emby_library_name: Optional[constr(min_length=1)] = None
+    jellyfin_library_name: Optional[constr(min_length=1)] = None
+    plex_library_name: Optional[constr(min_length=1)] = None
     emby_id: EmbyID = None
     imdb_id: IMDbID = None
     jellyfin_id: JellyfinID = None
@@ -92,7 +77,7 @@ class BaseSeries(BaseConfig):
     directory: Optional[str] = None
 
 class BaseUpdate(UpdateBase):
-    name: Optional[str] = Field(default=UNSPECIFIED, min_length=1)
+    name: Optional[constr(min_length=1)] = UNSPECIFIED
     monitored: bool = UNSPECIFIED
     font_id: Optional[int] = UNSPECIFIED
     sync_specials: Optional[bool] = UNSPECIFIED
