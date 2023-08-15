@@ -30,7 +30,8 @@ class FadeTitleCard(BaseCardType):
                 description='Color to use for the episode text',
             ),
         ], description=[
-            'Modification of the Standard style that is intended to be used for 4:3 aspect-ratio source images.',
+            'Modification of the Standard style that is intended to be used '
+            'for 4:3 aspect-ratio source images.',
             'A logo can also be placed above the title text.',
         ]
     )

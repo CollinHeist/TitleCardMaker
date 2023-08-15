@@ -121,7 +121,7 @@ class Offset:
 
 """
 Lists of all possible Positions for season text around each possible
-roma numeral.
+roman numeral.
 """
 POSITIONS: dict[str, list[Position]] = {
     'I': [
@@ -176,6 +176,7 @@ POSITIONS: dict[str, list[Position]] = {
         Position('Right', Offset('+395+0'), '88x88'),
     ]
 }
+
 
 class RomanNumeralTitleCard(BaseCardType):
     """

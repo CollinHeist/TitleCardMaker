@@ -137,22 +137,35 @@ class ComicBookTitleCard(BaseCardType):
                 name='Index Text Position',
                 identifier='index_text_position',
                 description='Position of the index text on the top of the image',
+                tooltip='Either <v>left</v>, <v>middle</v>, or <v>right</v>.'
             ), Extra(
                 name='Title Textbox Fill Color',
                 identifier='text_box_fill_color',
-                description='Fill color of the textbox for the title text',
+                description='Fill color of the text box for the title text',
             ), Extra(
                 name='Title Textbox Edge Color',
                 identifier='text_box_edge_color',
-                description='Edge color of the textbox for the title text',
+                description='Edge color of the text box for the title text',
             ), Extra(
                 name='Title Text Rotation Angle',
                 identifier='title_text_rotation_angle',
-                description='Rotation (in degrees) of the title text',
+                description='Rotation of the title text',
+                tooltip=(
+                    'Can be any number, or specified like <v>random[lower, '
+                    'upper]</v> for a random angle between <v>lower</v> and '
+                    '<v>upper</v> to be chosen. Positive angles are tilted '
+                    'down, negative tilted up. Unit is degrees.'
+                ),
             ), Extra(
                 name='Index Text Rotation Angle',
                 identifier='index_text_rotation_angle',
-                description='Rotation (in degrees) of the index text',
+                description='Rotation of the index text',
+                tooltip=(
+                    'Can be any number, or specified like <v>random[lower, '
+                    'upper]</v> for a random angle between <v>lower</v> and '
+                    '<v>upper</v> to be chosen. Positive angles are tilted '
+                    'down, negative tilted up. Unit is degrees.'
+                ),
             ), Extra(
                 name='Banner Fill Color',
                 identifier='banner_fill_color',
@@ -160,19 +173,29 @@ class ComicBookTitleCard(BaseCardType):
             ), Extra(
                 name='Title Banner Vertical Shift',
                 identifier='title_banner_shift',
-                description='Additional vertical shift (in pixels) to apply to the title text banner',
+                description='Additional vertical shift to apply to the title text banner',
+                tooltip=(
+                    'Positive values shift the banner up, negative values '
+                    'shift the banner down. Unit is pixels.'
+                ),
             ), Extra(
                 name='Index Banner Vertical Shift',
                 identifier='index_banner_shift',
-                description='Additional vertical shift (in pixels) to apply to the index text banner',
+                description='Additional vertical shift to apply to the index text banner',
+                tooltip=(
+                    'Positive values shift the banner up, negative values '
+                    'shift the banner down. Unit is pixels.'
+                ),
             ), Extra(
                 name='Hide Title Banner',
                 identifier='hide_title_banner',
                 description='Whether to hide the title text banner',
+                tooltip='Either <v>True</v> or <v>False</v>.',
             ), Extra(
                 name='Hide Index Banner',
                 identifier='hide_index_banner',
                 description='Whether to hide the index text banner',
+                tooltip='Either <v>True</v> or <v>False</v>.',
             ),
         ], description=[
             'Title card styled after a comic book page.',

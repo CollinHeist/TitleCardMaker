@@ -40,6 +40,10 @@ class StandardTitleCard(BaseCardType):
                 name='Gradient Omission',
                 identifier='omit_gradient',
                 description='Whether to omit the gradient overlay',
+                tooltip=(
+                    'Either <v>True</v> or <v>False</v>. If <v>True</v>, text '
+                    'may appear less legible on brighter images.'
+                ),
             )
         ], description=[
             'The most "generic" type of title card.',

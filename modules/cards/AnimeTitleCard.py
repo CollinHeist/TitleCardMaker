@@ -26,15 +26,27 @@ class AnimeTitleCard(BaseCardType):
             Extra(
                 name='Kanji Text',
                 identifier='kanji',
-                description='Japanese text to place above title text',
+                description='Japanese text placed above title text',
+                tooltip=(
+                    'Usually provided automatically when specifing a Japanese '
+                    'to Kanji Translation.'
+                ),
             ), Extra(
                 name='Require Kanji Text',
                 identifier='require_kanji',
                 description='Whether to require kanji text for card creation',
+                tooltip=(
+                    'Either <v>True</v> or <v>False</v>. If <v>True</v>, cards '
+                    'without Kanji will not be created.'
+                ),
             ), Extra(
                 name='Kanji Vertical Shift',
                 identifier='kanji_vertical_shift',
                 description='Additional vertical offset to apply only to kanji text',
+                tooltip=(
+                    'Positive values shift the Kanji up, negative values shift '
+                    'Kanji down. Unit is pixels.'
+                ),
             ), Extra(
                 name='Episode Text Color',
                 identifier='episode_text_color',
@@ -51,6 +63,10 @@ class AnimeTitleCard(BaseCardType):
                 name='Gradient Omission',
                 identifier='omit_gradient',
                 description='Whether to omit the gradient overlay',
+                tooltip=(
+                    'Either <v>True</v> or <v>False</v>. If <v>True</v>, text '
+                    'may appear less legible on brighter images.'
+                ),
             ),
         ], description=[
             'Title card with all text aligned in the lower left of the image.',

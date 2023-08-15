@@ -31,9 +31,9 @@ class OlivierTitleCard(BaseCardType):
                 identifier='stroke_color',
                 description='Color to use for the text stroke',
             ), Extra(
-                name='Background Color or Image',
-                identifier='background',
-                description='Background color or image to use behind the logo',
+                name='Interword Spacing',
+                identifier='interword_spacing',
+                description='Spacing to offset the spacing between words',
             ),
         ], description=[
             'Title card with left-aligned title and episode text.',

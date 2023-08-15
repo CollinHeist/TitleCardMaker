@@ -37,18 +37,30 @@ class LandscapeTitleCard(BaseCardType):
                 name='Bounding Box Toggle',
                 identifier='add_bounding_box',
                 description='Whether to add a bounding box around the title text',
+                tooltip='Either <v>True</v>, or <v>False</v>.',
             ), Extra(
                 name='Bounding Box Color',
                 identifier='box_color',
-                description='Color of the bound box. Defaults to match the title text',
+                description='Color of the bounding box around the title text.',
+                tooltip='Matches the font color by default.',
             ), Extra(
                 name='Bounding Box Adjustments',
                 identifier='box_adjustments',
                 description='Manual adjustments to the bounds of the bounding box',
+                tooltip=(
+                    'Specified like <v>{top} {right} {bottom} {left}</v>. For '
+                    'example: <v>-20 10 0 5</v>. Positive values move that '
+                    'face out, negative values move the face in. Unit is pixels.'
+                ),
             ), Extra(
                 name='Image Darkening',
                 identifier='darken',
-                description='Whether to darken all of the image or the area inside the bounding box',
+                description='Whether to dark all or parts of the image',
+                tooltip=(
+                    'Either <v>all</v> to darken the entire image, or '
+                    '<v>box</v> to darken only the bounding box. This is to '
+                    'improve text legibility on very bright images.'
+                ),
             ),
         ], description=[
             'Title-centric title cards that do not feature any text except a title.',

@@ -41,11 +41,20 @@ class DividerTitleCard(BaseCardType):
             ), Extra(
                 name='Title Text Position',
                 identifier='title_text_position',
-                description='Which side the title text should be positioned relative to the index text',
+                description=(
+                    'Which side the title text should be positioned relative '
+                    'to the index text'
+                ),
+                tooltip='Either <v>left</v>, or <v>right</v>.',
             ), Extra(
                 name='Text Position',
                 identifier='text_position',
                 description='Where on the image the text should be positioned',
+                tooltip=(
+                    'Either <v>upper left</v>, <v>upper right</v>, '
+                    '<v>right</v>, <v>lower right</v>, <v>lower left</v>, or '
+                    '<v>left</v>.'
+                ),
             ),
         ], description=[
             'A simple title card featuring the title and index text separated by a vertical divider.',

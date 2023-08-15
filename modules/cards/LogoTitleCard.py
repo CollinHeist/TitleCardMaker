@@ -28,13 +28,15 @@ class LogoTitleCard(BaseCardType):
                 identifier='separator',
                 description='Character to separate season and episode text',
             ), Extra(
-                name='Background Color or Image',
+                name='Background Color',
                 identifier='background',
-                description='Background color or image to use behind the logo',
+                description='Background color to use behind the logo',
+                tooltip='Ignored if a background image is used.',
             ), Extra(
                 name='Background Image Enabling',
                 identifier='use_background_image',
-                description='Whether the background is an image (not a color)',
+                description='Whether to use a background image (not color)',
+                tooltip='Either <v>True</v>, or <v>False</v>.',
             ), Extra(
                 name='Stroke Text Color',
                 identifier='stroke_color',
@@ -43,10 +45,18 @@ class LogoTitleCard(BaseCardType):
                 name='Gradient Omission',
                 identifier='omit_gradient',
                 description='Whether to omit the gradient overlay',
+                tooltip=(
+                    'Either <v>True</v> or <v>False</v>. If <v>True</v>, text '
+                    'may appear less legible on brighter images.'
+                ),
             ), Extra(
                 name='Blur Image Only',
                 identifier='blur_only_image',
-                description='Whether to only blur the background image (not the logo)',
+                description='Whether to only blur the background image.',
+                tooltip=(
+                    'Either <v>True</v> or <v>False</v>. If <v>True</v>, the '
+                    'logo is not blurred.'
+                ),
             ),
         ], description=[
             'Variation of the Standard title card featuring a central logo.',
@@ -98,7 +108,7 @@ class LogoTitleCard(BaseCardType):
         'source_file', 'output_file', 'title_text', 'season_text',
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
         'font_file', 'font_kerning', 'font_interline_spacing', 'font_size',
-        'font_stroke_width',  'font_vertical_shift', 'separator', 'logo',
+        'font_stroke_width', 'font_vertical_shift', 'separator', 'logo',
         'omit_gradient', 'background', 'stroke_color', 'use_background_image',
         'blur_only_image',
     )

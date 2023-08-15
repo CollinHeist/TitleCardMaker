@@ -28,6 +28,7 @@ class FrameTitleCard(BaseCardType):
                 name='Episode Text Position',
                 identifier='episode_text_position',
                 description='Position of the episode text relative to the title text',
+                tooltip='Either <v>left</v>, <v>surround</v>, or <v>right</v>.',
             ), Extra(
                 name='Episode Text Color',
                 identifier='episode_text_color',

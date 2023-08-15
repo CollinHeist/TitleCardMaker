@@ -35,16 +35,23 @@ class TintedGlassTitleCard(BaseCardType):
             ), Extra(
                 name='Episode Text Position',
                 identifier='episode_text_position',
-                description='Position of the episode text relative to the title text - "left", "right", or "center"',
+                description='Position of the episode text relative to the title text',
+                tooltip='Either <v>left</v>, <v>center</v>, or <v>right</v>.',
             ), Extra(
                 name='Bounding Box Adjustments',
                 identifier='box_adjustments',
-                description='Manual adjustments to the bounds of the title text "glass" box',
+                description='Manual adjustments to the bounds of the box',
+                tooltip=(
+                    'Specified like <v>{top} {right} {bottom} {left}</v>. For '
+                    'example: <v>-20 10 0 5</v>. Positive values move that '
+                    'face out, negative values move the face in. Unit is pixels.'
+                ),
             ),
         ], description=[
             'Card type featuring a darkened and blurred rounded rectangle '
             'surrounding the title and episode text.',
-            'By default, these cards also feature the name of the series in the episode text.',
+            'By default, these cards also feature the name of the series in '
+            'the episode text.',
         ]
     )
     # pylint: enable=line-too-long
