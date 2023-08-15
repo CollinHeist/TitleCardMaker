@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import Iterator
+from typing import Iterator, Optional
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import Session
@@ -7,13 +7,15 @@ from sqlalchemy.orm import Session
 from app.database.session import (
     EmbyInterfaceLocal, ImageMagickInterfaceLocal, JellyfinInterfaceLocal,
     PreferencesLocal, PlexInterfaceLocal, Scheduler, SessionLocal,
-    SonarrInterfaceLocal, TMDbInterfaceLocal
+    SonarrInterfaceLocal, TMDbInterfaceLocal,
+    SonarrInterfaces,
 )
 from app.models.preferences import Preferences
 
 from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
 from modules.ImageMagickInterface import ImageMagickInterface
+from modules.InterfaceGroup import InterfaceGroup
 from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
@@ -196,13 +198,52 @@ def refresh_sonarr_interface(*, log: Logger = log) -> None:
         log: (Keyword) Logger for all log messages.
     """
 
-    preferences = get_preferences()
     global SonarrInterfaceLocal
     SonarrInterface.REQUEST_TIMEOUT = 15
     SonarrInterfaceLocal = SonarrInterface(
-        **preferences.sonarr_arguments, log=log
+        **get_preferences().sonarr_arguments, log=log
     )
     SonarrInterface.REQUEST_TIMEOUT = 600
+
+
+def refresh_sonarr_interfaces(
+        interface_id: Optional[int] = None,
+        *,
+        log: Logger = log,
+    ) -> None:
+    """
+    Refresh the global Sonarr `InterfaceGroup`.
+
+    Args:
+        log: (Keyword) Logger for all log messages.
+    """
+
+    if interface_id is None:
+        SonarrInterfaces.refresh_all(get_preferences().sonarr_args, log=log)
+    else:
+        interface_args = get_preferences().sonarr_args[interface_id]
+        SonarrInterfaces.refresh(interface_id, interface_args, log=log)
+
+
+def get_sonarr_interfaces() -> InterfaceGroup[int, SonarrInterface]:
+    """
+    Dependency to get all interfaces to Sonarr. This refreshes the
+    connections if Sonarr is enabled but any interfaces are not
+    initialized.
+
+    Returns:
+        Global InterfaceGroup for SonarrInterfaces.
+    """
+
+    preferences = get_preferences()
+    if preferences.use_sonarr and not SonarrInterfaces:
+        try:
+            refresh_sonarr_interfaces()
+        except Exception as exc:
+            log.exception(f'Error connecting to Sonarr', exc)
+
+    return SonarrInterfaces
+
 
 def get_sonarr_interface() -> SonarrInterface:
     """

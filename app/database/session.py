@@ -20,6 +20,7 @@ from app.models.preferences import Preferences
 from modules.Debug import log
 from modules.EmbyInterface2 import EmbyInterface
 from modules.ImageMagickInterface import ImageMagickInterface
+from modules.InterfaceGroup import InterfaceGroup
 from modules.JellyfinInterface2 import JellyfinInterface
 from modules.PlexInterface2 import PlexInterface
 from modules.SonarrInterface2 import SonarrInterface
@@ -163,6 +164,15 @@ if PreferencesLocal.use_sonarr:
         SonarrInterfaceLocal.REQUEST_TIMEOUT = 600
     except Exception as e:
         pass
+
+SonarrInterfaces: InterfaceGroup[int, SonarrInterface] = InterfaceGroup(SonarrInterface)
+if PreferencesLocal.use_sonarr:
+    try:
+        SonarrInterfaces = InterfaceGroup.from_argument_list(
+            SonarrInterface, PreferencesLocal.sonarr_args.values(),
+        )
+    except Exception as exc:
+        log.exception(f'Error initializating SonarrInterfaces', exc)
 
 TMDbInterfaceLocal = None
 if PreferencesLocal.use_tmdb:
