@@ -4,7 +4,8 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Request
 
 from app.dependencies import * # pylint: disable=W0401,W0614,W0621
 from app.internal.auth import get_current_user
-from app.internal.connection import update_connection
+from app.internal.connection import update_connection, update_connection2
+from app.schemas.connection import NewSonarrConnection, SonarrConnection2, UpdateSonarr2
 from app.schemas.preferences import (
     EmbyConnection, JellyfinConnection, PlexConnection, SonarrConnection,
     SonarrLibrary, TautulliConnection, TMDbConnection, UpdateEmby,
@@ -22,12 +23,39 @@ connection_router = APIRouter(
 )
 
 
+@connection_router.post('/sonarr', status_code=201)
+def add_sonarr_connection(
+        request: Request,
+        new_connection: NewSonarrConnection = Body(...),
+        preferences: Preferences = Depends(get_preferences),
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
+    ) -> SonarrConnection2:
+    """
+    
+    """
+
+    # Get contextual logger
+    log = request.state.log
+
+    # Create interface, get generated ID
+    kwargs = new_connection.dict()
+    interface_id, _ = sonarr_interfaces.append_interface(log=log, **kwargs)
+
+    # Store these interface kwargs, commit preference changes
+    finalized_kwargs = kwargs | {'interface_id': interface_id}
+    preferences.sonarr_args[interface_id] = finalized_kwargs
+    preferences.commit(log=log)
+
+    return finalized_kwargs
+
+
 @connection_router.put('/{connection}/{status}', status_code=204)
 def enable_or_disable_connection(
         request: Request,
         connection: Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
         status: Literal['enable', 'disable'],
         preferences: Preferences = Depends(get_preferences),
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
     ) -> None:
     """
     Set the enabled/disabled status of the given connection.
@@ -55,6 +83,8 @@ def enable_or_disable_connection(
         preferences.use_sonarr = status == 'enable'
         if preferences.use_sonarr:
             refresh_sonarr_interface(log=log)
+            refresh_sonarr_interfaces(log=log)
+            log.warning(f'{sonarr_interfaces=!r}')
     elif connection == 'tmdb':
         preferences.use_tmdb = status == 'enable'
         if preferences.use_tmdb:
@@ -105,6 +135,24 @@ def get_sonarr_connection_details(
     """
 
     return preferences
+
+
+@connection_router.get('/sonarr/{interface_id}', status_code=200)
+def get_sonarr_connection_details_by_id(
+        interface_id: int,
+        preferences: Preferences = Depends(get_preferences),
+    ) -> SonarrConnection:
+    """
+    Get the details for the Sonarr connection with the given ID.
+    """
+
+    if interface_id in preferences.sonarr_args:
+        return preferences.sonarr_args
+
+    raise HTTPException(
+        status_code=404,
+        detail=f'No Sonarr connection with ID {interface_id}',
+    )
 
 
 @connection_router.get('/tmdb', status_code=200)
@@ -183,6 +231,25 @@ def update_sonarr_connection(
 
     return update_connection(
         preferences, update_sonarr, 'sonarr', log=request.state.log
+    )
+
+
+@connection_router.patch('/sonarr/{interface_id}', status_code=200)
+def update_sonarr_connection_by_id(
+        request: Request,
+        interface_id: int,
+        update_sonarr: UpdateSonarr2 = Body(...),
+        preferences: Preferences = Depends(get_preferences),
+    ) -> SonarrConnection:
+    """
+    Update the connection details for Sonarr.
+
+    - update_sonarr: Sonarr connection details to modify.
+    """
+
+    return update_connection2(
+        preferences, interface_id, update_sonarr, 'sonarr',
+        log=request.state.log
     )
 
 
