@@ -1,7 +1,3 @@
-function sortStandardizeStr(text) {
-  return text.toString().replace(/^(a|an|the)(\s)/i, '').toLowercase();
-}
-
 function isSmallScreen() {
   return window.screen.availHeight < 768;
 }
@@ -43,7 +39,7 @@ function formatFastAPIError(errorResponse) {
 }
 
 function showErrorToast(args) {
-  const {title, response, displayTime=0} = args;
+  const {title, response, displayTime=10000} = args;
   $.toast({
     class: 'error',
     title,
@@ -91,13 +87,6 @@ function getActiveTemplates(activeIds, allTemplates) {
   });
 
   return values;
-}
-
-function formatValidationError(response) {
-  const detail = response.responseJSON.detail;
-  let message = '';
-  detail.forEach(obj => message += `<li>${obj.loc[1]} : ${obj.msg}</li>`)
-  return `<ul class="ui list">${message}</ul>`;
 }
 
 function createPageElement(pageNumber, pageText, active = false, navigateFunction) {
@@ -196,7 +185,7 @@ async function downloadFile(filename, url) {
   // Fetch contents from URL
   const response = await fetch(url);
   if (response.status !== 200 ) {
-    $.toast({class: 'error', title: 'Error Downloading File'});
+    showErrorToast({title: 'Error Downloading File'});
     return;
   }
 
@@ -229,18 +218,28 @@ async function downloadFileBlob(filename, blob) {
 }
 
 /*
- * Initialize the extra key dropdowns with all available options.
+ *
  */
 let allExtras, cardTypeSet, cardTypes;
-let popups = {};
-async function initializeExtraDropdowns(value, dropdownElements, popupHeaderElement, popupDescriptionElement) {
-  // Only re-query for extras if not initialized
+async function queryAvailableExtras() {
   if (allExtras === undefined) {
     allExtras = await fetch('/api/available/extras').then(resp => resp.json());
     // Get list of all unique card types
     cardTypeSet = new Set();
     allExtras.forEach(extra => cardTypeSet.add(extra.card_type));
     cardTypes = Array.from(cardTypeSet);
+  }
+}
+
+/*
+ * Initialize the extra key dropdowns with all available options.
+ */
+
+let popups = {};
+async function initializeExtraDropdowns(value, dropdownElements, popupHeaderElement, popupDescriptionElement) {
+  // Only re-query for extras if not initialized
+  if (allExtras === undefined) {
+    await queryAvailableExtras();
   }
 
   // Create list of values for the dropdown

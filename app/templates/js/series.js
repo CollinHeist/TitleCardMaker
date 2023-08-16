@@ -613,7 +613,6 @@ async function getEpisodeData(page=1) {
   episodeTable.replaceChildren(...rows);
 
   // Get all available elements for initializing dropdowns
-  const allCardTypes = await getAllCardTypes(false);
   const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
   const allFonts = await fetch('/api/fonts/all').then(resp => resp.json());
   const allStyles = await fetch('/api/available/styles').then(resp => resp.json());
@@ -632,7 +631,6 @@ async function getEpisodeData(page=1) {
     });
     // Card type
     loadCardTypes({
-      allCardTypes: allCardTypes,
       element: `#episode-id${episode.id} .dropdown[data-value="card_type"]`,
       isSelected: (identifier) => identifier === episode.card_type,
       showExcluded: false,

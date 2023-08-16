@@ -136,12 +136,12 @@ function updateTemplate(form, templateId) {
 
 async function getAllTemplates() {
   const allFilterOptions = await fetch('/api/available/template-filters').then(resp => resp.json());
-  // const allCardTypes = await fetch('/api/available/card-types').then(resp => resp.json());
   const allFonts = await fetch('/api/fonts/all').then(resp => resp.json());
   const allStyles = await fetch('/api/available/styles').then(resp => resp.json());
   const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
   const allEpisodeDataSources = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
   const allTranslations = await fetch('/api/available/translations').then(resp => resp.json());
+  await queryAvailableExtras();
   const elements = allTemplates.items.map(templateObj => {
     // Clone template
     const base = document.querySelector('#template').content.cloneNode(true);
