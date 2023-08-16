@@ -33,6 +33,10 @@ class FrameTitleCard(BaseCardType):
                 name='Episode Text Color',
                 identifier='episode_text_color',
                 description='Color to use for the episode text',
+            ), Extra(
+                name='Interword Spacing',
+                identifier='interword_spacing',
+                description='Spacing to offset the spacing between words',
             ),
         ], description=[
             'Title card styled to look like a Polaroid photo.',
