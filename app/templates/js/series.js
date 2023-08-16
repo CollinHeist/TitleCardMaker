@@ -375,6 +375,9 @@ function editEpisodeExtras(episode) {
   });
   // Add existing extras
   if (episode.extras !== null) {
+    // Remove any existing fields
+    $('#episode-extras-modal .field[data-value="extras"] .field').remove();
+    // Add new fields
     const extraField = $('#episode-extras-modal .field[data-value="extras"]');
     for (const [key, value] of Object.entries(episode.extras)) {
       const extra = document.getElementById('extra-template').content.cloneNode(true);
@@ -387,7 +390,7 @@ function editEpisodeExtras(episode) {
         $(`#episode-extras-modal  .field[data-value="extras"] .popup .description`).first(),
       );
     }
-    $('.field[data-value="extras"] .link.icon').popup({inline: true});
+    $('#episode-extras-modal .field[data-value="extras"] .link.icon').popup({inline: true});
   }
   // Assign functions to delete extra buttons
   $('#episode-extras-modal .button[data-delete-field="extras"]').off('click').on('click', () => {
@@ -400,6 +403,7 @@ function editEpisodeExtras(episode) {
   });
   // Show modal
   $('#episode-extras-modal').modal('show');
+
   // Submit episode extras form
   $('#episode-extras-form').off('submit').on('submit', event => {
     event.preventDefault();
@@ -418,8 +422,13 @@ function editEpisodeExtras(episode) {
       url: `/api/episodes/${episode.id}`,
       data: JSON.stringify(data),
       contentType: 'application/json',
-      success: () => showInfoToast('Updated Episode'),
-      error: response => showErrorToast({title: 'Error Updating Episode', response}),
+      success: updatedEpisode => {
+        showInfoToast('Updated Episode');
+        // Update the extras/translation modal for this Episode
+        $(`#episode-id${episode.id} td[data-column="extras"] a`)
+          .off('click')
+          .on('click', () => editEpisodeExtras(updatedEpisode));
+      }, error: response => showErrorToast({title: 'Error Updating Episode', response}),
     });
   });
 }
@@ -1194,7 +1203,8 @@ function downloadSeriesLogo(url) {
     success: () => {
       showInfoToast('Downloaded Logo');
       // Update logo source to force refresh
-      $('#logoImage img')[0].src = `/source/{{series.path_safe_name}}/logo.png?${new Date().getTime()}`;
+      document.querySelector('#logoImage img').src = `/source/{{series.path_safe_name}}/logo.png?${new Date().getTime()}`;
+      document.querySelector('#logoImage').style.display = 'unset';
     },
     error: response => showErrorToast({title: 'Error Downloading Logo', response}),
   });
@@ -1454,7 +1464,7 @@ function removePlexLabels(buttonElement) {
 }
 
 /*
- * Add a blank Series Extra to the card configuration form.
+ * Add a blank Series Extra field to the card configuration form.
  */
 function addBlankSeriesExtra() {
   const newExtra = document.getElementById('extra-template').content.cloneNode(true);
@@ -1467,6 +1477,9 @@ function addBlankSeriesExtra() {
   $('#card-config-form .field[data-value="extras"] .link.icon').popup({inline: true});
 }
 
+/*
+ * Add a blank Episode Extra field to the Episode extra modal form.
+ */
 function addBlankEpisodeExtra() {
   const newExtra = document.getElementById('extra-template').content.cloneNode(true);
   $('#episode-extras-modal .field[data-value="extras"]').append(newExtra);
