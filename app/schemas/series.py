@@ -44,7 +44,7 @@ class BaseConfig(Base):
     episode_text_format: Optional[str] = None
 
 class BaseTemplate(BaseConfig):
-    name: str = Field(..., min_length=1, title='Template name')
+    name: constr(min_length=1)
     filters: list[Condition] = []
     translations: Optional[list[Translation]] = None
 
@@ -191,7 +191,7 @@ class NewSeries(BaseSeries):
 Update classes
 """
 class UpdateTemplate(BaseUpdate):
-    name: str = Field(default=UNSPECIFIED, min_length=1)
+    name: constr(min_length=1) = UNSPECIFIED
     filters: list[Condition] = UNSPECIFIED
     season_title_ranges: list[SeasonTitleRange] = UNSPECIFIED
     season_title_values: list[str] = UNSPECIFIED
@@ -199,8 +199,8 @@ class UpdateTemplate(BaseUpdate):
     extra_values: list[Any] = UNSPECIFIED
 
 class UpdateSeries(BaseUpdate):
-    name: str = Field(default=UNSPECIFIED, min_length=1)
-    year: int = Field(default=UNSPECIFIED, ge=1900)
+    name: constr(min_length=1) = UNSPECIFIED
+    year: conint(ge=1900) = UNSPECIFIED
 
     template_ids: Optional[list[int]] = UNSPECIFIED
     font_id: Optional[int] = UNSPECIFIED
