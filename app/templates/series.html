@@ -939,8 +939,14 @@
               </span>
             </div>
             <h3 class="ui dividing header">Source Images</h3>
-            <div id="files-list" class="ui stackable cards"><!-- Added asynchrously --></div>
+            <div id="files-list" class="ui stackable cards">
+              <!-- Added asynchrously -->
+            </div>
+
             <h3 class="ui dividing header">Logo</h3>
+            <div id="browse-logos-button" class="ui blue tertiary button" onclick="browseTmdbLogos();">
+              Browse TMDb Logos
+            </div>
             <div class="ui special raised card">
               <div id="logoImage" class="blurring dimmable image">
                 <div class="ui dimmer">
@@ -950,7 +956,7 @@
                     </div>
                   </div>
                 </div>
-                <img src="/source/{{series.path_safe_name}}/logo.png" loading="lazy" onerror="this.remove();">
+                <img src="/source/{{series.path_safe_name}}/logo.png" loading="lazy" onerror="document.getElementById('logoImage').style.display = 'None';" onload="$('#browse-logos-button').remove();">
               </div>
             </div>
           </div>
