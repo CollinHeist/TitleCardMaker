@@ -15,7 +15,7 @@ function addTemplate() {
   });
 }
 
-async function reloadPreview(watchStatus, formElement, cardElement, imgElement) {
+function reloadPreview(watchStatus, formElement, cardElement, imgElement) {
   let form = new FormData(formElement);
   let listData = {extra_keys: [], extra_values: []};
   if (watchStatus === 'watched' && form.get('watched_style') === '') {
@@ -47,18 +47,9 @@ async function reloadPreview(watchStatus, formElement, cardElement, imgElement) 
     url: '/api/cards/preview',
     data: JSON.stringify(previewCard),
     contentType: 'application/json',
-    success: response => {
-      imgElement.src = `${response}?${new Date().getTime()}`;
-    },
-    error: response => {
-      $.toast({
-        class: 'error',
-        title: 'Error Creating Preview Card',
-        message: response,
-      });
-    }, complete: () => {
-      cardElement.classList.remove('loading');
-    }
+    success: imageUrl => imgElement.src = `${imageUrl}?${new Date().getTime()}`,
+    error: response =>  showErrorToast({title: 'Error Creating Preview Card', response}),
+    complete: () => cardElement.classList.remove('loading'),
   });
 }
 
@@ -158,7 +149,8 @@ async function getAllTemplates() {
     // Set accordion title and title input
     base.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${templateObj.name}`;
     const nameElem = base.querySelector('input[name="name"]');
-    nameElem.placeholder = templateObj.name; nameElem.value = templateObj.name;
+    nameElem.placeholder = templateObj.name;
+    nameElem.value = templateObj.name;
     // Filters added later
     // Card type set later
     // Font set later
@@ -237,7 +229,7 @@ async function getAllTemplates() {
           })
         });
         if (condition.reference !== null) {
-          $(`#template-id${templateObj.id} input[data-value="filter-reference"]`).last()[0].value = condition.reference;
+          $(`#template-id${templateObj.id} input[data-value="filter-reference"]`).last().val(condition.reference);
         }
       }
     }
@@ -435,6 +427,6 @@ async function getAllTemplates() {
   refreshTheme();
 }
 
-async function initAll() {
+function initAll() {
   getAllTemplates();
 }
