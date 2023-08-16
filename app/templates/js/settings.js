@@ -148,21 +148,9 @@ function initAll() {
           excluded_card_types: excludedCardTypes,
         }),
         contentType: 'application/json',
-        success: response => { 
-          $.toast({
-            class: 'blue info',
-            title: 'Updated Settings',
-          });
-        }, error: response => {
-          $.toast({
-            class: 'error',
-            title: 'Unable to Update Settngs',
-            message: formatValidationError(response),
-            displayTime: 0,
-          });
-        }, complete: () => {
-          $('#save-changes').toggleClass('loading', false);
-        },
+        success: () => showInfoToast('Updated Settings'),
+        error: response => showErrorToast({title: 'Unable to Update Settngs', response}),
+        complete: () => $('#save-changes').toggleClass('loading', false),
       });
     });
 
