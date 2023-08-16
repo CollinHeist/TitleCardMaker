@@ -318,15 +318,6 @@ async function initalizeSeriesConfig() {
       ]
     });
   });
-  // Add extra on button press
-  $('#card-config-form .button[data-add-field="extra"]').on('click', () => {
-    const newKey = document.createElement('input');
-    newKey.name = 'extra_keys'; newKey.type = 'text';
-    const newValue = document.createElement('input');
-    newValue.name = 'extra_values'; newValue.type = 'text';
-    $('#card-config-form .field[data-value="extra-key"]').append(newKey);
-    $('#card-config-form .field[data-value="extra-value"]').append(newValue);
-  });
 }
 
 /*
@@ -374,7 +365,7 @@ function editEpisodeExtras(episode) {
     $('#episode-extras-modal .field[data-value="translation-value"]').append(newValue);
   }
   // Assign functions to add/delete translation buttons
-  $('#episode-extras-modal .button[data-delete-field="translations"]').on('click', () => {
+  $('#episode-extras-modal .button[data-delete-field="translations"]').off('click').on('click', () => {
     deleteObject({
       url: `/api/episodes/${episode.id}`,
       dataObject: {translations: {}},
@@ -384,14 +375,19 @@ function editEpisodeExtras(episode) {
   });
   // Add existing extras
   if (episode.extras !== null) {
-    for (let [key, value] of Object.entries(episode.extras)) {
-      const newKey = document.createElement('input');
-      newKey.name = 'extra_keys'; newKey.value = key;
-      const newValue = document.createElement('input');
-      newValue.name = 'extra_values'; newValue.value = value;
-      $('#episode-extras-modal .field[data-value="extra-key"]').append(newKey);
-      $('#episode-extras-modal .field[data-value="extra-value"]').append(newValue);
+    const extraField = $('#episode-extras-modal .field[data-value="extras"]');
+    for (const [key, value] of Object.entries(episode.extras)) {
+      const extra = document.getElementById('extra-template').content.cloneNode(true);
+      extra.querySelector('input[name="extra_values"]').value = value;
+      extraField.append(extra);
+      initializeExtraDropdowns(
+        key,
+        $(`#episode-extras-modal .dropdown[data-value="extra_keys"]`).first(),
+        $(`#episode-extras-modal  .field[data-value="extras"] .popup .header`).first(),
+        $(`#episode-extras-modal  .field[data-value="extras"] .popup .description`).first(),
+      );
     }
+    $('.field[data-value="extras"] .link.icon').popup({inline: true});
   }
   // Assign functions to delete extra buttons
   $('#episode-extras-modal .button[data-delete-field="extras"]').off('click').on('click', () => {
@@ -399,7 +395,7 @@ function editEpisodeExtras(episode) {
       url: `/api/episodes/${episode.id}`,
       dataObject: {extra_keys: null, extra_values: null},
       label: 'Extras',
-      deleteElements: '#episode-extras-modal .field[data-value="extras"] input',
+      deleteElements: '#episode-extras-modal .field[data-value="extras"] .field',
     });
   });
   // Show modal
@@ -804,21 +800,8 @@ async function initAll() {
         rules: [{type: 'regExp', value: /^[a-z]+[^ ]*$/i}],
       }, translation_value: {
         rules: [{type: 'minLength[1]'}],
-      }, extra_keys: {
-        optional: true,
-        rules: [{type: 'regExp', value: /^[a-z]+[^ ]*$/i}],
       },
     }
-  });
-
-  // Add episode extra button press
-  $('#episode-extras-modal .button[data-add-field="extras"]').on('click', () => {
-    const newKey = document.createElement('input');
-    newKey.name = 'extra_keys'; newKey.type = 'text';
-    const newValue = document.createElement('input');
-    newValue.name = 'extra_values'; newValue.type = 'text';
-    $(`#episode-extras-modal .field[data-value="extra-key"]`).append(newKey);
-    $(`#episode-extras-modal .field[data-value="extra-value"]`).append(newValue);
   });
 
   // Submit the updated series config
@@ -834,7 +817,6 @@ async function initAll() {
       language_code: [], data_key: [],
     };
     let template_ids = [];
-    console.log(form);
     for (const [key, value] of [...form.entries()]) {
       // Handle Templates
       if (key === 'template_ids' && value != '') {
@@ -1483,4 +1465,15 @@ function addBlankSeriesExtra() {
   );
   refreshTheme();
   $('#card-config-form .field[data-value="extras"] .link.icon').popup({inline: true});
+}
+
+function addBlankEpisodeExtra() {
+  const newExtra = document.getElementById('extra-template').content.cloneNode(true);
+  $('#episode-extras-modal .field[data-value="extras"]').append(newExtra);
+  initializeExtraDropdowns(
+    null,
+    $(`#episode-extras-modal .dropdown[data-value="extra_keys"]`).last(),
+  );
+  refreshTheme();
+  $('#episode-extras-modal .field[data-value="extras"] .link.icon').popup({inline: true});
 }

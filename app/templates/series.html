@@ -16,7 +16,7 @@
   <template id="extra-template">
     <div class="ui field">
       <div class="ui left labeled action input">
-        <div class="ui dropdown long search scrolling label" data-value="extra_keys">
+        <div class="ui uninvertible dropdown long search scrolling label" data-value="extra_keys">
           <input type="hidden" name="extra_keys">
           <div class="default text">Extra</div>
           <i class="dropdown icon"></i>
@@ -1206,18 +1206,9 @@
           <div class="ui divider"></div>
           <div data-value="extras" class="ui field">
             <label>Extras</label>
-            <div class="two fields">
-              <div data-value="extra-key" class="right aligned field">
-                <label>Key</label>
-                <!-- <input name="extra_keys" type="text"> -->
-              </div>
-              <div data-value="extra-value" class="fluid field">
-                <label>Value</label>
-                <!-- <input name="extra_values" type="text"> -->
-              </div>
-            </div>
+            <!-- Added later -->
           </div>
-          <div data-add-field="extras" class="ui circular mini icon add-field button">
+          <div onclick="addBlankEpisodeExtra();" class="ui circular mini icon add-field button">
             <i class="plus square outline icon"></i>
             Add Extra
           </div>
