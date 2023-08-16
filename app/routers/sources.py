@@ -12,7 +12,7 @@ from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard
 from app.internal.auth import get_current_user
 from app.internal.cards import delete_cards
 from app.internal.sources import (
-    get_source_image, download_episode_source_image, download_series_logo
+    get_source_image, download_episode_source_image, download_series_logo, process_svg_logo
 )
 from app import models
 from app.schemas.card import SourceImage, TMDbImage
@@ -395,6 +395,7 @@ async def set_series_logo(
         file: Optional[UploadFile] = None,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
+        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
     ) -> None:
     """
     Set the logo for the given Series. If there is an existing logo
@@ -430,10 +431,24 @@ async def set_series_logo(
             detail='URL or file are required',
         )
 
+    # Get Series logo file
+    file = series.get_logo_file(preferences.source_directory)
+
+    # If file already exists, warn about overwriting
+    if file.exists():
+        log.info(f'{series.log_str} logo file exists - replacing')
+
     # If only URL was required, attempt to download, error if unable
     if url is not None:
+        # If logo is SVG, handle separately
+        if url.endswith('.svg'):
+            return process_svg_logo(
+                url, series, file, imagemagick_interface, log=log,
+            )
+
         try:
             content = get(url, timeout=30).content
+            log.debug(f'Downloaded {len(content)} bytes from {url}')
         except Exception as e:
             log.exception(f'Download failed', e)
             raise HTTPException(
@@ -443,13 +458,6 @@ async def set_series_logo(
     # Use uploaded file if provided
     else:
         content = uploaded_file
-
-    # Get Series logo file
-    file = series.get_logo_file(preferences.source_directory)
-
-    # If file already exists, warn about overwriting
-    if file.exists():
-        log.info(f'{series.log_str} logo file exists - replacing')
 
     # Write new file to the disk
     file.write_bytes(content)

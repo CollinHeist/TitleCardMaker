@@ -147,6 +147,70 @@ def resolve_source_settings(
     )
 
 
+def process_svg_logo(
+        url: str,
+        series: Series,
+        logo_file: Path,
+        imagemagick_interface: Optional[ImageMagickInterface],
+        *,
+        log: Logger = log,
+    ) -> str:
+    """
+    Process the given SVG logo URL, converting it to a PNG file and
+    downloading it.
+
+    Args:
+        url: URL to the SVG file to download and process.
+        series: Series whose logo this is (for logging).
+        logo_file: Path to the directory where the logo will be written.
+        imagemagick_interface: Interface to use for SVG -> PNG
+            conversion.
+        log: (Keyword) Logger for all log messages.
+
+    Returns:
+        String of the asset path for the processed logo.
+
+    Raises:
+        HTTPException (409) if an SVG image was returned but cannot be
+            converted into PNG.
+        HTTPException (400) if the logo cannot be downloaded.
+    """
+
+    # If no ImageMagick, raise 409
+    if not imagemagick_interface:
+        raise HTTPException(
+            status_code=409,
+            detail=f'Cannot convert SVG logo, no valid ImageMagick interface'
+        )
+
+    # Download to temporary location pre-conversion
+    success = WebInterface.download_image(
+        url, imagemagick_interface.TEMPORARY_SVG_FILE, log=log,
+    )
+
+    # Downloaded, convert svg -> png
+    if success:
+        converted_logo = imagemagick_interface.convert_svg_to_png(
+            imagemagick_interface.TEMPORARY_SVG_FILE, logo_file,
+        )
+        # Logo conversion failed, raise 400
+        if converted_logo is None:
+            raise HTTPException(
+                status_code=400,
+                detail=f'SVG logo conversion failed'
+            )
+
+        log.debug(f'{series.log_str} Converted SVG logo to PNG')
+        log.info(f'{series.log_str} Downloaded logo')
+        return f'/source/{series.path_safe_name}/{logo_file.name}'
+
+    # Download failed, raise 400
+    raise HTTPException(
+        status_code=400,
+        detail=f'Unable to download logo'
+    )
+
+
 def download_series_logo(
         preferences: Preferences,
         emby_interface: Optional[EmbyInterface],
@@ -206,38 +270,8 @@ def download_series_logo(
 
         # If logo is an svg, convert
         if logo.endswith('.svg'):
-            # If no ImageMagick, raise 409
-            if not imagemagick_interface:
-                raise HTTPException(
-                    status_code=409,
-                    detail=f'Cannot convert SVG logo, no valid ImageMagick interface'
-                )
-
-            # Download to temporary location pre-conversion
-            success = WebInterface.download_image(
-                logo, imagemagick_interface.TEMPORARY_SVG_FILE, log=log,
-            )
-
-            # Downloaded, convert svg -> png
-            if success:
-                converted_logo = imagemagick_interface.convert_svg_to_png(
-                    imagemagick_interface.TEMPORARY_SVG_FILE, logo_file,
-                )
-                # Logo conversion failed, raise 400
-                if converted_logo is None:
-                    raise HTTPException(
-                        status_code=400,
-                        detail=f'SVG logo conversion failed'
-                    )
-
-                log.debug(f'{series.log_str} Converted SVG logo to PNG')
-                log.info(f'{series.log_str} Downloaded logo from {image_source}')
-                return f'/source/{series.path_safe_name}/{logo_file.name}'
-
-            # Download failed, raise 400
-            raise HTTPException(
-                status_code=400,
-                detail=f'Unable to download logo'
+            return process_svg_logo(
+                logo, series, logo_file, imagemagick_interface, log=log
             )
 
         # Logo is png and valid, download
