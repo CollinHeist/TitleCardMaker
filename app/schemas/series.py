@@ -1,7 +1,7 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
 from typing import Any, Literal, Optional
 
-from pydantic import constr, Field, root_validator, validator  # pylint: disable=no-name-in-module
+from pydantic import conint, constr, Field, root_validator, validator  # pylint: disable=no-name-in-module
 
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.base import (
@@ -24,7 +24,7 @@ FilterArgument = Literal[tuple(ARGUMENT_KEYS)]
 class Condition(Base):
     argument: FilterArgument
     operation: FilterOperation
-    reference: str
+    reference: Optional[str] = None
 
 class Translation(Base):
     language_code: LanguageCode
@@ -44,18 +44,13 @@ class BaseConfig(Base):
     episode_text_format: Optional[str] = None
 
 class BaseTemplate(BaseConfig):
-    name: str = Field(..., min_length=1, title='Template name')
+    name: constr(min_length=1)
     filters: list[Condition] = []
     translations: Optional[list[Translation]] = None
 
 class BaseSeries(BaseConfig):
-    name: str = Field(..., min_length=1, title='Series name')
-    year: int = Field(
-        ...,
-        ge=1900,
-        title='Series year',
-        description='Year the series first aired'
-    )
+    name: constr(min_length=1)
+    year: conint(ge=1900)
     monitored: bool = True
     template_ids: Optional[list[int]] = None
     match_titles: bool = True
@@ -69,24 +64,9 @@ class BaseSeries(BaseConfig):
     font_interline_spacing: Optional[int] = None
     font_vertical_shift: Optional[int] = None
 
-    emby_library_name: Optional[str] = Field(
-        default=None,
-        min_length=1,
-        title='Emby library name',
-        description='Library within Emby with this series',
-    )
-    jellyfin_library_name: Optional[str] = Field(
-        default=None,
-        min_length=1,
-        title='Jellyfin library name',
-        description='Library within Jellyfin with this series',
-    )
-    plex_library_name: Optional[str] = Field(
-        default=None,
-        min_length=1,
-        title='Plex library name',
-        description='Library within Plex with this series',
-    )
+    emby_library_name: Optional[constr(min_length=1)] = None
+    jellyfin_library_name: Optional[constr(min_length=1)] = None
+    plex_library_name: Optional[constr(min_length=1)] = None
     emby_id: EmbyID = None
     imdb_id: IMDbID = None
     jellyfin_id: JellyfinID = None
@@ -97,7 +77,7 @@ class BaseSeries(BaseConfig):
     directory: Optional[str] = None
 
 class BaseUpdate(UpdateBase):
-    name: Optional[str] = Field(default=UNSPECIFIED, min_length=1)
+    name: Optional[constr(min_length=1)] = UNSPECIFIED
     monitored: bool = UNSPECIFIED
     font_id: Optional[int] = UNSPECIFIED
     sync_specials: Optional[bool] = UNSPECIFIED
@@ -211,7 +191,7 @@ class NewSeries(BaseSeries):
 Update classes
 """
 class UpdateTemplate(BaseUpdate):
-    name: str = Field(default=UNSPECIFIED, min_length=1)
+    name: constr(min_length=1) = UNSPECIFIED
     filters: list[Condition] = UNSPECIFIED
     season_title_ranges: list[SeasonTitleRange] = UNSPECIFIED
     season_title_values: list[str] = UNSPECIFIED
@@ -219,8 +199,8 @@ class UpdateTemplate(BaseUpdate):
     extra_values: list[Any] = UNSPECIFIED
 
 class UpdateSeries(BaseUpdate):
-    name: str = Field(default=UNSPECIFIED, min_length=1)
-    year: int = Field(default=UNSPECIFIED, ge=1900)
+    name: constr(min_length=1) = UNSPECIFIED
+    year: conint(ge=1900) = UNSPECIFIED
 
     template_ids: Optional[list[int]] = UNSPECIFIED
     font_id: Optional[int] = UNSPECIFIED

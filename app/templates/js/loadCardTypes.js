@@ -1,12 +1,15 @@
+let allCardTypes;
 async function getAllCardTypes(showExcluded=false) {
-  return await fetch(`/api/available/card-types?show_excluded=${showExcluded}`).then(resp => resp.json());
+  if (allCardTypes === undefined) {
+    allCardTypes = await fetch(`/api/available/card-types?show_excluded=${showExcluded}`).then(resp => resp.json());
+  }
 }
 
 async function loadCardTypes(args) {
-  let {element, isSelected, showExcluded=false, dropdownArgs, allCardTypes} = args;
+  let {element, isSelected, showExcluded=false, dropdownArgs} = args;
   if (allCardTypes === undefined) {
     // Make API request for all types if not provided
-    allCardTypes = await getAllCardTypes(showExcluded);
+    await getAllCardTypes(showExcluded);
   }
 
   // Generate lists of local/remote types

@@ -647,7 +647,7 @@ def update_episode_watch_statuses(
 
     if series.emby_library_name is not None:
         if emby_interface is None:
-            log.warning(f'Cannot query watch statuses - no Emby connection')
+            log.warning(f'{series.log_str} Cannot query watch statuses - no Emby connection')
         else:
             emby_interface.update_watched_statuses(
                 series.emby_library_name,
@@ -656,7 +656,7 @@ def update_episode_watch_statuses(
             )
     elif series.jellyfin_library_name is not None:
         if jellyfin_interface is None:
-            log.warning(f'Cannot query watch statuses - no Jellyfin connection')
+            log.warning(f'{series.log_str} Cannot query watch statuses - no Jellyfin connection')
         else:
             jellyfin_interface.update_watched_statuses(
                 series.jellyfin_library_name,
@@ -666,7 +666,7 @@ def update_episode_watch_statuses(
             )
     elif series.plex_library_name is not None:
         if plex_interface is None:
-            log.warning(f'Cannot query watch statuses - no Plex connection')
+            log.warning(f'{series.log_str} Cannot query watch statuses - no Plex connection')
         else:
             plex_interface.update_watched_statuses(
                 series.plex_library_name,

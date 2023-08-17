@@ -320,7 +320,6 @@ def get_episode_card(
 
 @card_router.post('/key', tags=['Plex', 'Tautulli'], status_code=200)
 def create_cards_for_plex_rating_keys(
-        background_tasks: BackgroundTasks,
         request: Request,
         plex_rating_keys: Union[int, list[int]] = Body(...),
         preferences: Preferences = Depends(get_preferences),
@@ -424,18 +423,15 @@ def create_cards_for_plex_rating_keys(
         if image is None:
             log.info(f'{episode.log_str} has no source image - skipping')
             continue
-        create_episode_card(db, preferences, background_tasks, episode, log=log)
+        create_episode_card(db, preferences, None, episode, log=log)
 
         # Add this Series to list of Series to load
         if episode.series not in series_to_load:
             series_to_load.append(episode.series)
 
-    # Load all series that require reloading
+    # Load all Series that require reloading
     for series in series_to_load:
-        background_tasks.add_task(
-            # Function
-            load_series_title_cards,
-            # Args
+        load_series_title_cards(
             series, 'Plex', db, emby_interface=None, jellyfin_interface=None,
             plex_interface=plex_interface, force_reload=False, log=log,
         )

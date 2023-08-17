@@ -145,7 +145,8 @@ class ComicBookTitleCard(BaseCardType):
             ), Extra(
                 name='Title Textbox Edge Color',
                 identifier='text_box_edge_color',
-                description='Edge color of the text box for the title text',
+                description='Edge color of all text boxes',
+                tooltip='Defaults to matching the Font color',
             ), Extra(
                 name='Title Text Rotation Angle',
                 identifier='title_text_rotation_angle',
