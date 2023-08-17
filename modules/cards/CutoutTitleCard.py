@@ -39,14 +39,14 @@ class CutoutTitleCard(BaseCardType):
     EPISODE_TEXT_FORMAT = '{episode_number_cardinal}'
     EPISODE_TEXT_FONT = SW_REF_DIRECTORY / 'HelveticaNeue-Bold.ttf'
 
-    """Custom blur profile for the poster"""
+    """Custom blur profiles"""
     BLUR_PROFILE = '0x20'
     NUMBER_BLUR_PROFILE = '0x10'
 
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'episode_text',
         'font_color', 'font_file', 'font_size', 'font_vertical_shift',
-        'overlay_color', 'blur_edges',
+        'overlay_color', 'blur_edges', 'number_blur_profile',
     )
 
     def __init__(self,
@@ -62,6 +62,7 @@ class CutoutTitleCard(BaseCardType):
             grayscale: bool = False,
             overlay_color: str = 'black',
             blur_edges: bool = False,
+            blur_profile: str = NUMBER_BLUR_PROFILE,
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
         ) -> None:
@@ -91,6 +92,7 @@ class CutoutTitleCard(BaseCardType):
         # Optional extras
         self.overlay_color = overlay_color
         self.blur_edges = blur_edges
+        self.number_blur_profile = blur_profile
 
 
     def _format_episode_text(self, episode_text: str) -> str:
@@ -196,7 +198,7 @@ class CutoutTitleCard(BaseCardType):
             # Resize with 100px margin on all sides
             f'-resize 3100x1700',
             f'-extent "{self.TITLE_CARD_SIZE}"',
-            f'-blur "{self.NUMBER_BLUR_PROFILE}" \)' if self.blur_edges else '\)',
+            f'-blur "{self.number_blur_profile}" \)' if self.blur_edges else '\)',
             # Use masked alpha composition to combine images
             f'-gravity center',
             f'-composite',
