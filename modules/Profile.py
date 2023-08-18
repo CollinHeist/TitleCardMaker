@@ -71,7 +71,8 @@ class Profile:
 
     def get_valid_profiles(self,
             card_class: 'CardType',
-            all_variations: bool) -> list[dict[str, str]]:
+            all_variations: bool,
+        ) -> list[dict[str, str]]:
         """
         Gets the valid applicable profiles for this profile. For example,
         for a profile with only generic attributes, it's invalid to
@@ -154,7 +155,8 @@ class Profile:
 
     def convert_extras(self,
             card_type: 'BaseCardType',
-            extras: dict[str, Any]) -> None:
+            extras: dict[str, Any],
+        ) -> None:
         """
         Convert the given extras according to this profile's rules.
 
@@ -343,7 +345,8 @@ class Profile:
 
     def convert_title(self,
             title_text: str,
-            manually_specified: bool = False) -> str:
+            manually_specified: bool = False,
+        ) -> str:
         """
         Convert the given title text through this profile's settings.
         This is any combination of text substitutions, case functions,

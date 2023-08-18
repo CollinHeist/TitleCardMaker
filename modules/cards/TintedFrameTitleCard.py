@@ -147,8 +147,11 @@ class TintedFrameTitleCard(BaseCardType):
        # Optional extras
         self.separator = separator
         self.frame_color = font_color if frame_color is None else frame_color
+        self.frame_width = frame_width
         self.logo_size = logo_size
         self.blur_edges = blur_edges
+        self.episode_text_font_size = episode_text_font_size
+        self.episode_text_vertical_shift = episode_text_vertical_shift
         if episode_text_color is None:
             self.episode_text_color = font_color
         else:
@@ -206,15 +209,6 @@ class TintedFrameTitleCard(BaseCardType):
         except Exception as exc:
             log.exception(f'Invalid episode text font', exc)
             self.valid = False
-
-        self.episode_text_font_size = episode_text_font_size
-        self.episode_text_vertical_shift = episode_text_vertical_shift
-        self.frame_color = frame_color
-        self.frame_width = frame_width
-        self.logo_size = logo_size
-        self.middle_element = middle_element
-        self.separator = separator
-        self.top_element = top_element
 
 
     @property
