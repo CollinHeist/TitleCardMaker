@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
-from modules.BaseCardType import BaseCardType, Extra, CardDescription
+from modules.BaseCardType import BaseCardType, Extra, CardDescription, ImageMagickCommands
 
 
 class CutoutTitleCard(BaseCardType):
@@ -83,8 +83,10 @@ class CutoutTitleCard(BaseCardType):
 
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'episode_text',
-        'font_color', 'font_file', 'font_size', 'font_vertical_shift',
-        'overlay_color', 'blur_edges', 'number_blur_profile',
+        'font_color', 'font_file', 'font_interline_spacing',
+        'font_interword_spacing', 'font_kerning', 'font_size',
+        'font_vertical_shift', 'overlay_color', 'blur_edges',
+        'number_blur_profile',
     )
 
     def __init__(self,
@@ -94,6 +96,9 @@ class CutoutTitleCard(BaseCardType):
             episode_text: str,
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
+            font_interline_spacing: int = 0,
+            font_interword_spacing: int = 0,
+            font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_vertical_shift: int = 0,
             blur: bool = False,
@@ -124,6 +129,9 @@ class CutoutTitleCard(BaseCardType):
         # Font/card customizations
         self.font_color = font_color
         self.font_file = font_file
+        self.font_interline_spacing = font_interline_spacing
+        self.font_interword_spacing = font_interword_spacing
+        self.font_kerning = font_kerning
         self.font_size = font_size
         self.font_vertical_shift = font_vertical_shift
 
@@ -161,6 +169,32 @@ class CutoutTitleCard(BaseCardType):
         return '\n'.join(episode_text.split('-'))
 
 
+    @property
+    def title_text_commands(self) -> ImageMagickCommands:
+        """
+        Subcommand for adding title text to the source image.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        font_size = 50 * self.font_size
+        font_kerning = 1 * self.font_kerning
+        font_interword_spacing = 35 + int(self.font_interword_spacing)
+        font_vertical_shift = 100 + self.font_vertical_shift
+
+        return [
+            f'-gravity south',
+            f'-pointsize {font_size}',
+            f'-fill "{self.font_color}"',
+            f'-font "{self.font_file}"',
+            f'-interline-spacing {self.font_interline_spacing}',
+            f'-interword-spacing {font_interword_spacing}',
+            f'-kerning {font_kerning}',
+            f'-annotate +0+{font_vertical_shift} "{self.title_text}"',
+        ]
+
+
     @staticmethod
     def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
@@ -176,6 +210,9 @@ class CutoutTitleCard(BaseCardType):
 
         return ((font.color != CutoutTitleCard.TITLE_COLOR)
             or (font.file != CutoutTitleCard.TITLE_FONT)
+            or (font.interline_spacing != 0)
+            or (font.interword_spacing != 0)
+            or (font.kerning != 1.0)
             or (font.size != 1.0)
             or (font.vertical_shift != 0)
         )
@@ -241,12 +278,7 @@ class CutoutTitleCard(BaseCardType):
             f'-gravity center',
             f'-composite',
             # Add title text
-            f'-gravity south',
-            f'-pointsize {50 * self.font_size}',
-            f'+interline-spacing',
-            f'-fill "{self.font_color}"',
-            f'-font "{self.font_file}"',
-            f'-annotate +0+{100 + self.font_vertical_shift} "{self.title_text}"',
+            *self.title_text_commands,
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

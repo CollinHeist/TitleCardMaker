@@ -4,7 +4,6 @@ from typing import Literal, Optional
 from modules.BaseCardType import (
     BaseCardType, ImageMagickCommands, Extra, CardDescription
 )
-from modules.Debug import log
 
 
 SeriesExtra = Optional
@@ -55,11 +54,19 @@ class DividerTitleCard(BaseCardType):
                     '<v>right</v>, <v>lower right</v>, <v>lower left</v>, or '
                     '<v>left</v>.'
                 ),
-            ),
+            ), Extra(
+                name='Divider Color',
+                identifier='divider_color',
+                description='Color of the divider bar between text',
+                tooltip='Defaults to the Font color',
+            )
         ], description=[
-            'A simple title card featuring the title and index text separated by a vertical divider.',
-            'This card allows the text to be positioned at various points around the image.',
-            'Text on this image is unobtrusive, and is intended for shorter titles.',
+            'A simple title card featuring the title and index text separated '
+            'by a vertical divider.',
+            'This card allows the text to be positioned at various points '
+            'around the image.',
+            'Text on this image is unobtrusive, and is intended for shorter '
+            'titles.',
         ]
     )
     # pylint: enable=line-too-long
@@ -92,9 +99,10 @@ class DividerTitleCard(BaseCardType):
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'season_text',
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
-        'font_file', 'font_interline_spacing', 'font_kerning', 'font_size',
-        'font_stroke_width', 'stroke_color', 'title_text_position',
-        'text_position', 'font_vertical_shift'
+        'font_file', 'font_interline_spacing', 'font_interword_spacing',
+        'font_kerning', 'font_size', 'font_stroke_width', 'stroke_color',
+        'title_text_position', 'text_position', 'font_vertical_shift',
+        'divider_color',
     )
 
     def __init__(self,
@@ -108,6 +116,7 @@ class DividerTitleCard(BaseCardType):
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
+            font_interword_spacing: int = 0,
             font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_stroke_width: float = 1.0,
@@ -115,6 +124,7 @@ class DividerTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             stroke_color: str = 'black',
+            divider_color: str = TITLE_COLOR,
             title_text_position: TitleTextPosition = 'left',
             text_position: TextPosition = 'lower right',
             preferences: Optional['Preferences'] = None, # type: ignore
@@ -141,6 +151,7 @@ class DividerTitleCard(BaseCardType):
         self.font_color = font_color
         self.font_file = font_file
         self.font_interline_spacing = font_interline_spacing
+        self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_size = font_size
         self.font_stroke_width = font_stroke_width
@@ -148,17 +159,9 @@ class DividerTitleCard(BaseCardType):
 
         # Optional extras
         self.stroke_color = stroke_color
-        if str(title_text_position).lower() not in ('left', 'right'):
-            log.error(f'Invalid "title_text_position" - must be left, or right')
-            self.valid = False
-        self.title_text_position = str(title_text_position).lower()
-        if (str(text_position).lower()
-            not in ('upper left', 'upper right', 'right', 'lower left',
-                    'lower right', 'left')):
-            log.error(f'Invalid "text_position" - must be upper left, upper '
-                      f'right, right, lower left, lower right, or left')
-            self.valid = False
-        self.text_position = str(text_position).lower()
+        self.divider_color = divider_color
+        self.title_text_position = title_text_position
+        self.text_position = text_position
 
 
     @property
@@ -248,13 +251,14 @@ class DividerTitleCard(BaseCardType):
 
     def divider_command(self,
             divider_height: int,
-            font_color: str) -> ImageMagickCommands:
+            color: str,
+        ) -> ImageMagickCommands:
         """
         Subcommand to add the dividing rectangle to the image.
 
         Args:
             divider_height: Height of the divider to create.
-            font_color: Color of the text to create the divider in.
+            color: Color to create the divider in.
 
         Returns:
             List of ImageMagick commands.
@@ -267,7 +271,7 @@ class DividerTitleCard(BaseCardType):
 
         return [
             f'\( -size 7x{divider_height-25}',
-            f'xc:"{font_color}" \)',
+            f'xc:"{color}" \)',
             f'+size',
             f'-gravity center',
             f'+smush 25',
@@ -275,31 +279,38 @@ class DividerTitleCard(BaseCardType):
 
 
     def text_command(self,
-            divider_height: int, font_color: str) -> ImageMagickCommands:
+            divider_height: int,
+            is_stroke_text: bool,
+        ) -> ImageMagickCommands:
         """
         Subcommand to add all text - index, title, and the divider - to
         the image.
 
         Args:
             divider_height: Height of the divider to create.
-            font_color: Color of the text being created.
+            is_stroke_text: Whether this text command is for the stroke
+                text. This informs which color is used for the divider.
 
         Returns:
             List of ImageMagick commands.
         """
 
+        divider_color = (
+            self.stroke_color if is_stroke_text else self.divider_color
+        )
+
         # Title on left, add text as: title divider index
         if self.title_text_position == 'left':
             return [
                 *self.title_text_command,
-                *self.divider_command(divider_height, font_color),
+                *self.divider_command(divider_height, divider_color),
                 *self.index_text_command,
             ]
 
         # Title on right, add text as index divider title
         return [
             *self.index_text_command,
-            *self.divider_command(divider_height, font_color),
+            *self.divider_command(divider_height, divider_color),
             *self.title_text_command,
         ]
 
@@ -324,6 +335,8 @@ class DividerTitleCard(BaseCardType):
         if not custom_font:
             if 'stroke_color' in extras:
                 extras['stroke_color'] = 'black'
+            if 'divider_color' in extras:
+                extras['divider_color'] = DividerTitleCard.TITLE_COLOR
 
 
     @staticmethod
@@ -342,6 +355,7 @@ class DividerTitleCard(BaseCardType):
         return ((font.color != DividerTitleCard.TITLE_COLOR)
             or (font.file != DividerTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
+            or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
             or (font.stroke_width != 1.0)
@@ -350,7 +364,9 @@ class DividerTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> bool:
         """
         Determine whether the given attributes constitute custom or
         generic season titles.
@@ -376,7 +392,7 @@ class DividerTitleCard(BaseCardType):
         """
 
         interline_spacing = -20 + self.font_interline_spacing
-        kerning = 0 * self.font_kerning
+        kerning = -0.5 * self.font_kerning
         stroke_width = 8 * self.font_stroke_width
 
         # The gravity of the text composition is based on the text position
@@ -403,8 +419,9 @@ class DividerTitleCard(BaseCardType):
             f'-kerning {kerning}',
             f'-strokewidth {stroke_width}',
             f'-interline-spacing {interline_spacing}',
+            f'-interword-spacing {self.font_interword_spacing}',
             f'\( -stroke "{self.stroke_color}"',
-            *self.text_command(divider_height, self.stroke_color),
+            *self.text_command(divider_height, is_stroke_text=True),
             # Combine text images
             f'+smush 25',
             # Add border so the blurred text doesn't get sharply cut off
@@ -417,7 +434,7 @@ class DividerTitleCard(BaseCardType):
             f'\( -fill "{self.font_color}"',
             # Use basically transparent color so text spacing matches
             f'-stroke "rgba(1, 1, 1, 0.01)"',
-            *self.text_command(divider_height, self.font_color),
+            *self.text_command(divider_height, is_stroke_text=False),
             f'+smush 25',
             f'-border 50x{50+self.font_vertical_shift} \)',
             # Overlay title text in correct position

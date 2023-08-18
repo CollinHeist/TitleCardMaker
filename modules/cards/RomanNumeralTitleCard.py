@@ -268,7 +268,8 @@ class RomanNumeralTitleCard(BaseCardType):
 
     __slots__ = (
         'output_file', 'title_text', 'season_text', 'hide_season_text',
-        'hide_episode_text', 'font_color', 'font_size', 'background',
+        'hide_episode_text', 'font_color', 'font_interline_spacing',
+        'font_interword_spacing', 'font_size', 'background',
         'roman_numeral_color', 'roman_numeral', '__roman_text_scalar',
         '__roman_numeral_lines', 'rotation', 'offset', 'season_text_color',
         'font_file',
@@ -281,6 +282,8 @@ class RomanNumeralTitleCard(BaseCardType):
             hide_season_text: bool = False,
             hide_episode_text: bool = False,
             font_color: str = TITLE_COLOR,
+            font_interline_spacing: int = 0,
+            font_interword_spacing: int = 0,
             font_file: str = TITLE_FONT,
             font_size: float = 1.0,
             episode_number: int = 1,
@@ -303,8 +306,11 @@ class RomanNumeralTitleCard(BaseCardType):
         self.output_file = card_file
         self.title_text = self.image_magick.escape_chars(title_text)
         self.font_color = font_color
+        self.font_interline_spacing = font_interline_spacing
+        self.font_interword_spacing = font_interword_spacing
         self.font_file = font_file
         self.font_size = font_size
+
         self.background = background
         self.roman_numeral_color = roman_numeral_color
         self.season_text_color = season_text_color
@@ -471,12 +477,13 @@ class RomanNumeralTitleCard(BaseCardType):
         """
 
         font_size = 150 * self.font_size
+        interword_spacing = 40 + self.font_interword_spacing
 
         return [
             f'-font "{self.font_file}"',
             f'-pointsize {font_size}',
-            f'-interword-spacing 40',
-            f'-interline-spacing 0',
+            f'-interline-spacing {self.font_interline_spacing}',
+            f'-interword-spacing {interword_spacing}',
             f'-fill "{self.font_color}"',
             f'-annotate +0+0 "{self.title_text}"',
         ]
@@ -698,6 +705,8 @@ class RomanNumeralTitleCard(BaseCardType):
         """
 
         return ((font.color != RomanNumeralTitleCard.TITLE_COLOR)
+            or (font.interline_spacing != 0)
+            or (font.interword_spacing != 0)
             or (font.file != RomanNumeralTitleCard.TITLE_FONT)
             or (font.size != 1.0)
         )

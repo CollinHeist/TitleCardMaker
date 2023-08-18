@@ -162,11 +162,12 @@ class TintedFrameTitleCard(BaseCardType):
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'season_text',
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_file',
-        'font_size', 'font_color', 'font_interline_spacing', 'font_kerning',
-        'font_vertical_shift', 'episode_text_color', 'separator', 'frame_color',
-        'logo', 'top_element', 'middle_element', 'bottom_element', 'logo_size',
-        'blur_edges', 'episode_text_font', 'frame_width',
-        'episode_text_font_size', 'episode_text_vertical_shift',
+        'font_size', 'font_color', 'font_interline_spacing',
+        'font_interword_spacing', 'font_kerning', 'font_vertical_shift',
+        'episode_text_color', 'separator', 'frame_color', 'logo', 'top_element',
+        'middle_element', 'bottom_element', 'logo_size', 'blur_edges',
+        'episode_text_font', 'frame_width', 'episode_text_font_size',
+        'episode_text_vertical_shift',
     )
 
     def __init__(self, *,
@@ -180,6 +181,7 @@ class TintedFrameTitleCard(BaseCardType):
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
+            font_interword_spacing: int = 0,
             font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_vertical_shift: int = 0,
@@ -223,6 +225,7 @@ class TintedFrameTitleCard(BaseCardType):
         self.font_color = font_color
         self.font_file = font_file
         self.font_interline_spacing = font_interline_spacing
+        self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_size = font_size
         self.font_vertical_shift = font_vertical_shift
@@ -298,7 +301,8 @@ class TintedFrameTitleCard(BaseCardType):
             f'\( -font "{self.font_file}"',
             f'-pointsize {100 * self.font_size}',
             f'-kerning {1 * self.font_kerning}',
-            f'-interline-spacing {0 + self.font_interline_spacing}',
+            f'-interline-spacing {self.font_interline_spacing}',
+            f'-interword-spacing {self.font_interword_spacing}',
             f'-fill "{self.font_color}"',
             f'label:"{self.title_text}"',
             # Create drop shadow
@@ -346,7 +350,7 @@ class TintedFrameTitleCard(BaseCardType):
         return [
             f'-background transparent',
             f'\( -font "{self.episode_text_font.resolve()}"',
-            f'+kerning +interline-spacing',
+            f'+kerning +interline-spacing +interword-spacing',
             f'-pointsize {60 * self.episode_text_font_size}',
             f'-fill "{self.episode_text_color}"',
             f'label:"{index_text}"',
@@ -654,6 +658,7 @@ class TintedFrameTitleCard(BaseCardType):
         return ((font.color != TintedFrameTitleCard.TITLE_COLOR)
             or (font.file != TintedFrameTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
+            or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
             or (font.vertical_shift != 0)

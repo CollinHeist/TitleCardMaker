@@ -47,7 +47,7 @@ class StandardTitleCard(BaseCardType):
             )
         ], description=[
             'The most "generic" type of title card.',
-            'This card features center-aligned season, episode, and title text.',
+            'This card features center-aligned season, episode, and title text.'
         ]
     )
 
@@ -85,9 +85,9 @@ class StandardTitleCard(BaseCardType):
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'season_text',
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
-        'font_file', 'font_interline_spacing', 'font_kerning', 'font_size',
-        'font_stroke_width', 'font_vertical_shift', 'episode_text_color',
-        'omit_gradient', 'stroke_color', 'separator',
+        'font_file', 'font_interline_spacing', 'font_interword_spacing',
+        'font_kerning', 'font_size', 'font_stroke_width', 'font_vertical_shift',
+        'episode_text_color', 'omit_gradient', 'stroke_color', 'separator',
     )
 
     def __init__(self,
@@ -101,6 +101,7 @@ class StandardTitleCard(BaseCardType):
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
+            font_interword_spacing: int = 0,
             font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_stroke_width: float = 1.0,
@@ -136,6 +137,7 @@ class StandardTitleCard(BaseCardType):
         self.font_file = font_file
         self.font_kerning = font_kerning
         self.font_interline_spacing = font_interline_spacing
+        self.font_interword_spacing = font_interword_spacing
         self.font_size = font_size
         self.font_stroke_width = font_stroke_width
         self.font_vertical_shift = font_vertical_shift
@@ -303,8 +305,9 @@ class StandardTitleCard(BaseCardType):
 
         return ((font.color != StandardTitleCard.TITLE_COLOR)
             or (font.file != StandardTitleCard.TITLE_FONT)
-            or (font.kerning != 1.0)
             or (font.interline_spacing != 0)
+            or (font.interword_spacing != 0)
+            or (font.kerning != 1.0)
             or (font.size != 1.0)
             or (font.stroke_width != 1.0)
             or (font.vertical_shift != 0)
@@ -343,6 +346,7 @@ class StandardTitleCard(BaseCardType):
         # Font customizations
         font_size = 157.41 * self.font_size
         interline_spacing = -22 + self.font_interline_spacing
+        interword_spacing = 50 + self.font_interword_spacing
         kerning = -1.25 * self.font_kerning
         vertical_shift = 245 + self.font_vertical_shift
 
@@ -364,7 +368,7 @@ class StandardTitleCard(BaseCardType):
             f'-gravity south',
             f'-font "{self.font_file}"',
             f'-kerning {kerning}',
-            f'-interword-spacing 50',
+            f'-interword-spacing {interword_spacing}',
             f'-interline-spacing {interline_spacing}',
             f'-pointsize {font_size}',
             # Black stroke behind title text
