@@ -94,6 +94,7 @@ class LandscapeTitleCard(BaseCardType):
         self.source_file = source_file
         self.output_file = card_file
         self.title_text = self.image_magick.escape_chars(title_text)
+
         self.font_color = font_color
         self.font_file = font_file
         self.font_interline_spacing = font_interline_spacing

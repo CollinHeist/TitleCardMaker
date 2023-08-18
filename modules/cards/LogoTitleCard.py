@@ -86,7 +86,8 @@ class LogoTitleCard(BaseCardType):
             use_background_image: SeriesExtra[bool] = False,
             blur_only_image: SeriesExtra[bool] = False,
             preferences: 'Preferences' = None,
-            **unused) -> None:
+            **unused,
+        ) -> None:
         """
         Construct a new instance of this card.
         """
