@@ -74,6 +74,7 @@ class DividerTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             stroke_color: str = 'black',
+            divider_color: str = TITLE_COLOR,
             title_text_position: TitleTextPosition = 'left',
             text_position: TextPosition = 'lower right',
             preferences: Optional['Preferences'] = None, # type: ignore
@@ -119,6 +120,7 @@ class DividerTitleCard(BaseCardType):
                       f'right, right, lower left, lower right, or left')
             self.valid = False
         self.text_position = str(text_position).lower()
+        self.divider_color = divider_color
 
 
     @property
@@ -208,13 +210,14 @@ class DividerTitleCard(BaseCardType):
 
     def divider_command(self,
             divider_height: int,
-            font_color: str) -> ImageMagickCommands:
+            color: str,
+        ) -> ImageMagickCommands:
         """
         Subcommand to add the dividing rectangle to the image.
 
         Args:
             divider_height: Height of the divider to create.
-            font_color: Color of the text to create the divider in.
+            color: Color to create the divider in.
 
         Returns:
             List of ImageMagick commands.
@@ -227,7 +230,7 @@ class DividerTitleCard(BaseCardType):
 
         return [
             f'\( -size 7x{divider_height-25}',
-            f'xc:"{font_color}" \)',
+            f'xc:"{color}" \)',
             f'+size',
             f'-gravity center',
             f'+smush 25',
@@ -235,31 +238,38 @@ class DividerTitleCard(BaseCardType):
 
 
     def text_command(self,
-            divider_height: int, font_color: str) -> ImageMagickCommands:
+            divider_height: int,
+            is_stroke_text: bool,
+        ) -> ImageMagickCommands:
         """
         Subcommand to add all text - index, title, and the divider - to
         the image.
 
         Args:
             divider_height: Height of the divider to create.
-            font_color: Color of the text being created.
+            is_stroke_text: Whether this text command is for the stroke
+                text. This informs which color is used for the divider.
 
         Returns:
             List of ImageMagick commands.
         """
 
+        divider_color = (
+            self.stroke_color if is_stroke_text else self.divider_color
+        )
+
         # Title on left, add text as: title divider index
         if self.title_text_position == 'left':
             return [
                 *self.title_text_command,
-                *self.divider_command(divider_height, font_color),
+                *self.divider_command(divider_height, divider_color),
                 *self.index_text_command,
             ]
 
         # Title on right, add text as index divider title
         return [
             *self.index_text_command,
-            *self.divider_command(divider_height, font_color),
+            *self.divider_command(divider_height, divider_color),
             *self.title_text_command,
         ]
 
@@ -284,6 +294,8 @@ class DividerTitleCard(BaseCardType):
         if not custom_font:
             if 'stroke_color' in extras:
                 extras['stroke_color'] = 'black'
+            if 'divider_color' in extras:
+                extras['divider_color'] = DividerTitleCard.TITLE_COLOR
 
 
     @staticmethod
@@ -368,7 +380,7 @@ class DividerTitleCard(BaseCardType):
             f'-interline-spacing {interline_spacing}',
             f'-interword-spacing {self.font_interword_spacing}',
             f'\( -stroke "{self.stroke_color}"',
-            *self.text_command(divider_height, self.stroke_color),
+            *self.text_command(divider_height, is_stroke_text=True),
             # Combine text images
             f'+smush 25',
             # Add border so the blurred text doesn't get sharply cut off
@@ -381,7 +393,7 @@ class DividerTitleCard(BaseCardType):
             f'\( -fill "{self.font_color}"',
             # Use basically transparent color so text spacing matches
             f'-stroke "rgba(1, 1, 1, 0.01)"',
-            *self.text_command(divider_height, self.font_color),
+            *self.text_command(divider_height, is_stroke_text=False),
             f'+smush 25',
             f'-border 50x{50+self.font_vertical_shift} \)',
             # Overlay title text in correct position
