@@ -201,8 +201,8 @@ class Font(YamlReader):
         self.__validate = global_objects.pp.validate_fonts
 
         # Default itle card characteristics and font values
-        self.case = self.__card_class.CASE_FUNCTIONS[self.case_name]
         self.case_name = self.__card_class.DEFAULT_FONT_CASE
+        self.case = self.__card_class.CASE_FUNCTIONS[self.case_name]
         self.color = self.__card_class.TITLE_COLOR
         self.delete_missing = True
         self.file = self.__card_class.TITLE_FONT
