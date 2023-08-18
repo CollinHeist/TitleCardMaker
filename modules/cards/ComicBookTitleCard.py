@@ -160,12 +160,12 @@ class ComicBookTitleCard(BaseCardType):
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'season_text',
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
-        'font_interline_spacing', 'font_file', 'font_kerning', 'font_size',
-        'font_vertical_shift', 'episode_text_color', 'index_text_position',
-        'text_box_fill_color', 'text_box_edge_color',
-        'title_text_rotation_angle', 'index_text_rotation_angle',
-        'banner_fill_color', 'title_banner_shift', 'index_banner_shift',
-        'hide_title_banner', 'hide_index_banner',
+        'font_interline_spacing', 'font_interword_spacing', 'font_file',
+        'font_kerning', 'font_size', 'font_vertical_shift',
+        'episode_text_color', 'index_text_position', 'text_box_fill_color',
+        'text_box_edge_color', 'title_text_rotation_angle',
+        'index_text_rotation_angle', 'banner_fill_color', 'title_banner_shift',
+        'index_banner_shift', 'hide_title_banner', 'hide_index_banner',
     )
 
     def __init__(self, *,
@@ -179,6 +179,7 @@ class ComicBookTitleCard(BaseCardType):
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
+            font_interword_spacing: int = 0,
             font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_vertical_shift: int = 0,
@@ -219,6 +220,7 @@ class ComicBookTitleCard(BaseCardType):
         self.font_color = font_color
         self.font_file = font_file
         self.font_interline_spacing = font_interline_spacing
+        self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_size = font_size
         self.font_vertical_shift = font_vertical_shift
@@ -294,6 +296,7 @@ class ComicBookTitleCard(BaseCardType):
             f'-fill "{self.font_color}"',
             f'-kerning {1 * self.font_kerning}',
             f'-interline-spacing {self.font_interline_spacing}',
+            f'-interword-spacing {self.font_interword_spacing}',
             f'-strokewidth 0',
             f'+stroke',
             f'-annotate {rotation}+0+{y_coordinate} "{self.title_text}"',
@@ -433,6 +436,7 @@ class ComicBookTitleCard(BaseCardType):
             f'+kerning',
             f'-strokewidth 0',
             f'+stroke',
+            f'+interword-spacing',
             f'-annotate {rotation}+{x_coordinate}+{y_coordinate} "{index_text}"',
         ]
 
@@ -591,6 +595,7 @@ class ComicBookTitleCard(BaseCardType):
         return ((font.color != ComicBookTitleCard.TITLE_COLOR)
             or (font.file != ComicBookTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
+            or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
             or (font.vertical_shift != 0)
