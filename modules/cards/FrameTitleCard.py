@@ -7,7 +7,6 @@ from modules.Debug import log
 
 Position = Literal['left', 'surround', 'right']
 
-
 class FrameTitleCard(BaseCardType):
     """
     This class describes a type of CardType that produces title cards in
