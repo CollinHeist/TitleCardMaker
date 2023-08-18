@@ -257,6 +257,7 @@ function showAddSeriesModal(result, resultElementId) {
 async function quickAddSeries(result, resultElementId) {
   let resultElement = document.getElementById(resultElementId)
   resultElement.classList.add('loading');
+  resultElement.classList.remove('transition');
   $.ajax({
     type: 'POST',
     url: '/api/series/new',
@@ -277,7 +278,10 @@ async function quickAddSeries(result, resultElementId) {
         }
       });
     }, error: response => showErrorToast({title: 'Error adding Series', response}),
-    complete: () => resultElement.classList.remove('loading')
+    complete: () => {
+      resultElement.classList.remove('loading');
+      resultElement.classList.add('transition');
+    }
   });
 }
 
