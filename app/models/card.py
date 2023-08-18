@@ -46,6 +46,7 @@ class Card(Base):
     font_kerning = Column(Float, nullable=False)
     font_stroke_width = Column(Float, nullable=False)
     font_interline_spacing = Column(Integer, nullable=False)
+    font_interword_spacing = Column(Integer, nullable=False)
     font_vertical_shift = Column(Integer, nullable=False)
 
     blur = Column(Boolean, nullable=False)
@@ -98,5 +99,6 @@ class Card(Base):
             'font_kerning': self.font_kerning,
             'font_stroke_width': self.font_stroke_width,
             'font_interline_spacing': self.font_interline_spacing,
+            'font_interword_spacing': self.font_interword_spacing,
             'font_vertical_shift': self.font_vertical_shift,
         }

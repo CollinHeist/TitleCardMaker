@@ -45,8 +45,14 @@ def upgrade() -> None:
     with op.batch_alter_table('episode', schema=None) as batch_op:
         batch_op.add_column(sa.Column('font_interword_spacing', sa.Integer(), nullable=True))
 
+    with op.batch_alter_table('card', schema=None) as batch_op:
+        batch_op.add_column(sa.Column('font_interword_spacing', sa.Integer(), nullable=True))
+
 
 def downgrade() -> None:
+    with op.batch_alter_table('card', schema=None) as batch_op:
+        batch_op.drop_column('font_interword_spacing')
+
     with op.batch_alter_table('episode', schema=None) as batch_op:
         batch_op.drop_column('font_interword_spacing')
 
