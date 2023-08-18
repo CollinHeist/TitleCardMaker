@@ -243,7 +243,8 @@ async function initializeExtraDropdowns(value, dropdownElements, popupHeaderElem
   }
 
   // Create list of values for the dropdown
-  let dropdownValues = [];
+  let dropdownValues = [],
+      found = false;
   cardTypes.forEach(card_type => {
     // Add dividing header for each card type
     dropdownValues.push({name: card_type, type: 'header', divider: true});
@@ -256,6 +257,7 @@ async function initializeExtraDropdowns(value, dropdownElements, popupHeaderElem
         .replaceAll('</v>', '</span>');
 
       if (extra.card_type === card_type) {
+        found ||= extra.identifier === value;
         dropdownValues.push({
           name: extra.name,
           text: extra.name,
@@ -272,6 +274,18 @@ async function initializeExtraDropdowns(value, dropdownElements, popupHeaderElem
       }
     });
   });
+
+  // If not found, must be manually specified - add
+  if (!found) {
+    dropdownValues.push({name: 'Variable Overrides', type: 'header', divider: true});
+    dropdownValues.push({
+      name: value,
+      value: value,
+      selected: true,
+    });
+    popupHeaderElement[0].innerText = value;
+    popupDescriptionElement[0].innerHTML = 'Manually specified variable override.';
+  }
 
   // Initialize dropdown
   dropdownElements.dropdown({
