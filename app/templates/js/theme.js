@@ -2,7 +2,7 @@ function refreshTheme() {
   const siteTheme = window.localStorage.getItem('site-theme') || 'dark';
   const inverted = (siteTheme === 'dark');
   $('#main-content .ui:not(.uninvertible)').toggleClass('inverted', inverted);
-  $('.modal:not(.basic):not(.uninvertible), .modal:not(.basic):not(.uninvertible) >* .ui, .accordion, .accordion >* .ui:not(.uninvertible)').toggleClass('inverted', inverted);
+  $('.modal:not(.basic):not(.uninvertible), .modal:not(.basic):not(.uninvertible) >* .ui:not(.uninvertible), .accordion:not(.uninvertible), .accordion >* .ui:not(.uninvertible)').toggleClass('inverted', inverted);
 }
 
 function toggleTheme() {
