@@ -265,18 +265,7 @@ async function quickAddSeries(result, resultElementId) {
     contentType: 'application/json',
     success: series => {
       resultElement.classList.add('disabled');
-      // $(`#${resultElementId}`).toggleClass('disabled', true);
-      $.toast({class: 'blue info', title: `Added Series "${series.name}"`});
-      // Refresh episode data for the newly added Series
-      $.ajax({
-        type: 'POST',
-        url: `/api/episodes/${series.id}/refresh`,
-        success: () => {
-          $.toast({class: 'blue info', title: `Refreshed Episode data for "${series.name}"`});
-        }, error: response2 => {
-          showErrorToast({title: `Error refreshing Episode data for "${response2.name}"`, response2});
-        }
-      });
+      showInfoToast(`Added Series "${series.name}"`);
     }, error: response => showErrorToast({title: 'Error adding Series', response}),
     complete: () => {
       resultElement.classList.remove('loading');
