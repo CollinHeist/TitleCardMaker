@@ -339,7 +339,7 @@ class DividerTitleCard(BaseCardType):
         """
 
         interline_spacing = -20 + self.font_interline_spacing
-        kerning = 0 * self.font_kerning
+        kerning = -0.5 * self.font_kerning
         stroke_width = 8 * self.font_stroke_width
 
         # The gravity of the text composition is based on the text position
