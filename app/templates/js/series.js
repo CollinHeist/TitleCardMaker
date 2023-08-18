@@ -1487,6 +1487,8 @@ function addBlankSeriesExtra() {
   initializeExtraDropdowns(
     null,
     $(`#card-config-form .dropdown[data-value="extra_keys"]`).last(),
+    $(`#card-config-form .popup .header`).last(),
+    $(`#card-config-form .popup .description`).last(),
   );
   refreshTheme();
   $('#card-config-form .field[data-value="extras"] .link.icon').popup({inline: true});
@@ -1501,6 +1503,8 @@ function addBlankEpisodeExtra() {
   initializeExtraDropdowns(
     null,
     $(`#episode-extras-modal .dropdown[data-value="extra_keys"]`).last(),
+    $(`#episode-extras-modal .field[data-value="extras"] .popup .header`).last(),
+    $(`#episode-extras-modal .field[data-value="extras"] .popup .description`).last(),
   );
   refreshTheme();
   $('#episode-extras-modal .field[data-value="extras"] .link.icon').popup({inline: true});
