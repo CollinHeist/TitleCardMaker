@@ -40,6 +40,7 @@ class BlueprintSeries(SeriesBase):
     font_kerning: Optional[float] = None
     font_stroke_width: Optional[float] = None
     font_interline_spacing: Optional[int] = None
+    font_interword_spacing: Optional[int] = None
     font_vertical_shift: Optional[int] = None
 
 class BlueprintEpisode(BlueprintSeries):
@@ -56,6 +57,7 @@ class BlueprintFont(BlueprintBase):
     file: Optional[str] = None
     kerning: float = None
     interline_spacing: int = None
+    interword_spacing: int = None
     replacements_in: list[str] = None
     replacements_out: list[str] = None
     size: float = None

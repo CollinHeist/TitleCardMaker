@@ -5,7 +5,8 @@ from re import match as re_match
 from typing import Literal, Optional, Union
 
 from pydantic import (
-    FilePath, PositiveFloat, PositiveInt, conint, constr, root_validator, validator
+    FilePath, PositiveFloat, PositiveInt, conint, constr, root_validator,
+    validator
 )
 
 from app.schemas.base import Base, BetterColor, DictKey
@@ -68,6 +69,7 @@ class BaseCardTypeCustomFontNoText(BaseCardType):
     font_color: BetterColor
     font_file: FilePath
     font_interline_spacing: int = 0
+    font_interword_spacing: int = 0
     font_kerning: float = 1.0
     font_size: PositiveFloat = 1.0
     font_stroke_width: float = 1.0
@@ -77,6 +79,7 @@ class BaseCardTypeCustomFontAllText(BaseCardTypeAllText):
     font_color: BetterColor
     font_file: FilePath
     font_interline_spacing: int = 0
+    font_interword_spacing: int = 0
     font_kerning: float = 1.0
     font_size: PositiveFloat = 1.0
     font_stroke_width: float = 1.0
@@ -148,6 +151,10 @@ class CutoutCardType(BaseCardType):
     episode_text: constr(to_upper=True)
     font_color: BetterColor = CutoutTitleCard.TITLE_COLOR
     font_file: FilePath = CutoutTitleCard.TITLE_FONT
+    font_interline_spacing: int = 0
+    font_interword_spacing: int = 0
+    font_size: PositiveFloat = 1.0
+    font_vertical_shift: int = 0
     overlay_color: BetterColor = 'black'
     blur_edges: bool = False
 
@@ -160,8 +167,17 @@ class DividerCardType(BaseCardTypeCustomFontAllText):
     font_color: BetterColor = DividerTitleCard.TITLE_COLOR
     font_file: FilePath = DividerTitleCard.TITLE_FONT
     stroke_color: BetterColor = 'black'
+    divider_color: Optional[BetterColor] = None
     title_text_position: Literal['left', 'right'] = 'left'
     text_position: TextPosition = 'lower right'
+
+    @root_validator(skip_on_failure=True)
+    def assign_unassigned_color(cls, values):
+        # None means match font color
+        if values['divider_color'] is None:
+            values['divider_color'] = values['font_color']
+
+        return values
 
 class FadeCardType(BaseCardTypeCustomFontAllText):
     font_color: BetterColor = FadeTitleCard.TITLE_COLOR
@@ -175,7 +191,6 @@ class FrameCardType(BaseCardTypeCustomFontAllText):
     font_file: FilePath = FrameTitleCard.TITLE_FONT
     episode_text_color: BetterColor = FrameTitleCard.EPISODE_TEXT_COLOR
     episode_text_position: Literal['left', 'right', 'surround'] = 'surround'
-    interword_spacing: int = 0
 
 BoxAdjustmentRegex = r'^([-+]?\d+)\s+([-+]?\d+)\s+([-+]?\d+)\s+([-+]?\d+)$'
 BoxAdjustments = constr(regex=BoxAdjustmentRegex)
@@ -184,12 +199,13 @@ class LandscapeCardType(BaseCardType):
     font_color: BetterColor = LandscapeTitleCard.TITLE_COLOR
     font_file: FilePath = LandscapeTitleCard.TITLE_FONT
     font_interline_spacing: int = 0
+    font_interword_spacing: int = 0
     font_kerning: float = 1.0
     font_size: PositiveFloat = 1.0
     font_vertical_shift: int = 0
     add_bounding_box: bool = False
     box_adjustments: BoxAdjustments = (0, 0, 0, 0)
-    box_color: BetterColor = None
+    box_color: Optional[BetterColor] = None
     darken: Union[Literal['all', 'box'], bool] = False
 
     @validator('box_adjustments')
@@ -218,9 +234,9 @@ class LogoCardType(BaseCardTypeCustomFontAllText):
 
     @root_validator(skip_on_failure=True)
     def validate_source_file(cls, values):
-        if values['use_background_image']:
-            if not values['source_file'] or not values['source_file'].exists():
-                raise ValueError(f'Source file indicated and does not exist')
+        if (values['use_background_image'] and
+            (not values['source_file'] or not values['source_file'].exists())):
+            raise ValueError(f'Source file indicated and does not exist')
 
         return values
 
@@ -232,7 +248,6 @@ class OlivierCardType(BaseCardTypeCustomFontNoText):
     font_file: FilePath = OlivierTitleCard.TITLE_FONT
     episode_text_color: BetterColor = OlivierTitleCard.EPISODE_TEXT_COLOR
     stroke_color: BetterColor = OlivierTitleCard.STROKE_COLOR
-    interword_spacing: int = 0
 
 class PosterCardType(BaseCardType):
     title_text: str
@@ -240,6 +255,7 @@ class PosterCardType(BaseCardType):
     font_color: BetterColor = PosterTitleCard.TITLE_COLOR
     font_file: FilePath = PosterTitleCard.TITLE_FONT
     font_interline_spacing: int = 0
+    font_interword_spacing: int = 0
     font_size: PositiveFloat = 1.0
     logo_file: Optional[Path] = None
     episode_text_color: Optional[BetterColor] = None
@@ -258,6 +274,8 @@ class RomanNumeralCardType(BaseCardTypeAllText):
     episode_number: RomanNumeralValue
     font_color: BetterColor = RomanNumeralTitleCard.TITLE_COLOR
     font_file: FilePath = RomanNumeralTitleCard.TITLE_FONT
+    font_interline_spacing: int = 0
+    font_interword_spacing: int = 0
     font_size: PositiveFloat = 1.0
     background: BetterColor = RomanNumeralTitleCard.BACKGROUND_COLOR
     roman_numeral_color: BetterColor = RomanNumeralTitleCard.ROMAN_NUMERAL_TEXT_COLOR
@@ -278,6 +296,7 @@ class StarWarsCardType(BaseCardType):
     font_color: BetterColor = StarWarsTitleCard.TITLE_COLOR
     font_file: FilePath = StarWarsTitleCard.TITLE_FONT
     font_interline_spacing: int = 0
+    font_interword_spacing: int = 0
     font_size: PositiveFloat = 1.0
     episode_text_color: BetterColor = StarWarsTitleCard.EPISODE_TEXT_COLOR
 
@@ -297,6 +316,7 @@ class TintedFrameCardType(BaseCardTypeAllText):
     font_color: BetterColor = TintedFrameTitleCard.TITLE_COLOR
     font_file: FilePath = TintedFrameTitleCard.TITLE_FONT
     font_interline_spacing: int = 0
+    font_interword_spacing: int = 0
     font_kerning: float = 1.0
     font_size: PositiveFloat = 1.0
     font_vertical_shift: int = 0
@@ -364,7 +384,6 @@ class WhiteBorderCardType(BaseCardTypeCustomFontAllText):
     separator: str = '•'
     stroke_color: BetterColor = WhiteBorderTitleCard.STROKE_COLOR
     episode_text_color: BetterColor = WhiteBorderTitleCard.TITLE_COLOR
-    interword_spacing: float = 0.0
 
 LocalCardTypeModels = {
     '4x3': FadeCardType,

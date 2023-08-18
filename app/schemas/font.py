@@ -12,6 +12,7 @@ TitleCase = Literal['blank', 'lower', 'source', 'title', 'upper']
 
 DefaultFont = {
     'font_interline_spacing': 0,
+    'font_interword_spacing': 0,
     'font_kerning': 1.0,
     'font_size': 1.0,
     'font_stroke_width': 1.0,
@@ -32,6 +33,7 @@ class BaseFont(Base):
     kerning: float = 1.0
     stroke_width: float = 1.0
     interline_spacing: int = 0
+    interword_spacing: int = 0
     vertical_shift: int = 0
 
 class BaseNamedFont(BaseFont):
@@ -68,19 +70,21 @@ class PreviewFont(Base):
     kerning: Optional[float] = None
     stroke_width: Optional[float] = None
     interline_spacing: Optional[int] = None
+    interword_spacing: Optional[int] = None
     vertical_shift: Optional[int] = None
 
 """
 Update classes
 """
 class UpdateNamedFont(UpdateBase):
-    name: str = Field(default=UNSPECIFIED, min_length=1)
+    name: constr(min_length=1) = UNSPECIFIED
     color: Optional[BetterColor] = UNSPECIFIED
     title_case: Optional[TitleCase] = UNSPECIFIED
-    size: float = Field(default=UNSPECIFIED, gt=0.0)
+    size: PositiveFloat = UNSPECIFIED
     kerning: float = UNSPECIFIED
     stroke_width: float = UNSPECIFIED
     interline_spacing: int = UNSPECIFIED
+    interword_spacing: int = UNSPECIFIED
     vertical_shift: int = UNSPECIFIED
     delete_missing: bool = UNSPECIFIED
     replacements_in: list[str] = UNSPECIFIED
