@@ -18,9 +18,9 @@ class Font(YamlReader):
 
     """Valid YAML attributes to customize a font"""
     VALID_ATTRIBUTES = (
-        'validate', 'color', 'size', 'file', 'case', 'replacements',
-        'vertical_shift', 'interline_spacing', 'interword_spacing' 'kerning',
-        'stroke_width',
+        'validate', 'color', 'size', 'file', 'case', 'case_name',
+        'replacements', 'vertical_shift', 'interline_spacing',
+        'interword_spacing' 'kerning', 'stroke_width',
     )
 
     """Compiled regex to identify percentage values for scalars"""
