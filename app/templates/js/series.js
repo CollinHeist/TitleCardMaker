@@ -593,6 +593,7 @@ async function getEpisodeData(page=1) {
     row.querySelector('input[name="font_size"]').value = episode.font_size;
     row.querySelector('input[name="font_stroke_width"]').value = episode.font_stroke_width;
     row.querySelector('input[name="font_interline_spacing"]').value = episode.font_interline_spacing;
+    row.querySelector('input[name="font_interword_spacing"]').value = episode.font_interword_spacing;
     row.querySelector('input[name="font_vertical_shift"]').value = episode.font_vertical_shift;
     row.querySelector('td[data-column="extras"] a').onclick = () => editEpisodeExtras(episode);
     row.querySelector('input[name="source_file"]').value = episode.source_file;

@@ -125,6 +125,11 @@
           <input name="font_interline_spacing" placeholder="Default">
         </div>
       </td>
+      <td data-column="font_interword_spacing" class="center aligned collapsing">
+        <div class="ui transparent number input">
+          <input name="font_interword_spacing" placeholder="Default">
+        </div>
+      </td>
       <td data-column="font_vertical_shift" class="center aligned collapsing">
         <div class="ui transparent number input">
           <input name="font_vertical_shift" placeholder="Default">
@@ -671,19 +676,28 @@
                   </div>
 
                   <!-- Font interline spacing, vertical shift -->
-                  <div class="two fields">
+                  <div class="three fields">
                     <div class="field">
                       <label>Interline Spacing</label>
-                      {% if series.font_kerning is none %}
+                      {% if series.font_interline is none %}
                       <input name="font_interline_spacing" type="number" placeholder="Default">
                       {% else %}
                       <input name="font_interline_spacing" type="number" placeholder="Default" value="{{series.font_interline_spacing}}">
                       {% endif %}
                     </div>
+
+                    <div class="field">
+                      <label>Interword Spacing</label>
+                      {% if series.font_interword_spacing is none %}
+                      <input name="font_interword_spacing" type="number" placeholder="Default">
+                      {% else %}
+                      <input name="font_interword_spacing" type="number" placeholder="Default" value="{{series.font_interword_spacing}}">
+                      {% endif %}
+                    </div>
     
                     <div class="field">
                       <label>Vertical Shift</label>
-                      {% if series.font_kerning is none %}
+                      {% if series.font_vertical_shift is none %}
                       <input name="font_vertical_shift" type="number" placeholder="Default">
                       {% else %}
                       <input name="font_vertical_shift" type="number" placeholder="Default" value="{{series.font_vertical_shift}}">
@@ -793,7 +807,7 @@
                     <i class="trash alternate outline icon"></i>
                     Delete Extras
                   </div>
-                  <br>
+                  <br><br>
 
                   <!-- Submit changes button -->
                   <button id="submit-changes" class="ui animated primary button" type="submit">
@@ -884,6 +898,7 @@
                     <th class="collapsing">Font<br>Size (%)</th>
                     <th class="collapsing">Font Stroke<br>Width (%)</th>
                     <th class="collapsing">Font Interline<br>Spacing</th>
+                    <th class="collapsing">Font Interword<br>Spacing</th>
                     <th class="collapsing">Font<br>Vertical Shift</th>
 
                     <th class="collapsing">Extras &<br>Translations</th>
@@ -1214,7 +1229,7 @@
             <label>Extras</label>
             <!-- Added later -->
           </div>
-          <div onclick="addBlankEpisodeExtra();" class="ui circular mini icon add-field button">
+          <div onclick="addBlankEpisodeExtra();" class="ui circular mini icon add-field grey button">
             <i class="plus square outline icon"></i>
             Add Extra
           </div>
