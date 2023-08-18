@@ -30,7 +30,7 @@ class Font(YamlReader):
     __slots__ = (
         '__card_class', '__series_info', '__validator', '__validate', 'color',
         'size', 'file', 'replacements', 'delete_missing', 'case_name', 'case',
-        'vertical_shift', 'interline_spacing', 'interword_spacing' 'kerning',
+        'vertical_shift', 'interline_spacing', 'interword_spacing', 'kerning',
         'stroke_width',
     )
 
