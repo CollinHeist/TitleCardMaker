@@ -36,6 +36,9 @@
 
   <template id="episode-row">
     <tr class="center aligned"> 
+      <td data-column="create" class="selectable">
+        <a><i class="ui green image outline icon"></i></a>
+      </td>
       <td data-column="edit" class="selectable">
         <a><i class="ui blue save outline icon"></i></a>
       </td>
@@ -872,6 +875,7 @@
               <table class="ui compact striped head stuck sortable unstackable table">
                 <thead>
                   <tr class="center aligned">
+                    <th class="collapsing">Create<br>Card</th>
                     <th class="collapsing">Save<br>Changes</th>
                     <th class="collapsing">Season</th>
                     <th class="collapsing">Episode</th>

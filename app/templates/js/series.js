@@ -93,6 +93,21 @@ function getUpdateEpisodeObject(episodeId) {
 }
 
 /*
+ * Submit an API request to create the Title Card for the Episode with the given
+ * ID.
+ * 
+ * @param {int} episodeId - ID of the Episode whose Card is being created.
+ */
+function createEpisodeCard(episodeId) {
+  $.ajax({
+    type: 'POST',
+    url: `/api/cards/episode/${episodeId}`,
+    success: () => showInfoToast('Created Title Card'),
+    error: response => showErrorToast({title: 'Error Creating Title Card', response}),
+  });
+}
+
+/*
  * Submit an API request to save the modified Episode configuration
  * for the given Episode.
  * 
@@ -567,7 +582,8 @@ async function getEpisodeData(page=1) {
     // Set row ID
     row.querySelector('tr').id = `episode-id${episode.id}`;
     row.querySelector('tr').dataset.episodeId = episode.id;
-    // Assign function to onclick of <a> element
+    // Assign functions to onclick of <a> element
+    row.querySelector('td[data-column="create"] a').onclick = () => createEpisodeCard(episode.id);
     row.querySelector('td[data-column="edit"] a').onclick = () => saveEpisodeConfig(episode.id);
     // Fill in row data
     row.querySelector('td[data-column="season_number"]').innerHTML = episode.season_number;
