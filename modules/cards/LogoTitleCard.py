@@ -52,11 +52,11 @@ class LogoTitleCard(BaseCardType):
 
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'season_text',
-        'episode_text', 'hide_season_text', 'font_color', 'font_file',
-        'font_kerning', 'font_interline_spacing', 'font_size',
-        'font_stroke_width',  'font_vertical_shift', 'separator', 'logo',
-        'omit_gradient', 'background', 'stroke_color', 'use_background_image',
-        'blur_only_image',
+        'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
+        'font_file', 'font_kerning', 'font_interline_spacing',
+        'font_interword_spacing', 'font_size', 'font_stroke_width',
+        'font_vertical_shift', 'separator', 'logo', 'omit_gradient',
+        'background', 'stroke_color', 'use_background_image', 'blur_only_image',
     )
 
     def __init__(self,
@@ -66,11 +66,12 @@ class LogoTitleCard(BaseCardType):
             episode_text: str,
             source_file: Optional[Path] = None,
             hide_season_text: bool = False,
-            font_file: str = TITLE_FONT,
             font_color: str = TITLE_COLOR,
-            font_size: float = 1.0,
-            font_kerning: float = 1.0,
+            font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
+            font_interword_spacing: int = 0,
+            font_kerning: float = 1.0,
+            font_size: float = 1.0,
             font_stroke_width: float = 1.0,
             font_vertical_shift: int = 0,
             season_number: int = 1,
@@ -126,6 +127,7 @@ class LogoTitleCard(BaseCardType):
         self.font_color = font_color
         self.font_file = font_file
         self.font_interline_spacing = font_interline_spacing
+        self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_size = font_size
         self.font_stroke_width = font_stroke_width
@@ -226,7 +228,7 @@ class LogoTitleCard(BaseCardType):
 
 
     @staticmethod
-    def is_custom_font(font: 'Font') -> bool:
+    def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
         Determines whether the given font characteristics constitute a
         default or custom font.
@@ -241,6 +243,7 @@ class LogoTitleCard(BaseCardType):
         return ((font.color != LogoTitleCard.TITLE_COLOR)
             or (font.file != LogoTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
+            or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
             or (font.stroke_width != 1.0)
@@ -250,7 +253,9 @@ class LogoTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> bool:
         """
         Determines whether the given attributes constitute custom or
         generic season titles.
@@ -297,6 +302,7 @@ class LogoTitleCard(BaseCardType):
         vertical_shift = 245 + self.font_vertical_shift
         font_size = 157.41 * self.font_size
         interline_spacing = -22 + self.font_interline_spacing
+        interword_spacing = 50 + self.font_interword_spacing
         kerning = -1.25 * self.font_kerning
         stroke_width = 3.0 * self.font_stroke_width
 
@@ -352,7 +358,7 @@ class LogoTitleCard(BaseCardType):
             f'-gravity south',
             f'-font "{self.font_file}"',
             f'-kerning {kerning}',
-            f'-interword-spacing 50',
+            f'-interword-spacing {interword_spacing}',
             f'-interline-spacing {interline_spacing}',
             f'-pointsize {font_size}',
             # Stroke behind title text

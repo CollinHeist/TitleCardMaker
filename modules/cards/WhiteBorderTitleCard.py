@@ -66,6 +66,7 @@ class WhiteBorderTitleCard(BaseCardType):
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
+            font_interword_spacing: int = 0,
             font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_stroke_width: float = 1.0,
@@ -73,7 +74,6 @@ class WhiteBorderTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             episode_text_color: str = TITLE_COLOR,
-            interword_spacing: float = 0.0,
             omit_gradient: bool = False,
             separator: str = '•',
             stroke_color: str = STROKE_COLOR,
@@ -101,6 +101,7 @@ class WhiteBorderTitleCard(BaseCardType):
         self.font_color = font_color
         self.font_file = font_file
         self.font_interline_spacing = font_interline_spacing
+        self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_size = font_size
         self.font_stroke_width = font_stroke_width
@@ -108,7 +109,6 @@ class WhiteBorderTitleCard(BaseCardType):
 
         # Optional extras
         self.episode_text_color = episode_text_color
-        self.font_interword_spacing = interword_spacing
         self.omit_gradient = omit_gradient
         self.separator = separator
         self.stroke_color = stroke_color
@@ -135,8 +135,8 @@ class WhiteBorderTitleCard(BaseCardType):
             f'-font "{self.font_file}"',
             f'-pointsize {160 * self.font_size}',
             f'-kerning {-1 * self.font_kerning}',
-            f'-interline-spacing {0 + self.font_interline_spacing}',
-            f'-interword-spacing {0 + self.font_interword_spacing}',
+            f'-interline-spacing {self.font_interline_spacing}',
+            f'-interword-spacing {self.font_interword_spacing}',
             # Black stroke behind primary text
             f'-fill "{self.stroke_color}"',
             f'-stroke "{self.stroke_color}"',
@@ -212,8 +212,6 @@ class WhiteBorderTitleCard(BaseCardType):
                     WhiteBorderTitleCard.EPISODE_TEXT_COLOR
             if 'stroke_color' in extras:
                 extras['stroke_color'] = WhiteBorderTitleCard.STROKE_COLOR
-            if 'interword_spacing' in extras:
-                del extras['interword_spacing']
 
 
     @staticmethod
@@ -232,6 +230,7 @@ class WhiteBorderTitleCard(BaseCardType):
         return ((font.color != WhiteBorderTitleCard.TITLE_COLOR)
             or (font.file != WhiteBorderTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
+            or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
             or (font.stroke_width != 1.0)

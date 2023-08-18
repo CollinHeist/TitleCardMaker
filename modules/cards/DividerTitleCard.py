@@ -49,9 +49,10 @@ class DividerTitleCard(BaseCardType):
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'season_text',
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
-        'font_file', 'font_interline_spacing', 'font_kerning', 'font_size',
-        'font_stroke_width', 'stroke_color', 'title_text_position',
-        'text_position', 'font_vertical_shift'
+        'font_file', 'font_interline_spacing', 'font_interword_spacing',
+        'font_kerning', 'font_size', 'font_stroke_width', 'stroke_color',
+        'title_text_position', 'text_position', 'font_vertical_shift',
+        'divider_color',
     )
 
     def __init__(self,
@@ -65,6 +66,7 @@ class DividerTitleCard(BaseCardType):
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
+            font_interword_spacing: int = 0,
             font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_stroke_width: float = 1.0,
@@ -98,6 +100,7 @@ class DividerTitleCard(BaseCardType):
         self.font_color = font_color
         self.font_file = font_file
         self.font_interline_spacing = font_interline_spacing
+        self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_size = font_size
         self.font_stroke_width = font_stroke_width
@@ -299,6 +302,7 @@ class DividerTitleCard(BaseCardType):
         return ((font.color != DividerTitleCard.TITLE_COLOR)
             or (font.file != DividerTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
+            or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
             or (font.stroke_width != 1.0)
@@ -307,7 +311,9 @@ class DividerTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> bool:
         """
         Determine whether the given attributes constitute custom or
         generic season titles.
@@ -360,6 +366,7 @@ class DividerTitleCard(BaseCardType):
             f'-kerning {kerning}',
             f'-strokewidth {stroke_width}',
             f'-interline-spacing {interline_spacing}',
+            f'-interword-spacing {self.font_interword_spacing}',
             f'\( -stroke "{self.stroke_color}"',
             *self.text_command(divider_height, self.stroke_color),
             # Combine text images

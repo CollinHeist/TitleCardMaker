@@ -42,9 +42,9 @@ class OlivierTitleCard(BaseCardType):
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'hide_episode_text',
         'episode_prefix', 'episode_text', 'font_color', 'font_file',
-        'font_interline_spacing', 'font_kerning', 'font_size',
-        'font_stroke_width', 'font_vertical_shift', 'stroke_color',
-        'episode_text_color', 'interword_spacing',
+        'font_interline_spacing', 'font_interword_spacing', 'font_kerning',
+        'font_size', 'font_stroke_width', 'font_vertical_shift', 'stroke_color',
+        'episode_text_color',
     )
 
     def __init__(self,
@@ -56,6 +56,7 @@ class OlivierTitleCard(BaseCardType):
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
+            font_interword_spacing: int = 0,
             font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_stroke_width: float = 1.0,
@@ -64,7 +65,6 @@ class OlivierTitleCard(BaseCardType):
             grayscale: bool = False,
             episode_text_color: str = EPISODE_TEXT_COLOR,
             stroke_color: str = STROKE_COLOR,
-            interword_spacing: int = 0,
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
         ) -> None:
@@ -97,6 +97,7 @@ class OlivierTitleCard(BaseCardType):
         self.font_color = font_color
         self.font_file = font_file
         self.font_interline_spacing = font_interline_spacing
+        self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_size = font_size
         self.font_stroke_width = font_stroke_width
@@ -105,7 +106,6 @@ class OlivierTitleCard(BaseCardType):
         # Optional extras
         self.episode_text_color = episode_text_color
         self.stroke_color = stroke_color
-        self.interword_spacing = interword_spacing
 
 
     @property
@@ -122,7 +122,6 @@ class OlivierTitleCard(BaseCardType):
         stroke_width = 8.0 * self.font_stroke_width
         kerning = 0.5 * self.font_kerning
         interline_spacing = -20 + self.font_interline_spacing
-        interword_spacing = 0 + self.interword_spacing
         vertical_shift = 785 + self.font_vertical_shift
 
         return [
@@ -131,7 +130,7 @@ class OlivierTitleCard(BaseCardType):
             f'-pointsize {font_size}',
             f'-kerning {kerning}',
             f'-interline-spacing {interline_spacing}',
-            f'-interword-spacing {interword_spacing}',
+            f'-interword-spacing {self.font_interword_spacing}',
             f'-fill "{self.stroke_color}"',
             f'-stroke "{self.stroke_color}"',
             f'-strokewidth {stroke_width}',
@@ -254,6 +253,7 @@ class OlivierTitleCard(BaseCardType):
         return ((font.color != OlivierTitleCard.TITLE_COLOR)
             or (font.file != OlivierTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
+            or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
             or (font.stroke_width != 1.0)
@@ -263,7 +263,9 @@ class OlivierTitleCard(BaseCardType):
 
     @staticmethod
     def is_custom_season_titles(
-            custom_episode_map: bool, episode_text_format: str) -> bool:
+            custom_episode_map: bool,
+            episode_text_format: str,
+        ) -> bool:
         """
         Determine whether the given attributes constitute custom or
         generic season titles.
