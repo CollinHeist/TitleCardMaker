@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
-from modules.BaseCardType import BaseCardType
+from modules.BaseCardType import BaseCardType, ImageMagickCommands
 
 
 class CutoutTitleCard(BaseCardType):
