@@ -44,6 +44,7 @@ function reloadPreview(fontId, fontForm, previewForm, cardElement, imageElement)
     font_title_case: fontFormObj.get('title_case'),
     font_color: fontFormObj.get('color'),
     font_interline_spacing: fontFormObj.get('interline_spacing'),
+    font_interword_spacing: fontFormObj.get('interword_spacing'),
     font_kerning: fontFormObj.get('kerning') / 100.0,
     font_size: fontFormObj.get('size') / 100.0,
     font_stroke_width: fontFormObj.get('stroke_width') / 100.0,
@@ -57,12 +58,9 @@ function reloadPreview(fontId, fontForm, previewForm, cardElement, imageElement)
     url: '/api/cards/preview',
     data: JSON.stringify(previewCardObj),
     contentType: 'application/json',
-    success: (response) => {
-      // Update source, use current time to force reload
-      imageElement.src = `${response}?${new Date().getTime()}`;
-    },
+    success: imageUrl => imageElement.src = `${imageUrl}?${new Date().getTime()}`,
     error: response => showErrorToast({title: 'Error Creating Preview Card', response}),
-    complete: () => {cardElement.classList.remove('loading'); }
+    complete: () => cardElement.classList.remove('loading'),
   });
 }
 
@@ -169,6 +167,8 @@ async function getAllFonts() {
     stokeWidth.placeholder = fontObj.stroke_width*100; stokeWidth.value = fontObj.stroke_width*100;
     const interlineSpacing = template.querySelector('input[name="interline_spacing"]');
     interlineSpacing.placeholder = fontObj.interline_spacing; interlineSpacing.value = fontObj.interline_spacing;
+    const interwordSpacing = template.querySelector('input[name="interword_spacing"]');
+    interwordSpacing.placeholder = fontObj.interword_spacing; interwordSpacing.value = fontObj.interword_spacing;
     const verticalShift = template.querySelector('input[name="vertical_shift"]');
     verticalShift.placeholder = fontObj.vertical_shift; verticalShift.value = fontObj.vertical_shift;
     if (fontObj.delete_missing) {

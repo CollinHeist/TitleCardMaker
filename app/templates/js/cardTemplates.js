@@ -69,13 +69,11 @@ async function showDeleteModal(templateId) {
     $.ajax({
       type: 'DELETE',
       url: `/api/templates/${templateId}`,
-      success: response => {
-        $.toast({class: 'blue info', title: 'Deleted Template'});
-        getAllTemplates();
+      success: () => {
+        showInfoToast('Deleted Template');
+        getAllTemplates(); // TODO delete just this one template element
       },
-      error: response => {
-        $.toast({class: 'error', title: 'Error Deleting Template'});
-      }, complete: () => {}
+      error: response => showErrorToast({title: 'Error Deleting Template', response}),
     });
   });
 
