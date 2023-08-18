@@ -397,6 +397,8 @@ async function getAllTemplates() {
       initializeExtraDropdowns(
         null,
         $(`#template-id${templateObj.id} .dropdown[data-value="extra_keys"]`).last(),
+        $(`#template-id${templateObj.id} .field[data-value="extras"] .popup .header`).last(),
+        $(`#template-id${templateObj.id} .field[data-value="extras"] .popup .description`).last(),
       );
       refreshTheme();
       $('.field[data-value="extras"] .link.icon').popup({inline: true});

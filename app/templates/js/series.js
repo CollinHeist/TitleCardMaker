@@ -369,7 +369,7 @@ function deleteObject(args) {
 
 function editEpisodeExtras(episode) {
   // Clear existing values
-  $('#episode-extras-modal input').remove();
+  $('#episode-extras-modal .field').remove();
   // Add existing translations
   for (let [data_key, value] of Object.entries(episode.translations)) {
     const newKey = document.createElement('input');
