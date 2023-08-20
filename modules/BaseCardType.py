@@ -1,12 +1,13 @@
 from abc import abstractmethod
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
 from titlecase import titlecase
 
-from modules.Debug import log
 from modules.ImageMaker import ImageMaker
 
+
 ImageMagickCommands = list[str]
+
 
 class BaseCardType(ImageMaker):
     """
@@ -135,9 +136,10 @@ class BaseCardType(ImageMaker):
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
-        attributes = ', '.join(f'{attr}={getattr(self, attr)!r}'
-                               for attr in self.__slots__
-                               if not attr.startswith('__'))
+        attributes = ', '.join(
+            f'{attr}={getattr(self, attr)!r}' for attr in self.__slots__
+            if not attr.startswith('__')
+        )
 
         return f'<{self.__class__.__name__} {attributes}>'
 

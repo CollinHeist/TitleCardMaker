@@ -44,8 +44,8 @@ class StarWarsTitleCard(BaseCardType):
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'episode_text',
         'hide_episode_text', 'font_color', 'font_file',
-        'font_interline_spacing', 'font_size', 'episode_text_color',
-        'episode_prefix',
+        'font_interline_spacing', 'font_interword_spacing', 'font_size',
+        'episode_text_color', 'episode_prefix',
     )
 
     def __init__(self,
@@ -57,6 +57,7 @@ class StarWarsTitleCard(BaseCardType):
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
+            font_interword_spacing: int = 0,
             font_size: float = 1.0,
             blur: bool = False,
             grayscale: bool = False,
@@ -82,6 +83,7 @@ class StarWarsTitleCard(BaseCardType):
         self.font_color = font_color
         self.font_file = font_file
         self.font_interline_spacing = font_interline_spacing
+        self.font_interword_spacing = font_interword_spacing
         self.font_size = font_size
 
         # Attempt to detect prefix text
@@ -123,6 +125,7 @@ class StarWarsTitleCard(BaseCardType):
             f'-pointsize {size}',
             f'-kerning 0.5',
             f'-interline-spacing {interline_spacing}',
+            f'-interword-spacing {self.font_interword_spacing}',
             f'-fill "{self.font_color}"',
             f'-annotate +320+829 "{self.title_text}"',
         ]
@@ -146,6 +149,7 @@ class StarWarsTitleCard(BaseCardType):
             f'-gravity west',
             f'-pointsize 53',
             f'-kerning 19',
+            f'+interword-spacing',
             f'-fill "{self.episode_text_color}"',
             f'-background transparent',
             # Create prefix text
@@ -201,6 +205,7 @@ class StarWarsTitleCard(BaseCardType):
         return ((font.color != StarWarsTitleCard.TITLE_COLOR)
             or (font.file != StarWarsTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
+            or (font.interword_spacing != 0)
             or (font.size != 1.0)
         )
 

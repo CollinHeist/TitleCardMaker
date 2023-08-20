@@ -58,8 +58,9 @@ class LandscapeTitleCard(BaseCardType):
 
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'font_color', 'font_file',
-        'font_interline_spacing', 'font_kerning', 'font_size',
-        'font_vertical_shift', 'darken', 'add_bounding_box', 'box_adjustments'
+        'font_interline_spacing', 'font_interword_spacing', 'font_kerning',
+        'font_size', 'box_color', 'font_vertical_shift', 'darken',
+        'add_bounding_box', 'box_adjustments'
     )
 
     def __init__(self,
@@ -69,14 +70,16 @@ class LandscapeTitleCard(BaseCardType):
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
+            font_interword_spacing: int = 0,
             font_size: float = 1.0,
             font_kerning: float = 1.0,
             font_vertical_shift: float = 0,
             blur: bool = False,
             grayscale: bool = False,
-            darken: DarkenOption = False,
             add_bounding_box: bool = False,
             box_adjustments: tuple[int, int, int, int] = None,
+            box_color: str = TITLE_COLOR,
+            darken: DarkenOption = False,
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
         ) ->None:
@@ -91,9 +94,11 @@ class LandscapeTitleCard(BaseCardType):
         self.source_file = source_file
         self.output_file = card_file
         self.title_text = self.image_magick.escape_chars(title_text)
+
         self.font_color = font_color
         self.font_file = font_file
         self.font_interline_spacing = font_interline_spacing
+        self.font_interword_spacing = font_interword_spacing
         self.font_size = font_size
         self.font_kerning = font_kerning
         self.font_vertical_shift = font_vertical_shift
@@ -114,7 +119,8 @@ class LandscapeTitleCard(BaseCardType):
         else:
             self.darken = bool(darken)
 
-        # Parse box adjustments
+        # Parse box extras
+        self.box_color = box_color
         self.box_adjustments = (0, 0, 0, 0)
         if box_adjustments:
             # Verify adjustments are properly provided
@@ -131,7 +137,7 @@ class LandscapeTitleCard(BaseCardType):
                 self.valid = False
 
 
-    def darken_command(self, coordinates: BoxCoordinates) ->ImageMagickCommands:
+    def darken_commands(self, coordinates: BoxCoordinates) ->ImageMagickCommands:
         """
         Subcommand to darken the image if indicated.
 
@@ -172,7 +178,7 @@ class LandscapeTitleCard(BaseCardType):
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
             *self.resize_and_style,
-            *self.darken_command((0, 0, 0, 0)),
+            *self.darken_commands((0, 0, 0, 0)),
             f'"{self.output_file.resolve()}"',
         ])
 
@@ -182,13 +188,16 @@ class LandscapeTitleCard(BaseCardType):
     def get_bounding_box_coordinates(self,
             font_size: float,
             interline_spacing: float,
-            kerning: float) -> BoxCoordinates:
+            interword_spacing: int,
+            kerning: float,
+        ) -> BoxCoordinates:
         """
         Get the coordinates of the bounding box around the title.
 
         Args:
             font_size: Font size.
             interline_spacing: Font interline spacing.
+            interword_spacing: Font interword spacing.
             kerning: Font kerning.
 
         Returns:
@@ -205,6 +214,7 @@ class LandscapeTitleCard(BaseCardType):
             f'-pointsize {font_size}',
             f'-gravity center',
             f'-interline-spacing {interline_spacing}',
+            f'-interword-spacing {interword_spacing}',
             f'-kerning {kerning}',
             f'-interword-spacing 40',
             f'-fill "{self.font_color}"',
@@ -235,7 +245,8 @@ class LandscapeTitleCard(BaseCardType):
 
 
     def add_bounding_box_commands(self,
-            coordinates: BoxCoordinates) -> ImageMagickCommands:
+            coordinates: BoxCoordinates,
+        ) -> ImageMagickCommands:
         """
         Subcommand to add the bounding box around the title text.
 
@@ -260,7 +271,7 @@ class LandscapeTitleCard(BaseCardType):
             # Create bounding box
             f'-fill transparent',
             f'-strokewidth 10',
-            f'-stroke "{self.font_color}"',
+            f'-stroke "{self.box_color}"',
             f'-draw "rectangle {x_start},{y_start},{x_end},{y_end}"',
             # Create shadow of the bounding box
             f'\( +clone',
@@ -280,7 +291,8 @@ class LandscapeTitleCard(BaseCardType):
     def modify_extras(
             extras: dict[str, Any],
             custom_font: bool,
-            custom_season_titles: bool) -> None:
+            custom_season_titles: bool,
+        ) -> None:
         """
         Modify the given extras base on whether font or season titles
         are custom.
@@ -291,10 +303,12 @@ class LandscapeTitleCard(BaseCardType):
             custom_season_titles: Whether the season titles are custom.
         """
 
-        # Generic font, reset box adjustments
+        # Generic font, reset box adjustments and coloring
         if not custom_font:
             if 'box_adjustments' in extras:
                 extras['box_adjustments'] = '0 0 0 0'
+            if 'box_color' in extras:
+                extras['box_color'] = LandscapeTitleCard.TITLE_COLOR
 
 
     @staticmethod
@@ -313,6 +327,7 @@ class LandscapeTitleCard(BaseCardType):
         return ((font.color != LandscapeTitleCard.TITLE_COLOR)
             or (font.file != LandscapeTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
+            or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
         )
@@ -352,11 +367,12 @@ class LandscapeTitleCard(BaseCardType):
         # Scale font size and interline spacing of roman text
         font_size = int(150 * self.font_size)
         interline_spacing = int(60 * self.font_interline_spacing)
+        interword_spacing = 40 + int(self.font_interword_spacing)
         kerning = int(40 * self.font_kerning)
 
         # Get coordinates for bounding box
         bounding_box = self.get_bounding_box_coordinates(
-            font_size, interline_spacing, kerning
+            font_size, interline_spacing, interword_spacing, kerning
         )
 
         # Generate command to create card
@@ -364,7 +380,7 @@ class LandscapeTitleCard(BaseCardType):
             f'convert "{self.source_file.resolve()}"',
             # Resize and apply any style modifiers
             *self.resize_and_style,
-            *self.darken_command(bounding_box),
+            *self.darken_commands(bounding_box),
             # Add title text
             f'\( -background None',
             f'-font "{self.font_file}"',
@@ -372,7 +388,7 @@ class LandscapeTitleCard(BaseCardType):
             f'-gravity center',
             f'-interline-spacing {interline_spacing}',
             f'-kerning {kerning}',
-            f'-interword-spacing 40',
+            f'-interword-spacing {interword_spacing}',
             f'-fill "{self.font_color}"',
             f'label:"{self.title_text}"',
             # Create drop shadow of title text

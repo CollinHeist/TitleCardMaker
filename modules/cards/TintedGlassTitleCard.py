@@ -57,8 +57,9 @@ class TintedGlassTitleCard(BaseCardType):
     __slots__ = (
         'source', 'output_file', 'title_text', '__line_count', 'episode_text',
         'hide_episode_text', 'font_file', 'font_size', 'font_color',
-        'font_interline_spacing', 'font_kerning', 'font_vertical_shift',
-        'episode_text_color', 'episode_text_position', 'box_adjustments',
+        'font_interline_spacing', 'font_interword_spacing', 'font_kerning',
+        'font_vertical_shift', 'episode_text_color', 'episode_text_position',
+        'box_adjustments',
     )
 
     def __init__(self,
@@ -70,6 +71,7 @@ class TintedGlassTitleCard(BaseCardType):
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
+            font_interword_spacing: int = 0,
             font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_vertical_shift: int = 0,
@@ -98,6 +100,7 @@ class TintedGlassTitleCard(BaseCardType):
         self.font_size = font_size
         self.font_color = font_color
         self.font_interline_spacing = font_interline_spacing
+        self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_vertical_shift = font_vertical_shift
 
@@ -184,6 +187,7 @@ class TintedGlassTitleCard(BaseCardType):
         font_size = 200 * self.font_size
         kerning = -5 * self.font_kerning
         interline_spacing = -50 + self.font_interline_spacing
+        interword_spacing = 40 + self.font_interword_spacing
         vertical_shift = 300 + self.font_vertical_shift
 
         return [
@@ -191,8 +195,8 @@ class TintedGlassTitleCard(BaseCardType):
             f'-font "{self.font_file}"',
             f'-pointsize {font_size}',
             f'-interline-spacing {interline_spacing}',
-            f'-kerning {kerning}',
             f'-interword-spacing 40',
+            f'-kerning {kerning}',
             f'-fill "{self.font_color}"',
             f'-annotate +0+{vertical_shift} "{self.title_text}"',
         ]
@@ -221,8 +225,8 @@ class TintedGlassTitleCard(BaseCardType):
         y_start += 12
 
         # Shift y coordinates by vertical shift
-        y_start += self.font_vertical_shift
-        y_end += self.font_vertical_shift
+        y_start -= self.font_vertical_shift
+        y_end -= self.font_vertical_shift
 
         # Adjust upper bounds of box if title is multi-line
         y_start += (65 * (self.__line_count-1)) if self.__line_count > 1 else 0
@@ -237,7 +241,7 @@ class TintedGlassTitleCard(BaseCardType):
 
 
     def add_episode_text_command(self,
-            title_coordinates: BoxCoordinates
+            title_coordinates: BoxCoordinates,
         ) -> ImageMagickCommands:
         """
         Get the list of ImageMagick commands to add episode text.
@@ -325,7 +329,6 @@ class TintedGlassTitleCard(BaseCardType):
         if not custom_font:
             if 'box_adjustments' in extras:
                 del extras['box_adjustments']
-
             if 'episode_text_color' in extras:
                 del extras['episode_text_color']
 
@@ -346,6 +349,7 @@ class TintedGlassTitleCard(BaseCardType):
         return ((font.color != TintedGlassTitleCard.TITLE_COLOR)
             or  (font.file != TintedGlassTitleCard.TITLE_FONT)
             or  (font.interline_spacing != 0)
+            or  (font.interword_spacing != 0)
             or  (font.kerning != 1.0)
             or  (font.size != 1.0)
             or  (font.vertical_shift != 0)

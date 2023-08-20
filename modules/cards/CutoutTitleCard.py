@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
-from modules.BaseCardType import BaseCardType
+from modules.BaseCardType import BaseCardType, ImageMagickCommands
 
 
 class CutoutTitleCard(BaseCardType):
@@ -39,14 +39,16 @@ class CutoutTitleCard(BaseCardType):
     EPISODE_TEXT_FORMAT = '{episode_number_cardinal}'
     EPISODE_TEXT_FONT = SW_REF_DIRECTORY / 'HelveticaNeue-Bold.ttf'
 
-    """Custom blur profile for the poster"""
+    """Custom blur profiles"""
     BLUR_PROFILE = '0x20'
     NUMBER_BLUR_PROFILE = '0x10'
 
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'episode_text',
-        'font_color', 'font_file', 'font_size', 'font_vertical_shift',
-        'overlay_color', 'blur_edges',
+        'font_color', 'font_file', 'font_interline_spacing',
+        'font_interword_spacing', 'font_kerning', 'font_size',
+        'font_vertical_shift', 'overlay_color', 'blur_edges',
+        'number_blur_profile',
     )
 
     def __init__(self,
@@ -56,12 +58,16 @@ class CutoutTitleCard(BaseCardType):
             episode_text: str,
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
+            font_interline_spacing: int = 0,
+            font_interword_spacing: int = 0,
+            font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
             overlay_color: str = 'black',
             blur_edges: bool = False,
+            blur_profile: str = NUMBER_BLUR_PROFILE,
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
         ) -> None:
@@ -85,12 +91,16 @@ class CutoutTitleCard(BaseCardType):
         # Font/card customizations
         self.font_color = font_color
         self.font_file = font_file
+        self.font_interline_spacing = font_interline_spacing
+        self.font_interword_spacing = font_interword_spacing
+        self.font_kerning = font_kerning
         self.font_size = font_size
         self.font_vertical_shift = font_vertical_shift
 
         # Optional extras
         self.overlay_color = overlay_color
         self.blur_edges = blur_edges
+        self.number_blur_profile = blur_profile
 
 
     def _format_episode_text(self, episode_text: str) -> str:
@@ -121,6 +131,32 @@ class CutoutTitleCard(BaseCardType):
         return '\n'.join(episode_text.split('-'))
 
 
+    @property
+    def title_text_commands(self) -> ImageMagickCommands:
+        """
+        Subcommand for adding title text to the source image.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        font_size = 50 * self.font_size
+        font_kerning = 1 * self.font_kerning
+        font_interword_spacing = 35 + int(self.font_interword_spacing)
+        font_vertical_shift = 100 + self.font_vertical_shift
+
+        return [
+            f'-gravity south',
+            f'-pointsize {font_size}',
+            f'-fill "{self.font_color}"',
+            f'-font "{self.font_file}"',
+            f'-interline-spacing {self.font_interline_spacing}',
+            f'-interword-spacing {font_interword_spacing}',
+            f'-kerning {font_kerning}',
+            f'-annotate +0+{font_vertical_shift} "{self.title_text}"',
+        ]
+
+
     @staticmethod
     def is_custom_font(font: 'Font') -> bool: # type: ignore
         """
@@ -136,6 +172,9 @@ class CutoutTitleCard(BaseCardType):
 
         return ((font.color != CutoutTitleCard.TITLE_COLOR)
             or (font.file != CutoutTitleCard.TITLE_FONT)
+            or (font.interline_spacing != 0)
+            or (font.interword_spacing != 0)
+            or (font.kerning != 1.0)
             or (font.size != 1.0)
             or (font.vertical_shift != 0)
         )
@@ -169,6 +208,9 @@ class CutoutTitleCard(BaseCardType):
         object's defined title card.
         """
 
+        # Masked Alpha Composition layers must be ordered as:
+        # [Replace Black Parts of Mask] | [Replace White Parts of Mask] | [Mask]
+
         command = ' '.join([
             f'convert',
             f'-set colorspace sRGB',
@@ -187,22 +229,18 @@ class CutoutTitleCard(BaseCardType):
             f'-gravity center',
             f'-interline-spacing -300',
             f'-font "{self.EPISODE_TEXT_FONT.resolve()}"',
+            f'-fill white',
             f'+size',
             f'label:"{self.episode_text}"',
             # Resize with 100px margin on all sides
             f'-resize 3100x1700',
             f'-extent "{self.TITLE_CARD_SIZE}"',
-            f'-blur "{self.NUMBER_BLUR_PROFILE}" \)' if self.blur_edges else '\)',
+            f'-blur "{self.number_blur_profile}" \)' if self.blur_edges else '\)',
             # Use masked alpha composition to combine images
             f'-gravity center',
             f'-composite',
             # Add title text
-            f'-gravity south',
-            f'-pointsize {50 * self.font_size}',
-            f'+interline-spacing',
-            f'-fill "{self.font_color}"',
-            f'-font "{self.font_file}"',
-            f'-annotate +0+{100 + self.font_vertical_shift} "{self.title_text}"',
+            *self.title_text_commands,
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

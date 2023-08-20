@@ -7,7 +7,6 @@ from modules.Debug import log
 
 Position = Literal['left', 'surround', 'right']
 
-
 class FrameTitleCard(BaseCardType):
     """
     This class describes a type of CardType that produces title cards in
@@ -50,9 +49,9 @@ class FrameTitleCard(BaseCardType):
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'season_text',
         'episode_text', 'hide_season', 'hide_episode', 'font_color',
-        'font_file', 'font_interline_spacing', 'font_kerning', 'font_size',
-        'font_vertical_shift', 'episode_text_color', 'episode_text_position',
-        'interword_spacing',
+        'font_file', 'font_interline_spacing', 'font_interword_spacing',
+        'font_kerning', 'font_size', 'font_vertical_shift',
+        'episode_text_color', 'episode_text_position',
     )
 
     def __init__(self, *,
@@ -66,6 +65,7 @@ class FrameTitleCard(BaseCardType):
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
+            font_interword_spacing: int = 0,
             font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_vertical_shift: int = 0,
@@ -73,7 +73,6 @@ class FrameTitleCard(BaseCardType):
             grayscale: bool = False,
             episode_text_color: str = EPISODE_TEXT_COLOR,
             episode_text_position: Position = 'surround',
-            interword_spacing: int = 0,
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
         ) -> None:
@@ -100,6 +99,7 @@ class FrameTitleCard(BaseCardType):
         self.font_color = font_color
         self.font_file = font_file
         self.font_interline_spacing = font_interline_spacing
+        self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_size = font_size
         self.font_vertical_shift = font_vertical_shift
@@ -112,7 +112,6 @@ class FrameTitleCard(BaseCardType):
             self.valid = False
         else:
             self.episode_text_position = episode_text_position.lower()
-        self.interword_spacing = interword_spacing
 
 
     @property
@@ -126,7 +125,7 @@ class FrameTitleCard(BaseCardType):
 
         title_size = 125 * self.font_size
         interline_spacing = -45 + self.font_interline_spacing
-        interword_spacing = 0 + self.interword_spacing
+        interword_spacing = 0 + self.font_interword_spacing
         kerning = 5 * self.font_kerning
 
         return [
@@ -256,6 +255,7 @@ class FrameTitleCard(BaseCardType):
             or (font.file != FrameTitleCard.TITLE_FONT)
             or (font.kerning != 1.0)
             or (font.interline_spacing != 0)
+            or (font.interword_spacing != 0)
             or (font.size != 1.0)
             or (font.vertical_shift != 0)
         )

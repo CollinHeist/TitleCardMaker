@@ -48,9 +48,10 @@ class AnimeTitleCard(BaseCardType):
         'source_file', 'output_file', 'title_text', 'season_text',
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_color',
         'font_file', 'font_kerning', 'font_size', 'font_stroke_width',
-        'font_interline_spacing', 'font_vertical_shift', 'omit_gradient',
-        'stroke_color', 'separator', 'kanji', 'use_kanji', 'require_kanji',
-        'kanji_vertical_shift', 'episode_text_color',
+        'font_interline_spacing', 'font_interword_spacing',
+        'font_vertical_shift', 'omit_gradient', 'stroke_color', 'separator',
+        'kanji', 'use_kanji', 'require_kanji', 'kanji_vertical_shift',
+        'episode_text_color',
     )
 
     def __init__(self, *,
@@ -64,6 +65,7 @@ class AnimeTitleCard(BaseCardType):
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
+            font_interword_spacing: int = 0,
             font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_stroke_width: float = 1.0,
@@ -105,6 +107,7 @@ class AnimeTitleCard(BaseCardType):
         self.font_color = font_color
         self.font_file = font_file
         self.font_interline_spacing = font_interline_spacing
+        self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_size = font_size
         self.font_stroke_width = font_stroke_width
@@ -136,6 +139,7 @@ class AnimeTitleCard(BaseCardType):
             f'-font "{self.font_file}"',
             f'-kerning {kerning}',
             f'-interline-spacing {interline_spacing}',
+            f'-interword-spacing {self.font_interword_spacing}',
             f'-pointsize {font_size}',
             f'-gravity southwest',
         ]
@@ -359,6 +363,7 @@ class AnimeTitleCard(BaseCardType):
         return ((font.color != AnimeTitleCard.TITLE_COLOR)
             or (font.file != AnimeTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
+            or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
             or (font.stroke_width != 1.0)

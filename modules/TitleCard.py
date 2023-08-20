@@ -10,6 +10,7 @@ from modules.SeriesInfo import SeriesInfo
 
 # Built-in BaseCardType classes
 from modules.cards.AnimeTitleCard import AnimeTitleCard
+from modules.cards.ComicBookTitleCard import ComicBookTitleCard
 from modules.cards.CutoutTitleCard import CutoutTitleCard
 from modules.cards.DividerTitleCard import DividerTitleCard
 from modules.cards.FadeTitleCard import FadeTitleCard
@@ -58,6 +59,7 @@ class TitleCard:
         '4x3': FadeTitleCard,
         'anime': AnimeTitleCard,
         'blurred border': TintedFrameTitleCard,
+        'comic book': ComicBookTitleCard,
         'cutout': CutoutTitleCard,
         'divider': DividerTitleCard,
         'fade': FadeTitleCard,

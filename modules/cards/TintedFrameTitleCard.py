@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Optional
 
@@ -9,23 +10,21 @@ Element = Literal['index', 'logo', 'omit', 'title']
 MiddleElement = Literal['logo', 'omit']
 
 
+@dataclass(repr=False)
 class Coordinate:
-    __slots__ = ('x', 'y')
-
-    def __init__(self, x: float, y: float) -> None:
-        self.x = x
-        self.y = y
+    """Class that defines a single Coordinate on an x/y plane."""
+    x: float
+    y: float
 
     def __str__(self) -> str:
         return f'{self.x:.0f},{self.y:.0f}'
 
 
+@dataclass(repr=False)
 class Rectangle:
-    __slots__ = ('start', 'end')
-
-    def __init__(self, start: Coordinate, end: Coordinate) -> None:
-        self.start = start
-        self.end = end
+    """Class that defines movable SVG rectangle."""
+    start: Coordinate
+    end: Coordinate
 
     def __str__(self) -> str:
         return f'rectangle {str(self.start)},{str(self.end)}'
@@ -76,10 +75,12 @@ class TintedFrameTitleCard(BaseCardType):
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'season_text',
         'episode_text', 'hide_season_text', 'hide_episode_text', 'font_file',
-        'font_size', 'font_color', 'font_interline_spacing', 'font_kerning',
-        'font_vertical_shift', 'episode_text_color', 'separator', 'frame_color',
-        'logo', 'top_element', 'middle_element', 'bottom_element', 'logo_size',
-        'blur_edges',
+        'font_size', 'font_color', 'font_interline_spacing',
+        'font_interword_spacing', 'font_kerning', 'font_vertical_shift',
+        'episode_text_color', 'separator', 'frame_color', 'logo', 'top_element',
+        'middle_element', 'bottom_element', 'logo_size', 'blur_edges',
+        'episode_text_font', 'frame_width', 'episode_text_font_size',
+        'episode_text_vertical_shift',
     )
 
     def __init__(self, *,
@@ -93,6 +94,7 @@ class TintedFrameTitleCard(BaseCardType):
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
+            font_interword_spacing: int = 0,
             font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_vertical_shift: int = 0,
@@ -100,17 +102,22 @@ class TintedFrameTitleCard(BaseCardType):
             episode_number: int = 1,
             blur: bool = False,
             grayscale: bool = False,
-            episode_text_color: SeriesExtra[str] = None,
-            separator: SeriesExtra[str] = '-',
-            frame_color: SeriesExtra[str] = None,
+            separator: str = '-',
+            episode_text_color: str = None,
+            episode_text_font: Path = EPISODE_TEXT_FONT,
+            episode_text_font_size: float = 1.0,
+            episode_text_vertical_shift: int = 0,
+            frame_color: str = None,
+            frame_width: int = BOX_WIDTH,
             top_element: Element = 'title',
             middle_element: MiddleElement = 'omit',
             bottom_element: Element = 'index',
             logo: SeriesExtra[str] = None,
             logo_size: SeriesExtra[float] = 1.0,
             blur_edges: bool = True,
-            preferences: 'Preferences' = None,
-            **unused) -> None:
+            preferences: Optional['Preferences'] = None, # type: ignore
+            **unused,
+        ) -> None:
         """
         Construct a new instance of this Card.
         """
@@ -132,6 +139,7 @@ class TintedFrameTitleCard(BaseCardType):
         self.font_color = font_color
         self.font_file = font_file
         self.font_interline_spacing = font_interline_spacing
+        self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_size = font_size
         self.font_vertical_shift = font_vertical_shift
@@ -139,8 +147,11 @@ class TintedFrameTitleCard(BaseCardType):
        # Optional extras
         self.separator = separator
         self.frame_color = font_color if frame_color is None else frame_color
+        self.frame_width = frame_width
         self.logo_size = logo_size
         self.blur_edges = blur_edges
+        self.episode_text_font_size = episode_text_font_size
+        self.episode_text_vertical_shift = episode_text_vertical_shift
         if episode_text_color is None:
             self.episode_text_color = font_color
         else:
@@ -193,7 +204,11 @@ class TintedFrameTitleCard(BaseCardType):
             log.warning(f'Logo file not provided')
             self.valid = False
 
-        return None
+        try:
+            self.episode_text_font = Path(episode_text_font)
+        except Exception as exc:
+            log.exception(f'Invalid episode text font', exc)
+            self.valid = False
 
 
     @property
@@ -252,7 +267,8 @@ class TintedFrameTitleCard(BaseCardType):
             f'\( -font "{self.font_file}"',
             f'-pointsize {100 * self.font_size}',
             f'-kerning {1 * self.font_kerning}',
-            f'-interline-spacing {0 + self.font_interline_spacing}',
+            f'-interline-spacing {self.font_interline_spacing}',
+            f'-interword-spacing {self.font_interword_spacing}',
             f'-fill "{self.font_color}"',
             f'label:"{self.title_text}"',
             # Create drop shadow
@@ -295,12 +311,13 @@ class TintedFrameTitleCard(BaseCardType):
             vertical_shift = -708
         else:
             vertical_shift = 722
+        vertical_shift += self.episode_text_vertical_shift
 
         return [
             f'-background transparent',
-            f'\( -font "{self.EPISODE_TEXT_FONT}"',
-            f'+kerning +interline-spacing',
-            f'-pointsize {60}',
+            f'\( -font "{self.episode_text_font.resolve()}"',
+            f'+kerning +interline-spacing +interword-spacing',
+            f'-pointsize {60 * self.episode_text_font_size}',
             f'-fill "{self.episode_text_color}"',
             f'label:"{index_text}"',
             # Create drop shadow
@@ -381,7 +398,7 @@ class TintedFrameTitleCard(BaseCardType):
 
         # Coordinates used by multiple rectangles
         INSET = self.BOX_OFFSET
-        BOX_WIDTH = self.BOX_WIDTH
+        BOX_WIDTH = self.frame_width
         TopLeft = Coordinate(INSET, INSET)
         TopRight = Coordinate(self.WIDTH - INSET, INSET + BOX_WIDTH)
 
@@ -407,6 +424,7 @@ class TintedFrameTitleCard(BaseCardType):
                 self.logo
             )
             element_width /= (logo_height / 150)
+            element_width *= self.logo_size
             margin = 25
         # Element is title text
         elif self.top_element == 'title':
@@ -451,7 +469,7 @@ class TintedFrameTitleCard(BaseCardType):
 
         # Coordinates used by multiple rectangles
         INSET = self.BOX_OFFSET
-        BOX_WIDTH = self.BOX_WIDTH
+        BOX_WIDTH = self.frame_width
         # BottomLeft = Coordinate(INSET + BOX_WIDTH, self.HEIGHT - INSET)
         BottomRight = Coordinate(self.WIDTH - INSET, self.HEIGHT - INSET)
 
@@ -482,6 +500,7 @@ class TintedFrameTitleCard(BaseCardType):
                 self.logo
             )
             element_width /= (logo_height / 150)
+            element_width *= self.logo_size
             margin = 25
         # Element is title
         elif self.bottom_element == 'title':
@@ -528,7 +547,7 @@ class TintedFrameTitleCard(BaseCardType):
 
         # Coordinates used by multiple rectangles
         INSET = self.BOX_OFFSET
-        BOX_WIDTH = self.BOX_WIDTH
+        BOX_WIDTH = self.frame_width
         TopLeft = Coordinate(INSET, INSET)
         # TopRight = Coordinate(self.WIDTH - INSET, INSET + BOX_WIDTH)
         BottomLeft = Coordinate(INSET + BOX_WIDTH, self.HEIGHT - INSET)
@@ -585,6 +604,13 @@ class TintedFrameTitleCard(BaseCardType):
             if 'episode_text_color' in extras:
                 extras['episode_text_color'] =\
                     TintedFrameTitleCard.EPISODE_TEXT_COLOR
+            if 'episode_text_font' in extras:
+                extras['episode_text_font'] =\
+                    TintedFrameTitleCard.EPISODE_TEXT_FONT
+            if 'episode_text_font_size' in extras:
+                extras['episode_text_font_size'] = 1.0
+            if 'episode_text_vertical_shift' in extras:
+                extras['episode_text_vertical_shift'] = 0
             if 'frame_color' in extras:
                 extras['frame_color'] = TintedFrameTitleCard.TITLE_COLOR
 
@@ -605,6 +631,7 @@ class TintedFrameTitleCard(BaseCardType):
         return ((font.color != TintedFrameTitleCard.TITLE_COLOR)
             or (font.file != TintedFrameTitleCard.TITLE_FONT)
             or (font.interline_spacing != 0)
+            or (font.interword_spacing != 0)
             or (font.kerning != 1.0)
             or (font.size != 1.0)
             or (font.vertical_shift != 0)

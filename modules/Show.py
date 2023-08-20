@@ -804,7 +804,8 @@ class Show(YamlReader):
 
 
     def select_source_images(self,
-            select_only: Optional[Episode] = None) -> None:
+            select_only: Optional[Episode] = None,
+        ) -> None:
         """
         Modify this series' Episode source images based on their watch
         statuses, and how that style applies to this show's un/watched
@@ -837,11 +838,13 @@ class Show(YamlReader):
         always_check_emby = (
             bool(self.emby_interface)
             and ('emby' in self.image_source_priority)
-            and self.emby_interface.has_series(self.series_info))
+            and self.emby_interface.has_series(self.library_name,
+                                               self.series_info))
         always_check_jellyfin = (
             bool(self.jellyfin_interface)
             and ('jellyfin' in self.image_source_priority)
-            and self.jellyfin_interface.has_series(self.series_info))
+            and self.jellyfin_interface.has_series(self.library_name,
+                                                   self.series_info))
         always_check_tmdb = (
             bool(self.tmdb_interface)
             and ('tmdb' in self.image_source_priority))
@@ -886,6 +889,8 @@ class Show(YamlReader):
                     )
                 elif source_interface == 'jellyfin' and check_jellyfin:
                     image = self.jellyfin_interface.get_source_image(
+                        self.library_name,
+                        self.series_info,
                         episode.episode_info,
                     )
                 elif source_interface == 'plex' and check_plex:
