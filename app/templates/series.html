@@ -431,6 +431,32 @@
           <!-- Configuration tab -->
           <div id="series-tabs" class="ui bottom attached tab segment" data-tab="configuration">
             <form id="series-config-form" class="ui compact form">
+              <!-- Warning if Series is not found in various interfaces -->
+              {% if preferences.use_emby and series.emby_id is none %}
+              <div class="ui visible floating warning message">
+                <i class="exclamation triangle icon"></i>
+                This Series has not been found in Emby.
+              </div>
+              {% endif %}
+              {% if preferences.use_jellyfin and series.jellyfin_id is none %}
+              <div class="ui visible floating warning message">
+                <i class="exclamation triangle icon"></i>
+                This Series has not been found in Jellyfin.
+              </div>
+              {% endif %}
+              {% if preferences.use_sonarr and series.sonarr_id is none %}
+              <div class="ui visible floating warning message">
+                <i class="exclamation triangle icon"></i>
+                This Series has not been found in Sonarr.
+              </div>
+              {% endif %}
+              {% if preferences.use_tmdb and series.tmdb_id is none %}
+              <div class="ui visible floating warning message">
+                <i class="exclamation triangle icon"></i>
+                This Series has not been found on TMDb.
+              </div>
+              {% endif %}
+
               <!-- Episode Data Source -->
               <div class="field">
                 <label>Episode Data Source</label>
