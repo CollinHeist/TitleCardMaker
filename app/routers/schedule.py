@@ -189,7 +189,7 @@ BaseJobs = {
         function=wrapped_create_all_title_cards,
         seconds=60 * 60 * 6,
         crontab='0 */6 * * *',
-        description='Create all missing or updated Title Cards',
+        description='Create all missing or outdated Title Cards',
     ), JOB_LOAD_MEDIA_SERVERS: NewJob(
         id=JOB_LOAD_MEDIA_SERVERS,
         function=wrapped_load_media_servers,
