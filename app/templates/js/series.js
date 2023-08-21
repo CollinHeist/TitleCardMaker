@@ -157,6 +157,7 @@ function saveAllEpisodes() {
 }
 
 // Initialize series specific dropdowns
+let allStyles, availableTemplates, availableFonts;
 async function initalizeSeriesConfig() {
   // Episode data sources
   const sources = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
@@ -178,9 +179,8 @@ async function initalizeSeriesConfig() {
     value: '{{series.skip_localized_images}}',
   });
   // Template
-  const templates = await fetch('/api/templates/all').then(resp => resp.json());
   $('#card-config-form .dropdown[data-value="template_ids"]').dropdown({
-    values: getActiveTemplates({{series.template_ids}}, templates),
+    values: getActiveTemplates({{series.template_ids}}, availableTemplates),
   });
   // Card types
   loadCardTypes({
@@ -193,7 +193,6 @@ async function initalizeSeriesConfig() {
     }
   });
   // Styles
-  const allStyles = await fetch('/api/available/styles').then(resp => resp.json());
   $('#card-config-form .dropdown[data-value="watched-style"]').dropdown({
     values: [
       {name: 'Art Variations', type: 'header'},
@@ -220,9 +219,8 @@ async function initalizeSeriesConfig() {
     ]
   });
   // Fonts
-  const fonts = await fetch('/api/fonts/all').then(resp => resp.json());
   $('#card-config-form .dropdown[data-value="fonts"]').dropdown({
-    values: fonts.map(({id, name}) => {
+    values: availableFonts.map(({id, name}) => {
       return {name: name, value: id, selected: `${id}` === '{{series.font_id}}'};
     })
   });
@@ -629,20 +627,15 @@ async function getEpisodeData(page=1) {
   });
   episodeTable.replaceChildren(...rows);
 
-  // Get all available elements for initializing dropdowns
-  const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
-  const allFonts = await fetch('/api/fonts/all').then(resp => resp.json());
-  const allStyles = await fetch('/api/available/styles').then(resp => resp.json());
-
   // Initialize dropdowns, assign form submit API request
   episodes.forEach(episode => {
     // Templates
     $(`#episode-id${episode.id} .dropdown[data-value="template_ids"]`).dropdown({
-      values: getActiveTemplates(episode.template_ids, allTemplates),
+      values: getActiveTemplates(episode.template_ids, availableTemplates),
     });
     // Fonts
     $(`#episode-id${episode.id} .dropdown[data-value="font_id"]`).dropdown({
-      values: allFonts.map(({id, name}) => {
+      values: availableFonts.map(({id, name}) => {
         return {name: name, value: id, selected: episode.font_id === id};
       })
     });
@@ -651,7 +644,6 @@ async function getEpisodeData(page=1) {
       element: `#episode-id${episode.id} .dropdown[data-value="card_type"]`,
       isSelected: (identifier) => identifier === episode.card_type,
       showExcluded: false,
-      // Dropdown args
       dropdownArgs: {}
     });
     // Unwatched style
@@ -695,14 +687,19 @@ async function getEpisodeData(page=1) {
 }
 
 async function initAll() {
+  // Get global availables for initializing dropdowns
+  allStyles = await fetch('/api/available/styles').then(resp => resp.json());
+  availableTemplates = await fetch('/api/available/templates').then(resp => resp.json());
+  availableFonts = await fetch('/api/available/fonts').then(resp => resp.json());
+  // Initialize 
   initalizeSeriesConfig();
-  getStatistics();
   getLibraries();
   getEpisodeData();
-  getFileData();
   initStyles();
-
+  getFileData();
+  
   // Schedule recurring statistics query
+  getStatistics();
   getStatisticsId = setInterval(getStatistics, 30000); // Refresh stats every 30s
 
   // Enable all dropdowns, menus, and accordians

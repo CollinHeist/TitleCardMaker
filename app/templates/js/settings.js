@@ -68,6 +68,7 @@ function initAll() {
 
   // Filled in later
   let allCards = [];
+
   // Enable dropdowns, checkboxes, etc.
   $('.ui.dropdown').dropdown();
   $('.ui.checkbox').checkbox();
