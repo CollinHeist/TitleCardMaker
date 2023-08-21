@@ -46,12 +46,16 @@ class TintedGlassTitleCard(BaseCardType):
                     'example: <v>-20 10 0 5</v>. Positive values move that '
                     'face out, negative values move the face in. Unit is pixels.'
                 ),
+            ), Extra(
+                name='Glass Color',
+                identifier='glass_color',
+                description='Color of the "glass" beneath the text',
+                tooltip='Default value is <v>rgba(25, 25, 25, 0.7)</v>.',
             ),
         ], description=[
             'Card type featuring a darkened and blurred rounded rectangle '
-            'surrounding the title and episode text.',
-            'By default, these cards also feature the name of the series in '
-            'the episode text.',
+            'surrounding the title and episode text.', 'By default, these '
+            'cards also feature the name of the series in the episode text.',
         ]
     )
     # pylint: enable=line-too-long
@@ -97,7 +101,7 @@ class TintedGlassTitleCard(BaseCardType):
         'hide_episode_text', 'font_file', 'font_size', 'font_color',
         'font_interline_spacing', 'font_interword_spacing', 'font_kerning',
         'font_vertical_shift', 'episode_text_color', 'episode_text_position',
-        'box_adjustments',
+        'box_adjustments', 'glass_color',
     )
 
     def __init__(self,
@@ -118,6 +122,7 @@ class TintedGlassTitleCard(BaseCardType):
             episode_text_color: str = EPISODE_TEXT_COLOR,
             episode_text_position: Position = 'center',
             box_adjustments: tuple[int, int, int, int] = (0, 0, 0, 0),
+            glass_color: str = DARKEN_COLOR,
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
         ) -> None:
@@ -143,9 +148,10 @@ class TintedGlassTitleCard(BaseCardType):
         self.font_vertical_shift = font_vertical_shift
 
         # Store and validate extras
+        self.box_adjustments = box_adjustments
         self.episode_text_color = episode_text_color
         self.episode_text_position = episode_text_position
-        self.box_adjustments = box_adjustments
+        self.glass_color = glass_color
 
 
     def blur_rectangle_command(self,
@@ -184,7 +190,7 @@ class TintedGlassTitleCard(BaseCardType):
             f'-blur {self.TEXT_BLUR_PROFILE}',
             f'+mask',
             # Darken area behind title text
-            f'-fill "{self.DARKEN_COLOR}"',
+            f'-fill "{self.glass_color}"',
             f'-draw "roundrectangle {draw_coords}"',
         ]
 
@@ -328,7 +334,7 @@ class TintedGlassTitleCard(BaseCardType):
     def modify_extras(
             extras: dict,
             custom_font: bool,
-            custom_season_titles: bool
+            custom_season_titles: bool,
         ) -> None:
         """
         Modify the given extras base on whether font or season titles

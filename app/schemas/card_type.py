@@ -363,9 +363,10 @@ class TintedGlassCardType(BaseCardTypeCustomFontNoText):
     hide_episode_text: bool = False
     font_color: BetterColor = TintedGlassTitleCard.TITLE_COLOR
     font_file: FilePath = TintedGlassTitleCard.TITLE_FONT
+    box_adjustments: BoxAdjustments = (0, 0, 0, 0)
     episode_text_color: BetterColor = TintedGlassTitleCard.EPISODE_TEXT_COLOR
     episode_text_position: EpisodeTextPosition = 'center'
-    box_adjustments: BoxAdjustments = (0, 0, 0, 0)
+    glass_color: BetterColor = TintedGlassTitleCard.DARKEN_COLOR
 
     @validator('box_adjustments')
     def parse_box_adjustments(cls, val):
