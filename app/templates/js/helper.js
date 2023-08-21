@@ -62,12 +62,12 @@ function showInfoToast(args) {
   }
 }
 
-function getActiveTemplates(activeIds, allTemplates) {
+function getActiveTemplates(activeIds, availableTemplates) {
   let values = [];
   // Add all active Template values
   if (activeIds !== undefined && activeIds !== null) {
     activeIds.forEach(activeId => {
-      for (let {id, name} of allTemplates.items) {
+      for (let {id, name} of availableTemplates) {
         // Found matching Template, add to values array
         if (activeId === id) {
           values.push({name: name, value: id, selected: true});
@@ -77,7 +77,7 @@ function getActiveTemplates(activeIds, allTemplates) {
     });
   }
   // Add all inactive Template values
-  allTemplates.items.forEach(({id, name}) => {
+  availableTemplates.forEach(({id, name}) => {
     // Skip Templates already included
     if (activeIds === undefined || activeIds === null) {
       values.push({name: name, value: id, selected: false});
@@ -236,7 +236,11 @@ async function queryAvailableExtras() {
  */
 
 let popups = {};
-async function initializeExtraDropdowns(value, dropdownElements, popupHeaderElement, popupDescriptionElement) {
+async function initializeExtraDropdowns(
+    value,
+    dropdownElements,
+    popupHeaderElement,
+    popupDescriptionElement) {
   // Only re-query for extras if not initialized
   if (allExtras === undefined) {
     await queryAvailableExtras();
