@@ -58,11 +58,16 @@ async function getPlexLibraries() {
   });
 }
 
-async function getTemplates() {
-  const templates = await fetch('/api/templates/all').then(resp => resp.json());
-  $('.dropdown[data-value="template_ids"]').dropdown({
-    values: getActiveTemplates(null, templates),
-  });
+function getTemplates() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/available/templates',
+    success: availableTemplates => {
+      $('.dropdown[data-value="template_ids"]').dropdown({
+        values: getActiveTemplates(null, availableTemplates),
+      });
+    }, error: response => showErrorToast({'title': 'Error Getting Template List', response}),
+  })
 }
 
 // Function to add tags to all tag dropdowns
