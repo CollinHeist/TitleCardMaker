@@ -390,6 +390,13 @@ def resolve_card_settings(
     if card_settings.get('font_color', None) is None:
         card_settings['font_color'] = CardClass.TITLE_COLOR
 
+    # Apply Font replacements
+    if card_settings.get('font_replacements', {}):
+        for repl_in, repl_out in card_settings['font_replacements'].items():
+            card_settings['title'] = card_settings['title'].replace(
+                repl_in, repl_out
+            )
+
     # Determine effective title text
     if card_settings.get('auto_split_title', True):
         title = Title(card_settings['title'])
