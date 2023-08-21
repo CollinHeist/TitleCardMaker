@@ -56,6 +56,7 @@
       </td>
       <td data-column="match_title" data-type="boolean" class="center aligned collapsing"><!-- Icon --></td>
       <td data-column="auto_split_title" data-type="boolean" class="center aligned collapsing"><!-- Icon --></td>
+      {% if not preferences.simplified_data_table %}
       <td data-column="templates" class="center aligned collapsing">
         <div data-value="template_ids" class="ui inline clearable scrolling multiple dropdown">
           <input name="template_ids" type="hidden">
@@ -80,6 +81,7 @@
           <div class="menu"><!-- Submenu --></div>
         </div>
       </td>
+      {% endif %}
       <td data-column="hide_season_text" data-type="boolean" class="center aligned collapsing"><!-- Icon --></td>
       <td data-column="season_text" class="center aligned collapsing">
         <div class="ui transparent short input">
@@ -92,6 +94,7 @@
           <input name="episode_text" type="text" placeholder="Default">
         </div>
       </td>
+      {% if not preferences.simplified_data_table %}
       <td data-column="unwatched_style" class="center aligned collapsing">
         <div data-value="unwatched_style" class="ui inline clearable dropdown">
           <input name="unwatched_style" type="hidden">
@@ -138,9 +141,11 @@
           <input name="font_vertical_shift" placeholder="Default">
         </div>
       </td>
+      {% endif %}
       <td data-column="extras" class="selectable">
         <a><i class="ui eye outline icon"></i></a>
       </td>
+      {% if not preferences.simplified_data_table %}
       <td data-column="source_file" class="center aligned collapsing">
         <div class="ui transparent short input">
           <input name="source_file" type="text" placeholder="Default">
@@ -151,7 +156,9 @@
           <input name="card_file" type="text" placeholder="Default">
         </div>
       </td>
+      {% endif %}
       <td data-column="watched" data-type="boolean" class="center aligned collapsing"><!-- Icon --></td>
+      {% if not preferences.simplified_data_table %}
       {% if preferences.use_emby and series.emby_library_name %}
       <td data-column="emby_id" class="center aligned collapsing">
         <div class="ui transparent id input">
@@ -187,6 +194,7 @@
           <input name="tvrage_id" type="text" placeholder="-">
         </div>
       </td>
+      {% endif %}
       {% endif %}
       <td data-column="delete" class="selectable">
         <a><i class="ui red trash alternate outline icon"></i></a>
@@ -884,32 +892,34 @@
                     <th class="left aligned">Title</th>
                     <th class="collapsing">Match<br>Title</th>
                     <th class="collapsing">Auto-Split<br>Title</th>
-
+                    {% if not preferences.simplified_data_table %}
                     <th class="collapsing">Templates</th>
                     <th class="collapsing">Font</th>
                     <th class="collapsing">Card<br>Type</th>
-
+                    {% endif %}
                     <th class="collapsing">Hide<br>Season Text</th>
                     <th class="collapsing">Season<br>Text</th>
 
                     <th class="collapsing">Hide<br>Episode Text</th>
                     <th class="collapsing">Episode<br>Text</th>
-
+                    {% if not preferences.simplified_data_table %}
                     <th class="collapsing">Unwatched<br>Style</th>
                     <th class="collapsing">Watched<br>Style</th>
-
+                    
                     <th class="collapsing">Font<br>Color</th>
                     <th class="collapsing">Font<br>Size (%)</th>
                     <th class="collapsing">Font Stroke<br>Width (%)</th>
                     <th class="collapsing">Font Interline<br>Spacing</th>
                     <th class="collapsing">Font Interword<br>Spacing</th>
                     <th class="collapsing">Font<br>Vertical Shift</th>
-
+                    {% endif %}
                     <th class="collapsing">Extras &<br>Translations</th>
-
+                    {% if not preferences.simplified_data_table %}
                     <th class="collapsing">Source<br>File</th>
                     <th class="collapsing">Card<br>File</th>
+                    {% endif %}
                     <th class="collapsing">Watched</th>
+                    {% if not preferences.simplified_data_table %}
                     {% if preferences.use_emby and series.emby_library_name %}
                     <th class="collapsing">Emby<br>ID</th>
                     {% endif %}
@@ -921,6 +931,7 @@
                     <th class="collapsing">TVDb<br>ID</th>
                     {% if series.year < 2017 %}
                     <th class="collapsing">TVRage<br>ID</th>
+                    {% endif %}
                     {% endif %}
                     <th class="collapsing">Delete</th>
                   </tr>

@@ -601,6 +601,7 @@ async function getEpisodeData(page=1) {
     row.querySelector('input[name="season_text"]').value = episode.season_text;
     row.querySelector('td[data-column="hide_episode_text"]').innerHTML = getIcon(episode.hide_episode_text, true);
     row.querySelector('input[name="episode_text"]').value = episode.episode_text;
+    {% if not preferences.simplified_data_table %}
       // Unwatched style
       // Watched style
     row.querySelector('input[name="font_color"]').value = episode.font_color;
@@ -609,19 +610,23 @@ async function getEpisodeData(page=1) {
     row.querySelector('input[name="font_interline_spacing"]').value = episode.font_interline_spacing;
     row.querySelector('input[name="font_interword_spacing"]').value = episode.font_interword_spacing;
     row.querySelector('input[name="font_vertical_shift"]').value = episode.font_vertical_shift;
-    row.querySelector('td[data-column="extras"] a').onclick = () => editEpisodeExtras(episode);
     row.querySelector('input[name="source_file"]').value = episode.source_file;
     row.querySelector('input[name="card_file"]').value = episode.card_file;
+    {% endif %}
+    row.querySelector('td[data-column="extras"] a').onclick = () => editEpisodeExtras(episode);
     row.querySelector('td[data-column="watched"]').innerHTML = getIcon(episode.watched, false);
+    {% if not preferences.simplified_data_table %}
     const embyIdInput = row.querySelector('input[name="emby_id"]');
     if (embyIdInput !== null) { embyIdInput.value = episode.emby_id; }
     row.querySelector('input[name="imdb_id"]').value = episode.imdb_id;
     const jellyfinIdInput = row.querySelector('input[name="jellyfin_id"]');
     if (jellyfinIdInput !== null) { jellyfinIdInput.value = episode.jellyfin_id; }
-    row.querySelector('input[name="tmdb_id"]').value = episode.tmdb_id;
+    const tmdbIdInput = row.querySelector('input[name="tmdb_id"]');
+    if (tmdbIdInput !== null) { tmdbIdInput.value = episode.tmdb_id; }
     row.querySelector('input[name="tvdb_id"]').value = episode.tvdb_id;
     const tvrageIdInput = row.querySelector('input[name="tvrage_id"]')
     if (tvrageIdInput !== null) { tvrageIdInput.value = episode.tvrage_id; }
+    {% endif %}
     row.querySelector('td[data-column="delete"] a').onclick = () => deleteEpisode(episode.id);
     return row;
   });
