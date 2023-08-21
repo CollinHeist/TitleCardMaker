@@ -20,7 +20,7 @@ class Font(YamlReader):
     VALID_ATTRIBUTES = (
         'validate', 'color', 'size', 'file', 'case', 'case_name',
         'replacements', 'vertical_shift', 'interline_spacing',
-        'interword_spacing' 'kerning', 'stroke_width',
+        'interword_spacing', 'kerning', 'stroke_width',
     )
 
     """Compiled regex to identify percentage values for scalars"""
