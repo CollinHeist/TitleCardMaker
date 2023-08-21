@@ -6,7 +6,7 @@ function addTemplate() {
   $.ajax({
     type: 'POST',
     url: '/api/templates/new',
-    data: JSON.stringify({name: 'Blank Template'}),
+    data: JSON.stringify({name: ' Blank Template'}),
     contentType: 'application/json',
     success: response => {
       showInfoToast(`Created Template #${response.id}`);
