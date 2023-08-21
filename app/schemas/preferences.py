@@ -96,6 +96,7 @@ class UpdatePreferences(UpdateBase):
     specials_folder_format: str = UNSPECIFIED
     season_folder_format: str = UNSPECIFIED
     sync_specials: bool = UNSPECIFIED
+    simplified_data_table: bool = UNSPECIFIED
     default_card_type: CardTypeIdentifier = UNSPECIFIED
     excluded_card_types: list[CardTypeIdentifier] = UNSPECIFIED
     default_watched_style: Style = UNSPECIFIED
@@ -215,6 +216,7 @@ class Preferences(Base):
     specials_folder_format: str
     season_folder_format: str
     sync_specials: bool
+    simplified_data_table: bool
     is_docker: bool
     default_card_type: CardTypeIdentifier
     excluded_card_types: list[CardTypeIdentifier]

@@ -107,6 +107,15 @@
                 {% endif %}
                 <label>Sync Specials</label>
               </div>
+              <br>
+              <div class="ui right aligned checkbox field" data-value="simplified_data_table" data-tooltip="Whether to hide advanced columns in Episode Data tables" data-position="right center">
+                {% if preferences.simplified_data_table %}
+                <input name="simplified_data_table" type="checkbox" checked="">
+                {% else %}
+                <input name="simplified_data_table" type="checkbox">
+                {% endif %}
+                <label>Simplified Episode Data Tables</label>
+              </div>
             </div>
 
             <!-- Title Card Settings -->

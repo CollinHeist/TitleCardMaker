@@ -76,7 +76,7 @@ class Preferences:
         'tmdb_logo_language_priority', 'supported_language_codes',
         'use_magick_prefix', 'current_version', 'available_version',
         'blacklisted_blueprints', 'advanced_scheduling', 'require_auth',
-        'task_crontabs',
+        'task_crontabs', 'simplified_data_table',
     )
 
 
@@ -172,6 +172,7 @@ class Preferences:
         self.season_folder_format = 'Season {season_number}'
 
         self.sync_specials = True
+        self.simplified_data_table = True
         self.remote_card_types = {}
         self.default_card_type = 'standard'
         self.excluded_card_types = []
