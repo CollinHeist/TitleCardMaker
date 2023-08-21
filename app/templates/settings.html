@@ -92,14 +92,14 @@
               </div>
               <div class="field">
                 <label>Image Source Priority</label>
-                <div id="image-source-priority" class="ui compact multiple selection dropdown">
+                <div id="image-source-priority" class="ui compact multiple selection dropdown" data-tooltip="Order to gather source images from" data-position="right center">
                   <input id="image-source-priority-input" type="hidden" name="image_source_priority">
                   <i class="dropdown icon"></i>
                   <div class="default text">Image Sources</div>
                   <div class="menu"><!-- Added asynchronousely --></div>
                 </div>
               </div>
-              <div class="ui right aligned checkbox field" data-tooltip="Whether to sync episodes from season 0 by default">
+              <div class="ui right aligned checkbox field" data-tooltip="Whether to include Episodes from season 0" data-position="right center">
                 {% if preferences.sync_specials %}
                 <input name="sync_specials" type="checkbox" checked="checked">
                 {% else %}
@@ -120,7 +120,7 @@
                 <div class="four wide column">
                   <div class="field">
                     <label>Default Card Type</label>
-                    <div id="default-card-type" class="ui long compact search selection dropdown" data-tooltip="Global default card type for all series" data-position="right center">
+                    <div id="default-card-type" class="ui long compact search selection dropdown">
                       <span class="text"></span>
                       <input name="default_card_type" type="hidden" value="{{preferences.default_card_type.lower()}}">
                       <i class="dropdown icon"></i>
@@ -128,7 +128,7 @@
                     </div>
                   </div>
 
-                  <div class="field" data-tooltip="Card types to exclude from dropdowns" data-position="right center">
+                  <div class="field">
                     <label>Excluded Card Types</label>
                     <div id="excluded-card-types" class="ui long compact selection multiple dropdown">
                       <span class="text"></span>
