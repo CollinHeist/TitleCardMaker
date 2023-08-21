@@ -327,7 +327,7 @@ async function initAll() {
   initializeSearchSource();
   initializeLibraryDropdowns();
 
-  const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
+  const allTemplates = await fetch('/api/available/templates').then(resp => resp.json());
   $('.dropdown[data-value="template_ids"]').dropdown({
     placeholder: 'None',
     values: await getActiveTemplates(undefined, allTemplates),
