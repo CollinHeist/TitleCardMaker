@@ -168,6 +168,10 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface
             dictionary itself.
         """
 
+        # If Series has Jellyfin ID, and not returning raw object, return
+        if series_info.has_id('jellyfin') and not raw_obj:
+            return series_info.jellyfin_id
+
         # Get ID of this library
         if (library_id := self.libraries.get(library_name, None)) is None:
             log.error(f'Library "{library_name}" not found in Jellyfin')
@@ -225,7 +229,11 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface
             Jellyfin ID of the episode, if found. None otherwise.
         """
 
-        # Query for this Episode
+        # If episode has a Jellyfin ID, return that
+        if episode_info.has_id('jellyfin'):
+            return episode_info.jellyfin_id
+
+        # Query for this episode
         response = self.session.get(
             f'{self.url}/Items',
             params={
@@ -247,7 +255,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface
     def __find_ids(self,
             library_name: str,
             series_info: SeriesInfo,
-            episode_info: Optional[EpisodeInfo]
+            episode_info: Optional[EpisodeInfo],
         ) -> tuple[Optional[str], Optional[str]]:
         """
         Get the Jellyfin ID's for the given series and episode.
@@ -319,6 +327,7 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface
             return None
 
         # Assign ID's
+        series_info.set_jellyfin_id(series['Id'])
         if (imdb_id := series['ProviderIds'].get('Imdb')):
             series_info.set_imdb_id(imdb_id)
         if (tmdb_id := series['ProviderIds'].get('Tmdb')):
@@ -714,7 +723,8 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface
             log.warning(f'Series {series_info!r} not found in Jellyfin')
             return None
         if episode_id is None:
-            log.warning(f'{series_info} Episode {episode_info!r} not found in Jellyfin')
+            log.warning(f'{series_info} Episode {episode_info!r} not found in '
+                        f'Jellyfin')
             return None
 
         # Get the source image for this episode
