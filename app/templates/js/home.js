@@ -67,7 +67,7 @@ async function getAllSeries(page=1) {
     navigateFunction: getAllSeries,
     page: allSeriesData.page,
     pages: allSeriesData.pages,
-    amountVisible: 5,
+    amountVisible: isSmallScreen() ? 5 : 25,
     hideIfSinglePage: true,
   });
 
