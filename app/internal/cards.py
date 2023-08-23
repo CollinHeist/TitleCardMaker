@@ -604,13 +604,13 @@ def create_episode_card(
     # Existing card doesn't match, delete and remake
     existing_card: TitleCard = existing_card[0]
     if any(str(val) != str(getattr(card, attr))
-            for attr, val in existing_card.comparison_properties.items()):
+           for attr, val in existing_card.comparison_properties.items()):
         for attr, val in existing_card.comparison_properties.items():
             if str(val) != str(getattr(card, attr)):
                 log.debug(f'Card[{existing_card.id}].{attr} | {val} -> {getattr(card, attr)}')
                 break
-        log.debug(f'{series.log_str} {episode.log_str} Card config changed - recreating')
         # Delete existing card file, remove from database
+        log.debug(f'{series.log_str} {episode.log_str} Card config changed - recreating')
         Path(existing_card.card_file).unlink(missing_ok=True)
         db.delete(existing_card)
         db.commit()
@@ -619,9 +619,8 @@ def create_episode_card(
         _start_card_creation()
         return None
 
-    # Existing card file doesn't exist anymore, create
+    # Existing card file doesn't exist anymore, remove from db and recreate
     if not Path(existing_card.card_file).exists():
-        # Remove existing card from database
         log.debug(f'{series.log_str} {episode.log_str} Card not found - creating')
         db.delete(existing_card)
         db.commit()
