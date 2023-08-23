@@ -360,14 +360,13 @@ def load_series_title_cards(
         )
 
     # Get list of Episodes to reload
-    episodes_to_load = []
-    changed = False
+    changed, episodes_to_load = False, []
     for episode in series.episodes:
         # Only load if Episode has a Card
         if not episode.card:
-            log.debug(f'{series.log_str} {episode.log_str} - no associated card')
+            log.debug(f'{series.log_str} {episode.log_str} - no associated Card')
             continue
-        card = episode.card[0]
+        card = episode.card[-1]
 
         # Find previously loaded Card
         previously_loaded = None
