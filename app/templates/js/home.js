@@ -15,7 +15,7 @@ async function getAllSeries(page=1) {
   $('#series-list .card').transition({animation: 'scale', interval: 15, reverse: true});
 
   // Get this page of Series data
-  let allSeriesData = await fetch(`/api/series/all?order_by=${sortParam}&size=100&page=${page}`).then(resp => resp.json());
+  let allSeriesData = await fetch(`/api/series/all?order_by=${sortParam}&size={{preferences.home_page_size}}&page=${page}`).then(resp => resp.json());
   let allSeries = allSeriesData.items;
 
   // Create Series cards

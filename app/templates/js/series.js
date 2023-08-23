@@ -557,7 +557,7 @@ async function getEpisodeData(page=1) {
   if (rowTemplate === null) { return; }
 
   // Get page of episodes via API
-  const episodeData = await fetch(`/api/episodes/{{series.id}}/all?size=50&page=${page}`).then(resp => resp.json());
+  const episodeData = await fetch(`/api/episodes/{{series.id}}/all?size={{preferences.episode_data_page_size}}&page=${page}`).then(resp => resp.json());
   if (episodeData === null || episodeData.items.length === 0) { return; }
   const episodes = episodeData.items;
 
