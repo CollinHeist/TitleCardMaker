@@ -101,6 +101,8 @@ class UpdatePreferences(UpdateBase):
     excluded_card_types: list[CardTypeIdentifier] = UNSPECIFIED
     default_watched_style: Style = UNSPECIFIED
     default_unwatched_style: Style = UNSPECIFIED
+    home_page_size: PositiveInt = UNSPECIFIED
+    episode_data_page_size: PositiveInt = UNSPECIFIED
 
     @validator('card_filename_format', pre=True)
     def validate_card_filename_format(cls, v):
@@ -204,8 +206,8 @@ Return classes
 class Preferences(Base):
     card_directory: Path
     source_directory: Path
-    card_width: int
-    card_height: int
+    card_width: PositiveInt
+    card_height: PositiveInt
     card_filename_format: str
     card_extension: str
     image_source_priority: list[ImageSource]
@@ -222,6 +224,8 @@ class Preferences(Base):
     excluded_card_types: list[CardTypeIdentifier]
     default_watched_style: Style
     default_unwatched_style: Style
+    home_page_size: PositiveInt
+    episode_data_page_size: PositiveInt
 
 class EmbyConnection(Base):
     use_emby: bool

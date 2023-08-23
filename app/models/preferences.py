@@ -76,7 +76,8 @@ class Preferences:
         'tmdb_logo_language_priority', 'supported_language_codes',
         'use_magick_prefix', 'current_version', 'available_version',
         'blacklisted_blueprints', 'advanced_scheduling', 'require_auth',
-        'task_crontabs', 'simplified_data_table',
+        'task_crontabs', 'simplified_data_table', 'home_page_size',
+        'episode_data_page_size',
     )
 
 
@@ -223,7 +224,10 @@ class Preferences:
         self.blacklisted_blueprints = set()
         self.advanced_scheduling = False
         self.task_crontabs = {}
+
         self.require_auth = False
+        self.home_page_size = 100
+        self.episode_data_page_size = 50
 
 
     def read_file(self) -> Optional[object]:
@@ -231,7 +235,8 @@ class Preferences:
         Read this object's file, returning the loaded object.
 
         Returns:
-            Object unpickled (loaded) from this object's file.
+            Object unpickled (loaded) from this object's file. None if
+            the file does not exist or cannot be unpickled.
         """
 
         # Skip if file DNE
@@ -322,7 +327,7 @@ class Preferences:
             # Create ImageMagickInterface and verify validity
             interface = ImageMagickInterface(use_magick_prefix=use_magick)
             if interface.validate_interface():
-                self.use_magick_prefix = use_magick
+                self.use_magick_prefix = use_magick # pylint: disable=W0201
                 log.debug(f'Using "{prefix}" ImageMagick command prefix')
                 return None
 
