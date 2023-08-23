@@ -376,7 +376,14 @@ def import_blueprint(
     # Import Fonts
     font_map: dict[int, Font] = {}
     for font_id, font in enumerate(blueprint.fonts):
-        # TODO See if this Font matches an existing one?
+        # See if this Font already exists (match by name)
+        if ((existing_font := db.query(Font).filter_by(name=font.name).first())
+            is not None):
+            font_map[font_id] = existing_font
+            log.info(f'Matched Blueprint Font[{font_id}] to existing Font '
+                     f'{existing_font.log_str}')
+            break
+
         # This Font has a file that can be directly downloaded
         font_content = None
         if getattr(font, 'file', None) is not None:
@@ -408,14 +415,21 @@ def import_blueprint(
             # Update object and database
             new_font.file = str(file_path)
 
-    # Commit Fonts to database so Font objects have ID's
+    # Commit Fonts to database so Fonts have IDs
     if font_map:
         db.commit()
 
     # Import Templates
     template_map: dict[int, Template] = {}
     for template_id, template in enumerate(blueprint.templates):
-        # TODO see if this Template matches an existing one
+        # See if this Template already exists (match by name)
+        if ((exist_template := db.query(Template).filter_by(name=template.name))
+            is not None):
+            template_map[template_id] = exist_template
+            log.info(f'Matched Blueprint Template[{template_id}] to existing '
+                     f'Template {exist_template.log_str}')
+            break
+
         # Update Font ID from Font map if indicated
         if template.font_id is not None:
             template.font_id = font_map[template.font_id].id
