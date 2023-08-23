@@ -41,12 +41,7 @@ def update_global_settings(
     - update_preferences: UpdatePreferences containing fields to update.
     """
 
-    # Get contextual logger
-    log = request.state.log
-
-    preferences.update_values(**update_preferences.dict(), log=log)
-    refresh_imagemagick_interface()
-    preferences.determine_imagemagick_prefix(log=log)
+    preferences.update_values(**update_preferences.dict(), log=request.state.log)
 
     return preferences
 
