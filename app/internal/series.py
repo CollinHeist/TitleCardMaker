@@ -1,10 +1,12 @@
 from logging import Logger
 from pathlib import Path
 from shutil import copy as file_copy
+from time import sleep
 from typing import Optional, Union
 
 from fastapi import BackgroundTasks, HTTPException
 from requests import get
+from sqlalchemy.exc import InvalidRequestError, OperationalError
 from sqlalchemy.orm import Session
 from app.database.query import get_all_templates, get_font
 
@@ -69,6 +71,7 @@ def load_all_media_servers(*, log: Logger = log) -> None:
 
     try:
         # Get the Database
+        retries = 0
         with next(get_database()) as db:
             # Get all Series
             for series in db.query(models.series.Series).all():
@@ -93,6 +96,13 @@ def load_all_media_servers(*, log: Logger = log) -> None:
                 except HTTPException:
                     log.warning(f'{series.log_str} Skipping Title Card loading')
                     continue
+                except OperationalError:
+                    if (retries := retries + 1) > 10:
+                        log.warning(f'Database is very busy - stopping Task')
+                        break
+
+                    log.debug(f'Database is busy, sleeping..')
+                    sleep(30)
     except Exception as e:
         log.exception(f'Failed to load Title Cards', e)
 
