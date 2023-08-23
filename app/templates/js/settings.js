@@ -119,7 +119,9 @@ function initAll() {
           rules: [{type: 'integer[1..]', prompt: 'Dimension must be a positive number'}]
         }, card_filename_format: {
           rules: [{type: 'minLength[1]', prompt: 'Filename format is required'}]
-        }, 
+        },
+        home_page_size: 'integer[1..999]',
+        episode_data_page_size: 'integer[1..999]',
       },
     })
     // On form submission, submit API request to change settings
