@@ -40,16 +40,12 @@ class DatabaseInfoContainer(ABC):
         if not isinstance(other, self.__class__):
             raise TypeError(f'Can only compare like DatabaseInfoContainer objects')
 
-        # Compare each ID attribute in slots
-        for attr in self.__slots__:
-            if attr.endswith('_id'):
-                # ID is defined, non-None, and matches
-                if (getattr(self, attr, None) is not None
-                    and getattr(self, attr, None) == getattr(other, attr, None)):
-                    return True
-
-        # No matches, inequality
-        return False
+        return any(
+            attr.endswith('_id')
+            and getattr(self, attr, None) is not None
+            and getattr(self, attr, None) == getattr(other, attr, None)
+            for attr in self.__slots__
+        )
 
 
     def _update_attribute(self,
