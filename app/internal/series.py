@@ -347,6 +347,11 @@ def load_series_title_cards(
         force_reload: Whether to reload Title Cards even if no changes
             are detected.
         log: (Keyword) Logger for all log messages.
+
+    Raises:
+        HTTPException (409) if the specified Media Server cannot be
+            communciated with, or if the given Series does not have an
+            associated library.
     """
 
     # Get associated library for the indicated media server
@@ -361,9 +366,9 @@ def load_series_title_cards(
     if library is None:
         raise HTTPException(
             status_code=409,
-            detail=f'{series.log_str} has no {media_server} Library',
+            detail=f'{series.log_str} has no linked {media_server} Library',
         )
-    if interface is None:
+    if not interface:
         raise HTTPException(
             status_code=409,
             detail=f'Unable to communicate with {media_server}',
@@ -386,13 +391,14 @@ def load_series_title_cards(
                 break
 
         # No previously loaded Cards for this Episode in this server, load
-        if not previously_loaded:
+        if previously_loaded is None:
             episodes_to_load.append((episode, card))
             continue
 
         # There is a previously loaded card, delete loaded entry, reload
-        if force_reload or previously_loaded.filesize != card.filesize:
-            # Delete previosly loaded entries for this server
+        if (force_reload or (previously_loaded is not None
+                             and previously_loaded.filesize != card.filesize)):
+            # Delete previously loaded entries for this server
             for loaded in episode.loaded:
                 if loaded.media_server == media_server:
                     db.delete(loaded)
@@ -414,7 +420,7 @@ def load_series_title_cards(
                 media_server=media_server,
                 series=series,
                 episode=loaded_episode,
-                card=loaded_card,
+                card_id=loaded_card.id,
                 filesize=loaded_card.filesize,
             ))
             log.debug(f'{series.log_str} {loaded_episode.log_str} Loaded {card.log_str}')
