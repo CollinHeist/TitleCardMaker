@@ -240,7 +240,7 @@ def refresh_episode_data(
 
     # Get effective episode data source and sync specials toggle
     series_template = get_effective_series_template(series)
-    sync_specials = TieredSettings.resolve_singular_setting(
+    sync_specials: bool = TieredSettings.resolve_singular_setting(
         preferences.sync_specials,
         getattr(series_template, 'sync_specials', None),
         series.sync_specials,
@@ -254,13 +254,10 @@ def refresh_episode_data(
             log.debug(f'{series.log_str} Skipping {episode_info} - not syncing specials')
             continue
 
-        # Check if this episode exists in the database currently
+        # Check if this Episode exists in the database already
         existing = db.query(models.episode.Episode)\
-            .filter_by(
-                series_id=series.id,
-                season_number=episode_info.season_number,
-                episode_number=episode_info.episode_number,
-            ).first()
+            .filter(episode_info.filter_conditions(models.episode.Episode))\
+            .first()
 
         # Episode does not exist, add
         if existing is None:
@@ -289,6 +286,8 @@ def refresh_episode_data(
                 existing.title = episode_info.title.full_title
                 log.debug(f'{series.log_str} {existing.log_str} Updating title')
                 changed, add = True, True
+
+            # Update watched status
             if watched is not None and existing.watched != watched:
                 log.debug(f'{series.log_str} {existing.log_str} Updating watched status')
                 existing.watched = watched
