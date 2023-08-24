@@ -1,6 +1,6 @@
 from collections import namedtuple
 from datetime import datetime, timedelta
-from logging import Logger
+from logging import Logger, LoggerAdapter
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
 from typing import Any, Callable, Optional, Union
@@ -54,7 +54,8 @@ def catch_and_log(
     def decorator(function: Callable) -> Callable:
         def inner(*args, **kwargs):
             # Get contextual logger if provided as argument to function
-            if 'log' in kwargs and isinstance(kwargs['log'], Logger):
+            if ('log' in kwargs
+                and isinstance(kwargs['log'], (Logger, LoggerAdapter))):
                 clog = kwargs['log']
             else:
                 clog = log

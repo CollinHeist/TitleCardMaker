@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from logging import Logger
+from logging import Logger, LoggerAdapter
 from typing import Any, Callable, Literal, Optional, Union
 
 from fastapi import HTTPException
@@ -38,12 +38,13 @@ def catch_and_log(
     """
 
     def decorator(function: Callable) -> Callable:
-        def inner(*args, **kwargs):
+        def inner(*args, **kwargs) -> Any:
             try:
                 return function(*args, **kwargs)
             except TMDbException as e:
                 # Get contextual logger if provided as argument to function
-                if 'log' in kwargs and isinstance(kwargs['log'], Logger):
+                if ('log' in kwargs
+                    and isinstance(kwargs['log'], (Logger, LoggerAdapter))):
                     clog = kwargs['log']
                 else:
                     clog = log
@@ -61,8 +62,7 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
     """
     This class defines an interface to TheMovieDatabase (TMDb). Once
     initialized  with a valid API key, the primary purpose of this class
-    is to gather images for title cards, logos for summaries, or
-    translations for titles.
+    is to communicate with TMDb.
     """
 
     """Default for how many failed requests lead to a blacklisted entry"""

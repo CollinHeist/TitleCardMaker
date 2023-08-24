@@ -1,8 +1,8 @@
-# pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
+# pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument,no-name-in-module
 from pathlib import Path
 from typing import Literal, Optional
 
-from pydantic import ( # pylint: disable=no-name-in-module
+from pydantic import (
     AnyUrl, DirectoryPath, Field, NonNegativeInt, PositiveInt, SecretStr,
     constr, root_validator, validator
 )
