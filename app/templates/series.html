@@ -702,7 +702,7 @@
                     <div class="field">
                       <label>Stroke Width</label>
                       <div class="ui right labeled input">
-                        {% if series.font_kerning is none %}
+                        {% if series.font_stroke_width is none %}
                         <input name="font_stroke_width" type="number" placeholder="Default">
                         {% else %}
                         <input name="font_stroke_width" type="number" placeholder="Default" value="{{series.font_stroke_width*100}}">
