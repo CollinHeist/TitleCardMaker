@@ -633,6 +633,7 @@ async function getEpisodeData(page=1) {
   episodeTable.replaceChildren(...rows);
 
   // Initialize dropdowns, assign form submit API request
+  await getAllCardTypes();
   episodes.forEach(episode => {
     // Templates
     $(`#episode-id${episode.id} .dropdown[data-value="template_ids"]`).dropdown({
@@ -687,7 +688,7 @@ async function getEpisodeData(page=1) {
     navigateFunction: getEpisodeData,
     page: episodeData.page,
     pages: episodeData.pages,
-    amountVisible: isSmallScreen() ? 4 : 20,
+    amountVisible: isSmallScreen() ? 4 : 18,
   });
 }
 
