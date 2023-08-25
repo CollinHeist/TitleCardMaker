@@ -176,6 +176,17 @@ def get_sonarr_connection_details(
     return preferences
 
 
+@connection_router.get('/sonarr/all', status_code=200)
+def get_all_sonarr_connection_details(
+        preferences: Preferences = Depends(get_preferences),
+    ) -> list[SonarrConnection2]:
+    """
+    Get all Sonarr connection details.
+    """
+
+    return preferences.all_sonarr_argument_groups
+
+
 @connection_router.get('/sonarr/{interface_id}', status_code=200)
 def get_sonarr_connection_details_by_id(
         interface_id: int,
@@ -183,6 +194,8 @@ def get_sonarr_connection_details_by_id(
     ) -> SonarrConnection:
     """
     Get the details for the Sonarr connection with the given ID.
+
+    - interface_id: ID of the Interface whose connection details to get.
     """
 
     if interface_id in preferences.sonarr_args:
@@ -279,17 +292,17 @@ def update_sonarr_connection_by_id(
         interface_id: int,
         update_sonarr: UpdateSonarr2 = Body(...),
         preferences: Preferences = Depends(get_preferences),
-    ) -> SonarrConnection:
+    ) -> SonarrConnection2:
     """
     Update the connection details for Sonarr.
 
     - update_sonarr: Sonarr connection details to modify.
     """
-
+    request.state.log.info(f'{preferences.sonarr_args=}')
     return update_connection2(
         preferences, interface_id, update_sonarr, 'sonarr',
         log=request.state.log
-    )
+    ).sonarr_args[interface_id]
 
 
 @connection_router.patch('/tmdb', status_code=200)
@@ -311,18 +324,11 @@ def update_tmdb_connection(
 
 @connection_router.get('/sonarr/libraries', status_code=200, tags=['Sonarr'])
 def get_potential_sonarr_libraries(
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        sonarr_interface: SonarrInterface = Depends(require_sonarr_interface),
     ) -> list[SonarrLibrary]:
     """
     Get the potential library names and paths from Sonarr.
     """
-
-    # If Sonarr is disabled, raise 409
-    if sonarr_interface is None:
-        raise HTTPException(
-            status_code=409,
-            detail=f'Unable to communicate with Sonarr'
-        )
 
     # Function to parse a library name from a folder name
     def _guess_library_name(folder_name: str) -> str:
