@@ -86,6 +86,7 @@ def update_connection2(
 
     Args:
         preferences: Preferences to update the connection attributes of.
+        interface_id: ID of the interface being updated.
         update_object: Update object with attributes to update.
         connection: Name of the connection being updated. Used as the
             prefix for the updated attributes, e.g. emby_*.
@@ -99,7 +100,8 @@ def update_connection2(
     """
 
     # Get arguments being changed
-    if (interface_args := getattr(preferences, f'{connection}_args')) is None:
+    all_interface_args = getattr(preferences, f'{connection}_args')
+    if (interface_args := all_interface_args.get(interface_id)) is None:
         raise HTTPException(
             status_code=404,
             detail=f'No {connection} connection with ID {interface_id}'
@@ -109,8 +111,8 @@ def update_connection2(
     changed = False
     for attribute, value in update_object.dict().items():
         if (value != UNSPECIFIED
-            and value != getattr(interface_args, attribute)):
-            setattr(interface_args, attribute, value)
+            and value != interface_args[attribute]):
+            interface_args[attribute] = value
             if f'{connection}_{attribute}' in preferences.PRIVATE_ATTRIBUTES:
                 log.debug(f'Preferences.{connection}[{interface_id}].{attribute} = *****')
             else:
@@ -118,17 +120,21 @@ def update_connection2(
             changed = True
 
     # Refresh interface if changed
-    if changed and getattr(preferences, f'use_{connection}'):
+    if changed and interface_args['enabled']:
         if connection == 'emby':
-            refresh_emby_interface(log=log)
+            # TODO populate
+            ...
         elif connection == 'jellyfin':
-            refresh_jellyfin_interface(log=log)
+            # TODO populate
+            ...
         elif connection == 'plex':
-            refresh_plex_interface(log=log)
+            # TODO populate
+            ...
         elif connection == 'sonarr':
             refresh_sonarr_interfaces(interface_id, log=log)
         elif connection == 'tmdb':
-            refresh_tmdb_interface(log=log)
+            # TODO populate
+            ...
 
     # Commit changes
     if changed:
