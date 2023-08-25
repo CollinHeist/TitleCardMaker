@@ -28,7 +28,7 @@ def add_sonarr_connection(
         request: Request,
         new_connection: NewSonarrConnection = Body(...),
         preferences: Preferences = Depends(get_preferences),
-        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
+        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_all_sonarr_interfaces),
     ) -> SonarrConnection2:
     """
     
@@ -42,11 +42,10 @@ def add_sonarr_connection(
     interface_id, _ = sonarr_interfaces.append_interface(log=log, **kwargs)
 
     # Store these interface kwargs, commit preference changes
-    finalized_kwargs = kwargs | {'interface_id': interface_id}
-    preferences.sonarr_args[interface_id] = finalized_kwargs
+    preferences.sonarr_args[interface_id] = kwargs
     preferences.commit(log=log)
 
-    return finalized_kwargs
+    return kwargs | {'interface_id': interface_id}
 
 
 @connection_router.put('/{connection}/{status}', status_code=204)
@@ -55,7 +54,6 @@ def enable_or_disable_connection(
         connection: Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
         status: Literal['enable', 'disable'],
         preferences: Preferences = Depends(get_preferences),
-        sonarr_interfaces: InterfaceGroup[int, SonarrInterface] = Depends(get_sonarr_interfaces),
     ) -> None:
     """
     Set the enabled/disabled status of the given connection.
@@ -83,12 +81,53 @@ def enable_or_disable_connection(
         preferences.use_sonarr = status == 'enable'
         if preferences.use_sonarr:
             refresh_sonarr_interface(log=log)
-            refresh_sonarr_interfaces(log=log)
-            log.warning(f'{sonarr_interfaces=!r}')
     elif connection == 'tmdb':
         preferences.use_tmdb = status == 'enable'
         if preferences.use_tmdb:
             refresh_tmdb_interface(log=log)
+
+    preferences.commit(log=log)
+
+
+@connection_router.put('/{connection}/{interface_id}/{status}', status_code=204)
+def enable_or_disable_connection_by_id(
+        request: Request,
+        connection: Literal['emby', 'jellyfin', 'plex', 'sonarr', 'tmdb'],
+        interface_id: int,
+        status: Literal['enable', 'disable'],
+        preferences: Preferences = Depends(get_preferences),
+    ) -> None:
+    """
+    Set the enabled/disabled status of the given connection.
+
+    - connection: Interface name whose connection is being toggled.
+    - status: Whether to enable or disable the given connection.
+    """
+
+    # Get contextual logger
+    log = request.state.log
+
+    if connection == 'emby':
+        # TODO implement
+        ...
+    elif connection == 'jellyfin':
+        # TODO implement
+        ...
+    elif connection == 'plex':
+        # TODO implement
+        ...
+    elif connection == 'sonarr':
+        if interface_id not in preferences.sonarr_args:
+            raise HTTPException(
+                status_code=409,
+                detail=f'No Sonarr connection with ID {interface_id}',
+            )
+        preferences.sonarr_args[interface_id]['enabled'] = status == 'enable'
+        if status == 'enable':
+            refresh_sonarr_interfaces(interface_id, log=log)
+    elif connection == 'tmdb':
+        # TODO implement
+        ...
 
     preferences.commit(log=log)
 
