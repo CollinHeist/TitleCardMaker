@@ -224,7 +224,7 @@ def lookup_series(
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
         jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
         plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
-        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface2),
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> Page[SearchResult]:
     """
@@ -241,7 +241,7 @@ def lookup_series(
         'Emby': emby_interface,
         'Jellyfin': jellyfin_interface,
         'Plex': plex_interface,
-        'Sonarr': sonarr_interface,
+        'Sonarr': sonarr_interface,#sonarr_interfaces,#sonarr_interface,
         'TMDb': tmdb_interface,
     }.get(interface)
     if not interface_obj:
@@ -272,6 +272,7 @@ def lookup_series(
 
 @series_router.get('/{series_id}', status_code=200)
 def get_series_config(
+        request: Request,
         series_id: int,
         db: Session = Depends(get_database)
     ) -> Series:
@@ -280,8 +281,9 @@ def get_series_config(
 
     - series_id: ID of the series to get the config of.
     """
-
-    return get_series(db, series_id, raise_exc=True)
+    series = get_series(db, series_id, raise_exc=True)
+    request.state.log.info(f'{series.as_series_info=!r}')
+    return series
 
 
 @series_router.patch('/{series_id}', status_code=200)
