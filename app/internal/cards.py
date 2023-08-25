@@ -11,6 +11,7 @@ from sqlalchemy.orm import Query, Session
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.templates import get_effective_templates
 from app import models
+from app.models.card import Card
 from app.models.episode import Episode
 from app.models.preferences import Preferences
 from app.schemas.font import DefaultFont
@@ -90,9 +91,7 @@ def remove_duplicate_cards(*, log: Logger = log) -> None:
             changed = False
             for episode in all_episodes:
                 # Look for any Cards with this Episode ID
-                cards = db.query(models.card.Card)\
-                    .filter_by(episode_id=episode.id)\
-                    .all()
+                cards = db.query(Card).filter_by(episode_id=episode.id).all()
                 if len(cards) > 1:
                     log.info(f'Identified duplicate Cards for {episode.log_str}')
                     for delete_card in cards[:-1]:
@@ -101,9 +100,8 @@ def remove_duplicate_cards(*, log: Logger = log) -> None:
                         changed = True
 
             # Delete any cards w/o Series or Episode IDs
-            unlinked_cards = db.query(models.card.Card)\
-                .filter(or_(models.card.Card.series_id == None,
-                            models.card.Card.episode_id == None))
+            unlinked_cards = db.query(Card)\
+                .filter(or_(Card.series_id == None, Card.episode_id == None)) # pylint: disable=singleton-comparison
             if unlinked_cards.count():
                 log.info(f'Deleting {unlinked_cards.count()} unlinked Cards')
                 unlinked_cards.delete()
@@ -184,7 +182,7 @@ def add_card_to_database(
         db: Session,
         card_model: NewTitleCard,
         card_file: Path,
-    ) -> 'models.card.Card':
+    ) -> Card:
     """
     Add the given Card to the Database.
 
@@ -199,7 +197,7 @@ def add_card_to_database(
     """
 
     card_model.filesize = card_file.stat().st_size
-    card = models.card.Card(**card_model.dict())
+    card = Card(**card_model.dict())
     db.add(card)
     db.commit()
 
@@ -280,7 +278,7 @@ def create_card(
     # If file exists, card was created successfully - add to database
     if (card_file := CardTypeModel.card_file).exists():
         card = add_card_to_database(db, card_model, card_file)
-        log.info(f'Created Title Card[{card.id}] "{card_file.resolve()}"')
+        log.info(f'Created {card.log_str}')
     # Card file does not exist, log failure
     else:
         log.warning(f'Card creation failed')
@@ -596,13 +594,13 @@ def create_episode_card(
             )
 
     # No existing card, create and add to database
-    existing_card = episode.card
+    existing_card: list[Card] = episode.card
     if not existing_card:
         _start_card_creation()
         return None
 
     # Existing card doesn't match, delete and remake
-    existing_card: TitleCard = existing_card[0]
+    existing_card = existing_card[0]
     if any(str(val) != str(getattr(card, attr))
            for attr, val in existing_card.comparison_properties.items()):
         for attr, val in existing_card.comparison_properties.items():
