@@ -5,10 +5,12 @@ from pathlib import Path
 
 from modules.Debug import log
 from modules.EpisodeInfo2 import EpisodeInfo
-from modules.ImageMaker import ImageMaker
+from modules.ImageMagickInterface import ImageMagickInterface
 from modules.SeriesInfo import SeriesInfo
 
+
 SourceImage = Union[str, bytes, None]
+
 
 class MediaServer(ABC):
     """
@@ -26,10 +28,21 @@ class MediaServer(ABC):
 
 
     @abstractmethod
-    def __init__(self, filesize_limit: int) -> None:
-        """Initialize an instance of this object."""
+    def __init__(self,
+            filesize_limit: Optional[int],
+            use_magick_prefix: bool,
+        ) -> None:
+        """
+        Initialize an instance of this object.
+        
+        Args:
+            filesize_limit: Number of bytes to limit a single file to
+                during upload.
+            use_magick_prefix: Whether to use 'magick' command prefix.
+        """
 
         self.filesize_limit = filesize_limit
+        self._magick = ImageMagickInterface(use_magick_prefix=use_magick_prefix)
 
 
     def compress_image(self,
@@ -65,7 +78,7 @@ class MediaServer(ABC):
         while small_image.stat().st_size > self.filesize_limit:
             # Process image, exit if cannot be reduced
             quality -= 5
-            small_image = ImageMaker.reduce_file_size(image, quality)
+            small_image = self._magick.reduce_file_size(image, quality)
             if small_image is None:
                 log.warning(f'Cannot reduce filesize of "{image.resolve()}" '
                             f'below limit')
