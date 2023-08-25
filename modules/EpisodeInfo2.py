@@ -3,11 +3,11 @@ from typing import Any, Optional, Union
 
 from num2words import num2words
 from plexapi.video import Episode as PlexEpisode
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, literal, or_
 from sqlalchemy.orm import Query
 
 from modules.Debug import log
-from modules.DatabaseInfoContainer import DatabaseInfoContainer
+from modules.DatabaseInfoContainer import DatabaseInfoContainer, InterfaceID
 from modules.Title import Title
 
 
@@ -79,9 +79,9 @@ class EpisodeInfo(DatabaseInfoContainer):
     """
 
     __slots__ = (
-        'title', 'season_number', 'episode_number', 'absolute_number', 'emby_id',
-        'imdb_id', 'jellyfin_id', 'tmdb_id', 'tvdb_id', 'tvrage_id', 'airdate',
-        '__word_set',
+        'title', 'season_number', 'episode_number', 'absolute_number',
+        'emby_id', 'imdb_id', 'jellyfin_id', 'tmdb_id', 'tvdb_id', 'tvrage_id',
+        'airdate', '__word_set',
     )
 
 
@@ -117,18 +117,16 @@ class EpisodeInfo(DatabaseInfoContainer):
         self.airdate = airdate
 
         # Store default database ID's
-        self.emby_id = None
+        self.emby_id = InterfaceID(emby_id, type_=int)
         self.imdb_id = None
-        self.jellyfin_id = None
+        self.jellyfin_id = InterfaceID(jellyfin_id, type_=str)
         self.tmdb_id = None
         self.tvdb_id = None
         self.tvrage_id = None
         self.airdate = None
 
         # Update each ID
-        self.set_emby_id(emby_id)
         self.set_imdb_id(imdb_id)
-        self.set_jellyfin_id(jellyfin_id)
         self.set_tmdb_id(tmdb_id)
         self.set_tvdb_id(tvdb_id)
         self.set_tvrage_id(tvrage_id)
@@ -154,9 +152,9 @@ class EpisodeInfo(DatabaseInfoContainer):
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
-        attributes = ', '.join(f'{attr}={getattr(self, attr)}'
+        attributes = ', '.join(f'{attr}={getattr(self, attr)!r}'
             for attr in self.__slots__
-            if not attr.startswith('__') and getattr(self, attr) is not None
+            if not attr.startswith('__')
         )
 
         return f'<EpisodeInfo {attributes}>'
@@ -181,17 +179,9 @@ class EpisodeInfo(DatabaseInfoContainer):
             match,  False otherwise.
         """
 
-        # Verify the comparison is another EpisodeInfo object
-        if not isinstance(info, EpisodeInfo):
-            raise TypeError(
-                f'Can only compare equality between EpisodeInfo objects'
-            )
-
-
         # ID matches are immediate equality
-        for id_type, id_ in self.ids.items():
-            if id_ is not None and info.has_id(id_type):
-                return id_ == getattr(info, id_type)
+        if self == info:
+            return True
 
         # TODO temporary to see if title match is useful
         if (self.season_number == info.season_number
@@ -252,7 +242,7 @@ class EpisodeInfo(DatabaseInfoContainer):
     def has_all_ids(self) -> bool:
         """Whether this object has all ID's defined"""
 
-        return all(id_ is not None for id_ in self.ids.values())
+        return all(self.ids.values())
 
 
     @property
@@ -300,32 +290,47 @@ class EpisodeInfo(DatabaseInfoContainer):
         }
 
 
-    def set_emby_id(self, emby_id) -> None:
+    def set_emby_id(self, emby_id: int, interface_id: int) -> None:
         """Set the Emby ID of this object. See `_update_attribute()`."""
-        self._update_attribute('emby_id', emby_id, int)
 
-    def set_imdb_id(self, imdb_id) -> None:
+        self._update_attribute('emby_id', emby_id, interface_id=interface_id)
+
+
+    def set_imdb_id(self, imdb_id: str) -> None:
         """Set the IMDb ID of this object. See `_update_attribute()`."""
+
         self._update_attribute('imdb_id', imdb_id, str)
 
-    def set_jellyfin_id(self, jellyfin_id) -> None:
+
+    def set_jellyfin_id(self, jellyfin_id: str, interface_id: int) -> None:
         """Set the Jellyfin ID of this object. See `_update_attribute()`."""
-        self._update_attribute('jellyfin_id', jellyfin_id, str)
+
+        self._update_attribute(
+            'jellyfin_id', jellyfin_id, interface_id=interface_id
+        )
+
 
     def set_tmdb_id(self, tmdb_id) -> None:
         """Set the TMDb ID of this object. See `_update_attribute()`."""
+
         self._update_attribute('tmdb_id', tmdb_id, int)
+
 
     def set_tvdb_id(self, tvdb_id) -> None:
         """Set the TVDb ID of this object. See `_update_attribute()`."""
+
         self._update_attribute('tvdb_id', tvdb_id, int)
+
 
     def set_tvrage_id(self, tvrage_id) -> None:
         """Set the TVRage ID of this object. See `_update_attribute()`."""
+
         self._update_attribute('tvrage_id', tvrage_id, int)
+
 
     def set_airdate(self, airdate: datetime) -> None:
         """Set the airdate of this object. See `_update_attribute()`."""
+
         self._update_attribute('airdate', airdate)
 
 
@@ -346,8 +351,16 @@ class EpisodeInfo(DatabaseInfoContainer):
 
         # Conditions to filter by database ID
         id_conditions = []
+        if self.emby_id:
+            id_str = str(self.emby_id)
+            id_conditions.append(EpisodeModel.emby_id.contains(id_str))
+            id_conditions.append(literal(id_str).contains(EpisodeModel.emby_id))
         if self.imdb_id is not None:
             id_conditions.append(EpisodeModel.imdb_id==self.imdb_id)
+        if self.jellyfin_id:
+            id_str = str(self.jellyfin_id)
+            id_conditions.append(EpisodeModel.jellyfin_id.contains(id_str))
+            id_conditions.append(literal(id_str).contains(EpisodeModel.jellyfin_id))
         if self.tmdb_id is not None:
             id_conditions.append(EpisodeModel.tmdb_id==self.tmdb_id)
         if self.tvdb_id is not None:
@@ -362,7 +375,6 @@ class EpisodeInfo(DatabaseInfoContainer):
             and_(
                 EpisodeModel.season_number==self.season_number,
                 EpisodeModel.episode_number==self.episode_number,
-                # TODO Maybe not title match?
                 EpisodeModel.title==self.title.full_title,
             ),
         )
