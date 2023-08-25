@@ -1,5 +1,5 @@
 from logging import Logger
-from typing import Iterable, Iterator, Mapping, Type
+from typing import Iterable, Iterator, Mapping, Optional, Type
 
 from modules.Debug import log
 from modules.Interface import Interface
@@ -7,7 +7,19 @@ from modules.Interface import Interface
 
 class InterfaceGroup(Mapping[int, Interface]):
     """
-    
+    Class that defines a group of like-classed Interfaces. This class
+    creates a mapping of interface IDs to Interface instances, and also
+    provides convenience methods for adding and modifying interfaces.
+
+    >>> ig = InterfaceGroup.from_argument_list(
+        MyInterface,
+        [{'interface_id': 0, 'url': '...', 'api_key': '...'},
+         {'interface_id': 2, 'url': '...', 'api_key': '...'}],
+    ) # This is practically equivalent to:
+    >>> ig = {
+        0: MyInterface(url='...', api_key='...'),
+        2: MyInterface(url='...', api_key='...'),
+    }
     """
 
 
@@ -45,33 +57,45 @@ class InterfaceGroup(Mapping[int, Interface]):
 
     def __len__(self) -> int:
         """
-        
+        The number of interfaces defined in this group.
         """
 
         return len(self.interfaces)
 
 
-    def __getitem__(self, interface_id: int) -> Interface:
+    def __getitem__(self, interface_id: int, /) -> Optional[Interface]:
         """
-        
+        Get the Interface with the given ID.
+
+        Args:
+            interface_id: ID of the Interface to get.
+
+        Returns:
+            Interface with the given ID. None if there is no Interface
+            with the given ID.
         """
 
-        return self.interfaces[interface_id]
+        return self.interfaces.get(interface_id)
 
 
-    def __setitem__(self, interface_id: int, interface: Interface) -> None:
+    def __setitem__(self, interface_id: int, interface: Interface, /) -> None:
         """
-        
+        Store the given Interface at the given ID.
+
+        Args:
+            interface_id: ID to store the given Interface at.
+            interface: Interface being stored.
         """
 
         self.interfaces[interface_id] = interface
 
 
-    def __contains__(self, __key: int) -> bool:
+    def __contains__(self, interface_id: int, /) -> bool:
         """
+        Whether the given interface ID has an associated Interface.
         """
 
-        return __key in self.interfaces
+        return interface_id in self.interfaces
 
 
     def __iter__(self) -> Iterator[tuple[int, Interface]]:
@@ -104,6 +128,7 @@ class InterfaceGroup(Mapping[int, Interface]):
             MyInterface,
             [{'interface_id': 0, 'url': '...'},
              {'interface_id': 1, 'url': '...'}],
+        )
 
         Args:
             interface_cls: Interface class the created `InterfaceGroup`
@@ -164,7 +189,13 @@ class InterfaceGroup(Mapping[int, Interface]):
             log: Logger = log,
         ) -> None:
         """
-        
+        Reset and refresh all interfaces. Functionally equivalent to
+
+        Args:
+            interface_kwargs: List of kwargs to pass to each interface
+                initialization. `'interface_id'` must be an included
+                keyword.
+            log: (Keyword) Logger for all log messages.
         """
 
         self.interfaces = {}
@@ -178,9 +209,20 @@ class InterfaceGroup(Mapping[int, Interface]):
             interface_kwargs: dict,
             *,
             log: Logger = log,
-        ) -> None:
+        ) -> Interface:
         """
-        
+        Refresh the given interface.
+
+        Args:
+            interface_id: ID of the interface being refreshed.
+            interface_kwargs: Keyword arguments to initialize the
+                Interface with.
+            log: (Keyword) Logger for all log messages.
+
+        Returns:
+            Interface initialized with the given arguments.
         """
 
-        self.interfaces[interface_id] = self.cls(interface_kwargs, log=log)
+        self.interfaces[interface_id] = self.cls(**interface_kwargs, log=log)
+
+        return self.interfaces[interface_id]
