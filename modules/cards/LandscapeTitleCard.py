@@ -247,7 +247,7 @@ class LandscapeTitleCard(BaseCardType):
         ]
 
         # Get dimensions of text - since text is stacked, do max/sum operations
-        width, height = self.get_text_dimensions(
+        width, height = self.image_magick.get_text_dimensions(
             text_command, width='max', height='sum'
         )
 

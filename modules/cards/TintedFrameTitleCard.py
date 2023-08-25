@@ -448,7 +448,7 @@ class TintedFrameTitleCard(BaseCardType):
 
         # Element is index text
         if self.top_element == 'index':
-            element_width, _ = self.get_text_dimensions(
+            element_width, _ = self.image_magick.get_text_dimensions(
                 self.index_text_commands, width='max', height='max',
             )
             margin = 25
@@ -462,7 +462,7 @@ class TintedFrameTitleCard(BaseCardType):
             margin = 25
         # Element is title text
         elif self.top_element == 'title':
-            element_width, _ = self.get_text_dimensions(
+            element_width, _ = self.image_magick.get_text_dimensions(
                 self.title_text_commands, width='max', height='max',
             )
             margin = 10
@@ -524,7 +524,7 @@ class TintedFrameTitleCard(BaseCardType):
 
         # Element is index text
         if self.bottom_element == 'index':
-            element_width, _ = self.get_text_dimensions(
+            element_width, _ = self.image_magick.get_text_dimensions(
                 self.index_text_commands, width='max', height='max',
             )
             margin = 25
@@ -538,7 +538,7 @@ class TintedFrameTitleCard(BaseCardType):
             margin = 25
         # Element is title
         elif self.bottom_element == 'title':
-            element_width, _ = self.get_text_dimensions(
+            element_width, _ = self.image_magick.get_text_dimensions(
                 self.title_text_commands, width='max', height='max',
             )
             margin = 10

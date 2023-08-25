@@ -371,7 +371,7 @@ class ComicBookTitleCard(BaseCardType):
             return []
 
         # Get dimensions of the title text
-        title_text_width, title_text_height = self.get_text_dimensions(
+        title_text_width, title_text_height = self.image_magick.get_text_dimensions(
             self.title_text_commands,
             width='max',
             height='sum',
@@ -509,7 +509,7 @@ class ComicBookTitleCard(BaseCardType):
             return []
 
         # Get dimensions of the index text
-        index_text_width, index_text_height = self.get_text_dimensions(
+        index_text_width, index_text_height = self.image_magick.get_text_dimensions(
             self.index_text_commands,
             width='max',
             height='sum',

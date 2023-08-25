@@ -232,7 +232,7 @@ class TintedGlassTitleCard(BaseCardType):
         """
 
         # Get dimensions of text - since text is stacked, do max/sum operations
-        width, height = self.get_text_dimensions(
+        width, height = self.image_magick.get_text_dimensions(
             self.add_title_text_command, width='max', height='sum'
         )
 
@@ -300,7 +300,7 @@ class TintedGlassTitleCard(BaseCardType):
             f'-annotate {position} "{self.episode_text}"',
         ]
 
-        width, height = self.get_text_dimensions(
+        width, height = self.image_magick.get_text_dimensions(
             command, width='max', height='max'
         )
 
