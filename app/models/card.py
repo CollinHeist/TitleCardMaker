@@ -6,7 +6,7 @@ from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.orm import relationship
 
 from app.database.session import Base
-from app.models.loaded import Loaded
+
 
 class Card(Base):
     """
@@ -26,7 +26,7 @@ class Card(Base):
     loaded = relationship(
         'Loaded',
         back_populates='card',
-        foreign_keys=[Loaded.card_id]
+        foreign_keys='Loaded.card_id',
     )
 
     source_file = Column(String, nullable=False)
