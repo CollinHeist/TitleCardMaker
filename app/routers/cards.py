@@ -16,7 +16,7 @@ from app.internal.cards import (
     validate_card_type_model
 )
 from app.internal.episodes import refresh_episode_data
-from app.internal.series import load_series_title_cards
+from app.internal.series import load_episode_title_card, load_series_title_cards
 from app.internal.sources import download_episode_source_image
 from app.internal.translate import translate_episode
 from app.schemas.card import CardActions, TitleCard, PreviewTitleCard
@@ -364,7 +364,7 @@ def create_cards_for_plex_rating_keys(
         details += deets
 
     # Process each set of details
-    series_to_load = []
+    episodes_to_load = []
     for series_info, episode_info, watched_status in details:
         # Find all matching Episodes
         episodes = db.query(models.episode.Episode)\
@@ -426,12 +426,17 @@ def create_cards_for_plex_rating_keys(
         create_episode_card(db, preferences, None, episode, log=log)
 
         # Add this Series to list of Series to load
-        if episode.series not in series_to_load:
-            series_to_load.append(episode.series)
+        if episode.series.plex_library_name is None:
+            log.info(f'{episode.series.log_str} has no linked Library - skipping')
+        elif episode.series not in episodes_to_load:
+            episodes_to_load.append(episode)
 
-    # Load all Series that require reloading
-    for series in series_to_load:
-        load_series_title_cards(
-            series, 'Plex', db, emby_interface=None, jellyfin_interface=None,
-            plex_interface=plex_interface, force_reload=False, log=log,
-        )
+    # Load all Episodes that require reloading
+    for episode in episodes_to_load:
+        # Refresh this Episode so that relational Card objects are
+        # updated, preventing stale (deleted) Cards from being used in
+        # the Loaded asset evaluation. Not sure why this is required
+        # because SQLAlchemy SHOULD update child objects when the DELETE
+        # is committed; but this does not happen.
+        db.refresh(episode)
+        load_episode_title_card(episode, db, plex_interface, log=log)
