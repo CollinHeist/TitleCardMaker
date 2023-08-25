@@ -2,9 +2,11 @@ from re import match, compile as re_compile
 from typing import Optional, Union
 
 from plexapi.video import Show as PlexShow
+from sqlalchemy import and_, literal, or_
+from sqlalchemy.orm import Query
 
 from modules.CleanPath import CleanPath
-from modules.DatabaseInfoContainer import DatabaseInfoContainer
+from modules.DatabaseInfoContainer import DatabaseInfoContainer, InterfaceID
 
 
 class SeriesInfo(DatabaseInfoContainer):
@@ -63,19 +65,16 @@ class SeriesInfo(DatabaseInfoContainer):
         # Parse arguments into attributes
         self.name = name
         self.year = year
-        self.emby_id = None
+        self.emby_id = InterfaceID(emby_id, type_=str)
         self.imdb_id = None
-        self.jellyfin_id = None
-        self.sonarr_id = None
+        self.jellyfin_id = InterfaceID(jellyfin_id, type_=str)
+        self.sonarr_id = InterfaceID(sonarr_id, type_=int)
         self.tmdb_id = None
         self.tvdb_id = None
         self.tvrage_id = None
         self.match_titles = match_titles
 
-        self.set_emby_id(emby_id)
         self.set_imdb_id(imdb_id)
-        self.set_jellyfin_id(jellyfin_id)
-        self.set_sonarr_id(sonarr_id)
         self.set_tmdb_id(tmdb_id)
         self.set_tvdb_id(tvdb_id)
         self.set_tvrage_id(tvrage_id)
@@ -97,14 +96,9 @@ class SeriesInfo(DatabaseInfoContainer):
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
-        ret = f'<SeriesInfo name={self.name}, year={self.year}'
-        ret += f', emby_id={self.emby_id}' if self.emby_id else ''
-        ret += f', imdb_id={self.imdb_id}' if self.imdb_id else ''
-        ret += f', jellyfin_id={self.jellyfin_id}' if self.jellyfin_id else ''
-        ret += f', sonarr_id={self.sonarr_id}' if self.sonarr_id else ''
-        ret += f', tmdb_id={self.tmdb_id}' if self.tmdb_id else ''
-        ret += f', tvdb_id={self.tvdb_id}' if self.tvdb_id else ''
-        ret += f', tvrage_id={self.tvrage_id}' if self.tvrage_id else ''
+        ret = '<SeriesInfo'
+        for attr in self.__slots__:
+            ret += f' {attr}={getattr(self, attr)!r}'
 
         return f'{ret}>'
 
@@ -154,7 +148,7 @@ class SeriesInfo(DatabaseInfoContainer):
 
 
     @property
-    def ids(self) -> dict[str, Union[str, int]]:
+    def ids(self) -> dict[str, Union[str, int, InterfaceID]]:
         """Dictionary of ID's for this object."""
 
         return {
@@ -195,32 +189,49 @@ class SeriesInfo(DatabaseInfoContainer):
         self.full_clean_name =  CleanPath.sanitize_name(self.full_name)
 
 
-    def set_emby_id(self, emby_id: int) -> None:
+    def set_emby_id(self, emby_id: int, interface_id: int) -> None:
         """Set this object's Emby ID - see `_update_attribute()`."""
-        self._update_attribute('emby_id', emby_id, type_=int)
+
+        self._update_attribute('emby_id', emby_id, interface_id=interface_id)
+
 
     def set_imdb_id(self, imdb_id: str) -> None:
         """Set this object's IMDb ID - see `_update_attribute()`."""
+
         self._update_attribute('imdb_id', imdb_id, type_=str)
 
-    def set_jellyfin_id(self, jellyfin_id: str) -> None:
-        """Set this object's Jellyfin ID - see `_update_attribute()`."""
-        self._update_attribute('jellyfin_id', jellyfin_id, type_=str)
 
-    def set_sonarr_id(self, sonarr_id: str) -> None:
+    def set_jellyfin_id(self, jellyfin_id: str, interface_id: int) -> None:
+        """Set this object's Jellyfin ID - see `_update_attribute()`."""
+
+        self._update_attribute(
+            'jellyfin_id', jellyfin_id, interface_id=interface_id
+        )
+
+
+    def set_sonarr_id(self, sonarr_id: int, interface_id: int) -> None:
         """Set this object's Sonarr ID - see `_update_attribute()`."""
-        self._update_attribute('sonarr_id', sonarr_id, str)
+
+        self._update_attribute(
+            'sonarr_id', sonarr_id, interface_id=interface_id
+        )
+
 
     def set_tmdb_id(self, tmdb_id: int) -> None:
         """Set this object's TMDb ID - see `_update_attribute()`."""
+
         self._update_attribute('tmdb_id', tmdb_id, type_=int)
+
 
     def set_tvdb_id(self, tvdb_id: int) -> None:
         """Set this object's TVDb ID - see `_update_attribute()`."""
+
         self._update_attribute('tvdb_id', tvdb_id, type_=int)
+
 
     def set_tvrage_id(self, tvrage_id: int) -> None:
         """Set this object's TVRage ID - see `_update_attribute()`."""
+
         self._update_attribute('tvrage_id', tvrage_id, type_=int)
 
 
@@ -254,3 +265,49 @@ class SeriesInfo(DatabaseInfoContainer):
         matching_names = map(self.get_matching_title, names)
 
         return any(name == self.match_name for name in matching_names)
+
+
+    def filter_conditions(self,
+            SeriesModel: 'sqlachemy.Model' # type: ignore
+        ) -> Query:
+        """
+        Get the SQLAlchemy Query condition for this object.
+
+        Args:
+            SeriesModel: Series model to utilize for Query conditions.
+
+        Returns:
+            Query condition for this object. This includes an OR for any
+            (non-None) database ID matches as well as a year+name match.
+        """
+
+        # Conditions to filter by database ID
+        id_conditions = []
+        if self.emby_id:
+            id_str = str(self.emby_id)
+            id_conditions.append(SeriesModel.emby_id.contains(id_str))
+            id_conditions.append(literal(id_str).contains(SeriesModel.emby_id))
+        if self.imdb_id is not None:
+            id_conditions.append(SeriesModel.imdb_id==self.imdb_id)
+        if self.jellyfin_id:
+            id_str = str(self.jellyfin_id)
+            id_conditions.append(SeriesModel.jellyfin_id.contains(id_str))
+            id_conditions.append(literal(id_str).contains(SeriesModel.jellyfin_id))
+            id_conditions.append(SeriesModel.jellyfin_id==self.jellyfin_id)
+        if self.sonarr_id:
+            id_str = str(self.sonarr_id)
+            id_conditions.append(SeriesModel.sonarr_id.contains(id_str))
+            id_conditions.append(literal(id_str).contains(SeriesModel.sonarr_id))
+        if self.tmdb_id is not None:
+            id_conditions.append(SeriesModel.tmdb_id==self.tmdb_id)
+        if self.tvdb_id is not None:
+            id_conditions.append(SeriesModel.tvdb_id==self.tvdb_id)
+        if self.tvrage_id is not None:
+            id_conditions.append(SeriesModel.tvrage_id==self.tvrage_id)
+
+        return or_(
+            # Find by database ID
+            or_(*id_conditions),
+            # Find by title and year
+            and_(SeriesModel.name==self.name, SeriesModel.year==self.year),
+        )
