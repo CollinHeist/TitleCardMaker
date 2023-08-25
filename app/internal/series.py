@@ -15,6 +15,7 @@ from app import models
 from app.internal.cards import refresh_remote_card_types
 from app.internal.episodes import refresh_episode_data
 from app.internal.sources import download_series_logo
+from app.models.episode import Episode
 from app.schemas.preferences import MediaServer, Preferences
 from app.schemas.series import NewSeries, Series
 
@@ -381,7 +382,7 @@ def load_series_title_cards(
         if not episode.card:
             log.debug(f'{series.log_str} {episode.log_str} - no associated Card')
             continue
-        card = episode.card[-1]
+        card = episode.card[0]
 
         # Find previously loaded Card
         previously_loaded = None
@@ -432,6 +433,58 @@ def load_series_title_cards(
     if changed or loaded_assets:
         db.commit()
         log.info(f'{series.log_str} Loaded {len(loaded_assets)} Cards into {media_server}')
+
+
+def load_episode_title_card(
+        episode: Episode,
+        db: Session,
+        plex_interface: PlexInterface,
+        *,
+        log: Logger = log,
+    ) -> None:
+    """
+    Load the Title Card for the given Episode into Plex.
+
+    Args:
+        episode: Episode to load the Title Card of.
+        db: Database to look for and add Loaded records from/to.
+        plex_interface: Interface to load Title Cards into.
+        log: (Keyword) Logger for all log messages.
+    """
+
+    # Only load if Episode has a Card
+    if not episode.card:
+        log.debug(f'{episode.series.log_str} {episode.log_str} - no associated Card')
+        return None
+    card = episode.card[-1]
+
+    # Delete any existing Loaded asset for this Episode in Plex
+    db.query(models.loaded.Loaded)\
+        .filter_by(episode_id=episode.id, media_server='Plex')\
+        .delete()
+
+    # Load into Plex
+    loaded_assets = plex_interface.load_title_cards(
+        episode.series.plex_library_name,
+        episode.series.as_series_info,
+        [(episode, card)],
+        log=log,
+    )
+
+    # Episode was not loaded, exit
+    if not loaded_assets:
+        return None
+
+    db.add(models.loaded.Loaded(
+        media_server='Plex',
+        series=episode.series,
+        episode=episode,
+        card=card,
+        filesize=card.filesize,
+    ))
+    log.debug(f'{episode.series.log_str} {episode.log_str} Loaded {card.log_str}')
+
+    db.commit()
 
 
 def add_series(
