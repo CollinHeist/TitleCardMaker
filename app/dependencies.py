@@ -2,6 +2,7 @@ from logging import Logger
 from typing import Iterator, Optional
 
 from apscheduler.schedulers.background import BackgroundScheduler
+from fastapi import HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database.session import (
@@ -219,13 +220,15 @@ def refresh_sonarr_interfaces(
     """
 
     if interface_id is None:
-        SonarrInterfaces.refresh_all(get_preferences().sonarr_args, log=log)
+        SonarrInterfaces.refresh_all(
+            get_preferences().sonarr_argument_groups, log=log
+        )
     else:
         interface_args = get_preferences().sonarr_args[interface_id]
         SonarrInterfaces.refresh(interface_id, interface_args, log=log)
 
 
-def get_sonarr_interfaces() -> InterfaceGroup[int, SonarrInterface]:
+def get_all_sonarr_interfaces() -> InterfaceGroup[int, SonarrInterface]:
     """
     Dependency to get all interfaces to Sonarr. This refreshes the
     connections if Sonarr is enabled but any interfaces are not
@@ -235,17 +238,73 @@ def get_sonarr_interfaces() -> InterfaceGroup[int, SonarrInterface]:
         Global InterfaceGroup for SonarrInterfaces.
     """
 
-    preferences = get_preferences()
-    if preferences.use_sonarr and not SonarrInterfaces:
-        try:
-            refresh_sonarr_interfaces()
-        except Exception as exc:
-            log.exception(f'Error connecting to Sonarr', exc)
+    for interface_id, interface_args in get_preferences().sonarr_args.items():
+        if interface_args['enabled'] and not SonarrInterfaces[interface_id]:
+            try:
+                refresh_sonarr_interfaces(interface_id)
+            except Exception as exc:
+                log.exception(f'Error connecting to Sonarr[{interface_id}]',exc)
 
     return SonarrInterfaces
 
 
-def get_sonarr_interface() -> SonarrInterface:
+def get_sonarr_interface2(
+        interface_id: int = Query(...),
+    ) -> Optional[SonarrInterface]:
+    """
+    Dependency to get the SonarrInterface with the given ID. This adds
+    the `interface_id` Query parameter for the 
+    """
+
+    if (args := get_preferences().sonarr_args.get(interface_id)) is None:
+        return None
+
+    if not args['enabled']:
+        return None
+
+    if not SonarrInterfaces[interface_id]:
+        try:
+            refresh_sonarr_interfaces(interface_id)
+        except Exception as exc:
+            log.exception(f'Error connecting to Sonarr[{interface_id}]', exc)
+            return None
+
+    return SonarrInterfaces[interface_id]
+
+
+def require_sonarr_interface(interface_id: int = Query(...)) -> SonarrInterface:
+    """
+    Dependency to get the SonarrInterface with a given ID. This adds the
+    `interface_id` Query paramater, and will raise an HTTPException if
+    the interface cannot be communicated with or is disabled.
+    """
+    print(f'require_sonarr_interface({interface_id})')
+    if (args := get_preferences().sonarr_args.get(interface_id)) is None:
+        raise HTTPException(
+            status_code=409,
+            detail=f'No Sonarr connection with ID {interface_id}'
+        )
+
+    if not args['enabled']:
+        raise HTTPException(
+            status_code=409,
+            detail=f'Unable to communicate with Sonarr[{interface_id}]'
+        )
+
+    if not SonarrInterfaces[interface_id]:
+        try:
+            refresh_sonarr_interfaces(interface_id)
+        except Exception as exc:
+            log.exception(f'Error connecting to Sonarr[{interface_id}]', exc)
+            raise HTTPException(
+                status_code=400,
+                detail=f'Error connecting to Sonarr[{interface_id}]'
+            ) from exc
+
+    return SonarrInterfaces[interface_id]
+
+
+def get_sonarr_interface() -> Optional[SonarrInterface]:
     """
     Dependency to get the global interface to Sonarr. This refreshes the
     connection if it is enabled but not initialized.
