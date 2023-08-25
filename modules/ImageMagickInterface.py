@@ -1,6 +1,7 @@
 from collections import namedtuple
 from logging import Logger
 from pathlib import Path
+from re import findall
 from shlex import split as command_split
 from subprocess import Popen, PIPE, TimeoutExpired
 from typing import Literal, Optional
@@ -38,6 +39,9 @@ class ImageMagickInterface:
     """Temporary file location for svg -> png conversion"""
     TEMPORARY_SVG_FILE = TEMP_DIR / 'temp_logo.svg'
 
+    """Temporary file location for image filesize reduction"""
+    TEMPORARY_COMPRESS_FILE = TEMP_DIR / 'temp_compress.jpg'
+
     """Characters that must be escaped in commands"""
     __REQUIRED_ESCAPE_CHARACTERS = ('"', '`', '%')
 
@@ -48,7 +52,7 @@ class ImageMagickInterface:
 
 
     def __init__(self,
-            container: Optional[str] = None,
+            container: Optional[str] = 'ImageMagick',
             use_magick_prefix: bool = False,
             timeout: int = COMMAND_TIMEOUT_SECONDS,
         ) -> None:
@@ -215,6 +219,64 @@ class ImageMagickInterface:
         return im_get(image)
 
 
+    def get_text_dimensions(self,
+            text_command: list[str],
+            *,
+            width: Literal['sum', 'max'] = 'max',
+            height: Literal['sum', 'max'] = 'sum',
+        ) -> Dimensions:
+        """
+        Get the dimensions of the text produced by the given text
+        command. For 'width' and 'height' arguments, if 'max' then the
+        maximum value of the text is utilized, while 'sum' will add each
+        value. For example, if the given text command produces text like:
+
+            Top Line Text
+            Bottom Text
+
+        Specifying width='sum', will add the widths of the two lines
+        (not very meaningful), width='max' will return the maximum width
+        of the two lines. Specifying height='sum' will return the total
+        height of the text, and height='max' will return the tallest
+        single line of text.
+
+        Args:
+            text_command: ImageMagick commands that produce text(s) to
+                measure.
+            width: How to process the width of the produced text(s).
+            height: How to process the height of the produced text(s).
+
+        Returns:
+            Dimensions namedtuple.
+        """
+
+        text_command = ' '.join([
+            f'convert',
+            f'-debug annotate',
+            f'' if '-annotate ' in ' '.join(text_command) else f'xc: ',
+            *text_command,
+            f'null: 2>&1',
+        ])
+
+        # Execute dimension command, parse output
+        metrics = self.run_get_output(text_command)
+        widths = map(int, findall(r'Metrics:.*width:\s+(\d+)', metrics))
+        heights = map(int, findall(r'Metrics:.*height:\s+(\d+)', metrics))
+
+        try:
+            # Label text produces duplicate Metrics
+            sum_ = lambda v: sum(v)//(2 if ' label:"' in text_command else 1)
+
+            # Process according to given methods
+            return Dimensions(
+                sum_(widths)  if width  == 'sum' else max(widths),
+                sum_(heights) if height == 'sum' else max(heights),
+            )
+        except ValueError as e:
+            log.debug(f'Cannot identify text dimensions - {e}')
+            return Dimensions(0, 0)
+
+
     def resize_image(self,
             input_image: Path,
             output_image: Path,
@@ -304,3 +366,40 @@ class ImageMagickInterface:
 
         self.print_command_history()
         return None
+
+
+    def reduce_file_size(self, image: Path, quality: int = 90) -> Path:
+        """
+        Reduce the file size of the given image.
+
+        Args:
+            image: Path to the image to reduce the file size of.
+            quality: Quality of the reduction. 100 being no reduction, 0
+                being complete reduction. Passed to ImageMagick -quality.
+
+        Returns:
+            Path to the created image.
+        """
+
+        # Verify quality is 0-100
+        if (quality := int(quality)) not in range(0, 100):
+            return None
+
+        # If image DNE, warn and return
+        if not image.exists():
+            log.warning(f'Cannot reduce file size of non-existent image '
+                        f'"{image.resolve()}"')
+            return None
+
+        # Downsample and reduce quality of source image
+        command = ' '.join([
+            f'convert',
+            f'"{image.resolve()}"',
+            f'-sampling-factor 4:2:0',
+            f'-quality {quality}%',
+            f'"{self.TEMPORARY_COMPRESS_FILE.resolve()}"',
+        ])
+
+        self.run(command)
+
+        return self.TEMPORARY_COMPRESS_FILE
