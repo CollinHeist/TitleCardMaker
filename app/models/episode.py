@@ -14,6 +14,7 @@ from app.schemas.preferences import Style
 
 from modules.EpisodeInfo2 import EpisodeInfo
 
+
 class Episode(Base):
     """
     SQL Table that defines an Episode. This contains any Episode-level
@@ -29,8 +30,8 @@ class Episode(Base):
     font = relationship('Font', back_populates='episodes')
     series_id = Column(Integer, ForeignKey('series.id'))
     series = relationship('Series', back_populates='episodes')
-    card = relationship('Card', back_populates='episode')
-    loaded = relationship('Loaded', back_populates='episode')
+    card = relationship('Card', back_populates='episode', cascade='all, delete-orphan')
+    loaded = relationship('Loaded', back_populates='episode', cascade='all, delete-orphan')
     templates = relationship(
         'Template',
         secondary=EpisodeTemplates.__table__,

@@ -1,6 +1,8 @@
 from logging import Logger
 from typing import Literal, Union
 
+from fastapi import HTTPException
+
 from app.dependencies import (
     refresh_emby_interface, refresh_jellyfin_interface, refresh_plex_interface,
     refresh_sonarr_interface, refresh_tmdb_interface,
@@ -12,9 +14,11 @@ from app.schemas.preferences import (
 )
 from modules.Debug import log
 
+
 UpdateConnection = Union[
     UpdateEmby, UpdateJellyfin, UpdatePlex, UpdateSonarr, UpdateTMDb
 ]
+
 
 def update_connection(
         preferences: Preferences,
