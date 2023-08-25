@@ -75,7 +75,7 @@ def catch_and_log(
     return decorator
 
 
-class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
+class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
     """This class describes an interface to Plex."""
 
     """Series ID's that can be set by TMDb"""
@@ -91,6 +91,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
             verify_ssl: bool = True,
             integrate_with_pmm: bool = False,
             filesize_limit: int = 10485760,
+            use_magick_prefix: bool = False,
             *,
             log: Logger = log,
         ) -> None:
@@ -106,10 +107,11 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
                 uploading.
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
+            use_magick_prefix: Whether to use 'magick' command prefix.
             log: (Keyword) Logger for all log messages.
         """
 
-        super().__init__(filesize_limit)
+        super().__init__(filesize_limit, use_magick_prefix)
 
         # Create Session for caching HTTP responses
         self.__session = WebInterface('Plex', verify_ssl, log=log).session

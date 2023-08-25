@@ -376,6 +376,7 @@ class Preferences:
             'username': self.emby_username,
             'verify_ssl': self.emby_use_ssl,
             'filesize_limit': self.emby_filesize_limit,
+            'use_magick_prefix': self.use_magick_prefix,
         }
 
 
@@ -398,6 +399,7 @@ class Preferences:
             'username': self.jellyfin_username,
             'verify_ssl': self.jellyfin_use_ssl,
             'filesize_limit': self.jellyfin_filesize_limit,
+            'use_magick_prefix': self.use_magick_prefix,
         }
 
 
@@ -411,6 +413,7 @@ class Preferences:
             'verify_ssl': self.plex_use_ssl,
             'integrate_with_pmm': self.plex_integrate_with_pmm,
             'filesize_limit': self.plex_filesize_limit,
+            'use_magick_prefix': self.use_magick_prefix,
         }
 
 
