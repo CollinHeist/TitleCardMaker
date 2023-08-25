@@ -27,6 +27,7 @@ class SonarrLibrary(Base):
 Creation classes
 """
 class NewSonarrConnection(Base):
+    enabled: bool = True
     url: AnyUrl
     api_key: Hexstring
     verify_ssl: bool = True
@@ -55,12 +56,9 @@ Return classes
 """
 class SonarrConnection2(Base):
     interface_id: int
+    enabled: bool
     url: AnyUrl
     api_key: SecretStr
     verify_ssl: bool
     downloaded_only: bool
     libraries: list[SonarrLibrary]
-
-class SonarrConnections(Base):
-    use_sonarr: bool
-    connections: list[SonarrConnection2]
