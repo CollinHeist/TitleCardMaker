@@ -47,8 +47,8 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             api_key: str,
             verify_ssl: bool = True,
             downloaded_only: bool = True,
-            interface_id: int = 0,
             *,
+            interface_id: int = 0,
             log: Logger = log,
             **_,
         ) -> None:
@@ -212,7 +212,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
                 show['title'],
                 show['year'],
                 imdb_id=show.get('imdbId'),
-                sonarr_id=f'{self.server_id}-{show.get("id")}',
+                sonarr_id=f'{self.server_id}:{show.get("id")}',
                 tvdb_id=show.get('tvdbId'),
                 tvrage_id=show.get('tvRageId'),
             )
@@ -239,11 +239,11 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
         """
 
         # If all possible ID's are defined, exit
-        if series_info.has_ids(*self.SERIES_IDS):
+        if series_info.has_ids(*self.SERIES_IDS, interface_id=self.server_id):
             return None
 
         # Search for Series
-        search_results = self.get(
+        search_results: list[dict] = self.get(
             url=f'{self.url}series/lookup',
             params={'term': series_info.name} | self.__standard_params,
         )
@@ -268,9 +268,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
 
             # Add Sonarr ID if added to this server
             if (sonarr_id := series.get('id')) is not None:
-                reference_series_info.set_sonarr_id(
-                    f'{self.server_id}-{sonarr_id}'
-                )
+                reference_series_info.set_sonarr_id(sonarr_id, self.server_id)
             else:
                 log.debug(f'Found {series_info} via Sonarr, but not in server')
 
@@ -331,7 +329,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
             return None
 
         def get_sonarr_id(id_: Optional[int]) -> Optional[str]:
-            return None if id_ is None else f'{self.server_id}-{id_}'
+            return None if id_ is None else f'{self.server_id}:{id_}'
 
         return [
             SearchResult(
@@ -370,14 +368,14 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
         """
 
         # If no ID was returned, error and return an empty list
-        if not series_info.has_id('sonarr_id'):
+        if not series_info.has_id('sonarr_id', self.server_id):
             log.warning(f'Series "{series_info}" not found in Sonarr')
             return []
 
         # Construct GET arguments
         url = f'{self.url}episode/'
         params = {
-            'seriesId': int(series_info.sonarr_id.split('-')[1])
+            'seriesId': series_info.sonarr_id[self.server_id]
         } | self.__standard_params
 
         # Query Sonarr to get JSON of all episodes for this series
