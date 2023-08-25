@@ -4,6 +4,7 @@ from logging import Logger
 from typing import Optional, Union
 
 from fastapi import HTTPException
+from modules.DatabaseInfoContainer import InterfaceID
 
 from modules.Debug import log
 from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult
@@ -46,6 +47,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
             verify_ssl: bool = True,
             filesize_limit: Optional[int] = None,
             *,
+            interface_id: int = 0,
             log: Logger = log,
         ) -> None:
         """
@@ -69,6 +71,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
         super().__init__(filesize_limit)
 
         # Store attributes of this Interface
+        self._interface_id = interface_id
         self.session = WebInterface('Emby', verify_ssl, log=log)
         self.url = url[:-1] if url.endswith('/') else url
         self.__params = {'api_key': api_key}
@@ -176,9 +179,8 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
             itself.
         """
 
-        # TODO evaluate whether Emby cycles object ID's
-        if series_info.has_id('emby_id'):
-            return series_info.emby_id
+        if series_info.has_id('emby_id', interface_id=self._interface_id):
+            return series_info.emby_id[self._interface_id]
 
         # Get ID of this library
         if (library_ids := self.libraries.get(library_name, None)) is None:
@@ -269,13 +271,13 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
             return None
 
         # Set database ID's
-        series_info.set_emby_id(int(series['Id']))
+        series_info.set_emby_id(series['Id'], self._interface_id)
         if (imdb_id := series['ProviderIds'].get('IMDB')):
             series_info.set_imdb_id(imdb_id)
         if (tmdb_id := series['ProviderIds'].get('Tmdb')):
-            series_info.set_tmdb_id(int(tmdb_id))
+            series_info.set_tmdb_id(tmdb_id)
         if (tvdb_id := series['ProviderIds'].get('Tvdb')):
-            series_info.set_tvdb_id(int(tvdb_id))
+            series_info.set_tvdb_id(tvdb_id)
 
         return None
 
@@ -347,7 +349,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
                 overview=result.get('Overview', 'No overview available'),
                 poster=f'{self.url}/Items/{result["Id"]}/Images/Primary?quality=75',
                 imdb_id=result.get('ProviderIds', {}).get('IMDB'),
-                jellyfin_id=result['Id'],
+                jellyfin_id=f'{self._interface_id}:{result["Id"]}',
                 tmdb_id=result.get('ProviderIds', {}).get('Tmdb'),
                 tvdb_id=result.get('ProviderIds', {}).get('Tvdb'),
                 tvrage_id=result.get('ProviderIds', {}).get('TvRage'),
@@ -471,7 +473,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
                         ids = series.get('ProviderIds', {})
                         series_info = SeriesInfo(
                             series['Name'], None,
-                            emby_id=series['Id'],
+                            emby_id=f'{self._interface_id}:{series["Id"]}',
                             imdb_id=ids.get('IMDB'),
                             tmdb_id=ids.get('Tmdb'),
                             tvdb_id=ids.get('Tvdb'),
@@ -543,7 +545,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
                 episode['Name'],
                 episode['ParentIndexNumber'],
                 episode['IndexNumber'],
-                emby_id=int(episode.get('Id')),
+                emby_id=f'{self._interface_id}:{episode.get("Id")}',
                 imdb_id=episode['ProviderIds'].get('Imdb'),
                 tmdb_id=episode['ProviderIds'].get('Tmdb'),
                 tvdb_id=episode['ProviderIds'].get('Tvdb'),
@@ -628,6 +630,9 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
         for episode, card in episode_and_cards:
             # Skip episodes without Emby ID's (e.g. not in Emby)
             if (emby_id := episode.emby_id) is None:
+                continue
+            interface_id = InterfaceID(episode.emby_id, type_=str)
+            if (emby_id := interface_id[self._interface_id]) is None:
                 continue
 
             # Shrink image if necessary, skip if cannot be compressed
