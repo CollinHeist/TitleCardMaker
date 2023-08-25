@@ -210,7 +210,7 @@ class Preferences:
         self.sonarr_use_ssl = True
         self.sonarr_downloaded_only = True
         self.sonarr_libraries = []
-        self.sonarr_args = {}
+        self.sonarr_args: dict[int, dict] = {}
 
         self.use_tmdb = False
         self.tmdb_api_key = ''
@@ -421,6 +421,27 @@ class Preferences:
             'verify_ssl': self.sonarr_use_ssl,
             'downloaded_only': self.sonarr_downloaded_only,
         }
+    
+
+    @property
+    def sonarr_argument_groups(self) -> list[dict[str, Any]]:
+        """"""
+
+        return [
+            {'interface_id': id_} | interface_args
+            for id_, interface_args in self.sonarr_args.items()
+            if interface_args['enabled']
+        ]
+    
+
+    @property
+    def all_sonarr_argument_groups(self) -> list[dict[str, Any]]:
+        """"""
+
+        return [
+            {'interface_id': id_} | interface_args
+            for id_, interface_args in self.sonarr_args.items()
+        ]
 
 
     @property
