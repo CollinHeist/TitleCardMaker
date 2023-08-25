@@ -59,7 +59,7 @@ def add_new_episode(
     # Refresh card types in case new remote type was specified
     refresh_remote_card_types(db, log=request.state.log)
 
-    # Add background task to add episode ID's for this Episode
+    # Add ID's for this Episode
     set_episode_ids(
         db, series, [episode], emby_interface, jellyfin_interface,
         plex_interface, sonarr_interface, tmdb_interface, log=request.state.log,

@@ -13,7 +13,7 @@ from modules.EpisodeDataSource2 import EpisodeDataSource, SearchResult
 from modules.EpisodeInfo2 import EpisodeInfo
 from modules.Interface import Interface
 from modules.PersistentDatabase import PersistentDatabase
-from modules.SeriesInfo import SeriesInfo
+from modules.SeriesInfo2 import SeriesInfo
 from modules.WebInterface import WebInterface
 
 

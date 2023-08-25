@@ -15,7 +15,7 @@ from app.dependencies import get_preferences
 from app.models.template import SeriesTemplates
 
 from modules.CleanPath import CleanPath
-from modules.SeriesInfo import SeriesInfo
+from modules.SeriesInfo2 import SeriesInfo
 
 INTERNAL_ASSET_DIRECTORY = Path(__file__).parent.parent / 'assets'
 

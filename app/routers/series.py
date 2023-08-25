@@ -220,7 +220,6 @@ def lookup_series(
         request: Request,
         name: str = Query(..., min_length=1),
         interface: EpisodeDataSource = Query(...),
-        # year: Optional[int] = None,
         db: Session = Depends(get_database),
         emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
         jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
@@ -244,7 +243,7 @@ def lookup_series(
         'Plex': plex_interface,
         'Sonarr': sonarr_interface,
         'TMDb': tmdb_interface,
-    }.get(interface, None)
+    }.get(interface)
     if not interface_obj:
         raise HTTPException(
             status_code=409,
@@ -339,7 +338,7 @@ def update_series_(
 @series_router.post('/{series_id}/toggle-monitor', status_code=201)
 def toggle_series_monitored_status(
         series_id: int,
-        db: Session = Depends(get_database)
+        db: Session = Depends(get_database),
     ) -> Series:
     """
     Toggle the monitored attribute of the given Series.
