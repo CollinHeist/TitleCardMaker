@@ -472,7 +472,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
                     break
 
 
-    def get_all_tags(self) -> list[dict[str, Any]]:
+    def get_all_tags(self) -> list[dict[Literal['id', 'label'], Any]]:
         """
         Get all tags present in Sonarr.
 
