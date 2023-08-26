@@ -13,8 +13,9 @@ from app.database.session import Page
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.auth import get_current_user
 from app.internal.blueprint import (
-    generate_series_blueprint, get_blueprint_by_id, get_blueprint_font_files,
-    import_blueprint, query_all_blueprints, query_series_blueprints
+    delay_zip_deletion, generate_series_blueprint, get_blueprint_by_id,
+    get_blueprint_font_files, import_blueprint, query_all_blueprints,
+    query_series_blueprints
 )
 from app.internal.episodes import get_all_episode_data
 from app.internal.series import add_series
@@ -115,6 +116,7 @@ def get_series_blueprint_font_files(
 
 @blueprint_router.get('/export/series/{series_id}/zip', status_code=200)
 async def export_series_blueprint_as_zip(
+        background_tasks: BackgroundTasks,
         request: Request,
         series_id: int,
         include_global_defaults: bool = Query(default=True),
@@ -183,26 +185,42 @@ async def export_series_blueprint_as_zip(
             card_file = this_card_file
             break
 
-    # Get directory for zipping
-    zip_dir = preferences.TEMPORARY_DIRECTORY / 'zips' / log.extra['context_id']
+    # Directories for zipping
+    ZIPS_DIR = preferences.TEMPORARY_DIRECTORY / 'zips'
+    font_zip_dir = ZIPS_DIR / f"fonts_{log.extra['context_id']}"
+    font_zip_dir.mkdir(exist_ok=True, parents=True)
+    zip_dir: Path = ZIPS_DIR / log.extra['context_id']
+    zip_dir.mkdir(exist_ok=True, parents=True)
 
-    # Copy all files into the directory to be zipped
-    zip_dir.mkdir(parents=True, exist_ok=True)
+    # Copy all files into the zip directory
     for file in font_files:
-        copy_file(file, zip_dir / file.name)
-        log.debug(f'Copied "{file}" into zip directory "{zip_dir}"')
-    if card_file:
+        copy_file(file, font_zip_dir / file.name)
+        log.debug(f'Copied "{file}" into Font zip directory')
+
+    # Zip files, copy into main zip directory, delete after some delay
+    if font_files:
+        font_zip = Path(zip_directory(font_zip_dir, 'zip', font_zip_dir))
+        background_tasks.add_task(delay_zip_deletion, font_zip_dir, font_zip)
+        copy_file(font_zip, zip_dir / 'fonts.zip')
+
+    # Copy preview into main zip directory
+    if card_file is not None:
         copy_file(card_file, zip_dir / f'preview{card_file.suffix}')
         blueprint['preview'] = f'preview{card_file.suffix}'
+        log.debug(f'Copied "{card_file}" into zip directory')
 
     # Write Blueprint as JSON into zip directory
     blueprint_file = zip_dir / 'blueprint.json'
     with blueprint_file.open('w') as file_handle:
         dump(blueprint, file_handle, indent=2)
-    log.debug(f'Dumped Blueprint JSON into "{blueprint_file}"')
+    log.debug(f'Wrote "blueprint.json" into zip directory')
+
+    # Create zip of Font zip + preview file + Blueprint JSON
+    zip_ = zip_directory(zip_dir, 'zip', zip_dir)
+    background_tasks.add_task(delay_zip_deletion, zip_dir, Path(zip_))
 
     # Zip directory, return zipped file
-    return FileResponse(zip_directory(zip_dir, 'zip', zip_dir))
+    return FileResponse(zip_)
 
 
 @blueprint_router.put('/query/blacklist')

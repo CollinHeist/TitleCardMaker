@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from logging import Logger
 from pathlib import Path
 from re import compile as re_compile, sub as re_sub, IGNORECASE
+from time import sleep
 
 from fastapi import HTTPException
 from requests import get, JSONDecodeError
@@ -39,6 +40,35 @@ BLUEPRINTS_URL = f'{REPO_URL}/blueprints'
 
 """URL to the master Blueprint file"""
 MASTER_BLUEPRINT_FILE = f'{REPO_URL}/master_blueprints.json'
+
+
+def delay_zip_deletion(zip_directory: Path, zip_file: Path) -> None:
+    """
+    Delete the given zip directory and files. A delay is utilized so
+    that the browser is able to download the content before they are
+    deleted.
+
+    Args:
+        zip_directory: Directory containing zipped files to be deleted.
+            The contents are deleted, then the directory itself.
+        zip_file: Zip file to delete directly.
+    """
+
+    # Wait a while to give the browser time to download the zips
+    sleep(15)
+
+    # Delete zip file
+    zip_file.unlink(missing_ok=True)
+    log.debug(f'Deleted "{zip_file}"')
+
+    # Delete zip directory contents
+    for file in zip_directory.glob('*'):
+        file.unlink(missing_ok=True)
+        log.debug(f'Deleted "{file}"')
+
+    # Delete zip directory
+    zip_directory.rmdir()
+    log.debug(f'Deleted {zip_directory}')
 
 
 def get_blueprint_folders(series_name: str) -> tuple[str, str]:
