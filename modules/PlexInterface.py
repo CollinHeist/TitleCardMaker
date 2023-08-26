@@ -199,9 +199,11 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
         # Try by name
         try:
-            for series in library.search(title=series_info.name,
-                    year=series_info.year, libtype='show'):
-                if series.title in (series_info.name, series_info.full_name):
+            results = library.search(
+                title=series_info.name, year=series_info.year, libtype='show'
+            )
+            for series in results:
+                if series_info.matches(series.title):
                     return series
         except NotFound:
             pass
