@@ -103,6 +103,7 @@ class UpdatePreferences(UpdateBase):
     default_unwatched_style: Style = UNSPECIFIED
     home_page_size: PositiveInt = UNSPECIFIED
     episode_data_page_size: PositiveInt = UNSPECIFIED
+    stylize_unmonitored_posters: bool = UNSPECIFIED
 
     @validator('card_filename_format', pre=True)
     def validate_card_filename_format(cls, v):
@@ -226,6 +227,7 @@ class Preferences(Base):
     default_unwatched_style: Style
     home_page_size: PositiveInt
     episode_data_page_size: PositiveInt
+    stylize_unmonitored_posters: bool
 
 class EmbyConnection(Base):
     use_emby: bool

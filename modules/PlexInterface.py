@@ -217,7 +217,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     @catch_and_log('Error getting library paths', default={})
     def get_library_paths(self,
-            filter_libraries: list[str] = []) -> dict[str, list[str]]:
+            filter_libraries: list[str] = [],
+        ) -> dict[str, list[str]]:
         """
         Get all libraries and their associated base directories.
 
@@ -653,7 +654,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
            reraise=True)
     def __retry_upload(self,
             plex_object: Union[PlexEpisode, PlexSeason],
-            filepath: Path) -> None:
+            filepath: Path,
+        ) -> None:
         """
         Upload the given poster to the given Episode, retrying if it fails.
 
@@ -828,7 +830,8 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface):
 
     @catch_and_log('Error getting episode details')
     def get_episode_details(self,
-            rating_key: int) -> list[tuple[SeriesInfo, EpisodeInfo, str]]:
+            rating_key: int,
+        ) -> list[tuple[SeriesInfo, EpisodeInfo, str]]:
         """
         Get all details for all episodes indicated by the given Plex rating key.
 

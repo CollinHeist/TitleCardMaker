@@ -30,6 +30,10 @@ async function getAllSeries(page=1) {
     // Poster
     const img = clone.querySelector('img');
     img.src = series.small_poster_url; img.alt = `Poster for ${series.name}`;
+    // Grayscale if unmonitored (and enabled)
+    {% if preferences.stylize_unmonitored_posters %}
+    if (!series.monitored) { img.classList.add('unmonitored'); }
+    {% endif %}
     // Link name and poster to the Series page
     const as = clone.querySelectorAll('a');
     as[0].href = `/series/${series.id}`;

@@ -77,7 +77,7 @@ class Preferences:
         'use_magick_prefix', 'current_version', 'available_version',
         'blacklisted_blueprints', 'advanced_scheduling', 'require_auth',
         'task_crontabs', 'simplified_data_table', 'home_page_size',
-        'episode_data_page_size',
+        'episode_data_page_size', 'stylize_unmonitored_posters',
     )
 
 
@@ -228,6 +228,7 @@ class Preferences:
         self.require_auth = False
         self.home_page_size = 100
         self.episode_data_page_size = 50
+        self.stylize_unmonitored_posters = False
 
 
     def read_file(self) -> Optional[object]:

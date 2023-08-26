@@ -282,14 +282,23 @@
               <i class="wrench icon"></i>
               Web Interface
             </h3>
-            <div class="field" data-tooltip="How many Series per page to display on the Home Page">
+            <div class="eight wide field" data-tooltip="How many Series per page to display on the Home Page">
               <label>Home Page Size</label>
               <input type="number" name="home_page_size" placeholder="{{preferences.home_page_size}}" value="{{preferences.home_page_size}}">
             </div>
 
-            <div class="field" data-tooltip="How many Episodes per page to display in Episode data tables">
+            <div class="eight wide field" data-tooltip="How many Episodes per page to display in Episode data tables">
               <label>Episode Data Table Page Size</label>
               <input type="number" name="episode_data_page_size" placeholder="{{preferences.episode_data_page_size}}" value="{{preferences.episode_data_page_size}}">
+            </div>
+
+            <div class="ui right aligned checkbox field" data-tooltip="Whether to stylize the posters of Unmonitored Series on the Home Page">
+              {% if preferences.stylize_unmonitored_posters %}
+              <input name="stylize_unmonitored_posters" type="checkbox" checked="checked">
+              {% else %}
+              <input name="stylize_unmonitored_posters" type="checkbox">
+              {% endif %}
+              <label>Stylize Unmonitored Series Posters</label>
             </div>
 
             <!-- Validation message -->
