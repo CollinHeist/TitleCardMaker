@@ -327,6 +327,13 @@ async function initAll() {
   initializeSearchSource();
   initializeLibraryDropdowns();
 
+  // Initialize search input with query param if provided
+  const query = new URLSearchParams(window.location.search).get('q');
+  if (query) {
+    document.getElementById('search-query').value = query;
+    querySeries();
+  }
+
   const allTemplates = await fetch('/api/available/templates').then(resp => resp.json());
   $('.dropdown[data-value="template_ids"]').dropdown({
     placeholder: 'None',
@@ -345,7 +352,7 @@ async function querySeries() {
   const query = $('#search-query').val();
   if (resultTemplate === null || resultSegment === null || !query) { return; }
   addPlaceholders(resultSegment, 10);
-  const interfaceName = $('#search-interface').val();
+  const interfaceName = $('#search-interface').val() || 'Sonarr';
   const allResults = await fetch(`/api/series/lookup?name=${query}&interface=${interfaceName}`).then(resp => resp.json());
   const results = allResults.items.map((result, index) => {
     // Clone template
