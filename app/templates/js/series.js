@@ -1137,10 +1137,11 @@ async function queryBlueprints() {
       let text = `<b>${blueprint.templates.length}</b> Template` + (blueprint.templates.length > 1 ? 's' : '');
       card.querySelector('[data-value="template-count"]').innerHTML = text;
     }
-    if (Object.keys(blueprint.episodes).length === 0) {
+    const episode_count = Object.keys(blueprint.episodes).length
+    if (episode_count === 0) {
       card.querySelector('[data-value="episode-count"]').remove();
     } else {
-      let text = `<b>${Object.keys(blueprint.episodes).length}</b> Episode Override` + (blueprint.episodes.length > 1 ? 's' : '');
+      let text = `<b>${episode_count}</b> Episode Override` + (episode_count > 1 ? 's' : '');
       card.querySelector('[data-value="episode-count"]').innerHTML = text;
     }
     card.querySelector('[data-value="description"]').innerHTML = '<p>' + blueprint.description.join('</p><p>') + '</p>';
