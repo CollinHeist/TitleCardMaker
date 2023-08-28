@@ -17,14 +17,17 @@ function addFont() {
   });
 }
 
+/*
+ * Submit an API request to delete the given Font from the database. If
+ * successful, the HTML element for this Font is removed from the page.
+ */
 function deleteFont(font) {
   $.ajax({
     type: 'DELETE',
     url: `/api/fonts/${font.id}`,
     success: () => {
       showInfoToast(`Deleted Font "${font.name}"`);
-      $('.ui.accordion').accordion('close');
-      getAllFonts();
+      $(`#font-id${font.id}`).remove();
     },
     error: response => showErrorToast({title: 'Error Deleting Font', response}),
   });
