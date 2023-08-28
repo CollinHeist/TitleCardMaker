@@ -99,22 +99,13 @@
                   <div class="menu"><!-- Added asynchronousely --></div>
                 </div>
               </div>
-              <div class="ui right aligned checkbox field" data-tooltip="Whether to include Episodes from season 0" data-position="right center">
+              <div class="ui checkbox field" data-tooltip="Whether to include Episodes from season 0">
                 {% if preferences.sync_specials %}
                 <input name="sync_specials" type="checkbox" checked="checked">
                 {% else %}
                 <input name="sync_specials" type="checkbox">
                 {% endif %}
                 <label>Sync Specials</label>
-              </div>
-              <br>
-              <div class="ui right aligned checkbox field" data-value="simplified_data_table" data-tooltip="Whether to hide advanced columns in Episode Data tables" data-position="right center">
-                {% if preferences.simplified_data_table %}
-                <input name="simplified_data_table" type="checkbox" checked="">
-                {% else %}
-                <input name="simplified_data_table" type="checkbox">
-                {% endif %}
-                <label>Simplified Episode Data Tables</label>
               </div>
             </div>
 
@@ -291,6 +282,15 @@
               <label>Episode Data Table Page Size</label>
               <input type="number" name="episode_data_page_size" placeholder="{{preferences.episode_data_page_size}}" value="{{preferences.episode_data_page_size}}">
             </div>
+            <div class="ui checkbox field" data-value="simplified_data_table" data-tooltip="Whether to hide advanced columns in Episode Data tables">
+              {% if preferences.simplified_data_table %}
+              <input name="simplified_data_table" type="checkbox" checked="">
+              {% else %}
+              <input name="simplified_data_table" type="checkbox">
+              {% endif %}
+              <label>Simplified Episode Data Tables</label>
+            </div>
+            <br>
 
             <div class="ui right aligned checkbox field" data-tooltip="Whether to stylize the posters of Unmonitored Series on the Home Page">
               {% if preferences.stylize_unmonitored_posters %}
