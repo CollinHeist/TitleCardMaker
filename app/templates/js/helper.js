@@ -46,12 +46,20 @@ function formatFastAPIError(errorResponse) {
 
 function showErrorToast(args) {
   const {title, response, displayTime=10000} = args;
-  $.toast({
-    class: 'error',
-    title,
-    message: formatFastAPIError(response.responseJSON),
-    displayTime: displayTime,
-  });
+  if (response === undefined) {
+    $.toast({
+      class: 'error',
+      title,
+      displayTime: displayTime,
+    });
+  } else {
+    $.toast({
+      class: 'error',
+      title,
+      message: formatFastAPIError(response.responseJSON),
+      displayTime: displayTime,
+    });
+  }
 }
 
 function showInfoToast(args) {
