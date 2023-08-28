@@ -492,3 +492,73 @@ async def set_series_logo(
 
     # Write new file to the disk
     file.write_bytes(content)
+
+
+@source_router.post('/series/{series_id}/backdrop/upload', status_code=201)
+async def set_series_backdrop(
+        request: Request,
+        series_id: int,
+        url: Optional[str] = Form(default=None),
+        file: Optional[UploadFile] = None,
+        db: Session = Depends(get_database),
+        preferences: Preferences = Depends(get_preferences),
+        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
+    ) -> None:
+    """
+    Set the backdrop for the given Series. If there is an existing
+    backdrop associated with this Series, it is deleted.
+
+    - series_id: ID of the Series to set the backdrop of.
+    - url: URL to the backdrop to download and utilize.
+    - file: Backdrop to utilize.
+    """
+
+    # Get contextual logger
+    log = request.state.log
+
+    # Get Series with this ID, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Get image contents
+    uploaded_file = b''
+    if file is not None:
+        uploaded_file = await file.read()
+
+    # Send error if both a URL and file were provided
+    if url is not None and len(uploaded_file) > 0:
+        raise HTTPException(
+            status_code=422,
+            detail='Cannot provide multiple images'
+        )
+
+    # Send error if neither were provided
+    if url is None and len(uploaded_file) == 0:
+        raise HTTPException(
+            status_code=422,
+            detail='URL or file are required',
+        )
+
+    # Get Series backdrop file
+    file = series.get_series_backdrop(preferences.source_directory)
+
+    # If file already exists, warn about overwriting
+    if file.exists():
+        log.info(f'{series.log_str} backdrop file exists - replacing')
+
+    # If only URL was required, attempt to download, error if unable
+    if url is not None:
+        try:
+            content = get(url, timeout=30).content
+            log.debug(f'Downloaded {len(content)} bytes from {url}')
+        except Exception as e:
+            log.exception(f'Download failed', e)
+            raise HTTPException(
+                status_code=400,
+                detail=f'Unable to download image - {e}'
+            ) from e
+    # Use uploaded file if provided
+    else:
+        content = uploaded_file
+
+    # Write new file to the disk
+    file.write_bytes(content)
