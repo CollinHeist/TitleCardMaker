@@ -15,8 +15,14 @@ function formatBytes(bytes, decimals = 2) {
 }
 
 function formatFastAPIError(errorResponse) {
-  if (!errorResponse || !errorResponse.detail || !Array.isArray(errorResponse.detail)) {
+  // No response or details
+  if (!errorResponse || !errorResponse.detail) {
     return undefined;
+  }
+
+  // If detail is string, likely an explicit error
+  if (typeof errorResponse.detail === 'string') {
+    return errorResponse.detail;
   }
 
   const formattedErrors = errorResponse.detail.map(detail => {
