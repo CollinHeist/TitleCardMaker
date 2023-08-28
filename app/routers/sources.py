@@ -4,10 +4,13 @@ from fastapi import (
     APIRouter, BackgroundTasks, Depends, Form, HTTPException, Request,
     UploadFile,
 )
+from fastapi_pagination import paginate as paginate_sequence
+from fastapi_pagination.ext.sqlalchemy import paginate
 from requests import get
 from sqlalchemy.orm import Session
 
 from app.database.query import get_episode, get_series
+from app.database.session import Page
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.auth import get_current_user
 from app.internal.cards import delete_cards
@@ -229,7 +232,7 @@ def get_all_series_logos_on_tmdb(
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> list[TMDbImage]:
     """
-    Get a list of all the Logos available for the specified Series on
+    Get a list of all the logos available for the specified Series on
     TMDb.
 
     - series_id: ID of the Series whose logos are being requested.
@@ -260,26 +263,21 @@ def get_existing_series_source_images(
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
         imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
-    ) -> list[SourceImage]:
+    ) -> Page[SourceImage]:
     """
     Get the SourceImage details for the given Series.
 
     - series_id: ID of the Series to get the details of.
     """
 
-    # Get all Episodes for this Series
-    all_episodes = db.query(models.episode.Episode)\
-        .filter_by(series_id=series_id)
-
-    # Get all source files
-    sources = [
-        get_source_image(preferences, imagemagick_interface, episode)
-        for episode in all_episodes
-    ]
-
-    return sorted(
-        sources,
-        key=lambda s: (s['season_number']*1000) + s['episode_number']
+    return paginate(
+        db.query(models.episode.Episode)\
+            .filter_by(series_id=series_id)\
+            .order_by(models.episode.Episode.season_number,
+                      models.episode.Episode.episode_number),
+        transformer=lambda episodes: [get_source_image(
+            preferences, imagemagick_interface, episode
+        ) for episode in episodes]
     )
 
 
