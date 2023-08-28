@@ -51,8 +51,11 @@ def create_preview_card(
     - card: Card definition to create.
     """
 
+    # Get contextual logger
+    log = request.state.log
+
     # Get the effective card class
-    CardClass = preferences.get_card_type_class(card.card_type)
+    CardClass = preferences.get_card_type_class(card.card_type, log=log)
     if CardClass is None:
         raise HTTPException(
             status_code=400,
@@ -97,7 +100,7 @@ def create_preview_card(
     card_settings['title_text'] = case_func(card_settings['title_text'])
 
     CardClass, CardTypeModel = validate_card_type_model(
-        preferences, card_settings, log=request.state.log
+        preferences, card_settings, log=log,
     )
 
     # Delete output if it exists, then create Card
