@@ -883,6 +883,55 @@ class TMDbInterface(EpisodeDataSource, WebInterface, Interface):
 
         # Series found on TMDb, return all logos
         return series.logos
+    
+
+    @catch_and_log('Error getting all backdrops', default=None)
+    def get_all_backdrops(self,
+            series_info: SeriesInfo,
+            *,
+            bypass_blacklist: bool = False,
+            log: Logger = log,
+        ) -> Optional[list[TMDbStill]]:
+        """
+        Get all backdrops for the requested series.
+
+        Args:
+            series_info: SeriesInfo for this entry.
+            bypass_blacklist: (Keyword) Whether to bypass the blacklist.
+            log: (Keyword) Logger for all log messages.
+
+        Returns:
+            List of `tmdbapis.objs.image.Still` objects. If the series
+            is blacklisted, then None is returned.
+
+        Raises:
+            HTTPException (404) if the given Series is not found on TMDb
+        """
+
+        # Don't query the database if this episode is in the blacklist
+        if (not bypass_blacklist
+            and self.__is_blacklisted(series_info, None, 'backdrop')):
+            log.debug(f'Series {series_info} logo is blacklisted')
+            return None
+
+        # Get the series, exit if series or backdrops DNE
+        try:
+            series = self.api.tv_show(series_info.tmdb_id)
+        except NotFound as exc:
+            self.__update_blacklist(series_info, None, 'backdrop')
+            raise HTTPException(
+                status_code=404,
+                detail=f'Series {series_info} not found on TMDb',
+            ) from exc
+
+        # Blacklist if there are no backdrops
+        if len(series.backdrops) == 0:
+            self.__update_blacklist(series_info, None, 'backdrop')
+            log.info(f'Series {series_info} has no backdrops')
+            return []
+
+        # Series found on TMDb, return all backdrops
+        return series.backdrops
 
 
     @catch_and_log('Error getting source image', default=None)
