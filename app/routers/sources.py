@@ -257,6 +257,39 @@ def get_all_series_logos_on_tmdb(
     return [] if logos is None else logos
 
 
+@source_router.get('/series/{series_id}/backdrop/browse', status_code=200)
+def get_all_series_backdrops_on_tmdb(
+        request: Request,
+        series_id: int,
+        db: Session = Depends(get_database),
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
+    ) -> list[TMDbImage]:
+    """
+    Get a list of all the backdrops available for the specified Series
+    on TMDb.
+
+    - series_id: ID of the Series whose backdrops are being requested.
+    """
+
+    # If no TMDb connection, raise 409
+    if tmdb_interface is None:
+        raise HTTPException(
+            status_code=409,
+            detail=f'No connection to TMDb'
+        )
+
+    # Get the Series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Get all backdrops
+    backdrops = tmdb_interface.get_all_backdrops(
+        series.as_series_info,
+        bypass_blacklist=True,
+        log=request.state.log,
+    )
+    return [] if backdrops is None else backdrops
+
+
 @source_router.get('/series/{series_id}', status_code=200)
 def get_existing_series_source_images(
         series_id: int,
