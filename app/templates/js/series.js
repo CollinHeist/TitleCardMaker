@@ -970,23 +970,16 @@ function toggleMonitorStatus() {
     success: response => {
       // Show toast, toggle text and icon to show new status
       if (response.monitored) {
-        $.toast({class: 'blue info', title: 'Started Monitoring Series'});
+        showInfoToast('Started Monitoring Series');
         $('#monitor-status span').toggleClass('red', false).toggleClass('green', true);
         $('#monitor-status span')[0].innerHTML = '<i class="ui eye outline green icon"></i>Monitored';
       } else {
-        $.toast({class: 'blue info', title: 'Stopped Monitoring Series'});
+        showInfoToast('Stopped Monitoring Series');
         $('#monitor-status span').toggleClass('red', true).toggleClass('green', false);
         $('#monitor-status span')[0].innerHTML = '<i class="ui eye slash outline red icon"></i>Unmonitored';
       }
       refreshTheme();
-    }, error: response => {
-      $.toast({
-        class: 'error',
-        title: 'Error Changing Status',
-        message: response.responseJSON.detail,
-        displayTime: 0,
-      });
-    },
+    }, error: response => showErrorToast({title: 'Error Changing Status', response}),
   });
 }
 
@@ -1000,11 +993,9 @@ function processSeries() {
   $.ajax({
     type: 'POST',
     url: '/api/series/{{series.id}}/process',
-    success: () => {
-      $.toast({class: 'blue info', title: 'Started Processing Series'});
-    }, error: response => {
-      showErrorToast({title: 'Error Processing Series', response});
-    }, complete: () => {
+    success: () => showInfoToast('Started Processing Series'),
+    error: response => showErrorToast({title: 'Error Processing Series', response}),
+    complete: () => {
       $('#action-buttons .button[data-action="process"] i').toggleClass('loading', false);
       $('#action-buttons .button').toggleClass('disabled', false);
     }
@@ -1281,14 +1272,14 @@ function browseTmdbLogos() {
  * Submit an API request to download the Source Image for the given Episode.
  * This marks the given cardElementId as loading while processing.
  */
-function getEpisodeSourceImage(episodeId, cardElementId) {
-  document.getElementById(cardElementId).classList.add('loading');
+function getEpisodeSourceImage(episodeId, sourceElementId) {
+  document.getElementById(sourceElementId).classList.add('loading');
   $.ajax({
     type: 'POST',
     url: `/api/sources/episode/${episodeId}`,
     success: sourceImage => showInfoToast(sourceImage ? 'Downloaded Image' : 'Unable to Download Image'),
     error: response => showErrorToast({title: 'Error Downloading Source Image', response}),
-    complete: () => document.getElementById(cardElementId).classList.remove('loading'),
+    complete: () => document.getElementById(sourceElementId).classList.remove('loading'),
   });
 }
 
