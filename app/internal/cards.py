@@ -172,7 +172,7 @@ def refresh_remote_card_types(
 
             # Load new type
             log.debug(f'Loading RemoteCardType[{card_identifier}]..')
-            remote_card_type = RemoteCardType(card_identifier)
+            remote_card_type = RemoteCardType(card_identifier, log=log)
             if remote_card_type.valid and remote_card_type is not None:
                 preferences.remote_card_types[card_identifier] =\
                     remote_card_type.card_class
