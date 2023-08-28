@@ -78,6 +78,7 @@ class Preferences:
         'blacklisted_blueprints', 'advanced_scheduling', 'require_auth',
         'task_crontabs', 'simplified_data_table', 'home_page_size',
         'episode_data_page_size', 'stylize_unmonitored_posters',
+        'sources_as_table',
     )
 
 
@@ -229,6 +230,7 @@ class Preferences:
         self.home_page_size = 100
         self.episode_data_page_size = 50
         self.stylize_unmonitored_posters = False
+        self.sources_as_table = False
 
 
     def read_file(self) -> Optional[object]:

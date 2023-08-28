@@ -300,6 +300,16 @@
               {% endif %}
               <label>Stylize Unmonitored Series Posters</label>
             </div>
+            <br>
+
+            <div class="ui checkbox field">
+              {% if preferences.sources_as_table %}
+              <input name="sources_as_table" type="checkbox" checked="checked">
+              {% else %}
+              <input name="sources_as_table" type="checkbox">
+              {% endif %}
+              <label>Display Source Image Data as a Table</label>
+            </div>
 
             <!-- Validation message -->
             <div class="ui floating error message"></div>
