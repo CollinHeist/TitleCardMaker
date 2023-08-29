@@ -31,18 +31,18 @@ class Font(Base):
     series = relationship('Series', back_populates='font')
     templates = relationship('Template', back_populates='font')
 
-    name = Column(String)
+    name = Column(String, nullable=False)
     color = Column(String, default=None)
     delete_missing = Column(Boolean, default=True)
     file = Column(String, default=None)
-    interline_spacing = Column(Integer, default=0)
-    kerning = Column(Float, default=1.0)
+    interline_spacing = Column(Integer, default=0, nullable=False)
+    interword_spacing = Column(Integer, default=0, nullable=False)
+    kerning = Column(Float, default=1.0, nullable=False)
     replacements = Column(JSON, default=None)
-    size = Column(Float, default=1.0)
+    size = Column(Float, default=1.0, nullable=False)
     stroke_width = Column(Float, default=1.0)
     title_case = Column(String, default=None)
-    validate_characters = Column(Boolean, default=None)
-    vertical_shift = Column(Integer, default=0)
+    vertical_shift = Column(Integer, default=0, nullable=False)
 
 
     @hybrid_property
@@ -121,6 +121,7 @@ class Font(Base):
             'delete_missing': self.delete_missing,
             'file': self.file_name,
             'interline_spacing': self.interline_spacing or None,
+            'interword_spacing': self.interword_spacing or None,
             'kerning': None if self.kerning == 1.0 else self.kerning,
             'replacements_in': list(self.replacements.keys()),
             'replacements_out': list(self.replacements.values()),

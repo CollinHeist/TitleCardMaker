@@ -71,8 +71,8 @@ class PosterTitleCard(BaseCardType):
 
     __slots__ = (
         'source_file', 'output_file', 'logo', 'title_text', 'episode_text',
-        'font_color', 'font_file', 'font_interline_spacing', 'font_size',
-        'episode_text_color',
+        'font_color', 'font_file', 'font_interline_spacing',
+        'font_interword_spacing', 'font_size', 'episode_text_color',
     )
 
 
@@ -84,6 +84,7 @@ class PosterTitleCard(BaseCardType):
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
+            font_interword_spacing: int = 0,
             font_size: float = 1.0,
             blur: bool = False,
             grayscale: bool = False,
@@ -112,6 +113,7 @@ class PosterTitleCard(BaseCardType):
         self.font_color = font_color
         self.font_file = font_file
         self.font_interline_spacing = font_interline_spacing
+        self.font_interword_spacing = font_interword_spacing
         self.font_size = font_size
         self.episode_text_color = episode_text_color
 
@@ -154,6 +156,9 @@ class PosterTitleCard(BaseCardType):
         """
 
         return ((font.color != PosterTitleCard.TITLE_COLOR)
+            or (font.file != PosterTitleCard.TITLE_FONT)
+            or (font.interline_spacing != 0)
+            or (font.interword_spacing != 0)
             or (font.size != 1.0)
         )
 
@@ -225,6 +230,7 @@ class PosterTitleCard(BaseCardType):
             f'-gravity center',
             f'-pointsize {165 * self.font_size}',
             f'-interline-spacing {-40 + self.font_interline_spacing}',
+            f'-interword-spacing {self.font_interword_spacing}',
             f'-fill "{self.font_color}"',
             f'-annotate +649+{title_offset} "{self.title_text}"',
             # Create card

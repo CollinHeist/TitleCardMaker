@@ -93,6 +93,21 @@ function getUpdateEpisodeObject(episodeId) {
 }
 
 /*
+ * Submit an API request to create the Title Card for the Episode with the given
+ * ID.
+ * 
+ * @param {int} episodeId - ID of the Episode whose Card is being created.
+ */
+function createEpisodeCard(episodeId) {
+  $.ajax({
+    type: 'POST',
+    url: `/api/cards/episode/${episodeId}`,
+    success: () => showInfoToast('Created Title Card'),
+    error: response => showErrorToast({title: 'Error Creating Title Card', response}),
+  });
+}
+
+/*
  * Submit an API request to save the modified Episode configuration
  * for the given Episode.
  * 
@@ -142,6 +157,7 @@ function saveAllEpisodes() {
 }
 
 // Initialize series specific dropdowns
+let allStyles, availableTemplates, availableFonts;
 async function initalizeSeriesConfig() {
   // Episode data sources
   const sources = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
@@ -163,9 +179,8 @@ async function initalizeSeriesConfig() {
     value: '{{series.skip_localized_images}}',
   });
   // Template
-  const templates = await fetch('/api/templates/all').then(resp => resp.json());
   $('#card-config-form .dropdown[data-value="template_ids"]').dropdown({
-    values: getActiveTemplates({{series.template_ids}}, templates),
+    values: getActiveTemplates({{series.template_ids}}, availableTemplates),
   });
   // Card types
   loadCardTypes({
@@ -178,7 +193,6 @@ async function initalizeSeriesConfig() {
     }
   });
   // Styles
-  const allStyles = await fetch('/api/available/styles').then(resp => resp.json());
   $('#card-config-form .dropdown[data-value="watched-style"]').dropdown({
     values: [
       {name: 'Art Variations', type: 'header'},
@@ -205,9 +219,8 @@ async function initalizeSeriesConfig() {
     ]
   });
   // Fonts
-  const fonts = await fetch('/api/fonts/all').then(resp => resp.json());
   $('#card-config-form .dropdown[data-value="fonts"]').dropdown({
-    values: fonts.map(({id, name}) => {
+    values: availableFonts.map(({id, name}) => {
       return {name: name, value: id, selected: `${id}` === '{{series.font_id}}'};
     })
   });
@@ -354,7 +367,7 @@ function deleteObject(args) {
 
 function editEpisodeExtras(episode) {
   // Clear existing values
-  $('#episode-extras-modal input').remove();
+  $('#episode-extras-modal .field').remove();
   // Add existing translations
   for (let [data_key, value] of Object.entries(episode.translations)) {
     const newKey = document.createElement('input');
@@ -463,11 +476,13 @@ function initStyles() {
   refreshTheme();
 }
 
-async function getFileData() {
-  const fileHolder = document.getElementById('files-list');
-  const fileTemplate = document.getElementById('file-template');
-  if (fileHolder === null || fileTemplate === null) { return; }
-  const allFiles = await fetch('/api/sources/series/{{series.id}}').then(resp => resp.json());
+let currentPage=1;
+async function getFileData(page=currentPage) {
+  const sourceImageContainer = document.getElementById('source-images');
+  const fileTemplate = document.getElementById('file-card-template');
+  const rowTemplate = document.getElementById('file-row-template');
+  if (!sourceImageContainer || !fileTemplate || !rowTemplate) { return; }
+  const allFiles = await fetch(`/api/sources/series/{{series.id}}?page=${page}&size=12`).then(resp => resp.json());
 
   // Some error occured, toast and exit
   if (allFiles.detail !== undefined) {
@@ -480,17 +495,77 @@ async function getFileData() {
     return;
   }
 
-  const files = allFiles.map(source => {
+  const sources = allFiles.items.map(source => {
+    const elementId = `file-episode${source.episode_id}`;
+    {% if preferences.sources_as_table %}
+    const row = rowTemplate.content.cloneNode(true);
+    row.querySelector('tr').id = elementId;
+    // Season
+    const season = row.querySelector('td[data-column="season_number"]');
+    season.innerText = source.season_number;
+    season.dataset.sortValue = source.season_number;
+    // Episode
+    const episode = row.querySelector('td[data-column="episode_number"]');
+    episode.innerText = source.episode_number;
+    episode.dataset.sortValue = source.episode_number;
+    // Width
+    const width = row.querySelector('td[data-column="width"]');
+    width.innerText = source.width || 'Missing';
+    width.dataset.sortValue = source.width;
+    // Height
+    const height = row.querySelector('td[data-column="height"]');
+    height.innerHTML = source.height || 'Missing';
+    height.dataset.sortValue = source.height;
+    // Filesize
+    const filesize = row.querySelector('td[data-column="filesize"]');
+    if (source.exists) {
+      filesize.innerText = formatBytes(source.filesize, 1);
+      filesize.dataset.sortValue = source.filesize;
+      row.querySelector('[data-column="search-tmdb"]').classList.add('disabled');
+    } else {
+      filesize.innerText = 'Missing'; filesize.dataset.sortValue = 0;
+      width.classList.add('error');
+      height.classList.add('error');
+      filesize.classList.add('error');
+      row.querySelector('i[data-action="search-tmdb"]').onclick = () => getEpisodeSourceImage(source.episode_id, elementId);
+    }
+    // Launch TMDb browse modal when TMDb logo is clicked
+    const tmdbLogo = row.querySelector('[data-action="browse-tmdb"]');
+    if (tmdbLogo !== null) {
+      tmdbLogo.onclick = () => browseTmdbImages(source.episode_id, elementId);
+    }
+    // Launch upload source modal when upload icon is clicked
+    row.querySelector('i[data-action="upload"]').onclick = () => {
+      $('#upload-source-form').off('submit').on('submit', event => {
+        event.preventDefault();
+        $.ajax({
+          type: 'POST',
+          url: `/api/sources/episode/${source.episode_id}/upload`,
+          data: new FormData(event.target),
+          cache: false,
+          contentType: false,
+          processData: false,
+          success: () => {
+            showInfoToast('Updated source image');
+            getFileData();
+          }, error: response => showErrorToast({title: 'Error updating source image', response}),
+          complete: () => $('#upload-source-form')[0].reset(),
+        });
+      });
+      $('#upload-source-modal').modal('show');
+    }
+
+    return row;
+    {% else %}
     const file = fileTemplate.content.cloneNode(true);
     // Fill in the card values present on all files
-    const cardId = `file-episode${source.episode_id}`;
-    file.querySelector('.card').id = cardId;
+    file.querySelector('.card').id = elementId;
     file.querySelector('[data-value="index"]').innerHTML = `Season ${source.season_number} Episode ${source.episode_number}`;
     file.querySelector('[data-value="path"]').innerHTML = source.source_file_name;
     // Launch TMDb browse modal when TMDb logo is clicked
     const tmdbLogo = file.querySelector('[data-action="browse-tmdb"]');
     if (tmdbLogo !== null) {
-      tmdbLogo.onclick = () => browseTmdbImages(source.episode_id, cardId);
+      tmdbLogo.onclick = () => browseTmdbImages(source.episode_id, elementId);
     }
     // Launch upload source modal when upload icon is clicked
     file.querySelector('i[data-action="upload"]').onclick = () => {
@@ -514,14 +589,14 @@ async function getFileData() {
     }
     if (source.exists) {
       // Disable search icon
-      file.querySelector('i[data-action="search"]').classList.add('disabled');
+      file.querySelector('i[data-action="search-tmdb"]').classList.add('disabled');
       // Remove missing label, fill in dimensions and filesize
       file.querySelector('[data-value="missing"]').remove();
       file.querySelector('[data-value="dimension"]').innerHTML = `${source.width}x${source.height}`;
       file.querySelector('[data-value="filesize"]').innerHTML = formatBytes(source.filesize, 1);
     } else {
       // Add download image function to icon click
-      file.querySelector('i[data-action="search"]').onclick = () => getEpisodeSourceImage(source.episode_id, cardId);
+      file.querySelector('i[data-action="search-tmdb"]').onclick = () => getEpisodeSourceImage(source.episode_id, elementId);
       // Make the card red, remove unnecessary elements
       file.querySelector('.card').classList.add('red');
       file.querySelector('[data-value="dimension"]').remove();
@@ -529,8 +604,19 @@ async function getFileData() {
     }
 
     return file;
+    {% endif %}
   });
-  fileHolder.replaceChildren(...files);
+  sourceImageContainer.replaceChildren(...sources);
+
+  // Update pagination
+  currentPage = page;
+  updatePagination({
+    paginationElementId: 'file-pagination',
+    navigateFunction: getFileData,
+    page: allFiles.page,
+    pages: allFiles.pages,
+    amountVisible: isSmallScreen() ? 4 : 18,
+  });
   refreshTheme();
 }
 
@@ -544,7 +630,7 @@ async function getEpisodeData(page=1) {
   if (rowTemplate === null) { return; }
 
   // Get page of episodes via API
-  const episodeData = await fetch(`/api/episodes/{{series.id}}/all?size=50&page=${page}`).then(resp => resp.json());
+  const episodeData = await fetch(`/api/episodes/{{series.id}}/all?size={{preferences.episode_data_page_size}}&page=${page}`).then(resp => resp.json());
   if (episodeData === null || episodeData.items.length === 0) { return; }
   const episodes = episodeData.items;
 
@@ -567,7 +653,8 @@ async function getEpisodeData(page=1) {
     // Set row ID
     row.querySelector('tr').id = `episode-id${episode.id}`;
     row.querySelector('tr').dataset.episodeId = episode.id;
-    // Assign function to onclick of <a> element
+    // Assign functions to onclick of <a> element
+    row.querySelector('td[data-column="create"] a').onclick = () => createEpisodeCard(episode.id);
     row.querySelector('td[data-column="edit"] a').onclick = () => saveEpisodeConfig(episode.id);
     // Fill in row data
     row.querySelector('td[data-column="season_number"]').innerHTML = episode.season_number;
@@ -587,45 +674,47 @@ async function getEpisodeData(page=1) {
     row.querySelector('input[name="season_text"]').value = episode.season_text;
     row.querySelector('td[data-column="hide_episode_text"]').innerHTML = getIcon(episode.hide_episode_text, true);
     row.querySelector('input[name="episode_text"]').value = episode.episode_text;
+    {% if not preferences.simplified_data_table %}
       // Unwatched style
       // Watched style
     row.querySelector('input[name="font_color"]').value = episode.font_color;
     row.querySelector('input[name="font_size"]').value = episode.font_size;
     row.querySelector('input[name="font_stroke_width"]').value = episode.font_stroke_width;
     row.querySelector('input[name="font_interline_spacing"]').value = episode.font_interline_spacing;
+    row.querySelector('input[name="font_interword_spacing"]').value = episode.font_interword_spacing;
     row.querySelector('input[name="font_vertical_shift"]').value = episode.font_vertical_shift;
-    row.querySelector('td[data-column="extras"] a').onclick = () => editEpisodeExtras(episode);
     row.querySelector('input[name="source_file"]').value = episode.source_file;
     row.querySelector('input[name="card_file"]').value = episode.card_file;
+    {% endif %}
+    row.querySelector('td[data-column="extras"] a').onclick = () => editEpisodeExtras(episode);
     row.querySelector('td[data-column="watched"]').innerHTML = getIcon(episode.watched, false);
+    {% if not preferences.simplified_data_table %}
     const embyIdInput = row.querySelector('input[name="emby_id"]');
     if (embyIdInput !== null) { embyIdInput.value = episode.emby_id; }
     row.querySelector('input[name="imdb_id"]').value = episode.imdb_id;
     const jellyfinIdInput = row.querySelector('input[name="jellyfin_id"]');
     if (jellyfinIdInput !== null) { jellyfinIdInput.value = episode.jellyfin_id; }
-    row.querySelector('input[name="tmdb_id"]').value = episode.tmdb_id;
+    const tmdbIdInput = row.querySelector('input[name="tmdb_id"]');
+    if (tmdbIdInput !== null) { tmdbIdInput.value = episode.tmdb_id; }
     row.querySelector('input[name="tvdb_id"]').value = episode.tvdb_id;
     const tvrageIdInput = row.querySelector('input[name="tvrage_id"]')
     if (tvrageIdInput !== null) { tvrageIdInput.value = episode.tvrage_id; }
+    {% endif %}
     row.querySelector('td[data-column="delete"] a').onclick = () => deleteEpisode(episode.id);
     return row;
   });
   episodeTable.replaceChildren(...rows);
 
-  // Get all available elements for initializing dropdowns
-  const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
-  const allFonts = await fetch('/api/fonts/all').then(resp => resp.json());
-  const allStyles = await fetch('/api/available/styles').then(resp => resp.json());
-
   // Initialize dropdowns, assign form submit API request
+  await getAllCardTypes();
   episodes.forEach(episode => {
     // Templates
     $(`#episode-id${episode.id} .dropdown[data-value="template_ids"]`).dropdown({
-      values: getActiveTemplates(episode.template_ids, allTemplates),
+      values: getActiveTemplates(episode.template_ids, availableTemplates),
     });
     // Fonts
     $(`#episode-id${episode.id} .dropdown[data-value="font_id"]`).dropdown({
-      values: allFonts.map(({id, name}) => {
+      values: availableFonts.map(({id, name}) => {
         return {name: name, value: id, selected: episode.font_id === id};
       })
     });
@@ -634,7 +723,6 @@ async function getEpisodeData(page=1) {
       element: `#episode-id${episode.id} .dropdown[data-value="card_type"]`,
       isSelected: (identifier) => identifier === episode.card_type,
       showExcluded: false,
-      // Dropdown args
       dropdownArgs: {}
     });
     // Unwatched style
@@ -673,19 +761,24 @@ async function getEpisodeData(page=1) {
     navigateFunction: getEpisodeData,
     page: episodeData.page,
     pages: episodeData.pages,
-    amountVisible: isSmallScreen() ? 4 : 15,
+    amountVisible: isSmallScreen() ? 4 : 18,
   });
 }
 
 async function initAll() {
+  // Get global availables for initializing dropdowns
+  allStyles = await fetch('/api/available/styles').then(resp => resp.json());
+  availableTemplates = await fetch('/api/available/templates').then(resp => resp.json());
+  availableFonts = await fetch('/api/available/fonts').then(resp => resp.json());
+  // Initialize 
   initalizeSeriesConfig();
-  getStatistics();
   getLibraries();
   getEpisodeData();
-  getFileData();
   initStyles();
-
+  getFileData();
+  
   // Schedule recurring statistics query
+  getStatistics();
   getStatisticsId = setInterval(getStatistics, 30000); // Refresh stats every 30s
 
   // Enable all dropdowns, menus, and accordians
@@ -950,23 +1043,16 @@ function toggleMonitorStatus() {
     success: response => {
       // Show toast, toggle text and icon to show new status
       if (response.monitored) {
-        $.toast({class: 'blue info', title: 'Started Monitoring Series'});
+        showInfoToast('Started Monitoring Series');
         $('#monitor-status span').toggleClass('red', false).toggleClass('green', true);
         $('#monitor-status span')[0].innerHTML = '<i class="ui eye outline green icon"></i>Monitored';
       } else {
-        $.toast({class: 'blue info', title: 'Stopped Monitoring Series'});
+        showInfoToast('Stopped Monitoring Series');
         $('#monitor-status span').toggleClass('red', true).toggleClass('green', false);
         $('#monitor-status span')[0].innerHTML = '<i class="ui eye slash outline red icon"></i>Unmonitored';
       }
       refreshTheme();
-    }, error: response => {
-      $.toast({
-        class: 'error',
-        title: 'Error Changing Status',
-        message: response.responseJSON.detail,
-        displayTime: 0,
-      });
-    },
+    }, error: response => showErrorToast({title: 'Error Changing Status', response}),
   });
 }
 
@@ -980,11 +1066,9 @@ function processSeries() {
   $.ajax({
     type: 'POST',
     url: '/api/series/{{series.id}}/process',
-    success: () => {
-      $.toast({class: 'blue info', title: 'Started Processing Series'});
-    }, error: response => {
-      showErrorToast({title: 'Error Processing Series', response});
-    }, complete: () => {
+    success: () => showInfoToast('Started Processing Series'),
+    error: response => showErrorToast({title: 'Error Processing Series', response}),
+    complete: () => {
       $('#action-buttons .button[data-action="process"] i').toggleClass('loading', false);
       $('#action-buttons .button').toggleClass('disabled', false);
     }
@@ -1117,10 +1201,11 @@ async function queryBlueprints() {
       let text = `<b>${blueprint.templates.length}</b> Template` + (blueprint.templates.length > 1 ? 's' : '');
       card.querySelector('[data-value="template-count"]').innerHTML = text;
     }
-    if (Object.keys(blueprint.episodes).length === 0) {
+    const episode_count = Object.keys(blueprint.episodes).length
+    if (episode_count === 0) {
       card.querySelector('[data-value="episode-count"]').remove();
     } else {
-      let text = `<b>${Object.keys(blueprint.episodes).length}</b> Episode Override` + (blueprint.episodes.length > 1 ? 's' : '');
+      let text = `<b>${episode_count}</b> Episode Override` + (episode_count > 1 ? 's' : '');
       card.querySelector('[data-value="episode-count"]').innerHTML = text;
     }
     card.querySelector('[data-value="description"]').innerHTML = '<p>' + blueprint.description.join('</p><p>') + '</p>';
@@ -1185,6 +1270,8 @@ function selectTmdbImage(episodeId, url) {
 /*
  * Submit an API request to download the Series logo at the specified
  * URL.
+ * 
+ * @param {str} url - URL of the logo file to download.
  */
 function downloadSeriesLogo(url) {
   // Create psuedo form for this URL
@@ -1201,10 +1288,35 @@ function downloadSeriesLogo(url) {
     success: () => {
       showInfoToast('Downloaded Logo');
       // Update logo source to force refresh
-      document.querySelector('#logoImage img').src = `/source/{{series.path_safe_name}}/logo.png?${new Date().getTime()}`;
-      document.querySelector('#logoImage').style.display = 'unset';
+      document.querySelector('#logo').src = `/source/{{series.path_safe_name}}/logo.png?${new Date().getTime()}`;
     },
     error: response => showErrorToast({title: 'Error Downloading Logo', response}),
+  });
+}
+
+/*
+ * Submit an API request to download the Series backdrop at the specified
+ * URL.
+ * 
+ * @param {str} url - URL of the backdrop file to download.
+ */
+function downloadSeriesBackdrop(url) {
+  // Create psuedo form for this URL
+  const form = new FormData();
+  form.set('url', url);
+  // Submit API request to upload this URL
+  $.ajax({
+    type: 'POST',
+    url: '/api/sources/series/{{series.id}}/backdrop/upload',
+    data: form,
+    cache: false,
+    contentType: false,
+    processData: false,
+    success: () => {
+      showInfoToast('Downloaded Backdrop');
+      document.querySelector('#backdrop').src = `/source/{{series.path_safe_name}}/backdrop.jpg?${new Date().getTime()}`;
+    },
+    error: response => showErrorToast({title: 'Error Downloading Backdrop', response}),
   });
 }
 
@@ -1235,10 +1347,10 @@ function browseTmdbImages(episodeId, cardElementId) {
 }
 
 /*
- * Submit an API request to browse the available TMDb logos for this
- * Series. If successful, the relevant modal is shown.
+ * Submit an API request to browse the available logos for this Series.
+ * If successful, the relevant modal is shown.
  */
-function browseTmdbLogos() {
+function browseLogos() {
   $.ajax({
     type: 'GET',
     url: '/api/sources/series/{{series.id}}/logo/browse',
@@ -1257,17 +1369,111 @@ function browseTmdbLogos() {
 }
 
 /*
+ * Submit an API request to browse the available backdrops for this
+ * Series. If successful, the relevant modal is shown.
+ */
+function browseBackdrops() {
+  $.ajax({
+    type: 'GET',
+    url: `/api/sources/series/{{series.id}}/backdrop/browse`,
+    success: images => {
+      if (images.length === 0) {
+        showErrorToast({title: 'TMDb returned no images'});
+      } else {
+        // Images returned, add to browse modal
+        const imageElements = images.map(({url, width, height}, index) => {
+          const location = index % 2 ? 'right' : 'left';
+          return `<a class="ui image" onclick="downloadSeriesBackdrop('${url}')"><div class="ui blue ${location} ribbon label">${width}x${height}</div><img src="${url}"/></a>`;
+        });
+        $('#browse-tmdb-modal .content .images')[0].innerHTML = imageElements.join('');
+        $('#browse-tmdb-modal').modal('show');
+      }
+    }, error: response => showErrorToast({title: 'Unable to Query TMDb', response}),
+  });
+}
+
+/*
+ * Get the uploaded logo file and upload it to this Series. If the logo
+ * is an image, then the API request to upload the logo is submitted. If
+ * successful, then the logo `img` element is updated.
+ */
+function uploadLogo() {
+  // Get uploaded file
+  const file = $('#logo-upload')[0].files[0];
+  if (!file) { return; }
+
+  // Verify file is an image
+  if (file.type.indexOf('image') !== 0) {
+    showErrorToast({title: 'Uploaded file is not an image'});
+    return;
+  }
+
+  // Create Form with this file
+  const form = new FormData();
+  form.append('file', file);
+
+  // Submit API request
+  $.ajax({
+    type: 'POST',
+    url: `/api/sources/series/{{series.id}}/logo/upload`,
+    data: form,
+    cache: false,
+    contentType: false,
+    processData: false,
+    success: () => {
+      showInfoToast('Updated Logo');
+      document.querySelector('#logo').src = `/source/{{series.path_safe_name}}/logo.png?${new Date().getTime()}`;
+    }, error: response => showErrorToast({title: 'Error Updating Logo', response}),
+  });
+}
+
+/*
+ * Get the uploaded backdrop file and upload it to this Series. If the
+ * backdrop is an image, then the API request to upload the file is
+ * submitted. If successful, then the backdrop `img` element is updated.
+ */
+function uploadBackdrop() {
+  // Get uploaded file
+  const file = $('#backdrop-upload')[0].files[0];
+  if (!file) { return; }
+
+  // Verify file is an image
+  if (file.type.indexOf('image') !== 0) {
+    showErrorToast({title: 'Uploaded file is not an image'});
+    return;
+  }
+
+  // Create Form with this file
+  const form = new FormData();
+  form.append('file', file);
+
+  // Submit API request
+  $.ajax({
+    type: 'POST',
+    url: `/api/sources/series/{{series.id}}/backdrop/upload`,
+    data: form,
+    cache: false,
+    contentType: false,
+    processData: false,
+    success: () => {
+      showInfoToast('Updated Backdrop');
+      document.querySelector('#backdrop').src = `/source/{{series.path_safe_name}}/backdrop.jpg?${new Date().getTime()}`;
+    }, error: response => showErrorToast({title: 'Error Updating Backdrop', response}),
+  });
+}
+
+/*
  * Submit an API request to download the Source Image for the given Episode.
  * This marks the given cardElementId as loading while processing.
  */
-function getEpisodeSourceImage(episodeId, cardElementId) {
-  document.getElementById(cardElementId).classList.add('loading');
+function getEpisodeSourceImage(episodeId, sourceElementId) {
+  document.getElementById(sourceElementId).classList.add('loading');
   $.ajax({
     type: 'POST',
     url: `/api/sources/episode/${episodeId}`,
     success: sourceImage => showInfoToast(sourceImage ? 'Downloaded Image' : 'Unable to Download Image'),
     error: response => showErrorToast({title: 'Error Downloading Source Image', response}),
-    complete: () => document.getElementById(cardElementId).classList.remove('loading'),
+    complete: () => document.getElementById(sourceElementId).classList.remove('loading'),
   });
 }
 
@@ -1278,7 +1484,7 @@ function getEpisodeSourceImage(episodeId, cardElementId) {
  */
 function getSourceImages() {
   $('.button[data-action="download-source-images"]').toggleClass('disabled', true);
-  $.toast({class: 'blue info', title: 'Starting to Download Source Images'});
+  showInfoToast('Starting to Download Source Images');
   $.ajax({
     type: 'POST',
     url: '/api/sources/series/{{series.id}}',
@@ -1470,6 +1676,8 @@ function addBlankSeriesExtra() {
   initializeExtraDropdowns(
     null,
     $(`#card-config-form .dropdown[data-value="extra_keys"]`).last(),
+    $(`#card-config-form .popup .header`).last(),
+    $(`#card-config-form .popup .description`).last(),
   );
   refreshTheme();
   $('#card-config-form .field[data-value="extras"] .link.icon').popup({inline: true});
@@ -1484,6 +1692,8 @@ function addBlankEpisodeExtra() {
   initializeExtraDropdowns(
     null,
     $(`#episode-extras-modal .dropdown[data-value="extra_keys"]`).last(),
+    $(`#episode-extras-modal .field[data-value="extras"] .popup .header`).last(),
+    $(`#episode-extras-modal .field[data-value="extras"] .popup .description`).last(),
   );
   refreshTheme();
   $('#episode-extras-modal .field[data-value="extras"] .link.icon').popup({inline: true});

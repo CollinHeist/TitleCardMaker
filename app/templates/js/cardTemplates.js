@@ -6,7 +6,7 @@ function addTemplate() {
   $.ajax({
     type: 'POST',
     url: '/api/templates/new',
-    data: JSON.stringify({name: 'Blank Template'}),
+    data: JSON.stringify({name: ' Blank Template'}),
     contentType: 'application/json',
     success: response => {
       showInfoToast(`Created Template #${response.id}`);
@@ -69,13 +69,11 @@ async function showDeleteModal(templateId) {
     $.ajax({
       type: 'DELETE',
       url: `/api/templates/${templateId}`,
-      success: response => {
-        $.toast({class: 'blue info', title: 'Deleted Template'});
-        getAllTemplates();
+      success: () => {
+        showInfoToast('Deleted Template');
+        getAllTemplates(); // TODO delete just this one template element
       },
-      error: response => {
-        $.toast({class: 'error', title: 'Error Deleting Template'});
-      }, complete: () => {}
+      error: response => showErrorToast({title: 'Error Deleting Template', response}),
     });
   });
 
@@ -399,6 +397,8 @@ async function getAllTemplates() {
       initializeExtraDropdowns(
         null,
         $(`#template-id${templateObj.id} .dropdown[data-value="extra_keys"]`).last(),
+        $(`#template-id${templateObj.id} .field[data-value="extras"] .popup .header`).last(),
+        $(`#template-id${templateObj.id} .field[data-value="extras"] .popup .description`).last(),
       );
       refreshTheme();
       $('.field[data-value="extras"] .link.icon').popup({inline: true});

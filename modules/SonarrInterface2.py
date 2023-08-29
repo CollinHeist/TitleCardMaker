@@ -176,35 +176,19 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
         # Go through each series in Sonarr
         series = []
         for show in all_series:
-            # Skip if monitored only and show isn't monitored
-            if monitored_only and not show['monitored']:
-                continue
-
-            # Skip if downloaded only and filesize is 0
-            if (downloaded_only
-                and show.get('statistics', {}).get('sizeOnDisk') == 0):
-                continue
-
-            # Skip show if tag is in exclude list
-            if (len(excluded_tags) > 0
-                and any(tag in excluded_tag_ids for tag in show['tags'])):
-                continue
-
-            # Skip show if tag isn't in filter (and filter is enabled)
-            if (len(required_tags) > 0
-                and not all(tag in show['tags'] for tag in required_tag_ids)):
-                continue
-
-            # Filter by series type
-            if (required_series_type is not None
-                and show['seriesType'] != required_series_type):
-                continue
-            if (excluded_series_type is not None
-                and show['seriesType'] == excluded_series_type):
-                continue
-
-            # Skip show if it has a year of 0
-            if show['year'] == 0:
+            # Apply filters/exclusions
+            if ((monitored_only and not show['monitored'])
+                or (downloaded_only
+                    and show.get('statistics', {}).get('sizeOnDisk') == 0)
+                or (excluded_tags
+                    and any(tag in excluded_tag_ids for tag in show['tags']))
+                or (required_tags
+                    and not all(tag in show['tags'] for tag in required_tag_ids))
+                or (required_series_type
+                    and show['seriesType'] != required_series_type)
+                or (excluded_series_type
+                    and show['seriesType'] == excluded_series_type)
+                or show['year'] == 0):
                 continue
 
             # Construct SeriesInfo object for this show, do not use MediaInfoSet
@@ -476,8 +460,7 @@ class SonarrInterface(EpisodeDataSource, WebInterface, SyncInterface, Interface)
         Get all tags present in Sonarr.
 
         Returns:
-            List of tag dictionary objects with the keys "id" and
-            "label" for each tag.
+            List of tag dictionary objects.
         """
 
         return self.get(f'{self.url}tag', self.__standard_params)

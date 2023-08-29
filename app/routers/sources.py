@@ -4,10 +4,13 @@ from fastapi import (
     APIRouter, BackgroundTasks, Depends, Form, HTTPException, Request,
     UploadFile,
 )
+from fastapi_pagination import paginate as paginate_sequence
+from fastapi_pagination.ext.sqlalchemy import paginate
 from requests import get
 from sqlalchemy.orm import Session
 
 from app.database.query import get_episode, get_series
+from app.database.session import Page
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
 from app.internal.auth import get_current_user
 from app.internal.cards import delete_cards
@@ -229,7 +232,7 @@ def get_all_series_logos_on_tmdb(
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> list[TMDbImage]:
     """
-    Get a list of all the Logos available for the specified Series on
+    Get a list of all the logos available for the specified Series on
     TMDb.
 
     - series_id: ID of the Series whose logos are being requested.
@@ -254,32 +257,60 @@ def get_all_series_logos_on_tmdb(
     return [] if logos is None else logos
 
 
+@source_router.get('/series/{series_id}/backdrop/browse', status_code=200)
+def get_all_series_backdrops_on_tmdb(
+        request: Request,
+        series_id: int,
+        db: Session = Depends(get_database),
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
+    ) -> list[TMDbImage]:
+    """
+    Get a list of all the backdrops available for the specified Series
+    on TMDb.
+
+    - series_id: ID of the Series whose backdrops are being requested.
+    """
+
+    # If no TMDb connection, raise 409
+    if tmdb_interface is None:
+        raise HTTPException(
+            status_code=409,
+            detail=f'No connection to TMDb'
+        )
+
+    # Get the Series, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Get all backdrops
+    backdrops = tmdb_interface.get_all_backdrops(
+        series.as_series_info,
+        bypass_blacklist=True,
+        log=request.state.log,
+    )
+    return [] if backdrops is None else backdrops
+
+
 @source_router.get('/series/{series_id}', status_code=200)
 def get_existing_series_source_images(
         series_id: int,
         db: Session = Depends(get_database),
         preferences: Preferences = Depends(get_preferences),
         imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
-    ) -> list[SourceImage]:
+    ) -> Page[SourceImage]:
     """
     Get the SourceImage details for the given Series.
 
     - series_id: ID of the Series to get the details of.
     """
 
-    # Get all Episodes for this Series
-    all_episodes = db.query(models.episode.Episode)\
-        .filter_by(series_id=series_id)
-
-    # Get all source files
-    sources = [
-        get_source_image(preferences, imagemagick_interface, episode)
-        for episode in all_episodes
-    ]
-
-    return sorted(
-        sources,
-        key=lambda s: (s['season_number']*1000) + s['episode_number']
+    return paginate(
+        db.query(models.episode.Episode)\
+            .filter_by(series_id=series_id)\
+            .order_by(models.episode.Episode.season_number,
+                      models.episode.Episode.episode_number),
+        transformer=lambda episodes: [get_source_image(
+            preferences, imagemagick_interface, episode
+        ) for episode in episodes]
     )
 
 
@@ -446,6 +477,76 @@ async def set_series_logo(
                 url, series, file, imagemagick_interface, log=log,
             )
 
+        try:
+            content = get(url, timeout=30).content
+            log.debug(f'Downloaded {len(content)} bytes from {url}')
+        except Exception as e:
+            log.exception(f'Download failed', e)
+            raise HTTPException(
+                status_code=400,
+                detail=f'Unable to download image - {e}'
+            ) from e
+    # Use uploaded file if provided
+    else:
+        content = uploaded_file
+
+    # Write new file to the disk
+    file.write_bytes(content)
+
+
+@source_router.post('/series/{series_id}/backdrop/upload', status_code=201)
+async def set_series_backdrop(
+        request: Request,
+        series_id: int,
+        url: Optional[str] = Form(default=None),
+        file: Optional[UploadFile] = None,
+        db: Session = Depends(get_database),
+        preferences: Preferences = Depends(get_preferences),
+        imagemagick_interface: Optional[ImageMagickInterface] = Depends(get_imagemagick_interface),
+    ) -> None:
+    """
+    Set the backdrop for the given Series. If there is an existing
+    backdrop associated with this Series, it is deleted.
+
+    - series_id: ID of the Series to set the backdrop of.
+    - url: URL to the backdrop to download and utilize.
+    - file: Backdrop to utilize.
+    """
+
+    # Get contextual logger
+    log = request.state.log
+
+    # Get Series with this ID, raise 404 if DNE
+    series = get_series(db, series_id, raise_exc=True)
+
+    # Get image contents
+    uploaded_file = b''
+    if file is not None:
+        uploaded_file = await file.read()
+
+    # Send error if both a URL and file were provided
+    if url is not None and len(uploaded_file) > 0:
+        raise HTTPException(
+            status_code=422,
+            detail='Cannot provide multiple images'
+        )
+
+    # Send error if neither were provided
+    if url is None and len(uploaded_file) == 0:
+        raise HTTPException(
+            status_code=422,
+            detail='URL or file are required',
+        )
+
+    # Get Series backdrop file
+    file = series.get_series_backdrop(preferences.source_directory)
+
+    # If file already exists, warn about overwriting
+    if file.exists():
+        log.info(f'{series.log_str} backdrop file exists - replacing')
+
+    # If only URL was required, attempt to download, error if unable
+    if url is not None:
         try:
             content = get(url, timeout=30).content
             log.debug(f'Downloaded {len(content)} bytes from {url}')

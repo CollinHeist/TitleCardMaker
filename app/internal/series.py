@@ -1,10 +1,12 @@
 from logging import Logger
 from pathlib import Path
 from shutil import copy as file_copy
+from time import sleep
 from typing import Optional, Union
 
 from fastapi import BackgroundTasks, HTTPException
 from requests import get
+from sqlalchemy.exc import InvalidRequestError, OperationalError
 from sqlalchemy.orm import Session
 from app.database.query import get_all_templates, get_font
 
@@ -13,6 +15,7 @@ from app import models
 from app.internal.cards import refresh_remote_card_types
 from app.internal.episodes import refresh_episode_data
 from app.internal.sources import download_series_logo
+from app.models.episode import Episode
 from app.schemas.preferences import MediaServer, Preferences
 from app.schemas.series import NewSeries, Series
 
@@ -69,6 +72,7 @@ def load_all_media_servers(*, log: Logger = log) -> None:
 
     try:
         # Get the Database
+        retries = 0
         with next(get_database()) as db:
             # Get all Series
             for series in db.query(models.series.Series).all():
@@ -93,6 +97,13 @@ def load_all_media_servers(*, log: Logger = log) -> None:
                 except HTTPException:
                     log.warning(f'{series.log_str} Skipping Title Card loading')
                     continue
+                except OperationalError:
+                    if (retries := retries + 1) > 10:
+                        log.warning(f'Database is very busy - stopping Task')
+                        break
+
+                    log.debug(f'Database is busy, sleeping..')
+                    sleep(30)
     except Exception as e:
         log.exception(f'Failed to load Title Cards', e)
 
@@ -337,6 +348,11 @@ def load_series_title_cards(
         force_reload: Whether to reload Title Cards even if no changes
             are detected.
         log: (Keyword) Logger for all log messages.
+
+    Raises:
+        HTTPException (409) if the specified Media Server cannot be
+            communciated with, or if the given Series does not have an
+            associated library.
     """
 
     # Get associated library for the indicated media server
@@ -351,21 +367,20 @@ def load_series_title_cards(
     if library is None:
         raise HTTPException(
             status_code=409,
-            detail=f'{series.log_str} has no {media_server} Library',
+            detail=f'{series.log_str} has no linked {media_server} Library',
         )
-    if interface is None:
+    if not interface:
         raise HTTPException(
             status_code=409,
             detail=f'Unable to communicate with {media_server}',
         )
 
     # Get list of Episodes to reload
-    episodes_to_load = []
-    changed = False
+    changed, episodes_to_load = False, []
     for episode in series.episodes:
         # Only load if Episode has a Card
         if not episode.card:
-            log.debug(f'{series.log_str} {episode.log_str} - no associated card')
+            log.debug(f'{series.log_str} {episode.log_str} - no associated Card')
             continue
         card = episode.card[0]
 
@@ -377,13 +392,14 @@ def load_series_title_cards(
                 break
 
         # No previously loaded Cards for this Episode in this server, load
-        if not previously_loaded:
+        if previously_loaded is None:
             episodes_to_load.append((episode, card))
             continue
 
         # There is a previously loaded card, delete loaded entry, reload
-        if force_reload or previously_loaded.filesize != card.filesize:
-            # Delete previosly loaded entries for this server
+        if (force_reload or (previously_loaded is not None
+                             and previously_loaded.filesize != card.filesize)):
+            # Delete previously loaded entries for this server
             for loaded in episode.loaded:
                 if loaded.media_server == media_server:
                     db.delete(loaded)
@@ -400,19 +416,75 @@ def load_series_title_cards(
 
     # Update database with loaded entries
     for loaded_episode, loaded_card in loaded_assets:
-        log.debug(f'{series.log_str} {loaded_episode.log_str} Loaded card {card.log_str}')
-        db.add(models.loaded.Loaded(
-            media_server=media_server,
-            series=series,
-            episode=loaded_episode,
-            card=loaded_card,
-            filesize=loaded_card.filesize,
-        ))
+        try:
+            db.add(models.loaded.Loaded(
+                media_server=media_server,
+                series=series,
+                episode=loaded_episode,
+                card_id=loaded_card.id,
+                filesize=loaded_card.filesize,
+            ))
+            log.debug(f'{series.log_str} {loaded_episode.log_str} Loaded {card.log_str}')
+        except InvalidRequestError:
+            log.warning(f'Error creating Loaded asset for {loaded_episode.log_str} {card.log_str}')
+            continue
 
     # If any cards were (re)loaded, commit updates to database
     if changed or loaded_assets:
         db.commit()
         log.info(f'{series.log_str} Loaded {len(loaded_assets)} Cards into {media_server}')
+
+
+def load_episode_title_card(
+        episode: Episode,
+        db: Session,
+        plex_interface: PlexInterface,
+        *,
+        log: Logger = log,
+    ) -> None:
+    """
+    Load the Title Card for the given Episode into Plex.
+
+    Args:
+        episode: Episode to load the Title Card of.
+        db: Database to look for and add Loaded records from/to.
+        plex_interface: Interface to load Title Cards into.
+        log: (Keyword) Logger for all log messages.
+    """
+
+    # Only load if Episode has a Card
+    if not episode.card:
+        log.debug(f'{episode.series.log_str} {episode.log_str} - no associated Card')
+        return None
+    card = episode.card[-1]
+
+    # Delete any existing Loaded asset for this Episode in Plex
+    db.query(models.loaded.Loaded)\
+        .filter_by(episode_id=episode.id, media_server='Plex')\
+        .delete()
+
+    # Load into Plex
+    loaded_assets = plex_interface.load_title_cards(
+        episode.series.plex_library_name,
+        episode.series.as_series_info,
+        [(episode, card)],
+        log=log,
+    )
+
+    # Episode was not loaded, exit
+    if not loaded_assets:
+        return None
+
+    db.add(models.loaded.Loaded(
+        media_server='Plex',
+        series=episode.series,
+        episode=episode,
+        card=card,
+        filesize=card.filesize,
+    ))
+    log.debug(f'{episode.series.log_str} {episode.log_str} Loaded {card.log_str}')
+
+    db.commit()
 
 
 def add_series(

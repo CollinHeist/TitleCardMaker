@@ -113,7 +113,7 @@
 }
 
 /* The TMDb logo should be 14px high */
-#files-list .card img {
+img[data-action="browse-tmdb"] {
   height: 14px;
   padding-right: 3px;
 }
@@ -131,8 +131,8 @@
   padding: 10px;
 }
 
-/* Limit height of logo */
-#logoImage img {
+/* Limit height of logo and backdrop images */
+#logo, #backdrop {
   object-fit: contain;
-  max-height: 500px;
+  max-height: 450px;
 }

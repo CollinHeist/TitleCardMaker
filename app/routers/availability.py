@@ -11,6 +11,9 @@ from app.internal.auth import get_current_user
 from app.internal.availability import get_latest_version
 from app import models
 from app.models.template import OPERATIONS, ARGUMENT_KEYS
+from app.schemas.availability import (
+    AvailableFont, AvailableSeries, AvailableTemplate
+)
 from app.schemas.card import CardType, LocalCardType, RemoteCardType
 from app.schemas.card_type import Extra
 from app.schemas.preferences import (
@@ -295,23 +298,41 @@ def get_sonarr_tags(
 
 
 @availablility_router.get('/fonts', status_code=200, tags=['Fonts'])
-def get_available_fonts(db: Session = Depends(get_database)) -> list[str]:
+def get_available_fonts(
+        db: Session = Depends(get_database),
+    ) -> list[AvailableFont]:
     """
-    Get the names of all the available Fonts.
+    Get all the available Font base data.
     """
 
-    return [font.name for font in db.query(models.font.Font).all()]
+    return db.query(models.font.Font).order_by(models.font.Font.sort_name).all()
+
+
+@availablility_router.get('/series', status_code=200, tags=['Series'])
+def get_available_series(
+        db: Session = Depends(get_database),
+    ) -> list[AvailableSeries]:
+    """
+    Get all the available Series base data.
+    """
+
+    return db.query(models.series.Series)\
+        .order_by(models.series.Series.sort_name)\
+        .order_by(models.series.Series.year)\
+        .all()
 
 
 @availablility_router.get('/templates', status_code=200, tags=['Templates'])
-def get_available_templates(db: Session = Depends(get_database)) -> list[str]:
+def get_available_templates(
+        db: Session = Depends(get_database),
+    ) -> list[AvailableTemplate]:
     """
     Get the names of all the available Templates.
     """
 
-    return [
-        template.name for template in db.query(models.template.Template).all()
-    ]
+    return db.query(models.template.Template)\
+        .order_by(models.template.Template.name)\
+        .all()
 
 
 @availablility_router.get('/styles', status_code=200)

@@ -16,7 +16,7 @@ from modules.SyncInterface import SyncInterface
 from modules.WebInterface import WebInterface
 
 
-class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
+class EmbyInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
     """
     This class describes an interface to an Emby media server. This is a
     type of EpisodeDataSource (e.g. interface by which Episode data can
@@ -46,6 +46,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
             username: str,
             verify_ssl: bool = True,
             filesize_limit: Optional[int] = None,
+            use_magick_prefix: bool = False,
             *,
             interface_id: int = 0,
             log: Logger = log,
@@ -61,6 +62,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
             verify_ssl: Whether to verify SSL requests.
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
+            use_magick_prefix: Whether to use 'magick' command prefix.
             log: (Keyword) Logger for all log messages.
 
         Raises:
@@ -68,7 +70,7 @@ class EmbyInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
         """
 
         # Intiialize parent classes
-        super().__init__(filesize_limit)
+        super().__init__(filesize_limit, use_magick_prefix)
 
         # Store attributes of this Interface
         self._interface_id = interface_id

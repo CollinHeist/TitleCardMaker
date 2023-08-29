@@ -46,12 +46,16 @@ class TintedGlassTitleCard(BaseCardType):
                     'example: <v>-20 10 0 5</v>. Positive values move that '
                     'face out, negative values move the face in. Unit is pixels.'
                 ),
+            ), Extra(
+                name='Glass Color',
+                identifier='glass_color',
+                description='Color of the "glass" beneath the text',
+                tooltip='Default value is <v>rgba(25, 25, 25, 0.7)</v>.',
             ),
         ], description=[
             'Card type featuring a darkened and blurred rounded rectangle '
-            'surrounding the title and episode text.',
-            'By default, these cards also feature the name of the series in '
-            'the episode text.',
+            'surrounding the title and episode text.', 'By default, these '
+            'cards also feature the name of the series in the episode text.',
         ]
     )
     # pylint: enable=line-too-long
@@ -95,8 +99,9 @@ class TintedGlassTitleCard(BaseCardType):
     __slots__ = (
         'source', 'output_file', 'title_text', '__line_count', 'episode_text',
         'hide_episode_text', 'font_file', 'font_size', 'font_color',
-        'font_interline_spacing', 'font_kerning', 'font_vertical_shift',
-        'episode_text_color', 'episode_text_position', 'box_adjustments',
+        'font_interline_spacing', 'font_interword_spacing', 'font_kerning',
+        'font_vertical_shift', 'episode_text_color', 'episode_text_position',
+        'box_adjustments', 'glass_color',
     )
 
     def __init__(self,
@@ -108,6 +113,7 @@ class TintedGlassTitleCard(BaseCardType):
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
+            font_interword_spacing: int = 0,
             font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_vertical_shift: int = 0,
@@ -116,6 +122,7 @@ class TintedGlassTitleCard(BaseCardType):
             episode_text_color: str = EPISODE_TEXT_COLOR,
             episode_text_position: Position = 'center',
             box_adjustments: tuple[int, int, int, int] = (0, 0, 0, 0),
+            glass_color: str = DARKEN_COLOR,
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
         ) -> None:
@@ -136,13 +143,15 @@ class TintedGlassTitleCard(BaseCardType):
         self.font_size = font_size
         self.font_color = font_color
         self.font_interline_spacing = font_interline_spacing
+        self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_vertical_shift = font_vertical_shift
 
         # Store and validate extras
+        self.box_adjustments = box_adjustments
         self.episode_text_color = episode_text_color
         self.episode_text_position = episode_text_position
-        self.box_adjustments = box_adjustments
+        self.glass_color = glass_color
 
 
     def blur_rectangle_command(self,
@@ -181,7 +190,7 @@ class TintedGlassTitleCard(BaseCardType):
             f'-blur {self.TEXT_BLUR_PROFILE}',
             f'+mask',
             # Darken area behind title text
-            f'-fill "{self.DARKEN_COLOR}"',
+            f'-fill "{self.glass_color}"',
             f'-draw "roundrectangle {draw_coords}"',
         ]
 
@@ -199,6 +208,7 @@ class TintedGlassTitleCard(BaseCardType):
         font_size = 200 * self.font_size
         kerning = -5 * self.font_kerning
         interline_spacing = -50 + self.font_interline_spacing
+        interword_spacing = 40 + self.font_interword_spacing
         vertical_shift = 300 + self.font_vertical_shift
 
         return [
@@ -206,8 +216,8 @@ class TintedGlassTitleCard(BaseCardType):
             f'-font "{self.font_file}"',
             f'-pointsize {font_size}',
             f'-interline-spacing {interline_spacing}',
+            f'-interword-spacing {interword_spacing}',
             f'-kerning {kerning}',
-            f'-interword-spacing 40',
             f'-fill "{self.font_color}"',
             f'-annotate +0+{vertical_shift} "{self.title_text}"',
         ]
@@ -222,7 +232,7 @@ class TintedGlassTitleCard(BaseCardType):
         """
 
         # Get dimensions of text - since text is stacked, do max/sum operations
-        width, height = self.get_text_dimensions(
+        width, height = self.image_magick.get_text_dimensions(
             self.add_title_text_command, width='max', height='sum'
         )
 
@@ -252,7 +262,7 @@ class TintedGlassTitleCard(BaseCardType):
 
 
     def add_episode_text_command(self,
-            title_coordinates: BoxCoordinates
+            title_coordinates: BoxCoordinates,
         ) -> ImageMagickCommands:
         """
         Get the list of ImageMagick commands to add episode text.
@@ -290,7 +300,7 @@ class TintedGlassTitleCard(BaseCardType):
             f'-annotate {position} "{self.episode_text}"',
         ]
 
-        width, height = self.get_text_dimensions(
+        width, height = self.image_magick.get_text_dimensions(
             command, width='max', height='max'
         )
 
@@ -324,7 +334,7 @@ class TintedGlassTitleCard(BaseCardType):
     def modify_extras(
             extras: dict,
             custom_font: bool,
-            custom_season_titles: bool
+            custom_season_titles: bool,
         ) -> None:
         """
         Modify the given extras base on whether font or season titles
@@ -340,7 +350,6 @@ class TintedGlassTitleCard(BaseCardType):
         if not custom_font:
             if 'box_adjustments' in extras:
                 del extras['box_adjustments']
-
             if 'episode_text_color' in extras:
                 del extras['episode_text_color']
 
@@ -361,6 +370,7 @@ class TintedGlassTitleCard(BaseCardType):
         return ((font.color != TintedGlassTitleCard.TITLE_COLOR)
             or  (font.file != TintedGlassTitleCard.TITLE_FONT)
             or  (font.interline_spacing != 0)
+            or  (font.interword_spacing != 0)
             or  (font.kerning != 1.0)
             or  (font.size != 1.0)
             or  (font.vertical_shift != 0)

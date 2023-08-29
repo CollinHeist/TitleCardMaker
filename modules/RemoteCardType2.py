@@ -1,3 +1,4 @@
+from logging import Logger
 import sys
 from importlib.util import spec_from_file_location, module_from_spec
 
@@ -28,7 +29,11 @@ class RemoteCardType:
     __slots__ = ('card_class', 'valid')
 
 
-    def __init__(self, remote: str) -> None:
+    def __init__(self,
+            remote: str,
+            *,
+            log: Logger = log,
+        ) -> None:
         """
         Construct a new RemoteCardType. This downloads the source file
         at the specified location and loads it as a class in the global
@@ -36,11 +41,10 @@ class RemoteCardType:
         specification is a file that exists, that file is loaded.
 
         Args:
-            database_directory: Base Path to read/write any databases
-                from.
             remote: URL to remote card to inject. Should omit repo base.
-                Should be specified like {username}/{class_name}. Can
+                Should be specified like `{username}/{class_name}`. Can
                 also be a local filepath.
+            log: (Keyword) Logger for all log messages.
         """
 
         # Get database of loaded assets/cards

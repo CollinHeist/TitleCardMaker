@@ -15,8 +15,14 @@ function formatBytes(bytes, decimals = 2) {
 }
 
 function formatFastAPIError(errorResponse) {
-  if (!errorResponse || !errorResponse.detail || !Array.isArray(errorResponse.detail)) {
+  // No response or details
+  if (!errorResponse || !errorResponse.detail) {
     return undefined;
+  }
+
+  // If detail is string, likely an explicit error
+  if (typeof errorResponse.detail === 'string') {
+    return errorResponse.detail;
   }
 
   const formattedErrors = errorResponse.detail.map(detail => {
@@ -40,12 +46,20 @@ function formatFastAPIError(errorResponse) {
 
 function showErrorToast(args) {
   const {title, response, displayTime=10000} = args;
-  $.toast({
-    class: 'error',
-    title,
-    message: formatFastAPIError(response.responseJSON),
-    displayTime: displayTime,
-  });
+  if (response === undefined) {
+    $.toast({
+      class: 'error',
+      title,
+      displayTime: displayTime,
+    });
+  } else {
+    $.toast({
+      class: 'error',
+      title,
+      message: formatFastAPIError(response.responseJSON),
+      displayTime: displayTime,
+    });
+  }
 }
 
 function showInfoToast(args) {
@@ -62,12 +76,12 @@ function showInfoToast(args) {
   }
 }
 
-function getActiveTemplates(activeIds, allTemplates) {
+function getActiveTemplates(activeIds, availableTemplates) {
   let values = [];
   // Add all active Template values
   if (activeIds !== undefined && activeIds !== null) {
     activeIds.forEach(activeId => {
-      for (let {id, name} of allTemplates.items) {
+      for (let {id, name} of availableTemplates) {
         // Found matching Template, add to values array
         if (activeId === id) {
           values.push({name: name, value: id, selected: true});
@@ -77,7 +91,7 @@ function getActiveTemplates(activeIds, allTemplates) {
     });
   }
   // Add all inactive Template values
-  allTemplates.items.forEach(({id, name}) => {
+  availableTemplates.forEach(({id, name}) => {
     // Skip Templates already included
     if (activeIds === undefined || activeIds === null) {
       values.push({name: name, value: id, selected: false});
@@ -236,14 +250,19 @@ async function queryAvailableExtras() {
  */
 
 let popups = {};
-async function initializeExtraDropdowns(value, dropdownElements, popupHeaderElement, popupDescriptionElement) {
+async function initializeExtraDropdowns(
+    value,
+    dropdownElements,
+    popupHeaderElement,
+    popupDescriptionElement) {
   // Only re-query for extras if not initialized
   if (allExtras === undefined) {
     await queryAvailableExtras();
   }
 
   // Create list of values for the dropdown
-  let dropdownValues = [];
+  let dropdownValues = [],
+      found = false;
   cardTypes.forEach(card_type => {
     // Add dividing header for each card type
     dropdownValues.push({name: card_type, type: 'header', divider: true});
@@ -256,6 +275,7 @@ async function initializeExtraDropdowns(value, dropdownElements, popupHeaderElem
         .replaceAll('</v>', '</span>');
 
       if (extra.card_type === card_type) {
+        found ||= extra.identifier === value;
         dropdownValues.push({
           name: extra.name,
           text: extra.name,
@@ -272,6 +292,18 @@ async function initializeExtraDropdowns(value, dropdownElements, popupHeaderElem
       }
     });
   });
+
+  // If not found, must be manually specified - add
+  if (!found) {
+    dropdownValues.push({name: 'Variable Overrides', type: 'header', divider: true});
+    dropdownValues.push({
+      name: value,
+      value: value,
+      selected: true,
+    });
+    popupHeaderElement[0].innerText = value;
+    popupDescriptionElement[0].innerHTML = 'Manually specified variable override.';
+  }
 
   // Initialize dropdown
   dropdownElements.dropdown({

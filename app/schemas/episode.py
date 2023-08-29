@@ -47,6 +47,7 @@ class NewEpisode(Base):
     font_kerning: Optional[float] = None
     font_stroke_width: Optional[float] = None
     font_interline_spacing: Optional[int] = None
+    font_interword_spacing: Optional[int] = None
     font_vertical_shift: Optional[int] = None
 
     airdate: Optional[datetime] = None
@@ -98,6 +99,7 @@ class UpdateEpisode(UpdateBase):
     font_kerning: Optional[float] = UNSPECIFIED
     font_stroke_width: Optional[float] = UNSPECIFIED
     font_interline_spacing: Optional[int] = UNSPECIFIED
+    font_interword_spacing: Optional[int] = UNSPECIFIED
     font_vertical_shift: Optional[int] = UNSPECIFIED
 
     airdate: Optional[datetime] = UNSPECIFIED
@@ -172,6 +174,7 @@ class Episode(Base):
     font_kerning: Optional[float]
     font_stroke_width: Optional[float]
     font_interline_spacing: Optional[int]
+    font_interword_spacing: Optional[int]
     font_vertical_shift: Optional[int]
 
     airdate: Optional[datetime]

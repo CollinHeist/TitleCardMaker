@@ -4,11 +4,13 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app import models
-from app.schemas.card import TitleCard
-from app.schemas.episode import Episode
-from app.schemas.font import NamedFont
-from app.schemas.series import Series, Template
-from app.schemas.sync import Sync
+from app.models.card import Card
+from app.models.episode import Episode
+from app.models.font import Font
+from app.models.series import Series
+from app.models.sync import Sync
+from app.models.template import Template
+
 from modules.Debug import log
 
 
@@ -65,7 +67,7 @@ def get_card(
         card_id: int,
         *,
         raise_exc: bool = True
-    ) -> Optional[TitleCard]:
+    ) -> Optional[Card]:
     """
     Get the Card with the given ID from the given Database.
 
@@ -95,7 +97,7 @@ def get_font(
         font_id: int,
         *,
         raise_exc: bool = True
-    ) -> Optional[NamedFont]:
+    ) -> Optional[Font]:
     """
     Get the Font with the given ID from the given Database.
 

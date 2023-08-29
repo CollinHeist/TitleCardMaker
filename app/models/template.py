@@ -51,8 +51,9 @@ ARGUMENT_KEYS = (
     'Episode Title Length', 'Episode Airdate',
 )
 
-# Tables for many <-> many Template relationships
-
+"""
+Tables for many <-> many Template relationships
+"""
 class SeriesTemplates(Base):
     """SQL Relationship table for Series:Template relationships"""
 
@@ -79,6 +80,7 @@ class SyncTemplates(Base):
     id = Column(Integer, primary_key=True, index=True)
     template_id = Column(Integer, ForeignKey('template.id'))
     sync_id = Column(Integer, ForeignKey('sync.id'))
+
 
 # Template table
 class Template(Base):
@@ -170,6 +172,7 @@ class Template(Base):
             'watched_style': self.watched_style,
             'extras': self.extras,
         }
+
 
     @hybrid_property
     def export_properties(self) -> dict[str, Any]:

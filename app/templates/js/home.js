@@ -11,8 +11,11 @@ async function getAllSeries(page=1) {
     'year-desc': 'reverse-year',
   }[sortState];
 
+  // Fade out existing posters
+  $('#series-list .card').transition({animation: 'scale', interval: 15, reverse: true});
+
   // Get this page of Series data
-  let allSeriesData = await fetch(`/api/series/all?order_by=${sortParam}&size=100&page=${page}`).then(resp => resp.json());
+  let allSeriesData = await fetch(`/api/series/all?order_by=${sortParam}&size={{preferences.home_page_size}}&page=${page}`).then(resp => resp.json());
   let allSeries = allSeriesData.items;
 
   // Create Series cards
@@ -27,6 +30,10 @@ async function getAllSeries(page=1) {
     // Poster
     const img = clone.querySelector('img');
     img.src = series.small_poster_url; img.alt = `Poster for ${series.name}`;
+    // Grayscale if unmonitored (and enabled)
+    {% if preferences.stylize_unmonitored_posters %}
+    if (!series.monitored) { img.classList.add('unmonitored'); }
+    {% endif %}
     // Link name and poster to the Series page
     const as = clone.querySelectorAll('a');
     as[0].href = `/series/${series.id}`;
@@ -55,7 +62,7 @@ async function getAllSeries(page=1) {
     return clone;
   });
   document.getElementById('series-list').replaceChildren(...allSeriesCards);
-  $('#series-list .card').transition({animation: 'scale', interval: 20});
+  $('#series-list .card').transition({animation: 'scale', interval: 15});
   $('.progress').progress({duration: 2000});
 
   // Update pagination
@@ -64,7 +71,7 @@ async function getAllSeries(page=1) {
     navigateFunction: getAllSeries,
     page: allSeriesData.page,
     pages: allSeriesData.pages,
-    amountVisible: 5,
+    amountVisible: isSmallScreen() ? 5 : 25,
     hideIfSinglePage: true,
   });
 

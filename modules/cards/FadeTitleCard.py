@@ -51,8 +51,9 @@ class FadeTitleCard(BaseCardType):
     """Characteristics of the default title font"""
     TITLE_FONT = str((FONT_REF_DIRECTORY / 'Sequel-Neue.otf').resolve())
     TITLE_COLOR = 'white'
-    FONT_REPLACEMENTS = {'[': '(', ']': ')', '(': '[', ')': ']', '―': '-',
-                         '…': '...', '“': '"'}
+    FONT_REPLACEMENTS = {
+        '[': '(', ']': ')', '(': '[', ')': ']', '―': '-', '…': '...', '“': '"'
+    }
 
     """Characteristics of the episode text"""
     EPISODE_TEXT_FORMAT = 'EPISODE {episode_number}'
@@ -69,8 +70,9 @@ class FadeTitleCard(BaseCardType):
 
     __slots__ = (
         'source_file', 'output_file', 'title_text', 'index_text', 'font_file',
-        'font_size', 'font_color', 'font_interline_spacing', 'font_kerning',
-        'font_vertical_shift', 'logo', 'episode_text_color',
+        'font_size', 'font_color', 'font_interline_spacing',
+        'font_interword_spacing', 'font_kerning', 'font_vertical_shift', 'logo',
+        'episode_text_color',
     )
 
     def __init__(self,
@@ -84,6 +86,7 @@ class FadeTitleCard(BaseCardType):
             font_color: str = TITLE_COLOR,
             font_file: str = TITLE_FONT,
             font_interline_spacing: int = 0,
+            font_interword_spacing: int = 0,
             font_kerning: float = 1.0,
             font_size: float = 1.0,
             font_vertical_shift: int = 0,
@@ -123,6 +126,7 @@ class FadeTitleCard(BaseCardType):
         self.font_color = font_color
         self.font_file = font_file
         self.font_interline_spacing = font_interline_spacing
+        self.font_interword_spacing = font_interword_spacing
         self.font_kerning = font_kerning
         self.font_size = font_size
         self.font_vertical_shift = font_vertical_shift
@@ -175,6 +179,7 @@ class FadeTitleCard(BaseCardType):
             f'-pointsize {size}',
             f'-kerning {kerning}',
             f'-interline-spacing {interline_spacing}',
+            f'-interword-spacing {self.font_interword_spacing}',
             f'-fill "{self.font_color}"',
             f'-annotate +100+{vertical_shift} "{self.title_text}"',
         ]
@@ -219,6 +224,7 @@ class FadeTitleCard(BaseCardType):
         return ((font.color != FadeTitleCard.TITLE_COLOR)
             or  (font.file != FadeTitleCard.TITLE_FONT)
             or  (font.interline_spacing != 0)
+            or  (font.interword_spacing != 0)
             or  (font.kerning != 1.0)
             or  (font.size != 1.0)
             or  (font.vertical_shift != 0)
@@ -271,8 +277,8 @@ class FadeTitleCard(BaseCardType):
             # Overlay logo if indicated
             *self.add_logo,
             # Add title and index text
-            *self.add_title_text,
             *self.add_index_text,
+            *self.add_title_text,
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',

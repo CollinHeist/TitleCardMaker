@@ -76,8 +76,9 @@ class Preferences:
         'tmdb_logo_language_priority', 'supported_language_codes',
         'use_magick_prefix', 'current_version', 'available_version',
         'blacklisted_blueprints', 'advanced_scheduling', 'require_auth',
-        'task_crontabs',
-
+        'task_crontabs', 'simplified_data_table', 'home_page_size',
+        'episode_data_page_size', 'stylize_unmonitored_posters',
+        'sources_as_table',
         'sonarr_args',
     )
 
@@ -174,6 +175,7 @@ class Preferences:
         self.season_folder_format = 'Season {season_number}'
 
         self.sync_specials = True
+        self.simplified_data_table = True
         self.remote_card_types = {}
         self.default_card_type = 'standard'
         self.excluded_card_types = []
@@ -225,7 +227,12 @@ class Preferences:
         self.blacklisted_blueprints = set()
         self.advanced_scheduling = False
         self.task_crontabs = {}
+
         self.require_auth = False
+        self.home_page_size = 100
+        self.episode_data_page_size = 50
+        self.stylize_unmonitored_posters = False
+        self.sources_as_table = False
 
 
     def read_file(self) -> Optional[object]:
@@ -233,7 +240,8 @@ class Preferences:
         Read this object's file, returning the loaded object.
 
         Returns:
-            Object unpickled (loaded) from this object's file.
+            Object unpickled (loaded) from this object's file. None if
+            the file does not exist or cannot be unpickled.
         """
 
         # Skip if file DNE
@@ -324,7 +332,7 @@ class Preferences:
             # Create ImageMagickInterface and verify validity
             interface = ImageMagickInterface(use_magick_prefix=use_magick)
             if interface.validate_interface():
-                self.use_magick_prefix = use_magick
+                self.use_magick_prefix = use_magick # pylint: disable=W0201
                 log.debug(f'Using "{prefix}" ImageMagick command prefix')
                 return None
 
@@ -373,6 +381,7 @@ class Preferences:
             'username': self.emby_username,
             'verify_ssl': self.emby_use_ssl,
             'filesize_limit': self.emby_filesize_limit,
+            'use_magick_prefix': self.use_magick_prefix,
         }
 
 
@@ -395,6 +404,7 @@ class Preferences:
             'username': self.jellyfin_username,
             'verify_ssl': self.jellyfin_use_ssl,
             'filesize_limit': self.jellyfin_filesize_limit,
+            'use_magick_prefix': self.use_magick_prefix,
         }
 
 
@@ -408,6 +418,7 @@ class Preferences:
             'verify_ssl': self.plex_use_ssl,
             'integrate_with_pmm': self.plex_integrate_with_pmm,
             'filesize_limit': self.plex_filesize_limit,
+            'use_magick_prefix': self.use_magick_prefix,
         }
 
 

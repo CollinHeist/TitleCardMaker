@@ -8,8 +8,10 @@ from alembic import context
 """
 Auto-detect db changes:
 >>> alembic revision --autogenerate -m "..."
-Manually perform DB migrations
+Manually perform DB migrations (to latest revision)
 >>> alembic upgrade head
+Manually downgrade DB to specific version
+>>> alembic downgrade <target-revision>
 """
 
 # this is the Alembic Config object, which provides

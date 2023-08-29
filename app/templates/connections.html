@@ -39,7 +39,7 @@
       <h2 class="ui dividing header">Authentication</h2>
       <div class="connection-form">
         <!-- Enable button -->
-        <div data-value="require_auth" class="ui left aligned checkbox field" data-tooltip="Whether to require a username and password for TCM">
+        <div data-value="require_auth" class="ui left aligned checkbox field" data-tooltip="Whether to require a username and password">
           <input type="checkbox">
           <label>Require Authentication</label>
         </div>
@@ -344,7 +344,7 @@
             <label>Library Paths</label>
             <div class="ui compact floating visible info message">
               <i class="exclamation icon"></i>
-              Only required if <a href="/sync">syncing</a> from Sonarr
+              Only required if Syncing from Sonarr
             </div>
             <div class="fields">
               <div id="sonarr-libraries-library-names" class="two wide library field">
@@ -360,7 +360,7 @@
               <i class="plus square outline icon"></i>
               Add Library
             </div>
-            <div class="circular ui icon mini button" onclick="querySonarrLibraries()" data-tooltip="Attempt to detect any Sonarr libraries ">
+            <div class="circular ui icon mini button" onclick="querySonarrLibraries()" data-tooltip="Attempt to auto-detect Sonarr libraries">
               <i class="search icon"></i>
               Auto-fill Libraries
             </div>

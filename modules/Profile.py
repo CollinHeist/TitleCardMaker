@@ -4,9 +4,11 @@ from re import compile as re_compile, match, IGNORECASE
 
 from modules.Debug import log
 from modules.EpisodeInfo import EpisodeInfo
+from modules.EpisodeMap import EpisodeMap
 from modules.Font import Font
 from modules.MultiEpisode import MultiEpisode
 from modules.SeriesInfo import SeriesInfo
+
 
 class Profile:
     """
@@ -27,8 +29,9 @@ class Profile:
             series_info: SeriesInfo,
             font: Font,
             hide_seasons: bool,
-            episode_map: 'EpisodeMap',
-            episode_text_format: str) -> None:
+            episode_map: EpisodeMap,
+            episode_text_format: str,
+        ) -> None:
         """
         Construct a new instance of a Profile. All given arguments will
         be applied through this Profile (and whether it's generic or
@@ -71,7 +74,8 @@ class Profile:
 
     def get_valid_profiles(self,
             card_class: 'CardType',
-            all_variations: bool) -> list[dict[str, str]]:
+            all_variations: bool,
+        ) -> list[dict[str, str]]:
         """
         Gets the valid applicable profiles for this profile. For example,
         for a profile with only generic attributes, it's invalid to
@@ -139,9 +143,9 @@ class Profile:
         """
 
         # Update this object's data
-        self.__use_custom_seasons = (seasons in ('custom', 'hidden'))
-        self.hide_season_title = (seasons == 'hidden')
-        self.__use_custom_font = (font == 'custom')
+        self.__use_custom_seasons = seasons in ('custom', 'hidden')
+        self.hide_season_title = seasons == 'hidden'
+        self.__use_custom_font = font == 'custom'
 
         # If the new profile has a generic font, reset font attributes
         if not self.__use_custom_font:
@@ -154,7 +158,8 @@ class Profile:
 
     def convert_extras(self,
             card_type: 'BaseCardType',
-            extras: dict[str, Any]) -> None:
+            extras: dict[str, Any],
+        ) -> None:
         """
         Convert the given extras according to this profile's rules.
 
@@ -218,8 +223,9 @@ class Profile:
             log.warning(f'Episode text formatting uses absolute episode number,'
                         f' but {episode} has no absolute number - using episode'
                         f' number instead')
-            format_string = self.episode_text_format.replace('{abs_',
-                                                             '{episode_')
+            format_string = self.episode_text_format.replace(
+                '{abs_', '{episode_'
+            )
 
         # Format MultiEpisode episode text
         if isinstance(episode, MultiEpisode):
@@ -343,7 +349,8 @@ class Profile:
 
     def convert_title(self,
             title_text: str,
-            manually_specified: bool = False) -> str:
+            manually_specified: bool = False,
+        ) -> str:
         """
         Convert the given title text through this profile's settings.
         This is any combination of text substitutions, case functions,

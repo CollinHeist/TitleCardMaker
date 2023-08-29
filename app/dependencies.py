@@ -71,9 +71,10 @@ def refresh_emby_interface(*, log: Logger = log) -> None:
         log: (Keyword) Logger for all log messages.
     """
 
-    preferences = get_preferences()
     global EmbyInterfaceLocal
-    EmbyInterfaceLocal = EmbyInterface(**preferences.emby_arguments, log=log)
+    EmbyInterfaceLocal = EmbyInterface(
+        **get_preferences().emby_arguments, log=log
+    )
 
 
 def get_emby_interface() -> EmbyInterface:
@@ -85,8 +86,7 @@ def get_emby_interface() -> EmbyInterface:
         Global EmbyInterface.
     """
 
-    preferences = get_preferences()
-    if preferences.use_emby and not EmbyInterfaceLocal:
+    if get_preferences().use_emby and not EmbyInterfaceLocal:
         try:
             refresh_emby_interface()
         except Exception as e:
@@ -104,10 +104,9 @@ def refresh_imagemagick_interface() -> None:
         log: (Keyword) Logger for all log messages.
     """
 
-    preferences = get_preferences()
     global ImageMagickInterfaceLocal
     ImageMagickInterfaceLocal = ImageMagickInterface(
-        **preferences.imagemagick_arguments,
+        **get_preferences().imagemagick_arguments,
     )
 
 
@@ -131,10 +130,9 @@ def refresh_jellyfin_interface(*, log: Logger = log) -> JellyfinInterface:
         log: (Keyword) Logger for all log messages.
     """
 
-    preferences = get_preferences()
     global JellyfinInterfaceLocal
     JellyfinInterfaceLocal = JellyfinInterface(
-        **preferences.jellyfin_arguments, log=log
+        **get_preferences().jellyfin_arguments, log=log
     )
 
 
@@ -147,8 +145,7 @@ def get_jellyfin_interface() -> JellyfinInterface:
         Global JellyfinInterface.
     """
 
-    preferences = get_preferences()
-    if preferences.use_jellyfin and not JellyfinInterfaceLocal:
+    if get_preferences().use_jellyfin and not JellyfinInterfaceLocal:
         try:
             refresh_jellyfin_interface()
         except Exception as e:
@@ -166,9 +163,10 @@ def refresh_plex_interface(*, log: Logger = log) -> None:
         log: (Keyword) Logger for all log messages.
     """
 
-    preferences = get_preferences()
     global PlexInterfaceLocal
-    PlexInterfaceLocal = PlexInterface(**preferences.plex_arguments, log=log)
+    PlexInterfaceLocal = PlexInterface(
+        **get_preferences().plex_arguments, log=log
+    )
 
 
 def get_plex_interface() -> PlexInterface:
@@ -180,8 +178,7 @@ def get_plex_interface() -> PlexInterface:
         Global PlexInterface.
     """
 
-    preferences = get_preferences()
-    if preferences.use_plex and not PlexInterfaceLocal:
+    if get_preferences().use_plex and not PlexInterfaceLocal:
         try:
             refresh_plex_interface()
         except Exception as e:
@@ -313,8 +310,7 @@ def get_sonarr_interface() -> Optional[SonarrInterface]:
         Global SonarrInterface.
     """
 
-    preferences = get_preferences()
-    if preferences.use_sonarr and not SonarrInterfaceLocal:
+    if get_preferences().use_sonarr and not SonarrInterfaceLocal:
         try:
             refresh_sonarr_interface()
         except Exception as e:
@@ -332,9 +328,10 @@ def refresh_tmdb_interface(*, log: Logger = log) -> None:
         log: (Keyword) Logger for all log messages.
     """
 
-    preferences = get_preferences()
     global TMDbInterfaceLocal
-    TMDbInterfaceLocal = TMDbInterface(**preferences.tmdb_arguments, log=log)
+    TMDbInterfaceLocal = TMDbInterface(
+        **get_preferences().tmdb_arguments, log=log
+    )
 
 
 def get_tmdb_interface() -> TMDbInterface:
@@ -346,8 +343,7 @@ def get_tmdb_interface() -> TMDbInterface:
         Global TMDbInterface.
     """
 
-    preferences = get_preferences()
-    if preferences.use_tmdb and not TMDbInterfaceLocal:
+    if get_preferences().use_tmdb and not TMDbInterfaceLocal:
         try:
             refresh_tmdb_interface()
         except Exception as e:

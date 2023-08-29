@@ -257,6 +257,7 @@ function showAddSeriesModal(result, resultElementId) {
 async function quickAddSeries(result, resultElementId) {
   let resultElement = document.getElementById(resultElementId)
   resultElement.classList.add('loading');
+  resultElement.classList.remove('transition');
   $.ajax({
     type: 'POST',
     url: '/api/series/new',
@@ -264,20 +265,12 @@ async function quickAddSeries(result, resultElementId) {
     contentType: 'application/json',
     success: series => {
       resultElement.classList.add('disabled');
-      // $(`#${resultElementId}`).toggleClass('disabled', true);
-      $.toast({class: 'blue info', title: `Added Series "${series.name}"`});
-      // Refresh episode data for the newly added Series
-      $.ajax({
-        type: 'POST',
-        url: `/api/episodes/${series.id}/refresh`,
-        success: () => {
-          $.toast({class: 'blue info', title: `Refreshed Episode data for "${series.name}"`});
-        }, error: response2 => {
-          showErrorToast({title: `Error refreshing Episode data for "${response2.name}"`, response2});
-        }
-      });
+      showInfoToast(`Added Series "${series.name}"`);
     }, error: response => showErrorToast({title: 'Error adding Series', response}),
-    complete: () => resultElement.classList.remove('loading')
+    complete: () => {
+      resultElement.classList.remove('loading');
+      resultElement.classList.add('transition');
+    }
   });
 }
 
@@ -334,7 +327,14 @@ async function initAll() {
   initializeSearchSource();
   initializeLibraryDropdowns();
 
-  const allTemplates = await fetch('/api/templates/all').then(resp => resp.json());
+  // Initialize search input with query param if provided
+  const query = new URLSearchParams(window.location.search).get('q');
+  if (query) {
+    document.getElementById('search-query').value = query;
+    querySeries();
+  }
+
+  const allTemplates = await fetch('/api/available/templates').then(resp => resp.json());
   $('.dropdown[data-value="template_ids"]').dropdown({
     placeholder: 'None',
     values: await getActiveTemplates(undefined, allTemplates),
@@ -352,7 +352,7 @@ async function querySeries() {
   const query = $('#search-query').val();
   if (resultTemplate === null || resultSegment === null || !query) { return; }
   addPlaceholders(resultSegment, 10);
-  const interfaceName = $('#search-interface').val();
+  const interfaceName = $('#search-interface').val() || 'Sonarr';
   const allResults = await fetch(`/api/series/lookup?name=${query}&interface=${interfaceName}`).then(resp => resp.json());
   const results = allResults.items.map((result, index) => {
     // Clone template

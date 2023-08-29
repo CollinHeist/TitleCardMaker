@@ -11,8 +11,8 @@ async function initSeriesImport() {
     ],
   });
   // Series selector
-  const seriesResults = await fetch('/api/series/all?size=9999&page=1').then(resp => resp.json());
-  const allSeries = seriesResults.items;
+  $('#import-cards-form .dropdown[data-value="series_id"]').toggleClass('loading', true);
+  const allSeries = await fetch('/api/available/series').then(resp => resp.json());
   let seriesMap = {};
   for (series of allSeries) { seriesMap[series.id] = series; }
   $('.dropdown[data-value="series_id"]').dropdown({
@@ -68,6 +68,7 @@ async function initSeriesImport() {
       });
     },
   });
+  $('#import-cards-form .dropdown[data-value="series_id"]').toggleClass('loading', false);
   // Toggle media server dropdown with load checkbox
   $('.checkbox[data-value="load_afterwards"]').checkbox({
     onChecked: () => $('.field[data-value="media_server"]').toggleClass('disabled', false),

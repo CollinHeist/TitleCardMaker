@@ -43,7 +43,8 @@ $(document).ready(function() {
       return elements.join('');
     }, message: (message, type) => {
       if (message === 'Your search returned no results') {
-        return '<div class="search result">No Series found..</div>';
+        const query = $('#search-bar input').val();
+        return `<a class="search result" href="/add?q=${query}">Search for "${query}"..</a>`;
       } else {
         return `<div class="search result">${message}</div>`;
       }

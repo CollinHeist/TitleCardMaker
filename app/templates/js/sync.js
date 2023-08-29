@@ -58,11 +58,16 @@ async function getPlexLibraries() {
   });
 }
 
-async function getTemplates() {
-  const templates = await fetch('/api/templates/all').then(resp => resp.json());
-  $('.dropdown[data-value="template_ids"]').dropdown({
-    values: getActiveTemplates(null, templates),
-  });
+function getTemplates() {
+  $.ajax({
+    type: 'GET',
+    url: '/api/available/templates',
+    success: availableTemplates => {
+      $('.dropdown[data-value="template_ids"]').dropdown({
+        values: getActiveTemplates(null, availableTemplates),
+      });
+    }, error: response => showErrorToast({'title': 'Error Getting Template List', response}),
+  })
 }
 
 // Function to add tags to all tag dropdowns
@@ -72,7 +77,7 @@ async function getSonarrTags() {
   $('.dropdown[dropdown-type="sonarr-tags"]').dropdown({
     placeholder: 'None',
     allowAdditions: true,
-    values: tags.map(({id, label}) => {
+    values: tags.map(({label}) => {
       return {name: label, value: label, selected: false};
     }),
   })
@@ -123,8 +128,8 @@ async function showEditModel(sync) {
       url: `/api/sync/${sync.id}`,
       data: JSON.stringify(dataObj),
       contentType: 'application/json',
-      success: response => {
-        $.toast({class: 'blue info', title: `Updated Sync "${response.name}"`});
+      success: updatedSync => {
+        showInfoToast(`Updated Sync "${updatedSync.name}"`);
         getAllSyncs();
       }, error: response => showErrorToast({title: 'Error Editing Sync', response}),
       complete: () => {
@@ -149,36 +154,39 @@ async function showDeleteSyncModal(syncId) {
   }
   $('#delete-sync-modal [data-value="series-list"]')[0].innerHTML = seriesElements.join('');
   // Attach functions to delete buttons
-  $('#delete-sync-modal .button[data-action="delete-sync-only"]').off('click').on('click', () => {
-    $(`#card-sync${syncId}`).toggleClass('red double loading', true);
-    $.ajax({
-      type: 'DELETE',
-      url: `/api/sync/delete/${syncId}?delete_series=false`,
-      success: () => {
-        $.toast({class: 'blue info', title: 'Deleted Sync'});
-        getAllSyncs();
-      },
-      error: response => {
-        showErrorToast({title: 'Error Deleting Sync', response});
-        $(`#card-sync${syncId}`).toggleClass('red double loading', false);
-      }, complete: () => {}
+  $('#delete-sync-modal .button[data-action="delete-sync-only"]')
+    .off('click')
+    .on('click', () => {
+      $(`#card-sync${syncId}`).toggleClass('red double loading', true);
+      $.ajax({
+        type: 'DELETE',
+        url: `/api/sync/delete/${syncId}?delete_series=false`,
+        success: () => {
+          showInfoToast('Deleted Sync');
+          getAllSyncs();
+        }, error: response => {
+          showErrorToast({title: 'Error Deleting Sync', response});
+          $(`#card-sync${syncId}`).toggleClass('red double loading', false);
+        },
+      });
     });
-  });
-  $('#delete-sync-modal .button[data-action="delete-sync-and-series"]').off('click').on('click', () => {
-    $(`#card-sync${syncId}`).toggleClass('red double loading', true);
-    $.ajax({
-      type: 'DELETE',
-      url: `/api/sync/delete/${syncId}?delete_series=true`,
-      success: () => {
-        $.toast({class: 'blue info', title: 'Deleted Sync and associated Series'});
-        getAllSyncs();
-      },
-      error: response => {
-        showErrorToast({title: 'Error Deleting Sync', response});
-        $(`#card-sync${syncId}`).toggleClass('red double loading', false);
-      },
+  $('#delete-sync-modal .button[data-action="delete-sync-and-series"]')
+    .off('click')
+    .on('click', () => {
+      $(`#card-sync${syncId}`).toggleClass('red double loading', true);
+      $.ajax({
+        type: 'DELETE',
+        url: `/api/sync/delete/${syncId}?delete_series=true`,
+        success: () => {
+          showInfoToast('Deleted Sync and associated Series');
+          getAllSyncs();
+        },
+        error: response => {
+          showErrorToast({title: 'Error Deleting Sync', response});
+          $(`#card-sync${syncId}`).toggleClass('red double loading', false);
+        },
+      });
     });
-  });
 
   $('#delete-sync-modal').modal('show');
 }
@@ -217,10 +225,7 @@ async function getAllSyncs() {
       clone.querySelector('i.sync').onclick = () => {
         // Add loading indicator, create toast
         $(`#card-sync${id} >* i.sync`).toggleClass('loading blue', true);
-        $.toast({
-          class: 'blue info',
-          title: `Started Syncing "${name}"`,
-        });
+        showInfoToast(`Started Syncing "${name}"`);
         // Submit API request, show toast of results
         $.ajax({
           type: 'POST',
@@ -343,10 +348,7 @@ async function initAll() {
         data: JSON.stringify(dataObj),
         contentType: 'application/json',
         success: response => {
-          $.toast({
-            class: 'blue info',
-            title: `Created Sync "${response.name}"`,
-          });
+          showInfoToast(`Created Sync "${response.name}"`);
           getAllSyncs();
           $(`#${modalID}`).modal('hide');
         }, error: response => showErrorToast({title: 'Error Creating Sync', response}),

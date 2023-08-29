@@ -17,14 +17,17 @@ function addFont() {
   });
 }
 
+/*
+ * Submit an API request to delete the given Font from the database. If
+ * successful, the HTML element for this Font is removed from the page.
+ */
 function deleteFont(font) {
   $.ajax({
     type: 'DELETE',
     url: `/api/fonts/${font.id}`,
     success: () => {
       showInfoToast(`Deleted Font "${font.name}"`);
-      $('.ui.accordion').accordion('close');
-      getAllFonts();
+      $(`#font-id${font.id}`).remove();
     },
     error: response => showErrorToast({title: 'Error Deleting Font', response}),
   });
@@ -44,6 +47,7 @@ function reloadPreview(fontId, fontForm, previewForm, cardElement, imageElement)
     font_title_case: fontFormObj.get('title_case'),
     font_color: fontFormObj.get('color'),
     font_interline_spacing: fontFormObj.get('interline_spacing'),
+    font_interword_spacing: fontFormObj.get('interword_spacing'),
     font_kerning: fontFormObj.get('kerning') / 100.0,
     font_size: fontFormObj.get('size') / 100.0,
     font_stroke_width: fontFormObj.get('stroke_width') / 100.0,
@@ -57,12 +61,9 @@ function reloadPreview(fontId, fontForm, previewForm, cardElement, imageElement)
     url: '/api/cards/preview',
     data: JSON.stringify(previewCardObj),
     contentType: 'application/json',
-    success: (response) => {
-      // Update source, use current time to force reload
-      imageElement.src = `${response}?${new Date().getTime()}`;
-    },
+    success: imageUrl => imageElement.src = `${imageUrl}?${new Date().getTime()}`,
     error: response => showErrorToast({title: 'Error Creating Preview Card', response}),
-    complete: () => {cardElement.classList.remove('loading'); }
+    complete: () => cardElement.classList.remove('loading'),
   });
 }
 
@@ -149,28 +150,23 @@ async function getAllFonts() {
 
     // Add Font accordion
     const template = document.querySelector('#font-template').content.cloneNode(true);
+    template.querySelector('.accordion').id = `font-id${fontObj.id}`;
     template.querySelector('.title').innerHTML = `<i class="dropdown icon"></i>${fontObj.name}`;
-    const name = template.querySelector('input[name="name"]');
-    name.placeholder = fontObj.name; name.value = fontObj.name;
+    template.querySelector('input[name="name"]').value = fontObj.name;
     const file = template.querySelector('label[data-value="file"]');
     file.innerText = fontObj.file_name === null ? 'Font' : `Font (${fontObj.file_name})`;
     if (fontObj.color !== null) {
-      const color = template.querySelector('input[name="color"]');
-      color.placeholder = fontObj.color; color.value = fontObj.color;
+      template.querySelector('input[name="color"]').value = fontObj.color;
     }
     if (fontObj.title_case !== null) {
       template.querySelector('input[name="title_case"]').value = fontObj.title_case;
     }
-    const size = template.querySelector('input[name="size"]');
-    size.placeholder = fontObj.size*100; size.value = fontObj.size*100;
-    const kerning = template.querySelector('input[name="kerning"]');
-    kerning.placeholder = fontObj.kerning*100; kerning.value = fontObj.kerning*100;
-    const stokeWidth = template.querySelector('input[name="stroke_width"]');
-    stokeWidth.placeholder = fontObj.stroke_width*100; stokeWidth.value = fontObj.stroke_width*100;
-    const interlineSpacing = template.querySelector('input[name="interline_spacing"]');
-    interlineSpacing.placeholder = fontObj.interline_spacing; interlineSpacing.value = fontObj.interline_spacing;
-    const verticalShift = template.querySelector('input[name="vertical_shift"]');
-    verticalShift.placeholder = fontObj.vertical_shift; verticalShift.value = fontObj.vertical_shift;
+    template.querySelector('input[name="size"]').value = Math.floor(fontObj.size*100);
+    template.querySelector('input[name="kerning"]').value = Math.floor(fontObj.kerning*100);
+    template.querySelector('input[name="stroke_width"]').value = Math.floor(fontObj.stroke_width*100);
+    template.querySelector('input[name="interline_spacing"]').value = fontObj.interline_spacing;
+    template.querySelector('input[name="interword_spacing"]').value = fontObj.interword_spacing;
+    template.querySelector('input[name="vertical_shift"]').value = fontObj.vertical_shift;
     if (fontObj.delete_missing) {
       template.querySelector('input[name="delete_missing"]').checked = true;
     }
@@ -180,11 +176,11 @@ async function getAllFonts() {
       Object.entries(fontObj.replacements).forEach(([in_, out_]) => {
         const newInput = document.createElement('input');
         newInput.name = 'replacements_in'; newInput.type='text';
-        newInput.placeholder = in_; newInput.value = in_;
+        newInput.value = in_;
         inElement.appendChild(newInput);
         const newOutput = document.createElement('input');
         newOutput.name = 'replacements_out'; newOutput.type='text';
-        newOutput.placeholder = out_; newOutput.value = out_;
+        newOutput.value = out_;
         outElement.appendChild(newOutput);
       });
     }

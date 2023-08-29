@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 
 from app.database.session import Base
 
+
 class Loaded(Base):
     """
     SQL Table that defines a Loaded asset. This contains which media
@@ -24,6 +25,7 @@ class Loaded(Base):
 
     media_server = Column(String, nullable=False)
     filesize = Column(Integer, ForeignKey('card.filesize'))
+
 
     @hybrid_property
     def log_str(self) -> str:

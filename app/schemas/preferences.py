@@ -1,8 +1,8 @@
-# pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument
+# pylint: disable=missing-class-docstring,missing-function-docstring,no-self-argument,no-name-in-module
 from pathlib import Path
 from typing import Literal, Optional
 
-from pydantic import ( # pylint: disable=no-name-in-module
+from pydantic import (
     AnyUrl, DirectoryPath, Field, NonNegativeInt, PositiveInt, SecretStr,
     constr, root_validator, validator
 )
@@ -96,10 +96,15 @@ class UpdatePreferences(UpdateBase):
     specials_folder_format: str = UNSPECIFIED
     season_folder_format: str = UNSPECIFIED
     sync_specials: bool = UNSPECIFIED
+    simplified_data_table: bool = UNSPECIFIED
     default_card_type: CardTypeIdentifier = UNSPECIFIED
     excluded_card_types: list[CardTypeIdentifier] = UNSPECIFIED
     default_watched_style: Style = UNSPECIFIED
     default_unwatched_style: Style = UNSPECIFIED
+    home_page_size: PositiveInt = UNSPECIFIED
+    episode_data_page_size: PositiveInt = UNSPECIFIED
+    stylize_unmonitored_posters: bool = UNSPECIFIED
+    sources_as_table: bool = UNSPECIFIED
 
     @validator('card_filename_format', pre=True)
     def validate_card_filename_format(cls, v):
@@ -203,8 +208,8 @@ Return classes
 class Preferences(Base):
     card_directory: Path
     source_directory: Path
-    card_width: int
-    card_height: int
+    card_width: PositiveInt
+    card_height: PositiveInt
     card_filename_format: str
     card_extension: str
     image_source_priority: list[ImageSource]
@@ -215,11 +220,16 @@ class Preferences(Base):
     specials_folder_format: str
     season_folder_format: str
     sync_specials: bool
+    simplified_data_table: bool
     is_docker: bool
     default_card_type: CardTypeIdentifier
     excluded_card_types: list[CardTypeIdentifier]
     default_watched_style: Style
     default_unwatched_style: Style
+    home_page_size: PositiveInt
+    episode_data_page_size: PositiveInt
+    stylize_unmonitored_posters: bool
+    sources_as_table: bool
 
 class EmbyConnection(Base):
     use_emby: bool

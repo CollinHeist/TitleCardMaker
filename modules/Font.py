@@ -19,7 +19,8 @@ class Font(YamlReader):
     """Valid YAML attributes to customize a font"""
     VALID_ATTRIBUTES = (
         'validate', 'color', 'size', 'file', 'case', 'replacements',
-        'vertical_shift', 'interline_spacing', 'kerning', 'stroke_width',
+        'vertical_shift', 'interline_spacing', 'interword_spacing' 'kerning',
+        'stroke_width',
     )
 
     """Compiled regex to identify percentage values for scalars"""
@@ -29,14 +30,16 @@ class Font(YamlReader):
     __slots__ = (
         '__card_class', '__series_info', '__validator', '__validate', 'color',
         'size', 'file', 'replacements', 'delete_missing', 'case_name', 'case',
-        'vertical_shift', 'interline_spacing', 'kerning', 'stroke_width',
+        'vertical_shift', 'interline_spacing', 'interword_spacing', 'kerning',
+        'stroke_width',
     )
 
 
     def __init__(self,
             yaml: dict,
             card_class: BaseCardType,
-            series_info: SeriesInfo) -> None:
+            series_info: SeriesInfo,
+        ) -> None:
         """
         Construct a new instance of a Font.
 
@@ -75,15 +78,18 @@ class Font(YamlReader):
 
         font_file_name = Path(self.file).name
 
-        return (f'{self.color}|{self.size}|{font_file_name}|{self.replacements}'
-                f'|{self.case_name}|{self.vertical_shift}'
-                f'|{self.interline_spacing}|{self.kerning}|{self.stroke_width}')
+        return (
+            f'{self.color}|{self.size}|{font_file_name}|{self.replacements}'
+            f'|{self.case_name}|{self.vertical_shift}|{self.interline_spacing}'
+            f'|{self.interword_spacing}|{self.kerning}|{self.stroke_width}'
+        )
 
 
     def __error(self,
             attribute: str,
             value: str,
-            description: Optional[str] = None) -> None:
+            description: Optional[str] = None,
+        ) -> None:
         """
         Print an error message for the given attribute of the given
         value. Also sets the valid attribute of this object to False.
@@ -166,6 +172,13 @@ class Font(YamlReader):
             else:
                 self.__error('interline_spacing', value, 'must be integer')
 
+        # Interword spacing
+        if (value := self.get('interword_spacing', type_=int)) is not None:
+            if isinstance(value, int):
+                self.interword_spacing = value
+            else:
+                self.__error('interword_spacing', value, 'must be integer')
+
         # Kerning
         if (value := self.get('kerning', type_=str)) is not None:
             if bool(self._PERCENT_REGEX.match(value)):
@@ -188,17 +201,18 @@ class Font(YamlReader):
         self.__validate = global_objects.pp.validate_fonts
 
         # Default itle card characteristics and font values
-        self.color = self.__card_class.TITLE_COLOR
-        self.size = 1.0
-        self.file = self.__card_class.TITLE_FONT
-        self.replacements = self.__card_class.FONT_REPLACEMENTS
-        self.delete_missing = True
         self.case_name = self.__card_class.DEFAULT_FONT_CASE
         self.case = self.__card_class.CASE_FUNCTIONS[self.case_name]
-        self.vertical_shift = 0
-        self.interline_spacing = 0
+        self.color = self.__card_class.TITLE_COLOR
+        self.delete_missing = True
+        self.file = self.__card_class.TITLE_FONT
         self.kerning = 1.0
+        self.interline_spacing = 0
+        self.interword_spacing = 0
+        self.size = 1.0
+        self.replacements = self.__card_class.FONT_REPLACEMENTS
         self.stroke_width = 1.0
+        self.vertical_shift = 0
 
 
     def get_attributes(self) -> dict[str, Any]:
@@ -206,9 +220,7 @@ class Font(YamlReader):
         Return a dictionary of attributes for this font to be unpacked.
 
         Returns:
-            Dictionary of attributes whose keys are 'title_color',
-            'font_size', 'font', 'vertical_shift', 'interline_spacing',
-            'kerning', and 'stroke_width'.
+            Dictionary of attributes.
         """
 
         return {
@@ -216,6 +228,7 @@ class Font(YamlReader):
             'font': self.file,
             'font_file': self.file,
             'font_interline_spacing': self.interline_spacing,
+            'font_interword_spacing': self.interword_spacing,
             'font_kerning': self.kerning,
             'font_size': self.size,
             'font_stroke_width': self.stroke_width,

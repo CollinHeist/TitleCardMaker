@@ -76,6 +76,7 @@ class PreviewTitleCard(UpdateBase):
     font_id: Optional[int] = None
     font_color: Optional[str] = None
     font_interline_spacing: Optional[int] = None
+    font_interword_spacing: Optional[int] = None
     font_kerning: Optional[float] = None
     font_size: Optional[float] = None
     font_stroke_width: Optional[float] = None
@@ -122,6 +123,7 @@ class NewTitleCard(Base):
     font_kerning: float
     font_stroke_width: float
     font_interline_spacing: int
+    font_interword_spacing: int
     font_vertical_shift: int
     blur: bool
     grayscale: bool
@@ -194,6 +196,7 @@ class TitleCard(Base):
     font_kerning: float
     font_stroke_width: float
     font_interline_spacing: int
+    font_interword_spacing: int
     font_vertical_shift: int
     blur: bool
     grayscale: bool

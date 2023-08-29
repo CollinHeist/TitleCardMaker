@@ -36,6 +36,9 @@
 
   <template id="episode-row">
     <tr class="center aligned"> 
+      <td data-column="create" class="selectable">
+        <a><i class="ui green image outline icon"></i></a>
+      </td>
       <td data-column="edit" class="selectable">
         <a><i class="ui blue save outline icon"></i></a>
       </td>
@@ -53,6 +56,7 @@
       </td>
       <td data-column="match_title" data-type="boolean" class="center aligned collapsing"><!-- Icon --></td>
       <td data-column="auto_split_title" data-type="boolean" class="center aligned collapsing"><!-- Icon --></td>
+      {% if not preferences.simplified_data_table %}
       <td data-column="templates" class="center aligned collapsing">
         <div data-value="template_ids" class="ui inline clearable scrolling multiple dropdown">
           <input name="template_ids" type="hidden">
@@ -77,6 +81,7 @@
           <div class="menu"><!-- Submenu --></div>
         </div>
       </td>
+      {% endif %}
       <td data-column="hide_season_text" data-type="boolean" class="center aligned collapsing"><!-- Icon --></td>
       <td data-column="season_text" class="center aligned collapsing">
         <div class="ui transparent short input">
@@ -89,6 +94,7 @@
           <input name="episode_text" type="text" placeholder="Default">
         </div>
       </td>
+      {% if not preferences.simplified_data_table %}
       <td data-column="unwatched_style" class="center aligned collapsing">
         <div data-value="unwatched_style" class="ui inline clearable dropdown">
           <input name="unwatched_style" type="hidden">
@@ -125,14 +131,21 @@
           <input name="font_interline_spacing" placeholder="Default">
         </div>
       </td>
+      <td data-column="font_interword_spacing" class="center aligned collapsing">
+        <div class="ui transparent number input">
+          <input name="font_interword_spacing" placeholder="Default">
+        </div>
+      </td>
       <td data-column="font_vertical_shift" class="center aligned collapsing">
         <div class="ui transparent number input">
           <input name="font_vertical_shift" placeholder="Default">
         </div>
       </td>
+      {% endif %}
       <td data-column="extras" class="selectable">
         <a><i class="ui eye outline icon"></i></a>
       </td>
+      {% if not preferences.simplified_data_table %}
       <td data-column="source_file" class="center aligned collapsing">
         <div class="ui transparent short input">
           <input name="source_file" type="text" placeholder="Default">
@@ -143,7 +156,9 @@
           <input name="card_file" type="text" placeholder="Default">
         </div>
       </td>
+      {% endif %}
       <td data-column="watched" data-type="boolean" class="center aligned collapsing"><!-- Icon --></td>
+      {% if not preferences.simplified_data_table %}
       {% if preferences.use_emby and series.emby_library_name %}
       <td data-column="emby_id" class="center aligned collapsing">
         <div class="ui transparent id input">
@@ -179,6 +194,7 @@
           <input name="tvrage_id" type="text" placeholder="-">
         </div>
       </td>
+      {% endif %}
       {% endif %}
       <td data-column="delete" class="selectable">
         <a><i class="ui red trash alternate outline icon"></i></a>
@@ -229,10 +245,10 @@
     </div>
   </template>
 
-  <template id="file-template">
+  <template id="file-card-template">
     <div class="ui card">
       <div class="content">
-        <i data-action="search" class="right floated search icon" title="Search for this image"></i>
+        <i data-action="search-tmdb" class="right floated search icon" title="Search for this image"></i>
         <i data-action="upload" class="right floated file import icon" title="Upload a new source image"></i>
         {% if preferences.use_tmdb %}
         <img data-action="browse-tmdb" class="right floated icon" src="/internal_assets/tmdb_primary_full_logo.svg" title="Browse TMDb source images"/>
@@ -246,6 +262,25 @@
         </div>
       </div>
     </div>
+  </template>
+
+  <template id="file-row-template">
+    <tr class="center aligned"> 
+      <td data-column="season_number" class="center aligned collapsing"></td>
+      <td data-column="episode_number" class="center aligned collapsing"></td>
+      <td data-column="width" class="center aligned collapsing"></td>
+      <td data-column="height" class="center aligned collapsing"></td>
+      <td data-column="filesize" class="center aligned collapsing"></td>
+      <td data-column="browse-tmdb" class="center aligned collapsing selectable">
+        <a><img data-action="browse-tmdb" class="right floated icon" src="/internal_assets/tmdb_primary_full_logo.svg" title="Browse TMDb source images" height="14"/></a>
+      </td>
+      <td data-column="search-tmdb" class="center aligned collapsing selectable">
+        <a><i data-action="search-tmdb" class="ui right floated search icon"></i></a>
+      </td>
+      <td data-column="upload" class="center aligned collapsing selectable">
+        <a><i data-action="upload" class="ui right floated file import icon"></i></a>
+      </td>
+    </tr>
   </template>
 </head>
 
@@ -404,7 +439,7 @@
         <!-- Data Tabs -->
         <div class="twelve wide column">
           <div class="ui top attached stackable tabular menu">
-            <a class="item active" data-tab="configuration">Configuration</a>
+            <a class="item active" data-tab="configuration">Options</a>
             <a class="item" data-tab="card-config">Card Configuration</a>
             <a class="item" data-tab="blueprints">Blueprints</a>
             <a class="item" data-tab="episode-data">Episode Data</a>
@@ -415,6 +450,32 @@
           <!-- Configuration tab -->
           <div id="series-tabs" class="ui bottom attached tab segment" data-tab="configuration">
             <form id="series-config-form" class="ui compact form">
+              <!-- Warning if Series is not found in various interfaces -->
+              {% if preferences.use_emby and series.emby_id is none %}
+              <div class="ui visible floating warning message">
+                <i class="exclamation triangle icon"></i>
+                This Series has not been found in Emby.
+              </div>
+              {% endif %}
+              {% if preferences.use_jellyfin and series.jellyfin_id is none %}
+              <div class="ui visible floating warning message">
+                <i class="exclamation triangle icon"></i>
+                This Series has not been found in Jellyfin.
+              </div>
+              {% endif %}
+              {% if preferences.use_sonarr and series.sonarr_id is none %}
+              <div class="ui visible floating warning message">
+                <i class="exclamation triangle icon"></i>
+                This Series has not been found in Sonarr.
+              </div>
+              {% endif %}
+              {% if preferences.use_tmdb and series.tmdb_id is none %}
+              <div class="ui visible floating warning message">
+                <i class="exclamation triangle icon"></i>
+                This Series has not been found on TMDb.
+              </div>
+              {% endif %}
+
               <!-- Episode Data Source -->
               <div class="field">
                 <label>Episode Data Source</label>
@@ -660,7 +721,7 @@
                     <div class="field">
                       <label>Stroke Width</label>
                       <div class="ui right labeled input">
-                        {% if series.font_kerning is none %}
+                        {% if series.font_stroke_width is none %}
                         <input name="font_stroke_width" type="number" placeholder="Default">
                         {% else %}
                         <input name="font_stroke_width" type="number" placeholder="Default" value="{{series.font_stroke_width*100}}">
@@ -671,19 +732,28 @@
                   </div>
 
                   <!-- Font interline spacing, vertical shift -->
-                  <div class="two fields">
+                  <div class="three fields">
                     <div class="field">
                       <label>Interline Spacing</label>
-                      {% if series.font_kerning is none %}
+                      {% if series.font_interline is none %}
                       <input name="font_interline_spacing" type="number" placeholder="Default">
                       {% else %}
                       <input name="font_interline_spacing" type="number" placeholder="Default" value="{{series.font_interline_spacing}}">
                       {% endif %}
                     </div>
+
+                    <div class="field">
+                      <label>Interword Spacing</label>
+                      {% if series.font_interword_spacing is none %}
+                      <input name="font_interword_spacing" type="number" placeholder="Default">
+                      {% else %}
+                      <input name="font_interword_spacing" type="number" placeholder="Default" value="{{series.font_interword_spacing}}">
+                      {% endif %}
+                    </div>
     
                     <div class="field">
                       <label>Vertical Shift</label>
-                      {% if series.font_kerning is none %}
+                      {% if series.font_vertical_shift is none %}
                       <input name="font_vertical_shift" type="number" placeholder="Default">
                       {% else %}
                       <input name="font_vertical_shift" type="number" placeholder="Default" value="{{series.font_vertical_shift}}">
@@ -793,7 +863,7 @@
                     <i class="trash alternate outline icon"></i>
                     Delete Extras
                   </div>
-                  <br>
+                  <br><br>
 
                   <!-- Submit changes button -->
                   <button id="submit-changes" class="ui animated primary button" type="submit">
@@ -858,6 +928,7 @@
               <table class="ui compact striped head stuck sortable unstackable table">
                 <thead>
                   <tr class="center aligned">
+                    <th class="collapsing">Create<br>Card</th>
                     <th class="collapsing">Save<br>Changes</th>
                     <th class="collapsing">Season</th>
                     <th class="collapsing">Episode</th>
@@ -866,31 +937,34 @@
                     <th class="left aligned">Title</th>
                     <th class="collapsing">Match<br>Title</th>
                     <th class="collapsing">Auto-Split<br>Title</th>
-
+                    {% if not preferences.simplified_data_table %}
                     <th class="collapsing">Templates</th>
                     <th class="collapsing">Font</th>
                     <th class="collapsing">Card<br>Type</th>
-
+                    {% endif %}
                     <th class="collapsing">Hide<br>Season Text</th>
                     <th class="collapsing">Season<br>Text</th>
 
                     <th class="collapsing">Hide<br>Episode Text</th>
                     <th class="collapsing">Episode<br>Text</th>
-
+                    {% if not preferences.simplified_data_table %}
                     <th class="collapsing">Unwatched<br>Style</th>
                     <th class="collapsing">Watched<br>Style</th>
-
+                    
                     <th class="collapsing">Font<br>Color</th>
                     <th class="collapsing">Font<br>Size (%)</th>
                     <th class="collapsing">Font Stroke<br>Width (%)</th>
                     <th class="collapsing">Font Interline<br>Spacing</th>
+                    <th class="collapsing">Font Interword<br>Spacing</th>
                     <th class="collapsing">Font<br>Vertical Shift</th>
-
+                    {% endif %}
                     <th class="collapsing">Extras &<br>Translations</th>
-
+                    {% if not preferences.simplified_data_table %}
                     <th class="collapsing">Source<br>File</th>
                     <th class="collapsing">Card<br>File</th>
+                    {% endif %}
                     <th class="collapsing">Watched</th>
+                    {% if not preferences.simplified_data_table %}
                     {% if preferences.use_emby and series.emby_library_name %}
                     <th class="collapsing">Emby<br>ID</th>
                     {% endif %}
@@ -902,6 +976,7 @@
                     <th class="collapsing">TVDb<br>ID</th>
                     {% if series.year < 2017 %}
                     <th class="collapsing">TVRage<br>ID</th>
+                    {% endif %}
                     {% endif %}
                     <th class="collapsing">Delete</th>
                   </tr>
@@ -939,25 +1014,59 @@
               </span>
             </div>
             <h3 class="ui dividing header">Source Images</h3>
-            <div id="files-list" class="ui stackable cards">
-              <!-- Added asynchrously -->
+            {% if preferences.sources_as_table %}
+            <div class="ui scrolling long container">
+              <table class="ui compact striped head stuck sortable unstackable scrolling long table">
+                <thead>
+                  <tr class="center aligned">
+                    <th class="collapsing">Season</th>
+                    <th class="collapsing">Episode</th>
+                    <th class="collapsing">Width</th>
+                    <th class="collapsing">Height</th>
+                    <th class="collapsing">Filesize</th>
+                    {% if preferences.use_tmdb %}
+                    <th class="collapsing">Browse<br>TMDb</th>
+                    <th class="collapsing">Search<br>TMDb</th>
+                    {% endif %}
+                    <th class="collapsing">Upload<br>Image</th>
+                  </tr>
+                </thead>
+                <tbody id="source-images"><!-- Added asynchrously --></tbody>
+              </table>
             </div>
+            {% else %}
+            <div id="source-images" class="ui stackable cards"><!-- Added asynchrously --></div>
+            {% endif %}
+            <div id="file-pagination" class="ui attached pagination menu"><!-- Added asynchrously --></div>
 
+            <!-- Logo -->
             <h3 class="ui dividing header">Logo</h3>
-            <div id="browse-logos-button" class="ui blue tertiary button" onclick="browseTmdbLogos();">
-              Browse TMDb Logos
+            {% if preferences.use_tmdb %}
+            <div class="ui blue tertiary button" onclick="browseLogos();">
+              Browse
             </div>
-            <div class="ui special raised card">
-              <div id="logoImage" class="blurring dimmable image">
-                <div class="ui dimmer">
-                  <div class="content">
-                    <div class="center">
-                      <div onclick="browseTmdbLogos();" class="ui inverted button">Browse TMDb Logos</div>
-                    </div>
-                  </div>
-                </div>
-                <img src="/source/{{series.path_safe_name}}/logo.png" loading="lazy" onerror="document.getElementById('logoImage').style.display = 'None';" onload="$('#browse-logos-button').remove();">
-              </div>
+            {% endif %}
+            <input type="file" id="logo-upload" class="ui invisible file input" onchange="uploadLogo();">
+            <label for="logo-upload" class="ui green tertiary button">
+              Upload
+            </label>
+            <img id="logo" class="ui rounded image" src="/source/{{series.path_safe_name}}/logo.png" loading="lazy" onerror="this.remove();">
+
+            <!-- Backdrop -->
+            <h3 class="ui dividing header">Backdrop</h3>
+            {% if preferences.use_tmdb %}
+            <div class="ui blue tertiary button" onclick="browseBackdrops();">
+              Browse
+            </div>
+            {% endif %}
+            <input type="file" id="backdrop-upload" class="ui invisible file input" onchange="uploadBackdrop();">
+            <label for="backdrop-upload" class="ui green tertiary button">
+              Upload
+            </label>
+            <img id="backdrop" class="ui rounded image" src="/source/{{series.path_safe_name}}/backdrop.jpg" loading="lazy" onerror="this.remove()">
+            <div class="ui visible floating info message">
+              <i class="info circle icon"></i>
+              The Backdrop is automatically used as the source image for any <b>Art</b> styles.
             </div>
           </div>
 
@@ -1214,7 +1323,7 @@
             <label>Extras</label>
             <!-- Added later -->
           </div>
-          <div onclick="addBlankEpisodeExtra();" class="ui circular mini icon add-field button">
+          <div onclick="addBlankEpisodeExtra();" class="ui circular mini icon add-field grey button">
             <i class="plus square outline icon"></i>
             Add Extra
           </div>

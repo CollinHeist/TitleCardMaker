@@ -13,6 +13,7 @@ class TemporaryPreferenceParser:
         """Fake initialize this object"""
 
         self.database_directory = Path(database_directory)
+        self.imagemagick_container = None
 
 # pylint: disable=global-statement
 pp = TemporaryPreferenceParser(Path(__file__).parent / '.objects')

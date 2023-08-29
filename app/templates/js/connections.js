@@ -209,8 +209,8 @@ function initializeAuthForm() {
   $('.checkbox[data-value="require_auth"]').checkbox('check');
   $('#auth-settings .field').toggleClass('disabled', false);
   {% else %}
-  $('#auth-settings .field').toggleClass('disabled', true);
   $('.checkbox[data-value="require_auth"]').checkbox('uncheck');
+  $('#auth-settings .field').toggleClass('disabled', true);
   {% endif %}
 
   // Assign checked/unchecked functions
@@ -249,7 +249,7 @@ function initializeFormToggles() {
         $.ajax({
           type: 'PUT',
           url: `${toggleAPI}/enable`,
-          success: () => $.toast({class: 'blue info', title: `Enabled ${title} Connection`}),
+          success: () => showInfoToast(`Enabled ${title} Connection`),
           error: response => showErrorToast({title: `Error Enabling ${title} Connection`, response})
         });
       }, onUnchecked: () => {
@@ -383,7 +383,8 @@ function enablePlexFilesizeWarning() {
     const number = $('.field[data-value="plex_filesize_limit"] input[name="filesize_limit_number"]').val() * 1;
     const unit = $('.field[data-value="plex_filesize_limit"] input[name="filesize_limit_unit"]').val();
     const unitValues = {
-      'Bytes': 1, 'Kilobytes':  2**10, 'Megabytes':  2**20, 'Gigabytes':  2**30, 'Terabytes':  2**40
+      'Bytes': 1, 'Kilobytes':  2**10, 'Megabytes':  2**20,
+      'Gigabytes':  2**30, 'Terabytes':  2**40,
     };
     let current = unitValues[unit] * number,
         limit   = 10 * unitValues['Megabytes'];
@@ -392,6 +393,10 @@ function enablePlexFilesizeWarning() {
 }
 
 async function initAll() {
+  // Enable dropdowns, checkboxes
+  $('.ui.dropdown').dropdown();
+  $('.ui.checkbox').checkbox();
+
   {% if preferences.use_emby %}
   getEmbyUsernames();
   {% endif %}
@@ -408,9 +413,6 @@ async function initAll() {
   initializeFormToggles();
   enablePlexFilesizeWarning();
   initializeTautulliForm();
-
-  // Enable dropdowns, checkboxes
-  $('.ui.dropdown').dropdown();
 
   // Attach Tautlli modal to button
   $('#tautulli-agent-modal')
@@ -458,10 +460,7 @@ async function initAll() {
         contentType: 'application/json',
         success: () => {
           if (successCallback !== undefined ) { successCallback(); }
-          $.toast({
-            class: 'blue info',
-            title: `Updated Connection to ${title}`,
-          });
+          showInfoToast(`Updated Connection to ${title}`);
           getEmbyUsernames();
           getJellyfinUsernames();
           $(formId).toggleClass('error', false);

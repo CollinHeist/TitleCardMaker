@@ -14,6 +14,7 @@ from app.schemas.preferences import Style
 
 from modules.EpisodeInfo2 import EpisodeInfo
 
+
 class Episode(Base):
     """
     SQL Table that defines an Episode. This contains any Episode-level
@@ -29,8 +30,8 @@ class Episode(Base):
     font = relationship('Font', back_populates='episodes')
     series_id = Column(Integer, ForeignKey('series.id'))
     series = relationship('Series', back_populates='episodes')
-    card = relationship('Card', back_populates='episode')
-    loaded = relationship('Loaded', back_populates='episode')
+    card = relationship('Card', back_populates='episode', cascade='all, delete-orphan')
+    loaded = relationship('Loaded', back_populates='episode', cascade='all, delete-orphan')
     templates = relationship(
         'Template',
         secondary=EpisodeTemplates.__table__,
@@ -62,6 +63,7 @@ class Episode(Base):
     font_kerning = Column(Float, default=None)
     font_stroke_width = Column(Float, default=None)
     font_interline_spacing = Column(Integer, default=None)
+    font_interword_spacing = Column(Integer, default=None)
     font_vertical_shift = Column(Integer, default=None)
 
     emby_id = Column(Integer, default=None)
@@ -141,6 +143,7 @@ class Episode(Base):
             'font_kerning': self.font_kerning,
             'font_stroke_width': self.font_stroke_width,
             'font_interline_spacing': self.font_interline_spacing,
+            'font_interword_spacing': self.font_interword_spacing,
             'font_vertical_shift': self.font_vertical_shift,
             'extras': self.extras,
             'episode_emby_id': self.emby_id,
@@ -183,6 +186,7 @@ class Episode(Base):
             'font_kerning': self.font_kerning,
             'font_stroke_width': self.font_stroke_width,
             'font_interline_spacing': self.font_interline_spacing,
+            'font_interword_spacing': self.font_interword_spacing,
             'font_vertical_shift': self.font_vertical_shift,
             'extra_keys': ex_keys,
             'extra_values': ex_values,

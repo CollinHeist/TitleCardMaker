@@ -62,6 +62,7 @@ class BaseSeries(BaseConfig):
     font_kerning: Optional[float] = None
     font_stroke_width: Optional[float] = None
     font_interline_spacing: Optional[int] = None
+    font_interword_spacing: Optional[int] = None
     font_vertical_shift: Optional[int] = None
 
     emby_library_name: Optional[constr(min_length=1)] = None
@@ -227,6 +228,7 @@ class UpdateSeries(BaseUpdate):
     font_kerning: Optional[float] = UNSPECIFIED
     font_stroke_width: Optional[float] = UNSPECIFIED
     font_interline_spacing: Optional[int] = UNSPECIFIED
+    font_interword_spacing: Optional[int] = UNSPECIFIED
     font_vertical_shift: Optional[int] = UNSPECIFIED
 
     emby_library_name: Optional[str] = UNSPECIFIED
@@ -286,6 +288,7 @@ class Series(BaseSeries):
     font_kerning: Optional[float]
     font_stroke_width: Optional[float]
     font_interline_spacing: Optional[int]
+    font_interword_spacing: Optional[int]
     font_vertical_shift: Optional[int]
     season_titles: Optional[dict[SeasonTitleRange, str]]
     extras: Optional[dict[str, Any]]

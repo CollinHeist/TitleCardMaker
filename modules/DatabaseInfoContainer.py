@@ -198,7 +198,7 @@ class DatabaseInfoContainer(ABC):
 
         # Verify class comparison
         if not isinstance(other, self.__class__):
-            raise TypeError(f'Can only compare like DatabaseInfoContainer objects')
+            raise TypeError(f'Can only compare like DatabaseInfoContainers')
 
         return any(
             attr.endswith('_id')

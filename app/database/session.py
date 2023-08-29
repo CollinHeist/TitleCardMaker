@@ -102,8 +102,9 @@ Base = declarative_base()
 
 # Scheduler
 Scheduler = BackgroundScheduler(
-    jobstores={'default': SQLAlchemyJobStore(url=SQLALCHEMY_DATABASE_URL)},
-    executors={'default': ThreadPoolExecutor(20)},
+    jobstores={
+        'default': SQLAlchemyJobStore(url=SQLALCHEMY_DATABASE_URL, engine=engine)
+    }, executors={'default': ThreadPoolExecutor(20)},
     job_defaults={'coalesce': True, 'misfire_grace_time': 60 * 10},
     misfire_grace_time=600,
 )
@@ -117,9 +118,7 @@ PreferencesLocal = Preferences(preferences_file)
 
 
 # Default Page arguments used for paginated returns
-Page = Page.with_custom_options(
-    size=Field(250, ge=1),
-)
+Page = Page.with_custom_options(size=Field(250, ge=1))
 
 
 # Initialize all interfaces

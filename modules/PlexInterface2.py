@@ -1,6 +1,6 @@
 from collections import namedtuple
 from datetime import datetime, timedelta
-from logging import Logger
+from logging import Logger, LoggerAdapter
 from pathlib import Path
 from re import IGNORECASE, compile as re_compile
 from typing import Any, Callable, Optional, Union
@@ -54,7 +54,8 @@ def catch_and_log(
     def decorator(function: Callable) -> Callable:
         def inner(*args, **kwargs):
             # Get contextual logger if provided as argument to function
-            if 'log' in kwargs and isinstance(kwargs['log'], Logger):
+            if ('log' in kwargs
+                and isinstance(kwargs['log'], (Logger, LoggerAdapter))):
                 clog = kwargs['log']
             else:
                 clog = log
@@ -74,7 +75,7 @@ def catch_and_log(
     return decorator
 
 
-class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
+class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
     """This class describes an interface to Plex."""
 
     """Series ID's that can be set by TMDb"""
@@ -90,6 +91,7 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
             verify_ssl: bool = True,
             integrate_with_pmm: bool = False,
             filesize_limit: int = 10485760,
+            use_magick_prefix: bool = False,
             *,
             log: Logger = log,
         ) -> None:
@@ -105,10 +107,11 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
                 uploading.
             filesize_limit: Number of bytes to limit a single file to
                 during upload.
+            use_magick_prefix: Whether to use 'magick' command prefix.
             log: (Keyword) Logger for all log messages.
         """
 
-        super().__init__(filesize_limit)
+        super().__init__(filesize_limit, use_magick_prefix)
 
         # Create Session for caching HTTP responses
         self.__session = WebInterface('Plex', verify_ssl, log=log).session
@@ -210,9 +213,11 @@ class PlexInterface(EpisodeDataSource, MediaServer, SyncInterface, Interface):
 
         # Try by name
         try:
-            for series in library.search(title=series_info.name,
-                                         year=series_info.year, libtype='show'):
-                if series.title in (series_info.name, series_info.full_name):
+            results = library.search(
+                title=series_info.name, year=series_info.year, libtype='show'
+            )
+            for series in results:
+                if series_info.matches(series.title):
                     return series
         except NotFound:
             pass
