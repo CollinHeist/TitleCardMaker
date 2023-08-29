@@ -1270,6 +1270,8 @@ function selectTmdbImage(episodeId, url) {
 /*
  * Submit an API request to download the Series logo at the specified
  * URL.
+ * 
+ * @param {str} url - URL of the logo file to download.
  */
 function downloadSeriesLogo(url) {
   // Create psuedo form for this URL
@@ -1286,10 +1288,35 @@ function downloadSeriesLogo(url) {
     success: () => {
       showInfoToast('Downloaded Logo');
       // Update logo source to force refresh
-      document.querySelector('#logoImage img').src = `/source/{{series.path_safe_name}}/logo.png?${new Date().getTime()}`;
-      document.querySelector('#logoImage').style.display = 'unset';
+      document.querySelector('#logo').src = `/source/{{series.path_safe_name}}/logo.png?${new Date().getTime()}`;
     },
     error: response => showErrorToast({title: 'Error Downloading Logo', response}),
+  });
+}
+
+/*
+ * Submit an API request to download the Series backdrop at the specified
+ * URL.
+ * 
+ * @param {str} url - URL of the backdrop file to download.
+ */
+function downloadSeriesBackdrop(url) {
+  // Create psuedo form for this URL
+  const form = new FormData();
+  form.set('url', url);
+  // Submit API request to upload this URL
+  $.ajax({
+    type: 'POST',
+    url: '/api/sources/series/{{series.id}}/backdrop/upload',
+    data: form,
+    cache: false,
+    contentType: false,
+    processData: false,
+    success: () => {
+      showInfoToast('Downloaded Backdrop');
+      document.querySelector('#backdrop').src = `/source/{{series.path_safe_name}}/backdrop.jpg?${new Date().getTime()}`;
+    },
+    error: response => showErrorToast({title: 'Error Downloading Backdrop', response}),
   });
 }
 
@@ -1320,10 +1347,10 @@ function browseTmdbImages(episodeId, cardElementId) {
 }
 
 /*
- * Submit an API request to browse the available TMDb logos for this
- * Series. If successful, the relevant modal is shown.
+ * Submit an API request to browse the available logos for this Series.
+ * If successful, the relevant modal is shown.
  */
-function browseTmdbLogos() {
+function browseLogos() {
   $.ajax({
     type: 'GET',
     url: '/api/sources/series/{{series.id}}/logo/browse',
@@ -1338,6 +1365,100 @@ function browseTmdbLogos() {
         $('#browse-tmdb-logo-modal').modal('show');
       }
     }, error: response => showErrorToast({title: 'Unable to Query TMDb', response}),
+  });
+}
+
+/*
+ * Submit an API request to browse the available backdrops for this
+ * Series. If successful, the relevant modal is shown.
+ */
+function browseBackdrops() {
+  $.ajax({
+    type: 'GET',
+    url: `/api/sources/series/{{series.id}}/backdrop/browse`,
+    success: images => {
+      if (images.length === 0) {
+        showErrorToast({title: 'TMDb returned no images'});
+      } else {
+        // Images returned, add to browse modal
+        const imageElements = images.map(({url, width, height}, index) => {
+          const location = index % 2 ? 'right' : 'left';
+          return `<a class="ui image" onclick="downloadSeriesBackdrop('${url}')"><div class="ui blue ${location} ribbon label">${width}x${height}</div><img src="${url}"/></a>`;
+        });
+        $('#browse-tmdb-modal .content .images')[0].innerHTML = imageElements.join('');
+        $('#browse-tmdb-modal').modal('show');
+      }
+    }, error: response => showErrorToast({title: 'Unable to Query TMDb', response}),
+  });
+}
+
+/*
+ * Get the uploaded logo file and upload it to this Series. If the logo
+ * is an image, then the API request to upload the logo is submitted. If
+ * successful, then the logo `img` element is updated.
+ */
+function uploadLogo() {
+  // Get uploaded file
+  const file = $('#logo-upload')[0].files[0];
+  if (!file) { return; }
+
+  // Verify file is an image
+  if (file.type.indexOf('image') !== 0) {
+    showErrorToast({title: 'Uploaded file is not an image'});
+    return;
+  }
+
+  // Create Form with this file
+  const form = new FormData();
+  form.append('file', file);
+
+  // Submit API request
+  $.ajax({
+    type: 'POST',
+    url: `/api/sources/series/{{series.id}}/logo/upload`,
+    data: form,
+    cache: false,
+    contentType: false,
+    processData: false,
+    success: () => {
+      showInfoToast('Updated Logo');
+      document.querySelector('#logo').src = `/source/{{series.path_safe_name}}/logo.png?${new Date().getTime()}`;
+    }, error: response => showErrorToast({title: 'Error Updating Logo', response}),
+  });
+}
+
+/*
+ * Get the uploaded backdrop file and upload it to this Series. If the
+ * backdrop is an image, then the API request to upload the file is
+ * submitted. If successful, then the backdrop `img` element is updated.
+ */
+function uploadBackdrop() {
+  // Get uploaded file
+  const file = $('#backdrop-upload')[0].files[0];
+  if (!file) { return; }
+
+  // Verify file is an image
+  if (file.type.indexOf('image') !== 0) {
+    showErrorToast({title: 'Uploaded file is not an image'});
+    return;
+  }
+
+  // Create Form with this file
+  const form = new FormData();
+  form.append('file', file);
+
+  // Submit API request
+  $.ajax({
+    type: 'POST',
+    url: `/api/sources/series/{{series.id}}/backdrop/upload`,
+    data: form,
+    cache: false,
+    contentType: false,
+    processData: false,
+    success: () => {
+      showInfoToast('Updated Backdrop');
+      document.querySelector('#backdrop').src = `/source/{{series.path_safe_name}}/backdrop.jpg?${new Date().getTime()}`;
+    }, error: response => showErrorToast({title: 'Error Updating Backdrop', response}),
   });
 }
 
@@ -1363,7 +1484,7 @@ function getEpisodeSourceImage(episodeId, sourceElementId) {
  */
 function getSourceImages() {
   $('.button[data-action="download-source-images"]').toggleClass('disabled', true);
-  $.toast({class: 'blue info', title: 'Starting to Download Source Images'});
+  showInfoToast('Starting to Download Source Images');
   $.ajax({
     type: 'POST',
     url: '/api/sources/series/{{series.id}}',
