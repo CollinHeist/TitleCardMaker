@@ -1014,9 +1014,30 @@
               </span>
             </div>
             <h3 class="ui dividing header">Source Images</h3>
-            <div id="files-list" class="ui stackable cards">
-              <!-- Added asynchrously -->
+            {% if preferences.sources_as_table %}
+            <div class="ui scrolling long container">
+              <table class="ui compact striped head stuck sortable unstackable scrolling long table">
+                <thead>
+                  <tr class="center aligned">
+                    <th class="collapsing">Season</th>
+                    <th class="collapsing">Episode</th>
+                    <th class="collapsing">Width</th>
+                    <th class="collapsing">Height</th>
+                    <th class="collapsing">Filesize</th>
+                    {% if preferences.use_tmdb %}
+                    <th class="collapsing">Browse<br>TMDb</th>
+                    <th class="collapsing">Search<br>TMDb</th>
+                    {% endif %}
+                    <th class="collapsing">Upload<br>Image</th>
+                  </tr>
+                </thead>
+                <tbody id="source-images"><!-- Added asynchrously --></tbody>
+              </table>
             </div>
+            {% else %}
+            <div id="source-images" class="ui stackable cards"><!-- Added asynchrously --></div>
+            {% endif %}
+            <div id="file-pagination" class="ui attached pagination menu"><!-- Added asynchrously --></div>
 
             <h3 class="ui dividing header">Logo</h3>
             <div id="browse-logos-button" class="ui blue tertiary button" onclick="browseTmdbLogos();">
