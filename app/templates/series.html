@@ -245,7 +245,7 @@
     </div>
   </template>
 
-  <template id="file-template">
+  <template id="file-card-template">
     <div class="ui card">
       <div class="content">
         <i data-action="search" class="right floated search icon" title="Search for this image"></i>
@@ -262,6 +262,25 @@
         </div>
       </div>
     </div>
+  </template>
+
+  <template id="file-row-template">
+    <tr class="center aligned"> 
+      <td data-column="season_number" class="center aligned collapsing"></td>
+      <td data-column="episode_number" class="center aligned collapsing"></td>
+      <td data-column="width" class="center aligned collapsing"></td>
+      <td data-column="height" class="center aligned collapsing"></td>
+      <td data-column="filesize" class="center aligned collapsing"></td>
+      <td data-column="browse-tmdb" class="center aligned collapsing selectable">
+        <a><img data-action="browse-tmdb" class="right floated icon" src="/internal_assets/tmdb_primary_full_logo.svg" title="Browse TMDb source images" height="14"/></a>
+      </td>
+      <td data-column="search-tmdb" class="center aligned collapsing selectable">
+        <a><i data-action="search-tmdb" class="ui right floated search icon"></i></a>
+      </td>
+      <td data-column="upload" class="center aligned collapsing selectable">
+        <a><i data-action="upload" class="ui right floated file import icon"></i></a>
+      </td>
+    </tr>
   </template>
 </head>
 

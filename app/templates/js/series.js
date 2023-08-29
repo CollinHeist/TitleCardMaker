@@ -476,11 +476,13 @@ function initStyles() {
   refreshTheme();
 }
 
-async function getFileData() {
-  const fileHolder = document.getElementById('files-list');
-  const fileTemplate = document.getElementById('file-template');
-  if (fileHolder === null || fileTemplate === null) { return; }
-  const allFiles = await fetch('/api/sources/series/{{series.id}}').then(resp => resp.json());
+let currentPage=1;
+async function getFileData(page=currentPage) {
+  const sourceImageContainer = document.getElementById('source-images');
+  const fileTemplate = document.getElementById('file-card-template');
+  const rowTemplate = document.getElementById('file-row-template');
+  if (!sourceImageContainer || !fileTemplate || !rowTemplate) { return; }
+  const allFiles = await fetch(`/api/sources/series/{{series.id}}?page=${page}&size=12`).then(resp => resp.json());
 
   // Some error occured, toast and exit
   if (allFiles.detail !== undefined) {
@@ -493,17 +495,77 @@ async function getFileData() {
     return;
   }
 
-  const files = allFiles.map(source => {
+  const sources = allFiles.items.map(source => {
+    const elementId = `file-episode${source.episode_id}`;
+    {% if preferences.sources_as_table %}
+    const row = rowTemplate.content.cloneNode(true);
+    row.querySelector('tr').id = elementId;
+    // Season
+    const season = row.querySelector('td[data-column="season_number"]');
+    season.innerText = source.season_number;
+    season.dataset.sortValue = source.season_number;
+    // Episode
+    const episode = row.querySelector('td[data-column="episode_number"]');
+    episode.innerText = source.episode_number;
+    episode.dataset.sortValue = source.episode_number;
+    // Width
+    const width = row.querySelector('td[data-column="width"]');
+    width.innerText = source.width || 'Missing';
+    width.dataset.sortValue = source.width;
+    // Height
+    const height = row.querySelector('td[data-column="height"]');
+    height.innerHTML = source.height || 'Missing';
+    height.dataset.sortValue = source.height;
+    // Filesize
+    const filesize = row.querySelector('td[data-column="filesize"]');
+    if (source.exists) {
+      filesize.innerText = formatBytes(source.filesize, 1);
+      filesize.dataset.sortValue = source.filesize;
+      row.querySelector('[data-column="search-tmdb"]').classList.add('disabled');
+    } else {
+      filesize.innerText = 'Missing'; filesize.dataset.sortValue = 0;
+      width.classList.add('error');
+      height.classList.add('error');
+      filesize.classList.add('error');
+      row.querySelector('i[data-action="search-tmdb"]').onclick = () => getEpisodeSourceImage(source.episode_id, elementId);
+    }
+    // Launch TMDb browse modal when TMDb logo is clicked
+    const tmdbLogo = row.querySelector('[data-action="browse-tmdb"]');
+    if (tmdbLogo !== null) {
+      tmdbLogo.onclick = () => browseTmdbImages(source.episode_id, elementId);
+    }
+    // Launch upload source modal when upload icon is clicked
+    row.querySelector('i[data-action="upload"]').onclick = () => {
+      $('#upload-source-form').off('submit').on('submit', event => {
+        event.preventDefault();
+        $.ajax({
+          type: 'POST',
+          url: `/api/sources/episode/${source.episode_id}/upload`,
+          data: new FormData(event.target),
+          cache: false,
+          contentType: false,
+          processData: false,
+          success: () => {
+            showInfoToast('Updated source image');
+            getFileData();
+          }, error: response => showErrorToast({title: 'Error updating source image', response}),
+          complete: () => $('#upload-source-form')[0].reset(),
+        });
+      });
+      $('#upload-source-modal').modal('show');
+    }
+
+    return row;
+    {% else %}
     const file = fileTemplate.content.cloneNode(true);
     // Fill in the card values present on all files
-    const cardId = `file-episode${source.episode_id}`;
-    file.querySelector('.card').id = cardId;
+    file.querySelector('.card').id = elementId;
     file.querySelector('[data-value="index"]').innerHTML = `Season ${source.season_number} Episode ${source.episode_number}`;
     file.querySelector('[data-value="path"]').innerHTML = source.source_file_name;
     // Launch TMDb browse modal when TMDb logo is clicked
     const tmdbLogo = file.querySelector('[data-action="browse-tmdb"]');
     if (tmdbLogo !== null) {
-      tmdbLogo.onclick = () => browseTmdbImages(source.episode_id, cardId);
+      tmdbLogo.onclick = () => browseTmdbImages(source.episode_id, elementId);
     }
     // Launch upload source modal when upload icon is clicked
     file.querySelector('i[data-action="upload"]').onclick = () => {
@@ -527,14 +589,14 @@ async function getFileData() {
     }
     if (source.exists) {
       // Disable search icon
-      file.querySelector('i[data-action="search"]').classList.add('disabled');
+      file.querySelector('i[data-action="search-tmdb"]').classList.add('disabled');
       // Remove missing label, fill in dimensions and filesize
       file.querySelector('[data-value="missing"]').remove();
       file.querySelector('[data-value="dimension"]').innerHTML = `${source.width}x${source.height}`;
       file.querySelector('[data-value="filesize"]').innerHTML = formatBytes(source.filesize, 1);
     } else {
       // Add download image function to icon click
-      file.querySelector('i[data-action="search"]').onclick = () => getEpisodeSourceImage(source.episode_id, cardId);
+      file.querySelector('i[data-action="search-tmdb"]').onclick = () => getEpisodeSourceImage(source.episode_id, elementId);
       // Make the card red, remove unnecessary elements
       file.querySelector('.card').classList.add('red');
       file.querySelector('[data-value="dimension"]').remove();
@@ -542,8 +604,19 @@ async function getFileData() {
     }
 
     return file;
+    {% endif %}
   });
-  fileHolder.replaceChildren(...files);
+  sourceImageContainer.replaceChildren(...sources);
+
+  // Update pagination
+  currentPage = page;
+  updatePagination({
+    paginationElementId: 'file-pagination',
+    navigateFunction: getFileData,
+    page: allFiles.page,
+    pages: allFiles.pages,
+    amountVisible: isSmallScreen() ? 4 : 18,
+  });
   refreshTheme();
 }
 
