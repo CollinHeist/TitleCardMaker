@@ -509,14 +509,17 @@ def resolve_card_settings(
     # If an explicit card file was indicated, use it vs. default
     try:
         if card_settings.get('card_file', None) is None:
+            filename = CleanPath.sanitize_name(
+                card_settings['card_filename_format'].format(**card_settings)
+            )
             card_settings['title'] = card_settings['title'].replace('\\n', '')
             card_settings['card_file'] = series_directory \
                 / preferences.get_folder_format(episode_info) \
-                / card_settings['card_filename_format'].format(**card_settings)
+                / filename
         else:
             card_settings['card_file'] = series_directory \
                 / preferences.get_folder_format(episode_info) \
-                / card_settings['card_file']
+                / CleanPath.sanitize_name(card_settings['card_file'])
     except KeyError as e:
         log.exception(f'{series.log_str} {episode.log_str} Cannot format Card '
                       f'filename - missing data', e)
