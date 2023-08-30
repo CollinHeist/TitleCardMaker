@@ -47,6 +47,9 @@ class BaseCardType(ImageMaker):
     """Default case string for all title text"""
     DEFAULT_FONT_CASE = 'upper'
 
+    """Default font replacements"""
+    FONT_REPLACEMENTS = {}
+
     """Mapping of 'case' strings to format functions"""
     CASE_FUNCTIONS = {
         'blank': lambda _: '',
@@ -102,13 +105,6 @@ class BaseCardType(ImageMaker):
     @abstractmethod
     def TITLE_COLOR(self) -> str:
         """Standard color to use for the episode title text"""
-        raise NotImplementedError(f'All CardType objects must implement this')
-
-
-    @property
-    @abstractmethod
-    def FONT_REPLACEMENTS(self) -> dict:
-        """Standard font replacements for the episode title font"""
         raise NotImplementedError(f'All CardType objects must implement this')
 
 
