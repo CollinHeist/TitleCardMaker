@@ -7,6 +7,7 @@ from tinydb import where
 from modules.Debug import log
 from modules.PersistentDatabase import PersistentDatabase
 
+
 class RemoteFile:
     """
     This class describes a RemoteFile. A RemoteFile is a file that is
@@ -19,7 +20,7 @@ class RemoteFile:
 
     """Base URL to look for remote content at"""
     BASE_URL = (
-        'https://github.com/CollinHeist/TitleCardMaker-CardTypes/raw/master'
+        'https://github.com/CollinHeist/TitleCardMaker-CardTypes/raw/web-ui'
     )
 
     """Temporary directory all files will be downloaded into"""
@@ -92,8 +93,10 @@ class RemoteFile:
     def __repr__(self) -> str:
         """Returns an unambiguous string representation of the object."""
 
-        return (f'<RemoteFile remote_source={self.remote_source}, local_file='
-                f'{self.local_file}, valid={self.valid}>')
+        return (
+            f'<RemoteFile remote_source={self.remote_source}, local_file='
+            f'{self.local_file}, valid={self.valid}>'
+        )
 
 
     def resolve(self) -> Path:
@@ -117,7 +120,7 @@ class RemoteFile:
             Response object from this object's remote source.
         """
 
-        return get(self.remote_source, timeout=30)
+        return get(self.remote_source, timeout=10)
 
 
     def download(self) -> None:
