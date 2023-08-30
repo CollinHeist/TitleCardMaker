@@ -138,11 +138,20 @@ class TitleCard:
           | extra_characteristics
 
         # Initialize model
-        inverse_mappings = {CardClass: identifier for identifier, CardClass in self.CARD_TYPES.items()}
-        CardModel = LocalCardTypeModels[inverse_mappings[self.episode.card_class]](
-            logo_file=episode.source.parent / 'logo.png',
-            **kwargs,
-        )
+        if hasattr(self.episode.card_class, 'CardModel'):
+            CardModel = self.episode.card_class.CardModel(
+                logo_file=episode.source.parent / 'logo.png',
+                **kwargs,
+            )
+        else:
+            inverse_mappings = {
+                CardClass: identifier
+                for identifier, CardClass in self.CARD_TYPES.items()
+            }
+            CardModel = LocalCardTypeModels[inverse_mappings[self.episode.card_class]](
+                logo_file=episode.source.parent / 'logo.png',
+                **kwargs,
+            )
 
         try:
             self.maker = self.episode.card_class(**CardModel.dict())
