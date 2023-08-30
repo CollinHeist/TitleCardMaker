@@ -67,7 +67,10 @@ class TintedFrameTitleCard(BaseCardType):
             ), Extra(
                 name='Episode Text Vertical Shift',
                 identifier='episode_text_vertical_shift',
-                description='Additional vertical shift to apply to the season and episode text',
+                description=(
+                    'Additional vertical shift to apply to the season and '
+                    'episode text'
+                ),
             ), Extra(
                 name='Separator Character',
                 identifier='separator',
@@ -76,12 +79,15 @@ class TintedFrameTitleCard(BaseCardType):
                 name='Frame Color',
                 identifier='frame_color',
                 description='Color of the frame edges',
-                tooltip='If unspecified, the font color is utilized.',
+                tooltip='Defaults to match the Font color.',
             ), Extra(
                 name='Frame Width',
                 identifier='frame_width',
                 description='Width of the frame',
-                tooltip='Thickness of the frame. Unit in pixels. Default is 3.',
+                tooltip=(
+                    'Thickness of the frame. Default is <v>3</v>. Unit is '
+                    'pixels.'
+                ),
             ), Extra(
                 name='Top Element',
                 identifier='top_element',
@@ -90,7 +96,7 @@ class TintedFrameTitleCard(BaseCardType):
                     'Either <v>index</v> to display the season and episode '
                     'text, <v>logo</v> to display the logo, <v>omit</v> to not '
                     'display anything, or <v>title</v> to display the title '
-                    'text.'
+                    'text. Default is <v>title</v>.'
                 ),
             ), Extra(
                 name='Middle Element',
@@ -98,7 +104,7 @@ class TintedFrameTitleCard(BaseCardType):
                 description='Which element to display in the middle of the frame',
                 tooltip=(
                     'Either <v>logo</v> to display the logo, or <v>omit</v> to '
-                    'not display anything.'
+                    'not display anything. Default is <v>omit</v>.'
                 ),
             ), Extra(
                 name='Bottom Element',
@@ -108,23 +114,27 @@ class TintedFrameTitleCard(BaseCardType):
                     'Either <v>index</v> to display the season and episode '
                     'text, <v>logo</v> to display the logo, <v>omit</v> to not '
                     'display anything, or <v>title</v> to display the title '
-                    'text.'
+                    'text. Default is <v>index</v>'
                 ),
             ), Extra(
                 name='Logo Size',
                 identifier='logo_size',
-                description='Scalar for how much to scale the size of the logo element',
+                description=(
+                    'Scalar for how much to scale the size of the logo element'
+                ), tooltip='Number ≥<v>0.0</v>.'
             ), Extra(
                 name='Edge Blurring',
                 identifier='blur_edges',
                 description='Whether to blur the edges around the frame',
-                tooltip='Either <v>True</v> or <v>False</v>.',
+                tooltip=(
+                    'Either <v>True</v> or <v>False</v>. Default is <v>True</v>.'
+                ),
             ),
         ], description=[
             'Title card featuring a rectangular frame with blurred content on '
-            'the outside of the frame, and unblurred content within.',
-            'The frame and all text can be recolored via extras.',
-            'The top and bottoms of the frame can also be optionally '
+            'the outside of the frame, and unblurred content within.', 'The '
+            'frame and all text can be recolored via extras.', 'The top, '
+            'bottom, and middle of the frame can also be optionally '
             'intersected by title text, index text, and/or a logo.',
         ]
     )

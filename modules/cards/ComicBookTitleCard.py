@@ -137,7 +137,10 @@ class ComicBookTitleCard(BaseCardType):
                 name='Index Text Position',
                 identifier='index_text_position',
                 description='Position of the index text on the top of the image',
-                tooltip='Either <v>left</v>, <v>middle</v>, or <v>right</v>.'
+                tooltip=(
+                    'Either <v>left</v>, <v>middle</v>, or <v>right</v>. '
+                    'Default is <v>left</v>.'
+                )
             ), Extra(
                 name='Title Textbox Fill Color',
                 identifier='text_box_fill_color',
@@ -155,7 +158,8 @@ class ComicBookTitleCard(BaseCardType):
                     'Can be any number, or specified like <v>random[lower, '
                     'upper]</v> for a random angle between <v>lower</v> and '
                     '<v>upper</v> to be chosen. Positive angles are tilted '
-                    'down, negative tilted up. Unit is degrees.'
+                    'down, negative tilted up. Default is <v>-4.0</v>. Unit is '
+                    'degrees.'
                 ),
             ), Extra(
                 name='Index Text Rotation Angle',
@@ -165,7 +169,8 @@ class ComicBookTitleCard(BaseCardType):
                     'Can be any number, or specified like <v>random[lower, '
                     'upper]</v> for a random angle between <v>lower</v> and '
                     '<v>upper</v> to be chosen. Positive angles are tilted '
-                    'down, negative tilted up. Unit is degrees.'
+                    'down, negative tilted up. Default is <v>-4.0</v>. Unit is '
+                    'degrees.'
                 ),
             ), Extra(
                 name='Banner Fill Color',
