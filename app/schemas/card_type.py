@@ -249,6 +249,12 @@ class OlivierCardType(BaseCardTypeCustomFontNoText):
     episode_text_color: BetterColor = OlivierTitleCard.EPISODE_TEXT_COLOR
     stroke_color: BetterColor = OlivierTitleCard.STROKE_COLOR
 
+    @root_validator(skip_on_failure=True)
+    def toggle_text_hiding(cls, values):
+        values['hide_episode_text'] |= (len(values['episode_text']) == 0)
+
+        return values
+
 class PosterCardType(BaseCardType):
     title_text: str
     episode_text: constr(to_upper=True)
