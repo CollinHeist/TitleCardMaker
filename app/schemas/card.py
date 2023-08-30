@@ -3,16 +3,11 @@ from typing import Literal, Optional
 
 from pydantic import Field, validator, root_validator
 
-from app.schemas.base import Base, DictKey, UpdateBase, validate_argument_lists_to_dict
+from app.schemas.base import (
+    Base, DictKey, UpdateBase, validate_argument_lists_to_dict
+)
 from app.schemas.font import TitleCase
 from app.schemas.preferences import Style
-
-LocalCardIdentifiers = Literal[
-    'anime', 'comic book', 'cutout', 'fade', 'frame', 'generic', 'gundam',
-    'ishalioh', 'landscape', 'logo', 'olivier', 'phendrena', 'photo', 'polymath',
-    'poster', 'reality tv', 'roman', 'roman numeral', 'sherlock', 'standard',
-    'star wars', 'textless', 'tinted glass', '4x3'
-]
 
 """
 Models of card types and series extras.
@@ -35,7 +30,7 @@ class CardType(Base):
     description: list[str]
 
 class LocalCardType(CardType):
-    name: LocalCardIdentifiers
+    name: str
     source: str = 'local'
 
 class RemoteCardType(CardType):
