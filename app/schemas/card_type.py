@@ -19,6 +19,7 @@ from modules.cards.FrameTitleCard import FrameTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
 from modules.cards.OlivierTitleCard import OlivierTitleCard
+from modules.cards.OverlineTitleCard import OverlineTitleCard
 from modules.cards.PosterTitleCard import PosterTitleCard
 from modules.cards.RomanNumeralTitleCard import RomanNumeralTitleCard
 from modules.cards.StandardTitleCard import StandardTitleCard
@@ -255,6 +256,29 @@ class OlivierCardType(BaseCardTypeCustomFontNoText):
 
         return values
 
+class OverlineCardType(BaseCardTypeCustomFontAllText):
+    font_color: BetterColor = OverlineTitleCard.TITLE_COLOR
+    font_file: FilePath = OverlineTitleCard.TITLE_FONT
+    episode_text_color: Optional[BetterColor] = None
+    hide_line: bool = False
+    line_color: Optional[BetterColor] = None
+    line_position: Literal['top', 'bottom'] = 'top'
+    line_width: PositiveInt = OverlineTitleCard.LINE_THICKNESS
+    omit_gradient: bool = False
+    separator: str = '-'
+
+    @root_validator(skip_on_failure=True)
+    def assign_unassigned_color(cls, values):
+        if values['episode_text_color'] is None:
+            values['episode_text_color'] = values['font_color']
+        if values['line_color'] is None:
+            if values['episode_text_color'] is None:
+                values['line_color'] = values['font_color']
+            else:
+                values['line_color'] = values['episode_text_color']
+
+        return values
+
 class PosterCardType(BaseCardType):
     title_text: str
     episode_text: constr(to_upper=True)
@@ -408,6 +432,7 @@ LocalCardTypeModels = {
     'logo': LogoCardType,
     'musikmann': WhiteBorderCardType,
     'olivier': OlivierCardType,
+    'overline': OverlineCardType,
     'phendrena': CutoutCardType,
     'photo': FrameCardType,
     'polymath': StandardCardType,

@@ -9,6 +9,7 @@ from modules.CleanPath import CleanPath
 from modules.Debug import log
 from modules.RemoteFile import RemoteFile
 
+
 class RemoteCardType:
     """
     This class defines a remote CardType. This is an encapsulation of a
