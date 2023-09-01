@@ -1653,7 +1653,7 @@ function navigateSeries(next_or_previous) {
       if (series === null) {
         $(`i[data-action="${next_or_previous}-series"]`).toggleClass('disabled', true);
       } else {
-        window.location.href = `/series/${series.id}`;
+        window.location.href = `/series/${series.id}${window.location.hash}`;
       }
     }, error: response => showErrorToast({title: 'Navigation Failed', response}),
   });
