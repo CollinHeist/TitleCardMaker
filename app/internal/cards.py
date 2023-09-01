@@ -44,6 +44,7 @@ def create_all_title_cards(*, log: Logger = log) -> None:
 
     try:
         # Get the Database
+        failures = 0
         with next(get_database()) as db:
             # Get all Series
             all_series = db.query(models.series.Series).all()
@@ -65,6 +66,9 @@ def create_all_title_cards(*, log: Logger = log) -> None:
                             log.warning(f'{series.log_str} {episode.log_str} - skipping Card')
                             log.debug(f'Exception: {e}')
                     except OperationalError:
+                        if failures > 10:
+                            break
+                        failures += 1
                         log.debug(f'Database is busy, sleeping..')
                         sleep(30)
     except Exception as e:
