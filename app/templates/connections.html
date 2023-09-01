@@ -36,7 +36,7 @@
       <h1 class="ui header">Connections</h1>
 
       <!-- Authentication -->
-      <h2 class="ui dividing header">Authentication</h2>
+      <h2 id="authentication" class="ui dividing header">Authentication</h2>
       <div class="connection-form">
         <!-- Enable button -->
         <div data-value="require_auth" class="ui left aligned checkbox field" data-tooltip="Whether to require a username and password">
@@ -69,7 +69,7 @@
       </div>
 
       <!-- Emby Connections -->
-      <h2 class="ui dividing header">Emby Media Server</h2>
+      <h2 id="emby" class="ui dividing header">Emby Media Server</h2>
       <div id="emby-connection" class="connection-form">
         <!-- Enable button -->
         {% if preferences.use_emby %}
@@ -142,7 +142,7 @@
       </div>
 
       <!-- Jellyfin Connections -->
-      <h2 class="ui dividing header">Jellyfin Media Server</h2>
+      <h2 id="jellyfin" class="ui dividing header">Jellyfin Media Server</h2>
       <div id="jellyfin-connection" class="connection-form">
         <!-- Enable button -->
         {% if preferences.use_jellyfin %}
@@ -215,7 +215,7 @@
       </div>
 
       <!-- Plex Connections -->
-      <h2 class="ui dividing header">Plex Media Server</h2>
+      <h2 id="plex" class="ui dividing header">Plex Media Server</h2>
       <div id="plex-connection" class="connection-form">
         <!-- Enable button -->
         <div id="enable-plex" class="ui left aligned checkbox field">
@@ -296,7 +296,7 @@
       </div>
 
       <!-- Sonarr Connections -->
-      <h2 class="ui dividing header">Sonarr</h2>
+      <h2 id="sonarr" class="ui dividing header">Sonarr</h2>
       <div id="sonarr-connection" class="connection-form">
         <!-- Enable button -->
         <div id="enable-sonarr" class="ui left aligned checkbox field">
@@ -382,7 +382,7 @@
       </div>
 
       <!-- Tautulli Integration -->
-      <h2 class="ui dividing header">Tautulli</h2>
+      <h2 id="tautulli" class="ui dividing header">Tautulli</h2>
       <button id="tautulli-agent-button" class="ui labeled icon blue button">
         <i class="bell icon"></i>
         Create Notification Agent
