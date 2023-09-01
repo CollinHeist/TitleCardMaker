@@ -770,6 +770,7 @@ async function initAll() {
   allStyles = await fetch('/api/available/styles').then(resp => resp.json());
   availableTemplates = await fetch('/api/available/templates').then(resp => resp.json());
   availableFonts = await fetch('/api/available/fonts').then(resp => resp.json());
+
   // Initialize 
   initalizeSeriesConfig();
   getLibraries();
@@ -781,12 +782,20 @@ async function initAll() {
   getStatistics();
   getStatisticsId = setInterval(getStatistics, 30000); // Refresh stats every 30s
 
+  // Open tab indicated by URL param
+  const tab = window.location.hash.substring(1) || 'options';
+  $('.menu .item')
+    .tab('change tab', tab)
+    // When tab is changed, update hash URL field 
+    .tab({
+      onVisible: (tabPath) => history.replaceState(null, null, `#${tabPath}`),
+    });
+
   // Enable all dropdowns, menus, and accordians
   $('.ui.dropdown').dropdown();
-  // $('.ui.checkbox').checkbox();
-  $('.menu .item').tab()
   $('.ui.accordion').accordion();
   $('.ui.checkbox').checkbox();
+
   // Enable IOS hover on the series poster
   $('.ui.special.card .image').dimmer({
     on: 'ontouchstart' in document.documentElement ? 'click' : 'hover'
