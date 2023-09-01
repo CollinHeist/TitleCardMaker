@@ -44,7 +44,7 @@ function addSeries(result, resultElementId) {
     contentType: 'application/json',
     success: series => {
       $(`#${resultElementId}`).toggleClass('disabled', true);
-      $.toast({class: 'blue info', title: `Added Series "${series.name}"`});
+      showInfoToast(`Added Series "${series.name}"`);
     }, error: response => showErrorToast({title: 'Error Adding Series', response}),
     complete: () => $('#add-series-modal').modal('hide'),
   });
