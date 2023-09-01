@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import HTTPException
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from app.dependencies import * # pylint: disable=wildcard-import,unused-wildcard-import
@@ -33,6 +34,7 @@ def download_all_source_images(*, log: Logger = log) -> None:
         # Get the Database
         with next(get_database()) as db:
             # Get all Series
+            failures = 0
             for series in db.query(models.series.Series).all():
                 # Skip if Series is unmonitored
                 if not series.monitored:
@@ -51,6 +53,12 @@ def download_all_source_images(*, log: Logger = log) -> None:
                         log.warning(f'{series.log_str} {episode.log_str} '
                                     f'Skipping source selection')
                         continue
+                    except OperationalError:
+                        if failures > 10:
+                            break
+                        failures += 1
+                        log.debug(f'Database is busy, sleeping..')
+                        sleep(30)
     except Exception as exc:
         log.exception(f'Failed to download source images', exc)
 
