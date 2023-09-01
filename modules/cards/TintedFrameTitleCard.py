@@ -265,8 +265,8 @@ class TintedFrameTitleCard(BaseCardType):
             List of ImageMagick Commands.
         """
 
-        # Blurring is disabled, return empty command
-        if not self.blur_edges:
+        # Blurring is disabled (or being applied globally), return empty command
+        if not self.blur_edges or self.blur:
             return []
 
         crop_width = self.WIDTH - (2 * self.BOX_OFFSET) - 6 # 6px margin
@@ -580,7 +580,7 @@ class TintedFrameTitleCard(BaseCardType):
     @property
     def frame_commands(self) -> ImageMagickCommands:
         """
-        Subcommand to add the box that separates the outer (blurred)
+        Subcommands to add the box that separates the outer (blurred)
         image and the interior (unblurred) image. This box features a
         drop shadow. The top and bottom parts of the frame are
         optionally intersected by a index text, title text, or a logo.
