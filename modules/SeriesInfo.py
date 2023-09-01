@@ -1,4 +1,4 @@
-from re import match, compile as re_compile
+from re import compile as re_compile, match, sub as re_sub, IGNORECASE
 from typing import Optional, Union
 
 from plexapi.video import Show as PlexShow
@@ -241,6 +241,13 @@ class SeriesInfo(DatabaseInfoContainer):
         return ''.join(filter(str.isalnum, text)).lower()
 
 
+    @property
+    def sort_name(self) -> str:
+        """The sort-friendly name of this Series."""
+
+        return re_sub(r'^(a|an|the)(\s)', '', self.name.lower(), IGNORECASE)
+
+
     def matches(self, *names: tuple[str]) -> bool:
         """
         Get whether any of the given names match this Series.
@@ -293,5 +300,10 @@ class SeriesInfo(DatabaseInfoContainer):
             # Find by database ID
             or_(*id_conditions),
             # Find by title and year
-            and_(SeriesModel.name==self.name, SeriesModel.year==self.year),
+            and_(
+                or_(
+                    SeriesModel.name==self.name,
+                    SeriesModel.sort_name==self.sort_name,
+                ), SeriesModel.year==self.year
+            ),
         )
