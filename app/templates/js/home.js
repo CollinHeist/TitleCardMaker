@@ -1,5 +1,8 @@
 // Get all series and load their cards into HTML
-async function getAllSeries(page=1) {
+async function getAllSeries(page=undefined) {
+  // Get page from URL param if provided
+  page = page || new URLSearchParams(window.location.search).get('page') || 1;
+
   // Get associated sort query param
   const sortState = window.localStorage.getItem('series-sort-order') || 'a-z';
   const sortParam = {
@@ -74,6 +77,11 @@ async function getAllSeries(page=1) {
     amountVisible: isSmallScreen() ? 5 : 25,
     hideIfSinglePage: true,
   });
+
+  // Update page search param field for the current page
+  const url = new URL(location.href);
+  url.searchParams.set('page', page);
+  history.pushState(null, '', url);
 
   // Refresh theme for any newly added HTML
   refreshTheme();
