@@ -37,9 +37,11 @@ $(document).ready(function() {
   // Search results should show a poster preview
   $.fn.search.settings.templates = {
     standard: response => {
+      const query = $('#search-bar input').val();
       let elements = response.results.map(({id, name, poster_url}) => {
         return `<a class="search result" href="/series/${id}"><div class="search content"><img src="${poster_url}">${name}</div></a>`;
       });
+      elements.push(`<a class="search result" href="/add?q=${query}">Search for "${query}"..</a>`);
       return elements.join('');
     }, message: (message, type) => {
       if (message === 'Your search returned no results') {
