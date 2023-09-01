@@ -439,16 +439,16 @@
         <!-- Data Tabs -->
         <div class="twelve wide column">
           <div class="ui top attached stackable tabular menu">
-            <a class="item active" data-tab="configuration">Options</a>
+            <a class="item active" data-tab="options">Options</a>
             <a class="item" data-tab="card-config">Card Configuration</a>
             <a class="item" data-tab="blueprints">Blueprints</a>
-            <a class="item" data-tab="episode-data">Episode Data</a>
+            <a class="item" data-tab="episodes">Episode Data</a>
             <a class="item" data-tab="files">Files</a>
-            <a class="item" data-tab="database-ids">Database ID's</a>
+            <a class="item" data-tab="ids">Database ID's</a>
           </div>
           
           <!-- Configuration tab -->
-          <div id="series-tabs" class="ui bottom attached tab segment" data-tab="configuration">
+          <div id="series-tabs" class="ui bottom attached tab segment" data-tab="options">
             <form id="series-config-form" class="ui compact form">
               <!-- Warning if Series is not found in various interfaces -->
               {% if preferences.use_emby and series.emby_id is none %}
@@ -908,7 +908,7 @@
           </div>
 
           <!-- Episode Data Tab -->
-          <div class="ui bottom attached tab segment" data-tab="episode-data">
+          <div class="ui bottom attached tab segment" data-tab="episodes">
             <!-- Mass table editor buttons -->
             <button id="new-episode" class="ui green tertiary button">
               <i class="plus square outline icon"></i>
@@ -1071,7 +1071,7 @@
           </div>
 
           <!-- Database ID's Tab -->
-          <div class="ui bottom attached tab segment" data-tab="database-ids">
+          <div class="ui bottom attached tab segment" data-tab="ids">
             <form id="series-ids-form" class="ui compact form">
               {% if preferences.use_emby %}
               <div id-type="Emby ID" class="field">
