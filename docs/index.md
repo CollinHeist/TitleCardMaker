@@ -173,39 +173,28 @@ assigned to them.
 
 === ":material-docker: Docker"
 
-    1. Build the Docker container by executing the following command:
+    1. Build the Docker container, and label it `titlecardmaker`, by
+    executing the following command:
 
         === ":material-linux: Linux"
 
             ```bash
-            docker build -t "titlecardmaker" . # (1)!
-            ```
-
-            1. This will label the built container `titlecardmaker`.
+            docker build -t "titlecardmaker" .
 
         === ":material-apple: MacOS"
 
             ```bash
-            docker build -t "titlecardmaker" . # (1)!
-            ```
-
-            1. This will label the built container `titlecardmaker`.
+            docker build -t "titlecardmaker" .
 
         === ":material-powershell: Windows (Powershell)"
 
             ```bash
-            docker build -t "titlecardmaker" . <#(1)#>
-            ```
-
-            1. This will label the built container `titlecardmaker`.
+            docker build -t "titlecardmaker" .
 
         === ":material-microsoft-windows: Windows (Non-Powershell)"
 
             ```bash
-            docker build -t "titlecardmaker" . # (1)!
-            ```
-
-            1. This will label the built container `titlecardmaker`.
+            docker build -t "titlecardmaker" .
 
     2. Determine your timezone, a full list is available
     [here](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). You
