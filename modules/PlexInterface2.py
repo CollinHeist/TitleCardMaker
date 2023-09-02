@@ -774,7 +774,6 @@ class PlexInterface(MediaServer, EpisodeDataSource, SyncInterface, Interface):
                 if self.integrate_with_pmm:
                     plex_episode.removeLabel(['Overlay'])
             except Exception as e:
-                error_count += 1
                 log.exception(f'Unable to upload {image.resolve()} to '
                               f'{series_info}', e)
                 continue
