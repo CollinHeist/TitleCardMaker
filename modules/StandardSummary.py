@@ -95,7 +95,7 @@ class StandardSummary(BaseSummary):
             f'-tile 3x3',
             f'-geometry +80+80',
             f'-shadow',
-            f'"'+'" "'.join(self.inputs)+'"',       # Wrap each filename in ""
+            f'"'+'" "'.join(self.inputs)+'"', # Wrap each filename in ""
             f'"{self.__MONTAGE_PATH.resolve()}"',
         ])
 
@@ -201,7 +201,8 @@ class StandardSummary(BaseSummary):
 
     def _add_created_by(self,
             montage_and_logo: Path,
-            created_by: Path) -> Path:
+            created_by: Path,
+        ) -> Path:
         """
         Add the 'created by' image to the bottom of the montage.
 
@@ -232,7 +233,8 @@ class StandardSummary(BaseSummary):
 
     def __add_background_image(self,
             montage_and_logo: Path,
-            created_by: Path) -> Path:
+            created_by: Path,
+        ) -> Path:
         """
         Add the two images on top of the background image.
 
