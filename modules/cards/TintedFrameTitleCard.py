@@ -536,7 +536,7 @@ class TintedFrameTitleCard(BaseCardType):
     @property
     def frame_commands(self) -> ImageMagickCommands:
         """
-        Subcommand to add the box that separates the outer (blurred)
+        Subcommands to add the box that separates the outer (blurred)
         image and the interior (unblurred) image. This box features a
         drop shadow. The top and bottom parts of the frame are
         optionally intersected by a index text, title text, or a logo.
@@ -582,6 +582,34 @@ class TintedFrameTitleCard(BaseCardType):
             f'-composite',
         ]
 
+
+    @property
+    def mask_commands(self) -> ImageMagickCommands:
+        """
+        Subcommands to add the top-level mask which overlays all other
+        elements of the image, even the frame. This mask can be used to
+        have parts of the image appear to "pop out" of the frame.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        # Do not apply mask if stylized
+        if self.blur or self.grayscale:
+            return []
+
+        # Look for mask file corresponding to this source image
+        mask = self.source_file.parent / f'{self.source_file.stem}-mask.png'
+
+        # Mask exists, return commands to compose atop image
+        if mask.exists():
+            return [
+                f'\( "{mask.resolve()}"',
+                *self.resize_and_style,
+                f'\) -composite',
+            ]
+
+        return []
 
     @staticmethod
     def modify_extras(
@@ -684,6 +712,8 @@ class TintedFrameTitleCard(BaseCardType):
             *self.index_text_commands,
             *self.logo_commands,
             *self.frame_commands,
+            # Attempt to overlay mask
+            *self.mask_commands,
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
