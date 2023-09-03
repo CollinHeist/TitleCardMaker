@@ -40,10 +40,13 @@ class JellyfinInterface(EpisodeDataSource, MediaServer, SyncInterface):
     AIRDATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%f000000Z'
 
 
-    def __init__(self, url: str, api_key: str,
+    def __init__(self,
+            url: str,
+            api_key: str,
             username: Optional[str] = None,
             verify_ssl: bool = True,
-            filesize_limit: Optional[int] = None) -> None:
+            filesize_limit: Optional[int] = None,
+        ) -> None:
         """
         Construct a new instance of an interface to a Jellyfin server.
 
