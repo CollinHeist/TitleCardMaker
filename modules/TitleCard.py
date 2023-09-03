@@ -18,6 +18,7 @@ from modules.cards.FrameTitleCard import FrameTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
 from modules.cards.OlivierTitleCard import OlivierTitleCard
+from modules.cards.OverlineTitleCard import OverlineTitleCard
 from modules.cards.PosterTitleCard import PosterTitleCard
 from modules.cards.RomanNumeralTitleCard import RomanNumeralTitleCard
 from modules.cards.StandardTitleCard import StandardTitleCard
@@ -72,6 +73,7 @@ class TitleCard:
         'logo': LogoTitleCard,
         'musikmann': WhiteBorderTitleCard,
         'olivier': OlivierTitleCard,
+        'overline': OverlineTitleCard,
         'phendrena': CutoutTitleCard,
         'photo': FrameTitleCard,
         'polymath': StandardTitleCard,
