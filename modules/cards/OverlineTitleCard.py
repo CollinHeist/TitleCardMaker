@@ -161,7 +161,7 @@ class OverlineTitleCard(BaseCardType):
             font_vertical_shift: int = 0,
             blur: bool = False,
             grayscale: bool = False,
-            episode_text_color: str = TITLE_COLOR,
+            episode_text_color: str = EPISODE_TEXT_COLOR,
             hide_line: bool = False,
             line_color: str = TITLE_COLOR,
             line_position: Literal['top', 'bottom'] = 'top',
@@ -407,7 +407,11 @@ class OverlineTitleCard(BaseCardType):
 
         # Generic font, reset episode text and box colors
         if not custom_font:
-            ...
+            if 'episode_text_color' in extras:
+                extras['episode_text_color'] =\
+                    OverlineTitleCard.EPISODE_TEXT_COLOR
+            if 'line_color' in extras:
+                extras['line_color'] = OverlineTitleCard.TITLE_COLOR
 
 
     @staticmethod
