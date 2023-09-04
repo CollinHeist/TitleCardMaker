@@ -59,7 +59,7 @@
               </div>
               <div class="ui visible info message">
                 <i class="info circle icon"></i>
-                <b>Info</b> When importing Cards for multiple Series, only each default Card Directory is searched.
+                When importing Cards for multiple Series, only each default Card Directory is searched.
               </div>
 
               <div data-value="force_reload" class="ui inline field">
@@ -105,6 +105,10 @@
           </div>
           
           <h2 class="ui dividing header">YAML</h2>
+          <div class="ui compact floating visible info message">
+            <i class="info circle icon"></i>
+            Validate your YAML <i>before</i> importing - an online validator can be found <a href="https://www.yamllint.com/" target="_blank">here</a>.
+          </div>
           <h3 class="ui header">Preferences File</h3>
           <form id="preferences-form" class="ui form">
             <div data-value="yaml" class="ui field">
@@ -177,8 +181,10 @@
               <i class="exclamation triangle icon"></i>
               <b>Warning</b>
               <ul class="list">
-                <li>Template settings will be applied to imported Series. Templates will not be assigned.</li>
+                <li>Template settings will be applied to the imported Series. Templates will not be assigned.</li>
                 <li>Custom Font files will need to be manually uploaded.</li>
+                <li>Fonts cannot be defined inside Templates. Create a separate Font entry and assign it to the Template.</li>
+                <li>Custom Source file overrides (via <b>seasons</b> or <b>episode_ranges</b>) will not be imported.</li>
               </ul>
             </div>
             <br>
