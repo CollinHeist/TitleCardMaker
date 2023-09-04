@@ -343,7 +343,7 @@
           <div class="ui disabled field">
             <label>Library Paths</label>
             <div class="ui compact floating visible info message">
-              <i class="exclamation icon"></i>
+              <i class="info circle icon"></i>
               Only required if Syncing from Sonarr
             </div>
             <div class="fields">
@@ -463,8 +463,13 @@
       <i class="close icon"></i>
       <div class="header">Tautulli Notification Agent</div>
       <div class="content">
-        <div class="ui compact raised segment">
-          <span>TitleCardMaker can create a Notification Agent on Tautulli to immediately update Title Cards for newly added or recently watched Episodes.</span>
+        <div class="ui compact floating visible info message">
+          <!-- <i class="info circle icon"></i>
+          <b>Info</b> -->
+          <ul class="list">
+            <li>A Tautulli Notification Agent can be used to immediately update Title Cards for newly added or recently watched Episodes.</li>
+            <li>This bypasses the Scheduler, and is <i>highly</i> recommended for Plex users.</li>
+          </ul>
         </div>
         <form id="tautulli-agent-form" class="ui form">
           <div class="ui field">
@@ -479,7 +484,7 @@
 
           <div class="ui left aligned checkbox field">
             <input name="tautulli_use_ssl" type="checkbox" checked="">
-            <label>Use SSL for Secure Connections</label>
+            <label>Use SSL</label>
           </div>
 
           <div class="ui field">
