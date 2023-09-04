@@ -42,7 +42,7 @@ Height = lambda dims: int(str(dims).lower().split('x')[1])
 
 def parse_raw_yaml(yaml: str) -> dict[str, Any]:
     """
-    Parse the raw YAML string into a Python Dictionary (ordereddict).
+    Parse the raw YAML string into a Python dictionary (ordereddict).
 
     Args:
         yaml: String that represents YAML to parse.
@@ -59,11 +59,11 @@ def parse_raw_yaml(yaml: str) -> dict[str, Any]:
     try:
         yaml_dict = YAML().load(yaml)
         return {} if yaml_dict is None else yaml_dict
-    except Exception as e:
+    except Exception as exc:
         raise HTTPException(
             status_code=422,
-            detail=f'YAML cannot be parsed',
-        ) from e
+            detail=f'YAML is invalid and cannot be parsed',
+        ) from exc
 
 
 def _get(yaml_dict: dict[str, Any],
@@ -921,6 +921,9 @@ def parse_templates(
                 status_code=422,
                 detail=f'Invalid extras in Template "{template_name}"',
             )
+        
+        # Remove logo, as this is built-in
+        extras.pop('logo', None)
 
         # Create NewTemplate with all indicated customization
         templates.append(NewTemplate(**_remove_unspecifed_args(
