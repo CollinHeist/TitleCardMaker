@@ -27,9 +27,15 @@ class OlivierTitleCard(BaseCardType):
                 identifier='episode_text_color',
                 description='Color to utilize for the episode text',
             ), Extra(
+                name='Episode Text Vertical Shit',
+                identifier='episode_text_vertical_shift',
+                description='Vertical offset to apply to the episode text',
+                tooltip='Unit is pixels.'
+            ), Extra(
                 name='Text Stroke Color',
                 identifier='stroke_color',
                 description='Color to use for the text stroke',
+                tooltip='Default is <v>black</v>.'
             ),
         ], description=[
             'Title card with left-aligned title and episode text.', 'This card '
@@ -72,7 +78,7 @@ class OlivierTitleCard(BaseCardType):
         'episode_prefix', 'episode_text', 'font_color', 'font_file',
         'font_interline_spacing', 'font_interword_spacing', 'font_kerning',
         'font_size', 'font_stroke_width', 'font_vertical_shift', 'stroke_color',
-        'episode_text_color',
+        'episode_text_color', 'episode_text_vertical_shift',
     )
 
     def __init__(self,
@@ -92,6 +98,7 @@ class OlivierTitleCard(BaseCardType):
             blur: bool = False,
             grayscale: bool = False,
             episode_text_color: str = EPISODE_TEXT_COLOR,
+            episode_text_vertical_shift: int = 0,
             stroke_color: str = STROKE_COLOR,
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
@@ -131,6 +138,7 @@ class OlivierTitleCard(BaseCardType):
 
         # Optional extras
         self.episode_text_color = episode_text_color
+        self.episode_text_vertical_shift = episode_text_vertical_shift
         self.stroke_color = stroke_color
 
 
@@ -182,6 +190,8 @@ class OlivierTitleCard(BaseCardType):
         if self.episode_prefix is None or self.hide_episode_text:
             return []
 
+        vertical_shift = -150 + self.episode_text_vertical_shift
+
         return [
             f'-gravity west',
             f'-font "{self.EPISODE_PREFIX_FONT.resolve()}"',
@@ -190,11 +200,11 @@ class OlivierTitleCard(BaseCardType):
             f'-fill black',
             f'-stroke black',
             f'-strokewidth 5',
-            f'-annotate +325-150 "{self.episode_prefix}"',
+            f'-annotate +325{vertical_shift:+} "{self.episode_prefix}"',
             f'-fill "{self.episode_text_color}"',
             f'-stroke "{self.episode_text_color}"',
             f'-strokewidth 0',
-            f'-annotate +325-150 "{self.episode_prefix}"',
+            f'-annotate +325{vertical_shift:+} "{self.episode_prefix}"',
         ]
 
 
@@ -211,6 +221,9 @@ class OlivierTitleCard(BaseCardType):
         # No episode text, return empty command
         if self.hide_episode_text:
             return []
+
+        # Vertical shift
+        vertical_shift = -150 + self.episode_text_vertical_shift
 
         # Get variable horizontal offset based of episode prefix
         text_offset = {'EPISODE': 425, 'CHAPTER': 425, 'PART': 275}
@@ -230,11 +243,11 @@ class OlivierTitleCard(BaseCardType):
             f'-fill black',
             f'-stroke black',
             f'-strokewidth 7',
-            f'-annotate +{325+offset}-150 "{self.episode_text}"',
+            f'-annotate +{325+offset}{vertical_shift:+} "{self.episode_text}"',
             f'-fill "{self.episode_text_color}"',
             f'-stroke "{self.episode_text_color}"',
             f'-strokewidth 1',
-            f'-annotate +{325+offset}-150 "{self.episode_text}"',
+            f'-annotate +{325+offset}{vertical_shift:+} "{self.episode_text}"',
         ]
 
 
@@ -259,6 +272,8 @@ class OlivierTitleCard(BaseCardType):
             if 'episode_text_color' in extras:
                 extras['episode_text_color'] =\
                     OlivierTitleCard.EPISODE_TEXT_COLOR
+            if 'episode_text_vertical_shift' in extras:
+                extras['episode_text_vertical_shift'] = 0
             if 'stroke_color' in extras:
                 extras['stroke_color'] = 'black'
 

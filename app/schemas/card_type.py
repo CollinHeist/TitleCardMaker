@@ -248,6 +248,7 @@ class OlivierCardType(BaseCardTypeCustomFontNoText):
     font_color: BetterColor = OlivierTitleCard.TITLE_COLOR
     font_file: FilePath = OlivierTitleCard.TITLE_FONT
     episode_text_color: BetterColor = OlivierTitleCard.EPISODE_TEXT_COLOR
+    episode_text_vertical_shift: int = 0
     stroke_color: BetterColor = OlivierTitleCard.STROKE_COLOR
 
     @root_validator(skip_on_failure=True)
