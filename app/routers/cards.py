@@ -41,7 +41,7 @@ def create_preview_card(
         request: Request,
         card: PreviewTitleCard = Body(...),
         db: Session = Depends(get_database),
-        preferences = Depends(get_preferences),
+        preferences: Preferences = Depends(get_preferences),
     ) -> str:
     """
     Create a preview title card. This uses a fixed source file and
@@ -71,7 +71,7 @@ def create_preview_card(
     # Determine appropriate Source and Output file
     preview_dir = preferences.INTERNAL_ASSET_DIRECTORY / 'preview'
     source = preview_dir / (('art' if 'art' in card.style else 'unique') + '.jpg')
-    output = preview_dir / f'card-{card.style}.png'
+    output = preview_dir / f'card-{card.style}{preferences.card_extension}'
 
     # Resolve all settings
     card_settings = TieredSettings.new_settings(
