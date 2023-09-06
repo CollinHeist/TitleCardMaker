@@ -24,85 +24,83 @@
         <div class="sixteen wide column">
           <h1 class="ui header">Importer</h1>
 
-          <div data-value="import-series-segment" class="ui compact segment">
-            <h2 class="ui dividing header">Existing Title Cards</h2>
-            <div class="ui dimmer">
-              <div class="ui text blue elastic loader">Importing Title Cards..</div>
-            </div>
-            <form id="import-cards-form" class="ui form">
-              <div class="ui field">
-                <label>Series</label>
-                <div data-value="series_id" class="ui search multiple selection dropdown" data-tooltip="Series to import the Cards into">
-                  <input name="series_id" type="hidden">
-                  <div class="text"></div>
-                  <i class="dropdown icon"></i>
-                  <div class="menu"></div>
-                </div>
-              </div>
-
-              <div data-value="image_extension" class="ui field">
-                <label>Card Extension</label>
-                <div data-value="image_extension" class="ui search selection dropdown" data-tooltip="File extension of Cards to search for">
-                  <input name="image_extension" type="hidden">
-                  <div class="default text">.jpg</div>
-                  <i class="dropdown icon"></i>
-                  <div class="menu"></div>
-                </div>
-              </div>
-
-              <div data-value="directory" class="ui field">
-                <label>Card Directory</label>
-                <div data-value="directory" class="ui right icon input" data-tooltip="Directory to search for Cards">
-                  <input name="directory" type="text" placeholder="Series Default">
-                  <i class="folder outline icon"></i>
-                </div>
-              </div>
-              <div class="ui visible info message">
-                <i class="info circle icon"></i>
-                When importing Cards for multiple Series, only each default Card Directory is searched.
-              </div>
-
-              <div data-value="force_reload" class="ui inline field">
-                <div data-value="force_reload" class="ui checked checkbox" data-tooltip="Do not import Episodes that TCM has already created Cards for" data-position="right center">
-                  <input type="checkbox" class="hidden" checked="">
-                  <label>Skip Episodes with existing Cards</label>
-                </div>
-              </div>
-
-              <div class="ui inline field">
-                <div data-value="load_afterwards" class="ui checked checkbox" data-tooltip="Whether to load the title cards after importing them" data-position="right center">
-                  <input type="checkbox" class="hidden" checked="">
-                  <label>Load Title Cards</label>
-                </div>
-              </div>
-
-              <div data-value="media_server" class="ui field">
-                <label>Media Server</label>
-                <div data-value="media_server" class="ui selection dropdown" data-tooltip="Which server to load the cards into after importing (if enabled)">
-                  <input name="media_server" type="hidden">
-                  <i class="dropdown icon"></i>
-                  <div class="default text">Plex</div>
-                  <div class="menu">
-                    {% if preferences.use_emby %}
-                    <div class="item">Emby</div>
-                    {% endif %}
-                    {% if preferences.use_jellyfin %}
-                    <div class="item">Jellyfin</div>
-                    {% endif %}
-                    {% if preferences.use_plex %}
-                    <div class="active item">Plex</div>
-                    {% endif %}
-                  </div>
-                </div>
-              </div>
-              <button class="ui animated primary button" type="submit">
-                <div class="visible content">Submit</div>
-                <div class="hidden content">
-                  <i class="right arrow icon"></i>
-                </div>
-              </button>
-            </form>
+          <h2 class="ui dividing header">Existing Title Cards</h2>
+          <div class="ui dimmer">
+            <div class="ui text blue elastic loader">Importing Title Cards..</div>
           </div>
+          <form id="import-cards-form" class="ui form">
+            <div class="ui eight wide field">
+              <label>Series</label>
+              <div data-value="series_id" class="ui search multiple selection dropdown" data-tooltip="Series to import the Cards into">
+                <input name="series_id" type="hidden">
+                <div class="text"></div>
+                <i class="dropdown icon"></i>
+                <div class="menu"></div>
+              </div>
+            </div>
+
+            <div data-value="image_extension" class="ui field">
+              <label>Card Extension</label>
+              <div data-value="image_extension" class="ui compact search selection dropdown" data-tooltip="File extension of Cards to search for" data-position="right center">
+                <input name="image_extension" type="hidden">
+                <div class="default text">.jpg</div>
+                <i class="dropdown icon"></i>
+                <div class="menu"></div>
+              </div>
+            </div>
+
+            <div data-value="directory" class="ui eight wide field">
+              <label>Card Directory</label>
+              <div data-value="directory" class="ui right icon input" data-tooltip="Directory to search for Cards">
+                <input name="directory" type="text" placeholder="Series Default">
+                <i class="folder outline icon"></i>
+              </div>
+            </div>
+            <div class="ui visible compact floating info message">
+              <i class="info circle icon"></i>
+              When importing Cards for multiple Series, only each default Card Directory is searched.
+            </div>
+
+            <div data-value="force_reload" class="ui inline field">
+              <div data-value="force_reload" class="ui checked checkbox" data-tooltip="Do not import Episodes that TCM has already created Cards for" data-position="right center">
+                <input type="checkbox" class="hidden" checked="">
+                <label>Skip Episodes with existing Cards</label>
+              </div>
+            </div>
+
+            <div class="ui inline field">
+              <div data-value="load_afterwards" class="ui checked checkbox" data-tooltip="Whether to load the title cards after importing them" data-position="right center">
+                <input type="checkbox" class="hidden" checked="">
+                <label>Load Title Cards</label>
+              </div>
+            </div>
+
+            <div data-value="media_server" class="ui field">
+              <label>Media Server</label>
+              <div data-value="media_server" class="ui compact selection dropdown" data-tooltip="Which server to load the cards into after importing (if enabled)" data-position="right center">
+                <input name="media_server" type="hidden">
+                <i class="dropdown icon"></i>
+                <div class="default text">Plex</div>
+                <div class="menu">
+                  {% if preferences.use_emby %}
+                  <div class="item">Emby</div>
+                  {% endif %}
+                  {% if preferences.use_jellyfin %}
+                  <div class="item">Jellyfin</div>
+                  {% endif %}
+                  {% if preferences.use_plex %}
+                  <div class="active item">Plex</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <button class="ui animated primary button" type="submit">
+              <div class="visible content">Submit</div>
+              <div class="hidden content">
+                <i class="right arrow icon"></i>
+              </div>
+            </button>
+          </form>
           
           <h2 class="ui dividing header">YAML</h2>
           <div class="ui compact floating visible info message">
@@ -177,12 +175,12 @@
                 </div>
               </div>
             </div>
-            <div class="ui visible compact floating warning message">
-              <i class="exclamation triangle icon"></i>
-              <b>Warning</b>
+            <div class="ui visible compact floating info message">
+              <i class="info circle icon"></i>
+              <b>YAML Importing Notes</b>
               <ul class="list">
-                <li>Template settings will be applied to the imported Series. Templates will not be assigned.</li>
-                <li>Custom Font files will need to be manually uploaded.</li>
+                <li>Template settings will be merged with the imported Series. Templates will not be assigned.</li>
+                <li>Custom Font files must be manually uploaded.</li>
                 <li>Fonts cannot be defined inside Templates. Create a separate Font entry and assign it to the Template.</li>
                 <li>Custom Source file overrides (via <b>seasons</b> or <b>episode_ranges</b>) will not be imported.</li>
               </ul>
