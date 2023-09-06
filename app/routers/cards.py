@@ -1,3 +1,4 @@
+from time import sleep
 from typing import Optional, Union
 
 from fastapi import (
@@ -16,13 +17,18 @@ from app.internal.cards import (
     validate_card_type_model
 )
 from app.internal.episodes import refresh_episode_data
-from app.internal.series import load_episode_title_card, load_series_title_cards
+from app.internal.series import load_episode_title_card
 from app.internal.sources import download_episode_source_image
 from app.internal.translate import translate_episode
+from app.models.episode import Episode
+from app.models.series import Series
 from app.schemas.card import CardActions, TitleCard, PreviewTitleCard
+from app.schemas.connection import SonarrWebhook
 from app.schemas.font import DefaultFont
+from modules.EpisodeInfo2 import EpisodeInfo
 
 from modules.PlexInterface2 import PlexInterface
+from modules.SeriesInfo import SeriesInfo
 from modules.SonarrInterface2 import SonarrInterface
 from modules.TieredSettings import TieredSettings
 from modules.TMDbInterface2 import TMDbInterface
@@ -335,7 +341,7 @@ def create_cards_for_plex_rating_keys(
         tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
     ) -> None:
     """
-    Remake the Title Card for the item associated with the given Plex
+    Create the Title Card for the item associated with the given Plex
     Rating Key. This item can be a Show, Season, or Episode. This
     endpoint does NOT require an authenticated User so that Tautulli can
     trigger this without any credentials.
@@ -373,15 +379,15 @@ def create_cards_for_plex_rating_keys(
     episodes_to_load = []
     for series_info, episode_info, watched_status in details:
         # Find all matching Episodes
-        episodes = db.query(models.episode.Episode)\
-            .filter(episode_info.filter_conditions(models.episode.Episode))\
+        episodes = db.query(Episode)\
+            .filter(episode_info.filter_conditions(Episode))\
             .all()
 
         # Episode does not exist, refresh episode data and try again
         if not episodes:
             # Try and find associated Series, skip if DNE
-            series = db.query(models.series.Series)\
-                .filter(series_info.filter_conditions(models.series.Series))\
+            series = db.query(Series)\
+                .filter(series_info.filter_conditions(Series))\
                 .first()
             if series is None:
                 log.info(f'Cannot find Series for {series_info}')
@@ -394,8 +400,8 @@ def create_cards_for_plex_rating_keys(
                 sonarr_interface=sonarr_interface,tmdb_interface=tmdb_interface,
                 log=log,
             )
-            episodes = db.query(models.episode.Episode)\
-                .filter(episode_info.filter_conditions(models.episode.Episode))\
+            episodes = db.query(Episode)\
+                .filter(episode_info.filter_conditions(Episode))\
                 .all()
             if not episodes:
                 log.info(f'Cannot find Episode for {series_info} {episode_info}')
@@ -445,4 +451,130 @@ def create_cards_for_plex_rating_keys(
         # because SQLAlchemy SHOULD update child objects when the DELETE
         # is committed; but this does not happen.
         db.refresh(episode)
-        load_episode_title_card(episode, db, plex_interface, log=log)
+        load_episode_title_card(
+            episode, db, 'Plex', plex_interface=plex_interface, log=log
+        )
+
+
+@card_router.post('/sonarr', tags=['Sonarr'])
+def create_cards_for_sonarr_webhook(
+        request: Request,
+        webhook: SonarrWebhook = Body(...),
+        preferences: Preferences = Depends(get_preferences),
+        db: Session = Depends(get_database),
+        emby_interface: Optional[EmbyInterface] = Depends(get_emby_interface),
+        jellyfin_interface: Optional[JellyfinInterface] = Depends(get_jellyfin_interface),
+        plex_interface: Optional[PlexInterface] = Depends(get_plex_interface),
+        sonarr_interface: Optional[SonarrInterface] = Depends(get_sonarr_interface),
+        tmdb_interface: Optional[TMDbInterface] = Depends(get_tmdb_interface),
+    ) -> None:
+    """
+    Create the Title Card for the items associated with the given Sonarr
+    Webhook payload. This is practically identical to the `/key`
+    endpoint.
+
+    - webhook: Webhook payload containing Series and Episode details to
+    create the Title Cards of.
+    """
+
+    # Get contextual logger
+    log = request.state.log
+
+    # Skip if payload has no Episodes to create Cards for
+    if len(webhook.episodes) == 0:
+        return None
+
+    # Create SeriesInfo for this payload's series
+    series_info = SeriesInfo(
+        name=webhook.series.title,
+        year=webhook.series.year,
+        imdb_id=webhook.series.imdbId,
+        sonarr_id=f'0-{webhook.series.id}',
+        tvdb_id=webhook.series.tvdbId,
+        tvrage_id=webhook.series.tvRageId,
+    )
+
+    # Search for this Series
+    series = db.query(Series)\
+        .filter(series_info.filter_conditions(Series))\
+        .first()
+
+    # Series is not found, exit
+    if series is None:
+        log.info(f'Cannot find Series for {series_info}')
+        return None
+
+    # Find each Episode in the payload
+    for episode in webhook.episodes:
+        episode_info = EpisodeInfo(
+            title=episode.title,
+            season_number=episode.seasonNumber,
+            episode_number=episode.episodeNumber,
+        )
+
+        # Find this Episode
+        episode = db.query(Episode)\
+            .filter(
+                Episode.series_id==series.id,
+                episode_info.filter_conditions(Episode),
+            ).first()
+
+        # Refresh data and look for Episode again
+        if episode is None:
+            refresh_episode_data(
+                db, preferences, series, emby_interface=emby_interface,
+                jellyfin_interface=jellyfin_interface,
+                plex_interface=plex_interface,
+                sonarr_interface=sonarr_interface,
+                tmdb_interface=tmdb_interface,
+                log=log,
+            )
+            episode = db.query(Episode)\
+                .filter(
+                    Episode.series_id==series.id,
+                    episode_info.filter_conditions(Episode)
+                ).first()
+            if not episode:
+                log.info(f'Cannot find Episode for {series_info} {episode_info}')
+                return None
+
+        # Assume Episode is unwatched
+        episode.watched = False
+
+        # Look for source, add translation, create Card if source exists
+        image = download_episode_source_image(
+            db, preferences, emby_interface=emby_interface,
+            jellyfin_interface=jellyfin_interface,
+            plex_interface=plex_interface, tmdb_interface=tmdb_interface,
+            episode=episode, log=log,
+        )
+        translate_episode(db, episode, tmdb_interface, log=log)
+        if image is None:
+            log.info(f'{episode.log_str} has no source image - skipping')
+            return None
+        create_episode_card(db, preferences, None, episode, log=log)
+
+        # Wait 35s to give time for media server to load the Episode
+        sleep(35)
+
+        # Refresh this Episode so that relational Card objects are
+        # updated, preventing stale (deleted) Cards from being used in
+        # the Loaded asset evaluation. Not sure why this is required
+        # because SQLAlchemy SHOULD update child objects when the DELETE
+        # is committed; but this does not happen.
+        db.refresh(episode)
+        if series.emby_library_name and emby_interface:
+            load_episode_title_card(
+                episode, db, 'Emby', emby_interface=emby_interface, log=log
+            )
+        if series.jellyfin_library_name and jellyfin_interface:
+            load_episode_title_card(
+                episode, db, 'Jellyfin', jellyfin_interface=jellyfin_interface,
+                log=log
+            )
+        if series.plex_library_name and plex_interface:
+            load_episode_title_card(
+                episode, db, 'Plex', plex_interface=plex_interface, log=log
+            )
+
+    return None
