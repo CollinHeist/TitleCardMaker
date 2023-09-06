@@ -2,7 +2,7 @@ from logging import Logger
 from pathlib import Path
 from shutil import copy as file_copy
 from time import sleep
-from typing import Optional, Union
+from typing import Literal, Optional, Union
 
 from fastapi import BackgroundTasks, HTTPException
 from requests import get
@@ -34,7 +34,7 @@ def set_all_series_ids(*, log: Logger = log) -> None:
     in the Database.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     try:
@@ -67,7 +67,7 @@ def load_all_media_servers(*, log: Logger = log) -> None:
     the media servers.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     try:
@@ -114,7 +114,7 @@ def download_all_series_posters(*, log: Logger = log) -> None:
     Series in the Database.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     try:
@@ -155,7 +155,7 @@ def set_series_database_ids(
         db: Database to commit changes to.
         *_interface: Interface to query for database ID's from.
         commit: Whether to commit changes after setting any ID's.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         Whether the Series was modified.
@@ -214,7 +214,7 @@ def download_series_poster(
         preferences: Base Preferences to get the global asset directory.
         series: Series to download the poster of.
         *_interface: Interface to TMDb to query for posters.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     # Exit if no interface
@@ -301,7 +301,7 @@ def delete_series_and_episodes(
         db: Database to commit any deletion to.
         series: Series to delete.
         commit_changes: Whether to commit Database changes.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     # Delete poster if not the placeholder
@@ -347,7 +347,7 @@ def load_series_title_cards(
             Title Cards into.
         force_reload: Whether to reload Title Cards even if no changes
             are detected.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Raises:
         HTTPException (409) if the specified Media Server cannot be
@@ -438,18 +438,24 @@ def load_series_title_cards(
 def load_episode_title_card(
         episode: Episode,
         db: Session,
-        plex_interface: PlexInterface,
+        media_server: Literal['Emby', 'Jellyfin', 'Plex'],
+        emby_interface: Optional[EmbyInterface] = None,
+        jellyfin_interface: Optional[JellyfinInterface] = None,
+        plex_interface: Optional[PlexInterface] = None,
         *,
         log: Logger = log,
     ) -> None:
     """
-    Load the Title Card for the given Episode into Plex.
+    Load the Title Card for the given Episode into the indicated media
+    server. This is a forced reload, and any existing Loaded assets are
+    deleted.
 
     Args:
         episode: Episode to load the Title Card of.
         db: Database to look for and add Loaded records from/to.
-        plex_interface: Interface to load Title Cards into.
-        log: (Keyword) Logger for all log messages.
+        media_server: Which media server to load Title Cards into.
+        *_interface: Interface to load Title Cards into.
+        log: Logger for all log messages.
     """
 
     # Only load if Episode has a Card
@@ -458,13 +464,22 @@ def load_episode_title_card(
         return None
     card = episode.card[-1]
 
-    # Delete any existing Loaded asset for this Episode in Plex
+    # Delete any existing Loaded asset for this Episode in the given server
     db.query(models.loaded.Loaded)\
-        .filter_by(episode_id=episode.id, media_server='Plex')\
+        .filter_by(episode_id=episode.id, media_server=media_server)\
         .delete()
 
-    # Load into Plex
-    loaded_assets = plex_interface.load_title_cards(
+    # Load into the given server
+    interface: Union[EmbyInterface, JellyfinInterface, PlexInterface] = {
+        'Emby': emby_interface,
+        'Jellyfin': jellyfin_interface,
+        'Plex': plex_interface,
+    }[media_server]
+    if not interface:
+        log.debug(f'No {media_server} connection - cannot load Card')
+        return None
+
+    loaded_assets = interface.load_title_cards(
         episode.series.plex_library_name,
         episode.series.as_series_info,
         [(episode, card)],
@@ -475,16 +490,18 @@ def load_episode_title_card(
     if not loaded_assets:
         return None
 
+    # Episode loaded, create Loaded asset and commit to database
     db.add(models.loaded.Loaded(
-        media_server='Plex',
+        media_server=media_server,
         series=episode.series,
         episode=episode,
         card=card,
         filesize=card.filesize,
     ))
     log.debug(f'{episode.series.log_str} {episode.log_str} Loaded {card.log_str}')
-
     db.commit()
+
+    return None
 
 
 def add_series(
@@ -513,7 +530,7 @@ def add_series(
         db: Database to add the Series to.
         preferences: Global Preferences for setting resolution.
         *_interface: Interface to query.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         The Created Series.
