@@ -307,8 +307,8 @@ class BaseCardType(ImageMaker):
             f'+profile "*"',
             f'-background transparent',
             f'-gravity center',
-            f'-resize "{self.preferences.card_dimensions}"',
-            f'-extent "{self.preferences.card_dimensions}"',
+            f'-resize "{self.card_dimensions}"',
+            f'-extent "{self.card_dimensions}"',
         ]
 
 

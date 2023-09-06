@@ -29,19 +29,26 @@ class ImageMaker(ABC):
     """
     VALID_IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.tiff', '.gif', '.webp')
 
-    __slots__ = ('preferences', 'image_magick')
+    __slots__ = ('card_dimensions', 'image_magick')
 
 
     @abstractmethod
-    def __init__(self, *, preferences: Optional['Preferences'] = None) -> None:
+    def __init__(self,
+            *,
+            preferences: Optional['Preferences'] = None, # type: ignore
+        ) -> None:
         """
         Initializes a new instance. This gives all subclasses access to
         an ImageMagickInterface via the image_magick attribute.
+
+        Args:
+            preferences: Global Preferences object to initialize the
+                `ImageMagickInterface` with.
         """
 
         # No Preferences object, use global
         if preferences is None:
-            self.preferences = global_objects.pp
+            self.card_dimensions = global_objects.pp.card_dimensions
             self.image_magick = ImageMagickInterface(
                 global_objects.pp.imagemagick_container,
                 global_objects.pp.use_magick_prefix,
@@ -49,9 +56,9 @@ class ImageMaker(ABC):
             )
         # Preferences object provided, use directly
         else:
-            self.preferences = preferences
+            self.card_dimensions = preferences.card_dimensions
             self.image_magick = ImageMagickInterface(
-                **preferences.imagemagick_arguments,
+                use_magick_prefix=preferences.use_magick_prefix,
             )
 
 
