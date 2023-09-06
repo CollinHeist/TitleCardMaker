@@ -109,13 +109,6 @@ class Preferences:
                        self.source_directory):
             folder.mkdir(parents=True, exist_ok=True)
 
-        # Migrate old settings
-        if isinstance(self.sonarr_libraries, dict):
-            self.sonarr_libraries = [
-                {'name': name, 'path': path}
-                for name, path in self.sonarr_libraries.items()
-            ]
-            self.commit()
 
 
     def __getstate__(self) -> dict:
