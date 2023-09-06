@@ -15,7 +15,7 @@ from app.models.card import Card
 from app.models.episode import Episode
 from app.models.preferences import Preferences
 from app.schemas.font import DefaultFont
-from app.schemas.card import NewTitleCard, TitleCard
+from app.schemas.card import NewTitleCard
 from app.schemas.card_type import LocalCardTypeModels
 from app.schemas.series import Series
 from modules.BaseCardType import BaseCardType
@@ -367,14 +367,24 @@ def resolve_card_settings(
         )
         card_settings['logo_file'] = Path(series.source_directory) \
             / f"{formatted_filename}{card_settings['logo_file'].suffix}"
-    except KeyError as e:
+    except KeyError as exc:
         log.exception(f'{series.log_str} {episode.log_str} Cannot format logo '
-                      f'filename - missing data', e)
+                      f'filename - missing data', exc)
         raise HTTPException(
             status_code=400,
             detail=f'Cannot create Card - invalid logo filename format - '
-                   f'missing data {e}',
-        ) from e
+                   f'missing data {exc}',
+        ) from exc
+    except ValueError as exc:
+        log.exception(f'{series.log_str} {episode.log_str} Cannot format logo '
+                      f'filename - bad format', exc)
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f'Cannot create Card - invalid logo filename format - bad '
+                f'format {exc}'
+            )
+        ) from exc
 
     # Get the effective card class
     CardClass = preferences.get_card_type_class(
