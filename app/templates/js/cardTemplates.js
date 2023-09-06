@@ -140,6 +140,7 @@ async function getAllTemplates() {
   const allEpisodeDataSources = await fetch('/api/available/episode-data-sources').then(resp => resp.json());
   const allTranslations = await fetch('/api/available/translations').then(resp => resp.json());
   await queryAvailableExtras();
+  await getAllCardTypes();
   const elements = allTemplates.items.map(templateObj => {
     // Clone template
     const base = document.querySelector('#template').content.cloneNode(true);
