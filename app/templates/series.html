@@ -879,11 +879,11 @@
 
           <!-- Blueprints Tab -->
           <div class="ui bottom attached tab segment" data-tab="blueprints">
-            <button data-action="search" onclick="queryBlueprints();" class="ui green tertiary button" data-tooltip="Search for any existing Blueprints">
+            <button data-action="search" onclick="queryBlueprints();" class="ui blue tertiary button" data-tooltip="Search for any existing Blueprints">
               <i class="search icon"></i>
-              Search for Blueprints
+              Search
             </button>
-            <button data-action="export" onclick="exportBlueprint();" class="ui blue tertiary button" data-tooltip="Export a zip file with this Series' Blueprint">
+            <button data-action="export" onclick="exportBlueprint();" class="ui green tertiary button" data-tooltip="Export a zip file with this Series' Blueprint">
               <i class="file export icon"></i>
               Export Blueprint
             </button>
@@ -1157,6 +1157,8 @@
       </div>
     </div>
 
+    <!-- MODALS -->
+
     <!-- Edit poster modal -->
     <div id="edit-poster-modal" class="ui mini modal">
       <i class="close icon"></i>
@@ -1345,7 +1347,7 @@
     </div>
 
     <!-- Season title helper popup -->
-    <div id="season-title-popup" class="ui flowing popup right">
+    <div id="season-title-popup" class="ui flowing uninvertible popup right">
       <div class="ui list content">
         <div class="item">
           A number indicates an entire season - e.g. <span class="ui red text">1</span> for <span class="ui red text">season 1</span>.
