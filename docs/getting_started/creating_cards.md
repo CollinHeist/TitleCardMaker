@@ -31,9 +31,10 @@ Episodes.
 depending on whether you have turned on or off the Specials syncing.
 
 ### Source Images
-4. Open the "Files" tab. This tab has shows image information for all Source
-Images for each Episode of the Series. Since we just added _Breaking Bad_, all
-images should show as missing.
+
+4. Open the "Files" tab. This tab shows image information for all Source Images
+for each Episode of the Series. Since we just added _Breaking Bad_, all images
+should show as missing.
 
 5. For Season 1 Episode 1, click the small TMDb logo. This will launch a browser
 for all Source Images on TMDb. Clicking any image will request TCM download it

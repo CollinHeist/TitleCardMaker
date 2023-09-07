@@ -5,12 +5,20 @@
     This step is completely optional, and only those with both Plex media
     servers and Tautulli should continue.
 
+    If you do not use Plex _or_ Tautulli, a Sonarr Webhook can be utilized as an
+    alternative - setting this up is covered
+    [here](./sonarr.md#webhook-integration).
+
 !!! question "Why Connect to Tautulli?"
 
     Typically, TitleCardMaker creates and loads Title Cards on an
     [adjustable schedule](../scheduler.md). However, TCM is able to set up a
     Notification Agent on Tautulli so that it can notify TCM __immediately__
     after new Episodes are available, or an existing Episode has been watched.
+
+    A similiar integration can be enabled with
+    [Sonarr](./sonarr.md#webhook-integration), but that integration only
+    triggers for newly added content, not on watch-statuses.
 
 1. Click the `Create Notification Agent` button.
 2. In the launched window, enter the _root_ URL to your instance of Tautulli.

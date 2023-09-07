@@ -1,6 +1,6 @@
 # Settings
 For most users the default Settings can be left as-is. If you'd like to adjust
-these, additional detail can be found [here](../settings.md).
+these, additional detail can be found [here](../user_guide/settings.md).
 
 For the purposes of this tutorial, the following settings are recommended:
 

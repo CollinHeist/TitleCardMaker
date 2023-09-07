@@ -297,8 +297,8 @@ assigned to them.
             3. The `-v` commands make your directories accessible inside the
             container.
             4. The `-e TZ..` command defines your timezone inside the container.
-            5. Exposes the _internal_ `4242` port outside the container, so that you
-            can access it on your machine.
+            5. Exposes the _internal_ `4242` port outside the container, so that
+            you can access it on your machine.
 
     !!! success "Success"
 
@@ -307,8 +307,8 @@ assigned to them.
 
 === ":material-language-python: Non-Docker"
 
-    4. Run the following command to install the required Python packages and launch
-    the TCM interface.
+    4. Run the following command to install the required Python packages and
+    launch the TCM interface.
 
         === ":material-linux: Linux"
 
@@ -318,8 +318,8 @@ assigned to them.
             ```
 
             1. This installs the required Python dependencies
-            2. This launches a webserver at your `{your IP}:4242` which the TCM Web
-            UI is accessible at.
+            2. This launches a webserver at your `{your IP}:4242` which the TCM
+            Web UI is accessible at.
 
         === ":material-apple: MacOS"
 
@@ -329,8 +329,8 @@ assigned to them.
             ```
 
             1. This installs the required Python dependencies
-            2. This launches a webserver at your `{your IP}:4242` which the TCM Web
-            UI is accessible at.
+            2. This launches a webserver at your `{your IP}:4242` which the TCM
+            Web UI is accessible at.
 
         === ":material-powershell: Windows (Powershell)"
 
@@ -340,8 +340,8 @@ assigned to them.
             ```
 
             1. This installs the required Python dependencies
-            2. This launches a webserver at your `{your IP}:4242` which the TCM Web
-            UI is accessible at.
+            2. This launches a webserver at your `{your IP}:4242` which the TCM
+            Web UI is accessible at.
 
         === ":material-microsoft-windows: Windows (Non-Powershell)"
 
@@ -351,8 +351,8 @@ assigned to them.
             ```
 
             1. This installs the required Python dependencies
-            2. This launches a webserver at your `{your IP}:4242` which the TCM Web
-            UI is accessible at.
+            2. This launches a webserver at your `{your IP}:4242` which the TCM
+            Web UI is accessible at.
 
     !!! success "Success"
 
@@ -367,16 +367,16 @@ assigned to them.
         INFO:     Application startup complete.
         ```
         
-        And neither the `http://0.0.0.0:4242` or `http://localhost:4242/` URL loads
-        into the TCM UI, then replace the `0.0.0.0` part of the previous command
-        with your _local_ IP address - e.g. `192.168.0.10`. If you still have
-        issues, reach out on the Discord.
+        And neither the `http://0.0.0.0:4242` or `http://localhost:4242/` URL
+        loads into the TCM UI, then replace the `0.0.0.0` part of the previous
+        command with your _local_ IP address - e.g. `192.168.0.10`. If you still
+        have issues, reach out on the Discord.
 
 # Getting Started
 !!! info "Detailed Tutorial"
 
-    For more detailed tutorials that take step-by-step through the installation
-    and setup of TitleCardMaker, continue to the Tutorial pages.
+    For more detailed tutorials that take you step-by-step through the
+    installation and setup of TitleCardMaker, continue to the Tutorial pages.
 
 TitleCardMaker is designed to for an easy "out of the box" setup. The basic
 steps are as follows:
