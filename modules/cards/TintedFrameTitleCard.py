@@ -221,8 +221,8 @@ class TintedFrameTitleCard(BaseCardType):
             List of ImageMagick Commands.
         """
 
-        # Blurring is disabled, return empty command
-        if not self.blur_edges:
+        # Blurring is disabled (or being applied globally), return empty command
+        if not self.blur_edges or self.blur:
             return []
 
         crop_width = self.WIDTH - (2 * self.BOX_OFFSET) - 6 # 6px margin
