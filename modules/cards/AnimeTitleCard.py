@@ -71,7 +71,7 @@ class AnimeTitleCard(BaseCardType):
         ], description=[
             'Title card with all text aligned in the lower left of the image.',
             'Although it is referred to as the "anime" card style, the only '
-            'Anime specific feature is the ability to add Kani (Japanese) text'
+            'Anime specific feature is the ability to add Kani (Japanese) text '
             'above the title text.',
         ]
     )
