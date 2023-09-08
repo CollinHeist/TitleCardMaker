@@ -6,6 +6,7 @@ from modules.cards.FadeTitleCard import FadeTitleCard
 from modules.cards.FrameTitleCard import FrameTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
+from modules.cards.MarvelTitleCard import MarvelTitleCard
 from modules.cards.OlivierTitleCard import OlivierTitleCard
 from modules.cards.OverlineTitleCard import OverlineTitleCard
 from modules.cards.PosterTitleCard import PosterTitleCard
@@ -26,6 +27,7 @@ LocalCards = [
     FrameTitleCard.API_DETAILS,
     LandscapeTitleCard.API_DETAILS,
     LogoTitleCard.API_DETAILS,
+    MarvelTitleCard.API_DETAILS,
     OlivierTitleCard.API_DETAILS,
     OverlineTitleCard.API_DETAILS,
     PosterTitleCard.API_DETAILS,

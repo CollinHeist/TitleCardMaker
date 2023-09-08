@@ -18,6 +18,7 @@ from modules.cards.FadeTitleCard import FadeTitleCard
 from modules.cards.FrameTitleCard import FrameTitleCard
 from modules.cards.LandscapeTitleCard import LandscapeTitleCard
 from modules.cards.LogoTitleCard import LogoTitleCard
+from modules.cards.MarvelTitleCard import MarvelTitleCard
 from modules.cards.OlivierTitleCard import OlivierTitleCard
 from modules.cards.OverlineTitleCard import OverlineTitleCard
 from modules.cards.PosterTitleCard import PosterTitleCard
@@ -30,7 +31,7 @@ from modules.cards.WhiteBorderTitleCard import WhiteBorderTitleCard
 
 LocalCardIdentifiers = Literal[
     'anime', 'comic book', 'cutout', 'divider', 'fade', 'frame', 'generic',
-    'gundam', 'ishalioh', 'landscape', 'logo', 'musikmann', 'olivier',
+    'gundam', 'ishalioh', 'landscape', 'logo', 'marvel', 'musikmann', 'olivier',
     'phendrena', 'photo', 'polymath', 'poster', 'reality tv', 'roman',
     'roman numeral', 'sherlock', 'standard', 'star wars', 'textless',
     'tinted glass', '4x3', 'white border',
@@ -222,7 +223,6 @@ class LandscapeCardType(BaseCardType):
         return values
 
 class LogoCardType(BaseCardTypeCustomFontAllText):
-    source_file: Path
     logo_file: FilePath
     font_color: BetterColor = LogoTitleCard.TITLE_COLOR
     font_file: Path = LogoTitleCard.TITLE_FONT
@@ -240,6 +240,18 @@ class LogoCardType(BaseCardTypeCustomFontAllText):
             raise ValueError(f'Source file indicated and does not exist')
 
         return values
+
+class MarvelCardType(BaseCardTypeCustomFontAllText):
+    font_file: Path = MarvelTitleCard.TITLE_FONT
+    font_color: BetterColor = MarvelTitleCard.TITLE_COLOR
+    border_color: BetterColor = MarvelTitleCard.DEFAULT_BORDER_COLOR
+    border_size: PositiveInt = MarvelTitleCard.DEFAULT_BORDER_SIZE
+    episode_text_color: BetterColor = MarvelTitleCard.EPISODE_TEXT_COLOR
+    episode_text_location: Literal['compact', 'fixed'] = 'fixed'
+    fit_text: bool = True
+    hide_border: bool = False
+    text_box_color: BetterColor = MarvelTitleCard.DEFAULT_TEXT_BOX_COLOR
+    text_box_height: PositiveInt = MarvelTitleCard.DEFAULT_TEXT_BOX_HEIGHT
 
 class OlivierCardType(BaseCardTypeCustomFontNoText):
     title_text: str
@@ -431,6 +443,7 @@ LocalCardTypeModels = {
     'ishalioh': OlivierCardType,
     'landscape': LandscapeCardType,
     'logo': LogoCardType,
+    'marvel': MarvelCardType,
     'musikmann': WhiteBorderCardType,
     'olivier': OlivierCardType,
     'overline': OverlineCardType,
