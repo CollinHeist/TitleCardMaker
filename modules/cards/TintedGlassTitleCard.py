@@ -79,7 +79,7 @@ class TintedGlassTitleCard(BaseCardType):
             grayscale: bool = False,
             episode_text_color: str = EPISODE_TEXT_COLOR,
             episode_text_position: Position = 'center',
-            box_adjustments: tuple[int, int, int, int] = (0, 0, 0, 0),
+            box_adjustments: Optional[str] = None,
             glass_color: str = DARKEN_COLOR,
             preferences: Optional['Preferences'] = None, # type: ignore
             **unused,
