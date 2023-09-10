@@ -48,7 +48,7 @@ class MarvelTitleCard(BaseCardType):
     TITLE_CHARACTERISTICS = {
         'max_line_width': 25,   # Character count to begin splitting titles
         'max_line_count': 1,    # Maximum number of lines a title can take up
-        'top_heavy': True,      # This class uses top heavy titling
+        'top_heavy': False,      # This class uses top heavy titling
     }
 
     """Characteristics of the default title font"""
@@ -170,8 +170,12 @@ class MarvelTitleCard(BaseCardType):
 
         # Font characteristics
         size = 150 * self.font_size * self.font_size_modifier
-        kerning = 1.0 * self.font_kerning
-        vertical_shift = 820 + self.font_vertical_shift
+        kerning = 1.0 * self.font_kerning * self.font_size_modifier
+        # When the modifier is <1.0, the text can appear shifted down - adjust
+        vertical_shift = 820 \
+            + self.font_vertical_shift \
+            - ((self.font_size_modifier - 1.0) * -10)
+            # Map the modifier [0.0, 1.0] -> [-10, 0] pixels
 
         return [
             f'-font "{self.font_file}"',
@@ -185,57 +189,39 @@ class MarvelTitleCard(BaseCardType):
         ]
 
 
-    def index_text_commands(self,
+    def season_text_commands(self,
             title_text_dimensions: Dimensions,
         ) -> ImageMagickCommands:
         """
-        Subcommands for adding index text to the source image.
+        Subcommands for adding episode text to the source image.
 
         Args:
             title_text_dimensions: Dimensions of the title text. For
-                positioning the index text when the positioning mode
-                is `compact`.
+                positioning the text in compact positioning mode.
 
         Returns:
             List of ImageMagick commands.
         """
 
-        # If not showing index text, return
-        if self.hide_season_text and self.hide_episode_text:
+        # Return if not showing text
+        if self.hide_season_text:
             return []
 
-        # Vertical positioning of all index text
+        # Vertical positioning of text
         y_position = 810 + self.font_vertical_shift
 
-        # Commands for season text
-        season_text_command = []
-        if not self.hide_season_text:
-            if self.episode_text_position == 'compact':
-                x_position = (self.WIDTH + title_text_dimensions.width) / 2 + 20
-                season_text_command = [
-                    f'-gravity east',
-                    f'-annotate {x_position:+}{y_position:+} "{self.season_text}"',
-                ]
-            else:
-                season_text_command = [
-                    f'-gravity west',
-                    f'-annotate +{self.border_size}{y_position:+} "{self.season_text}"',
-                ]
-
-        # Commands for episode text
-        episode_text_command = []
-        if not self.hide_episode_text:
-            if self.episode_text_position == 'compact':
-                x_position = (self.WIDTH + title_text_dimensions.width) / 2 + 20
-                episode_text_command = [
-                    f'-gravity west',
-                    f'-annotate {x_position:+}{y_position:+} "{self.episode_text}"',
-                ]
-            else:
-                episode_text_command = [
-                    f'-gravity east',
-                    f'-annotate +{self.border_size}{y_position:+} "{self.episode_text}"',
-                ]
+        text_command = []
+        if self.episode_text_position == 'compact':
+            x_position = (self.WIDTH + title_text_dimensions.width) / 2 + 20
+            text_command = [
+                f'-gravity east',
+                f'-annotate {x_position:+}{y_position:+} "{self.season_text}"',
+            ]
+        else:
+            text_command = [
+                f'-gravity west',
+                f'-annotate +{self.border_size}{y_position:+} "{self.season_text}"',
+            ]
 
         font_size = 70 * self.font_size_modifier
 
@@ -245,9 +231,110 @@ class MarvelTitleCard(BaseCardType):
             f'-pointsize {font_size}',
             f'-kerning 1',
             f'-interword-spacing 15',
-            *season_text_command,
-            *episode_text_command,
+            *text_command,
         ]
+
+
+    def episode_text_commands(self,
+            title_text_dimensions: Dimensions,
+        ) -> ImageMagickCommands:
+        """
+        Subcommands for adding episode text to the source image.
+
+        Args:
+            title_text_dimensions: Dimensions of the title text. For
+                positioning the text in compact positioning mode.
+
+        Returns:
+            List of ImageMagick commands.
+        """
+
+        # Return if not showing text
+        if self.hide_episode_text:
+            return []
+
+        # Vertical positioning of text
+        y_position = 810 + self.font_vertical_shift
+
+        text_command = []
+        if self.episode_text_position == 'compact':
+            x_position = (self.WIDTH + title_text_dimensions.width) / 2 + 20
+            text_command = [
+                f'-gravity west',
+                f'-annotate {x_position:+}{y_position:+} "{self.episode_text}"',
+            ]
+        else:
+            text_command = [
+                f'-gravity east',
+                f'-annotate +{self.border_size}{y_position:+} "{self.episode_text}"',
+            ]
+
+        font_size = 70 * self.font_size_modifier
+
+        return [
+            f'-font "{self.EPISODE_TEXT_FONT.resolve()}"',
+            f'-fill "{self.episode_text_color}"',
+            f'-pointsize {font_size}',
+            f'-kerning 1',
+            f'-interword-spacing 15',
+            *text_command,
+        ]
+
+
+    def scale_text(self, title_text_dimensions: Dimensions) -> Dimensions:
+        """
+        Set the font size modifier to scale the title and index text and
+        ensure it fits in the image.
+
+        Args:
+            title_text_dimensions: Dimensions of the title text for
+                determining the scaling factor.
+
+        Returns:
+            New dimensions of the title text. If `fit_text` is False,
+            or if the text is not scaled, then the original dimensions
+            are returned.
+        """
+
+        # If not fitting text, return original dimensions
+        if not self.fit_text:
+            return title_text_dimensions
+
+        # Get dimensions of season and episode text
+        season_text_dimensions = self.image_magick.get_text_dimensions(
+            self.season_text_commands(title_text_dimensions),
+            width='sum', height='sum',
+        )
+        episode_text_dimensions = self.image_magick.get_text_dimensions(
+            self.episode_text_commands(title_text_dimensions),
+            width='sum', height='sum',
+        )
+
+        # Check left/right separately for overlap
+        half_title = title_text_dimensions.width / 2
+        left_width = half_title + season_text_dimensions.width
+        right_width = half_title + episode_text_dimensions.width
+
+        # Add margin
+        left_width += 0 if self.hide_season_text else 40
+        right_width += 0 if self.hide_episode_text else 40
+
+        # If either side is too wide, scale by largest size
+        max_width = (self.WIDTH / 2) - self.border_size
+        if left_width > max_width or right_width > max_width:
+            self.font_size_modifier = min(
+                max_width / left_width,
+                max_width / right_width,
+            )
+
+        # If font scalar was modified, recalculate+return text dimensions
+        if self.font_size_modifier < 1.0:
+            return self.image_magick.get_text_dimensions(
+                self.title_text_commands, width='max', height='sum',
+            )
+
+        # Scalar unmodified, return original dimensions
+        return title_text_dimensions
 
 
     @property
@@ -386,27 +473,8 @@ class MarvelTitleCard(BaseCardType):
             self.title_text_commands, width='max', height='sum',
         )
 
-        # If fitting text, adjust font size if all text is too wide
-        if self.fit_text:
-            # Get dimensions of index text
-            index_text_dimensions = self.get_text_dimensions(
-                self.index_text_commands(title_text_dimensions),
-                width='sum', height='sum',
-            )
-
-            # If text is too wide, scale font size
-            width = title_text_dimensions.width + index_text_dimensions.width
-            margin = 20 * (2 - self.hide_season_text - self.hide_episode_text)
-            text_width = width + margin
-            max_width = self.WIDTH - (2 * self.border_size)
-
-            if text_width > max_width:
-                self.font_size_modifier = max_width / text_width
-
-                # Recalculate title text dimensions
-                title_text_dimensions = self.get_text_dimensions(
-                    self.title_text_commands, width='max', height='sum',
-                )
+        # Apply any font scaling to fit text
+        title_text_dimensions = self.scale_text(title_text_dimensions)
 
         command = ' '.join([
             f'convert "{self.source_file.resolve()}"',
@@ -420,7 +488,8 @@ class MarvelTitleCard(BaseCardType):
             *self.bottom_border_commands,
             # Add text
             *self.title_text_commands,
-            *self.index_text_commands(title_text_dimensions),
+            *self.season_text_commands(title_text_dimensions),
+            *self.episode_text_commands(title_text_dimensions),
             # Create card
             *self.resize_output,
             f'"{self.output_file.resolve()}"',
