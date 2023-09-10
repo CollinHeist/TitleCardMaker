@@ -110,7 +110,7 @@ class OverlineTitleCard(BaseCardType):
     TITLE_CHARACTERISTICS = {
         'max_line_width': 30,   # Character count to begin splitting titles
         'max_line_count': 2,    # Maximum number of lines a title can take up
-        'top_heavy': True,      # This class uses top heavy titling
+        'top_heavy': False,      # This class uses top heavy titling
     }
 
     """Characteristics of the default title font"""
