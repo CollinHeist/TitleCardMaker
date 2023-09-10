@@ -9,6 +9,7 @@ from modules.ImageMagickInterface import Dimensions
 
 class Coordinate:
     """Class that defines a single Coordinate on an x/y plane."""
+    __slots__ = ('x', 'y')
 
     def __init__(self, x: float, y: float) -> None:
         self.x = x
@@ -20,6 +21,7 @@ class Coordinate:
 
 class Rectangle:
     """Class that defines movable SVG rectangle."""
+    __slots__ = ('start', 'end')
 
     def __init__(self, start: Coordinate, end: Coordinate) -> None:
         self.start = start
