@@ -194,7 +194,7 @@ class RomanNumeralTitleCard(BaseCardType):
         identifier='roman numeral',
         example='/internal_assets/cards/roman.jpg',
         creators=['CollinHeist'],
-        source='local',
+        source='builtin',
         supports_custom_fonts=False,
         supports_custom_seasons=True,
         supported_extras=[

@@ -20,7 +20,7 @@ class StarWarsTitleCard(BaseCardType):
         identifier='star wars',
         example='/internal_assets/cards/star wars.jpg',
         creators=['/u/Olivier_286', 'CollinHeist'],
-        source='local',
+        source='builtin',
         supports_custom_fonts=True,
         supports_custom_seasons=False,
         supported_extras=[

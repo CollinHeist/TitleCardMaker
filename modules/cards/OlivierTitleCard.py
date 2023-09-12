@@ -18,7 +18,7 @@ class OlivierTitleCard(BaseCardType):
         identifier='olivier',
         example='/internal_assets/cards/olivier.jpg',
         creators=['/u/Olivier_286', 'Yozora', 'CollinHeist'],
-        source='local',
+        source='builtin',
         supports_custom_fonts=True,
         supports_custom_seasons=True,
         supported_extras=[

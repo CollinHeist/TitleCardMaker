@@ -12,28 +12,30 @@ from app.schemas.preferences import Style
 """
 Models of card types and series extras.
 """
-class CardExtra(Base):
+class Extra(Base):
     name: str
     identifier: DictKey
     description: str
     tooltip: Optional[str] = None
 
-class CardType(Base):
+class CardTypeDescription(Base):
     name: str
     identifier: str
     example: str
     creators: list[str]
-    source: Literal['local', 'remote']
+    source: Literal['builtin', 'local', 'remote']
     supports_custom_fonts: bool
     supports_custom_seasons: bool
-    supported_extras: list[CardExtra]
+    supported_extras: list[Extra]
     description: list[str]
 
-class LocalCardType(CardType):
-    name: str
+class BuiltinCardType(CardTypeDescription):
+    source: str = 'builtin'
+
+class LocalCardType(CardTypeDescription):
     source: str = 'local'
 
-class RemoteCardType(CardType):
+class RemoteCardType(CardTypeDescription):
     source: str = 'remote'
 
 """

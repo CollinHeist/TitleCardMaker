@@ -17,7 +17,7 @@ class TextlessTitleCard(BaseCardType):
         identifier='textless',
         example='/internal_assets/cards/textless.jpg',
         creators=['CollinHeist'],
-        source='local',
+        source='builtin',
         supports_custom_fonts=False,
         supports_custom_seasons=False,
         supported_extras=[],

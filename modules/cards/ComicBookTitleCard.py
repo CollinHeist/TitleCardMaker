@@ -125,7 +125,7 @@ class ComicBookTitleCard(BaseCardType):
         identifier='comic book',
         example='/internal_assets/cards/comic book.jpg',
         creators=['CollinHeist'],
-        source='local',
+        source='builtin',
         supports_custom_fonts=True,
         supports_custom_seasons=True,
         supported_extras=[

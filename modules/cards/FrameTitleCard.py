@@ -20,7 +20,7 @@ class FrameTitleCard(BaseCardType):
         identifier='frame',
         example='/internal_assets/cards/frame.jpg',
         creators=['CollinHeist'],
-        source='local',
+        source='builtin',
         supports_custom_fonts=True,
         supports_custom_seasons=True,
         supported_extras=[

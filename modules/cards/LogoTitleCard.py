@@ -19,7 +19,7 @@ class LogoTitleCard(BaseCardType):
         identifier='logo',
         example='/internal_assets/cards/logo.jpg',
         creators=['CollinHeist'],
-        source='local',
+        source='builtin',
         supports_custom_fonts=True,
         supports_custom_seasons=True,
         supported_extras=[

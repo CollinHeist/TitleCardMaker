@@ -48,7 +48,7 @@ class OverlineTitleCard(BaseCardType):
         identifier='overline',
         example='/internal_assets/cards/overline.jpg',
         creators=['CollinHeist'],
-        source='local',
+        source='builtin',
         supports_custom_fonts=True,
         supports_custom_seasons=True,
         supported_extras=[

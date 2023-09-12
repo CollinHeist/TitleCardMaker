@@ -14,7 +14,9 @@ from app.models.template import OPERATIONS, ARGUMENT_KEYS
 from app.schemas.availability import (
     AvailableFont, AvailableSeries, AvailableTemplate
 )
-from app.schemas.card import CardType, LocalCardType, RemoteCardType
+from app.schemas.card import (
+    BuiltinCardType, CardTypeDescription, LocalCardType, RemoteCardType
+)
 from app.schemas.card_type import Extra
 from app.schemas.preferences import (
     EpisodeDataSourceToggle, Preferences, StyleOption
@@ -37,6 +39,23 @@ USER_CARD_TYPE_URL = (
 )
 
 
+def _get_local_cards(preferences: Preferences) -> list[LocalCardType]:
+    """
+    Get the list of availably locally specified card types.
+
+    Args:
+        preferences: Global preferences.
+
+    Returns:
+        List of LocalCardType objects.
+    """
+
+    return [
+        card_class.API_DETAILS
+        for card_class in preferences.local_card_types.values()
+    ]
+
+
 _cache = {'content': [], 'expires': datetime.now()}
 def _get_remote_cards(*, log: Logger = log) -> list[RemoteCardType]:
     """
@@ -45,7 +64,7 @@ def _get_remote_cards(*, log: Logger = log) -> list[RemoteCardType]:
     GitHub is re-queried.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         List of RemoteCardTypes.
@@ -86,7 +105,7 @@ def get_all_available_card_types(
         request: Request,
         show_excluded: bool = Query(default=False),
         preferences: Preferences = Depends(get_preferences),
-    ) -> list[CardType]:
+    ) -> list[CardTypeDescription]:
     """
     Get a list of all available card types (local and remote).
 
@@ -97,23 +116,36 @@ def get_all_available_card_types(
     # Get contextual logger
     log = request.state.log
 
-    all_cards = LocalCards + _get_remote_cards(log=log)
+    all_cards = LocalCards \
+        + _get_local_cards(preferences) \
+        + _get_remote_cards(log=log)
     if show_excluded:
         return all_cards
 
     return [
-        card for card in LocalCards + _get_remote_cards(log=log)
+        card for card in all_cards
         if card.identifier not in preferences.excluded_card_types
     ]
 
 
+@availablility_router.get('/card-types/builtin', status_code=200, tags=['Title Cards'])
+def get_builtin_card_types() -> list[BuiltinCardType]:
+    """
+    Get all pre-built card types.
+    """
+
+    return LocalCards
+
+
 @availablility_router.get('/card-types/local', status_code=200, tags=['Title Cards'])
-def get_local_card_types() -> list[LocalCardType]:
+def get_local_card_types(
+        preferences: Preferences = Depends(get_preferences),
+    ) -> list[LocalCardType]:
     """
     Get all locally defined card types.
     """
 
-    return LocalCards
+    return _get_local_cards(preferences)
 
 
 @availablility_router.get('/card-types/remote', status_code=200, tags=['Title Cards'])

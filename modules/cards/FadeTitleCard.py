@@ -20,7 +20,7 @@ class FadeTitleCard(BaseCardType):
         identifier='fade',
         example='/internal_assets/cards/fade.jpg',
         creators=['Yozora', 'CollinHeist'],
-        source='local',
+        source='builtin',
         supports_custom_fonts=True,
         supports_custom_seasons=True,
         supported_extras=[

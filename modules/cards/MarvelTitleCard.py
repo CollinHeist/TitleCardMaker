@@ -49,7 +49,7 @@ class MarvelTitleCard(BaseCardType):
         identifier='marvel',
         example='/internal_assets/cards/marvel.jpg',
         creators=['CollinHeist', 'RedHeadJedi'],
-        source='local',
+        source='builtin',
         supports_custom_fonts=True,
         supports_custom_seasons=True,
         supported_extras=[

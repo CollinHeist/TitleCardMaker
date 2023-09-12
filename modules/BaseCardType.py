@@ -3,30 +3,13 @@ from typing import Literal, Optional, Union
 
 from titlecase import titlecase
 
-from app.schemas.base import Base
+from app.schemas.card import CardTypeDescription, Extra
 from modules.ImageMaker import ImageMaker
 
 
+CardDescription = CardTypeDescription
+Extra = Extra
 ImageMagickCommands = list[str]
-
-
-class Extra(Base): # pylint: disable=missing-class-docstring
-    name: str
-    identifier: str
-    description: str
-    tooltip: Optional[str] = None
-
-
-class CardDescription(Base): # pylint: disable=missing-class-docstring
-    name: str
-    identifier: str
-    example: str
-    creators: list[str]
-    source: Literal['local', 'remote']
-    supports_custom_fonts: bool
-    supports_custom_seasons: bool
-    supported_extras: list[Extra]
-    description: list[str]
 
 
 class BaseCardType(ImageMaker):

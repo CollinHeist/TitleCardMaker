@@ -48,7 +48,7 @@ class TintedFrameTitleCard(BaseCardType):
         identifier='tinted frame',
         example='/internal_assets/cards/tinted frame.jpg',
         creators=['CollinHeist'],
-        source='local',
+        source='builtin',
         supports_custom_fonts=True,
         supports_custom_seasons=True,
         supported_extras=[

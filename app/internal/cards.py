@@ -39,7 +39,7 @@ def create_all_title_cards(*, log: Logger = log) -> None:
     and Episodes in the Database.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     try:
@@ -82,7 +82,7 @@ def remove_duplicate_cards(*, log: Logger = log) -> None:
     from the database.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     try:
@@ -123,7 +123,7 @@ def refresh_all_remote_card_types(*, log: Logger = log) -> None:
     Schedule-able function to refresh all specified RemoteCardTypes.
 
     Args:
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     try:
@@ -147,7 +147,7 @@ def refresh_remote_card_types(
     Args:
         db: Database to query for remote card type identifiers.
         reset: Whether to reset the existing RemoteFile database.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     # Function to get all unique card types for the table model
@@ -167,19 +167,21 @@ def refresh_remote_card_types(
 
     # Refresh all remote card types
     for card_identifier in card_identifiers:
-        # Card type is remote
-        if (card_identifier is not None
-            and card_identifier not in TitleCardCreator.CARD_TYPES):
-            # If not resetting, skip already loaded types
-            if not reset and card_identifier in preferences.remote_card_types:
-                continue
+        # Skip blank identifiers, and builtin or local cards
+        if (card_identifier is None
+            or card_identifier in TitleCardCreator.CARD_TYPES
+            or card_identifier in preferences.local_card_types):
+            continue
 
-            # Load new type
-            log.debug(f'Loading RemoteCardType[{card_identifier}]..')
-            remote_card_type = RemoteCardType(card_identifier, log=log)
-            if remote_card_type.valid and remote_card_type is not None:
-                preferences.remote_card_types[card_identifier] =\
-                    remote_card_type.card_class
+        # If not resetting, skip already loaded types
+        if not reset and card_identifier in preferences.remote_card_types:
+            continue
+
+        # Load new type
+        log.debug(f'Loading RemoteCardType[{card_identifier}]..')
+        card_type = RemoteCardType(card_identifier, log=log)
+        if card_type.valid and card_type is not None:
+            preferences.remote_card_types[card_identifier] =card_type.card_class
 
 
 def add_card_to_database(
@@ -221,7 +223,7 @@ def validate_card_type_model(
     Args:
         preferences: Preferences to query the BaseCardType class from.
         card_settings: Dictionary of Card settings.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         Tuple of the `BaseCardType` class (which can be used to create
@@ -272,7 +274,7 @@ def create_card(
         CardClass: Class to initialize for Card creation.
         CardTypeModel: Pydantic model for this Card to pass the
             attributes of to the CardClass.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     # Create card
@@ -302,7 +304,7 @@ def resolve_card_settings(
     Args:
         preferences: Preferences with the default global settings.
         episode: Episode whose Card settings are being resolved.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         List of CardAction strings if some error occured in setting
@@ -435,6 +437,13 @@ def resolve_card_settings(
             raise HTTPException(
                 status_code=400,
                 detail=f'Invalid title text format - missing data {exc}'
+            ) from exc
+        except ValueError as exc:
+            log.exception(f'{series.log_str} {episode.log_str} Title Text '
+                          f'Format is invalid - bad format', exc)
+            raise HTTPException(
+                status_code=400,
+                detail=f'Invalid title text format - bad format {exc}'
             ) from exc
 
     # Get EpisodeInfo for this Episode
@@ -571,9 +580,9 @@ def create_episode_card(
         background_tasks: Optional BackgroundTasks to queue card
             creation within.
         episode: Episode whose Card is being created.
-        raise_exc: (Keyword) Whether to raise or ignore any
+        raise_exc: Whether to raise or ignore any
             HTTPExceptions.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     # Resolve Card settings
@@ -663,7 +672,7 @@ def update_episode_watch_statuses(
             watch statuses.
         series: Series whose Episodes are being updated.
         episodes: List of Episodes to update the statuses of.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
     """
 
     if series.emby_library_name is not None:
@@ -713,7 +722,7 @@ def delete_cards(
         card_query: SQL query for Cards whose card files to delete.
             Query contents itself are also deleted.
         loaded_query: SQL query for loaded assets to delete.
-        log: (Keyword) Logger for all log messages.
+        log: Logger for all log messages.
 
     Returns:
         List of file names of the deleted cards.

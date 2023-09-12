@@ -18,7 +18,7 @@ class CutoutTitleCard(BaseCardType):
         identifier='cutout',
         example='/internal_assets/cards/cutout.jpg',
         creators=['/u/Phendrena', 'CollinHeist'],
-        source='local',
+        source='builtin',
         supports_custom_fonts=True,
         supports_custom_seasons=False,
         supported_extras=[

@@ -24,7 +24,7 @@ class TintedGlassTitleCard(BaseCardType):
         identifier='tinted glass',
         example='/internal_assets/cards/tinted glass.jpg',
         creators=['/u/RaceDebriefF1', 'CollinHeist'],
-        source='local',
+        source='builtin',
         supports_custom_fonts=True,
         supports_custom_seasons=True,
         supported_extras=[

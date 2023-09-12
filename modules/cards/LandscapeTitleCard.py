@@ -29,7 +29,7 @@ class LandscapeTitleCard(BaseCardType):
         identifier='landscape',
         example='/internal_assets/cards/landscape.jpg',
         creators=['CollinHeist'],
-        source='local',
+        source='builtin',
         supports_custom_fonts=True,
         supports_custom_seasons=False,
         supported_extras=[
